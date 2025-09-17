@@ -13,6 +13,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.NetworkStatus
+import com.tangem.domain.models.network.getAddress
 import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.domain.models.staking.StakingID
 import com.tangem.domain.models.staking.YieldBalance
@@ -32,7 +33,6 @@ import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.operations.CurrenciesStatusesOperations.Error
 import com.tangem.domain.tokens.repository.CurrenciesRepository
-import com.tangem.domain.tokens.utils.extractAddress
 import com.tangem.utils.extensions.addOrReplace
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
@@ -143,7 +143,7 @@ class CachedCurrenciesStatusesOperations(
                         currencies.associate { currency ->
                             val networkStatus = networksStatuses.firstOrNull { it.network == currency.network }
 
-                            currency.id to extractAddress(networkStatus)
+                            currency.id to networkStatus.getAddress()
                         }
                     }
 
@@ -208,7 +208,7 @@ class CachedCurrenciesStatusesOperations(
         if (yieldBalances.isNullOrEmpty()) return null
 
         val supportedIntegration = StakingIntegrationID.create(currencyId = currency.id)?.value
-        val address = extractAddress(networkStatus)
+        val address = networkStatus.getAddress()
 
         return if (supportedIntegration != null && address != null) {
             val stakingId = StakingID(integrationId = supportedIntegration, address = address)
