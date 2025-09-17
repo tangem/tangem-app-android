@@ -52,10 +52,10 @@ fun TangemTheme(
 
 @Composable
 fun TangemTheme(
-    isDark: Boolean = false,
     windowSize: WindowSize,
     typography: TangemTypography = TangemTheme.typography,
     dimens: TangemDimens = TangemTheme.dimens,
+    isDark: Boolean = false,
     vibratorHapticManager: VibratorHapticManager? = null,
     eventMessageHandler: EventMessageHandler = remember { EventMessageHandler() },
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
