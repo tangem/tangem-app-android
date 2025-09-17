@@ -24,6 +24,7 @@ dependencies {
     implementation(projects.core.decompose)
     implementation(projects.libs.crypto)
     implementation(projects.common.routing)
+    implementation(projects.common.ui)
 
     /** AndroidX */
     implementation(deps.androidx.appCompat)

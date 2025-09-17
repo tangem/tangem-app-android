@@ -5,15 +5,14 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.buttons.segmentedbutton.SegmentedButtons
+import com.tangem.core.ui.components.grid.EnumeratedTwoColumnGrid
+import com.tangem.core.ui.components.grid.entity.EnumeratedTwoColumnGridItem
 import com.tangem.core.ui.extensions.pluralStringResourceSafe
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
@@ -21,8 +20,6 @@ import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.onboarding.v2.impl.R
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.model.GeneratedWordsType
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.ui.state.MultiWalletSeedPhraseUM
-import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.ui.state.MultiWalletSeedPhraseUM.GenerateSeedPhrase.MnemonicGridItem
-import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 
@@ -45,8 +42,8 @@ internal fun MultiWalletSeedPhraseWords(
 
             TitleBlock(state)
 
-            SeedPhraseGridBlock(
-                mnemonicGridItems = state.words,
+            EnumeratedTwoColumnGrid(
+                items = state.words,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 20.dp, bottom = 32.dp),
@@ -127,67 +124,6 @@ private fun TitleBlock(state: MultiWalletSeedPhraseUM.GenerateSeedPhrase, modifi
     }
 }
 
-@Composable
-private fun SeedPhraseGridBlock(mnemonicGridItems: ImmutableList<MnemonicGridItem>, modifier: Modifier = Modifier) {
-    VerticalGrid(
-        modifier = modifier,
-        items = mnemonicGridItems,
-    ) { item ->
-        Row(
-            modifier = Modifier.padding(all = TangemTheme.dimens.size8),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            if (LocalLayoutDirection.current == LayoutDirection.Ltr) {
-                Text(
-                    modifier = Modifier.width(TangemTheme.dimens.size40),
-                    text = "${item.index}.",
-                    style = TangemTheme.typography.body2,
-                    color = TangemTheme.colors.text.secondary,
-                )
-                Text(
-                    text = item.mnemonic,
-                    style = TangemTheme.typography.button,
-                    color = TangemTheme.colors.text.primary1,
-                )
-            } else {
-                Text(
-                    text = item.mnemonic,
-                    style = TangemTheme.typography.button,
-                    color = TangemTheme.colors.text.primary1,
-                )
-                Text(
-                    modifier = Modifier.width(TangemTheme.dimens.size40),
-                    text = "${item.index}.",
-                    style = TangemTheme.typography.body2,
-                    color = TangemTheme.colors.text.secondary,
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private inline fun <T> VerticalGrid(
-    items: ImmutableList<T>,
-    modifier: Modifier = Modifier,
-    crossinline content: @Composable (T) -> Unit,
-) {
-    val columnLength = items.size / 2
-    Row(
-        modifier = modifier,
-        horizontalArrangement = Arrangement.SpaceEvenly,
-    ) {
-        repeat(2) { index ->
-            Column {
-                for (i in 0 until columnLength) {
-                    val item = items[index * columnLength + i]
-                    content(item)
-                }
-            }
-        }
-    }
-}
-
 @Preview(showBackground = true, heightDp = 640)
 @Composable
 private fun Preview() {
@@ -195,7 +131,7 @@ private fun Preview() {
         MultiWalletSeedPhraseWords(
             state = MultiWalletSeedPhraseUM.GenerateSeedPhrase(
                 words = List(24) {
-                    MnemonicGridItem(
+                    EnumeratedTwoColumnGridItem(
                         index = it + 1,
                         mnemonic = "word1",
                     )
