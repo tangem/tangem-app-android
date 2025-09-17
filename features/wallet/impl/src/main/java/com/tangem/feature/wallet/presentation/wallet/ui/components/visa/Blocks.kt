@@ -19,8 +19,8 @@ private const val BLOCK_ITEM_VALUE_WEIGHT = .55f
 @Composable
 internal inline fun BlockContent(
     title: TextReference,
-    content: @Composable ColumnScope.() -> Unit,
     modifier: Modifier = Modifier,
+    content: @Composable ColumnScope.() -> Unit,
     description: @Composable RowScope.() -> Unit = {},
 ) {
     Column(
