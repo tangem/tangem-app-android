@@ -88,10 +88,10 @@ internal class NFTSendModel @Inject constructor(
     private val nftAsset = params.nftAsset
 
     val uiState: StateFlow<NFTSendUM>
-    field = MutableStateFlow(initialState())
+        field = MutableStateFlow(initialState())
 
     val isBalanceHiddenFlow: StateFlow<Boolean>
-    field = MutableStateFlow(false)
+        field = MutableStateFlow(false)
 
     var cryptoCurrency: CryptoCurrency by Delegates.notNull()
     var userWallet: UserWallet by Delegates.notNull()
