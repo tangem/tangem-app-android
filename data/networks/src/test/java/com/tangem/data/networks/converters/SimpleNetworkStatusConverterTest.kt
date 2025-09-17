@@ -12,6 +12,7 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.models.network.NetworkStatus.Amount
+import com.tangem.domain.models.yield.supply.YieldSupplyStatus
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
@@ -68,6 +69,14 @@ internal class SimpleNetworkStatusConverterTest {
                     "coin⟨BCH⟩bitcoin-cash" to BigDecimal.ZERO,
                     "coin⟨ETH→12367123⟩ethereum" to BigDecimal.ONE,
                 ),
+                yieldSupplyStatuses = mapOf(
+                    "coin⟨ETH⟩ethereum" to NetworkStatusDM.YieldSupplyStatus(
+                        isActive = false,
+                        isInitialized = false,
+                        isAllowedToSpend = false,
+                    ),
+                    "coin⟨ETH⟩ethereum" to null,
+                ),
             ),
             expected = SimpleNetworkStatus(
                 id = Network.ID(
@@ -104,6 +113,22 @@ internal class SimpleNetworkStatusConverterTest {
                         ) to Amount.Loaded(value = BigDecimal.ONE),
                     ),
                     pendingTransactions = emptyMap(),
+                    yieldSupplyStatuses = mapOf(
+                        ID(
+                            prefix = Prefix.COIN_PREFIX,
+                            body = Body.NetworkId(rawId = "ETH"),
+                            suffix = ID.Suffix.RawID(rawId = "ethereum"),
+                        ) to YieldSupplyStatus(
+                            isActive = false,
+                            isInitialized = false,
+                            isAllowedToSpend = false,
+                        ),
+                        ID(
+                            prefix = Prefix.COIN_PREFIX,
+                            body = Body.NetworkId(rawId = "ETH"),
+                            suffix = ID.Suffix.RawID(rawId = "ethereum"),
+                        ) to null,
+                    ),
                     source = StatusSource.CACHE,
                 ),
             ).let(Result.Companion::success),
@@ -178,6 +203,7 @@ internal class SimpleNetworkStatusConverterTest {
                     ),
                 ),
                 amounts = emptyMap(),
+                yieldSupplyStatuses = emptyMap(),
             ),
             expected = Result.failure(
                 exception = IllegalArgumentException("Selected address must not be null"),
@@ -193,6 +219,7 @@ internal class SimpleNetworkStatusConverterTest {
                 selectedAddress = "0x1",
                 availableAddresses = setOf(),
                 amounts = emptyMap(),
+                yieldSupplyStatuses = emptyMap(),
             ),
             expected = Result.failure(
                 exception = IllegalArgumentException("Selected address must not be null"),
@@ -217,6 +244,7 @@ internal class SimpleNetworkStatusConverterTest {
                     ),
                 ),
                 amounts = emptyMap(),
+                yieldSupplyStatuses = emptyMap(),
             ),
             expected = Result.failure(
                 exception = IllegalArgumentException("Selected address must not be null"),

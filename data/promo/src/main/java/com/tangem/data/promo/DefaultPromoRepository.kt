@@ -38,24 +38,19 @@ internal class DefaultPromoRepository(
             key = PreferencesKeys.getShouldShowPromoKey(promoId = promoId.name),
             default = true,
         ).map { shouldShow ->
-            if (promoId == PromoId.Referral) {
-                runCatching {
+            when (promoId) {
+                PromoId.Referral -> runCatching {
                     !referralRepository.isReferralParticipant(userWalletId) && shouldShow
                 }.getOrDefault(false)
-            } else {
-                shouldShow
+                PromoId.Sepa -> shouldShow
             }
         }
     }
 
     override fun isReadyToShowTokenPromo(promoId: PromoId): Flow<Boolean> {
-        return if (promoId == PromoId.Referral) {
-            flowOf(false)
-        } else {
-            appPreferencesStore.get(
-                PreferencesKeys.getShouldShowPromoKey(promoId = promoId.name),
-                default = false,
-            )
+        return when (promoId) {
+            PromoId.Referral -> flowOf(false)
+            PromoId.Sepa -> flowOf(false)
         }
     }
 

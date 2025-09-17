@@ -15,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.userwallet.UserWalletItem
@@ -43,10 +44,9 @@ internal fun AnimatedContentScope.WelcomeSelectWallet(state: WelcomeUM.SelectWal
             .statusBarsPadding(),
     ) {
         TopBar(state)
-        TitleText()
-        SpacerH12()
 
         var actualWallets by remember { mutableStateOf<ImmutableList<UserWalletItemUM>>(persistentListOf()) }
+        val bottomBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getBottom(this).toDp() }
 
         Box(modifier = Modifier.weight(1f)) {
             LazyColumn(
@@ -58,18 +58,25 @@ internal fun AnimatedContentScope.WelcomeSelectWallet(state: WelcomeUM.SelectWal
                         ) + fadeIn(tween(delayMillis = 300)),
                         exit = fadeOut(),
                     )
-                    .fillMaxHeight()
-                    .padding(horizontal = 16.dp),
+                    .fillMaxHeight(),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
+                item {
+                    TitleText(modifier = Modifier.padding(bottom = 4.dp))
+                }
                 itemsIndexed(actualWallets) { index, walletState ->
                     UserWalletItem(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .padding(horizontal = 16.dp)
+                            .fillMaxWidth(),
                         state = walletState,
                         blockColors = TangemBlockCardColors.copy(
                             containerColor = TangemTheme.colors.field.primary,
                         ),
                     )
+                }
+                item {
+                    SpacerH(128.dp + bottomBarHeight)
                 }
             }
 
@@ -115,7 +122,6 @@ private fun AnimatedContentScope.TopBar(state: WelcomeUM.SelectWallet, modifier:
             )
             .padding(
                 top = 16.dp,
-                bottom = 16.dp,
                 start = 16.dp,
             )
             .fillMaxWidth(),

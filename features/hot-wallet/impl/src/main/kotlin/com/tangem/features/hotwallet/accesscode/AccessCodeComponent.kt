@@ -25,7 +25,9 @@ internal class AccessCodeComponent @AssistedInject constructor(
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
 
-        DisableScreenshotsDisposableEffect()
+        if (!state.isConfirmMode) {
+            DisableScreenshotsDisposableEffect()
+        }
 
         AccessCode(
             modifier = modifier,
@@ -34,12 +36,11 @@ internal class AccessCodeComponent @AssistedInject constructor(
     }
 
     interface ModelCallbacks {
-        fun onAccessCodeSet(userWalletId: UserWalletId, accessCode: String)
-        fun onAccessCodeConfirmed(userWalletId: UserWalletId)
+        fun onNewAccessCodeInput(userWalletId: UserWalletId, accessCode: String)
+        fun onAccessCodeUpdated(userWalletId: UserWalletId)
     }
 
     data class Params(
-        val isConfirmMode: Boolean,
         val accessCodeToConfirm: String? = null,
         val userWalletId: UserWalletId,
         val callbacks: ModelCallbacks,

@@ -53,6 +53,7 @@ dependencies {
     implementation(projects.domain.transaction)
 
     /** Tangem libraries */
+    implementation(tangemDeps.hot.core)
     implementation(projects.libs.tangemSdkApi)
     implementation(tangemDeps.card.core)
     implementation(tangemDeps.card.android) {

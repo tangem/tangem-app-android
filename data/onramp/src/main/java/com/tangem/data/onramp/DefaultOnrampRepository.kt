@@ -261,6 +261,49 @@ internal class DefaultOnrampRepository(
         storeOnrampPairs(pairs = onrampPairs.await(), providers = providers.await())
     }
 
+    override suspend fun hasSepaMethod(
+        userWallet: UserWallet,
+        currency: OnrampCurrency,
+        country: OnrampCountry,
+        cryptoCurrency: CryptoCurrency,
+    ): Boolean {
+        return withContext(dispatchers.io) {
+            val onrampPairs =
+                safeApiCall(
+                    call = {
+                        onrampApi.getPairs(
+                            userWalletId = userWallet.walletId.stringValue,
+                            refCode = ExpressUtils.getRefCode(
+                                userWallet = userWallet,
+                                appPreferencesStore = appPreferencesStore,
+                            ),
+                            body = OnrampPairsRequest(
+                                fromCurrencyCode = EUR_CURRENCY_CODE,
+                                countryCode = country.code,
+                                to = listOf(
+                                    OnrampDestinationDTO(
+                                        contractAddress = cryptoCurrency.getContractAddress(),
+                                        network = cryptoCurrency.network.backendId,
+                                    ),
+                                ),
+                            ),
+                        ).bind()
+                    },
+                    onError = {
+                        Timber.w(it, "Unable to fetch onramp pairs")
+                        throw it
+                    },
+                )
+
+            val hasSepaMethod = onrampPairs
+                .flatMap { it.providers }
+                .flatMap { it.paymentMethods }
+                .any { it == SEPA_METHOD_ID }
+
+            hasSepaMethod
+        }
+    }
+
     override suspend fun fetchQuotes(userWallet: UserWallet, cryptoCurrency: CryptoCurrency, amount: Amount) =
         withContext(dispatchers.io) {
             val pairs = requireNotNull(pairsStore.getSyncOrNull(PAIRS_KEY)) {
@@ -554,5 +597,8 @@ internal class DefaultOnrampRepository(
         const val PROVIDER_THEME_LIGHT = "light"
 
         const val REDIRECT_URL = "https://tangem.com/onramp"
+
+        const val SEPA_METHOD_ID = "sepa"
+        const val EUR_CURRENCY_CODE = "EUR"
     }
 }

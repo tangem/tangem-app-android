@@ -3,9 +3,11 @@ package com.tangem.tests
 import androidx.compose.ui.test.onAllNodesWithText
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.TOTAL_BALANCE
+import com.tangem.common.extensions.SwipeDirection
 import com.tangem.common.extensions.clickWithAssertion
-import com.tangem.common.extensions.swipeUp
-import com.tangem.scenarios.OpenMainScreenScenario
+import com.tangem.common.extensions.swipeVertical
+import com.tangem.scenarios.openMainScreen
+import com.tangem.scenarios.synchronizeAddresses
 import com.tangem.screens.onMainScreen
 import com.tangem.screens.onOrganizeTokensScreen
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -23,15 +25,16 @@ class OrganizeTokensTest : BaseTestCase() {
         setupHooks().run {
             val tokenTitle = "Ethereum"
             val tokenNetwork = "Ethereum network"
+
             step("Open 'Main Screen'") {
-                scenario(OpenMainScreenScenario(composeTestRule))
+                openMainScreen()
             }
-            step("Click on 'Synchronize addresses' button" ) {
+            step("Click on 'Synchronize addresses' button") {
                 onMainScreen { synchronizeAddressesButton.clickWithAssertion() }
             }
             step("Swipe to 'Organize tokens' button") {
-                swipeUp()
-                swipeUp()
+                swipeVertical(SwipeDirection.UP)
+                swipeVertical(SwipeDirection.UP)
             }
             step("Click 'Organize tokens' button") {
                 onMainScreen { organizeTokensButton().clickWithAssertion() }
@@ -55,8 +58,8 @@ class OrganizeTokensTest : BaseTestCase() {
                 onMainScreen { tokenNetworkGroupTitle(tokenNetwork).assertIsDisplayed() }
             }
             step("Swipe to 'Organize tokens' button") {
-                swipeUp()
-                swipeUp()
+                swipeVertical(SwipeDirection.UP)
+                swipeVertical(SwipeDirection.UP)
             }
             step("Click 'Organize tokens' button") {
                 onMainScreen { organizeTokensButton().clickWithAssertion() }
@@ -90,14 +93,12 @@ class OrganizeTokensTest : BaseTestCase() {
             val ethereumTitle = "Ethereum"
             val bitcoinTitle = "Bitcoin"
             val balance = TOTAL_BALANCE
+
             step("Open 'Main Screen'") {
-                scenario(OpenMainScreenScenario(composeTestRule))
+                openMainScreen()
             }
-            step("Click on 'Synchronize addresses' button" ) {
-                onMainScreen { synchronizeAddressesButton.clickWithAssertion() }
-            }
-            step("Assert wallet balance = '$balance'") {
-                onMainScreen { walletBalance().assertTextContains(balance) }
+            step("Synchronize addresses") {
+                synchronizeAddresses(balance)
             }
             step("Check positions of tokens on 'Main Screen'") {
                 onMainScreen {
@@ -106,8 +107,8 @@ class OrganizeTokensTest : BaseTestCase() {
                 }
             }
             step("Swipe to 'Organize tokens' button") {
-                swipeUp()
-                swipeUp()
+                swipeVertical(SwipeDirection.UP)
+                swipeVertical(SwipeDirection.UP)
             }
             step("Click 'Organize tokens' button") {
                 onMainScreen { organizeTokensButton().clickWithAssertion() }
@@ -129,10 +130,11 @@ class OrganizeTokensTest : BaseTestCase() {
         setupHooks().run {
             val ethereumTitle = "Ethereum"
             val bitcoinTitle = "Bitcoin"
+
             step("Open 'Main Screen'") {
-                scenario(OpenMainScreenScenario(composeTestRule))
+                openMainScreen()
             }
-            step("Click on 'Synchronize addresses' button" ) {
+            step("Click on 'Synchronize addresses' button") {
                 onMainScreen { synchronizeAddressesButton.clickWithAssertion() }
             }
             step("Check positions of tokens on 'Main Screen'") {
@@ -142,8 +144,8 @@ class OrganizeTokensTest : BaseTestCase() {
                 }
             }
             step("Swipe to 'Organize tokens' button") {
-                swipeUp()
-                swipeUp()
+                swipeVertical(SwipeDirection.UP)
+                swipeVertical(SwipeDirection.UP)
             }
             step("Click 'Organize tokens' button") {
                 onMainScreen { organizeTokensButton().clickWithAssertion() }
@@ -178,14 +180,12 @@ class OrganizeTokensTest : BaseTestCase() {
             val polygonTitle = "Polygon"
             val polExMaticTitle = "POL (ex-MATIC)"
             val balance = TOTAL_BALANCE
+
             step("Open 'Main Screen'") {
-                scenario(OpenMainScreenScenario(composeTestRule))
+                openMainScreen()
             }
-            step("Click on 'Synchronize addresses' button" ) {
-                onMainScreen { synchronizeAddressesButton.clickWithAssertion() }
-            }
-            step("Assert wallet balance = '$balance'") {
-                onMainScreen { walletBalance().assertTextContains(balance) }
+            step("Synchronize addresses") {
+                synchronizeAddresses(balance)
             }
             step("Check positions of tokens on 'Main Screen'") {
                 onMainScreen {
@@ -195,8 +195,8 @@ class OrganizeTokensTest : BaseTestCase() {
                 }
             }
             step("Swipe to 'Organize tokens' button") {
-                swipeUp()
-                swipeUp()
+                swipeVertical(SwipeDirection.UP)
+                swipeVertical(SwipeDirection.UP)
             }
             step("Click 'Organize tokens' button") {
                 onMainScreen { organizeTokensButton().clickWithAssertion() }
@@ -235,6 +235,4 @@ class OrganizeTokensTest : BaseTestCase() {
             }
         }
     }
-
-
 }

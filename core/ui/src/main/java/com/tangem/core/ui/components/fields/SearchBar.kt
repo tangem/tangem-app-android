@@ -11,7 +11,6 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -39,7 +38,7 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.core.ui.test.SelectCountryBottomSheetTestTags
+import com.tangem.core.ui.test.BaseSearchBarTestTags
 
 @Composable
 fun SearchBar(
@@ -47,10 +46,10 @@ fun SearchBar(
     modifier: Modifier = Modifier,
     colors: TextFieldColors = TangemSearchBarDefaults.defaultTextFieldColors,
     enabled: Boolean = true,
+    focusRequester: FocusRequester = remember { FocusRequester() },
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
-    val focusRequester = remember { FocusRequester() }
     val interactionSource = remember { MutableInteractionSource() }
 
     BasicTextField(
@@ -65,7 +64,7 @@ fun SearchBar(
                 }
             }
             .focusRequester(focusRequester)
-            .testTag(SelectCountryBottomSheetTestTags.SEARCH_BAR),
+            .testTag(BaseSearchBarTestTags.SEARCH_BAR),
         enabled = enabled,
         value = state.query,
         onValueChange = state.onQueryChange,
@@ -97,10 +96,6 @@ fun SearchBar(
             )
         },
     )
-
-    LaunchedEffect(Unit) {
-        focusRequester.requestFocus()
-    }
 }
 
 @Suppress("LongParameterList")

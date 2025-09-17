@@ -10,6 +10,7 @@ import com.tangem.common.ui.amountScreen.converters.AmountReduceByTransformer
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.navigationButtons.NavigationButton
 import com.tangem.common.ui.navigationButtons.NavigationUM
+import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -21,14 +22,12 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
-import com.tangem.domain.feedback.GetCardInfoUseCase
+import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.BlockchainErrorInfo
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.models.wallet.requireColdWallet
 import com.tangem.domain.settings.IsSendTapHelpEnabledUseCase
 import com.tangem.domain.settings.NeverShowTapHelpUseCase
 import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
@@ -45,6 +44,8 @@ import com.tangem.features.send.v2.api.callbacks.FeeSelectorModelCallback
 import com.tangem.features.send.v2.api.entity.FeeNonce
 import com.tangem.features.send.v2.api.params.FeeSelectorParams.FeeStateConfiguration
 import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationUM
+import com.tangem.features.send.v2.api.subcomponents.feeSelector.FeeSelectorCheckReloadListener
+import com.tangem.features.send.v2.api.subcomponents.feeSelector.FeeSelectorCheckReloadTrigger
 import com.tangem.features.send.v2.api.subcomponents.feeSelector.FeeSelectorReloadTrigger
 import com.tangem.features.send.v2.api.subcomponents.notifications.SendNotificationsUpdateListener
 import com.tangem.features.send.v2.api.subcomponents.notifications.SendNotificationsUpdateTrigger
@@ -90,13 +91,15 @@ internal class SendConfirmModel @Inject constructor(
     private val createTransferTransactionUseCase: CreateTransferTransactionUseCase,
     private val sendTransactionUseCase: SendTransactionUseCase,
     private val saveBlockchainErrorUseCase: SaveBlockchainErrorUseCase,
-    private val getCardInfoUseCase: GetCardInfoUseCase,
+    private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val addCryptoCurrenciesUseCase: AddCryptoCurrenciesUseCase,
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
     private val isAmountSubtractAvailableUseCase: IsAmountSubtractAvailableUseCase,
     private val sendFeeCheckReloadTrigger: SendFeeCheckReloadTrigger,
     private val sendFeeCheckReloadListener: SendFeeCheckReloadListener,
+    private val feeSelectorCheckReloadListener: FeeSelectorCheckReloadListener,
+    private val feeSelectorCheckReloadTrigger: FeeSelectorCheckReloadTrigger,
     private val notificationsUpdateTrigger: SendNotificationsUpdateTrigger,
     private val notificationsUpdateListener: SendNotificationsUpdateListener,
     private val alertFactory: SendConfirmAlertFactory,
@@ -277,7 +280,11 @@ internal class SendConfirmModel @Inject constructor(
             verifyAndSendTransaction()
         } else {
             modelScope.launch {
-                sendFeeCheckReloadTrigger.triggerCheckUpdate()
+                if (uiState.value.isRedesignEnabled) {
+                    feeSelectorCheckReloadTrigger.triggerCheckUpdate()
+                } else {
+                    sendFeeCheckReloadTrigger.triggerCheckUpdate()
+                }
             }
         }
     }
@@ -329,15 +336,9 @@ internal class SendConfirmModel @Inject constructor(
             ),
         )
 
-        if (userWallet is UserWallet.Hot) {
-            return // TODO [REDACTED_TASK_KEY] [Hot Wallet] Email feedback flow
-        }
-
-        val cardInfo =
-            getCardInfoUseCase(userWallet.requireColdWallet().scanResponse).getOrNull() ?: return
-
         modelScope.launch {
-            sendFeedbackEmailUseCase(type = FeedbackEmailType.TransactionSendingProblem(cardInfo = cardInfo))
+            val metaInfo = getWalletMetaInfoUseCase.invoke(userWallet.walletId).getOrNull() ?: return@launch
+            sendFeedbackEmailUseCase(type = FeedbackEmailType.TransactionSendingProblem(walletMetaInfo = metaInfo))
         }
     }
 
@@ -514,8 +515,17 @@ internal class SendConfirmModel @Inject constructor(
 
     private fun subscribeOnCheckFeeResultUpdates() {
         sendFeeCheckReloadListener.checkReloadResultFlow.onEach { isFeeResultSuccess ->
+            sendIdleTimer = SystemClock.elapsedRealtime()
             if (isFeeResultSuccess) {
-                sendIdleTimer = SystemClock.elapsedRealtime()
+                _uiState.update(SendConfirmSendingStateTransformer(isSending = true))
+                verifyAndSendTransaction()
+            } else {
+                _uiState.update(SendConfirmSendingStateTransformer(isSending = false))
+            }
+        }.launchIn(modelScope)
+        feeSelectorCheckReloadListener.checkReloadResultFlow.onEach { isFeeResultSuccess ->
+            sendIdleTimer = SystemClock.elapsedRealtime()
+            if (isFeeResultSuccess) {
                 _uiState.update(SendConfirmSendingStateTransformer(isSending = true))
                 verifyAndSendTransaction()
             } else {
@@ -655,7 +665,7 @@ internal class SendConfirmModel @Inject constructor(
                 }
                 else -> resourceReference(R.string.common_send)
             },
-            iconRes = R.drawable.ic_tangem_24,
+            iconRes = walletInterationIcon(userWallet),
             isIconVisible = isReadyToSend,
             isEnabled = confirmUM.isPrimaryButtonEnabled,
             isHapticClick = isReadyToSend,

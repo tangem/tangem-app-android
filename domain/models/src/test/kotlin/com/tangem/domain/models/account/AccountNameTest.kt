@@ -3,7 +3,6 @@ package com.tangem.domain.models.account
 import arrow.core.Either
 import arrow.core.left
 import com.google.common.truth.Truth
-import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
@@ -13,16 +12,6 @@ import org.junit.jupiter.params.provider.MethodSource
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class AccountNameTest {
-
-    @Test
-    fun main_returnsMainAccountName() {
-        // Act
-        val main = AccountName.Main.value
-
-        // Assert
-        val expected = "Main Account"
-        Truth.assertThat(main).isEqualTo(expected)
-    }
 
     @ParameterizedTest
     @MethodSource("provideTestModels")
