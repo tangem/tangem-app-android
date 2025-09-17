@@ -9,6 +9,7 @@ import retrofit2.http.Header
 import retrofit2.http.POST
 import retrofit2.http.Query
 
+@Suppress("TooManyFunctions")
 interface TangemPayApi {
 
     // region: auth
@@ -31,6 +32,11 @@ interface TangemPayApi {
 
     @POST("v1/auth/token")
     suspend fun getTokenByCustomerWallet(@Body request: GetTokenByCustomerWalletRequest): ApiResponse<JWTResponse>
+
+    @POST("v1/auth/token/refresh")
+    suspend fun refreshCustomerWalletAccessToken(
+        @Body request: RefreshCustomerWalletAccessTokenRequest,
+    ): ApiResponse<JWTResponse>
 
     @POST("v1/auth/token")
     suspend fun getAccessTokenByCardWallet(@Body request: GetAccessTokenByCardWalletRequest): ApiResponse<JWTResponse>
@@ -106,4 +112,7 @@ interface TangemPayApi {
 
     @GET("v1/customer/me")
     suspend fun getCustomerMe(@Header("Authorization") authHeader: String): ApiResponse<CustomerMeResponse>
+
+    @POST("v1/deeplink/validate")
+    suspend fun validateDeeplink(@Body body: DeeplinkValidityRequest): ApiResponse<DeeplinkValidityResponse>
 }
