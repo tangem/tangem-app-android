@@ -150,7 +150,7 @@ internal class MainViewModel @Inject constructor(
             prepareSelectedWalletFeedback()
 
             // await while initial route stack is initialized
-            appRouterConfig.isInitialized.first { it }
+            appRouterConfig.initializedState.first { it }
 
             isSplashScreenShown = false
         }

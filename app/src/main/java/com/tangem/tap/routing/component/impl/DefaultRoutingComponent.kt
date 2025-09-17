@@ -133,7 +133,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
                 AppRoute.Wallet
             }
         }.also {
-            appRouterConfig.isInitialized.value = true
+            appRouterConfig.initializedState.value = true
             checkForUnfinishedBackup()
         }
     }
