@@ -5,7 +5,7 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.domain.wallets.legacy.UserWalletsListManager
+import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
 import com.tangem.lib.crypto.UserWalletManager
 import com.tangem.lib.crypto.models.ProxyAmount
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -15,13 +15,13 @@ import java.math.BigDecimal
 
 class UserWalletManagerImpl(
     private val walletManagersFacade: WalletManagersFacade,
-    private val userWalletsListManager: UserWalletsListManager,
+    private val getSelectedWalletUseCase: GetSelectedWalletUseCase,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : UserWalletManager {
 
     override fun getWalletId(): String {
         val selectedUserWallet = requireNotNull(
-            userWalletsListManager.selectedUserWalletSync,
+            getSelectedWalletUseCase.sync().getOrNull(),
         ) { "selectedUserWallet shouldn't be null" }
         return selectedUserWallet.walletId.stringValue
     }
@@ -62,7 +62,7 @@ class UserWalletManagerImpl(
     @Throws(IllegalArgumentException::class)
     private suspend fun getActualWalletManager(blockchain: Blockchain, derivationPath: String?): WalletManager {
         val selectedUserWallet = requireNotNull(
-            userWalletsListManager.selectedUserWalletSync,
+            getSelectedWalletUseCase.sync().getOrNull(),
         ) { "userWallet or userWalletsListManager is null" }
         val walletManager = withContext(dispatchers.io) {
             walletManagersFacade.getOrCreateWalletManager(
