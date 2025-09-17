@@ -53,32 +53,32 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
     private var userWallet = params.userWallet
 
     private val feeCryptoCurrencyStatusFlow: StateFlow<CryptoCurrencyStatus>
-    field = MutableStateFlow(
-        CryptoCurrencyStatus(
-            cryptoCurrencyStatus.currency,
-            value = CryptoCurrencyStatus.Loading,
-        ),
-    )
+        field = MutableStateFlow(
+            CryptoCurrencyStatus(
+                cryptoCurrencyStatus.currency,
+                value = CryptoCurrencyStatus.Loading,
+            ),
+        )
 
     private var appCurrency = AppCurrency.Default
 
     val uiState: StateFlow<YieldSupplyActionUM>
-    field: MutableStateFlow<YieldSupplyActionUM> = MutableStateFlow(
-        YieldSupplyActionUM(
-            title = resourceReference(R.string.yield_module_stop_earning),
-            subtitle = resourceReference(
-                id = R.string.yield_module_stop_earning_sheet_description,
-                formatArgs = wrappedList(cryptoCurrency.symbol),
+        field: MutableStateFlow<YieldSupplyActionUM> = MutableStateFlow(
+            YieldSupplyActionUM(
+                title = resourceReference(R.string.yield_module_stop_earning),
+                subtitle = resourceReference(
+                    id = R.string.yield_module_stop_earning_sheet_description,
+                    formatArgs = wrappedList(cryptoCurrency.symbol),
+                ),
+                footer = combinedReference(
+                    resourceReference(R.string.yield_module_stop_earning_sheet_fee_note),
+                    resourceReference(R.string.common_read_more),
+                ),
+                currencyIconState = CryptoCurrencyToIconStateConverter().convert(cryptoCurrency),
+                yieldSupplyFeeUM = YieldSupplyFeeUM.Loading,
+                isPrimaryButtonEnabled = false,
             ),
-            footer = combinedReference(
-                resourceReference(R.string.yield_module_stop_earning_sheet_fee_note),
-                resourceReference(R.string.common_read_more),
-            ),
-            currencyIconState = CryptoCurrencyToIconStateConverter().convert(cryptoCurrency),
-            yieldSupplyFeeUM = YieldSupplyFeeUM.Loading,
-            isPrimaryButtonEnabled = false,
-        ),
-    )
+        )
 
     init {
         modelScope.launch {
