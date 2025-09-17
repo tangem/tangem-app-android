@@ -4,7 +4,7 @@ import androidx.compose.runtime.Stable
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.domain.pay.KycStartInfo
-import com.tangem.domain.pay.usecase.KycStartInfoUseCase
+import com.tangem.domain.pay.repository.KycRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -15,7 +15,7 @@ import javax.inject.Inject
 @ModelScoped
 class DefaultKycModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
-    private val kycStartInfoUseCase: KycStartInfoUseCase,
+    private val kycRepository: KycRepository,
 ) : Model() {
 
     private val _uiState: MutableStateFlow<KycStartInfo?> = MutableStateFlow(null)
@@ -23,7 +23,7 @@ class DefaultKycModel @Inject constructor(
 
     fun getKycToken() {
         modelScope.launch {
-            kycStartInfoUseCase().getOrNull()?.let { _uiState.emit(it) }
+            kycRepository.getKycStartInfo().getOrNull()?.let { _uiState.emit(it) }
         }
     }
 }
