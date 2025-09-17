@@ -2,6 +2,7 @@ package com.tangem.features.staking.impl.presentation.state.transformers.approva
 
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.bottomsheet.permission.state.*
+import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
@@ -10,6 +11,7 @@ import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.FeeState
 import com.tangem.features.staking.impl.presentation.state.StakingStates
@@ -18,6 +20,7 @@ import com.tangem.utils.Provider
 import com.tangem.utils.transformer.Transformer
 
 internal class ShowApprovalBottomSheetTransformer(
+    private val userWallet: UserWallet,
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
     private val feeCryptoCurrencyStatus: CryptoCurrencyStatus?,
@@ -75,6 +78,7 @@ internal class ShowApprovalBottomSheetTransformer(
                         footerText = resourceReference(R.string.staking_give_permission_fee_footer),
                         onChangeApproveType = prevState.clickIntents::onApproveTypeChange,
                     ),
+                    walletInteractionIcon = walletInterationIcon(userWallet),
                     onCancel = onDismiss,
                 ),
             ),

@@ -12,7 +12,7 @@ sealed class SwapDataTransactionModel {
 
     abstract val fromAmount: BigDecimal
     abstract val toAmount: BigDecimal
-    abstract val txValue: String
+    abstract val txValue: String?
     abstract val txId: String
     abstract val txTo: String
     abstract val txExtraId: String?
@@ -23,7 +23,7 @@ sealed class SwapDataTransactionModel {
     data class DEX(
         override val fromAmount: BigDecimal,
         override val toAmount: BigDecimal,
-        override val txValue: String,
+        override val txValue: String?,
         override val txId: String,
         override val txTo: String,
         override val txExtraId: String?,
@@ -36,7 +36,7 @@ sealed class SwapDataTransactionModel {
     data class CEX(
         override val fromAmount: BigDecimal,
         override val toAmount: BigDecimal,
-        override val txValue: String,
+        override val txValue: String?,
         override val txId: String,
         override val txTo: String,
         override val txExtraId: String?,

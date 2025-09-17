@@ -65,21 +65,26 @@ internal fun AccountDetailsContent(state: AccountDetailsUM, modifier: Modifier =
             AccountRow(state)
             SpacerH16()
             ManageTokensRow(state)
-            SpacerH16()
-            ArchiveAccountRow(state)
-            SpacerH(8.dp)
-            Text(
-                modifier = Modifier.padding(horizontal = 12.dp),
-                text = stringResourceSafe(R.string.account_details_archive_description),
-                style = TangemTheme.typography.caption2,
-                color = TangemTheme.colors.text.tertiary,
-            )
+            when (state.archiveMode) {
+                is AccountDetailsUM.ArchiveMode.Available -> {
+                    SpacerH16()
+                    ArchiveAccountRow(state.archiveMode)
+                    SpacerH(8.dp)
+                    Text(
+                        modifier = Modifier.padding(horizontal = 12.dp),
+                        text = stringResourceSafe(R.string.account_details_archive_description),
+                        style = TangemTheme.typography.caption2,
+                        color = TangemTheme.colors.text.tertiary,
+                    )
+                }
+                AccountDetailsUM.ArchiveMode.None -> Unit
+            }
         }
     }
 }
 
 @Composable
-private fun ArchiveAccountRow(state: AccountDetailsUM) {
+private fun ArchiveAccountRow(state: AccountDetailsUM.ArchiveMode.Available) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -143,7 +148,7 @@ private fun AccountRow(state: AccountDetailsUM) {
         horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
     ) {
         AccountRow(
-            title = stringReference(state.accountName),
+            title = state.accountName,
             subtitle = resourceReference(R.string.account_form_name),
             icon = state.accountIcon,
             modifier = Modifier.weight(1f),
@@ -176,12 +181,15 @@ private class PreviewStateProvider : CollectionPreviewParameterProvider<AccountD
             onCloseClick = {},
             onAccountEditClick = {},
             onManageTokensClick = {},
-            onArchiveAccountClick = {},
-            accountName = accountName,
+            archiveMode = AccountDetailsUM.ArchiveMode.Available(
+                onArchiveAccountClick = {},
+            ),
+            accountName = stringReference(accountName),
             accountIcon = portfolioIcon,
         )
         add(first)
         portfolioIcon = AccountIconPreviewData.randomAccountIcon(letter = true)
         add(first.copy(accountIcon = portfolioIcon))
+        add(first.copy(archiveMode = AccountDetailsUM.ArchiveMode.None))
     },
 )
