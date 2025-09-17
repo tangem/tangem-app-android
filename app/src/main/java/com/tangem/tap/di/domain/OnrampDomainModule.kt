@@ -25,6 +25,15 @@ internal object OnrampDomainModule {
 
     @Provides
     @Singleton
+    fun provideGetOnrampCurrencyUseCase(
+        onrampRepository: OnrampRepository,
+        onrampErrorResolver: OnrampErrorResolver,
+    ): OnrampGetDefaultCurrencyUseCase {
+        return OnrampGetDefaultCurrencyUseCase(onrampRepository, onrampErrorResolver)
+    }
+
+    @Provides
+    @Singleton
     fun provideOnrampSaveDefaultCurrencyUseCase(
         onrampRepository: OnrampRepository,
         onrampErrorResolver: OnrampErrorResolver,
