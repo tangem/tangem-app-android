@@ -35,6 +35,7 @@ import com.tangem.features.onboarding.v2.multiwallet.impl.child.createwallet.Mul
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.finalize.MultiWalletFinalizeComponent
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.scanprimary.MultiWalletScanPrimaryComponent
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.MultiWalletSeedPhraseComponent
+import com.tangem.features.onboarding.v2.multiwallet.impl.child.upgradewallet.MultiWalletUpgradeWalletComponent
 import com.tangem.features.onboarding.v2.multiwallet.impl.model.OnboardingMultiWalletModel
 import com.tangem.features.onboarding.v2.multiwallet.impl.model.OnboardingMultiWalletState
 import com.tangem.features.onboarding.v2.multiwallet.impl.model.OnboardingMultiWalletState.Step.*
@@ -57,6 +58,7 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
     private val artworksState = instanceKeeper.getOrCreateSimple(key = "artworksState") {
         MutableStateFlow(
             when (model.state.value.currentStep) {
+                UpgradeWallet -> WalletArtworksState.Folded
                 CreateWallet -> WalletArtworksState.Folded
                 ChooseBackupOption -> WalletArtworksState.Fan
                 SeedPhrase -> WalletArtworksState.Folded
@@ -142,6 +144,11 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
         childContext: AppComponentContext,
     ): ComposableContentComponent {
         return when (step) {
+            UpgradeWallet -> MultiWalletUpgradeWalletComponent(
+                context = childContext,
+                params = childParams,
+                onNextStep = ::handleNavigationEvent,
+            )
             CreateWallet -> MultiWalletCreateWalletComponent(
                 context = childContext,
                 params = childParams,
