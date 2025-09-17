@@ -35,11 +35,11 @@ internal class ViewPhraseModel @Inject constructor(
     private val params = paramsContainer.require<ViewPhraseComponent.Params>()
 
     internal val uiState: StateFlow<ViewPhraseUM>
-    field = MutableStateFlow(
-        ViewPhraseUM(
-            onBackClick = { router.pop() },
-        ),
-    )
+        field = MutableStateFlow(
+            ViewPhraseUM(
+                onBackClick = { router.pop() },
+            ),
+        )
 
     init {
         loadSeedPhrase()
