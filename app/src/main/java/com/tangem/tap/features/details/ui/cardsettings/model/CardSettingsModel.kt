@@ -135,34 +135,38 @@ internal class CardSettingsModel @Inject constructor(
         )
         val isResetCardAllowed = isResetToFactoryAllowedByCard(card, cardTypesResolver)
 
-        val cardDetails = buildList {
-            CardInfo.CardId(cardId).let(::add)
-            CardInfo.Issuer(card.issuer.name).let(::add)
+        val cardDetails = buildList<CardInfo> {
+            add(CardInfo.CardId(cardId))
+            add(CardInfo.Issuer(card.issuer.name))
 
             if (!cardTypesResolver.isTangemTwins()) {
-                CardInfo.SignedHashes(card.signedHashesCount().toString()).let(::add)
+                add(CardInfo.SignedHashes(card.signedHashesCount().toString()))
             }
 
-            CardInfo.SecurityMode(
-                currentSecurityOption,
-                clickable = allowedSecurityOptions.size > 1,
-            ).let(::add)
+            add(
+                CardInfo.SecurityMode(
+                    currentSecurityOption,
+                    clickable = allowedSecurityOptions.size > 1,
+                ),
+            )
 
             if (card.backupStatus?.isActive == true && card.isAccessCodeSet) {
-                CardInfo.ChangeAccessCode.let(::add)
+                add(CardInfo.ChangeAccessCode)
             }
 
             if (isAccessCodeRecoveryAllowed(cardTypesResolver)) {
-                CardInfo.AccessCodeRecovery(isAccessCodeRecoveryEnabled(cardTypesResolver, card)).let(::add)
+                add(CardInfo.AccessCodeRecovery(isAccessCodeRecoveryEnabled(cardTypesResolver, card)))
             }
 
             if (isResetCardAllowed) {
-                CardInfo.ResetToFactorySettings(
-                    description = getResetToFactoryDescription(
-                        isActiveBackupStatus = card.backupStatus?.isActive == true,
-                        typesResolver = cardTypesResolver,
+                add(
+                    CardInfo.ResetToFactorySettings(
+                        description = getResetToFactoryDescription(
+                            isActiveBackupStatus = card.backupStatus?.isActive == true,
+                            typesResolver = cardTypesResolver,
+                        ),
                     ),
-                ).let(::add)
+                )
             }
         }
 

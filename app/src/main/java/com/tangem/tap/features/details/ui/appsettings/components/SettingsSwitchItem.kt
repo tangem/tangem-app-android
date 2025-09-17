@@ -85,26 +85,26 @@ private class SwitchItemProvider : CollectionPreviewParameterProvider<Item.Switc
     collection = buildList {
         val itemsFactory = AppSettingsItemsFactory()
 
-        itemsFactory.createSaveAccessCodeSwitch(
+        add(itemsFactory.createSaveAccessCodeSwitch(
             isChecked = true,
             isEnabled = true,
             onCheckedChange = { /* no-op */ },
-        ).let(::add)
-        itemsFactory.createSaveAccessCodeSwitch(
+        ))
+        add(itemsFactory.createSaveAccessCodeSwitch(
             isChecked = false,
             isEnabled = true,
             onCheckedChange = { /* no-op */ },
-        ).let(::add)
-        itemsFactory.createSaveAccessCodeSwitch(
+        ))
+        add(itemsFactory.createSaveAccessCodeSwitch(
             isChecked = true,
             isEnabled = false,
             onCheckedChange = { /* no-op */ },
-        ).let(::add)
-        itemsFactory.createSaveAccessCodeSwitch(
+        ))
+        add(itemsFactory.createSaveAccessCodeSwitch(
             isChecked = false,
             isEnabled = false,
             onCheckedChange = { /* no-op */ },
-        ).let(::add)
+        ))
     },
 )
 // endregion Preview

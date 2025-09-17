@@ -103,10 +103,10 @@ private class AppSettingsScreenStateProvider : CollectionPreviewParameterProvide
             itemsFactory.createSelectThemeModeButton(AppThemeMode.DEFAULT, {}),
         )
 
-        AppSettingsScreenState.Content(
+        add(AppSettingsScreenState.Content(
             items = items,
             dialog = null,
-        ).let(::add)
+        ))
     },
 )
 // endregion Preview
