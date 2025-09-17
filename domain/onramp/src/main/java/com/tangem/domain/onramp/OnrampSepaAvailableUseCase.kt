@@ -23,7 +23,7 @@ class OnrampSepaAvailableUseCase(
         }
 
         return Either.catch {
-            repository.hasMercuryoSepaMethod(
+            repository.hasSepaMethod(
                 userWallet = userWallet,
                 currency = currency,
                 country = country,
