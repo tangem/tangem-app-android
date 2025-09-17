@@ -21,9 +21,9 @@ import com.tangem.core.ui.utils.*
 @Composable
 inline fun ArrowRow(
     isLastItem: Boolean,
-    content: @Composable() (BoxScope.() -> Unit),
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(all = TangemTheme.dimens.spacing0),
+    content: @Composable() (BoxScope.() -> Unit),
 ) {
     val density = LocalDensity.current.density
     val defaultRowHeight = TangemTheme.dimens.size0
