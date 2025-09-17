@@ -41,7 +41,7 @@ class TwinCardsManager(card: CardDTO) {
         creatingWalletMessage: Message,
     ): CompletionResult<CreateWalletResponse> {
         val response = tangemSdkManager.createSecondTwinWallet(
-            firstPublicKey = currentCardPublicKey!!,
+            firstPublicKey = requireNotNull(currentCardPublicKey),
             firstCardId = firstCardId,
             issuerKeys = getIssuerKeys(),
             preparingMessage = preparingMessage,
@@ -58,7 +58,7 @@ class TwinCardsManager(card: CardDTO) {
 
     suspend fun complete(message: Message): CompletionResult<ScanResponse> {
         val response = tangemSdkManager.finalizeTwin(
-            secondCardPublicKey = secondCardPublicKey!!.hexToBytes(),
+            secondCardPublicKey = requireNotNull(secondCardPublicKey).hexToBytes(),
             issuerKeyPair = getIssuerKeys(),
             cardId = firstCardId,
             initialMessage = message,
