@@ -35,11 +35,11 @@ internal class ManualBackupPhraseModel @Inject constructor(
     private val callbacks = params.callbacks
 
     internal val uiState: StateFlow<ManualBackupPhraseUM>
-    field = MutableStateFlow(
-        ManualBackupPhraseUM(
-            onContinueClick = callbacks::onContinueClick,
-        ),
-    )
+        field = MutableStateFlow(
+            ManualBackupPhraseUM(
+                onContinueClick = callbacks::onContinueClick,
+            ),
+        )
 
     init {
         modelScope.launch {

@@ -22,5 +22,5 @@ internal class TangemPayOnboardingModel @Inject constructor(
     private val params = paramsContainer.require<TangemPayOnboardingComponent.Params>()
 
     val screenState: StateFlow<TangemPayOnboardingScreenState>
-    field = MutableStateFlow(TangemPayOnboardingScreenState())
+        field = MutableStateFlow(TangemPayOnboardingScreenState())
 }
