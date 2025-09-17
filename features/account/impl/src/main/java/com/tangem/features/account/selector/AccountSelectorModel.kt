@@ -36,7 +36,7 @@ internal class AccountSelectorModel @Inject constructor(
     private val selectorController get() = params.controller
 
     internal val state: StateFlow<AccountSelectorUM>
-    field = MutableStateFlow<AccountSelectorUM>(emptyState())
+        field = MutableStateFlow<AccountSelectorUM>(emptyState())
 
     init {
         balanceFetcher.data
