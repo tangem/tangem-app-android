@@ -219,7 +219,7 @@ internal class OnboardingEntryModel @Inject constructor(
 
         // legacy flow
         if (userWalletsListManager.hasUserWallets) {
-            val isLocked = runCatching { userWalletsListManager.asLockable()?.isLockedSync!! }.getOrElse { false }
+            val isLocked = runCatching { userWalletsListManager.asLockable()?.isLocked!! }.getOrElse { false }
 
             if (isLocked) {
                 router.replaceAll(AppRoute.Welcome())

@@ -141,13 +141,13 @@ internal class WelcomeMiddleware {
             onSuccess = { scanResponse ->
                 scope.launch { onCardScanned(scanResponse) }
             },
-            onFailure = {
-                when (it) {
+            onFailure = { error ->
+                when (error) {
                     is TangemSdkError.ExceptionError -> {
                         store.dispatchOnMain(WelcomeAction.ProceedWithCard.Success)
                     }
                     else -> {
-                        store.dispatchOnMain(WelcomeAction.ProceedWithCard.Error(it))
+                        store.dispatchOnMain(WelcomeAction.ProceedWithCard.Error(error))
                     }
                 }
             },
