@@ -11,6 +11,7 @@ import com.tangem.features.onboarding.v2.multiwallet.impl.child.createwallet.mod
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.finalize.model.MultiWalletFinalizeModel
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.scanprimary.model.MultiWalletScanPrimaryModel
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.model.MultiWalletSeedPhraseModel
+import com.tangem.features.onboarding.v2.multiwallet.impl.child.upgradewallet.model.MultiWalletUpgradeWalletModel
 import com.tangem.features.onboarding.v2.multiwallet.impl.model.OnboardingMultiWalletModel
 import dagger.Binds
 import dagger.Module
@@ -72,4 +73,9 @@ internal interface ModelModule {
     @IntoMap
     @ClassKey(MultiWalletScanPrimaryModel::class)
     fun provideModel8(model: MultiWalletScanPrimaryModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(MultiWalletUpgradeWalletModel::class)
+    fun provideModel9(model: MultiWalletUpgradeWalletModel): Model
 }

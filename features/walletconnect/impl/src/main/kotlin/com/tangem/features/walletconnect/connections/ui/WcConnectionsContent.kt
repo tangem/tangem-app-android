@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -35,6 +36,7 @@ import com.tangem.core.ui.components.snackbar.TangemSnackbarHost
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.WalletConnectScreenTestTags
 import com.tangem.features.walletconnect.connections.entity.*
 import com.tangem.features.walletconnect.connections.ui.preview.WcConnectionsPreviewData
 import com.tangem.features.walletconnect.impl.R
@@ -170,7 +172,9 @@ private fun ConnectionItem(connection: WcConnectionsUM, modifier: Modifier = Mod
     Column(modifier = modifier) {
         key("${connection.userWalletId}_${connection.walletName}") {
             Text(
-                modifier = Modifier.padding(top = 12.dp, bottom = 4.dp, start = 12.dp, end = 12.dp),
+                modifier = Modifier
+                    .padding(top = 12.dp, bottom = 4.dp, start = 12.dp, end = 12.dp)
+                    .testTag(WalletConnectScreenTestTags.WALLET_NAME),
                 text = connection.walletName,
                 color = TangemTheme.colors.text.tertiary,
                 style = TangemTheme.typography.subtitle2,
@@ -199,7 +203,8 @@ private fun AppInfoItem(appInfo: WcConnectedAppInfo, modifier: Modifier = Modifi
         AsyncImage(
             modifier = Modifier
                 .size(40.dp)
-                .clip(RoundedCornerShape(TangemTheme.dimens.radius8)),
+                .clip(RoundedCornerShape(TangemTheme.dimens.radius8))
+                .testTag(WalletConnectScreenTestTags.APP_ICON),
             model = appInfo.iconUrl,
             error = painterResource(R.drawable.img_wc_dapp_icon_placeholder_48),
             fallback = painterResource(R.drawable.img_wc_dapp_icon_placeholder_48),
@@ -214,7 +219,9 @@ private fun AppInfoItem(appInfo: WcConnectedAppInfo, modifier: Modifier = Modifi
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    modifier = Modifier.weight(1f, fill = false),
+                    modifier = Modifier
+                        .weight(1f, fill = false)
+                        .testTag(WalletConnectScreenTestTags.APP_NAME),
                     text = appInfo.name,
                     color = TangemTheme.colors.text.primary1,
                     style = TangemTheme.typography.subtitle2,
@@ -223,7 +230,9 @@ private fun AppInfoItem(appInfo: WcConnectedAppInfo, modifier: Modifier = Modifi
                 )
                 if (appInfo.verifiedState is VerifiedDAppState.Verified) {
                     Icon(
-                        modifier = Modifier.size(20.dp),
+                        modifier = Modifier
+                            .size(20.dp)
+                            .testTag(WalletConnectScreenTestTags.APPROVE_ICON),
                         painter = painterResource(R.drawable.img_approvale2_20),
                         contentDescription = null,
                         tint = Color.Unspecified,
@@ -234,6 +243,7 @@ private fun AppInfoItem(appInfo: WcConnectedAppInfo, modifier: Modifier = Modifi
                 text = appInfo.subtitle,
                 color = TangemTheme.colors.text.tertiary,
                 style = TangemTheme.typography.caption2,
+                modifier = Modifier.testTag(WalletConnectScreenTestTags.APP_URL),
             )
         }
     }
@@ -259,6 +269,7 @@ private fun ConnectionsTopBar(
             TopAppBarButton(
                 button = config.startButtonUM,
                 tint = TangemTheme.colors.icon.primary1,
+                modifier = Modifier.testTag(WalletConnectScreenTestTags.MORE_BUTTON),
             )
         },
         title = {
