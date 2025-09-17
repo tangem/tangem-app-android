@@ -94,6 +94,7 @@ internal class CurrencyStatusOperations(
         } else {
             null
         }
+        val yieldSupplyStatus = networkStatusValue.yieldSupplyStatuses[currency.id]
 
         val quoteValue = quoteStatus?.value
 
@@ -108,6 +109,7 @@ internal class CurrencyStatusOperations(
                 pendingTransactions = currentTransactions,
                 networkAddress = networkStatusValue.address,
                 yieldBalance = currentYieldBalance,
+                yieldSupplyStatus = yieldSupplyStatus,
                 sources = CryptoCurrencyStatus.Sources(
                     networkSource = networkStatusValue.source,
                     quoteSource = quoteStatus?.value?.source ?: StatusSource.ACTUAL,
@@ -120,6 +122,7 @@ internal class CurrencyStatusOperations(
                 pendingTransactions = currentTransactions,
                 networkAddress = networkStatusValue.address,
                 yieldBalance = currentYieldBalance,
+                yieldSupplyStatus = yieldSupplyStatus,
                 sources = CryptoCurrencyStatus.Sources(
                     networkSource = networkStatusValue.source,
                     quoteSource = quoteStatus?.value?.source ?: StatusSource.ACTUAL,
@@ -135,6 +138,7 @@ internal class CurrencyStatusOperations(
                 pendingTransactions = currentTransactions,
                 networkAddress = networkStatusValue.address,
                 yieldBalance = currentYieldBalance,
+                yieldSupplyStatus = yieldSupplyStatus,
                 sources = CryptoCurrencyStatus.Sources(
                     networkSource = networkStatusValue.source,
                     quoteSource = quoteValue.source,
