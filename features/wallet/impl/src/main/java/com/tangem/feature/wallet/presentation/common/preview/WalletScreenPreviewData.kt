@@ -5,14 +5,15 @@ import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.components.notifications.NotificationConfig.ButtonsState
+import com.tangem.core.ui.components.token.AccountItemPreviewData
 import com.tangem.core.ui.components.token.state.TokenItemState
+import com.tangem.core.ui.components.tokenlist.state.PortfolioTokensListItemUM
 import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletAdditionalInfo
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData.topBarConfig
 import com.tangem.feature.wallet.presentation.wallet.state.model.*
@@ -74,6 +75,26 @@ internal object WalletScreenPreviewData {
                         type = PriceChangeType.DOWN,
                     ),
                 ),
+            ),
+        ),
+        organizeTokensButtonConfig = WalletTokensListState.OrganizeTokensButtonConfig(
+            isEnabled = true,
+            onClick = {},
+        ),
+    )
+
+    private val portfolioContentState = WalletTokensListState.ContentState.PortfolioContent(
+        items = persistentListOf(
+            TokensListItemUM.Portfolio(
+                tokens = textContentTokensState.items.filterIsInstance<PortfolioTokensListItemUM>(),
+                isExpanded = false,
+                state = AccountItemPreviewData.accountItem
+                    .copy(iconState = AccountItemPreviewData.accountLetterIcon),
+            ),
+            TokensListItemUM.Portfolio(
+                tokens = textContentTokensState.items.filterIsInstance<PortfolioTokensListItemUM>(),
+                isExpanded = true,
+                state = AccountItemPreviewData.accountItem,
             ),
         ),
         organizeTokensButtonConfig = WalletTokensListState.OrganizeTokensButtonConfig(
@@ -175,4 +196,12 @@ internal object WalletScreenPreviewData {
         showMarketsOnboarding = false,
         onDismissMarketsOnboarding = {},
     )
+
+    internal val accountScreenState =
+        walletScreenState.copy(
+            wallets = persistentListOf(
+                singleWalletLockedState,
+                multiWalletState.copy(tokensListState = portfolioContentState),
+            ),
+        )
 }
