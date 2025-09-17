@@ -22,6 +22,7 @@ import com.tangem.features.managetokens.choosetoken.entity.ChooseManageTokensBot
 import com.tangem.features.managetokens.choosetoken.entity.ChooseManagedTokenUM
 import com.tangem.features.managetokens.component.ChooseManagedTokensComponent
 import com.tangem.features.managetokens.component.ChooseManagedTokensComponent.Source
+import com.tangem.features.managetokens.component.ManageTokensMode
 import com.tangem.features.managetokens.component.ManageTokensSource
 import com.tangem.features.managetokens.component.analytics.CommonManageTokensAnalyticEvents
 import com.tangem.features.managetokens.entity.item.CurrencyItemUM
@@ -29,6 +30,7 @@ import com.tangem.features.managetokens.entity.managetokens.ManageTokensTopBarUM
 import com.tangem.features.managetokens.entity.managetokens.ManageTokensUM
 import com.tangem.features.managetokens.impl.R
 import com.tangem.features.managetokens.utils.list.ManageTokensListManager
+import com.tangem.features.managetokens.utils.list.ManageTokensUseCasesFacade
 import com.tangem.features.managetokens.utils.list.getLoadingItems
 import com.tangem.pagination.BatchFetchResult
 import com.tangem.pagination.PaginationStatus
@@ -51,12 +53,19 @@ internal class ChooseManagedTokensModel @Inject constructor(
     private val setShouldShowNotificationUseCase: SetShouldShowNotificationUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
     paramsContainer: ParamsContainer,
+    manageTokensUseCasesFacadeFactory: ManageTokensUseCasesFacade.Factory,
     manageTokensListManagerFactory: ManageTokensListManager.Factory,
 ) : Model() {
 
     private val params: ChooseManagedTokensComponent.Params = paramsContainer.require()
+    private val useCasesFacade: ManageTokensUseCasesFacade = manageTokensUseCasesFacadeFactory
+        .create(mode = ManageTokensMode.None)
 
     private val manageTokensListManager = manageTokensListManagerFactory.create(
+        scope = modelScope,
+        source = ManageTokensSource.SEND_VIA_SWAP,
+        mode = ManageTokensMode.None,
+        useCasesFacade = useCasesFacade,
         onCurrencySelect = { token ->
             bottomSheetNavigation.activate(
                 ChooseManageTokensBottomSheetConfig.SwapTokensBottomSheetConfig(
@@ -86,7 +95,7 @@ internal class ChooseManagedTokensModel @Inject constructor(
         observeSearchQueryChanges()
 
         modelScope.launch {
-            manageTokensListManager.launchPagination(source = ManageTokensSource.SEND_VIA_SWAP, userWalletId = null)
+            manageTokensListManager.launchPagination()
         }
     }
 
@@ -159,7 +168,7 @@ internal class ChooseManagedTokensModel @Inject constructor(
                 }
             }
             .sample(periodMillis = 1_000)
-            .onEach { query -> manageTokensListManager.search(userWalletId = null, query = query) }
+            .onEach { query -> manageTokensListManager.search(query = query) }
             .launchIn(modelScope)
     }
 
@@ -295,7 +304,7 @@ internal class ChooseManagedTokensModel @Inject constructor(
         if (state.readContent.isInitialBatchLoading || state.readContent.isNextBatchLoading) return false
 
         modelScope.launch {
-            manageTokensListManager.loadMore(userWalletId = null, query = state.readContent.search.query)
+            manageTokensListManager.loadMore(query = state.readContent.search.query)
         }
 
         return true
