@@ -160,7 +160,9 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
                     uiState.update { it.copy(isPrimaryButtonEnabled = true) }
                 },
                 ifRight = {
-                    params.callback.onTransactionSent()
+                    modelScope.launch {
+                        params.callback.onTransactionSent()
+                    }
                 },
             )
         }
