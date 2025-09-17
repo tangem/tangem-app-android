@@ -15,7 +15,7 @@ interface OnrampRepository {
     suspend fun getCountriesSync(): List<OnrampCountry>?
     suspend fun getCountryByIp(userWallet: UserWallet): OnrampCountry
     suspend fun getStatus(userWallet: UserWallet, txId: String): OnrampStatus
-    suspend fun hasMercuryoSepaMethod(
+    suspend fun hasSepaMethod(
         userWallet: UserWallet,
         currency: OnrampCurrency,
         country: OnrampCountry,
