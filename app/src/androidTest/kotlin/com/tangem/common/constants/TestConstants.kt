@@ -8,4 +8,7 @@ object TestConstants {
     const val WAIT_UNTIL_TIMEOUT = 20_000L
 
     const val MARKETS_MAIN_NETWORK_SUFFIX = "MAIN"
+
+    const val ALLURE_LABEL_NAME = "Owner"
+    const val ALLURE_LABEL_VALUE = "Kaspresso"
 }
