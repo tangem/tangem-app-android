@@ -1,8 +1,8 @@
 package com.tangem.features.markets.portfolio.impl.model
 
+import com.tangem.common.ui.userwallet.state.UserWalletItemUM
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.domain.markets.TokenMarketInfo
-import com.tangem.domain.models.ArtworkModel
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
@@ -36,7 +36,7 @@ internal class MyPortfolioUMFactory(
     fun create(
         portfolioData: PortfolioData,
         portfolioUIData: PortfolioUIData,
-        artworks: HashMap<UserWalletId, ArtworkModel>,
+        artworks: Map<UserWalletId, UserWalletItemUM.ImageState>,
     ): MyPortfolioUM {
         val addToPortfolioData = portfolioUIData.addToPortfolioData
 
@@ -89,7 +89,7 @@ internal class MyPortfolioUMFactory(
     private fun createAddToPortfolioBSConfig(
         portfolioData: PortfolioData,
         portfolioUIData: PortfolioUIData,
-        artworks: HashMap<UserWalletId, ArtworkModel>,
+        artworks: Map<UserWalletId, UserWalletItemUM.ImageState>,
     ): TangemBottomSheetConfig {
         val selectedWallet = portfolioData.walletsWithCurrencies.keys
             .firstOrNull { it.walletId == portfolioUIData.selectedWalletId }
