@@ -26,7 +26,11 @@ interface VisaAuthRemoteDataSource {
         sessionId: String,
         signature: String,
         nonce: String,
-    ): Either<VisaApiError, String>
+    ): Either<VisaApiError, VisaAuthTokens>
+
+    suspend fun refreshCustomerWalletAuthTokens(
+        refreshToken: VisaAuthTokens.RefreshToken,
+    ): Either<VisaApiError, VisaAuthTokens>
 
     suspend fun getAccessTokens(signedChallenge: VisaAuthSignedChallenge): Either<VisaApiError, VisaAuthTokens>
 
