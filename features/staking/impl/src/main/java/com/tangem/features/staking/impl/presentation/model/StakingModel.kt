@@ -32,7 +32,6 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.staking.*
 import com.tangem.domain.models.staking.action.StakingActionType
-import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.staking.*
 import com.tangem.domain.staking.analytics.StakeScreenSource
@@ -153,7 +152,11 @@ internal class StakingModel @Inject constructor(
     private var feeCryptoCurrencyStatus: CryptoCurrencyStatus? = null
     private var minimumTransactionAmount: EnterAmountBoundary? = null
 
-    private var userWallet: UserWallet by Delegates.notNull()
+    private val userWallet by lazy {
+        requireNotNull(
+            getUserWalletUseCase(userWalletId).getOrNull(),
+        ) { "No wallet found for id: $userWalletId" }
+    }
     private var appCurrency: AppCurrency by Delegates.notNull()
 
     private val balancesToShow: List<BalanceItem>
@@ -925,17 +928,6 @@ internal class StakingModel @Inject constructor(
     }
 
     private fun subscribeOnCurrencyStatusUpdates() {
-        getUserWalletUseCase(userWalletId).fold(
-            ifRight = { wallet ->
-                userWallet = wallet
-            },
-            ifLeft = {
-                stakingEventFactory.createGenericErrorAlert(it.toString())
-                stateController.update(
-                    SetConfirmationStateResetAssentTransformer(cryptoCurrencyStatus = cryptoCurrencyStatus),
-                )
-            },
-        )
         getSingleCryptoCurrencyStatusUseCase.invokeMultiWallet(
             userWalletId = userWalletId,
             currencyId = cryptoCurrencyId,
