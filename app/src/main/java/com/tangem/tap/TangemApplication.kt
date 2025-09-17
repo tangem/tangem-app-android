@@ -47,7 +47,7 @@ import com.tangem.domain.balancehiding.repositories.BalanceHidingRepository
 import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.common.LogConfig
-import com.tangem.domain.feedback.GetCardInfoUseCase
+import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.onboarding.SaveTwinsOnboardingShownUseCase
 import com.tangem.domain.onboarding.WasTwinsOnboardingShownUseCase
@@ -63,6 +63,7 @@ import com.tangem.tap.common.analytics.AnalyticsFactory
 import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
 import com.tangem.tap.common.analytics.handlers.BlockchainExceptionHandler
 import com.tangem.tap.common.analytics.handlers.amplitude.AmplitudeAnalyticsHandler
+import com.tangem.tap.common.analytics.handlers.appsflyer.AppsFlyerAnalyticsHandler
 import com.tangem.tap.common.analytics.handlers.firebase.FirebaseAnalyticsHandler
 import com.tangem.tap.common.images.createCoilImageLoader
 import com.tangem.tap.common.log.TangemAppLoggerInitializer
@@ -75,9 +76,12 @@ import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.wallet.BuildConfig
 import dagger.hilt.EntryPoints
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.rekotlin.Store
-import com.tangem.tap.domain.walletconnect2.domain.LegacyWalletConnectRepository as WalletConnect2Repository
+import timber.log.Timber
 
 lateinit var store: Store<AppState>
 
@@ -110,9 +114,6 @@ abstract class TangemApplication : Application(), ImageLoaderFactory, Configurat
 
     private val cardScanningFeatureToggles: CardScanningFeatureToggles
         get() = entryPoint.getCardScanningFeatureToggles()
-
-    private val walletConnect2Repository: WalletConnect2Repository
-        get() = entryPoint.getWalletConnect2Repository()
 
     private val scanCardProcessor: ScanCardProcessor
         get() = entryPoint.getScanCardProcessor()
@@ -165,8 +166,8 @@ abstract class TangemApplication : Application(), ImageLoaderFactory, Configurat
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase
         get() = entryPoint.getSendFeedbackEmailUseCase()
 
-    private val getCardInfoUseCase: GetCardInfoUseCase
-        get() = entryPoint.getGetCardInfoUseCase()
+    private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase
+        get() = entryPoint.getWalletMetaInfoUseCase()
 
     private val urlOpener
         get() = entryPoint.getUrlOpener()
@@ -236,6 +237,9 @@ abstract class TangemApplication : Application(), ImageLoaderFactory, Configurat
     private val hotWalletFeatureToggles
         get() = entryPoint.getHotWalletFeatureToggles()
 
+    private val wcInitializeUseCase
+        get() = entryPoint.getWcInitializeUseCase()
+
     // endregion
 
     private val appScope = MainScope()
@@ -289,15 +293,16 @@ abstract class TangemApplication : Application(), ImageLoaderFactory, Configurat
 
         tangemAppLoggerInitializer.initialize()
 
+        Timber.i("APP STARTED")
+        if (BuildConfig.TESTER_MENU_ENABLED) {
+            Timber.i(featureTogglesManager.toString())
+            Timber.i(excludedBlockchainsManager.toString())
+        }
+
         foregroundActivityObserver = ForegroundActivityObserver()
         registerActivityLifecycleCallbacks(foregroundActivityObserver.callbacks)
 
-        // We need to initialize the toggles and excludedBlockchainsManager before the MainActivity starts using them.
         runBlocking {
-            awaitAll(
-                async { featureTogglesManager.init() },
-                async { excludedBlockchainsManager.init() },
-            )
             initWithConfigDependency(environmentConfig = environmentConfigStorage.initialize())
         }
 
@@ -329,7 +334,8 @@ abstract class TangemApplication : Application(), ImageLoaderFactory, Configurat
         )
 
         appStateHolder.mainStore = store
-        walletConnect2Repository.init(
+
+        wcInitializeUseCase.init(
             projectId = environmentConfigStorage.getConfigSync().walletConnectProjectId,
         )
     }
@@ -342,7 +348,6 @@ abstract class TangemApplication : Application(), ImageLoaderFactory, Configurat
                 daggerGraphState = DaggerGraphState(
                     networkConnectionManager = networkConnectionManager,
                     cardScanningFeatureToggles = cardScanningFeatureToggles,
-                    walletConnectRepository = walletConnect2Repository,
                     scanCardProcessor = scanCardProcessor,
                     appCurrencyRepository = appCurrencyRepository,
                     walletManagersFacade = walletManagersFacade,
@@ -357,7 +362,7 @@ abstract class TangemApplication : Application(), ImageLoaderFactory, Configurat
                     settingsRepository = settingsRepository,
                     blockchainSDKFactory = blockchainSDKFactory,
                     sendFeedbackEmailUseCase = sendFeedbackEmailUseCase,
-                    getCardInfoUseCase = getCardInfoUseCase,
+                    getWalletMetaInfoUseCase = getWalletMetaInfoUseCase,
                     issuersConfigStorage = issuersConfigStorage,
                     urlOpener = urlOpener,
                     shareManager = shareManager,
@@ -401,6 +406,7 @@ abstract class TangemApplication : Application(), ImageLoaderFactory, Configurat
         val factory = AnalyticsFactory()
         factory.addHandlerBuilder(AmplitudeAnalyticsHandler.Builder())
         factory.addHandlerBuilder(FirebaseAnalyticsHandler.Builder())
+        factory.addHandlerBuilder(AppsFlyerAnalyticsHandler.Builder())
 
         factory.addFilter(oneTimeEventFilter)
 
