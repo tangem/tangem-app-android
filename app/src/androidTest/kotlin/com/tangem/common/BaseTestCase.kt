@@ -13,6 +13,8 @@ import com.kaspersky.components.composesupport.config.addComposeSupport
 import com.kaspersky.kaspresso.kaspresso.Kaspresso
 import com.kaspersky.kaspresso.testcases.api.testcase.TestCase
 import com.tangem.common.allure.FailedStepScreenshotInterceptor
+import com.tangem.common.constants.TestConstants.ALLURE_LABEL_NAME
+import com.tangem.common.constants.TestConstants.ALLURE_LABEL_VALUE
 import com.tangem.common.rules.ApiEnvironmentRule
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.core.configtoggle.feature.MutableFeatureTogglesManager
@@ -23,6 +25,7 @@ import com.tangem.domain.promo.PromoRepository
 import com.tangem.domain.promo.models.PromoId
 import com.tangem.tap.MainActivity
 import dagger.hilt.android.testing.HiltAndroidRule
+import io.qameta.allure.kotlin.Allure
 import kotlinx.coroutines.runBlocking
 import org.junit.Rule
 import org.junit.rules.RuleChain
@@ -88,6 +91,7 @@ abstract class BaseTestCase : TestCase(
         additionalBeforeSection: () -> Unit = {},
         additionalAfterSection: () -> Unit = {},
     ) = before {
+        Allure.label(ALLURE_LABEL_NAME, ALLURE_LABEL_VALUE)
         hiltRule.inject()
         runBlocking {
             appPreferencesStore.editData { mutablePreferences ->
