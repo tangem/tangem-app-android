@@ -106,10 +106,10 @@ internal class SendModel @Inject constructor(
     val analyticCategoryName = CommonSendAnalyticEvents.SEND_CATEGORY
 
     val uiState: StateFlow<SendUM>
-    field = MutableStateFlow(initialState())
+        field = MutableStateFlow(initialState())
 
     val isBalanceHiddenFlow: StateFlow<Boolean>
-    field = MutableStateFlow(false)
+        field = MutableStateFlow(false)
 
     val initialRoute = if (params.amount == null) {
         if (uiState.value.isRedesignEnabled) {
