@@ -1,5 +1,7 @@
 package com.tangem.data.staking.multi
 
+import arrow.core.Option
+import arrow.core.some
 import com.tangem.data.staking.store.YieldsBalancesStore
 import com.tangem.domain.models.staking.YieldBalance
 import com.tangem.domain.staking.multi.MultiYieldBalanceProducer
@@ -27,8 +29,7 @@ internal class DefaultMultiYieldBalanceProducer @AssistedInject constructor(
     private val dispatchers: CoroutineDispatcherProvider,
 ) : MultiYieldBalanceProducer {
 
-    override val fallback: Set<YieldBalance>
-        get() = setOf()
+    override val fallback: Option<Set<YieldBalance>> = emptySet<YieldBalance>().some()
 
     override fun produce(): Flow<Set<YieldBalance>> {
         return yieldsBalancesStore.get(userWalletId = params.userWalletId)
