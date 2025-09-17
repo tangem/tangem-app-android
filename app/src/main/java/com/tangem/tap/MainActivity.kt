@@ -26,10 +26,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import arrow.core.getOrElse
-import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.deeplink.DeeplinkConst.WEBLINK_KEY
 import com.tangem.common.routing.deeplink.PayloadToDeeplinkConverter
-import com.tangem.common.routing.entity.SerializableIntent
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.di.RootAppComponentContext
@@ -41,7 +39,6 @@ import com.tangem.domain.card.ScanCardUseCase
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.core.wallets.UserWalletsListRepository
-import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.settings.SetGooglePayAvailabilityUseCase
 import com.tangem.domain.settings.SetGoogleServicesAvailabilityUseCase
 import com.tangem.domain.settings.ShouldInitiallyAskPermissionUseCase
@@ -62,11 +59,9 @@ import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.tap.common.ActivityResultCallbackHolder
 import com.tangem.tap.common.DialogManager
 import com.tangem.tap.common.OnActivityResultCallback
+import com.tangem.tap.common.analytics.events.Push
 import com.tangem.tap.common.apptheme.MutableAppThemeModeHolder
-import com.tangem.tap.common.extensions.dispatchNavigationAction
-import com.tangem.tap.features.intentHandler.IntentProcessor
 import com.tangem.tap.features.intentHandler.handlers.BackgroundScanIntentHandler
-import com.tangem.tap.features.intentHandler.handlers.OnPushClickedIntentHandler
 import com.tangem.tap.features.main.MainViewModel
 import com.tangem.tap.proxy.redux.DaggerGraphAction
 import com.tangem.tap.routing.component.RoutingComponent
@@ -173,12 +168,6 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
     internal lateinit var testerMenuLauncher: TesterMenuLauncher
 
     @Inject
-    internal lateinit var intentProcessor: IntentProcessor
-
-    @Inject
-    internal lateinit var onPushClickedIntentHandler: OnPushClickedIntentHandler
-
-    @Inject
     internal lateinit var backgroundScanIntentHandler: BackgroundScanIntentHandler
 
     @Inject
@@ -248,6 +237,10 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
         if (BuildConfig.TESTER_MENU_ENABLED) {
             lifecycle.addObserver(testerMenuLauncher.launchOnKeyEventObserver)
         }
+
+        if (intent != null) {
+            handleDeepLink(intent = intent, isFromOnNewIntent = false)
+        }
     }
 
     private fun setRootContent() {
@@ -257,6 +250,7 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
         val routingComponent = routingComponentFactory.create(
             context = rootComponentContext,
             initialStack = appRouterConfig.stack,
+            launchMode = backgroundScanIntentHandler.getInitScreenLaunchMode(intent),
         )
 
         setContent {
@@ -280,8 +274,6 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
             hotWalletFeatureToggles = hotWalletFeatureToggles,
             clearAllHotWalletContextualUnlockUseCase = clearAllHotWalletContextualUnlockUseCase,
         )
-
-        initIntentHandlers()
 
         store.dispatch(
             DaggerGraphAction.SetActivityDependencies(
@@ -339,28 +331,18 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
         dialogManager.onStart(this)
     }
 
-    override fun onResume() {
-        super.onResume()
-        navigateToInitialScreenIfNeeded(intent)
-    }
-
     override fun onStop() {
         dialogManager.onStop()
         super.onStop()
     }
 
     override fun onDestroy() {
-        intentProcessor.removeAll()
         // workaround: kill process when activity destroy to avoid state when lock() wallets
         // and navigation to unlock screen was skipped because system kills activity but not process
         if (BuildConfig.BUILD_TYPE != MOCKED_BUILD_TYPE) {
             android.os.Process.killProcess(android.os.Process.myPid())
         }
         super.onDestroy()
-    }
-
-    private fun initIntentHandlers() {
-        intentProcessor.addHandler(onPushClickedIntentHandler)
     }
 
     private fun updateAppTheme(appThemeMode: AppThemeMode) {
@@ -388,8 +370,9 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
 
-        lifecycleScope.launch {
-            intentProcessor.handleIntent(intent = intent, isFromForeground = true)
+        val fromPush = intent?.extras?.containsKey(OPENED_FROM_GCM_PUSH) ?: false
+        if (fromPush) {
+            analyticsEventsHandler.send(Push.PushNotificationOpened)
         }
 
         if (intent != null) {
@@ -429,134 +412,6 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
         } else {
             super.dispatchKeyEvent(event)
         }
-    }
-
-    private fun navigateToInitialScreenIfNeeded(intentWhichStartedActivity: Intent?) {
-        // TODO refactor this method to return a route instead of navigating directly
-        if (hotWalletFeatureToggles.isHotWalletEnabled) {
-            navigateToInitialScreenIfNeededNew(intentWhichStartedActivity)
-            return
-        }
-
-        val backStack = appRouterConfig.stack ?: emptyList()
-        // TODO move inital navigation to navigation component ([REDACTED_JIRA])
-        val isOnlyInitialRoute = backStack.all { it is AppRoute.Initial }
-        val isOnInitialScreen = backStack.all { it is AppRoute.Welcome || it is AppRoute.Home }
-        val isNotScannedBefore = store.state.globalState.scanResponse == null
-        val isOnboardingServiceNotActive = !store.state.globalState.onboardingState.onboardingStarted
-
-        when {
-            !isOnInitialScreen && isNotScannedBefore && isOnboardingServiceNotActive -> {
-                navigateToInitialScreen(intentWhichStartedActivity)
-            }
-            backStack.isEmpty() -> {
-                navigateToInitialScreen(intentWhichStartedActivity)
-            }
-            isOnlyInitialRoute -> navigateToInitialScreen(intentWhichStartedActivity)
-            else -> Unit
-        }
-    }
-
-    @Deprecated("Refactor this method to return a route instead of navigating directly")
-    private fun navigateToInitialScreenIfNeededNew(intentWhichStartedActivity: Intent?) {
-        lifecycleScope.launch {
-            val userWallets = userWalletsListRepository.userWalletsSync()
-            val launchMode = backgroundScanIntentHandler.getInitScreenLaunchMode(intentWhichStartedActivity)
-            if (userWallets.isEmpty()) {
-                val shouldShowTos = !cardRepository.isTangemTOSAccepted()
-
-                val route = if (shouldShowTos) {
-                    AppRoute.Disclaimer(isTosAccepted = false)
-                } else {
-                    AppRoute.Home(launchMode = launchMode)
-                }
-
-                store.dispatchNavigationAction { replaceAll(route) }
-                intentProcessor.handleIntent(
-                    intent = intentWhichStartedActivity,
-                    isFromForeground = false,
-                    skipNavigationHandlers = false,
-                )
-            } else {
-                if (userWallets.any { it.isLocked }) {
-                    store.dispatchNavigationAction {
-                        replaceAll(
-                            AppRoute.Welcome(
-                                launchMode = launchMode,
-                                intent = intentWhichStartedActivity?.let(::SerializableIntent),
-                            ),
-                        )
-                    }
-                } else {
-                    store.dispatchNavigationAction {
-                        replaceAll(AppRoute.Wallet)
-                    }
-                }
-
-                intentProcessor.handleIntent(
-                    intent = intentWhichStartedActivity,
-                    isFromForeground = false,
-                    skipNavigationHandlers = true,
-                )
-            }
-
-            if (intent != null) {
-                handleDeepLink(intent = intent, isFromOnNewIntent = false)
-            }
-
-            viewModel.checkForUnfinishedBackup()
-        }
-    }
-
-    private fun navigateToInitialScreen(intentWhichStartedActivity: Intent?) {
-        val launchMode = backgroundScanIntentHandler.getInitScreenLaunchMode(intentWhichStartedActivity)
-
-        // Workaround to navigate to TangemPayDetails screen. Will be deleted in next PRs
-        if (tangemPayFeatureToggles.isTangemPayEnabled) {
-            lifecycleScope.launch {
-                val selectedUserWalledId = userWalletsListRepository.selectedUserWalletSync()?.walletId
-                store.dispatchNavigationAction {
-                    replaceAll(AppRoute.TangemPayDetails(requireNotNull(selectedUserWalledId)))
-                }
-            }
-        } else if (userWalletsListManager.isLockable && userWalletsListManager.hasUserWallets) {
-            store.dispatchNavigationAction {
-                replaceAll(
-                    AppRoute.Welcome(
-                        launchMode = launchMode,
-                        intent = intentWhichStartedActivity?.let(::SerializableIntent),
-                    ),
-                )
-            }
-            intentProcessor.handleIntent(
-                intent = intentWhichStartedActivity,
-                isFromForeground = false,
-                skipNavigationHandlers = true,
-            )
-        } else {
-            lifecycleScope.launch {
-                val shouldShowTos = !cardRepository.isTangemTOSAccepted()
-
-                val route = if (shouldShowTos) {
-                    AppRoute.Disclaimer(isTosAccepted = false)
-                } else {
-                    AppRoute.Home(launchMode = launchMode)
-                }
-
-                store.dispatchNavigationAction { replaceAll(route) }
-                intentProcessor.handleIntent(
-                    intent = intentWhichStartedActivity,
-                    isFromForeground = false,
-                    skipNavigationHandlers = false,
-                )
-            }
-        }
-
-        if (intent != null) {
-            handleDeepLink(intent = intent, isFromOnNewIntent = false)
-        }
-
-        viewModel.checkForUnfinishedBackup()
     }
 
     private fun handleDeepLink(intent: Intent, isFromOnNewIntent: Boolean) {
@@ -627,5 +482,6 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
     companion object {
         private const val APP_THEME_LOAD_TIMEOUT = 2
         private const val MOCKED_BUILD_TYPE = "mocked"
+        private const val OPENED_FROM_GCM_PUSH = "google.sent_time" // every bundle from FCM contains this key
     }
 }

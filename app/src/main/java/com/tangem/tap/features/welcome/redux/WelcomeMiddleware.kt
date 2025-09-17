@@ -1,6 +1,5 @@
 package com.tangem.tap.features.welcome.redux
 
-import android.content.Intent
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.doOnFailure
 import com.tangem.common.doOnResult
@@ -41,7 +40,6 @@ internal class WelcomeMiddleware {
     private fun handleAction(action: WelcomeAction) {
         mainScope.launch {
             when (action) {
-                is WelcomeAction.ProceedWithIntent -> proceedWithIntent(action.intent)
                 is WelcomeAction.ProceedWithBiometrics -> proceedWithBiometrics()
                 is WelcomeAction.ProceedWithCard -> proceedWithCard()
                 is WelcomeAction.ClearUserWallets -> disableUserWalletsSaving()
@@ -50,26 +48,7 @@ internal class WelcomeMiddleware {
         }
     }
 
-    private suspend fun proceedWithIntent(initialIntent: Intent) {
-        Timber.d(
-            """
-                Proceeding with intent
-                |- Intent: $initialIntent
-            """.trimIndent(),
-        )
-
-        val hasUncompletedBackup = backupService.hasIncompletedBackup
-
-        if (!hasUncompletedBackup) {
-            store.dispatchWithMain(WelcomeAction.ProceedWithBiometrics(initialIntent))
-        } else {
-            store.dispatchWithMain(WelcomeAction.ProceedWithCard)
-        }
-    }
-
     private suspend fun proceedWithBiometrics() {
-        Timber.d("Proceeding with biometry")
-
         val userWalletsListManager = store.inject(DaggerGraphState::generalUserWalletsListManager)
         userWalletsListManager.unlockIfLockable(type = UnlockType.ANY)
             .doOnFailure { error ->
@@ -89,8 +68,6 @@ internal class WelcomeMiddleware {
     }
 
     private suspend fun proceedWithCard() {
-        Timber.d("Proceeding with card")
-
         scanCardInternal { scanResponse ->
             val userWalletBuilder = store.inject(DaggerGraphState::coldUserWalletBuilderFactory).create(scanResponse)
 
