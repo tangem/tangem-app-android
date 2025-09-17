@@ -1,18 +1,28 @@
 package com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.model
 
 import androidx.compose.runtime.Stable
+import arrow.core.getOrElse
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.decompose.di.GlobalUiMessageSender
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.core.ui.R
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.crypto.bip39.Mnemonic
 import com.tangem.domain.card.repository.CardRepository
-import com.tangem.domain.feedback.GetCardInfoUseCase
+import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
+import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
+import com.tangem.domain.wallets.usecase.IsWalletAlreadySavedUseCase
 import com.tangem.features.hotwallet.MnemonicRepository
 import com.tangem.features.onboarding.v2.common.analytics.OnboardingEvent
 import com.tangem.features.onboarding.v2.common.ui.OnboardingDialogUM
@@ -44,9 +54,12 @@ internal class MultiWalletSeedPhraseModel @Inject constructor(
     private val urlOpener: UrlOpener,
     private val tangemSdkManager: TangemSdkManager,
     private val cardRepository: CardRepository,
-    private val getCardInfoUseCase: GetCardInfoUseCase,
+    private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val analyticsHandler: AnalyticsEventHandler,
+    private val isWalletAlreadySavedUseCase: IsWalletAlreadySavedUseCase,
+    private val coldUserWalletBuilderFactory: ColdUserWalletBuilder.Factory,
+    @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
 ) : Model() {
 
     private val params = paramsContainer.require<MultiWalletChildParams>()
@@ -198,30 +211,42 @@ internal class MultiWalletSeedPhraseModel @Inject constructor(
 
             when (result) {
                 is CompletionResult.Success -> {
-                    analyticsHandler.send(
-                        OnboardingEvent.CreateWallet.WalletCreatedSuccessfully(
-                            creationType = if (generatedSeedPhrase) {
-                                OnboardingEvent.CreateWallet.WalletCreationType.NewSeed
-                            } else {
-                                OnboardingEvent.CreateWallet.WalletCreationType.SeedImport
-                            },
-                            seedPhraseLength = mnemonic.mnemonicComponents.size,
-                        ),
+                    val updatedScanResponse = multiWalletState.value.currentScanResponse.copy(
+                        card = result.data.card,
+                        derivedKeys = result.data.derivedKeys,
+                        primaryCard = result.data.primaryCard,
                     )
 
-                    multiWalletState.update {
-                        it.copy(
-                            currentScanResponse = it.currentScanResponse.copy(
-                                card = result.data.card,
-                                derivedKeys = result.data.derivedKeys,
-                                primaryCard = result.data.primaryCard,
+                    val wallet = createUserWallet(updatedScanResponse)
+
+                    val isWalletAlreadySaved = isWalletAlreadySavedUseCase
+                        .invoke(wallet)
+                        .getOrElse { false }
+
+                    if (!isWalletAlreadySaved) {
+                        analyticsHandler.send(
+                            OnboardingEvent.CreateWallet.WalletCreatedSuccessfully(
+                                creationType = if (generatedSeedPhrase) {
+                                    OnboardingEvent.CreateWallet.WalletCreationType.NewSeed
+                                } else {
+                                    OnboardingEvent.CreateWallet.WalletCreationType.SeedImport
+                                },
+                                seedPhraseLength = mnemonic.mnemonicComponents.size,
                             ),
                         )
+
+                        multiWalletState.update {
+                            it.copy(currentScanResponse = updatedScanResponse)
+                        }
+
+                        cardRepository.startCardActivation(cardId = result.data.card.cardId)
+
+                        onDone.emit(Unit)
+                    } else {
+                        uiMessageSender.send(
+                            SnackbarMessage(resourceReference(R.string.hw_import_seed_phrase_already_imported)),
+                        )
                     }
-
-                    cardRepository.startCardActivation(cardId = result.data.card.cardId)
-
-                    onDone.emit(Unit)
                 }
                 is CompletionResult.Failure -> {
                     if (result.error is TangemSdkError.WalletAlreadyCreated) {
@@ -255,9 +280,17 @@ internal class MultiWalletSeedPhraseModel @Inject constructor(
         }
     }
 
+    private fun createUserWallet(scanResponse: ScanResponse): UserWallet.Cold {
+        return requireNotNull(
+            value = coldUserWalletBuilderFactory.create(scanResponse = scanResponse).build(),
+            lazyMessage = { "User wallet not created" },
+        )
+    }
+
     fun navigateToSupportScreen() {
         modelScope.launch {
-            val cardInfo = getCardInfoUseCase(multiWalletState.value.currentScanResponse).getOrNull() ?: return@launch
+            val cardInfo =
+                getWalletMetaInfoUseCase(multiWalletState.value.currentScanResponse).getOrNull() ?: return@launch
             sendFeedbackEmailUseCase(FeedbackEmailType.DirectUserRequest(cardInfo))
         }
     }

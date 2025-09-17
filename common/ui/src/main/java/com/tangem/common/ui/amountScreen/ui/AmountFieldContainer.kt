@@ -29,7 +29,7 @@ import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.test.StakingSendScreenTestTags
+import com.tangem.core.ui.test.SendScreenTestTags
 
 private const val AMOUNT_FIELD_KEY = "amountFieldKey"
 
@@ -54,7 +54,7 @@ internal fun LazyListScope.amountField(
                 color = TangemTheme.colors.text.tertiary,
                 modifier = Modifier
                     .padding(top = TangemTheme.dimens.spacing14)
-                    .testTag(StakingSendScreenTestTags.AMOUNT_CONTAINER_TITLE),
+                    .testTag(SendScreenTestTags.AMOUNT_CONTAINER_TITLE),
             )
 
             val balance = amountState.availableBalance.orMaskWithStars(isBalanceHidden).resolveReference()
@@ -69,7 +69,7 @@ internal fun LazyListScope.amountField(
                     textAlign = TextAlign.Center,
                     modifier = Modifier
                         .padding(top = TangemTheme.dimens.spacing2)
-                        .testTag(StakingSendScreenTestTags.AMOUNT_CONTAINER_TEXT),
+                        .testTag(SendScreenTestTags.AMOUNT_CONTAINER_TEXT),
                 )
             }
             CurrencyIcon(
