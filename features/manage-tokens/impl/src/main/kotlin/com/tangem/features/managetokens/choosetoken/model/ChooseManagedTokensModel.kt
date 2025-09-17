@@ -167,9 +167,7 @@ internal class ChooseManagedTokensModel @Inject constructor(
         uiState.update { state ->
             state.copy(
                 readContent = state.readContent.copy(
-                    items = items.filterNot {
-                        it.id.value == params.initialCurrency.id.rawCurrencyId?.value
-                    }.toPersistentList(),
+                    items = items.toPersistentList(),
                 ),
             )
         }
