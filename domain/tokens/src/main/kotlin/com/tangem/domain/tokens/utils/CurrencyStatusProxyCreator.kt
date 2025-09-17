@@ -7,6 +7,7 @@ import arrow.core.toNonEmptySetOrNull
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.NetworkStatus
+import com.tangem.domain.models.network.getAddress
 import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.domain.models.staking.StakingID
 import com.tangem.domain.models.staking.YieldBalance
@@ -72,7 +73,7 @@ class CurrencyStatusProxyCreator {
         currencies.map { currency ->
             val quote = quoteStatuses?.firstOrNull { it.rawCurrencyId == currency.id.rawCurrencyId }
             val networkStatus = networksStatuses?.firstOrNull { it.network == currency.network }
-            val address = extractAddress(networkStatus)
+            val address = networkStatus.getAddress()
 
             val supportedIntegration = StakingIntegrationID.create(currencyId = currency.id)?.value
 
