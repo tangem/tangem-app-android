@@ -644,6 +644,8 @@
   <string name="notification_referral_promo_button">Присоединиться</string>
   <string name="notification_referral_promo_text">Поделись промокодом — заработай 5 USDT с каждой покупки. Твои друзья получат скидку 10% на карту Tangem!</string>
   <string name="notification_referral_promo_title">Получай бонусы за каждого друга!</string>
+  <string name="notification_sepa_text">Tangem снижает комиссии SEPA почти до нуля, предлагая вам лучшие условия.</string>
+  <string name="notification_sepa_title">Покупайте криптовалюту без комиссии!</string>
   <string name="onboarding_access_code_feature_1_description">Установите единый код доступа для защиты всех ваших карт или колец</string>
   <string name="onboarding_access_code_feature_1_title">Защита</string>
   <string name="onboarding_access_code_feature_2_description">Установите индивидуальный код доступа для каждой карты или кольца позже.</string>
