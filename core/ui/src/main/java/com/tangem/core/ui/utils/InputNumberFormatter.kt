@@ -44,9 +44,7 @@ class InputNumberFormatter(
             val beforeDecimal = filteredChars.substringBefore(decimalSeparator)
             val afterDecimal = filteredChars.substringAfter(decimalSeparator)
             beforeDecimal + decimalSeparator + afterDecimal.take(decimals)
-        }
-        // If there is no dot, just take all digits
-        else {
+        } else { // If there is no dot, just take all digits
             filteredChars
         }
     }
@@ -62,9 +60,7 @@ class InputNumberFormatter(
                 .reversed()
             val afterDecimal = text.substringAfter(decimalSeparator)
             beforeDecimal + decimalSeparator + afterDecimal.take(decimals)
-        }
-        // If there is no dot, just take all digits
-        else {
+        } else { // If there is no dot, just take all digits
             text.reversed()
                 .chunked(TEXT_CHUNK_THOUSAND)
                 .joinToString(thousandsSeparator.toString())

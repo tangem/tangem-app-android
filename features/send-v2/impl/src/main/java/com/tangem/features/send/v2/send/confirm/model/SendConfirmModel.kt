@@ -127,7 +127,7 @@ internal class SendConfirmModel @Inject constructor(
     val uiState = _uiState.asStateFlow()
 
     val isBalanceHiddenFlow: StateFlow<Boolean>
-    field = MutableStateFlow(false)
+        field = MutableStateFlow(false)
 
     private val amountState
         get() = uiState.value.amountUM as? AmountState.Data
