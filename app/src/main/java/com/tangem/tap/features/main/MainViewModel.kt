@@ -150,7 +150,7 @@ internal class MainViewModel @Inject constructor(
             prepareSelectedWalletFeedback()
 
             // await while initial route stack is initialized
-            appRouterConfig.isInitialized.first { it }
+            appRouterConfig.initializedState.first { it }
 
             isSplashScreenShown = false
         }
@@ -179,11 +179,9 @@ internal class MainViewModel @Inject constructor(
     private fun prepareSelectedWalletFeedback() {
         getSelectedWalletUseCase.invoke()
             .mapLeft { emptyFlow<UserWallet>() }
-            .onRight {
-                it.distinctUntilChanged()
-                    .onEach { userWallet ->
-                        Analytics.setContext(userWallet)
-                    }
+            .onRight { wallet ->
+                wallet.distinctUntilChanged()
+                    .onEach { Analytics.setContext(it) }
                     .flowOn(dispatchers.io)
                     .launchIn(viewModelScope)
             }
@@ -208,7 +206,7 @@ internal class MainViewModel @Inject constructor(
         return MoonPayService(
             apiKey = environmentConfig.moonPayApiKey,
             secretKey = environmentConfig.moonPayApiSecretKey,
-            logEnabled = LogConfig.network.moonPayService,
+            isLogEnabled = LogConfig.network.moonPayService,
             userWalletProvider = { getSelectedWalletUseCase.sync().getOrNull() },
         )
     }
@@ -224,8 +222,8 @@ internal class MainViewModel @Inject constructor(
             .filter {
                 it.isBalanceHidingNotificationEnabled && it.isBalanceHidden
             }
-            .onEach {
-                if (!it.isUpdateFromToast) {
+            .onEach { settings ->
+                if (!settings.isUpdateFromToast) {
                     listenToFlipsUseCase.changeUpdateEnabled(false)
 
                     val message = BottomSheetMessage.invoke(
@@ -354,6 +352,7 @@ internal class MainViewModel @Inject constructor(
         listenToFlipsUseCase.changeUpdateEnabled(isUpdateEnabled = true)
     }
 
+    @Suppress("NullableToStringCall")
     private fun sendKeyboardIdentifierEvent() {
         viewModelScope.launch {
             val keyboardId = keyboardValidator.getKeyboardId()
