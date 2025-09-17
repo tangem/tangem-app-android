@@ -114,7 +114,7 @@ internal class SwapAmountModel @Inject constructor(
     private var showBestRateAnimation: Boolean = false
 
     val uiState: StateFlow<SwapAmountUM>
-    field = MutableStateFlow(params.amountUM)
+        field = MutableStateFlow(params.amountUM)
 
     private val amountDebouncer = Debouncer()
     private val quoteTaskScheduler = SingleTaskScheduler<Unit>()
