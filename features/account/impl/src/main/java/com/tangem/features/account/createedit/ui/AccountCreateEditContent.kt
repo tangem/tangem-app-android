@@ -13,6 +13,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -24,16 +25,13 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.R
-import com.tangem.common.ui.account.AccountIcon
-import com.tangem.common.ui.account.AccountIconPreviewData
-import com.tangem.common.ui.account.AccountIconSize
-import com.tangem.common.ui.account.getResId
-import com.tangem.common.ui.account.getUiColor
+import com.tangem.common.ui.account.*
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.SpacerH24
 import com.tangem.core.ui.components.SpacerH8
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
+import com.tangem.core.ui.components.account.AccountIconSize
 import com.tangem.core.ui.components.fields.AutoSizeTextField
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
@@ -43,7 +41,6 @@ import com.tangem.features.account.createedit.entity.AccountCreateEditUM
 import com.tangem.features.account.createedit.entity.AccountCreateEditUM.Account
 import kotlinx.collections.immutable.toImmutableList
 
-@Suppress("LongMethod", "MagicNumber")
 @Composable
 internal fun AccountCreateEditContent(state: AccountCreateEditUM, modifier: Modifier = Modifier) {
     Column(
@@ -65,7 +62,6 @@ internal fun AccountCreateEditContent(state: AccountCreateEditUM, modifier: Modi
             modifier = Modifier
                 .padding(horizontal = 16.dp)
                 .weight(1f),
-
         ) {
             AccountSummary(state.account)
             SpacerH24()
@@ -85,6 +81,7 @@ internal fun AccountCreateEditContent(state: AccountCreateEditUM, modifier: Modi
                 .fillMaxWidth()
                 .padding(16.dp),
             enabled = state.buttonState.isButtonEnabled,
+            showProgress = state.buttonState.showProgress,
             text = state.buttonState.text.resolveReference(),
             onClick = state.buttonState.onConfirmClick,
         )
@@ -103,7 +100,7 @@ private fun AccountSummary(account: Account) {
         Spacer(modifier = Modifier.height(24.dp))
 
         AccountIcon(
-            name = stringReference(account.name),
+            name = account.name.value,
             icon = account.portfolioIcon,
             size = AccountIconSize.Large,
         )
@@ -116,13 +113,27 @@ private fun AccountSummary(account: Account) {
         )
         Spacer(modifier = Modifier.height(2.dp))
 
+        val wasDefault = remember { account.name is AccountNameUM.DefaultMain }
+        val defaultAccountName = AccountNameUM.DefaultMain.value.resolveReference()
         AutoSizeTextField(
             centered = true,
             textStyle = TangemTheme.typography.head,
             placeholder = account.inputPlaceholder,
-            value = account.name,
+            value = account.name.value.resolveReference(),
             singleLine = true,
-            onValueChange = account.onNameChange,
+            onValueChange = {
+                /*
+                 * If the user had the default main account name and enters the same name during renaming,
+                 * we should use the default value instead of custom to avoid breaking the name validation process.
+                 */
+                val newName = if (wasDefault && it == defaultAccountName) {
+                    AccountNameUM.DefaultMain
+                } else {
+                    AccountNameUM.Custom(raw = it)
+                }
+
+                account.onNameChange(newName)
+            },
         )
         SpacerH(20.dp)
     }
@@ -279,7 +290,7 @@ private class PreviewStateProvider : CollectionPreviewParameterProvider<AccountC
             title = stringReference("Add account"),
             onCloseClick = {},
             account = Account(
-                name = "",
+                name = AccountNameUM.DefaultMain,
                 portfolioIcon = portfolioIcon,
                 inputPlaceholder = resourceReference(R.string.account_form_placeholder_new_account),
                 onNameChange = {},
@@ -300,6 +311,7 @@ private class PreviewStateProvider : CollectionPreviewParameterProvider<AccountC
             ),
             buttonState = AccountCreateEditUM.Button(
                 isButtonEnabled = false,
+                showProgress = false,
                 onConfirmClick = {},
                 text = stringReference("Add account"),
             ),
@@ -313,7 +325,7 @@ private class PreviewStateProvider : CollectionPreviewParameterProvider<AccountC
             onCloseClick = {},
             account = Account(
                 portfolioIcon = portfolioIcon,
-                name = accountName,
+                name = AccountNameUM.Custom(raw = accountName),
                 inputPlaceholder = resourceReference(R.string.account_form_placeholder_edit_account),
                 onNameChange = {},
                 derivationInfo = AccountCreateEditUM.DerivationInfo.Content(
@@ -333,6 +345,7 @@ private class PreviewStateProvider : CollectionPreviewParameterProvider<AccountC
             ),
             buttonState = AccountCreateEditUM.Button(
                 isButtonEnabled = false,
+                showProgress = false,
                 onConfirmClick = {},
                 text = stringReference("Save"),
             ),
