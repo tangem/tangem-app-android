@@ -29,7 +29,7 @@ class DefaultKycComponent @AssistedInject constructor(
                         .withAccessToken(accessToken = startInfo.token, onTokenExpiration = tokenExpirationHandler)
                         .withTheme(TangemSNSTheme.theme(activity))
                         .withIconHandler(TangemSNSIconHandler())
-                        .withLocale(Locale("en"))
+                        .withLocale(Locale(startInfo.locale))
                         .build()
                     snsSdk.launch()
                 }
