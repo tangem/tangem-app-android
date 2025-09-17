@@ -29,22 +29,22 @@ internal class YieldSupplyActiveModel @Inject constructor(
     private val cryptoCurrency = cryptoCurrencyStatusFlow.value.currency
 
     val uiState: StateFlow<YieldSupplyActiveContentUM>
-    field = MutableStateFlow(
-        YieldSupplyActiveContentUM(
-            totalEarnings = stringReference("0"),
-            availableBalance = stringReference(
-                cryptoCurrencyStatusFlow.value.value.amount.format {
-                    crypto(cryptoCurrency = cryptoCurrencyStatusFlow.value.currency)
-                },
-            ),
-            providerTitle = resourceReference(R.string.yield_module_provider),
-            subtitle = combinedReference(
-                resourceReference(
-                    id = R.string.yield_module_earn_sheet_provider_description,
-                    formatArgs = wrappedList(cryptoCurrency.symbol, cryptoCurrency.symbol),
+        field = MutableStateFlow(
+            YieldSupplyActiveContentUM(
+                totalEarnings = stringReference("0"),
+                availableBalance = stringReference(
+                    cryptoCurrencyStatusFlow.value.value.amount.format {
+                        crypto(cryptoCurrency = cryptoCurrencyStatusFlow.value.currency)
+                    },
                 ),
-                resourceReference(R.string.common_read_more),
+                providerTitle = resourceReference(R.string.yield_module_provider),
+                subtitle = combinedReference(
+                    resourceReference(
+                        id = R.string.yield_module_earn_sheet_provider_description,
+                        formatArgs = wrappedList(cryptoCurrency.symbol, cryptoCurrency.symbol),
+                    ),
+                    resourceReference(R.string.common_read_more),
+                ),
             ),
-        ),
-    )
+        )
 }
