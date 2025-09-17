@@ -263,7 +263,7 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
         tangemSdkManager = injectedTangemSdkManager
 
         backupServiceHolder.createAndSetService(cardSdkConfigRepository.sdk, this)
-        backupService = backupServiceHolder.backupService.get()!! // will be deleted eventually
+        backupService = requireNotNull(backupServiceHolder.backupService.get()) // will be deleted eventually
 
         lockUserWalletsTimer = LockUserWalletsTimer(
             context = this,
@@ -370,8 +370,8 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
 
-        val fromPush = intent?.extras?.containsKey(OPENED_FROM_GCM_PUSH) ?: false
-        if (fromPush) {
+        val isFromPush = intent?.extras?.containsKey(OPENED_FROM_GCM_PUSH) == true
+        if (isFromPush) {
             analyticsEventsHandler.send(Push.PushNotificationOpened)
         }
 
@@ -402,8 +402,8 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
     }
 
     override fun dispatchTouchEvent(event: MotionEvent): Boolean {
-        val result = WindowObscurationObserver.dispatchTouchEvent(event, analyticsEventsHandler)
-        return if (result) super.dispatchTouchEvent(event) else false
+        val isHandled = WindowObscurationObserver.dispatchTouchEvent(event, analyticsEventsHandler)
+        return if (isHandled) super.dispatchTouchEvent(event) else false
     }
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
@@ -447,9 +447,9 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
             getPolkadotCheckHasImmortalUseCase()
                 .flowWithLifecycle(lifecycle, minActiveState = Lifecycle.State.CREATED)
                 .distinctUntilChanged()
-                .collect {
+                .collect { (_, hasImmortalTransaction) ->
                     analyticsEventsHandler.send(
-                        WalletScreenAnalyticsEvent.Token.PolkadotImmortalTransactions(it.second),
+                        WalletScreenAnalyticsEvent.Token.PolkadotImmortalTransactions(hasImmortalTransaction),
                     )
                 }
         }
