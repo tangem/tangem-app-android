@@ -6,6 +6,7 @@ import com.tangem.common.ui.alerts.models.AlertDemoModeUM
 import com.tangem.common.ui.bottomsheet.permission.state.*
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.common.ui.swapStoriesScreen.SwapStoriesFactory
+import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.event.consumedEvent
@@ -19,6 +20,7 @@ import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.promo.models.StoryContent
 import com.tangem.feature.swap.converters.SwapTransactionErrorStateConverter
 import com.tangem.feature.swap.converters.TokensDataConverter
@@ -53,6 +55,7 @@ import kotlin.math.min
  */
 @Suppress("LargeClass", "TooManyFunctions")
 internal class StateBuilder(
+    private val userWalletProvider: Provider<UserWallet>,
     private val actions: UiActions,
     private val isBalanceHiddenProvider: Provider<Boolean>,
     private val appCurrencyProvider: Provider<AppCurrency>,
@@ -111,7 +114,11 @@ internal class StateBuilder(
                 isBalanceHidden = true,
             ),
             fee = FeeItemState.Empty,
-            swapButton = SwapButton(enabled = false, onClick = {}),
+            swapButton = SwapButton(
+                walletInteractionIcon = walletInterationIcon(userWalletProvider()),
+                enabled = false,
+                onClick = {},
+            ),
             onRefresh = {},
             onBackClicked = actions.onBackClicked,
             onChangeCardsClicked = actions.onChangeCardsClicked,
@@ -167,6 +174,7 @@ internal class StateBuilder(
             notifications = notificationsFactory.getNotAvailableStateNotifications(fromToken.currency.name),
             fee = FeeItemState.Empty,
             swapButton = SwapButton(
+                walletInteractionIcon = walletInterationIcon(userWalletProvider()),
                 enabled = false,
                 onClick = { },
             ),
@@ -225,7 +233,11 @@ internal class StateBuilder(
             ),
             notifications = persistentListOf(),
             fee = FeeItemState.Empty,
-            swapButton = SwapButton(enabled = false, onClick = {}),
+            swapButton = SwapButton(
+                walletInteractionIcon = walletInterationIcon(userWalletProvider()),
+                enabled = false,
+                onClick = {},
+            ),
             providerState = ProviderState.Loading(),
             permissionState = uiStateHolder.permissionState,
             changeCardsButtonState = ChangeCardsButtonState.UPDATE_IN_PROGRESS,
@@ -338,6 +350,7 @@ internal class StateBuilder(
             ),
             fee = feeState,
             swapButton = SwapButton(
+                walletInteractionIcon = walletInterationIcon(userWalletProvider()),
                 enabled = getSwapButtonEnabled(notifications),
                 onClick = actions.onSwapClick,
             ),
@@ -465,6 +478,7 @@ internal class StateBuilder(
             permissionState = GiveTxPermissionState.Empty,
             fee = FeeItemState.Empty,
             swapButton = SwapButton(
+                walletInteractionIcon = walletInterationIcon(userWalletProvider()),
                 enabled = false,
                 onClick = actions.onSwapClick,
             ),
@@ -561,6 +575,7 @@ internal class StateBuilder(
             isInsufficientFunds = false,
             fee = FeeItemState.Empty,
             swapButton = SwapButton(
+                walletInteractionIcon = walletInterationIcon(userWalletProvider()),
                 enabled = false,
                 onClick = { },
             ),
@@ -973,6 +988,7 @@ internal class StateBuilder(
             val config = GiveTxPermissionBottomSheetConfig(
                 data = permissionState,
                 onCancel = onDismiss,
+                walletInteractionIcon = walletInterationIcon(userWalletProvider()),
             )
             return uiState.copy(
                 bottomSheetConfig = TangemBottomSheetConfig(

@@ -21,7 +21,7 @@ class WalletSettingsPageObject(semanticsProvider: SemanticsNodeInteractionsProvi
     val linkMoreCardsButton: KNode = walletSettingsItem.child {
         hasText(getResourceString(R.string.details_row_title_create_backup))
     }
-    val cardSettingsButton: KNode = walletSettingsItem.child {
+    val deviceSettingsButton: KNode = walletSettingsItem.child {
         hasText(getResourceString(R.string.card_settings_title))
     }
     val referralProgramButton: KNode = walletSettingsItem.child {
