@@ -291,10 +291,10 @@ private inline fun BaseScaffoldWithMarkets(
     listState: LazyListState,
     selectedWallet: WalletState,
     snackbarHostState: SnackbarHostState,
-    bottomSheetHeaderHeightProvider: () -> Dp,
-    crossinline bottomSheetContent: @Composable () -> Unit,
     alertConfig: WalletAlertState?,
+    bottomSheetHeaderHeightProvider: () -> Dp,
     noinline onBottomSheetStateChange: (BottomSheetState) -> Unit,
+    crossinline bottomSheetContent: @Composable () -> Unit,
     crossinline content: @Composable (PaddingValues) -> Unit,
 ) {
     val bottomSheetState = rememberTangemStandardBottomSheetState()
