@@ -30,7 +30,7 @@ internal class TangemPayTxHistoryModel @Inject constructor(
     private val params: DefaultTangemPayTxHistoryComponent.Params = paramsContainer.require()
 
     val uiState: StateFlow<TxHistoryUM>
-    field = MutableStateFlow(getInitialState())
+        field = MutableStateFlow(getInitialState())
 
     init {
         handleBalanceHiding()
