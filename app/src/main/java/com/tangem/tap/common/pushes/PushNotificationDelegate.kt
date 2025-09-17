@@ -16,7 +16,6 @@ import coil.request.ImageRequest
 import com.tangem.domain.common.LogConfig
 import com.tangem.tap.MainActivity
 import com.tangem.tap.common.images.createCoilImageLoader
-import com.tangem.tap.features.intentHandler.handlers.OnPushClickedIntentHandler
 import com.tangem.wallet.R
 
 class PushNotificationDelegate(private val context: Context) {
@@ -35,7 +34,7 @@ class PushNotificationDelegate(private val context: Context) {
             dataMap.forEach { (key, value) ->
                 putExtra(key, value)
             }
-            putExtra(OnPushClickedIntentHandler.OPENED_FROM_GCM_PUSH, true)
+            putExtra(OPENED_FROM_GCM_PUSH, true)
             addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
         }
 
@@ -98,5 +97,6 @@ class PushNotificationDelegate(private val context: Context) {
 
     private companion object {
         const val PUSH_NOTIFICATION_REQUEST_CODE = 123
+        private const val OPENED_FROM_GCM_PUSH = "google.sent_time" // every bundle from FCM contains this key
     }
 }

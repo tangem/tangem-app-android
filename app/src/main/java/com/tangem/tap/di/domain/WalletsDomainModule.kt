@@ -10,6 +10,7 @@ import com.tangem.domain.transaction.usecase.ValidateWalletMemoUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.delegate.DefaultUserWalletsSyncDelegate
 import com.tangem.domain.wallets.delegate.UserWalletsSyncDelegate
+import com.tangem.domain.wallets.derivations.DerivationsRepository
 import com.tangem.domain.wallets.hot.HotWalletAccessor
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.repository.WalletNamesMigrationRepository
@@ -130,6 +131,20 @@ internal object WalletsDomainModule {
             userWalletsListManager = userWalletsListManager,
             userWalletsListRepository = userWalletsListRepository,
             walletsRepository = walletsRepository,
+            useNewRepository = hotWalletFeatureToggles.isHotWalletEnabled,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun providesIsWalletAlreadySavedUseCase(
+        userWalletsListManager: UserWalletsListManager,
+        userWalletsListRepository: UserWalletsListRepository,
+        hotWalletFeatureToggles: HotWalletFeatureToggles,
+    ): IsWalletAlreadySavedUseCase {
+        return IsWalletAlreadySavedUseCase(
+            userWalletsListManager = userWalletsListManager,
+            userWalletsListRepository = userWalletsListRepository,
             useNewRepository = hotWalletFeatureToggles.isHotWalletEnabled,
         )
     }
@@ -419,6 +434,18 @@ internal object WalletsDomainModule {
     fun providesExportSeedPhraseUseCase(hotWalletAccessor: HotWalletAccessor): ExportSeedPhraseUseCase {
         return ExportSeedPhraseUseCase(
             hotWalletAccessor = hotWalletAccessor,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun providesColdWalletInteractionNeededUseCase(
+        derivationsRepository: DerivationsRepository,
+        getUserWalletUseCase: GetUserWalletUseCase,
+    ): ColdWalletAndHasMissedDerivationsUseCase {
+        return ColdWalletAndHasMissedDerivationsUseCase(
+            derivationsRepository = derivationsRepository,
+            userWalletUseCase = getUserWalletUseCase,
         )
     }
 }

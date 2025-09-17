@@ -10,6 +10,7 @@ import com.tangem.common.ui.amountScreen.converters.AmountReduceByTransformer
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.navigationButtons.NavigationButton
 import com.tangem.common.ui.navigationButtons.NavigationUM
+import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -664,7 +665,7 @@ internal class SendConfirmModel @Inject constructor(
                 }
                 else -> resourceReference(R.string.common_send)
             },
-            iconRes = R.drawable.ic_tangem_24,
+            iconRes = walletInterationIcon(userWallet),
             isIconVisible = isReadyToSend,
             isEnabled = confirmUM.isPrimaryButtonEnabled,
             isHapticClick = isReadyToSend,

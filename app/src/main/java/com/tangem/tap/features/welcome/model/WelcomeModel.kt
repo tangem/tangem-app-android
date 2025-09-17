@@ -47,7 +47,7 @@ internal class WelcomeModel @Inject constructor(
 
         val welcomeAction = when (params.launchMode) {
             is InitScreenLaunchMode.WithCardScan -> WelcomeAction.ProceedWithCard
-            is InitScreenLaunchMode.Standard -> WelcomeAction.ProceedWithBiometrics(params.intent?.toIntent())
+            is InitScreenLaunchMode.Standard -> WelcomeAction.ProceedWithBiometrics
         }
 
         store.dispatch(welcomeAction)
@@ -55,7 +55,7 @@ internal class WelcomeModel @Inject constructor(
 
     private fun unlockWallets() {
         Analytics.send(SignIn.ButtonBiometricSignIn())
-        store.dispatch(WelcomeAction.ProceedWithBiometrics())
+        store.dispatch(WelcomeAction.ProceedWithBiometrics)
     }
 
     private fun scanCard() {

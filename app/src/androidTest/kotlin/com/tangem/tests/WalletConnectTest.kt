@@ -2,11 +2,12 @@ package com.tangem.tests
 
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.TOTAL_BALANCE
+import com.tangem.common.extensions.SwipeDirection
 import com.tangem.common.extensions.clickWithAssertion
-import com.tangem.common.extensions.swipeUp
+import com.tangem.common.extensions.swipeVertical
 import com.tangem.common.utils.getWcUri
-import com.tangem.screens.*
 import com.tangem.scenarios.*
+import com.tangem.screens.*
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
@@ -16,7 +17,7 @@ import org.junit.Test
 @HiltAndroidTest
 class WalletConnectTest : BaseTestCase() {
 
-    @AllureId("3833")
+    @AllureId("3958")
     @DisplayName("WC (React App): open session from deeplink on main screen")
     @Ignore("TODO [REDACTED_JIRA] React app deeplink doesn't work")
     @Test
@@ -65,7 +66,7 @@ class WalletConnectTest : BaseTestCase() {
         }
     }
 
-    @AllureId("3834")
+    @AllureId("3959")
     @DisplayName("WC (React App): open session from deeplink not on main screen")
     @Ignore("TODO [REDACTED_JIRA] React app deeplink doesn't work")
     @Test
@@ -120,7 +121,7 @@ class WalletConnectTest : BaseTestCase() {
         }
     }
 
-    @AllureId("886")
+    @AllureId("3957")
     @DisplayName("WC (React App): open session from deeplink ")
     @Ignore("TODO [REDACTED_JIRA] React app deeplink doesn't work")
     @Test
@@ -140,7 +141,7 @@ class WalletConnectTest : BaseTestCase() {
                 device.uiDevice.pressRecentApps()
             }
             step("Stop app by swipe") {
-                swipeUp(startHeightRatio = 0.8f)
+                swipeVertical(SwipeDirection.UP, startHeightRatio = 0.8f)
             }
             step("Create WC session buy deeplink") {
                 openAppByDeepLink(deepLinkUri)

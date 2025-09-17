@@ -18,7 +18,6 @@ import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.utils.Provider
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -69,12 +68,13 @@ internal class FetchWalletAccountsErrorHandler @Inject constructor(
             return
         }
 
-        val userWalletProvider = Provider { userWalletsStore.getSyncStrict(key = userWalletId) }
-        val accountDTOs = savedAccountsResponse?.accounts.orDefault(userWalletProvider = userWalletProvider)
+        val (accountDTOs, userTokensResponse) = if (savedAccountsResponse == null) {
+            val userWallet = userWalletsStore.getSyncStrict(key = userWalletId)
 
-        val userTokensResponse = savedAccountsResponse?.toUserTokensResponse()
-            .orFromLegacyStore(userWalletProvider = userWalletProvider)
-            .orDefault(userWalletProvider = userWalletProvider)
+            createDefaultAccountDTOs(userWallet) to getFromLegacyStore(userWalletId).orDefault(userWallet)
+        } else {
+            savedAccountsResponse.accounts to savedAccountsResponse.toUserTokensResponse()
+        }
 
         val isNotFoundError = error.isNetworkError(code = Code.NOT_FOUND)
         if (isNotFoundError) {
@@ -86,11 +86,7 @@ internal class FetchWalletAccountsErrorHandler @Inject constructor(
         storeWalletAccounts(userWalletId, response)
     }
 
-    private fun List<WalletAccountDTO>?.orDefault(userWalletProvider: Provider<UserWallet>): List<WalletAccountDTO> {
-        if (this != null) return this
-
-        val userWallet = userWalletProvider()
-
+    private fun createDefaultAccountDTOs(userWallet: UserWallet): List<WalletAccountDTO> {
         val accounts = AccountList.empty(userWallet).accounts
             .filterIsInstance<Account.CryptoPortfolio>()
 
@@ -99,24 +95,16 @@ internal class FetchWalletAccountsErrorHandler @Inject constructor(
         return converter.convertListBack(input = accounts)
     }
 
-    private suspend fun UserTokensResponse?.orFromLegacyStore(
-        userWalletProvider: Provider<UserWallet>,
-    ): UserTokensResponse? {
-        if (this != null) return this
-
-        val userWalletId = userWalletProvider().walletId
-
+    private suspend fun getFromLegacyStore(userWalletId: UserWalletId): UserTokensResponse? {
         return userTokensResponseStore.getSyncOrNull(userWalletId)
             .also { userTokensResponseStore.clear(userWalletId) }
     }
 
-    private fun UserTokensResponse?.orDefault(userWalletProvider: Provider<UserWallet>): UserTokensResponse {
+    private fun UserTokensResponse?.orDefault(userWallet: UserWallet): UserTokensResponse {
         if (this != null) return this
 
         return userTokensResponseFactory.createUserTokensResponse(
-            currencies = cardCryptoCurrencyFactory.createDefaultCoinsForMultiCurrencyWallet(
-                userWallet = userWalletProvider(),
-            ),
+            currencies = cardCryptoCurrencyFactory.createDefaultCoinsForMultiCurrencyWallet(userWallet = userWallet),
             isGroupedByNetwork = false,
             isSortedByBalance = false,
         )

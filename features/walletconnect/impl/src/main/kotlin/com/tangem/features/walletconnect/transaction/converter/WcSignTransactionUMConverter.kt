@@ -1,5 +1,6 @@
 package com.tangem.features.walletconnect.transaction.converter
 
+import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.domain.walletconnect.usecase.method.WcMessageSignUseCase
 import com.tangem.domain.walletconnect.usecase.method.WcMethodContext
 import com.tangem.domain.walletconnect.usecase.method.WcSignState
@@ -32,6 +33,7 @@ internal class WcSignTransactionUMConverter @Inject constructor(
             networkInfo = networkInfoUMConverter.convert(value.context.network),
             isLoading = value.signState.domainStep == WcSignStep.Signing,
             address = WcAddressConverter.convert(value.context.derivationState),
+            walletInteractionIcon = walletInterationIcon(value.context.session.wallet),
         ),
         transactionRequestInfo = WcTransactionRequestInfoUM(
             requestBlockUMConverter.convert(

@@ -68,7 +68,7 @@ internal class PreviewManageTokensComponent(
             loadMore = { false },
             saveChanges = {},
             isSavingInProgress = false,
-            needToAddDerivations = showTangemIcon,
+            needToInteractWithColdWallet = showTangemIcon,
         ),
     )
 

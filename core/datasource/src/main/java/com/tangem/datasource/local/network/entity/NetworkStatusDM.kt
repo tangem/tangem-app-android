@@ -2,8 +2,6 @@ package com.tangem.datasource.local.network.entity
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
-import com.tangem.datasource.local.network.entity.NetworkStatusDM.NoAccount
-import com.tangem.datasource.local.network.entity.NetworkStatusDM.Verified
 import dev.onenowy.moshipolymorphicadapter.PolymorphicAdapterType
 import dev.onenowy.moshipolymorphicadapter.annotations.NameLabel
 import java.math.BigDecimal
@@ -44,6 +42,7 @@ sealed interface NetworkStatusDM {
         @Json(name = "selected_address") override val selectedAddress: String,
         @Json(name = "available_addresses") override val availableAddresses: Set<Address>,
         @Json(name = "amounts") val amounts: Map<String, BigDecimal>,
+        @Json(name = "yield_supply_statuses") val yieldSupplyStatuses: Map<String, YieldSupplyStatus?> = emptyMap(),
     ) : NetworkStatusDM
 
     /**
@@ -107,4 +106,11 @@ sealed interface NetworkStatusDM {
             Secondary,
         }
     }
+
+    @JsonClass(generateAdapter = true)
+    data class YieldSupplyStatus(
+        @Json(name = "is_active") val isActive: Boolean,
+        @Json(name = "is_initialized") val isInitialized: Boolean,
+        @Json(name = "is_allowed_to_spend") val isAllowedToSpend: Boolean,
+    )
 }

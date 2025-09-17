@@ -153,6 +153,7 @@ dependencies {
     implementation(projects.domain.swap)
     implementation(projects.domain.walletManager)
     implementation(projects.domain.walletManager.models)
+    implementation(projects.domain.yieldSupply)
 
     implementation(projects.common)
     implementation(projects.common.routing)
@@ -201,6 +202,7 @@ dependencies {
     implementation(projects.data.notifications)
     implementation(projects.data.swap)
     implementation(projects.data.walletManager)
+    implementation(projects.data.yieldSupply)
 
     /** Features */
     implementation(projects.features.referral.impl)
@@ -352,6 +354,7 @@ dependencies {
     implementation(deps.coil.gif)
     implementation(deps.coil.svg)
     implementation(deps.amplitude)
+    implementation(deps.appsflyer)
     implementation(deps.spongecastle.core)
     implementation(deps.lottie)
     implementation(deps.compose.accompanist.appCompatTheme)

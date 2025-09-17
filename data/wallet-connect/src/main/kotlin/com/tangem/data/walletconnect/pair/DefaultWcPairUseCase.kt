@@ -9,13 +9,11 @@ import com.domain.blockaid.models.dapp.DAppData
 import com.reown.walletkit.client.Wallet
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.data.walletconnect.utils.WC_TAG
-import com.tangem.data.walletconnect.utils.WcSdkSessionConverter
 import com.tangem.data.walletconnect.utils.getDappOriginUrl
 import com.tangem.domain.blockaid.BlockAidVerifier
 import com.tangem.domain.walletconnect.WcAnalyticEvents
 import com.tangem.domain.walletconnect.model.*
 import com.tangem.domain.walletconnect.model.sdkcopy.WcAppMetaData
-import com.tangem.domain.walletconnect.repository.WcSessionsManager
 import com.tangem.domain.walletconnect.usecase.pair.WcPairState
 import com.tangem.domain.walletconnect.usecase.pair.WcPairUseCase
 import dagger.assisted.Assisted
@@ -25,12 +23,12 @@ import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 import org.joda.time.DateTime
+import org.joda.time.Duration
 import timber.log.Timber
 import java.net.URI
 
 @Suppress("LongParameterList")
 internal class DefaultWcPairUseCase @AssistedInject constructor(
-    private val sessionsManager: WcSessionsManager,
     private val associateNetworksDelegate: AssociateNetworksDelegate,
     private val caipNamespaceDelegate: CaipNamespaceDelegate,
     private val sdkDelegate: WcPairSdkDelegate,
@@ -105,24 +103,29 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
 
             // start flow of approving in wc sdk
             emit(WcPairState.Approving.Loading(sessionForApprove))
+
+            val connectingTime = DateTime.now().millis
+            val expiredTime = connectingTime + Duration
+                .standardMinutes(PENDING_SESSION_EXPIRED_DURATION_MIN)
+                .millis
+            val sessionDTO = WcSessionDTO(
+                topic = "",
+                walletId = sessionForApprove.wallet.walletId,
+                url = sdkVerifyContext.getDappOriginUrl(),
+                securityStatus = proposalState.dAppSession.securityStatus,
+                connectingTime = connectingTime,
+            )
+            val pendingSessionForSave = WcPendingApprovalSessionDTO(
+                pairingTopic = sdkSessionProposal.pairingTopic,
+                session = sessionDTO,
+                expiredTime = expiredTime,
+            )
+
             val either = walletKitApproveSession(
+                pendingSessionForSave = pendingSessionForSave,
                 sessionForApprove = sessionForApprove,
                 sdkSessionProposal = sdkSessionProposal,
             ).map { settledSession ->
-                val newSession = WcSession(
-                    wallet = sessionForApprove.wallet,
-                    sdkModel = WcSdkSessionConverter.convert(
-                        value = WcSdkSessionConverter.Input(
-                            originUrl = sdkVerifyContext.getDappOriginUrl(),
-                            session = settledSession.session,
-                        ),
-                    ),
-                    securityStatus = proposalState.dAppSession.securityStatus,
-                    networks = sessionForApprove.network.toSet(),
-                    connectingTime = DateTime.now().millis,
-                    showWalletInfo = proposalState.dAppSession.proposalNetwork.keys.size > 1,
-                )
-                sessionsManager.saveSession(newSession)
                 analytics.send(
                     WcAnalyticEvents.DAppConnected(
                         sessionProposal = proposalState.dAppSession,
@@ -130,7 +133,7 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
                         securityStatus = proposalState.dAppSession.securityStatus,
                     ),
                 )
-                newSession
+                proposalState.dAppSession.dAppMetaData
             }.onLeft {
                 analytics.send(
                     WcAnalyticEvents.DAppConnectionFailed(
@@ -170,9 +173,10 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
     }
 
     private suspend fun walletKitApproveSession(
+        pendingSessionForSave: WcPendingApprovalSessionDTO,
         sessionForApprove: WcSessionApprove,
         sdkSessionProposal: Wallet.Model.SessionProposal,
-    ): Either<WcPairError, Wallet.Model.SettledSessionResponse.Result> = try {
+    ): Either<WcPairError, Unit> = try {
         val namespaces = caipNamespaceDelegate.associate(
             sdkSessionProposal,
             sessionForApprove,
@@ -181,7 +185,7 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
             proposerPublicKey = sdkSessionProposal.proposerPublicKey,
             namespaces = namespaces,
         )
-        sdkDelegate.approve(sessionApprove)
+        sdkDelegate.approve(pendingSessionForSave, sessionApprove)
     } catch (e: Throwable) {
         Timber.tag(WC_TAG).e(e, "Failed to sdk approve session $pairRequest")
         WcPairError.ApprovalFailed(e.message.orEmpty()).left()
@@ -232,6 +236,10 @@ internal class DefaultWcPairUseCase @AssistedInject constructor(
             }
         },
     )
+
+    private companion object {
+        const val PENDING_SESSION_EXPIRED_DURATION_MIN = 15L
+    }
 
     private sealed interface TerminalAction {
         data class Approve(val sessionForApprove: WcSessionApprove) : TerminalAction
