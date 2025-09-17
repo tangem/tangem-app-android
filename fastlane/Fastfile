@@ -19,9 +19,11 @@ platform :android do
 
   desc "Run detekt"
   lane :detekt do
+    FileUtils.cp("../app/src/main/assets/tangem-app-config/android/google-services/dev/google-services.json", "../app")
     FileUtils.cp("../tangem-android-tools/CI/gradle_properties/tests_ci_gradle.properties", "../gradle.properties")
     puts File.read("../gradle.properties")
     gradle(task: "detekt")
+    gradle(task: "detektGoogleDebug")
   end
 
   desc "Run tests"

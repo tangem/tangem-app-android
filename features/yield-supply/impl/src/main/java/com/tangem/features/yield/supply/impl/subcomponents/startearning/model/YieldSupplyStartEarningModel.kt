@@ -57,37 +57,37 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
     private var userWallet: UserWallet by Delegates.notNull()
 
     private val cryptoCurrencyStatusFlow: StateFlow<CryptoCurrencyStatus>
-    field = MutableStateFlow(
-        CryptoCurrencyStatus(
-            currency = cryptoCurrency,
-            value = CryptoCurrencyStatus.Loading,
-        ),
-    )
+        field = MutableStateFlow(
+            CryptoCurrencyStatus(
+                currency = cryptoCurrency,
+                value = CryptoCurrencyStatus.Loading,
+            ),
+        )
     private val feeCryptoCurrencyStatusFlow: StateFlow<CryptoCurrencyStatus>
-    field = MutableStateFlow(
-        CryptoCurrencyStatus(
-            currency = cryptoCurrency,
-            value = CryptoCurrencyStatus.Loading,
-        ),
-    )
+        field = MutableStateFlow(
+            CryptoCurrencyStatus(
+                currency = cryptoCurrency,
+                value = CryptoCurrencyStatus.Loading,
+            ),
+        )
 
     val uiState: StateFlow<YieldSupplyActionUM>
-    field: MutableStateFlow<YieldSupplyActionUM> = MutableStateFlow(
-        YieldSupplyActionUM(
-            title = resourceReference(R.string.yield_module_start_earning),
-            subtitle = resourceReference(
-                R.string.yield_module_start_earning_sheet_description,
-                wrappedList(cryptoCurrency.symbol),
+        field: MutableStateFlow<YieldSupplyActionUM> = MutableStateFlow(
+            YieldSupplyActionUM(
+                title = resourceReference(R.string.yield_module_start_earning),
+                subtitle = resourceReference(
+                    R.string.yield_module_start_earning_sheet_description,
+                    wrappedList(cryptoCurrency.symbol),
+                ),
+                footer = combinedReference(
+                    resourceReference(R.string.yield_module_start_earning_sheet_next_deposits),
+                    resourceReference(R.string.yield_module_start_earning_sheet_fee_policy),
+                ),
+                currencyIconState = CryptoCurrencyToIconStateConverter().convert(params.cryptoCurrency),
+                yieldSupplyFeeUM = YieldSupplyFeeUM.Loading,
+                isPrimaryButtonEnabled = false,
             ),
-            footer = combinedReference(
-                resourceReference(R.string.yield_module_start_earning_sheet_next_deposits),
-                resourceReference(R.string.yield_module_start_earning_sheet_fee_policy),
-            ),
-            currencyIconState = CryptoCurrencyToIconStateConverter().convert(params.cryptoCurrency),
-            yieldSupplyFeeUM = YieldSupplyFeeUM.Loading,
-            isPrimaryButtonEnabled = false,
-        ),
-    )
+        )
 
     private val cryptoCurrencyStatus
         get() = cryptoCurrencyStatusFlow.value
