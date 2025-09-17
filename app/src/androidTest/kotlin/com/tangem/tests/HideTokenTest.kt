@@ -3,7 +3,8 @@ package com.tangem.tests
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.TOTAL_BALANCE
 import com.tangem.common.extensions.clickWithAssertion
-import com.tangem.scenarios.OpenMainScreenScenario
+import com.tangem.scenarios.openMainScreen
+import com.tangem.scenarios.synchronizeAddresses
 import com.tangem.screens.*
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.qameta.allure.kotlin.AllureId
@@ -21,13 +22,10 @@ class HideTokenTest : BaseTestCase() {
         val balance = TOTAL_BALANCE
         setupHooks().run {
             step("Open 'Main Screen'") {
-                scenario(OpenMainScreenScenario(composeTestRule))
+                openMainScreen()
             }
-            step("Click on 'Synchronize addresses' button" ) {
-                onMainScreen { synchronizeAddressesButton.clickWithAssertion() }
-            }
-            step("Assert wallet balance = $balance") {
-                onMainScreen { walletBalance().assertTextContains(balance) }
+            step("Synchronize addresses") {
+                synchronizeAddresses(balance)
             }
             step("Click on token with name: '$tokenTitle'") {
                 onMainScreen { tokenWithTitleAndAddress(tokenTitle).clickWithAssertion() }
@@ -35,7 +33,7 @@ class HideTokenTest : BaseTestCase() {
             step("Assert 'Token details screen' open") {
                 onTokenDetailsScreen { screenContainer.assertIsDisplayed() }
             }
-            step("Click 'More button'") {
+            step("Click 'More' button") {
                 onTokenDetailsTopBar { moreButton.clickWithAssertion() }
             }
             step("Click 'Hide token' button") {

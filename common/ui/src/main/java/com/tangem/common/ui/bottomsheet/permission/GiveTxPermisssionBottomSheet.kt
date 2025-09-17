@@ -87,7 +87,7 @@ private fun GiveTxPermissionBottomSheetContent(content: GiveTxPermissionBottomSh
 
         PrimaryButtonIconEnd(
             text = stringResourceSafe(id = R.string.common_approve),
-            iconResId = R.drawable.ic_tangem_24,
+            iconResId = content.walletInteractionIcon,
             showProgress = data.approveButton.loading,
             modifier = Modifier
                 .fillMaxWidth()
@@ -319,5 +319,6 @@ private val previewData = GiveTxPermissionBottomSheetConfig(
         dialogText = resourceReference(R.string.give_permission_staking_footer),
         footerText = resourceReference(R.string.swap_give_permission_fee_footer),
     ),
+    walletInteractionIcon = R.drawable.ic_tangem_24,
     onCancel = {},
 )

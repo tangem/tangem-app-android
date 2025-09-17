@@ -3,6 +3,7 @@ package com.tangem.tap.routing.component
 import android.content.Intent
 import androidx.compose.runtime.Immutable
 import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.entity.InitScreenLaunchMode
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.ui.decompose.ComposableContentComponent
 
@@ -22,6 +23,10 @@ internal interface RoutingComponent : ComposableContentComponent {
     }
 
     interface Factory {
-        fun create(context: AppComponentContext, initialStack: List<AppRoute>?): RoutingComponent
+        fun create(
+            context: AppComponentContext,
+            initialStack: List<AppRoute>?,
+            launchMode: InitScreenLaunchMode,
+        ): RoutingComponent
     }
 }

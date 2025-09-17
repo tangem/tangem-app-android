@@ -19,6 +19,8 @@ internal object EnvironmentConfigConverter : Converter<EnvironmentConfigModel, E
             mercuryoSecret = value.mercuryoSecret,
             blockchainSdkConfig = BlockchainSDKConfigConverter.convert(value = value),
             amplitudeApiKey = value.amplitudeApiKey,
+            appsFlyerApiKey = value.appsFlyer.appsFlyerDevKey,
+            appsAppId = value.appsFlyer.appsFlyerAppID,
             walletConnectProjectId = value.walletConnectProjectId,
             express = value.express,
             devExpress = value.devExpress,

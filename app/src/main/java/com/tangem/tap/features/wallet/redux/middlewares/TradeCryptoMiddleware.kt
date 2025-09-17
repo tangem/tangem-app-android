@@ -30,7 +30,7 @@ object TradeCryptoMiddleware {
     }
 
     private fun handle(state: () -> AppState?, action: TradeCryptoAction) {
-        if (DemoHelper.tryHandle(state, action)) return
+        if (DemoHelper.tryHandle(state)) return
 
         when (action) {
             is TradeCryptoAction.FinishSelling -> openReceiptUrl(action.transactionId)

@@ -1,7 +1,11 @@
 package com.tangem.feature.wallet.presentation.wallet.state.model
 
+import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.notifications.NotificationConfig
+import com.tangem.core.ui.components.notifications.NotificationConfig.ButtonsState
+import com.tangem.core.ui.components.notifications.NotificationConfig.IconTint
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.pluralReference
 import com.tangem.core.ui.extensions.resourceReference
@@ -149,7 +153,11 @@ sealed class WalletNotification(val config: NotificationConfig) {
         ),
     ) {
 
-        data class MissingAddresses(val missingAddressesCount: Int, val onGenerateClick: () -> Unit) : Informational(
+        data class MissingAddresses(
+            @DrawableRes val tangemIcon: Int?,
+            val missingAddressesCount: Int,
+            val onGenerateClick: () -> Unit,
+        ) : Informational(
             title = resourceReference(id = R.string.warning_missing_derivation_title),
             subtitle = pluralReference(
                 id = R.plurals.warning_missing_derivation_message,
@@ -158,7 +166,7 @@ sealed class WalletNotification(val config: NotificationConfig) {
             ),
             buttonsState = NotificationConfig.ButtonsState.PrimaryButtonConfig(
                 text = resourceReference(id = R.string.common_generate_addresses),
-                iconResId = R.drawable.ic_tangem_24,
+                iconResId = tangemIcon,
                 onClick = onGenerateClick,
             ),
         )
@@ -256,16 +264,15 @@ sealed class WalletNotification(val config: NotificationConfig) {
     )
 
     data class FinishWalletActivation(
-        val onFinishClick: () -> Unit,
+        val iconTint: IconTint,
+        val buttonsState: ButtonsState,
     ) : WalletNotification(
         config = NotificationConfig(
             title = resourceReference(R.string.hw_activation_need_title),
             subtitle = resourceReference(R.string.hw_activation_need_description),
             iconResId = R.drawable.img_knight_shield_32,
-            buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
-                text = resourceReference(R.string.hw_activation_need_finish),
-                onClick = onFinishClick,
-            ),
+            iconTint = iconTint,
+            buttonsState = buttonsState,
         ),
     )
 
@@ -282,6 +289,24 @@ sealed class WalletNotification(val config: NotificationConfig) {
                 text = resourceReference(R.string.notification_referral_promo_button),
                 onClick = onClick,
             ),
+            iconSize = 54.dp,
+        ),
+    )
+
+    data class Sepa(
+        val onCloseClick: () -> Unit,
+        val onClick: () -> Unit,
+    ) : WalletNotification(
+        config = NotificationConfig(
+            title = resourceReference(R.string.notification_sepa_title),
+            subtitle = resourceReference(R.string.notification_sepa_text),
+            iconResId = R.drawable.img_notification_sepa,
+            onCloseClick = onCloseClick,
+            buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
+                text = resourceReference(R.string.notification_sepa_button),
+                onClick = onClick,
+            ),
+            iconSize = 54.dp,
         ),
     )
 }

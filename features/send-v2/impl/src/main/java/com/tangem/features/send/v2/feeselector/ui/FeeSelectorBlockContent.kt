@@ -156,7 +156,7 @@ private fun FeeContent(state: FeeSelectorUM.Content, modifier: Modifier = Modifi
     val fiatRate = state.feeFiatRateUM
     Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
         EllipsisText(
-            text = if (fiatRate != null) {
+            text = if (state.feeExtraInfo.isFeeConvertibleToFiat && fiatRate != null) {
                 getFiatString(
                     value = state.selectedFeeItem.fee.amount.value,
                     rate = fiatRate.rate,
