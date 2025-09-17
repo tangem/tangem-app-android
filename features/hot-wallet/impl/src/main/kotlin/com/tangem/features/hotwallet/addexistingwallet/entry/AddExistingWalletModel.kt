@@ -63,9 +63,7 @@ internal class AddExistingWalletModel @Inject constructor(
         modelScope.launch {
             val shouldRequestPush = shouldAskPermissionUseCase(PUSH_PERMISSION)
             if (shouldRequestPush) {
-                // is yet blocked by [REDACTED_TASK_KEY]
-                // stackNavigation.replaceAll(AddExistingWalletRoute.PushNotifications)
-                stackNavigation.replaceAll(AddExistingWalletRoute.SetupFinished)
+                stackNavigation.replaceAll(AddExistingWalletRoute.PushNotifications)
             } else {
                 stackNavigation.replaceAll(AddExistingWalletRoute.SetupFinished)
             }
