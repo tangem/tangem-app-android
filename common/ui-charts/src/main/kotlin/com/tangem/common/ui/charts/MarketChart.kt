@@ -311,7 +311,6 @@ private fun MarketChartPreview(
     }
 
     val coroutineScope = rememberCoroutineScope()
-    val look by dataProducer.lookState.collectAsState()
 
     TangemThemePreview {
         val growingColor = TangemTheme.colors.icon.accent
