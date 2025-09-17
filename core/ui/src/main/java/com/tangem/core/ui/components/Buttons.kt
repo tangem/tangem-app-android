@@ -112,7 +112,7 @@ fun PrimaryButton(
 @Composable
 fun PrimaryButtonIconEnd(
     text: String,
-    @DrawableRes iconResId: Int,
+    @DrawableRes iconResId: Int?,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     size: TangemButtonSize = TangemButtonSize.Default,
@@ -122,7 +122,7 @@ fun PrimaryButtonIconEnd(
     TangemButton(
         modifier = modifier,
         text = text,
-        icon = TangemButtonIconPosition.End(iconResId),
+        icon = if (iconResId != null) TangemButtonIconPosition.End(iconResId) else TangemButtonIconPosition.None,
         onClick = onClick,
         colors = TangemButtonsDefaults.primaryButtonColors,
         enabled = enabled,
