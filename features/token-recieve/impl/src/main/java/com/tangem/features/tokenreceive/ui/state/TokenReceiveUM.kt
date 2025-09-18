@@ -10,5 +10,6 @@ internal data class TokenReceiveUM(
     val iconState: CurrencyIconState,
     val addresses: ImmutableList<ReceiveAddress>,
     val isEnsResultLoading: Boolean,
+    val showYieldSupplyWarning: Boolean,
     val notificationConfigs: ImmutableList<NotificationUM>,
 )
