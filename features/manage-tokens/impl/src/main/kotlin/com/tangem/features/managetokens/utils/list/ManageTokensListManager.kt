@@ -83,7 +83,12 @@ internal class ManageTokensListManager @AssistedInject constructor(
         .distinctUntilChanged()
     val uiItems: Flow<ImmutableList<CurrencyItemUM>> = uiManager.items
 
-    suspend fun launchPagination() = coroutineScope {
+    /**
+     * Launch pagination flow to get currencies
+     *
+     * @param isCollapsed   set initial display state of networks. !!! WARNING !!! Use `false` flag with cation
+     */
+    suspend fun launchPagination(isCollapsed: Boolean) = coroutineScope {
         val loadUserTokensFromRemote = when (mode) {
             is ManageTokensMode.Wallet -> source == ManageTokensSource.ONBOARDING
             is ManageTokensMode.Account,
@@ -100,7 +105,7 @@ internal class ManageTokensListManager @AssistedInject constructor(
         )
 
         batchFlow.state
-            .onEach { state -> updateState(state) }
+            .onEach { state -> updateState(state, isCollapsed) }
             .flowOn(dispatchers.default)
             .launchIn(scope = this)
             .saveIn(jobHolder)
@@ -137,7 +142,7 @@ internal class ManageTokensListManager @AssistedInject constructor(
         )
     }
 
-    private fun updateState(batchListState: BatchListState<Int, List<ManagedCryptoCurrency>>) {
+    private fun updateState(batchListState: BatchListState<Int, List<ManagedCryptoCurrency>>, isCollapsed: Boolean) {
         state.update { state ->
             state.copy(
                 status = batchListState.status,
@@ -186,7 +191,7 @@ internal class ManageTokensListManager @AssistedInject constructor(
                 }
                 state.copy(
                     currencyBatches = newBatches,
-                    uiBatches = uiManager.createOrUpdateUiBatches(newBatches, canEditItems),
+                    uiBatches = uiManager.createOrUpdateUiBatches(newBatches, canEditItems, isCollapsed),
                     canEditItems = canEditItems,
                 )
             }
