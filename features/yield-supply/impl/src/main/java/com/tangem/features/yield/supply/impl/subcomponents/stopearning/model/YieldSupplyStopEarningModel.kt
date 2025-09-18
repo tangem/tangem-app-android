@@ -4,11 +4,9 @@ import arrow.core.getOrElse
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
-import com.tangem.core.ui.extensions.combinedReference
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
@@ -43,6 +41,7 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
     private val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase,
     private val sendTransactionUseCase: SendTransactionUseCase,
     private val yieldSupplyStopEarningUseCase: YieldSupplyStopEarningUseCase,
+    private val urlOpener: UrlOpener,
 ) : Model() {
 
     private val params: YieldSupplyStopEarningComponent.Params = paramsContainer.require()
@@ -60,6 +59,9 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
             ),
         )
 
+    private val feeCryptoCurrencyStatus: CryptoCurrencyStatus
+        get() = feeCryptoCurrencyStatusFlow.value
+
     private var appCurrency = AppCurrency.Default
 
     val uiState: StateFlow<YieldSupplyActionUM>
@@ -70,10 +72,8 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
                     id = R.string.yield_module_stop_earning_sheet_description,
                     formatArgs = wrappedList(cryptoCurrency.symbol),
                 ),
-                footer = combinedReference(
-                    resourceReference(R.string.yield_module_stop_earning_sheet_fee_note),
-                    resourceReference(R.string.common_read_more),
-                ),
+                footer = resourceReference(R.string.yield_module_stop_earning_sheet_fee_note),
+                footerLink = resourceReference(R.string.common_read_more),
                 currencyIconState = CryptoCurrencyToIconStateConverter().convert(cryptoCurrency),
                 yieldSupplyFeeUM = YieldSupplyFeeUM.Loading,
                 isPrimaryButtonEnabled = false,
@@ -85,6 +85,10 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
             appCurrency = getSelectedAppCurrencyUseCase.invokeSync().getOrElse { AppCurrency.Default }
             subscribeOnCurrencyStatusUpdates()
         }
+    }
+
+    fun onReadMoreClick() {
+        urlOpener.openUrl(READ_MORE_URL)
     }
 
     fun onClick() {
@@ -132,12 +136,13 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
             network = cryptoCurrency.network,
         ).getOrNull() ?: return
 
-        val crypto = fee.normal.amount.value.format { crypto(feeCryptoCurrencyStatusFlow.value.currency) }
-        val fiatFeeValue = cryptoCurrencyStatus.value.fiatRate?.let { rate ->
-            fee.normal.amount.value?.multiply(rate)
-        }
+        val feeCryptoValue = fee.normal.amount.value
 
-        val fiat = fiatFeeValue.format { fiat(appCurrency.code, appCurrency.symbol) }
+        val feeFiatValue = feeCryptoCurrencyStatus.value.fiatRate?.let { rate ->
+            feeCryptoValue?.multiply(rate)
+        }
+        val cryptoFee = feeCryptoValue.format { crypto(feeCryptoCurrencyStatus.currency) }
+        val fiatFee = feeFiatValue.format { fiat(appCurrency.code, appCurrency.symbol) }
 
         uiState.update {
             if (cryptoCurrencyStatus.value is CryptoCurrencyStatus.Loading) {
@@ -148,13 +153,19 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
                     yieldSupplyFeeUM = YieldSupplyFeeUM.Content(
                         transactionDataList = persistentListOf(exitTransitionData.copy(fee = fee.normal)),
                         feeValue = combinedReference(
-                            stringReference(crypto),
+                            stringReference(cryptoFee),
                             stringReference(" $DOT "),
-                            stringReference(fiat),
+                            stringReference(fiatFee),
                         ),
+                        currentNetworkFeeValue = TextReference.EMPTY,
+                        maxNetworkFeeValue = TextReference.EMPTY,
                     ),
                 )
             }
         }
+    }
+
+    private companion object {
+        const val READ_MORE_URL = "https://tangem.com" // todo yield supply replace with real link
     }
 }
