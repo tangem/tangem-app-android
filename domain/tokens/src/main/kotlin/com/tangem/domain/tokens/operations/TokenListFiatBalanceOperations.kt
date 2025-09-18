@@ -9,6 +9,7 @@ import com.tangem.domain.models.staking.YieldBalance
 import com.tangem.domain.staking.utils.getTotalWithRewardsStakingBalance
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.extensions.orZero
+import com.tangem.utils.savableContext
 import java.math.BigDecimal
 
 internal class TokenListFiatBalanceOperations(
@@ -17,60 +18,65 @@ internal class TokenListFiatBalanceOperations(
 ) {
 
     @Suppress("LoopWithTooManyJumpStatements")
-    fun calculateFiatBalance(): TotalFiatBalance {
-        var fiatBalance: TotalFiatBalance = TotalFiatBalance.Loading
-        if (isAnyTokenLoading) return fiatBalance
+    fun calculateFiatBalance(): TotalFiatBalance = savableContext<TotalFiatBalance>(TotalFiatBalance.Loading) {
+        if (isAnyTokenLoading) return@savableContext
 
         for (token in currencies) {
             val blockchainId = token.currency.network.rawId
             when (val status = token.value) {
                 is CryptoCurrencyStatus.Loading -> {
-                    fiatBalance = TotalFiatBalance.Loading
+                    update(value = TotalFiatBalance.Loading)
                     break
                 }
                 is CryptoCurrencyStatus.NoQuote,
                 is CryptoCurrencyStatus.MissedDerivation,
                 -> {
-                    fiatBalance = TotalFiatBalance.Failed
+                    update(value = TotalFiatBalance.Failed)
                     break
                 }
                 is CryptoCurrencyStatus.Unreachable,
                 is CryptoCurrencyStatus.NoAmount,
                 -> {
                     if (BlockchainUtils.isIncludeToBalanceOnError(blockchainId)) {
-                        fiatBalance = recalculateNoAccountBalance(status, fiatBalance)
+                        update {
+                            recalculateNoAccountBalance(status = status, currentBalance = it)
+                        }
                     } else {
-                        fiatBalance = TotalFiatBalance.Failed
+                        update(value = TotalFiatBalance.Failed)
                         break
                     }
                 }
                 is CryptoCurrencyStatus.NoAccount -> {
-                    fiatBalance = recalculateNoAccountBalance(status, fiatBalance)
+                    update {
+                        recalculateNoAccountBalance(status = status, currentBalance = it)
+                    }
                 }
                 is CryptoCurrencyStatus.Loaded -> {
-                    fiatBalance = recalculateBalance(status, fiatBalance, blockchainId)
+                    update {
+                        recalculateBalance(status = status, currentBalance = it, blockchainId = blockchainId)
+                    }
                 }
                 is CryptoCurrencyStatus.Custom -> {
-                    fiatBalance = recalculateBalance(status, fiatBalance, blockchainId)
+                    update {
+                        recalculateBalance(status = status, currentBalance = it, blockchainId = blockchainId)
+                    }
                 }
             }
         }
 
-        return (fiatBalance as? TotalFiatBalance.Loaded)?.copy(
-            source = currencies.map { it.value.sources.total }.getResultStatusSource(),
-        ) ?: fiatBalance
+        update { balance ->
+            (balance as? TotalFiatBalance.Loaded)?.copy(
+                source = currencies.map { it.value.sources.total }.getResultStatusSource(),
+            ) ?: balance
+        }
     }
 
     private fun recalculateNoAccountBalance(
         status: CryptoCurrencyStatus.Value,
         currentBalance: TotalFiatBalance,
     ): TotalFiatBalance {
-        return (currentBalance as? TotalFiatBalance.Loaded)?.copy(isAllAmountsSummarized = false)
-            ?: TotalFiatBalance.Loaded(
-                amount = BigDecimal.ZERO,
-                isAllAmountsSummarized = false,
-                source = (status as? CryptoCurrencyStatus.NoAccount)?.sources?.total ?: StatusSource.ACTUAL,
-            )
+        return currentBalance as? TotalFiatBalance.Loaded
+            ?: TotalFiatBalance.Loaded(amount = BigDecimal.ZERO, source = status.sources.total)
     }
 
     private fun recalculateBalance(
@@ -86,7 +92,6 @@ internal class TokenListFiatBalanceOperations(
                 amount = this.amount + status.fiatAmount + fiatStakingBalance,
             ) ?: TotalFiatBalance.Loaded(
                 amount = status.fiatAmount + fiatStakingBalance,
-                isAllAmountsSummarized = true,
                 source = status.sources.total,
             )
         }
@@ -98,16 +103,14 @@ internal class TokenListFiatBalanceOperations(
         blockchainId: String,
     ): TotalFiatBalance {
         return with(currentBalance) {
-            val isTokenAmountCanBeSummarized = status.fiatAmount != null
             val yieldBalance = (status.yieldBalance as? YieldBalance.Data)
                 ?.getTotalWithRewardsStakingBalance(blockchainId).orZero()
             val fiatYieldBalance = status.fiatRate?.times(yieldBalance).orZero()
+
             (this as? TotalFiatBalance.Loaded)?.copy(
                 amount = this.amount + status.fiatAmount.orZero() + fiatYieldBalance,
-                isAllAmountsSummarized = isTokenAmountCanBeSummarized,
             ) ?: TotalFiatBalance.Loaded(
                 amount = status.fiatAmount.orZero() + fiatYieldBalance,
-                isAllAmountsSummarized = isTokenAmountCanBeSummarized,
                 source = StatusSource.ACTUAL,
             )
         }
