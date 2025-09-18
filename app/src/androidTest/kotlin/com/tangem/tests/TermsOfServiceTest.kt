@@ -2,8 +2,9 @@ package com.tangem.tests
 
 import androidx.test.InstrumentationRegistry.getTargetContext
 import com.tangem.common.BaseTestCase
+import com.tangem.common.extensions.SwipeDirection
 import com.tangem.common.extensions.clickWithAssertion
-import com.tangem.common.extensions.swipeUp
+import com.tangem.common.extensions.swipeVertical
 import com.tangem.screens.onDisclaimerScreen
 import com.tangem.screens.onStoriesScreen
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -37,7 +38,8 @@ class TermsOfServiceTest : BaseTestCase() {
             step("Assert 'Stories' screen is opened") {
                 onStoriesScreen {
                     scanButton.assertIsDisplayed()
-                    orderButton.assertIsDisplayed()}
+                    orderButton.assertIsDisplayed()
+                }
             }
         }
     }
@@ -67,7 +69,7 @@ class TermsOfServiceTest : BaseTestCase() {
                 device.uiDevice.pressRecentApps()
             }
             step("Stop app by swipe") {
-                swipeUp(startHeightRatio = 0.5f)
+                swipeVertical(SwipeDirection.UP, startHeightRatio = 0.5f)
             }
             step("Launch app") {
                 device.apps.launch(packageName)
@@ -90,7 +92,7 @@ class TermsOfServiceTest : BaseTestCase() {
                 device.uiDevice.pressRecentApps()
             }
             step("Stop app by swipe") {
-                swipeUp(startHeightRatio = 0.5f)
+                swipeVertical(SwipeDirection.UP, startHeightRatio = 0.5f)
             }
             step("Launch app") {
                 device.apps.launch(packageName)
@@ -98,9 +100,9 @@ class TermsOfServiceTest : BaseTestCase() {
             step("Assert 'Stories' screen is opened") {
                 onStoriesScreen {
                     scanButton.assertIsDisplayed()
-                    orderButton.assertIsDisplayed()}
+                    orderButton.assertIsDisplayed()
+                }
             }
         }
     }
-
 }
