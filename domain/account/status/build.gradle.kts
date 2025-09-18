@@ -21,6 +21,7 @@ dependencies {
     implementation(projects.domain.models)
     implementation(projects.domain.networks)
     implementation(projects.domain.staking)
+    implementation(projects.domain.tokens)
 
     implementation(projects.libs.crypto)
 
