@@ -22,9 +22,9 @@ import timber.log.Timber
 )
 @Suppress("MagicNumber")
 suspend fun WalletManager.safeUpdate(isDemoCard: Boolean): Result<Wallet> = try {
-    if (isDemoCard || TestActions.testAmountInjectionForWalletManagerEnabled) {
+    if (isDemoCard || TestActions.isTestAmountInjectionForWalletManagerEnabled) {
         delay(500)
-        TestActions.testAmountInjectionForWalletManagerEnabled = false
+        TestActions.isTestAmountInjectionForWalletManagerEnabled = false
         Result.Success(wallet)
     } else {
         update()
@@ -35,7 +35,7 @@ suspend fun WalletManager.safeUpdate(isDemoCard: Boolean): Result<Wallet> = try 
 
     val networkConnectionManager = store.inject(DaggerGraphState::networkConnectionManager)
     if (!networkConnectionManager.isOnline) {
-        Result.Failure(TapError.NoInternetConnection)
+        Result.Failure(TapError.NoInternetConnection())
     } else {
         val blockchain = wallet.blockchain
         val amountToCreateAccount = blockchain.amountToCreateAccount(this, wallet.getFirstToken())
