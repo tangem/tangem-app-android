@@ -456,7 +456,7 @@
     <item quantity="other">%1$d із %2$d гаманців</item>
   </plurals>
   <string name="manage_tokens_remove">Видалити</string>
-  <string name="manage_tokens_search_placeholder">наприклад Bitcoin</string>
+  <string name="manage_tokens_search_placeholder">Наприклад Bitcoin</string>
   <string name="manage_tokens_toast_portfolio_updated">Ваше портфоліо оновлено</string>
   <string name="manage_tokens_unavailable_description">Обраний токен наразі недоступний для дій у криптогаманці. Але не хвилюйтеся, ви можете висловити свою зацікавленість, проголосувавши за його інтеграцію.</string>
   <string name="manage_tokens_unavailable_vote">Проголосувати</string>
@@ -626,6 +626,9 @@
   <string name="notification_referral_promo_button">Приєднатися</string>
   <string name="notification_referral_promo_text">Поділіться промокодом — заробіть 5 USDT з кожної покупки. Ваші друзі отримають знижку 10% на картку Tangem!</string>
   <string name="notification_referral_promo_title">Отримуй бонуси за кожного друга!</string>
+  <string name="notification_sepa_button">Купити криптовалюту</string>
+  <string name="notification_sepa_text">Насолоджуйтесь **нульовою комісією** при купівлі криптовалюти через перекази SEPA.</string>
+  <string name="notification_sepa_title">Купуйте криптовалюту через SEPA</string>
   <string name="onboarding_access_code_feature_1_description">Налаштуйте єдиний код доступу для захисту всіх ваших карток або кілець</string>
   <string name="onboarding_access_code_feature_1_title">Захист</string>
   <string name="onboarding_access_code_feature_2_description">Встановіть індивідуальний код доступу для кожної картки або кільця пізніше.</string>
