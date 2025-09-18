@@ -84,7 +84,7 @@ private fun handlePrivacyAction(action: DetailsAction.AppSettings, state: Detail
         )
         is DetailsAction.AppSettings.BiometricsStatusChanged -> state.copy(
             appSettingsState = state.appSettingsState.copy(
-                needEnrollBiometrics = action.needEnrollBiometrics,
+                needEnrollBiometrics = action.isEnrollBiometricsNeeded,
             ),
         )
         is DetailsAction.AppSettings.ChangeAppThemeMode -> state.copy(
@@ -99,7 +99,7 @@ private fun handlePrivacyAction(action: DetailsAction.AppSettings, state: Detail
         )
         is DetailsAction.AppSettings.ChangeBalanceHiding -> state.copy(
             appSettingsState = state.appSettingsState.copy(
-                isHidingEnabled = action.hideBalance,
+                isHidingEnabled = action.shouldHideBalance,
             ),
         )
         // state should be copied to avoid concurrent modifications from different sources
