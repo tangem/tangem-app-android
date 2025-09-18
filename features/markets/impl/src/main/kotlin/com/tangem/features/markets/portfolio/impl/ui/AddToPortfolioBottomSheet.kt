@@ -26,8 +26,8 @@ import com.tangem.common.ui.userwallet.UserWalletItem
 import com.tangem.core.ui.components.*
 import com.tangem.core.ui.components.block.TangemBlockCardColors
 import com.tangem.core.ui.components.block.information.InformationBlock
-import com.tangem.core.ui.components.bottomsheets.sheet.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
+import com.tangem.core.ui.components.bottomsheets.sheet.TangemBottomSheet
 import com.tangem.core.ui.components.buttons.common.TangemButton
 import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
 import com.tangem.core.ui.components.buttons.common.TangemButtonSize
@@ -228,9 +228,7 @@ private fun NetworkSelection(state: SelectNetworkUM, modifier: Modifier = Modifi
                     isLastItem = index == state.networks.lastIndex,
                     content = {
                         BlockchainRow(
-                            modifier = Modifier.padding(
-                                end = TangemTheme.dimens.spacing4,
-                            ),
+                            modifier = Modifier.padding(end = TangemTheme.dimens.spacing4),
                             model = network,
                             action = {
                                 TangemSwitch(

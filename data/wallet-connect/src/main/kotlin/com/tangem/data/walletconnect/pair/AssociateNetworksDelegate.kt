@@ -10,8 +10,6 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesProducer
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
-import com.tangem.domain.tokens.TokensFeatureToggles
-import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.walletconnect.model.WcPairError
 import com.tangem.domain.walletconnect.model.WcSessionProposal.ProposalNetwork
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
@@ -19,9 +17,7 @@ import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 internal class AssociateNetworksDelegate(
     private val namespaceConverters: Set<WcNamespaceConverter>,
     private val getWallets: GetWalletsUseCase,
-    private val currenciesRepository: CurrenciesRepository,
     private val multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
-    private val tokensFeatureToggles: TokensFeatureToggles,
 ) {
 
     @Throws(WcPairError.UnsupportedBlockchains::class)
@@ -96,14 +92,10 @@ internal class AssociateNetworksDelegate(
     }
 
     private suspend fun getWalletNetworks(userWalletId: UserWalletId): List<Network> {
-        return if (tokensFeatureToggles.isWalletBalanceFetcherEnabled) {
-            multiWalletCryptoCurrenciesSupplier.getSyncOrNull(
-                params = MultiWalletCryptoCurrenciesProducer.Params(userWalletId = userWalletId),
-            )
-                .orEmpty()
-        } else {
-            currenciesRepository.getMultiCurrencyWalletCurrenciesSync(userWalletId)
-        }
+        return multiWalletCryptoCurrenciesSupplier.getSyncOrNull(
+            params = MultiWalletCryptoCurrenciesProducer.Params(userWalletId = userWalletId),
+        )
+            .orEmpty()
             .filterIsInstance<CryptoCurrency.Coin>()
             .map(CryptoCurrency.Coin::network)
             // flatten all derivation
