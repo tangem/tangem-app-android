@@ -7,7 +7,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -37,6 +40,8 @@ import kotlinx.collections.immutable.toPersistentList
 
 @Composable
 internal fun ChooseManagedTokenContent(state: ChooseManagedTokenUM, modifier: Modifier = Modifier) {
+    val focusRequester = remember { FocusRequester() }
+
     Scaffold(
         modifier = modifier,
         containerColor = TangemTheme.colors.background.tertiary,
@@ -46,6 +51,7 @@ internal fun ChooseManagedTokenContent(state: ChooseManagedTokenUM, modifier: Mo
                 modifier = Modifier.statusBarsPadding(),
                 topBar = state.readContent.topBar,
                 search = state.readContent.search,
+                focusRequester = focusRequester,
             )
         },
         content = { innerPadding ->
@@ -57,6 +63,10 @@ internal fun ChooseManagedTokenContent(state: ChooseManagedTokenUM, modifier: Mo
             )
         },
     )
+
+    LaunchedEffect(Unit) {
+        focusRequester.requestFocus()
+    }
 }
 
 @Composable
