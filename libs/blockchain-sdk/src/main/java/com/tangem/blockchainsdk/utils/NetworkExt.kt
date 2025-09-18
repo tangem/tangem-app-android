@@ -9,4 +9,5 @@ fun Network.toBlockchain(): Blockchain = id.toBlockchain()
 /** Converts [Network.ID] to [Blockchain] */
 fun Network.ID.toBlockchain(): Blockchain = rawId.toBlockchain()
 
+/** Converts [Network.RawID] to [Blockchain] */
 fun Network.RawID.toBlockchain(): Blockchain = Blockchain.fromId(id = value)

@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -25,6 +26,7 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.components.label.Label
 import com.tangem.core.ui.components.label.entity.LabelStyle
 import com.tangem.core.ui.components.label.entity.LabelUM
+import com.tangem.core.ui.components.rows.NetworkTitle
 import com.tangem.core.ui.extensions.resourceReference
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -47,11 +49,12 @@ internal fun WalletBackupContent(state: WalletBackupUM, modifier: Modifier = Mod
                 .padding(horizontal = 16.dp),
         ) {
             OptionBlock(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .padding(top = 8.dp),
                 title = stringResourceSafe(R.string.hw_backup_seed_title),
                 description = stringResourceSafe(R.string.hw_backup_seed_description),
                 badge = {
-                    state.recoveryPhraseStatus?.let { Label(it) }
+                    state.recoveryPhraseOption?.let { Label(it) }
                 },
                 onClick = state.onRecoveryPhraseClick,
                 enabled = true,
@@ -59,14 +62,35 @@ internal fun WalletBackupContent(state: WalletBackupUM, modifier: Modifier = Mod
             )
 
             OptionBlock(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .padding(top = 8.dp),
                 title = stringResourceSafe(R.string.hw_backup_google_drive_title),
                 description = stringResourceSafe(R.string.hw_backup_google_drive_description),
                 badge = {
-                    state.googleDriveStatus?.let { Label(it) }
+                    state.googleDriveOption?.let { Label(it) }
                 },
                 onClick = state.onGoogleDriveClick,
                 enabled = state.googleDriveStatus != BackupStatus.ComingSoon,
+                backgroundColor = TangemTheme.colors.background.primary,
+            )
+
+            NetworkTitle(
+                title = {
+                    Text(
+                        modifier = Modifier,
+                        text = stringResourceSafe(R.string.express_provider_recommended),
+                        style = TangemTheme.typography.subtitle2,
+                        color = TangemTheme.colors.text.tertiary,
+                    )
+                },
+            )
+            OptionBlock(
+                modifier = Modifier.fillMaxWidth(),
+                title = stringResourceSafe(R.string.hw_backup_hardware_title),
+                description = stringResourceSafe(R.string.hw_backup_hardware_description),
+                badge = null,
+                onClick = state.onHardwareWalletClick,
+                enabled = true,
                 backgroundColor = TangemTheme.colors.background.primary,
             )
         }
@@ -85,45 +109,51 @@ private fun WalletBackupContentPreview(@PreviewParameter(WalletBackupUMProvider:
 private class WalletBackupUMProvider : CollectionPreviewParameterProvider<WalletBackupUM>(
     collection = listOf(
         WalletBackupUM(
-            recoveryPhraseStatus = LabelUM(
+            recoveryPhraseOption = LabelUM(
                 text = resourceReference(R.string.hw_backup_no_backup),
                 style = LabelStyle.WARNING,
             ),
-            googleDriveStatus = LabelUM(
+            googleDriveOption = LabelUM(
                 text = resourceReference(R.string.common_coming_soon),
                 style = LabelStyle.REGULAR,
             ),
+            googleDriveStatus = BackupStatus.ComingSoon,
             onBackClick = {},
             onRecoveryPhraseClick = {},
             onGoogleDriveClick = {},
+            onHardwareWalletClick = {},
             backedUp = false,
         ),
         WalletBackupUM(
-            recoveryPhraseStatus = LabelUM(
+            recoveryPhraseOption = LabelUM(
                 text = resourceReference(R.string.hw_backup_no_backup),
                 style = LabelStyle.WARNING,
             ),
-            googleDriveStatus = LabelUM(
+            googleDriveOption = LabelUM(
                 text = resourceReference(R.string.hw_backup_no_backup),
                 style = LabelStyle.WARNING,
             ),
+            googleDriveStatus = BackupStatus.NoBackup,
             onBackClick = {},
             onRecoveryPhraseClick = {},
             onGoogleDriveClick = {},
+            onHardwareWalletClick = {},
             backedUp = false,
         ),
         WalletBackupUM(
-            recoveryPhraseStatus = LabelUM(
+            recoveryPhraseOption = LabelUM(
                 text = resourceReference(R.string.common_done),
                 style = LabelStyle.ACCENT,
             ),
-            googleDriveStatus = LabelUM(
+            googleDriveOption = LabelUM(
                 text = resourceReference(R.string.common_done),
                 style = LabelStyle.ACCENT,
             ),
+            googleDriveStatus = BackupStatus.Done,
             onBackClick = {},
             onRecoveryPhraseClick = {},
             onGoogleDriveClick = {},
+            onHardwareWalletClick = {},
             backedUp = false,
         ),
     ),
