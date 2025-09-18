@@ -33,6 +33,7 @@ import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotification
 import com.tangem.lib.crypto.BlockchainUtils.isBitcoin
 import com.tangem.utils.coroutines.combine6
+import com.tangem.utils.extensions.addIf
 import com.tangem.utils.extensions.isPositive
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
@@ -354,10 +355,6 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
             ),
             condition = shouldShowFinishActivation,
         )
-    }
-
-    private fun MutableList<WalletNotification>.addIf(element: WalletNotification, condition: Boolean) {
-        if (condition) add(element = element)
     }
 
     private companion object {
