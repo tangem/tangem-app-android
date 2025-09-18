@@ -34,17 +34,17 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.tap.routing.component.RoutingComponent
 import com.tangem.tap.routing.transitions.RoutingTransitionAnimationFactory
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "ReusedModifierInstance")
 @OptIn(ExperimentalDecomposeApi::class)
 @Composable
 internal fun RootContent(
     stack: Value<ChildStack<AppRoute, RoutingComponent.Child>>,
     backHandler: BackHandler,
     uiDependencies: UiDependencies,
-    wcContent: @Composable (modifier: Modifier) -> Unit,
-    hotAccessCodeContent: @Composable (modifier: Modifier) -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
+    wcContent: @Composable (modifier: Modifier) -> Unit,
+    hotAccessCodeContent: @Composable (modifier: Modifier) -> Unit,
 ) {
     val context = LocalContext.current
 
