@@ -88,7 +88,7 @@ internal class ChooseManagedTokensModel @Inject constructor(
         modelScope.launch {
             manageTokensListManager.launchPagination(
                 source = ManageTokensSource.SEND_VIA_SWAP,
-                userWalletId = null,
+                userWalletId = params.userWalletId,
                 isCollapsed = false,
             )
         }
@@ -163,7 +163,7 @@ internal class ChooseManagedTokensModel @Inject constructor(
                 }
             }
             .sample(periodMillis = 1_000)
-            .onEach { query -> manageTokensListManager.search(userWalletId = null, query = query) }
+            .onEach { query -> manageTokensListManager.search(userWalletId = params.userWalletId, query = query) }
             .launchIn(modelScope)
     }
 
@@ -310,7 +310,7 @@ internal class ChooseManagedTokensModel @Inject constructor(
         if (state.readContent.isInitialBatchLoading || state.readContent.isNextBatchLoading) return false
 
         modelScope.launch {
-            manageTokensListManager.loadMore(userWalletId = null, query = state.readContent.search.query)
+            manageTokensListManager.loadMore(userWalletId = params.userWalletId, query = state.readContent.search.query)
         }
 
         return true
