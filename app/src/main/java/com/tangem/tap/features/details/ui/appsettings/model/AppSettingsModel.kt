@@ -32,6 +32,7 @@ import com.tangem.tap.store
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
+import com.tangem.utils.extensions.addIf
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.*
@@ -100,74 +101,57 @@ internal class AppSettingsModel @Inject constructor(
 
     private fun buildItems(state: AppSettingsState): ImmutableList<AppSettingsScreenState.Item> {
         val items = buildList<AppSettingsScreenState.Item> {
-            if (state.needEnrollBiometrics) {
-                add(
-                    itemsFactory.createEnrollBiometricsCard(
-                        onClick = ::enrollBiometrics,
-                    ),
-                )
-            }
+            addIf(
+                condition = state.needEnrollBiometrics,
+                element = itemsFactory.createEnrollBiometricsCard(onClick = ::enrollBiometrics),
+            )
 
-            add(
-                itemsFactory.createSelectAppCurrencyButton(
-                    currentAppCurrencyName = state.selectedAppCurrency.name,
-                    onClick = ::showAppCurrencySelector,
-                ),
+            this + itemsFactory.createSelectAppCurrencyButton(
+                currentAppCurrencyName = state.selectedAppCurrency.name,
+                onClick = ::showAppCurrencySelector,
             )
 
             if (hotWalletFeatureToggles.isHotWalletEnabled) {
                 val canUseBiometrics = !state.needEnrollBiometrics && !state.isInProgress
 
-                add(
-                    itemsFactory.createUseBiometricsSwitch(
-                        isChecked = state.useBiometricAuthentication,
-                        isEnabled = canUseBiometrics,
-                        onCheckedChange = ::onBiometricAuthenticationToggled,
-                    ),
+                this + itemsFactory.createUseBiometricsSwitch(
+                    isChecked = state.useBiometricAuthentication,
+                    isEnabled = canUseBiometrics,
+                    onCheckedChange = ::onBiometricAuthenticationToggled,
                 )
 
-                add(
-                    itemsFactory.createRequireAccessCodeSwitch(
-                        isChecked = state.requireAccessCode,
-                        isEnabled = canUseBiometrics && state.useBiometricAuthentication,
-                        onCheckedChange = ::onRequireAccessCodeToggled,
-                    ),
+                this + itemsFactory.createRequireAccessCodeSwitch(
+                    isChecked = state.requireAccessCode,
+                    isEnabled = canUseBiometrics && state.useBiometricAuthentication,
+                    onCheckedChange = ::onRequireAccessCodeToggled,
                 )
             } else {
                 if (state.isBiometricsAvailable) {
                     val canUseBiometrics = !state.needEnrollBiometrics && !state.isInProgress
 
-                    add(
-                        itemsFactory.createSaveWalletsSwitch(
-                            isChecked = state.saveWallets,
-                            isEnabled = canUseBiometrics,
-                            onCheckedChange = ::onSaveWalletsToggled,
-                        ),
+                    this + itemsFactory.createSaveWalletsSwitch(
+                        isChecked = state.saveWallets,
+                        isEnabled = canUseBiometrics,
+                        onCheckedChange = ::onSaveWalletsToggled,
                     )
 
-                    add(
-                        itemsFactory.createSaveAccessCodeSwitch(
-                            isChecked = state.saveAccessCodes,
-                            isEnabled = canUseBiometrics,
-                            onCheckedChange = ::onSaveAccessCodesToggled,
-                        ),
+                    this + itemsFactory.createSaveAccessCodeSwitch(
+                        isChecked = state.saveAccessCodes,
+                        isEnabled = canUseBiometrics,
+                        onCheckedChange = ::onSaveAccessCodesToggled,
                     )
                 }
             }
 
-            add(
-                itemsFactory.createFlipToHideBalanceSwitch(
-                    isChecked = state.isHidingEnabled,
-                    isEnabled = true,
-                    onCheckedChange = ::onFlipToHideBalanceToggled,
-                ),
+            this + itemsFactory.createFlipToHideBalanceSwitch(
+                isChecked = state.isHidingEnabled,
+                isEnabled = true,
+                onCheckedChange = ::onFlipToHideBalanceToggled,
             )
 
-            add(
-                itemsFactory.createSelectThemeModeButton(
-                    currentThemeMode = state.selectedThemeMode,
-                    onClick = { showThemeModeSelector(state.selectedThemeMode) },
-                ),
+            this + itemsFactory.createSelectThemeModeButton(
+                currentThemeMode = state.selectedThemeMode,
+                onClick = { showThemeModeSelector(state.selectedThemeMode) },
             )
         }
 
