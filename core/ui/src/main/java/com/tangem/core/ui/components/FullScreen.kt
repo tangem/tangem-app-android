@@ -3,6 +3,7 @@ package com.tangem.core.ui.components
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.PixelFormat
+import android.os.Build
 import android.view.KeyEvent
 import android.view.View
 import android.view.WindowManager
@@ -100,8 +101,12 @@ private class FullScreenLayout(
         width = WindowManager.LayoutParams.MATCH_PARENT
         height = WindowManager.LayoutParams.MATCH_PARENT
         format = PixelFormat.TRANSLUCENT
-        flags = WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS or
-            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
+
+        if (focusable && Build.VERSION.SDK_INT <= Build.VERSION_CODES.Q) {
+            softInputMode = WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
+        } else {
+            flags = WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
+        }
     }
 
     fun show() {
@@ -142,7 +147,7 @@ private class FullScreenLayout(
 
     fun dispose() {
         dismiss()
-        setViewTreeSavedStateRegistryOwner(null)
+        setViewTreeLifecycleOwner(null)
         setViewTreeSavedStateRegistryOwner(null)
         setViewTreeViewModelStoreOwner(null)
     }

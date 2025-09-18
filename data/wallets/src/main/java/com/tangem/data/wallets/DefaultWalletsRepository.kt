@@ -37,6 +37,7 @@ import com.tangem.utils.coroutines.runCatching
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlin.collections.mutableSetOf
 
 typealias SeedPhraseNotificationsStatuses = Map<UserWalletId, SeedPhraseNotificationsStatus>
 
@@ -49,6 +50,9 @@ internal class DefaultWalletsRepository(
     private val dispatchers: CoroutineDispatcherProvider,
     private val authProvider: AuthProvider,
 ) : WalletsRepository {
+
+    private val upgradeWalletNotificationDisabled: MutableStateFlow<Set<UserWalletId>> =
+        MutableStateFlow(mutableSetOf<UserWalletId>())
 
     override suspend fun shouldSaveUserWalletsSync(): Boolean {
         return appPreferencesStore.getSyncOrDefault(key = PreferencesKeys.SAVE_USER_WALLETS_KEY, default = false)
@@ -333,6 +337,16 @@ internal class DefaultWalletsRepository(
         }
     }
 
+    override fun isUpgradeWalletNotificationEnabled(userWalletId: UserWalletId): Flow<Boolean> {
+        return upgradeWalletNotificationDisabled.map {
+            it.contains(userWalletId)
+        }
+    }
+
+    override suspend fun dismissUpgradeWalletNotification(userWalletId: UserWalletId) {
+        upgradeWalletNotificationDisabled.update { it.plus(userWalletId) }
+    }
+
     override suspend fun setWalletName(walletId: String, walletName: String) = withContext(dispatchers.io) {
         tangemTechApi.updateWallet(
             walletId = walletId,
@@ -401,6 +415,6 @@ internal class DefaultWalletsRepository(
                 else -> ActivatePromoCodeError.ActivationFailed
             }
             return@fold error.left()
-        },)
+        })
     }
 }
