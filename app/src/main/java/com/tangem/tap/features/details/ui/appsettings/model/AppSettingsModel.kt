@@ -99,60 +99,76 @@ internal class AppSettingsModel @Inject constructor(
     }
 
     private fun buildItems(state: AppSettingsState): ImmutableList<AppSettingsScreenState.Item> {
-        val items = buildList {
+        val items = buildList<AppSettingsScreenState.Item> {
             if (state.needEnrollBiometrics) {
-                itemsFactory.createEnrollBiometricsCard(
-                    onClick = ::enrollBiometrics,
-                ).let(::add)
+                add(
+                    itemsFactory.createEnrollBiometricsCard(
+                        onClick = ::enrollBiometrics,
+                    ),
+                )
             }
 
-            itemsFactory.createSelectAppCurrencyButton(
-                currentAppCurrencyName = state.selectedAppCurrency.name,
-                onClick = ::showAppCurrencySelector,
-            ).let(::add)
+            add(
+                itemsFactory.createSelectAppCurrencyButton(
+                    currentAppCurrencyName = state.selectedAppCurrency.name,
+                    onClick = ::showAppCurrencySelector,
+                ),
+            )
 
             if (hotWalletFeatureToggles.isHotWalletEnabled) {
                 val canUseBiometrics = !state.needEnrollBiometrics && !state.isInProgress
 
-                itemsFactory.createUseBiometricsSwitch(
-                    isChecked = state.useBiometricAuthentication,
-                    isEnabled = canUseBiometrics,
-                    onCheckedChange = ::onBiometricAuthenticationToggled,
-                ).let(::add)
+                add(
+                    itemsFactory.createUseBiometricsSwitch(
+                        isChecked = state.useBiometricAuthentication,
+                        isEnabled = canUseBiometrics,
+                        onCheckedChange = ::onBiometricAuthenticationToggled,
+                    ),
+                )
 
-                itemsFactory.createRequireAccessCodeSwitch(
-                    isChecked = state.requireAccessCode,
-                    isEnabled = canUseBiometrics && state.useBiometricAuthentication,
-                    onCheckedChange = ::onRequireAccessCodeToggled,
-                ).let(::add)
+                add(
+                    itemsFactory.createRequireAccessCodeSwitch(
+                        isChecked = state.requireAccessCode,
+                        isEnabled = canUseBiometrics && state.useBiometricAuthentication,
+                        onCheckedChange = ::onRequireAccessCodeToggled,
+                    ),
+                )
             } else {
                 if (state.isBiometricsAvailable) {
                     val canUseBiometrics = !state.needEnrollBiometrics && !state.isInProgress
 
-                    itemsFactory.createSaveWalletsSwitch(
-                        isChecked = state.saveWallets,
-                        isEnabled = canUseBiometrics,
-                        onCheckedChange = ::onSaveWalletsToggled,
-                    ).let(::add)
+                    add(
+                        itemsFactory.createSaveWalletsSwitch(
+                            isChecked = state.saveWallets,
+                            isEnabled = canUseBiometrics,
+                            onCheckedChange = ::onSaveWalletsToggled,
+                        ),
+                    )
 
-                    itemsFactory.createSaveAccessCodeSwitch(
-                        isChecked = state.saveAccessCodes,
-                        isEnabled = canUseBiometrics,
-                        onCheckedChange = ::onSaveAccessCodesToggled,
-                    ).let(::add)
+                    add(
+                        itemsFactory.createSaveAccessCodeSwitch(
+                            isChecked = state.saveAccessCodes,
+                            isEnabled = canUseBiometrics,
+                            onCheckedChange = ::onSaveAccessCodesToggled,
+                        ),
+                    )
                 }
             }
 
-            itemsFactory.createFlipToHideBalanceSwitch(
-                isChecked = state.isHidingEnabled,
-                isEnabled = true,
-                onCheckedChange = ::onFlipToHideBalanceToggled,
-            ).let(::add)
+            add(
+                itemsFactory.createFlipToHideBalanceSwitch(
+                    isChecked = state.isHidingEnabled,
+                    isEnabled = true,
+                    onCheckedChange = ::onFlipToHideBalanceToggled,
+                ),
+            )
 
-            itemsFactory.createSelectThemeModeButton(
-                currentThemeMode = state.selectedThemeMode,
-                onClick = { showThemeModeSelector(state.selectedThemeMode) },
-            ).let(::add)
+            add(
+                itemsFactory.createSelectThemeModeButton(
+                    currentThemeMode = state.selectedThemeMode,
+                    onClick = { showThemeModeSelector(state.selectedThemeMode) },
+                ),
+            )
         }
 
         return items.toImmutableList()
@@ -280,7 +296,7 @@ internal class AppSettingsModel @Inject constructor(
         val param = AnalyticsParam.OnOffState(enable)
         analyticsEventHandler.send(Settings.AppSettings.HideBalanceChanged(param))
 
-        store.dispatch(DetailsAction.AppSettings.ChangeBalanceHiding(hideBalance = enable))
+        store.dispatch(DetailsAction.AppSettings.ChangeBalanceHiding(shouldHideBalance = enable))
     }
 
     private fun dismissDialog() {
@@ -290,10 +306,10 @@ internal class AppSettingsModel @Inject constructor(
     private fun bootstrapAppCurrencyUpdates() {
         appCurrencyRepository
             .getSelectedAppCurrency()
-            .onEach {
-                if (it.code == store.state.globalState.appCurrency.code) return@onEach
+            .onEach { appCurrency ->
+                if (appCurrency.code == store.state.globalState.appCurrency.code) return@onEach
 
-                store.dispatchWithMain(DetailsAction.AppSettings.ChangeAppCurrency(it))
+                store.dispatchWithMain(DetailsAction.AppSettings.ChangeAppCurrency(appCurrency))
             }
             .launchIn(scope)
             .saveIn(appCurrencyUpdatesJobHolder)

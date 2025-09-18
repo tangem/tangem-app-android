@@ -49,8 +49,18 @@ internal class OnrampAddToPortfolioModel @Inject constructor(
             currencyName = params.cryptoCurrency.name,
             networkName = params.cryptoCurrency.network.name,
             currencyIconState = params.currencyIconState,
-            addButtonUM = OnrampAddToPortfolioUM.AddButtonUM(isProgress = false, onClick = ::onAddClick),
+            addButtonUM = OnrampAddToPortfolioUM.AddButtonUM(
+                isProgress = false,
+                isTangemIconVisible = isTangemIconVisible(),
+                onClick = ::onAddClick,
+            ),
         )
+    }
+
+    private fun isTangemIconVisible(): Boolean {
+        return getUserWalletUseCase(params.userWalletId)
+            .onLeft { Timber.e("Unable to get wallet by id [${params.userWalletId}]: $it") }
+            .fold(ifLeft = { false }, ifRight = { it is UserWallet.Cold })
     }
 
     private fun getUserWalletName(): String {

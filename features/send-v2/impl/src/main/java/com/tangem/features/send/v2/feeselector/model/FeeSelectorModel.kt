@@ -62,7 +62,7 @@ internal class FeeSelectorModel @Inject constructor(
     val feeSelectorBottomSheet = SlotNavigation<Unit>()
 
     val uiState: StateFlow<FeeSelectorUM>
-    field = MutableStateFlow<FeeSelectorUM>(params.state)
+        field = MutableStateFlow<FeeSelectorUM>(params.state)
 
     init {
         initAppCurrency()
@@ -129,6 +129,9 @@ internal class FeeSelectorModel @Inject constructor(
             )
         }
         uiState.update(FeeItemSelectedTransformer(feeItem))
+        if (feeItem !is FeeItem.Custom) {
+            onDoneClick()
+        }
     }
 
     override fun onCustomFeeValueChange(index: Int, value: String) {
