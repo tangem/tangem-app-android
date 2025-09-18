@@ -28,7 +28,7 @@ internal class TokenReceiveStateFactory(
 
     private val iconStateConverter by lazy(::CryptoCurrencyToIconStateConverter)
 
-    fun getInitialState(tokenName: String): TokenReceiveUM {
+    fun getInitialState(tokenName: String, showYieldSupplyNotification: Boolean): TokenReceiveUM {
         return TokenReceiveUM(
             addresses = mapAddresses(
                 addresses = addresses,
@@ -37,6 +37,7 @@ internal class TokenReceiveStateFactory(
             iconState = iconStateConverter.convert(cryptoCurrency),
             network = cryptoCurrency.network.name,
             isEnsResultLoading = false,
+            showYieldSupplyWarning = showYieldSupplyNotification,
             notificationConfigs = getNotifications(
                 tokenName = tokenName,
                 tokenReceiveNotification = tokenReceiveNotification,

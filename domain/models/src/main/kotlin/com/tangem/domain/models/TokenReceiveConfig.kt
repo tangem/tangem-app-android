@@ -13,6 +13,7 @@ data class TokenReceiveConfig(
     val receiveAddress: List<ReceiveAddressModel>,
     val tokenReceiveNotification: List<TokenReceiveNotification> = emptyList(),
     val asset: Asset = Asset.Currency,
+    val showYieldSupplyWarning: Boolean = false,
 )
 
 @Serializable
