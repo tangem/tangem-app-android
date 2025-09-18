@@ -64,10 +64,10 @@ private class ButtonItemProvider : CollectionPreviewParameterProvider<Item.Butto
     collection = buildList {
         val itemsFactory = AppSettingsItemsFactory()
 
-        itemsFactory.createSelectAppCurrencyButton(
+        add(itemsFactory.createSelectAppCurrencyButton(
             currentAppCurrencyName = "US Dollar",
             onClick = { /* no-op */ },
-        ).let(::add)
+        ))
     },
 )
 // endregion Preview

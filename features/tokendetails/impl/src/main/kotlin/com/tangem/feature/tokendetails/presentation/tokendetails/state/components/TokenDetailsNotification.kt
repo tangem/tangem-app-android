@@ -1,12 +1,14 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.state.components
 
 import androidx.compose.runtime.Immutable
+import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.networkIconResId
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.features.tokendetails.impl.R
 import org.joda.time.DateTime
@@ -212,6 +214,7 @@ internal sealed class TokenDetailsNotification(val config: NotificationConfig) {
     )
 
     data class KaspaIncompleteTransactionWarning(
+        private val userWallet: UserWallet,
         private val currency: CryptoCurrency,
         private val amount: String,
         private val currencySymbol: String,
@@ -227,7 +230,7 @@ internal sealed class TokenDetailsNotification(val config: NotificationConfig) {
         buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
             text = resourceReference(R.string.alert_button_try_again),
             onClick = onRetryIncompleteTransactionClick,
-            iconResId = R.drawable.ic_tangem_24,
+            iconResId = walletInterationIcon(userWallet),
         ),
         onCloseClick = onDismissIncompleteTransactionClick,
     )

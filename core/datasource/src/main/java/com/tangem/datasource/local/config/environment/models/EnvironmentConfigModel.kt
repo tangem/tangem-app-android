@@ -23,6 +23,7 @@ class EnvironmentConfigModel(
     @Json(name = "infuraProjectId") val infuraProjectId: String?,
     @Json(name = "tronGridApiKey") val tronGridApiKey: String,
     @Json(name = "amplitudeApiKey") val amplitudeApiKey: String,
+    @Json(name = "appsFlyer") val appsFlyer: AppsFlyerModel,
     @Json(name = "kaspaSecondaryApiUrl") val kaspaSecondaryApiUrl: String,
     @Json(name = "walletConnectProjectId") val walletConnectProjectId: String,
     @Json(name = "chiaFireAcademyApiKey") val chiaFireAcademyApiKey: String?,
@@ -102,4 +103,12 @@ data class ExpressModel(
     val apiKey: String,
     @Json(name = "signVerifierPublicKey")
     val signVerifierPublicKey: String,
+)
+
+@JsonClass(generateAdapter = true)
+data class AppsFlyerModel(
+    @Json(name = "appsFlyerDevKey")
+    val appsFlyerDevKey: String,
+    @Json(name = "appsFlyerAppID")
+    val appsFlyerAppID: String,
 )
