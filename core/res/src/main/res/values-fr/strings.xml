@@ -460,7 +460,7 @@
     <item quantity="other">%1$d des %2$d portefeuilles</item>
   </plurals>
   <string name="manage_tokens_remove">Enlever</string>
-  <string name="manage_tokens_search_placeholder">par exemple, BTC I trust, hodl I must</string>
+  <string name="manage_tokens_search_placeholder">Par exemple, Bitcoin</string>
   <string name="manage_tokens_toast_portfolio_updated">Votre portfolio a été mis à jour</string>
   <string name="manage_tokens_unavailable_description">Le jeton sélectionné n\'est actuellement pas disponible pour des actions dans le portefeuille crypto. Mais ne vous inquiétez pas, vous pouvez exprimer votre intérêt en votant positivement.</string>
   <string name="manage_tokens_unavailable_vote">Vote positif</string>
@@ -623,6 +623,9 @@
   <string name="notification_referral_promo_button">Rejoignez maintenant</string>
   <string name="notification_referral_promo_text">Partagez votre code et gagnez 5 USDT par vente. Votre ami bénéficie de 10 % de réduction.</string>
   <string name="notification_referral_promo_title">Recevez des RÉCOMPENSES pour chaque ami !</string>
+  <string name="notification_sepa_button">Acheter crypto</string>
+  <string name="notification_sepa_text">Tangem réduit les frais SEPA à presque rien, vous offrant ainsi la meilleure offre à ce jour.</string>
+  <string name="notification_sepa_title">Achetez des cryptomonnaies sans payer de frais !</string>
   <string name="onboarding_access_code_feature_1_description">Vous devez définir un seul code d\'accès pour protéger tous vos appareils.</string>
   <string name="onboarding_access_code_feature_1_title">Protéger</string>
   <string name="onboarding_access_code_feature_2_description">Vous pourrez définir un code d\'accès individuel sur chaque carte plus tard</string>
