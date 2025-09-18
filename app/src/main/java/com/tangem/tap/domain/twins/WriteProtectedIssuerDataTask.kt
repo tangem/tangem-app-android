@@ -21,8 +21,9 @@ class WriteProtectedIssuerDataTask(
 
     override fun run(session: CardSession, callback: (result: CompletionResult<SuccessResponse>) -> Unit) {
         SignHashCommand(
-            twinPublicKey.calculateSha256(),
-            session.environment.card!!.wallets.first().publicKey,
+            hash = twinPublicKey.calculateSha256(),
+            walletPublicKey = requireNotNull(session.environment.card)
+                .wallets.first().publicKey,
         )
             .run(session) { signResult ->
                 when (signResult) {
@@ -31,12 +32,12 @@ class WriteProtectedIssuerDataTask(
                             when (readResult) {
                                 is CompletionResult.Success -> {
                                     writeIssuerData(
-                                        twinPublicKey,
-                                        issuerKeys,
-                                        signResult.data.signature,
-                                        readResult.data,
-                                        session,
-                                        callback,
+                                        twinPublicKey = twinPublicKey,
+                                        issuerKeys = issuerKeys,
+                                        cardSignature = signResult.data.signature,
+                                        readResponse = readResult.data,
+                                        session = session,
+                                        callback = callback,
                                     )
                                 }
                                 is CompletionResult.Failure -> callback(
@@ -78,7 +79,7 @@ class WriteProtectedIssuerDataTask(
         )
         WriteIssuerDataCommand(
             issuerData = data,
-            issuerDataSignature = signedByIssuer.finalizingSignature!!,
+            issuerDataSignature = requireNotNull(signedByIssuer.finalizingSignature),
             issuerDataCounter = counter,
             issuerPublicKey = issuerKeys.publicKey,
         ).run(session, callback)

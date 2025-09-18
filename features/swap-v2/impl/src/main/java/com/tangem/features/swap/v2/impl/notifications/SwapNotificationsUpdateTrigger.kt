@@ -30,10 +30,10 @@ internal class DefaultSwapNotificationsUpdateTrigger @Inject constructor() :
     SwapNotificationsUpdateTrigger {
 
     override val updateTriggerFlow: SharedFlow<SwapNotificationData>
-    field = MutableSharedFlow<SwapNotificationData>()
+        field = MutableSharedFlow<SwapNotificationData>()
 
     override val hasErrorFlow: SharedFlow<Boolean>
-    field = MutableSharedFlow<Boolean>()
+        field = MutableSharedFlow<Boolean>()
 
     override suspend fun callbackHasError(hasError: Boolean) {
         hasErrorFlow.emit(hasError)
