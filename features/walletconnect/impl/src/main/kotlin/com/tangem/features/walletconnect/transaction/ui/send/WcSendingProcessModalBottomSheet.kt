@@ -13,11 +13,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.SpacerH8
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheet
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 
@@ -43,14 +45,14 @@ internal fun WcSendingProcessModalBottomSheet(config: TangemBottomSheetConfig) {
                 )
                 SpacerH(32.dp)
                 Text(
-                    text = "Sending your funds",
+                    text = stringResourceSafe(R.string.wallet_connect_sending_multiple_tx),
                     style = TangemTheme.typography.h3,
                     color = TangemTheme.colors.text.primary1,
                     textAlign = TextAlign.Center,
                 )
                 SpacerH8()
                 Text(
-                    text = "We’re processing the transaction — it’ll be complete in moments.",
+                    text = stringResourceSafe(R.string.wallet_connect_sending_multiple_explanation),
                     style = TangemTheme.typography.body2,
                     color = TangemTheme.colors.text.secondary,
                     textAlign = TextAlign.Center,
