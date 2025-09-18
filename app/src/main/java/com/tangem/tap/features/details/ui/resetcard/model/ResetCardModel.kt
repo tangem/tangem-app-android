@@ -18,6 +18,7 @@ import com.tangem.domain.wallets.legacy.asLockable
 import com.tangem.domain.wallets.usecase.DeleteWalletUseCase
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.tap.common.analytics.events.Settings
 import com.tangem.tap.common.extensions.dispatchNavigationAction
 import com.tangem.tap.common.extensions.onUserWalletSelected
@@ -50,6 +51,7 @@ internal class ResetCardModel @Inject constructor(
     private val userWalletsListManager: UserWalletsListManager,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val cardSettingsInteractor: CardSettingsInteractor,
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
 ) : Model() {
 
     private val params = paramsContainer.require<ResetCardComponent.Params>()
@@ -95,15 +97,15 @@ internal class ResetCardModel @Inject constructor(
         }
 
         return ResetCardScreenState(
-            resetButtonEnabled = false,
+            isResetButtonEnabled = false,
             descriptionText = getResetToFactoryDescription(
                 isActiveBackupStatus = isActiveBackupPrimaryCard,
                 typesResolver = currentCardTypesResolver,
             ),
             warningsToShow = warningsToShow,
-            showResetPasswordButton = shouldShowResetPasswordButton,
-            acceptCondition1Checked = false,
-            acceptCondition2Checked = false,
+            isResetPasswordButtonShown = shouldShowResetPasswordButton,
+            isAcceptCondition1Checked = false,
+            isAcceptCondition2Checked = false,
             onAcceptCondition1ToggleClick = ::toggleFirstCondition,
             onAcceptCondition2ToggleClick = ::toggleSecondCondition,
             onResetButtonClick = { showDialog(ResetCardDialog.StartResetDialog) },
@@ -119,26 +121,26 @@ internal class ResetCardModel @Inject constructor(
 
     private fun toggleFirstCondition(isAccepted: Boolean) {
         screenState.update { prevState ->
-            val resetButtonEnabled = if (prevState.showResetPasswordButton) {
-                isAccepted && prevState.acceptCondition2Checked
+            val isResetButtonEnabled = if (prevState.isResetPasswordButtonShown) {
+                isAccepted && prevState.isAcceptCondition2Checked
             } else {
                 isAccepted
             }
 
             prevState.copy(
-                acceptCondition1Checked = isAccepted,
-                resetButtonEnabled = resetButtonEnabled,
+                isAcceptCondition1Checked = isAccepted,
+                isResetButtonEnabled = isResetButtonEnabled,
             )
         }
     }
 
     private fun toggleSecondCondition(isAccepted: Boolean) {
         screenState.update { prevState ->
-            val resetButtonEnabled = prevState.acceptCondition1Checked && isAccepted
+            val isResetButtonEnabled = prevState.isAcceptCondition1Checked && isAccepted
 
             prevState.copy(
-                acceptCondition2Checked = isAccepted,
-                resetButtonEnabled = resetButtonEnabled,
+                isAcceptCondition2Checked = isAccepted,
+                isResetButtonEnabled = isResetButtonEnabled,
             )
         }
     }
@@ -181,14 +183,14 @@ internal class ResetCardModel @Inject constructor(
         modelScope.launch {
             resetCardUseCase(cardId = primaryCardId, params = currentUserCodeParams).onRight {
                 deleteSavedAccessCodesUseCase(cardId = primaryCardId)
-                val hasUserWallets = deleteWalletUseCase(userWalletId = currentUserWalletId).getOrElse {
-                    Timber.e("Unable to delete user wallet: $it")
+                val hasUserWallets = deleteWalletUseCase(userWalletId = currentUserWalletId).getOrElse { error ->
+                    Timber.e("Unable to delete user wallet: $error")
                     return@launch
                 }
 
                 if (hasUserWallets) {
-                    val newSelectedWallet = getSelectedWalletSyncUseCase().getOrElse {
-                        error("Failed to get selected wallet: $it")
+                    val newSelectedWallet = getSelectedWalletSyncUseCase().getOrElse { error ->
+                        error("Failed to get selected wallet: $error")
                     }
 
                     store.onUserWalletSelected(newSelectedWallet)
@@ -259,16 +261,20 @@ internal class ResetCardModel @Inject constructor(
     private fun finishFullReset() {
         cardSettingsInteractor.clear()
 
-        val newSelectedWallet = userWalletsListManager.selectedUserWalletSync
+        val newSelectedWallet = getSelectedWalletSyncUseCase.invoke().getOrNull()
 
         if (newSelectedWallet != null) {
             store.dispatchNavigationAction { popTo<AppRoute.Wallet>() }
         } else {
-            val isLocked = runCatching { userWalletsListManager.asLockable()?.isLockedSync }.isSuccess
-            if (isLocked && userWalletsListManager.hasUserWallets) {
-                store.dispatchNavigationAction { popTo<AppRoute.Welcome>() }
-            } else {
+            if (hotWalletFeatureToggles.isHotWalletEnabled) {
                 store.dispatchNavigationAction { replaceAll(AppRoute.Home()) }
+            } else {
+                val isLocked = runCatching { userWalletsListManager.asLockable()?.isLocked }.isSuccess
+                if (isLocked && userWalletsListManager.hasUserWallets) {
+                    store.dispatchNavigationAction { popTo<AppRoute.Welcome>() }
+                } else {
+                    store.dispatchNavigationAction { replaceAll(AppRoute.Home()) }
+                }
             }
         }
     }

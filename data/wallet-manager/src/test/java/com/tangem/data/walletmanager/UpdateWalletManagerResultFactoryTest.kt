@@ -188,7 +188,7 @@ internal class UpdateWalletManagerResultFactoryTest {
                     ),
                     currenciesAmounts = setOf(
                         UpdateWalletManagerResult.CryptoCurrencyAmount.Coin(value = BigDecimal.ONE),
-                        UpdateWalletManagerResult.CryptoCurrencyAmount.Token(
+                        UpdateWalletManagerResult.CryptoCurrencyAmount.Token.BasicToken(
                             value = BigDecimal.ZERO,
                             currencyRawId = usdtToken.id?.let(CryptoCurrency::RawID),
                             contractAddress = usdtToken.contractAddress,
@@ -250,7 +250,9 @@ internal class UpdateWalletManagerResultFactoryTest {
                             ),
                         ),
                         currenciesAmounts = setOf(
-                            UpdateWalletManagerResult.CryptoCurrencyAmount.Coin(value = BigDecimal.ZERO), // default for demo
+                            UpdateWalletManagerResult.CryptoCurrencyAmount.Coin(
+                                value = BigDecimal.ZERO,
+                            ), // default for demo
                         ),
                         currentTransactions = emptySet(),
                     ),
@@ -272,7 +274,9 @@ internal class UpdateWalletManagerResultFactoryTest {
                             ),
                         ),
                         currenciesAmounts = setOf(
-                            UpdateWalletManagerResult.CryptoCurrencyAmount.Coin(value = BigDecimal.ONE), // used demo amount
+                            UpdateWalletManagerResult.CryptoCurrencyAmount.Coin(
+                                value = BigDecimal.ONE,
+                            ), // used demo amount
                         ),
                         currentTransactions = emptySet(),
                     ),
@@ -416,7 +420,7 @@ internal class UpdateWalletManagerResultFactoryTest {
                         ),
                         currenciesAmounts = setOf(
                             UpdateWalletManagerResult.CryptoCurrencyAmount.Coin(value = BigDecimal.ZERO),
-                            UpdateWalletManagerResult.CryptoCurrencyAmount.Token(
+                            UpdateWalletManagerResult.CryptoCurrencyAmount.Token.BasicToken(
                                 value = BigDecimal.ZERO,
                                 currencyRawId = usdtToken.id?.let(CryptoCurrency::RawID),
                                 contractAddress = usdtToken.contractAddress,
@@ -477,7 +481,7 @@ internal class UpdateWalletManagerResultFactoryTest {
                         ),
                         currenciesAmounts = setOf(
                             UpdateWalletManagerResult.CryptoCurrencyAmount.Coin(value = BigDecimal.TEN),
-                            UpdateWalletManagerResult.CryptoCurrencyAmount.Token(
+                            UpdateWalletManagerResult.CryptoCurrencyAmount.Token.BasicToken(
                                 value = BigDecimal.TEN,
                                 currencyRawId = usdtToken.id?.let(CryptoCurrency::RawID),
                                 contractAddress = usdtToken.contractAddress,

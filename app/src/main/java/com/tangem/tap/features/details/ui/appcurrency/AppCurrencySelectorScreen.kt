@@ -341,16 +341,16 @@ private class AppCurrencySelectorStateProvider : CollectionPreviewParameterProvi
             .mapIndexed { index, s -> Currency(index.toString(), s) }
             .toPersistentList()
 
-        AppCurrencySelectorState.Loading(onBackClick = {}).let(::add)
-        AppCurrencySelectorState.Default(
+        add(AppCurrencySelectorState.Loading(onBackClick = {}))
+        add(AppCurrencySelectorState.Default(
             selectedId = "0",
             items = items,
             scrollToSelected = consumedEvent(),
             onCurrencyClick = {},
             onBackClick = {},
             onTopBarActionClick = {},
-        ).let(::add)
-        AppCurrencySelectorState.Search(
+        ))
+        add(AppCurrencySelectorState.Search(
             selectedId = "0",
             items = items,
             scrollToSelected = consumedEvent(),
@@ -358,7 +358,7 @@ private class AppCurrencySelectorStateProvider : CollectionPreviewParameterProvi
             onBackClick = {},
             onSearchInputChange = {},
             onTopBarActionClick = {},
-        ).let(::add)
+        ))
     },
 )
 // endregion Preview
