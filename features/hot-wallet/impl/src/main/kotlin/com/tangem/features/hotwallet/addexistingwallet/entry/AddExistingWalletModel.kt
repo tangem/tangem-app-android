@@ -2,9 +2,15 @@ package com.tangem.features.hotwallet.addexistingwallet.entry
 
 import com.arkivanov.decompose.router.stack.*
 import com.tangem.common.routing.AppRoute
+import com.tangem.core.decompose.di.GlobalUiMessageSender
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.ui.R
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.message.DialogMessage
+import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.settings.ShouldAskPermissionUseCase
 import com.tangem.features.hotwallet.addexistingwallet.entry.routing.AddExistingWalletRoute
@@ -26,6 +32,7 @@ internal class AddExistingWalletModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
     private val shouldAskPermissionUseCase: ShouldAskPermissionUseCase,
+    @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
 ) : Model() {
 
     val hotWalletStepperComponentModelCallback = HotWalletStepperComponentModelCallback()
@@ -56,9 +63,7 @@ internal class AddExistingWalletModel @Inject constructor(
         modelScope.launch {
             val shouldRequestPush = shouldAskPermissionUseCase(PUSH_PERMISSION)
             if (shouldRequestPush) {
-                // is yet blocked by [REDACTED_TASK_KEY]
-                // stackNavigation.replaceAll(AddExistingWalletRoute.PushNotifications)
-                stackNavigation.replaceAll(AddExistingWalletRoute.SetupFinished)
+                stackNavigation.replaceAll(AddExistingWalletRoute.PushNotifications)
             } else {
                 stackNavigation.replaceAll(AddExistingWalletRoute.SetupFinished)
             }
@@ -69,13 +74,31 @@ internal class AddExistingWalletModel @Inject constructor(
         stackNavigation.replaceAll(AddExistingWalletRoute.SetupFinished)
     }
 
+    private fun showSkipAccessCodeWarningDialog() {
+        uiMessageSender.send(
+            DialogMessage(
+                message = resourceReference(R.string.access_code_alert_skip_description),
+                title = resourceReference(R.string.access_code_alert_skip_title),
+                firstAction = EventMessageAction(
+                    title = resourceReference(R.string.common_cancel),
+                    onClick = {},
+                ),
+                secondAction = EventMessageAction(
+                    title = resourceReference(R.string.access_code_alert_skip_ok),
+                    onClick = { navigateToPushNotificationsOrNext() },
+                ),
+                dismissOnFirstAction = true,
+            ),
+        )
+    }
+
     inner class HotWalletStepperComponentModelCallback : HotWalletStepperComponent.ModelCallback {
         override fun onBackClick() {
             onChildBack()
         }
 
         override fun onSkipClick() {
-            navigateToPushNotificationsOrNext()
+            showSkipAccessCodeWarningDialog()
         }
     }
 
@@ -102,11 +125,11 @@ internal class AddExistingWalletModel @Inject constructor(
     }
 
     inner class AccessCodeModelCallbacks : AccessCodeComponent.ModelCallbacks {
-        override fun onAccessCodeSet(userWalletId: UserWalletId, accessCode: String) {
+        override fun onNewAccessCodeInput(userWalletId: UserWalletId, accessCode: String) {
             stackNavigation.push(AddExistingWalletRoute.ConfirmAccessCode(userWalletId, accessCode))
         }
 
-        override fun onAccessCodeConfirmed(userWalletId: UserWalletId) {
+        override fun onAccessCodeUpdated(userWalletId: UserWalletId) {
             navigateToPushNotificationsOrNext()
         }
     }
