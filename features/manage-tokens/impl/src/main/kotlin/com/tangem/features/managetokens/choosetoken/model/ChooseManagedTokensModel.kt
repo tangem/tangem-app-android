@@ -26,6 +26,7 @@ import com.tangem.features.managetokens.component.ManageTokensMode
 import com.tangem.features.managetokens.component.ManageTokensSource
 import com.tangem.features.managetokens.component.analytics.CommonManageTokensAnalyticEvents
 import com.tangem.features.managetokens.entity.item.CurrencyItemUM
+import com.tangem.features.managetokens.entity.item.CurrencyItemUM.Basic
 import com.tangem.features.managetokens.entity.managetokens.ManageTokensTopBarUM
 import com.tangem.features.managetokens.entity.managetokens.ManageTokensUM
 import com.tangem.features.managetokens.impl.R
@@ -42,7 +43,6 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
-import kotlin.collections.isNotEmpty
 
 @Suppress("LongParameterList")
 @ModelScoped
@@ -95,7 +95,7 @@ internal class ChooseManagedTokensModel @Inject constructor(
         observeSearchQueryChanges()
 
         modelScope.launch {
-            manageTokensListManager.launchPagination()
+            manageTokensListManager.launchPagination(isCollapsed = false)
         }
     }
 
@@ -176,8 +176,19 @@ internal class ChooseManagedTokensModel @Inject constructor(
         uiState.update { state ->
             state.copy(
                 readContent = state.readContent.copy(
-                    items = items.filterNot {
-                        it.id.value == params.initialCurrency.id.rawCurrencyId?.value
+                    items = items.filterNot { currency ->
+                        val availableNetworks = (currency as? Basic)?.networks as? Basic.NetworksUM.Expanded
+
+                        // Check whether currency is initial token
+                        val isToken = currency.id.value == params.initialCurrency.id.rawCurrencyId?.value
+
+                        // Ensure that initial token network is filtered out and network list is empty
+                        val isEmptyNetworks = availableNetworks?.networks?.filterNot { network ->
+                            network.id == params.initialCurrency.network.id.rawId.value
+                        }.isNullOrEmpty()
+
+                        // Filter out currency from display
+                        isToken && isEmptyNetworks
                     }.toPersistentList(),
                 ),
             )
