@@ -12,9 +12,9 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.domain.card.CardTypesResolver
 import com.tangem.domain.card.ScanCardProcessor
-import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.card.common.util.getBackupCardsCount
+import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.requireColdWallet
@@ -34,6 +34,7 @@ import com.tangem.tap.features.details.ui.cardsettings.domain.CardSettingsIntera
 import com.tangem.tap.features.details.ui.common.utils.*
 import com.tangem.tap.store
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.extensions.addIf
 import com.tangem.wallet.R
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -89,8 +90,7 @@ internal class CardSettingsModel @Inject constructor(
                 .getOrElse { error("User wallet $userWalletId not found") }
                 .requireColdWallet()
 
-            cardSdkConfigRepository.isBiometricsRequestPolicy =
-                userWallet.scanResponse.card.isAccessCodeSet &&
+            cardSdkConfigRepository.isBiometricsRequestPolicy = userWallet.scanResponse.card.isAccessCodeSet &&
                 settingsRepository.shouldSaveAccessCodes()
         }
     }
@@ -135,36 +135,37 @@ internal class CardSettingsModel @Inject constructor(
         )
         val isResetCardAllowed = isResetToFactoryAllowedByCard(card, cardTypesResolver)
 
-        val cardDetails = buildList<CardInfo> {
+        val cardDetails: List<CardInfo> = buildList {
             add(CardInfo.CardId(cardId))
             add(CardInfo.Issuer(card.issuer.name))
 
-            if (!cardTypesResolver.isTangemTwins()) {
-                add(CardInfo.SignedHashes(card.signedHashesCount().toString()))
-            }
+            addIf(
+                condition = !cardTypesResolver.isTangemTwins(),
+                element = CardInfo.SignedHashes(card.signedHashesCount().toString()),
+            )
 
             add(
                 CardInfo.SecurityMode(
-                    currentSecurityOption,
+                    securityOption = currentSecurityOption,
                     clickable = allowedSecurityOptions.size > 1,
                 ),
             )
 
-            if (card.backupStatus?.isActive == true && card.isAccessCodeSet) {
-                add(CardInfo.ChangeAccessCode)
-            }
+            addIf(
+                condition = card.backupStatus?.isActive == true && card.isAccessCodeSet,
+                element = CardInfo.ChangeAccessCode,
+            )
 
-            if (isAccessCodeRecoveryAllowed(cardTypesResolver)) {
-                add(CardInfo.AccessCodeRecovery(isAccessCodeRecoveryEnabled(cardTypesResolver, card)))
-            }
+            addIf(
+                condition = isAccessCodeRecoveryAllowed(cardTypesResolver),
+                element = CardInfo.AccessCodeRecovery(isAccessCodeRecoveryEnabled(cardTypesResolver, card)),
+            )
 
-            if (isResetCardAllowed) {
-                add(
-                    CardInfo.ResetToFactorySettings(
-                        description = getResetToFactoryDescription(
-                            isActiveBackupStatus = card.backupStatus?.isActive == true,
-                            typesResolver = cardTypesResolver,
-                        ),
+            addIf(isResetCardAllowed) {
+                CardInfo.ResetToFactorySettings(
+                    description = getResetToFactoryDescription(
+                        isActiveBackupStatus = card.backupStatus?.isActive == true,
+                        typesResolver = cardTypesResolver,
                     ),
                 )
             }
