@@ -487,7 +487,7 @@
     <item quantity="other">%1$d de %2$d billeteras</item>
   </plurals>
   <string name="manage_tokens_remove">Eliminar</string>
-  <string name="manage_tokens_search_placeholder">por ejemplo, BTC I trust, hodl I must</string>
+  <string name="manage_tokens_search_placeholder">Por ejemplo, Bitcoin</string>
   <string name="manage_tokens_toast_portfolio_updated">Su portafolio ha sido actualizada</string>
   <string name="manage_tokens_unavailable_description">El token seleccionado no está disponible actualmente para acciones dentro de la billetera cripto. Pero no se preocupa, puede expresar su interés votando a favor.</string>
   <string name="manage_tokens_unavailable_vote">Votar a favor</string>
@@ -650,6 +650,9 @@
   <string name="notification_referral_promo_button">Únase ahora</string>
   <string name="notification_referral_promo_text">Comparta su código y gane 5 USDT por venta. Su amigo obtiene un 10% de descuento.</string>
   <string name="notification_referral_promo_title">¡Obtenga RECOMPENSAS por cada amigo!</string>
+  <string name="notification_sepa_button">Comprar cripto</string>
+  <string name="notification_sepa_text">Disfrute de unas comisiones del **0%** al comprar criptomonedas mediante transferencias SEPA.</string>
+  <string name="notification_sepa_title">Comprar criptomonedas con SEPA</string>
   <string name="onboarding_access_code_feature_1_description">Configure un código de acceso único para proteger todos sus dispositivos.</string>
   <string name="onboarding_access_code_feature_1_title">Proteger</string>
   <string name="onboarding_access_code_feature_2_description">Puede configurar un código de acceso individual en cada tarjeta más adelante</string>
