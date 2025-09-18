@@ -1,8 +1,11 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.ui.components
 
 import android.content.res.Configuration
+import androidx.compose.animation.Crossfade
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -11,6 +14,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.buttons.HorizontalActionChips
 import com.tangem.core.ui.components.buttons.segmentedbutton.SegmentedButtons
@@ -22,6 +27,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.tokendetails.presentation.tokendetails.TokenDetailsPreviewData
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsBalanceBlockState
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsYieldSupplyState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsActionButton
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.utils.StringsSigns.DASH_SIGN
@@ -44,8 +50,7 @@ internal fun TokenDetailsBalanceBlock(
         val spacing12 = TangemTheme.dimens.spacing12
 
         ConstraintLayout(
-            modifier = Modifier
-                .fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth(),
         ) {
             val (balanceTitle, toggleButtons, fiatBalance, cryptoBalance, actionChips) = createRefs()
 
@@ -87,13 +92,12 @@ internal fun TokenDetailsBalanceBlock(
 
             HorizontalActionChips(
                 buttons = state.actionButtons.map(TokenDetailsActionButton::config).toImmutableList(),
-                modifier = Modifier
-                    .constrainAs(actionChips) {
-                        top.linkTo(anchor = cryptoBalance.bottom, margin = spacing12)
-                        start.linkTo(anchor = parent.start)
-                        end.linkTo(anchor = parent.end)
-                        bottom.linkTo(anchor = parent.bottom, margin = spacing12)
-                    },
+                modifier = Modifier.constrainAs(actionChips) {
+                    top.linkTo(anchor = cryptoBalance.bottom, margin = spacing12)
+                    start.linkTo(anchor = parent.start)
+                    end.linkTo(anchor = parent.end)
+                    bottom.linkTo(anchor = parent.bottom, margin = spacing12)
+                },
                 containerColor = TangemTheme.colors.background.primary,
                 contentPadding = PaddingValues(horizontal = TangemTheme.dimens.spacing12),
             )
@@ -144,14 +148,52 @@ private fun CryptoBalance(
                 height = TangemTheme.dimens.size16,
             ),
         )
-        is TokenDetailsBalanceBlockState.Content -> Text(
-            modifier = modifier,
-            text = state.displayCryptoBalance.orMaskWithStars(isBalanceHidden),
-            style = TangemTheme.typography.caption2.applyBladeBrush(
-                isEnabled = state.isBalanceFlickering,
-                textColor = TangemTheme.colors.text.tertiary,
-            ),
-        )
+        is TokenDetailsBalanceBlockState.Content -> {
+            Crossfade(
+                modifier = modifier,
+                targetState = state.yieldSupplyState,
+            ) { yieldSupplyState ->
+                when (yieldSupplyState) {
+                    is TokenDetailsYieldSupplyState.Active -> {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        ) {
+                            Icon(
+                                modifier = Modifier.size(TangemTheme.dimens.size16),
+                                painter = painterResource(id = R.drawable.ic_exchange_horizontal_24),
+                                tint = TangemTheme.colors.icon.inactive,
+                                contentDescription = null,
+                            )
+                            Text(
+                                text = state.displayCryptoBalance.orMaskWithStars(isBalanceHidden),
+                                style = TangemTheme.typography.caption2.applyBladeBrush(
+                                    isEnabled = state.isBalanceFlickering,
+                                    textColor = TangemTheme.colors.text.tertiary,
+                                ),
+                            )
+                            Icon(
+                                modifier = Modifier
+                                    .size(TangemTheme.dimens.size16)
+                                    .clickable {
+                                        yieldSupplyState.yieldInfoClick()
+                                    },
+                                painter = painterResource(id = R.drawable.ic_information_24),
+                                tint = TangemTheme.colors.icon.inactive,
+                                contentDescription = null,
+                            )
+                        }
+                    }
+                    is TokenDetailsYieldSupplyState.Empty -> Text(
+                        text = state.displayCryptoBalance.orMaskWithStars(isBalanceHidden),
+                        style = TangemTheme.typography.caption2.applyBladeBrush(
+                            isEnabled = state.isBalanceFlickering,
+                            textColor = TangemTheme.colors.text.tertiary,
+                        ),
+                    )
+                }
+            }
+        }
         is TokenDetailsBalanceBlockState.Error -> Text(
             modifier = modifier,
             text = DASH_SIGN.orMaskWithStars(isBalanceHidden),
@@ -209,6 +251,9 @@ private class TokenDetailsBalanceBlockStateProvider : CollectionPreviewParameter
         TokenDetailsPreviewData.balanceLoading,
         TokenDetailsPreviewData.balanceContent,
         TokenDetailsPreviewData.balanceContent.copy(isBalanceFlickering = true),
+        TokenDetailsPreviewData.balanceContent.copy(
+            yieldSupplyState = TokenDetailsYieldSupplyState.Active({}),
+        ),
         TokenDetailsPreviewData.balanceError,
     ),
 )
