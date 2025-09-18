@@ -11,6 +11,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.derivations.HotMapDerivationsRepository
+import com.tangem.domain.wallets.hot.HotWalletAccessor
 import com.tangem.domain.wallets.usecase.BackendId
 import com.tangem.hot.sdk.model.DeriveWalletRequest
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
