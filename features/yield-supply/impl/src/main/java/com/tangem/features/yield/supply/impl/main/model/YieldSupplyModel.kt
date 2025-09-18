@@ -36,7 +36,7 @@ internal class YieldSupplyModel @Inject constructor(
     private val params = paramsContainer.require<YieldSupplyComponent.Params>()
 
     val uiState: StateFlow<YieldSupplyUM>
-    field = MutableStateFlow<YieldSupplyUM>(YieldSupplyUM.Loading)
+        field = MutableStateFlow<YieldSupplyUM>(YieldSupplyUM.Loading)
 
     val bottomSheetNavigation: SlotNavigation<Unit> = SlotNavigation()
 
@@ -44,12 +44,12 @@ internal class YieldSupplyModel @Inject constructor(
     var userWallet: UserWallet by Delegates.notNull()
 
     val cryptoCurrencyStatusFlow: StateFlow<CryptoCurrencyStatus>
-    field = MutableStateFlow(
-        CryptoCurrencyStatus(
-            currency = params.cryptoCurrency,
-            value = CryptoCurrencyStatus.Loading,
-        ),
-    )
+        field = MutableStateFlow(
+            CryptoCurrencyStatus(
+                currency = params.cryptoCurrency,
+                value = CryptoCurrencyStatus.Loading,
+            ),
+        )
 
     init {
         subscribeOnCurrencyStatusUpdates()
