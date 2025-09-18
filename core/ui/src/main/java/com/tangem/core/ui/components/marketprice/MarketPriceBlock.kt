@@ -10,6 +10,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -20,6 +21,7 @@ import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.MarketPriceBlockTestTags
 import com.tangem.utils.StringsSigns.DASH_SIGN
 
 /**
@@ -45,7 +47,8 @@ fun MarketPriceBlock(state: MarketPriceBlockState, modifier: Modifier = Modifier
             .fillMaxWidth()
             .heightIn(min = TangemTheme.dimens.size72)
             .padding(all = TangemTheme.dimens.spacing12)
-            .onSizeChanged { rootWidth = it.width },
+            .onSizeChanged { rootWidth = it.width }
+            .testTag(MarketPriceBlockTestTags.BLOCK),
         verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing4),
         horizontalAlignment = Alignment.Start,
     ) {
@@ -64,6 +67,7 @@ private fun Title(currencyName: String, modifier: Modifier = Modifier) {
             text = stringResourceSafe(id = R.string.wallet_marketplace_block_title, currencyName),
             color = TangemTheme.colors.text.tertiary,
             style = TangemTheme.typography.subtitle2,
+            modifier = Modifier.testTag(MarketPriceBlockTestTags.TEXT),
         )
     }
 }

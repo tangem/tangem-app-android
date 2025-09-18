@@ -1,6 +1,7 @@
 package com.tangem.features.txhistory.entity
 
 import com.tangem.core.ui.components.transactions.state.TransactionState
+import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -81,7 +82,9 @@ sealed interface TxHistoryUM {
         data class GroupTitle(
             val title: String,
             val itemKey: String,
-        ) : TxHistoryItemUM
+        ) : TxHistoryItemUM {
+            val legacyGroupTitle = TxHistoryState.TxHistoryItemState.GroupTitle(title = title, itemKey = itemKey)
+        }
 
         /**
          * Transaction item

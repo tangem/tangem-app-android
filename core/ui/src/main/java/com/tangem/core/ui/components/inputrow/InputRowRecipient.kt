@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment.Companion.CenterEnd
 import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
@@ -32,6 +33,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.SendAddressScreenTestTags
 import com.tangem.core.ui.utils.DEFAULT_ANIMATION_DURATION
 import kotlinx.coroutines.delay
 
@@ -92,6 +94,7 @@ fun InputRowRecipient(
                     text = it.resolveReference(),
                     style = TangemTheme.typography.subtitle2,
                     color = color,
+                    modifier = Modifier.testTag(SendAddressScreenTestTags.ADDRESS_TEXT_FIELD_TITLE),
                 )
             }
             Box(
@@ -115,7 +118,8 @@ fun InputRowRecipient(
                         modifier = Modifier
                             .padding(start = TangemTheme.dimens.spacing12)
                             .weight(1f)
-                            .align(CenterVertically),
+                            .align(CenterVertically)
+                            .testTag(SendAddressScreenTestTags.ADDRESS_TEXT_FIELD),
                     )
                     CrossIcon(
                         onClick = onPasteClick,
