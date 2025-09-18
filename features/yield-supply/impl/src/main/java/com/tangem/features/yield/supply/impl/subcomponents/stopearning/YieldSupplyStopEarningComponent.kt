@@ -49,6 +49,7 @@ internal class YieldSupplyStopEarningComponent(
         val state by model.uiState.collectAsStateWithLifecycle()
         YieldSupplyActionContent(
             yieldSupplyActionUM = state,
+            onFooterClick = model::onReadMoreClick,
             modifier = modifier,
         ) {
             Box(
