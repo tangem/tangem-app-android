@@ -9,12 +9,14 @@ import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.*
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.ResetCardScreenTestTags
 import com.tangem.tap.features.details.ui.cardsettings.TextReference
 import com.tangem.tap.features.details.ui.cardsettings.resolveReference
 import com.tangem.tap.features.details.ui.common.DetailsMainButton
@@ -25,11 +27,11 @@ import com.tangem.tap.features.details.ui.resetcard.ResetCardScreenState.Dialog 
 @Composable
 internal fun ResetCardScreen(state: ResetCardScreenState, onBackClick: () -> Unit, modifier: Modifier = Modifier) {
     SettingsScreensScaffold(
+        onBackClick = onBackClick,
         modifier = modifier,
         content = {
             ResetCardView(state = state)
         },
-        onBackClick = onBackClick,
     )
 
     when (val dialog = state.dialog) {
@@ -63,7 +65,7 @@ private fun ResetCardView(state: ResetCardScreenState) {
         Conditions(state)
         DynamicSpacer(scrollState = scrollState)
         SpacerH16()
-        ResetButton(enabled = state.resetButtonEnabled, onResetButtonClick = state.onResetButtonClick)
+        ResetButton(enabled = state.isResetButtonEnabled, onResetButtonClick = state.onResetButtonClick)
         SpacerH16()
     }
 }
@@ -74,6 +76,7 @@ private fun Title() {
         text = stringResourceSafe(id = R.string.card_settings_reset_card_to_factory),
         style = TangemTheme.typography.h1,
         color = TangemTheme.colors.text.primary1,
+        modifier = Modifier.testTag(ResetCardScreenTestTags.TITLE),
     )
 }
 
@@ -82,7 +85,9 @@ private fun AlertImage() {
     Image(
         painter = painterResource(id = R.drawable.img_alert_80),
         contentDescription = null,
-        modifier = Modifier.size(TangemTheme.dimens.size80),
+        modifier = Modifier
+            .size(TangemTheme.dimens.size80)
+            .testTag(ResetCardScreenTestTags.ATTENTION_IMAGE),
     )
 }
 
@@ -92,6 +97,7 @@ private fun Subtitle() {
         text = stringResourceSafe(id = R.string.common_attention),
         style = TangemTheme.typography.h3,
         color = TangemTheme.colors.text.primary1,
+        modifier = Modifier.testTag(ResetCardScreenTestTags.SUBTITLE),
     )
 }
 
@@ -101,23 +107,24 @@ private fun Description(text: TextReference) {
         text = text.resolveReference(),
         style = TangemTheme.typography.body1,
         color = TangemTheme.colors.text.secondary,
+        modifier = Modifier.testTag(ResetCardScreenTestTags.DESCRIPTION),
     )
 }
 
 @Composable
 private fun Conditions(state: ResetCardScreenState) {
-    state.warningsToShow.forEach {
-        when (it) {
+    state.warningsToShow.forEach { warning ->
+        when (warning) {
             ResetCardScreenState.WarningsToReset.LOST_WALLET_ACCESS -> {
                 ConditionCheckBox(
-                    checkedState = state.acceptCondition1Checked,
+                    checkedState = state.isAcceptCondition1Checked,
                     onCheckedChange = state.onAcceptCondition1ToggleClick,
                     description = TextReference.Res(R.string.reset_card_to_factory_condition_1),
                 )
             }
             ResetCardScreenState.WarningsToReset.LOST_PASSWORD_RESTORE -> {
                 ConditionCheckBox(
-                    checkedState = state.acceptCondition2Checked,
+                    checkedState = state.isAcceptCondition2Checked,
                     onCheckedChange = state.onAcceptCondition2ToggleClick,
                     description = TextReference.Res(R.string.reset_card_to_factory_condition_2),
                 )
@@ -135,7 +142,11 @@ private fun ConditionCheckBox(checkedState: Boolean, onCheckedChange: (Boolean) 
             .padding(vertical = TangemTheme.dimens.size16),
         horizontalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing16),
     ) {
-        IconToggleButton(checked = checkedState, onCheckedChange = onCheckedChange) {
+        IconToggleButton(
+            checked = checkedState,
+            onCheckedChange = onCheckedChange,
+            modifier = Modifier.testTag(ResetCardScreenTestTags.CHECKBOX),
+        ) {
             AnimatedContent(targetState = checkedState, label = "Update checked state") { checked ->
                 Icon(
                     painter = painterResource(
@@ -159,6 +170,7 @@ private fun ConditionCheckBox(checkedState: Boolean, onCheckedChange: (Boolean) 
             text = description.resolveReference(),
             style = TangemTheme.typography.body2,
             color = TangemTheme.colors.text.secondary,
+            modifier = Modifier.testTag(ResetCardScreenTestTags.CHECKBOX_TEXT),
         )
     }
 }
@@ -226,12 +238,12 @@ private fun ResetCardScreenSample(modifier: Modifier = Modifier) {
     ) {
         ResetCardScreen(
             state = ResetCardScreenState(
-                resetButtonEnabled = true,
-                showResetPasswordButton = false,
+                isResetButtonEnabled = true,
+                isResetPasswordButtonShown = false,
                 warningsToShow = listOf(ResetCardScreenState.WarningsToReset.LOST_WALLET_ACCESS),
                 descriptionText = TextReference.Res(R.string.reset_card_with_backup_to_factory_message),
-                acceptCondition1Checked = false,
-                acceptCondition2Checked = false,
+                isAcceptCondition1Checked = false,
+                isAcceptCondition2Checked = false,
                 onAcceptCondition1ToggleClick = {},
                 onAcceptCondition2ToggleClick = {},
                 onResetButtonClick = {},
