@@ -48,6 +48,8 @@ fun CurrencyIcon(
             is CurrencyIconState.FiatIcon,
             is CurrencyIconState.CustomTokenIcon,
             is CurrencyIconState.TokenIcon,
+            is CurrencyIconState.CryptoPortfolio.Icon,
+            is CurrencyIconState.CryptoPortfolio.Letter,
             -> {
                 ContentIconContainer(
                     icon = state,
