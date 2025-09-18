@@ -74,7 +74,7 @@ internal fun AccessCode(state: AccessCodeUM, modifier: Modifier = Modifier) {
             ) {
                 PinTextField(
                     length = state.accessCodeLength,
-                    isPasswordVisual = !state.isConfirmMode,
+                    isPasswordVisual = state.isConfirmMode,
                     value = state.accessCode,
                     pinTextColor = PinTextColor.Primary,
                     onValueChange = state.onAccessCodeChange,
