@@ -7,4 +7,5 @@ internal data class YieldSupplyActiveContentUM(
     val availableBalance: TextReference,
     val providerTitle: TextReference,
     val subtitle: TextReference,
+    val subtitleLink: TextReference,
 )
