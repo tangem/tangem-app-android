@@ -522,12 +522,9 @@
   <string name="hw_backup_need_action">Gehe zum Backup</string>
   <string name="hw_backup_need_description">Um Deine Wallet mit einem Zugangscode zu sichern, führe zuerst die Sicherung durch.</string>
   <string name="hw_backup_need_title">Sicherung zuerst beenden</string>
-  <string name="hw_backup_no_backup">Kein Backup</string>
   <string name="hw_backup_seed_description">Physische Karten, die Deine Kryptowährung sicher offline speichern.</string>
   <string name="hw_backup_seed_title">Wiederherstellungs-Phrase</string>
-  <string name="hw_create_keys_description">Über eingehende Transaktionen benachrichtigt werden</string>
   <string name="hw_create_keys_title">Schlüssel werden in der App gespeichert</string>
-  <string name="hw_create_seed_description">Bleibe über die neuesten Funktionen und Neuigkeiten auf dem Laufenden</string>
   <string name="hw_create_seed_title">Sicherung der Seed-Phrase</string>
   <string name="hw_create_title">Mobile Wallet erstellen</string>
   <string name="hw_import_seed_phrase_already_imported">Diese Wiederherstellungsphrase wurde bereits importiert</string>
@@ -586,7 +583,7 @@
     <item quantity="other">%1$d von %2$d Wallets</item>
   </plurals>
   <string name="manage_tokens_remove">Entfernen</string>
-  <string name="manage_tokens_search_placeholder">z.B. BTC vertraue ich, hodl muss ich</string>
+  <string name="manage_tokens_search_placeholder">Zum Beispiel, Bitcoin</string>
   <string name="manage_tokens_toast_portfolio_updated">Dein Portfolio wurde aktualisiert</string>
   <string name="manage_tokens_unavailable_description">Der ausgewählte Token ist derzeit nicht für Aktionen innerhalb der Krypto-Wallet verfügbar. Aber keine Sorge, du kannst dein Interesse bekunden, indem du den Token hochstufen.</string>
   <string name="manage_tokens_unavailable_vote">Hochstimmen</string>
