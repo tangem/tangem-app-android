@@ -27,7 +27,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.*
 import com.tangem.core.ui.components.buttons.common.TangemButtonSize
@@ -63,8 +62,8 @@ fun Notification(
         NotificationConfig.IconTint.Unspecified -> null
         NotificationConfig.IconTint.Accent -> TangemTheme.colors.icon.accent
         NotificationConfig.IconTint.Attention -> TangemTheme.colors.icon.attention
+        NotificationConfig.IconTint.Warning -> TangemTheme.colors.icon.warning
     },
-    iconSize: Dp = 20.dp,
     isEnabled: Boolean = true,
 ) {
     NotificationBaseContainer(
@@ -78,7 +77,7 @@ fun Notification(
         MainContent(
             iconResId = config.iconResId,
             iconTint = iconTint,
-            iconSize = iconSize,
+            iconSize = config.iconSize,
             title = config.title,
             titleColor = titleColor,
             subtitle = config.subtitle,
@@ -117,7 +116,9 @@ internal fun NotificationBaseContainer(
     ) {
         Box {
             Column(
-                modifier = Modifier.padding(all = TangemTheme.dimens.spacing12),
+                modifier = Modifier
+                    .padding(all = TangemTheme.dimens.spacing12)
+                    .testTag(NotificationTestTags.CONTAINER),
                 verticalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing12),
             ) {
                 content()
@@ -152,7 +153,8 @@ private fun MainContent(
             tint = iconTint,
             modifier = Modifier
                 .size(size = iconSize)
-                .align(alignment = Alignment.Top),
+                .align(alignment = Alignment.Top)
+                .testTag(NotificationTestTags.ICON),
         )
 
         SpacerW(width = TangemTheme.dimens.spacing10)
@@ -220,7 +222,7 @@ internal fun TextsBlock(
                 text = subtitleText,
                 color = subtitleColor,
                 style = TangemTheme.typography.caption2,
-                modifier = Modifier.testTag(NotificationTestTags.TEXT),
+                modifier = Modifier.testTag(NotificationTestTags.MESSAGE),
             )
         }
     }
