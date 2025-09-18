@@ -25,7 +25,6 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.utils.StringsSigns.PASSWORD_VISUAL_CHAR
@@ -159,14 +158,17 @@ private fun CellDecoration(
                             )
                         }
                     } else {
-                        Text(
+                        Box(
                             modifier = Modifier.sizeIn(minWidth = minWidth, minHeight = minHeight),
-                            text = text,
-                            style = TangemTheme.typography.h3,
-                            color = color,
-                            textAlign = TextAlign.Center,
-                            lineHeight = 48.sp,
-                        )
+                        ) {
+                            Text(
+                                modifier = Modifier.align(Alignment.Center),
+                                text = text,
+                                style = TangemTheme.typography.h3,
+                                color = color,
+                                textAlign = TextAlign.Center,
+                            )
+                        }
                     }
                 }
             }
