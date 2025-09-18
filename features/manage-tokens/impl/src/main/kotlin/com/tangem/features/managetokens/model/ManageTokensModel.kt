@@ -84,7 +84,7 @@ internal class ManageTokensModel @Inject constructor(
         observeSearchQueryChanges()
 
         modelScope.launch {
-            manageTokensListManager.launchPagination()
+            manageTokensListManager.launchPagination(isCollapsed = true)
         }
     }
 
