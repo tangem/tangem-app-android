@@ -27,16 +27,16 @@ import kotlinx.collections.immutable.persistentListOf
 @Composable
 internal fun AppSettingsScreen(state: AppSettingsScreenState, onBackClick: () -> Unit, modifier: Modifier = Modifier) {
     SettingsScreensScaffold(
+        onBackClick = onBackClick,
         modifier = modifier,
+        titleRes = R.string.app_settings_title,
+        addBottomInsets = false,
         content = {
             when (state) {
                 is AppSettingsScreenState.Content -> AppSettings(state = state)
                 is AppSettingsScreenState.Loading -> Unit
             }
         },
-        titleRes = R.string.app_settings_title,
-        onBackClick = onBackClick,
-        addBottomInsets = false,
     )
 }
 
@@ -103,10 +103,10 @@ private class AppSettingsScreenStateProvider : CollectionPreviewParameterProvide
             itemsFactory.createSelectThemeModeButton(AppThemeMode.DEFAULT, {}),
         )
 
-        AppSettingsScreenState.Content(
+        add(AppSettingsScreenState.Content(
             items = items,
             dialog = null,
-        ).let(::add)
+        ))
     },
 )
 // endregion Preview

@@ -8,6 +8,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
@@ -20,6 +21,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.WalletConnectDetailsBottomSheetTestTags
 
 /**
  * Title component for [TangemModalBottomSheet] with [TangemIconButton] for buttons.
@@ -54,7 +56,9 @@ fun TangemModalBottomSheetTitle(
                     text = title.resolveReference(),
                     style = TangemTheme.typography.subtitle1,
                     color = TangemTheme.colors.text.primary1,
-                    modifier = Modifier.align(Alignment.CenterHorizontally),
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .testTag(WalletConnectDetailsBottomSheetTestTags.TITLE),
                 )
             }
             if (subtitle != null) {
@@ -62,7 +66,9 @@ fun TangemModalBottomSheetTitle(
                     text = subtitle.resolveReference(),
                     style = TangemTheme.typography.caption1,
                     color = TangemTheme.colors.text.tertiary,
-                    modifier = Modifier.align(Alignment.CenterHorizontally),
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .testTag(WalletConnectDetailsBottomSheetTestTags.DATE),
                 )
             }
         }
@@ -72,7 +78,8 @@ fun TangemModalBottomSheetTitle(
                 onClick = onEndClick,
                 modifier = Modifier
                     .padding(16.dp)
-                    .align(Alignment.CenterEnd),
+                    .align(Alignment.CenterEnd)
+                    .testTag(WalletConnectDetailsBottomSheetTestTags.CLOSE_BUTTON),
             )
         }
     }
