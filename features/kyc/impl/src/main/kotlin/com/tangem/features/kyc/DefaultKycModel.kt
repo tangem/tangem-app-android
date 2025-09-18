@@ -15,18 +15,15 @@ import javax.inject.Inject
 @ModelScoped
 class DefaultKycModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
-    kycRepositoryFactory: KycRepository.Factory,
+    private val kycRepository: KycRepository,
 ) : Model() {
-
-    private val kycRepository = kycRepositoryFactory.create()
 
     private val _uiState: MutableStateFlow<KycStartInfo?> = MutableStateFlow(null)
     val uiState = _uiState.asStateFlow()
 
-    fun getKycToken(params: KycComponent.Params) {
+    fun getKycToken() {
         modelScope.launch {
-            kycRepository.getKycStartInfo(address = params.targetAddress, cardId = params.cardId).getOrNull()
-                ?.let { _uiState.emit(it) }
+            kycRepository.getKycStartInfo().getOrNull()?.let { _uiState.emit(it) }
         }
     }
 }
