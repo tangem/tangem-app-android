@@ -13,6 +13,8 @@ internal sealed class YieldSupplyFeeUM {
     data class Content(
         val transactionDataList: ImmutableList<TransactionData.Uncompiled>,
         val feeValue: TextReference,
+        val currentNetworkFeeValue: TextReference,
+        val maxNetworkFeeValue: TextReference,
     ) : YieldSupplyFeeUM()
 }
 
@@ -20,6 +22,7 @@ internal data class YieldSupplyActionUM(
     val title: TextReference,
     val subtitle: TextReference,
     val footer: TextReference,
+    val footerLink: TextReference,
     val currencyIconState: CurrencyIconState,
     val yieldSupplyFeeUM: YieldSupplyFeeUM,
     val isPrimaryButtonEnabled: Boolean,
