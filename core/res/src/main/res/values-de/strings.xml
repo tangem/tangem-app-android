@@ -586,7 +586,7 @@
     <item quantity="other">%1$d von %2$d Wallets</item>
   </plurals>
   <string name="manage_tokens_remove">Entfernen</string>
-  <string name="manage_tokens_search_placeholder">z.B. BTC vertraue ich, hodl muss ich</string>
+  <string name="manage_tokens_search_placeholder">Zum Beispiel, Bitcoin</string>
   <string name="manage_tokens_toast_portfolio_updated">Dein Portfolio wurde aktualisiert</string>
   <string name="manage_tokens_unavailable_description">Der ausgewählte Token ist derzeit nicht für Aktionen innerhalb der Krypto-Wallet verfügbar. Aber keine Sorge, du kannst dein Interesse bekunden, indem du den Token hochstufen.</string>
   <string name="manage_tokens_unavailable_vote">Hochstimmen</string>
