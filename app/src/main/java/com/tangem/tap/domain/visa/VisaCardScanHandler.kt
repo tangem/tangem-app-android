@@ -15,7 +15,7 @@ import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.domain.visa.error.VisaCardScanError
 import com.tangem.domain.visa.model.*
 import com.tangem.domain.visa.repository.VisaActivationRepository
-import com.tangem.domain.visa.repository.VisaAuthRepository
+import com.tangem.domain.visa.datasource.VisaAuthRemoteDataSource
 import com.tangem.operations.attestation.AttestCardKeyCommand
 import com.tangem.operations.attestation.AttestCardKeyResponse
 import com.tangem.operations.attestation.AttestWalletKeyResponse
@@ -26,7 +26,7 @@ import javax.inject.Inject
 import kotlin.coroutines.resume
 
 internal class VisaCardScanHandler @Inject constructor(
-    private val visaAuthRepository: VisaAuthRepository,
+    private val visaAuthRemoteDataSource: VisaAuthRemoteDataSource,
     private val visaActivationRepositoryFactory: VisaActivationRepository.Factory,
     private val visaAuthTokenStorage: VisaAuthTokenStorage,
 ) {
@@ -83,13 +83,13 @@ internal class VisaCardScanHandler @Inject constructor(
 
         Timber.i("Requesting challenge for wallet authorization")
 
-        val challengeResponse = visaAuthRepository.getCardWalletAuthChallenge(
+        val challengeResponse = visaAuthRemoteDataSource.getCardWalletAuthChallenge(
             cardId = card.cardId,
             // This is the wallet public key, not the address and it's alright, as the API expects it in this format
             cardWalletAddress = wallet.publicKey.toHexString(),
-        ).getOrElse {
+        ).getOrElse { error ->
             Timber.i("Failed to get Access token for Wallet public key authorization")
-            return CompletionResult.Failure(it.tangemError)
+            return CompletionResult.Failure(error.tangemError)
         }
 
         val signChallengeResult = signChallengeWithWallet(
@@ -122,17 +122,17 @@ internal class VisaCardScanHandler @Inject constructor(
         cardWalletAddress: String,
         signedChallenge: VisaAuthSignedChallenge,
     ): CompletionResult<VisaCardActivationStatus> {
-        val authorizationTokensResponse = visaAuthRepository.getAccessTokens(signedChallenge = signedChallenge)
-            .getOrElse {
+        val authorizationTokensResponse = visaAuthRemoteDataSource.getAccessTokens(signedChallenge = signedChallenge)
+            .getOrElse { error ->
                 Timber.i("Failed to get Access token for Wallet public key authorization.")
                 return if (
-                    it is VisaApiError.ProductInstanceIsNotActivated ||
-                    it is VisaApiError.ProductInstanceNotFoundActivationRequired
+                    error is VisaApiError.ProductInstanceIsNotActivated ||
+                    error is VisaApiError.ProductInstanceNotFoundActivationRequired
                 ) {
                     Timber.i("Proceeding with card authorization.")
                     handleCardAuthorization(cardWalletAddress = cardWalletAddress)
                 } else {
-                    CompletionResult.Failure(it.tangemError)
+                    CompletionResult.Failure(error.tangemError)
                 }
             }
 
@@ -149,12 +149,12 @@ internal class VisaCardScanHandler @Inject constructor(
 
         Timber.i("Requesting authorization challenge to sign")
 
-        val challengeResponse = visaAuthRepository.getCardAuthChallenge(
+        val challengeResponse = visaAuthRemoteDataSource.getCardAuthChallenge(
             cardId = card.cardId,
             cardPublicKey = card.cardPublicKey.toHexString(),
-        ).getOrElse {
-            Timber.e("Failed to get challenge for Card authorization. Plain error: ${it.errorCode}")
-            return CompletionResult.Failure(it.tangemError)
+        ).getOrElse { error ->
+            Timber.e("Failed to get challenge for Card authorization. Plain error: ${error.errorCode}")
+            return CompletionResult.Failure(error.tangemError)
         }
 
         Timber.i("Received challenge to sign: ${challengeResponse.challenge}")
@@ -174,14 +174,14 @@ internal class VisaCardScanHandler @Inject constructor(
             }
         }
 
-        val authorizationTokensResponse = visaAuthRepository.getAccessTokens(
+        val authorizationTokensResponse = visaAuthRemoteDataSource.getAccessTokens(
             signedChallenge = challengeResponse.toSignedChallenge(
                 signedChallenge = attestCardKeyResponse.cardSignature.toHexString(),
                 salt = attestCardKeyResponse.salt.toHexString(),
             ),
-        ).getOrElse {
-            Timber.e("Failed to sign challenge with Card public key. Plain error: ${it.errorCode}")
-            return CompletionResult.Failure(it.tangemError)
+        ).getOrElse { error ->
+            Timber.e("Failed to sign challenge with Card public key. Plain error: ${error.errorCode}")
+            return CompletionResult.Failure(error.tangemError)
         }
 
         visaAuthTokenStorage.store(
@@ -189,9 +189,9 @@ internal class VisaCardScanHandler @Inject constructor(
             tokens = authorizationTokensResponse,
         )
 
-        val activationRemoteState = visaActivationRepository.getActivationRemoteState().getOrElse {
-            Timber.e("Failed to sign challenge with Card public key. Plain error: ${it.errorCode}")
-            return CompletionResult.Failure(it.tangemError)
+        val activationRemoteState = visaActivationRepository.getActivationRemoteState().getOrElse { error ->
+            Timber.e("Failed to sign challenge with Card public key. Plain error: ${error.errorCode}")
+            return CompletionResult.Failure(error.tangemError)
         }
 
         val error = when (activationRemoteState) {

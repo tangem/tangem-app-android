@@ -11,13 +11,13 @@ import com.tangem.domain.card.models.TwinKey
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.models.wallet.requireColdWallet
 import com.tangem.domain.transaction.TransactionRepository
 import com.tangem.domain.transaction.error.SendTransactionError
 
 class PrepareAndSignUseCase(
     private val transactionRepository: TransactionRepository,
     private val cardSdkConfigRepository: CardSdkConfigRepository,
+    private val getHotTransactionSigner: (UserWallet.Hot) -> TransactionSigner,
 ) {
 
     suspend operator fun invoke(
@@ -57,7 +57,13 @@ class PrepareAndSignUseCase(
     }
 
     private fun createSigner(userWallet: UserWallet): TransactionSigner {
-        userWallet.requireColdWallet() // TODO [REDACTED_TASK_KEY]
+        return when (userWallet) {
+            is UserWallet.Hot -> getHotTransactionSigner(userWallet)
+            is UserWallet.Cold -> createColdSigner(userWallet)
+        }
+    }
+
+    private fun createColdSigner(userWallet: UserWallet.Cold): TransactionSigner {
         val card = userWallet.scanResponse.card
         val isCardNotBackedUp = card.backupStatus?.isActive != true && !card.isTangemTwins
 
