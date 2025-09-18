@@ -7,7 +7,7 @@ internal fun isAccessCodeRecoveryAllowed(typeResolver: CardTypesResolver): Boole
 
 internal fun isAccessCodeRecoveryEnabled(typeResolver: CardTypesResolver, card: CardDTO): Boolean =
     if (typeResolver.isWallet2()) {
-        card.userSettings?.isUserCodeRecoveryAllowed ?: false
+        card.userSettings?.isUserCodeRecoveryAllowed == true
     } else {
         false
     }

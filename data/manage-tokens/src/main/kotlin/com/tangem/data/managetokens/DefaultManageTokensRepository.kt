@@ -23,6 +23,7 @@ import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.card.common.TapWorkarounds.isTestCard
 import com.tangem.domain.card.common.extensions.canHandleBlockchain
 import com.tangem.domain.card.common.extensions.canHandleToken
+import com.tangem.domain.card.common.extensions.hotWalletExcludedBlockchains
 import com.tangem.domain.card.common.extensions.supportedBlockchains
 import com.tangem.domain.card.common.extensions.supportedTokens
 import com.tangem.domain.card.common.util.cardTypesResolver
@@ -291,13 +292,8 @@ internal class DefaultManageTokensRepository(
         userWallet: UserWallet,
         blockchain: Blockchain,
     ): CurrencyUnsupportedState? {
-        if (userWallet !is UserWallet.Cold) {
-            return null
-        }
-
-        val canHandleBlockchain = userWallet.scanResponse.card.canHandleBlockchain(
+        val canHandleBlockchain = userWallet.canHandleBlockchain(
             blockchain = blockchain,
-            cardTypesResolver = userWallet.cardTypesResolver,
             excludedBlockchains = excludedBlockchains,
         )
 
@@ -312,6 +308,14 @@ internal class DefaultManageTokensRepository(
         userWallet: UserWallet,
         blockchain: Blockchain,
     ): CurrencyUnsupportedState.Token? {
+        if (userWallet is UserWallet.Hot) {
+            return if (blockchain in hotWalletExcludedBlockchains) {
+                CurrencyUnsupportedState.Token.NetworkTokensUnsupported(networkName = blockchain.fullName)
+            } else {
+                null
+            }
+        }
+
         if (userWallet !is UserWallet.Cold) {
             return null
         }
