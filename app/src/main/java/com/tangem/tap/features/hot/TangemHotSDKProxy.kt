@@ -32,6 +32,13 @@ class TangemHotSDKProxy @Inject constructor() : TangemHotSdk {
     override suspend fun exportBackup(unlockHotWallet: UnlockHotWallet): ByteArray =
         callSdk { exportBackup(unlockHotWallet) }
 
+    override suspend fun clearUnlockContext(hotWalletId: HotWalletId) {
+        callSdk { clearUnlockContext(hotWalletId) }
+    }
+
+    override suspend fun getContextUnlock(unlockHotWallet: UnlockHotWallet): UnlockHotWallet =
+        callSdk { getContextUnlock(unlockHotWallet) }
+
     override suspend fun delete(id: HotWalletId) = callSdk { delete(id) }
 
     override suspend fun changeAuth(unlockHotWallet: UnlockHotWallet, auth: HotAuth): HotWalletId =
