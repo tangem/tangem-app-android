@@ -19,6 +19,7 @@ internal class DefaultClipboardManager(private val clipboardManager: AndroidClip
         clipboardManager.setPrimaryClip(clip)
     }
 
+    @Suppress("UseIsNullOrEmpty")
     override fun getText(default: String?): String? {
         val clip = clipboardManager.primaryClip
 
