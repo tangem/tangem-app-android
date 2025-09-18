@@ -2,19 +2,22 @@ package com.tangem.core.ui.components.label
 
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.R
 import com.tangem.core.ui.components.label.entity.LabelStyle
 import com.tangem.core.ui.components.label.entity.LabelUM
 import com.tangem.core.ui.extensions.TextReference
@@ -48,8 +51,18 @@ fun Label(state: LabelUM, modifier: Modifier = Modifier) {
         },
     )
 
+    val iconColor by animateColorAsState(
+        targetValue = when (state.style) {
+            LabelStyle.ACCENT -> TangemTheme.colors.icon.accent
+            LabelStyle.REGULAR -> TangemTheme.colors.icon.informative
+            LabelStyle.WARNING -> TangemTheme.colors.icon.warning
+        },
+    )
+
     AnimatedContent(targetState = state.text) { text ->
-        Box(
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
             modifier = modifier
                 .padding(horizontal = 4.dp)
                 .background(
@@ -63,6 +76,15 @@ fun Label(state: LabelUM, modifier: Modifier = Modifier) {
                 style = TangemTheme.typography.caption1,
                 color = textColor,
             )
+            AnimatedVisibility(state.icon != null) {
+                val wrappedIcon = remember(this) { requireNotNull(state.icon) }
+                Icon(
+                    imageVector = ImageVector.vectorResource(wrappedIcon),
+                    tint = iconColor,
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp),
+                )
+            }
         }
     }
 }
@@ -73,6 +95,7 @@ fun Label(state: LabelUM, modifier: Modifier = Modifier) {
 private fun LabelPreview() {
     TangemThemePreview {
         Column(
+            verticalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier.padding(16.dp),
         ) {
             Label(
@@ -81,22 +104,37 @@ private fun LabelPreview() {
                     style = LabelStyle.REGULAR,
                 ),
             )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
             Label(
                 state = LabelUM(
                     text = TextReference.Str("Accent Label"),
                     style = LabelStyle.ACCENT,
                 ),
             )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
             Label(
                 state = LabelUM(
                     text = TextReference.Str("Warning Label"),
                     style = LabelStyle.WARNING,
+                ),
+            )
+            Label(
+                state = LabelUM(
+                    text = TextReference.Str("Regular Label"),
+                    style = LabelStyle.REGULAR,
+                    icon = R.drawable.ic_information_24,
+                ),
+            )
+            Label(
+                state = LabelUM(
+                    text = TextReference.Str("Accent Label"),
+                    style = LabelStyle.ACCENT,
+                    icon = R.drawable.ic_information_24,
+                ),
+            )
+            Label(
+                state = LabelUM(
+                    text = TextReference.Str("Warning Label"),
+                    style = LabelStyle.WARNING,
+                    icon = R.drawable.ic_information_24,
                 ),
             )
         }
