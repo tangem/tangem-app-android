@@ -28,10 +28,6 @@ class ExcludedBlockchains @Inject internal constructor(
         excludedBlockchainsManager = object : ExcludedBlockchainsManager {
 
             override val excludedBlockchainsIds: Set<String> = emptySet()
-
-            override suspend fun init() {
-                /* no-op */
-            }
         },
     )
 
