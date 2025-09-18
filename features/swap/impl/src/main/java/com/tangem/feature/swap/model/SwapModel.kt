@@ -32,7 +32,6 @@ import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.promo.GetStoryContentUseCase
 import com.tangem.domain.promo.ShouldShowStoriesUseCase
@@ -77,7 +76,6 @@ import java.text.DecimalFormat
 import java.text.NumberFormat
 import java.util.Locale
 import javax.inject.Inject
-import kotlin.properties.Delegates
 
 typealias SuccessLoadedSwapData = Map<SwapProvider, SwapState.QuotesLoadedState>
 
@@ -115,11 +113,15 @@ internal class SwapModel @Inject constructor(
     private val userWalletId = params.userWalletId
     private val isInitiallyReversed = params.isInitialReverseOrder
 
+    private val userWallet by lazy {
+        requireNotNull(
+            getUserWalletUseCase(userWalletId).getOrNull(),
+        ) { "No wallet found for id: $userWalletId" }
+    }
     private val swapInteractor = swapInteractorFactory.create(userWalletId)
 
     private lateinit var initialFromStatus: CryptoCurrencyStatus
     private var initialToStatus: CryptoCurrencyStatus? = null
-    private var userWallet: UserWallet by Delegates.notNull()
 
     private var isBalanceHidden = true
 
@@ -186,12 +188,10 @@ internal class SwapModel @Inject constructor(
             val toStatus = initialCurrencyTo?.let {
                 getSingleCryptoCurrencyStatusUseCase.invokeMultiWalletSync(userWalletId, it.id).getOrNull()
             }
-            val wallet = getUserWalletUseCase(userWalletId).getOrNull()
 
-            if (fromStatus == null || wallet == null) {
+            if (fromStatus == null) {
                 uiState = stateBuilder.addAlert(uiState = uiState, onDismiss = swapRouter::back)
             } else {
-                userWallet = wallet
                 initialFromStatus = fromStatus
                 initialToStatus = toStatus
                 initTokens(isInitiallyReversed)
