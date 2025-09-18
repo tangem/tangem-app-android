@@ -30,6 +30,7 @@ internal class DefaultYieldSupplyTransactionRepository(
     override suspend fun createEnterTransactions(
         userWalletId: UserWalletId,
         cryptoCurrencyStatus: CryptoCurrencyStatus,
+        maxNetworkFee: BigDecimal,
     ): List<TransactionData.Uncompiled> {
         val cryptoCurrency = cryptoCurrencyStatus.currency
 
@@ -62,6 +63,7 @@ internal class DefaultYieldSupplyTransactionRepository(
             existingYieldContractAddress = existingYieldContractAddress,
             calculatedYieldContractAddress = calculatedYieldContractAddress,
             yieldTokenStatus = yieldTokenStatus,
+            maxNetworkFee = maxNetworkFee,
         )
     }
 
@@ -93,12 +95,14 @@ internal class DefaultYieldSupplyTransactionRepository(
         )
     }
 
+    @Suppress("LongParameterList")
     private fun buildEnterTransactions(
         walletManager: WalletManager,
         cryptoCurrency: CryptoCurrency.Token,
         existingYieldContractAddress: String?,
         calculatedYieldContractAddress: String,
         yieldTokenStatus: YieldSupplyStatus?,
+        maxNetworkFee: BigDecimal,
     ): MutableList<TransactionData.Uncompiled> {
         val enterTransactions = mutableListOf<TransactionData.Uncompiled>()
 
@@ -108,6 +112,7 @@ internal class DefaultYieldSupplyTransactionRepository(
                     createDeployTransaction(
                         walletManager = walletManager,
                         cryptoCurrency = cryptoCurrency,
+                        maxNetworkFee = maxNetworkFee,
                     ),
                 )
             }
@@ -118,6 +123,7 @@ internal class DefaultYieldSupplyTransactionRepository(
                     cryptoCurrency = cryptoCurrency,
                     yieldSupplyStatus = yieldTokenStatus,
                     yieldContractAddress = calculatedYieldContractAddress,
+                    maxNetworkFee = maxNetworkFee,
                 ),
             )
             !yieldTokenStatus.isActive -> enterTransactions.add(
@@ -126,6 +132,7 @@ internal class DefaultYieldSupplyTransactionRepository(
                     cryptoCurrency = cryptoCurrency,
                     yieldSupplyStatus = yieldTokenStatus,
                     yieldContractAddress = calculatedYieldContractAddress,
+                    maxNetworkFee = maxNetworkFee,
                 ),
             )
             else -> Unit
@@ -202,6 +209,7 @@ internal class DefaultYieldSupplyTransactionRepository(
                 isActive = sdkSupplyStatus?.isActive == true,
                 isInitialized = sdkSupplyStatus?.isInitialized == true,
                 isAllowedToSpend = isAllowedToSpend,
+                // maxNetworkFee = sdkSupplyStatus?.maxNetworkFee,
             )
         }.onFailure(Timber::e).getOrNull()
     }
@@ -209,11 +217,12 @@ internal class DefaultYieldSupplyTransactionRepository(
     private fun createDeployTransaction(
         walletManager: WalletManager,
         cryptoCurrency: CryptoCurrency.Token,
+        maxNetworkFee: BigDecimal,
     ): TransactionData.Uncompiled {
         val callData = YieldSupplyContractCallDataProviderFactory.getDeployCallData(
             tokenContractAddress = cryptoCurrency.contractAddress,
             walletAddress = walletManager.wallet.address,
-            maxNetworkFee = MAX_NETWORK_FEE.convertToSdkAmount(cryptoCurrency),
+            maxNetworkFee = maxNetworkFee.convertToSdkAmount(cryptoCurrency),
         )
 
         val factoryContractAddress = walletManager.getYieldSupplyContractAddresses()?.factoryContractAddress
@@ -234,10 +243,11 @@ internal class DefaultYieldSupplyTransactionRepository(
         cryptoCurrency: CryptoCurrency.Token,
         yieldContractAddress: String,
         yieldSupplyStatus: YieldSupplyStatus,
+        maxNetworkFee: BigDecimal,
     ): TransactionData.Uncompiled {
         val callData = YieldSupplyContractCallDataProviderFactory.getInitTokenCallData(
             tokenContractAddress = cryptoCurrency.contractAddress,
-            maxNetworkFee = MAX_NETWORK_FEE.convertToSdkAmount(cryptoCurrency),
+            maxNetworkFee = maxNetworkFee.convertToSdkAmount(cryptoCurrency),
         )
 
         return createTransaction(
@@ -255,10 +265,11 @@ internal class DefaultYieldSupplyTransactionRepository(
         cryptoCurrency: CryptoCurrency.Token,
         yieldContractAddress: String,
         yieldSupplyStatus: YieldSupplyStatus,
+        maxNetworkFee: BigDecimal,
     ): TransactionData.Uncompiled {
         val callData = YieldSupplyContractCallDataProviderFactory.getReactivateTokenCallData(
             tokenContractAddress = cryptoCurrency.contractAddress,
-            maxNetworkFee = MAX_NETWORK_FEE.convertToSdkAmount(cryptoCurrency),
+            maxNetworkFee = maxNetworkFee.convertToSdkAmount(cryptoCurrency),
         )
 
         return createTransaction(
@@ -364,8 +375,4 @@ internal class DefaultYieldSupplyTransactionRepository(
                 isAllowedToSpend = yieldSupplyStatus?.isAllowedToSpend ?: false,
             ),
         )
-
-    private companion object {
-        val MAX_NETWORK_FEE: BigDecimal = BigDecimal.TEN // TODO for TESTNET only
-    }
 }

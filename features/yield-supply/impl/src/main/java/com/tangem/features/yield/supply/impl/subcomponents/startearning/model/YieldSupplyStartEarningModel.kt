@@ -106,6 +106,7 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
         val transactionListData = yieldSupplyStartEarningUseCase(
             userWalletId = userWallet.walletId,
             cryptoCurrencyStatus = cryptoCurrencyStatus,
+            maxNetworkFee = MAX_NETWORK_FEE,
         ).getOrNull() ?: return
 
         val updatedTransactionList = yieldSupplyEstimateEnterFeeUseCase.invoke(
@@ -220,5 +221,9 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
         modelScope.launch {
             onLoadFee()
         }
+    }
+
+    private companion object {
+        val MAX_NETWORK_FEE: BigDecimal = BigDecimal.TEN // TODO replace with value from api
     }
 }
