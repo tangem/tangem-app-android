@@ -8,6 +8,7 @@ import com.tangem.datasource.local.walletconnect.DefaultWalletConnectStore
 import com.tangem.datasource.local.walletconnect.WalletConnectStore
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
 import com.tangem.datasource.utils.setTypes
+import com.tangem.domain.walletconnect.model.WcPendingApprovalSessionDTO
 import com.tangem.domain.walletconnect.model.WcSessionDTO
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
@@ -30,6 +31,7 @@ object WalletConnectModule {
         @ApplicationContext context: Context,
         dispatchers: CoroutineDispatcherProvider,
     ): WalletConnectStore {
+        val scope = CoroutineScope(context = dispatchers.io + SupervisorJob())
         return DefaultWalletConnectStore(
             persistenceStore = DataStoreFactory.create(
                 serializer = MoshiDataStoreSerializer(
@@ -38,7 +40,16 @@ object WalletConnectModule {
                     defaultValue = emptySet(),
                 ),
                 produceFile = { context.dataStoreFile(fileName = "wallet_connect_sessions") },
-                scope = CoroutineScope(context = dispatchers.io + SupervisorJob()),
+                scope = scope,
+            ),
+            pendingApprovalSessionsStore = DataStoreFactory.create(
+                serializer = MoshiDataStoreSerializer(
+                    moshi = moshi,
+                    types = setTypes<WcPendingApprovalSessionDTO>(),
+                    defaultValue = emptySet(),
+                ),
+                produceFile = { context.dataStoreFile(fileName = "wallet_connect_pending_approval_sessions") },
+                scope = scope,
             ),
         )
     }
