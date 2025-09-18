@@ -148,4 +148,8 @@ internal class OnrampStateFactory(
         decimals = currency.precision,
         type = AmountType.FiatType(currency.code),
     )
+
+    companion object {
+        const val PREDEFINED_SEPA_AMOUNT = "100"
+    }
 }
