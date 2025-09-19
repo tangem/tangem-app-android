@@ -34,6 +34,7 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.math.BigDecimal
+import java.math.RoundingMode
 import javax.inject.Inject
 import kotlin.properties.Delegates
 
@@ -79,10 +80,8 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
                     R.string.yield_module_start_earning_sheet_description,
                     wrappedList(cryptoCurrency.symbol),
                 ),
-                footer = combinedReference(
-                    resourceReference(R.string.yield_module_start_earning_sheet_next_deposits),
-                    resourceReference(R.string.yield_module_start_earning_sheet_fee_policy),
-                ),
+                footer = resourceReference(R.string.yield_module_start_earning_sheet_next_deposits),
+                footerLink = resourceReference(R.string.yield_module_start_earning_sheet_fee_policy),
                 currencyIconState = CryptoCurrencyToIconStateConverter().convert(params.cryptoCurrency),
                 yieldSupplyFeeUM = YieldSupplyFeeUM.Loading,
                 isPrimaryButtonEnabled = false,
@@ -120,11 +119,22 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
         }
 
         val crypto = feeSum.format { crypto(feeCryptoCurrencyStatusFlow.value.currency) }
-        val fiatFeeValue = cryptoCurrencyStatus.value.fiatRate?.let { rate ->
+        val fiatFeeValue = feeCryptoCurrencyStatusFlow.value.value.fiatRate?.let { rate ->
             feeSum.multiply(rate)
         }
 
         val fiat = fiatFeeValue.format { fiat(appCurrency.code, appCurrency.symbol) }
+
+        val tokenCryptoFeeValue = cryptoCurrencyStatus.value.fiatRate?.let { rate ->
+            fiatFeeValue?.divide(rate, cryptoCurrency.decimals, RoundingMode.HALF_UP)
+        }
+        val tokenCryptoFee = tokenCryptoFeeValue.format { crypto(cryptoCurrency) }
+
+        val maxCryptoFee = MAX_NETWORK_FEE.format { crypto(cryptoCurrency) }
+        val maxFiatFeeValue = cryptoCurrencyStatus.value.fiatRate?.let { rate ->
+            MAX_NETWORK_FEE.divide(rate, cryptoCurrency.decimals, RoundingMode.HALF_UP)
+        }
+        val maxFiatFee = maxFiatFeeValue.format { fiat(appCurrency.code, appCurrency.symbol) }
 
         uiState.update {
             if (cryptoCurrencyStatus.value is CryptoCurrencyStatus.Loading) {
@@ -138,6 +148,16 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
                             stringReference(crypto),
                             stringReference(" $DOT "),
                             stringReference(fiat),
+                        ),
+                        currentNetworkFeeValue = combinedReference(
+                            stringReference(tokenCryptoFee),
+                            stringReference(" $DOT "),
+                            stringReference(fiat),
+                        ),
+                        maxNetworkFeeValue = combinedReference(
+                            stringReference(maxCryptoFee),
+                            stringReference(" $DOT "),
+                            stringReference(maxFiatFee),
                         ),
                     ),
                 )
