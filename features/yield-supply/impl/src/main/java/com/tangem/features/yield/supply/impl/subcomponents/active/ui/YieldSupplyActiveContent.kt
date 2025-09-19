@@ -13,6 +13,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.LinkAnnotation
+import androidx.compose.ui.text.withLink
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
@@ -90,11 +92,7 @@ private fun YieldSupplyActiveMyFunds(state: YieldSupplyActiveContentUM) {
             )
         }
         SpacerH8()
-        Text(
-            text = state.subtitle.resolveReference(),
-            style = TangemTheme.typography.caption2,
-            color = TangemTheme.colors.text.tertiary,
-        )
+        DescriptionText(state = state)
         SpacerH8()
         HorizontalDivider(
             thickness = 0.5.dp,
@@ -113,6 +111,31 @@ private fun YieldSupplyActiveMyFunds(state: YieldSupplyActiveContentUM) {
             info = state.availableBalance,
         )
     }
+}
+
+@Composable
+private fun DescriptionText(state: YieldSupplyActiveContentUM) {
+    val subtitle = annotatedReference {
+        append(state.subtitle.resolveReference())
+        appendSpace()
+        withLink(
+            LinkAnnotation.Clickable(
+                tag = "LINK_TAG",
+                linkInteractionListener = {},
+            ),
+            {
+                appendColored(
+                    text = state.subtitleLink.resolveReference(),
+                    color = TangemTheme.colors.icon.accent,
+                )
+            },
+        )
+    }
+    Text(
+        text = subtitle.resolveAnnotatedReference(),
+        style = TangemTheme.typography.caption2,
+        color = TangemTheme.colors.text.tertiary,
+    )
 }
 
 @Composable
@@ -158,6 +181,7 @@ private class YieldSupplyActiveBottomSheetPreviewProvider : PreviewParameterProv
                     R.string.yield_module_earn_sheet_provider_description,
                     wrappedList("USDT", "USDT"),
                 ),
+                subtitleLink = resourceReference(R.string.common_read_more),
             ),
         )
 }
