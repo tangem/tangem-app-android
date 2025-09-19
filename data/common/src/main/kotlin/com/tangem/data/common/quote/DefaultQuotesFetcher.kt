@@ -7,6 +7,7 @@ import arrow.core.raise.catch
 import arrow.core.raise.ensure
 import arrow.core.raise.ensureNotNull
 import com.tangem.data.common.api.safeApiCallWithTimeout
+import com.tangem.data.common.quote.DefaultQuotesFetcher.Companion.tenSecInMillis
 import com.tangem.data.common.quote.QuotesFetcher.Error
 import com.tangem.data.common.quote.QuotesFetcher.Field
 import com.tangem.data.common.quote.utils.combine
@@ -18,6 +19,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import org.joda.time.DateTime
+import timber.log.Timber
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.time.Duration.Companion.seconds
 
@@ -181,9 +183,22 @@ internal class DefaultQuotesFetcher(
                     fields = fields.combine(),
                 )
                     .bind()
+                    .addSkippedIfHas(currenciesIds)
             },
             onError = { raise(Error.ApiOperationError(it)) },
         )
+    }
+
+    private fun QuotesResponse.addSkippedIfHas(ids: Set<String>): QuotesResponse {
+        val skippedIds = ids.filterNot(quotes.keys::contains).ifEmpty {
+            return this
+        }
+
+        Timber.d("Some quotes are missing from the server response: $skippedIds")
+
+        val emptyQuotes = skippedIds.associateWith { QuotesResponse.Quote.EMPTY }
+
+        return copy(quotes = quotes + emptyQuotes)
     }
 
     private fun saveQuotes(fiatCurrencyId: String, response: QuotesResponse) {
