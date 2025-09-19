@@ -5,6 +5,7 @@ import com.tangem.blockchain.common.TransactionData
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.yield.supply.YieldSupplyTransactionRepository
+import java.math.BigDecimal
 
 class YieldSupplyStartEarningUseCase(
     private val yieldSupplyTransactionRepository: YieldSupplyTransactionRepository,
@@ -13,10 +14,12 @@ class YieldSupplyStartEarningUseCase(
     suspend operator fun invoke(
         userWalletId: UserWalletId,
         cryptoCurrencyStatus: CryptoCurrencyStatus,
+        maxNetworkFee: BigDecimal,
     ): Either<Throwable, List<TransactionData.Uncompiled>> = Either.catch {
         yieldSupplyTransactionRepository.createEnterTransactions(
             userWalletId = userWalletId,
             cryptoCurrencyStatus = cryptoCurrencyStatus,
+            maxNetworkFee = maxNetworkFee,
         )
     }
 }
