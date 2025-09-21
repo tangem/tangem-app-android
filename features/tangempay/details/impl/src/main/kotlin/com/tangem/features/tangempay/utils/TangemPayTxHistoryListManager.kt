@@ -4,7 +4,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tangempay.model.TangemPayTxHistoryListBatchingContext
 import com.tangem.domain.tangempay.model.TangemPayTxHistoryListConfig
 import com.tangem.domain.tangempay.repository.TangemPayTxHistoryRepository
-import com.tangem.domain.visa.model.VisaTxHistoryItem
+import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import com.tangem.features.txhistory.entity.TxHistoryUM
 import com.tangem.features.txhistory.utils.TxHistoryUiActions
 import com.tangem.pagination.BatchAction
@@ -69,7 +69,7 @@ internal class TangemPayTxHistoryListManager(
         )
     }
 
-    private fun updateState(batchListState: BatchListState<Int, List<VisaTxHistoryItem>>) {
+    private fun updateState(batchListState: BatchListState<Int, List<TangemPayTxHistoryItem>>) {
         state.update { state ->
             val clearUiBatches =
                 state.status is PaginationStatus.InitialLoading && batchListState.status is PaginationStatus.Paginating
