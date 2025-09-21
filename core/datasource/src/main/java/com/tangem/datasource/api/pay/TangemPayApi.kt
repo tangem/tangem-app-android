@@ -9,6 +9,8 @@ import retrofit2.http.Header
 import retrofit2.http.POST
 import retrofit2.http.Query
 
+private const val TX_HISTORY_PAGING_DEFAULT_LIMIT = 20
+
 @Suppress("TooManyFunctions")
 interface TangemPayApi {
 
@@ -106,6 +108,13 @@ interface TangemPayApi {
         @Query("limit") limit: Int,
         @Query("offset") offset: Int,
     ): ApiResponse<VisaTxHistoryResponse>
+
+    @GET("v1/customer/transactions")
+    suspend fun getTangemPayTxHistory(
+        @Header("Authorization") authHeader: String,
+        @Query("cursor") cursor: String?,
+        @Query("limit") limit: Int = TX_HISTORY_PAGING_DEFAULT_LIMIT,
+    ): ApiResponse<TangemPayTxHistoryResponse>
 
     @GET("v1/customer/kyc")
     suspend fun getKycAccess(@Header("Authorization") authHeader: String): ApiResponse<KycAccessInfoResponse>
