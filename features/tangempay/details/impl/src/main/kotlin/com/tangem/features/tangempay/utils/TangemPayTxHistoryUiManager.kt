@@ -1,7 +1,7 @@
 package com.tangem.features.tangempay.utils
 
 import com.tangem.core.ui.utils.toDateFormatWithTodayYesterday
-import com.tangem.domain.visa.model.VisaTxHistoryItem
+import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import com.tangem.features.tangempay.model.transformers.TangemPayTxHistoryItemsConverter
 import com.tangem.features.txhistory.entity.TxHistoryUM
 import com.tangem.features.txhistory.utils.TxHistoryUiActions
@@ -10,11 +10,7 @@ import com.tangem.pagination.PaginationStatus
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.mapLatest
+import kotlinx.coroutines.flow.*
 import java.util.UUID
 
 internal class TangemPayTxHistoryUiManager(
@@ -40,7 +36,7 @@ internal class TangemPayTxHistoryUiManager(
     private val txHistoryItemConverter = TangemPayTxHistoryItemsConverter(txHistoryUiActions = txHistoryUiActions)
 
     fun createOrUpdateUiBatches(
-        newCurrencyBatches: List<Batch<Int, List<VisaTxHistoryItem>>>,
+        newCurrencyBatches: List<Batch<Int, List<TangemPayTxHistoryItem>>>,
         clearUiBatches: Boolean,
     ): List<Batch<Int, List<TxHistoryUM.TxHistoryItemUM>>> {
         val currentUiBatches = state.value.uiBatches
@@ -72,7 +68,7 @@ internal class TangemPayTxHistoryUiManager(
         return batches
     }
 
-    private fun generateUiItems(key: Int, data: List<VisaTxHistoryItem>): List<TxHistoryUM.TxHistoryItemUM> {
+    private fun generateUiItems(key: Int, data: List<TangemPayTxHistoryItem>): List<TxHistoryUM.TxHistoryItemUM> {
         val items = mutableListOf<TxHistoryUM.TxHistoryItemUM>()
 
         // Add title for the first batch
@@ -115,7 +111,7 @@ internal class TangemPayTxHistoryUiManager(
     }
 
     private fun List<TxHistoryUM.TxHistoryItemUM>.transactionItemsSizeNotEqual(
-        txInfos: List<VisaTxHistoryItem>,
+        txInfos: List<TangemPayTxHistoryItem>,
     ): Boolean {
         return this.filterIsInstance<TxHistoryUM.TxHistoryItemUM.Transaction>().size != txInfos.size
     }
