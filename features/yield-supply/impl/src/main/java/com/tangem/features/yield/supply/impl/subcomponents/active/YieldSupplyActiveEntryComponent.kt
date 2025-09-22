@@ -17,6 +17,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.features.yield.supply.impl.subcomponents.active.model.YieldSupplyActiveEntryModel
 import com.tangem.features.yield.supply.impl.subcomponents.active.model.YieldSupplyActiveRoute
 import com.tangem.features.yield.supply.impl.subcomponents.active.ui.YieldSupplyActiveEntryBottomSheet
+import com.tangem.features.yield.supply.impl.subcomponents.approve.YieldSupplyApproveComponent
 import com.tangem.features.yield.supply.impl.subcomponents.stopearning.YieldSupplyStopEarningComponent
 import kotlinx.coroutines.flow.StateFlow
 
@@ -77,9 +78,17 @@ internal class YieldSupplyActiveEntryComponent(
                 callback = model,
             ),
         )
-        YieldSupplyActiveRoute.Action -> YieldSupplyStopEarningComponent(
+        YieldSupplyActiveRoute.Exit -> YieldSupplyStopEarningComponent(
             appComponentContext = factoryContext,
             params = YieldSupplyStopEarningComponent.Params(
+                userWallet = params.userWallet,
+                cryptoCurrencyStatusFlow = params.cryptoCurrencyStatusFlow,
+                callback = model,
+            ),
+        )
+        YieldSupplyActiveRoute.Approve -> YieldSupplyApproveComponent(
+            appComponentContext = factoryContext,
+            params = YieldSupplyApproveComponent.Params(
                 userWallet = params.userWallet,
                 cryptoCurrencyStatusFlow = params.cryptoCurrencyStatusFlow,
                 callback = model,
