@@ -49,7 +49,7 @@ internal class SetButtonsStateTransformer(
         val isPrimaryButtonDisabled = prevState.isPrimaryButtonDisabled()
         return NavigationButton(
             textReference = prevState.getButtonText(),
-            iconRes = R.drawable.ic_tangem_24,
+            iconRes = R.drawable.ic_tangem_24.takeIf { prevState.showColdWalletInteractionIcon },
             isDimmed = isPrimaryButtonDisabled,
             isIconVisible = isIconVisible,
             showProgress = isInProgress,

@@ -5,60 +5,85 @@ import com.tangem.data.common.tokens.UserTokensBackwardCompatibility
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.local.token.UserTokensResponseStore
+import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
-import timber.log.Timber
 
 class UserTokensSaver(
     private val tangemTechApi: TangemTechApi,
     private val userTokensResponseStore: UserTokensResponseStore,
     private val dispatchers: CoroutineDispatcherProvider,
-    private val userTokensResponseAddressesEnricher: UserTokensResponseAddressesEnricher,
+    private val addressesEnricher: UserTokensResponseAddressesEnricher,
+    private val accountsFeatureToggles: AccountsFeatureToggles,
 ) {
     private val userTokensBackwardCompatibility = UserTokensBackwardCompatibility()
 
-    suspend fun store(userWalletId: UserWalletId, response: UserTokensResponse, useEnricher: Boolean = true) =
-        withContext(dispatchers.io) {
-            val compatibleUserTokensResponse = userTokensBackwardCompatibility.applyCompatibilityAndGetUpdated(response)
-            val enrichedUserTokensResponse = if (useEnricher) {
-                userTokensResponseAddressesEnricher(
-                    userWalletId = userWalletId,
-                    response = compatibleUserTokensResponse,
-                )
-            } else {
-                compatibleUserTokensResponse
-            }
-
-            userTokensResponseStore.store(userWalletId = userWalletId, response = enrichedUserTokensResponse)
-        }
-
     suspend fun storeAndPush(userWalletId: UserWalletId, response: UserTokensResponse) {
-        val enrichedUserTokensResponse = userTokensResponseAddressesEnricher(
-            userWalletId = userWalletId,
-            response = response,
-        )
-        store(userWalletId, enrichedUserTokensResponse, false)
-        push(userWalletId, enrichedUserTokensResponse, false)
+        withContext(dispatchers.default) {
+            val enrichedResponse = response.enrichIf(userWalletId = userWalletId, condition = true)
+
+            store(userWalletId = userWalletId, response = enrichedResponse, useEnricher = false)
+            push(userWalletId = userWalletId, response = enrichedResponse, useEnricher = false)
+        }
     }
+
+    suspend fun store(userWalletId: UserWalletId, response: UserTokensResponse, useEnricher: Boolean = true) =
+        withContext(dispatchers.default) {
+            val updatedResponse = response
+                .applyCompatibility()
+                .enrichIf(userWalletId = userWalletId, condition = useEnricher)
+
+            userTokensResponseStore.store(userWalletId = userWalletId, response = updatedResponse)
+        }
 
     suspend fun push(
         userWalletId: UserWalletId,
         response: UserTokensResponse,
         useEnricher: Boolean = true,
         onFailSend: () -> Unit = {},
-    ) = withContext(dispatchers.io) {
-        val enrichedUserTokensResponse = if (useEnricher) {
-            userTokensResponseAddressesEnricher(
-                userWalletId = userWalletId,
-                response = response,
+    ) {
+        withContext(dispatchers.default) {
+            val enrichedResponse = response.enrichIf(userWalletId = userWalletId, condition = useEnricher)
+
+            safeApiCall(
+                call = {
+                    withContext(dispatchers.io) {
+                        tangemTechApi.saveUserTokens(userId = userWalletId.stringValue, userTokens = enrichedResponse)
+                            .bind()
+                    }
+                },
+                onError = { onFailSend() },
             )
-        } else {
-            response
         }
-        safeApiCall({ tangemTechApi.saveUserTokens(userWalletId.stringValue, enrichedUserTokensResponse).bind() }) {
-            Timber.e(it, "Unable to push user tokens for: ${userWalletId.stringValue}")
-            onFailSend()
-        }
+    }
+
+    private fun UserTokensResponse.applyCompatibility(): UserTokensResponse {
+        return userTokensBackwardCompatibility.applyCompatibilityAndGetUpdated(userTokensResponse = this)
+    }
+
+    private suspend fun UserTokensResponse.enrichIf(
+        userWalletId: UserWalletId,
+        condition: Boolean,
+    ): UserTokensResponse {
+        if (!condition) return this
+
+        return this
+            .enrichByAddress(userWalletId = userWalletId)
+            .let {
+                if (accountsFeatureToggles.isFeatureEnabled) {
+                    it.enrichByAccountId(userWalletId = userWalletId)
+                } else {
+                    it
+                }
+            }
+    }
+
+    private suspend fun UserTokensResponse.enrichByAddress(userWalletId: UserWalletId): UserTokensResponse {
+        return addressesEnricher(userWalletId = userWalletId, response = this)
+    }
+
+    private fun UserTokensResponse.enrichByAccountId(userWalletId: UserWalletId): UserTokensResponse {
+        return UserTokensResponseAccountIdEnricher(userWalletId = userWalletId, response = this)
     }
 }

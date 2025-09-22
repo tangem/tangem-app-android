@@ -1,24 +1,34 @@
 package com.tangem.core.configtoggle.storage
 
-import com.tangem.datasource.asset.loader.AssetLoader
-import kotlin.properties.Delegates
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.stringPreferencesKey
+import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.datasource.local.preferences.utils.getObjectMapSync
+import com.tangem.datasource.local.preferences.utils.storeObjectMap
 
 /**
- * Storage implementation for storing local feature toggles.
- * Feature toggles are declared in file [LOCAL_CONFIG_PATH].
+ * Local storage for toggles
  *
- * @property assetLoader asset loader
+ * @property appPreferencesStore app preferences store
+ * @property preferencesKey      preferences key
  *
 [REDACTED_AUTHOR]
  */
 internal class LocalTogglesStorage(
-    private val assetLoader: AssetLoader,
-) : TogglesStorage {
+    private val appPreferencesStore: AppPreferencesStore,
+    private val preferencesKey: Preferences.Key<String>,
+) {
 
-    override var toggles: List<ConfigToggle> by Delegates.notNull()
-        private set
+    suspend fun getSyncOrEmpty(): Map<String, Boolean> {
+        return appPreferencesStore.getObjectMapSync<Boolean>(key = preferencesKey)
+    }
 
-    override suspend fun populate(path: String) {
-        toggles = assetLoader.loadList<ConfigToggle>(path)
+    suspend fun store(value: Map<String, Boolean>) {
+        appPreferencesStore.storeObjectMap(key = preferencesKey, value = value)
+    }
+
+    companion object {
+        val FEATURE_TOGGLES_KEY by lazy { stringPreferencesKey(name = "featureToggles") }
+        val EXCLUDED_BLOCKCHAINS_KEY by lazy { stringPreferencesKey(name = "excludedBlockchainsV2") }
     }
 }
