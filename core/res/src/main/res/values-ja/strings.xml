@@ -520,9 +520,12 @@
   <string name="hw_backup_need_action">バックアップへ移動</string>
   <string name="hw_backup_need_description">アクセスコードを作成する前にウォレットをバックアップしてください。</string>
   <string name="hw_backup_need_title">まずバックアップを完了する</string>
+  <string name="hw_backup_no_backup">バックアップなし</string>
   <string name="hw_backup_seed_description">秘密鍵をオフラインで安全に保存する物理デバイス。</string>
   <string name="hw_backup_seed_title">リカバリーフレーズ</string>
+  <string name="hw_create_keys_description">受信取引の通知を受け取る</string>
   <string name="hw_create_keys_title">鍵はアプリに保存されます</string>
+  <string name="hw_create_seed_description">新機能やアップデートの最新情報を入手</string>
   <string name="hw_create_seed_title">シードフレーズのバックアップ</string>
   <string name="hw_create_title">モバイルウォレットを作成する</string>
   <string name="hw_import_seed_phrase_already_imported">このリカバリーフレーズはすでにインポートされています。</string>
