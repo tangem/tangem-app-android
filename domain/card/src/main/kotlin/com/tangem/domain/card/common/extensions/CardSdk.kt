@@ -19,6 +19,11 @@ import com.tangem.domain.models.wallet.UserWallet
 val FirmwareVersion.Companion.SolanaTokensAvailable
     get() = FirmwareVersion(4, 52)
 
+val hotWalletExcludedBlockchains = setOf(
+    Blockchain.Hedera,
+    Blockchain.HederaTestnet,
+)
+
 fun UserWallet.supportedBlockchains(excludedBlockchains: ExcludedBlockchains): List<Blockchain> {
     return when (this) {
         is UserWallet.Cold -> {
@@ -28,7 +33,9 @@ fun UserWallet.supportedBlockchains(excludedBlockchains: ExcludedBlockchains): L
             )
         }
         is UserWallet.Hot -> {
-            Blockchain.entries.filter { it.isTestnet().not() && it !in excludedBlockchains }
+            Blockchain.entries.filter {
+                it.isTestnet().not() && it !in excludedBlockchains && it !in hotWalletExcludedBlockchains
+            }
         }
     }
 }
@@ -80,7 +87,7 @@ fun UserWallet.canHandleToken(supportedTokens: List<Blockchain>, blockchain: Blo
                 cardTypesResolver = scanResponse.cardTypesResolver,
             )
         }
-        is UserWallet.Hot -> blockchain in supportedTokens
+        is UserWallet.Hot -> blockchain in supportedTokens && blockchain !in hotWalletExcludedBlockchains
     }
 }
 
@@ -96,6 +103,7 @@ fun UserWallet.canHandleToken(blockchain: Blockchain, excludedBlockchains: Exclu
 
         is UserWallet.Hot -> blockchain.isTestnet().not() &&
             blockchain !in excludedBlockchains &&
+            blockchain !in hotWalletExcludedBlockchains &&
             blockchain.canHandleTokens()
     }
 }
@@ -110,7 +118,8 @@ fun UserWallet.canHandleBlockchain(blockchain: Blockchain, excludedBlockchains: 
             )
         }
         is UserWallet.Hot -> blockchain.isTestnet().not() &&
-            blockchain !in excludedBlockchains
+            blockchain !in excludedBlockchains &&
+            blockchain !in hotWalletExcludedBlockchains
     }
 }
 
