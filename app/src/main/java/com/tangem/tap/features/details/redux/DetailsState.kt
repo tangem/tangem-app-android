@@ -11,6 +11,7 @@ data class DetailsState(
     val appSettingsState: AppSettingsState = AppSettingsState(),
 ) : StateType
 
+@Suppress("BooleanPropertyNaming")
 data class AppSettingsState(
     @Deprecated("Delete after hot wallet release")
     val saveWallets: Boolean = false,
