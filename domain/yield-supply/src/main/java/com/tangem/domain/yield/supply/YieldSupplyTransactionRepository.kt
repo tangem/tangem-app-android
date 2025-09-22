@@ -22,4 +22,6 @@ interface YieldSupplyTransactionRepository {
         yieldSupplyStatus: YieldSupplyStatus,
         fee: Fee?,
     ): TransactionData.Uncompiled
+
+    suspend fun getYieldContractAddress(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): String?
 }
