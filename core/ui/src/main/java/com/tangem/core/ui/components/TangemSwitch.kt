@@ -15,10 +15,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.test.MarketsTestTags
 
 @Suppress("MagicNumber")
 @Composable
@@ -56,7 +58,7 @@ fun TangemSwitch(
                 onClick = {
                     onCheckedChange(!checked)
                 },
-            ),
+            ).testTag(MarketsTestTags.ADD_TO_PORTFOLIO_SWITCH),
     ) {
         BoxWithConstraints(
             modifier = Modifier

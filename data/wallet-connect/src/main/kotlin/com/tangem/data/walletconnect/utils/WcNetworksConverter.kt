@@ -9,8 +9,6 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesProducer
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
-import com.tangem.domain.tokens.TokensFeatureToggles
-import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.walletconnect.model.WcSession
 import com.tangem.domain.walletconnect.model.WcSessionApprove
 import com.tangem.domain.walletconnect.model.sdkcopy.WcSdkSessionRequest
@@ -20,9 +18,7 @@ import javax.inject.Inject
 internal class WcNetworksConverter @Inject constructor(
     private val namespaceConverters: Set<WcNamespaceConverter>,
     private val walletManagersFacade: WalletManagersFacade,
-    private val currenciesRepository: CurrenciesRepository,
     private val multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
-    private val tokensFeatureToggles: TokensFeatureToggles,
 ) {
 
     fun createNetwork(chainId: String, wallet: UserWallet): Network? {
@@ -101,12 +97,10 @@ internal class WcNetworksConverter @Inject constructor(
     }
 
     private suspend fun getWalletNetworks(userWalletId: UserWalletId): List<Network> {
-        return if (tokensFeatureToggles.isWalletBalanceFetcherEnabled) {
-            multiWalletCryptoCurrenciesSupplier.getSyncOrNull(
-                params = MultiWalletCryptoCurrenciesProducer.Params(userWalletId = userWalletId),
-            ).orEmpty()
-        } else {
-            currenciesRepository.getMultiCurrencyWalletCurrenciesSync(userWalletId)
-        }.filterIsInstance<CryptoCurrency.Coin>().map(CryptoCurrency.Coin::network)
+        return multiWalletCryptoCurrenciesSupplier.getSyncOrNull(
+            params = MultiWalletCryptoCurrenciesProducer.Params(userWalletId = userWalletId),
+        )
+            .orEmpty()
+            .filterIsInstance<CryptoCurrency.Coin>().map(CryptoCurrency.Coin::network)
     }
 }
