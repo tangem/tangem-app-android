@@ -25,6 +25,7 @@ import com.tangem.core.ui.components.*
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheet
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 
@@ -56,14 +57,14 @@ internal fun WcSendMultipleTransactionsModalBottomSheet(
                 )
                 SpacerH24()
                 Text(
-                    text = "Multiple Transactions",
+                    text = stringResourceSafe(R.string.wallet_connect_multiple_transactions),
                     style = TangemTheme.typography.h3,
                     color = TangemTheme.colors.text.primary1,
                     textAlign = TextAlign.Center,
                 )
                 SpacerH8()
                 Text(
-                    text = "You’ll need to tap your Tangem device a few times to complete this process.",
+                    text = stringResourceSafe(R.string.wallet_connect_multiple_transactions_description),
                     style = TangemTheme.typography.body2,
                     color = TangemTheme.colors.text.secondary,
                     textAlign = TextAlign.Center,
@@ -71,14 +72,14 @@ internal fun WcSendMultipleTransactionsModalBottomSheet(
                 SpacerH(48.dp)
                 SecondaryButton(
                     modifier = Modifier.fillMaxWidth(),
-                    text = "Return",
+                    text = stringResourceSafe(R.string.common_cancel),
                     onClick = onBack,
                 )
                 SpacerH8()
                 PrimaryButtonIconEnd(
                     modifier = Modifier.fillMaxWidth(),
                     iconResId = R.drawable.ic_tangem_24,
-                    text = "Send",
+                    text = stringResourceSafe(R.string.common_send),
                     onClick = onConfirm,
                 )
             }
