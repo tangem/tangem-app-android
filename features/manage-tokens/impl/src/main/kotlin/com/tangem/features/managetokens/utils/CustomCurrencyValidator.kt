@@ -1,31 +1,21 @@
 package com.tangem.features.managetokens.utils
 
 import arrow.core.getOrElse
-import com.tangem.core.decompose.di.ModelScoped
-import com.tangem.domain.managetokens.CheckIsCurrencyNotAddedUseCase
-import com.tangem.domain.managetokens.CreateCryptoCurrencyUseCase
-import com.tangem.domain.managetokens.FindTokenUseCase
-import com.tangem.domain.managetokens.ValidateTokenFormUseCase
 import com.tangem.domain.managetokens.model.AddCustomTokenForm
 import com.tangem.domain.managetokens.model.exceptoin.CustomTokenFormValidationException
 import com.tangem.domain.managetokens.model.exceptoin.FindTokenException
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.features.managetokens.utils.list.CustomTokenFormUseCasesFacade
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveInAndJoin
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import javax.inject.Inject
 
-@ModelScoped
-internal class CustomCurrencyValidator @Inject constructor(
-    private val validateTokenFormUseCase: ValidateTokenFormUseCase,
-    private val createCryptoCurrencyUseCase: CreateCryptoCurrencyUseCase,
-    private val findTokenUseCase: FindTokenUseCase,
-    private val checkIsCurrencyNotAddedUseCase: CheckIsCurrencyNotAddedUseCase,
+internal class CustomCurrencyValidator(
+    private val useCasesFacade: CustomTokenFormUseCasesFacade,
 ) {
 
     private val validateFormJobHolder = JobHolder()
@@ -45,14 +35,13 @@ internal class CustomCurrencyValidator @Inject constructor(
     }
 
     suspend fun validateForm(
-        userWalletId: UserWalletId,
         networkId: Network.ID,
         derivationPath: Network.DerivationPath,
         formValues: AddCustomTokenForm.Raw,
     ) = coroutineScope {
         updateStatus(Status.Validating)
 
-        val result = validateTokenFormUseCase(
+        val result = useCasesFacade.validateTokenFormUseCase(
             networkId = networkId,
             formValues = formValues,
         )
@@ -73,20 +62,19 @@ internal class CustomCurrencyValidator @Inject constructor(
         launch {
             when (validatedForm) {
                 is AddCustomTokenForm.Validated.All -> {
-                    findOrCreateCurrency(userWalletId, networkId, derivationPath, validatedForm)
+                    findOrCreateCurrency(networkId, derivationPath, validatedForm)
                 }
                 is AddCustomTokenForm.Validated.ContractAddressOnly -> {
-                    findToken(userWalletId, networkId, derivationPath, validatedForm)
+                    findToken(networkId, derivationPath, validatedForm)
                 }
                 is AddCustomTokenForm.Validated.Empty -> {
-                    createCurrency(userWalletId, networkId, derivationPath, validatedForm = null)
+                    createCurrency(networkId, derivationPath, validatedForm = null)
                 }
             }
         }.saveInAndJoin(validateFormJobHolder)
     }
 
     private suspend fun findOrCreateCurrency(
-        userWalletId: UserWalletId,
         networkId: Network.ID,
         derivationPath: Network.DerivationPath,
         validatedForm: AddCustomTokenForm.Validated.All,
@@ -96,14 +84,13 @@ internal class CustomCurrencyValidator @Inject constructor(
             currentState.prevFoundOrCreatedCurrency.contractAddress == validatedForm.contractAddress
         ) {
             // No need to search for token again if contract address is not changed
-            createCurrency(userWalletId, networkId, derivationPath, validatedForm)
+            createCurrency(networkId, derivationPath, validatedForm)
             return
         }
 
         updateStatus(Status.SearchingToken)
 
-        val foundToken = findTokenUseCase(
-            userWalletId = userWalletId,
+        val foundToken = useCasesFacade.findTokenUseCase(
             contractAddress = validatedForm.contractAddress,
             networkId = networkId,
             derivationPath = derivationPath,
@@ -121,22 +108,20 @@ internal class CustomCurrencyValidator @Inject constructor(
         }
 
         if (foundToken != null) {
-            updateStateToValidated(userWalletId, foundToken, fillForm = true, isCustom = false)
+            updateStateToValidated(foundToken, fillForm = true, isCustom = false)
         } else {
-            createCurrency(userWalletId, networkId, derivationPath, validatedForm)
+            createCurrency(networkId, derivationPath, validatedForm)
         }
     }
 
     private suspend fun findToken(
-        userWalletId: UserWalletId,
         networkId: Network.ID,
         derivationPath: Network.DerivationPath,
         validatedForm: AddCustomTokenForm.Validated.ContractAddressOnly,
     ) {
         updateStatus(Status.SearchingToken)
 
-        val token = findTokenUseCase(
-            userWalletId = userWalletId,
+        val token = useCasesFacade.findTokenUseCase(
             contractAddress = validatedForm.contractAddress,
             networkId = networkId,
             derivationPath = derivationPath,
@@ -155,17 +140,15 @@ internal class CustomCurrencyValidator @Inject constructor(
             return
         }
 
-        updateStateToValidated(userWalletId, token, fillForm = true, isCustom = false)
+        updateStateToValidated(token, fillForm = true, isCustom = false)
     }
 
     private suspend fun createCurrency(
-        userWalletId: UserWalletId,
         networkId: Network.ID,
         derivationPath: Network.DerivationPath,
         validatedForm: AddCustomTokenForm.Validated.All?,
     ) {
-        val currency = createCryptoCurrencyUseCase(
-            userWalletId = userWalletId,
+        val currency = useCasesFacade.createCryptoCurrencyUseCase(
             networkId = networkId,
             derivationPath = derivationPath,
             formValues = validatedForm,
@@ -175,20 +158,14 @@ internal class CustomCurrencyValidator @Inject constructor(
             return
         }
 
-        updateStateToValidated(userWalletId, currency, fillForm = false, isCustom = validatedForm != null)
+        updateStateToValidated(currency, fillForm = false, isCustom = validatedForm != null)
     }
 
-    private suspend fun updateStateToValidated(
-        userWalletId: UserWalletId,
-        currency: CryptoCurrency,
-        fillForm: Boolean,
-        isCustom: Boolean,
-    ) {
+    private suspend fun updateStateToValidated(currency: CryptoCurrency, fillForm: Boolean, isCustom: Boolean) {
         val currentStatus = state.value.status
         if (currentStatus is Status.Validated && currentStatus.currency == currency) return
 
-        val isNotAdded = checkIsCurrencyNotAddedUseCase(
-            userWalletId = userWalletId,
+        val isNotAdded = useCasesFacade.checkIsCurrencyNotAddedUseCase(
             networkId = currency.network.id,
             derivationPath = currency.network.derivationPath,
             contractAddress = when (currency) {
