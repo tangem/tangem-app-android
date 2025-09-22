@@ -250,7 +250,9 @@ internal class UpdateWalletManagerResultFactoryTest {
                             ),
                         ),
                         currenciesAmounts = setOf(
-                            UpdateWalletManagerResult.CryptoCurrencyAmount.Coin(value = BigDecimal.ZERO), // default for demo
+                            UpdateWalletManagerResult.CryptoCurrencyAmount.Coin(
+                                value = BigDecimal.ZERO,
+                            ), // default for demo
                         ),
                         currentTransactions = emptySet(),
                     ),
@@ -272,7 +274,9 @@ internal class UpdateWalletManagerResultFactoryTest {
                             ),
                         ),
                         currenciesAmounts = setOf(
-                            UpdateWalletManagerResult.CryptoCurrencyAmount.Coin(value = BigDecimal.ONE), // used demo amount
+                            UpdateWalletManagerResult.CryptoCurrencyAmount.Coin(
+                                value = BigDecimal.ONE,
+                            ), // used demo amount
                         ),
                         currentTransactions = emptySet(),
                     ),

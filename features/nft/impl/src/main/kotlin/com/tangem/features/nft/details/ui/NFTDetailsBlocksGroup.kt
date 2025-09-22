@@ -185,9 +185,9 @@ internal fun NFTDetailsGroupBlock(
 @Composable
 internal fun NFTBlocksGroupAction(
     text: TextReference,
-    startIcon: @Composable RowScope.() -> Unit,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    startIcon: @Composable RowScope.() -> Unit,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
 
