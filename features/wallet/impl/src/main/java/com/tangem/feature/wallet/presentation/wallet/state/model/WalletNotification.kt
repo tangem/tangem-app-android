@@ -138,6 +138,11 @@ sealed class WalletNotification(val config: NotificationConfig) {
                 formatArgs = wrappedList(count),
             ),
         )
+
+        data object YeildSupplyApprove : Warning(
+            title = resourceReference(R.string.yield_module_main_view_approve_notification_title),
+            subtitle = resourceReference(R.string.yield_module_main_view_approve_notification_description),
+        )
     }
 
     sealed class Informational(
