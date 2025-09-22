@@ -12,12 +12,13 @@ import java.util.concurrent.TimeoutException
 import javax.net.ssl.SSLHandshakeException
 
 internal fun <T : Any> Response<T>.toSafeApiResponse(analyticsErrorHandler: AnalyticsErrorHandler): ApiResponse<T> {
+    val headers = headers().toMultimap()
     val body = body()
 
     return if (isSuccessful && body != null) {
-        apiSuccess(body)
+        apiSuccess(data = body, headers = headers)
     } else {
-        val code = ApiResponseError.HttpException.Code.values
+        val code = ApiResponseError.HttpException.Code.entries
             .firstOrNull { it.numericCode == code() }
         val e = try {
             if (code == null) {
@@ -33,7 +34,7 @@ internal fun <T : Any> Response<T>.toSafeApiResponse(analyticsErrorHandler: Anal
             ApiResponseError.UnknownException(e)
         }
 
-        apiError(e)
+        apiError(e, headers)
     }
 }
 
