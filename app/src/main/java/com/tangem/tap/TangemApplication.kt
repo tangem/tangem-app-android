@@ -88,7 +88,7 @@ lateinit var store: Store<AppState>
 lateinit var foregroundActivityObserver: ForegroundActivityObserver
 internal lateinit var derivationsFinder: DerivationsFinder
 
-abstract class TangemApplication : Application(), ImageLoaderFactory, Configuration.Provider {
+open class TangemApplication : Application(), ImageLoaderFactory, Configuration.Provider {
 
     // region DI
     private val entryPoint: ApplicationEntryPoint
