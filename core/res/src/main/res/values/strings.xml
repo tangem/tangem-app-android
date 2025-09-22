@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
-  <string name="access_code_alert_skip_description">Without an access code, your wallet is not secure.</string>
+  <string name="access_code_alert_skip_description">Without an access code, your wallet isn\'t secure.</string>
   <string name="access_code_alert_skip_ok">Skip anyway</string>
   <string name="access_code_alert_skip_title">Access code not set</string>
   <string name="access_code_check_title">Enter access code</string>
@@ -77,7 +77,7 @@
   <string name="alert_manage_tokens_unsupported_message">Tokens in %1$s network are not supported by this card or ring due to firmware limitation.</string>
   <string name="alert_troubleshooting_scan_card_title">Are you having difficulty scanning your card or ring?</string>
   <string name="alert_unsupported_card">This card is not designed to work with this app</string>
-  <string name="app_settings_biometrics_footer">Use %1$s to unlock your wallet and approve sensitive actions, like signing transactions. For hardware wallets, a card or ring is still required to sign.</string>
+  <string name="app_settings_biometrics_footer">Use %1$s to quickly and securely unlock your wallet and authorize all sensitive actions, such as signing transactions. For hardware wallets, you will still need a card to sign.</string>
   <string name="app_settings_default_fee">Default Fee</string>
   <string name="app_settings_default_fee_footer">Enable Default Fee to set transaction fees automatically and skip the Fee page when sending funds. You can always go back to this page if necessary.</string>
   <string name="app_settings_enable_biometrics_description">Go to settings to enable biometric authentication in the Tangem App</string>
@@ -88,7 +88,7 @@
   <string name="app_settings_off_saved_wallet_alert_message">Removing the saved devices deletes all the saved wallets and their access codes from the app.</string>
   <string name="app_settings_on_require_access_code_alert_message">This will delete all the saved wallet access codes. Any further interaction with the wallet will require submitting the access code.</string>
   <string name="app_settings_require_access_code">Require Access Code</string>
-  <string name="app_settings_require_access_code_footer">This option turns off biometrics for sensitive actions. You’ll need to enter your access code each time you sign a transaction.</string>
+  <string name="app_settings_require_access_code_footer">This option disables biometric authentication for sensitive actions. You will be required to enter your access code every time, such as when signing a transaction.</string>
   <string name="app_settings_saved_access_codes">Save Access Code</string>
   <string name="app_settings_saved_access_codes_footer">Biometric authentication will be requested instead of the access code for interactions with your card or ring.</string>
   <string name="app_settings_saved_wallet">Keep the wallet in the app</string>
@@ -528,12 +528,12 @@
   <string name="hw_backup_need_action">Go to backup</string>
   <string name="hw_backup_need_description">Please back up your wallet before creating an access code.</string>
   <string name="hw_backup_need_title">Finalize backup first</string>
-  <string name="hw_backup_no_backup">Incomplete</string>
+  <string name="hw_backup_no_backup">No backup</string>
   <string name="hw_backup_seed_description">Physical devices that securely store your private key offline.</string>
   <string name="hw_backup_seed_title">Recovery phrase</string>
-  <string name="hw_create_keys_description">Your private keys are securely encrypted and stored on your phone</string>
+  <string name="hw_create_keys_description">Get notified of incoming transactions</string>
   <string name="hw_create_keys_title">Keys are stored in the app</string>
-  <string name="hw_create_seed_description">Create or restore your wallet using a recovery phrase — your built-in backup.</string>
+  <string name="hw_create_seed_description">Stay informed about new features and updates</string>
   <string name="hw_create_seed_title">Seed phrase backup</string>
   <string name="hw_create_title">Create Mobile Wallet</string>
   <string name="hw_import_seed_phrase_already_imported">This recovery phrase has already been imported</string>
@@ -549,7 +549,7 @@
   <string name="hw_upgrade_key_migration_title">Key Migration</string>
   <string name="hw_upgrade_scan_device">Scan device</string>
   <string name="hw_upgrade_start_action">Start upgrade</string>
-  <string name="hw_upgrade_start_description">You’re about to upgrade to our hardware wallet. This will keep your assets safe in cold storage.</string>
+  <string name="hw_upgrade_start_description">You\'re about to upgrade to a Tangem device, where your assets stay safe in cold storage.</string>
   <string name="hw_upgrade_start_title">Tangem Wallet</string>
   <string name="hw_upgrade_title">Upgrade to Hardware Wallet</string>
   <string name="hw_upgrade_to_cold_banner_description">Keep your crypto safe with Tangem\'s top-tier hardware wallet.</string>
@@ -778,7 +778,7 @@
   <string name="onboarding_add_tokens">Add tokens</string>
   <string name="onboarding_alert_message_not_max_backup_cards_added">You\'ve added one backup card or ring. When backup process is finished you can\'t add more backup devices. If you have one more card or ring, add it to the backup. Would you like to continue the backup process?</string>
   <string name="onboarding_backup_exit_warning">The backup process is partly complete. You can\'t exit it now.</string>
-  <string name="onboarding_bottom_sheet_passphrase_description">A passphrase is an optional security feature that adds a word or phrase to your recovery phrase, creating a new set of wallet addresses for extra protection.</string>
+  <string name="onboarding_bottom_sheet_passphrase_description">The passphrase is an advanced security feature that crypto wallets use. It adds an extra word or phrase of your own choosing to your already existing recovery phrase to unlock a brand-new set of addresses.</string>
   <string name="onboarding_button_add_backup_card">Add a card or ring</string>
   <string name="onboarding_button_backup_card">Scan card</string>
   <string name="onboarding_button_backup_card_format">Scan card #%d</string>
@@ -1344,15 +1344,9 @@
   <string name="unlock_wallet_description_full">Use %s or scan a card/ring to have access to your wallet</string>
   <string name="unsupported_wc_version">Connection failed: This dApp uses Wallet Connect version 1.0, which is not supported. Please ensure the dApp supports Wallet Connect version 2.0 to connect successfully.</string>
   <string name="user_push_notification_agreement_argument_one">Stay up to date with the latest features and news</string>
-  <string name="user_push_notification_agreement_argument_one_subtitle">Real-time alerts for transactions, exchanges, and critical updates.</string>
-  <string name="user_push_notification_agreement_argument_one_title">Transaction Alerts</string>
   <string name="user_push_notification_agreement_argument_three">Get notified of incoming transactions</string>
   <string name="user_push_notification_agreement_argument_two">Be the first to know about new promotions</string>
-  <string name="user_push_notification_agreement_argument_two_subtitle">Early access to fresh features and exclusive offers.</string>
-  <string name="user_push_notification_agreement_argument_two_title">Feature and News Updates</string>
   <string name="user_push_notification_agreement_header">Would you like to use\nPush-notifications?</string>
-  <string name="user_push_notification_banner_subtitle">Enable push notifications and we’ll notify you instantly when funds arrive\n</string>
-  <string name="user_push_notification_banner_title">Don’t Miss a Transaction</string>
   <string name="user_wallet_list_add_button">Add new wallet</string>
   <string name="user_wallet_list_delete_prompt">Are you sure you want to forget this wallet?</string>
   <string name="user_wallet_list_error_unable_to_unlock">An error has occurred, please scan your card or ring to log in</string>
@@ -1450,8 +1444,6 @@
   <string name="wallet_connect_error_wrong_card_selected">Wrong card or ring selected in Tangem App</string>
   <string name="wallet_connect_failed_to_build_tx">Failed to create transaction from Dapp data. Code: %s</string>
   <string name="wallet_connect_generic_error_with_code">We\'ve encountered unknown error. Error code: %d. If the problem persists — feel free to contact our support</string>
-  <string name="wallet_connect_multiple_transactions">Multiple transactions</string>
-  <string name="wallet_connect_multiple_transactions_description">You’ll need to tap your Tangem device a few times to complete this process.</string>
   <string name="wallet_connect_no_sessions_message">No opened WalletConnect sessions</string>
   <string name="wallet_connect_no_sessions_title">Ooops. No Sessions.</string>
   <string name="wallet_connect_pairing_error">Failed to pairing WalletConnect session: %1$s</string>
@@ -1463,8 +1455,6 @@
   <string name="wallet_connect_scanner_error_not_valid_card">This card can\'t be used to establish WalletConnect session</string>
   <string name="wallet_connect_scanner_error_unsupported_network">This network is not supported. Please select another network.</string>
   <string name="wallet_connect_select_network">Select network</string>
-  <string name="wallet_connect_sending_multiple_explanation">We\'re processing the transaction</string>
-  <string name="wallet_connect_sending_multiple_tx">Sending your funds...</string>
   <string name="wallet_connect_sessions_title">WalletConnect Sessions</string>
   <string name="wallet_connect_subtitle">Connect to dApps</string>
   <string name="wallet_connect_title">WalletConnect</string>

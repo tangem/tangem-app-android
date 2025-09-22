@@ -15,9 +15,11 @@ interface ComposableModularContentComponent {
 
     @Composable
     fun Footer()
-}
 
-fun getEmptyComposableModularContentComponent() = EmptyComposableModularContentComponent
+    companion object {
+        val EMPTY = EmptyComposableModularContentComponent
+    }
+}
 
 object EmptyComposableModularContentComponent : ComposableModularContentComponent {
     @Composable
