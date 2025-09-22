@@ -9,7 +9,7 @@ import com.tangem.tap.domain.sdk.mocks.MockContent
 import com.tangem.tap.domain.sdk.mocks.MockProvider
 import io.qameta.allure.kotlin.Allure.step
 
-fun BaseTestCase.openMainScreen(
+fun BaseTestCase.scanCard(
     productType: ProductType? = null,
     mockContent: MockContent? = null,
     alreadyActivatedDialogIsShown : Boolean = false
@@ -31,6 +31,20 @@ fun BaseTestCase.openMainScreen(
             composeTestRule.waitForIdle()
             AlreadyUsedWalletDialogPageObject { thisIsMyWalletButton.click() }
         }
+    }
+}
+
+fun BaseTestCase.openMainScreen(
+    productType: ProductType? = null,
+    mockContent: MockContent? = null,
+    alreadyActivatedDialogIsShown: Boolean = false
+) {
+    step("Scan card") {
+        scanCard(
+            productType = productType,
+            mockContent = mockContent,
+            alreadyActivatedDialogIsShown = alreadyActivatedDialogIsShown
+        )
     }
     step("Assert 'Main' screen is displayed") {
         onMainScreen { screenContainer.assertIsDisplayed() }
