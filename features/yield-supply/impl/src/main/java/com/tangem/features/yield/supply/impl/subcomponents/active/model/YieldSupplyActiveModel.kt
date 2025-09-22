@@ -3,7 +3,6 @@ package com.tangem.features.yield.supply.impl.subcomponents.active.model
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
-import com.tangem.core.ui.extensions.combinedReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
@@ -29,22 +28,20 @@ internal class YieldSupplyActiveModel @Inject constructor(
     private val cryptoCurrency = cryptoCurrencyStatusFlow.value.currency
 
     val uiState: StateFlow<YieldSupplyActiveContentUM>
-    field = MutableStateFlow(
-        YieldSupplyActiveContentUM(
-            totalEarnings = stringReference("0"),
-            availableBalance = stringReference(
-                cryptoCurrencyStatusFlow.value.value.amount.format {
-                    crypto(cryptoCurrency = cryptoCurrencyStatusFlow.value.currency)
-                },
-            ),
-            providerTitle = resourceReference(R.string.yield_module_provider),
-            subtitle = combinedReference(
-                resourceReference(
+        field = MutableStateFlow(
+            YieldSupplyActiveContentUM(
+                totalEarnings = stringReference("0"),
+                availableBalance = stringReference(
+                    cryptoCurrencyStatusFlow.value.value.amount.format {
+                        crypto(cryptoCurrency = cryptoCurrencyStatusFlow.value.currency)
+                    },
+                ),
+                providerTitle = resourceReference(R.string.yield_module_provider),
+                subtitle = resourceReference(
                     id = R.string.yield_module_earn_sheet_provider_description,
                     formatArgs = wrappedList(cryptoCurrency.symbol, cryptoCurrency.symbol),
                 ),
-                resourceReference(R.string.common_read_more),
+                subtitleLink = resourceReference(R.string.common_read_more),
             ),
-        ),
-    )
+        )
 }

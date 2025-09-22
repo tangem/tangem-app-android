@@ -1,6 +1,5 @@
 package com.tangem.data.pay.repository
 
-import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.pay.TangemPayApi
 import com.tangem.domain.pay.KycStartInfo
 import com.tangem.domain.pay.repository.KycRepository
@@ -16,9 +15,9 @@ internal class DefaultKycRepository @Inject constructor(
 
     override suspend fun getKycStartInfo() = withContext(dispatchers.io) {
         requestHelper.request { authHeader ->
-            tangemPayApi.getKycAccess(authHeader = authHeader).getOrThrow().result
+            tangemPayApi.getKycAccess(authHeader = authHeader)
         }.map {
-            KycStartInfo(token = it.token, locale = it.locale)
+            KycStartInfo(token = it.result.token, locale = it.result.locale)
         }
     }
 }
