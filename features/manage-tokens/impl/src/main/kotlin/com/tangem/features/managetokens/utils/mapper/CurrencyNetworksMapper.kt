@@ -46,7 +46,7 @@ internal fun Network.toCurrencyNetworkModel(
     )
 }
 
-private fun SourceNetwork.toCurrencyNetworkModel(
+internal fun SourceNetwork.toCurrencyNetworkModel(
     isSelected: Boolean,
     isEditable: Boolean,
     onSelectedStateChange: (SourceNetwork, Boolean) -> Unit,
