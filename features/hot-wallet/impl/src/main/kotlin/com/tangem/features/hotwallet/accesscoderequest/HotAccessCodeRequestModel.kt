@@ -82,6 +82,7 @@ internal class HotAccessCodeRequestModel @Inject constructor(
             it.copy(
                 accessCodeColor = PinTextColor.WrongCode,
                 onAccessCodeChange = {},
+                useBiometricVisible = currentRequest.hasBiometry,
             )
         }
         delay(timeMillis = 500) // Delay to show the wrong access code state
@@ -121,7 +122,10 @@ internal class HotAccessCodeRequestModel @Inject constructor(
 
         if (accessCode.length == ACCESS_CODE_LENGTH) {
             uiState.update {
-                it.copy(onAccessCodeChange = {})
+                it.copy(
+                    onAccessCodeChange = {},
+                    useBiometricVisible = false,
+                )
             }
 
             result.value = HotWalletPasswordRequester.Result.EnteredPassword(HotAuth.Password(accessCode.toCharArray()))
