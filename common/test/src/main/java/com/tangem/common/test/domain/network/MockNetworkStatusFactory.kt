@@ -30,6 +30,7 @@ object MockNetworkStatusFactory {
                 ),
                 amounts = mapOf(),
                 pendingTransactions = mapOf(),
+                yieldSupplyStatuses = mapOf(),
                 source = source,
             )
                 .let(transform),
