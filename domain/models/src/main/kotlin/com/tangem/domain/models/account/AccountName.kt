@@ -8,14 +8,44 @@ import kotlinx.serialization.Serializable
 /**
  * Represents an account name
  *
- * @property value the validated account name as a string
- *
 [REDACTED_AUTHOR]
  */
 @Serializable
-data class AccountName private constructor(
-    val value: String,
-) {
+sealed interface AccountName {
+
+    /**
+     * Represents the default main account name.
+     * If the user renames the main account, it will be converted to a [Custom] account name.
+     */
+    @Serializable
+    data object DefaultMain : AccountName
+
+    /**
+     * Represents a custom account name provided by the user
+     *
+     * @property value the string value of the custom account name
+     */
+    @Serializable
+    data class Custom private constructor(val value: String) : AccountName {
+
+        companion object {
+
+            /**
+             * Factory method to create an [AccountName.Custom] instance.
+             * Validates the input string to ensure it is not blank and does not exceed the maximum length.
+             *
+             * @param value the input string representing the account name
+             */
+            operator fun invoke(value: String): Either<Error, Custom> = either {
+                val trimmedValue = value.trim()
+
+                ensure(trimmedValue.isNotBlank()) { Error.Empty }
+                ensure(trimmedValue.length <= MAX_LENGTH) { Error.ExceedsMaxLength }
+
+                Custom(value = trimmedValue)
+            }
+        }
+    }
 
     /**
      * Represents possible validation errors
@@ -44,26 +74,14 @@ data class AccountName private constructor(
 
     companion object {
 
-        private const val MAIN_ACCOUNT_NAME = "Main Account"
         private const val MAX_LENGTH = 20
 
-        /** Default name for the main account */
-        val Main: AccountName
-            get() = AccountName(value = MAIN_ACCOUNT_NAME)
-
         /**
-         * Factory method to create an `AccountName` instance.
+         * Factory method to create an [AccountName] instance.
          * Validates the input string to ensure it is not blank and does not exceed the maximum length.
          *
          * @param value the input string representing the account name
          */
-        operator fun invoke(value: String): Either<Error, AccountName> = either {
-            val trimmedValue = value.trim()
-
-            ensure(trimmedValue.isNotBlank()) { Error.Empty }
-            ensure(trimmedValue.length <= MAX_LENGTH) { Error.ExceedsMaxLength }
-
-            AccountName(value = trimmedValue)
-        }
+        operator fun invoke(value: String): Either<Error, AccountName> = Custom(value)
     }
 }
