@@ -2,8 +2,9 @@ package com.tangem.data.common.currency
 
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.domain.models.currency.CryptoCurrency
+import javax.inject.Inject
 
-class UserTokensResponseFactory {
+class UserTokensResponseFactory @Inject constructor() {
 
     fun createUserTokensResponse(
         currencies: List<CryptoCurrency>,
