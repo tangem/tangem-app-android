@@ -121,12 +121,12 @@ fun SimpleTextField(
 
 @Composable
 private fun SimpleTextPlaceholder(
-    placeholder: TextReference?,
     value: String,
     textStyle: TextStyle,
     centered: Boolean,
-    textValue: @Composable () -> Unit,
+    placeholder: TextReference?,
     color: Color = TangemTheme.colors.text.disabled,
+    textValue: @Composable () -> Unit,
 ) {
     Box(contentAlignment = if (centered) Alignment.Center else Alignment.TopStart) {
         if (value.isBlank() && placeholder != null) {

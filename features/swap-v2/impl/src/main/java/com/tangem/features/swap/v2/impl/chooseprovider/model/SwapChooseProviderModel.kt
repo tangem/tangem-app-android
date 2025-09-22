@@ -37,7 +37,7 @@ internal class SwapChooseProviderModel @Inject constructor(
     }
 
     val uiState: StateFlow<SwapChooseProviderBottomSheetContent>
-    field: MutableStateFlow<SwapChooseProviderBottomSheetContent> = MutableStateFlow(getInitialState())
+        field: MutableStateFlow<SwapChooseProviderBottomSheetContent> = MutableStateFlow(getInitialState())
 
     fun onProviderClick(quoteUM: SwapQuoteUM) {
         params.callback.onProviderResult(quoteUM)
