@@ -13,19 +13,19 @@ object MockProvider {
 
     private var content: MockContent = getMockContent(ProductType.Wallet)
 
-    private var emulateError: Boolean = false
+    private var isEmulatingError: Boolean = false
 
     private var emulatedError: TangemError = TangemSdkError.TagLost()
 
     fun setEmulateError(error: TangemError? = null) {
-        emulateError = true
+        isEmulatingError = true
         error?.let {
             emulatedError = it
         }
     }
 
     fun resetEmulateError() {
-        emulateError = false
+        isEmulatingError = false
     }
 
     fun setMocks(productType: ProductType) {
@@ -74,7 +74,7 @@ object MockProvider {
     }
 
     private fun <T> CompletionResult.Success<T>.orFailure(): CompletionResult<T> {
-        return if (emulateError) {
+        return if (isEmulatingError) {
             CompletionResult.Failure(emulatedError)
         } else {
             this
