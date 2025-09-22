@@ -1,5 +1,6 @@
 package com.tangem.tap.di.domain
 
+import com.tangem.domain.core.wallets.UserWalletsListRepository
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.transaction.WalletAddressServiceRepository
@@ -9,8 +10,9 @@ import com.tangem.domain.transaction.usecase.ValidateWalletMemoUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.delegate.DefaultUserWalletsSyncDelegate
 import com.tangem.domain.wallets.delegate.UserWalletsSyncDelegate
+import com.tangem.domain.wallets.derivations.DerivationsRepository
+import com.tangem.domain.wallets.hot.HotWalletAccessor
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
-import com.tangem.domain.core.wallets.UserWalletsListRepository
 import com.tangem.domain.wallets.repository.WalletNamesMigrationRepository
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.*
@@ -25,7 +27,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
-@Suppress("TooManyFunctions")
+@Suppress("TooManyFunctions", "LargeClass")
 @Module
 @InstallIn(SingletonComponent::class)
 internal object WalletsDomainModule {
@@ -129,6 +131,20 @@ internal object WalletsDomainModule {
             userWalletsListManager = userWalletsListManager,
             userWalletsListRepository = userWalletsListRepository,
             walletsRepository = walletsRepository,
+            useNewRepository = hotWalletFeatureToggles.isHotWalletEnabled,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun providesIsWalletAlreadySavedUseCase(
+        userWalletsListManager: UserWalletsListManager,
+        userWalletsListRepository: UserWalletsListRepository,
+        hotWalletFeatureToggles: HotWalletFeatureToggles,
+    ): IsWalletAlreadySavedUseCase {
+        return IsWalletAlreadySavedUseCase(
+            userWalletsListManager = userWalletsListManager,
+            userWalletsListRepository = userWalletsListRepository,
             useNewRepository = hotWalletFeatureToggles.isHotWalletEnabled,
         )
     }
@@ -350,6 +366,86 @@ internal object WalletsDomainModule {
     ): GetIsNotificationsEnabledUseCase {
         return GetIsNotificationsEnabledUseCase(
             walletsRepository = walletsRepository,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun providesIsUpgradeWalletNotificationEnabledUseCase(
+        walletsRepository: WalletsRepository,
+    ): IsUpgradeWalletNotificationEnabledUseCase {
+        return IsUpgradeWalletNotificationEnabledUseCase(
+            walletsRepository = walletsRepository,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun providesDismissUpgradeWalletNotificationUseCase(
+        walletsRepository: WalletsRepository,
+    ): DismissUpgradeWalletNotificationUseCase {
+        return DismissUpgradeWalletNotificationUseCase(
+            walletsRepository = walletsRepository,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun providesUnlockHotWalletContextualUseCase(
+        hotWalletAccessor: HotWalletAccessor,
+    ): UnlockHotWalletContextualUseCase {
+        return UnlockHotWalletContextualUseCase(
+            hotWalletAccessor = hotWalletAccessor,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun providesGetHotWalletContextualUnlockUseCase(
+        hotWalletAccessor: HotWalletAccessor,
+    ): GetHotWalletContextualUnlockUseCase {
+        return GetHotWalletContextualUnlockUseCase(
+            hotWalletAccessor = hotWalletAccessor,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun providesClearHotWalletContextualUnlockUseCase(
+        hotWalletAccessor: HotWalletAccessor,
+    ): ClearHotWalletContextualUnlockUseCase {
+        return ClearHotWalletContextualUnlockUseCase(
+            hotWalletAccessor = hotWalletAccessor,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun providesClearAllHotWalletContextualUnlockUseCase(
+        hotWalletAccessor: HotWalletAccessor,
+    ): ClearAllHotWalletContextualUnlockUseCase {
+        return ClearAllHotWalletContextualUnlockUseCase(
+            hotWalletAccessor = hotWalletAccessor,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun providesExportSeedPhraseUseCase(hotWalletAccessor: HotWalletAccessor): ExportSeedPhraseUseCase {
+        return ExportSeedPhraseUseCase(
+            hotWalletAccessor = hotWalletAccessor,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun providesColdWalletInteractionNeededUseCase(
+        derivationsRepository: DerivationsRepository,
+        getUserWalletUseCase: GetUserWalletUseCase,
+    ): ColdWalletAndHasMissedDerivationsUseCase {
+        return ColdWalletAndHasMissedDerivationsUseCase(
+            derivationsRepository = derivationsRepository,
+            userWalletUseCase = getUserWalletUseCase,
         )
     }
 }
