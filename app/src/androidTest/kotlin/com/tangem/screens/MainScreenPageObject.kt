@@ -3,11 +3,11 @@ package com.tangem.screens
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
+import androidx.compose.ui.test.hasAnyAncestor
 import com.tangem.common.BaseTestCase
 import com.tangem.common.extensions.hasLazyListItemPosition
 import com.tangem.common.utils.LazyListItemNode
-import com.tangem.core.ui.test.TokenElementsTestTags
-import com.tangem.core.ui.test.MainScreenTestTags
+import com.tangem.core.ui.test.*
 import com.tangem.core.ui.utils.LazyListItemPositionSemantics
 import com.tangem.feature.wallet.impl.R
 import io.github.kakaocup.compose.node.element.ComposeScreen
@@ -35,13 +35,127 @@ class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider)
         }
     )
 
-    val synchronizeAddressesButton: KNode = child {
+    val screenContainer: KNode = child {
+        hasTestTag(MainScreenTestTags.SCREEN_CONTAINER)
+    }
+
+    val synchronizeAddressesButton: KNode = lazyList.child {
         hasText(getResourceString(R.string.common_generate_addresses))
     }
 
     val buyButton: KNode = child {
         hasTestTag(MainScreenTestTags.MULTI_CURRENCY_ACTION_BUTTON)
         hasText(getResourceString(R.string.common_buy))
+    }
+
+    val walletNameText: KNode = child {
+        hasTestTag(MainScreenTestTags.CARD_TITLE)
+        useUnmergedTree = true
+    }
+
+    val walletImage: KNode = child {
+        hasTestTag(MainScreenTestTags.CARD_IMAGE)
+        useUnmergedTree = true
+    }
+
+    val marketPriceBlock: KNode = child {
+        hasTestTag(MarketPriceBlockTestTags.BLOCK)
+        useUnmergedTree = true
+    }
+
+    val marketPriceText: KNode = child {
+        hasTestTag(MarketPriceBlockTestTags.TEXT)
+        useUnmergedTree = true
+    }
+
+    val transactionsExplorerIcon: KNode = child {
+        hasTestTag(TransactionHistoryBlockTestTags.EXPLORER_ICON)
+        useUnmergedTree = true
+    }
+
+    val transactionsTitle: KNode = child {
+        hasTestTag(TransactionHistoryBlockTestTags.TITLE_TEXT)
+        hasText(getResourceString(R.string.common_transactions))
+        useUnmergedTree = true
+    }
+
+    fun transactionsExplorer(): KNode {
+        return child {
+            hasTestTag(TransactionHistoryBlockTestTags.EXPLORER_TEXT)
+            hasText(getResourceString(R.string.common_explorer))
+            useUnmergedTree = true
+        }
+    }
+
+    val notificationContainer: KNode = child {
+        hasTestTag(NotificationTestTags.CONTAINER)
+        useUnmergedTree = true
+    }
+
+    val devCardNotificationIcon: KNode = child {
+        hasAnySibling(withText(getResourceString(R.string.warning_developer_card_title)))
+        hasTestTag(NotificationTestTags.ICON)
+        useUnmergedTree = true
+    }
+
+    val devCardNotificationTitle: KNode = child {
+        hasTestTag(NotificationTestTags.TITLE)
+        hasText(getResourceString(R.string.warning_developer_card_title))
+        useUnmergedTree = true
+    }
+
+    val devCardNotificationMessage: KNode = child {
+        hasTestTag(NotificationTestTags.MESSAGE)
+        hasText(getResourceString(R.string.warning_developer_card_message))
+        useUnmergedTree = true
+    }
+
+    val seedPhraseNotificationIcon: KNode = child {
+        hasAnySibling(withText(getResourceString(R.string.warning_seedphrase_issue_title)))
+        hasTestTag(NotificationTestTags.ICON)
+        useUnmergedTree = true
+    }
+
+    val seedPhraseNotificationTitle: KNode = child {
+        hasTestTag(NotificationTestTags.TITLE)
+        hasText(getResourceString(R.string.warning_seedphrase_issue_title))
+        useUnmergedTree = true
+    }
+
+    val seedPhraseNotificationMessage: KNode = child {
+        hasTestTag(NotificationTestTags.MESSAGE)
+        hasText(getResourceString(R.string.warning_seedphrase_issue_message))
+        useUnmergedTree = true
+    }
+
+    val totalBalanceContainer: KNode = child {
+        hasTestTag(MainScreenTestTags.WALLET_LIST_ITEM)
+    }
+
+    val totalBalanceMenuRenameWallet: KNode = child {
+        hasTestTag(MainScreenTestTags.TOTAL_BALANCE_MENU_ITEM)
+        hasText(getResourceString(R.string.common_rename))
+    }
+
+    val totalBalanceMenuDeleteWallet: KNode = child {
+        hasTestTag(MainScreenTestTags.TOTAL_BALANCE_MENU_ITEM)
+        hasText(getResourceString(R.string.common_delete))
+    }
+
+    val totalBalanceText: KNode = child {
+        hasParent(withTestTag(MainScreenTestTags.WALLET_BALANCE))
+    }
+
+    val notificationYesButton: KNode = child {
+        hasTestTag(BaseButtonTestTags.TEXT)
+        hasText(getResourceString(R.string.common_yes))
+        useUnmergedTree = true
+    }
+
+    val notificationNoButton: KNode = child {
+        hasTestTag(BaseButtonTestTags.TEXT)
+        hasText(getResourceString(R.string.common_no))
+        useUnmergedTree = true
     }
 
     /**
@@ -58,24 +172,19 @@ class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider)
         }
     }
 
-    /**
-     * Find node with wallet balance using lazyList. This construction doesn't affect next step with lazyList.
-     */
-    @OptIn(ExperimentalTestApi::class)
-    fun walletBalance(): KNode {
-        return lazyList.childWith<LazyListItemNode> {
-            hasAnyDescendant(withTestTag(MainScreenTestTags.WALLET_LIST_ITEM))
-        }.child<KNode> {
-            hasTestTag(MainScreenTestTags.WALLET_BALANCE)
-            useUnmergedTree = true
-        }
-    }
-
     @OptIn(ExperimentalTestApi::class)
     fun organizeTokensButton(): KNode {
         return lazyList.childWith<LazyListItemNode> {
             hasTestTag(MainScreenTestTags.ORGANIZE_TOKENS_BUTTON)
         }.child<KNode> {
+            hasText(getResourceString(R.string.organize_tokens_title))
+            useUnmergedTree = true
+        }
+    }
+
+    fun organizeTokensButtonWithoutLazySearch(): KNode {
+        return child {
+            hasTestTag(MainScreenTestTags.ORGANIZE_TOKENS_BUTTON)
             hasText(getResourceString(R.string.organize_tokens_title))
             useUnmergedTree = true
         }
@@ -101,6 +210,12 @@ class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider)
         }
     }
 
+    fun KNode.assertIsUnreachable() {
+        this {
+            hasAnyAncestor(withText(getResourceString(R.string.common_unreachable)))
+            assertIsDisplayed()
+        }
+    }
 
     /**
      * This assertion is required to properly verify the token's absence in the semantic tree.
