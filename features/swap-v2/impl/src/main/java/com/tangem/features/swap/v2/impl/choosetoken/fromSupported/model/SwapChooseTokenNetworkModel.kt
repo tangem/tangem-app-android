@@ -46,20 +46,20 @@ internal class SwapChooseTokenNetworkModel @Inject constructor(
     private val params: SwapChooseTokenNetworkComponent.Params = paramsContainer.require()
 
     val uiState: StateFlow<SwapChooseTokenNetworkUM>
-    field: MutableStateFlow<SwapChooseTokenNetworkUM> = MutableStateFlow(
-        SwapChooseTokenNetworkUM(
-            TangemBottomSheetConfig(
-                isShown = true,
-                onDismissRequest = params.onDismiss,
-                content = SwapChooseTokenNetworkContentUM.Loading(
-                    messageContent = getErrorMessage(
-                        tokenName = params.token.name,
-                        onDismiss = params.onDismiss,
+        field: MutableStateFlow<SwapChooseTokenNetworkUM> = MutableStateFlow(
+            SwapChooseTokenNetworkUM(
+                TangemBottomSheetConfig(
+                    isShown = true,
+                    onDismissRequest = params.onDismiss,
+                    content = SwapChooseTokenNetworkContentUM.Loading(
+                        messageContent = getErrorMessage(
+                            tokenName = params.token.name,
+                            onDismiss = params.onDismiss,
+                        ),
                     ),
                 ),
             ),
-        ),
-    )
+        )
 
     init {
         initContent()

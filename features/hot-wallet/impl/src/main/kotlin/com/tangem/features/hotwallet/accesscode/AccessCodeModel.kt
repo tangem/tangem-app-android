@@ -56,7 +56,7 @@ internal class AccessCodeModel @Inject constructor(
     private val params = paramsContainer.require<AccessCodeComponent.Params>()
 
     internal val uiState: StateFlow<AccessCodeUM>
-    field = MutableStateFlow(getInitialState())
+        field = MutableStateFlow(getInitialState())
 
     private fun getInitialState() = AccessCodeUM(
         accessCode = "",
