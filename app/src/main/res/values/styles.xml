@@ -1,6 +1,6 @@
 <resources>
 
-    <style name="BaseAppTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar" />
+    <style name="BaseAppTheme" parent="@style/Theme.AppCompat.DayNight.NoActionBar" />
 
     <style name="AppTheme" parent="BaseAppTheme">
         <item name="colorPrimary">@color/menu_accent_color</item>
