@@ -59,8 +59,8 @@ internal class SetTxHistoryCountTransformer(
     private fun createLoadingItems(): List<TxHistoryState.TxHistoryItemState> {
         return buildList {
             add(TxHistoryState.TxHistoryItemState.Title(onExploreClick = clickIntents::onExploreClick))
-            (1..transactionsCount).forEach {
-                add(TxHistoryState.TxHistoryItemState.Transaction(state = TransactionState.Loading(it.toString())))
+            for (i in 1..transactionsCount) {
+                add(TxHistoryState.TxHistoryItemState.Transaction(state = TransactionState.Loading(i.toString())))
             }
         }
     }
