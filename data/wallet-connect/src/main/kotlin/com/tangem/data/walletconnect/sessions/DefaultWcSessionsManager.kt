@@ -3,54 +3,44 @@ package com.tangem.data.walletconnect.sessions
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
-import com.domain.blockaid.models.dapp.CheckDAppResult
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.data.walletconnect.utils.WC_TAG
-import com.tangem.data.walletconnect.utils.WcNetworksConverter
-import com.tangem.data.walletconnect.utils.WcSdkObserver
-import com.tangem.data.walletconnect.utils.WcSdkSessionConverter
+import com.tangem.data.walletconnect.utils.*
 import com.tangem.datasource.local.walletconnect.WalletConnectStore
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.walletconnect.WcAnalyticEvents
 import com.tangem.domain.walletconnect.model.WcSession
 import com.tangem.domain.walletconnect.model.WcSessionDTO
-import com.tangem.domain.walletconnect.model.legacy.WalletConnectSessionsRepository
 import com.tangem.domain.walletconnect.repository.WcSessionsManager
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
-import org.joda.time.DateTime
+import kotlinx.coroutines.joinAll
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 import kotlin.coroutines.resume
 
 @Suppress("LongParameterList")
 internal class DefaultWcSessionsManager(
     private val store: WalletConnectStore,
-    private val legacyStore: WalletConnectSessionsRepository,
     private val getWallets: GetWalletsUseCase,
     private val dispatchers: CoroutineDispatcherProvider,
     private val wcNetworksConverter: WcNetworksConverter,
     private val analytics: AnalyticsEventHandler,
-    private val scope: CoroutineScope,
+    private val scope: WcScope,
 ) : WcSessionsManager, WcSdkObserver {
 
     private val onSessionDelete = Channel<Wallet.Model.SessionDelete>(capacity = Channel.BUFFERED)
-    private val oneTimeMigration = MutableStateFlow(true)
 
     override val sessions: Flow<Map<UserWallet, List<WcSession>>>
         get() = combine(getWallets(), store.sessions) { wallets, inStore -> wallets to inStore }
             .transform { pair ->
                 val (wallets, inStore) = pair
                 val inSdk: List<Wallet.Model.Session> = WalletKit.getListOfActiveSessions()
-                if (oneTimeMigration.value) {
-                    oneTimeMigration.value = false
-                    val someMigrated = migrateLegacyStore(inStore, inSdk, wallets)
-                    if (someMigrated) return@transform // ignore emit, wait next one
-                }
                 val associatedSessions: List<WcSession> = associate(inSdk, inStore, wallets)
                 val someRemove = removeUnknownSessions(inStore, inSdk, associatedSessions)
                 if (someRemove) return@transform // ignore emit, wait next one
@@ -60,21 +50,8 @@ internal class DefaultWcSessionsManager(
             .flowOn(dispatchers.io)
 
     override fun onWcSdkInit() {
-        oneTimeMigration.value = true
         listenOnSessionDelete()
         extendSessions()
-    }
-
-    override suspend fun saveSession(session: WcSession) {
-        store.saveSession(
-            WcSessionDTO(
-                topic = session.sdkModel.topic,
-                walletId = session.wallet.walletId,
-                url = session.sdkModel.appMetaData.url,
-                securityStatus = session.securityStatus,
-                connectingTime = session.connectingTime ?: DateTime.now().millis,
-            ),
-        )
     }
 
     override suspend fun removeSession(session: WcSession): Either<Throwable, Unit> {
@@ -96,45 +73,21 @@ internal class DefaultWcSessionsManager(
         onSessionDelete.trySend(sessionDelete)
     }
 
-    private suspend fun migrateLegacyStore(
-        inNewStore: Set<WcSessionDTO>,
-        inSdk: List<Wallet.Model.Session>,
-        wallets: List<UserWallet>,
-    ): Boolean {
-        val walletIds = wallets.map { wallet -> wallet.walletId }
-        val inLegacyStore = walletIds
-            .map { walletId ->
-                flow {
-                    emit(
-                        legacyStore.loadSessions(walletId.stringValue).mapNotNull { legacySession ->
-                            val url =
-                                inSdk.find { it.topic == legacySession.topic }?.metaData?.url ?: return@mapNotNull null
-                            WcSessionDTO(
-                                topic = legacySession.topic,
-                                walletId = walletId,
-                                url = url,
-                                securityStatus = CheckDAppResult.FAILED_TO_VERIFY,
-                            )
-                        },
-                    )
-                }
-            }
-            .merge()
-            .reduce { accumulator, value -> accumulator.plus(value) }
-            // migrate only active legacySessions
-            .filter { legacySession -> inSdk.any { inSdkSession -> inSdkSession.topic == legacySession.topic } }
-
-        val mustSaveInNewStore = inLegacyStore.subtract(inNewStore)
-        if (mustSaveInNewStore.isNotEmpty()) store.saveSessions(mustSaveInNewStore)
-        return mustSaveInNewStore.isNotEmpty()
-    }
-
     private suspend fun associate(
         inSdk: List<Wallet.Model.Session>,
         inStore: Set<WcSessionDTO>,
         wallets: List<UserWallet>,
     ): List<WcSession> {
-        val wcSessions = inStore.mapNotNull { storeSession ->
+        // if the WcSdk `onSessionSettleResponse` callback arrives late, merge pending approvals with WcSdk sessions
+        val savedPending = store.pendingApproval.first()
+            .mapNotNullTo(mutableSetOf()) { savedPendingSession ->
+                val sdkSession = inSdk
+                    .find { sdkSession -> sdkSession.pairingTopic == savedPendingSession.pairingTopic }
+                    ?: return@mapNotNullTo null
+                savedPendingSession.session.copy(topic = sdkSession.topic)
+            }
+
+        val wcSessions = savedPending.plus(inStore).mapNotNull { storeSession ->
             val wallet = wallets.find { it.walletId == storeSession.walletId } ?: return@mapNotNull null
             val sdkSession = inSdk.find { it.topic == storeSession.topic } ?: return@mapNotNull null
             val networks = wcNetworksConverter.findWalletNetworks(wallet, sdkSession)

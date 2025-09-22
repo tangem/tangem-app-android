@@ -40,16 +40,16 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.paging.compose.collectAsLazyPagingItems
+import com.tangem.common.ui.bottomsheet.chooseaddress.ChooseAddressBottomSheet
+import com.tangem.common.ui.bottomsheet.chooseaddress.ChooseAddressBottomSheetConfig
+import com.tangem.common.ui.bottomsheet.receive.TokenReceiveBottomSheet
+import com.tangem.common.ui.bottomsheet.receive.TokenReceiveBottomSheetConfig
 import com.tangem.common.ui.expressStatus.ExpressStatusBottomSheet
 import com.tangem.common.ui.expressStatus.ExpressStatusBottomSheetConfig
 import com.tangem.common.ui.expressStatus.expressTransactionsItems
 import com.tangem.core.ui.components.atoms.Hand
 import com.tangem.core.ui.components.atoms.handComposableComponentHeight
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
-import com.tangem.common.ui.bottomsheet.chooseaddress.ChooseAddressBottomSheet
-import com.tangem.common.ui.bottomsheet.chooseaddress.ChooseAddressBottomSheetConfig
-import com.tangem.common.ui.bottomsheet.receive.TokenReceiveBottomSheet
-import com.tangem.common.ui.bottomsheet.receive.TokenReceiveBottomSheetConfig
 import com.tangem.core.ui.components.containers.pullToRefresh.TangemPullToRefreshContainer
 import com.tangem.core.ui.components.rememberIsKeyboardVisible
 import com.tangem.core.ui.components.sheetscaffold.*
@@ -67,18 +67,14 @@ import com.tangem.core.ui.test.MarketTooltipTestTags
 import com.tangem.core.ui.utils.lineTo
 import com.tangem.core.ui.utils.moveTo
 import com.tangem.core.ui.utils.toPx
-import com.tangem.feature.wallet.presentation.wallet.state.model.ActionsBottomSheetConfig
-import com.tangem.feature.wallet.presentation.wallet.state.model.BalancesAndLimitsBottomSheetConfig
-import com.tangem.feature.wallet.presentation.wallet.state.model.VisaTxDetailsBottomSheetConfig
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletAlertState
 import com.tangem.feature.wallet.impl.R
+import com.tangem.feature.wallet.presentation.common.preview.WalletScreenPreviewData.accountScreenState
 import com.tangem.feature.wallet.presentation.common.preview.WalletScreenPreviewData.walletScreenState
 import com.tangem.feature.wallet.presentation.wallet.state.model.*
 import com.tangem.feature.wallet.presentation.wallet.state.model.holder.TxHistoryStateHolder
 import com.tangem.feature.wallet.presentation.wallet.ui.components.TokenActionsBottomSheet
 import com.tangem.feature.wallet.presentation.wallet.ui.components.WalletsList
 import com.tangem.feature.wallet.presentation.wallet.ui.components.common.*
-import com.tangem.feature.wallet.presentation.wallet.ui.components.common.actions
 import com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrency.nftCollections
 import com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrency.organizeTokensButton
 import com.tangem.feature.wallet.presentation.wallet.ui.components.singlecurrency.marketPriceBlock
@@ -740,6 +736,7 @@ private class WalletScreenPreviewProvider : PreviewParameterProvider<WalletScree
         get() = sequenceOf(
             walletScreenState,
             walletScreenState.copy(selectedWalletIndex = 1),
+            accountScreenState.copy(selectedWalletIndex = 1),
         )
 }
 // endregion

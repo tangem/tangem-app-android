@@ -11,7 +11,8 @@ import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.wallets.usecase.DerivePublicKeysUseCase
 import com.tangem.domain.card.SetCardWasScannedUseCase
-import com.tangem.domain.feedback.GetCardInfoUseCase
+import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
+import com.tangem.domain.core.wallets.UserWalletsListRepository
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -19,6 +20,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.requireColdWallet
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
+import com.tangem.domain.onramp.model.OnrampSource
 import com.tangem.domain.promo.ShouldShowPromoWalletUseCase
 import com.tangem.domain.promo.models.PromoId
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
@@ -43,6 +45,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.WalletBottomShe
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletEvent
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.CloseBottomSheetTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -75,7 +78,7 @@ internal interface WalletWarningsClickIntents {
 
     fun onClosePromoClick(promoId: PromoId)
 
-    fun onPromoClick(promoId: PromoId)
+    fun onPromoClick(promoId: PromoId, cryptoCurrency: CryptoCurrency? = null)
 
     fun onSupportClick()
 
@@ -92,7 +95,7 @@ internal interface WalletWarningsClickIntents {
     fun onFinishWalletActivationClick()
 }
 
-@Suppress("LongParameterList")
+@Suppress("LargeClass", "LongParameterList")
 @ModelScoped
 internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     private val stateHolder: WalletStateController,
@@ -107,7 +110,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val dispatchers: CoroutineDispatcherProvider,
     private val shouldShowPromoWalletUseCase: ShouldShowPromoWalletUseCase,
-    private val getCardInfoUseCase: GetCardInfoUseCase,
+    private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val seedPhraseNotificationUseCase: SeedPhraseNotificationUseCase,
     private val urlOpener: UrlOpener,
@@ -116,6 +119,8 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     private val multiYieldBalanceFetcher: MultiYieldBalanceFetcher,
     private val stakingIdFactory: StakingIdFactory,
     private val appRouter: AppRouter,
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
+    private val userWalletsListRepository: UserWalletsListRepository,
 ) : BaseWalletClickIntents(), WalletWarningsClickIntents {
 
     override fun onAddBackupCardClick() {
@@ -167,6 +172,22 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     override fun onOpenUnlockWalletsBottomSheetClick() {
         analyticsEventHandler.send(MainScreen.WalletUnlockTapped)
 
+        if (hotWalletFeatureToggles.isHotWalletEnabled) {
+            modelScope.launch {
+                userWalletsListRepository.unlockAllWallets()
+                    .onLeft {
+                        val selectedUserWallet = getSelectedUserWallet() ?: return@onLeft
+                        val method = when (selectedUserWallet) {
+                            is UserWallet.Cold -> UserWalletsListRepository.UnlockMethod.Scan()
+                            is UserWallet.Hot -> UserWalletsListRepository.UnlockMethod.AccessCode
+                        }
+                        userWalletsListRepository.unlock(stateHolder.getSelectedWalletId(), method)
+                    }
+            }
+            return
+        }
+
+        // Will be removed after hot wallet release
         stateHolder.showBottomSheet(
             WalletBottomSheetConfig.UnlockWallets(
                 onUnlockClick = this::onUnlockWalletClick,
@@ -175,6 +196,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
         )
     }
 
+    @Deprecated("Will be removed with hot wallet release")
     override fun onUnlockWalletClick() {
         analyticsEventHandler.send(MainScreen.UnlockAllWithBiometrics)
 
@@ -202,6 +224,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
         walletEventSender.send(event)
     }
 
+    @Deprecated("Will be removed with hot wallet release")
     override fun onScanToUnlockWalletClick() {
         analyticsEventHandler.send(MainScreen.UnlockWithCardScan)
         openScanCardDialog()
@@ -244,15 +267,9 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
             neverToSuggestRateAppUseCase()
 
             val userWallet = getSelectedUserWallet() ?: return@launch
+            val cardInfo = getWalletMetaInfoUseCase(userWallet.walletId).getOrNull() ?: return@launch
 
-            if (userWallet is UserWallet.Hot) {
-                return@launch // TODO [REDACTED_TASK_KEY] [Hot Wallet] Email feedback flow
-            }
-
-            val scanResponse = userWallet.requireColdWallet().scanResponse
-            val cardInfo = getCardInfoUseCase(scanResponse).getOrNull() ?: return@launch
-
-            sendFeedbackEmailUseCase(type = FeedbackEmailType.RateCanBeBetter(cardInfo = cardInfo))
+            sendFeedbackEmailUseCase(type = FeedbackEmailType.RateCanBeBetter(walletMetaInfo = cardInfo))
         }
     }
 
@@ -266,41 +283,55 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
 
     override fun onClosePromoClick(promoId: PromoId) {
         analyticsEventHandler.send(
-            if (promoId == PromoId.Referral) {
-                MainScreen.ReferralPromoButtonDismiss
-            } else {
-                TokenSwapPromoAnalyticsEvent.PromotionBannerClicked(
+            when (promoId) {
+                PromoId.Referral -> MainScreen.ReferralPromoButtonDismiss
+                PromoId.Sepa -> TokenSwapPromoAnalyticsEvent.PromotionBannerClicked(
                     source = AnalyticsParam.ScreensSources.Main,
-                    programName = TokenSwapPromoAnalyticsEvent.ProgramName.Empty, // Use it on new promo action
+                    program = TokenSwapPromoAnalyticsEvent.Program.Sepa,
                     action = TokenSwapPromoAnalyticsEvent.PromotionBannerClicked.BannerAction.Closed,
                 )
             },
+
         )
         modelScope.launch(dispatchers.main) {
             shouldShowPromoWalletUseCase.neverToShow(promoId)
         }
     }
 
-    override fun onPromoClick(promoId: PromoId) {
-        if (promoId == PromoId.Referral) {
-            val userWallet = getSelectedUserWallet() ?: return
-            analyticsEventHandler.send(MainScreen.ReferralPromoButtonParticipate)
-            appRouter.push(AppRoute.ReferralProgram(userWalletId = userWallet.walletId))
+    override fun onPromoClick(promoId: PromoId, cryptoCurrency: CryptoCurrency?) {
+        val userWallet = getSelectedUserWallet() ?: return
+        when (promoId) {
+            PromoId.Referral -> {
+                analyticsEventHandler.send(MainScreen.ReferralPromoButtonParticipate)
+                appRouter.push(AppRoute.ReferralProgram(userWalletId = userWallet.walletId))
+            }
+            PromoId.Sepa -> {
+                analyticsEventHandler.send(
+                    TokenSwapPromoAnalyticsEvent.PromotionBannerClicked(
+                        source = AnalyticsParam.ScreensSources.Main,
+                        program = TokenSwapPromoAnalyticsEvent.Program.Sepa,
+                        action = TokenSwapPromoAnalyticsEvent.PromotionBannerClicked.BannerAction.Clicked,
+                    ),
+                )
+                cryptoCurrency ?: return
+                appRouter.push(
+                    AppRoute.Onramp(
+                        userWalletId = userWallet.walletId,
+                        currency = cryptoCurrency,
+                        source = OnrampSource.SEPA_BANNER,
+                        launchSepa = true,
+                    ),
+                )
+            }
         }
     }
 
     override fun onSupportClick() {
         val userWallet = getSelectedUserWallet() ?: return
 
-        if (userWallet is UserWallet.Hot) {
-            return // TODO [REDACTED_TASK_KEY] [Hot Wallet] Email feedback flow
-        }
-
-        val scanResponse = userWallet.requireColdWallet().scanResponse
-        val cardInfo = getCardInfoUseCase(scanResponse).getOrNull() ?: return
-
         modelScope.launch {
-            sendFeedbackEmailUseCase(type = FeedbackEmailType.DirectUserRequest(cardInfo = cardInfo))
+            val metaInfo = getWalletMetaInfoUseCase(userWallet.walletId).getOrNull() ?: return@launch
+            sendFeedbackEmailUseCase(type = FeedbackEmailType.DirectUserRequest(walletMetaInfo = metaInfo))
         }
     }
 

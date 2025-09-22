@@ -44,7 +44,11 @@ class NetworkLogsSaveInterceptor(
             throw e
         }
 
-        logResponseMessage(response, startNs)
+        if (restrictedForLogURLs.contains(request.url.host + request.url.encodedPath)) {
+            logResponseWithEmptyMessage(response, startNs)
+        } else {
+            logResponseMessage(response, startNs)
+        }
 
         return response
     }
@@ -85,6 +89,14 @@ class NetworkLogsSaveInterceptor(
                 "--> END $method (binary ${requestBody.contentLength()}-byte body omitted)"
             }
         }
+    }
+
+    private fun logResponseWithEmptyMessage(response: Response, startNs: Long) {
+        val tookMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNs)
+        saveLogMessage(
+            "<-- ${response.code}",
+            " ${response.request.url} (${tookMs}ms)\n",
+        )
     }
 
     private fun logResponseMessage(response: Response, startNs: Long) {
@@ -201,5 +213,14 @@ class NetworkLogsSaveInterceptor(
 
     private fun saveLogMessage(vararg messages: String) {
         appLogsStore.saveLogMessage(tag = "NetworkLogs", *messages)
+    }
+
+    private companion object {
+        /**
+         * List of URLs (host + path) for which logging is restricted
+         */
+        val restrictedForLogURLs = listOf(
+            "api.stakek.it/v1/yields/enabled",
+        )
     }
 }
