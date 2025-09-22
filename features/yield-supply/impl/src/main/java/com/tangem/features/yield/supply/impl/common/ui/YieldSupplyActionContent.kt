@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.LinkAnnotation
@@ -19,6 +20,7 @@ import com.tangem.core.ui.components.SpacerH8
 import com.tangem.core.ui.components.containers.FooterContainer
 import com.tangem.core.ui.components.currency.icon.CurrencyIcon
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
+import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -32,12 +34,14 @@ import kotlinx.collections.immutable.persistentListOf
 internal fun YieldSupplyActionContent(
     yieldSupplyActionUM: YieldSupplyActionUM,
     onFooterClick: () -> Unit,
+    yieldSupplyNotificationsComponent: ComposableContentComponent,
     modifier: Modifier = Modifier,
+    enableFooterClick: Boolean = true,
     iconContent: @Composable ColumnScope.() -> Unit,
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = modifier.padding(bottom = 16.dp, start = 16.dp, end = 16.dp),
+        modifier = modifier.padding(bottom = 8.dp, start = 16.dp, end = 16.dp),
     ) {
         iconContent()
         SpacerH24()
@@ -55,33 +59,43 @@ internal fun YieldSupplyActionContent(
             modifier = Modifier.padding(horizontal = 16.dp),
         )
         SpacerH24()
-        FooterContainer(
-            footer = annotatedReference {
-                append(yieldSupplyActionUM.footer.resolveReference())
-                appendSpace()
-                withLink(link = LinkAnnotation.Clickable("LINK_TAG") { onFooterClick() }) {
-                    appendColored(
-                        text = yieldSupplyActionUM.footerLink.resolveReference(),
-                        color = TangemTheme.colors.icon.accent,
-                    )
+        key(enableFooterClick) {
+            FooterContainer(
+                footer = annotatedReference {
+                    append(yieldSupplyActionUM.footer.resolveReference())
+                    appendSpace()
+                    if (enableFooterClick) {
+                        withLink(link = LinkAnnotation.Clickable("LINK_TAG") { onFooterClick() }) {
+                            appendColored(
+                                text = yieldSupplyActionUM.footerLink.resolveReference(),
+                                color = TangemTheme.colors.icon.accent,
+                            )
+                        }
+                    } else {
+                        appendColored(
+                            text = yieldSupplyActionUM.footerLink.resolveReference(),
+                            color = TangemTheme.colors.text.disabled,
+                        )
+                    }
+                },
+                paddingValues = PaddingValues(
+                    start = 12.dp,
+                    end = 12.dp,
+                    top = 8.dp,
+                ),
+            ) {
+                val fee = when (val yieldSupplyFeeUM = yieldSupplyActionUM.yieldSupplyFeeUM) {
+                    is YieldSupplyFeeUM.Content -> yieldSupplyFeeUM.feeValue
+                    YieldSupplyFeeUM.Error -> stringReference(StringsSigns.DASH_SIGN)
+                    YieldSupplyFeeUM.Loading -> null
                 }
-            },
-            paddingValues = PaddingValues(
-                start = 12.dp,
-                end = 12.dp,
-                top = 8.dp,
-            ),
-        ) {
-            val fee = when (val yieldSupplyFeeUM = yieldSupplyActionUM.yieldSupplyFeeUM) {
-                is YieldSupplyFeeUM.Content -> yieldSupplyFeeUM.feeValue
-                YieldSupplyFeeUM.Error -> stringReference(StringsSigns.DASH_SIGN)
-                YieldSupplyFeeUM.Loading -> null
+                YieldSupplyFeeRow(
+                    title = resourceReference(R.string.common_network_fee_title),
+                    value = fee,
+                )
             }
-            YieldSupplyFeeRow(
-                title = resourceReference(R.string.common_network_fee_title),
-                value = fee,
-            )
         }
+        yieldSupplyNotificationsComponent.Content(Modifier)
     }
 }
 
@@ -96,6 +110,8 @@ private fun YieldSupplyActionContent_Preview(
         YieldSupplyActionContent(
             yieldSupplyActionUM = params,
             onFooterClick = {},
+            yieldSupplyNotificationsComponent = ComposableContentComponent.EMPTY,
+            enableFooterClick = false,
             modifier = Modifier.background(TangemTheme.colors.background.tertiary),
         ) {
             CurrencyIcon(
