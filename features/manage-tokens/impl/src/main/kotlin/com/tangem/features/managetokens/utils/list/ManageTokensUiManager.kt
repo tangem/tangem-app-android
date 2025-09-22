@@ -38,6 +38,7 @@ internal class ManageTokensUiManager(
     fun createOrUpdateUiBatches(
         newCurrencyBatches: List<Batch<Int, List<ManagedCryptoCurrency>>>,
         canEditItems: Boolean,
+        isCollapsed: Boolean,
     ): List<Batch<Int, List<CurrencyItemUM>>> {
         val currentUiBatches = state.value.uiBatches
         val batches = currentUiBatches.toMutableList()
@@ -54,6 +55,7 @@ internal class ManageTokensUiManager(
                             isEditable = canEditItems,
                             onRemoveCustomCurrencyClick = ::removeCustomCurrency,
                             onTokenClick = actions::onTokenClick,
+                            isCollapsed = isCollapsed,
                         )
                     },
                 )
@@ -78,6 +80,7 @@ internal class ManageTokensUiManager(
                                 isEditable = canEditItems,
                                 onRemoveCustomCurrencyClick = ::removeCustomCurrency,
                                 onTokenClick = actions::onTokenClick,
+                                isCollapsed = isCollapsed,
                             )
                         } else {
                             previousUiItem.update(item)
