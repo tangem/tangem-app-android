@@ -76,6 +76,7 @@ internal class OnboardingManageTokensModel @Inject constructor(
             manageTokensListManager.launchPagination(
                 source = ManageTokensSource.ONBOARDING,
                 userWalletId = params.userWalletId,
+                isCollapsed = true,
             )
         }
     }
