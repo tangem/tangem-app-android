@@ -1,6 +1,7 @@
 package com.tangem.core.ui.components.bottomsheets.modal
 
 import android.content.res.Configuration
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -49,7 +50,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> TangemModalBottomSheetWi
     noinline onBack: (() -> Unit)? = null,
     crossinline title: @Composable BoxScope.(T) -> Unit = {},
     crossinline content: @Composable (T) -> Unit,
-    crossinline footer: @Composable (BoxScope.(T) -> Unit),
+    noinline footer: @Composable (BoxScope.(T) -> Unit)?,
 ) {
     val isAlwaysVisible = LocalBottomSheetAlwaysVisible.current
 
@@ -84,7 +85,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> DefaultModalBottomSheetW
     noinline onBack: (() -> Unit)? = null,
     crossinline title: @Composable BoxScope.(T) -> Unit,
     crossinline content: @Composable (T) -> Unit,
-    crossinline footer: @Composable (BoxScope.(T) -> Unit),
+    noinline footer: @Composable (BoxScope.(T) -> Unit)?,
 ) {
     var isVisible by remember { mutableStateOf(value = config.isShown) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = skipPartiallyExpanded)
@@ -118,7 +119,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> PreviewModalBottomSheetW
     skipPartiallyExpanded: Boolean = true,
     crossinline title: @Composable BoxScope.(T) -> Unit,
     crossinline content: @Composable (T) -> Unit,
-    crossinline footer: @Composable BoxScope.(T) -> Unit,
+    noinline footer: @Composable (BoxScope.(T) -> Unit)?,
 ) {
     BasicModalBottomSheetWithFooter<T>(
         config = config,
@@ -145,7 +146,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> BasicModalBottomSheetWit
     noinline onBack: (() -> Unit)? = null,
     crossinline title: @Composable BoxScope.(T) -> Unit,
     crossinline content: @Composable (T) -> Unit,
-    crossinline footer: @Composable (BoxScope.(T) -> Unit),
+    noinline footer: @Composable (BoxScope.(T) -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
     val model = config.content as? T ?: return
@@ -156,8 +157,13 @@ inline fun <reified T : TangemBottomSheetConfigContent> BasicModalBottomSheetWit
         val scrollState = rememberScrollState(initial = initial)
 
         val isKeyboardOpen by rememberIsKeyboardVisible()
-        val buttonHeight = TangemTheme.dimens.spacing80
-        val contentBottomPadding = TangemTheme.dimens.spacing80
+        val buttonHeight by animateDpAsState(
+            if (footer != null) {
+                80.dp
+            } else {
+                0.dp
+            },
+        )
         // Offset calculation for keyboard scroll adjustment:
         // 1) Button height (footer)
         // 2) Column content bottom padding
@@ -202,7 +208,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> BasicModalBottomSheetWit
                 Column(
                     modifier = Modifier
                         .verticalScroll(state = scrollState)
-                        .padding(bottom = contentBottomPadding),
+                        .padding(bottom = buttonHeight),
                 ) {
                     content(model)
                 }
@@ -218,7 +224,9 @@ inline fun <reified T : TangemBottomSheetConfigContent> BasicModalBottomSheetWit
                         .height(buttonHeight)
                         .align(Alignment.BottomCenter),
                 ) {
-                    footer(model)
+                    if (footer != null) {
+                        footer(model)
+                    }
                 }
             }
         }
