@@ -33,13 +33,9 @@ internal class TokenListOperations(
     private fun Raise<Error>.createTokenList(isGrouped: Boolean, isSortedByBalance: Boolean): TokenList {
         val nonEmptyCurrencies = tokens.toNonEmptyListOrNull() ?: return TokenList.Empty
 
-        val isAnyTokenLoading = nonEmptyCurrencies.any { it.value is CryptoCurrencyStatus.Loading }
-        val fiatBalanceOperations = TokenListFiatBalanceOperations(nonEmptyCurrencies, isAnyTokenLoading)
-
         return createTokenList(
             currencies = nonEmptyCurrencies,
-            fiatBalance = fiatBalanceOperations.calculateFiatBalance(),
-            isAnyTokenLoading = isAnyTokenLoading,
+            fiatBalance = TotalFiatBalanceCalculator.calculate(statuses = nonEmptyCurrencies),
             isGrouped = isGrouped,
             isSortedByBalance = isSortedByBalance,
         )
@@ -48,13 +44,12 @@ internal class TokenListOperations(
     private fun Raise<Error>.createTokenList(
         currencies: NonEmptyList<CryptoCurrencyStatus>,
         fiatBalance: TotalFiatBalance,
-        isAnyTokenLoading: Boolean,
         isGrouped: Boolean,
         isSortedByBalance: Boolean,
     ): TokenList {
         val sortingOperations = TokenListSortingOperations(
             currencies = currencies,
-            isAnyTokenLoading = isAnyTokenLoading,
+            isAnyTokenLoading = currencies.any { it.value is CryptoCurrencyStatus.Loading },
             sortByBalance = isSortedByBalance,
         )
 
