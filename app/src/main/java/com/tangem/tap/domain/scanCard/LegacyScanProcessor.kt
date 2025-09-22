@@ -193,7 +193,7 @@ internal class LegacyScanProcessor @Inject constructor(
         }
     }
 
-    @Suppress("LongMethod", "MagicNumber")
+    @Suppress("LongMethod", "LongParameterList", "MagicNumber")
     private suspend inline fun onScanSuccess(
         scanResponse: ScanResponse,
         crossinline onProgressStateChange: suspend (showProgress: Boolean) -> Unit,
@@ -265,7 +265,7 @@ internal class LegacyScanProcessor @Inject constructor(
                     onOk = { mainScope.launch { onSuccess() } },
                     onSupportClick = {
                         val cardInfo =
-                            store.inject(DaggerGraphState::getCardInfoUseCase).invoke(scanResponse).getOrNull()
+                            store.inject(DaggerGraphState::getWalletMetaInfoUseCase).invoke(scanResponse).getOrNull()
                                 ?: error("CardInfo must be not null")
 
                         scope.launch {
