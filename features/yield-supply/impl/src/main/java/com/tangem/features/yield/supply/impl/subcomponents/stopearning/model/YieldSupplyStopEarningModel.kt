@@ -6,10 +6,8 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
-import com.tangem.core.ui.extensions.*
-import com.tangem.core.ui.format.bigdecimal.crypto
-import com.tangem.core.ui.format.bigdecimal.fiat
-import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -20,13 +18,15 @@ import com.tangem.domain.yield.supply.usecase.YieldSupplyStopEarningUseCase
 import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyActionUM
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyFeeUM
+import com.tangem.features.yield.supply.impl.subcomponents.notifications.YieldSupplyNotificationsComponent
+import com.tangem.features.yield.supply.impl.subcomponents.notifications.YieldSupplyNotificationsUpdateTrigger
+import com.tangem.features.yield.supply.impl.subcomponents.notifications.entity.YieldSupplyNotificationData
 import com.tangem.features.yield.supply.impl.subcomponents.stopearning.YieldSupplyStopEarningComponent
-import com.tangem.utils.StringsSigns.DOT
+import com.tangem.features.yield.supply.impl.subcomponents.stopearning.model.transformer.YieldSupplyStopEarningFeeContentTransformer
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.collections.immutable.persistentListOf
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.update
+import com.tangem.utils.extensions.orZero
+import com.tangem.utils.transformer.update
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
@@ -42,7 +42,8 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
     private val sendTransactionUseCase: SendTransactionUseCase,
     private val yieldSupplyStopEarningUseCase: YieldSupplyStopEarningUseCase,
     private val urlOpener: UrlOpener,
-) : Model() {
+    private val yieldSupplyNotificationsUpdateTrigger: YieldSupplyNotificationsUpdateTrigger,
+) : Model(), YieldSupplyNotificationsComponent.ModelCallback {
 
     private val params: YieldSupplyStopEarningComponent.Params = paramsContainer.require()
 
@@ -51,10 +52,10 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
     private val cryptoCurrency = cryptoCurrencyStatus.currency
     private var userWallet = params.userWallet
 
-    private val feeCryptoCurrencyStatusFlow: StateFlow<CryptoCurrencyStatus>
+    val feeCryptoCurrencyStatusFlow: StateFlow<CryptoCurrencyStatus>
         field = MutableStateFlow(
             CryptoCurrencyStatus(
-                cryptoCurrencyStatus.currency,
+                currency = cryptoCurrencyStatus.currency,
                 value = CryptoCurrencyStatus.Loading,
             ),
         )
@@ -84,6 +85,13 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
         modelScope.launch {
             appCurrency = getSelectedAppCurrencyUseCase.invokeSync().getOrElse { AppCurrency.Default }
             subscribeOnCurrencyStatusUpdates()
+            subscribeOnNotificationsErrors()
+        }
+    }
+
+    override fun onFeeReload() {
+        modelScope.launch {
+            onLoadFee()
         }
     }
 
@@ -130,39 +138,57 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
             fee = null,
         ).getOrNull() ?: return
 
-        val fee = getFeeUseCase(
+        uiState.update {
+            it.copy(yieldSupplyFeeUM = YieldSupplyFeeUM.Loading)
+        }
+
+        getFeeUseCase(
             transactionData = exitTransitionData,
             userWallet = userWallet,
             network = cryptoCurrency.network,
-        ).getOrNull() ?: return
-
-        val feeCryptoValue = fee.normal.amount.value
-
-        val feeFiatValue = feeCryptoCurrencyStatus.value.fiatRate?.let { rate ->
-            feeCryptoValue?.multiply(rate)
-        }
-        val cryptoFee = feeCryptoValue.format { crypto(feeCryptoCurrencyStatus.currency) }
-        val fiatFee = feeFiatValue.format { fiat(appCurrency.code, appCurrency.symbol) }
-
-        uiState.update {
-            if (cryptoCurrencyStatus.value is CryptoCurrencyStatus.Loading) {
-                it.copy(yieldSupplyFeeUM = YieldSupplyFeeUM.Loading)
-            } else {
-                it.copy(
-                    isPrimaryButtonEnabled = true,
-                    yieldSupplyFeeUM = YieldSupplyFeeUM.Content(
-                        transactionDataList = persistentListOf(exitTransitionData.copy(fee = fee.normal)),
-                        feeValue = combinedReference(
-                            stringReference(cryptoFee),
-                            stringReference(" $DOT "),
-                            stringReference(fiatFee),
-                        ),
-                        currentNetworkFeeValue = TextReference.EMPTY,
-                        maxNetworkFeeValue = TextReference.EMPTY,
+        ).fold(
+            ifLeft = { feeError ->
+                yieldSupplyNotificationsUpdateTrigger.triggerUpdate(
+                    data = YieldSupplyNotificationData(
+                        feeValue = null,
+                        feeError = feeError,
                     ),
                 )
-            }
-        }
+                uiState.update {
+                    it.copy(yieldSupplyFeeUM = YieldSupplyFeeUM.Error)
+                }
+            },
+            ifRight = { fee ->
+                val fee = fee.normal
+                val feeCryptoValue = fee.amount.value.orZero()
+
+                uiState.update(
+                    YieldSupplyStopEarningFeeContentTransformer(
+                        cryptoCurrencyStatus = cryptoCurrencyStatus,
+                        feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
+                        appCurrency = appCurrency,
+                        transactions = listOf(exitTransitionData.copy(fee = fee)),
+                        feeValue = feeCryptoValue,
+                    ),
+                )
+
+                yieldSupplyNotificationsUpdateTrigger.triggerUpdate(
+                    data = YieldSupplyNotificationData(
+                        feeValue = feeCryptoValue,
+                        feeError = null,
+                    ),
+                )
+            },
+        )
+    }
+
+    private fun subscribeOnNotificationsErrors() {
+        yieldSupplyNotificationsUpdateTrigger.hasErrorFlow
+            .onEach { hasError ->
+                uiState.update {
+                    it.copy(isPrimaryButtonEnabled = !hasError)
+                }
+            }.launchIn(modelScope)
     }
 
     private companion object {
