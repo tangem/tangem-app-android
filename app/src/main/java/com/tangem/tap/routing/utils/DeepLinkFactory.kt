@@ -14,6 +14,7 @@ import com.tangem.features.onramp.deeplink.SellDeepLinkHandler
 import com.tangem.features.onramp.deeplink.SwapDeepLinkHandler
 import com.tangem.features.send.v2.api.deeplink.SellRedirectDeepLinkHandler
 import com.tangem.features.staking.api.deeplink.StakingDeepLinkHandler
+import com.tangem.features.tangempay.deeplink.OnboardVisaDeepLinkHandler
 import com.tangem.features.tokendetails.deeplink.TokenDetailsDeepLinkHandler
 import com.tangem.features.wallet.deeplink.PromoDeeplinkHandler
 import com.tangem.features.wallet.deeplink.WalletDeepLinkHandler
@@ -48,6 +49,7 @@ internal class DeepLinkFactory @Inject constructor(
     private val sellDeepLink: SellDeepLinkHandler.Factory,
     private val swapDeepLink: SwapDeepLinkHandler.Factory,
     private val promoDeepLink: PromoDeeplinkHandler.Factory,
+    private val onboardVisaDeepLink: OnboardVisaDeepLinkHandler.Factory,
 ) {
     private val permittedAppRoute = MutableStateFlow(false)
 
@@ -135,6 +137,7 @@ internal class DeepLinkFactory @Inject constructor(
             DeepLinkRoute.Swap.host -> swapDeepLink.create()
             DeepLinkRoute.WalletConnect.host -> walletConnectDeepLink.create(deeplinkUri)
             DeepLinkRoute.Promo.host -> promoDeepLink.create(coroutineScope, queryParams)
+            DeepLinkRoute.OnboardVisa.host -> onboardVisaDeepLink.create(deeplinkUri)
             else -> {
                 Timber.i(
                     """
