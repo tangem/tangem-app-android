@@ -81,6 +81,7 @@ import com.tangem.features.tokendetails.TokenDetailsComponent
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.features.tokenreceive.TokenReceiveFeatureToggle
 import com.tangem.features.txhistory.entity.TxHistoryContentUpdateEmitter
+import com.tangem.features.yield.supply.api.YieldSupplyFeatureToggles
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
 import com.tangem.utils.extensions.isZero
@@ -137,6 +138,7 @@ internal class TokenDetailsModel @Inject constructor(
     private val tokenReceiveFeatureToggle: TokenReceiveFeatureToggle,
     private val getViewedTokenReceiveWarningUseCase: GetViewedTokenReceiveWarningUseCase,
     private val getEnsNameUseCase: GetEnsNameUseCase,
+    private val yieldSupplyFeatureToggles: YieldSupplyFeatureToggles,
 ) : Model(), TokenDetailsClickIntents {
 
     private val params = paramsContainer.require<TokenDetailsComponent.Params>()
@@ -170,6 +172,7 @@ internal class TokenDetailsModel @Inject constructor(
         networkHasDerivationUseCase = networkHasDerivationUseCase,
         getUserWalletUseCase = getUserWalletUseCase,
         userWalletId = userWalletId,
+        yieldSupplyFeatureToggles = yieldSupplyFeatureToggles,
     )
 
     private val expressStatusFactory by lazy(mode = LazyThreadSafetyMode.NONE) {
