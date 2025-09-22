@@ -23,7 +23,7 @@ import java.util.UUID
  * @param modifier modifier
  */
 @Composable
-internal fun TxHistoryGroupTitle(config: TxHistoryItemState.GroupTitle, modifier: Modifier = Modifier) {
+fun TxHistoryGroupTitle(config: TxHistoryItemState.GroupTitle, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .background(TangemTheme.colors.background.primary)

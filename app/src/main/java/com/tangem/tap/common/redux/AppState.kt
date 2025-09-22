@@ -5,8 +5,6 @@ import com.tangem.tap.common.redux.global.GlobalState
 import com.tangem.tap.common.redux.legacy.LegacyMiddleware
 import com.tangem.tap.features.details.redux.DetailsMiddleware
 import com.tangem.tap.features.details.redux.DetailsState
-import com.tangem.tap.features.details.redux.walletconnect.WalletConnectMiddleware
-import com.tangem.tap.features.details.redux.walletconnect.WalletConnectState
 import com.tangem.tap.features.onboarding.products.wallet.redux.BackupMiddleware
 import com.tangem.tap.features.wallet.redux.middlewares.TradeCryptoMiddleware
 import com.tangem.tap.features.welcome.redux.WelcomeMiddleware
@@ -19,7 +17,6 @@ import org.rekotlin.StateType
 data class AppState(
     val globalState: GlobalState = GlobalState(),
     val detailsState: DetailsState = DetailsState(),
-    val walletConnectState: WalletConnectState = WalletConnectState(),
     val welcomeState: WelcomeState = WelcomeState(),
     val daggerGraphState: DaggerGraphState = DaggerGraphState(),
 ) : StateType {
@@ -30,7 +27,6 @@ data class AppState(
                 logMiddleware,
                 GlobalMiddleware.handler,
                 DetailsMiddleware().detailsMiddleware,
-                WalletConnectMiddleware().walletConnectMiddleware,
                 BackupMiddleware().backupMiddleware,
                 WelcomeMiddleware().middleware,
                 LockUserWalletsTimerMiddleware().middleware,
