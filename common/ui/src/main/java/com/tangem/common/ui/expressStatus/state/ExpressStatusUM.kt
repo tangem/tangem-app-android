@@ -50,5 +50,4 @@ enum class ExpressStatusItemState {
     Done,
     Warning,
     Error,
-    ;
 }
