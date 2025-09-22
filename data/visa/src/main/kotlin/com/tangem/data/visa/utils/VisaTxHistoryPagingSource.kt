@@ -20,8 +20,6 @@ internal class VisaTxHistoryPagingSource(
     val requestTxHistory: suspend (offset: Int, pageSize: Int) -> VisaTxHistoryResponse,
 ) : PagingSource<Int, VisaTxHistoryItem>() {
 
-    private val itemsFactory = VisaTxHistoryItemFactory()
-
     private val cardPublicKey = params.cardPublicKey
     private val pageSize = params.pageSize
     private val isRefresh = params.isRefresh
@@ -82,7 +80,7 @@ internal class VisaTxHistoryPagingSource(
 
         pagedItems.update {
             it.toMutableMap().apply {
-                this[offset] = response.transactions.map(itemsFactory::create)
+                this[offset] = response.transactions.map(VisaTxHistoryItemConverter::convert)
             }
         }
     }
