@@ -522,12 +522,9 @@
   <string name="hw_backup_need_action">Gehe zum Backup</string>
   <string name="hw_backup_need_description">Um Deine Wallet mit einem Zugangscode zu sichern, führe zuerst die Sicherung durch.</string>
   <string name="hw_backup_need_title">Sicherung zuerst beenden</string>
-  <string name="hw_backup_no_backup">Kein Backup</string>
   <string name="hw_backup_seed_description">Physische Karten, die Deine Kryptowährung sicher offline speichern.</string>
   <string name="hw_backup_seed_title">Wiederherstellungs-Phrase</string>
-  <string name="hw_create_keys_description">Über eingehende Transaktionen benachrichtigt werden</string>
   <string name="hw_create_keys_title">Schlüssel werden in der App gespeichert</string>
-  <string name="hw_create_seed_description">Bleibe über die neuesten Funktionen und Neuigkeiten auf dem Laufenden</string>
   <string name="hw_create_seed_title">Sicherung der Seed-Phrase</string>
   <string name="hw_create_title">Mobile Wallet erstellen</string>
   <string name="hw_import_seed_phrase_already_imported">Diese Wiederherstellungsphrase wurde bereits importiert</string>
@@ -1028,7 +1025,7 @@
   <string name="send_recipient_address_error">Keine gültige Adresse</string>
   <string name="send_recipient_address_footer">Stelle sicher, dass sich die empfangende Wallet-Adresse im **%s -Netzwerk** befindet, um den Verlust Deiner Token zu vermeiden.</string>
   <string name="send_recipient_label">Senden an</string>
-  <string name="send_recipient_memo_footer">Ein Memo/Destination Tag ist eine eindeutige ID zur Unterscheidung von Transaktionen, die an denselben Empfänger im selben Netzwerk gesendet werden. Vorsicht! Das Weglassen eines Vermerks kann dazu führen, dass Gelder für immer verloren sind!</string>
+  <string name="send_recipient_memo_footer">Ein Memo/Destination Tag ist eine eindeutige ID zur Unterscheidung von Transaktionen, die an denselben Empfänger im selben Netzwerk gesendet werden.\n**Vorsicht! Das Weglassen eines Vermerks kann dazu führen, dass Gelder für immer verloren sind!**</string>
   <string name="send_recipient_memo_footer_v2">Memo / Destination Tag ist ein Code, der Transaktionen an einen gemeinsamen Empfänger im Kryptonetzwerk voneinander trennt.</string>
   <string name="send_recipient_memo_footer_v2_highlighted">Achtung: Das Fehlen eines Memos kann zum Verlust von Geldern führen.</string>
   <string name="send_recipient_wallets_title">Meine Wallet</string>
