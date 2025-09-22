@@ -6,6 +6,7 @@ import com.tangem.blockchain.common.TransactionData
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.navigationButtons.NavigationButton
 import com.tangem.common.ui.navigationButtons.NavigationUM
+import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -16,13 +17,11 @@ import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.datasource.local.nft.converter.NFTSdkAssetConverter
-import com.tangem.domain.feedback.GetCardInfoUseCase
+import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.BlockchainErrorInfo
 import com.tangem.domain.feedback.models.FeedbackEmailType
-import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.models.wallet.requireColdWallet
 import com.tangem.domain.settings.IsSendTapHelpEnabledUseCase
 import com.tangem.domain.settings.NeverShowTapHelpUseCase
 import com.tangem.domain.transaction.usecase.CreateNFTTransferTransactionUseCase
@@ -35,6 +34,8 @@ import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents.SendScreenSource
 import com.tangem.features.send.v2.api.callbacks.FeeSelectorModelCallback
 import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationUM
+import com.tangem.features.send.v2.api.subcomponents.feeSelector.FeeSelectorCheckReloadListener
+import com.tangem.features.send.v2.api.subcomponents.feeSelector.FeeSelectorCheckReloadTrigger
 import com.tangem.features.send.v2.api.subcomponents.notifications.SendNotificationsUpdateListener
 import com.tangem.features.send.v2.api.subcomponents.notifications.SendNotificationsUpdateTrigger
 import com.tangem.features.send.v2.common.CommonSendRoute
@@ -78,12 +79,14 @@ internal class NFTSendConfirmModel @Inject constructor(
     private val sendTransactionUseCase: SendTransactionUseCase,
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
     private val saveBlockchainErrorUseCase: SaveBlockchainErrorUseCase,
-    private val getCardInfoUseCase: GetCardInfoUseCase,
+    private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val notificationsUpdateTrigger: SendNotificationsUpdateTrigger,
     private val notificationsUpdateListener: SendNotificationsUpdateListener,
     private val sendFeeCheckReloadTrigger: SendFeeCheckReloadTrigger,
     private val sendFeeCheckReloadListener: SendFeeCheckReloadListener,
+    private val feeSelectorCheckReloadTrigger: FeeSelectorCheckReloadTrigger,
+    private val feeSelectorCheckReloadListener: FeeSelectorCheckReloadListener,
     private val alertFactory: SendConfirmAlertFactory,
     private val urlOpener: UrlOpener,
     private val shareManager: ShareManager,
@@ -208,7 +211,11 @@ internal class NFTSendConfirmModel @Inject constructor(
             verifyAndSendTransaction()
         } else {
             modelScope.launch {
-                sendFeeCheckReloadTrigger.triggerCheckUpdate()
+                if (uiState.value.isRedesignEnabled) {
+                    feeSelectorCheckReloadTrigger.triggerCheckUpdate()
+                } else {
+                    sendFeeCheckReloadTrigger.triggerCheckUpdate()
+                }
             }
         }
     }
@@ -242,15 +249,9 @@ internal class NFTSendConfirmModel @Inject constructor(
             ),
         )
 
-        if (userWallet is UserWallet.Hot) {
-            return // TODO [REDACTED_TASK_KEY] [Hot Wallet] Email feedback flow
-        }
-
-        val cardInfo =
-            getCardInfoUseCase(userWallet.requireColdWallet().scanResponse).getOrNull() ?: return
-
         modelScope.launch {
-            sendFeedbackEmailUseCase(type = FeedbackEmailType.TransactionSendingProblem(cardInfo = cardInfo))
+            val metaInfo = getWalletMetaInfoUseCase(userWallet.walletId).getOrNull() ?: return@launch
+            sendFeedbackEmailUseCase(type = FeedbackEmailType.TransactionSendingProblem(walletMetaInfo = metaInfo))
         }
     }
 
@@ -380,8 +381,17 @@ internal class NFTSendConfirmModel @Inject constructor(
 
     private fun subscribeOnCheckFeeResultUpdates() {
         sendFeeCheckReloadListener.checkReloadResultFlow.onEach { isFeeResultSuccess ->
+            sendIdleTimer = SystemClock.elapsedRealtime()
             if (isFeeResultSuccess) {
-                sendIdleTimer = SystemClock.elapsedRealtime()
+                _uiState.update(NFTSendConfirmSendingStateTransformer(isSending = true))
+                verifyAndSendTransaction()
+            } else {
+                _uiState.update(NFTSendConfirmSendingStateTransformer(isSending = false))
+            }
+        }.launchIn(modelScope)
+        feeSelectorCheckReloadListener.checkReloadResultFlow.onEach { isFeeResultSuccess ->
+            sendIdleTimer = SystemClock.elapsedRealtime()
+            if (isFeeResultSuccess) {
                 _uiState.update(NFTSendConfirmSendingStateTransformer(isSending = true))
                 verifyAndSendTransaction()
             } else {
@@ -507,7 +517,7 @@ internal class NFTSendConfirmModel @Inject constructor(
                 }
                 else -> resourceReference(R.string.common_send)
             },
-            iconRes = R.drawable.ic_tangem_24,
+            iconRes = walletInterationIcon(userWallet),
             isIconVisible = isReadyToSend,
             isEnabled = confirmUM.isPrimaryButtonEnabled,
             isHapticClick = isReadyToSend,
