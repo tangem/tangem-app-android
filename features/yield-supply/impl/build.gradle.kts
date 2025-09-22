@@ -15,7 +15,6 @@ dependencies {
 
     /** Feature */
     implementation(projects.features.yieldSupply.api)
-    implementation(projects.features.sendV2.api)
 
     /** Core */
     implementation(projects.core.configToggles)
@@ -43,6 +42,7 @@ dependencies {
     implementation(projects.domain.transaction.models)
     implementation(projects.domain.transaction)
     implementation(projects.domain.yieldSupply)
+    implementation(projects.libs.crypto)
 
     /** Compose */
     implementation(deps.compose.foundation)
