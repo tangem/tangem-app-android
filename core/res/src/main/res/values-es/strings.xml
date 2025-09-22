@@ -445,7 +445,6 @@
   <string name="hot_crypto_token_network">En la red %s</string>
   <string name="hw_access_code_create_alert_title">¿Está seguro de que desea salir del proceso de creación de código de acceso?</string>
   <string name="hw_backup_close_description">Si lo hace, tendrá que empezar de nuevo.</string>
-  <string name="hw_create_seed_description">Manténgase al día de las últimas funciones y noticias</string>
   <string name="information_generated_with_ai">Esta información fue generada con IA.\nPulse aquí si encuentra algún error.</string>
   <string name="initial_message_change_access_code_body">Para cambiar el código de acceso coloque la tarjeta o el anillo como se muestra arriba y no lo retire hasta el fin de la operación</string>
   <string name="initial_message_change_passcode_body">Toque para cambiar la contraseña</string>
@@ -926,7 +925,7 @@
   <string name="send_recipient_address_error">No es una dirección válida</string>
   <string name="send_recipient_address_footer">Asegúrese de que la dirección de la billetera receptora esté en **la red %s** para evitar perder sus tokens</string>
   <string name="send_recipient_label">Destinatario</string>
-  <string name="send_recipient_memo_footer">Un Memo/ID de destino es un ID único para diferenciar transacciones enviadas al mismo destinatario en la misma red. Precaución: Omitir un memo puede llevar a la pérdida de fondos</string>
+  <string name="send_recipient_memo_footer">Un Memo/ID de destino es un ID único para diferenciar transacciones enviadas al mismo destinatario en la misma red.\n**Precaución: Omitir un memo puede llevar a la pérdida de fondos**</string>
   <string name="send_recipient_memo_footer_v2">Memo / Destination Tag es un código que separa las transacciones dirigidas a un destinatario compartido en una red de criptomonedas.</string>
   <string name="send_recipient_memo_footer_v2_highlighted">Atención: La omisión del campo Memo puede provocar la pérdida de fondos.</string>
   <string name="send_recipient_wallets_title">Mis billeteras</string>
