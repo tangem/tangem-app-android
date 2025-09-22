@@ -12,6 +12,7 @@ import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -28,6 +29,7 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.WalletConnectDetailsBottomSheetTestTags
 import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.core.ui.utils.toDateFormatWithTodayYesterday
 import com.tangem.core.ui.utils.toTimeFormat
@@ -116,7 +118,8 @@ private fun WcConnectedAppInfoBSContent(state: WcConnectedAppInfoUM, modifier: M
         SecondaryButton(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 16.dp),
+                .padding(vertical = 16.dp)
+                .testTag(WalletConnectDetailsBottomSheetTestTags.DISCONNECT_BUTTON),
             text = stringResourceSafe(R.string.common_disconnect),
             enabled = state.disconnectButtonConfig.enabled,
             showProgress = state.disconnectButtonConfig.showProgress,
@@ -142,7 +145,9 @@ private fun AppInfoFirstBlock(state: WcConnectedAppInfoUM, modifier: Modifier = 
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(
-                modifier = Modifier.size(24.dp),
+                modifier = Modifier
+                    .size(24.dp)
+                    .testTag(WalletConnectDetailsBottomSheetTestTags.WALLET_ICON),
                 painter = painterResource(R.drawable.ic_wallet_new_24),
                 contentDescription = null,
                 tint = TangemTheme.colors.icon.accent,
@@ -150,7 +155,8 @@ private fun AppInfoFirstBlock(state: WcConnectedAppInfoUM, modifier: Modifier = 
             Text(
                 modifier = Modifier
                     .padding(start = TangemTheme.dimens.spacing4)
-                    .weight(1f),
+                    .weight(1f)
+                    .testTag(WalletConnectDetailsBottomSheetTestTags.WALLET_TITLE),
                 text = stringResourceSafe(R.string.manage_tokens_network_selector_wallet),
                 style = TangemTheme.typography.body1,
                 color = TangemTheme.colors.text.primary1,
@@ -158,7 +164,8 @@ private fun AppInfoFirstBlock(state: WcConnectedAppInfoUM, modifier: Modifier = 
             Text(
                 modifier = Modifier
                     .padding(start = TangemTheme.dimens.spacing16)
-                    .weight(1f),
+                    .weight(1f)
+                    .testTag(WalletConnectDetailsBottomSheetTestTags.WALLET_NAME),
                 text = state.walletName,
                 textAlign = TextAlign.End,
                 style = TangemTheme.typography.body1,
@@ -174,7 +181,8 @@ private fun NetworksBlock(networks: ImmutableList<WcNetworkInfoItem.Required>, m
         Text(
             modifier = Modifier
                 .padding(top = 12.dp, bottom = 4.dp)
-                .padding(horizontal = 12.dp),
+                .padding(horizontal = 12.dp)
+                .testTag(WalletConnectDetailsBottomSheetTestTags.NETWORKS_TITLE),
             text = stringResourceSafe(R.string.wc_connected_networks),
             style = TangemTheme.typography.subtitle2,
             color = TangemTheme.colors.text.tertiary,
