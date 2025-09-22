@@ -105,11 +105,12 @@ internal class FeeSelectorAlertFactory @Inject constructor(
                 DialogMessage(
                     message = resourceReference(id = R.string.send_notification_high_fee_title),
                     dismissOnFirstAction = true,
+                    onDismissRequest = { stopAction() },
                     firstActionBuilder = {
-                        okAction { proceedAction(); onDismissRequest() }
-                    },
-                    secondActionBuilder = {
-                        cancelAction { stopAction(); onDismissRequest() }
+                        EventMessageAction(
+                            title = resourceReference(R.string.common_understand),
+                            onClick = { stopAction(); onDismissRequest() },
+                        )
                     },
                 ),
             )

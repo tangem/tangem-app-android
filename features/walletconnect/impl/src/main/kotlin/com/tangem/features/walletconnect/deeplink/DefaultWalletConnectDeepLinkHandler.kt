@@ -4,7 +4,6 @@ import android.net.Uri
 import com.tangem.domain.walletconnect.WcPairService
 import com.tangem.domain.walletconnect.model.WcPairRequest
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
-import com.tangem.features.walletconnect.components.WalletConnectFeatureToggles
 import com.tangem.features.walletconnect.components.deeplink.WalletConnectDeepLinkHandler
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -15,7 +14,6 @@ import java.net.URLDecoder
 internal class DefaultWalletConnectDeepLinkHandler @AssistedInject constructor(
     @Assisted uri: Uri,
     getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
-    walletConnectFeatureToggles: WalletConnectFeatureToggles,
     wcPairService: WcPairService,
 ) : WalletConnectDeepLinkHandler {
 
@@ -30,15 +28,13 @@ internal class DefaultWalletConnectDeepLinkHandler @AssistedInject constructor(
                     },
                     ifRight = { wallet ->
                         val decodedWcUri = URLDecoder.decode(wcUri, DEFAULT_CHARSET_NAME)
-                        if (walletConnectFeatureToggles.isRedesignedWalletConnectEnabled) {
-                            wcPairService.pair(
-                                request = WcPairRequest(
-                                    uri = decodedWcUri,
-                                    source = WcPairRequest.Source.DEEPLINK,
-                                    userWalletId = wallet.walletId,
-                                ),
-                            )
-                        }
+                        wcPairService.pair(
+                            request = WcPairRequest(
+                                uri = decodedWcUri,
+                                source = WcPairRequest.Source.DEEPLINK,
+                                userWalletId = wallet.walletId,
+                            ),
+                        )
                     },
                 )
             } catch (e: Exception) {

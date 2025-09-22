@@ -18,7 +18,7 @@ import com.tangem.domain.visa.model.VisaCardActivationStatus
 import com.tangem.domain.visa.model.VisaCardId
 import com.tangem.domain.visa.model.VisaCustomerWalletDataToSignRequest
 import com.tangem.domain.visa.repository.VisaActivationRepository
-import com.tangem.domain.visa.repository.VisaAuthRepository
+import com.tangem.domain.visa.datasource.VisaAuthRemoteDataSource
 import com.tangem.features.onboarding.v2.visa.impl.child.accesscode.OnboardingVisaAccessCodeComponent
 import com.tangem.features.onboarding.v2.visa.impl.child.accesscode.ui.state.OnboardingVisaAccessCodeUM
 import com.tangem.features.onboarding.v2.visa.impl.child.welcome.model.analytics.OnboardingVisaAnalyticsEvent
@@ -44,7 +44,7 @@ internal class OnboardingVisaAccessCodeModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     @Suppress("UnusedPrivateMember")
     private val tangemSdkManager: TangemSdkManager,
-    private val visaAuthRepository: VisaAuthRepository,
+    private val visaAuthRemoteDataSource: VisaAuthRemoteDataSource,
     private val uiMessageSender: UiMessageSender,
     private val analyticsEventsHandler: AnalyticsEventHandler,
 ) : Model() {
@@ -155,7 +155,7 @@ internal class OnboardingVisaAccessCodeModel @Inject constructor(
         loading(true)
 
         modelScope.launch {
-            val challengeToSign = visaAuthRepository.getCardAuthChallenge(
+            val challengeToSign = visaAuthRemoteDataSource.getCardAuthChallenge(
                 cardId = activationInput.cardId,
                 cardPublicKey = activationInput.cardPublicKey,
             ).getOrElse {

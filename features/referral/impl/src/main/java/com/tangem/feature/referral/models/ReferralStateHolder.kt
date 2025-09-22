@@ -1,5 +1,6 @@
 package com.tangem.feature.referral.models
 
+import androidx.annotation.DrawableRes
 import com.tangem.feature.referral.domain.models.ExpectedAwards
 
 internal data class ReferralStateHolder(
@@ -36,6 +37,7 @@ internal data class ReferralStateHolder(
             override val networkName: String,
             override val discount: String,
             override val url: String,
+            @DrawableRes val participateButtonIcon: Int?,
             val onParticipateClicked: () -> Unit,
         ) : ReferralInfoState, ReferralInfoContentState
 

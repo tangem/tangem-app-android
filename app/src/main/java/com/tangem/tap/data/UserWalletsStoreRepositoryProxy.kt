@@ -3,9 +3,9 @@ package com.tangem.tap.data
 import com.tangem.common.CompletionResult
 import com.tangem.common.catching
 import com.tangem.datasource.local.userwallet.UserWalletsStore
+import com.tangem.domain.core.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.core.wallets.UserWalletsListRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
@@ -23,6 +23,9 @@ class UserWalletsStoreRepositoryProxy(
                 emit(requireNotNull(it))
             }
         }
+
+    override val userWalletsSync: List<UserWallet>
+        get() = userWalletsListRepository.userWallets.value.orEmpty()
 
     override fun getSyncOrNull(key: UserWalletId): UserWallet? {
         return userWalletsListRepository.userWallets.value?.find { it.walletId == key }

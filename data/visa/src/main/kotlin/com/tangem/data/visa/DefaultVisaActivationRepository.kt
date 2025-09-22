@@ -18,7 +18,7 @@ import com.tangem.datasource.local.visa.VisaAuthTokenStorage
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.domain.visa.model.*
 import com.tangem.domain.visa.repository.VisaActivationRepository
-import com.tangem.domain.visa.repository.VisaAuthRepository
+import com.tangem.domain.visa.datasource.VisaAuthRemoteDataSource
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -32,7 +32,7 @@ internal class DefaultVisaActivationRepository @AssistedInject constructor(
     private val visaApi: TangemPayApi,
     private val dispatcherProvider: CoroutineDispatcherProvider,
     private val visaAuthTokenStorage: VisaAuthTokenStorage,
-    private val visaAuthRepository: VisaAuthRepository,
+    private val visaAuthRemoteDataSource: VisaAuthRemoteDataSource,
     private val visaLibLoader: VisaLibLoader,
     private val apiConfigsManager: ApiConfigsManager,
 ) : VisaActivationRepository {
@@ -194,7 +194,7 @@ internal class DefaultVisaActivationRepository @AssistedInject constructor(
             }
 
             val authTokens = visaAuthTokenStorage.get(visaCardId.cardId) ?: error("Auth tokens are not stored")
-            val newTokens = visaAuthRepository.refreshAccessTokens(authTokens.refreshToken).getOrElse {
+            val newTokens = visaAuthRemoteDataSource.refreshAccessTokens(authTokens.refreshToken).getOrElse {
                 return Either.Left(VisaApiError.RefreshTokenExpired)
             }
 
