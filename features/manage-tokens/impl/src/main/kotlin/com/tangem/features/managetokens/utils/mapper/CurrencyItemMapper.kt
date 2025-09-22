@@ -8,14 +8,16 @@ import com.tangem.domain.managetokens.model.ManagedCryptoCurrency
 import com.tangem.features.managetokens.entity.item.CurrencyItemUM
 import com.tangem.features.managetokens.entity.item.CurrencyItemUM.Basic.NetworksUM
 import com.tangem.features.managetokens.utils.ui.getIconRes
+import kotlinx.collections.immutable.toImmutableList
 
 internal fun ManagedCryptoCurrency.toUiModel(
     isEditable: Boolean,
     onTokenClick: (ManagedCryptoCurrency.Token) -> Unit,
     onRemoveCustomCurrencyClick: (ManagedCryptoCurrency.Custom) -> Unit,
+    isCollapsed: Boolean,
 ): CurrencyItemUM = when (this) {
     is ManagedCryptoCurrency.Custom -> toUiModel(onRemoveCustomCurrencyClick)
-    is ManagedCryptoCurrency.Token -> toUiModel(isEditable, onTokenClick)
+    is ManagedCryptoCurrency.Token -> toUiModel(isEditable, onTokenClick, isCollapsed)
 }
 
 private fun ManagedCryptoCurrency.Custom.toUiModel(
@@ -54,6 +56,7 @@ private fun ManagedCryptoCurrency.Custom.toUiModel(
 private fun ManagedCryptoCurrency.Token.toUiModel(
     isEditable: Boolean,
     onTokenClick: (ManagedCryptoCurrency.Token) -> Unit,
+    isCollapsed: Boolean,
 ): CurrencyItemUM {
     val background = TangemColorPalette.Black
 
@@ -69,7 +72,20 @@ private fun ManagedCryptoCurrency.Token.toUiModel(
             fallbackTint = getTintForTokenIcon(background),
             fallbackBackground = background,
         ),
-        networks = NetworksUM.Collapsed,
+        networks = if (isCollapsed) {
+            NetworksUM.Collapsed
+        } else {
+            NetworksUM.Expanded(
+                availableNetworks.map {
+                    it.toCurrencyNetworkModel(
+                        isSelected = it.network in addedIn,
+                        isEditable = false,
+                        onSelectedStateChange = { _, _ -> },
+                        onLongTap = { _ -> },
+                    )
+                }.toImmutableList(),
+            )
+        },
         onExpandClick = {
             onTokenClick(this)
         },
