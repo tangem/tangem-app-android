@@ -52,6 +52,8 @@ import timber.log.Timber
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
+import android.util.Base64
+import com.tangem.blockchainsdk.utils.toNetworkId
 
 @Suppress("LargeClass", "LongParameterList")
 internal class SwapInteractorImpl @AssistedInject constructor(
@@ -73,7 +75,6 @@ internal class SwapInteractorImpl @AssistedInject constructor(
     private val appCurrencyRepository: AppCurrencyRepository,
     private val currenciesRepository: CurrenciesRepository,
     private val multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
-    private val tokensFeatureToggles: TokensFeatureToggles,
     private val initialToCurrencyResolver: InitialToCurrencyResolver,
     private val validateTransactionUseCase: ValidateTransactionUseCase,
     private val estimateFeeUseCase: EstimateFeeUseCase,
@@ -281,16 +282,29 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             val networkId = fromToken.currency.network.backendId
             when (provider.type) {
                 ExchangeProviderType.DEX, ExchangeProviderType.DEX_BRIDGE -> {
-                    manageDex(
-                        networkId = networkId,
-                        fromToken = fromToken,
-                        toToken = toToken,
-                        provider = provider,
-                        selectedFee = selectedFee,
-                        amount = amount,
-                        isBalanceWithoutFeeEnough = isBalanceWithoutFeeEnough,
-                        expressOperationType = ExpressOperationType.SWAP,
-                    )
+                    if (isSolana(networkId)) {
+                        manageDexSolana(
+                            networkId = networkId,
+                            fromToken = fromToken,
+                            toToken = toToken,
+                            provider = provider,
+                            selectedFee = selectedFee,
+                            amount = amount,
+                            isBalanceWithoutFeeEnough = isBalanceWithoutFeeEnough,
+                            expressOperationType = ExpressOperationType.SWAP,
+                        )
+                    } else {
+                        manageDex(
+                            networkId = networkId,
+                            fromToken = fromToken,
+                            toToken = toToken,
+                            provider = provider,
+                            selectedFee = selectedFee,
+                            amount = amount,
+                            isBalanceWithoutFeeEnough = isBalanceWithoutFeeEnough,
+                            expressOperationType = ExpressOperationType.SWAP,
+                        )
+                    }
                 }
                 ExchangeProviderType.CEX -> {
                     manageCex(
@@ -365,6 +379,57 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                 networkId = networkId,
                 isAllowedToSpend = isAllowedToSpend,
                 isBalanceWithoutFeeEnough = isBalanceWithoutFeeEnough,
+                txFee = TxFeeState.Empty,
+                transactionFee = null,
+                includeFeeInAmount = IncludeFeeInAmount.Excluded, // exclude for dex
+                selectedFee = selectedFee,
+            )
+        }
+    }
+
+    private suspend fun manageDexSolana(
+        networkId: String,
+        fromToken: CryptoCurrencyStatus,
+        toToken: CryptoCurrencyStatus,
+        provider: SwapProvider,
+        selectedFee: FeeType,
+        amount: SwapAmount,
+        isBalanceWithoutFeeEnough: Boolean,
+        expressOperationType: ExpressOperationType,
+    ): Pair<SwapProvider, SwapState> {
+        val maybeQuotes = repository.findBestQuote(
+            userWallet = userWallet,
+            fromContractAddress = fromToken.currency.getContractAddress(),
+            fromNetwork = fromToken.currency.network.backendId,
+            toContractAddress = toToken.currency.getContractAddress(),
+            toNetwork = toToken.currency.network.backendId,
+            fromAmount = amount.toStringWithRightOffset(),
+            fromDecimals = amount.decimals,
+            toDecimals = toToken.currency.decimals,
+            providerId = provider.providerId,
+            rateType = RateType.FLOAT,
+        )
+
+        return if (isBalanceWithoutFeeEnough) {
+            provider to loadDexSwapData(
+                provider = provider,
+                networkId = networkId,
+                fromToken = fromToken,
+                toToken = toToken,
+                amount = amount,
+                selectedFee = selectedFee,
+                expressOperationType = expressOperationType,
+            )
+        } else {
+            provider to getQuotesState(
+                provider = provider,
+                quoteDataModel = maybeQuotes,
+                amount = amount,
+                fromToken = fromToken,
+                toToken = toToken,
+                networkId = networkId,
+                isAllowedToSpend = true,
+                isBalanceWithoutFeeEnough = false,
                 txFee = TxFeeState.Empty,
                 transactionFee = null,
                 includeFeeInAmount = IncludeFeeInAmount.Excluded, // exclude for dex
@@ -539,15 +604,27 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                 )
             }
             ExchangeProviderType.DEX, ExchangeProviderType.DEX_BRIDGE -> {
-                onSwapDex(
-                    provider = swapProvider,
-                    networkId = currencyToSend.currency.network.backendId,
-                    swapData = requireNotNull(swapData),
-                    currencyToSendStatus = currencyToSend,
-                    currencyToGetStatus = currencyToGet,
-                    txFee = fee,
-                    amountToSwap = amountToSwap,
-                )
+                val networkId = currencyToSend.currency.network.backendId
+                if (isSolana(networkId)) {
+                    onSwapSolanaDex(
+                        provider = swapProvider,
+                        networkId = currencyToSend.currency.network.backendId,
+                        swapData = requireNotNull(swapData),
+                        currencyToSendStatus = currencyToSend,
+                        currencyToGetStatus = currencyToGet,
+                        amountToSwap = amountToSwap,
+                    )
+                } else {
+                    onSwapDex(
+                        provider = swapProvider,
+                        networkId = currencyToSend.currency.network.backendId,
+                        swapData = requireNotNull(swapData),
+                        currencyToSendStatus = currencyToSend,
+                        currencyToGetStatus = currencyToGet,
+                        txFee = fee,
+                        amountToSwap = amountToSwap,
+                    )
+                }
             }
         }
     }
@@ -603,11 +680,12 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         txFee: TxFee,
     ): SwapTransactionState {
         val amountDecimal = requireNotNull(toBigDecimalOrNull(amountToSwap)) { "wrong amount format" }
+        val txValue = requireNotNull(swapData.transaction.txValue) { "txValue is null" }
         val amount = SwapAmount(amountDecimal, currencyToSendStatus.currency.decimals)
         val derivationPath = currencyToSendStatus.currency.network.derivationPath.value
         val dexTransaction = swapData.transaction as ExpressTransactionModel.DEX
         val dataToSign = dexTransaction.txData
-        val amountToSend = createNativeAmountForDex(swapData.transaction.txValue, currencyToSendStatus.currency.network)
+        val amountToSend = createNativeAmountForDex(txValue, currencyToSendStatus.currency.network)
         val txData = createTransactionUseCase(
             amount = amountToSend,
             fee = txFee.fee,
@@ -620,7 +698,59 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             Timber.e(it, "Failed to create swap dex tx data")
             return SwapTransactionState.Error.UnknownError
         }
+        return handleSwapResult(
+            provider = provider,
+            networkId = networkId,
+            swapData = swapData,
+            currencyToSendStatus = currencyToSendStatus,
+            currencyToGetStatus = currencyToGetStatus,
+            amount = amount,
+            derivationPath = derivationPath,
+            txData = txData,
+            payInAddress = txData.destinationAddress,
+        )
+    }
 
+    private suspend fun onSwapSolanaDex(
+        provider: SwapProvider,
+        networkId: String,
+        swapData: SwapDataModel,
+        currencyToSendStatus: CryptoCurrencyStatus,
+        currencyToGetStatus: CryptoCurrencyStatus,
+        amountToSwap: String,
+    ): SwapTransactionState {
+        val dexTransaction = swapData.transaction as? ExpressTransactionModel.DEX
+        val amountDecimal = requireNotNull(toBigDecimalOrNull(amountToSwap)) { "wrong amount format" }
+        val txDataBase64 = requireNotNull(dexTransaction?.txData) { "txData is null" }
+        val amount = SwapAmount(amountDecimal, currencyToSendStatus.currency.decimals)
+        val derivationPath = currencyToSendStatus.currency.network.derivationPath.value
+        val compiledTransaction = TransactionData.Compiled(
+            value = TransactionData.Compiled.Data.Bytes(Base64.decode(txDataBase64, Base64.NO_WRAP)),
+        )
+        return handleSwapResult(
+            provider = provider,
+            networkId = networkId,
+            swapData = swapData,
+            currencyToSendStatus = currencyToSendStatus,
+            currencyToGetStatus = currencyToGetStatus,
+            amount = amount,
+            derivationPath = derivationPath,
+            txData = compiledTransaction,
+            payInAddress = swapData.transaction.txTo,
+        )
+    }
+
+    private suspend fun handleSwapResult(
+        provider: SwapProvider,
+        networkId: String,
+        swapData: SwapDataModel,
+        currencyToSendStatus: CryptoCurrencyStatus,
+        currencyToGetStatus: CryptoCurrencyStatus,
+        amount: SwapAmount,
+        derivationPath: String?,
+        txData: TransactionData,
+        payInAddress: String,
+    ): SwapTransactionState {
         val result = sendTransactionUseCase(
             txData = txData,
             userWallet = userWallet,
@@ -633,7 +763,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                     txId = swapData.transaction.txId,
                     fromNetwork = currencyToSendStatus.currency.network.backendId,
                     fromAddress = currencyToSendStatus.value.networkAddress?.defaultAddress?.value.orEmpty(),
-                    payInAddress = txData.destinationAddress,
+                    payInAddress = payInAddress,
                     txHash = txHash,
                     payInExtraId = swapData.transaction.txExtraId,
                 )
@@ -1195,13 +1325,21 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                 val otherNativeFee = transaction.otherNativeFeeWei
                     ?.movePointLeft(nativeCoinDecimals)
                     ?: BigDecimal.ZERO
-                val txFeeState = getFeeDataForDexSwap(
-                    network = fromToken.currency.network,
-                    transaction = transaction,
-                    fromToken = fromToken.currency,
-                )
-                    .patchTransactionFeeForSwap(INCREASE_GAS_LIMIT_FOR_DEX)
-                    .toTxFeeState(fromToken.currency, otherNativeFee)
+                val txFeeState = if (isSolana(networkId)) {
+                    getFeeDataForSolanaDexSwap(
+                        network = fromToken.currency.network,
+                        transaction = transaction,
+                    )
+                        .toTxFeeState(fromToken.currency, otherNativeFee)
+                } else {
+                    getFeeDataForDexSwap(
+                        network = fromToken.currency.network,
+                        transaction = transaction,
+                        fromToken = fromToken.currency,
+                    )
+                        .patchTransactionFeeForSwap(INCREASE_GAS_LIMIT_FOR_DEX)
+                        .toTxFeeState(fromToken.currency, otherNativeFee)
+                }
 
                 val includeFeeInAmount = IncludeFeeInAmount.Excluded // exclude for dex
                 val feeByPriority = selectFeeByType(feeType = selectedFee, txFeeState = txFeeState)
@@ -1271,11 +1409,12 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         fromToken: CryptoCurrency,
     ): TransactionFee {
         return try {
+            val txAmountValue = transaction.txValue ?: error("unable to get txValue")
             val nativeBalance = userWalletManager.getNativeTokenBalance(
                 networkId = network.backendId,
                 derivationPath = fromToken.network.derivationPath.value,
             ) ?: ProxyAmount.empty()
-            val amountToSend = createNativeAmountForDex(transaction.txValue, fromToken.network)
+            val amountToSend = createNativeAmountForDex(txAmountValue, fromToken.network)
             // transaction.txValue is always native coin
             if (nativeBalance.value < amountToSend.value) {
                 error("It's impossible to calculate fee for nativeBalance.value < amountToSend.value")
@@ -1305,6 +1444,22 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                 gasLimit = transaction.gas,
             ).getOrNull() ?: error("can't get fee for getEthSpecificFeeUseCase")
         }
+    }
+
+    private suspend fun getFeeDataForSolanaDexSwap(
+        network: Network,
+        transaction: ExpressTransactionModel.DEX,
+    ): TransactionFee {
+        val txData = transaction.txData
+        val transactionData = TransactionData.Compiled(
+            value = TransactionData.Compiled.Data.Bytes(Base64.decode(txData, Base64.NO_WRAP)),
+        )
+
+        return getFeeUseCase(
+            transactionData = transactionData,
+            network = network,
+            userWallet = userWallet,
+        ).getOrNull() ?: error("unable to calculate fee")
     }
 
     @Suppress("LongParameterList")
@@ -1771,14 +1926,10 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                 if (feePaidCurrency.balance > fee.multiply(percentsToFeeIncrease)) {
                     SwapFeeState.Enough
                 } else {
-                    val tokens = if (tokensFeatureToggles.isWalletBalanceFetcherEnabled) {
-                        multiWalletCryptoCurrenciesSupplier.getSyncOrNull(
-                            params = MultiWalletCryptoCurrenciesProducer.Params(userWalletId),
-                        )
-                            .orEmpty()
-                    } else {
-                        currenciesRepository.getMultiCurrencyWalletCurrenciesSync(userWalletId)
-                    }
+                    val tokens = multiWalletCryptoCurrenciesSupplier.getSyncOrNull(
+                        params = MultiWalletCryptoCurrenciesProducer.Params(userWalletId),
+                    )
+                        .orEmpty()
 
                     val token = tokens
                         .filterIsInstance<CryptoCurrency.Token>()
@@ -1861,6 +2012,10 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         }
             .getOrNull()
             .orEmpty()
+    }
+
+    private fun isSolana(networkId: String): Boolean {
+        return networkId == Blockchain.Solana.toNetworkId()
     }
 
     companion object {

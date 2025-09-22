@@ -6,6 +6,7 @@ import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.data.common.currency.CryptoCurrencyFactory
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.domain.model.Currency
 import com.tangem.tap.proxy.redux.DaggerGraphState
@@ -24,9 +25,7 @@ internal class CryptoCurrencyConverter(
                 cryptoCurrencyFactory.createCoin(
                     blockchain = value.blockchain,
                     extraDerivationPath = value.derivationPath,
-                    userWallet = requireNotNull(
-                        store.inject(DaggerGraphState::generalUserWalletsListManager).selectedUserWalletSync,
-                    ),
+                    userWallet = getSelectedWallet(),
                 ),
             )
             is Currency.Token -> requireNotNull(
@@ -34,9 +33,7 @@ internal class CryptoCurrencyConverter(
                     sdkToken = value.token,
                     blockchain = value.blockchain,
                     extraDerivationPath = value.derivationPath,
-                    userWallet = requireNotNull(
-                        store.inject(DaggerGraphState::generalUserWalletsListManager).selectedUserWalletSync,
-                    ),
+                    userWallet = getSelectedWallet(),
                 ),
             )
         }
@@ -61,6 +58,17 @@ internal class CryptoCurrencyConverter(
                 blockchain = blockchain,
                 derivationPath = value.network.derivationPath.value,
             )
+        }
+    }
+
+    fun getSelectedWallet(): UserWallet {
+        val userWalletListManager = store.inject(DaggerGraphState::generalUserWalletsListManager)
+        val userWalletsListRepository = store.inject(DaggerGraphState::userWalletsListRepository)
+        val hotWalletFeatureToggles = store.inject(DaggerGraphState::hotWalletFeatureToggles)
+        return if (hotWalletFeatureToggles.isHotWalletEnabled) {
+            requireNotNull(userWalletsListRepository.selectedUserWallet.value)
+        } else {
+            requireNotNull(userWalletListManager.selectedUserWalletSync)
         }
     }
 }

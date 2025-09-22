@@ -5,9 +5,10 @@ import android.content.Context
 import com.tangem.domain.redux.StateDialog
 import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.global.GlobalState
-import com.tangem.tap.common.ui.*
-import com.tangem.tap.features.details.redux.walletconnect.WalletConnectDialog
-import com.tangem.tap.features.details.ui.walletconnect.dialogs.*
+import com.tangem.tap.common.ui.ScanFailsDialog
+import com.tangem.tap.common.ui.SimpleAlertDialog
+import com.tangem.tap.common.ui.SimpleCancelableAlertDialog
+import com.tangem.tap.common.ui.SimpleOkDialog
 import com.tangem.tap.features.onboarding.OnboardingDialog
 import com.tangem.tap.features.onboarding.products.wallet.redux.BackupDialog
 import com.tangem.tap.features.onboarding.products.wallet.ui.dialogs.ConfirmDiscardingBackupDialog
@@ -59,88 +60,6 @@ class DialogManager : StoreSubscriber<GlobalState> {
                 context = context,
             )
             is OnboardingDialog.WalletActivationError -> WalletActivationErrorDialog.create(context, state.dialog)
-            is WalletConnectDialog.UnsupportedCard ->
-                SimpleAlertDialog.create(
-                    titleRes = R.string.wallet_connect_title,
-                    messageRes = R.string.wallet_connect_scanner_error_not_valid_card,
-                    context = context,
-                )
-            is WalletConnectDialog.AddNetwork -> {
-                val message = context.getString(
-                    R.string.wallet_connect_error_missing_blockchains,
-                ) + state.dialog.networks.joinToString()
-                SimpleAlertDialog.create(
-                    titleRes = R.string.wallet_connect_title,
-                    message = message,
-                    context = context,
-                )
-            }
-            is WalletConnectDialog.OpeningSessionRejected -> {
-                SimpleAlertDialog.create(
-                    titleRes = R.string.wallet_connect_title,
-                    messageRes = R.string.wallet_connect_same_wcuri,
-                    context = context,
-                )
-            }
-            is WalletConnectDialog.SessionTimeout -> {
-                SimpleAlertDialog.create(
-                    titleRes = R.string.wallet_connect_title,
-                    messageRes = R.string.wallet_connect_error_timeout,
-                    context = context,
-                )
-            }
-            is WalletConnectDialog.RequestTransaction -> TransactionDialog.create(state.dialog.data, context)
-            is WalletConnectDialog.PersonalSign -> PersonalSignDialog.create(state.dialog.data, context)
-            is WalletConnectDialog.BnbTransactionDialog ->
-                BnbTransactionDialog.create(
-                    preparedData = state.dialog.data,
-                    context = context,
-                )
-            is WalletConnectDialog.UnsupportedNetwork -> {
-                val warning = if (state.dialog.networks.isNullOrEmpty()) {
-                    context.getString(R.string.wallet_connect_scanner_error_unsupported_network)
-                } else {
-                    context.getString(R.string.wallet_connect_error_unsupported_blockchains) +
-                        state.dialog.networks.joinToString()
-                }
-                SimpleAlertDialog.create(
-                    titleRes = R.string.wallet_connect_title,
-                    message = warning,
-                    context = context,
-                )
-            }
-            is WalletConnectDialog.UnsupportedDapp -> SimpleAlertDialog.create(
-                titleRes = R.string.wallet_connect_title,
-                messageRes = R.string.wallet_connect_error_unsupported_dapp,
-                context = context,
-            )
-            is WalletConnectDialog.SessionProposalDialog -> {
-                SessionProposalDialog.create(
-                    sessionProposal = state.dialog.sessionProposal,
-                    networks = state.dialog.networks,
-                    context = context,
-                    onApprove = state.dialog.onApprove,
-                    onReject = state.dialog.onReject,
-                )
-            }
-            is WalletConnectDialog.SignTransactionDialog -> SignTransactionDialog.create(
-                preparedData = state.dialog.data,
-                context = context,
-            )
-            is WalletConnectDialog.SignTransactionsDialog -> SignTransactionsDialog.create(
-                preparedData = state.dialog.data,
-                context = context,
-            )
-            is WalletConnectDialog.PairConnectErrorDialog -> SimpleAlertDialog.create(
-                titleRes = R.string.wallet_connect_title,
-                message = state.dialog.error.message,
-                context = context,
-            )
-            is WalletConnectDialog.UnsupportedWcVersion -> SimpleAlertDialog.create(
-                titleRes = R.string.common_error,
-                messageRes = R.string.unsupported_wc_version,
-                context = context,
-            )
             is BackupDialog.UnfinishedBackupFound -> UnfinishedBackupFoundDialog.create(
                 context = context,
                 scanResponse = state.dialog.scanResponse,
