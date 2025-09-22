@@ -6,12 +6,14 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.yield.supply.YieldSupplyStatus
+import java.math.BigDecimal
 
 interface YieldSupplyTransactionRepository {
 
     suspend fun createEnterTransactions(
         userWalletId: UserWalletId,
         cryptoCurrencyStatus: CryptoCurrencyStatus,
+        maxNetworkFee: BigDecimal,
     ): List<TransactionData.Uncompiled>
 
     suspend fun createExitTransaction(
