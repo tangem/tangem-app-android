@@ -12,4 +12,6 @@ data class VisaTxHistoryItem(
     val merchantName: String?,
     val status: String,
     val fiatCurrency: Currency,
-)
+) {
+    val timeStampInMillis: Long = date.millis
+}
