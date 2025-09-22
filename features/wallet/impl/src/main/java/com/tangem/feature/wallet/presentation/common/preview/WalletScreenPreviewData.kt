@@ -3,13 +3,17 @@ package com.tangem.feature.wallet.presentation.common.preview
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.marketprice.PriceChangeType
+import com.tangem.core.ui.components.notifications.NotificationConfig
+import com.tangem.core.ui.components.notifications.NotificationConfig.ButtonsState
+import com.tangem.core.ui.components.token.AccountItemPreviewData
 import com.tangem.core.ui.components.token.state.TokenItemState
+import com.tangem.core.ui.components.tokenlist.state.PortfolioTokensListItemUM
 import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletAdditionalInfo
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData.topBarConfig
 import com.tangem.feature.wallet.presentation.wallet.state.model.*
@@ -79,6 +83,26 @@ internal object WalletScreenPreviewData {
         ),
     )
 
+    private val portfolioContentState = WalletTokensListState.ContentState.PortfolioContent(
+        items = persistentListOf(
+            TokensListItemUM.Portfolio(
+                tokens = textContentTokensState.items.filterIsInstance<PortfolioTokensListItemUM>(),
+                isExpanded = false,
+                state = AccountItemPreviewData.accountItem
+                    .copy(iconState = AccountItemPreviewData.accountLetterIcon),
+            ),
+            TokensListItemUM.Portfolio(
+                tokens = textContentTokensState.items.filterIsInstance<PortfolioTokensListItemUM>(),
+                isExpanded = true,
+                state = AccountItemPreviewData.accountItem,
+            ),
+        ),
+        organizeTokensButtonConfig = WalletTokensListState.OrganizeTokensButtonConfig(
+            isEnabled = true,
+            onClick = {},
+        ),
+    )
+
     private val noteLockedCard by lazy {
         WalletCardState.LockedContent(
             id = UserWalletId(stringValue = "1"),
@@ -117,7 +141,13 @@ internal object WalletScreenPreviewData {
             buttons = persistentListOf(buyButton),
             warnings = persistentListOf(
                 WalletNotification.Warning.SomeNetworksUnreachable,
-                WalletNotification.FinishWalletActivation { },
+                WalletNotification.FinishWalletActivation(
+                    iconTint = NotificationConfig.IconTint.Attention,
+                    buttonsState = ButtonsState.SecondaryButtonConfig(
+                        text = resourceReference(R.string.hw_activation_need_finish),
+                        onClick = { },
+                    ),
+                ),
             ),
             bottomSheetConfig = null,
             tokensListState = textContentTokensState,
@@ -166,4 +196,12 @@ internal object WalletScreenPreviewData {
         showMarketsOnboarding = false,
         onDismissMarketsOnboarding = {},
     )
+
+    internal val accountScreenState =
+        walletScreenState.copy(
+            wallets = persistentListOf(
+                singleWalletLockedState,
+                multiWalletState.copy(tokensListState = portfolioContentState),
+            ),
+        )
 }

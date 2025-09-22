@@ -1,7 +1,9 @@
 package com.tangem.data.pay.di
 
-import com.tangem.data.pay.DefaultKycRepository
+import com.tangem.data.pay.repository.DefaultKycRepository
+import com.tangem.data.pay.repository.DefaultOnboardingRepository
 import com.tangem.domain.pay.repository.KycRepository
+import com.tangem.domain.pay.repository.OnboardingRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -14,5 +16,9 @@ internal interface TangemPayDataModule {
 
     @Binds
     @Singleton
-    fun bindKycRepositoryFactory(factory: DefaultKycRepository.Factory): KycRepository.Factory
+    fun bindKycRepository(repository: DefaultKycRepository): KycRepository
+
+    @Binds
+    @Singleton
+    fun bindOnboardingRepository(repository: DefaultOnboardingRepository): OnboardingRepository
 }
