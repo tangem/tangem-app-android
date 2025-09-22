@@ -154,6 +154,7 @@ dependencies {
     implementation(projects.domain.walletManager)
     implementation(projects.domain.walletManager.models)
     implementation(projects.domain.yieldSupply)
+    implementation(projects.domain.blockaid)
 
     implementation(projects.common)
     implementation(projects.common.routing)
