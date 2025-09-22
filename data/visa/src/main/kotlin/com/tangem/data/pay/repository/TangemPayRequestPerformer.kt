@@ -4,7 +4,9 @@ import arrow.core.Either
 import arrow.core.raise.either
 import com.squareup.moshi.Moshi
 import com.tangem.core.error.UniversalError
+import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.common.response.ApiResponseError
+import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.pay.models.response.VisaErrorResponseJsonAdapter
 import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.local.visa.TangemPayStorage
@@ -44,18 +46,19 @@ internal class TangemPayRequestPerformer @Inject constructor(
     private val refreshTokensMutex = Mutex()
     private var refreshTokensJob: Deferred<Either<UniversalError, VisaAuthTokens>>? = null
 
-    suspend fun <T : Any> request(requestBlock: suspend (header: String) -> T): Either<UniversalError, T> = either {
-        withContext(dispatchers.io) {
-            performRequest(requestBlock = requestBlock, refreshTokens = ::refreshAuthTokens).bind()
+    suspend fun <T : Any> request(requestBlock: suspend (header: String) -> ApiResponse<T>): Either<UniversalError, T> =
+        either {
+            withContext(dispatchers.io) {
+                performRequest(requestBlock = requestBlock, refreshTokens = ::refreshAuthTokens).bind()
+            }
         }
-    }
 
     private suspend fun <T : Any> performRequest(
-        requestBlock: suspend (header: String) -> T,
+        requestBlock: suspend (header: String) -> ApiResponse<T>,
         refreshTokens: (suspend () -> Either<UniversalError, VisaAuthTokens>)? = null,
     ): Either<UniversalError, T> = either {
         runCatching {
-            requestBlock("Bearer ${getAccessTokens().bind().accessToken}")
+            requestBlock("Bearer ${getAccessTokens().bind().accessToken}").getOrThrow()
         }.getOrElse { error ->
             when (error) {
                 is ApiResponseError.HttpException -> {
