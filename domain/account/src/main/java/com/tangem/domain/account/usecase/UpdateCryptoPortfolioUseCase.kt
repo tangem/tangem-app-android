@@ -61,7 +61,7 @@ class UpdateCryptoPortfolioUseCase(
 
     private suspend fun Raise<Error>.getAccountList(userWalletId: UserWalletId): AccountList {
         return catch(
-            block = { crudRepository.getAccounts(userWalletId = userWalletId) },
+            block = { crudRepository.getAccountListSync(userWalletId = userWalletId) },
             catch = { raise(Error.DataOperationFailed(cause = it)) },
         )
             .getOrElse { raise(Error.CriticalTechError.AccountsNotCreated(userWalletId = userWalletId)) }
