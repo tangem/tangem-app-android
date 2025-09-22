@@ -48,10 +48,10 @@ const val MODAL_SHEET_MAX_HEIGHT = 0.8f
 inline fun <reified T : TangemBottomSheetConfigContent> TangemModalBottomSheet(
     config: TangemBottomSheetConfig,
     containerColor: Color = TangemTheme.colors.background.primary,
+    noinline onBack: (() -> Unit)? = null,
     skipPartiallyExpanded: Boolean = true,
     dismissOnClickOutside: Boolean = true,
     scrollableContent: Boolean = true,
-    noinline onBack: (() -> Unit)? = null,
     crossinline title: @Composable BoxScope.(T) -> Unit = {},
     crossinline content: @Composable ColumnScope.(T) -> Unit,
 ) {
@@ -202,9 +202,9 @@ inline fun <reified T : TangemBottomSheetConfigContent> BsContent(
 inline fun <reified T : TangemBottomSheetConfigContent> BasicModalBottomSheet(
     config: TangemBottomSheetConfig,
     sheetState: SheetState,
+    modifier: Modifier = Modifier,
     noinline onBack: (() -> Unit)? = null,
     noinline bsContent: @Composable ColumnScope.() -> Unit,
-    modifier: Modifier = Modifier,
 ) {
     if (onBack != null) {
         ModalBottomSheetWithBackHandling(

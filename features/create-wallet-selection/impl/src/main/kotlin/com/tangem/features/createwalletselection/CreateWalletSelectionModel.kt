@@ -61,14 +61,14 @@ internal class CreateWalletSelectionModel @Inject constructor(
 ) : Model() {
 
     internal val uiState: StateFlow<CreateWalletSelectionUM>
-    field = MutableStateFlow(
-        CreateWalletSelectionUM(
-            onBackClick = { router.pop() },
-            onMobileWalletClick = ::onMobileWalletClick,
-            onHardwareWalletClick = ::onHardwareWalletClick,
-            onScanClick = ::onScanClick,
-        ),
-    )
+        field = MutableStateFlow(
+            CreateWalletSelectionUM(
+                onBackClick = { router.pop() },
+                onMobileWalletClick = ::onMobileWalletClick,
+                onHardwareWalletClick = ::onHardwareWalletClick,
+                onScanClick = ::onScanClick,
+            ),
+        )
 
     init {
         showAlreadyHaveWalletWithDelay()

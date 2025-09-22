@@ -111,10 +111,10 @@ fun ActionButton(
 fun ActionBaseButton(
     config: ActionButtonConfig,
     shape: RoundedCornerShape,
-    content: @Composable (modifier: Modifier) -> Unit,
     modifier: Modifier = Modifier,
     color: Color = TangemTheme.colors.button.secondary,
     containerColor: Color = TangemTheme.colors.background.secondary,
+    content: @Composable (modifier: Modifier) -> Unit,
 ) {
     val context = LocalContext.current
     val backgroundColor by animateColorAsState(
@@ -163,9 +163,9 @@ fun ActionBaseButton(
 @Composable
 fun ActionButtonContent(
     config: ActionButtonConfig,
-    text: @Composable (Color) -> Unit,
     modifier: Modifier = Modifier,
     paddingBetweenIconAndText: Dp = 8.dp,
+    text: @Composable (Color) -> Unit,
 ) {
     Row(
         modifier = modifier
