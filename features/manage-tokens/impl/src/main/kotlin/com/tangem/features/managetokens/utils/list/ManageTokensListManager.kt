@@ -84,28 +84,36 @@ internal class ManageTokensListManager @AssistedInject constructor(
         .distinctUntilChanged()
     val uiItems: Flow<ImmutableList<CurrencyItemUM>> = uiManager.items
 
-    suspend fun launchPagination(source: ManageTokensSource, userWalletId: UserWalletId?) = coroutineScope {
-        scope = this
-        this@ManageTokensListManager.source = source
+    /**
+     * Launch pagination flow to get currencies
+     *
+     * @param source        screen where manage tokens is used
+     * @param userWalletId  selected user wallet to manage
+     * @param isCollapsed   set initial display state of networks. !!! WARNING !!! Use `false` flag with cation
+     */
+    suspend fun launchPagination(source: ManageTokensSource, userWalletId: UserWalletId?, isCollapsed: Boolean) =
+        coroutineScope {
+            scope = this
+            this@ManageTokensListManager.source = source
 
-        val batchFlow = getManagedTokensUseCase(
-            context = ManageTokensListBatchingContext(
-                actionsFlow = actionsFlow,
-                coroutineScope = this,
-            ),
-            // only for onboarding case, change carefully and check repository implementation
-            loadUserTokensFromRemote = userWalletId != null && source == ManageTokensSource.ONBOARDING,
-        )
+            val batchFlow = getManagedTokensUseCase(
+                context = ManageTokensListBatchingContext(
+                    actionsFlow = actionsFlow,
+                    coroutineScope = this,
+                ),
+                // only for onboarding case, change carefully and check repository implementation
+                loadUserTokensFromRemote = userWalletId != null && source == ManageTokensSource.ONBOARDING,
+            )
 
-        batchFlow.state
-            .onEach { state -> updateState(state, userWalletId) }
-            .flowOn(dispatchers.default)
-            .launchIn(scope = this)
-            .saveIn(jobHolder)
+            batchFlow.state
+                .onEach { state -> updateState(state, userWalletId, isCollapsed) }
+                .flowOn(dispatchers.default)
+                .launchIn(scope = this)
+                .saveIn(jobHolder)
 
-        // Initial load
-        reload(userWalletId)
-    }
+            // Initial load
+            reload(userWalletId)
+        }
 
     suspend fun reload(userWalletId: UserWalletId?) {
         state.value = ManageTokensListState()
@@ -139,6 +147,7 @@ internal class ManageTokensListManager @AssistedInject constructor(
     private fun updateState(
         batchListState: BatchListState<Int, List<ManagedCryptoCurrency>>,
         userWalletId: UserWalletId?,
+        isCollapsed: Boolean,
     ) {
         state.update { state ->
             state.copy(
@@ -185,7 +194,7 @@ internal class ManageTokensListManager @AssistedInject constructor(
                 state.copy(
                     userWalletId = userWalletId,
                     currencyBatches = newBatches,
-                    uiBatches = uiManager.createOrUpdateUiBatches(newBatches, canEditItems),
+                    uiBatches = uiManager.createOrUpdateUiBatches(newBatches, canEditItems, isCollapsed),
                     canEditItems = canEditItems,
                 )
             }
