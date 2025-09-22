@@ -86,11 +86,11 @@ private fun CoinIcon(
 
 @Composable
 private fun TokenIcon(
-    url: String?,
     alpha: Float,
+    url: String?,
     colorFilter: ColorFilter?,
-    errorIcon: @Composable () -> Unit,
     modifier: Modifier = Modifier,
+    errorIcon: @Composable () -> Unit,
 ) {
     if (url == null) {
         errorIcon()
@@ -129,8 +129,8 @@ private inline fun DefaultCurrencyIcon(
     iconData: Any,
     alpha: Float,
     colorFilter: ColorFilter?,
-    crossinline errorIcon: @Composable () -> Unit,
     modifier: Modifier = Modifier,
+    crossinline errorIcon: @Composable () -> Unit,
 ) {
     var iconBackgroundColor by remember { mutableStateOf(Color.Transparent) }
     var isBackgroundColorDefined by remember { mutableStateOf(false) }

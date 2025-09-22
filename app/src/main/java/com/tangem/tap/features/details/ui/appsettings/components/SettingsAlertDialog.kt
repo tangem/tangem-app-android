@@ -47,8 +47,8 @@ private class AlertDialogProvider : CollectionPreviewParameterProvider<Dialog.Al
     collection = buildList {
         val dialogsFactory = AppSettingsDialogsFactory()
 
-        dialogsFactory.createDeleteSavedAccessCodesAlert({}, {}).let(::add)
-        dialogsFactory.createDeleteSavedWalletsAlert({}, {}).let(::add)
+        add(dialogsFactory.createDeleteSavedAccessCodesAlert({}, {}))
+        add(dialogsFactory.createDeleteSavedWalletsAlert({}, {}))
     },
 )
 // endregion Preview

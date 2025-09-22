@@ -115,8 +115,8 @@ class VisaCustomerWalletApproveTask(
             extendedPublicKey = extendedPublicKey,
         )
 
-        validationResult.onLeft {
-            callback(CompletionResult.Failure(it.tangemError))
+        validationResult.onLeft { error ->
+            callback(CompletionResult.Failure(error.tangemError))
             return
         }
 
@@ -137,8 +137,8 @@ class VisaCustomerWalletApproveTask(
         val publicKey = findKeyWithoutDerivation(
             targetAddress = visaDataForApprove.targetAddress,
             card = CardDTO(card),
-        ).getOrElse {
-            callback(CompletionResult.Failure(it.tangemError))
+        ).getOrElse { error ->
+            callback(CompletionResult.Failure(error.tangemError))
             return
         }
 
