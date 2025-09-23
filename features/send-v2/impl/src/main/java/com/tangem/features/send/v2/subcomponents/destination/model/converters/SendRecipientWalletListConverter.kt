@@ -13,7 +13,7 @@ import kotlinx.collections.immutable.toPersistentList
 
 internal class SendRecipientWalletListConverter(
     private val senderAddress: String?,
-    private val isUtxoConsolidationAvailable: Boolean,
+    private val isSelfSendAvailable: Boolean,
 ) :
     Converter<List<DestinationWalletUM?>, PersistentList<DestinationRecipientListUM>> {
     override fun convert(value: List<DestinationWalletUM?>): PersistentList<DestinationRecipientListUM> {
@@ -31,7 +31,7 @@ internal class SendRecipientWalletListConverter(
                 val isNotSameAddress = it.address != senderAddress
                 val isNotBlankAddress = it.address.isNotBlank()
 
-                isNotBlankAddress && isCoin && (isNotSameAddress || isUtxoConsolidationAvailable)
+                isNotBlankAddress && isCoin && (isNotSameAddress || isSelfSendAvailable)
             }
             .groupBy { item -> item.name }
             .values.map { wallets ->
