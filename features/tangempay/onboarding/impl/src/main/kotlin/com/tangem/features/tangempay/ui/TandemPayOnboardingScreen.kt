@@ -15,7 +15,8 @@ import com.tangem.core.ui.res.TangemThemePreview
 @Composable
 internal fun TandemPayOnboardingScreen(
     state: TangemPayOnboardingScreenState,
-    onButtonClick: () -> Unit,
+    onOpenKycClick: () -> Unit,
+    onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
@@ -23,7 +24,7 @@ internal fun TandemPayOnboardingScreen(
         topBar = {
             AppBarWithBackButton(
                 modifier = Modifier.statusBarsPadding(),
-                onBackClick = {},
+                onBackClick = onBackClick,
                 iconRes = R.drawable.ic_back_24,
             )
         },
@@ -33,7 +34,7 @@ internal fun TandemPayOnboardingScreen(
                     .padding(paddingValues)
                     .fillMaxSize(),
                 state = state,
-                onButtonClick = onButtonClick,
+                onButtonClick = onOpenKycClick,
             )
         },
     )
@@ -44,6 +45,6 @@ internal fun TandemPayOnboardingScreen(
 @Composable
 private fun PreviewDarkTheme() {
     TangemThemePreview {
-        TandemPayOnboardingScreen(state = TangemPayOnboardingScreenState(), {})
+        TandemPayOnboardingScreen(state = TangemPayOnboardingScreenState(), {}, {})
     }
 }
