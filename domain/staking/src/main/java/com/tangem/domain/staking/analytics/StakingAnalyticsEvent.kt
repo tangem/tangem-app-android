@@ -154,6 +154,11 @@ sealed class StakingAnalyticsEvent(
     data object TransactionError : StakingAnalyticsEvent(
         event = "Error - Transaction Rejected",
     )
+
+    data class UnitializedAddress(val token: String) : StakingAnalyticsEvent(
+        event = "Notice - Uninitialized Address",
+        params = mapOf(AnalyticsParam.TOKEN_PARAM to token),
+    )
 }
 
 enum class StakeScreenSource {
