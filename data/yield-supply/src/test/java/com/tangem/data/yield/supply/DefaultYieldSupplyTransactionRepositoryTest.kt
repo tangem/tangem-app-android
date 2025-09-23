@@ -88,7 +88,7 @@ class DefaultYieldSupplyTransactionRepositoryTest {
         val firstExpectedCallData = YieldSupplyContractCallDataProviderFactory.getDeployCallData(
             walletAddress = walletManager.wallet.address,
             tokenContractAddress = mockedContractAddress,
-            maxNetworkFee = BigDecimal.TEN.convertToSdkAmount(cryptoCurrency),
+            maxNetworkFee = BigDecimal.TEN.convertToSdkAmount(cryptoCurrencyStatus),
         )
         val firstTransaction = result.first()
 
@@ -141,7 +141,7 @@ class DefaultYieldSupplyTransactionRepositoryTest {
         // Check transaction - init token
         val firstExpectedCallData = YieldSupplyContractCallDataProviderFactory.getInitTokenCallData(
             tokenContractAddress = mockedContractAddress,
-            maxNetworkFee = BigDecimal.TEN.convertToSdkAmount(cryptoCurrency),
+            maxNetworkFee = BigDecimal.TEN.convertToSdkAmount(cryptoCurrencyStatus),
         )
         val firstTransaction = result.first()
 
@@ -194,7 +194,7 @@ class DefaultYieldSupplyTransactionRepositoryTest {
         // Check transaction - reactivate token
         val firstExpectedCallData = YieldSupplyContractCallDataProviderFactory.getReactivateTokenCallData(
             tokenContractAddress = mockedContractAddress,
-            maxNetworkFee = BigDecimal.TEN.convertToSdkAmount(cryptoCurrency),
+            maxNetworkFee = BigDecimal.TEN.convertToSdkAmount(cryptoCurrencyStatus),
         )
         val firstTransaction = result.first()
 
@@ -247,7 +247,7 @@ class DefaultYieldSupplyTransactionRepositoryTest {
         // Check transaction - reactivate token
         val firstExpectedCallData = YieldSupplyContractCallDataProviderFactory.getReactivateTokenCallData(
             tokenContractAddress = mockedContractAddress,
-            maxNetworkFee = BigDecimal.TEN.convertToSdkAmount(cryptoCurrency),
+            maxNetworkFee = BigDecimal.TEN.convertToSdkAmount(cryptoCurrencyStatus),
         )
         val firstTransaction = result.first()
 
