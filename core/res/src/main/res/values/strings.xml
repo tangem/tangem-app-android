@@ -1057,7 +1057,7 @@
   <string name="send_recipient_address_error">Not a valid address</string>
   <string name="send_recipient_address_footer">Ensure the recipient\'s address is on **the %s network** to avoid losing your funds</string>
   <string name="send_recipient_label">Send to</string>
-  <string name="send_recipient_memo_footer">A Memo/Destination Tag is a unique ID for differentiating transactions sent to the same recipient on the same network. Caution: Omitting a memo may lead to misplaced funds</string>
+  <string name="send_recipient_memo_footer">A Memo/Destination Tag is a unique ID for differentiating transactions sent to the same recipient on the same network.\n**Caution: Omitting a memo may lead to misplaced funds**</string>
   <string name="send_recipient_memo_footer_v2">Memo / Destination Tag is a code separating transactions to a shared recipient in a crypto network.</string>
   <string name="send_recipient_memo_footer_v2_highlighted">Caution: Missing a memo may lead to fund loss.</string>
   <string name="send_recipient_wallets_title">My wallets</string>
@@ -1165,7 +1165,7 @@
   <string name="staking_notification_restake_rewards_text">Reinvests your earned rewards in your staked amount, increasing potential earnings.</string>
   <string name="staking_notification_restake_text">Restake lets you move your funds from one validator to another without the need to unstake</string>
   <string name="staking_notification_stake_entire_balance_text">You’re about to stake your entire balance. We recommend leaving a small amount to cover network fees for unstaking or claiming rewards.</string>
-  <string name="staking_notification_ton_activate_account">To start staking in TON, first make an outgoing transaction of any amount — this will activate your wallet.</string>
+  <string name="staking_notification_ton_activate_account">To start staking in TON, first send a small transaction to your own address — this will activate your wallet.</string>
   <string name="staking_notification_ton_extra_reserve_info">Up to 0.2 TON may be required in addition to the network fee to complete the transaction. Any unused amount will be refunded.</string>
   <string name="staking_notification_ton_extra_reserve_is_required">0.2 TON is required to proceed with this operation, in addition to the network fee. Please top up your balance.</string>
   <string name="staking_notification_ton_extra_reserve_title">TON reserve required</string>
@@ -1268,6 +1268,10 @@
   <string name="swapping_to_title">You receive</string>
   <string name="swapping_token_list_title">Choose token</string>
   <string name="swapping_token_not_available">not available</string>
+  <string name="tangempay_issue_card_notification_title">Create account and issue a card</string>
+  <string name="tangempay_kyc_card_ready_notification_title">Tangem Pay</string>
+  <string name="tangempay_kyc_in_progress_notification_button">View Status</string>
+  <string name="tangempay_kyc_in_progress_notification_title">KYC in progress for Tangem Pay</string>
   <string name="tangempay_onboarding_get_card_button_text">Get card</string>
   <string name="tangempay_onboarding_pay_description">Add to your wallet and pay with your phone anywhere.</string>
   <string name="tangempay_onboarding_pay_title">Apple Pay &amp; Google Pay</string>
@@ -1710,13 +1714,15 @@
   <string name="xtz_withdrawal_message_ignore">No, send all</string>
   <string name="xtz_withdrawal_message_reduce">Reduce by %s XTZ</string>
   <string name="xtz_withdrawal_message_warning">To avoid paying an increased commission the next time you top up your wallet, reduce the amount by %s XTZ</string>
+  <string name="yield_module_alert_description">Text about your money in balance [PLACEHOLDER]</string>
+  <string name="yield_module_alert_title">Your %s is deposited in Aave</string>
   <string name="yield_module_approve_needed_notification_cta">Give Approve</string>
   <string name="yield_module_approve_needed_notification_description">Something went wrong with your previous approval, so we need a new one. Choose how you’d like to proceed.</string>
   <string name="yield_module_approve_needed_notification_title">Approve needed</string>
   <string name="yield_module_approve_sheet_fee_note">The fee will be taken out, and your assets will be lent again.</string>
   <string name="yield_module_approve_sheet_subtitle">To continue earning, approval is required.</string>
   <string name="yield_module_approve_sheet_title">Confirm approval</string>
-  <string name="yield_module_balance_info_sheet_subtitle">Text about your money in balance</string>
+  <string name="yield_module_balance_info_sheet_subtitle">Text about your money in balance [PLACEHOLDER]</string>
   <string name="yield_module_balance_info_sheet_title">Your %s is deposited in Aave</string>
   <string name="yield_module_earn_badge">Earn %s%</string>
   <string name="yield_module_earn_sheet_available_title">Available</string>
@@ -1734,6 +1740,7 @@
   <string name="yield_module_fee_policy_sheet_max_fee_note">If network fees rise above maximum fee, the transaction won’t go through until they decrease. You can change this limit later.</string>
   <string name="yield_module_fee_policy_sheet_max_fee_title">Maximum fee</string>
   <string name="yield_module_fee_policy_sheet_title">Fee policy</string>
+  <string name="yield_module_main_view_approve_notification_description">Write description here. In one, two or three lines will be awesome. [PLACEHOLDER]</string>
   <string name="yield_module_main_view_approve_notification_title">Some token approve needed</string>
   <string name="yield_module_promo_screen_auto_balance_subtitle">Every top-up of your account will be lended to Aave automatically.</string>
   <string name="yield_module_promo_screen_auto_balance_title">Your balance works automatically</string>
