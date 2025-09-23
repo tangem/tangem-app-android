@@ -1,6 +1,7 @@
 package com.tangem.features.tangempay.model
 
 import androidx.compose.runtime.Stable
+import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -30,10 +31,25 @@ internal class TangemPayOnboardingModel @Inject constructor(
 
     init {
         modelScope.launch {
-            repository.validateDeeplink(params.deeplink)
-                .onRight { isValid -> if (isValid) checkCustomerInfo() }
-                .onLeft { exit() }
+            when (params) {
+                is TangemPayOnboardingComponent.Params.ContinueOnboarding -> {
+                    checkCustomerInfo()
+                }
+                is TangemPayOnboardingComponent.Params.Deeplink -> {
+                    repository.validateDeeplink(params.deeplink)
+                        .onRight { isValid -> if (isValid) checkCustomerInfo() }
+                        .onLeft { back() }
+                }
+            }
         }
+    }
+
+    fun openKyc() {
+        router.replaceAll(AppRoute.Wallet, AppRoute.Kyc)
+    }
+
+    fun back() {
+        router.pop()
     }
 
     private suspend fun checkCustomerInfo() {
@@ -41,18 +57,18 @@ internal class TangemPayOnboardingModel @Inject constructor(
             .onRight { customerInfo ->
                 when {
                     !customerInfo.isKycApproved() -> {
-                        screenState.value = screenState.value.copy(fullScreenLoading = false)
+                        when (params) {
+                            is TangemPayOnboardingComponent.Params.Deeplink ->
+                                screenState.value = screenState.value.copy(fullScreenLoading = false)
+                            else -> openKyc()
+                        }
                     }
                     !customerInfo.isProductInstanceActive() -> {
                         // TODO [REDACTED_TASK_KEY]: create order and poll order status (API is not ready yet)
                     }
-                    else -> exit()
+                    else -> back()
                 }
             }
-            .onLeft { exit() }
-    }
-
-    private fun exit() {
-        router.pop()
+            .onLeft { back() }
     }
 }
