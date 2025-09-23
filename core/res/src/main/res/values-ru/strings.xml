@@ -991,7 +991,7 @@
   <string name="send_recipient_address_error">Неверный адрес</string>
   <string name="send_recipient_address_footer">Убедитесь, что адрес получателя находится **в сети %s**, чтобы избежать потери отправляемых средств</string>
   <string name="send_recipient_label">Отправить</string>
-  <string name="send_recipient_memo_footer">Мемо/ Код назначения - это код, разделяющий транзакции к общему получателю в сети криптовалют. Внимание: отсутствие мемо может привести к потере средств.</string>
+  <string name="send_recipient_memo_footer">Мемо/ Код назначения - это код, разделяющий транзакции к общему получателю в сети криптовалют.\n**Внимание: отсутствие мемо может привести к потере средств.**</string>
   <string name="send_recipient_memo_footer_v2">Memo / Destination Tag — это код, разделяющий транзакции, отправляемые одному и тому же получателю в криптовалютной сети.</string>
   <string name="send_recipient_memo_footer_v2_highlighted">Внимание: отсутствие Memo может привести к потере средств.</string>
   <string name="send_recipient_wallets_title">Мои кошельки</string>
@@ -1096,7 +1096,7 @@
   <string name="staking_notification_restake_rewards_text">Реинвестируйте свои заработанные награды в вашу застейканную сумму, увеличивая потенциальный доход</string>
   <string name="staking_notification_restake_text">Рестейк позволяет вам переместить средства из одного валидатора в другого без необходимости выхода из стейкинга.</string>
   <string name="staking_notification_stake_entire_balance_text">Вы собираетесь застейкать весь баланс, рекомендуем оставить небольшую сумму для оплаты комиссии сети при выходе из стейкинга или получении награды.</string>
-  <string name="staking_notification_ton_activate_account">Чтобы начать стейкинг в TON, сначала осуществите исходящую транзакцию на любую сумму — это активирует ваш кошелек.</string>
+  <string name="staking_notification_ton_activate_account">Чтобы начать стейкинг в TON, сначала отправьте небольшую транзакцию на свой же адрес — это активирует ваш кошелёк.</string>
   <string name="staking_notification_ton_extra_reserve_info">До 0.2 TON может потребоваться сверх сетевой комиссии для завершения транзакции. Неиспользованная часть будет возвращена.</string>
   <string name="staking_notification_ton_extra_reserve_is_required">Для выполнения операции требуется дополнительно 0.2 TON, помимо сетевой комиссии. Пожалуйста, пополните баланс.</string>
   <string name="staking_notification_ton_extra_reserve_title">Требуется резерв TON</string>
