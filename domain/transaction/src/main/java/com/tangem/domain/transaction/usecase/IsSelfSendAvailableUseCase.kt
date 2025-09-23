@@ -5,14 +5,14 @@ import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.models.wallet.UserWalletId
 
 /**
- * Gets UTXO consolidation availability
+ * Gets self send availability
  */
-class IsUtxoConsolidationAvailableUseCase(
+class IsSelfSendAvailableUseCase(
     private val walletManagersFacade: WalletManagersFacade,
 ) {
 
     suspend fun invokeSync(userWalletId: UserWalletId, network: Network) =
-        walletManagersFacade.checkUtxoConsolidationAvailability(
+        walletManagersFacade.checkSelfSendAvailability(
             userWalletId = userWalletId,
             network = network,
         )
