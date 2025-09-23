@@ -27,10 +27,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.*
 import com.tangem.core.ui.components.buttons.common.TangemButtonSize
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resolveAnnotatedReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
@@ -216,7 +218,7 @@ internal fun TextsBlock(
             SpacerH(height = TangemTheme.dimens.spacing2)
         }
 
-        val subtitleText = subtitle.resolveReference()
+        val subtitleText = subtitle.resolveAnnotatedReference()
         if (subtitleText.isNotEmpty()) {
             Text(
                 text = subtitleText,
@@ -458,6 +460,16 @@ private class NotificationConfigProvider : CollectionPreviewParameterProvider<No
         NotificationConfig(
             subtitle = resourceReference(id = R.string.information_generated_with_ai),
             iconResId = R.drawable.ic_magic_28,
+        ),
+        NotificationConfig(
+            title = resourceReference(R.string.notification_sepa_title),
+            subtitle = resourceReference(R.string.notification_sepa_text),
+            iconResId = R.drawable.img_notification_sepa,
+            buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
+                text = resourceReference(R.string.notification_sepa_button),
+                onClick = { },
+            ),
+            iconSize = 54.dp,
         ),
     ),
 )
