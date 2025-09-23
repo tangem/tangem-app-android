@@ -44,8 +44,28 @@ class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider)
     }
 
     val buyButton: KNode = child {
-        hasTestTag(MainScreenTestTags.MULTI_CURRENCY_ACTION_BUTTON)
+        hasTestTag(BaseActionButtonsBlockTestTags.ACTION_BUTTON)
         hasText(getResourceString(R.string.common_buy))
+    }
+
+    val sendButton: KNode = child {
+        hasTestTag(BaseActionButtonsBlockTestTags.ACTION_BUTTON)
+        hasText(getResourceString(R.string.common_send))
+    }
+
+    val receiveButton: KNode = child {
+        hasTestTag(BaseActionButtonsBlockTestTags.ACTION_BUTTON)
+        hasText(getResourceString(R.string.common_receive))
+    }
+
+    val sellButton: KNode = child {
+        hasTestTag(BaseActionButtonsBlockTestTags.ACTION_BUTTON)
+        hasText(getResourceString(R.string.common_sell))
+    }
+
+    val swapButton: KNode = child {
+        hasTestTag(BaseActionButtonsBlockTestTags.ACTION_BUTTON)
+        hasText(getResourceString(R.string.common_swap))
     }
 
     val walletNameText: KNode = child {
@@ -55,6 +75,11 @@ class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider)
 
     val walletImage: KNode = child {
         hasTestTag(MainScreenTestTags.CARD_IMAGE)
+        useUnmergedTree = true
+    }
+
+    val walletDevicesCount: KNode = child {
+        hasTestTag(MainScreenTestTags.DEVICES_COUNT)
         useUnmergedTree = true
     }
 
@@ -79,12 +104,28 @@ class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider)
         useUnmergedTree = true
     }
 
-    fun transactionsExplorer(): KNode {
+    fun transactionsExplorerText(): KNode {
         return child {
             hasTestTag(TransactionHistoryBlockTestTags.EXPLORER_TEXT)
             hasText(getResourceString(R.string.common_explorer))
             useUnmergedTree = true
         }
+    }
+
+    val emptyTransactionBlock: KNode = child {
+        hasTestTag(EmptyTransactionBlockTestTags.BLOCK)
+    }
+
+    val emptyTransactionBlockIcon: KNode = child {
+        hasTestTag(EmptyTransactionBlockTestTags.ICON)
+    }
+
+    val emptyTransactionBlockText: KNode = child {
+        hasTestTag(EmptyTransactionBlockTestTags.TEXT)
+    }
+
+    val emptyTransactionBlockExploreButton: KNode = child {
+        hasTestTag(EmptyTransactionBlockTestTags.EXPLORE_BUTTON)
     }
 
     val notificationContainer: KNode = child {

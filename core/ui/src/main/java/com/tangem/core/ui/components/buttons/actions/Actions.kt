@@ -34,7 +34,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.core.ui.test.TokenDetailsScreenTestTags
+import com.tangem.core.ui.test.BaseActionButtonsBlockTestTags
 
 /**
  * Rounded action button
@@ -100,7 +100,7 @@ fun ActionButton(
                 ),
             )
         },
-        modifier = modifier.testTag(TokenDetailsScreenTestTags.ACTION_BUTTON),
+        modifier = modifier,
         color = color,
         containerColor = containerColor,
     )
@@ -145,7 +145,8 @@ fun ActionBaseButton(
                     }
                 },
             )
-            .background(color = backgroundColor),
+            .background(color = backgroundColor)
+            .testTag(BaseActionButtonsBlockTestTags.ACTION_BUTTON),
     ) {
         content(Modifier.align(Alignment.Center))
 
