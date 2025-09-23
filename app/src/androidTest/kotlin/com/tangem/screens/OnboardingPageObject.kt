@@ -22,6 +22,18 @@ class OnboardingPageObject(semanticsProvider: SemanticsNodeInteractionsProvider)
         useUnmergedTree = true
     }
 
+    val continueButton: KNode = child {
+        hasTestTag(BaseButtonTestTags.TEXT)
+        hasText(getResourceString(R.string.common_continue))
+        useUnmergedTree = true
+    }
+
+    val continueToMyWalletButton: KNode = child {
+        hasTestTag(BaseButtonTestTags.TEXT)
+        hasText(getResourceString(R.string.onboarding_button_continue_wallet))
+        useUnmergedTree = true
+    }
+
     val createWalletTopBarTitle: KNode = child {
         hasTestTag(TopAppBarTestTags.TITLE)
         hasText(getResourceString(OnboardingImplR.string.onboarding_create_wallet_header))
