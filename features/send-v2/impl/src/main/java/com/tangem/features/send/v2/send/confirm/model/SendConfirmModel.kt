@@ -317,7 +317,7 @@ internal class SendConfirmModel @Inject constructor(
             null
         }
 
-        val amount = receivingAmount?.convertToSdkAmount(cryptoCurrency)
+        val amount = receivingAmount?.convertToSdkAmount(cryptoCurrencyStatus)
 
         saveBlockchainErrorUseCase(
             error = BlockchainErrorInfo(
@@ -331,7 +331,7 @@ internal class SendConfirmModel @Inject constructor(
                     ""
                 },
                 amount = amount?.value?.stripZeroPlainString() ?: "unknown",
-                fee = feeValue?.convertToSdkAmount(cryptoCurrency)
+                fee = feeValue?.convertToSdkAmount(cryptoCurrencyStatus)
                     ?.value?.stripZeroPlainString() ?: "unknown",
             ),
         )
@@ -424,7 +424,7 @@ internal class SendConfirmModel @Inject constructor(
 
         modelScope.launch {
             createTransferTransactionUseCase(
-                amount = receivingAmount.convertToSdkAmount(cryptoCurrency),
+                amount = receivingAmount.convertToSdkAmount(cryptoCurrencyStatus),
                 fee = fee,
                 memo = memo,
                 nonce = nonce,
