@@ -158,7 +158,7 @@ internal class StakingTransactionSender @AssistedInject constructor(
                     getConstructedStakingTransactionUseCase(
                         networkId = cryptoCurrencyStatus.currency.network.rawId,
                         fee = fee,
-                        amount = amount.convertToSdkAmount(cryptoCurrencyStatus.currency),
+                        amount = amount.convertToSdkAmount(cryptoCurrencyStatus),
                         transactionId = transaction.id,
                     ).fold(
                         ifRight = { (constructedTransaction, transactionData) ->
