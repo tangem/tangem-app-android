@@ -700,9 +700,11 @@ internal class SwapModel @Inject constructor(
     private fun givePermissionsToSwap() {
         modelScope.launch(dispatchers.main) {
             runCatching {
-                val fromToken = requireNotNull(dataState.fromCryptoCurrency?.currency) {
-                    "dataState.fromCurrency might not be null"
+                val fromCryptoCurrency = requireNotNull(dataState.fromCryptoCurrency) {
+                    "dataState.fromCryptoCurrency might not be null"
                 }
+                val fromToken = fromCryptoCurrency.currency
+
                 val approveDataModel = requireNotNull(dataState.approveDataModel) {
                     "dataState.approveDataModel.spenderAddress shouldn't be null"
                 }
@@ -725,7 +727,7 @@ internal class SwapModel @Inject constructor(
                         permissionOptions = PermissionOptions(
                             approveData = approveDataModel,
                             forTokenContractAddress = (fromToken as? CryptoCurrency.Token)?.contractAddress.orEmpty(),
-                            fromToken = fromToken,
+                            fromTokenStatus = fromCryptoCurrency,
                             approveType = approveType,
                             txFee = feeForPermission,
                             spenderAddress = approveDataModel.spenderAddress,
