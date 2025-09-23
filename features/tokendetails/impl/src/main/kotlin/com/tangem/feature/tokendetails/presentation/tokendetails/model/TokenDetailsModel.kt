@@ -1093,6 +1093,7 @@ internal class TokenDetailsModel @Inject constructor(
                 userWalletId = userWalletId,
                 showMemoDisclaimer = cryptoCurrency.network.transactionExtrasType != Network.TransactionExtrasType.NONE,
                 receiveAddress = receiveAddresses,
+                showYieldSupplyWarning = isActiveYieldSupply(),
             ),
         )
     }
@@ -1137,6 +1138,11 @@ internal class TokenDetailsModel @Inject constructor(
     private suspend fun needShowYieldSupplyWarning(): Boolean {
         return yieldSupplyFeatureToggles.isYieldSupplyFeatureEnabled &&
             needShowYieldSupplyDepositedWarningUseCase(cryptoCurrencyStatus)
+    }
+
+    private fun isActiveYieldSupply(): Boolean {
+        return yieldSupplyFeatureToggles.isYieldSupplyFeatureEnabled &&
+            cryptoCurrencyStatus?.value?.yieldSupplyStatus?.isActive == true
     }
 
     override fun onYieldSupplyWarningAcknowledged(tokenAction: TokenAction) {
