@@ -623,8 +623,8 @@
   <string name="notification_referral_promo_text">Partagez votre code et gagnez 5 USDT par vente. Votre ami bénéficie de 10 % de réduction.</string>
   <string name="notification_referral_promo_title">Recevez des RÉCOMPENSES pour chaque ami !</string>
   <string name="notification_sepa_button">Acheter crypto</string>
-  <string name="notification_sepa_text">Tangem réduit les frais SEPA à presque rien, vous offrant ainsi la meilleure offre à ce jour.</string>
-  <string name="notification_sepa_title">Achetez des cryptomonnaies sans payer de frais !</string>
+  <string name="notification_sepa_text">Profitez de **0% de frais** lors de l\'achat de cryptomonnaies via des virements SEPA.</string>
+  <string name="notification_sepa_title">Acheter des cryptomonnaies avec SEPA</string>
   <string name="onboarding_access_code_feature_1_description">Vous devez définir un seul code d\'accès pour protéger tous vos appareils.</string>
   <string name="onboarding_access_code_feature_1_title">Protéger</string>
   <string name="onboarding_access_code_feature_2_description">Vous pourrez définir un code d\'accès individuel sur chaque carte plus tard</string>
@@ -899,7 +899,7 @@
   <string name="send_recipient_address_error">Adresse non valide</string>
   <string name="send_recipient_address_footer">Assurez-vous que l\'adresse du portefeuille de réception est sur **le réseau %s** pour éviter de perdre vos jetons</string>
   <string name="send_recipient_label">Envoyer à</string>
-  <string name="send_recipient_memo_footer">Un Memo/Destination Tag est un identifiant unique permettant de différencier les transactions envoyées au même destinataire sur le même réseau. Attention : L\'omission d\'un mémo peut entraîner des fonds mal placés</string>
+  <string name="send_recipient_memo_footer">Un Memo/Destination Tag est un identifiant unique permettant de différencier les transactions envoyées au même destinataire sur le même réseau.\n**Attention : L\'omission d\'un mémo peut entraîner des fonds mal placés**</string>
   <string name="send_recipient_memo_footer_v2">Le Memo / Destination Tag est un code qui distingue les transactions envoyées à un destinataire partagé sur un réseau crypto.</string>
   <string name="send_recipient_memo_footer_v2_highlighted">Attention : l\'absence de Memo peut entraîner une perte de fonds.</string>
   <string name="send_recipient_wallets_title">Mes portefeuilles</string>
