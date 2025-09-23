@@ -138,7 +138,7 @@ internal class DefaultYieldSupplyTransactionRepository(
             else -> Unit
         }
 
-        if (yieldTokenStatus?.isAllowedToSpend == false) {
+        if (yieldTokenStatus?.isAllowedToSpend != true) {
             enterTransactions.add(
                 createTransaction(
                     walletManager = walletManager,
@@ -182,7 +182,7 @@ internal class DefaultYieldSupplyTransactionRepository(
             .getOrNull()
     }
 
-    private suspend fun getYieldContractAddress(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): String? =
+    override suspend fun getYieldContractAddress(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): String? =
         withContext(dispatchers.io) {
             require(cryptoCurrency is CryptoCurrency.Token)
             runCatching {
@@ -203,13 +203,18 @@ internal class DefaultYieldSupplyTransactionRepository(
         require(cryptoCurrency is CryptoCurrency.Token)
         runCatching {
             val sdkSupplyStatus = walletManager.getYieldSupplyStatus(cryptoCurrency.contractAddress)
-            val isAllowedToSpend = walletManager.isAllowedToSpend(cryptoCurrency.contractAddress)
+            val isAllowedToSpend = walletManager.isAllowedToSpend(
+                Token(
+                    symbol = cryptoCurrency.symbol,
+                    contractAddress = cryptoCurrency.contractAddress,
+                    decimals = cryptoCurrency.decimals,
+                ),
+            )
 
             YieldSupplyStatus(
                 isActive = sdkSupplyStatus?.isActive == true,
                 isInitialized = sdkSupplyStatus?.isInitialized == true,
                 isAllowedToSpend = isAllowedToSpend,
-                // maxNetworkFee = sdkSupplyStatus?.maxNetworkFee,
             )
         }.onFailure(Timber::e).getOrNull()
     }
