@@ -4,6 +4,7 @@ import com.tangem.domain.transaction.FeeRepository
 import com.tangem.domain.transaction.error.FeeErrorResolver
 import com.tangem.domain.yield.supply.YieldSupplyTransactionRepository
 import com.tangem.domain.yield.supply.usecase.YieldSupplyEstimateEnterFeeUseCase
+import com.tangem.domain.yield.supply.usecase.YieldSupplyGetContractAddressUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyStartEarningUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyStopEarningUseCase
 import dagger.Module
@@ -45,6 +46,17 @@ internal object YieldSupplyDomainModule {
         return YieldSupplyEstimateEnterFeeUseCase(
             feeRepository = feeRepository,
             feeErrorResolver = feeErrorResolver,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideYieldSupplyGetContractAddressUseCase(
+        yieldSupplyTransactionRepository: YieldSupplyTransactionRepository,
+    ): YieldSupplyGetContractAddressUseCase {
+        return YieldSupplyGetContractAddressUseCase(
+            yieldSupplyTransactionRepository = yieldSupplyTransactionRepository,
+
         )
     }
 }
