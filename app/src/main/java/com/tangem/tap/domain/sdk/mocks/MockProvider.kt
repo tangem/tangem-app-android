@@ -5,9 +5,7 @@ import com.tangem.common.core.TangemError
 import com.tangem.common.core.TangemSdkError
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.sdk.api.CreateProductWalletTaskResponse
-import com.tangem.tap.domain.sdk.mocks.content.Wallet2WithSeedPhraseMockContent
-import com.tangem.tap.domain.sdk.mocks.content.NoteMockContent
-import com.tangem.tap.domain.sdk.mocks.content.WalletMockContent
+import com.tangem.tap.domain.sdk.mocks.content.*
 
 object MockProvider {
 
@@ -69,6 +67,8 @@ object MockProvider {
             ProductType.Wallet -> WalletMockContent
             ProductType.Wallet2 -> Wallet2WithSeedPhraseMockContent
             ProductType.Note -> NoteMockContent
+            ProductType.Ring -> RingMockContent
+            ProductType.Twins -> TwinsMockContent
             else -> TODO()
         }
     }
