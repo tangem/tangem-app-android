@@ -1,13 +1,13 @@
 package com.tangem.data.promo.converters
 
-import com.tangem.datasource.api.promotion.models.PromotionInfoResponse
+import com.tangem.datasource.api.promotion.models.PromoBannerResponse
 import com.tangem.domain.promo.models.PromoBanner
 import com.tangem.utils.converter.Converter
 import org.joda.time.DateTime
 
-class PromoResponseConverter : Converter<PromotionInfoResponse, PromoBanner?> {
+class PromoBannerConverter : Converter<PromoBannerResponse, PromoBanner?> {
 
-    override fun convert(value: PromotionInfoResponse): PromoBanner? {
+    override fun convert(value: PromoBannerResponse): PromoBanner? {
         val bannerState = value.bannerState ?: return null
         return PromoBanner(
             name = value.name,
