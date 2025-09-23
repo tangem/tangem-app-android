@@ -26,7 +26,12 @@ class GetOnrampCountryUseCase(
     }
 
     suspend fun invokeSync(userWallet: UserWallet): Either<OnrampError, OnrampCountry> {
-        return Either.catch { repository.getDefaultCountrySync() ?: repository.getCountryByIp(userWallet) }
+        return Either.catch {
+            repository.getDefaultCountrySync() ?: repository.getCountryByIp(
+                userWallet = userWallet,
+                fromCache = true,
+            )
+        }
             .mapLeft(errorResolver::resolve)
     }
 }
