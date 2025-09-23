@@ -10,18 +10,20 @@ import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.pay.models.response.VisaErrorResponseJsonAdapter
 import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.local.visa.TangemPayStorage
-import com.tangem.domain.core.wallets.UserWalletsListRepository
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.pay.datasource.TangemPayAuthDataSource
 import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.domain.visa.model.VisaAuthTokens
+import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import javax.inject.Inject
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -35,9 +37,9 @@ internal class TangemPayRequestPerformer @Inject constructor(
     @NetworkMoshi moshi: Moshi,
     private val dispatchers: CoroutineDispatcherProvider,
     private val tangemPayStorage: TangemPayStorage,
-    private val userWalletsRepository: UserWalletsListRepository,
     private val getCurrencyUseCase: GetSingleCryptoCurrencyStatusUseCase,
     private val authDataSource: TangemPayAuthDataSource,
+    private val getWalletsUseCase: GetWalletsUseCase,
 ) {
     private val visaErrorAdapter = VisaErrorResponseJsonAdapter(moshi)
 
@@ -49,22 +51,39 @@ internal class TangemPayRequestPerformer @Inject constructor(
     suspend fun <T : Any> request(requestBlock: suspend (header: String) -> ApiResponse<T>): Either<UniversalError, T> =
         either {
             withContext(dispatchers.io) {
-                performRequest(requestBlock = requestBlock, refreshTokens = ::refreshAuthTokens).bind()
+                performRequest(
+                    requestBlock = requestBlock,
+                    getTokens = ::getAccessTokens,
+                    refreshTokens = ::refreshAuthTokens,
+                ).bind()
             }
         }
 
+    suspend fun <T : Any> requestWithPersistedToken(
+        requestBlock: suspend (header: String) -> ApiResponse<T>,
+    ): Either<UniversalError, T> = either {
+        withContext(dispatchers.io) {
+            performRequest(
+                requestBlock = requestBlock,
+                getTokens = ::getAccessTokensIfSaved,
+                refreshTokens = ::refreshAuthTokens,
+            ).bind()
+        }
+    }
+
     private suspend fun <T : Any> performRequest(
         requestBlock: suspend (header: String) -> ApiResponse<T>,
+        getTokens: (suspend () -> Either<UniversalError, VisaAuthTokens>),
         refreshTokens: (suspend () -> Either<UniversalError, VisaAuthTokens>)? = null,
     ): Either<UniversalError, T> = either {
         runCatching {
-            requestBlock("Bearer ${getAccessTokens().bind().accessToken}").getOrThrow()
+            requestBlock("Bearer ${getTokens().bind().accessToken}").getOrThrow()
         }.getOrElse { error ->
             when (error) {
                 is ApiResponseError.HttpException -> {
                     if (refreshTokens != null && error.code == ApiResponseError.HttpException.Code.UNAUTHORIZED) {
                         refreshOrJoin(refreshTokens).bind()
-                        performRequest(requestBlock, refreshTokens = null).bind()
+                        performRequest(requestBlock, refreshTokens = null, getTokens = getTokens).bind()
                     } else {
                         raise(mapHttpError(error))
                     }
@@ -103,14 +122,17 @@ internal class TangemPayRequestPerformer @Inject constructor(
     }
 
     private suspend fun getCustomerWalletAddress(): Either<UniversalError, String> = either {
-        customerWalletAddress
-            ?: tangemPayStorage.getCustomerWalletAddress()
-            ?: fetchAuthInputData().bind().address
+        customerWalletAddress ?: fetchAuthInputData().bind().address
     }
 
     private suspend fun getAccessTokens(): Either<UniversalError, VisaAuthTokens> = either {
         val address = getCustomerWalletAddress().bind()
         tangemPayStorage.getAuthTokens(address) ?: fetchTokens().bind()
+    }
+
+    private suspend fun getAccessTokensIfSaved(): Either<UniversalError, VisaAuthTokens> = either {
+        tangemPayStorage.getAuthTokens(getCustomerWalletAddress().bind())
+            ?: raise(VisaApiError.UnknownWithoutCode)
     }
 
     private fun mapHttpError(throwable: ApiResponseError.HttpException): UniversalError {
@@ -125,14 +147,16 @@ internal class TangemPayRequestPerformer @Inject constructor(
     }
 
     private suspend fun fetchAuthInputData(): Either<UniversalError, AuthInputData> = either {
-        val wallet = userWalletsRepository.userWalletsSync().find { it is UserWallet.Cold } as? UserWallet.Cold
+        val userWallets = getWalletsUseCase()
+            .filter { it.isNotEmpty() }
+            .first()
+        val wallet = userWallets.find { it is UserWallet.Cold } as? UserWallet.Cold
             ?: raise(VisaApiError.UnknownWithoutCode)
 
         val address = getCurrencyUseCase.invokeMultiWalletSync(wallet.walletId, CryptoCurrency.ID.fromValue(POL_VALUE))
             .getOrNull()?.value?.networkAddress?.defaultAddress?.value ?: raise(VisaApiError.UnknownWithoutCode)
 
         customerWalletAddress = address
-        tangemPayStorage.storeCustomerWalletAddress(address)
 
         AuthInputData(address, wallet.cardId)
     }
