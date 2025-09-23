@@ -15,7 +15,6 @@ import com.tangem.datasource.exchangeservice.swap.ExpressServiceLoader
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.token.TokenReceiveWarningActionStore
 import com.tangem.datasource.local.token.UserTokensResponseStore
-import com.tangem.datasource.local.token.YieldSupplyWarningActionStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
@@ -103,10 +102,12 @@ internal object TokensDataModule {
     @Provides
     @Singleton
     fun provideDefaultYieldSupplyWarningsViewedRepository(
-        yieldSupplyWarningActionStore: YieldSupplyWarningActionStore,
+        appPreferencesStore: AppPreferencesStore,
+        dispatchers: CoroutineDispatcherProvider,
     ): YieldSupplyWarningsViewedRepository {
         return DefaultYieldSupplyWarningsViewedRepository(
-            yieldSupplyWarningActionStore = yieldSupplyWarningActionStore,
+            appPreferencesStore = appPreferencesStore,
+            dispatchers = dispatchers,
         )
     }
 }
