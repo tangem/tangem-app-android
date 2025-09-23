@@ -15,6 +15,8 @@ dependencies {
     implementation(projects.features.kyc.api)
 
     implementation(projects.core.decompose)
+    implementation(deps.compose.ui)
+    implementation(projects.core.ui)
 
     /** DI */
     implementation(deps.hilt.android)
