@@ -651,7 +651,7 @@ internal class StakingModel @Inject constructor(
                 contractAddress = tokenCryptoCurrency.contractAddress,
                 spenderAddress = approval.spenderAddress,
                 fee = fee,
-                cryptoCurrency = tokenCryptoCurrency,
+                cryptoCurrencyStatus = cryptoCurrencyStatus,
                 userWalletId = userWalletId,
             ).fold(
                 ifLeft = { error ->
