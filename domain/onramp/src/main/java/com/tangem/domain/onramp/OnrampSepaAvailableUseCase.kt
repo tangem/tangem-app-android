@@ -6,7 +6,6 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.onramp.repositories.OnrampRepository
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.onramp.model.OnrampCountry
-import com.tangem.domain.onramp.model.OnrampCurrency
 
 class OnrampSepaAvailableUseCase(
     private val repository: OnrampRepository,
@@ -14,7 +13,6 @@ class OnrampSepaAvailableUseCase(
 
     suspend operator fun invoke(
         userWallet: UserWallet,
-        currency: OnrampCurrency,
         country: OnrampCountry,
         cryptoCurrency: CryptoCurrency,
     ): Boolean {
@@ -25,7 +23,6 @@ class OnrampSepaAvailableUseCase(
         return Either.catch {
             repository.hasSepaMethod(
                 userWallet = userWallet,
-                currency = currency,
                 country = country,
                 cryptoCurrency = cryptoCurrency,
             )
