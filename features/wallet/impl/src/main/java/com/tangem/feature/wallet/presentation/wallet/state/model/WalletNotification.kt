@@ -141,7 +141,8 @@ sealed class WalletNotification(val config: NotificationConfig) {
 
         data object YeildSupplyApprove : Warning(
             title = resourceReference(R.string.yield_module_main_view_approve_notification_title),
-            subtitle = resourceReference(R.string.yield_module_main_view_approve_notification_description),
+            // todo yield supply lokalise
+            subtitle = resourceReference(R.string.yield_module_main_view_approve_notification_title),
         )
     }
 
