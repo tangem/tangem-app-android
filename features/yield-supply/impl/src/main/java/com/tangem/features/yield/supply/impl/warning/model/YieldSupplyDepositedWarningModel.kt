@@ -28,7 +28,9 @@ internal class YieldSupplyDepositedWarningModel @Inject constructor(
         field = MutableStateFlow(
             YieldSupplyDepositedWarningUM(
                 iconState = iconStateConverter.convert(params.cryptoCurrency),
-                onWarningAcknowledged = params.modelCallback::onYieldSupplyWarningAcknowledged,
+                onWarningAcknowledged = {
+                    params.modelCallback.onYieldSupplyWarningAcknowledged(params.tokenAction)
+                },
                 network = params.cryptoCurrency.name,
             ),
         )
