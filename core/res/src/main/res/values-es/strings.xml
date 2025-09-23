@@ -925,7 +925,7 @@
   <string name="send_recipient_address_error">No es una dirección válida</string>
   <string name="send_recipient_address_footer">Asegúrese de que la dirección de la billetera receptora esté en **la red %s** para evitar perder sus tokens</string>
   <string name="send_recipient_label">Destinatario</string>
-  <string name="send_recipient_memo_footer">Un Memo/ID de destino es un ID único para diferenciar transacciones enviadas al mismo destinatario en la misma red. Precaución: Omitir un memo puede llevar a la pérdida de fondos</string>
+  <string name="send_recipient_memo_footer">Un Memo/ID de destino es un ID único para diferenciar transacciones enviadas al mismo destinatario en la misma red.\n**Precaución: Omitir un memo puede llevar a la pérdida de fondos**</string>
   <string name="send_recipient_memo_footer_v2">Memo / Destination Tag es un código que separa las transacciones dirigidas a un destinatario compartido en una red de criptomonedas.</string>
   <string name="send_recipient_memo_footer_v2_highlighted">Atención: La omisión del campo Memo puede provocar la pérdida de fondos.</string>
   <string name="send_recipient_wallets_title">Mis billeteras</string>
