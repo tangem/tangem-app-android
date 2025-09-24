@@ -21,7 +21,7 @@ class DefaultKycModel @Inject constructor(
     private val _uiState: MutableStateFlow<KycStartInfo?> = MutableStateFlow(null)
     val uiState = _uiState.asStateFlow()
 
-    fun getKycToken() {
+    init {
         modelScope.launch {
             kycRepository.getKycStartInfo().getOrNull()?.let { _uiState.emit(it) }
         }
