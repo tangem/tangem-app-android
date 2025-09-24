@@ -2,11 +2,13 @@ package com.tangem.data.notifications
 
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.datasource.local.preferences.utils.get
 import com.tangem.datasource.local.preferences.utils.getObjectMapSync
 import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
 import com.tangem.datasource.local.preferences.utils.getSyncOrNull
 import com.tangem.datasource.local.preferences.utils.store
 import com.tangem.domain.notifications.repository.NotificationsRepository
+import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 class DefaultNotificationsRepository @Inject constructor(
@@ -15,6 +17,10 @@ class DefaultNotificationsRepository @Inject constructor(
 
     override suspend fun shouldShowNotification(key: String): Boolean {
         return appPreferencesStore.getSyncOrDefault(PreferencesKeys.getShouldShowNotificationKey(key), true)
+    }
+
+    override fun getShouldShowNotification(key: String): Flow<Boolean> {
+        return appPreferencesStore.get(PreferencesKeys.getShouldShowNotificationKey(key), true)
     }
 
     override suspend fun setShouldShowNotifications(key: String, value: Boolean) {
