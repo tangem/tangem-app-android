@@ -43,6 +43,7 @@ class EnvironmentConfigModel(
     @Json(name = "tangemApiKey") val tangemApiKey: String?,
     @Json(name = "tangemApiKeyDev") val tangemApiKeyDev: String?,
     @Json(name = "tangemApiKeyStage") val tangemApiKeyStage: String?,
+    @Json(name = "etherscanApiKey") val etherScanApiKey: String?,
 )
 
 @JsonClass(generateAdapter = true)
