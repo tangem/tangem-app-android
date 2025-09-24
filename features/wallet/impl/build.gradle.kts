@@ -63,6 +63,8 @@ dependencies {
     implementation(projects.libs.blockchainSdk)
 
     /** Domain modules */
+    implementation(projects.domain.account)
+    implementation(projects.domain.account.status)
     implementation(projects.domain.analytics)
     implementation(projects.domain.appCurrency)
     implementation(projects.domain.appCurrency.models)
