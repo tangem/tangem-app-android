@@ -3,14 +3,23 @@ package com.tangem.feature.wallet.child.wallet.model.intents
 import android.os.Build
 import arrow.core.getOrElse
 import com.tangem.common.TangemBlogUrlBuilder
-import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.AppRoute.*
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.notifications.NotificationId
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
+import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUMV2
+import com.tangem.core.ui.components.bottomsheets.message.icon
+import com.tangem.core.ui.components.bottomsheets.message.infoBlock
+import com.tangem.core.ui.components.bottomsheets.message.onClick
+import com.tangem.core.ui.components.bottomsheets.message.primaryButton
+import com.tangem.core.ui.components.bottomsheets.message.secondaryButton
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.message.bottomSheetMessage
+import com.tangem.domain.wallets.usecase.DerivePublicKeysUseCase
 import com.tangem.domain.card.SetCardWasScannedUseCase
 import com.tangem.domain.core.wallets.UserWalletsListRepository
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
@@ -35,10 +44,10 @@ import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
 import com.tangem.domain.tokens.model.analytics.TokenSwapPromoAnalyticsEvent
 import com.tangem.domain.wallets.legacy.UserWalletsListManager.Lockable.UnlockType
 import com.tangem.domain.wallets.models.UnlockWalletsError
-import com.tangem.domain.wallets.usecase.DerivePublicKeysUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.SeedPhraseNotificationUseCase
 import com.tangem.domain.wallets.usecase.UnlockWalletsUseCase
+import com.tangem.feature.wallet.child.wallet.model.WalletActivationBannerType
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent.Basic
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent.MainScreen
@@ -98,11 +107,11 @@ internal interface WalletWarningsClickIntents {
 
     fun onSeedPhraseSecondNotificationReject()
 
-    fun onFinishWalletActivationClick()
-
     fun onAllowPermissions()
 
     fun onDenyPermissions()
+
+    fun onFinishWalletActivationClick(type: WalletActivationBannerType)
 }
 
 @Suppress("LargeClass", "LongParameterList", "TooManyFunctions")
@@ -134,7 +143,34 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     private val setShouldShowNotificationUseCase: SetShouldShowNotificationUseCase,
     private val notificationsRepository: NotificationsRepository,
     private val permissionRepository: PermissionRepository,
+    private val messageSender: UiMessageSender,
 ) : BaseWalletClickIntents(), WalletWarningsClickIntents {
+
+    private val finalizeWalletSetupAlertBS
+        get() = bottomSheetMessage {
+            infoBlock {
+                icon(R.drawable.img_knight_shield_32) {
+                    type = MessageBottomSheetUMV2.Icon.Type.Warning
+                    backgroundType = MessageBottomSheetUMV2.Icon.BackgroundType.SameAsTint
+                }
+                title = resourceReference(R.string.hw_activation_need_title)
+                body = resourceReference(R.string.hw_activation_need_description)
+            }
+            secondaryButton {
+                text = resourceReference(R.string.common_later)
+                onClick {
+                    closeBs()
+                }
+            }
+            primaryButton {
+                text = resourceReference(R.string.hw_activation_need_backup)
+                onClick {
+                    val userWallet = getSelectedUserWallet() ?: return@onClick
+                    appRouter.push(WalletActivation(userWallet.walletId))
+                    closeBs()
+                }
+            }
+        }
 
     override fun onAddBackupCardClick() {
         analyticsEventHandler.send(MainScreen.NoticeBackupYourWalletTapped)
@@ -316,7 +352,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
         when (promoId) {
             PromoId.Referral -> {
                 analyticsEventHandler.send(MainScreen.ReferralPromoButtonParticipate)
-                appRouter.push(AppRoute.ReferralProgram(userWalletId = userWallet.walletId))
+                appRouter.push(ReferralProgram(userWalletId = userWallet.walletId))
             }
             PromoId.Sepa -> {
                 analyticsEventHandler.send(
@@ -328,7 +364,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
                 )
                 cryptoCurrency ?: return
                 appRouter.push(
-                    AppRoute.Onramp(
+                    Onramp(
                         userWalletId = userWallet.walletId,
                         currency = cryptoCurrency,
                         source = OnrampSource.SEPA_BANNER,
@@ -430,9 +466,16 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
         }
     }
 
-    override fun onFinishWalletActivationClick() {
-        val userWallet = getSelectedUserWallet() ?: return
-        appRouter.push(AppRoute.WalletActivation(userWallet.walletId))
+    override fun onFinishWalletActivationClick(type: WalletActivationBannerType) {
+        when (type) {
+            WalletActivationBannerType.Attention -> {
+                val userWallet = getSelectedUserWallet() ?: return
+                appRouter.push(WalletActivation(userWallet.walletId))
+            }
+            WalletActivationBannerType.Warning -> {
+                messageSender.send(finalizeWalletSetupAlertBS)
+            }
+        }
     }
 
     override fun onAllowPermissions() {
