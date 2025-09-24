@@ -3,6 +3,7 @@
 package com.tangem.feature.wallet.presentation.wallet.domain
 
 import arrow.core.getOrElse
+import com.tangem.common.ui.notifications.NotificationId
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.ui.components.notifications.NotificationConfig.ButtonsState
@@ -18,6 +19,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.notifications.repository.NotificationsRepository
 import com.tangem.domain.onramp.GetOnrampCountryUseCase
 import com.tangem.domain.onramp.OnrampSepaAvailableUseCase
 import com.tangem.domain.promo.ShouldShowPromoWalletUseCase
@@ -33,16 +35,16 @@ import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotification
 import com.tangem.features.yield.supply.api.YieldSupplyFeatureToggles
 import com.tangem.lib.crypto.BlockchainUtils.isBitcoin
-import com.tangem.utils.coroutines.combine6
 import com.tangem.utils.extensions.addIf
 import com.tangem.utils.extensions.isPositive
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import timber.log.Timber
 import javax.inject.Inject
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 @ModelScoped
 internal class GetMultiWalletWarningsFactory @Inject constructor(
     private val tokenListStore: MultiWalletTokenListStore,
@@ -55,20 +57,31 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
     private val getCryptoCurrenciesUseCase: GetCryptoCurrenciesUseCase,
     private val onrampSepaAvailableUseCase: OnrampSepaAvailableUseCase,
     private val getOnrampCountryUseCase: GetOnrampCountryUseCase,
+    private val notificationsRepository: NotificationsRepository,
     private val yieldSupplyFeatureToggles: YieldSupplyFeatureToggles,
 ) {
 
+    @Suppress("UNCHECKED_CAST", "MagicNumber")
     fun create(userWallet: UserWallet, clickIntents: WalletClickIntents): Flow<ImmutableList<WalletNotification>> {
         val cardTypesResolver = (userWallet as? UserWallet.Cold)?.scanResponse?.cardTypesResolver
 
-        return combine6(
-            flow1 = tokenListStore.getOrThrow(userWallet.walletId),
-            flow2 = isReadyToShowRateAppUseCase(),
-            flow3 = isNeedToBackupUseCase(userWallet.walletId),
-            flow4 = seedPhraseNotificationUseCase(userWalletId = userWallet.walletId),
-            flow5 = shouldShowPromoWalletUseCase(userWalletId = userWallet.walletId, promoId = PromoId.Referral),
-            flow6 = shouldShowPromoWalletUseCase(userWalletId = userWallet.walletId, promoId = PromoId.Sepa),
-        ) { maybeTokenList, isReadyToShowRating, isNeedToBackup, seedPhraseIssueStatus, shouldShowReferralPromo, shouldShowSepaBanner ->
+        return combine(
+            tokenListStore.getOrThrow(userWallet.walletId),
+            isReadyToShowRateAppUseCase(),
+            isNeedToBackupUseCase(userWallet.walletId),
+            seedPhraseNotificationUseCase(userWalletId = userWallet.walletId),
+            shouldShowPromoWalletUseCase(userWalletId = userWallet.walletId, promoId = PromoId.Referral),
+            shouldShowPromoWalletUseCase(userWalletId = userWallet.walletId, promoId = PromoId.Sepa),
+            notificationsRepository.getShouldShowNotification(NotificationId.EnablePushesReminderNotification.key),
+        ) { array ->
+            val maybeTokenList = array[0] as Lce<TokenListError, TokenList>
+            val isReadyToShowRating = array[1] as Boolean
+            val isNeedToBackup = array[2] as Boolean
+            val seedPhraseIssueStatus = array[3] as SeedPhraseNotificationsStatus
+            val shouldShowReferralPromo = array[4] as Boolean
+            val shouldShowSepaBanner = array[5] as Boolean
+            val shouldShowEnablePushesReminderNotification = array[6] as Boolean
+
             buildList {
                 addUsedOutdatedDataNotification(maybeTokenList)
 
@@ -83,6 +96,12 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
                 addInformationalNotifications(userWallet, cardTypesResolver, maybeTokenList, clickIntents)
 
                 addWarningNotifications(cardTypesResolver, maybeTokenList, isNeedToBackup, clickIntents)
+
+                addPushReminderNotification(
+                    clickIntents = clickIntents,
+                    shouldShowPushReminderBanner = shouldShowEnablePushesReminderNotification &&
+                        !notificationsRepository.isUserAllowToSubscribeOnPushNotifications(),
+                )
 
                 addYieldSupplyNotifications(maybeTokenList)
 
@@ -302,6 +321,19 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
         addIf(
             element = WalletNotification.Warning.SomeNetworksUnreachable,
             condition = tokenList.hasUnreachableNetworks(),
+        )
+    }
+
+    private fun MutableList<WalletNotification>.addPushReminderNotification(
+        clickIntents: WalletClickIntents,
+        shouldShowPushReminderBanner: Boolean,
+    ) {
+        addIf(
+            element = WalletNotification.PushNotifications(
+                onCloseClick = clickIntents::onDenyPermissions,
+                onEnabledClick = clickIntents::onAllowPermissions,
+            ),
+            condition = shouldShowPushReminderBanner,
         )
     }
 
