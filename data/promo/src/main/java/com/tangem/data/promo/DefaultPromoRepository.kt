@@ -1,5 +1,6 @@
 package com.tangem.data.promo
 
+import com.tangem.data.promo.converters.PromoBannerConverter
 import com.tangem.data.promo.converters.StoryContentResponseConverter
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.tangemTech.TangemTechApi
@@ -12,6 +13,7 @@ import com.tangem.datasource.local.preferences.utils.store
 import com.tangem.datasource.local.promo.PromoStoriesStore
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.promo.PromoRepository
+import com.tangem.domain.promo.models.PromoBanner
 import com.tangem.domain.promo.models.PromoId
 import com.tangem.domain.promo.models.StoryContent
 import com.tangem.feature.referral.domain.ReferralRepository
@@ -22,6 +24,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
+import com.tangem.utils.coroutines.runCatching
 
 internal class DefaultPromoRepository(
     private val tangemApi: TangemTechApi,
@@ -32,6 +35,7 @@ internal class DefaultPromoRepository(
 ) : PromoRepository {
 
     private val storyContentConverter = StoryContentResponseConverter()
+    private val promoBannerConverter = PromoBannerConverter()
 
     override fun isReadyToShowWalletPromo(userWalletId: UserWalletId, promoId: PromoId): Flow<Boolean> {
         return appPreferencesStore.get(
@@ -42,7 +46,11 @@ internal class DefaultPromoRepository(
                 PromoId.Referral -> runCatching {
                     !referralRepository.isReferralParticipant(userWalletId) && shouldShow
                 }.getOrDefault(false)
-                PromoId.Sepa -> shouldShow
+                PromoId.Sepa -> {
+                    val isActive = getSepaPromoBanner()?.isActive ?: false
+
+                    isActive && shouldShow
+                }
             }
         }
     }
@@ -118,7 +126,16 @@ internal class DefaultPromoRepository(
         )
     }
 
+    private suspend fun getSepaPromoBanner(): PromoBanner? {
+        return runCatching(dispatchers.io) {
+            promoBannerConverter.convert(
+                tangemApi.getPromoBanner(SEPA_NAME).getOrThrow(),
+            )
+        }.getOrNull()
+    }
+
     private companion object {
+        const val SEPA_NAME = "sepa"
         const val STORIES_LOAD_DELAY = 1000L
     }
 }
