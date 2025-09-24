@@ -14,6 +14,7 @@ import com.tangem.feature.wallet.presentation.wallet.domain.MultiWalletTokenList
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletWithFundsChecker
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.subscribers.*
+import com.tangem.feature.wallet.presentation.account.AccountDependencies
 
 @Suppress("LongParameterList")
 internal class SingleWalletWithTokenContentLoader(
@@ -30,6 +31,7 @@ internal class SingleWalletWithTokenContentLoader(
     private val runPolkadotAccountHealthCheckUseCase: RunPolkadotAccountHealthCheckUseCase,
     private val shouldSaveUserWalletsUseCase: ShouldSaveUserWalletsUseCase,
     private val getStoryContentUseCase: GetStoryContentUseCase,
+    private val accountDependencies: AccountDependencies,
 ) : WalletContentLoader(id = userWallet.walletId) {
 
     override fun create(): List<WalletSubscriber> {
@@ -43,6 +45,7 @@ internal class SingleWalletWithTokenContentLoader(
                 tokenListStore = tokenListStore,
                 getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
                 runPolkadotAccountHealthCheckUseCase = runPolkadotAccountHealthCheckUseCase,
+                accountDependencies = accountDependencies,
             ).let(::add)
             MultiWalletWarningsSubscriber(
                 userWallet = userWallet,
