@@ -1,5 +1,6 @@
 package com.tangem.feature.swap.domain
 
+import android.util.Base64
 import arrow.core.Either
 import arrow.core.getOrElse
 import com.tangem.blockchain.common.Amount
@@ -11,6 +12,7 @@ import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.blockchainsdk.utils.toBlockchain
+import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
@@ -52,8 +54,6 @@ import timber.log.Timber
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
-import android.util.Base64
-import com.tangem.blockchainsdk.utils.toNetworkId
 
 @Suppress("LargeClass", "LongParameterList")
 internal class SwapInteractorImpl @AssistedInject constructor(
@@ -227,7 +227,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         val approveTransaction = createApprovalTransactionUseCase(
             fee = permissionOptions.txFee.fee,
             userWalletId = userWalletId,
-            cryptoCurrency = permissionOptions.fromToken as CryptoCurrency.Token,
+            cryptoCurrencyStatus = permissionOptions.fromTokenStatus,
             amount = amount?.value,
             contractAddress = permissionOptions.forTokenContractAddress,
             spenderAddress = permissionOptions.spenderAddress,
@@ -239,7 +239,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         val result = sendTransactionUseCase(
             txData = approveTransaction,
             userWallet = userWallet,
-            network = permissionOptions.fromToken.network,
+            network = permissionOptions.fromTokenStatus.currency.network,
         )
         return result.fold(
             ifRight = { hash ->
@@ -546,7 +546,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         )
 
         val result = validateTransactionUseCase(
-            amount = amount.value.convertToSdkAmount(currency),
+            amount = amount.value.convertToSdkAmount(fromToken),
             fee = fee,
             memo = null,
             destination = getTokenAddress(fromToken.currency),
@@ -842,7 +842,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         }
 
         val txData = createTransferTransactionUseCase(
-            amount = amount.value.convertToSdkAmount(currencyToSend.currency),
+            amount = amount.value.convertToSdkAmount(currencyToSend),
             fee = txFee.fee,
             memo = exchangeDataCex.txExtraId,
             destination = exchangeDataCex.txTo,
@@ -1022,7 +1022,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             val txFeeResult = getUnhandledFee(
                 amount = amount.value,
                 userWallet = userWallet,
-                cryptoCurrency = fromToken,
+                cryptoCurrencyStatus = fromTokenStatus,
             )
 
             val txFee = if (provider.type == ExchangeProviderType.CEX) {
@@ -1520,12 +1520,12 @@ internal class SwapInteractorImpl @AssistedInject constructor(
     private suspend fun getUnhandledFee(
         amount: BigDecimal,
         userWallet: UserWallet,
-        cryptoCurrency: CryptoCurrency,
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
     ): Either<GetFeeError, TransactionFee> {
         return estimateFeeUseCase(
             amount = amount,
             userWallet = userWallet,
-            cryptoCurrency = cryptoCurrency,
+            cryptoCurrencyStatus = cryptoCurrencyStatus,
         )
     }
 
@@ -1560,7 +1560,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         // setting up amount for approve with given amount for swap [SwapApproveType.Limited]
         val callData = SmartContractCallDataProviderFactory.getApprovalCallData(
             spenderAddress = requireNotNull(spenderAddress) { "Spender address is null" },
-            amount = swapAmount.value.convertToSdkAmount(fromToken),
+            amount = swapAmount.value.convertToSdkAmount(fromTokenStatus),
             blockchain = fromToken.network.toBlockchain(),
         )
         val feeData = try {
