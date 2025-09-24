@@ -1,5 +1,6 @@
 package com.tangem.domain.account.models
 
+import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.wallet.UserWallet
 import kotlinx.serialization.Serializable
@@ -18,4 +19,13 @@ data class AccountStatusList(
     val userWallet: UserWallet,
     val accountStatuses: Set<AccountStatus>,
     val totalAccounts: Int,
-)
+    val totalFiatBalance: TotalFiatBalance = TotalFiatBalance.Failed,
+) {
+
+    val mainAccount: AccountStatus
+        get() = accountStatuses.first { accountStatus ->
+            when (accountStatus) {
+                is AccountStatus.CryptoPortfolio -> accountStatus.account.isMainAccount
+            }
+        }
+}
