@@ -3,13 +3,13 @@ package com.tangem.data.pay.repository
 import arrow.core.Either
 import arrow.core.raise.either
 import com.tangem.core.error.UniversalError
-import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.pay.TangemPayApi
 import com.tangem.datasource.api.pay.models.request.DeeplinkValidityRequest
+import com.tangem.datasource.api.pay.models.response.CustomerMeResponse
+import com.tangem.domain.pay.model.CustomerInfo.CardInfo
 import com.tangem.domain.pay.model.CustomerInfo
-import com.tangem.domain.pay.model.ProductInstance
+import com.tangem.domain.pay.model.CustomerInfo.ProductInstance
 import com.tangem.domain.pay.repository.OnboardingRepository
-import com.tangem.domain.visa.error.VisaApiError
 import javax.inject.Inject
 
 private const val VALID_STATUS = "valid"
@@ -21,20 +21,38 @@ internal class DefaultOnboardingRepository @Inject constructor(
 
     override suspend fun validateDeeplink(link: String): Either<UniversalError, Boolean> = either {
         return requestHelper.request {
-            tangemPayApi.validateDeeplink(DeeplinkValidityRequest(link)).getOrThrow().result
-                ?: raise(VisaApiError.UnknownWithoutCode)
-        }.map { result -> result.status == VALID_STATUS }
+            tangemPayApi.validateDeeplink(DeeplinkValidityRequest(link))
+        }.map { it.result?.status == VALID_STATUS }
     }
 
     override suspend fun getCustomerInfo(): Either<UniversalError, CustomerInfo> = either {
         return requestHelper.request { authHeader ->
-            val response = tangemPayApi.getCustomerMe(authHeader).getOrThrow()
-            response.result ?: raise(VisaApiError.UnknownWithoutCode)
-        }.map { result ->
-            CustomerInfo(
-                productInstance = result.productInstance?.let { ProductInstance(id = it.id, status = it.status) },
-                kycStatus = result.kyc?.status,
+            tangemPayApi.getCustomerMe(authHeader)
+        }.map { getCustomerInfo(it.result) }
+    }
+
+    override suspend fun getMainScreenCustomerInfo(): Either<UniversalError, CustomerInfo> = either {
+        return requestHelper.requestWithPersistedToken { authHeader ->
+            tangemPayApi.getCustomerMe(authHeader)
+        }.map { getCustomerInfo(it.result) }
+    }
+
+    private fun getCustomerInfo(response: CustomerMeResponse.Result?): CustomerInfo {
+        val card = response?.card
+        val balance = response?.balance
+        val cardInfo = if (card != null && balance != null) {
+            CardInfo(
+                lastFourDigits = card.cardNumberEnd,
+                balance = balance.availableBalance,
+                currencyCode = balance.currency,
             )
+        } else {
+            null
         }
+        return CustomerInfo(
+            productInstance = response?.productInstance?.let { ProductInstance(id = it.id, status = it.status) },
+            kycStatus = response?.kyc?.status,
+            cardInfo = cardInfo,
+        )
     }
 }
