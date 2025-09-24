@@ -40,6 +40,7 @@ class EnvironmentConfigModel(
     @Json(name = "moralisApiKey") val moralisApiKey: String?,
     @Json(name = "nftScanApiKey") val nftScanApiKey: String?,
     @Json(name = "blockaidApiKey") val blockaidApiKey: String?,
+    @Json(name = "etherscanApiKey") val etherScanApiKey: String?,
 )
 
 @JsonClass(generateAdapter = true)
