@@ -16,13 +16,9 @@ class YieldSupplyStopEarningUseCase(
         cryptoCurrencyStatus: CryptoCurrencyStatus,
         fee: Fee?,
     ): Either<Throwable, TransactionData.Uncompiled> = Either.catch {
-        val yieldTokenStatus = cryptoCurrencyStatus.value.yieldSupplyStatus ?: error("")
-        val cryptoCurrency = cryptoCurrencyStatus.currency
-
         yieldSupplyTransactionRepository.createExitTransaction(
             userWalletId = userWalletId,
-            cryptoCurrency = cryptoCurrency,
-            yieldSupplyStatus = yieldTokenStatus,
+            cryptoCurrencyStatus = cryptoCurrencyStatus,
             fee = null,
         )
     }

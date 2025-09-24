@@ -86,7 +86,7 @@ class DetailsMiddleware {
                     changeAppThemeMode(action.appThemeMode)
                 }
                 is DetailsAction.AppSettings.ChangeBalanceHiding -> {
-                    changeBalanceHiding(action.hideBalance)
+                    changeBalanceHiding(action.shouldHideBalance)
                 }
                 is DetailsAction.AppSettings.ChangeAppCurrency -> {
                     store.dispatch(GlobalAction.ChangeAppCurrency(action.currency))
@@ -153,9 +153,9 @@ class DetailsMiddleware {
         private suspend fun setBiometricLockForAllWallets() {
             val userWalletsListRepository = store.inject(DaggerGraphState::userWalletsListRepository)
             val userWallets = userWalletsListRepository.userWalletsSync()
-            userWallets.forEach {
+            userWallets.forEach { wallet ->
                 userWalletsListRepository.setLock(
-                    userWalletId = it.walletId,
+                    userWalletId = wallet.walletId,
                     lockMethod = LockMethod.Biometric,
                     changeUnsecured = false,
                 )
@@ -174,11 +174,11 @@ class DetailsMiddleware {
             deleteSavedAccessCodes()
             val userWalletsListRepository = store.inject(DaggerGraphState::userWalletsListRepository)
             val tangemHotSdk = store.inject(DaggerGraphState::tangemHotSdk)
-            userWalletsListRepository.userWalletsSync().forEach {
-                if (it is UserWallet.Hot) {
+            userWalletsListRepository.userWalletsSync().forEach { wallet ->
+                if (wallet is UserWallet.Hot) {
                     userWalletsListRepository.saveWithoutLock(
-                        userWallet = it.copy(
-                            hotWalletId = tangemHotSdk.removeBiometryAuthIfPresented(it.hotWalletId),
+                        userWallet = wallet.copy(
+                            hotWalletId = tangemHotSdk.removeBiometryAuthIfPresented(wallet.hotWalletId),
                         ),
                     )
                 }
@@ -188,10 +188,10 @@ class DetailsMiddleware {
         private fun observeBiometricsStatusChanges(scope: CoroutineScope) {
             val needEnrollBiometricsFlow = flow {
                 do {
-                    val needEnrollBiometrics = runCatching(tangemSdkManager::needEnrollBiometrics).getOrNull()
+                    val isEnrollBiometricsNeeded = runCatching(tangemSdkManager::needEnrollBiometrics).getOrNull()
 
-                    if (needEnrollBiometrics != null) {
-                        emit(needEnrollBiometrics)
+                    if (isEnrollBiometricsNeeded != null) {
+                        emit(isEnrollBiometricsNeeded)
                     }
 
                     delay(timeMillis = 200)
