@@ -24,7 +24,7 @@ class FinalizeTwinTask(
                         when (readResult) {
                             is CompletionResult.Success ->
                                 ScanProductTask(
-                                    readResult.data,
+                                    card = readResult.data,
                                     derivationsFinder = null,
                                     visaCardScanHandler = null,
                                     visaCoroutineScope = null,
