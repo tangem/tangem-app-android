@@ -15,6 +15,7 @@ import com.tangem.features.tokenreceive.entity.ReceiveAddress.Type.Ens
 import com.tangem.features.tokenreceive.entity.ReceiveAddress.Type.Primary
 import com.tangem.features.tokenreceive.ui.state.TokenReceiveUM
 import com.tangem.utils.Provider
+import com.tangem.utils.extensions.addIf
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toPersistentList
@@ -129,7 +130,12 @@ internal class TokenReceiveStateFactory(
         tokenName: String,
         tokenReceiveNotification: List<TokenReceiveNotification>,
     ): List<NotificationUM> {
+        val yieldSupplyNotification: TokenReceiveNotification? =
+            tokenReceiveNotification.firstOrNull { it.isYieldSupplyNotification }
         return buildList {
+            addIf(yieldSupplyNotification != null) {
+                NotificationUM.Warning.YieldSupplyIsActive(tokenName)
+            }
             add(
                 NotificationUM.Info(
                     title = resourceReference(
@@ -143,7 +149,7 @@ internal class TokenReceiveStateFactory(
                     iconTint = NotificationConfig.IconTint.Accent,
                 ),
             )
-            tokenReceiveNotification.map { notification ->
+            tokenReceiveNotification.filter { !it.isYieldSupplyNotification }.map { notification ->
                 add(
                     NotificationUM.Warning(
                         title = resourceReference(notification.title),

@@ -50,6 +50,8 @@ internal class TokenReceiveAssetsModel @Inject constructor(
                 showMemoDisclaimer = params.showMemoDisclaimer,
                 isEnsResultLoading = false,
                 notificationConfigs = params.notificationConfigs,
+                currencyIconState = params.currencyIconState,
+                network = params.tokenName,
             ),
         )
 
