@@ -86,6 +86,7 @@ internal class ProdApiConfigsManagerTest {
                 }
                 ApiConfig.ID.TangemTech -> {
                     TangemTech(
+                        environmentConfigStorage = environmentConfigStorage,
                         appVersionProvider = appVersionProvider,
                         authProvider = appAuthProvider,
                         appInfoProvider = appInfoProvider,
