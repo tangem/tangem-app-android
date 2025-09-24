@@ -42,10 +42,12 @@ internal object ApiConfigsModule {
     @Provides
     @IntoSet
     fun provideTangemTechConfig(
+        environmentConfigStorage: EnvironmentConfigStorage,
         appVersionProvider: AppVersionProvider,
         authProvider: AuthProvider,
         appInfoProvider: AppInfoProvider,
     ): ApiConfig = TangemTech(
+        environmentConfigStorage = environmentConfigStorage,
         appVersionProvider = appVersionProvider,
         authProvider = authProvider,
         appInfoProvider = appInfoProvider,
