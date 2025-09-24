@@ -12,7 +12,6 @@ import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.models.yield.supply.YieldSupplyStatus
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.yield.supply.YieldSupplyTransactionRepository
@@ -30,6 +29,7 @@ internal class DefaultYieldSupplyTransactionRepository(
     override suspend fun createEnterTransactions(
         userWalletId: UserWalletId,
         cryptoCurrencyStatus: CryptoCurrencyStatus,
+        maxNetworkFee: BigDecimal,
     ): List<TransactionData.Uncompiled> {
         val cryptoCurrency = cryptoCurrencyStatus.currency
 
@@ -51,27 +51,23 @@ internal class DefaultYieldSupplyTransactionRepository(
             cryptoCurrency = cryptoCurrency,
         ) ?: error("Calculated yield contract address is null")
 
-        val yieldTokenStatus = cryptoCurrencyStatus.value.yieldSupplyStatus ?: getYieldTokenStatus(
-            walletManager = walletManager,
-            cryptoCurrency = cryptoCurrency,
-        )
+        val maxNetworkFee = maxNetworkFee.convertToSdkAmount(cryptoCurrencyStatus)
 
         return buildEnterTransactions(
             walletManager = walletManager,
-            cryptoCurrency = cryptoCurrency,
+            cryptoCurrencyStatus = cryptoCurrencyStatus,
             existingYieldContractAddress = existingYieldContractAddress,
             calculatedYieldContractAddress = calculatedYieldContractAddress,
-            yieldTokenStatus = yieldTokenStatus,
+            maxNetworkFee = maxNetworkFee,
         )
     }
 
     override suspend fun createExitTransaction(
         userWalletId: UserWalletId,
-        cryptoCurrency: CryptoCurrency,
-        yieldSupplyStatus: YieldSupplyStatus,
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
         fee: Fee?,
     ): TransactionData.Uncompiled = withContext(dispatchers.io) {
-        require(cryptoCurrency is CryptoCurrency.Token)
+        val cryptoCurrency = cryptoCurrencyStatus.currency as CryptoCurrency.Token
 
         val walletManager = walletManagersFacade.getOrCreateWalletManager(
             userWalletId = userWalletId,
@@ -88,19 +84,24 @@ internal class DefaultYieldSupplyTransactionRepository(
             cryptoCurrency = cryptoCurrency,
             callData = callData,
             destinationAddress = walletManager.getYieldContract(),
-            yieldSupplyStatus = yieldSupplyStatus,
+            amount = BigDecimal.ZERO.convertToSdkAmount(cryptoCurrencyStatus),
             fee = fee,
         )
     }
 
+    @Suppress("LongParameterList")
     private fun buildEnterTransactions(
         walletManager: WalletManager,
-        cryptoCurrency: CryptoCurrency.Token,
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
         existingYieldContractAddress: String?,
         calculatedYieldContractAddress: String,
-        yieldTokenStatus: YieldSupplyStatus?,
+        maxNetworkFee: Amount,
     ): MutableList<TransactionData.Uncompiled> {
         val enterTransactions = mutableListOf<TransactionData.Uncompiled>()
+        val cryptoCurrency = cryptoCurrencyStatus.currency as CryptoCurrency.Token
+        val yieldSupplyStatus = cryptoCurrencyStatus.value.yieldSupplyStatus
+
+        val amount = BigDecimal.ZERO.convertToSdkAmount(cryptoCurrencyStatus)
 
         when {
             existingYieldContractAddress == null || existingYieldContractAddress == EthereumUtils.ZERO_ADDRESS -> {
@@ -108,30 +109,34 @@ internal class DefaultYieldSupplyTransactionRepository(
                     createDeployTransaction(
                         walletManager = walletManager,
                         cryptoCurrency = cryptoCurrency,
+                        amount = amount,
+                        maxNetworkFee = maxNetworkFee,
                     ),
                 )
             }
-            yieldTokenStatus == null -> error("Yield token status is null")
-            !yieldTokenStatus.isInitialized -> enterTransactions.add(
+            yieldSupplyStatus == null -> error("Yield token status is null")
+            !yieldSupplyStatus.isInitialized -> enterTransactions.add(
                 createInitTokenTransaction(
                     walletManager = walletManager,
                     cryptoCurrency = cryptoCurrency,
-                    yieldSupplyStatus = yieldTokenStatus,
                     yieldContractAddress = calculatedYieldContractAddress,
+                    amount = amount,
+                    maxNetworkFee = maxNetworkFee,
                 ),
             )
-            !yieldTokenStatus.isActive -> enterTransactions.add(
+            !yieldSupplyStatus.isActive -> enterTransactions.add(
                 createReactivateTokenTransaction(
                     walletManager = walletManager,
                     cryptoCurrency = cryptoCurrency,
-                    yieldSupplyStatus = yieldTokenStatus,
                     yieldContractAddress = calculatedYieldContractAddress,
+                    amount = amount,
+                    maxNetworkFee = maxNetworkFee,
                 ),
             )
             else -> Unit
         }
 
-        if (yieldTokenStatus?.isAllowedToSpend == false) {
+        if (yieldSupplyStatus?.isAllowedToSpend != true) {
             enterTransactions.add(
                 createTransaction(
                     walletManager = walletManager,
@@ -141,7 +146,7 @@ internal class DefaultYieldSupplyTransactionRepository(
                         amount = null,
                     ),
                     destinationAddress = cryptoCurrency.contractAddress,
-                    yieldSupplyStatus = yieldTokenStatus,
+                    amount = amount,
                     fee = null,
                 ),
             )
@@ -151,7 +156,7 @@ internal class DefaultYieldSupplyTransactionRepository(
             createEnterTransaction(
                 walletManager = walletManager,
                 cryptoCurrency = cryptoCurrency,
-                yieldSupplyStatus = yieldTokenStatus,
+                amount = amount,
                 yieldContractAddress = calculatedYieldContractAddress,
             ),
         )
@@ -171,11 +176,10 @@ internal class DefaultYieldSupplyTransactionRepository(
                 derivationPath = cryptoCurrency.network.derivationPath.value,
             ) ?: error("Wallet manager not found")
             walletManager.calculateYieldContract()
-        }.onFailure(Timber::e)
-            .getOrNull()
+        }.onFailure(Timber::e).getOrNull()
     }
 
-    private suspend fun getYieldContractAddress(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): String? =
+    override suspend fun getYieldContractAddress(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): String? =
         withContext(dispatchers.io) {
             require(cryptoCurrency is CryptoCurrency.Token)
             runCatching {
@@ -185,35 +189,19 @@ internal class DefaultYieldSupplyTransactionRepository(
                     derivationPath = cryptoCurrency.network.derivationPath.value,
                 ) ?: error("Wallet manager not found")
                 walletManager.getYieldContract()
-            }.onFailure(Timber::e)
-                .getOrNull()
+            }.onFailure(Timber::e).getOrNull()
         }
-
-    private suspend fun getYieldTokenStatus(
-        walletManager: WalletManager,
-        cryptoCurrency: CryptoCurrency,
-    ): YieldSupplyStatus? = withContext(dispatchers.io) {
-        require(cryptoCurrency is CryptoCurrency.Token)
-        runCatching {
-            val sdkSupplyStatus = walletManager.getYieldSupplyStatus(cryptoCurrency.contractAddress)
-            val isAllowedToSpend = walletManager.isAllowedToSpend(cryptoCurrency.contractAddress)
-
-            YieldSupplyStatus(
-                isActive = sdkSupplyStatus?.isActive == true,
-                isInitialized = sdkSupplyStatus?.isInitialized == true,
-                isAllowedToSpend = isAllowedToSpend,
-            )
-        }.onFailure(Timber::e).getOrNull()
-    }
 
     private fun createDeployTransaction(
         walletManager: WalletManager,
         cryptoCurrency: CryptoCurrency.Token,
+        amount: Amount,
+        maxNetworkFee: Amount,
     ): TransactionData.Uncompiled {
         val callData = YieldSupplyContractCallDataProviderFactory.getDeployCallData(
             tokenContractAddress = cryptoCurrency.contractAddress,
             walletAddress = walletManager.wallet.address,
-            maxNetworkFee = MAX_NETWORK_FEE.convertToSdkAmount(cryptoCurrency),
+            maxNetworkFee = maxNetworkFee,
         )
 
         val factoryContractAddress = walletManager.getYieldSupplyContractAddresses()?.factoryContractAddress
@@ -224,7 +212,7 @@ internal class DefaultYieldSupplyTransactionRepository(
             cryptoCurrency = cryptoCurrency,
             callData = callData,
             destinationAddress = factoryContractAddress,
-            yieldSupplyStatus = null,
+            amount = amount,
             fee = null,
         )
     }
@@ -233,11 +221,12 @@ internal class DefaultYieldSupplyTransactionRepository(
         walletManager: WalletManager,
         cryptoCurrency: CryptoCurrency.Token,
         yieldContractAddress: String,
-        yieldSupplyStatus: YieldSupplyStatus,
+        amount: Amount,
+        maxNetworkFee: Amount,
     ): TransactionData.Uncompiled {
         val callData = YieldSupplyContractCallDataProviderFactory.getInitTokenCallData(
             tokenContractAddress = cryptoCurrency.contractAddress,
-            maxNetworkFee = MAX_NETWORK_FEE.convertToSdkAmount(cryptoCurrency),
+            maxNetworkFee = maxNetworkFee,
         )
 
         return createTransaction(
@@ -245,7 +234,7 @@ internal class DefaultYieldSupplyTransactionRepository(
             cryptoCurrency = cryptoCurrency,
             callData = callData,
             destinationAddress = yieldContractAddress,
-            yieldSupplyStatus = yieldSupplyStatus,
+            amount = amount,
             fee = null,
         )
     }
@@ -254,11 +243,12 @@ internal class DefaultYieldSupplyTransactionRepository(
         walletManager: WalletManager,
         cryptoCurrency: CryptoCurrency.Token,
         yieldContractAddress: String,
-        yieldSupplyStatus: YieldSupplyStatus,
+        amount: Amount,
+        maxNetworkFee: Amount,
     ): TransactionData.Uncompiled {
         val callData = YieldSupplyContractCallDataProviderFactory.getReactivateTokenCallData(
             tokenContractAddress = cryptoCurrency.contractAddress,
-            maxNetworkFee = MAX_NETWORK_FEE.convertToSdkAmount(cryptoCurrency),
+            maxNetworkFee = maxNetworkFee,
         )
 
         return createTransaction(
@@ -266,7 +256,7 @@ internal class DefaultYieldSupplyTransactionRepository(
             cryptoCurrency = cryptoCurrency,
             callData = callData,
             destinationAddress = yieldContractAddress,
-            yieldSupplyStatus = yieldSupplyStatus,
+            amount = amount,
             fee = null,
         )
     }
@@ -274,7 +264,7 @@ internal class DefaultYieldSupplyTransactionRepository(
     private fun createEnterTransaction(
         walletManager: WalletManager,
         cryptoCurrency: CryptoCurrency.Token,
-        yieldSupplyStatus: YieldSupplyStatus?,
+        amount: Amount,
         yieldContractAddress: String,
     ): TransactionData.Uncompiled {
         val callData = YieldSupplyContractCallDataProviderFactory.getEnterCallData(
@@ -286,7 +276,7 @@ internal class DefaultYieldSupplyTransactionRepository(
             cryptoCurrency = cryptoCurrency,
             callData = callData,
             destinationAddress = yieldContractAddress,
-            yieldSupplyStatus = yieldSupplyStatus,
+            amount = amount,
             fee = null,
         )
     }
@@ -297,7 +287,7 @@ internal class DefaultYieldSupplyTransactionRepository(
         cryptoCurrency: CryptoCurrency,
         callData: SmartContractCallData,
         destinationAddress: String,
-        yieldSupplyStatus: YieldSupplyStatus?,
+        amount: Amount,
         fee: Fee?,
     ): TransactionData.Uncompiled {
         requireNotNull(cryptoCurrency as? CryptoCurrency.Token)
@@ -307,8 +297,6 @@ internal class DefaultYieldSupplyTransactionRepository(
             callData = callData,
             blockchain = blockchain,
         )
-
-        val amount = getYieldSupplyAmount(cryptoCurrency, yieldSupplyStatus)
 
         return if (fee != null) {
             walletManager.createTransaction(
@@ -348,24 +336,5 @@ internal class DefaultYieldSupplyTransactionRepository(
             }
             else -> error("Data extras not supported for $blockchain")
         }
-    }
-
-    private fun getYieldSupplyAmount(cryptoCurrency: CryptoCurrency.Token, yieldSupplyStatus: YieldSupplyStatus?) =
-        BigDecimal.ZERO.convertToSdkAmount(
-            cryptoCurrency = cryptoCurrency,
-            amountType = AmountType.TokenYieldSupply(
-                token = Token(
-                    symbol = cryptoCurrency.symbol,
-                    contractAddress = cryptoCurrency.contractAddress,
-                    decimals = cryptoCurrency.decimals,
-                ),
-                isActive = yieldSupplyStatus?.isActive ?: false,
-                isInitialized = yieldSupplyStatus?.isInitialized ?: false,
-                isAllowedToSpend = yieldSupplyStatus?.isAllowedToSpend ?: false,
-            ),
-        )
-
-    private companion object {
-        val MAX_NETWORK_FEE: BigDecimal = BigDecimal.TEN // TODO for TESTNET only
     }
 }
