@@ -3,18 +3,17 @@ package com.tangem.domain.transaction.usecase
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
-import com.tangem.blockchain.common.Amount
-import com.tangem.blockchain.common.AmountType
-import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchain.extensions.Result
-import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.demo.DemoTransactionSender
+import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.mapToFeeError
+import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.domain.models.wallet.UserWallet
 import java.math.BigDecimal
 
 /**
@@ -27,13 +26,13 @@ class EstimateFeeUseCase(
     suspend operator fun invoke(
         amount: BigDecimal,
         userWallet: UserWallet,
-        cryptoCurrency: CryptoCurrency,
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
     ): Either<GetFeeError, TransactionFee> {
-        val amountData = convertCryptoCurrencyToAmount(cryptoCurrency, amount)
+        val amountData = amount.convertToSdkAmount(cryptoCurrencyStatus)
         val result = if (userWallet is UserWallet.Cold &&
             demoConfig.isDemoCardId(userWallet.scanResponse.card.cardId)
         ) {
-            demoTransactionSender(userWallet, cryptoCurrency).estimateFee(
+            demoTransactionSender(userWallet, cryptoCurrencyStatus.currency).estimateFee(
                 amount = amountData,
                 destination = "",
             )
@@ -41,7 +40,7 @@ class EstimateFeeUseCase(
             walletManagersFacade.estimateFee(
                 amount = amountData,
                 userWalletId = userWallet.walletId,
-                network = cryptoCurrency.network,
+                network = cryptoCurrencyStatus.currency.network,
             )
         }
 
@@ -62,20 +61,4 @@ class EstimateFeeUseCase(
                 ?: error("WalletManager is null"),
         )
     }
-
-    private fun convertCryptoCurrencyToAmount(cryptoCurrency: CryptoCurrency, amount: BigDecimal) = Amount(
-        currencySymbol = cryptoCurrency.symbol,
-        value = amount,
-        decimals = cryptoCurrency.decimals,
-        type = when (cryptoCurrency) {
-            is CryptoCurrency.Coin -> AmountType.Coin
-            is CryptoCurrency.Token -> AmountType.Token(
-                token = Token(
-                    symbol = cryptoCurrency.symbol,
-                    contractAddress = cryptoCurrency.contractAddress,
-                    decimals = cryptoCurrency.decimals,
-                ),
-            )
-        },
-    )
 }
