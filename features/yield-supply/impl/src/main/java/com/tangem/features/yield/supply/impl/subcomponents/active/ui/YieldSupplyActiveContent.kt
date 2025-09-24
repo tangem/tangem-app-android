@@ -1,6 +1,7 @@
 package com.tangem.features.yield.supply.impl.subcomponents.active.ui
 
 import android.content.res.Configuration
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -22,10 +23,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.notifications.NotificationUM
-import com.tangem.core.ui.components.ResizableText
-import com.tangem.core.ui.components.SpacerH4
-import com.tangem.core.ui.components.SpacerH8
-import com.tangem.core.ui.components.SpacerWMax
+import com.tangem.core.ui.components.*
 import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
@@ -152,7 +150,7 @@ private fun DescriptionText(state: YieldSupplyActiveContentUM) {
 }
 
 @Composable
-private fun InfoRow(title: TextReference, info: TextReference) {
+private fun InfoRow(title: TextReference, info: TextReference?) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         modifier = Modifier.padding(horizontal = 4.dp, vertical = 12.dp),
@@ -163,11 +161,21 @@ private fun InfoRow(title: TextReference, info: TextReference) {
             color = TangemTheme.colors.text.primary1,
         )
         SpacerWMax()
-        Text(
-            text = info.resolveReference(),
-            style = TangemTheme.typography.body1,
-            color = TangemTheme.colors.text.tertiary,
-        )
+
+        AnimatedContent(info) { currentInfo ->
+            if (currentInfo != null) {
+                Text(
+                    text = currentInfo.resolveReference(),
+                    style = TangemTheme.typography.body1,
+                    color = TangemTheme.colors.text.tertiary,
+                )
+            } else {
+                TextShimmer(
+                    text = title.resolveReference(),
+                    style = TangemTheme.typography.body1,
+                )
+            }
+        }
     }
 }
 
