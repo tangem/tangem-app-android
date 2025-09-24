@@ -307,7 +307,7 @@ private fun SendWithSwapSuccessContent_Preview() {
                     fees = TransactionFee.Single(
                         normal = Fee.Common(
                             BigDecimal.ONE.convertToSdkAmount(
-                                SwapAmountContentPreview.cryptoCurrencyStatus.currency,
+                                SwapAmountContentPreview.cryptoCurrencyStatus,
                             ),
                         ),
                     ),
@@ -315,7 +315,7 @@ private fun SendWithSwapSuccessContent_Preview() {
                     selectedFeeItem = FeeItem.Market(
                         Fee.Common(
                             BigDecimal.ONE.convertToSdkAmount(
-                                SwapAmountContentPreview.cryptoCurrencyStatus.currency,
+                                SwapAmountContentPreview.cryptoCurrencyStatus,
                             ),
                         ),
                     ),
