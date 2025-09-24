@@ -227,7 +227,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                 estimateFeeUseCase(
                     amount = amountValue,
                     userWallet = params.userWallet,
-                    cryptoCurrency = primaryCurrencyStatus.currency,
+                    cryptoCurrencyStatus = primaryCurrencyStatus,
                 ).map {
                     it.patchTransactionFeeForSwap(INCREASE_GAS_LIMIT_FOR_CEX)
                 }

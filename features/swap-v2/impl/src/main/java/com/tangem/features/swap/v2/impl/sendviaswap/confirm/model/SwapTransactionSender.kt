@@ -131,7 +131,7 @@ internal class SwapTransactionSender @AssistedInject constructor(
         }
 
         val txData = createTransferTransactionUseCase(
-            amount = fromAmount.convertToSdkAmount(fromStatus.currency),
+            amount = fromAmount.convertToSdkAmount(fromStatus),
             fee = fee,
             memo = swapTransaction.txExtraId,
             destination = swapTransaction.txTo,
