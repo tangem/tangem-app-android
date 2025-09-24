@@ -83,7 +83,7 @@ internal class DefaultYieldSupplyTransactionRepository(
             walletManager = walletManager,
             cryptoCurrency = cryptoCurrency,
             callData = callData,
-            destinationAddress = walletManager.getYieldContract(),
+            destinationAddress = walletManager.getYieldModuleAddress(),
             amount = BigDecimal.ZERO.convertToSdkAmount(cryptoCurrencyStatus),
             fee = fee,
         )
@@ -175,7 +175,7 @@ internal class DefaultYieldSupplyTransactionRepository(
                 blockchain = cryptoCurrency.network.toBlockchain(),
                 derivationPath = cryptoCurrency.network.derivationPath.value,
             ) ?: error("Wallet manager not found")
-            walletManager.calculateYieldContract()
+            walletManager.calculateYieldModuleAddress()
         }.onFailure(Timber::e).getOrNull()
     }
 
@@ -188,7 +188,7 @@ internal class DefaultYieldSupplyTransactionRepository(
                     blockchain = cryptoCurrency.network.toBlockchain(),
                     derivationPath = cryptoCurrency.network.derivationPath.value,
                 ) ?: error("Wallet manager not found")
-                walletManager.getYieldContract()
+                walletManager.getYieldModuleAddress()
             }.onFailure(Timber::e).getOrNull()
         }
 
