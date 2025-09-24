@@ -10,6 +10,7 @@ import com.tangem.domain.core.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.hot.HotWalletAccessCodeAttemptsRepository
 import com.tangem.domain.wallets.hot.HotWalletAccessCodeAttemptsRepository.Attempts
+import com.tangem.domain.wallets.hot.HotWalletAccessCodeAttemptsRepository.Companion.MAX_FAST_FORWARD_ATTEMPTS
 import com.tangem.domain.wallets.hot.HotWalletPasswordRequester
 import com.tangem.features.hotwallet.accesscode.ACCESS_CODE_LENGTH
 import com.tangem.features.hotwallet.accesscoderequest.entity.HotAccessCodeRequestUM
@@ -147,7 +148,24 @@ internal class HotAccessCodeRequestModel @Inject constructor(
         suspend fun collectAttempts(attempts: Attempts) {
             when (attempts) {
                 is Attempts.FastForward -> {
-                    /** ignore */
+                    if (attempts.count > 0) {
+                        uiState.update {
+                            it.copy(
+                                wrongAccessCodeText = resourceReference(
+                                    R.string.access_code_check_warining_lock,
+                                    wrappedList(MAX_FAST_FORWARD_ATTEMPTS - attempts.count),
+                                ),
+                                onAccessCodeChange = ::onAccessCodeChange,
+                            )
+                        }
+                    } else {
+                        uiState.update {
+                            it.copy(
+                                wrongAccessCodeText = null,
+                                onAccessCodeChange = ::onAccessCodeChange,
+                            )
+                        }
+                    }
                 }
                 is Attempts.WithDelay -> {
                     uiState.update {
