@@ -63,7 +63,8 @@ fun ShowcaseContent(
             repeat(showcaseItems.size) { index ->
                 ShowcaseItem(
                     iconRes = showcaseItems[index].iconRes,
-                    text = showcaseItems[index].text,
+                    title = showcaseItems[index].title,
+                    subtitle = showcaseItems[index].subTitle,
                 )
             }
         }
