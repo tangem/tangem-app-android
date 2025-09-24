@@ -38,6 +38,7 @@ import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.models.ReceiveAddressModel
 import com.tangem.domain.models.TokenReceiveConfig
+import com.tangem.domain.models.TokenReceiveNotification
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
@@ -1086,12 +1087,25 @@ internal class TokenDetailsModel @Inject constructor(
             }
         }
 
+        val notifications = buildList {
+            if (isActiveYieldSupply()) {
+                add(
+                    TokenReceiveNotification(
+                        title = R.string.yield_module_balance_info_sheet_title,
+                        subtitle = R.string.yield_module_balance_info_sheet_subtitle,
+                        isYieldSupplyNotification = true,
+                    ),
+                )
+            }
+        }
+
         return TokenDetailsBottomSheetConfig.Receive(
             TokenReceiveConfig(
                 shouldShowWarning = cryptoCurrency.name !in getViewedTokenReceiveWarningUseCase(),
                 cryptoCurrency = cryptoCurrency,
                 userWalletId = userWalletId,
                 showMemoDisclaimer = cryptoCurrency.network.transactionExtrasType != Network.TransactionExtrasType.NONE,
+                tokenReceiveNotification = notifications,
                 receiveAddress = receiveAddresses,
             ),
         )
@@ -1137,6 +1151,11 @@ internal class TokenDetailsModel @Inject constructor(
     private suspend fun needShowYieldSupplyWarning(): Boolean {
         return yieldSupplyFeatureToggles.isYieldSupplyFeatureEnabled &&
             needShowYieldSupplyDepositedWarningUseCase(cryptoCurrencyStatus)
+    }
+
+    private fun isActiveYieldSupply(): Boolean {
+        return yieldSupplyFeatureToggles.isYieldSupplyFeatureEnabled &&
+            cryptoCurrencyStatus?.value?.yieldSupplyStatus?.isActive == true
     }
 
     override fun onYieldSupplyWarningAcknowledged(tokenAction: TokenAction) {
