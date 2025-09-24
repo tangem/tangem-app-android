@@ -63,6 +63,8 @@ dependencies {
     implementation(projects.libs.blockchainSdk)
 
     /** Domain modules */
+    implementation(projects.domain.account)
+    implementation(projects.domain.account.status)
     implementation(projects.domain.analytics)
     implementation(projects.domain.appCurrency)
     implementation(projects.domain.appCurrency.models)
@@ -115,6 +117,8 @@ dependencies {
     implementation(projects.features.sendV2.api)
     implementation(projects.features.kyc.api)
     implementation(projects.features.tokenRecieve.api)
+    implementation(projects.features.yieldSupply.api)
+    implementation(projects.features.tangempay.details.api)
 
     /** Common modules */
     implementation(projects.common)
