@@ -13,13 +13,18 @@ import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.res.TangemThemePreview
 
 @Composable
-internal fun TandemPayOnboardingScreen(state: TangemPayOnboardingScreenState, modifier: Modifier = Modifier) {
+internal fun TandemPayOnboardingScreen(
+    state: TangemPayOnboardingScreenState,
+    onOpenKycClick: () -> Unit,
+    onBackClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Scaffold(
         modifier = modifier,
         topBar = {
             AppBarWithBackButton(
                 modifier = Modifier.statusBarsPadding(),
-                onBackClick = {},
+                onBackClick = onBackClick,
                 iconRes = R.drawable.ic_back_24,
             )
         },
@@ -29,6 +34,7 @@ internal fun TandemPayOnboardingScreen(state: TangemPayOnboardingScreenState, mo
                     .padding(paddingValues)
                     .fillMaxSize(),
                 state = state,
+                onButtonClick = onOpenKycClick,
             )
         },
     )
@@ -39,6 +45,6 @@ internal fun TandemPayOnboardingScreen(state: TangemPayOnboardingScreenState, mo
 @Composable
 private fun PreviewDarkTheme() {
     TangemThemePreview {
-        TandemPayOnboardingScreen(state = TangemPayOnboardingScreenState())
+        TandemPayOnboardingScreen(state = TangemPayOnboardingScreenState(), {}, {})
     }
 }
