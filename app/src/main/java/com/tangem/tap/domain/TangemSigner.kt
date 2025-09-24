@@ -39,7 +39,7 @@ class TangemSigner(
                             TangemSignerResponse(
                                 totalSignedHashes = result.data.totalSignedHashes,
                                 remainingSignatures = result.data.remainingSignatures,
-                                isRing = result.data.batchId?.let(::isRing) ?: false,
+                                isRing = result.data.batchId?.let(::isRing) == true,
                             ),
                         )
                         if (continuation.isActive) {
@@ -85,7 +85,7 @@ class TangemSigner(
                             TangemSignerResponse(
                                 totalSignedHashes = result.data.totalSignedHashes,
                                 remainingSignatures = result.data.remainingSignatures,
-                                isRing = result.data.batchId?.let(::isRing) ?: false,
+                                isRing = result.data.batchId?.let(::isRing) == true,
                             ),
                         )
                         if (continuation.isActive) {
