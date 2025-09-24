@@ -243,12 +243,12 @@ interface WalletManagersFacade {
     suspend fun discardRequirements(userWalletId: UserWalletId, currency: CryptoCurrency): SimpleResult
 
     /**
-     * Indicates UTXO consolidation availability
+     * Indicates self send availability
      *
      * @param userWalletId selected user wallet
      * @param network availability for network
      */
-    suspend fun checkUtxoConsolidationAvailability(userWalletId: UserWalletId, network: Network): Boolean
+    suspend fun checkSelfSendAvailability(userWalletId: UserWalletId, network: Network): Boolean
 
     suspend fun getNFTCollections(userWalletId: UserWalletId, network: Network): List<NFTCollection>
 

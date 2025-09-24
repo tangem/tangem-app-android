@@ -143,10 +143,8 @@ internal object TransactionDomainModule {
 
     @Provides
     @Singleton
-    fun provideIsUtxoConsolidationAvailableUseCase(
-        walletManagersFacade: WalletManagersFacade,
-    ): IsUtxoConsolidationAvailableUseCase {
-        return IsUtxoConsolidationAvailableUseCase(walletManagersFacade)
+    fun provideIsSelfSendAvailableUseCase(walletManagersFacade: WalletManagersFacade): IsSelfSendAvailableUseCase {
+        return IsSelfSendAvailableUseCase(walletManagersFacade)
     }
 
     @Provides

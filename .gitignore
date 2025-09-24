@@ -10,6 +10,7 @@
 **/build/kotlin/**
 **/build/libs/**
 **/build/outputs/**
+**/build/reports/**
 **/build/tmp/**
 
 # Local configuration file (sdk path, etc)
