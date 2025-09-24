@@ -67,7 +67,7 @@ internal class StakingTransactionSender @AssistedInject constructor(
         onConstructSuccess: (List<StakingTransaction>) -> Unit,
         onConstructError: (StakingError) -> Unit,
         onSendSuccess: (String) -> Unit,
-        onSendError: (SendTransactionError?) -> Unit,
+        onSendError: (SendTransactionError) -> Unit,
         onFeeIncreased: (Fee, Boolean) -> Unit,
     ) {
         val state = stateController.value
@@ -218,7 +218,7 @@ internal class StakingTransactionSender @AssistedInject constructor(
     private suspend fun sendStakingTransaction(
         fullTransactionsData: List<FullTransactionData>,
         onSendSuccess: (txUrl: String) -> Unit,
-        onSendError: (SendTransactionError?) -> Unit,
+        onSendError: (SendTransactionError) -> Unit,
     ) {
         if (fullTransactionsData.isEmpty()) return
 
