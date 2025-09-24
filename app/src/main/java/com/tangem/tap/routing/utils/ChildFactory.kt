@@ -16,6 +16,7 @@ import com.tangem.features.details.component.DetailsComponent
 import com.tangem.features.disclaimer.api.components.DisclaimerComponent
 import com.tangem.features.home.api.HomeComponent
 import com.tangem.features.hotwallet.*
+import com.tangem.features.kyc.KycComponent
 import com.tangem.features.managetokens.component.ChooseManagedTokensComponent
 import com.tangem.features.managetokens.component.ManageTokensComponent
 import com.tangem.features.managetokens.component.ManageTokensSource
@@ -35,6 +36,7 @@ import com.tangem.features.swap.SwapComponent
 import com.tangem.features.swap.v2.api.SendWithSwapComponent
 import com.tangem.features.tangempay.components.TangemPayDetailsComponent
 import com.tangem.features.tangempay.components.TangemPayOnboardingComponent
+import com.tangem.features.tangempay.components.TangemPayOnboardingComponent.Params.*
 import com.tangem.features.tokendetails.TokenDetailsComponent
 import com.tangem.features.wallet.WalletEntryComponent
 import com.tangem.features.walletconnect.components.WalletConnectEntryComponent
@@ -106,6 +108,7 @@ internal class ChildFactory @Inject constructor(
     private val sendEntryPointComponentFactory: SendEntryPointComponent.Factory,
     private val tangemPayDetailsComponentFactory: TangemPayDetailsComponent.Factory,
     private val tangemPayOnboardingComponentFactory: TangemPayOnboardingComponent.Factory,
+    private val kycComponentFactory: KycComponent.Factory,
     private val yieldSupplyPromoComponentFactory: YieldSupplyPromoComponent.Factory,
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
 ) {
@@ -183,10 +186,10 @@ internal class ChildFactory @Inject constructor(
                         token = route.token,
                         appCurrency = route.appCurrency,
                         showPortfolio = route.showPortfolio,
-                        analyticsParams = route.analyticsParams?.let {
+                        analyticsParams = route.analyticsParams?.let { params ->
                             MarketsTokenDetailsComponent.AnalyticsParams(
-                                blockchain = it.blockchain,
-                                source = it.source,
+                                blockchain = params.blockchain,
+                                source = params.source,
                             )
                         },
                     ),
@@ -597,8 +600,18 @@ internal class ChildFactory @Inject constructor(
             is AppRoute.TangemPayOnboarding -> {
                 createComponentChild(
                     context = context,
-                    params = TangemPayOnboardingComponent.Params(route.deeplink),
+                    params = when (val mode = route.mode) {
+                        is AppRoute.TangemPayOnboarding.Mode.ContinueOnboarding -> ContinueOnboarding
+                        is AppRoute.TangemPayOnboarding.Mode.Deeplink -> Deeplink(deeplink = mode.deeplink)
+                    },
                     componentFactory = tangemPayOnboardingComponentFactory,
+                )
+            }
+            is AppRoute.Kyc -> {
+                createComponentChild(
+                    context = context,
+                    params = KycComponent.Params,
+                    componentFactory = kycComponentFactory,
                 )
             }
             is AppRoute.YieldSupplyPromo -> {
