@@ -261,6 +261,9 @@ internal class StakingModel @Inject constructor(
                     return@launch
                 }
                 isInitialInfoStep && noBalanceState && !isAccountInitialized -> {
+                    analyticsEventHandler.send(StakingAnalyticsEvent.UnitializedAddress(
+                        token = cryptoCurrencyStatus.currency.symbol,
+                    ))
                     stakingEventFactory.createInitializeAccountAlert()
                     return@launch
                 }
