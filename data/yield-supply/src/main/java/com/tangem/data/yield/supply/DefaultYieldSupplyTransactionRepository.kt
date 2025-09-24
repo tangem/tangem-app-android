@@ -89,6 +89,25 @@ internal class DefaultYieldSupplyTransactionRepository(
         )
     }
 
+    override suspend fun getProtocolBalance(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): BigDecimal? =
+        withContext(dispatchers.io) {
+            require(cryptoCurrency is CryptoCurrency.Token)
+            runCatching {
+                val walletManager = walletManagersFacade.getOrCreateWalletManager(
+                    userWalletId = userWalletId,
+                    blockchain = cryptoCurrency.network.toBlockchain(),
+                    derivationPath = cryptoCurrency.network.derivationPath.value,
+                ) ?: error("Wallet manager not found")
+                walletManager.getProtocolBalance(
+                    token = Token(
+                        symbol = cryptoCurrency.symbol,
+                        contractAddress = cryptoCurrency.contractAddress,
+                        decimals = cryptoCurrency.decimals,
+                    ),
+                )
+            }.onFailure(Timber::e).getOrNull()
+        }
+
     @Suppress("LongParameterList")
     private fun buildEnterTransactions(
         walletManager: WalletManager,
