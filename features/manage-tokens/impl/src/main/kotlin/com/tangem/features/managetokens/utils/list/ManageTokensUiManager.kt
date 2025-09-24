@@ -70,8 +70,11 @@ internal class ManageTokensUiManager(
 
                 val updatedBatch = uiBatchToUpdate.copy(
                     data = data.mapIndexed { index, item ->
-                        if (item == currencyBatch.data[index]) {
-                            return@mapIndexed uiBatchToUpdate.data[index]
+                        val uiBatch = uiBatchToUpdate.data.getOrNull(index)
+                        if (item == currencyBatch.data.getOrNull(index) &&
+                            uiBatch != null
+                        ) {
+                            return@mapIndexed uiBatch
                         }
 
                         val previousUiItem = uiBatchToUpdate.data.getOrNull(index)
