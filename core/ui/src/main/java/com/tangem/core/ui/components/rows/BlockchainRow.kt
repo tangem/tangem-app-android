@@ -27,7 +27,7 @@ private const val DISABLED_ICON_ALPHA = 0.4f
  * [Figma Component](https://www.figma.com/design/14ISV23YB1yVW1uNVwqrKv/Android?node-id=2737-2800&t=ewlXfWwbDnRhjw4B-4)
  * */
 @Composable
-fun BlockchainRow(model: BlockchainRowUM, action: @Composable BoxScope.() -> Unit, modifier: Modifier = Modifier) {
+fun BlockchainRow(model: BlockchainRowUM, modifier: Modifier = Modifier, action: @Composable BoxScope.() -> Unit) {
     RowContentContainer(
         modifier = modifier
             .heightIn(min = TangemTheme.dimens.size52)

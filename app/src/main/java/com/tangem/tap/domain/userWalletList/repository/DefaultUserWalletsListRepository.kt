@@ -125,7 +125,7 @@ internal class DefaultUserWalletsListRepository(
 
         // update the userWallets state and add if it doesn't exist
         updateWallets { currentWallets ->
-            val wallets = currentWallets ?: emptyList()
+            val wallets = currentWallets.orEmpty()
             if (wallets.any { it.walletId == userWallet.walletId }) {
                 wallets.map { if (it.walletId == userWallet.walletId) userWallet else it }
             } else {
@@ -332,12 +332,12 @@ internal class DefaultUserWalletsListRepository(
             raise(LockWalletsError.NothingToLock)
         }
 
-        updateWallets {
-            it?.map {
-                if (it.walletId !in unsecuredWalletIds) {
-                    it.lock()
+        updateWallets { wallets ->
+            wallets?.map { wallet ->
+                if (wallet.walletId !in unsecuredWalletIds) {
+                    wallet.lock()
                 } else {
-                    it
+                    wallet
                 }
             }
         }
@@ -395,17 +395,17 @@ internal class DefaultUserWalletsListRepository(
     }
 
     private suspend fun hasBiometry(): Boolean {
-        val useBiometricAuthentication = appPreferencesStore.getSyncOrDefault(
+        val isBiometricAuthenticationUsed = appPreferencesStore.getSyncOrDefault(
             key = PreferencesKeys.USE_BIOMETRIC_AUTHENTICATION_KEY,
             default = false,
         )
 
-        return tangemSdkManagerProvider.invoke().canUseBiometry && useBiometricAuthentication
+        return tangemSdkManagerProvider.invoke().canUseBiometry && isBiometricAuthenticationUsed
     }
 
     private fun updateWallets(block: (List<UserWallet>?) -> List<UserWallet>?) {
-        userWallets.update {
-            val updated = block(it)
+        userWallets.update { wallets ->
+            val updated = block(wallets)
             selectedUserWallet.update { currentSelected ->
                 if (currentSelected == null) return@update null
                 updated?.find { it.walletId == currentSelected.walletId }

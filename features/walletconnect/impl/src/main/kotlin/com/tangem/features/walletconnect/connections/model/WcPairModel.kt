@@ -80,7 +80,7 @@ internal class WcPairModel @Inject constructor(
     private val dAppVerifiedStateConverter = WcDAppVerifiedStateConverter(onVerifiedClick = ::showVerifiedAlert)
 
     val appInfoUiState: StateFlow<WcAppInfoUM>
-    field = MutableStateFlow<WcAppInfoUM>(createLoadingState())
+        field = MutableStateFlow<WcAppInfoUM>(createLoadingState())
 
     init {
         loadDAppInfo()
