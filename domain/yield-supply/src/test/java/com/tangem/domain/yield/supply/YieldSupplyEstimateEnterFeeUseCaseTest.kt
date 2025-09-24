@@ -11,6 +11,7 @@ import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchain.yieldsupply.YieldSupplyContractCallDataProviderFactory
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.transaction.FeeRepository
 import com.tangem.domain.transaction.error.FeeErrorResolver
@@ -35,6 +36,10 @@ class YieldSupplyEstimateEnterFeeUseCaseTest {
     private val cryptoCurrency: CryptoCurrency = mockk(relaxed = true) {
         every { decimals } returns 18
     }
+    private val cryptoCurrencyStatus = mockk<CryptoCurrencyStatus>(relaxed = true) {
+        every { currency } returns cryptoCurrency
+        every { value.yieldSupplyStatus } returns null
+    }
 
     private fun ethLegacyFee(
         gasPrice: BigInteger = BigInteger.valueOf(100_000_000_000L),
@@ -42,7 +47,7 @@ class YieldSupplyEstimateEnterFeeUseCaseTest {
     ) = Fee.Ethereum.Legacy(
         gasPrice = gasPrice,
         gasLimit = gasLimit,
-        amount = BigDecimal.ONE.convertToSdkAmount(cryptoCurrency),
+        amount = BigDecimal.ONE.convertToSdkAmount(cryptoCurrencyStatus),
     )
 
     private fun ethEip1559Fee(
@@ -52,12 +57,12 @@ class YieldSupplyEstimateEnterFeeUseCaseTest {
         maxFeePerGas = maxFeePerGas,
         priorityFee = BigInteger.ONE,
         gasLimit = gasLimit,
-        amount = BigDecimal.ONE.convertToSdkAmount(cryptoCurrency),
+        amount = BigDecimal.ONE.convertToSdkAmount(cryptoCurrencyStatus),
     )
 
     private fun uncompiled(fee: Fee, extras: TransactionExtras) = TransactionData.Uncompiled(
         fee = fee,
-        amount = BigDecimal.ONE.convertToSdkAmount(cryptoCurrency),
+        amount = BigDecimal.ONE.convertToSdkAmount(cryptoCurrencyStatus),
         contractAddress = null,
         sourceAddress = "0x1234567890123456789012345678901234567890",
         destinationAddress = "0x1234567890123456789012345678901234567890",
@@ -214,7 +219,7 @@ class YieldSupplyEstimateEnterFeeUseCaseTest {
             YieldSupplyContractCallDataProviderFactory.getDeployCallData(
                 walletAddress = "0x1234567890123456789012345678901234567890",
                 tokenContractAddress = "0x1234567890123456789012345678901234567890",
-                maxNetworkFee = BigDecimal.ONE.convertToSdkAmount(cryptoCurrency),
+                maxNetworkFee = BigDecimal.ONE.convertToSdkAmount(cryptoCurrencyStatus),
             ),
         ),
     )
