@@ -34,12 +34,10 @@ internal class DerivationsFinder(
         val userWalletId = UserWalletIdBuilder.card(card).build() ?: return emptySet()
         val derivationStyle = derivationStyleProvider.getDerivationStyle()
 
-        var blockchains = withContext(dispatchers.io) {
+        val blockchains = withContext(dispatchers.io) {
             getBlockchains(userWalletId)
-        }
-
-        if (blockchains.isEmpty()) {
-            blockchains = if (DemoHelper.isDemoCardId(card.cardId)) {
+        }.ifEmpty {
+            if (DemoHelper.isDemoCardId(card.cardId)) {
                 getDemoBlockchains(derivationStyle)
             } else {
                 getDefaultBlockchains(derivationStyle)

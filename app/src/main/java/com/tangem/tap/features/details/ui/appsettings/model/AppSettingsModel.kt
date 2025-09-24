@@ -32,6 +32,7 @@ import com.tangem.tap.store
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
+import com.tangem.utils.extensions.addIf
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.*
@@ -99,60 +100,59 @@ internal class AppSettingsModel @Inject constructor(
     }
 
     private fun buildItems(state: AppSettingsState): ImmutableList<AppSettingsScreenState.Item> {
-        val items = buildList {
-            if (state.needEnrollBiometrics) {
-                itemsFactory.createEnrollBiometricsCard(
-                    onClick = ::enrollBiometrics,
-                ).let(::add)
-            }
+        val items = buildList<AppSettingsScreenState.Item> {
+            addIf(
+                condition = state.needEnrollBiometrics,
+                element = itemsFactory.createEnrollBiometricsCard(onClick = ::enrollBiometrics),
+            )
 
-            itemsFactory.createSelectAppCurrencyButton(
+            this + itemsFactory.createSelectAppCurrencyButton(
                 currentAppCurrencyName = state.selectedAppCurrency.name,
                 onClick = ::showAppCurrencySelector,
-            ).let(::add)
+            )
 
             if (hotWalletFeatureToggles.isHotWalletEnabled) {
                 val canUseBiometrics = !state.needEnrollBiometrics && !state.isInProgress
 
-                itemsFactory.createUseBiometricsSwitch(
+                this + itemsFactory.createUseBiometricsSwitch(
                     isChecked = state.useBiometricAuthentication,
                     isEnabled = canUseBiometrics,
                     onCheckedChange = ::onBiometricAuthenticationToggled,
-                ).let(::add)
+                )
 
-                itemsFactory.createRequireAccessCodeSwitch(
+                this + itemsFactory.createRequireAccessCodeSwitch(
                     isChecked = state.requireAccessCode,
                     isEnabled = canUseBiometrics && state.useBiometricAuthentication,
                     onCheckedChange = ::onRequireAccessCodeToggled,
-                ).let(::add)
+                )
             } else {
                 if (state.isBiometricsAvailable) {
                     val canUseBiometrics = !state.needEnrollBiometrics && !state.isInProgress
 
-                    itemsFactory.createSaveWalletsSwitch(
+                    this + itemsFactory.createSaveWalletsSwitch(
                         isChecked = state.saveWallets,
                         isEnabled = canUseBiometrics,
                         onCheckedChange = ::onSaveWalletsToggled,
-                    ).let(::add)
+                    )
 
-                    itemsFactory.createSaveAccessCodeSwitch(
+                    this + itemsFactory.createSaveAccessCodeSwitch(
                         isChecked = state.saveAccessCodes,
                         isEnabled = canUseBiometrics,
                         onCheckedChange = ::onSaveAccessCodesToggled,
-                    ).let(::add)
+                    )
                 }
             }
 
-            itemsFactory.createFlipToHideBalanceSwitch(
+            this + itemsFactory.createFlipToHideBalanceSwitch(
                 isChecked = state.isHidingEnabled,
                 isEnabled = true,
                 onCheckedChange = ::onFlipToHideBalanceToggled,
-            ).let(::add)
+            )
 
-            itemsFactory.createSelectThemeModeButton(
+            this + itemsFactory.createSelectThemeModeButton(
                 currentThemeMode = state.selectedThemeMode,
                 onClick = { showThemeModeSelector(state.selectedThemeMode) },
-            ).let(::add)
+            )
         }
 
         return items.toImmutableList()
@@ -280,7 +280,7 @@ internal class AppSettingsModel @Inject constructor(
         val param = AnalyticsParam.OnOffState(enable)
         analyticsEventHandler.send(Settings.AppSettings.HideBalanceChanged(param))
 
-        store.dispatch(DetailsAction.AppSettings.ChangeBalanceHiding(hideBalance = enable))
+        store.dispatch(DetailsAction.AppSettings.ChangeBalanceHiding(shouldHideBalance = enable))
     }
 
     private fun dismissDialog() {
@@ -290,10 +290,10 @@ internal class AppSettingsModel @Inject constructor(
     private fun bootstrapAppCurrencyUpdates() {
         appCurrencyRepository
             .getSelectedAppCurrency()
-            .onEach {
-                if (it.code == store.state.globalState.appCurrency.code) return@onEach
+            .onEach { appCurrency ->
+                if (appCurrency.code == store.state.globalState.appCurrency.code) return@onEach
 
-                store.dispatchWithMain(DetailsAction.AppSettings.ChangeAppCurrency(it))
+                store.dispatchWithMain(DetailsAction.AppSettings.ChangeAppCurrency(appCurrency))
             }
             .launchIn(scope)
             .saveIn(appCurrencyUpdatesJobHolder)

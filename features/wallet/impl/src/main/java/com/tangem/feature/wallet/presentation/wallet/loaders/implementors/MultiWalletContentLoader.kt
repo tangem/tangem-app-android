@@ -19,6 +19,7 @@ import com.tangem.feature.wallet.presentation.wallet.domain.MultiWalletTokenList
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletWithFundsChecker
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.subscribers.*
+import com.tangem.feature.wallet.presentation.account.AccountDependencies
 
 @Suppress("LongParameterList")
 @ModelScoped
@@ -40,6 +41,7 @@ internal class MultiWalletContentLoader(
     private val getStoryContentUseCase: GetStoryContentUseCase,
     private val walletsRepository: WalletsRepository,
     private val currenciesRepository: CurrenciesRepository,
+    private val accountDependencies: AccountDependencies,
 ) : WalletContentLoader(id = userWallet.walletId) {
 
     override fun create(): List<WalletSubscriber> {
@@ -54,6 +56,7 @@ internal class MultiWalletContentLoader(
                 getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
                 applyTokenListSortingUseCase = applyTokenListSortingUseCase,
                 runPolkadotAccountHealthCheckUseCase = runPolkadotAccountHealthCheckUseCase,
+                accountDependencies = accountDependencies,
             ).let(::add)
 
             WalletNFTListSubscriber(

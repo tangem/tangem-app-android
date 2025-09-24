@@ -52,8 +52,8 @@ import com.tangem.feature.walletsettings.impl.R
 @Composable
 internal fun WalletSettingsScreen(
     state: WalletSettingsUM,
-    dialog: @Composable () -> Unit,
     modifier: Modifier = Modifier,
+    dialog: @Composable () -> Unit,
 ) {
     val backgroundColor = TangemTheme.colors.background.secondary
 

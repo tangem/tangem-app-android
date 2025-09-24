@@ -18,6 +18,7 @@ import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.nft.ObserveAndClearNFTCacheIfNeedUseCase
 import com.tangem.domain.notifications.GetIsHuaweiDeviceWithoutGoogleServicesUseCase
 import com.tangem.domain.notifications.repository.NotificationsRepository
+import com.tangem.domain.pay.usecase.TangemPayMainScreenCustomerInfoUseCase
 import com.tangem.domain.settings.*
 import com.tangem.domain.tokens.RefreshMultiCurrencyWalletQuotesUseCase
 import com.tangem.domain.wallets.usecase.*
@@ -33,12 +34,14 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.WalletEvent
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletEvent.DemonstrateWalletsScrollPreview.Direction
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletScreenState
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.*
+import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.TangemPayStateConverter
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
 import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvider
 import com.tangem.features.biometry.AskBiometryComponent
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.pushnotifications.api.PushNotificationsModelCallbacks
 import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.wallet.deeplink.WalletDeepLinkActionListener
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
@@ -84,6 +87,9 @@ internal class WalletModel @Inject constructor(
     private val getIsHuaweiDeviceWithoutGoogleServicesUseCase: GetIsHuaweiDeviceWithoutGoogleServicesUseCase,
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
     private val userWalletsListRepository: UserWalletsListRepository,
+    private val tangemPayMainScreenCustomerInfoUseCase: TangemPayMainScreenCustomerInfoUseCase,
+    private val tangemPayStateConverter: TangemPayStateConverter,
+    private val tangemPayFeatureToggles: TangemPayFeatureToggles,
     val screenLifecycleProvider: ScreenLifecycleProvider,
     val innerWalletRouter: InnerWalletRouter,
 ) : Model() {
@@ -112,6 +118,7 @@ internal class WalletModel @Inject constructor(
         subscribeOnSelectedWalletFlow()
         subscribeToScreenBackgroundState()
         subscribeOnPushNotificationsPermission()
+        subscribeToTangemPayInfo()
         enableNotificationsIfNeeded()
 
         clickIntents.initialize(innerWalletRouter, modelScope)
@@ -311,6 +318,27 @@ internal class WalletModel @Inject constructor(
             .invoke(selectedWallet.walletId)
             .launchIn(modelScope)
             .saveIn(clearNFTCacheJobHolder)
+    }
+
+    private fun subscribeToTangemPayInfo() {
+        /**
+         * Update state each time a user opens/returns to wallet screen
+         */
+        screenLifecycleProvider.isBackgroundState.onEach { isBackground ->
+            if (!isBackground) { updateTangemPayInfo() }
+        }.launchIn(modelScope)
+    }
+
+    private fun updateTangemPayInfo() {
+        if (tangemPayFeatureToggles.isTangemPayEnabled) {
+            modelScope.launch {
+                tangemPayMainScreenCustomerInfoUseCase()?.let { info ->
+                    stateHolder.update {
+                        it.copy(tangemPayState = tangemPayStateConverter.convert(info))
+                    }
+                }
+            }
+        }
     }
 
     private fun needToRefreshTimer() {
