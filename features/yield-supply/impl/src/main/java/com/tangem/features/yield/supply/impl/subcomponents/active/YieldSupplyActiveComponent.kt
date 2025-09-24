@@ -59,5 +59,6 @@ internal class YieldSupplyActiveComponent(
     interface ModelCallback {
         fun onBackClick()
         fun onStopEarning()
+        fun onApprove()
     }
 }

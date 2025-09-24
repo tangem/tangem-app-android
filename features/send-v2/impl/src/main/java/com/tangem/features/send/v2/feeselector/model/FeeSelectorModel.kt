@@ -62,7 +62,7 @@ internal class FeeSelectorModel @Inject constructor(
     val feeSelectorBottomSheet = SlotNavigation<Unit>()
 
     val uiState: StateFlow<FeeSelectorUM>
-    field = MutableStateFlow<FeeSelectorUM>(params.state)
+        field = MutableStateFlow<FeeSelectorUM>(params.state)
 
     init {
         initAppCurrency()
