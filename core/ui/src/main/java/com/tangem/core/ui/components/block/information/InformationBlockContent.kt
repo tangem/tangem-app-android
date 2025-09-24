@@ -16,11 +16,11 @@ import kotlinx.collections.immutable.toImmutableList
 @Composable
 inline fun <T : Any> InformationBlockContentScope.ListItems(
     items: ImmutableList<T>,
-    itemContent: @Composable BoxScope.(T) -> Unit,
     modifier: Modifier = Modifier,
     itemPadding: PaddingValues = PaddingValues(all = TangemTheme.dimens.spacing0),
     horizontalAlignment: Alignment.Horizontal = Alignment.CenterHorizontally,
     verticalArragement: Arrangement.Vertical = Arrangement.Top,
+    itemContent: @Composable BoxScope.(T) -> Unit,
 ) {
     Column(
         modifier = modifier.fillMaxWidth(),
@@ -42,10 +42,10 @@ inline fun <T : Any> InformationBlockContentScope.ListItems(
 @Composable
 inline fun <T : Any> InformationBlockContentScope.GridItems(
     items: ImmutableList<T>,
-    itemContent: @Composable BoxScope.(T) -> Unit,
     modifier: Modifier = Modifier,
     verticalAlignment: Alignment.Vertical = Alignment.Top,
     horizontalArragement: Arrangement.Horizontal = Arrangement.Start,
+    itemContent: @Composable BoxScope.(T) -> Unit,
 ) {
     val rowItems by remember(items) {
         derivedStateOf {
@@ -81,10 +81,10 @@ inline fun <T : Any> InformationBlockContentScope.GridItems(
 @Composable
 inline fun <T : Any> InformationBlockContentScope.ArrowRowItems(
     items: ImmutableList<T>,
-    rootContent: @Composable BoxScope.() -> Unit,
-    itemContent: @Composable BoxScope.(T) -> Unit,
     modifier: Modifier = Modifier,
     itemPadding: PaddingValues = PaddingValues(all = TangemTheme.dimens.spacing0),
+    rootContent: @Composable BoxScope.() -> Unit,
+    itemContent: @Composable BoxScope.(T) -> Unit,
 ) {
     Column(
         modifier = modifier.fillMaxWidth(),
