@@ -315,4 +315,23 @@ sealed class WalletNotification(val config: NotificationConfig) {
             iconSize = 54.dp,
         ),
     )
+
+    data class PushNotifications(
+        val onCloseClick: () -> Unit,
+        val onEnabledClick: () -> Unit,
+    ) : WalletNotification(
+        config = NotificationConfig(
+            title = resourceReference(R.string.user_push_notification_banner_title),
+            subtitle = resourceReference(R.string.user_push_notification_banner_subtitle),
+            iconResId = R.drawable.img_push_reminder,
+            onCloseClick = onCloseClick,
+            buttonsState = NotificationConfig.ButtonsState.PairButtonsConfig(
+                primaryText = resourceReference(id = R.string.common_enable),
+                onPrimaryClick = onEnabledClick,
+                secondaryText = resourceReference(id = R.string.common_later),
+                onSecondaryClick = onCloseClick,
+            ),
+            iconSize = 54.dp,
+        ),
+    )
 }
