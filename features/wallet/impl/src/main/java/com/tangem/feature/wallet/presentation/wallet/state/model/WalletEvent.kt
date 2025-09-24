@@ -30,4 +30,9 @@ internal sealed class WalletEvent {
             RIGHT,
         }
     }
+
+    data class RequestPushPermissions(
+        val onAllow: () -> Unit,
+        val onDeny: () -> Unit,
+    ) : WalletEvent()
 }
