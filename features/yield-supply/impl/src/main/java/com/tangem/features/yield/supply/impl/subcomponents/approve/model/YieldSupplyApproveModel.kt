@@ -144,7 +144,7 @@ internal class YieldSupplyApproveModel @Inject constructor(
         ).getOrNull() ?: return
 
         val approvalTransitionData = createApprovalTransactionUseCase(
-            cryptoCurrency = cryptoCurrency,
+            cryptoCurrencyStatus = cryptoCurrencyStatus,
             userWalletId = userWallet.walletId,
             contractAddress = cryptoCurrency.contractAddress,
             spenderAddress = contractAddress,
