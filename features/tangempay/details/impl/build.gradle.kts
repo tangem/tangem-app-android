@@ -25,6 +25,8 @@ dependencies {
     implementation(projects.domain.balanceHiding)
     implementation(projects.domain.balanceHiding.models)
     implementation(projects.domain.models)
+    implementation(projects.domain.visa)
+    implementation(projects.domain.visa.models)
 
     /** Compose */
     implementation(deps.compose.foundation)
