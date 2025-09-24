@@ -8,9 +8,5 @@ interface TangemPayStorage {
 
     suspend fun getAuthTokens(customerWalletAddress: String): VisaAuthTokens?
 
-    suspend fun storeCustomerWalletAddress(customerWalletAddress: String)
-
-    suspend fun getCustomerWalletAddress(): String?
-
     suspend fun clear(customerWalletAddress: String)
 }
