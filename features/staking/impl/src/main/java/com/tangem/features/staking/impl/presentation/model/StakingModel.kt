@@ -325,7 +325,11 @@ internal class StakingModel @Inject constructor(
                     updateNotifications(stakingError = stakingFeeError)
                 },
                 onFeeError = { error ->
-                    analyticsEventHandler.send(StakingAnalyticsEvent.TransactionError)
+                    analyticsEventHandler.send(
+                        StakingAnalyticsEvent.TransactionError(
+                            errorCode = "GetFeeError",
+                        ),
+                    )
                     stateController.update(AddStakingErrorTransformer)
                     updateNotifications(error)
                 },
@@ -366,7 +370,11 @@ internal class StakingModel @Inject constructor(
                         stateController.update(SetConfirmationStateCompletedTransformer(txUrl, cryptoCurrencyStatus))
                     },
                     onSendError = { error ->
-                        analyticsEventHandler.send(StakingAnalyticsEvent.TransactionError)
+                        analyticsEventHandler.send(
+                            StakingAnalyticsEvent.TransactionError(
+                                errorCode = error.getAnalyticsDescription(),
+                            ),
+                        )
                         stakingEventFactory.createSendTransactionErrorAlert(error)
                         stateController.update(SetConfirmationStateResetAssentTransformer(cryptoCurrencyStatus))
                     },
@@ -652,7 +660,11 @@ internal class StakingModel @Inject constructor(
             ).fold(
                 ifLeft = { error ->
                     Timber.e(error.toString())
-                    analyticsEventHandler.send(StakingAnalyticsEvent.TransactionError)
+                    analyticsEventHandler.send(
+                        StakingAnalyticsEvent.TransactionError(
+                            errorCode = "CreateApprovalTxError",
+                        ),
+                    )
                     stateController.update(
                         SetConfirmationStateAssentApprovalTransformer(
                             appCurrencyProvider = Provider { appCurrency },
@@ -677,7 +689,11 @@ internal class StakingModel @Inject constructor(
             ).fold(
                 ifLeft = { error ->
                     Timber.e(error.toString())
-                    analyticsEventHandler.send(StakingAnalyticsEvent.TransactionError)
+                    analyticsEventHandler.send(
+                        StakingAnalyticsEvent.TransactionError(
+                            errorCode = error.getAnalyticsDescription(),
+                        ),
+                    )
                     stateController.update(
                         SetConfirmationStateAssentApprovalTransformer(
                             appCurrencyProvider = Provider { appCurrency },
