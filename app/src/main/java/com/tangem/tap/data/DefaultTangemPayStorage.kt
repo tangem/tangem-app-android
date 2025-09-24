@@ -14,7 +14,6 @@ import javax.inject.Singleton
 import kotlin.text.encodeToByteArray
 
 private const val DEFAULT_KEY = "tangem_pay_default_key"
-private const val DEFAULT_CUSTOMER_WALLET_ADDRESS_KEY = "tangem_pay_default_customer_wallet_address_key"
 
 @Singleton
 internal class DefaultTangemPayStorage @Inject constructor(
@@ -53,21 +52,6 @@ internal class DefaultTangemPayStorage @Inject constructor(
                 ?.decodeToString(throwOnInvalidSequence = true)
                 ?.let(tokensAdapter::fromJson)
         }
-
-    /**
-     * Store the only customer wallet address, since for the f&f user can issue only one card tied to one address
-     */
-    override suspend fun storeCustomerWalletAddress(customerWalletAddress: String) =
-        withContext(dispatcherProvider.io) {
-            secureStorage.store(
-                customerWalletAddress.encodeToByteArray(throwOnInvalidSequence = true),
-                DEFAULT_CUSTOMER_WALLET_ADDRESS_KEY,
-            )
-        }
-
-    override suspend fun getCustomerWalletAddress(): String? = withContext(dispatcherProvider.io) {
-        secureStorage.get(DEFAULT_CUSTOMER_WALLET_ADDRESS_KEY)?.decodeToString(throwOnInvalidSequence = true)
-    }
 
     override suspend fun clear(customerWalletAddress: String) = withContext(dispatcherProvider.io) {
         secureStorage.delete(createKey(customerWalletAddress))
