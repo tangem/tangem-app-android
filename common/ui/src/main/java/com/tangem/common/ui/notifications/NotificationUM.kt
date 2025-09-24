@@ -265,6 +265,11 @@ sealed class NotificationUM(val config: NotificationConfig) {
             title = resourceReference(id = R.string.selling_insufficient_balance_alert_title),
             subtitle = resourceReference(id = R.string.selling_insufficient_balance_alert_message),
         )
+
+        data class YieldSupplyIsActive(val tokenName: String) : Warning(
+            title = resourceReference(id = R.string.yield_module_balance_info_sheet_title, wrappedList(tokenName)),
+            subtitle = resourceReference(id = R.string.yield_module_balance_info_sheet_subtitle),
+        )
     }
 
     open class Info(
