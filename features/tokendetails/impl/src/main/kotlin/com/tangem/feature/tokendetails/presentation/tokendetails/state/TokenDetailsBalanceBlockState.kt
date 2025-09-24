@@ -27,6 +27,7 @@ internal sealed class TokenDetailsBalanceBlockState {
         val displayFiatBalance: String,
         val isBalanceSelectorEnabled: Boolean,
         val isBalanceFlickering: Boolean,
+        val yieldSupplyState: TokenDetailsYieldSupplyState = TokenDetailsYieldSupplyState.Empty,
     ) : TokenDetailsBalanceBlockState()
 
     data class Error(
