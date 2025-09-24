@@ -70,7 +70,7 @@ internal class TangemTech(
 
     private fun getApiKey(apiEnvironment: ApiEnvironment): String {
         return when (apiEnvironment) {
-            ApiEnvironment.MOCK -> null
+            ApiEnvironment.MOCK,
             ApiEnvironment.DEV,
             ApiEnvironment.DEV_2,
             -> environmentConfigStorage.getConfigSync().tangemApiKeyDev
