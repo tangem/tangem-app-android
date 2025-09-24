@@ -30,6 +30,7 @@ import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.wallets.models.SeedPhraseNotificationsStatus
 import com.tangem.domain.wallets.usecase.IsNeedToBackupUseCase
 import com.tangem.domain.wallets.usecase.SeedPhraseNotificationUseCase
+import com.tangem.feature.wallet.child.wallet.model.WalletActivationBannerType
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotification
@@ -364,6 +365,14 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
         )
     }
 
+    private fun TokenList?.getFinishWalletActivationType(): WalletActivationBannerType {
+        return if ((this?.totalFiatBalance as? TotalFiatBalance.Loaded)?.amount?.isPositive() == true) {
+            WalletActivationBannerType.Warning
+        } else {
+            WalletActivationBannerType.Attention
+        }
+    }
+
     private fun MutableList<WalletNotification>.addFinishWalletActivationNotification(
         userWallet: UserWallet,
         maybeTokenList: Lce<TokenListError, TokenList>,
@@ -373,35 +382,28 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
 
         val shouldShowFinishActivation = !userWallet.backedUp
 
-        val iconTint = maybeTokenList.fold(
-            ifLoading = {
-                if ((it?.totalFiatBalance as? TotalFiatBalance.Loaded)?.amount?.isPositive() == true) {
-                    IconTint.Warning
-                } else {
-                    IconTint.Attention
-                }
-            },
-            ifContent = {
-                if ((it.totalFiatBalance as? TotalFiatBalance.Loaded)?.amount?.isPositive() == true) {
-                    IconTint.Warning
-                } else {
-                    IconTint.Attention
-                }
-            },
-            ifError = { IconTint.Attention },
+        val type = maybeTokenList.fold(
+            ifLoading = { it.getFinishWalletActivationType() },
+            ifContent = { it.getFinishWalletActivationType() },
+            ifError = { WalletActivationBannerType.Attention },
         )
+
+        val tint = when (type) {
+            WalletActivationBannerType.Attention -> IconTint.Attention
+            WalletActivationBannerType.Warning -> IconTint.Warning
+        }
 
         addIf(
             element = WalletNotification.FinishWalletActivation(
-                iconTint = iconTint,
-                buttonsState = when (iconTint) {
-                    IconTint.Warning -> ButtonsState.PrimaryButtonConfig(
+                iconTint = tint,
+                buttonsState = when (type) {
+                    WalletActivationBannerType.Warning -> ButtonsState.PrimaryButtonConfig(
                         text = resourceReference(R.string.hw_activation_need_finish),
-                        onClick = clickIntents::onFinishWalletActivationClick,
+                        onClick = { clickIntents.onFinishWalletActivationClick(type) },
                     )
                     else -> ButtonsState.SecondaryButtonConfig(
                         text = resourceReference(R.string.hw_activation_need_finish),
-                        onClick = clickIntents::onFinishWalletActivationClick,
+                        onClick = { clickIntents.onFinishWalletActivationClick(type) },
                     )
                 },
             ),
