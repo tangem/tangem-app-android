@@ -56,12 +56,11 @@ class ValidateWalletAddressUseCase(
         isCurrentAddress: (String) -> Boolean,
     ): AddressValidationResult {
         val decodedXAddress = BlockchainUtils.decodeRippleXAddress(address, network.rawId)
-        val isUtxoConsolidationAvailable =
-            walletManagersFacade.checkUtxoConsolidationAvailability(userWalletId, network)
+        val isSelfSendAvailable = walletManagersFacade.checkSelfSendAvailability(userWalletId, network)
 
         val addressToValidate = decodedXAddress?.address ?: address
         val current = isCurrentAddress(addressToValidate)
-        val isForbidSelfSend = current && !isUtxoConsolidationAvailable
+        val isForbidSelfSend = current && !isSelfSendAvailable
         val isValidAddress = walletAddressServiceRepository.validateAddress(userWalletId, network, addressToValidate)
 
         return when {
