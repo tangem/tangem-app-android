@@ -24,6 +24,7 @@ import com.tangem.feature.tester.impl.R
 import com.tangem.feature.tester.presentation.common.components.appbar.TopBarWithRefresh
 import com.tangem.feature.tester.presentation.common.components.appbar.TopBarWithRefreshUM
 import com.tangem.feature.tester.presentation.common.components.notification.CustomSetupNotification
+import com.tangem.feature.tester.presentation.common.components.notification.InitialSetupNotification
 import com.tangem.feature.tester.presentation.featuretoggles.models.TesterFeatureToggle
 import com.tangem.feature.tester.presentation.featuretoggles.state.FeatureTogglesContentState
 import kotlinx.collections.immutable.persistentListOf
@@ -52,8 +53,19 @@ internal fun FeatureTogglesScreen(state: FeatureTogglesContentState) {
                     ),
                     modifier = Modifier
                         .animateItem()
-                        .padding(horizontal = 16.dp)
-                        .padding(bottom = 8.dp),
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                )
+            }
+        } else {
+            item(key = "warning_notification", contentType = "warning_notification") {
+                InitialSetupNotification(
+                    subtitle = resourceReference(
+                        id = R.string.feature_toggles_initial_setup_warning_description,
+                        wrappedList(state.appVersion),
+                    ),
+                    modifier = Modifier
+                        .animateItem()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
                 )
             }
         }

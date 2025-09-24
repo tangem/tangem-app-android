@@ -376,8 +376,23 @@ sealed class AppRoute(val path: String) : Route {
 
     @Serializable
     data class TangemPayOnboarding(
-        val deeplink: String,
-    ) : AppRoute(path = "/tangem_pay_onboarding/$deeplink")
+        val mode: Mode,
+    ) : AppRoute(path = "/tangem_pay_onboarding/$mode") {
+
+        @Serializable
+        sealed class Mode {
+            @Serializable
+            data class Deeplink(
+                val deeplink: String,
+            ) : Mode()
+
+            @Serializable
+            object ContinueOnboarding : Mode()
+        }
+    }
+
+    @Serializable
+    data object Kyc : AppRoute(path = "/kyc")
 
     @Serializable
     data class YieldSupplyPromo(
