@@ -278,7 +278,6 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
         val isSepaAvailable = onrampSepaAvailableUseCase(
             userWallet = userWallet,
             country = country,
-            currency = country.defaultCurrency,
             cryptoCurrency = bitcoinCurrency,
         )
 
