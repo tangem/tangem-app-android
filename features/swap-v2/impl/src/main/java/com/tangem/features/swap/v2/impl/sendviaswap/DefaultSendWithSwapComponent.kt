@@ -18,7 +18,6 @@ import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.decompose.ComposableContentComponent
-import com.tangem.core.ui.decompose.getEmptyComposableContentComponent
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.swap.models.R
 import com.tangem.domain.swap.models.SwapDirection
@@ -152,9 +151,9 @@ internal class DefaultSendWithSwapComponent @AssistedInject constructor(
 
     private fun getDestinationComponent(factoryContext: AppComponentContext): ComposableContentComponent {
         val amountContentUM = model.uiState.value.amountUM as? SwapAmountUM.Content
-            ?: return getEmptyComposableContentComponent()
+            ?: return ComposableContentComponent.EMPTY
         val secondaryCryptoCurrency = amountContentUM.secondaryCryptoCurrencyStatus?.currency
-            ?: return getEmptyComposableContentComponent()
+            ?: return ComposableContentComponent.EMPTY
 
         return sendDestinationComponentFactory.create(
             context = factoryContext,
