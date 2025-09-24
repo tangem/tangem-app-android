@@ -106,10 +106,10 @@ internal class SendModel @Inject constructor(
     val analyticCategoryName = CommonSendAnalyticEvents.SEND_CATEGORY
 
     val uiState: StateFlow<SendUM>
-    field = MutableStateFlow(initialState())
+        field = MutableStateFlow(initialState())
 
     val isBalanceHiddenFlow: StateFlow<Boolean>
-    field = MutableStateFlow(false)
+        field = MutableStateFlow(false)
 
     val initialRoute = if (params.amount == null) {
         if (uiState.value.isRedesignEnabled) {
@@ -260,10 +260,11 @@ internal class SendModel @Inject constructor(
 
     suspend fun loadFee(): Either<GetFeeError, TransactionFee> {
         val predefinedValues = predefinedValues
+        val cryptoCurrencyStatus = cryptoCurrencyStatusFlow.value
         val transferTransaction = if (predefinedValues is PredefinedValues.Content.Deeplink) {
-            val predefinedAmount = predefinedValues.amount.parseBigDecimalOrNull()?.convertToSdkAmount(cryptoCurrency)
+            val predefinedAmount = predefinedValues.amount.parseBigDecimalOrNull()
             createTransferTransactionUseCase(
-                amount = predefinedAmount ?: error("Invalid amount"),
+                amount = predefinedAmount?.convertToSdkAmount(cryptoCurrencyStatus) ?: error("Invalid amount"),
                 memo = predefinedValues.memo,
                 destination = predefinedValues.address,
                 userWalletId = userWallet.walletId,
@@ -277,7 +278,7 @@ internal class SendModel @Inject constructor(
             val enteredAmount = amountUM.amountTextField.cryptoAmount.value ?: error("Invalid amount")
 
             createTransferTransactionUseCase(
-                amount = enteredAmount.convertToSdkAmount(cryptoCurrency),
+                amount = enteredAmount.convertToSdkAmount(cryptoCurrencyStatus),
                 memo = enteredMemo,
                 destination = enteredDestinationAddress,
                 userWalletId = userWallet.walletId,
