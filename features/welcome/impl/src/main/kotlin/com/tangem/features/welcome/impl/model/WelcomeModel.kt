@@ -50,7 +50,7 @@ internal class WelcomeModel @Inject constructor(
 ) : Model() {
 
     val uiState: StateFlow<WelcomeUM>
-    field = MutableStateFlow<WelcomeUM>(WelcomeUM.Plain)
+        field = MutableStateFlow<WelcomeUM>(WelcomeUM.Plain)
 
     private val walletsFetcher = userWalletsFetcherFactory.create(
         messageSender = uiMessageSender,
