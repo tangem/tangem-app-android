@@ -468,6 +468,7 @@ internal class SendConfirmModel @Inject constructor(
                         categoryName = analyticsCategoryName,
                         token = cryptoCurrency.symbol,
                         blockchain = cryptoCurrency.network.name,
+                        errorCode = error.getAnalyticsDescription(),
                     ),
                 )
             },
