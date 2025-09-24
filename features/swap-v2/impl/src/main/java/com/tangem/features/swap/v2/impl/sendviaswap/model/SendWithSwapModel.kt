@@ -67,26 +67,26 @@ internal class SendWithSwapModel @Inject constructor(
     var appCurrency: AppCurrency = AppCurrency.Default
 
     val uiState: StateFlow<SendWithSwapUM>
-    field = MutableStateFlow(initialState())
+        field = MutableStateFlow(initialState())
 
     val isBalanceHiddenFlow: StateFlow<Boolean>
-    field = MutableStateFlow(false)
+        field = MutableStateFlow(false)
 
     val primaryCryptoCurrencyStatusFlow: StateFlow<CryptoCurrencyStatus>
-    field = MutableStateFlow(
-        CryptoCurrencyStatus(
-            currency = params.currency,
-            value = CryptoCurrencyStatus.Loading,
-        ),
-    )
+        field = MutableStateFlow(
+            CryptoCurrencyStatus(
+                currency = params.currency,
+                value = CryptoCurrencyStatus.Loading,
+            ),
+        )
 
     val primaryFeePaidCurrencyStatusFlow: StateFlow<CryptoCurrencyStatus>
-    field = MutableStateFlow(
-        CryptoCurrencyStatus(
-            currency = params.currency,
-            value = CryptoCurrencyStatus.Loading,
-        ),
-    )
+        field = MutableStateFlow(
+            CryptoCurrencyStatus(
+                currency = params.currency,
+                value = CryptoCurrencyStatus.Loading,
+            ),
+        )
 
     init {
         initUserWallet()
