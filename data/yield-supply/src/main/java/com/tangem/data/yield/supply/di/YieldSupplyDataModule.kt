@@ -1,7 +1,11 @@
 package com.tangem.data.yield.supply.di
 
+import com.tangem.data.yield.supply.DefaultYieldSupplyMarketRepository
 import com.tangem.data.yield.supply.DefaultYieldSupplyTransactionRepository
+import com.tangem.datasource.api.tangemTech.TangemTechApi
+import com.tangem.datasource.local.yieldsupply.YieldMarketsStore
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.domain.yield.supply.YieldSupplyMarketRepository
 import com.tangem.domain.yield.supply.YieldSupplyTransactionRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
@@ -22,6 +26,20 @@ internal object YieldSupplyDataModule {
     ): YieldSupplyTransactionRepository {
         return DefaultYieldSupplyTransactionRepository(
             walletManagersFacade = walletManagersFacade,
+            dispatchers = dispatchers,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideYieldSupplyMarketRepository(
+        techApi: TangemTechApi,
+        store: YieldMarketsStore,
+        dispatchers: CoroutineDispatcherProvider,
+    ): YieldSupplyMarketRepository {
+        return DefaultYieldSupplyMarketRepository(
+            techApi = techApi,
+            store = store,
             dispatchers = dispatchers,
         )
     }
