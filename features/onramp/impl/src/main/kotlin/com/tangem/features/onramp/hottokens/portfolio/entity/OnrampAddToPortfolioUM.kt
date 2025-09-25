@@ -37,7 +37,11 @@ data class OnrampAddToPortfolioUM(
         formatArgs = wrappedList(networkName),
     )
 
-    data class AddButtonUM(val isProgress: Boolean, val onClick: () -> Unit) {
+    data class AddButtonUM(
+        val isProgress: Boolean,
+        val isTangemIconVisible: Boolean,
+        val onClick: () -> Unit,
+    ) {
 
         val text: TextReference = resourceReference(R.string.common_add_to_portfolio)
     }
