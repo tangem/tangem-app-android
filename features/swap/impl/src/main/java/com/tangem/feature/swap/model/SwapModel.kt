@@ -24,7 +24,7 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.express.models.ExpressOperationType
-import com.tangem.domain.feedback.GetCardInfoUseCase
+import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.BlockchainErrorInfo
@@ -32,9 +32,7 @@ import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.models.wallet.requireColdWallet
 import com.tangem.domain.promo.GetStoryContentUseCase
 import com.tangem.domain.promo.ShouldShowStoriesUseCase
 import com.tangem.domain.promo.models.StoryContentIds
@@ -78,7 +76,6 @@ import java.text.DecimalFormat
 import java.text.NumberFormat
 import java.util.Locale
 import javax.inject.Inject
-import kotlin.properties.Delegates
 
 typealias SuccessLoadedSwapData = Map<SwapProvider, SwapState.QuotesLoadedState>
 
@@ -95,7 +92,7 @@ internal class SwapModel @Inject constructor(
     private val getSingleCryptoCurrencyStatusUseCase: GetSingleCryptoCurrencyStatusUseCase,
     private val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
-    private val getCardInfoUseCase: GetCardInfoUseCase,
+    private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase,
     private val saveBlockchainErrorUseCase: SaveBlockchainErrorUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val getMinimumTransactionAmountSyncUseCase: GetMinimumTransactionAmountSyncUseCase,
@@ -116,17 +113,22 @@ internal class SwapModel @Inject constructor(
     private val userWalletId = params.userWalletId
     private val isInitiallyReversed = params.isInitialReverseOrder
 
+    private val userWallet by lazy {
+        requireNotNull(
+            getUserWalletUseCase(userWalletId).getOrNull(),
+        ) { "No wallet found for id: $userWalletId" }
+    }
     private val swapInteractor = swapInteractorFactory.create(userWalletId)
 
     private lateinit var initialFromStatus: CryptoCurrencyStatus
     private var initialToStatus: CryptoCurrencyStatus? = null
-    private var userWallet: UserWallet by Delegates.notNull()
 
     private var isBalanceHidden = true
 
     private val selectedAppCurrencyFlow: StateFlow<AppCurrency> = createSelectedAppCurrencyFlow()
 
     private val stateBuilder = StateBuilder(
+        userWalletProvider = Provider { userWallet },
         actions = createUiActions(),
         isBalanceHiddenProvider = Provider { isBalanceHidden },
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
@@ -186,12 +188,10 @@ internal class SwapModel @Inject constructor(
             val toStatus = initialCurrencyTo?.let {
                 getSingleCryptoCurrencyStatusUseCase.invokeMultiWalletSync(userWalletId, it.id).getOrNull()
             }
-            val wallet = getUserWalletUseCase(userWalletId).getOrNull()
 
-            if (fromStatus == null || wallet == null) {
+            if (fromStatus == null) {
                 uiState = stateBuilder.addAlert(uiState = uiState, onDismiss = swapRouter::back)
             } else {
-                userWallet = wallet
                 initialFromStatus = fromStatus
                 initialToStatus = toStatus
                 initTokens(isInitiallyReversed)
@@ -1366,15 +1366,11 @@ internal class SwapModel @Inject constructor(
                 ),
             )
 
-            if (userWallet is UserWallet.Hot) {
-                return@launch // TODO [REDACTED_TASK_KEY] [Hot Wallet] Email feedback flow
-            }
-
-            val cardInfo = getCardInfoUseCase(userWallet.requireColdWallet().scanResponse)
+            val metaInfo = getWalletMetaInfoUseCase(userWallet.walletId)
                 .getOrElse { error("CardInfo must be not null") }
 
             val email = FeedbackEmailType.SwapProblem(
-                cardInfo = cardInfo,
+                walletMetaInfo = metaInfo,
                 providerName = dataState.selectedProvider?.name.orEmpty(),
                 txId = transaction?.txId.orEmpty(),
             )
