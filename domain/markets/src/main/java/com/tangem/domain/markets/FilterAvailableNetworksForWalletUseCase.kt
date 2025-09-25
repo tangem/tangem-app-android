@@ -4,10 +4,10 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.domain.card.common.extensions.supportedBlockchains
+import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.common.wallets.requireUserWalletsSync
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
-import com.tangem.domain.core.wallets.UserWalletsListRepository
-import com.tangem.domain.core.wallets.requireUserWalletsSync
 
 class FilterAvailableNetworksForWalletUseCase(
     private val userWalletsListManager: UserWalletsListManager,
