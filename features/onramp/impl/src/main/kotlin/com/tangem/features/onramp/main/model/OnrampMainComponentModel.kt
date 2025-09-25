@@ -171,7 +171,7 @@ internal class OnrampMainComponentModel @Inject constructor(
                         updatePairsAndQuotes()
 
                         if (wasInitialLoading && params.launchSepa) {
-                            onAmountValueChanged(PREDEFINED_SEPA_AMOUNT)
+                            onAmountValueChanged(value = PREDEFINED_SEPA_AMOUNT, isValuePasted = true)
                         }
                     },
                 )
@@ -243,8 +243,8 @@ internal class OnrampMainComponentModel @Inject constructor(
             .launchIn(modelScope)
     }
 
-    override fun onAmountValueChanged(value: String) {
-        _state.update { amountStateFactory.getOnAmountValueChange(value) }
+    override fun onAmountValueChanged(value: String, isValuePasted: Boolean) {
+        _state.update { amountStateFactory.getOnAmountValueChange(value, isValuePasted) }
         modelScope.launch { amountInputManager.update(value) }
     }
 
