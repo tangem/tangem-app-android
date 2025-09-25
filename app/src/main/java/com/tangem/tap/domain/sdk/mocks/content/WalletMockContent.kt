@@ -198,6 +198,13 @@ object WalletMockContent : MockContent {
                                 parentFingerprint = byteArrayOf(0, 0, 0, 0),
                                 childNumber = 0,
                             ),
+                            DerivationPath("m/44'/144'/0'/0/0") to ExtendedPublicKey( // xrp
+                                publicKey = byteArrayOf(2, 38, -6, 92, -37, -91, -59, -108, -18, -119, -55, 41, 38, -33, 44, 59, 24, -79, -14, -38, -10, -123, 106, 56, 39, 8, 112, 29, -41, 99, 70, -104, -121),
+                                chainCode = byteArrayOf(105, -21, -61, -50, 68, -89, 119, 53, -96, -40, 119, 77, -122, 121, 16, 40, -50, -48, -105, -101, -74, -7, -94, -59, -90, 96, 59, 99, 43, -91, 115, -29),
+                                depth = 0,
+                                parentFingerprint = byteArrayOf(0, 0, 0, 0),
+                                childNumber = 0,
+                            ),
                             DerivationPath("m/44'/3'/0'/0/0") to ExtendedPublicKey( // doge
                                 publicKey = byteArrayOf(3, -25, -24, -97, -124, 24, -89, 44, 75, 123, 92, -86, -73, -93, 25, -90, -89, -95, 88, 3, 107, 37, -1, -85, -32, -57, -123, -41, 108, -9, -96, 77, -124),
                                 chainCode = byteArrayOf(119, 3, 41, 112, 71, 54, 72, 30, 39, 25, 25, -104, 92, 46, -109, 63, 93, 67, 43, -102, -87, 39, -95, 106, 45, 67, 109, -29, -35, 10, -107, 104),

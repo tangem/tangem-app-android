@@ -26,7 +26,7 @@ import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.core.ui.test.StakingSendDetailsScreenTestTags
+import com.tangem.core.ui.test.BaseAmountBlockTestTags
 import java.math.BigDecimal
 
 @Composable
@@ -66,7 +66,7 @@ fun AmountBlock(amountState: AmountState, isClickDisabled: Boolean, isEditingDis
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = TangemTheme.dimens.spacing24)
-                .testTag(StakingSendDetailsScreenTestTags.PRIMARY_AMOUNT),
+                .testTag(BaseAmountBlockTestTags.PRIMARY_AMOUNT),
         )
         Text(
             text = secondAmount,
@@ -76,7 +76,7 @@ fun AmountBlock(amountState: AmountState, isClickDisabled: Boolean, isEditingDis
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = TangemTheme.dimens.spacing8)
-                .testTag(StakingSendDetailsScreenTestTags.SECONDARY_AMOUNT),
+                .testTag(BaseAmountBlockTestTags.SECONDARY_AMOUNT),
         )
     }
 }

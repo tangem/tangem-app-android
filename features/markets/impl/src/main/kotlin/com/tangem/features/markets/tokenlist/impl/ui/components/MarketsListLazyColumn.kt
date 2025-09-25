@@ -10,6 +10,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import com.tangem.core.ui.components.UnableToLoadData
 import com.tangem.core.ui.components.buttons.SecondarySmallButton
 import com.tangem.core.ui.components.buttons.SmallButtonConfig
@@ -18,6 +19,7 @@ import com.tangem.core.ui.event.EventEffect
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.test.MarketsTestTags
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.features.markets.impl.R
 import com.tangem.features.markets.tokenlist.impl.ui.state.ListUM
@@ -65,7 +67,7 @@ internal fun MarketsListLazyColumn(
         }
     } else {
         LazyColumn(
-            modifier = modifier,
+            modifier = modifier.testTag(MarketsTestTags.TOKENS_LIST),
             state = lazyListState,
             contentPadding = PaddingValues(bottom = bottomBarHeight),
             userScrollEnabled = true,

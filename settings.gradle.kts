@@ -3,6 +3,7 @@ pluginManagement {
         gradlePluginPortal()
         google()
         mavenCentral()
+        maven { url = uri("https://developer.huawei.com/repo/") }
     }
 
     includeBuild("plugins/configuration")
@@ -35,6 +36,7 @@ dependencyResolutionManagement {
             }
         }
         mavenCentral()
+        maven { url = uri("https://developer.huawei.com/repo/") }
         mavenLocal {
             content {
                 includeGroupAndSubgroups("com.tangem.tangem-sdk-kotlin")
@@ -261,14 +263,17 @@ include(":features:hot-wallet:api")
 include(":features:hot-wallet:impl")
 
 include(":features:kyc:api")
-//TODO disable for release because of the permissions
-// include(":features:kyc:impl")
+include(":features:kyc:impl")
+include(":features:kyc:mock")
 
 include(":features:tangempay:main:api")
 include(":features:tangempay:main:impl")
 
 include(":features:tangempay:details:api")
 include(":features:tangempay:details:impl")
+
+include(":features:tangempay:onboarding:api")
+include(":features:tangempay:onboarding:impl")
 
 include(":features:create-wallet-selection:api")
 include(":features:create-wallet-selection:impl")
@@ -281,6 +286,9 @@ include(":features:account:impl")
 
 include(":features:token-recieve:api")
 include(":features:token-recieve:impl")
+
+include(":features:yield-supply:api")
+include(":features:yield-supply:impl")
 // endregion Feature modules
 
 // region Domain modules
@@ -336,13 +344,13 @@ include(":domain:blockaid")
 include(":domain:blockaid:models")
 include(":domain:notifications")
 include(":domain:notifications:models")
-include(":domain:notifications:toggles")
 include(":domain:express")
 include(":domain:express:models")
 include(":domain:swap")
 include(":domain:swap:models")
 include(":domain:wallet-manager")
 include(":domain:wallet-manager:models")
+include(":domain:yield-supply")
 // endregion Domain modules
 
 // region Data modules
@@ -376,4 +384,6 @@ include(":data:blockaid")
 include(":data:swap")
 include(":data:express")
 include(":data:wallet-manager")
+include(":data:yield-supply")
 // endregion Data modules
+include(":features:tangempay:onboarding")
