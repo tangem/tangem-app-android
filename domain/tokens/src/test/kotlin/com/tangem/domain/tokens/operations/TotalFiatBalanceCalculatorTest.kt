@@ -31,7 +31,7 @@ class TotalFiatBalanceCalculatorTest {
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    inner class LoadingOrNonComputable {
+    inner class CalculateCurrenciesLoadingOrNonComputable {
 
         @Test
         fun `one token is Loading, total is Loading`() {
@@ -117,7 +117,7 @@ class TotalFiatBalanceCalculatorTest {
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    inner class Computable {
+    inner class CalculateCurrenciesComputable {
 
         @Test
         fun `Unreachable token isIncludeToBalanceOnError, total is Loaded`() {
@@ -371,6 +371,114 @@ class TotalFiatBalanceCalculatorTest {
             // Act
             val actual = (TotalFiatBalanceCalculator.calculate(statuses) as TotalFiatBalance.Loaded).source
 
+            // Assert
+            val expected = StatusSource.ONLY_CACHE
+            Truth.assertThat(actual).isEqualTo(expected)
+        }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class CalculateBalancesLoadingOrNonComputable {
+
+        @Test
+        fun `one balance is Loading, total is Loading`() {
+            // Arrange
+            val balances = nonEmptyListOf(
+                TotalFiatBalance.Loading,
+                TotalFiatBalance.Failed,
+            )
+
+            // Act
+            val actual = TotalFiatBalanceCalculator.calculate(balances)
+
+            // Assert
+            val expected = TotalFiatBalance.Loading
+            Truth.assertThat(actual).isEqualTo(expected)
+        }
+
+        @Test
+        fun `one balance is Failed, total is Failed`() {
+            // Arrange
+            val balances = nonEmptyListOf(
+                TotalFiatBalance.Failed,
+                TotalFiatBalance.Loaded(amount = BigDecimal.ONE, source = StatusSource.ACTUAL),
+            )
+
+            // Act
+            val actual = TotalFiatBalanceCalculator.calculate(balances)
+
+            // Assert
+            val expected = TotalFiatBalance.Failed
+            Truth.assertThat(actual).isEqualTo(expected)
+        }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class CalculateBalancesComputable {
+
+        @Test
+        fun `all balances are Loaded, total is Loaded`() {
+            // Arrange
+            val balances = nonEmptyListOf(
+                TotalFiatBalance.Loaded(amount = BigDecimal.TEN, source = StatusSource.ACTUAL),
+                TotalFiatBalance.Loaded(amount = BigDecimal.ONE, source = StatusSource.ACTUAL),
+            )
+
+            // Act
+            val actual = TotalFiatBalanceCalculator.calculate(balances)
+
+            // Assert
+            val expected = TotalFiatBalance.Loaded(
+                amount = BigDecimal(11),
+                source = StatusSource.ACTUAL,
+            )
+            Truth.assertThat(actual).isEqualTo(expected)
+        }
+
+        @Test
+        fun `StatusSource is Actual is all balances are Actual`() {
+            // Arrange
+            val balances = nonEmptyListOf(
+                TotalFiatBalance.Loaded(amount = BigDecimal.TEN, source = StatusSource.ACTUAL),
+                TotalFiatBalance.Loaded(amount = BigDecimal.ONE, source = StatusSource.ACTUAL),
+            )
+
+            // Act
+            val actual = (TotalFiatBalanceCalculator.calculate(balances) as TotalFiatBalance.Loaded).source
+
+            // Assert
+            val expected = StatusSource.ACTUAL
+            Truth.assertThat(actual).isEqualTo(expected)
+        }
+
+        @Test
+        fun `StatusSource is Cache is any balance is Cache`() {
+            // Arrange
+            val balances = nonEmptyListOf(
+                TotalFiatBalance.Loaded(amount = BigDecimal.TEN, source = StatusSource.ACTUAL),
+                TotalFiatBalance.Loaded(amount = BigDecimal.ONE, source = StatusSource.CACHE),
+            )
+
+            // Act
+            val actual = (TotalFiatBalanceCalculator.calculate(balances) as TotalFiatBalance.Loaded).source
+
+            // Assert
+            val expected = StatusSource.CACHE
+            Truth.assertThat(actual).isEqualTo(expected)
+        }
+
+        @Test
+        fun `StatusSource is ONLY_CACHE is any balance is ONLY_CACHE`() {
+            // Arrange
+            val balances = nonEmptyListOf(
+                TotalFiatBalance.Loaded(amount = BigDecimal.TEN, source = StatusSource.ACTUAL),
+                TotalFiatBalance.Loaded(amount = BigDecimal.ONE, source = StatusSource.ONLY_CACHE),
+            )
+
+            // Act
+            val actual = (TotalFiatBalanceCalculator.calculate(balances) as TotalFiatBalance.Loaded).source
             // Assert
             val expected = StatusSource.ONLY_CACHE
             Truth.assertThat(actual).isEqualTo(expected)
