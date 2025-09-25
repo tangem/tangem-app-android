@@ -348,8 +348,9 @@ internal class OnrampV2MainComponentModel @Inject constructor(
 
     private fun updateProvider(quote: OnrampQuote) {
         lastUpdateState.value = OnrampLastUpdate(
-            quote.fromAmount,
-            quote.countryCode,
+            fromAmount = quote.fromAmount,
+            countryCode = quote.countryCode,
+            paymentMethod = quote.paymentMethod,
         )
 
         _state.update {
@@ -378,8 +379,8 @@ internal class OnrampV2MainComponentModel @Inject constructor(
     }
 
     private fun checkLastInputState(quote: OnrampQuote?): Boolean {
-        return lastUpdateState.value?.lastAmount != quote?.fromAmount ||
-            lastUpdateState.value?.lastCountryString != quote?.countryCode
+        return lastUpdateState.value?.fromAmount != quote?.fromAmount ||
+            lastUpdateState.value?.countryCode != quote?.countryCode
     }
 
     private fun sendScreenOpenAnalytics() {
