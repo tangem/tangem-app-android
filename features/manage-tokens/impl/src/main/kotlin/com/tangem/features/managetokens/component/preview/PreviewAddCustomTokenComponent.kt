@@ -6,6 +6,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.managetokens.component.AddCustomTokenComponent
+import com.tangem.features.managetokens.component.AddCustomTokenMode
 import com.tangem.features.managetokens.component.CustomTokenSelectorComponent
 import com.tangem.features.managetokens.entity.customtoken.AddCustomTokenConfig
 import com.tangem.features.managetokens.ui.AddCustomTokenBottomSheet
@@ -14,7 +15,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 
 internal class PreviewAddCustomTokenComponent(
     initialState: AddCustomTokenConfig = AddCustomTokenConfig(
-        userWalletId = UserWalletId(stringValue = "321"),
+        mode = AddCustomTokenMode.Wallet(UserWalletId(stringValue = "321")),
         step = AddCustomTokenConfig.Step.INITIAL_NETWORK_SELECTOR,
     ),
 ) : AddCustomTokenComponent {
@@ -41,7 +42,7 @@ internal class PreviewAddCustomTokenComponent(
                     AddCustomTokenConfig.Step.INITIAL_NETWORK_SELECTOR -> {
                         PreviewCustomTokenSelectorComponent(
                             params = CustomTokenSelectorComponent.Params.NetworkSelector(
-                                userWalletId = config.userWalletId,
+                                mode = config.mode,
                                 selectedNetwork = null,
                                 onNetworkSelected = {},
                             ),
@@ -50,7 +51,7 @@ internal class PreviewAddCustomTokenComponent(
                     AddCustomTokenConfig.Step.NETWORK_SELECTOR -> {
                         PreviewCustomTokenSelectorComponent(
                             params = CustomTokenSelectorComponent.Params.NetworkSelector(
-                                userWalletId = config.userWalletId,
+                                mode = config.mode,
                                 selectedNetwork = config.selectedNetwork,
                                 onNetworkSelected = {},
                             ),
@@ -59,7 +60,7 @@ internal class PreviewAddCustomTokenComponent(
                     AddCustomTokenConfig.Step.DERIVATION_PATH_SELECTOR -> {
                         PreviewCustomTokenSelectorComponent(
                             params = CustomTokenSelectorComponent.Params.DerivationPathSelector(
-                                userWalletId = config.userWalletId,
+                                mode = config.mode,
                                 selectedNetwork = config.selectedNetwork!!,
                                 selectedDerivationPath = config.selectedDerivationPath!!,
                                 onDerivationPathSelected = {},
