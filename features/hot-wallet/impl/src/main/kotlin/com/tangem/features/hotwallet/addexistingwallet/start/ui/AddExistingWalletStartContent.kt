@@ -1,6 +1,7 @@
 package com.tangem.features.hotwallet.addexistingwallet.start.ui
 
 import android.content.res.Configuration
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.CircularProgressIndicator
@@ -62,7 +63,7 @@ internal fun AddExistingWalletStartContent(state: AddExistingWalletStartUM, modi
             )
             OptionBlock(
                 modifier = Modifier
-                    .padding(top = 24.dp),
+                    .padding(top = 32.dp),
                 backgroundColor = TangemTheme.colors.background.secondary,
                 title = stringResourceSafe(R.string.wallet_import_seed_title),
                 description = stringResourceSafe(R.string.wallet_import_seed_description),
@@ -71,6 +72,8 @@ internal fun AddExistingWalletStartContent(state: AddExistingWalletStartUM, modi
                 enabled = true,
             )
             OptionBlock(
+                modifier = Modifier
+                    .padding(top = 8.dp),
                 backgroundColor = TangemTheme.colors.background.secondary,
                 title = stringResourceSafe(R.string.wallet_import_scan_title),
                 description = stringResourceSafe(R.string.wallet_import_scan_description),
@@ -99,6 +102,8 @@ internal fun AddExistingWalletStartContent(state: AddExistingWalletStartUM, modi
                 enabled = true,
             )
             OptionBlock(
+                modifier = Modifier
+                    .padding(top = 8.dp),
                 backgroundColor = TangemTheme.colors.background.secondary,
                 title = stringResourceSafe(R.string.wallet_import_google_drive_title),
                 description = stringResourceSafe(R.string.wallet_import_google_drive_description),
@@ -123,9 +128,11 @@ internal fun AddExistingWalletStartContent(state: AddExistingWalletStartUM, modi
                 enabled = false,
             )
         }
-        BuyTangemWalletBlock(
-            onScanClick = state.onBuyCardClick,
-        )
+        AnimatedVisibility(state.showWantToPurchaseBlock) {
+            BuyTangemWalletBlock(
+                onScanClick = state.onBuyCardClick,
+            )
+        }
     }
 }
 
@@ -172,6 +179,7 @@ private fun PreviewCreateWalletContent() {
     TangemThemePreview {
         AddExistingWalletStartContent(
             state = AddExistingWalletStartUM(
+                showWantToPurchaseBlock = true,
                 isScanInProgress = true,
                 onBackClick = {},
                 onImportPhraseClick = {},
