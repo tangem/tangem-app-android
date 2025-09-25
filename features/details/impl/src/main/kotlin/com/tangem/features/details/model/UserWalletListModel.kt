@@ -2,6 +2,8 @@ package com.tangem.features.details.model
 
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.ui.userwallet.state.UserWalletItemUM
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.navigation.Router
@@ -13,6 +15,7 @@ import com.tangem.core.ui.components.bottomsheets.OptionsBottomSheetContent
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.domain.card.analytics.IntroductionProcess
 import com.tangem.domain.onboarding.analytics.OnboardingEvent
 import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
 import com.tangem.domain.wallets.usecase.ShouldSaveUserWalletsUseCase
@@ -43,6 +46,7 @@ internal class UserWalletListModel @Inject constructor(
     private val urlOpener: UrlOpener,
     private val userWalletSaver: UserWalletSaver,
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
 
     private val isWalletSavingInProgress: MutableStateFlow<Boolean> = MutableStateFlow(value = false)
@@ -134,8 +138,14 @@ internal class UserWalletListModel @Inject constructor(
             onOptionClick = { optionKey ->
                 dismissAddWalletBottomSheet()
                 when (optionKey) {
-                    ADD_WALLET_KEY_CREATE -> router.push(AppRoute.CreateWalletSelection)
-                    ADD_WALLET_KEY_ADD -> router.push(AppRoute.AddExistingWallet)
+                    ADD_WALLET_KEY_CREATE -> {
+                        analyticsEventHandler.send(IntroductionProcess.ButtonCreateNewWallet)
+                        router.push(AppRoute.CreateWalletSelection)
+                    }
+                    ADD_WALLET_KEY_ADD -> {
+                        analyticsEventHandler.send(IntroductionProcess.ButtonAddExistingWallet)
+                        router.push(AppRoute.AddExistingWallet)
+                    }
                     ADD_WALLET_KEY_BUY -> modelScope.launch {
                         analyticsEventHandler.send(OnboardingEvent.ButtonBuy(AnalyticsParam.ScreensSources.Settings))
                         generateBuyTangemCardLinkUseCase.invoke().let { urlOpener.openUrl(it) }

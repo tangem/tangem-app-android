@@ -96,6 +96,9 @@ sealed class AnalyticsParam {
         data object LongTap : ScreensSources("Long Tap")
         data object Markets : ScreensSources("Markets")
         data object HotWallet : ScreensSources("Hot Wallet")
+        data object Introduction : ScreensSources("Introduction")
+        data object CreateWallet : ScreensSources("Create Wallet")
+        data object ImportWallet : ScreensSources("Import Wallet")
     }
 
     sealed class TxSentFrom(val value: String) {
@@ -204,8 +207,15 @@ sealed class AnalyticsParam {
         Pending(value = "Pending"),
     }
 
-
-    
+    enum class ProductType(val value: String) {
+        Note("Note"),
+        Twins("Twins"),
+        Wallet("Wallet"),
+        Start2Coin("Start2Coin"),
+        Wallet2("Wallet 2.0"),
+        Ring("Ring"),
+        Visa("VISA"),
+        MobileWallet("Mobile Wallet"),
     }
 
     companion object Key {
@@ -258,5 +268,6 @@ sealed class AnalyticsParam {
         const val CHOSEN_TOKEN = "Token Chosen"
         const val ENS = "ENS"
         const val ENS_ADDRESS = "ENS Address"
+        const val WALLETS_COUNT = "Wallets Count"
     }
 }
