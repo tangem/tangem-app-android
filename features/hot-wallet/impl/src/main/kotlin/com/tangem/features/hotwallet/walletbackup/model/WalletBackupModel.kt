@@ -11,6 +11,8 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.common.routing.AppRoute
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import com.tangem.domain.wallets.usecase.UnlockHotWalletContextualUseCase
 import com.tangem.features.hotwallet.WalletBackupComponent
 import com.tangem.features.hotwallet.walletbackup.entity.BackupStatus
@@ -24,10 +26,11 @@ import javax.inject.Inject
 @ModelScoped
 internal class WalletBackupModel @Inject constructor(
     paramsContainer: ParamsContainer,
+    override val dispatchers: CoroutineDispatcherProvider,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val unlockHotWalletContextualUseCase: UnlockHotWalletContextualUseCase,
-    override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
 
     private val params: WalletBackupComponent.Params = paramsContainer.require()
@@ -53,6 +56,7 @@ internal class WalletBackupModel @Inject constructor(
         )
 
     init {
+        analyticsEventHandler.send(WalletSettingsAnalyticEvents.BackupScreenOpened)
         getUserWalletUseCase.invokeFlow(params.userWalletId)
             .onEach { either ->
                 either.fold(
@@ -96,6 +100,7 @@ internal class WalletBackupModel @Inject constructor(
     )
 
     private fun onRecoveryPhraseClick() {
+        analyticsEventHandler.send(WalletSettingsAnalyticEvents.ButtonManualBackup)
         if (uiState.value.backedUp) {
             getUserWalletUseCase.invoke(params.userWalletId)
                 .fold(

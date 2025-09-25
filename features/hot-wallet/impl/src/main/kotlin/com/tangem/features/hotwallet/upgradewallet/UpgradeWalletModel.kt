@@ -5,6 +5,7 @@ import com.tangem.common.core.TangemSdkError
 import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
 import com.tangem.common.routing.AppRoute
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -21,6 +22,7 @@ import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.settings.repositories.SettingsRepository
+import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import com.tangem.domain.wallets.usecase.ClearHotWalletContextualUnlockUseCase
 import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
 import com.tangem.features.hotwallet.UpgradeWalletComponent
@@ -50,17 +52,22 @@ internal class UpgradeWalletModel @Inject constructor(
     private val clearHotWalletContextualUnlockUseCase: ClearHotWalletContextualUnlockUseCase,
     private val tangemSdkManager: TangemSdkManager,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
     private val params = paramsContainer.require<UpgradeWalletComponent.Params>()
 
-    private val _uiState = MutableStateFlow(
-        UpgradeWalletUM(
-            onBackClick = { router.pop() },
-            onBuyTangemWalletClick = ::onBuyTangemWalletClick,
-            onScanDeviceClick = ::onScanDeviceClick,
-        ),
-    )
-    internal val uiState: StateFlow<UpgradeWalletUM> = _uiState
+    val uiState: StateFlow<UpgradeWalletUM>
+        field = MutableStateFlow(
+            UpgradeWalletUM(
+                onBackClick = { router.pop() },
+                onBuyTangemWalletClick = ::onBuyTangemWalletClick,
+                onScanDeviceClick = ::onScanDeviceClick,
+            ),
+        )
+
+    init {
+        analyticsEventHandler.send(WalletSettingsAnalyticEvents.HardwareUpdateScreenOpened)
+    }
 
     override fun onDestroy() {
         clearHotWalletContextualUnlockUseCase.invoke(params.userWalletId)
@@ -74,6 +81,7 @@ internal class UpgradeWalletModel @Inject constructor(
     }
 
     private fun onScanDeviceClick() {
+        analyticsEventHandler.send(WalletSettingsAnalyticEvents.ButtonHardwareUpdate)
         scanCard()
     }
 
@@ -100,13 +108,11 @@ internal class UpgradeWalletModel @Inject constructor(
     }
 
     private fun setLoading(isLoading: Boolean) {
-        _uiState.update { it.copy(isLoading = isLoading) }
+        uiState.update { it.copy(isLoading = isLoading) }
     }
 
     private fun showCardVerificationFailedDialog(error: TangemError) {
         if (error !is TangemSdkError.CardVerificationFailed) return
-
-        // TODO [REDACTED_TASK_KEY] track error
 
         val resource = error.localizedDescriptionRes()
         val resId = resource.resId ?: R.string.common_unknown_error

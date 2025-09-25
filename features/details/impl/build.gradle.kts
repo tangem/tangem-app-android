@@ -46,6 +46,7 @@ dependencies {
     implementation(projects.domain.balanceHiding)
     implementation(projects.domain.balanceHiding.models)
     implementation(projects.domain.legacy)
+    implementation(projects.domain.onboarding)
 
     /* SDK */
     // TODO: For TangemError model, should be removed after card domain scanning refactoring
