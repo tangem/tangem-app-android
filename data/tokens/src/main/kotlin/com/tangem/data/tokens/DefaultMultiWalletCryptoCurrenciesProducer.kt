@@ -1,5 +1,7 @@
 package com.tangem.data.tokens
 
+import arrow.core.Option
+import arrow.core.some
 import com.tangem.data.common.currency.ResponseCryptoCurrenciesFactory
 import com.tangem.datasource.local.token.UserTokensResponseStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
@@ -31,8 +33,7 @@ internal class DefaultMultiWalletCryptoCurrenciesProducer @AssistedInject constr
     private val dispatchers: CoroutineDispatcherProvider,
 ) : MultiWalletCryptoCurrenciesProducer {
 
-    override val fallback: Set<CryptoCurrency>
-        get() = emptySet()
+    override val fallback: Option<Set<CryptoCurrency>> = emptySet<CryptoCurrency>().some()
 
     override fun produce(): Flow<Set<CryptoCurrency>> {
         val userWallet = userWalletsStore.getSyncStrict(key = params.userWalletId)
@@ -51,7 +52,7 @@ internal class DefaultMultiWalletCryptoCurrenciesProducer @AssistedInject constr
                     userWallet = userWallet,
                 ).toSet()
             }
-            .onEmpty { emit(fallback) }
+            .onEmpty { emit(emptySet()) }
             .flowOn(dispatchers.default)
     }
 
