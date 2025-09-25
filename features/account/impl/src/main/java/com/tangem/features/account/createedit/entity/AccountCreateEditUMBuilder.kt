@@ -1,5 +1,6 @@
 package com.tangem.features.account.createedit.entity
 
+import com.tangem.common.ui.account.AccountNameUM
 import com.tangem.common.ui.account.toUM
 import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.TextReference
@@ -24,17 +25,17 @@ internal class AccountCreateEditUMBuilder(
             is AccountCreateEditComponent.Params.Edit -> resourceReference(R.string.account_form_title_edit)
         }
 
-    fun initAccountUM(onNameChange: (String) -> Unit): AccountCreateEditUM.Account {
+    fun initAccountUM(onNameChange: (AccountNameUM) -> Unit): AccountCreateEditUM.Account {
         return when (params) {
             is AccountCreateEditComponent.Params.Create -> AccountCreateEditUM.Account(
-                name = "",
+                name = AccountNameUM.Custom(raw = ""),
                 portfolioIcon = createIcon,
                 derivationInfo = AccountCreateEditUM.DerivationInfo.Empty,
                 inputPlaceholder = resourceReference(R.string.account_form_placeholder_new_account),
                 onNameChange = onNameChange,
             )
             is AccountCreateEditComponent.Params.Edit -> AccountCreateEditUM.Account(
-                name = params.account.accountName.value,
+                name = params.account.accountName.toUM(),
                 portfolioIcon = params.account.portfolioIcon.toUM(),
                 derivationInfo = createAccountDerivationInfo(
                     index = (params.account as Account.CryptoPortfolio).derivationIndex.value,
@@ -76,6 +77,7 @@ internal class AccountCreateEditUMBuilder(
         }
         return AccountCreateEditUM.Button(
             isButtonEnabled = false,
+            showProgress = false,
             onConfirmClick = onConfirmClick,
             text = text,
         )
@@ -108,12 +110,16 @@ internal class AccountCreateEditUMBuilder(
             )
         }
 
-        fun AccountCreateEditUM.updateName(name: String): AccountCreateEditUM {
+        fun AccountCreateEditUM.updateName(name: AccountNameUM): AccountCreateEditUM {
             return this.copy(account = this.account.copy(name = name))
         }
 
         fun AccountCreateEditUM.updateButton(isButtonEnabled: Boolean): AccountCreateEditUM {
             return this.copy(buttonState = this.buttonState.copy(isButtonEnabled = isButtonEnabled))
+        }
+
+        fun AccountCreateEditUM.toggleProgress(showProgress: Boolean): AccountCreateEditUM {
+            return this.copy(buttonState = this.buttonState.copy(showProgress = showProgress))
         }
 
         fun AccountCreateEditUM.updateDerivationIndex(derivationIndex: Int): AccountCreateEditUM {

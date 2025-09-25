@@ -159,6 +159,11 @@ sealed class StakingAnalyticsEvent(
             AnalyticsParam.ERROR_CODE to errorCode,
         ),
     )
+
+    data class UnitializedAddress(val token: String) : StakingAnalyticsEvent(
+        event = "Notice - Uninitialized Address",
+        params = mapOf(AnalyticsParam.TOKEN_PARAM to token),
+    )
 }
 
 enum class StakeScreenSource {
