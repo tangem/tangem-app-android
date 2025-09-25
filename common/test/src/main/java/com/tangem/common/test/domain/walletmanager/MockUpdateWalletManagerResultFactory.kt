@@ -2,7 +2,9 @@ package com.tangem.common.test.domain.walletmanager
 
 import com.tangem.blockchainsdk.models.UpdateWalletManagerResult
 import com.tangem.blockchainsdk.models.UpdateWalletManagerResult.*
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.TxInfo
+import com.tangem.domain.models.yield.supply.YieldSupplyStatus
 import java.math.BigDecimal
 
 /**
@@ -36,6 +38,41 @@ class MockUpdateWalletManagerResultFactory {
             addresses = setOf(Address(value = "0x1", type = Address.Type.Primary)),
             currenciesAmounts = setOf(
                 CryptoCurrencyAmount.Coin(value = BigDecimal.ONE),
+            ),
+            currentTransactions = setOf(CryptoCurrencyTransaction.Coin(txInfo)),
+        )
+    }
+
+    fun createVerifiedWithToken(): Verified {
+        return Verified(
+            selectedAddress = "0x1",
+            addresses = setOf(Address(value = "0x1", type = Address.Type.Primary)),
+            currenciesAmounts = setOf(
+                CryptoCurrencyAmount.Token.BasicToken(
+                    value = BigDecimal.ONE,
+                    currencyRawId = CryptoCurrency.RawID("token"),
+                    contractAddress = "0xTokenAddress",
+                ),
+            ),
+            currentTransactions = setOf(CryptoCurrencyTransaction.Coin(txInfo)),
+        )
+    }
+
+    fun createVerifiedWithSuppliedToken(): Verified {
+        return Verified(
+            selectedAddress = "0x1",
+            addresses = setOf(Address(value = "0x1", type = Address.Type.Primary)),
+            currenciesAmounts = setOf(
+                CryptoCurrencyAmount.Token.YieldSupplyToken(
+                    value = BigDecimal.ONE,
+                    currencyRawId = CryptoCurrency.RawID("token"),
+                    contractAddress = "0xTokenAddress",
+                    yieldSupplyStatus = YieldSupplyStatus(
+                        isActive = true,
+                        isInitialized = true,
+                        isAllowedToSpend = false,
+                    ),
+                ),
             ),
             currentTransactions = setOf(CryptoCurrencyTransaction.Coin(txInfo)),
         )
