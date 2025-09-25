@@ -2,13 +2,13 @@ package com.tangem.tap.common.analytics.paramsInterceptor
 
 import com.tangem.core.analytics.api.ParamsInterceptor
 import com.tangem.core.analytics.models.AnalyticsEvent
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.domain.card.analytics.IntroductionProcess
 import com.tangem.domain.card.analytics.ParamCardCurrencyConverter
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
-import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.proxy.redux.DaggerGraphState
@@ -50,17 +50,17 @@ class CardContextInterceptor(
         if (scanResponse.productType != ProductType.Ring && userWalletId != null) {
             val isWalletWithRing = runBlocking { walletsRepository.isWalletWithRing(userWalletId) }
 
-            if (isWalletWithRing) return "Ring"
+            if (isWalletWithRing) return AnalyticsParam.ProductType.Ring.value
         }
 
         return when (scanResponse.productType) {
-            ProductType.Note -> "Note"
-            ProductType.Twins -> "Twin"
-            ProductType.Wallet -> "Wallet"
-            ProductType.Wallet2 -> "Wallet 2.0"
-            ProductType.Ring -> "Ring"
-            ProductType.Start2Coin -> "Start2Coin"
-            ProductType.Visa -> "VISA"
+            ProductType.Note -> AnalyticsParam.ProductType.Note.value
+            ProductType.Twins -> AnalyticsParam.ProductType.Twins.value
+            ProductType.Wallet -> AnalyticsParam.ProductType.Wallet.value
+            ProductType.Wallet2 -> AnalyticsParam.ProductType.Wallet2.value
+            ProductType.Ring -> AnalyticsParam.ProductType.Ring.value
+            ProductType.Start2Coin -> AnalyticsParam.ProductType.Start2Coin.value
+            ProductType.Visa -> AnalyticsParam.ProductType.Visa.value
             else -> if (DemoHelper.isDemoCard(scanResponse)) getDemoCardProductType() else "Other"
         }
     }

@@ -128,7 +128,11 @@ internal class HomeModel @Inject constructor(
     }
 
     private fun onScanClick() {
-        analyticsEventHandler.send(IntroductionProcess.ButtonScanCard)
+        analyticsEventHandler.send(
+            IntroductionProcess.ButtonScanCard(
+                source = AnalyticsParam.ScreensSources.Introduction,
+            ),
+        )
         scanCard()
     }
 
@@ -146,10 +150,12 @@ internal class HomeModel @Inject constructor(
     }
 
     private fun onCreateNewWalletClick() {
+        analyticsEventHandler.send(IntroductionProcess.ButtonCreateNewWallet)
         router.push(AppRoute.CreateWalletSelection)
     }
 
     private fun onAddExistingWalletClick() {
+        analyticsEventHandler.send(IntroductionProcess.ButtonAddExistingWallet)
         router.push(AppRoute.AddExistingWallet)
     }
 
