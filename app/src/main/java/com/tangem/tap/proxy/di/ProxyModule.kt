@@ -1,7 +1,7 @@
 package com.tangem.tap.proxy.di
 
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.domain.wallets.legacy.UserWalletsListManager
+import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
 import com.tangem.lib.crypto.UserWalletManager
 import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.tap.proxy.UserWalletManagerImpl
@@ -26,12 +26,12 @@ internal object ProxyModule {
     @Singleton
     fun provideUserWalletManager(
         walletManagersFacade: WalletManagersFacade,
-        userWalletsListManager: UserWalletsListManager,
+        getSelectedWalletUseCase: GetSelectedWalletUseCase,
         dispatchers: CoroutineDispatcherProvider,
     ): UserWalletManager {
         return UserWalletManagerImpl(
             walletManagersFacade = walletManagersFacade,
-            userWalletsListManager = userWalletsListManager,
+            getSelectedWalletUseCase = getSelectedWalletUseCase,
             dispatchers = dispatchers,
         )
     }
