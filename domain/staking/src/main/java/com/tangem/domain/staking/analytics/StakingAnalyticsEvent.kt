@@ -151,8 +151,13 @@ sealed class StakingAnalyticsEvent(
         }
     }
 
-    data object TransactionError : StakingAnalyticsEvent(
+    data class TransactionError(
+        val errorCode: String,
+    ) : StakingAnalyticsEvent(
         event = "Error - Transaction Rejected",
+        params = mapOf(
+            AnalyticsParam.ERROR_CODE to errorCode,
+        ),
     )
 
     data class UnitializedAddress(val token: String) : StakingAnalyticsEvent(
