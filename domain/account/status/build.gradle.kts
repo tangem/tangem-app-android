@@ -17,6 +17,7 @@ tasks.withType<Test>().configureEach {
 dependencies {
     implementation(projects.domain.account)
     implementation(projects.domain.core)
+    api(projects.domain.common)
     implementation(projects.domain.quotes)
     implementation(projects.domain.models)
     implementation(projects.domain.networks)
