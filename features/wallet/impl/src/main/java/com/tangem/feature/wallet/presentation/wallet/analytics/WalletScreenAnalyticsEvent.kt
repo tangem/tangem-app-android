@@ -138,6 +138,15 @@ sealed class WalletScreenAnalyticsEvent {
 
         data object NoticeSeedPhraseSupportButtonDeclined : MainScreen(event = "Button - Support Declined")
 
+        data class NoticeFinishActivation(
+            private val balanceState: AnalyticsParam.EmptyFullState,
+        ) : MainScreen(
+            event = "Notice - Finish Activation",
+            params = mapOf("Balance State" to balanceState.value),
+        )
+
+        data object ButtonFinishNow : MainScreen(event = "Button - Finish Now")
+
         // region Referral Promo
         data object ReferralPromo : MainScreen(event = "Referral Banner")
         data object ReferralPromoButtonParticipate : MainScreen(event = "Button - Referral Participate")

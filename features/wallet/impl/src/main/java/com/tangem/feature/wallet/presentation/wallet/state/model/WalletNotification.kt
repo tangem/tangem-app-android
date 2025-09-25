@@ -271,6 +271,7 @@ sealed class WalletNotification(val config: NotificationConfig) {
     data class FinishWalletActivation(
         val iconTint: IconTint,
         val buttonsState: ButtonsState,
+        val isBalancePositive: Boolean,
     ) : WalletNotification(
         config = NotificationConfig(
             title = resourceReference(R.string.hw_activation_need_title),
