@@ -95,7 +95,6 @@ dependencies {
     implementation(projects.domain.wallets)
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.notifications)
-    implementation(projects.domain.notifications.toggles)
     implementation(projects.domain.transaction)
 
     /** Feature Apis */
