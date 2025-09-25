@@ -6,3 +6,4 @@ fun KNode.clickWithAssertion() {
     assertIsDisplayed()
     performClick()
 }
+

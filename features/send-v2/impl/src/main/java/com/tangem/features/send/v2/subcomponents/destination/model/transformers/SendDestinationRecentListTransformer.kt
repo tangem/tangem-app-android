@@ -11,7 +11,7 @@ import com.tangem.utils.transformer.Transformer
 internal class SendDestinationRecentListTransformer(
     private val senderAddress: String?,
     private val cryptoCurrency: CryptoCurrency,
-    private val isUtxoConsolidationAvailable: Boolean,
+    private val isSelfSendAvailable: Boolean,
     private val destinationWalletList: List<DestinationWalletUM>,
     private val txHistoryList: List<TxInfo>,
 ) : Transformer<DestinationUM> {
@@ -21,7 +21,7 @@ internal class SendDestinationRecentListTransformer(
         return state.copy(
             wallets = SendRecipientWalletListConverter(
                 senderAddress = senderAddress,
-                isUtxoConsolidationAvailable = isUtxoConsolidationAvailable,
+                isSelfSendAvailable = isSelfSendAvailable,
             ).convert(destinationWalletList),
             recent = SendRecipientHistoryListConverter(
                 cryptoCurrency = cryptoCurrency,

@@ -117,6 +117,9 @@ internal class OnboardingMultiWalletModel @Inject constructor(
         val card = scanResponse.card
 
         return when {
+            params.mode is OnboardingMultiWalletComponent.Mode.UpgradeHotWallet -> {
+                OnboardingMultiWalletState.Step.UpgradeWallet
+            }
             params.mode == OnboardingMultiWalletComponent.Mode.ContinueFinalize ->
                 OnboardingMultiWalletState.Step.Finalize
             // Add backup button
