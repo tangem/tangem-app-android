@@ -11,8 +11,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.test.BaseBottomSheetTestTags
 
 /**
  * [Show in Figma](https://www.figma.com/file/14ISV23YB1yVW1uNVwqrKv/Android?type=design&node-id=281-248&mode=design&t=bXqehWPHyATKcZEW-4)
@@ -38,7 +40,7 @@ fun SimpleSettingsRow(
                         onItemsClick()
                     }
                 },
-            ),
+            ).testTag(BaseBottomSheetTestTags.ACTION_TITLE),
         horizontalArrangement = Arrangement.Start,
         verticalAlignment = Alignment.CenterVertically,
     ) {
