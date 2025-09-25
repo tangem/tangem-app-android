@@ -144,14 +144,6 @@ interface TangemTechApi {
     suspend fun activatePromoCode(@Body body: PromocodeActivationBody): ApiResponse<PromocodeActivationResponse>
     // endregion
 
-    // region yield
-    @GET("v1/yield/markets")
-    suspend fun getYieldMarkets(): ApiResponse<YieldMarketsResponse>
-
-    @GET("v1/yield/token/{tokenAddress}")
-    suspend fun getYieldTokenStatus(@Path("tokenAddress") tokenAddress: String): ApiResponse<YieldTokenStatusResponse>
-    // endregion
-
     // region account
     @GET("/v1/wallets/{walletId}/accounts")
     suspend fun getWalletAccounts(
