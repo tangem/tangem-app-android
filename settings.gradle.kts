@@ -354,6 +354,7 @@ include(":domain:swap:models")
 include(":domain:wallet-manager")
 include(":domain:wallet-manager:models")
 include(":domain:yield-supply")
+include(":domain:yield-supply:models")
 // endregion Domain modules
 
 // region Data modules
