@@ -68,12 +68,7 @@ internal class WcEthSignTransactionUseCase @AssistedInject constructor(
                     chainId = tokenInfo.chainId,
                 )
             }
-            BlockAidTransactionCheck.Result.Approval(
-                result = result,
-                approval = this,
-                tokenInfo = tokenInfo,
-                isMutable = true,
-            )
+            BlockAidTransactionCheck.Result.Approval(result = result)
         }
     }
 
