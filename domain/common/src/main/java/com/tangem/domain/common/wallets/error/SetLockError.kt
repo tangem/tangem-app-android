@@ -1,4 +1,4 @@
-package com.tangem.domain.core.wallets.error
+package com.tangem.domain.common.wallets.error
 
 sealed interface SetLockError {
 
