@@ -58,6 +58,7 @@ internal class DefaultOnrampV2MainComponent @AssistedInject constructor(
                 userWalletId = params.userWalletId,
                 cryptoCurrency = params.cryptoCurrency,
                 country = config.country,
+                launchSepa = false,
                 onDismiss = { model.bottomSheetNavigation.dismiss() },
             ),
         )

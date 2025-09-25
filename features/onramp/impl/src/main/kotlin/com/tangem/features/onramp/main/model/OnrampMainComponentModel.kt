@@ -32,6 +32,7 @@ import com.tangem.features.onramp.main.entity.factory.OnrampStateFactory
 import com.tangem.features.onramp.main.entity.factory.OnrampStateFactory.Companion.PREDEFINED_SEPA_AMOUNT
 import com.tangem.features.onramp.main.entity.factory.amount.OnrampAmountStateFactory
 import com.tangem.features.onramp.providers.entity.SelectProviderResult
+import com.tangem.features.onramp.utils.model.EUR_CURRENCY
 import com.tangem.features.onramp.utils.sendOnrampErrorEvent
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -456,13 +457,5 @@ internal class OnrampMainComponentModel @Inject constructor(
         const val UPDATE_DELAY = 10_000L
 
         const val SEPA_METHOD_ID = "sepa"
-
-        val EUR_CURRENCY = OnrampCurrency(
-            code = "EUR",
-            name = "Euro",
-            unit = "€",
-            precision = 2,
-            image = "https://s3.eu-central-1.amazonaws.com/tangem.api/express/Currencies/EUR.png",
-        )
     }
 }
