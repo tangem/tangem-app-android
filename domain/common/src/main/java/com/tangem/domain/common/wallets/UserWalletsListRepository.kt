@@ -1,12 +1,7 @@
-package com.tangem.domain.core.wallets
+package com.tangem.domain.common.wallets
 
 import arrow.core.Either
-import com.tangem.domain.core.wallets.error.DeleteWalletError
-import com.tangem.domain.core.wallets.error.LockWalletsError
-import com.tangem.domain.core.wallets.error.SaveWalletError
-import com.tangem.domain.core.wallets.error.SelectWalletError
-import com.tangem.domain.core.wallets.error.SetLockError
-import com.tangem.domain.core.wallets.error.UnlockWalletError
+import com.tangem.domain.common.wallets.error.*
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
@@ -18,8 +13,8 @@ import kotlinx.coroutines.flow.StateFlow
  *
  * TODO tests [REDACTED_TASK_KEY]
  *
- * @see com.tangem.domain.models.wallet.UserWallet
- * @see com.tangem.domain.models.wallet.UserWalletId
+ * @see UserWallet
+ * @see UserWalletId
  */
 interface UserWalletsListRepository {
 
