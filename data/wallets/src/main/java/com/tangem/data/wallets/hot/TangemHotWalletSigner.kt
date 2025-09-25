@@ -6,6 +6,7 @@ import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.map
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.wallets.hot.HotWalletAccessor
 import com.tangem.hot.sdk.model.DataToSign
 import com.tangem.operations.sign.SignData
 import dagger.assisted.Assisted

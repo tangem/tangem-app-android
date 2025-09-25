@@ -19,6 +19,7 @@ import configparser
 import argparse
 import sys
 import shutil
+import time
 
 config = configparser.ConfigParser()
 
@@ -64,8 +65,8 @@ else:
         print('Read args...')
         args = parser.parse_args()
 
-        print("Generating bundle...")
-        response = client.download_files(project_id, {
+        print("Starting bundling process...")
+        response = client.download_files_async(project_id, {
             "format": "xml",
             "original_filenames": True,
             "filter_langs": list(filter(None, args.langs.split(",") if args.langs is not None else "")),
@@ -73,8 +74,17 @@ else:
             "filter_data": ["translated"]
         })
 
+        while True:
+            process = client.queued_process(project_id, response.process_id)
+            print(f"Process status: {process.status}")
+            if process.status == "finished":
+                break
+            elif process.status == "failed":
+                raise RuntimeError(f"Export failed: {process.message}")
+            time.sleep(5)
+
         print("Downloading translation file...")
-        bundle_url = response['bundle_url']
+        bundle_url = process.details["download_url"]
         urllib.request.urlretrieve(bundle_url, file_name)
 
         print("Unzipping archive...")
