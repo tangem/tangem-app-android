@@ -1,11 +1,14 @@
 package com.tangem.domain.wallets.usecase
 
+import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.legacy.asLockable
 import com.tangem.domain.wallets.legacy.isLockedSync
-import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.core.wallets.UserWalletsListRepository
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.map
 
 class GetSavedWalletsCountUseCase(
     private val userWalletsListManager: UserWalletsListManager,
