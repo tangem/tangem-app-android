@@ -3,10 +3,12 @@ package com.tangem.features.hotwallet.manualbackup.check.model
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.text.input.TextFieldValue
 import arrow.core.getOrElse
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.onboarding.analytics.OnboardingEvent
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.UpdateWalletUseCase
 import com.tangem.features.hotwallet.manualbackup.check.ManualBackupCheckComponent
@@ -38,6 +40,7 @@ internal class ManualBackupCheckModel @Inject constructor(
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val updateWalletUseCase: UpdateWalletUseCase,
     private val tangemHotSdk: TangemHotSdk,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
 
     private val params = paramsContainer.require<ManualBackupCheckComponent.Params>()
@@ -47,6 +50,7 @@ internal class ManualBackupCheckModel @Inject constructor(
         field = MutableStateFlow(getInitialUIState())
 
     init {
+        analyticsEventHandler.send(OnboardingEvent.Backup.SeedCheckingScreenOpened)
         modelScope.launch {
             runCatching {
                 val userWallet = getUserWalletUseCase(params.userWalletId)

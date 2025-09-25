@@ -5,6 +5,7 @@ import arrow.core.getOrElse
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.GlobalUiMessageSender
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -24,8 +25,9 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.wallets.usecase.IsWalletAlreadySavedUseCase
 import com.tangem.features.hotwallet.MnemonicRepository
-import com.tangem.features.onboarding.v2.common.analytics.OnboardingEvent
+import com.tangem.domain.onboarding.analytics.OnboardingEvent
 import com.tangem.features.onboarding.v2.common.ui.OnboardingDialogUM
+import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletComponent
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildParams
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.model.builder.GenerateSeedPhraseUiStateBuilder
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.model.builder.ImportSeedPhraseUiStateBuilder
@@ -56,7 +58,7 @@ internal class MultiWalletSeedPhraseModel @Inject constructor(
     private val cardRepository: CardRepository,
     private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
-    private val analyticsHandler: AnalyticsEventHandler,
+    private val analyticsEventHandler: AnalyticsEventHandler,
     private val isWalletAlreadySavedUseCase: IsWalletAlreadySavedUseCase,
     private val coldUserWalletBuilderFactory: ColdUserWalletBuilder.Factory,
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
@@ -149,6 +151,9 @@ internal class MultiWalletSeedPhraseModel @Inject constructor(
     private fun getInitialUIState(): MultiWalletSeedPhraseUM {
         return MultiWalletSeedPhraseUM.Start(
             onImportSeedPhraseClicked = {
+                analyticsEventHandler.send(
+                    event = OnboardingEvent.SeedPhrase.ButtonImportWallet(),
+                )
                 openImportSeedPhrase()
             },
             onGenerateSeedPhraseClicked = {
@@ -224,14 +229,20 @@ internal class MultiWalletSeedPhraseModel @Inject constructor(
                         .getOrElse { false }
 
                     if (!isWalletAlreadySaved) {
-                        analyticsHandler.send(
+                        analyticsEventHandler.send(
                             OnboardingEvent.CreateWallet.WalletCreatedSuccessfully(
                                 creationType = if (generatedSeedPhrase) {
                                     OnboardingEvent.CreateWallet.WalletCreationType.NewSeed
                                 } else {
                                     OnboardingEvent.CreateWallet.WalletCreationType.SeedImport
                                 },
+                                passphrase = AnalyticsParam.EmptyFullState.from(passphrase),
                                 seedPhraseLength = mnemonic.mnemonicComponents.size,
+                                overridingProductType = when (params.parentParams.mode) {
+                                    is OnboardingMultiWalletComponent.Mode.UpgradeHotWallet,
+                                    -> AnalyticsParam.ProductType.MobileWallet
+                                    else -> null
+                                },
                             ),
                         )
 

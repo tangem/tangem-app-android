@@ -20,12 +20,12 @@ import com.tangem.core.ui.message.DialogMessage
 import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.card.analytics.IntroductionProcess
 import com.tangem.domain.card.analytics.ParamCardCurrencyConverter
-import com.tangem.domain.card.analytics.Shop
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.error.SaveWalletError
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.onboarding.analytics.OnboardingEvent
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
@@ -82,19 +82,27 @@ internal class CreateWalletSelectionModel @Inject constructor(
     }
 
     private fun onMobileWalletClick() {
+        analyticsEventHandler.send(OnboardingEvent.ButtonMobileWallet)
         router.push(AppRoute.CreateMobileWallet)
     }
 
     private fun onHardwareWalletClick() {
-        analyticsEventHandler.send(IntroductionProcess.ButtonBuyCards)
-        analyticsEventHandler.send(Shop.ScreenOpened)
+        analyticsEventHandler.send(
+            event = OnboardingEvent.ButtonBuy(
+                source = AnalyticsParam.ScreensSources.CreateWallet,
+            ),
+        )
         modelScope.launch {
             generateBuyTangemCardLinkUseCase.invoke().let { urlOpener.openUrl(it) }
         }
     }
 
     private fun onScanClick() {
-        analyticsEventHandler.send(IntroductionProcess.ButtonScanCard)
+        analyticsEventHandler.send(
+            IntroductionProcess.ButtonScanCard(
+                source = AnalyticsParam.ScreensSources.CreateWallet,
+            ),
+        )
         scanCard()
     }
 

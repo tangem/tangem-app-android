@@ -4,6 +4,7 @@ import androidx.compose.runtime.Stable
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -16,8 +17,9 @@ import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
-import com.tangem.features.onboarding.v2.common.analytics.OnboardingEvent
+import com.tangem.domain.onboarding.analytics.OnboardingEvent
 import com.tangem.features.onboarding.v2.impl.R
+import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletComponent
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildParams
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.createwallet.ui.state.MultiWalletCreateWalletUM
 import com.tangem.features.onboarding.v2.multiwallet.impl.common.ui.resetCardDialog
@@ -63,11 +65,28 @@ internal class MultiWalletCreateWalletModel @Inject constructor(
                 resourceReference(R.string.onboarding_create_wallet_body)
             },
             onCreateWalletClick = {
-                analyticsHandler.send(OnboardingEvent.CreateWallet.ButtonCreateWallet)
+                analyticsHandler.send(
+                    event = OnboardingEvent.CreateWallet.ButtonCreateWallet(
+                        overridingProductType = when (params.parentParams.mode) {
+                            is OnboardingMultiWalletComponent.Mode.UpgradeHotWallet,
+                            -> AnalyticsParam.ProductType.MobileWallet
+                            else -> null
+                        },
+                    ),
+                )
                 createWallet(false)
             },
             showOtherOptionsButton = params.parentParams.withSeedPhraseFlow,
             onOtherOptionsClick = {
+                analyticsHandler.send(
+                    event = OnboardingEvent.CreateWallet.ButtonOtherOptions(
+                        overridingProductType = when (params.parentParams.mode) {
+                            is OnboardingMultiWalletComponent.Mode.UpgradeHotWallet,
+                            -> AnalyticsParam.ProductType.MobileWallet
+                            else -> null
+                        },
+                    ),
+                )
                 modelScope.launch {
                     onDone.emit(Step.SeedPhrase)
                 }
@@ -104,7 +123,15 @@ internal class MultiWalletCreateWalletModel @Inject constructor(
 
                     cardRepository.startCardActivation(cardId = result.data.card.cardId)
 
-                    analyticsHandler.send(OnboardingEvent.CreateWallet.WalletCreatedSuccessfully())
+                    analyticsHandler.send(
+                        event = OnboardingEvent.CreateWallet.WalletCreatedSuccessfully(
+                            overridingProductType = when (params.parentParams.mode) {
+                                is OnboardingMultiWalletComponent.Mode.UpgradeHotWallet,
+                                -> AnalyticsParam.ProductType.MobileWallet
+                                else -> null
+                            },
+                        ),
+                    )
 
                     val cardDoesNotSupportBackup = result.data.card.settings.isBackupAllowed.not()
                     when {
