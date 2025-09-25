@@ -435,6 +435,7 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
                         onClick = { clickIntents.onFinishWalletActivationClick(type) },
                     )
                 },
+                isBalancePositive = type == WalletActivationBannerType.Warning,
             ),
             condition = shouldShowFinishActivation,
         )

@@ -66,12 +66,14 @@ internal class WalletWarningsAnalyticsSender @Inject constructor(
             is WalletNotification.Warning.NetworksUnreachable,
             is WalletNotification.UsedOutdatedData,
             is WalletNotification.UnlockVisaAccess,
-            is WalletNotification.FinishWalletActivation,
             is WalletNotification.Warning.YeildSupplyApprove, // TODO apply correct event
             -> null
             is WalletNotification.Critical.SeedPhraseNotification -> MainScreen.NoticeSeedPhraseSupport
             is WalletNotification.Critical.SeedPhraseSecondNotification -> MainScreen.NoticeSeedPhraseSupportSecond
             is WalletNotification.PushNotifications -> WalletScreenAnalyticsEvent.PushBannerPromo.PushBanner
+            is WalletNotification.FinishWalletActivation -> MainScreen.NoticeFinishActivation(
+                balanceState = AnalyticsParam.EmptyFullState.from(warning.isBalancePositive),
+            )
         }
     }
 }
