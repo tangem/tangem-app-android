@@ -4,10 +4,7 @@ import com.tangem.domain.blockaid.BlockAidGasEstimate
 import com.tangem.domain.transaction.FeeRepository
 import com.tangem.domain.transaction.error.FeeErrorResolver
 import com.tangem.domain.yield.supply.YieldSupplyTransactionRepository
-import com.tangem.domain.yield.supply.usecase.YieldSupplyEstimateEnterFeeUseCase
-import com.tangem.domain.yield.supply.usecase.YieldSupplyGetContractAddressUseCase
-import com.tangem.domain.yield.supply.usecase.YieldSupplyStartEarningUseCase
-import com.tangem.domain.yield.supply.usecase.YieldSupplyStopEarningUseCase
+import com.tangem.domain.yield.supply.usecase.*
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -59,7 +56,16 @@ internal object YieldSupplyDomainModule {
     ): YieldSupplyGetContractAddressUseCase {
         return YieldSupplyGetContractAddressUseCase(
             yieldSupplyTransactionRepository = yieldSupplyTransactionRepository,
+        )
+    }
 
+    @Provides
+    @Singleton
+    fun provideYieldSupplyGetProtocolBalanceUseCase(
+        yieldSupplyTransactionRepository: YieldSupplyTransactionRepository,
+    ): YieldSupplyGetProtocolBalanceUseCase {
+        return YieldSupplyGetProtocolBalanceUseCase(
+            yieldSupplyTransactionRepository = yieldSupplyTransactionRepository,
         )
     }
 }
