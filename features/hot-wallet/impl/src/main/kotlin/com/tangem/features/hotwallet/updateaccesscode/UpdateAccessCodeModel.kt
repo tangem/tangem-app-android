@@ -35,11 +35,11 @@ internal class UpdateAccessCodeModel @Inject constructor(
         }
     }
 
-    override fun onAccessCodeSet(userWalletId: UserWalletId, accessCode: String) {
+    override fun onNewAccessCodeInput(userWalletId: UserWalletId, accessCode: String) {
         stackNavigation.push(UpdateAccessCodeRoute.ConfirmAccessCode(userWalletId, accessCode))
     }
 
-    override fun onAccessCodeConfirmed(userWalletId: UserWalletId) {
+    override fun onAccessCodeUpdated(userWalletId: UserWalletId) {
         router.pop()
     }
 }
