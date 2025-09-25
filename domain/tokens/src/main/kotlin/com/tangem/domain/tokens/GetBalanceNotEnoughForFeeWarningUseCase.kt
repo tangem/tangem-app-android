@@ -26,7 +26,6 @@ import java.math.BigDecimal
 class GetBalanceNotEnoughForFeeWarningUseCase(
     private val currenciesRepository: CurrenciesRepository,
     private val multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
-    private val tokensFeatureToggles: TokensFeatureToggles,
     private val dispatchers: CoroutineDispatcherProvider,
 ) {
     suspend operator fun invoke(
@@ -71,14 +70,10 @@ class GetBalanceNotEnoughForFeeWarningUseCase(
         tokenStatus: CryptoCurrencyStatus,
         feePaidToken: FeePaidCurrency.Token,
     ): CryptoCurrencyWarning {
-        val tokens = if (tokensFeatureToggles.isWalletBalanceFetcherEnabled) {
-            multiWalletCryptoCurrenciesSupplier.getSyncOrNull(
-                params = MultiWalletCryptoCurrenciesProducer.Params(userWalletId),
-            )
-                .orEmpty()
-        } else {
-            currenciesRepository.getMultiCurrencyWalletCurrenciesSync(userWalletId)
-        }
+        val tokens = multiWalletCryptoCurrenciesSupplier.getSyncOrNull(
+            params = MultiWalletCryptoCurrenciesProducer.Params(userWalletId),
+        )
+            .orEmpty()
 
         val token = tokens.find {
             it is CryptoCurrency.Token &&

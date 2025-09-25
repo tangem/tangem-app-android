@@ -9,6 +9,8 @@ data class EnvironmentConfig(
     val mercuryoWidgetId: String = "",
     val mercuryoSecret: String = "",
     val amplitudeApiKey: String = "",
+    val appsFlyerApiKey: String = "",
+    val appsAppId: String = "",
     val blockchainSdkConfig: BlockchainSdkConfig = BlockchainSdkConfig(),
     val walletConnectProjectId: String = "",
     val express: ExpressModel? = null,
