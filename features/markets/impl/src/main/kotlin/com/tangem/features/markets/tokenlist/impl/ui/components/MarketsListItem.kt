@@ -12,6 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -28,6 +29,7 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.LocalWindowSize
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.MarketsTestTags
 import com.tangem.core.ui.windowsize.WindowSizeType
 import com.tangem.features.markets.impl.R
 import com.tangem.features.markets.tokenlist.impl.ui.preview.MarketChartListItemPreviewDataProvider
@@ -41,7 +43,8 @@ internal fun MarketsListItem(model: MarketsListItemUM, modifier: Modifier = Modi
         modifier = modifier
             .fillMaxWidth()
             .clip(RectangleShape)
-            .clickable(onClick = onClick),
+            .clickable(onClick = onClick)
+            .testTag(MarketsTestTags.TOKENS_LIST_ITEM),
         model = model,
     )
 }
