@@ -1,11 +1,13 @@
 package com.tangem.domain.tokens.operations
 
 import arrow.core.NonEmptyList
+import arrow.core.toNonEmptyListOrNull
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.getResultStatusSource
 import com.tangem.domain.models.staking.YieldBalance
+import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.staking.utils.getTotalWithRewardsStakingBalance
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.extensions.orZero
@@ -34,6 +36,26 @@ object TotalFiatBalanceCalculator {
             ComputationState.LOADING -> TotalFiatBalance.Loading
             ComputationState.NON_COMPUTABLE -> TotalFiatBalance.Failed
             ComputationState.COMPUTABLE -> compute(statuses)
+        }
+    }
+
+    fun calculate(balances: List<TotalFiatBalance>): TotalFiatBalance {
+        val nonEmptyBalances = balances.toNonEmptyListOrNull()
+            ?: return TokenList.Empty.totalFiatBalance
+
+        val computationState = ComputationState.resolve(balances = nonEmptyBalances)
+
+        return when (computationState) {
+            ComputationState.LOADING -> TotalFiatBalance.Loading
+            ComputationState.NON_COMPUTABLE -> TotalFiatBalance.Failed
+            ComputationState.COMPUTABLE -> {
+                val loaded = balances.filterIsInstance<TotalFiatBalance.Loaded>()
+
+                TotalFiatBalance.Loaded(
+                    amount = loaded.sumOf(TotalFiatBalance.Loaded::amount),
+                    source = loaded.map(TotalFiatBalance.Loaded::source).getResultStatusSource(),
+                )
+            }
         }
     }
 
@@ -184,6 +206,18 @@ object TotalFiatBalanceCalculator {
                         is CryptoCurrencyStatus.Custom,
                         is CryptoCurrencyStatus.NoAccount,
                         -> continue
+                    }
+                }
+
+                return COMPUTABLE
+            }
+
+            fun resolve(balances: List<TotalFiatBalance>): ComputationState {
+                for (balance in balances) {
+                    when (balance) {
+                        TotalFiatBalance.Failed -> return NON_COMPUTABLE
+                        TotalFiatBalance.Loading -> return LOADING
+                        is TotalFiatBalance.Loaded -> continue
                     }
                 }
 
