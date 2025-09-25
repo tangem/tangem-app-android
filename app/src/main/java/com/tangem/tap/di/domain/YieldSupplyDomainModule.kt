@@ -1,5 +1,6 @@
 package com.tangem.tap.di.domain
 
+import com.tangem.domain.blockaid.BlockAidGasEstimate
 import com.tangem.domain.transaction.FeeRepository
 import com.tangem.domain.transaction.error.FeeErrorResolver
 import com.tangem.domain.yield.supply.YieldSupplyTransactionRepository
@@ -42,10 +43,12 @@ internal object YieldSupplyDomainModule {
     fun provideYieldSupplyEstimateEnterFeeUseCase(
         feeRepository: FeeRepository,
         feeErrorResolver: FeeErrorResolver,
+        blockAidGasEstimate: BlockAidGasEstimate,
     ): YieldSupplyEstimateEnterFeeUseCase {
         return YieldSupplyEstimateEnterFeeUseCase(
             feeRepository = feeRepository,
             feeErrorResolver = feeErrorResolver,
+            blockAidGasEstimate = blockAidGasEstimate,
         )
     }
 
