@@ -15,6 +15,7 @@ tasks.withType<Test>().configureEach {
 dependencies {
     /** Domain */
     implementation(projects.domain.models)
+    implementation(projects.domain.yieldSupply.models)
     implementation(projects.domain.transaction.models)
     implementation(projects.domain.transaction)
     implementation(projects.domain.legacy)
