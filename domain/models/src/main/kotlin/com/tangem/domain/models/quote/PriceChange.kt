@@ -7,7 +7,7 @@ import kotlinx.serialization.Serializable
 /**
  * Represents the price change of a cryptocurrency asset over a specific time period.
  *
- * @param value The amount of price change.
+ * @param value The amount of price change (like `0.00`)
  * @param source The source of the price change information.
  *
 [REDACTED_AUTHOR]
