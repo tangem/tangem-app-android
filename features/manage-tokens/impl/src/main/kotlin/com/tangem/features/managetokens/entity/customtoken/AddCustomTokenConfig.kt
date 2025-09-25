@@ -1,13 +1,13 @@
 package com.tangem.features.managetokens.entity.customtoken
 
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.features.managetokens.component.AddCustomTokenMode
 import kotlinx.serialization.Serializable
 
 @Serializable
 internal data class AddCustomTokenConfig(
     val step: Step,
-    val userWalletId: UserWalletId,
+    val mode: AddCustomTokenMode,
     val selectedNetwork: SelectedNetwork? = null,
     val selectedDerivationPath: SelectedDerivationPath? = null,
     val formValues: CustomTokenFormValues = CustomTokenFormValues(),
