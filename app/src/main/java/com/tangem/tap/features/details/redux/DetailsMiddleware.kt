@@ -6,7 +6,7 @@ import com.tangem.common.doOnSuccess
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.Analytics
 import com.tangem.domain.apptheme.model.AppThemeMode
-import com.tangem.domain.core.wallets.UserWalletsListRepository.LockMethod
+import com.tangem.domain.common.wallets.UserWalletsListRepository.LockMethod
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.tap.common.analytics.events.AnalyticsParam
