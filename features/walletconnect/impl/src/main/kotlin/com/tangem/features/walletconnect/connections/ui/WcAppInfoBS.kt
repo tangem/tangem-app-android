@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -42,6 +43,7 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.WalletConnectBottomSheetTestTags
 import com.tangem.features.walletconnect.connections.entity.*
 import com.tangem.features.walletconnect.impl.R
 import kotlinx.collections.immutable.ImmutableList
@@ -62,6 +64,7 @@ internal fun WcAppInfoModalBottomSheet(state: WcAppInfoUM, onBack: () -> Unit, o
                 title = resourceReference(R.string.wc_wallet_connect),
                 endIconRes = R.drawable.ic_close_24,
                 onEndClick = onDismiss,
+                modifier = Modifier.testTag(WalletConnectBottomSheetTestTags.TITLE),
             )
         },
         content = {
@@ -157,7 +160,9 @@ private fun WcAppInfoFirstBlock(state: WcAppInfoUM.Content, modifier: Modifier =
 private fun ConnectionRequestBlock(expanded: Boolean, modifier: Modifier = Modifier) {
     Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
         Icon(
-            modifier = Modifier.size(24.dp),
+            modifier = Modifier
+                .size(24.dp)
+                .testTag(WalletConnectBottomSheetTestTags.CONNECTION_REQUEST_ICON),
             painter = painterResource(R.drawable.ic_connect_new_24),
             contentDescription = null,
             tint = TangemTheme.colors.icon.accent,
@@ -165,7 +170,8 @@ private fun ConnectionRequestBlock(expanded: Boolean, modifier: Modifier = Modif
         Text(
             modifier = Modifier
                 .padding(start = TangemTheme.dimens.spacing4)
-                .weight(1f),
+                .weight(1f)
+                .testTag(WalletConnectBottomSheetTestTags.CONNECTION_REQUEST_TEXT),
             text = stringResourceSafe(R.string.wc_connection_request),
             style = TangemTheme.typography.body1,
             color = TangemTheme.colors.text.primary1,
@@ -173,7 +179,8 @@ private fun ConnectionRequestBlock(expanded: Boolean, modifier: Modifier = Modif
         Icon(
             modifier = Modifier
                 .padding(start = TangemTheme.dimens.spacing12)
-                .size(width = 18.dp, height = 24.dp),
+                .size(width = 18.dp, height = 24.dp)
+                .testTag(WalletConnectBottomSheetTestTags.CONNECTION_REQUEST_CHEVRON),
             painter = painterResource(if (expanded) R.drawable.ic_chevron_up_24 else R.drawable.ic_chevron_24),
             contentDescription = null,
             tint = TangemTheme.colors.icon.informative,
@@ -319,7 +326,9 @@ private fun WcAppInfoSecondBlock(state: WcAppInfoUM.Content, modifier: Modifier 
 private fun WalletRowItem(walletName: String, showEndIcon: Boolean, modifier: Modifier = Modifier) {
     Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
         Icon(
-            modifier = Modifier.size(24.dp),
+            modifier = Modifier
+                .size(24.dp)
+                .testTag(WalletConnectBottomSheetTestTags.WALLET_ICON),
             painter = painterResource(R.drawable.ic_wallet_new_24),
             contentDescription = null,
             tint = TangemTheme.colors.icon.accent,
@@ -330,14 +339,18 @@ private fun WalletRowItem(walletName: String, showEndIcon: Boolean, modifier: Mo
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                modifier = Modifier.padding(start = TangemTheme.dimens.spacing4),
+                modifier = Modifier
+                    .padding(start = TangemTheme.dimens.spacing4)
+                    .testTag(WalletConnectBottomSheetTestTags.WALLET_NAME_TITLE),
                 text = stringResourceSafe(R.string.manage_tokens_network_selector_wallet),
                 style = TangemTheme.typography.body1,
                 color = TangemTheme.colors.text.primary1,
                 maxLines = 1,
             )
             Text(
-                modifier = Modifier.padding(start = TangemTheme.dimens.spacing16),
+                modifier = Modifier
+                    .padding(start = TangemTheme.dimens.spacing16)
+                    .testTag(WalletConnectBottomSheetTestTags.WALLET_NAME),
                 text = walletName,
                 textAlign = TextAlign.End,
                 style = TangemTheme.typography.body1,
@@ -366,7 +379,9 @@ private fun SelectNetworksBlock(networksInfo: WcNetworksInfo, modifier: Modifier
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
-            modifier = Modifier.size(24.dp),
+            modifier = Modifier
+                .size(24.dp)
+                .testTag(WalletConnectBottomSheetTestTags.NETWORKS_ICON),
             painter = painterResource(R.drawable.ic_network_new_24),
             contentDescription = null,
             tint = TangemTheme.colors.icon.accent,
@@ -374,7 +389,8 @@ private fun SelectNetworksBlock(networksInfo: WcNetworksInfo, modifier: Modifier
         Text(
             modifier = Modifier
                 .padding(start = TangemTheme.dimens.spacing4)
-                .weight(1f),
+                .weight(1f)
+                .testTag(WalletConnectBottomSheetTestTags.NETWORKS_TITLE),
             text = stringResourceSafe(R.string.wc_common_networks),
             style = TangemTheme.typography.body1,
             color = TangemTheme.colors.text.primary1,
@@ -385,7 +401,9 @@ private fun SelectNetworksBlock(networksInfo: WcNetworksInfo, modifier: Modifier
             is WcNetworksInfo.NoneNetworksAdded -> Unit
         }
         Icon(
-            modifier = Modifier.size(width = 18.dp, height = 24.dp),
+            modifier = Modifier
+                .size(width = 18.dp, height = 24.dp)
+                .testTag(WalletConnectBottomSheetTestTags.NETWORKS_SELECTOR_ICON),
             painter = painterResource(id = R.drawable.ic_select_18_24),
             contentDescription = null,
             tint = TangemTheme.colors.icon.informative,
@@ -417,7 +435,8 @@ private fun NetworkIcons(items: ImmutableList<WcNetworkInfoItem>, modifier: Modi
                     )
                     .padding(2.dp)
                     .clip(CircleShape)
-                    .size(20.dp),
+                    .size(20.dp)
+                    .testTag(WalletConnectBottomSheetTestTags.NETWORKS_ICONS),
             )
         }
         if (remainingCount > 0) {
