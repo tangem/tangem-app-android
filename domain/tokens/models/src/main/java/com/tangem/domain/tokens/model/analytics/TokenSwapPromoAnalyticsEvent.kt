@@ -9,24 +9,24 @@ sealed class TokenSwapPromoAnalyticsEvent(
 ) : AnalyticsEvent(category = "Promotion", event = event, params = params) {
     class NoticePromotionBanner(
         source: AnalyticsParam.ScreensSources,
-        programName: ProgramName,
+        program: Program,
     ) : TokenSwapPromoAnalyticsEvent(
         event = "Notice - Promotion Banner",
         params = mapOf(
             AnalyticsParam.SOURCE to source.value,
-            "Program Name" to programName.name,
+            "Program Name" to program.programName,
         ),
     )
 
     class PromotionBannerClicked(
         source: AnalyticsParam.ScreensSources,
-        programName: ProgramName,
+        program: Program,
         action: BannerAction,
     ) : TokenSwapPromoAnalyticsEvent(
         event = "Promo Banner Clicked",
         params = mapOf(
             AnalyticsParam.SOURCE to source.value,
-            "Program Name" to programName.name,
+            "Program Name" to program.programName,
             "Action" to action.action,
         ),
     ) {
@@ -37,7 +37,8 @@ sealed class TokenSwapPromoAnalyticsEvent(
     }
 
     // Use it on new promo action
-    enum class ProgramName {
-        Empty,
+    enum class Program(val programName: String) {
+        Empty("Empty"),
+        Sepa("Sepa"),
     }
 }

@@ -10,7 +10,6 @@ import com.tangem.domain.walletconnect.WcRequestService
 import com.tangem.domain.walletconnect.model.WcEthMethodName
 import com.tangem.domain.walletconnect.model.WcMethodName
 import com.tangem.domain.walletconnect.model.WcSolanaMethodName
-import com.tangem.features.walletconnect.components.WalletConnectFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
@@ -21,18 +20,15 @@ internal class WcRoutingModel @Inject constructor(
     private val pairService: WcPairService,
     private val cardSdkProvider: CardSdkProvider,
     override val dispatchers: CoroutineDispatcherProvider,
-    private val featureToggles: WalletConnectFeatureToggles,
 ) : Model() {
 
-    val innerRouter = WcRouter(SlotNavigation<WcInnerRoute>())
+    val innerRouter = WcRouter(SlotNavigation())
 
     private val isSlotEmpty = MutableStateFlow(true)
     private val permittedAppRoute = MutableStateFlow(false)
 
     init {
-        if (featureToggles.isRedesignedWalletConnectEnabled) {
-            setupQueue()
-        }
+        setupQueue()
     }
 
     fun onSlotEmpty() {

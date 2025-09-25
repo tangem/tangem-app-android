@@ -22,7 +22,7 @@ import com.tangem.domain.card.ScanCardUseCase
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.core.wallets.UserWalletsListRepository
-import com.tangem.domain.feedback.GetCardInfoUseCase
+import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.onboarding.SaveTwinsOnboardingShownUseCase
 import com.tangem.domain.onboarding.WasTwinsOnboardingShownUseCase
@@ -37,8 +37,6 @@ import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.hot.sdk.TangemHotSdk
 import com.tangem.operations.attestation.CardArtworksProvider
 import com.tangem.tap.domain.scanCard.CardScanningFeatureToggles
-import com.tangem.tap.domain.walletconnect2.domain.LegacyWalletConnectRepository
-import com.tangem.tap.domain.walletconnect2.domain.WalletConnectInteractor
 import com.tangem.tap.proxy.AppStateHolder
 import org.rekotlin.StateType
 
@@ -46,8 +44,6 @@ data class DaggerGraphState(
     val networkConnectionManager: NetworkConnectionManager? = null,
     val cardScanningFeatureToggles: CardScanningFeatureToggles? = null,
     val scanCardUseCase: ScanCardUseCase? = null,
-    val walletConnectRepository: LegacyWalletConnectRepository? = null,
-    val walletConnectInteractor: WalletConnectInteractor? = null,
     val scanCardProcessor: ScanCardProcessor? = null,
     val cardSdkConfigRepository: CardSdkConfigRepository? = null,
     val appCurrencyRepository: AppCurrencyRepository? = null,
@@ -63,7 +59,7 @@ data class DaggerGraphState(
     val settingsRepository: SettingsRepository? = null,
     val blockchainSDKFactory: BlockchainSDKFactory? = null,
     val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase? = null,
-    val getCardInfoUseCase: GetCardInfoUseCase? = null,
+    val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase? = null,
     val issuersConfigStorage: IssuersConfigStorage? = null,
     val urlOpener: UrlOpener? = null,
     val shareManager: ShareManager? = null,
