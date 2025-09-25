@@ -11,6 +11,7 @@ android {
 
 dependencies {
     /** Project - Domain */
+    implementation(projects.domain.models)
     implementation(projects.domain.core)
     implementation(projects.domain.blockaid.models)
 
