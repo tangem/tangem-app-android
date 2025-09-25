@@ -1,6 +1,7 @@
 package com.tangem.datasource.api.tangemTech
 
 import com.tangem.datasource.api.common.response.ApiResponse
+import com.tangem.datasource.api.promotion.models.PromoBannerResponse
 import com.tangem.datasource.api.promotion.models.StoryContentResponse
 import com.tangem.datasource.api.tangemTech.models.*
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
@@ -119,9 +120,6 @@ interface TangemTechApi {
         @Path("application_id") applicationId: String,
         @Body body: NotificationApplicationCreateBody,
     ): ApiResponse<Unit>
-
-    @PATCH("v1/user-wallets/wallets/{wallet_id}/notify")
-    suspend fun setNotificationsEnabled(@Path("wallet_id") walletId: String, @Body body: WalletBody): ApiResponse<Unit>
     // endregion
 
     // region user-wallets
@@ -148,17 +146,30 @@ interface TangemTechApi {
 
     // region account
     @GET("/v1/wallets/{walletId}/accounts")
-    suspend fun getWalletAccounts(@Path("walletId") walletId: String): ApiResponse<GetWalletAccountsResponse>
+    suspend fun getWalletAccounts(
+        @Path("walletId") walletId: String,
+        @Header("If-None-Match") eTag: String? = null,
+    ): ApiResponse<GetWalletAccountsResponse>
 
     @PUT("/v1/wallets/{walletId}/accounts")
     suspend fun saveWalletAccounts(
         @Path("walletId") walletId: String,
-        @Header("If-Match") ifMatch: String,
-    ): ApiResponse<SaveWalletAccountsResponse>
+        @Header("If-Match") eTag: String,
+        @Body body: SaveWalletAccountsResponse,
+    ): ApiResponse<Unit>
 
     @GET("/v1/wallets/{walletId}/accounts/archived")
     suspend fun getWalletArchivedAccounts(
         @Path("walletId") walletId: String,
+        @Header("If-None-Match") eTag: String? = null,
     ): ApiResponse<GetWalletArchivedAccountsResponse>
+    // endregion
+
+    // region promo banners
+    @GET("/v1/promotion")
+    suspend fun getPromoBanner(
+        @Query("programName") name: String,
+        @Header("Cache-Control") cacheControl: String = "max-age=600",
+    ): ApiResponse<PromoBannerResponse>
     // endregion
 }
