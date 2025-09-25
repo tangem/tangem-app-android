@@ -26,7 +26,7 @@ internal fun LazyListScope.organizeTokensButton(
 ) {
     item(key = ORGANIZE_BUTTON_CONTENT_TYPE, contentType = ORGANIZE_BUTTON_CONTENT_TYPE) {
         RoundedActionButton(
-            modifier = modifier.testTag(MainScreenTestTags.ORGANIZE_TOKENS_BUTTON),
+            modifier = modifier.animateItem().testTag(MainScreenTestTags.ORGANIZE_TOKENS_BUTTON),
             config = ActionButtonConfig(
                 text = resourceReference(id = R.string.organize_tokens_title),
                 iconResId = R.drawable.ic_filter_24,

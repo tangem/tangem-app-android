@@ -32,6 +32,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.features.managetokens.component.AddCustomTokenMode
 import com.tangem.features.managetokens.component.CustomTokenSelectorComponent
 import com.tangem.features.managetokens.component.preview.PreviewCustomTokenSelectorComponent
 import com.tangem.features.managetokens.entity.customtoken.CustomTokenSelectorUM
@@ -268,12 +269,13 @@ private class CustomTokenNetworkSelectorComponentPreviewProvider :
     PreviewParameterProvider<CustomTokenSelectorComponent> {
 
     private val derivationPath = Network.DerivationPath.Card("m/44'/0'/0'/0/0")
+    private val mode: AddCustomTokenMode get() = AddCustomTokenMode.Wallet(UserWalletId(stringValue = "321"))
 
     override val values: Sequence<CustomTokenSelectorComponent>
         get() = sequenceOf(
             PreviewCustomTokenSelectorComponent(
                 params = CustomTokenSelectorComponent.Params.DerivationPathSelector(
-                    userWalletId = UserWalletId(stringValue = "321"),
+                    mode = mode,
                     selectedNetwork = SelectedNetwork(
                         id = Network.ID(value = "0", derivationPath = derivationPath),
                         name = "Ethereum",
@@ -291,7 +293,7 @@ private class CustomTokenNetworkSelectorComponentPreviewProvider :
             ),
             PreviewCustomTokenSelectorComponent(
                 params = CustomTokenSelectorComponent.Params.NetworkSelector(
-                    userWalletId = UserWalletId(stringValue = "321"),
+                    mode = mode,
                     selectedNetwork = SelectedNetwork(
                         id = Network.ID(value = "0", derivationPath = derivationPath),
                         name = "Ethereum",
