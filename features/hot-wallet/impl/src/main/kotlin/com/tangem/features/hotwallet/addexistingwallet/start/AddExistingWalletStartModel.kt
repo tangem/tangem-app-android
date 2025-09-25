@@ -23,11 +23,11 @@ import com.tangem.domain.card.analytics.ParamCardCurrencyConverter
 import com.tangem.domain.card.analytics.Shop
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.card.repository.CardSdkConfigRepository
+import com.tangem.domain.core.wallets.UserWalletsListRepository
 import com.tangem.domain.core.wallets.error.SaveWalletError
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
-import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
 import com.tangem.features.hotwallet.addexistingwallet.start.entity.AddExistingWalletStartUM
@@ -56,7 +56,7 @@ internal class AddExistingWalletStartModel @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val appRouter: AppRouter,
     private val urlOpener: UrlOpener,
-    private val userWalletsListManager: UserWalletsListManager,
+    private val userWalletsListRepository: UserWalletsListRepository,
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
 ) : Model() {
 
@@ -65,6 +65,7 @@ internal class AddExistingWalletStartModel @Inject constructor(
     internal val uiState: StateFlow<AddExistingWalletStartUM>
     field = MutableStateFlow(
         AddExistingWalletStartUM(
+            showWantToPurchaseBlock = false,
             isScanInProgress = false,
             onBackClick = params.callbacks::onBackClick,
             onImportPhraseClick = params.callbacks::onImportPhraseClick,
@@ -72,6 +73,17 @@ internal class AddExistingWalletStartModel @Inject constructor(
             onBuyCardClick = ::onShopClick,
         ),
     )
+
+    init {
+        showWantToPurchaseBlockWithDelay()
+    }
+
+    private fun showWantToPurchaseBlockWithDelay() {
+        modelScope.launch {
+            delay(SHOW_WANT_TO_PURCHASE_BLOCK_DELAY)
+            uiState.update { it.copy(showWantToPurchaseBlock = true) }
+        }
+    }
 
     private fun onShopClick() {
         analyticsEventHandler.send(IntroductionProcess.ButtonBuyCards)
@@ -134,7 +146,14 @@ internal class AddExistingWalletStartModel @Inject constructor(
                 setLoading(false)
                 when (it) {
                     is SaveWalletError.DataError -> Timber.e(it.toString(), "Unable to save user wallet")
-                    is SaveWalletError.WalletAlreadySaved -> appRouter.replaceAll(AppRoute.Wallet)
+                    is SaveWalletError.WalletAlreadySaved -> {
+                        userWalletsListRepository.unlock(
+                            userWalletId = userWallet.walletId,
+                            unlockMethod = UserWalletsListRepository.UnlockMethod.Scan(scanResponse),
+                        ).onRight {
+                            appRouter.replaceAll(AppRoute.Wallet)
+                        }
+                    }
                 }
             },
             ifRight = {
@@ -145,7 +164,7 @@ internal class AddExistingWalletStartModel @Inject constructor(
         )
     }
 
-    private fun sendSignedInCardAnalyticsEvent(scanResponse: ScanResponse) {
+    private suspend fun sendSignedInCardAnalyticsEvent(scanResponse: ScanResponse) {
         val currency = ParamCardCurrencyConverter().convert(value = scanResponse.cardTypesResolver)
         if (currency != null) {
             analyticsEventHandler.send(
@@ -153,7 +172,7 @@ internal class AddExistingWalletStartModel @Inject constructor(
                     currency = currency,
                     batch = scanResponse.card.batchId,
                     signInType = SignInType.Card,
-                    walletsCount = userWalletsListManager.walletsCount.toString(),
+                    walletsCount = userWalletsListRepository.userWalletsSync().size.toString(),
                     hasBackup = scanResponse.card.backupStatus?.isActive,
                 ),
             )
@@ -179,5 +198,9 @@ internal class AddExistingWalletStartModel @Inject constructor(
                 title = resourceReference(id = R.string.common_error),
             ),
         )
+    }
+
+    companion object {
+        private const val SHOW_WANT_TO_PURCHASE_BLOCK_DELAY = 3000L
     }
 }
