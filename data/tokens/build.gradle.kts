@@ -24,17 +24,18 @@ dependencies {
     // endregion
 
     // region Project - Domain
+    implementation(projects.domain.account)
+    implementation(projects.domain.card)
     implementation(projects.domain.core)
     implementation(projects.domain.demo)
     implementation(projects.domain.legacy)
-    implementation(projects.domain.walletManager)
-    implementation(projects.domain.card)
     implementation(projects.domain.models)
     implementation(projects.domain.staking)
     implementation(projects.domain.staking.models)
     implementation(projects.domain.tokens)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.txhistory.models)
+    implementation(projects.domain.walletManager)
     implementation(projects.domain.wallets.models)
     // endregion
 
