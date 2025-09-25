@@ -4,6 +4,8 @@ import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -18,6 +20,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.usecase.ExportSeedPhraseUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
+import com.tangem.domain.onboarding.analytics.OnboardingEvent
 import com.tangem.features.onboarding.v2.impl.R
 import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletComponent
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildParams
@@ -47,6 +50,7 @@ internal class MultiWalletUpgradeWalletModel @Inject constructor(
     private val saveWalletUseCase: SaveWalletUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val exportSeedPhraseUseCase: ExportSeedPhraseUseCase,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
 
     private val params = paramsContainer.require<MultiWalletChildParams>()
@@ -58,7 +62,7 @@ internal class MultiWalletUpgradeWalletModel @Inject constructor(
             title = resourceReference(R.string.hw_upgrade_start_title),
             bodyText = resourceReference(R.string.hw_upgrade_start_description),
             onStartUpgradeClick = {
-                // TODO [REDACTED_TASK_KEY] track button click
+                analyticsEventHandler.send(OnboardingEvent.CreateWallet.ButtonStartUpgrade)
                 upgradeWallet(false)
             },
             dialog = null,
@@ -69,7 +73,8 @@ internal class MultiWalletUpgradeWalletModel @Inject constructor(
     val onDone = MutableSharedFlow<Step>()
 
     init {
-        // TODO [REDACTED_TASK_KEY] track screen opened
+        analyticsEventHandler.send(OnboardingEvent.Started)
+        analyticsEventHandler.send(OnboardingEvent.CreateWallet.UpgradeWalletScreenOpened)
     }
 
     private fun upgradeWallet(shouldReset: Boolean) {
@@ -106,7 +111,15 @@ internal class MultiWalletUpgradeWalletModel @Inject constructor(
 
                             cardRepository.startCardActivation(cardId = result.data.card.cardId)
 
-                            // TODO [REDACTED_TASK_KEY] track wallet created
+                            analyticsEventHandler.send(
+                                OnboardingEvent.CreateWallet.WalletCreatedSuccessfully(
+                                    creationType = OnboardingEvent.CreateWallet.WalletCreationType.SeedImport,
+                                    passphrase = AnalyticsParam.EmptyFullState.from(privateInfo.passphrase?.toString()),
+                                    seedPhraseLength = privateInfo.mnemonic.mnemonicComponents.size,
+                                    overridingProductType = AnalyticsParam.ProductType.MobileWallet,
+                                ),
+                            )
+
                             val cardDoesNotSupportBackup = result.data.card.settings.isBackupAllowed.not()
                             when {
                                 cardDoesNotSupportBackup -> createWalletAndNavigateBackWithDone()

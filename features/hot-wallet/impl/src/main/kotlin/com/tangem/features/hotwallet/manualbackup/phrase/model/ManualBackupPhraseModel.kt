@@ -2,11 +2,13 @@ package com.tangem.features.hotwallet.manualbackup.phrase.model
 
 import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.ui.components.grid.entity.EnumeratedTwoColumnGridItem
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.onboarding.analytics.OnboardingEvent
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.hotwallet.manualbackup.phrase.ManualBackupPhraseComponent
 import com.tangem.features.hotwallet.manualbackup.phrase.entity.ManualBackupPhraseUM
@@ -29,6 +31,7 @@ internal class ManualBackupPhraseModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val tangemHotSdk: TangemHotSdk,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
 
     private val params = paramsContainer.require<ManualBackupPhraseComponent.Params>()
@@ -42,6 +45,7 @@ internal class ManualBackupPhraseModel @Inject constructor(
         )
 
     init {
+        analyticsEventHandler.send(OnboardingEvent.Backup.SeedPhraseInfo)
         modelScope.launch {
             runCatching {
                 val userWallet = getUserWalletUseCase(params.userWalletId)

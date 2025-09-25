@@ -2,8 +2,8 @@ package com.tangem.tap.features.onboarding.products.wallet.redux
 
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.Analytics
+import com.tangem.domain.onboarding.analytics.OnboardingEvent
 import com.tangem.tap.backupService
-import com.tangem.tap.common.analytics.events.Onboarding.Finished
 import com.tangem.tap.common.extensions.dispatchNavigationAction
 import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.common.redux.AppState
@@ -43,7 +43,7 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
 
                 cardRepository.finishCardActivation(unfinishedBackup.card.cardId)
                 onboardingRepository.clearUnfinishedFinalizeOnboarding()
-                Analytics.send(Finished())
+                Analytics.send(OnboardingEvent.Finished)
             }
         }
         is BackupAction.ResumeFoundUnfinishedBackup -> {

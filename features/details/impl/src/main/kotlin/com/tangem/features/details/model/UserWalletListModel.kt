@@ -13,6 +13,7 @@ import com.tangem.core.ui.components.bottomsheets.OptionsBottomSheetContent
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.domain.onboarding.analytics.OnboardingEvent
 import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
 import com.tangem.domain.wallets.usecase.ShouldSaveUserWalletsUseCase
 import com.tangem.features.details.entity.UserWalletListUM
@@ -136,6 +137,7 @@ internal class UserWalletListModel @Inject constructor(
                     ADD_WALLET_KEY_CREATE -> router.push(AppRoute.CreateWalletSelection)
                     ADD_WALLET_KEY_ADD -> router.push(AppRoute.AddExistingWallet)
                     ADD_WALLET_KEY_BUY -> modelScope.launch {
+                        analyticsEventHandler.send(OnboardingEvent.ButtonBuy(AnalyticsParam.ScreensSources.Settings))
                         generateBuyTangemCardLinkUseCase.invoke().let { urlOpener.openUrl(it) }
                     }
                 }

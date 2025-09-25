@@ -11,7 +11,7 @@ import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
-import com.tangem.features.onboarding.v2.common.analytics.OnboardingEvent
+import com.tangem.domain.onboarding.analytics.OnboardingEvent
 import com.tangem.features.onboarding.v2.note.impl.child.create.OnboardingNoteCreateWalletComponent
 import com.tangem.features.onboarding.v2.note.impl.child.create.ui.state.OnboardingNoteCreateWalletUM
 import com.tangem.sdk.api.TangemSdkManager
@@ -43,7 +43,7 @@ internal class OnboardingNoteCreateWalletModel @Inject constructor(
     init {
         Analytics.send(OnboardingEvent.CreateWallet.ScreenOpened)
         modelScope.launch {
-            val scanResponse = params.childParams.commonState.value.scanResponse ?: return@launch
+            val scanResponse = params.childParams.commonState.value.scanResponse
             if (!cardRepository.isActivationStarted(scanResponse.card.cardId)) {
                 Analytics.send(OnboardingEvent.Started)
             }
@@ -58,7 +58,7 @@ internal class OnboardingNoteCreateWalletModel @Inject constructor(
             _uiState.update {
                 it.copy(createWalletInProgress = true)
             }
-            val scanResponse = params.childParams.commonState.value.scanResponse ?: return@launch
+            val scanResponse = params.childParams.commonState.value.scanResponse
             val result = tangemSdkManager.createProductWallet(scanResponse)
             when (result) {
                 is CompletionResult.Success -> {

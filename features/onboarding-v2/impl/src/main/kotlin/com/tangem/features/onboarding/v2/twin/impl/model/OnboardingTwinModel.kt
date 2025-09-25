@@ -27,7 +27,7 @@ import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
 import com.tangem.domain.wallets.usecase.DeleteWalletUseCase
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
-import com.tangem.features.onboarding.v2.common.analytics.OnboardingEvent
+import com.tangem.domain.onboarding.analytics.OnboardingEvent
 import com.tangem.features.onboarding.v2.common.ui.interruptBackupDialog
 import com.tangem.features.onboarding.v2.impl.R
 import com.tangem.features.onboarding.v2.twin.api.OnboardingTwinComponent

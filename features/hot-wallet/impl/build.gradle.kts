@@ -36,6 +36,7 @@ dependencies {
     implementation(projects.domain.settings)
     implementation(projects.domain.feedback)
     implementation(projects.domain.feedback.models)
+    implementation(projects.domain.onboarding)
 
     /** Common */
     implementation(projects.common.ui)

@@ -1,9 +1,11 @@
 package com.tangem.features.hotwallet.createmobilewallet
 
 import com.tangem.common.routing.AppRoute
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.domain.onboarding.analytics.OnboardingEvent
 import com.tangem.domain.wallets.builder.HotUserWalletBuilder
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
 import com.tangem.features.hotwallet.createmobilewallet.entity.CreateMobileWalletUM
@@ -25,6 +27,7 @@ internal class CreateMobileWalletModel @Inject constructor(
     private val saveUserWalletUseCase: SaveWalletUseCase,
     private val router: Router,
     private val tangemHotSdk: TangemHotSdk,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
 
     internal val uiState: StateFlow<CreateMobileWalletUM>
@@ -52,6 +55,12 @@ internal class CreateMobileWalletModel @Inject constructor(
                 val hotUserWalletBuilder = hotUserWalletBuilderFactory.create(hotWalletId)
                 val userWallet = hotUserWalletBuilder.build()
                 saveUserWalletUseCase(userWallet)
+                analyticsEventHandler.send(
+                    event = OnboardingEvent.CreateWallet.WalletCreatedSuccessfully(
+                        creationType = OnboardingEvent.CreateWallet.WalletCreationType.NewSeed,
+                        seedPhraseLength = SEED_PHRASE_LENGTH,
+                    ),
+                )
                 router.replaceAll(AppRoute.Wallet)
             }.onFailure {
                 Timber.e(it)
@@ -61,5 +70,9 @@ internal class CreateMobileWalletModel @Inject constructor(
                 }
             }
         }
+    }
+
+    companion object {
+        private const val SEED_PHRASE_LENGTH = 12
     }
 }
