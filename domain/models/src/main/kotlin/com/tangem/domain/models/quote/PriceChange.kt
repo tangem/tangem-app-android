@@ -1,7 +1,8 @@
 package com.tangem.domain.models.quote
 
 import com.tangem.domain.models.StatusSource
-import java.math.BigDecimal
+import com.tangem.domain.models.serialization.SerializedBigDecimal
+import kotlinx.serialization.Serializable
 
 /**
  * Represents the price change of a cryptocurrency asset over a specific time period.
@@ -11,7 +12,8 @@ import java.math.BigDecimal
  *
 [REDACTED_AUTHOR]
  */
+@Serializable
 data class PriceChange(
-    val value: BigDecimal,
+    val value: SerializedBigDecimal,
     val source: StatusSource,
 )
