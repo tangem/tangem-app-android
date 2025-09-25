@@ -19,7 +19,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.card.repository.CardRepository
-import com.tangem.domain.core.wallets.UserWalletsListRepository
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.onboarding.repository.OnboardingRepository
 import com.tangem.features.hotwallet.HotAccessCodeRequestComponent
