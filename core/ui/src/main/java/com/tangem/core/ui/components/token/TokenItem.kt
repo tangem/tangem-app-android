@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.Measurable
 import androidx.compose.ui.layout.Placeable
@@ -309,7 +310,13 @@ private fun CustomContainer(state: TokenItemState, modifier: Modifier = Modifier
                 },
             )
 
-            fiatAmount?.placeRelative(x = layoutWidth - fiatAmount.width, y = verticalPadding)
+            fiatAmount?.placeRelative(
+                x = layoutWidth - fiatAmount.width,
+                y = when (state.subtitle2State) {
+                    null -> (layoutHeight - fiatAmount.height).div(other = 2)
+                    else -> verticalPadding
+                },
+            )
 
             priceChange?.placeRelative(
                 x = icon.width,
@@ -462,7 +469,7 @@ private fun calculateLayoutHeight(
     return max(firstColumnHeight, secondColumnHeight).coerceAtLeast(minLayoutHeight)
 }
 
-@Preview(widthDp = 360)
+@Preview(widthDp = 360, showBackground = true)
 @Composable
 private fun Preview_TokenItem_InLight(@PreviewParameter(TokenItemStateProvider::class) state: TokenItemState) {
     TangemThemePreview(isDark = false) {
@@ -589,6 +596,8 @@ private class TokenItemStateProvider : CollectionPreviewParameterProvider<TokenI
             titleState = TokenItemState.TitleState.Content(text = stringReference(value = "Polygon")),
             iconState = customTokenIconState.copy(isGrayscale = true),
         ),
+        AccountItemPreviewData.accountItem,
+        AccountItemPreviewData.accountItem.copy(iconState = AccountItemPreviewData.accountLetterIcon),
     ),
 ) {
 
@@ -641,4 +650,38 @@ private class TokenItemStateProvider : CollectionPreviewParameterProvider<TokenI
             )
         }
     }
+}
+
+object AccountItemPreviewData {
+    val accountResIcon: CurrencyIconState.CryptoPortfolio.Icon
+        get() = CurrencyIconState.CryptoPortfolio.Icon(
+            resId = R.drawable.ic_rounded_star_24,
+            color = Color.Blue,
+            isGrayscale = false,
+        )
+    val accountLetterIcon: CurrencyIconState.CryptoPortfolio.Letter
+        get() = CurrencyIconState.CryptoPortfolio.Letter(
+            char = stringReference("A"),
+            color = Color.Blue,
+            isGrayscale = false,
+        )
+
+    val accountItem: TokenItemState.Content
+        get() = TokenItemState.Content(
+            id = UUID.randomUUID().toString(),
+            iconState = accountResIcon,
+            titleState = TokenItemState.TitleState.Content(
+                text = stringReference(value = "Portfolio"),
+            ),
+            fiatAmountState = FiatAmountState.Content(
+                text = "$22,129.65",
+            ),
+            subtitleState = TokenItemState.SubtitleState.TextContent(
+                value = stringReference("24 tokens"),
+                isAvailable = false,
+            ),
+            subtitle2State = null,
+            onItemClick = {},
+            onItemLongClick = {},
+        )
 }
