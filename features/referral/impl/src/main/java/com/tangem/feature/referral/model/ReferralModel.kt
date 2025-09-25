@@ -5,6 +5,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.tangem.common.routing.AppRouter
+import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -147,13 +148,18 @@ internal class ReferralModel @Inject constructor(
             url = tosLink,
             expectedAwards = expectedAwards,
         )
-        is ReferralData.NonParticipantData -> ReferralInfoState.NonParticipantContent(
-            award = getAwardValue(),
-            networkName = getNetworkName(),
-            discount = getDiscountValue(),
-            url = tosLink,
-            onParticipateClicked = ::participate,
-        )
+        is ReferralData.NonParticipantData -> {
+            val userWallet = getUserWalletUseCase(params.userWalletId).getOrNull() ?: error("User wallet not found")
+
+            ReferralInfoState.NonParticipantContent(
+                award = getAwardValue(),
+                networkName = getNetworkName(),
+                discount = getDiscountValue(),
+                url = tosLink,
+                onParticipateClicked = ::participate,
+                participateButtonIcon = walletInterationIcon(userWallet),
+            )
+        }
     }
 
     private fun ReferralData.getAwardValue(): String = "$award ${getToken().symbol}"
