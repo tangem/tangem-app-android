@@ -341,25 +341,29 @@ private class AppCurrencySelectorStateProvider : CollectionPreviewParameterProvi
             .mapIndexed { index, s -> Currency(index.toString(), s) }
             .toPersistentList()
 
-        this + AppCurrencySelectorState.Loading(onBackClick = {})
+        add(AppCurrencySelectorState.Loading(onBackClick = {}))
 
-        this + AppCurrencySelectorState.Default(
-            selectedId = "0",
-            items = items,
-            scrollToSelected = consumedEvent(),
-            onCurrencyClick = {},
-            onBackClick = {},
-            onTopBarActionClick = {},
+        add(
+            AppCurrencySelectorState.Default(
+                selectedId = "0",
+                items = items,
+                scrollToSelected = consumedEvent(),
+                onCurrencyClick = {},
+                onBackClick = {},
+                onTopBarActionClick = {},
+            ),
         )
 
-        this + AppCurrencySelectorState.Search(
-            selectedId = "0",
-            items = items,
-            scrollToSelected = consumedEvent(),
-            onCurrencyClick = {},
-            onBackClick = {},
-            onSearchInputChange = {},
-            onTopBarActionClick = {},
+        add(
+            AppCurrencySelectorState.Search(
+                selectedId = "0",
+                items = items,
+                scrollToSelected = consumedEvent(),
+                onCurrencyClick = {},
+                onBackClick = {},
+                onSearchInputChange = {},
+                onTopBarActionClick = {},
+            ),
         )
     },
 )

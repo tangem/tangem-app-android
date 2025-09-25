@@ -85,28 +85,36 @@ private class SwitchItemProvider : CollectionPreviewParameterProvider<Item.Switc
     collection = buildList {
         val itemsFactory = AppSettingsItemsFactory()
 
-        this + itemsFactory.createSaveAccessCodeSwitch(
-            isChecked = true,
-            isEnabled = true,
-            onCheckedChange = { /* no-op */ },
+        add(
+            itemsFactory.createSaveAccessCodeSwitch(
+                isChecked = true,
+                isEnabled = true,
+                onCheckedChange = { /* no-op */ },
+            ),
         )
 
-        this + itemsFactory.createSaveAccessCodeSwitch(
-            isChecked = false,
-            isEnabled = true,
-            onCheckedChange = { /* no-op */ },
+        add(
+            itemsFactory.createSaveAccessCodeSwitch(
+                isChecked = false,
+                isEnabled = true,
+                onCheckedChange = { /* no-op */ },
+            ),
         )
 
-        this + itemsFactory.createSaveAccessCodeSwitch(
-            isChecked = true,
-            isEnabled = false,
-            onCheckedChange = { /* no-op */ },
+        add(
+            itemsFactory.createSaveAccessCodeSwitch(
+                isChecked = true,
+                isEnabled = false,
+                onCheckedChange = { /* no-op */ },
+            ),
         )
 
-        this + itemsFactory.createSaveAccessCodeSwitch(
-            isChecked = false,
-            isEnabled = false,
-            onCheckedChange = { /* no-op */ },
+        add(
+            itemsFactory.createSaveAccessCodeSwitch(
+                isChecked = false,
+                isEnabled = false,
+                onCheckedChange = { /* no-op */ },
+            ),
         )
     },
 )
