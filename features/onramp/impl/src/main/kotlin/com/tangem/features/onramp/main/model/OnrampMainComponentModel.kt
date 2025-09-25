@@ -69,7 +69,7 @@ internal class OnrampMainComponentModel @Inject constructor(
 
     private val params: OnrampMainComponent.Params = paramsContainer.require()
 
-    private var isSepaLaunched = false
+    private var shouldForceChooseSepa = params.launchSepa
     private var currencyToRestore: OnrampCurrency? = null
 
     val userWallet = getWalletsUseCase.invokeSync().first { it.walletId == params.userWalletId }
@@ -133,6 +133,10 @@ internal class OnrampMainComponentModel @Inject constructor(
 
     fun onProviderSelected(result: SelectProviderResult, isBestRate: Boolean) {
         _state.update { amountStateFactory.getAmountSecondaryUpdatedState(result, isBestRate) }
+
+        if (result.paymentMethod.id != SEPA_METHOD_ID) {
+            shouldForceChooseSepa = false
+        }
     }
 
     private fun checkResidenceCountry() {
@@ -342,9 +346,7 @@ internal class OnrampMainComponentModel @Inject constructor(
     private fun selectOrUpdateQuote(quotes: List<OnrampQuote>): OnrampQuote? {
         val quoteToCheck = quotes.firstOrNull { it !is OnrampQuote.Error }
 
-        val sepaQuote = if (params.launchSepa && !isSepaLaunched) {
-            isSepaLaunched = true
-
+        val bestSepaQuote = if (params.launchSepa && shouldForceChooseSepa) {
             quotes.filterIsInstance<OnrampQuote.Data>()
                 .filter { it.paymentMethod.id == SEPA_METHOD_ID }
                 .maxByOrNull { it.toAmount.value }
@@ -353,7 +355,7 @@ internal class OnrampMainComponentModel @Inject constructor(
         }
 
         // Check if amount, country or currency has changed
-        val newQuote = sepaQuote ?: if (checkLastInputState(quoteToCheck)) {
+        val newQuote = bestSepaQuote ?: if (isAmountOrCountryChanged(quoteToCheck)) {
             quoteToCheck
         } else {
             val state = state.value as? OnrampMainComponentUM.Content
@@ -372,7 +374,9 @@ internal class OnrampMainComponentModel @Inject constructor(
                 lastSelectedQuote
             }
         }
-        newQuote?.let { updateProvider(newQuote, quotes) }
+        if (newQuote != null) {
+            updateProvider(newQuote, quotes)
+        }
 
         return newQuote
     }
@@ -381,7 +385,12 @@ internal class OnrampMainComponentModel @Inject constructor(
         lastUpdateState.value = OnrampLastUpdate(
             quote.fromAmount,
             quote.countryCode,
+            quote.paymentMethod,
         )
+
+        if (quote.paymentMethod.id != SEPA_METHOD_ID) {
+            shouldForceChooseSepa = false
+        }
 
         _state.update {
             amountStateFactory.getUpdatedProviderState(selectedQuote = quote, quotes = quotes)
@@ -448,9 +457,9 @@ internal class OnrampMainComponentModel @Inject constructor(
         }
     }
 
-    private fun checkLastInputState(quote: OnrampQuote?): Boolean {
-        return lastUpdateState.value?.lastAmount != quote?.fromAmount ||
-            lastUpdateState.value?.lastCountryString != quote?.countryCode
+    private fun isAmountOrCountryChanged(quote: OnrampQuote?): Boolean {
+        return lastUpdateState.value?.fromAmount != quote?.fromAmount ||
+            lastUpdateState.value?.countryCode != quote?.countryCode
     }
 
     private companion object {
