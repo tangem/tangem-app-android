@@ -2,6 +2,8 @@ package com.tangem.features.welcome.impl.model
 
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.ui.userwallet.state.UserWalletItemUM
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.SignIn
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.navigation.Router
@@ -46,6 +48,7 @@ internal class WelcomeModel @Inject constructor(
     private val walletsRepository: WalletsRepository,
     private val generateBuyTangemCardLinkUseCase: GenerateBuyTangemCardLinkUseCase,
     private val urlOpener: UrlOpener,
+    private val analyticsEventHandler: AnalyticsEventHandler,
     userWalletsFetcherFactory: UserWalletsFetcher.Factory,
 ) : Model() {
 
@@ -72,6 +75,8 @@ internal class WelcomeModel @Inject constructor(
         modelScope.launch {
             userWalletsListRepository.load()
             wallets.value = walletsFetcher.userWallets.first()
+
+            analyticsEventHandler.send(SignIn.SignInScreenOpened(wallets.value.size))
 
             launch {
                 walletsFetcher.userWallets
@@ -125,6 +130,7 @@ internal class WelcomeModel @Inject constructor(
                 showUnlockWithBiometricButton = canUnlockWithBiometrics(),
                 addWalletClick = ::addWalletClick,
                 onUnlockWithBiometricClick = {
+                    analyticsEventHandler.send(SignIn.ButtonUnlockAllWithBiometric)
                     modelScope.launch {
                         userWalletsListRepository.unlockAllWallets()
                             .onRight {
@@ -184,10 +190,19 @@ internal class WelcomeModel @Inject constructor(
 
     private fun onAddWalletOptionClick(optionKey: String) {
         when (optionKey) {
-            ADD_WALLET_KEY_CREATE -> router.push(AppRoute.CreateWalletSelection)
-            ADD_WALLET_KEY_ADD -> router.push(AppRoute.AddExistingWallet)
-            ADD_WALLET_KEY_BUY -> modelScope.launch {
-                generateBuyTangemCardLinkUseCase.invoke().let { urlOpener.openUrl(it) }
+            ADD_WALLET_KEY_CREATE -> {
+                analyticsEventHandler.send(SignIn.ButtonAddWallet(SignIn.ButtonAddWallet.Action.Create))
+                router.push(AppRoute.CreateWalletSelection)
+            }
+            ADD_WALLET_KEY_ADD -> {
+                analyticsEventHandler.send(SignIn.ButtonAddWallet(SignIn.ButtonAddWallet.Action.Import))
+                router.push(AppRoute.AddExistingWallet)
+            }
+            ADD_WALLET_KEY_BUY -> {
+                analyticsEventHandler.send(SignIn.ButtonAddWallet(SignIn.ButtonAddWallet.Action.Buy))
+                modelScope.launch {
+                    generateBuyTangemCardLinkUseCase.invoke().let { urlOpener.openUrl(it) }
+                }
             }
         }
     }
