@@ -111,6 +111,7 @@ dependencies {
     implementation(projects.domain.account)
     implementation(projects.domain.models)
     implementation(projects.domain.core)
+    api(projects.domain.common)
     implementation(projects.domain.card)
     implementation(projects.domain.demo)
     implementation(projects.domain.demo.models)
