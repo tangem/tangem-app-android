@@ -24,12 +24,15 @@ import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.core.ui.format.bigdecimal.price
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.card.common.extensions.hotWalletExcludedBlockchains
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.markets.*
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
 import com.tangem.domain.settings.usercountry.models.UserCountry
 import com.tangem.domain.settings.usercountry.models.needApplyFCARestrictions
+import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.markets.details.MarketsTokenDetailsComponent
 import com.tangem.features.markets.details.impl.analytics.MarketDetailsAnalyticsEvent
 import com.tangem.features.markets.details.impl.model.converters.DescriptionConverter
@@ -72,6 +75,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val excludedBlockchains: ExcludedBlockchains,
     private val getUserCountryUseCase: GetUserCountryUseCase,
+    private val getUserWalletsUseCase: GetWalletsUseCase,
 ) : Model() {
 
     private var quotesJob = JobHolder()
@@ -423,8 +427,15 @@ internal class MarketsTokenDetailsModel @Inject constructor(
             )
         }
 
+        val allWalletsIsHot = getUserWalletsUseCase.invokeSync().all { it is UserWallet.Hot }
+
         val networks = newInfo.networks?.filter {
-            BlockchainUtils.isSupportedNetworkId(it.networkId, excludedBlockchains)
+            BlockchainUtils.isSupportedNetworkId(
+                blockchainId = it.networkId,
+                excludedBlockchains = excludedBlockchains,
+                hotExcludedBlockchains = hotWalletExcludedBlockchains,
+                hasOnlyHotWallets = allWalletsIsHot,
+            )
         }
 
         networksState.value = if (networks.isNullOrEmpty()) {
