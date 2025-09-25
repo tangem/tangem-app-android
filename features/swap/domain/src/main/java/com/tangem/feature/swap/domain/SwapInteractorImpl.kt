@@ -410,7 +410,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             rateType = RateType.FLOAT,
         )
 
-        return if (isBalanceWithoutFeeEnough) {
+        return if (isBalanceWithoutFeeEnough && maybeQuotes.isRight()) {
             provider to loadDexSwapData(
                 provider = provider,
                 networkId = networkId,
