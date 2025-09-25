@@ -7,9 +7,9 @@ import kotlinx.coroutines.flow.StateFlow
 @Suppress("TooManyFunctions")
 interface SettingsRepository {
 
-    suspend fun shouldShowSaveUserWalletScreen(): Boolean
+    suspend fun shouldShowAskBiometry(): Boolean
 
-    suspend fun setShouldShowSaveUserWalletScreen(value: Boolean)
+    suspend fun setShouldShowAskBiometry(value: Boolean)
 
     suspend fun isWalletScrollPreviewEnabled(): Boolean
 

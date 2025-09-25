@@ -13,12 +13,19 @@ import com.kaspersky.components.composesupport.config.addComposeSupport
 import com.kaspersky.kaspresso.kaspresso.Kaspresso
 import com.kaspersky.kaspresso.testcases.api.testcase.TestCase
 import com.tangem.common.allure.FailedStepScreenshotInterceptor
+import com.tangem.common.constants.TestConstants.ALLURE_LABEL_NAME
+import com.tangem.common.constants.TestConstants.ALLURE_LABEL_VALUE
 import com.tangem.common.rules.ApiEnvironmentRule
+import com.tangem.core.configtoggle.feature.FeatureTogglesManager
+import com.tangem.core.configtoggle.feature.MutableFeatureTogglesManager
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.domain.promo.PromoRepository
+import com.tangem.domain.promo.models.PromoId
 import com.tangem.tap.MainActivity
 import dagger.hilt.android.testing.HiltAndroidRule
+import io.qameta.allure.kotlin.Allure
 import kotlinx.coroutines.runBlocking
 import org.junit.Rule
 import org.junit.rules.RuleChain
@@ -45,6 +52,12 @@ abstract class BaseTestCase : TestCase(
 
     @Inject
     lateinit var appPreferencesStore: AppPreferencesStore
+
+    @Inject
+    lateinit var featureTogglesManager: FeatureTogglesManager
+
+    @Inject
+    lateinit var promoRepository: PromoRepository
 
     private val hiltRule = HiltAndroidRule(this)
     private val apiEnvironmentRule = ApiEnvironmentRule()
@@ -78,6 +91,7 @@ abstract class BaseTestCase : TestCase(
         additionalBeforeSection: () -> Unit = {},
         additionalAfterSection: () -> Unit = {},
     ) = before {
+        Allure.label(ALLURE_LABEL_NAME, ALLURE_LABEL_VALUE)
         hiltRule.inject()
         runBlocking {
             appPreferencesStore.editData { mutablePreferences ->
@@ -86,10 +100,12 @@ abstract class BaseTestCase : TestCase(
                     value = false
                 )
             }
+            promoRepository.setNeverToShowWalletPromo(PromoId.Sepa)
         }
         apiEnvironmentRule.setup(apiConfigsManager)
         ActivityScenario.launch(MainActivity::class.java)
         Intents.init()
+        setFeatureToggles()
         additionalBeforeSection()
     }.after {
         additionalAfterSection()
@@ -112,5 +128,19 @@ abstract class BaseTestCase : TestCase(
         maxDepth: Int = Int.MAX_VALUE)
     {
         composeTestRule.onRoot(useUnmergedTree = useUnmergedTree).printToLog(tag, maxDepth)
+    }
+
+
+    private fun setFeatureToggles() {
+        runBlocking {
+            with(featureTogglesManager as MutableFeatureTogglesManager) {
+                changeToggle("WALLET_CONNECT_REDESIGN_ENABLED", true)
+                changeToggle("WALLET_BALANCE_FETCHER_ENABLED", true)
+                changeToggle("SEND_VIA_SWAP_ENABLED", true)
+                changeToggle("SWAP_REDESIGN_ENABLED", true)
+                changeToggle("SEND_REDESIGN_ENABLED", true)
+                changeToggle("NEW_ONRAMP_MAIN_ENABLED", true)
+            }
+        }
     }
 }

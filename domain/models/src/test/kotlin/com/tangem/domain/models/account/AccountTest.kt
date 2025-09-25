@@ -147,7 +147,7 @@ class AccountTest {
                     userWalletId = userWalletId,
                     derivationIndex = derivationIndex,
                 ),
-                accountName = AccountName.Main,
+                accountName = AccountName.DefaultMain,
                 icon = CryptoPortfolioIcon.ofMainAccount(userWalletId),
                 derivationIndex = derivationIndex,
                 cryptoCurrencies = emptySet(),
