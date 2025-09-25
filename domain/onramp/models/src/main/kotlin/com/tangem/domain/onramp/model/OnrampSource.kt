@@ -6,4 +6,5 @@ enum class OnrampSource(val analyticsName: String) {
     TOKEN_LONG_TAP("Long Tap"),
     TOKEN_DETAILS("Token"),
     MARKETS("Markets"),
+    SEPA_BANNER("SEPA Banner"),
 }

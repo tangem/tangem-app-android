@@ -38,7 +38,7 @@ class BuyTokenDetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProv
     }
 
     val errorNotificationText: KNode = child {
-        hasTestTag(NotificationTestTags.TEXT)
+        hasTestTag(NotificationTestTags.MESSAGE)
         hasText(getResourceString(R.string.common_unknown_error))
         useUnmergedTree = true
     }
