@@ -49,7 +49,7 @@ internal class YieldSupplyActiveModel @Inject constructor(
     init {
         subscribeOnCurrencyUpdates()
 
-        modelScope.launch {
+        modelScope.launch(dispatchers.default) {
             val protocolBalance = yieldSupplyGetProtocolBalanceUseCase(
                 userWalletId = params.userWallet.walletId,
                 cryptoCurrency = cryptoCurrency,
