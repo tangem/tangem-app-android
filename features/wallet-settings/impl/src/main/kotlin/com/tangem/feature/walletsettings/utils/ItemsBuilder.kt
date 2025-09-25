@@ -11,7 +11,8 @@ import com.tangem.core.ui.components.label.entity.LabelUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.models.PortfolioId
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.feature.walletsettings.analytics.Settings
+import com.tangem.domain.wallets.analytics.Settings
+import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import com.tangem.feature.walletsettings.entity.WalletSettingsAccountsUM
 import com.tangem.feature.walletsettings.entity.WalletSettingsItemUM
 import com.tangem.feature.walletsettings.impl.R
@@ -190,7 +191,10 @@ internal class ItemsBuilder @Inject constructor(
                 BlockUM(
                     text = resourceReference(R.string.common_backup),
                     iconRes = R.drawable.ic_more_cards_24,
-                    onClick = { router.push(AppRoute.WalletBackup(userWalletId)) },
+                    onClick = {
+                        analyticsEventHandler.send(WalletSettingsAnalyticEvents.ButtonBackup)
+                        router.push(AppRoute.WalletBackup(userWalletId))
+                    },
                     label = if (hasBackup) {
                         null
                     } else {

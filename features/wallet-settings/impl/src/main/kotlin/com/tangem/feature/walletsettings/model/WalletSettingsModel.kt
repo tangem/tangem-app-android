@@ -33,9 +33,9 @@ import com.tangem.domain.nft.EnableWalletNFTUseCase
 import com.tangem.domain.nft.GetWalletNFTEnabledUseCase
 import com.tangem.domain.notifications.repository.NotificationsRepository
 import com.tangem.domain.settings.repositories.PermissionRepository
+import com.tangem.domain.wallets.analytics.Settings
+import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import com.tangem.domain.wallets.usecase.*
-import com.tangem.feature.walletsettings.analytics.Settings
-import com.tangem.feature.walletsettings.analytics.WalletSettingsAnalyticEvents
 import com.tangem.feature.walletsettings.component.WalletSettingsComponent
 import com.tangem.feature.walletsettings.entity.DialogConfig
 import com.tangem.feature.walletsettings.entity.NetworksAvailableForNotificationBSConfig
@@ -121,6 +121,7 @@ internal class WalletSettingsModel @Inject constructor(
         }
 
     init {
+        analyticsEventHandler.send(WalletSettingsAnalyticEvents.WalletSettingsScreenOpened)
         fun combineUI(wallet: UserWallet) = combine(
             getWalletNFTEnabledUseCase.invoke(params.userWalletId),
             getWalletNotificationsEnabledUseCase(params.userWalletId),
@@ -222,9 +223,9 @@ internal class WalletSettingsModel @Inject constructor(
             isNotificationsPermissionGranted = isNotificationsPermissionGranted,
             onCheckedNotificationsChanged = ::onCheckedNotificationsChange,
             onNotificationsDescriptionClick = ::onNotificationsDescriptionClick,
-            onAccessCodeClick = ::onAccessCodeClick,
+            onAccessCodeClick = { onAccessCodeClick(userWallet) },
             walletUpgradeDismissed = isUpgradeNotificationEnabled,
-            onUpgradeWalletClick = ::onUpgradeWalletClick,
+            onUpgradeWalletClick = { onUpgradeWalletClick(userWallet) },
             onDismissUpgradeWalletClick = ::onDismissUpgradeWalletClick,
             accountsUM = accountList,
         )
@@ -344,19 +345,26 @@ internal class WalletSettingsModel @Inject constructor(
         }
     }
 
-    private fun onAccessCodeClick() {
-        if (!state.value.isWalletBackedUp) {
-            messageSender.send(makeBackupAtFirstAlertBS)
-        } else {
-            unlockWalletIfNeedAndProceed {
-                router.push(AppRoute.UpdateAccessCode(params.userWalletId))
+    private fun onAccessCodeClick(userWallet: UserWallet) {
+        if (userWallet is UserWallet.Hot) {
+            val isCodeSet = userWallet.hotWalletId.authType != HotWalletId.AuthType.NoPassword
+            analyticsEventHandler.send(WalletSettingsAnalyticEvents.ButtonAccessCode(isCodeSet))
+            if (!state.value.isWalletBackedUp) {
+                analyticsEventHandler.send(WalletSettingsAnalyticEvents.NoticeBackupFirst)
+                messageSender.send(makeBackupAtFirstAlertBS)
+            } else {
+                unlockWalletIfNeedAndProceed(userWallet) {
+                    router.push(AppRoute.UpdateAccessCode(params.userWalletId))
+                }
             }
         }
     }
 
-    private fun onUpgradeWalletClick() {
-        unlockWalletIfNeedAndProceed {
-            router.push(AppRoute.UpgradeWallet(params.userWalletId))
+    private fun onUpgradeWalletClick(userWallet: UserWallet) {
+        if (userWallet is UserWallet.Hot) {
+            unlockWalletIfNeedAndProceed(userWallet) {
+                router.push(AppRoute.UpgradeWallet(params.userWalletId))
+            }
         }
     }
 
@@ -366,26 +374,22 @@ internal class WalletSettingsModel @Inject constructor(
         }
     }
 
-    private fun unlockWalletIfNeedAndProceed(action: () -> Unit) {
-        val userWallet = getUserWalletUseCase(params.userWalletId)
-            .getOrElse { error("User wallet with id ${params.userWalletId} not found") }
-        if (userWallet is UserWallet.Hot) {
-            val hotWalletId = userWallet.hotWalletId
-            when (hotWalletId.authType) {
-                HotWalletId.AuthType.NoPassword -> {
-                    action()
-                }
-                HotWalletId.AuthType.Password,
-                HotWalletId.AuthType.Biometry,
-                -> modelScope.launch {
-                    unlockHotWalletContextualUseCase.invoke(hotWalletId)
-                        .onLeft {
-                            Timber.e(it, "Unable to unlock wallet with id ${params.userWalletId}")
-                        }
-                        .onRight {
-                            action()
-                        }
-                }
+    private fun unlockWalletIfNeedAndProceed(userWallet: UserWallet.Hot, action: () -> Unit) {
+        val hotWalletId = userWallet.hotWalletId
+        when (hotWalletId.authType) {
+            HotWalletId.AuthType.NoPassword -> {
+                action()
+            }
+            HotWalletId.AuthType.Password,
+            HotWalletId.AuthType.Biometry,
+            -> modelScope.launch {
+                unlockHotWalletContextualUseCase.invoke(hotWalletId)
+                    .onLeft {
+                        Timber.e(it, "Unable to unlock wallet with id ${params.userWalletId}")
+                    }
+                    .onRight {
+                        action()
+                    }
             }
         }
     }
