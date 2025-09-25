@@ -2,6 +2,7 @@ package com.tangem.features.send.v2.api.analytics
 
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam.Key.BLOCKCHAIN
+import com.tangem.core.analytics.models.AnalyticsParam.Key.ERROR_CODE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.SOURCE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.TOKEN_PARAM
 
@@ -49,12 +50,14 @@ sealed class CommonSendAnalyticEvents(
         val categoryName: String,
         val token: String,
         val blockchain: String,
+        val errorCode: String,
     ) : CommonSendAnalyticEvents(
         category = categoryName,
         event = "Error - Transaction Rejected",
         params = mapOf(
             TOKEN_PARAM to token,
             BLOCKCHAIN to blockchain,
+            ERROR_CODE to errorCode,
         ),
     )
 
