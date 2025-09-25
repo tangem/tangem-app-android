@@ -18,7 +18,7 @@ class DefaultKycComponent @AssistedInject constructor(
 
     private val model: DefaultKycModel = getOrCreateModel()
 
-    override fun launch(params: KycComponent.Params) {
+    override fun launch() {
         componentScope.launch {
             model.uiState.collect {
                 it?.let { startInfo ->
@@ -29,13 +29,13 @@ class DefaultKycComponent @AssistedInject constructor(
                         .withAccessToken(accessToken = startInfo.token, onTokenExpiration = tokenExpirationHandler)
                         .withTheme(TangemSNSTheme.theme(activity))
                         .withIconHandler(TangemSNSIconHandler())
-                        .withLocale(Locale("en"))
+                        .withLocale(Locale(startInfo.locale))
                         .build()
                     snsSdk.launch()
                 }
             }
         }
-        model.getKycToken(params)
+        model.getKycToken()
     }
 
     @AssistedFactory

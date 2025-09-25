@@ -56,7 +56,7 @@ data class TxDetails(
     val txData: String?, // transaction data if DEX, null if CEX
 
     @Json(name = "txValue")
-    val txValue: String, // amount (same as fromAmount for Coin, but for bridge equal to otherNativeFee)
+    val txValue: String?, // amount (same as fromAmount for Coin, but for bridge equal to otherNativeFee)
 
     @Json(name = "otherNativeFee")
     val otherNativeFee: String?,

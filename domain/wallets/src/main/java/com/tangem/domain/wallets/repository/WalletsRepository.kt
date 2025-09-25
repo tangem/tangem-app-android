@@ -59,6 +59,10 @@ interface WalletsRepository {
 
     suspend fun setNotificationsEnabled(userWalletId: UserWalletId, isEnabled: Boolean)
 
+    fun isUpgradeWalletNotificationEnabled(userWalletId: UserWalletId): Flow<Boolean>
+
+    suspend fun dismissUpgradeWalletNotification(userWalletId: UserWalletId)
+
     @Throws
     suspend fun setWalletName(walletId: String, walletName: String)
 
