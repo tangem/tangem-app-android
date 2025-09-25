@@ -15,6 +15,7 @@ dependencies {
     // region Core modules
     implementation(projects.core.res)
     implementation(projects.core.utils)
+    implementation(projects.core.analytics)
     // endregion
 
     // region Domain modules
