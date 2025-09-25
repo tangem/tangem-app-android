@@ -6,8 +6,8 @@ import java.math.BigDecimal
 
 @JsonClass(generateAdapter = true)
 data class YieldMarketsResponse(
-    @Json(name = "markets") val marketDtos: List<MarketDto>,
-    @Json(name = "lastUpdated") val lastUpdated: String,
+    @Json(name = "tokens") val marketDtos: List<MarketDto>,
+    @Json(name = "lastUpdatedAt") val lastUpdated: String,
 ) {
 
     @JsonClass(generateAdapter = true)
@@ -24,5 +24,6 @@ data class YieldMarketsResponse(
         @Json(name = "isActive") val isActive: Boolean,
         @Json(name = "ltv") val ltv: BigDecimal,
         @Json(name = "liquidationThreshold") val liquidationThreshold: BigDecimal,
+        @Json(name = "decimals") val decimals: Int,
     )
 }
