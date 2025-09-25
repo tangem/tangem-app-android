@@ -10,17 +10,20 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.domain.yield.supply.usecase.YieldSupplyGetProtocolBalanceUseCase
 import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.impl.subcomponents.active.YieldSupplyActiveComponent
 import com.tangem.features.yield.supply.impl.subcomponents.active.entity.YieldSupplyActiveContentUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @ModelScoped
 internal class YieldSupplyActiveModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
+    private val yieldSupplyGetProtocolBalanceUseCase: YieldSupplyGetProtocolBalanceUseCase,
 ) : Model() {
 
     private val params: YieldSupplyActiveComponent.Params = paramsContainer.require()
@@ -32,11 +35,7 @@ internal class YieldSupplyActiveModel @Inject constructor(
         field = MutableStateFlow(
             YieldSupplyActiveContentUM(
                 totalEarnings = stringReference("0"),
-                availableBalance = stringReference(
-                    cryptoCurrencyStatusFlow.value.value.amount.format {
-                        crypto(cryptoCurrency = cryptoCurrencyStatusFlow.value.currency)
-                    },
-                ),
+                availableBalance = null,
                 providerTitle = resourceReference(R.string.yield_module_provider),
                 subtitle = resourceReference(
                     id = R.string.yield_module_earn_sheet_provider_description,
@@ -49,10 +48,31 @@ internal class YieldSupplyActiveModel @Inject constructor(
 
     init {
         subscribeOnCurrencyUpdates()
+
+        modelScope.launch(dispatchers.default) {
+            val protocolBalance = yieldSupplyGetProtocolBalanceUseCase(
+                userWalletId = params.userWallet.walletId,
+                cryptoCurrency = cryptoCurrency,
+            ).getOrNull()
+
+            stringReference(
+                protocolBalance.format {
+                    crypto(
+                        symbol = AAVEV3_PREFIX + cryptoCurrency.symbol,
+                        decimals = cryptoCurrency.decimals,
+                    )
+                },
+            )
+        }
     }
 
     private fun subscribeOnCurrencyUpdates() {
         cryptoCurrencyStatusFlow.onEach { cryptoCurrencyStatus ->
+            val protocolBalance = yieldSupplyGetProtocolBalanceUseCase(
+                userWalletId = params.userWallet.walletId,
+                cryptoCurrency = cryptoCurrency,
+            ).getOrNull()
+
             val approvalNotification = if (cryptoCurrencyStatus.value.yieldSupplyStatus?.isAllowedToSpend != true) {
                 NotificationUM.Error(
                     title = resourceReference(R.string.yield_module_approve_needed_notification_title),
@@ -67,8 +87,24 @@ internal class YieldSupplyActiveModel @Inject constructor(
                 null
             }
 
-            uiState.update { it.copy(notificationUM = approvalNotification) }
+            uiState.update {
+                it.copy(
+                    notificationUM = approvalNotification,
+                    availableBalance = stringReference(
+                        protocolBalance.format {
+                            crypto(
+                                symbol = AAVEV3_PREFIX + cryptoCurrency.symbol,
+                                decimals = cryptoCurrency.decimals,
+                            )
+                        },
+                    ),
+                )
+            }
         }.flowOn(dispatchers.default)
             .launchIn(modelScope)
+    }
+
+    private companion object {
+        const val AAVEV3_PREFIX = "a"
     }
 }
