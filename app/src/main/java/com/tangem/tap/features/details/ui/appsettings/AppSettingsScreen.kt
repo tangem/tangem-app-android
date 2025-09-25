@@ -103,9 +103,11 @@ private class AppSettingsScreenStateProvider : CollectionPreviewParameterProvide
             itemsFactory.createSelectThemeModeButton(AppThemeMode.DEFAULT, {}),
         )
 
-        this + AppSettingsScreenState.Content(
-            items = items,
-            dialog = null,
+        add(
+            AppSettingsScreenState.Content(
+                items = items,
+                dialog = null,
+            ),
         )
     },
 )
