@@ -7,13 +7,14 @@ import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.common.card.WalletData
 import com.tangem.common.test.domain.card.MockScanResponseFactory
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
+import com.tangem.common.test.domain.wallet.MockUserWalletFactory
 import com.tangem.common.test.utils.ProvideTestModels
 import com.tangem.data.common.network.NetworkFactory
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.local.token.UserTokensResponseStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
-import com.tangem.domain.card.configs.GenericCardConfig
 import com.tangem.domain.card.common.util.cardTypesResolver
+import com.tangem.domain.card.configs.GenericCardConfig
 import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
@@ -159,7 +160,7 @@ internal class DefaultCardCryptoCurrencyFactoryTest {
             model: CreateTestModel.SingleWalletWithToken,
         ) = runTest {
             // Arrange
-            val userWallet = createSingleWalletWithToken()
+            val userWallet = MockUserWalletFactory.createSingleWalletWithToken()
 
             coEvery { userWalletsStore.getSyncStrict(key = userWallet.walletId) } returns userWallet
 
@@ -284,7 +285,7 @@ internal class DefaultCardCryptoCurrencyFactoryTest {
                 expected = Result.failure(IllegalArgumentException("It isn't multi-currency wallet")),
             ),
             CreateCurrenciesForMultiWalletModel(
-                multiWallet = createSingleWalletWithToken(),
+                multiWallet = MockUserWalletFactory.createSingleWalletWithToken(),
                 userTokensResponse = null,
                 expected = Result.failure(IllegalArgumentException("It isn't multi-currency wallet")),
             ),
@@ -456,7 +457,7 @@ internal class DefaultCardCryptoCurrencyFactoryTest {
                 expected = Result.failure(IllegalArgumentException("Coin for the single currency card cannot be null")),
             ),
             CreateForSingleWalletWithTokenModel(
-                singleWalletWithToken = createSingleWalletWithToken(),
+                singleWalletWithToken = MockUserWalletFactory.createSingleWalletWithToken(),
                 isPrimaryTokenExpected = true,
                 expected = Result.success(listOf(ethereum)),
             ),
@@ -522,33 +523,8 @@ internal class DefaultCardCryptoCurrencyFactoryTest {
         )
     }
 
-    private fun createSingleWalletWithToken(): UserWallet.Cold {
-        return UserWallet.Cold(
-            name = "NODL",
-            walletId = UserWalletId("011"),
-            cardsInWallet = setOf(),
-            isMultiCurrency = false,
-            scanResponse = MockScanResponseFactory.create(
-                cardConfig = GenericCardConfig(maxWalletCount = 2),
-                derivedKeys = emptyMap(),
-            ).copy(
-                productType = ProductType.Note,
-                walletData = WalletData(
-                    blockchain = "ETH",
-                    token = WalletData.Token(
-                        name = "Ethereum",
-                        symbol = "ETH",
-                        contractAddress = "0x",
-                        decimals = 8,
-                    ),
-                ),
-            ),
-            hasBackupError = false,
-        )
-    }
-
     private fun createPrimaryToken(blockchain: Blockchain): CryptoCurrency.Token {
-        val userWallet = createSingleWalletWithToken()
+        val userWallet = MockUserWalletFactory.createSingleWalletWithToken()
 
         return CryptoCurrencyFactory(excludedBlockchains = ExcludedBlockchains()).createToken(
             sdkToken = userWallet.scanResponse.cardTypesResolver.getPrimaryToken()!!,
