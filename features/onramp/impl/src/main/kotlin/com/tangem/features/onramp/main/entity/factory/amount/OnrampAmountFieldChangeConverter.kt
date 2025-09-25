@@ -15,9 +15,12 @@ import java.math.BigDecimal
 
 internal class OnrampAmountFieldChangeConverter(
     private val currentStateProvider: Provider<OnrampMainComponentUM>,
-) : Converter<String, OnrampMainComponentUM> {
+) : Converter<OnrampAmountFieldChangeConverter.Input, OnrampMainComponentUM> {
 
-    override fun convert(value: String): OnrampMainComponentUM {
+    override fun convert(input: Input): OnrampMainComponentUM {
+        val value = input.value
+        val isValuePasted = input.isValuePasted
+
         val state = currentStateProvider()
         if (state !is OnrampMainComponentUM.Content) return state
 
@@ -34,6 +37,7 @@ internal class OnrampAmountFieldChangeConverter(
                 imeAction = if (isDoneActionEnabled) ImeAction.Done else ImeAction.None,
                 keyboardType = KeyboardType.Number,
             ),
+            isValuePasted = isValuePasted,
         )
 
         return state.copy(
@@ -66,4 +70,6 @@ internal class OnrampAmountFieldChangeConverter(
             providerBlockState = OnrampProviderBlockUM.Empty,
         )
     }
+
+    data class Input(val value: String, val isValuePasted: Boolean)
 }
