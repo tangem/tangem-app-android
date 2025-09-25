@@ -7,5 +7,5 @@ import android.content.Intent
  */
 interface IntentHandler {
 
-    fun handleIntent(intent: Intent?, isFromForeground: Boolean): Boolean
+    fun handleIntent(intent: Intent?): Boolean
 }
