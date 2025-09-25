@@ -22,4 +22,6 @@ interface YieldSupplyTransactionRepository {
     ): TransactionData.Uncompiled
 
     suspend fun getYieldContractAddress(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): String?
+
+    suspend fun getProtocolBalance(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): BigDecimal?
 }
