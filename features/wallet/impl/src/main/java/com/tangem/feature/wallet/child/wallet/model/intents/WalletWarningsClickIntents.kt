@@ -464,6 +464,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     }
 
     override fun onFinishWalletActivationClick(type: WalletActivationBannerType) {
+        analyticsEventHandler.send(MainScreen.ButtonFinishNow)
         when (type) {
             WalletActivationBannerType.Attention -> {
                 val userWallet = getSelectedUserWallet() ?: return
