@@ -10,4 +10,5 @@ internal data class WalletSettingsUM(
     val requestPushNotificationsPermission: Boolean = false,
     val onPushNotificationPermissionGranted: (Boolean) -> Unit,
     val isWalletBackedUp: Boolean = true,
+    val walletUpgradeDismissed: Boolean = false,
 )
