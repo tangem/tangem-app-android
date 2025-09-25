@@ -21,6 +21,7 @@ import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.components.buttons.SecondarySmallButton
 import com.tangem.core.ui.components.buttons.SmallButtonConfig
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
@@ -125,14 +126,21 @@ private fun ArchivedAccountRow(item: ArchivedAccountUM, modifier: Modifier = Mod
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .clickable(onClick = { item.onClick(item.accountId) })
+            .clickable(onClick = item.onClick)
             .padding(all = TangemTheme.dimens.spacing12),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
     ) {
+        val subtitle = stringResourceSafe(
+            id = R.string.account_label_tokens_info,
+            formatArgs = arrayOf(
+                item.tokensInfo.resolveReference(),
+                item.networksInfo.resolveReference(),
+            ),
+        )
         AccountRow(
             title = item.accountName,
-            subtitle = item.tokensInfo,
+            subtitle = stringReference(subtitle),
             icon = item.accountIconUM,
             modifier = Modifier.weight(1f),
         )
@@ -140,7 +148,7 @@ private fun ArchivedAccountRow(item: ArchivedAccountUM, modifier: Modifier = Mod
         SecondarySmallButton(
             config = SmallButtonConfig(
                 text = resourceReference(R.string.account_archived_recover),
-                onClick = { item.onClick(item.accountId) },
+                onClick = item.onClick,
             ),
         )
     }
@@ -166,7 +174,8 @@ private class PreviewStateProvider : CollectionPreviewParameterProvider<AccountA
                 accountId = it.toString(),
                 accountName = accountName,
                 accountIconUM = portfolioIcon(),
-                tokensInfo = stringReference("10 tokens in 2 networks"),
+                tokensInfo = stringReference("10 tokens"),
+                networksInfo = stringReference("2 networks"),
                 onClick = {},
 
             )
