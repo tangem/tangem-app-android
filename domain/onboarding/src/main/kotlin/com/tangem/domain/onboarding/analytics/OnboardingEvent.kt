@@ -1,10 +1,11 @@
-package com.tangem.features.onboarding.v2.common.analytics
+package com.tangem.domain.onboarding.analytics
 
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.AnalyticsParam.Key.PRODUCT_TYPE
 import com.tangem.domain.models.currency.CryptoCurrency
 
-sealed class OnboardingEvent(
+open class OnboardingEvent(
     category: String,
     event: String,
     params: Map<String, String> = mapOf(),
@@ -12,6 +13,15 @@ sealed class OnboardingEvent(
 
     data object Started : OnboardingEvent("Onboarding", "Onboarding Started")
     data object Finished : OnboardingEvent("Onboarding", "Onboarding Finished")
+    data object ButtonMobileWallet : OnboardingEvent("Onboarding", "Button - Mobile Wallet")
+
+    data class ButtonBuy(
+        val source: AnalyticsParam.ScreensSources,
+    ) : OnboardingEvent(
+        category = "Onboarding",
+        event = "Button - Buy",
+        params = mapOf(AnalyticsParam.SOURCE to source.value),
+    )
 
     sealed class CreateWallet(
         event: String,
@@ -19,10 +29,29 @@ sealed class OnboardingEvent(
     ) : OnboardingEvent("Onboarding / Create Wallet", event, params) {
 
         data object ScreenOpened : CreateWallet("Create Wallet Screen Opened")
-        data object ButtonCreateWallet : CreateWallet("Button - Create Wallet")
+        data class ButtonCreateWallet(
+            private val overridingProductType: AnalyticsParam.ProductType? = null,
+        ) : CreateWallet(
+            event = "Button - Create Wallet",
+            params = buildMap {
+                overridingProductType?.let { put(PRODUCT_TYPE, it.value) }
+            },
+        )
+        data class ButtonOtherOptions(
+            private val overridingProductType: AnalyticsParam.ProductType? = null,
+        ) : CreateWallet(
+            event = "Button - Other Options",
+            params = buildMap {
+                overridingProductType?.let { put(PRODUCT_TYPE, it.value) }
+            },
+        )
+        data object ButtonStartUpgrade : CreateWallet("Button - Start upgrade")
+        data object UpgradeWalletScreenOpened : CreateWallet("Upgrade Wallet Screen Opened")
         class WalletCreatedSuccessfully(
             creationType: WalletCreationType = WalletCreationType.PrivateKey,
             seedPhraseLength: Int? = null,
+            passphrase: AnalyticsParam.EmptyFullState = AnalyticsParam.EmptyFullState.Empty,
+            overridingProductType: AnalyticsParam.ProductType? = null,
         ) : CreateWallet(
             event = "Wallet Created Successfully",
             params = buildMap {
@@ -30,6 +59,8 @@ sealed class OnboardingEvent(
                 if (seedPhraseLength != null) {
                     put("Seed Phrase Length", seedPhraseLength.toString())
                 }
+                put("Passphrase", passphrase.value)
+                overridingProductType?.let { put(PRODUCT_TYPE, it.value) }
             },
         )
 
@@ -66,6 +97,9 @@ sealed class OnboardingEvent(
         data object SettingAccessCodeStarted : Backup("Setting Access Code Started")
         data object AccessCodeEntered : Backup("Access Code Entered")
         data object AccessCodeReEntered : Backup("Access Code Re-entered")
+        data object SeedPhraseInfo : Backup("Seed Phrase Info")
+        data object SeedCheckingScreenOpened : Backup("Seed Checking Screen Opened")
+        data object AccessCodeSkipped : Backup("Access Code Skipped")
 
         class Finished(cardsCount: Int) : Backup(
             event = "Backup Finished",
@@ -110,4 +144,36 @@ sealed class OnboardingEvent(
         event = "Offline Attestation Failed",
         params = mapOf(AnalyticsParam.SOURCE to source.value),
     )
+
+    sealed class SeedPhrase(
+        event: String,
+        params: Map<String, String> = mapOf(),
+    ) : OnboardingEvent("Onboarding / Seed Phrase", event, params) {
+
+        data object ImportWalletScreenOpened : SeedPhrase("Import Wallet Screen Opened")
+        data class ButtonImportWallet(
+            private val overridingProductType: AnalyticsParam.ProductType? = null,
+        ) : SeedPhrase(
+            event = "Button - Import Wallet",
+            params = buildMap {
+                overridingProductType?.let { put(PRODUCT_TYPE, it.value) }
+            },
+        )
+        data class ImportSeedPhraseScreenOpened(
+            private val overridingProductType: AnalyticsParam.ProductType? = null,
+        ) : SeedPhrase(
+            event = "Import Seed Phrase Screen Opened",
+            params = buildMap {
+                overridingProductType?.let { put(PRODUCT_TYPE, it.value) }
+            },
+        )
+        data class ButtonImport(
+            private val overridingProductType: AnalyticsParam.ProductType? = null,
+        ) : SeedPhrase(
+            event = "Button - Import",
+            params = buildMap {
+                overridingProductType?.let { put(PRODUCT_TYPE, it.value) }
+            },
+        )
+    }
 }

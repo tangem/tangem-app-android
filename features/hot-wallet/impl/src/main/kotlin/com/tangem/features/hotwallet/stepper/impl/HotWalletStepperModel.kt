@@ -1,9 +1,11 @@
 package com.tangem.features.hotwallet.stepper.impl
 
 import androidx.compose.runtime.Stable
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.domain.onboarding.analytics.OnboardingEvent
 import com.tangem.features.hotwallet.stepper.api.HotWalletStepperComponent
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,6 +17,7 @@ import javax.inject.Inject
 internal class HotWalletStepperModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
 
     val params = paramsContainer.require<HotWalletStepperComponent.Params>()
@@ -31,7 +34,7 @@ internal class HotWalletStepperModel @Inject constructor(
     }
 
     fun onSkipClick() {
-        // TODO send analytics
+        analyticsEventHandler.send(OnboardingEvent.Backup.AccessCodeSkipped)
         params.callback.onSkipClick()
     }
 
