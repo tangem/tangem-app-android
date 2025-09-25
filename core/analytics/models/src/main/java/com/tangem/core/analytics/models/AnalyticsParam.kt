@@ -11,11 +11,6 @@ sealed class AnalyticsParam {
         companion object
     }
 
-    sealed class TokenBalanceState(val value: String) {
-        data object Empty : TokenBalanceState("Empty")
-        data object Full : TokenBalanceState("Full")
-    }
-
     sealed class RateApp(val value: String) {
         data object Liked : RateApp("Liked")
         data object Disliked : RateApp("Disliked")
@@ -33,6 +28,23 @@ sealed class AnalyticsParam {
                 val state = if (enabled) On else Off
 
                 return state.value
+            }
+        }
+    }
+
+    enum class EmptyFullState(val value: String) {
+        Empty("Empty"),
+        Full("Full"),
+        ;
+
+        companion object {
+
+            fun from(value: String?): EmptyFullState {
+                return if (!value.isNullOrEmpty()) Full else Empty
+            }
+
+            fun from(value: Boolean): EmptyFullState {
+                return if (value) Full else Empty
             }
         }
     }
@@ -192,8 +204,8 @@ sealed class AnalyticsParam {
         Pending(value = "Pending"),
     }
 
-    enum class EnsStatus(val value: String) {
-        EMPTY("Empty"), FULL("Full")
+
+    
     }
 
     companion object Key {
