@@ -71,7 +71,7 @@ private class CardItemProvider : CollectionPreviewParameterProvider<Item.Card>(
     collection = buildList {
         val itemsFactory = AppSettingsItemsFactory()
 
-        this + itemsFactory.createEnrollBiometricsCard(onClick = { /* no-op */ })
+        add(itemsFactory.createEnrollBiometricsCard(onClick = { /* no-op */ }))
     },
 )
 // endregion Preview
