@@ -1,0 +1,21 @@
+package com.tangem.utils
+
+import java.util.Locale
+
+object TangemLinks {
+
+    private const val RU_LOCALE = "ru"
+    private const val EN_LOCALE = "en"
+
+    private const val TANGEM_MAIN = "https://tangem.com/"
+
+    val FEE_BLOG_LINK: String
+        get(): String {
+            val locale = if (Locale.getDefault().language == RU_LOCALE) RU_LOCALE else EN_LOCALE
+            return buildString {
+                append(TANGEM_MAIN)
+                append(locale)
+                append("/blog/post/what-is-a-transaction-fee-and-why-do-we-need-it/")
+            }
+        }
+}

@@ -10,6 +10,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.wallet.UserWallet
@@ -39,6 +40,7 @@ internal class YieldSupplyModel @Inject constructor(
     private val getSingleCryptoCurrencyStatusUseCase: GetSingleCryptoCurrencyStatusUseCase,
     private val fetchCurrencyStatusUseCase: FetchCurrencyStatusUseCase,
     @DelayedWork private val coroutineScope: CoroutineScope,
+    private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
 ) : Model(), YieldSupplyClickIntents {
 
     private val params = paramsContainer.require<YieldSupplyComponent.Params>()
@@ -59,8 +61,12 @@ internal class YieldSupplyModel @Inject constructor(
             ),
         )
 
+    val isBalanceHiddenFlow: StateFlow<Boolean>
+        field = MutableStateFlow(false)
+
     init {
         subscribeOnCurrencyStatusUpdates()
+        subscribeOnBalanceHidden()
     }
 
     private fun subscribeOnCurrencyStatusUpdates() {
@@ -80,7 +86,7 @@ internal class YieldSupplyModel @Inject constructor(
                                 onDataLoaded(cryptoCurrencyStatus)
                             },
                             ifLeft = {
-                                // todo error
+                                Timber.w(it.toString())
                             },
                         )
                     }.launchIn(modelScope)
@@ -104,6 +110,17 @@ internal class YieldSupplyModel @Inject constructor(
 
     override fun onActiveClick() {
         bottomSheetNavigation.activate(Unit)
+    }
+
+    private fun subscribeOnBalanceHidden() {
+        getBalanceHidingSettingsUseCase()
+            .conflate()
+            .distinctUntilChanged()
+            .onEach {
+                isBalanceHiddenFlow.value = it.isBalanceHidden
+            }
+            .flowOn(dispatchers.default)
+            .launchIn(modelScope)
     }
 
     private fun onDataLoaded(cryptoCurrencyStatus: CryptoCurrencyStatus) {
