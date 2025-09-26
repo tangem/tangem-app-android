@@ -33,7 +33,11 @@ import com.tangem.features.yield.supply.impl.main.entity.YieldSupplyUM
 import com.tangem.utils.StringsSigns
 
 @Composable
-internal fun YieldSupplyBlockContent(yieldSupplyUM: YieldSupplyUM, modifier: Modifier = Modifier) {
+internal fun YieldSupplyBlockContent(
+    yieldSupplyUM: YieldSupplyUM,
+    isBalanceHidden: Boolean,
+    modifier: Modifier = Modifier,
+) {
     AnimatedContent(
         targetState = yieldSupplyUM,
         modifier = modifier,
@@ -41,7 +45,7 @@ internal fun YieldSupplyBlockContent(yieldSupplyUM: YieldSupplyUM, modifier: Mod
         when (supplyUM) {
             is YieldSupplyUM.Initial -> SupplyInitial(supplyUM)
             YieldSupplyUM.Loading -> SupplyLoading()
-            is YieldSupplyUM.Content -> SupplyContent(supplyUM)
+            is YieldSupplyUM.Content -> SupplyContent(supplyUM, isBalanceHidden)
             YieldSupplyUM.Processing.Enter -> SupplyProcessing(
                 resourceReference(R.string.yield_module_token_details_earn_notification_processing),
             )
@@ -100,7 +104,7 @@ private fun SupplyInitial(supplyUM: YieldSupplyUM.Initial) {
 }
 
 @Composable
-private fun SupplyContent(supplyUM: YieldSupplyUM.Content) {
+private fun SupplyContent(supplyUM: YieldSupplyUM.Content, isBalanceHidden: Boolean) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
@@ -124,7 +128,7 @@ private fun SupplyContent(supplyUM: YieldSupplyUM.Content) {
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 Text(
-                    text = supplyUM.rewardsBalance.resolveReference(),
+                    text = supplyUM.rewardsBalance.orMaskWithStars(isBalanceHidden).resolveReference(),
                     style = TangemTheme.typography.subtitle1,
                     color = TangemTheme.colors.text.primary1,
                 )
@@ -224,7 +228,7 @@ private fun SupplyLoading() {
 @Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 private fun YieldSupplyBlockContent_Preview(@PreviewParameter(PreviewProvider::class) params: YieldSupplyUM) {
     TangemThemePreview {
-        YieldSupplyBlockContent(params)
+        YieldSupplyBlockContent(params, true)
     }
 }
 
