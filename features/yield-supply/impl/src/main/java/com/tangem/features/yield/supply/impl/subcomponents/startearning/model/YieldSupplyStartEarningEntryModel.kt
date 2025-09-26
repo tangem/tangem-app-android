@@ -42,6 +42,7 @@ internal class YieldSupplyStartEarningEntryModel @Inject constructor(
                 currencyIconState = CryptoCurrencyToIconStateConverter().convert(params.cryptoCurrency),
                 yieldSupplyFeeUM = YieldSupplyFeeUM.Loading,
                 isPrimaryButtonEnabled = false,
+                isTransactionSending = false,
             ),
         )
 
