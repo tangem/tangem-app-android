@@ -19,6 +19,7 @@ import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.blockchain.nft.models.NFTAsset
 import com.tangem.blockchain.nft.models.NFTCollection
 import com.tangem.blockchain.transactionhistory.models.TransactionHistoryRequest
+import com.tangem.blockchain.yieldsupply.YieldSupplyContractCallDataProviderFactory
 import com.tangem.blockchainsdk.BlockchainSDKFactory
 import com.tangem.blockchainsdk.models.UpdateWalletManagerResult
 import com.tangem.blockchainsdk.utils.toBlockchain
@@ -498,18 +499,26 @@ internal class DefaultWalletManagersFacade @Inject constructor(
             userWalletId = userWalletId,
             blockchain = blockchain,
             derivationPath = network.derivationPath.value,
-        )
+        ) ?: error("Wallet manager not found")
 
-        val destination = estimationFeeAddressFactory.makeAddress(blockchain)
+        val destination = when (amount.type) {
+            is AmountType.Token -> estimationFeeAddressFactory.makeAddress(blockchain)
+            is AmountType.TokenYieldSupply -> walletManager.getYieldModuleAddress()
+            else -> return@withContext null
+        }
 
-        val callData = if (amount.type is AmountType.Token) {
-            SmartContractCallDataProviderFactory.getTokenTransferCallData(
+        val callData = when (val amountType = amount.type) {
+            is AmountType.Token -> SmartContractCallDataProviderFactory.getTokenTransferCallData(
                 destinationAddress = destination,
                 amount = amount,
                 blockchain = blockchain,
             )
-        } else {
-            null
+            is AmountType.TokenYieldSupply -> YieldSupplyContractCallDataProviderFactory.getSendCallData(
+                tokenContractAddress = amountType.token.contractAddress,
+                destinationAddress = estimationFeeAddressFactory.makeAddress(blockchain),
+                amount = amount,
+            )
+            else -> null
         }
 
         (walletManager as? TransactionSender)?.estimateFee(
