@@ -32,7 +32,11 @@ import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.impl.subcomponents.active.entity.YieldSupplyActiveContentUM
 
 @Composable
-internal fun YieldSupplyActiveContent(state: YieldSupplyActiveContentUM, modifier: Modifier = Modifier) {
+internal fun YieldSupplyActiveContent(
+    state: YieldSupplyActiveContentUM,
+    isBalanceHidden: Boolean,
+    modifier: Modifier = Modifier,
+) {
     Column(
         verticalArrangement = Arrangement.spacedBy(14.dp),
         modifier = modifier.padding(
@@ -54,12 +58,12 @@ internal fun YieldSupplyActiveContent(state: YieldSupplyActiveContentUM, modifie
                 color = TangemTheme.colors.text.tertiary,
             )
             ResizableText(
-                text = state.totalEarnings.resolveReference(),
+                text = state.totalEarnings.orMaskWithStars(isBalanceHidden).resolveReference(),
                 style = TangemTheme.typography.h2,
                 color = TangemTheme.colors.text.primary1,
             )
         }
-        YieldSupplyActiveMyFunds(state = state)
+        YieldSupplyActiveMyFunds(state = state, isBalanceHidden = isBalanceHidden)
 
         AnimatedVisibility(state.notificationUM != null) {
             val wrappedNotification = remember(this) { requireNotNull(state.notificationUM) }
@@ -73,7 +77,7 @@ internal fun YieldSupplyActiveContent(state: YieldSupplyActiveContentUM, modifie
 }
 
 @Composable
-private fun YieldSupplyActiveMyFunds(state: YieldSupplyActiveContentUM) {
+private fun YieldSupplyActiveMyFunds(state: YieldSupplyActiveContentUM, isBalanceHidden: Boolean) {
     Column(
         modifier = Modifier
             .clip(RoundedCornerShape(16.dp))
@@ -112,6 +116,7 @@ private fun YieldSupplyActiveMyFunds(state: YieldSupplyActiveContentUM) {
         InfoRow(
             title = resourceReference(R.string.yield_module_earn_sheet_transfers_title),
             info = resourceReference(R.string.yield_module_transfer_mode_automatic),
+            isBalanceHidden = false,
         )
         HorizontalDivider(
             thickness = 0.5.dp,
@@ -120,6 +125,7 @@ private fun YieldSupplyActiveMyFunds(state: YieldSupplyActiveContentUM) {
         InfoRow(
             title = resourceReference(R.string.yield_module_earn_sheet_available_title),
             info = state.availableBalance,
+            isBalanceHidden = isBalanceHidden,
         )
     }
 }
@@ -150,7 +156,7 @@ private fun DescriptionText(state: YieldSupplyActiveContentUM) {
 }
 
 @Composable
-private fun InfoRow(title: TextReference, info: TextReference?) {
+private fun InfoRow(title: TextReference, isBalanceHidden: Boolean, info: TextReference?) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         modifier = Modifier.padding(horizontal = 4.dp, vertical = 12.dp),
@@ -165,7 +171,7 @@ private fun InfoRow(title: TextReference, info: TextReference?) {
         AnimatedContent(info) { currentInfo ->
             if (currentInfo != null) {
                 Text(
-                    text = currentInfo.resolveReference(),
+                    text = currentInfo.orMaskWithStars(isBalanceHidden).resolveReference(),
                     style = TangemTheme.typography.body1,
                     color = TangemTheme.colors.text.tertiary,
                 )
@@ -187,7 +193,7 @@ private fun YieldSupplyActiveBottomSheet_Preview(
     @PreviewParameter(YieldSupplyActiveBottomSheetPreviewProvider::class) params: YieldSupplyActiveContentUM,
 ) {
     TangemThemePreview {
-        YieldSupplyActiveContent(params)
+        YieldSupplyActiveContent(params, true)
     }
 }
 
