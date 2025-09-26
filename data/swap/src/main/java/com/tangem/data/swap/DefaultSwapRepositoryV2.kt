@@ -96,7 +96,7 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
 
                 val mappedProviders = pair.providers.mapNotNull {
                     mappedProviders[it.providerId]
-                }
+                }.filterYieldSupplyProvider(statusFrom)
 
                 if (statusFrom != null && statusTo != null && mappedProviders.isNotEmpty()) {
                     SwapPairModel(
@@ -153,7 +153,7 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
 
                 val mappedProvider = pair.providers.mapNotNull {
                     mappedProviders[it.providerId]
-                }
+                }.filterYieldSupplyProvider(currencyStatusFrom)
 
                 if (currencyStatusFrom != null && currencyStatusTo != null && mappedProvider.isNotEmpty()) {
                     SwapPairModel(
@@ -422,4 +422,15 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
             is CryptoCurrency.Coin -> "0"
         }
     }
+
+    private fun List<ExpressProvider>.filterYieldSupplyProvider(cryptoCurrencyStatus: CryptoCurrencyStatus?) =
+        filter { provider ->
+            // !!!WARNING!!! Filter out dex provider if yield supply is active
+            val yieldSupplyStatus = cryptoCurrencyStatus?.value?.yieldSupplyStatus
+            if (yieldSupplyStatus != null && yieldSupplyStatus.isActive) {
+                provider.type == ExpressProviderType.CEX
+            } else {
+                true
+            }
+        }
 }
