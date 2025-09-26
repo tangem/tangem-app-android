@@ -143,6 +143,7 @@ private class YieldSupplyActionContentPreviewProvider : PreviewParameterProvider
                     maxNetworkFeeValue = stringReference("8.50 USDT • \$8.50"),
                 ),
                 isPrimaryButtonEnabled = false,
+                isTransactionSending = false,
             ),
         )
 }
