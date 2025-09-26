@@ -85,7 +85,7 @@ import timber.log.Timber
 
 lateinit var store: Store<AppState>
 
-lateinit var foregroundActivityObserver: ForegroundActivityObserver
+val foregroundActivityObserver = ForegroundActivityObserver
 internal lateinit var derivationsFinder: DerivationsFinder
 
 abstract class TangemApplication : Application(), ImageLoaderFactory, Configuration.Provider {
@@ -246,6 +246,7 @@ abstract class TangemApplication : Application(), ImageLoaderFactory, Configurat
 
     override fun onCreate() {
         enableStrictModeInDebug()
+        preInit()
         super.onCreate()
         init()
     }
@@ -286,21 +287,24 @@ abstract class TangemApplication : Application(), ImageLoaderFactory, Configurat
         // }
     }
 
+    /**
+     * Initialize components that need to be initialized before [super.onCreate] is called
+     */
+    private fun preInit() {
+        tangemAppLoggerInitializer.initialize()
+        registerActivityLifecycleCallbacks(foregroundActivityObserver.callbacks)
+    }
+
     fun init() {
         apiConfigsManager.initialize()
 
         store = createReduxStore()
-
-        tangemAppLoggerInitializer.initialize()
 
         Timber.i("APP STARTED")
         if (BuildConfig.TESTER_MENU_ENABLED) {
             Timber.i(featureTogglesManager.toString())
             Timber.i(excludedBlockchainsManager.toString())
         }
-
-        foregroundActivityObserver = ForegroundActivityObserver()
-        registerActivityLifecycleCallbacks(foregroundActivityObserver.callbacks)
 
         runBlocking {
             initWithConfigDependency(environmentConfig = environmentConfigStorage.initialize())
