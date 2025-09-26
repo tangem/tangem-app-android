@@ -12,6 +12,7 @@ import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.models.yield.supply.YieldSupplyStatus
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.yield.supply.YieldSupplyTransactionRepository
@@ -56,7 +57,7 @@ internal class DefaultYieldSupplyTransactionRepository(
         return buildEnterTransactions(
             walletManager = walletManager,
             cryptoCurrencyStatus = cryptoCurrencyStatus,
-            existingYieldContractAddress = existingYieldContractAddress,
+            existingYieldAddress = existingYieldContractAddress,
             calculatedYieldContractAddress = calculatedYieldContractAddress,
             maxNetworkFee = maxNetworkFee,
         )
@@ -109,21 +110,23 @@ internal class DefaultYieldSupplyTransactionRepository(
         }
 
     @Suppress("LongParameterList")
-    private fun buildEnterTransactions(
+    private suspend fun buildEnterTransactions(
         walletManager: WalletManager,
         cryptoCurrencyStatus: CryptoCurrencyStatus,
-        existingYieldContractAddress: String?,
+        existingYieldAddress: String?,
         calculatedYieldContractAddress: String,
         maxNetworkFee: Amount,
     ): MutableList<TransactionData.Uncompiled> {
         val enterTransactions = mutableListOf<TransactionData.Uncompiled>()
         val cryptoCurrency = cryptoCurrencyStatus.currency as CryptoCurrency.Token
-        val yieldSupplyStatus = cryptoCurrencyStatus.value.yieldSupplyStatus
+        val yieldSupplyStatus = getYieldTokenStatus(walletManager, cryptoCurrency)
 
-        val amount = BigDecimal.ZERO.convertToSdkAmount(cryptoCurrencyStatus)
+        val amount = getEnterAmount(cryptoCurrency, yieldSupplyStatus)
+
+        val emptyContractAddress = existingYieldAddress == null || existingYieldAddress == EthereumUtils.ZERO_ADDRESS
 
         when {
-            existingYieldContractAddress == null || existingYieldContractAddress == EthereumUtils.ZERO_ADDRESS -> {
+            yieldSupplyStatus == null || emptyContractAddress -> {
                 enterTransactions.add(
                     createDeployTransaction(
                         walletManager = walletManager,
@@ -133,7 +136,6 @@ internal class DefaultYieldSupplyTransactionRepository(
                     ),
                 )
             }
-            yieldSupplyStatus == null -> error("Yield token status is null")
             !yieldSupplyStatus.isInitialized -> enterTransactions.add(
                 createInitTokenTransaction(
                     walletManager = walletManager,
@@ -210,6 +212,28 @@ internal class DefaultYieldSupplyTransactionRepository(
                 walletManager.getYieldModuleAddress()
             }.onFailure(Timber::e).getOrNull()
         }
+
+    private suspend fun getYieldTokenStatus(
+        walletManager: WalletManager,
+        cryptoCurrency: CryptoCurrency.Token,
+    ): YieldSupplyStatus? = withContext(dispatchers.io) {
+        runCatching {
+            val sdkSupplyStatus = walletManager.getYieldSupplyStatus(cryptoCurrency.contractAddress)
+            val isAllowedToSpend = walletManager.isAllowedToSpend(
+                Token(
+                    symbol = cryptoCurrency.symbol,
+                    contractAddress = cryptoCurrency.contractAddress,
+                    decimals = cryptoCurrency.decimals,
+                ),
+            )
+
+            YieldSupplyStatus(
+                isActive = sdkSupplyStatus?.isActive == true,
+                isInitialized = sdkSupplyStatus?.isInitialized == true,
+                isAllowedToSpend = isAllowedToSpend,
+            )
+        }.onFailure(Timber::e).getOrNull()
+    }
 
     private fun createDeployTransaction(
         walletManager: WalletManager,
@@ -356,4 +380,20 @@ internal class DefaultYieldSupplyTransactionRepository(
             else -> error("Data extras not supported for $blockchain")
         }
     }
+
+    private fun getEnterAmount(cryptoCurrency: CryptoCurrency.Token, yieldSupplyStatus: YieldSupplyStatus?) = Amount(
+        currencySymbol = cryptoCurrency.symbol,
+        value = BigDecimal.ZERO,
+        decimals = cryptoCurrency.decimals,
+        type = AmountType.TokenYieldSupply(
+            token = Token(
+                symbol = cryptoCurrency.symbol,
+                contractAddress = cryptoCurrency.contractAddress,
+                decimals = cryptoCurrency.decimals,
+            ),
+            isActive = yieldSupplyStatus?.isActive ?: false,
+            isInitialized = yieldSupplyStatus?.isInitialized ?: false,
+            isAllowedToSpend = yieldSupplyStatus?.isAllowedToSpend ?: false,
+        ),
+    )
 }
