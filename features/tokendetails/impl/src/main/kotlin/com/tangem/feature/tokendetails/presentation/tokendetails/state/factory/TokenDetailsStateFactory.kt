@@ -70,6 +70,7 @@ internal class TokenDetailsStateFactory(
             currentStateProvider = currentStateProvider,
             appCurrencyProvider = appCurrencyProvider,
             clickIntents = clickIntents,
+            yieldSupplyFeatureToggles = yieldSupplyFeatureToggles,
         )
     }
 
