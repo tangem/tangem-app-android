@@ -42,7 +42,12 @@ internal fun YieldSupplyBlockContent(yieldSupplyUM: YieldSupplyUM, modifier: Mod
             is YieldSupplyUM.Initial -> SupplyInitial(supplyUM)
             YieldSupplyUM.Loading -> SupplyLoading()
             is YieldSupplyUM.Content -> SupplyContent(supplyUM)
-            YieldSupplyUM.Processing -> SupplyProcessing()
+            YieldSupplyUM.Processing.Enter -> SupplyProcessing(
+                resourceReference(R.string.yield_module_token_details_earn_notification_processing),
+            )
+            YieldSupplyUM.Processing.Exit -> SupplyProcessing(
+                resourceReference(R.string.yield_module_stop_earning),
+            )
         }
     }
 }
@@ -153,7 +158,7 @@ private fun SupplyContent(supplyUM: YieldSupplyUM.Content) {
 }
 
 @Composable
-private fun SupplyProcessing() {
+private fun SupplyProcessing(text: TextReference) {
     Column(
         verticalArrangement = Arrangement.spacedBy(4.dp),
         modifier = Modifier
@@ -174,9 +179,7 @@ private fun SupplyProcessing() {
             horizontalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             Text(
-                text = stringResourceSafe(
-                    R.string.yield_module_token_details_earn_notification_processing,
-                ),
+                text = text.resolveReference(),
                 style = TangemTheme.typography.body1,
                 color = TangemTheme.colors.text.tertiary,
             )
@@ -248,7 +251,8 @@ private class PreviewProvider : PreviewParameterProvider<YieldSupplyUM> {
                 isAllowedToSpend = true,
             ),
             YieldSupplyUM.Loading,
-            YieldSupplyUM.Processing,
+            YieldSupplyUM.Processing.Enter,
+            YieldSupplyUM.Processing.Exit,
         )
 }
 // endregion
