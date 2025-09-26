@@ -14,6 +14,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.model.getOrCreateModel
@@ -89,7 +90,7 @@ internal class YieldSupplyStopEarningComponent(
         PrimaryButtonIconEnd(
             text = stringResourceSafe(R.string.common_confirm),
             onClick = model::onClick,
-            iconResId = R.drawable.ic_tangem_24,
+            iconResId = walletInterationIcon(params.userWallet),
             enabled = state.isPrimaryButtonEnabled,
             modifier = Modifier
                 .fillMaxWidth()
