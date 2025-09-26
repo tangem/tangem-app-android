@@ -26,4 +26,5 @@ internal data class YieldSupplyActionUM(
     val currencyIconState: CurrencyIconState,
     val yieldSupplyFeeUM: YieldSupplyFeeUM,
     val isPrimaryButtonEnabled: Boolean,
+    val isTransactionSending: Boolean,
 )
