@@ -20,6 +20,7 @@ import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyEstimateEnterFeeUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyStartEarningUseCase
 import com.tangem.features.yield.supply.impl.R
+import com.tangem.features.yield.supply.impl.common.YieldSupplyAlertFactory
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyActionUM
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyFeeUM
 import com.tangem.features.yield.supply.impl.common.entity.transformer.YieldSupplyTransactionInProgressTransformer
@@ -53,12 +54,13 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val yieldSupplyNotificationsUpdateTrigger: YieldSupplyNotificationsUpdateTrigger,
     private val fetchCurrencyStatusUseCase: FetchCurrencyStatusUseCase,
+    private val yieldSupplyAlertFactory: YieldSupplyAlertFactory,
 ) : Model(), YieldSupplyNotificationsComponent.ModelCallback {
 
     private val params: YieldSupplyStartEarningComponent.Params = paramsContainer.require()
 
     private val cryptoCurrency = params.cryptoCurrency
-    private var userWallet: UserWallet by Delegates.notNull()
+    var userWallet: UserWallet by Delegates.notNull()
 
     val cryptoCurrencyStatusFlow: StateFlow<CryptoCurrencyStatus>
         field = MutableStateFlow(
@@ -171,6 +173,19 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
                 ifLeft = { error ->
                     Timber.e(error.toString())
                     uiState.update(YieldSupplyTransactionReadyTransformer)
+                    yieldSupplyAlertFactory.getSendTransactionErrorState(
+                        error = error,
+                        popBack = params.callback::onBackClick,
+                        onFailedTxEmailClick = { errorMessage ->
+                            modelScope.launch(dispatchers.default) {
+                                yieldSupplyAlertFactory.onFailedTxEmailClick(
+                                    userWallet = userWallet,
+                                    cryptoCurrency = cryptoCurrency,
+                                    errorMessage = errorMessage,
+                                )
+                            }
+                        },
+                    )
                 },
                 ifRight = {
                     fetchCurrencyStatusUseCase(userWalletId = userWallet.walletId, cryptoCurrency.id)
@@ -191,8 +206,7 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
                 },
                 ifLeft = {
                     Timber.w(it.toString())
-                    // showAlertError() todo yield supply error alert
-                    return@launch
+                    showAlertError()
                 },
             )
         }
@@ -230,13 +244,8 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
                     )
                 },
                 ifLeft = {
-                    // todo yield supply error
-                    // sendConfirmAlertFactory.getGenericErrorState(
-                    //     onFailedTxEmailClick = {
-                    //         onFailedTxEmailClick(it.toString())
-                    //     },
-                    //     popBack = router::pop,
-                    // )
+                    Timber.w(it.toString())
+                    showAlertError()
                 },
             )
         }.launchIn(modelScope)
@@ -249,6 +258,21 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
         modelScope.launch {
             onLoadFee()
         }
+    }
+
+    private fun showAlertError() {
+        yieldSupplyAlertFactory.getGenericErrorState(
+            onFailedTxEmailClick = {
+                modelScope.launch(dispatchers.default) {
+                    yieldSupplyAlertFactory.onFailedTxEmailClick(
+                        userWallet,
+                        cryptoCurrency,
+                        null,
+                    )
+                }
+            },
+            popBack = params.callback::onBackClick,
+        )
     }
 
     private companion object {
