@@ -20,6 +20,7 @@ import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetContractAddressUseCase
 import com.tangem.features.yield.supply.impl.R
+import com.tangem.features.yield.supply.impl.common.YieldSupplyAlertFactory
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyActionUM
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyFeeUM
 import com.tangem.features.yield.supply.impl.common.entity.transformer.YieldSupplyTransactionInProgressTransformer
@@ -29,6 +30,7 @@ import com.tangem.features.yield.supply.impl.subcomponents.notifications.YieldSu
 import com.tangem.features.yield.supply.impl.subcomponents.notifications.YieldSupplyNotificationsUpdateTrigger
 import com.tangem.features.yield.supply.impl.subcomponents.notifications.entity.YieldSupplyNotificationData
 import com.tangem.utils.StringsSigns.DOT
+import com.tangem.utils.TangemLinks
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.transformer.update
 import kotlinx.collections.immutable.persistentListOf
@@ -50,6 +52,7 @@ internal class YieldSupplyApproveModel @Inject constructor(
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase,
     private val yieldSupplyGetContractAddressUseCase: YieldSupplyGetContractAddressUseCase,
+    private val yieldSupplyAlertFactory: YieldSupplyAlertFactory,
 ) : Model(), YieldSupplyNotificationsComponent.ModelCallback {
 
     private val params: YieldSupplyApproveComponent.Params = paramsContainer.require()
@@ -98,7 +101,7 @@ internal class YieldSupplyApproveModel @Inject constructor(
     }
 
     fun onReadMoreClick() {
-        urlOpener.openUrl(READ_MORE_URL)
+        urlOpener.openUrl(TangemLinks.FEE_BLOG_LINK)
     }
 
     override fun onFeeReload() {
@@ -117,9 +120,22 @@ internal class YieldSupplyApproveModel @Inject constructor(
                 userWallet = userWallet,
                 network = cryptoCurrency.network,
             ).fold(
-                ifLeft = {
-                    Timber.e(it.toString())
+                ifLeft = { error ->
+                    Timber.e(error.toString())
                     uiState.update(YieldSupplyTransactionReadyTransformer)
+                    yieldSupplyAlertFactory.getSendTransactionErrorState(
+                        error = error,
+                        popBack = params.callback::onBackClick,
+                        onFailedTxEmailClick = { errorMessage ->
+                            modelScope.launch(dispatchers.default) {
+                                yieldSupplyAlertFactory.onFailedTxEmailClick(
+                                    userWallet = userWallet,
+                                    cryptoCurrency = cryptoCurrency,
+                                    errorMessage = errorMessage,
+                                )
+                            }
+                        },
+                    )
                 },
                 ifRight = {
                     params.callback.onTransactionSent()
@@ -222,9 +238,5 @@ internal class YieldSupplyApproveModel @Inject constructor(
                     it.copy(isPrimaryButtonEnabled = !hasError)
                 }
             }.launchIn(modelScope)
-    }
-
-    private companion object {
-        const val READ_MORE_URL = "https://tangem.com" // todo yield supply replace with real link
     }
 }
