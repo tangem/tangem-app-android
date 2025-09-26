@@ -22,12 +22,15 @@ import com.tangem.domain.yield.supply.usecase.YieldSupplyGetContractAddressUseCa
 import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyActionUM
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyFeeUM
+import com.tangem.features.yield.supply.impl.common.entity.transformer.YieldSupplyTransactionInProgressTransformer
+import com.tangem.features.yield.supply.impl.common.entity.transformer.YieldSupplyTransactionReadyTransformer
 import com.tangem.features.yield.supply.impl.subcomponents.approve.YieldSupplyApproveComponent
 import com.tangem.features.yield.supply.impl.subcomponents.notifications.YieldSupplyNotificationsComponent
 import com.tangem.features.yield.supply.impl.subcomponents.notifications.YieldSupplyNotificationsUpdateTrigger
 import com.tangem.features.yield.supply.impl.subcomponents.notifications.entity.YieldSupplyNotificationData
 import com.tangem.utils.StringsSigns.DOT
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.transformer.update
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -82,6 +85,7 @@ internal class YieldSupplyApproveModel @Inject constructor(
                 currencyIconState = CryptoCurrencyToIconStateConverter().convert(cryptoCurrency),
                 yieldSupplyFeeUM = YieldSupplyFeeUM.Loading,
                 isPrimaryButtonEnabled = false,
+                isTransactionSending = false,
             ),
         )
 
@@ -105,7 +109,7 @@ internal class YieldSupplyApproveModel @Inject constructor(
 
     fun onClick() {
         val yieldSupplyFeeUM = uiState.value.yieldSupplyFeeUM as? YieldSupplyFeeUM.Content ?: return
-        uiState.update { it.copy(isPrimaryButtonEnabled = false) }
+        uiState.update(YieldSupplyTransactionInProgressTransformer)
 
         modelScope.launch(dispatchers.default) {
             sendTransactionUseCase(
@@ -115,6 +119,7 @@ internal class YieldSupplyApproveModel @Inject constructor(
             ).fold(
                 ifLeft = {
                     Timber.e(it.toString())
+                    uiState.update(YieldSupplyTransactionReadyTransformer)
                 },
                 ifRight = {
                     params.callback.onTransactionSent()
@@ -136,7 +141,7 @@ internal class YieldSupplyApproveModel @Inject constructor(
     }
 
     private suspend fun onLoadFee() {
-        if (cryptoCurrency !is CryptoCurrency.Token) return
+        if (cryptoCurrency !is CryptoCurrency.Token || uiState.value.isTransactionSending) return
 
         val contractAddress = yieldSupplyGetContractAddressUseCase.invoke(
             userWalletId = userWallet.walletId,

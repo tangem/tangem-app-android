@@ -12,7 +12,6 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.models.yield.supply.YieldSupplyStatus
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
@@ -69,10 +68,10 @@ class DefaultYieldSupplyTransactionRepositoryTest {
 
     @Test
     fun `createEnterTransactions returns deploy-approve-enter transactions`() = runTest {
-        coEvery { walletManager.getYieldContract() } returns EthereumUtils.ZERO_ADDRESS
+        coEvery { walletManager.getYieldModuleAddress() } returns EthereumUtils.ZERO_ADDRESS
         coEvery { walletManager.getYieldSupplyStatus(any()) } returns null
         coEvery { walletManager.isAllowedToSpend(any()) } returns false
-        coEvery { walletManager.calculateYieldContract() } returns yieldContractAddress
+        coEvery { walletManager.calculateYieldModuleAddress() } returns yieldContractAddress
 
         val result = repository.createEnterTransactions(
             userWalletId = userWalletId,
@@ -119,8 +118,8 @@ class DefaultYieldSupplyTransactionRepositoryTest {
 
     @Test
     fun `createEnterTransactions returns init-approve-enter transactions`() = runTest {
-        coEvery { walletManager.getYieldContract() } returns yieldContractAddress
-        coEvery { walletManager.calculateYieldContract() } returns yieldContractAddress
+        coEvery { walletManager.getYieldModuleAddress() } returns yieldContractAddress
+        coEvery { walletManager.calculateYieldModuleAddress() } returns yieldContractAddress
         coEvery { walletManager.isAllowedToSpend(any()) } returns false
         coEvery { walletManager.getYieldSupplyStatus(any()) } returns SDKYieldSupplyStatus(
             isActive = false,
@@ -172,8 +171,8 @@ class DefaultYieldSupplyTransactionRepositoryTest {
 
     @Test
     fun `createEnterTransactions returns reactivate-approve-enter transactions`() = runTest {
-        coEvery { walletManager.getYieldContract() } returns yieldContractAddress
-        coEvery { walletManager.calculateYieldContract() } returns yieldContractAddress
+        coEvery { walletManager.getYieldModuleAddress() } returns yieldContractAddress
+        coEvery { walletManager.calculateYieldModuleAddress() } returns yieldContractAddress
         coEvery { walletManager.isAllowedToSpend(any()) } returns false
         coEvery { walletManager.getYieldSupplyStatus(any()) } returns SDKYieldSupplyStatus(
             isActive = false,
@@ -225,8 +224,8 @@ class DefaultYieldSupplyTransactionRepositoryTest {
 
     @Test
     fun `createEnterTransactions returns reactivate-enter transactions`() = runTest {
-        coEvery { walletManager.getYieldContract() } returns yieldContractAddress
-        coEvery { walletManager.calculateYieldContract() } returns yieldContractAddress
+        coEvery { walletManager.getYieldModuleAddress() } returns yieldContractAddress
+        coEvery { walletManager.calculateYieldModuleAddress() } returns yieldContractAddress
         coEvery { walletManager.getYieldSupplyStatus(any()) } returns SDKYieldSupplyStatus(
             isActive = false,
             isInitialized = true,
@@ -266,8 +265,8 @@ class DefaultYieldSupplyTransactionRepositoryTest {
 
     @Test
     fun `createEnterTransactions returns enter transactions`() = runTest {
-        coEvery { walletManager.getYieldContract() } returns yieldContractAddress
-        coEvery { walletManager.calculateYieldContract() } returns yieldContractAddress
+        coEvery { walletManager.getYieldModuleAddress() } returns yieldContractAddress
+        coEvery { walletManager.calculateYieldModuleAddress() } returns yieldContractAddress
         coEvery { walletManager.getYieldSupplyStatus(any()) } returns SDKYieldSupplyStatus(
             isActive = true,
             isInitialized = true,
@@ -299,9 +298,7 @@ class DefaultYieldSupplyTransactionRepositoryTest {
         val expectedCallData =
             YieldSupplyContractCallDataProviderFactory.getExitCallData(mockedContractAddress)
 
-        val yieldSupplyStatus = mockk<YieldSupplyStatus>(relaxed = true)
-
-        val result = repository.createExitTransaction(userWalletId, cryptoCurrency, yieldSupplyStatus, null)
+        val result = repository.createExitTransaction(userWalletId, cryptoCurrencyStatus, null)
 
         Truth.assertThat(result).isNotNull()
         Truth.assertThat(result.extras).isInstanceOf(EthereumTransactionExtras::class.java)
