@@ -4,4 +4,5 @@ enum class TokenAction {
     Receive,
     Send,
     Swap,
+    Info,
 }
