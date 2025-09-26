@@ -17,6 +17,7 @@ import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.yield.supply.YieldSupplyTransactionRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.extensions.orZero
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.math.BigDecimal
@@ -106,7 +107,7 @@ internal class DefaultYieldSupplyTransactionRepository(
                         decimals = cryptoCurrency.decimals,
                     ),
                 )
-            }.onFailure(Timber::e).getOrNull()
+            }.onFailure(Timber::e).getOrThrow()
         }
 
     @Suppress("LongParameterList")
@@ -173,14 +174,16 @@ internal class DefaultYieldSupplyTransactionRepository(
             )
         }
 
-        enterTransactions.add(
-            createEnterTransaction(
-                walletManager = walletManager,
-                cryptoCurrency = cryptoCurrency,
-                amount = amount,
-                yieldContractAddress = calculatedYieldContractAddress,
-            ),
-        )
+        if (cryptoCurrencyStatus.value.amount.orZero() > BigDecimal.ZERO) {
+            enterTransactions.add(
+                createEnterTransaction(
+                    walletManager = walletManager,
+                    cryptoCurrency = cryptoCurrency,
+                    amount = amount,
+                    yieldContractAddress = calculatedYieldContractAddress,
+                ),
+            )
+        }
 
         return enterTransactions
     }
@@ -197,7 +200,7 @@ internal class DefaultYieldSupplyTransactionRepository(
                 derivationPath = cryptoCurrency.network.derivationPath.value,
             ) ?: error("Wallet manager not found")
             walletManager.calculateYieldModuleAddress()
-        }.onFailure(Timber::e).getOrNull()
+        }.onFailure(Timber::e).getOrThrow()
     }
 
     override suspend fun getYieldContractAddress(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): String? =
@@ -210,7 +213,7 @@ internal class DefaultYieldSupplyTransactionRepository(
                     derivationPath = cryptoCurrency.network.derivationPath.value,
                 ) ?: error("Wallet manager not found")
                 walletManager.getYieldModuleAddress()
-            }.onFailure(Timber::e).getOrNull()
+            }.onFailure(Timber::e).getOrThrow()
         }
 
     private suspend fun getYieldTokenStatus(
@@ -232,7 +235,7 @@ internal class DefaultYieldSupplyTransactionRepository(
                 isInitialized = sdkSupplyStatus?.isInitialized == true,
                 isAllowedToSpend = isAllowedToSpend,
             )
-        }.onFailure(Timber::e).getOrNull()
+        }.onFailure(Timber::e).getOrThrow()
     }
 
     private fun createDeployTransaction(
