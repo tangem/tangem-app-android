@@ -22,6 +22,7 @@ import com.tangem.blockchain.transactionhistory.models.TransactionHistoryRequest
 import com.tangem.blockchainsdk.BlockchainSDKFactory
 import com.tangem.blockchainsdk.models.UpdateWalletManagerResult
 import com.tangem.blockchainsdk.utils.toBlockchain
+import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.data.walletmanager.utils.*
 import com.tangem.datasource.asset.loader.AssetLoader
@@ -50,6 +51,7 @@ import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.math.BigDecimal
 import java.util.EnumSet
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 
 @Suppress("LargeClass", "TooManyFunctions")
@@ -71,7 +73,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
     private val requirementsConditionConverter by lazy { SdkRequirementsConditionConverter() }
     private val estimationFeeAddressFactory by lazy { EstimationFeeAddressFactory() }
 
-    private val initMutex = Mutex()
+    private val wmInitializationMutexes = ConcurrentHashMap<String, Mutex>()
 
     override suspend fun update(
         userWalletId: UserWalletId,
@@ -363,7 +365,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         blockchain: Blockchain,
         derivationPath: String?,
     ): WalletManager? {
-        initMutex.withLock {
+        getWmInitializationMutex(blockchain, derivationPath).withLock {
             val userWallet = getUserWallet(userWalletId)
 
             var walletManager = walletManagersStore.getSyncOrNull(
@@ -726,6 +728,17 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = network)
         val initializableAccountWalletManger = walletManager as? InitializableAccount ?: return true
         return initializableAccountWalletManger.accountInitializationState == InitializableAccount.State.INITIALIZED
+    }
+
+    private fun getWmInitializationMutex(blockchain: Blockchain, derivationPath: String?): Mutex {
+        val key = createMutexMapKey(blockchain, derivationPath)
+        return wmInitializationMutexes.computeIfAbsent(key) {
+            Mutex()
+        }
+    }
+
+    private fun createMutexMapKey(blockchain: Blockchain, derivationPath: String?): String {
+        return blockchain.toNetworkId() + "|" + derivationPath
     }
 
     private fun updateWalletManagerTokensIfNeeded(walletManager: WalletManager, tokens: Set<CryptoCurrency.Token>) {
