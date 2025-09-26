@@ -191,6 +191,7 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
     private val onActivityResultCallbacks = mutableListOf<OnActivityResultCallback>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        Timber.i("onCreate")
         // We need to call it before onCreate to prevent unnecessary activity recreation
         installAppTheme()
 
@@ -328,15 +329,18 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
 
     override fun onStart() {
         super.onStart()
+        Timber.i("onStart")
         dialogManager.onStart(this)
     }
 
     override fun onStop() {
         dialogManager.onStop()
         super.onStop()
+        Timber.i("onStop")
     }
 
     override fun onDestroy() {
+        Timber.i("onDestroy")
         // workaround: kill process when activity destroy to avoid state when lock() wallets
         // and navigation to unlock screen was skipped because system kills activity but not process
         if (BuildConfig.BUILD_TYPE != MOCKED_BUILD_TYPE) {
