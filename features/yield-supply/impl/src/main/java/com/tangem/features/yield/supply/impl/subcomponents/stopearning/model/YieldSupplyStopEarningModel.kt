@@ -10,6 +10,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.tokens.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
@@ -18,6 +19,8 @@ import com.tangem.domain.yield.supply.usecase.YieldSupplyStopEarningUseCase
 import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyActionUM
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyFeeUM
+import com.tangem.features.yield.supply.impl.common.entity.transformer.YieldSupplyTransactionInProgressTransformer
+import com.tangem.features.yield.supply.impl.common.entity.transformer.YieldSupplyTransactionReadyTransformer
 import com.tangem.features.yield.supply.impl.subcomponents.notifications.YieldSupplyNotificationsComponent
 import com.tangem.features.yield.supply.impl.subcomponents.notifications.YieldSupplyNotificationsUpdateTrigger
 import com.tangem.features.yield.supply.impl.subcomponents.notifications.entity.YieldSupplyNotificationData
@@ -78,6 +81,7 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
                 currencyIconState = CryptoCurrencyToIconStateConverter().convert(cryptoCurrency),
                 yieldSupplyFeeUM = YieldSupplyFeeUM.Loading,
                 isPrimaryButtonEnabled = false,
+                isTransactionSending = false,
             ),
         )
 
@@ -101,7 +105,7 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
 
     fun onClick() {
         val yieldSupplyFeeUM = uiState.value.yieldSupplyFeeUM as? YieldSupplyFeeUM.Content ?: return
-        uiState.update { it.copy(isPrimaryButtonEnabled = false) }
+        uiState.update(YieldSupplyTransactionInProgressTransformer)
 
         modelScope.launch(dispatchers.default) {
             sendTransactionUseCase(
@@ -111,6 +115,7 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
             ).fold(
                 ifLeft = {
                     Timber.e(it.toString())
+                    uiState.update(YieldSupplyTransactionReadyTransformer)
                 },
                 ifRight = {
                     params.callback.onTransactionSent()
@@ -132,6 +137,8 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
     }
 
     private suspend fun onLoadFee() {
+        if (cryptoCurrency !is CryptoCurrency.Token || uiState.value.isTransactionSending) return
+
         val exitTransitionData = yieldSupplyStopEarningUseCase(
             userWalletId = userWallet.walletId,
             cryptoCurrencyStatus = cryptoCurrencyStatus,
