@@ -1,11 +1,11 @@
 package com.tangem.features.kyc
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import com.tangem.core.decompose.context.AppComponentContext
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
-import androidx.compose.ui.Modifier
 
 /**
  * Mocking it for release/external builds to exclude SumSub dependency
