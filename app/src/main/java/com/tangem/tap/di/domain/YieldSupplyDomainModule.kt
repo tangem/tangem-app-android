@@ -3,6 +3,7 @@ package com.tangem.tap.di.domain
 import com.tangem.domain.blockaid.BlockAidGasEstimate
 import com.tangem.domain.transaction.FeeRepository
 import com.tangem.domain.transaction.error.FeeErrorResolver
+import com.tangem.domain.yield.supply.YieldSupplyErrorResolver
 import com.tangem.domain.yield.supply.YieldSupplyTransactionRepository
 import com.tangem.domain.yield.supply.usecase.*
 import dagger.Module
@@ -19,9 +20,11 @@ internal object YieldSupplyDomainModule {
     @Singleton
     fun provideYieldSupplyStartEarningUseCase(
         yieldSupplyTransactionRepository: YieldSupplyTransactionRepository,
+        yieldSupplyErrorResolver: YieldSupplyErrorResolver,
     ): YieldSupplyStartEarningUseCase {
         return YieldSupplyStartEarningUseCase(
             yieldSupplyTransactionRepository = yieldSupplyTransactionRepository,
+            yieldSupplyErrorResolver = yieldSupplyErrorResolver,
         )
     }
 
@@ -29,9 +32,11 @@ internal object YieldSupplyDomainModule {
     @Singleton
     fun provideYieldSupplyStopEarningUseCase(
         yieldSupplyTransactionRepository: YieldSupplyTransactionRepository,
+        yieldSupplyErrorResolver: YieldSupplyErrorResolver,
     ): YieldSupplyStopEarningUseCase {
         return YieldSupplyStopEarningUseCase(
             yieldSupplyTransactionRepository = yieldSupplyTransactionRepository,
+            yieldSupplyErrorResolver = yieldSupplyErrorResolver,
         )
     }
 
@@ -53,9 +58,11 @@ internal object YieldSupplyDomainModule {
     @Singleton
     fun provideYieldSupplyGetContractAddressUseCase(
         yieldSupplyTransactionRepository: YieldSupplyTransactionRepository,
+        yieldSupplyErrorResolver: YieldSupplyErrorResolver,
     ): YieldSupplyGetContractAddressUseCase {
         return YieldSupplyGetContractAddressUseCase(
             yieldSupplyTransactionRepository = yieldSupplyTransactionRepository,
+            yieldSupplyErrorResolver = yieldSupplyErrorResolver,
         )
     }
 
@@ -63,9 +70,11 @@ internal object YieldSupplyDomainModule {
     @Singleton
     fun provideYieldSupplyGetProtocolBalanceUseCase(
         yieldSupplyTransactionRepository: YieldSupplyTransactionRepository,
+        yieldSupplyErrorResolver: YieldSupplyErrorResolver,
     ): YieldSupplyGetProtocolBalanceUseCase {
         return YieldSupplyGetProtocolBalanceUseCase(
             yieldSupplyTransactionRepository = yieldSupplyTransactionRepository,
+            yieldSupplyErrorResolver = yieldSupplyErrorResolver,
         )
     }
 }
