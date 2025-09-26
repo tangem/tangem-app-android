@@ -8,6 +8,7 @@ import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.AppRoute.*
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.bottomsheet.receive.AddressModel
 import com.tangem.common.ui.bottomsheet.receive.mapToAddressModels
@@ -1028,6 +1029,15 @@ internal class TokenDetailsModel @Inject constructor(
         internalUiState.value = stateFactory.getStateWithClosedBottomSheet()
     }
 
+    override fun onYieldInfoClick() {
+        bottomSheetNavigation.activate(
+            configuration = TokenDetailsBottomSheetConfig.YieldSupplyWarning(
+                cryptoCurrency = cryptoCurrency,
+                tokenAction = TokenAction.Info,
+            ),
+        )
+    }
+
     private fun handleUnavailabilityReason(unavailabilityReason: ScenarioUnavailabilityReason): Boolean {
         if (unavailabilityReason == ScenarioUnavailabilityReason.None) return false
 
@@ -1161,7 +1171,9 @@ internal class TokenDetailsModel @Inject constructor(
     override fun onYieldSupplyWarningAcknowledged(tokenAction: TokenAction) {
         bottomSheetNavigation.dismiss()
         modelScope.launch {
-            saveViewedYieldSupplyWarningUseCase(cryptoCurrency.name)
+            if(tokenAction != TokenAction.Info) {
+                saveViewedYieldSupplyWarningUseCase(cryptoCurrency.name)
+            }
             if (tokenAction == TokenAction.Receive) {
                 saveViewedTokenReceiveWarningUseCase(cryptoCurrency.name)
             }
@@ -1169,12 +1181,13 @@ internal class TokenDetailsModel @Inject constructor(
                 TokenAction.Receive -> navigateToReceive()
                 TokenAction.Send -> sendCurrency()
                 TokenAction.Swap -> appRouter.push(
-                    AppRoute.Swap(
+                    Swap(
                         currencyFrom = cryptoCurrency,
                         userWalletId = userWalletId,
                         screenSource = AnalyticsParam.ScreensSources.Token.value,
                     ),
                 )
+                TokenAction.Info -> Unit
             }
         }
     }
