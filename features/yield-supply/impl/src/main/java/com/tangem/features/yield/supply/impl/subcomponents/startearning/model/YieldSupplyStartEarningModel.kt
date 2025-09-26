@@ -12,6 +12,7 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.tokens.FetchCurrencyStatusUseCase
 import com.tangem.domain.tokens.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
@@ -21,6 +22,8 @@ import com.tangem.domain.yield.supply.usecase.YieldSupplyStartEarningUseCase
 import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyActionUM
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyFeeUM
+import com.tangem.features.yield.supply.impl.common.entity.transformer.YieldSupplyTransactionInProgressTransformer
+import com.tangem.features.yield.supply.impl.common.entity.transformer.YieldSupplyTransactionReadyTransformer
 import com.tangem.features.yield.supply.impl.subcomponents.notifications.YieldSupplyNotificationsComponent
 import com.tangem.features.yield.supply.impl.subcomponents.notifications.YieldSupplyNotificationsUpdateTrigger
 import com.tangem.features.yield.supply.impl.subcomponents.notifications.entity.YieldSupplyNotificationData
@@ -49,6 +52,7 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
     private val yieldSupplyEstimateEnterFeeUseCase: YieldSupplyEstimateEnterFeeUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val yieldSupplyNotificationsUpdateTrigger: YieldSupplyNotificationsUpdateTrigger,
+    private val fetchCurrencyStatusUseCase: FetchCurrencyStatusUseCase,
 ) : Model(), YieldSupplyNotificationsComponent.ModelCallback {
 
     private val params: YieldSupplyStartEarningComponent.Params = paramsContainer.require()
@@ -84,6 +88,7 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
                 currencyIconState = CryptoCurrencyToIconStateConverter().convert(params.cryptoCurrency),
                 yieldSupplyFeeUM = YieldSupplyFeeUM.Loading,
                 isPrimaryButtonEnabled = false,
+                isTransactionSending = false,
             ),
         )
 
@@ -100,7 +105,7 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
     }
 
     private suspend fun onLoadFee() {
-        if (cryptoCurrencyStatus.value is CryptoCurrencyStatus.Loading) return
+        if (cryptoCurrencyStatus.value is CryptoCurrencyStatus.Loading || uiState.value.isTransactionSending) return
 
         val transactionListData = yieldSupplyStartEarningUseCase(
             userWalletId = userWallet.walletId,
@@ -155,7 +160,7 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
     fun onClick() {
         val yieldSupplyFeeUM = uiState.value.yieldSupplyFeeUM as? YieldSupplyFeeUM.Content ?: return
 
-        uiState.update { it.copy(isPrimaryButtonEnabled = false) }
+        uiState.update(YieldSupplyTransactionInProgressTransformer)
         modelScope.launch(dispatchers.default) {
             sendTransactionUseCase.invoke(
                 txsData = yieldSupplyFeeUM.transactionDataList,
@@ -163,11 +168,12 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
                 network = cryptoCurrency.network,
                 sendMode = TransactionSender.MultipleTransactionSendMode.DEFAULT,
             ).fold(
-                ifLeft = {
-                    Timber.e(it.toString())
-                    uiState.update { it.copy(isPrimaryButtonEnabled = true) }
+                ifLeft = { error ->
+                    Timber.e(error.toString())
+                    uiState.update(YieldSupplyTransactionReadyTransformer)
                 },
                 ifRight = {
+                    fetchCurrencyStatusUseCase(userWalletId = userWallet.walletId, cryptoCurrency.id)
                     modelScope.launch {
                         params.callback.onTransactionSent()
                     }
