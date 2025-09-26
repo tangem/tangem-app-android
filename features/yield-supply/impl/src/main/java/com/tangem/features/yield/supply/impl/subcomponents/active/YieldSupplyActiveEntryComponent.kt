@@ -75,6 +75,7 @@ internal class YieldSupplyActiveEntryComponent(
             params = YieldSupplyActiveComponent.Params(
                 userWallet = params.userWallet,
                 cryptoCurrencyStatusFlow = params.cryptoCurrencyStatusFlow,
+                isBalanceHiddenFlow = params.isBalanceHiddenFlow,
                 callback = model,
             ),
         )
@@ -107,6 +108,7 @@ internal class YieldSupplyActiveEntryComponent(
     data class Params(
         val userWallet: UserWallet,
         val cryptoCurrencyStatusFlow: StateFlow<CryptoCurrencyStatus>,
+        val isBalanceHiddenFlow: StateFlow<Boolean>,
         val onDismiss: () -> Unit,
     )
 }
