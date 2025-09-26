@@ -20,5 +20,9 @@ internal sealed class YieldSupplyUM {
         val isAllowedToSpend: Boolean,
     ) : YieldSupplyUM()
 
-    data object Processing : YieldSupplyUM()
+    @Immutable
+    sealed class Processing : YieldSupplyUM() {
+        data object Enter : Processing()
+        data object Exit : Processing()
+    }
 }
