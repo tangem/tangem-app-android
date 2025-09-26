@@ -17,6 +17,7 @@ import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyStopEarningUseCase
 import com.tangem.features.yield.supply.impl.R
+import com.tangem.features.yield.supply.impl.common.YieldSupplyAlertFactory
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyActionUM
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyFeeUM
 import com.tangem.features.yield.supply.impl.common.entity.transformer.YieldSupplyTransactionInProgressTransformer
@@ -26,6 +27,7 @@ import com.tangem.features.yield.supply.impl.subcomponents.notifications.YieldSu
 import com.tangem.features.yield.supply.impl.subcomponents.notifications.entity.YieldSupplyNotificationData
 import com.tangem.features.yield.supply.impl.subcomponents.stopearning.YieldSupplyStopEarningComponent
 import com.tangem.features.yield.supply.impl.subcomponents.stopearning.model.transformer.YieldSupplyStopEarningFeeContentTransformer
+import com.tangem.utils.TangemLinks
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.orZero
 import com.tangem.utils.transformer.update
@@ -46,6 +48,7 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
     private val yieldSupplyStopEarningUseCase: YieldSupplyStopEarningUseCase,
     private val urlOpener: UrlOpener,
     private val yieldSupplyNotificationsUpdateTrigger: YieldSupplyNotificationsUpdateTrigger,
+    private val yieldSupplyAlertFactory: YieldSupplyAlertFactory,
 ) : Model(), YieldSupplyNotificationsComponent.ModelCallback {
 
     private val params: YieldSupplyStopEarningComponent.Params = paramsContainer.require()
@@ -100,7 +103,7 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
     }
 
     fun onReadMoreClick() {
-        urlOpener.openUrl(READ_MORE_URL)
+        urlOpener.openUrl(TangemLinks.FEE_BLOG_LINK)
     }
 
     fun onClick() {
@@ -113,9 +116,22 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
                 userWallet = userWallet,
                 network = cryptoCurrency.network,
             ).fold(
-                ifLeft = {
-                    Timber.e(it.toString())
+                ifLeft = { error ->
+                    Timber.e(error.toString())
                     uiState.update(YieldSupplyTransactionReadyTransformer)
+                    yieldSupplyAlertFactory.getSendTransactionErrorState(
+                        error = error,
+                        popBack = params.callback::onBackClick,
+                        onFailedTxEmailClick = { errorMessage ->
+                            modelScope.launch(dispatchers.default) {
+                                yieldSupplyAlertFactory.onFailedTxEmailClick(
+                                    userWallet = params.userWallet,
+                                    cryptoCurrency = cryptoCurrency,
+                                    errorMessage = error.toString(),
+                                )
+                            }
+                        },
+                    )
                 },
                 ifRight = {
                     params.callback.onTransactionSent()
@@ -196,9 +212,5 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
                     it.copy(isPrimaryButtonEnabled = !hasError)
                 }
             }.launchIn(modelScope)
-    }
-
-    private companion object {
-        const val READ_MORE_URL = "https://tangem.com" // todo yield supply replace with real link
     }
 }

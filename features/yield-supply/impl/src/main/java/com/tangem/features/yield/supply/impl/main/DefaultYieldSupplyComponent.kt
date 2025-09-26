@@ -38,8 +38,9 @@ internal class DefaultYieldSupplyComponent @AssistedInject constructor(
     override fun Content(modifier: Modifier) {
         val yieldSupplyUM by model.uiState.collectAsStateWithLifecycle()
         val bottomSheet by bottomSheetSlot.subscribeAsState()
+        val isBalanceHidden by model.isBalanceHiddenFlow.collectAsStateWithLifecycle()
 
-        YieldSupplyBlockContent(yieldSupplyUM = yieldSupplyUM, modifier = modifier)
+        YieldSupplyBlockContent(yieldSupplyUM = yieldSupplyUM, isBalanceHidden = isBalanceHidden, modifier = modifier)
 
         bottomSheet.child?.instance?.BottomSheet()
     }
@@ -50,6 +51,7 @@ internal class DefaultYieldSupplyComponent @AssistedInject constructor(
             params = YieldSupplyActiveEntryComponent.Params(
                 userWallet = model.userWallet,
                 cryptoCurrencyStatusFlow = model.cryptoCurrencyStatusFlow,
+                isBalanceHiddenFlow = model.isBalanceHiddenFlow,
                 onDismiss = model.bottomSheetNavigation::dismiss,
             ),
         )

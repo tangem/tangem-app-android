@@ -13,6 +13,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.model.getOrCreateModel
@@ -105,11 +106,17 @@ internal class YieldSupplyStartEarningComponent(
     override fun Footer() {
         val state by model.uiState.collectAsStateWithLifecycle()
 
+        val icon = if (state.isPrimaryButtonEnabled) {
+            walletInterationIcon(model.userWallet)
+        } else {
+            null
+        }
+
         PrimaryButtonIconEnd(
             text = stringResourceSafe(R.string.yield_module_start_earning),
             onClick = model::onClick,
             enabled = state.isPrimaryButtonEnabled,
-            iconResId = R.drawable.ic_tangem_24,
+            iconResId = icon,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
