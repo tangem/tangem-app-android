@@ -11,19 +11,25 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.tokens.FetchCurrencyStatusUseCase
 import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.yield.supply.api.YieldSupplyComponent
 import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.impl.main.entity.YieldSupplyUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.DelayedWork
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 import kotlin.properties.Delegates
 
+@Suppress("LongParameterList")
 @ModelScoped
 internal class YieldSupplyModel @Inject constructor(
     paramsContainer: ParamsContainer,
@@ -31,6 +37,8 @@ internal class YieldSupplyModel @Inject constructor(
     private val appRouter: AppRouter,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val getSingleCryptoCurrencyStatusUseCase: GetSingleCryptoCurrencyStatusUseCase,
+    private val fetchCurrencyStatusUseCase: FetchCurrencyStatusUseCase,
+    @DelayedWork private val coroutineScope: CoroutineScope,
 ) : Model(), YieldSupplyClickIntents {
 
     private val params = paramsContainer.require<YieldSupplyComponent.Params>()
@@ -100,9 +108,22 @@ internal class YieldSupplyModel @Inject constructor(
 
     private fun onDataLoaded(cryptoCurrencyStatus: CryptoCurrencyStatus) {
         val yieldSupplyStatus = cryptoCurrencyStatus.value.yieldSupplyStatus
+        val hasActiveTransaction = cryptoCurrencyStatus.value.hasCurrentNetworkTransactions
+        val yieldTransaction = cryptoCurrencyStatus.value.pendingTransactions.firstOrNull {
+            it.type is TxInfo.TransactionType.YieldSupply
+        }?.type as? TxInfo.TransactionType.YieldSupply
 
-        // todo yield supply add processing state
         val yieldSupplyUM = when {
+            hasActiveTransaction && yieldTransaction != null -> {
+                coroutineScope.launch(dispatchers.io) {
+                    delay(PROCESSING_UPDATE_DELAY)
+                    fetchCurrencyStatusUseCase(userWalletId = userWallet.walletId, cryptoCurrency.id)
+                }
+                when (yieldTransaction) {
+                    TxInfo.TransactionType.YieldSupply.Enter -> YieldSupplyUM.Processing.Enter
+                    TxInfo.TransactionType.YieldSupply.Exit -> YieldSupplyUM.Processing.Exit
+                }
+            }
             yieldSupplyStatus?.isActive == true ->
                 YieldSupplyUM.Content(
                     rewardsBalance = TextReference.EMPTY,
@@ -120,5 +141,9 @@ internal class YieldSupplyModel @Inject constructor(
         }
 
         uiState.update { yieldSupplyUM }
+    }
+
+    private companion object {
+        const val PROCESSING_UPDATE_DELAY = 10_000L
     }
 }
