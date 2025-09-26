@@ -4,30 +4,38 @@ import android.app.Activity
 import android.app.Application.ActivityLifecycleCallbacks
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import java.util.WeakHashMap
+import timber.log.Timber
 import kotlin.reflect.KClass
 
-class ForegroundActivityObserver {
+object ForegroundActivityObserver {
 
-    private val activities = WeakHashMap<KClass<out Activity>, AppCompatActivity>()
+    private val activities = HashMap<KClass<out Activity>, AppCompatActivity>()
 
     val foregroundActivity: AppCompatActivity?
         get() = activities.entries
-            .firstOrNull { it.value?.isDestroyed == false }
+            .firstOrNull {
+                Timber.i("foregroundActivity: ${it.key} | ${it.value.isDestroyed}")
+                it.value.isDestroyed == false
+            }
             ?.value
 
     internal val callbacks: ActivityLifecycleCallbacks
         get() = Callbacks()
 
-    internal inner class Callbacks : ActivityLifecycleCallbacks {
+    internal class Callbacks : ActivityLifecycleCallbacks {
         override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
         }
 
         override fun onActivityResumed(activity: Activity) {
-            activities[activity::class] = activity as? AppCompatActivity
+            Timber.i("onActivityResumed ${activity::class}")
+            (activity as? AppCompatActivity)?.let {
+                Timber.i("onActivityResumed store activity")
+                activities[activity::class] = it
+            }
         }
 
         override fun onActivityDestroyed(activity: Activity) {
+            Timber.i("onActivityDestroyed")
             activities.remove(activity::class)
         }
 
