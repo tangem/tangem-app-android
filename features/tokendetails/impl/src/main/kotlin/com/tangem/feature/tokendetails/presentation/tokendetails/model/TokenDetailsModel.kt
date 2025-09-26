@@ -1171,7 +1171,7 @@ internal class TokenDetailsModel @Inject constructor(
     override fun onYieldSupplyWarningAcknowledged(tokenAction: TokenAction) {
         bottomSheetNavigation.dismiss()
         modelScope.launch {
-            if(tokenAction != TokenAction.Info) {
+            if (tokenAction != TokenAction.Info) {
                 saveViewedYieldSupplyWarningUseCase(cryptoCurrency.name)
             }
             if (tokenAction == TokenAction.Receive) {
