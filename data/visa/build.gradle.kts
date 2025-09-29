@@ -28,6 +28,10 @@ dependencies {
     implementation(projects.domain.appCurrency.models)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.tokens)
+    implementation(projects.domain.networks)
+
+    /** Feature API - remove after removing [HotWalletFeatureToggles] */
+    implementation(projects.features.hotWallet.api)
 
     /** Project - Utils */
     implementation(projects.core.utils)
