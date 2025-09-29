@@ -51,6 +51,7 @@ internal class DefaultFeeSelectorBlockComponent @AssistedInject constructor(
                     feeStateConfiguration = params.feeStateConfiguration,
                     feeDisplaySource = FeeSelectorParams.FeeDisplaySource.Screen,
                     analyticsCategoryName = params.analyticsCategoryName,
+                    analyticsSendSource = params.analyticsSendSource,
                 ),
                 onDismiss = {
                     model.feeSelectorBottomSheet.dismiss()
