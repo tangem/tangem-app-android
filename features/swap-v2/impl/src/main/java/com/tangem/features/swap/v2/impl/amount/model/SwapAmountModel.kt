@@ -224,6 +224,7 @@ internal class SwapAmountModel @Inject constructor(
                 categoryName = params.analyticsCategoryName,
                 token = primaryCryptoCurrency.symbol,
                 blockchain = primaryCryptoCurrency.network.name,
+                source = params.analyticsSendSource,
             ),
         )
         uiState.transformerUpdate(
