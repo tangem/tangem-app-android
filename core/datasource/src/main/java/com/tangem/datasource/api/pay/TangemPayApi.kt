@@ -7,6 +7,7 @@ import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.POST
+import retrofit2.http.Path
 import retrofit2.http.Query
 
 private const val TX_HISTORY_PAGING_DEFAULT_LIMIT = 20
@@ -124,4 +125,16 @@ interface TangemPayApi {
 
     @POST("v1/deeplink/validate")
     suspend fun validateDeeplink(@Body body: DeeplinkValidityRequest): ApiResponse<DeeplinkValidityResponse>
+
+    @GET("v1/order/{order_id}")
+    suspend fun getOrder(
+        @Header("Authorization") authHeader: String,
+        @Path("order_id") orderId: String,
+    ): ApiResponse<OrderResponse>
+
+    @POST("v1/order")
+    suspend fun createOrder(
+        @Header("Authorization") authHeader: String,
+        @Body body: OrderRequest,
+    ): ApiResponse<OrderResponse>
 }
