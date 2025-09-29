@@ -8,8 +8,10 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.card.common.util.cardTypesResolver
+import com.tangem.domain.models.PortfolioId
 import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.tokenlist.TokenList
@@ -34,34 +36,46 @@ internal class TokenListStateConverter(
     private val clickIntents: WalletClickIntents,
 ) : Converter<WalletTokensListState, WalletTokensListState> {
 
-    private val tokenStatusConverter = when (params) {
-        is TokenConverterParams.Account, // todo account Click with accountId param
-        is TokenConverterParams.Wallet,
-        -> TokenItemStateConverter(
-            appCurrency = appCurrency,
-            onItemClick = { _, status -> clickIntents.onTokenItemClick(status) },
-            onItemLongClick = { _, status -> clickIntents.onTokenItemLongClick(status) },
-        )
-    }
+    private val onTokenClick: (accountId: AccountId?, currencyStatus: CryptoCurrencyStatus) -> Unit =
+        { accountId, currencyStatus ->
+            val id = accountId?.let { PortfolioId(accountId) } ?: PortfolioId(selectedWallet.walletId)
+            clickIntents.onTokenItemClick(id, currencyStatus)
+        }
+
+    private val onTokenLongClick: (accountId: AccountId?, currencyStatus: CryptoCurrencyStatus) -> Unit =
+        { accountId, currencyStatus ->
+            val id = accountId?.let { PortfolioId(accountId) } ?: PortfolioId(selectedWallet.walletId)
+            clickIntents.onTokenItemLongClick(id, currencyStatus)
+        }
+
+    private fun tokenStatusConverter(accountId: AccountId? = null) = TokenItemStateConverter(
+        appCurrency = appCurrency,
+        onItemClick = { _, status -> onTokenClick(accountId, status) },
+        onItemLongClick = { _, status -> onTokenLongClick(accountId, status) },
+    )
 
     override fun convert(value: WalletTokensListState): WalletTokensListState {
         return when (params) {
             is TokenConverterParams.Account -> convertAccountList(params)
-            is TokenConverterParams.Wallet -> convertTokenList(params.tokenList)
+            is TokenConverterParams.Wallet -> convertTokenList(
+                tokenConverter = tokenStatusConverter((params.portfolioId as? PortfolioId.Account)?.accountId),
+                tokenList = params.tokenList,
+            )
         }
     }
 
-    private fun convertTokenList(tokenList: TokenList): WalletTokensListState = when (tokenList) {
-        is TokenList.Empty -> WalletTokensListState.Empty
-        is TokenList.GroupedByNetwork -> WalletTokensListState.ContentState.Content(
-            items = tokenList.toGroupedItems(),
-            organizeTokensButtonConfig = getOrganizeTokensButtonState(tokenList = tokenList),
-        )
-        is TokenList.Ungrouped -> WalletTokensListState.ContentState.Content(
-            items = tokenList.toUngroupedItems(),
-            organizeTokensButtonConfig = getOrganizeTokensButtonState(tokenList = tokenList),
-        )
-    }
+    private fun convertTokenList(tokenConverter: TokenItemStateConverter, tokenList: TokenList): WalletTokensListState =
+        when (tokenList) {
+            is TokenList.Empty -> WalletTokensListState.Empty
+            is TokenList.GroupedByNetwork -> WalletTokensListState.ContentState.Content(
+                items = tokenList.toGroupedItems(tokenConverter),
+                organizeTokensButtonConfig = getOrganizeTokensButtonState(tokenList = tokenList),
+            )
+            is TokenList.Ungrouped -> WalletTokensListState.ContentState.Content(
+                items = tokenList.toUngroupedItems(tokenConverter),
+                organizeTokensButtonConfig = getOrganizeTokensButtonState(tokenList = tokenList),
+            )
+        }
 
     private fun convertAccountList(params: TokenConverterParams.Account): WalletTokensListState {
         val accountList = params.accountList
@@ -85,7 +99,8 @@ internal class TokenListStateConverter(
                 onItemClick = onItemClick,
             )
             val accountItem = converter.convert(tokenList.totalFiatBalance)
-            val tokensListState = convertTokenList(tokenList)
+            val tokenConverter = tokenStatusConverter(account.accountId)
+            val tokensListState = convertTokenList(tokenConverter, tokenList)
             val items = when (tokensListState) {
                 is WalletTokensListState.ContentState.PortfolioContent -> tokensListState.items
                 is WalletTokensListState.ContentState.Content -> tokensListState.items
@@ -112,19 +127,26 @@ internal class TokenListStateConverter(
         )
     }
 
-    private fun TokenList.GroupedByNetwork.toGroupedItems(): PersistentList<TokensListItemUM> {
+    private fun TokenList.GroupedByNetwork.toGroupedItems(
+        tokenConverter: TokenItemStateConverter,
+    ): PersistentList<TokensListItemUM> {
         return groups.fold(initial = persistentListOf()) { acc, group ->
-            acc.mutate { it.addGroup(group) }
+            acc.mutate { it.addGroup(tokenConverter, group) }
         }
     }
 
-    private fun TokenList.Ungrouped.toUngroupedItems(): PersistentList<TokensListItemUM> {
+    private fun TokenList.Ungrouped.toUngroupedItems(
+        tokenConverter: TokenItemStateConverter,
+    ): PersistentList<TokensListItemUM> {
         return currencies.fold(initial = persistentListOf()) { acc, token ->
-            acc.mutate { it.addToken(token) }
+            acc.mutate { it.addToken(tokenConverter, token) }
         }
     }
 
-    private fun MutableList<TokensListItemUM>.addGroup(group: NetworkGroup): List<TokensListItemUM> {
+    private fun MutableList<TokensListItemUM>.addGroup(
+        tokenConverter: TokenItemStateConverter,
+        group: NetworkGroup,
+    ): List<TokensListItemUM> {
         val groupTitle = TokensListItemUM.GroupTitle(
             id = group.network.hashCode(),
             text = resourceReference(
@@ -134,13 +156,16 @@ internal class TokenListStateConverter(
         )
 
         add(groupTitle)
-        group.currencies.forEach { token -> addToken(token) }
+        group.currencies.forEach { token -> addToken(tokenConverter, token) }
 
         return this
     }
 
-    private fun MutableList<TokensListItemUM>.addToken(token: CryptoCurrencyStatus): List<TokensListItemUM> {
-        val tokenItemState = tokenStatusConverter.convert(token)
+    private fun MutableList<TokensListItemUM>.addToken(
+        tokenConverter: TokenItemStateConverter,
+        token: CryptoCurrencyStatus,
+    ): List<TokensListItemUM> {
+        val tokenItemState = tokenConverter.convert(token)
         add(TokensListItemUM.Token(tokenItemState))
 
         return this
