@@ -10,7 +10,6 @@ import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.data.account.store.AccountsResponseStoreFactory
 import com.tangem.data.account.utils.assignTokens
 import com.tangem.data.account.utils.toUserTokensResponse
-import com.tangem.data.common.account.WalletAccountsSaver
 import com.tangem.data.common.currency.UserTokensSaver
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
@@ -28,14 +27,12 @@ import timber.log.Timber
  *
  * @property accountsResponseStoreFactory Factory for creating stores to access cached account responses.
  * @property userTokensSaver Saver for updating user tokens in persistent storage.
- * @property walletAccountsSaver Saver for updating wallet accounts in persistent storage.
  *
 [REDACTED_AUTHOR]
  */
 internal class DefaultMainAccountTokensMigration(
     private val accountsResponseStoreFactory: AccountsResponseStoreFactory,
     private val userTokensSaver: UserTokensSaver,
-    private val walletAccountsSaver: WalletAccountsSaver,
 ) : MainAccountTokensMigration {
 
     override suspend fun migrate(
@@ -80,8 +77,6 @@ internal class DefaultMainAccountTokensMigration(
                 }
             },
         )
-
-        walletAccountsSaver.store(userWalletId = userWalletId, response = updatedResponse)
 
         userTokensSaver.push(
             userWalletId = userWalletId,
