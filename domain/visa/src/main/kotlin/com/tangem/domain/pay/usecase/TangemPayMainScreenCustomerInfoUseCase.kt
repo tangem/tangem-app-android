@@ -1,6 +1,6 @@
 package com.tangem.domain.pay.usecase
 
-import com.tangem.domain.pay.model.CustomerInfo
+import com.tangem.domain.pay.model.MainScreenCustomerInfo
 import com.tangem.domain.pay.repository.OnboardingRepository
 
 /**
@@ -11,5 +11,5 @@ class TangemPayMainScreenCustomerInfoUseCase(
     private val repository: OnboardingRepository,
 ) {
 
-    suspend operator fun invoke(): CustomerInfo? = repository.getMainScreenCustomerInfo().getOrNull()
+    suspend operator fun invoke(): MainScreenCustomerInfo? = repository.getMainScreenCustomerInfo().getOrNull()
 }
