@@ -32,6 +32,7 @@ import com.tangem.domain.transaction.error.SendTransactionError.UserCancelledErr
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.walletconnect.WcAnalyticEvents
 import com.tangem.domain.walletconnect.WcAnalyticEvents.SignatureRequestReceived.EmulationStatus
+import com.tangem.domain.walletconnect.WcAnalyticEvents.SolanaLargeTransaction
 import com.tangem.domain.walletconnect.WcRequestUseCaseFactory
 import com.tangem.domain.walletconnect.model.WcRequestError
 import com.tangem.domain.walletconnect.model.WcRequestError.Companion.message
@@ -143,6 +144,7 @@ internal class WcSendTransactionModel @Inject constructor(
                             wcApproval = useCase as? WcApproval
                             sign = {
                                 if (isMultipleSignRequired(useCase)) {
+                                    analytics.send(SolanaLargeTransaction(useCase.rawSdkRequest.dAppMetaData.name))
                                     openMultipleTransaction(useCase)
                                 } else {
                                     useCase.sign()
