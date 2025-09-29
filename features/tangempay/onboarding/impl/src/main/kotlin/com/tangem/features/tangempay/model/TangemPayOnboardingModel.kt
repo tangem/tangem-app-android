@@ -63,9 +63,6 @@ internal class TangemPayOnboardingModel @Inject constructor(
                             else -> openKyc()
                         }
                     }
-                    !customerInfo.isProductInstanceActive() -> {
-                        // TODO [REDACTED_TASK_KEY]: create order and poll order status (API is not ready yet)
-                    }
                     else -> back()
                 }
             }
