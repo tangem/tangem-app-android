@@ -107,4 +107,8 @@ internal class DefaultWalletRouter @Inject constructor(
             configuration = WalletDialogConfig.TokenReceive(tokenReceiveConfig),
         )
     }
+
+    override fun openTangemPayOnboarding() {
+        router.push(AppRoute.TangemPayOnboarding(AppRoute.TangemPayOnboarding.Mode.ContinueOnboarding))
+    }
 }
