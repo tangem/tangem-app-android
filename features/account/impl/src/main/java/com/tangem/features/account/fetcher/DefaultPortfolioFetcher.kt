@@ -1,17 +1,18 @@
 package com.tangem.features.account.fetcher
 
 import arrow.core.getOrElse
+import com.tangem.domain.account.models.AccountStatusList
+import com.tangem.domain.account.status.producer.SingleAccountStatusListProducer
+import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
-import com.tangem.domain.core.lce.Lce
-import com.tangem.domain.models.TotalFiatBalance
-import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.isMultiCurrency
+import com.tangem.domain.tokens.GetWalletTotalBalanceUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
-import com.tangem.features.account.AccountsBalanceFetcher
-import com.tangem.features.account.AccountsBalanceFetcher.*
+import com.tangem.features.account.PortfolioFetcher
+import com.tangem.features.account.PortfolioFetcher.*
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -20,14 +21,17 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.*
 
-internal class DefaultAccountsBalanceFetcher @AssistedInject constructor(
+@Suppress("LongParameterList")
+internal class DefaultPortfolioFetcher @AssistedInject constructor(
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
+    private val getWalletTotalBalanceUseCase: GetWalletTotalBalanceUseCase,
+    private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     private val getWallets: GetWalletsUseCase,
-    private val dispatchers: CoroutineDispatcherProvider,
+    dispatchers: CoroutineDispatcherProvider,
     @Assisted mode: Mode,
     @Assisted private val scope: CoroutineScope,
-) : AccountsBalanceFetcher {
+) : PortfolioFetcher {
 
     private val _mode = MutableStateFlow(mode)
     private val _data = MutableSharedFlow<Data>(
@@ -73,33 +77,22 @@ internal class DefaultAccountsBalanceFetcher @AssistedInject constructor(
         }
     }
 
-    private fun balancesForWallets(wallets: List<UserWallet>): Flow<Map<UserWallet, Map<Account, AccountBalance>>> =
-        wallets.asFlow()
-            .map { walletAccountsBalancesFlow(it) }
-            .mapLatest { accountsBalances -> combine(accountsBalances) { pairs -> pairs.toMap() } }
-            .flattenConcat()
-
-    private fun walletAccountsBalancesFlow(wallet: UserWallet): Flow<Pair<UserWallet, Map<Account, AccountBalance>>> =
-        walletAccounts(wallet)
-            .distinctUntilChanged()
-            .map { list -> list.map(::accountBalanceFlow) }
-            .mapLatest { balanceFlows -> combine(balanceFlows) { balances -> balances.toMap() } }
-            .flattenConcat()
-            .map { accountBalance -> wallet to accountBalance }
-
-    private fun walletAccounts(wallet: UserWallet): Flow<List<Account>> = flow {
-        // todo account load accounts
-        val accounts: List<Account> = Account.CryptoPortfolio
-            .createMainAccount(wallet.walletId)
-            .let(::listOf)
-        emit(accounts)
+    private fun balancesForWallets(wallets: List<UserWallet>): Flow<Map<UserWallet, PortfolioBalance>> {
+        val balanceFlows = wallets.map { walletAccountsBalancesFlow(it) }
+        return combine(balanceFlows) { pairs -> pairs.toMap() }
     }
 
-    private fun accountBalanceFlow(account: Account): Flow<Pair<Account, AccountBalance>> = flow {
-        // todo account load balance
-        val balance = AccountBalance(balance = Lce.Content(TotalFiatBalance.Loading))
-        emit(account to balance)
-    }
+    private fun walletAccountsBalancesFlow(wallet: UserWallet): Flow<Pair<UserWallet, PortfolioBalance>> = combine(
+        flow = accountStatusListFlow(wallet),
+        flow2 = getWalletTotalBalanceUseCase(wallet.walletId),
+        transform = { accountStatusList, walletBalance ->
+            val portfolioBalance = PortfolioBalance(walletBalance, accountStatusList)
+            wallet to portfolioBalance
+        },
+    )
+
+    private fun accountStatusListFlow(wallet: UserWallet): Flow<AccountStatusList> =
+        singleAccountStatusListSupplier(SingleAccountStatusListProducer.Params(wallet.walletId))
 
     private fun appCurrencyFlow(): Flow<AppCurrency> {
         return getSelectedAppCurrencyUseCase()
@@ -114,7 +107,7 @@ internal class DefaultAccountsBalanceFetcher @AssistedInject constructor(
     }
 
     @AssistedFactory
-    interface Factory : AccountsBalanceFetcher.Factory {
-        override fun create(mode: Mode, scope: CoroutineScope): DefaultAccountsBalanceFetcher
+    interface Factory : PortfolioFetcher.Factory {
+        override fun create(mode: Mode, scope: CoroutineScope): DefaultPortfolioFetcher
     }
 }
