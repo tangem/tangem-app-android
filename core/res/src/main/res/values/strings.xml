@@ -19,7 +19,10 @@
   <string name="account_archived_recover">Recover</string>
   <string name="account_archived_recover_dialog_description">You’re about to recover “%1$s”.</string>
   <string name="account_archived_recover_dialog_title">Recover account</string>
+  <string name="account_archived_recover_error_message">You have already exceeded the limit of 20 active accounts. Archive one to recover</string>
+  <string name="account_archived_recover_error_title">Can\'t recover account</string>
   <string name="account_archived_title">Archived</string>
+  <string name="account_could_not_create">We couldn’t create account. Please try again later.</string>
   <string name="account_create_success_message">Account created</string>
   <string name="account_details_archive">Archive account</string>
   <string name="account_details_archive_action">Archive</string>
@@ -263,6 +266,7 @@
   <string name="common_left">%1$s left</string>
   <string name="common_legacy_bitcoin_address">Legacy Bitcoin</string>
   <string name="common_locked">Locked</string>
+  <string name="common_locked_wallets">Locked Wallets</string>
   <string name="common_main_network">Main network</string>
   <string name="common_month">month</string>
   <string name="common_network_fee_title">Network fee</string>
@@ -313,6 +317,7 @@
   <string name="common_sign">Sign</string>
   <string name="common_sign_and_send">Sign and send</string>
   <string name="common_skip">Skip</string>
+  <string name="common_something_went_wrong">Something went wrong</string>
   <string name="common_stake">Stake</string>
   <string name="common_staking">Staking</string>
   <string name="common_start">Start</string>
@@ -926,6 +931,7 @@
   <string name="receive_bottom_sheet_warning_message_full">Send only %s to this address. Sending any other currency will result in its irreversible loss.</string>
   <string name="receive_bottom_sheet_warning_title">Send only %1$s on the %2$s network</string>
   <string name="receive_token_description">Transfer funds from any wallet or exchange</string>
+  <string name="referral_address_for_rewards">Address for rewards</string>
   <string name="referral_button_participate">Participate</string>
   <string name="referral_error_failed_to_load_info">Failed to load the information about the referral program. Please try again later.</string>
   <string name="referral_error_failed_to_load_info_with_reason">Failed to load the information about the referral program. Error code: %s. Please try again later.</string>
@@ -1236,6 +1242,7 @@
   <string name="story_web3_title">Web 3.0 Compatible</string>
   <string name="sui_not_enough_coin_for_fee_description">An incoming transaction of at least %1$s is required to proceed</string>
   <string name="sui_not_enough_coin_for_fee_title">Insufficient funds</string>
+  <string name="swap_approve_description">By approving, you allow the smart contract to use your tokens in future transactions.</string>
   <string name="swap_fixed_rate">Fixed Rate</string>
   <string name="swap_give_permission_fee_footer">The network will charge a token approval fee to verify that you are authorizing the use of your token for the swap.</string>
   <string name="swap_promo_text">Exchange more tokens at better rates directly in your wallet.</string>
@@ -1454,8 +1461,8 @@
   <string name="wallet_connect_error_wrong_card_selected">Wrong card or ring selected in Tangem App</string>
   <string name="wallet_connect_failed_to_build_tx">Failed to create transaction from Dapp data. Code: %s</string>
   <string name="wallet_connect_generic_error_with_code">We\'ve encountered unknown error. Error code: %d. If the problem persists — feel free to contact our support</string>
-  <string name="wallet_connect_multiple_transactions">Multiple transactions</string>
-  <string name="wallet_connect_multiple_transactions_description">You’ll need to tap your Tangem device a few times to complete this process.</string>
+  <string name="wallet_connect_multiple_transactions">Multi-Part Transaction</string>
+  <string name="wallet_connect_multiple_transactions_description">To process successfully, your transaction will be split into multiple parts. You\'ll need to tap your card several times to complete it.</string>
   <string name="wallet_connect_no_sessions_message">No opened WalletConnect sessions</string>
   <string name="wallet_connect_no_sessions_title">Ooops. No Sessions.</string>
   <string name="wallet_connect_pairing_error">Failed to pairing WalletConnect session: %1$s</string>
@@ -1467,8 +1474,8 @@
   <string name="wallet_connect_scanner_error_not_valid_card">This card can\'t be used to establish WalletConnect session</string>
   <string name="wallet_connect_scanner_error_unsupported_network">This network is not supported. Please select another network.</string>
   <string name="wallet_connect_select_network">Select network</string>
-  <string name="wallet_connect_sending_multiple_explanation">We\'re processing the transaction</string>
-  <string name="wallet_connect_sending_multiple_tx">Sending your funds...</string>
+  <string name="wallet_connect_sending_multiple_explanation">The transaction is being processed. Please tap your card multiple times to complete it.</string>
+  <string name="wallet_connect_sending_multiple_tx">Transaction in progress</string>
   <string name="wallet_connect_sessions_title">WalletConnect Sessions</string>
   <string name="wallet_connect_subtitle">Connect to dApps</string>
   <string name="wallet_connect_title">WalletConnect</string>
@@ -1724,7 +1731,7 @@
   <string name="yield_module_approve_sheet_title">Confirm approval</string>
   <string name="yield_module_balance_info_sheet_subtitle">Text about your money in balance [PLACEHOLDER]</string>
   <string name="yield_module_balance_info_sheet_title">Your %s is deposited in Aave</string>
-  <string name="yield_module_earn_badge">Earn %s%</string>
+  <string name="yield_module_earn_badge">Earn %1$s%%</string>
   <string name="yield_module_earn_sheet_available_title">Available</string>
   <string name="yield_module_earn_sheet_current_apy_title">Current APY</string>
   <string name="yield_module_earn_sheet_my_funds_title">My Funds</string>
@@ -1742,6 +1749,8 @@
   <string name="yield_module_fee_policy_sheet_title">Fee policy</string>
   <string name="yield_module_main_view_approve_notification_description">Write description here. In one, two or three lines will be awesome. [PLACEHOLDER]</string>
   <string name="yield_module_main_view_approve_notification_title">Some token approve needed</string>
+  <string name="yield_module_network_fee_unreachable_notification_description">Check your network connection</string>
+  <string name="yield_module_network_fee_unreachable_notification_title">Network fee info unreachable</string>
   <string name="yield_module_promo_screen_auto_balance_subtitle">Every top-up of your account will be lended to Aave automatically.</string>
   <string name="yield_module_promo_screen_auto_balance_title">Your balance works automatically</string>
   <string name="yield_module_promo_screen_cash_out_subtitle">Send, swap, or sell your funds instantly, anytime you want.</string>
