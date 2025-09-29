@@ -60,6 +60,7 @@ internal class SendWithSwapModel @Inject constructor(
     private val params: SendWithSwapComponent.Params = paramsContainer.require()
 
     val analyticCategoryName = CommonSendAnalyticEvents.SEND_CATEGORY
+    val analyticsSendSource = CommonSendAnalyticEvents.CommonSendSource.SendWithSwap
     val initialRoute = SendWithSwapRoute.Amount(false)
     val currentRoute = MutableStateFlow<SendWithSwapRoute>(initialRoute)
 
