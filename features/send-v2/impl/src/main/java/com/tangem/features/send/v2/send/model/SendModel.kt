@@ -104,6 +104,7 @@ internal class SendModel @Inject constructor(
     private val cryptoCurrency = params.currency
 
     val analyticCategoryName = CommonSendAnalyticEvents.SEND_CATEGORY
+    val analyticsSendSource = CommonSendAnalyticEvents.CommonSendSource.Send
 
     val uiState: StateFlow<SendUM>
         field = MutableStateFlow(initialState())
