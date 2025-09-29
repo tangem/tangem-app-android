@@ -156,6 +156,7 @@ internal class SendFeeModel @Inject constructor(
                     CommonSendFeeAnalyticEvents.SelectedFee(
                         categoryName = analyticsCategoryName,
                         feeType = feeSelectorUM.selectedType.toAnalyticType(feeSelectorUM),
+                        source = params.analyticsSendSource,
                     ),
                 )
 

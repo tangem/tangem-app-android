@@ -150,6 +150,7 @@ internal class FeeSelectorModel @Inject constructor(
             CommonSendFeeAnalyticEvents.SelectedFee(
                 categoryName = params.analyticsCategoryName,
                 feeType = feeSelectorUM.toAnalyticType(),
+                source = params.analyticsSendSource,
             ),
         )
         val isCustomFeeEdited = feeSelectorUM.selectedFeeItem.fee.amount.value != feeSelectorUM.fees.normal.amount.value
@@ -176,7 +177,10 @@ internal class FeeSelectorModel @Inject constructor(
 
     fun showFeeSelector() {
         analyticsEventHandler.send(
-            CommonSendAnalyticEvents.FeeScreenOpened(categoryName = params.analyticsCategoryName),
+            CommonSendAnalyticEvents.FeeScreenOpened(
+                categoryName = params.analyticsCategoryName,
+                source = params.analyticsSendSource,
+            ),
         )
         analyticsEventHandler.send(
             CommonSendAnalyticEvents.ScreenReopened(
