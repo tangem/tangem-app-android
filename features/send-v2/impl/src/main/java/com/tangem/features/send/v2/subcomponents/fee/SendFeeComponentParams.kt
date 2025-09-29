@@ -6,6 +6,7 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.v2.common.CommonSendRoute
 import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeUM
 import kotlinx.coroutines.flow.Flow
@@ -23,6 +24,7 @@ internal sealed class SendFeeComponentParams {
     abstract val sendAmount: BigDecimal
     abstract val destinationAddress: String
     abstract val onLoadFee: suspend () -> Either<GetFeeError, TransactionFee>
+    abstract val analyticsSendSource: CommonSendAnalyticEvents.CommonSendSource
 
     data class FeeParams(
         override val state: FeeUM,
@@ -34,6 +36,7 @@ internal sealed class SendFeeComponentParams {
         override val sendAmount: BigDecimal,
         override val destinationAddress: String,
         override val onLoadFee: suspend () -> Either<GetFeeError, TransactionFee>,
+        override val analyticsSendSource: CommonSendAnalyticEvents.CommonSendSource,
         val currentRoute: Flow<CommonSendRoute.Fee>,
         val callback: SendFeeComponent.ModelCallback,
     ) : SendFeeComponentParams()
@@ -48,6 +51,7 @@ internal sealed class SendFeeComponentParams {
         override val sendAmount: BigDecimal,
         override val destinationAddress: String,
         override val onLoadFee: suspend () -> Either<GetFeeError, TransactionFee>,
+        override val analyticsSendSource: CommonSendAnalyticEvents.CommonSendSource,
         val blockClickEnableFlow: StateFlow<Boolean>,
     ) : SendFeeComponentParams()
 }

@@ -246,6 +246,7 @@ internal class SendAmountModel @Inject constructor(
                 categoryName = analyticsCategoryName,
                 token = params.cryptoCurrency.symbol,
                 blockchain = params.cryptoCurrency.network.name,
+                source = params.analyticsSendSource,
             ),
         )
     }
