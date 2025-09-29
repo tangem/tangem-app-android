@@ -14,6 +14,7 @@ import com.tangem.data.walletconnect.utils.BlockAidVerificationDelegate
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.transaction.usecase.PrepareAndSignUseCase
 import com.tangem.domain.transaction.usecase.SendLargeSolanaTransactionUseCase
+import com.tangem.domain.walletconnect.WcAnalyticEvents.SolanaLargeTransactionStatus
 import com.tangem.domain.walletconnect.error.parseSendError
 import com.tangem.domain.walletconnect.model.WcSolanaMethod
 import com.tangem.domain.walletconnect.usecase.method.BlockAidTransactionCheck
@@ -59,10 +60,12 @@ internal class WcSolanaSignTransactionUseCase @AssistedInject constructor(
             sendLargeSolanaTransactionUseCase(context.session.wallet as UserWallet.Cold, context.network, formattedHash)
                 .fold(
                     ifLeft = {
+                        analytics.send(SolanaLargeTransactionStatus(SolanaLargeTransactionStatus.Status.Failed))
                         Timber.e(it.toString())
                         emit(state.toResult(parseSendError(it).left()))
                     },
                     ifRight = {
+                        analytics.send(SolanaLargeTransactionStatus(SolanaLargeTransactionStatus.Status.Success))
                         val emptyRespond = ByteArray(0).formatAsSolanaSignature()
                         val respondResult = respondService.respond(rawSdkRequest, emptyRespond)
                         emit(state.toResult(respondResult))
