@@ -18,22 +18,50 @@ sealed class CommonSendAnalyticEvents(
     /** Recipient address screen opened */
     data class AddressScreenOpened(
         val categoryName: String,
-    ) : CommonSendAnalyticEvents(category = categoryName, event = "Address Screen Opened")
+        val source: CommonSendSource,
+    ) : CommonSendAnalyticEvents(
+        category = categoryName,
+        event = "Address Screen Opened",
+        params = mapOf(
+            SOURCE to source.analyticsName,
+        ),
+    )
 
     /** Amount screen opened */
     data class AmountScreenOpened(
         val categoryName: String,
-    ) : CommonSendAnalyticEvents(category = categoryName, event = "Amount Screen Opened")
+        val source: CommonSendSource,
+    ) : CommonSendAnalyticEvents(
+        category = categoryName,
+        event = "Amount Screen Opened",
+        params = mapOf(
+            SOURCE to source.analyticsName,
+        ),
+    )
 
     /** Fee screen opened */
     data class FeeScreenOpened(
         val categoryName: String,
-    ) : CommonSendAnalyticEvents(category = categoryName, event = "Fee Screen Opened")
+        val source: CommonSendSource,
+    ) : CommonSendAnalyticEvents(
+        category = categoryName,
+        event = "Fee Screen Opened",
+        params = mapOf(
+            SOURCE to source.analyticsName,
+        ),
+    )
 
     /** Confirmation screen opened */
     data class ConfirmationScreenOpened(
         val categoryName: String,
-    ) : CommonSendAnalyticEvents(category = categoryName, event = "Confirm Screen Opened")
+        val source: CommonSendSource,
+    ) : CommonSendAnalyticEvents(
+        category = categoryName,
+        event = "Confirm Screen Opened",
+        params = mapOf(
+            SOURCE to source.analyticsName,
+        ),
+    )
 
     /** If transaction delays notification is present */
     data class NoticeTransactionDelays(
@@ -141,5 +169,12 @@ sealed class CommonSendAnalyticEvents(
         Amount,
         Fee,
         Confirm,
+    }
+
+    enum class CommonSendSource(val analyticsName: String) {
+        Send("Send"),
+        SendWithSwap("Send&Swap"),
+        WalletConnect("WalletConnect"),
+        NFT("NFT"),
     }
 }
