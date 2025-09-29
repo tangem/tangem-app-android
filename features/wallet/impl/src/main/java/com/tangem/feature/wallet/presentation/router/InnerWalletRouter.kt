@@ -58,4 +58,6 @@ internal interface InnerWalletRouter {
     fun openNFT(userWallet: UserWallet)
 
     fun openTokenReceiveBottomSheet(tokenReceiveConfig: TokenReceiveConfig)
+
+    fun openTangemPayOnboarding()
 }
