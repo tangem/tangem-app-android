@@ -84,13 +84,19 @@ internal class DefaultSendWithSwapComponent @AssistedInject constructor(
                 when (val activeComponent = stack.active.instance) {
                     is SwapAmountComponent -> {
                         analyticsEventHandler.send(
-                            CommonSendAnalyticEvents.AmountScreenOpened(categoryName = model.analyticCategoryName),
+                            CommonSendAnalyticEvents.AmountScreenOpened(
+                                categoryName = model.analyticCategoryName,
+                                source = model.analyticsSendSource,
+                            ),
                         )
                         activeComponent.updateState(model.uiState.value.amountUM)
                     }
                     is SendDestinationComponent -> {
                         analyticsEventHandler.send(
-                            CommonSendAnalyticEvents.AddressScreenOpened(categoryName = model.analyticCategoryName),
+                            CommonSendAnalyticEvents.AddressScreenOpened(
+                                categoryName = model.analyticCategoryName,
+                                source = model.analyticsSendSource,
+                            ),
                         )
                         activeComponent.updateState(model.uiState.value.destinationUM)
                     }
@@ -98,6 +104,7 @@ internal class DefaultSendWithSwapComponent @AssistedInject constructor(
                         analyticsEventHandler.send(
                             CommonSendAnalyticEvents.ConfirmationScreenOpened(
                                 categoryName = model.analyticCategoryName,
+                                source = model.analyticsSendSource,
                             ),
                         )
                         if (model.currentRoute.value.isEditMode) {
@@ -145,6 +152,7 @@ internal class DefaultSendWithSwapComponent @AssistedInject constructor(
                 callback = model,
                 userWallet = model.userWallet,
                 filterProviderTypes = SEND_WITH_SWAP_PROVIDER_TYPES,
+                analyticsSendSource = model.analyticsSendSource,
             ),
         )
     }
@@ -162,6 +170,7 @@ internal class DefaultSendWithSwapComponent @AssistedInject constructor(
                 currentRoute = model.currentRoute.filterIsInstance<DestinationRoute>(),
                 isBalanceHidingFlow = model.isBalanceHiddenFlow,
                 analyticsCategoryName = model.analyticCategoryName,
+                analyticsSendSource = model.analyticsSendSource,
                 title = resourceReference(R.string.common_address),
                 userWalletId = params.userWalletId,
                 cryptoCurrency = secondaryCryptoCurrency,
@@ -183,6 +192,7 @@ internal class DefaultSendWithSwapComponent @AssistedInject constructor(
                 analyticsCategoryName = model.analyticCategoryName,
                 primaryCryptoCurrencyStatusFlow = model.primaryCryptoCurrencyStatusFlow,
                 primaryFeePaidCurrencyStatusFlow = model.primaryFeePaidCurrencyStatusFlow,
+                analyticsSendSource = model.analyticsSendSource,
                 swapDirection = SwapDirection.Direct,
             ),
         )
