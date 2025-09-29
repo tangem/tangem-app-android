@@ -1,8 +1,8 @@
 package com.tangem.features.account.createedit
 
+import androidx.annotation.StringRes
 import com.tangem.common.ui.account.AccountNameUM
 import com.tangem.common.ui.account.toDomain
-import androidx.annotation.StringRes
 import com.tangem.common.ui.account.toUM
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
@@ -18,6 +18,7 @@ import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.ToastMessage
 import com.tangem.core.ui.utils.showErrorDialog
+import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.usecase.AddCryptoPortfolioUseCase
 import com.tangem.domain.account.usecase.GetUnoccupiedAccountIndexUseCase
 import com.tangem.domain.account.usecase.UpdateCryptoPortfolioUseCase
@@ -110,12 +111,28 @@ internal class AccountCreateEditModel @Inject constructor(
             derivationIndex = derivationIndex,
         )
         uiState.value = uiState.value.toggleProgress(showProgress = false)
+
         result
-            .onLeft { showMessage(it.toString()) }
+            .onLeft(::handleAddAccountError)
             .onRight {
                 showMessage(R.string.account_create_success_message)
                 router.pop()
             }
+    }
+
+    private fun handleAddAccountError(error: AddCryptoPortfolioUseCase.Error) {
+        if (error is AddCryptoPortfolioUseCase.Error.AccountListRequirementsNotMet &&
+            error.cause is AccountList.Error.DuplicateAccountNames
+        ) {
+            // TODO("account") show alert that the account name already exists
+            return
+        }
+
+        // TODO: show alert https://www.figma.com/design/09KKG4ZVuFDZhj8WLv5rGJ/%F0%9F%9A%A7-App-experience?node-id=38882-113775&t=vk6TCy4MkYol1cPb-4
+        logError(
+            error = AccountFeatureError.CreateAccount.FailedToCreateAccount(cause = error),
+
+        )
     }
 
     private suspend fun editCryptoPortfolio(params: AccountCreateEditComponent.Params.Edit) {
@@ -203,33 +220,30 @@ internal class AccountCreateEditModel @Inject constructor(
                     }
                 }
                 .onLeft { cause ->
-                    handleError(
-                        error = AccountFeatureError.CreateAccount.UnableToGetDerivationIndex,
-                        message = cause.toString(),
+                    val error = AccountFeatureError.CreateAccount.UnableToGetDerivationIndex(cause)
+
+                    logError(
+                        error = error,
                         params = mapOf(
                             "userWalletId" to userWalletId.stringValue,
                             "cause" to cause.toString(),
                         ),
                     )
 
+                    messageSender.showErrorDialog(universalError = error, onDismiss = router::pop)
+
                     return@launch
                 }
         }
     }
 
-    private fun handleError(
-        error: AccountFeatureError,
-        message: String? = null,
-        params: Map<String, String> = mapOf(),
-    ) {
-        val exception = IllegalStateException("$error. Cause: $message")
+    private fun logError(error: AccountFeatureError, params: Map<String, String> = mapOf()) {
+        val exception = IllegalStateException(error.toString())
 
         Timber.e(exception)
 
         analyticsExceptionHandler.sendException(
             event = ExceptionAnalyticsEvent(exception = exception, params = params),
         )
-
-        messageSender.showErrorDialog(universalError = error, onDismiss = router::pop)
     }
 }
