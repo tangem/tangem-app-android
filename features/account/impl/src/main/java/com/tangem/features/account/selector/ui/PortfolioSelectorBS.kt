@@ -13,14 +13,13 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheet
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetTitle
-import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.account.impl.R
-import com.tangem.features.account.selector.entity.AccountSelectorUM
+import com.tangem.features.account.selector.entity.PortfolioSelectorUM
 
 @Composable
-internal fun AccountSelectorBS(state: AccountSelectorUM, onDismiss: () -> Unit, modifier: Modifier = Modifier) {
+internal fun PortfolioSelectorBS(state: PortfolioSelectorUM, onDismiss: () -> Unit, modifier: Modifier = Modifier) {
     TangemModalBottomSheet<TangemBottomSheetConfigContent.Empty>(
         config = TangemBottomSheetConfig(
             isShown = true,
@@ -32,13 +31,13 @@ internal fun AccountSelectorBS(state: AccountSelectorUM, onDismiss: () -> Unit, 
         containerColor = TangemTheme.colors.background.secondary,
         title = {
             TangemModalBottomSheetTitle(
-                title = resourceReference(R.string.common_choose_account),
+                title = state.title,
                 startIconRes = R.drawable.ic_back_24,
                 onStartClick = onDismiss,
             )
         },
         content = {
-            AccountSelectorContent(
+            PortfolioSelectorContent(
                 state = state,
                 contentPadding = PaddingValues(bottom = 16.dp),
                 modifier = modifier.padding(horizontal = 16.dp),
@@ -50,9 +49,9 @@ internal fun AccountSelectorBS(state: AccountSelectorUM, onDismiss: () -> Unit, 
 @Preview(showBackground = true, widthDp = 360)
 @Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview(@PreviewParameter(AccountSelectorPreviewStateProvider::class) params: AccountSelectorUM) {
+private fun Preview(@PreviewParameter(PortfolioSelectorPreviewStateProvider::class) params: PortfolioSelectorUM) {
     TangemThemePreview {
-        AccountSelectorBS(
+        PortfolioSelectorBS(
             state = params,
             onDismiss = {},
             modifier = Modifier.background(color = TangemTheme.colors.background.secondary),

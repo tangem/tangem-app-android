@@ -1,9 +1,9 @@
 package com.tangem.features.account
 
+import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.models.TotalFiatBalance
-import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tokens.error.TokenListError
@@ -11,7 +11,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 
-interface AccountsBalanceFetcher {
+interface PortfolioFetcher {
 
     val data: Flow<Data>
 
@@ -21,12 +21,15 @@ interface AccountsBalanceFetcher {
     data class Data(
         val appCurrency: AppCurrency,
         val isBalanceHidden: Boolean,
-        val balances: Map<UserWallet, Map<Account, AccountBalance>>,
+        val balances: Map<UserWallet, PortfolioBalance>,
     )
 
-    data class AccountBalance(
-        val balance: Lce<TokenListError, TotalFiatBalance>,
-    )
+    data class PortfolioBalance(
+        val walletBalance: Lce<TokenListError, TotalFiatBalance>,
+        val accountsBalance: AccountStatusList,
+    ) {
+        val userWallet: UserWallet get() = accountsBalance.userWallet
+    }
 
     sealed interface Mode {
         data class All(val onlyMultiCurrency: Boolean) : Mode
@@ -34,6 +37,6 @@ interface AccountsBalanceFetcher {
     }
 
     interface Factory {
-        fun create(mode: Mode, scope: CoroutineScope): AccountsBalanceFetcher
+        fun create(mode: Mode, scope: CoroutineScope): PortfolioFetcher
     }
 }
