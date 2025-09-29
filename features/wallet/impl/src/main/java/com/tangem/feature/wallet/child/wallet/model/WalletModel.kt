@@ -35,7 +35,6 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.WalletEvent
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletEvent.DemonstrateWalletsScrollPreview.Direction
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletScreenState
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.*
-import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.TangemPayStateConverter
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
 import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvider
 import com.tangem.features.biometry.AskBiometryComponent
@@ -52,7 +51,7 @@ import kotlinx.coroutines.flow.*
 import timber.log.Timber
 import javax.inject.Inject
 
-private const val TANGEM_PAY_UPDATE_INTERVAL = 60000L
+private const val TANGEM_PAY_UPDATE_INTERVAL = 60_000L
 
 @Suppress("LongParameterList", "LargeClass")
 @Stable
@@ -92,7 +91,6 @@ internal class WalletModel @Inject constructor(
     private val userWalletsListRepository: UserWalletsListRepository,
     private val tangemPayMainScreenCustomerInfoUseCase: TangemPayMainScreenCustomerInfoUseCase,
     private val tangemPayIssueOrderUseCase: TangemPayIssueOrderUseCase,
-    private val tangemPayStateConverter: TangemPayStateConverter,
     private val tangemPayFeatureToggles: TangemPayFeatureToggles,
     val screenLifecycleProvider: ScreenLifecycleProvider,
     val innerWalletRouter: InnerWalletRouter,
@@ -106,10 +104,9 @@ internal class WalletModel @Inject constructor(
     private val refreshWalletJobHolder = JobHolder()
     private var needToRefreshWallet = false
     private val clearNFTCacheJobHolder = JobHolder()
+    private val updateTangemPayJobHolder = JobHolder()
 
     private var expressTxStatusTaskScheduler = SingleTaskScheduler<Unit>()
-
-    private var updateTangemPayJob: Job? = null
 
     init {
         analyticsEventsHandler.send(WalletScreenAnalyticsEvent.MainScreen.ScreenOpened)
@@ -332,17 +329,15 @@ internal class WalletModel @Inject constructor(
          * and every minute while user stays on the main screen
          */
         screenLifecycleProvider.isBackgroundState.onEach { inBackground ->
+            updateTangemPayJobHolder.cancel()
             if (!inBackground && tangemPayFeatureToggles.isTangemPayEnabled) {
-                updateTangemPayJob = modelScope.launch {
+                modelScope.launch {
                     refreshTangemPayInfo()
                     while (isActive) {
                         delay(TANGEM_PAY_UPDATE_INTERVAL)
                         refreshTangemPayInfo()
                     }
-                }
-            } else {
-                updateTangemPayJob?.cancel()
-                updateTangemPayJob = null
+                }.saveIn(updateTangemPayJobHolder)
             }
         }.launchIn(modelScope)
     }
@@ -350,11 +345,11 @@ internal class WalletModel @Inject constructor(
     private suspend fun refreshTangemPayInfo() {
         val newState = withContext(dispatchers.io) {
             tangemPayMainScreenCustomerInfoUseCase()?.let { info ->
-                tangemPayStateConverter.convert(
+                TangemPayStateTransformer(
                     value = info,
                     onIssueOrderClick = ::issueOrder,
                     onContinueKycClick = innerWalletRouter::openTangemPayOnboarding,
-                )
+                ).transform(stateHolder.uiState.value.tangemPayState)
             }
         } ?: return
         stateHolder.update { it.copy(tangemPayState = newState) }
@@ -362,11 +357,19 @@ internal class WalletModel @Inject constructor(
 
     private fun issueOrder() {
         modelScope.launch {
-            stateHolder.update { it.copy(tangemPayState = tangemPayStateConverter.getIssueProgress()) }
+            stateHolder.update {
+                it.copy(
+                    tangemPayState = TangemPayStateTransformer(issueProgressState = true)
+                        .transform(it.tangemPayState),
+                )
+            }
             withContext(dispatchers.io) {
                 tangemPayIssueOrderUseCase()
             } ?: stateHolder.update {
-                it.copy(tangemPayState = tangemPayStateConverter.getIssueState(::issueOrder))
+                it.copy(
+                    tangemPayState = TangemPayStateTransformer(issueState = true, onIssueOrderClick = ::issueOrder)
+                        .transform(it.tangemPayState),
+                )
             }
         }
     }
