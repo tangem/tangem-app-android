@@ -14,6 +14,7 @@ import javax.inject.Singleton
 import kotlin.text.encodeToByteArray
 
 private const val DEFAULT_KEY = "tangem_pay_default_key"
+private const val ORDER_ID_KEY = "tangem_pay_order_id_key"
 
 @Singleton
 internal class DefaultTangemPayStorage @Inject constructor(
@@ -53,9 +54,25 @@ internal class DefaultTangemPayStorage @Inject constructor(
                 ?.let(tokensAdapter::fromJson)
         }
 
-    override suspend fun clear(customerWalletAddress: String) = withContext(dispatcherProvider.io) {
-        secureStorage.delete(createKey(customerWalletAddress))
+    override suspend fun storeOrderId(customerWalletAddress: String, orderId: String) {
+        withContext(dispatcherProvider.io) {
+            secureStorage.store(
+                orderId.encodeToByteArray(throwOnInvalidSequence = true),
+                createOrderIdKey(customerWalletAddress),
+            )
+        }
     }
 
-    private fun createKey(cardId: String): String = "${DEFAULT_KEY}_$cardId"
+    override suspend fun getOrderId(customerWalletAddress: String): String? = withContext(dispatcherProvider.io) {
+        secureStorage.get(createOrderIdKey(customerWalletAddress))?.decodeToString(throwOnInvalidSequence = true)
+    }
+
+    override suspend fun clear(customerWalletAddress: String) = withContext(dispatcherProvider.io) {
+        secureStorage.delete(createKey(customerWalletAddress))
+        secureStorage.delete(createOrderIdKey(customerWalletAddress))
+    }
+
+    private fun createKey(address: String): String = "${DEFAULT_KEY}_$address"
+
+    private fun createOrderIdKey(address: String): String = "${ORDER_ID_KEY}_$address"
 }

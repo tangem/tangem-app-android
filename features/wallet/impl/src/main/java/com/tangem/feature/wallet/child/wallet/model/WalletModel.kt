@@ -18,6 +18,7 @@ import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.nft.ObserveAndClearNFTCacheIfNeedUseCase
 import com.tangem.domain.notifications.GetIsHuaweiDeviceWithoutGoogleServicesUseCase
 import com.tangem.domain.notifications.repository.NotificationsRepository
+import com.tangem.domain.pay.usecase.TangemPayIssueOrderUseCase
 import com.tangem.domain.pay.usecase.TangemPayMainScreenCustomerInfoUseCase
 import com.tangem.domain.settings.*
 import com.tangem.domain.tokens.RefreshMultiCurrencyWalletQuotesUseCase
@@ -50,6 +51,8 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.*
 import timber.log.Timber
 import javax.inject.Inject
+
+private const val TANGEM_PAY_UPDATE_INTERVAL = 60000L
 
 @Suppress("LongParameterList", "LargeClass")
 @Stable
@@ -88,6 +91,7 @@ internal class WalletModel @Inject constructor(
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val tangemPayMainScreenCustomerInfoUseCase: TangemPayMainScreenCustomerInfoUseCase,
+    private val tangemPayIssueOrderUseCase: TangemPayIssueOrderUseCase,
     private val tangemPayStateConverter: TangemPayStateConverter,
     private val tangemPayFeatureToggles: TangemPayFeatureToggles,
     val screenLifecycleProvider: ScreenLifecycleProvider,
@@ -104,6 +108,8 @@ internal class WalletModel @Inject constructor(
     private val clearNFTCacheJobHolder = JobHolder()
 
     private var expressTxStatusTaskScheduler = SingleTaskScheduler<Unit>()
+
+    private var updateTangemPayJob: Job? = null
 
     init {
         analyticsEventsHandler.send(WalletScreenAnalyticsEvent.MainScreen.ScreenOpened)
@@ -323,20 +329,44 @@ internal class WalletModel @Inject constructor(
     private fun subscribeToTangemPayInfo() {
         /**
          * Update state each time a user opens/returns to wallet screen
+         * and every minute while user stays on the main screen
          */
-        screenLifecycleProvider.isBackgroundState.onEach { isBackground ->
-            if (!isBackground) { updateTangemPayInfo() }
+        screenLifecycleProvider.isBackgroundState.onEach { inBackground ->
+            if (!inBackground && tangemPayFeatureToggles.isTangemPayEnabled) {
+                updateTangemPayJob = modelScope.launch {
+                    refreshTangemPayInfo()
+                    while (isActive) {
+                        delay(TANGEM_PAY_UPDATE_INTERVAL)
+                        refreshTangemPayInfo()
+                    }
+                }
+            } else {
+                updateTangemPayJob?.cancel()
+                updateTangemPayJob = null
+            }
         }.launchIn(modelScope)
     }
 
-    private fun updateTangemPayInfo() {
-        if (tangemPayFeatureToggles.isTangemPayEnabled) {
-            modelScope.launch {
-                tangemPayMainScreenCustomerInfoUseCase()?.let { info ->
-                    stateHolder.update {
-                        it.copy(tangemPayState = tangemPayStateConverter.convert(info))
-                    }
-                }
+    private suspend fun refreshTangemPayInfo() {
+        val newState = withContext(dispatchers.io) {
+            tangemPayMainScreenCustomerInfoUseCase()?.let { info ->
+                tangemPayStateConverter.convert(
+                    value = info,
+                    onIssueOrderClick = ::issueOrder,
+                    onContinueKycClick = innerWalletRouter::openTangemPayOnboarding,
+                )
+            }
+        } ?: return
+        stateHolder.update { it.copy(tangemPayState = newState) }
+    }
+
+    private fun issueOrder() {
+        modelScope.launch {
+            stateHolder.update { it.copy(tangemPayState = tangemPayStateConverter.getIssueProgress()) }
+            withContext(dispatchers.io) {
+                tangemPayIssueOrderUseCase()
+            } ?: stateHolder.update {
+                it.copy(tangemPayState = tangemPayStateConverter.getIssueState(::issueOrder))
             }
         }
     }
