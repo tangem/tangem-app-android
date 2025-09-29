@@ -263,6 +263,7 @@
   <string name="common_left">%1$s left</string>
   <string name="common_legacy_bitcoin_address">Legacy Bitcoin</string>
   <string name="common_locked">Locked</string>
+  <string name="common_locked_wallets">Locked Wallets</string>
   <string name="common_main_network">Main network</string>
   <string name="common_month">month</string>
   <string name="common_network_fee_title">Network fee</string>
