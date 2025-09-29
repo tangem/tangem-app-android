@@ -7,6 +7,7 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.core.lce.LceFlow
 import com.tangem.domain.core.utils.getOrElse
+import com.tangem.domain.models.PortfolioId
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.models.wallet.UserWallet
@@ -72,13 +73,16 @@ internal abstract class BasicTokenListSubscriber : WalletSubscriber() {
                     coroutineScope.launch { startCheck(maybeTokenList) }
                 },
             flow2 = appCurrencyFlow(),
-            transform = { maybeTokenList, appCurrency -> singleAccountTransform(maybeTokenList, appCurrency) },
+            transform = { maybeTokenList, appCurrency ->
+                singleAccountTransform(maybeTokenList, appCurrency, PortfolioId(userWallet.walletId))
+            },
         )
     }
 
     private suspend fun singleAccountTransform(
         maybeTokenList: Lce<TokenListError, TokenList>,
         appCurrency: AppCurrency,
+        portfolioId: PortfolioId,
     ) {
         val tokenList = maybeTokenList.getOrElse(
             ifLoading = { maybeContent ->
@@ -102,8 +106,7 @@ internal abstract class BasicTokenListSubscriber : WalletSubscriber() {
                 return
             },
         )
-
-        updateContent(TokenConverterParams.Wallet(tokenList), appCurrency)
+        updateContent(TokenConverterParams.Wallet(portfolioId, tokenList), appCurrency)
         walletWithFundsChecker.check(tokenList)
     }
 
@@ -150,7 +153,7 @@ internal abstract class BasicTokenListSubscriber : WalletSubscriber() {
             }
 
             suspend fun singleAccountTransform(maybeTokenList: Lce<TokenListError, TokenList>) =
-                this.singleAccountTransform(maybeTokenList, appCurrency)
+                this.singleAccountTransform(maybeTokenList, appCurrency, PortfolioId(mainAccount.account.accountId))
 
             when {
                 !isAccountMode -> when (mainAccount.tokenList.flattenCurrencies().isEmpty()) {
