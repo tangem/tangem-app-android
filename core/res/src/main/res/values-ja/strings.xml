@@ -19,7 +19,10 @@
   <string name="account_archived_recover">回復する</string>
   <string name="account_archived_recover_dialog_description">「 %1$s 」を回復しようとしています。</string>
   <string name="account_archived_recover_dialog_title">アカウントを回復する</string>
+  <string name="account_archived_recover_error_message">すでにアクティブアカウント数の上限（20件）を超えています。復元するには1件アーカイブしてください。</string>
+  <string name="account_archived_recover_error_title">アカウントを復元できません</string>
   <string name="account_archived_title">アーカイブ済み</string>
+  <string name="account_could_not_create">アカウントを作成できませんでした。しばらくしてからもう一度お試しください。</string>
   <string name="account_create_success_message">アカウントを作成しました</string>
   <string name="account_details_archive">アカウントをアーカイブする</string>
   <string name="account_details_archive_action">アーカイブ</string>
@@ -258,6 +261,7 @@
   <string name="common_left">残り%1$s</string>
   <string name="common_legacy_bitcoin_address">レガシービットコイン</string>
   <string name="common_locked">ロックされています</string>
+  <string name="common_locked_wallets">ロックされたウォレット</string>
   <string name="common_main_network">メインネットワーク</string>
   <string name="common_month">月</string>
   <string name="common_network_fee_title">ネットワーク手数料</string>
@@ -307,6 +311,7 @@
   <string name="common_sign">署名</string>
   <string name="common_sign_and_send">署名して送信</string>
   <string name="common_skip">スキップ</string>
+  <string name="common_something_went_wrong">問題が発生しました</string>
   <string name="common_stake">ステーキング</string>
   <string name="common_staking">ステーキング</string>
   <string name="common_start">始める</string>
@@ -1143,7 +1148,7 @@
   <string name="staking_notification_restake_rewards_text">獲得した報酬をステーキングに再投資し、潜在的な収益を増やします。</string>
   <string name="staking_notification_restake_text">再ステーキングを使うと、ステーキングを解除することなく、あるバリデータから別のバリデータに資金を移動できます。</string>
   <string name="staking_notification_stake_entire_balance_text">残高のすべてをステーキングしようとしています。ステーキング解除や報酬請求にかかるネットワーク手数料をカバーするために、少額を残しておくことをお勧めします。</string>
-  <string name="staking_notification_ton_activate_account">TONでステーキングを開始するには、まず任意の金額の送金を行ってください。これにより、ウォレットがアクティブになります。</string>
+  <string name="staking_notification_ton_activate_account">TONのステーキングを開始するには、まず自分のアドレスに少額の取引を送信します。これによりウォレットが有効になります。</string>
   <string name="staking_notification_ton_extra_reserve_info">取引を完了するには、ネットワーク手数料に加えて最大0.2TONが必要になる場合があります。未使用分は返金されます。</string>
   <string name="staking_notification_ton_extra_reserve_is_required">この操作を続行するには、ネットワーク手数料に加えて0.2 TONが必要です。残高を補充してください。</string>
   <string name="staking_notification_ton_extra_reserve_title">TONの準備金が必要です</string>
@@ -1214,6 +1219,7 @@
   <string name="story_web3_title">Web3.0対応</string>
   <string name="sui_not_enough_coin_for_fee_description">続行するには少なくとも%1$sの受信取引が必要です</string>
   <string name="sui_not_enough_coin_for_fee_title">残高不足</string>
+  <string name="swap_approve_description">承認すると、このスマートコントラクトが今後の取引でトークンを利用できるようになります。</string>
   <string name="swap_fixed_rate">固定レート</string>
   <string name="swap_give_permission_fee_footer">ネットワークは、あなたがトークンのスワップを承認していることを確認するために、トークン承認手数料を請求します。</string>
   <string name="swap_promo_text">より多くのトークンをより良いレートで、ウォレット内にて直接交換します。</string>
@@ -1653,7 +1659,7 @@
   <string name="yield_module_approve_sheet_title">承認を確定する</string>
   <string name="yield_module_balance_info_sheet_subtitle">資産残高に関するテキスト [プレースホルダー]</string>
   <string name="yield_module_balance_info_sheet_title">あなたの%sはAaveに預けられています</string>
-  <string name="yield_module_earn_badge">%s%を獲得</string>
+  <string name="yield_module_earn_badge">%1$s%% を獲得</string>
   <string name="yield_module_earn_sheet_available_title">利用可能</string>
   <string name="yield_module_earn_sheet_current_apy_title">現在のAPY</string>
   <string name="yield_module_earn_sheet_my_funds_title">私の資金</string>
@@ -1670,6 +1676,8 @@
   <string name="yield_module_fee_policy_sheet_title">手数料ポリシー</string>
   <string name="yield_module_main_view_approve_notification_description">ここに説明を入力してください。1〜3行が理想的です。[プレースホルダー]</string>
   <string name="yield_module_main_view_approve_notification_title">トークン承認が必要</string>
+  <string name="yield_module_network_fee_unreachable_notification_description">ネットワーク接続を確認してください</string>
+  <string name="yield_module_network_fee_unreachable_notification_title">ネットワーク手数料についての情報にアクセスできません</string>
   <string name="yield_module_promo_screen_auto_balance_subtitle">アカウントへの入金はすべて自動的にAaveに貸し出されます。</string>
   <string name="yield_module_promo_screen_auto_balance_title">残高は自動的に計算されます</string>
   <string name="yield_module_promo_screen_cash_out_subtitle">いつでも、即座に資金を送信、交換、売却できます。</string>
