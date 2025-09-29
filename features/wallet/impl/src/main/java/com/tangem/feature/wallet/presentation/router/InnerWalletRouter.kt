@@ -2,6 +2,7 @@ package com.tangem.feature.wallet.presentation.router
 
 import androidx.compose.runtime.Stable
 import com.arkivanov.decompose.router.slot.SlotNavigation
+import com.tangem.domain.models.PortfolioId
 import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.scan.ScanResponse
@@ -39,7 +40,7 @@ internal interface InnerWalletRouter {
     fun openUrl(url: String)
 
     /** Open token details screen */
-    fun openTokenDetails(userWalletId: UserWalletId, currencyStatus: CryptoCurrencyStatus)
+    fun openTokenDetails(portfolioId: PortfolioId, currencyStatus: CryptoCurrencyStatus)
 
     /** Open stories screen */
     fun openStoriesScreen()
