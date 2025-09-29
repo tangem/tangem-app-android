@@ -3,6 +3,7 @@ plugins {
     alias(deps.plugins.kotlin.android)
     alias(deps.plugins.kotlin.kapt)
     alias(deps.plugins.hilt.android)
+    alias(deps.plugins.kotlin.serialization)
     id("configuration")
 }
 
@@ -15,18 +16,20 @@ tasks.withType<Test>().configureEach {
 }
 
 dependencies {
-    implementation(projects.domain.account)
-    implementation(projects.domain.core)
+    api(projects.domain.account)
+    api(projects.domain.core)
     api(projects.domain.common)
-    implementation(projects.domain.quotes)
-    implementation(projects.domain.models)
-    implementation(projects.domain.networks)
-    implementation(projects.domain.staking)
-    implementation(projects.domain.tokens)
+    api(projects.domain.quotes)
+    api(projects.domain.models)
+    api(projects.domain.networks)
+    api(projects.domain.staking)
+    api(projects.domain.tokens)
 
     implementation(projects.libs.crypto)
 
     implementation(deps.kotlin.datetime)
+    implementation(deps.kotlin.serialization)
+    implementation(deps.timber)
 
     // region DI
     implementation(deps.hilt.android)
