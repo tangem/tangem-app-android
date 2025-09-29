@@ -2,6 +2,7 @@ package com.tangem.data.pay.repository
 
 import arrow.core.Either
 import com.squareup.moshi.Moshi
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.core.error.UniversalError
 import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.common.response.ApiResponseError
@@ -9,39 +10,40 @@ import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.pay.models.response.VisaErrorResponseJsonAdapter
 import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.local.visa.TangemPayStorage
-import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.networks.repository.NetworksRepository
 import com.tangem.domain.pay.datasource.TangemPayAuthDataSource
-import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
-import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.domain.visa.model.VisaAuthTokens
-import com.tangem.domain.wallets.usecase.GetWalletsUseCase
+import com.tangem.domain.wallets.derivations.derivationStyleProvider
+import com.tangem.domain.wallets.legacy.UserWalletsListManager
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import javax.inject.Inject
 
-/**
- * For TangemPay Customer Wallet auth we are using polygon address
- */
-private const val POL_VALUE = "coin⟨POLYGON⟩polygon-ecosystem-token"
-
+@Suppress("LongParameterList")
 internal class TangemPayRequestPerformer @Inject constructor(
     @NetworkMoshi moshi: Moshi,
     private val dispatchers: CoroutineDispatcherProvider,
     private val tangemPayStorage: TangemPayStorage,
-    private val getCurrencyUseCase: GetSingleCryptoCurrencyStatusUseCase,
+    private val networksRepository: NetworksRepository,
     private val authDataSource: TangemPayAuthDataSource,
-    private val getWalletsUseCase: GetWalletsUseCase,
+    private val userWalletsListManager: UserWalletsListManager,
+    private val userWalletsListRepository: UserWalletsListRepository,
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
 ) {
 
     private var customerWalletAddress: String? = null
@@ -78,6 +80,12 @@ internal class TangemPayRequestPerformer @Inject constructor(
                 refreshTokens = ::refreshAuthTokens,
             )
         }
+
+    private fun getWallets(): Flow<List<UserWallet>> = if (hotWalletFeatureToggles.isHotWalletEnabled) {
+        userWalletsListRepository.userWallets.map { requireNotNull(it) }
+    } else {
+        userWalletsListManager.userWallets
+    }
 
     private suspend fun <T : Any> performRequest(
         requestBlock: suspend (header: String) -> ApiResponse<T>,
@@ -130,26 +138,26 @@ internal class TangemPayRequestPerformer @Inject constructor(
     }
 
     private suspend fun fetchAuthInputData(): AuthInputData {
-        val userWallets = getWalletsUseCase()
+        val userWallets = getWallets()
             .filter { it.isNotEmpty() }
             .first()
         val wallet = userWallets.find { it is UserWallet.Cold } as? UserWallet.Cold
             ?: error("Cannot find cold user wallet")
 
-        val address = getCurrencyUseCase.invokeMultiWallet(
-            userWalletId = wallet.walletId,
-            currencyId = CryptoCurrency.ID.fromValue(POL_VALUE),
-            isSingleWalletWithTokens = false,
-        )
-            .filter { it.getAddress() != null }.first().getAddress() ?: error("Cannot find polygon network address")
+        val blockchain = Blockchain.Polygon
+        val derivationPath = getDerivationPath(blockchain, wallet)
+        val address = networksRepository.getNetworkAddresses(wallet.walletId, Network.RawID(blockchain.id))
+            .find { it.cryptoCurrency.network.derivationPath.value == derivationPath }?.address
+            ?: error("Cannot get polygon address")
 
         customerWalletAddress = address
 
         return AuthInputData(address, wallet.cardId)
     }
 
-    private fun Either<CurrencyStatusError, CryptoCurrencyStatus>.getAddress() =
-        getOrNull()?.value?.networkAddress?.defaultAddress?.value
+    private fun getDerivationPath(blockchain: Blockchain, wallet: UserWallet) =
+        blockchain.derivationPath(wallet.derivationStyleProvider.getDerivationStyle())?.rawPath
+            ?: error("Cannot get derivation path")
 
     private suspend fun fetchTokens(): VisaAuthTokens {
         val inputData = fetchAuthInputData()
