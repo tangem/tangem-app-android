@@ -367,17 +367,15 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
         }
     }
 
-    override fun onNewIntent(intent: Intent?) {
+    override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
 
-        val isFromPush = intent?.extras?.containsKey(OPENED_FROM_GCM_PUSH) == true
+        val isFromPush = intent.extras?.containsKey(OPENED_FROM_GCM_PUSH) == true
         if (isFromPush) {
             analyticsEventsHandler.send(Push.PushNotificationOpened)
         }
 
-        if (intent != null) {
-            handleDeepLink(intent = intent, isFromOnNewIntent = true)
-        }
+        handleDeepLink(intent = intent, isFromOnNewIntent = true)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
