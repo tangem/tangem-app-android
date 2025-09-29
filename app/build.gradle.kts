@@ -28,6 +28,7 @@ android {
     packaging {
         jniLibs {
             useLegacyPackaging = true
+            excludes.add("lib/x86_64/libargon2.so")
         }
         resources.excludes.add("META-INF/LICENSE.md")
         resources.excludes.add("META-INF/NOTICE.md")
@@ -96,6 +97,9 @@ configurations.all {
 
         force(
             "org.bouncycastle:bcpkix-jdk15on:1.70",
+            deps.kotlin.coroutines,
+            deps.kotlin.coroutines.jvm,
+            deps.kotlin.coroutines.android,
         )
     }
 }
