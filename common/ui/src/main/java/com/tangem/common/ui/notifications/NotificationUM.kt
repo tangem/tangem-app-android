@@ -148,13 +148,17 @@ sealed class NotificationUM(val config: NotificationConfig) {
             },
         )
 
-        data class ExistentialDeposit(val deposit: String, val onConfirmClick: () -> Unit) : Error(
+        data class ExistentialDeposit(
+            val deposit: String,
+            val onConfirmClick: () -> Unit,
+            val isActionable: Boolean,
+        ) : Error(
             title = resourceReference(R.string.send_notification_existential_deposit_title),
             subtitle = resourceReference(R.string.send_notification_existential_deposit_text, wrappedList(deposit)),
             buttonState = NotificationConfig.ButtonsState.PrimaryButtonConfig(
                 text = resourceReference(R.string.send_notification_leave_button, wrappedList(deposit)),
                 onClick = onConfirmClick,
-            ),
+            ).takeIf { isActionable },
         )
 
         data class ReserveAmount(val amount: String) : Error(
