@@ -1,7 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.ui.components.visa
 
 import android.content.res.Configuration
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -16,31 +15,31 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.wallet.presentation.wallet.state.model.TangemPayState
+import com.tangem.feature.wallet.presentation.wallet.state.model.TangemPayState.Progress
 import com.tangem.feature.wallet.presentation.wallet.ui.components.singlecurrency.TangemPayCardMainBlock
 
 @Composable
 internal fun TangemPayMainScreenBlock(state: TangemPayState, modifier: Modifier = Modifier) {
-    AnimatedVisibility(state !is TangemPayState.Empty) {
-        when (state) {
-            is TangemPayState.Progress -> {
-                Notification(
-                    modifier = modifier
-                        .fillMaxWidth(),
-                    config = NotificationConfig(
-                        title = state.title,
-                        iconSize = 36.dp,
-                        subtitle = TextReference.EMPTY,
-                        iconResId = state.iconRes,
-                        buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
-                            text = state.buttonText,
-                            onClick = state.onButtonClick,
-                        ),
+    when (state) {
+        is Progress -> {
+            Notification(
+                modifier = modifier
+                    .fillMaxWidth(),
+                config = NotificationConfig(
+                    title = state.title,
+                    iconSize = 36.dp,
+                    subtitle = TextReference.EMPTY,
+                    iconResId = state.iconRes,
+                    buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
+                        text = state.buttonText,
+                        onClick = state.onButtonClick,
+                        showProgress = state.showProgress,
                     ),
-                )
-            }
-            is TangemPayState.Card -> TangemPayCardMainBlock(state, modifier)
-            is TangemPayState.Empty -> Unit
+                ),
+            )
         }
+        is TangemPayState.Card -> TangemPayCardMainBlock(state, modifier)
+        is TangemPayState.Empty -> Unit
     }
 }
 
@@ -51,7 +50,7 @@ private fun ResetCardScreenPreview() {
     TangemThemePreview {
         Column(verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8)) {
             TangemPayMainScreenBlock(
-                TangemPayState.Progress(
+                Progress(
                     title = TextReference.Res(R.string.tangempay_kyc_in_progress_notification_title),
                     buttonText = TextReference.Res(R.string.tangempay_kyc_in_progress_notification_button),
                     iconRes = R.drawable.ic_promo_kyc_36,
@@ -60,11 +59,21 @@ private fun ResetCardScreenPreview() {
             )
 
             TangemPayMainScreenBlock(
-                TangemPayState.Progress(
+                Progress(
                     title = TextReference.Res(R.string.tangempay_issue_card_notification_title),
                     buttonText = TextReference.Res(R.string.common_continue),
                     iconRes = R.drawable.ic_tangem_pay_promo_card_36,
                     onButtonClick = {},
+                ),
+            )
+
+            TangemPayMainScreenBlock(
+                Progress(
+                    title = TextReference.Res(R.string.tangempay_issue_card_notification_title),
+                    buttonText = TextReference.EMPTY,
+                    iconRes = R.drawable.ic_tangem_pay_promo_card_36,
+                    onButtonClick = {},
+                    showProgress = true,
                 ),
             )
 
