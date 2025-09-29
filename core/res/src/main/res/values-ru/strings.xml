@@ -1298,6 +1298,8 @@
   <string name="wallet_connect_error_wrong_card_selected">Неверная карта или кольцо выбрана в приложении Tangem</string>
   <string name="wallet_connect_failed_to_build_tx">Не удалось создать транзакцию из данных Dapp. Код: %s</string>
   <string name="wallet_connect_generic_error_with_code">Произошла непредвиденная ошибка. Код ошибки: %d. Попробуйте, пожалуйста, позже. Если проблема будет продолжать возникать — обратитесь в службу поддержки.</string>
+  <string name="wallet_connect_multiple_transactions">Транзакция в несколько шагов</string>
+  <string name="wallet_connect_multiple_transactions_description">Чтобы успешно обработать запрос, ваша транзакция будет разделена на несколько частей. Для завершения потребуется несколько приложений карты.</string>
   <string name="wallet_connect_no_sessions_message">Нет открытых сессий WalletConnect</string>
   <string name="wallet_connect_no_sessions_title">Упс. Нет сессий.</string>
   <string name="wallet_connect_pairing_error">Не удалось создать пару WalletConnect: %1$s</string>
@@ -1309,6 +1311,8 @@
   <string name="wallet_connect_scanner_error_not_valid_card">Эту карту нельзя использовать с WalletConnect.</string>
   <string name="wallet_connect_scanner_error_unsupported_network">Сеть не поддерживается. Пожалуйста, выберите другую сеть.</string>
   <string name="wallet_connect_select_network">Выберите сеть</string>
+  <string name="wallet_connect_sending_multiple_explanation">Транзакция в процессе отправки. Пожалуйста, приложите карту несколько раз для её завершения.</string>
+  <string name="wallet_connect_sending_multiple_tx">Транзакция в обработке</string>
   <string name="wallet_connect_sessions_title">Сессии WalletConnect</string>
   <string name="wallet_connect_subtitle">Подключение к dApps</string>
   <string name="wallet_connect_title">WalletConnect</string>
