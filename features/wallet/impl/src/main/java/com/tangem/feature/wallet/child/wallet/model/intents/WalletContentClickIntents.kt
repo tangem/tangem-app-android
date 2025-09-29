@@ -4,6 +4,7 @@ import arrow.core.getOrElse
 import com.tangem.common.ui.expressStatus.ExpressStatusBottomSheetConfig
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
+import com.tangem.domain.models.PortfolioId
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
@@ -44,9 +45,9 @@ internal interface WalletContentClickIntents {
 
     fun onDismissMarketsOnboarding()
 
-    fun onTokenItemClick(currencyStatus: CryptoCurrencyStatus)
+    fun onTokenItemClick(portfolioId: PortfolioId, currencyStatus: CryptoCurrencyStatus)
 
-    fun onTokenItemLongClick(cryptoCurrencyStatus: CryptoCurrencyStatus)
+    fun onTokenItemLongClick(portfolioId: PortfolioId, cryptoCurrencyStatus: CryptoCurrencyStatus)
 
     fun onAccountExpandClick(account: Account)
 
@@ -137,13 +138,13 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
         }
     }
 
-    override fun onTokenItemClick(currencyStatus: CryptoCurrencyStatus) {
-        router.openTokenDetails(stateHolder.getSelectedWalletId(), currencyStatus)
+    override fun onTokenItemClick(portfolioId: PortfolioId, currencyStatus: CryptoCurrencyStatus) {
+        router.openTokenDetails(portfolioId, currencyStatus)
     }
 
-    override fun onTokenItemLongClick(cryptoCurrencyStatus: CryptoCurrencyStatus) {
+    override fun onTokenItemLongClick(portfolioId: PortfolioId, cryptoCurrencyStatus: CryptoCurrencyStatus) {
         modelScope.launch(dispatchers.main) {
-            val userWalletId = stateHolder.getSelectedWalletId()
+            val userWalletId = portfolioId.userWalletId
             val userWallet = getUserWalletUseCase(userWalletId).getOrElse {
                 Timber.e(
                     """
@@ -159,7 +160,7 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
             getCryptoCurrencyActionsUseCase(userWallet = userWallet, cryptoCurrencyStatus = cryptoCurrencyStatus)
                 .take(count = 1)
                 .collectLatest {
-                    showActionsBottomSheet(it, userWallet)
+                    showActionsBottomSheet(it, userWallet, portfolioId)
                 }
         }
     }
@@ -174,12 +175,17 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
         accountDependencies.expandedAccountsHolder.collapseAccount(userWalletId, account.accountId)
     }
 
-    private fun showActionsBottomSheet(tokenActionsState: TokenActionsState, userWallet: UserWallet) {
+    private fun showActionsBottomSheet(
+        tokenActionsState: TokenActionsState,
+        userWallet: UserWallet,
+        portfolioId: PortfolioId,
+    ) {
         stateHolder.showBottomSheet(
             ActionsBottomSheetConfig(
                 actions = MultiWalletCurrencyActionsConverter(
                     userWallet = userWallet,
                     clickIntents = currencyActionsClickIntents,
+                    portfolioId = portfolioId,
                 ).convert(tokenActionsState),
             ),
             userWallet.walletId,
