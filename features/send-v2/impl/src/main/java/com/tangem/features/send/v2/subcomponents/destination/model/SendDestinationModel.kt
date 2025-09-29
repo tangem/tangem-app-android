@@ -275,7 +275,8 @@ internal class SendDestinationModel @Inject constructor(
                 analyticsEventHandler.send(
                     SendDestinationAnalyticEvents.AddressEntered(
                         categoryName = analyticsCategoryName,
-                        source = it,
+                        source = params.analyticsSendSource,
+                        method = it,
                         isValid = addressValidationResult.isRight(),
                     ),
                 )
