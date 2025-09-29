@@ -19,6 +19,7 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import javax.inject.Inject
 
 private const val INITIAL_CURSOR = "initial_cursor_key"
+private const val TAG = "TangemPay: TangemPayTxHistoryRepository:"
 
 internal class DefaultTangemPayTxHistoryRepository @Inject constructor(
     private val requestPerformer: TangemPayRequestPerformer,
@@ -80,15 +81,11 @@ internal class DefaultTangemPayTxHistoryRepository @Inject constructor(
     }
 
     private suspend fun fetch(userWalletId: UserWalletId, cursor: String?, pageSize: Int) {
-        val response = requestPerformer.request { authHeader ->
-            visaApi.getTangemPayTxHistory(
-                authHeader = authHeader,
-                limit = pageSize,
-                cursor = cursor,
-            )
-        }.getOrNull()
-        response?.let {
-            val items = TangemPayTxHistoryItemConverter.convertList(response.result.transactions)
+        requestPerformer.runWithErrorLogs(TAG) {
+            val result = requestPerformer.request { authHeader ->
+                visaApi.getTangemPayTxHistory(authHeader = authHeader, limit = pageSize, cursor = cursor)
+            }.result
+            val items = TangemPayTxHistoryItemConverter.convertList(result.transactions)
             txHistoryItemsStore.store(key = userWalletId, cursor = cursor ?: INITIAL_CURSOR, value = items)
         }
     }
