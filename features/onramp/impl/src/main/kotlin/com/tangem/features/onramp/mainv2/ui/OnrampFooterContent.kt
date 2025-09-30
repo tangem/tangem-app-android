@@ -15,6 +15,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.Keyboard
 import com.tangem.core.ui.components.PrimaryButton
@@ -55,6 +56,16 @@ internal fun OnrampFooterContent(
                 modifier = modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
+                Text(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    text = stringResourceSafe(R.string.onramp_tos_external_providers),
+                    style = TangemTheme.typography.caption2,
+                    color = TangemTheme.colors.text.tertiary,
+                    textAlign = TextAlign.Center,
+                )
+                SpacerH(16.dp)
                 PrimaryButton(
                     modifier = Modifier
                         .fillMaxWidth()
