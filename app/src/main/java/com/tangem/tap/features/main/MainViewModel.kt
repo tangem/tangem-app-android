@@ -165,7 +165,7 @@ internal class MainViewModel @Inject constructor(
     private fun launchAPIRequests(function: suspend CoroutineScope.() -> Unit) {
         viewModelScope.launch {
             if (BuildConfig.TESTER_MENU_ENABLED) {
-                apiConfigsManager.isInitialized
+                apiConfigsManager.initializedState
                     .filter { it }
                     .first() // wait until isInitialized becomes true
 

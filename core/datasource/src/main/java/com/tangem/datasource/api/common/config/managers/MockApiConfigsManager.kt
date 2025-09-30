@@ -24,7 +24,7 @@ internal class MockApiConfigsManager(
     override val configs: StateFlow<Map<ApiConfig, ApiEnvironment>>
         field = MutableStateFlow(value = getInitialConfigs())
 
-    override val isInitialized: StateFlow<Boolean> = MutableStateFlow(value = true)
+    override val initializedState: StateFlow<Boolean> = MutableStateFlow(value = true)
 
     private val coroutineScope = CoroutineScope(SupervisorJob() + dispatchers.default)
 

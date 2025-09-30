@@ -68,7 +68,7 @@ internal class WalletComponent @AssistedInject constructor(
                     askBiometryComponentFactory.create(
                         context = childByContext(componentContext),
                         params = AskBiometryComponent.Params(
-                            bottomSheetVariant = true,
+                            isBottomSheetVariant = true,
                             modelCallbacks = model.askBiometryModelCallbacks,
                         ),
                     )
