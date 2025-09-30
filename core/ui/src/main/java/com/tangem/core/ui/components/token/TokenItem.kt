@@ -481,7 +481,7 @@ private fun Preview_TokenItem_InLight(@PreviewParameter(TokenItemStateProvider::
 private class TokenItemStateProvider : CollectionPreviewParameterProvider<TokenItemState>(
     collection = listOf(
         tokenItemVisibleState.copy(
-            iconState = coinIconState.copy(showCustomBadge = true),
+            iconState = coinIconState.copy(shouldShowCustomBadge = true),
             titleState = TokenItemState.TitleState.Content(
                 text = stringReference(value = "PolygonPolygonPolygonPolygonPolygonPolygon"),
                 hasPending = true,
@@ -621,7 +621,7 @@ private class TokenItemStateProvider : CollectionPreviewParameterProvider<TokenI
                 url = null,
                 fallbackResId = R.drawable.img_polygon_22,
                 isGrayscale = false,
-                showCustomBadge = false,
+                shouldShowCustomBadge = false,
             )
 
         val tokenIconState
@@ -631,7 +631,7 @@ private class TokenItemStateProvider : CollectionPreviewParameterProvider<TokenI
                 fallbackTint = TangemColorPalette.Black,
                 fallbackBackground = TangemColorPalette.Meadow,
                 isGrayscale = false,
-                showCustomBadge = false,
+                shouldShowCustomBadge = false,
             )
 
         private val customTokenIconState
