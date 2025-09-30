@@ -31,7 +31,7 @@ internal sealed interface OnrampMainComponentUM {
             endButtonUM = TopAppBarButtonUM.Icon(
                 iconRes = R.drawable.ic_more_vertical_24,
                 onClicked = openSettings,
-                enabled = false,
+                isEnabled = false,
             ),
         )
 

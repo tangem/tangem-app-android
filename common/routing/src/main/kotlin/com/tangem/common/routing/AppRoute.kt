@@ -1,3 +1,5 @@
+@file:Suppress("NullableToStringCall")
+
 package com.tangem.common.routing
 
 import android.annotation.SuppressLint
@@ -160,7 +162,7 @@ sealed class AppRoute(val path: String) : Route {
         val initialCurrency: CryptoCurrency,
         val selectedCurrency: CryptoCurrency?,
         val source: Source,
-        val showSendViaSwapNotification: Boolean,
+        val shouldShowSendViaSwapNotification: Boolean,
         val analyticsCategoryName: String,
     ) : AppRoute(path = "/$source/choose_managed_tokens/$userWalletId/${initialCurrency.id.value}") {
         enum class Source {
@@ -271,9 +273,9 @@ sealed class AppRoute(val path: String) : Route {
     data class MarketsTokenDetails(
         val token: TokenMarketParams,
         val appCurrency: AppCurrency,
-        val showPortfolio: Boolean,
+        val shouldShowPortfolio: Boolean,
         val analyticsParams: AnalyticsParams? = null,
-    ) : AppRoute(path = "/markets_token_details/${token.id}/$showPortfolio") {
+    ) : AppRoute(path = "/markets_token_details/${token.id}/$shouldShowPortfolio") {
 
         @Serializable
         data class AnalyticsParams(
@@ -287,7 +289,7 @@ sealed class AppRoute(val path: String) : Route {
         val source: OnrampSource,
         val portfolioId: PortfolioId,
         val currency: CryptoCurrency,
-        val launchSepa: Boolean = false,
+        val shouldLaunchSepa: Boolean = false,
     ) : AppRoute(path = "/onramp/${portfolioId.stringValue}/${currency.symbol}"), RouteBundleParams {
         override fun getBundle(): Bundle = bundle(serializer())
 
@@ -301,7 +303,7 @@ sealed class AppRoute(val path: String) : Route {
                 source = source,
                 portfolioId = PortfolioId(userWalletId),
                 currency = currency,
-                launchSepa = launchSepa,
+                shouldLaunchSepa = launchSepa,
             )
         }
     }

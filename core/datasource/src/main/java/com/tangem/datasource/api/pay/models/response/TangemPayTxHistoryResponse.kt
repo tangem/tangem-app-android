@@ -26,6 +26,7 @@ data class TangemPayTxHistoryResponse(
     )
 
     @JsonClass(generateAdapter = true)
+    @Suppress("BooleanPropertyNaming")
     data class Spend(
         @Json(name = "amount") val amount: BigDecimal,
         @Json(name = "currency") val currency: String,

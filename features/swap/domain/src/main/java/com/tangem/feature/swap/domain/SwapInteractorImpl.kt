@@ -172,7 +172,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         return CurrenciesGroup(
             available = availableCryptoCurrencies,
             unavailable = unavailableCryptoCurrencies.map { CryptoCurrencySwapInfo(it, emptyList()) },
-            afterSearch = false,
+            isAfterSearch = false,
         )
     }
 

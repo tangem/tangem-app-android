@@ -63,8 +63,8 @@ internal class ShowApprovalBottomSheetTransformer(
                             wrappedList(feeCryptoValue, feeFiatValue),
                         ),
                         approveButton = ApprovePermissionButton(
-                            enabled = true,
-                            loading = false,
+                            isEnabled = true,
+                            isLoading = false,
                             onClick = prevState.clickIntents::onApprovalClick,
                         ),
                         cancelButton = CancelPermissionButton(
