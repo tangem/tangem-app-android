@@ -498,7 +498,7 @@ internal class NFTSendConfirmModel @Inject constructor(
                                 iconRes = R.drawable.ic_share_24,
                                 onClick = ::onShareClick,
                             )
-                            ).takeIf { confirmUM is ConfirmUM.Success },
+                            ).takeUnless { (confirmUM as? ConfirmUM.Success)?.txUrl.isNullOrBlank() },
                     ),
                 ),
             )
