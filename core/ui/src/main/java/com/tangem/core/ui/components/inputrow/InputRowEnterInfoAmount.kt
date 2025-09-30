@@ -97,9 +97,9 @@ fun InputRowEnterInfoAmount(
                         .padding(top = TangemTheme.dimens.spacing8)
                         .weight(1f),
                 )
-                info?.let {
+                info?.let { info ->
                     Text(
-                        text = it.resolveReference(),
+                        text = info.resolveReference(),
                         style = TangemTheme.typography.body2,
                         color = infoColor,
                         modifier = Modifier
@@ -185,9 +185,9 @@ fun InputRowEnterInfoAmountV2(
                         .padding(top = TangemTheme.dimens.spacing8)
                         .weight(1f),
                 )
-                info?.let {
+                info?.let { info ->
                     Text(
-                        text = it.resolveReference(),
+                        text = info.resolveReference(),
                         style = TangemTheme.typography.body2,
                         color = infoColor,
                         modifier = Modifier
