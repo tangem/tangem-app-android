@@ -13,10 +13,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
-import com.tangem.common.ui.footers.SendingText
 import com.tangem.common.ui.notifications.NotificationUM
+import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.transactions.TransactionDoneTitle
-import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemTheme
@@ -77,8 +76,10 @@ internal fun SendConfirmContent(
                     isClickDisabled = confirmUM.isSending,
                 )
             }
+            item("SPACER_KEY") {
+                SpacerH(16.dp)
+            }
         }
-        SendingText(footerText = confirmUM?.sendingFooter ?: TextReference.EMPTY)
     }
 }
 
