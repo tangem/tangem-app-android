@@ -198,6 +198,7 @@ data class YieldDTO(
     enum class RewardTypeDTO {
         @Json(name = "apy")
         APY, // compound rate
+
         @Json(name = "apr")
         APR, // simple rate,
 

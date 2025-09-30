@@ -23,8 +23,8 @@ import com.tangem.domain.card.analytics.ParamCardCurrencyConverter
 import com.tangem.domain.card.analytics.Shop
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.card.repository.CardSdkConfigRepository
-import com.tangem.domain.core.wallets.UserWalletsListRepository
-import com.tangem.domain.core.wallets.error.SaveWalletError
+import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.common.wallets.error.SaveWalletError
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
@@ -63,16 +63,16 @@ internal class AddExistingWalletStartModel @Inject constructor(
     private val params: AddExistingWalletStartComponent.Params = paramsContainer.require()
 
     internal val uiState: StateFlow<AddExistingWalletStartUM>
-    field = MutableStateFlow(
-        AddExistingWalletStartUM(
-            showWantToPurchaseBlock = false,
-            isScanInProgress = false,
-            onBackClick = params.callbacks::onBackClick,
-            onImportPhraseClick = params.callbacks::onImportPhraseClick,
-            onScanCardClick = ::onScanClick,
-            onBuyCardClick = ::onShopClick,
-        ),
-    )
+        field = MutableStateFlow(
+            AddExistingWalletStartUM(
+                showWantToPurchaseBlock = false,
+                isScanInProgress = false,
+                onBackClick = params.callbacks::onBackClick,
+                onImportPhraseClick = params.callbacks::onImportPhraseClick,
+                onScanCardClick = ::onScanClick,
+                onBuyCardClick = ::onShopClick,
+            ),
+        )
 
     init {
         showWantToPurchaseBlockWithDelay()

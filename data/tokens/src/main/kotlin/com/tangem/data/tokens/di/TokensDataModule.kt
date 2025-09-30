@@ -9,6 +9,7 @@ import com.tangem.data.tokens.repository.DefaultCurrenciesRepository
 import com.tangem.data.tokens.repository.DefaultCurrencyChecksRepository
 import com.tangem.data.tokens.repository.DefaultPolkadotAccountHealthCheckRepository
 import com.tangem.data.tokens.repository.DefaultTokenReceiveWarningsViewedRepository
+import com.tangem.data.tokens.repository.DefaultYieldSupplyWarningsViewedRepository
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.exchangeservice.swap.ExpressServiceLoader
 import com.tangem.datasource.local.preferences.AppPreferencesStore
@@ -19,6 +20,7 @@ import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.tokens.repository.PolkadotAccountHealthCheckRepository
 import com.tangem.domain.tokens.repository.TokenReceiveWarningsViewedRepository
+import com.tangem.domain.tokens.repository.YieldSupplyWarningsViewedRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
@@ -94,6 +96,18 @@ internal object TokensDataModule {
     ): TokenReceiveWarningsViewedRepository {
         return DefaultTokenReceiveWarningsViewedRepository(
             tokenReceiveWarningActionStore = tokenReceiveWarningActionStore,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideDefaultYieldSupplyWarningsViewedRepository(
+        appPreferencesStore: AppPreferencesStore,
+        dispatchers: CoroutineDispatcherProvider,
+    ): YieldSupplyWarningsViewedRepository {
+        return DefaultYieldSupplyWarningsViewedRepository(
+            appPreferencesStore = appPreferencesStore,
+            dispatchers = dispatchers,
         )
     }
 }

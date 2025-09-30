@@ -206,6 +206,7 @@ object NotificationsFactory {
                             NotificationUM.Error.ExistentialDeposit::class.java,
                         )
                     },
+                    isActionable = balance > existentialDeposit,
                 ),
             )
         }

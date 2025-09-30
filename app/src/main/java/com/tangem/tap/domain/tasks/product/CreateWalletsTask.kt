@@ -42,7 +42,7 @@ class CreateWalletsTask(
         callback: (result: CompletionResult<CreateWalletsResponse>) -> Unit,
     ) {
         val extendedPrivateKey = mnemonic?.let {
-            AnyMasterKeyFactory(mnemonic = it, passphrase = passphrase ?: "").makeMasterKey(curve)
+            AnyMasterKeyFactory(mnemonic = it, passphrase = passphrase.orEmpty()).makeMasterKey(curve)
         }
         CreateWalletTask(curve, extendedPrivateKey).run(session) { result ->
             when (result) {
