@@ -75,7 +75,7 @@ fun Modifier.bottomFade(
 )
 
 enum class FadePosition {
-    TOP, BOTTOM, LEFT, RIGHT;
+    TOP, BOTTOM, LEFT, RIGHT
 }
 
 @Stable
