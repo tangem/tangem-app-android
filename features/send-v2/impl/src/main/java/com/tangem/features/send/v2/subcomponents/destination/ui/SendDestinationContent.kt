@@ -21,6 +21,7 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.containers.FooterContainer
 import com.tangem.core.ui.components.inputrow.InputRowRecipient
 import com.tangem.core.ui.extensions.*
@@ -52,11 +53,7 @@ internal fun SendDestinationContent(
     LazyColumn(
         modifier = Modifier // Do not put fillMaxSize() in here
             .background(TangemTheme.colors.background.tertiary)
-            .padding(
-                start = 16.dp,
-                end = 16.dp,
-                bottom = 16.dp,
-            ),
+            .padding(horizontal = 16.dp),
     ) {
         addressItem(
             address = address,
@@ -106,6 +103,9 @@ internal fun SendDestinationContent(
                 )
             },
         )
+        item("SPACER_KEY") {
+            SpacerH(16.dp)
+        }
     }
 }
 
