@@ -88,12 +88,12 @@ private fun GiveTxPermissionBottomSheetContent(content: GiveTxPermissionBottomSh
         PrimaryButtonIconEnd(
             text = stringResourceSafe(id = R.string.common_approve),
             iconResId = content.walletInteractionIcon,
-            showProgress = data.approveButton.loading,
+            showProgress = data.approveButton.isLoading,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = TangemTheme.dimens.spacing16),
             onClick = data.approveButton.onClick,
-            enabled = data.approveButton.enabled,
+            enabled = data.approveButton.isEnabled,
         )
 
         SpacerH12()

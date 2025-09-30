@@ -8,7 +8,7 @@ internal class DefaultTokenReceiveWarningActionStore(
 ) : TokenReceiveWarningActionStore {
 
     override suspend fun getSync(): Set<String> {
-        return persistenceStore.data.firstOrNull() ?: emptySet()
+        return persistenceStore.data.firstOrNull().orEmpty()
     }
 
     override suspend fun store(symbol: String) {
