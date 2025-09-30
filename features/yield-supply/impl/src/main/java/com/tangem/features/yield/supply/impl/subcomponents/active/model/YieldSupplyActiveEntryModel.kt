@@ -6,6 +6,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.features.yield.supply.impl.subcomponents.active.YieldSupplyActiveComponent
 import com.tangem.features.yield.supply.impl.subcomponents.active.YieldSupplyActiveEntryComponent
+import com.tangem.features.yield.supply.impl.subcomponents.approve.YieldSupplyApproveComponent
 import com.tangem.features.yield.supply.impl.subcomponents.stopearning.YieldSupplyStopEarningComponent
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import javax.inject.Inject
@@ -15,12 +16,14 @@ internal class YieldSupplyActiveEntryModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     paramsContainer: ParamsContainer,
     private val router: Router,
-) : Model(), YieldSupplyActiveComponent.ModelCallback, YieldSupplyStopEarningComponent.ModelCallback {
+) : Model(), YieldSupplyActiveComponent.ModelCallback,
+    YieldSupplyStopEarningComponent.ModelCallback,
+    YieldSupplyApproveComponent.ModelCallback {
 
     private val params = paramsContainer.require<YieldSupplyActiveEntryComponent.Params>()
 
     override fun onStopEarning() {
-        router.push(YieldSupplyActiveRoute.Action)
+        router.push(YieldSupplyActiveRoute.Exit)
     }
 
     override fun onBackClick() {
@@ -29,5 +32,9 @@ internal class YieldSupplyActiveEntryModel @Inject constructor(
 
     override fun onTransactionSent() {
         params.onDismiss()
+    }
+
+    override fun onApprove() {
+        router.push(YieldSupplyActiveRoute.Approve)
     }
 }

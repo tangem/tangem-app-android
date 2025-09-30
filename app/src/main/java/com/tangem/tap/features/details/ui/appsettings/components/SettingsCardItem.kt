@@ -16,8 +16,8 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SpacerH4
 import com.tangem.core.ui.components.SpacerW16
 import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.tap.features.details.ui.appsettings.AppSettingsItemsFactory
 import com.tangem.tap.features.details.ui.appsettings.AppSettingsScreenState.Item
 
@@ -71,9 +71,7 @@ private class CardItemProvider : CollectionPreviewParameterProvider<Item.Card>(
     collection = buildList {
         val itemsFactory = AppSettingsItemsFactory()
 
-        itemsFactory.createEnrollBiometricsCard(
-            onClick = { /* no-op */ },
-        ).let(::add)
+        add(itemsFactory.createEnrollBiometricsCard(onClick = { /* no-op */ }))
     },
 )
 // endregion Preview

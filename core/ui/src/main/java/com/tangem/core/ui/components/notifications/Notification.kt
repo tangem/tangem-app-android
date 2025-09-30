@@ -256,6 +256,7 @@ private fun SingleSecondaryButton(config: NotificationButtonsState.SecondaryButt
             modifier = Modifier.fillMaxWidth(),
             iconResId = config.iconResId,
             enabled = isEnabled,
+            showProgress = config.showProgress,
         )
     } else {
         SecondaryButton(
@@ -264,6 +265,7 @@ private fun SingleSecondaryButton(config: NotificationButtonsState.SecondaryButt
             modifier = Modifier.fillMaxWidth(),
             size = TangemButtonSize.WideAction,
             enabled = isEnabled,
+            showProgress = config.showProgress,
         )
     }
 }

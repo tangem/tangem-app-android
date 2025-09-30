@@ -91,7 +91,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
     private val params: SendWithSwapConfirmComponent.Params = paramsContainer.require()
 
     val uiState: StateFlow<SendWithSwapUM>
-    field = MutableStateFlow(params.sendWithSwapUM)
+        field = MutableStateFlow(params.sendWithSwapUM)
 
     val primaryCurrencyStatus: CryptoCurrencyStatus = params.primaryCryptoCurrencyStatusFlow.value
     val secondaryCurrencyStatus: CryptoCurrencyStatus? = amountUM?.secondaryCryptoCurrencyStatus
@@ -227,7 +227,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                 estimateFeeUseCase(
                     amount = amountValue,
                     userWallet = params.userWallet,
-                    cryptoCurrency = primaryCurrencyStatus.currency,
+                    cryptoCurrencyStatus = primaryCurrencyStatus,
                 ).map {
                     it.patchTransactionFeeForSwap(INCREASE_GAS_LIMIT_FOR_CEX)
                 }
