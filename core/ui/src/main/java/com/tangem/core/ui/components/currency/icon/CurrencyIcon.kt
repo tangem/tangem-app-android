@@ -127,7 +127,7 @@ private fun BoxScope.ContentIconContainer(
         )
     }
 
-    if (icon.showCustomBadge) {
+    if (icon.shouldShowCustomBadge) {
         CurrencyIconBottomBadge(
             modifier = Modifier.align(Alignment.BottomEnd),
         )

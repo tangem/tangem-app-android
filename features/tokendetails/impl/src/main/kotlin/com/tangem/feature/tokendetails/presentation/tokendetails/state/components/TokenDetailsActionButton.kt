@@ -25,7 +25,7 @@ internal sealed class TokenDetailsActionButton(val config: ActionButtonConfig) {
             text = TextReference.Res(id = R.string.common_buy),
             iconResId = R.drawable.ic_plus_24,
             onClick = onClick,
-            dimContent = dimContent,
+            shouldDimContent = dimContent,
         ),
     )
 
@@ -40,7 +40,7 @@ internal sealed class TokenDetailsActionButton(val config: ActionButtonConfig) {
             text = TextReference.Res(id = R.string.common_send),
             iconResId = R.drawable.ic_arrow_up_24,
             onClick = onClick,
-            dimContent = dimContent,
+            shouldDimContent = dimContent,
         ),
     )
 
@@ -58,7 +58,7 @@ internal sealed class TokenDetailsActionButton(val config: ActionButtonConfig) {
             iconResId = R.drawable.ic_arrow_down_24,
             onClick = onClick,
             onLongClick = onLongClick,
-            enabled = true,
+            isEnabled = true,
         ),
     )
 
@@ -73,7 +73,7 @@ internal sealed class TokenDetailsActionButton(val config: ActionButtonConfig) {
             text = TextReference.Res(id = R.string.common_sell),
             iconResId = R.drawable.ic_currency_24,
             onClick = onClick,
-            dimContent = dimContent,
+            shouldDimContent = dimContent,
         ),
     )
 
@@ -92,8 +92,8 @@ internal sealed class TokenDetailsActionButton(val config: ActionButtonConfig) {
             text = TextReference.Res(id = R.string.swapping_swap_action),
             iconResId = R.drawable.ic_exchange_vertical_24,
             onClick = onClick,
-            dimContent = dimContent,
-            showBadge = showBadge,
+            shouldDimContent = dimContent,
+            shouldShowBadge = showBadge,
         ),
     )
 }
