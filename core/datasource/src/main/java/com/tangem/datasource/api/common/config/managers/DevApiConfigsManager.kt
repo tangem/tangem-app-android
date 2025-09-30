@@ -28,11 +28,11 @@ internal class DevApiConfigsManager(
     override val configs: StateFlow<Map<ApiConfig, ApiEnvironment>>
         field = MutableStateFlow(value = getInitialConfigs())
 
-    override val isInitialized: StateFlow<Boolean>
+    override val initializedState: StateFlow<Boolean>
         field = MutableStateFlow(value = false)
 
     override fun initialize() {
-        isInitialized.value = false
+        initializedState.value = false
 
         appPreferencesStore.getObjectMap<ApiEnvironment>(PreferencesKeys.apiConfigsEnvironmentKey)
             .distinctUntilChanged()
@@ -45,8 +45,8 @@ internal class DevApiConfigsManager(
                     savedEnvironments[config.id.name] ?: currentEnvironment
                 }
 
-                if (!isInitialized.value) {
-                    isInitialized.value = true
+                if (!initializedState.value) {
+                    initializedState.value = true
                 }
 
                 notifyListeners(apiConfigs = apiConfigs, savedEnvironments = savedEnvironments)
