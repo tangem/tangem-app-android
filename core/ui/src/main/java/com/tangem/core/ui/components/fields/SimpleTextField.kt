@@ -91,10 +91,10 @@ fun SimpleTextField(
         onValueChange = { newTextFieldValueState ->
             textFieldValueState = newTextFieldValueState
 
-            val stringChangedSinceLastInvocation = lastTextValue != newTextFieldValueState.text
+            val isStringChangedSinceLastInvocation = lastTextValue != newTextFieldValueState.text
             lastTextValue = newTextFieldValueState.text
 
-            if (stringChangedSinceLastInvocation) onValueChange(newTextFieldValueState.text)
+            if (isStringChangedSinceLastInvocation) onValueChange(newTextFieldValueState.text)
         },
         textStyle = textStyle,
         cursorBrush = SolidColor(TangemTheme.colors.text.primary1),
@@ -133,9 +133,9 @@ private fun SimpleTextPlaceholder(
             AnimatedContent(
                 targetState = placeholder,
                 label = "Placeholder Change Animation",
-            ) {
+            ) { placeholder ->
                 Text(
-                    text = it.resolveReference(),
+                    text = placeholder.resolveReference(),
                     style = textStyle,
                     color = color,
                 )
