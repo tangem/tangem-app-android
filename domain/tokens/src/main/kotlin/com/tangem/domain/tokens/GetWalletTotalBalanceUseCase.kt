@@ -13,7 +13,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.operations.BaseCurrencyStatusOperations
-import com.tangem.domain.tokens.operations.TokenListFiatBalanceOperations
+import com.tangem.domain.tokens.operations.TotalFiatBalanceCalculator
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import timber.log.Timber
@@ -112,11 +112,8 @@ class GetWalletTotalBalanceUseCase(
             }
         }
 
-        val operations = TokenListFiatBalanceOperations(
-            currencies = ensureNotNull(statuses.toNonEmptyListOrNull()) { lceLoading() },
-            isAnyTokenLoading = false,
+        TotalFiatBalanceCalculator.calculate(
+            statuses = ensureNotNull(statuses.toNonEmptyListOrNull()) { lceLoading() },
         )
-
-        operations.calculateFiatBalance()
     }
 }
