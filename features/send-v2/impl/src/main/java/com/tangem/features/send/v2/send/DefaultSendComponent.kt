@@ -144,6 +144,7 @@ internal class DefaultSendComponent @AssistedInject constructor(
         )
         SendContent(
             navigationUM = state.navigationUM,
+            confirmUM = state.confirmUM,
             stackState = stackState,
         )
     }

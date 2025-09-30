@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.amountScreen.AmountScreenContent
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.preview.AmountStatePreviewData
+import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -39,12 +40,13 @@ fun SendAmountContent(
             amountState = amountState,
             isBalanceHidden = isBalanceHidden,
             clickIntents = clickIntents,
+            extraContent = {
+                SendConvertTokenButton(
+                    onConvertToAnother = clickIntents::onConvertToAnotherToken,
+                ).takeIf { isSendWithSwapAvailable }
+            },
         )
-        if (isSendWithSwapAvailable) {
-            SendConvertTokenButton(
-                onConvertToAnother = clickIntents::onConvertToAnotherToken,
-            )
-        }
+        SpacerH(16.dp)
     }
 }
 
