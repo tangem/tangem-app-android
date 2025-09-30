@@ -122,10 +122,10 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
 
                 responseBody
             },
-            onError = {
+            onError = { throwable ->
                 // pushWalletAccounts and storeWalletAccounts help to avoid cyclic dependency
                 fetchWalletAccountsErrorHandler.handle(
-                    error = it,
+                    error = throwable,
                     userWalletId = userWalletId,
                     savedAccountsResponse = savedAccountsResponse,
                     pushWalletAccounts = ::push,
