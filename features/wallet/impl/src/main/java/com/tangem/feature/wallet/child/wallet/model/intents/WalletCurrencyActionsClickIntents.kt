@@ -29,6 +29,7 @@ import com.tangem.domain.core.utils.lceError
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.markets.TokenMarketParams
+import com.tangem.domain.models.PortfolioId
 import com.tangem.domain.models.ReceiveAddressModel
 import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -44,8 +45,6 @@ import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.domain.tokens.GetViewedTokenReceiveWarningUseCase
-import com.tangem.domain.tokens.IsCryptoCurrencyCoinCouldHideUseCase
-import com.tangem.domain.tokens.RemoveCurrencyUseCase
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.analytics.TokenReceiveAnalyticsEvent
@@ -67,6 +66,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListState
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.CloseBottomSheetTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
+import com.tangem.feature.wallet.presentation.wallet.utils.WalletFeatureUseCasesFacade
 import com.tangem.features.tokenreceive.TokenReceiveFeatureToggle
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.toImmutableList
@@ -78,29 +78,41 @@ import javax.inject.Inject
 
 interface WalletCurrencyActionsClickIntents {
 
-    fun onSendClick(cryptoCurrencyStatus: CryptoCurrencyStatus, unavailabilityReason: ScenarioUnavailabilityReason)
-
-    fun onSellClick(cryptoCurrencyStatus: CryptoCurrencyStatus, unavailabilityReason: ScenarioUnavailabilityReason)
-
-    fun onBuyClick(cryptoCurrencyStatus: CryptoCurrencyStatus, unavailabilityReason: ScenarioUnavailabilityReason)
-
-    fun onSwapClick(
+    fun onSendClick(
+        portfolioId: PortfolioId,
         cryptoCurrencyStatus: CryptoCurrencyStatus,
-        userWalletId: UserWalletId,
         unavailabilityReason: ScenarioUnavailabilityReason,
     )
 
-    fun onReceiveClick(cryptoCurrencyStatus: CryptoCurrencyStatus, event: AnalyticsEvent? = null)
+    fun onSellClick(cryptoCurrencyStatus: CryptoCurrencyStatus, unavailabilityReason: ScenarioUnavailabilityReason)
 
-    fun onStakeClick(cryptoCurrencyStatus: CryptoCurrencyStatus, yield: Yield?)
+    fun onBuyClick(
+        portfolioId: PortfolioId,
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+        unavailabilityReason: ScenarioUnavailabilityReason,
+    )
+
+    fun onSwapClick(
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+        portfolioId: PortfolioId,
+        unavailabilityReason: ScenarioUnavailabilityReason,
+    )
+
+    fun onReceiveClick(
+        portfolioId: PortfolioId,
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+        event: AnalyticsEvent? = null,
+    )
+
+    fun onStakeClick(portfolioId: PortfolioId, cryptoCurrencyStatus: CryptoCurrencyStatus, yield: Yield?)
 
     fun onCopyAddressLongClick(cryptoCurrencyStatus: CryptoCurrencyStatus): TextReference?
 
-    fun onCopyAddressClick(cryptoCurrencyStatus: CryptoCurrencyStatus)
+    fun onCopyAddressClick(portfolioId: PortfolioId, cryptoCurrencyStatus: CryptoCurrencyStatus)
 
-    fun onHideTokensClick(cryptoCurrencyStatus: CryptoCurrencyStatus)
+    fun onHideTokensClick(portfolioId: PortfolioId, cryptoCurrencyStatus: CryptoCurrencyStatus)
 
-    fun onPerformHideToken(cryptoCurrencyStatus: CryptoCurrencyStatus)
+    fun onPerformHideToken(portfolioId: PortfolioId, cryptoCurrencyStatus: CryptoCurrencyStatus)
 
     fun onExploreClick()
 
@@ -122,8 +134,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
     private val walletManagersFacade: WalletManagersFacade,
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val getSingleCryptoCurrencyStatusUseCase: GetSingleCryptoCurrencyStatusUseCase,
-    private val isCryptoCurrencyCoinCouldHide: IsCryptoCurrencyCoinCouldHideUseCase,
-    private val removeCurrencyUseCase: RemoveCurrencyUseCase,
+    private val useCasesFacade: WalletFeatureUseCasesFacade,
     private val getExploreUrlUseCase: GetExploreUrlUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getStoryContentUseCase: GetStoryContentUseCase,
@@ -141,11 +152,10 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
 ) : BaseWalletClickIntents(), WalletCurrencyActionsClickIntents {
 
     override fun onSendClick(
+        portfolioId: PortfolioId,
         cryptoCurrencyStatus: CryptoCurrencyStatus,
         unavailabilityReason: ScenarioUnavailabilityReason,
     ) {
-        val userWallet = getSelectedWalletSyncUseCase.unwrap() ?: return
-
         analyticsEventHandler.send(
             event = TokenScreenAnalyticsEvent.ButtonWithParams.ButtonSend(
                 token = cryptoCurrencyStatus.currency.symbol,
@@ -156,17 +166,25 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
 
         if (handleUnavailabilityReason(unavailabilityReason)) return
 
-        stateHolder.update(CloseBottomSheetTransformer(userWalletId = userWallet.walletId))
+        stateHolder.update(CloseBottomSheetTransformer(userWalletId = portfolioId.userWalletId))
         val route = AppRoute.Send(
             currency = cryptoCurrencyStatus.currency,
-            userWalletId = userWallet.walletId,
+            portfolioId = portfolioId,
         )
 
         appRouter.push(route)
     }
 
-    override fun onReceiveClick(cryptoCurrencyStatus: CryptoCurrencyStatus, event: AnalyticsEvent?) {
-        val userWalletId = stateHolder.getSelectedWalletId()
+    override fun onReceiveClick(
+        portfolioId: PortfolioId,
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+        event: AnalyticsEvent?,
+    ) {
+        val userWalletId = portfolioId.userWalletId
+        if (portfolioId is PortfolioId.Account) {
+            // todo account find address
+            TODO("account")
+        }
 
         analyticsEventHandler.send(
             event = TokenScreenAnalyticsEvent.ButtonWithParams.ButtonReceive(
@@ -240,7 +258,12 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
         )
     }
 
-    override fun onCopyAddressClick(cryptoCurrencyStatus: CryptoCurrencyStatus) {
+    override fun onCopyAddressClick(portfolioId: PortfolioId, cryptoCurrencyStatus: CryptoCurrencyStatus) {
+        val userWalletId = portfolioId.userWalletId
+        if (portfolioId is PortfolioId.Account) {
+            // todo account find address
+            TODO("account")
+        }
         analyticsEventHandler.send(
             event = TokenReceiveNewAnalyticsEvent.ButtonCopyAddress(
                 token = cryptoCurrencyStatus.currency.symbol,
@@ -251,10 +274,10 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
 
         modelScope.launch(dispatchers.main) {
             walletManagersFacade.getDefaultAddress(
-                userWalletId = stateHolder.getSelectedWalletId(),
+                userWalletId = userWalletId,
                 network = cryptoCurrencyStatus.currency.network,
             )?.let { address ->
-                stateHolder.update(CloseBottomSheetTransformer(userWalletId = stateHolder.getSelectedWalletId()))
+                stateHolder.update(CloseBottomSheetTransformer(userWalletId = userWalletId))
 
                 clipboardManager.setText(text = address, isSensitive = true)
                 walletEventSender.send(event = WalletEvent.CopyAddress)
@@ -262,7 +285,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
         }
     }
 
-    override fun onHideTokensClick(cryptoCurrencyStatus: CryptoCurrencyStatus) {
+    override fun onHideTokensClick(portfolioId: PortfolioId, cryptoCurrencyStatus: CryptoCurrencyStatus) {
         analyticsEventHandler.send(
             event = TokenScreenAnalyticsEvent.ButtonRemoveToken(cryptoCurrencyStatus.currency.symbol),
         )
@@ -270,18 +293,20 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
         modelScope.launch(dispatchers.main) {
             walletEventSender.send(
                 event = WalletEvent.ShowAlert(
-                    state = getHideTokeAlertConfig(stateHolder.getSelectedWalletId(), cryptoCurrencyStatus),
+                    state = getHideTokeAlertConfig(portfolioId, cryptoCurrencyStatus),
                 ),
             )
         }
     }
 
     private suspend fun getHideTokeAlertConfig(
-        userWalletId: UserWalletId,
+        portfolioId: PortfolioId,
         cryptoCurrencyStatus: CryptoCurrencyStatus,
     ): WalletAlertState.DefaultAlert {
         val currency = cryptoCurrencyStatus.currency
-        return if (currency is CryptoCurrency.Coin && !isCryptoCurrencyCoinCouldHide(userWalletId, currency)) {
+        val isCryptoCurrencyCoinCouldHide = currency is CryptoCurrency.Coin &&
+            !useCasesFacade.isCryptoCurrencyCoinCouldHide(portfolioId = portfolioId, cryptoCurrencyCoin = currency)
+        return if (isCryptoCurrencyCoinCouldHide) {
             WalletAlertState.DefaultAlert(
                 title = resourceReference(
                     id = R.string.token_details_unable_hide_alert_title,
@@ -306,16 +331,14 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
                     formatArgs = WrappedList(listOf(cryptoCurrencyStatus.currency.name)),
                 ),
                 message = resourceReference(R.string.token_details_hide_alert_message),
-                onConfirmClick = { onPerformHideToken(cryptoCurrencyStatus) },
+                onConfirmClick = { onPerformHideToken(portfolioId, cryptoCurrencyStatus) },
             )
         }
     }
 
-    override fun onPerformHideToken(cryptoCurrencyStatus: CryptoCurrencyStatus) {
-        val userWalletId = stateHolder.getSelectedWalletId()
-
+    override fun onPerformHideToken(portfolioId: PortfolioId, cryptoCurrencyStatus: CryptoCurrencyStatus) {
         modelScope.launch(dispatchers.io) {
-            removeCurrencyUseCase(userWalletId, cryptoCurrencyStatus.currency)
+            useCasesFacade.removeCurrencyUseCase(portfolioId, cryptoCurrencyStatus.currency)
                 .fold(
                     ifLeft = {
                         walletEventSender.send(
@@ -323,7 +346,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
                         )
                     },
                     ifRight = {
-                        stateHolder.update(CloseBottomSheetTransformer(userWalletId = userWalletId))
+                        stateHolder.update(CloseBottomSheetTransformer(userWalletId = portfolioId.userWalletId))
                     },
                 )
         }
@@ -356,11 +379,10 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
     }
 
     override fun onBuyClick(
+        portfolioId: PortfolioId,
         cryptoCurrencyStatus: CryptoCurrencyStatus,
         unavailabilityReason: ScenarioUnavailabilityReason,
     ) {
-        val userWallet = getSelectedWalletSyncUseCase.unwrap() ?: return
-
         analyticsEventHandler.send(
             event = TokenScreenAnalyticsEvent.ButtonWithParams.ButtonBuy(
                 token = cryptoCurrencyStatus.currency.symbol,
@@ -373,7 +395,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
 
         appRouter.push(
             AppRoute.Onramp(
-                userWalletId = userWallet.walletId,
+                portfolioId = portfolioId,
                 currency = cryptoCurrencyStatus.currency,
                 source = OnrampSource.TOKEN_LONG_TAP,
             ),
@@ -382,7 +404,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
 
     override fun onSwapClick(
         cryptoCurrencyStatus: CryptoCurrencyStatus,
-        userWalletId: UserWalletId,
+        portfolioId: PortfolioId,
         unavailabilityReason: ScenarioUnavailabilityReason,
     ) {
         analyticsEventHandler.send(
@@ -398,7 +420,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
         appRouter.push(
             AppRoute.Swap(
                 currencyFrom = cryptoCurrencyStatus.currency,
-                userWalletId = userWalletId,
+                portfolioId = portfolioId,
                 screenSource = AnalyticsParam.ScreensSources.LongTap.value,
             ),
         )
@@ -440,17 +462,15 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
         }
     }
 
-    override fun onStakeClick(cryptoCurrencyStatus: CryptoCurrencyStatus, yield: Yield?) {
-        val userWallet = getSelectedWalletSyncUseCase.unwrap() ?: return
-        stateHolder.update(CloseBottomSheetTransformer(userWalletId = userWallet.walletId))
+    override fun onStakeClick(portfolioId: PortfolioId, cryptoCurrencyStatus: CryptoCurrencyStatus, yield: Yield?) {
+        stateHolder.update(CloseBottomSheetTransformer(userWalletId = portfolioId.userWalletId))
 
         modelScope.launch {
-            val userWalletId = stateHolder.getSelectedWalletId()
             val cryptoCurrency = cryptoCurrencyStatus.currency
 
             appRouter.push(
                 AppRoute.Staking(
-                    userWalletId = userWalletId,
+                    portfolioId = portfolioId,
                     cryptoCurrencyId = cryptoCurrency.id,
                     yieldId = yield?.id ?: return@launch,
                 ),
