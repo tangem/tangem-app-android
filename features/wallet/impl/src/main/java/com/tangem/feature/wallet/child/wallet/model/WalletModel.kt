@@ -349,6 +349,7 @@ internal class WalletModel @Inject constructor(
                     value = info,
                     onIssueOrderClick = ::issueOrder,
                     onContinueKycClick = innerWalletRouter::openTangemPayOnboarding,
+                    cardOnClick = ::tangemPayCardOnClick,
                 ).transform(stateHolder.uiState.value.tangemPayState)
             }
         } ?: return
@@ -372,6 +373,10 @@ internal class WalletModel @Inject constructor(
                 )
             }
         }
+    }
+
+    private fun tangemPayCardOnClick(customerWalletAddress: String) {
+        innerWalletRouter.openTangemPayDetails(customerWalletAddress)
     }
 
     private fun needToRefreshTimer() {
