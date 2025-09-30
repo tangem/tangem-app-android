@@ -6,7 +6,7 @@ import java.text.NumberFormat
 import java.util.Locale
 
 class BigDecimalPercentFormat(
-    val withoutSign: Boolean = true,
+    val isWithoutSign: Boolean = true,
     val locale: Locale = Locale.getDefault(),
 ) : BigDecimalFormat {
     override fun invoke(value: BigDecimal): String = default()(value)
@@ -19,7 +19,7 @@ fun BigDecimalFormatScope.percent(
     locale: Locale = Locale.getDefault(),
 ): BigDecimalPercentFormat {
     return BigDecimalPercentFormat(
-        withoutSign = withoutSign,
+        isWithoutSign = withoutSign,
         locale = locale,
     )
 }
@@ -33,7 +33,7 @@ private fun BigDecimalPercentFormat.default(): BigDecimalFormat = BigDecimalForm
         roundingMode = RoundingMode.HALF_UP
     }
 
-    val valueToFormat = if (withoutSign) value.abs() else value
+    val valueToFormat = if (isWithoutSign) value.abs() else value
 
     formatter.format(valueToFormat)
 }
