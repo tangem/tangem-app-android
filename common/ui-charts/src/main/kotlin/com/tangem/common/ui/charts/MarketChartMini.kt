@@ -104,10 +104,10 @@ private fun PreviewColumn() {
 
     TangemThemePreview {
         LazyColumn {
-            items(100) {
+            items(100) { i ->
                 MarketChartMini(
                     rawData = data,
-                    type = if (it % 3 == 0) MarketChartLook.Type.Growing else MarketChartLook.Type.Falling,
+                    type = if (i % 3 == 0) MarketChartLook.Type.Growing else MarketChartLook.Type.Falling,
                 )
             }
         }
