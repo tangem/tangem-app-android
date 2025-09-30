@@ -5,8 +5,10 @@ import arrow.core.getOrElse
 import arrow.core.merge
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
+import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.AppRoute.*
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.bottomsheet.receive.AddressModel
 import com.tangem.common.ui.bottomsheet.receive.mapToAddressModels
@@ -37,6 +39,7 @@ import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.models.ReceiveAddressModel
 import com.tangem.domain.models.TokenReceiveConfig
+import com.tangem.domain.models.TokenReceiveNotification
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
@@ -58,6 +61,7 @@ import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.domain.tokens.model.analytics.*
 import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent.Companion.toReasonAnalyticsText
 import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent.DetailsScreenOpened.TokenBalance
+import com.tangem.domain.tokens.model.details.TokenAction
 import com.tangem.domain.transaction.error.AssociateAssetError
 import com.tangem.domain.transaction.error.IncompleteTransactionError
 import com.tangem.domain.transaction.error.OpenTrustlineError
@@ -72,6 +76,7 @@ import com.tangem.feature.tokendetails.deeplink.TokenDetailsDeepLinkActionListen
 import com.tangem.feature.tokendetails.presentation.router.InnerTokenDetailsRouter
 import com.tangem.feature.tokendetails.presentation.tokendetails.analytics.TokenDetailsCurrencyStatusAnalyticsSender
 import com.tangem.feature.tokendetails.presentation.tokendetails.analytics.TokenDetailsNotificationsAnalyticsSender
+import com.tangem.feature.tokendetails.presentation.tokendetails.route.TokenDetailsBottomSheetConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenBalanceSegmentedButtonConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.TokenDetailsStateFactory
@@ -81,6 +86,8 @@ import com.tangem.features.tokendetails.TokenDetailsComponent
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.features.tokenreceive.TokenReceiveFeatureToggle
 import com.tangem.features.txhistory.entity.TxHistoryContentUpdateEmitter
+import com.tangem.features.yield.supply.api.YieldSupplyDepositedWarningComponent
+import com.tangem.features.yield.supply.api.YieldSupplyFeatureToggles
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
 import com.tangem.utils.extensions.isZero
@@ -137,7 +144,11 @@ internal class TokenDetailsModel @Inject constructor(
     private val tokenReceiveFeatureToggle: TokenReceiveFeatureToggle,
     private val getViewedTokenReceiveWarningUseCase: GetViewedTokenReceiveWarningUseCase,
     private val getEnsNameUseCase: GetEnsNameUseCase,
-) : Model(), TokenDetailsClickIntents {
+    private val yieldSupplyFeatureToggles: YieldSupplyFeatureToggles,
+    private val saveViewedYieldSupplyWarningUseCase: SaveViewedYieldSupplyWarningUseCase,
+    private val saveViewedTokenReceiveWarningUseCase: SaveViewedTokenReceiveWarningUseCase,
+    private val needShowYieldSupplyDepositedWarningUseCase: NeedShowYieldSupplyDepositedWarningUseCase,
+) : Model(), TokenDetailsClickIntents, YieldSupplyDepositedWarningComponent.ModelCallback {
 
     private val params = paramsContainer.require<TokenDetailsComponent.Params>()
     private val userWalletId: UserWalletId = params.userWalletId
@@ -160,7 +171,7 @@ internal class TokenDetailsModel @Inject constructor(
     /** Transaction id to check for status */
     private val waitForFirstExpressStatusEmmit = MutableStateFlow(false)
 
-    val bottomSheetNavigation: SlotNavigation<TokenReceiveConfig> = SlotNavigation()
+    val bottomSheetNavigation: SlotNavigation<TokenDetailsBottomSheetConfig> = SlotNavigation()
 
     private val stateFactory = TokenDetailsStateFactory(
         currentStateProvider = Provider { uiState.value },
@@ -170,6 +181,7 @@ internal class TokenDetailsModel @Inject constructor(
         networkHasDerivationUseCase = networkHasDerivationUseCase,
         getUserWalletUseCase = getUserWalletUseCase,
         userWalletId = userWalletId,
+        yieldSupplyFeatureToggles = yieldSupplyFeatureToggles,
     )
 
     private val expressStatusFactory by lazy(mode = LazyThreadSafetyMode.NONE) {
@@ -524,8 +536,18 @@ internal class TokenDetailsModel @Inject constructor(
         if (handleUnavailabilityReason(unavailabilityReason = unavailabilityReason)) {
             return
         }
-
-        sendCurrency()
+        modelScope.launch {
+            if (needShowYieldSupplyDepositedWarningUseCase(cryptoCurrencyStatus)) {
+                bottomSheetNavigation.activate(
+                    configuration = TokenDetailsBottomSheetConfig.YieldSupplyWarning(
+                        cryptoCurrency = cryptoCurrency,
+                        tokenAction = TokenAction.Send,
+                    ),
+                )
+            } else {
+                sendCurrency()
+            }
+        }
     }
 
     private fun sendCurrency() {
@@ -560,26 +582,15 @@ internal class TokenDetailsModel @Inject constructor(
         }
 
         modelScope.launch {
-            if (tokenReceiveFeatureToggle.isNewTokenReceiveEnabled) {
+            if (needShowYieldSupplyWarning()) {
                 bottomSheetNavigation.activate(
-                    configuration = configureReceiveAddresses(addresses = networkAddress),
+                    configuration = TokenDetailsBottomSheetConfig.YieldSupplyWarning(
+                        cryptoCurrency = cryptoCurrency,
+                        tokenAction = TokenAction.Receive,
+                    ),
                 )
             } else {
-                analyticsEventsHandler.send(TokenReceiveAnalyticsEvent.ReceiveScreenOpened(cryptoCurrency.symbol))
-                internalUiState.value = stateFactory.getStateWithReceiveBottomSheet(
-                    currency = cryptoCurrency,
-                    networkAddress = networkAddress,
-                    onCopyClick = {
-                        analyticsEventsHandler.send(TokenReceiveAnalyticsEvent.ButtonCopyAddress(cryptoCurrency.symbol))
-                        clipboardManager.setText(text = it, isSensitive = true)
-                    },
-                    onShareClick = {
-                        analyticsEventsHandler.send(
-                            TokenReceiveAnalyticsEvent.ButtonShareAddress(cryptoCurrency.symbol),
-                        )
-                        shareManager.shareText(text = it)
-                    },
-                )
+                navigateToReceive()
             }
         }
     }
@@ -653,13 +664,24 @@ internal class TokenDetailsModel @Inject constructor(
             return
         }
 
-        appRouter.push(
-            AppRoute.Swap(
-                currencyFrom = cryptoCurrency,
-                userWalletId = userWalletId,
-                screenSource = AnalyticsParam.ScreensSources.Token.value,
-            ),
-        )
+        modelScope.launch {
+            if (needShowYieldSupplyDepositedWarningUseCase(cryptoCurrencyStatus)) {
+                bottomSheetNavigation.activate(
+                    configuration = TokenDetailsBottomSheetConfig.YieldSupplyWarning(
+                        cryptoCurrency = cryptoCurrency,
+                        tokenAction = TokenAction.Swap,
+                    ),
+                )
+            } else {
+                appRouter.push(
+                    AppRoute.Swap(
+                        currencyFrom = cryptoCurrency,
+                        userWalletId = userWalletId,
+                        screenSource = AnalyticsParam.ScreensSources.Token.value,
+                    ),
+                )
+            }
+        }
     }
 
     override fun onDismissDialog() {
@@ -1007,6 +1029,15 @@ internal class TokenDetailsModel @Inject constructor(
         internalUiState.value = stateFactory.getStateWithClosedBottomSheet()
     }
 
+    override fun onYieldInfoClick() {
+        bottomSheetNavigation.activate(
+            configuration = TokenDetailsBottomSheetConfig.YieldSupplyWarning(
+                cryptoCurrency = cryptoCurrency,
+                tokenAction = TokenAction.Info,
+            ),
+        )
+    }
+
     private fun handleUnavailabilityReason(unavailabilityReason: ScenarioUnavailabilityReason): Boolean {
         if (unavailabilityReason == ScenarioUnavailabilityReason.None) return false
 
@@ -1037,7 +1068,7 @@ internal class TokenDetailsModel @Inject constructor(
             .launchIn(modelScope)
     }
 
-    private suspend fun configureReceiveAddresses(addresses: NetworkAddress): TokenReceiveConfig {
+    private suspend fun configureReceiveAddresses(addresses: NetworkAddress): TokenDetailsBottomSheetConfig {
         val ensName = getEnsNameUseCase.invoke(
             userWalletId = userWalletId,
             network = cryptoCurrency.network,
@@ -1066,12 +1097,27 @@ internal class TokenDetailsModel @Inject constructor(
             }
         }
 
-        return TokenReceiveConfig(
-            shouldShowWarning = cryptoCurrency.name !in getViewedTokenReceiveWarningUseCase(),
-            cryptoCurrency = cryptoCurrency,
-            userWalletId = userWalletId,
-            showMemoDisclaimer = cryptoCurrency.network.transactionExtrasType != Network.TransactionExtrasType.NONE,
-            receiveAddress = receiveAddresses,
+        val notifications = buildList {
+            if (isActiveYieldSupply()) {
+                add(
+                    TokenReceiveNotification(
+                        title = R.string.yield_module_balance_info_sheet_title,
+                        subtitle = R.string.yield_module_balance_info_sheet_subtitle,
+                        isYieldSupplyNotification = true,
+                    ),
+                )
+            }
+        }
+
+        return TokenDetailsBottomSheetConfig.Receive(
+            TokenReceiveConfig(
+                shouldShowWarning = cryptoCurrency.name !in getViewedTokenReceiveWarningUseCase(),
+                cryptoCurrency = cryptoCurrency,
+                userWalletId = userWalletId,
+                showMemoDisclaimer = cryptoCurrency.network.transactionExtrasType != Network.TransactionExtrasType.NONE,
+                tokenReceiveNotification = notifications,
+                receiveAddress = receiveAddresses,
+            ),
         )
     }
 
@@ -1110,6 +1156,67 @@ internal class TokenDetailsModel @Inject constructor(
             ),
         )
         isBalanceLoadedEventSent = true
+    }
+
+    private suspend fun needShowYieldSupplyWarning(): Boolean {
+        return yieldSupplyFeatureToggles.isYieldSupplyFeatureEnabled &&
+            needShowYieldSupplyDepositedWarningUseCase(cryptoCurrencyStatus)
+    }
+
+    private fun isActiveYieldSupply(): Boolean {
+        return yieldSupplyFeatureToggles.isYieldSupplyFeatureEnabled &&
+            cryptoCurrencyStatus?.value?.yieldSupplyStatus?.isActive == true
+    }
+
+    override fun onYieldSupplyWarningAcknowledged(tokenAction: TokenAction) {
+        bottomSheetNavigation.dismiss()
+        modelScope.launch {
+            if (tokenAction != TokenAction.Info) {
+                saveViewedYieldSupplyWarningUseCase(cryptoCurrency.name)
+            }
+            if (tokenAction == TokenAction.Receive) {
+                saveViewedTokenReceiveWarningUseCase(cryptoCurrency.name)
+            }
+            when (tokenAction) {
+                TokenAction.Receive -> navigateToReceive()
+                TokenAction.Send -> sendCurrency()
+                TokenAction.Swap -> appRouter.push(
+                    Swap(
+                        currencyFrom = cryptoCurrency,
+                        userWalletId = userWalletId,
+                        screenSource = AnalyticsParam.ScreensSources.Token.value,
+                    ),
+                )
+                TokenAction.Info -> Unit
+            }
+        }
+    }
+
+    private fun navigateToReceive() {
+        val networkAddress = cryptoCurrencyStatus?.value?.networkAddress ?: return
+        if (tokenReceiveFeatureToggle.isNewTokenReceiveEnabled) {
+            modelScope.launch {
+                bottomSheetNavigation.activate(
+                    configuration = configureReceiveAddresses(addresses = networkAddress),
+                )
+            }
+        } else {
+            analyticsEventsHandler.send(TokenReceiveAnalyticsEvent.ReceiveScreenOpened(cryptoCurrency.symbol))
+            internalUiState.value = stateFactory.getStateWithReceiveBottomSheet(
+                currency = cryptoCurrency,
+                networkAddress = networkAddress,
+                onCopyClick = {
+                    analyticsEventsHandler.send(TokenReceiveAnalyticsEvent.ButtonCopyAddress(cryptoCurrency.symbol))
+                    clipboardManager.setText(text = it, isSensitive = true)
+                },
+                onShareClick = {
+                    analyticsEventsHandler.send(
+                        TokenReceiveAnalyticsEvent.ButtonShareAddress(cryptoCurrency.symbol),
+                    )
+                    shareManager.shareText(text = it)
+                },
+            )
+        }
     }
 
     private companion object {

@@ -17,6 +17,7 @@ import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.features.send.v2.api.FeeSelectorBlockComponent
 import com.tangem.features.send.v2.api.SendNotificationsComponent
 import com.tangem.features.send.v2.api.SendNotificationsComponent.Params.NotificationData
+import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.v2.api.entity.PredefinedValues
 import com.tangem.features.send.v2.api.params.FeeSelectorParams
 import com.tangem.features.send.v2.api.subcomponents.destination.SendDestinationComponentParams.DestinationBlockParams
@@ -50,6 +51,7 @@ internal class SendConfirmComponent(
             params = DestinationBlockParams(
                 state = model.uiState.value.destinationUM,
                 analyticsCategoryName = params.analyticsCategoryName,
+                analyticsSendSource = params.analyticsSendSource,
                 userWalletId = params.userWallet.walletId,
                 cryptoCurrency = params.cryptoCurrencyStatus.currency,
                 blockClickEnableFlow = blockClickEnableFlow.asStateFlow(),
@@ -73,6 +75,7 @@ internal class SendConfirmComponent(
             cryptoCurrency = params.cryptoCurrencyStatus.currency,
             cryptoCurrencyStatusFlow = params.cryptoCurrencyStatusFlow,
             isBalanceHidingFlow = params.isBalanceHidingFlow,
+            analyticsSendSource = params.analyticsSendSource,
         ),
         onResult = model::onAmountResult,
         onClick = model::showEditAmount,
@@ -90,6 +93,7 @@ internal class SendConfirmComponent(
             sendAmount = model.confirmData.enteredAmount.orZero(),
             destinationAddress = model.confirmData.enteredDestination.orEmpty(),
             blockClickEnableFlow = blockClickEnableFlow.asStateFlow(),
+            analyticsSendSource = params.analyticsSendSource,
             onLoadFee = params.onLoadFee,
         ),
         onResult = model::onFeeResult,
@@ -106,6 +110,7 @@ internal class SendConfirmComponent(
             feeStateConfiguration = model.feeStateConfiguration,
             feeDisplaySource = FeeSelectorParams.FeeDisplaySource.Screen,
             analyticsCategoryName = params.analyticsCategoryName,
+            analyticsSendSource = params.analyticsSendSource,
         ),
         onResult = model::onFeeResult,
     )
@@ -165,6 +170,7 @@ internal class SendConfirmComponent(
     data class Params(
         val state: SendUM,
         val analyticsCategoryName: String,
+        val analyticsSendSource: CommonSendAnalyticEvents.CommonSendSource,
         val userWallet: UserWallet,
         val cryptoCurrencyStatus: CryptoCurrencyStatus,
         val feeCryptoCurrencyStatus: CryptoCurrencyStatus,

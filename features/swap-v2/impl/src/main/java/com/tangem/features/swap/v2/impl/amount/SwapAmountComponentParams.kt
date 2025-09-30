@@ -6,6 +6,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.swap.models.SwapDirection
+import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountUM
 import com.tangem.features.swap.v2.impl.sendviaswap.SendWithSwapRoute
 import kotlinx.coroutines.flow.Flow
@@ -15,6 +16,7 @@ internal sealed class SwapAmountComponentParams {
 
     abstract val amountUM: SwapAmountUM
     abstract val analyticsCategoryName: String
+    abstract val analyticsSendSource: CommonSendAnalyticEvents.CommonSendSource
     abstract val userWallet: UserWallet
     abstract val swapDirection: SwapDirection
     abstract val isBalanceHidingFlow: StateFlow<Boolean>
@@ -31,6 +33,7 @@ internal sealed class SwapAmountComponentParams {
         override val primaryCryptoCurrencyStatusFlow: StateFlow<CryptoCurrencyStatus>,
         override val secondaryCryptoCurrency: CryptoCurrency?,
         override val filterProviderTypes: List<ExpressProviderType> = emptyList(),
+        override val analyticsSendSource: CommonSendAnalyticEvents.CommonSendSource,
         val title: TextReference,
         val callback: SwapAmountComponent.ModelCallback,
         val currentRoute: Flow<SendWithSwapRoute>,
@@ -45,6 +48,7 @@ internal sealed class SwapAmountComponentParams {
         override val primaryCryptoCurrencyStatusFlow: StateFlow<CryptoCurrencyStatus>,
         override val secondaryCryptoCurrency: CryptoCurrency?,
         override val filterProviderTypes: List<ExpressProviderType> = emptyList(),
+        override val analyticsSendSource: CommonSendAnalyticEvents.CommonSendSource,
         val blockClickEnableFlow: StateFlow<Boolean>,
     ) : SwapAmountComponentParams()
 }
