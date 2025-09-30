@@ -22,7 +22,7 @@ internal class MockApiConfigsManager(
 ) : MutableApiConfigsManager() {
 
     override val configs: StateFlow<Map<ApiConfig, ApiEnvironment>>
-    field = MutableStateFlow(value = getInitialConfigs())
+        field = MutableStateFlow(value = getInitialConfigs())
 
     override val isInitialized: StateFlow<Boolean> = MutableStateFlow(value = true)
 
