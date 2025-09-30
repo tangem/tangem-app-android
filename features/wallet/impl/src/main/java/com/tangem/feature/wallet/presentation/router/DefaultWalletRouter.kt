@@ -7,6 +7,7 @@ import com.tangem.common.routing.AppRoute.ManageTokens.Source
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.domain.models.PortfolioId
 import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.scan.ScanResponse
@@ -64,12 +65,12 @@ internal class DefaultWalletRouter @Inject constructor(
         urlOpener.openUrl(url)
     }
 
-    override fun openTokenDetails(userWalletId: UserWalletId, currencyStatus: CryptoCurrencyStatus) {
+    override fun openTokenDetails(portfolioId: PortfolioId, currencyStatus: CryptoCurrencyStatus) {
         val networkAddress = currencyStatus.value.networkAddress
         if (networkAddress != null && networkAddress.defaultAddress.value.isNotEmpty()) {
             router.push(
                 AppRoute.CurrencyDetails(
-                    userWalletId = userWalletId,
+                    portfolioId = portfolioId,
                     currency = currencyStatus.currency,
                 ),
             )
@@ -105,5 +106,13 @@ internal class DefaultWalletRouter @Inject constructor(
         dialogNavigation.activate(
             configuration = WalletDialogConfig.TokenReceive(tokenReceiveConfig),
         )
+    }
+
+    override fun openTangemPayOnboarding() {
+        router.push(AppRoute.TangemPayOnboarding(AppRoute.TangemPayOnboarding.Mode.ContinueOnboarding))
+    }
+
+    override fun openTangemPayDetails(custoemrWalletAddress: String) {
+        router.push(AppRoute.TangemPayDetails(custoemrWalletAddress))
     }
 }
