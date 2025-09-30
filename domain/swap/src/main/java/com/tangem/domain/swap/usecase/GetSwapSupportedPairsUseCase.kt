@@ -87,7 +87,7 @@ class GetSwapSupportedPairsUseCase(
                     emptyList(),
                 )
             },
-            afterSearch = false,
+            isAfterSearch = false,
         )
     }
 }

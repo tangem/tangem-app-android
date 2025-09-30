@@ -15,7 +15,7 @@ import com.tangem.core.ui.extensions.TextReference
 sealed class CurrencyIconState {
 
     abstract val isGrayscale: Boolean
-    abstract val showCustomBadge: Boolean
+    abstract val shouldShowCustomBadge: Boolean
     abstract val topBadgeIconResId: Int?
 
     /**
@@ -24,13 +24,13 @@ sealed class CurrencyIconState {
      * @property url The URL where the coin icon can be fetched from. May be `null` if not found.
      * @property fallbackResId The drawable resource ID to be used as a fallback if the URL is not available.
      * @property isGrayscale Specifies whether to show the icon in grayscale.
-     * @property showCustomBadge Specifies whether to show the custom token badge.
+     * @property shouldShowCustomBadge Specifies whether to show the custom token badge.
      */
     data class CoinIcon(
         val url: String?,
         @DrawableRes val fallbackResId: Int,
         override val isGrayscale: Boolean,
-        override val showCustomBadge: Boolean,
+        override val shouldShowCustomBadge: Boolean,
     ) : CurrencyIconState() {
 
         override val topBadgeIconResId: Int? = null
@@ -42,7 +42,7 @@ sealed class CurrencyIconState {
      * @property url The URL where the token icon can be fetched from. May be `null` if not found.
      * @property topBadgeIconResId The drawable resource ID for the network badge. May be `null`.
      * @property isGrayscale Specifies whether to show the icon in grayscale.
-     * @property showCustomBadge Specifies whether to show the custom token badge.
+     * @property shouldShowCustomBadge Specifies whether to show the custom token badge.
      * @property fallbackTint The color to be used for tinting the fallback icon.
      * @property fallbackBackground The background color to be used for the fallback icon.
      */
@@ -50,7 +50,7 @@ sealed class CurrencyIconState {
         val url: String?,
         @DrawableRes override val topBadgeIconResId: Int?,
         override val isGrayscale: Boolean,
-        override val showCustomBadge: Boolean,
+        override val shouldShowCustomBadge: Boolean,
         val fallbackTint: Color,
         val fallbackBackground: Color,
     ) : CurrencyIconState()
@@ -62,14 +62,14 @@ sealed class CurrencyIconState {
      * @property background The background color to be used for the icon.
      * @property topBadgeIconResId The drawable resource ID for the network badge.
      * @property isGrayscale Specifies whether to show the icon in grayscale.
-     * @property showCustomBadge Specifies whether to show the custom token badge.
+     * @property shouldShowCustomBadge Specifies whether to show the custom token badge.
      */
     data class CustomTokenIcon(
         val tint: Color,
         val background: Color,
         @DrawableRes override val topBadgeIconResId: Int,
         override val isGrayscale: Boolean,
-        override val showCustomBadge: Boolean = true,
+        override val shouldShowCustomBadge: Boolean = true,
     ) : CurrencyIconState()
 
     /**
@@ -83,13 +83,13 @@ sealed class CurrencyIconState {
         @DrawableRes val fallbackResId: Int,
     ) : CurrencyIconState() {
         override val isGrayscale: Boolean = false
-        override val showCustomBadge: Boolean = false
+        override val shouldShowCustomBadge: Boolean = false
         override val topBadgeIconResId: Int? = null
     }
 
     @Immutable
     sealed class CryptoPortfolio : CurrencyIconState() {
-        override val showCustomBadge: Boolean = false
+        override val shouldShowCustomBadge: Boolean = false
         override val topBadgeIconResId: Int? = null
         abstract val color: Color
 
@@ -108,13 +108,13 @@ sealed class CurrencyIconState {
 
     data object Loading : CurrencyIconState() {
         override val isGrayscale: Boolean = false
-        override val showCustomBadge: Boolean = false
+        override val shouldShowCustomBadge: Boolean = false
         override val topBadgeIconResId: Int? = null
     }
 
     data object Locked : CurrencyIconState() {
         override val isGrayscale: Boolean = false
-        override val showCustomBadge: Boolean = false
+        override val shouldShowCustomBadge: Boolean = false
         override val topBadgeIconResId: Int? = null
     }
 
@@ -122,27 +122,27 @@ sealed class CurrencyIconState {
         @DrawableRes val resId: Int = R.drawable.ic_empty_64,
     ) : CurrencyIconState() {
         override val isGrayscale: Boolean = true
-        override val showCustomBadge: Boolean = false
+        override val shouldShowCustomBadge: Boolean = false
         override val topBadgeIconResId: Int? = null
     }
 
     fun copySealed(
         isGrayscale: Boolean = this.isGrayscale,
-        showCustomBadge: Boolean = this.showCustomBadge,
+        showCustomBadge: Boolean = this.shouldShowCustomBadge,
         topBadgeIconResId: Int? = this.topBadgeIconResId,
     ): CurrencyIconState = when (this) {
         is CoinIcon -> copy(
             isGrayscale = isGrayscale,
-            showCustomBadge = showCustomBadge,
+            shouldShowCustomBadge = showCustomBadge,
         )
         is CustomTokenIcon -> copy(
             isGrayscale = isGrayscale,
-            showCustomBadge = showCustomBadge,
+            shouldShowCustomBadge = showCustomBadge,
             topBadgeIconResId = topBadgeIconResId ?: this.topBadgeIconResId,
         )
         is TokenIcon -> copy(
             isGrayscale = isGrayscale,
-            showCustomBadge = showCustomBadge,
+            shouldShowCustomBadge = showCustomBadge,
             topBadgeIconResId = topBadgeIconResId,
         )
         is CryptoPortfolio.Icon -> copy(

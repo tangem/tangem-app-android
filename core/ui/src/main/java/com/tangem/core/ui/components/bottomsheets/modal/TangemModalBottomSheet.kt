@@ -95,9 +95,10 @@ inline fun <reified T : TangemBottomSheetConfigContent> DefaultModalBottomSheet(
     var isVisible by remember { mutableStateOf(value = config.isShown) }
     val sheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = skipPartiallyExpanded,
-        confirmValueChange = {
+        confirmValueChange = { sheetValue ->
             if (!dismissOnClickOutside) {
-                it != SheetValue.Hidden // Ignore transitions to hidden (prevents dismiss on outside click/back press)
+                // Ignore transitions to hidden (prevents dismiss on outside click/back press)
+                sheetValue != SheetValue.Hidden
             } else {
                 true
             }

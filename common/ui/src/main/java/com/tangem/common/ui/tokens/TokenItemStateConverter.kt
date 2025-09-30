@@ -219,15 +219,19 @@ class TokenItemStateConverter(
                         isFlickering = status.value.isFlickering(),
                         icons = buildList {
                             if (!status.getStakedBalance().isZero()) {
-                                TokenItemState.FiatAmountState.Content.IconUM(
-                                    iconRes = R.drawable.ic_staking_24,
-                                    tint = IconTint.Accent,
-                                ).let(::add)
+                                add(
+                                    TokenItemState.FiatAmountState.Content.IconUM(
+                                        iconRes = R.drawable.ic_staking_24,
+                                        tint = IconTint.Accent,
+                                    ),
+                                )
                             }
                             if (status.value.sources.total == StatusSource.ONLY_CACHE) {
-                                TokenItemState.FiatAmountState.Content.IconUM(
-                                    iconRes = R.drawable.ic_error_sync_24,
-                                ).let(::add)
+                                add(
+                                    TokenItemState.FiatAmountState.Content.IconUM(
+                                        iconRes = R.drawable.ic_error_sync_24,
+                                    ),
+                                )
                             }
                         }.toImmutableList(),
                     )
