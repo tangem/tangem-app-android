@@ -22,7 +22,7 @@ internal fun SettingsAlertDialog(dialog: Dialog.Alert) {
         isDismissable = false,
         confirmButton = DialogButtonUM(
             title = dialog.confirmText.resolveReference(),
-            warning = true,
+            isWarning = true,
             onClick = dialog.onConfirm,
         ),
         dismissButton = DialogButtonUM(
