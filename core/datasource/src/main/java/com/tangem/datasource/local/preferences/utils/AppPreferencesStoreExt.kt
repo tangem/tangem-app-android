@@ -37,9 +37,9 @@ inline fun <reified T> AppPreferencesStore.getObject(key: Preferences.Key<String
     return flow {
         val adapter = moshi.adapter(T::class.java)
         emitAll(
-            data.map {
+            data.map { prefs ->
                 try {
-                    it[key]?.let(adapter::fromJson) ?: default
+                    prefs[key]?.let(adapter::fromJson) ?: default
                 } catch (e: JsonDataException) {
                     default
                 }

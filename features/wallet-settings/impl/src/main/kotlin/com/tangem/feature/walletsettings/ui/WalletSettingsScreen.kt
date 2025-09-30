@@ -214,7 +214,7 @@ private fun CardBlock(model: WalletSettingsItemUM.CardBlock, modifier: Modifier 
             }
             SecondarySmallButton(
                 config = SmallButtonConfig(
-                    enabled = model.isEnabled,
+                    isEnabled = model.isEnabled,
                     text = resourceReference(R.string.common_rename),
                     onClick = model.onClick,
                 ),
