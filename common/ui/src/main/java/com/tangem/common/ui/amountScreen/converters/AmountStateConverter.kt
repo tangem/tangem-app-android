@@ -52,7 +52,7 @@ class AmountStateConverter(
         val status = cryptoCurrencyStatusProvider()
         val fiat = maxEnterAmount.fiatAmount.format { fiat(appCurrency.code, appCurrency.symbol) }
         val crypto = maxEnterAmount.amount.format { crypto(status.currency) }
-        val noFeeRate = status.value.fiatRate.isNullOrZero()
+        val hasNoFeeRate = status.value.fiatRate.isNullOrZero()
 
         return AmountState.Data(
             title = value.title,
@@ -69,7 +69,7 @@ class AmountStateConverter(
                     title = stringReference(status.currency.symbol),
                     iconState = iconStateConverter.convertCustom(
                         value = status,
-                        forceGrayscale = noFeeRate,
+                        forceGrayscale = hasNoFeeRate,
                         showCustomTokenBadge = false,
                     ),
                     isFiat = false,
@@ -80,7 +80,7 @@ class AmountStateConverter(
                     isFiat = true,
                 ),
             ),
-            isSegmentedButtonsEnabled = !noFeeRate,
+            isSegmentedButtonsEnabled = !hasNoFeeRate,
             selectedButton = 0,
             isRedesignEnabled = false,
         )
