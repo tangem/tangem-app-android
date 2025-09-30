@@ -93,6 +93,7 @@ internal class DefaultSendComponent @AssistedInject constructor(
                         analyticsEventHandler.send(
                             CommonSendAnalyticEvents.ConfirmationScreenOpened(
                                 categoryName = model.analyticCategoryName,
+                                source = model.analyticsSendSource,
                             ),
                         )
                         if (model.currentRoute.value.isEditMode) {
@@ -101,19 +102,28 @@ internal class DefaultSendComponent @AssistedInject constructor(
                     }
                     is SendAmountComponent -> {
                         analyticsEventHandler.send(
-                            CommonSendAnalyticEvents.AmountScreenOpened(categoryName = model.analyticCategoryName),
+                            CommonSendAnalyticEvents.AmountScreenOpened(
+                                categoryName = model.analyticCategoryName,
+                                source = model.analyticsSendSource,
+                            ),
                         )
                         activeComponent.updateState(model.uiState.value.amountUM)
                     }
                     is DefaultSendDestinationComponent -> {
                         analyticsEventHandler.send(
-                            CommonSendAnalyticEvents.AddressScreenOpened(categoryName = model.analyticCategoryName),
+                            CommonSendAnalyticEvents.AddressScreenOpened(
+                                categoryName = model.analyticCategoryName,
+                                source = model.analyticsSendSource,
+                            ),
                         )
                         activeComponent.updateState(model.uiState.value.destinationUM)
                     }
                     is SendFeeComponent -> {
                         analyticsEventHandler.send(
-                            CommonSendAnalyticEvents.FeeScreenOpened(categoryName = model.analyticCategoryName),
+                            CommonSendAnalyticEvents.FeeScreenOpened(
+                                categoryName = model.analyticCategoryName,
+                                source = model.analyticsSendSource,
+                            ),
                         )
                     }
                 }
@@ -155,6 +165,7 @@ internal class DefaultSendComponent @AssistedInject constructor(
                 currentRoute = model.currentRoute.filterIsInstance<CommonSendRoute.Destination>(),
                 isBalanceHidingFlow = model.isBalanceHiddenFlow,
                 analyticsCategoryName = model.analyticCategoryName,
+                analyticsSendSource = model.analyticsSendSource,
                 title = resourceReference(R.string.common_address),
                 userWalletId = params.userWalletId,
                 cryptoCurrency = params.currency,
@@ -177,6 +188,7 @@ internal class DefaultSendComponent @AssistedInject constructor(
                 callback = model,
                 predefinedValues = model.predefinedValues,
                 isRedesignEnabled = model.uiState.value.isRedesignEnabled,
+                analyticsSendSource = model.analyticsSendSource,
             ),
         )
     }
@@ -204,6 +216,7 @@ internal class DefaultSendComponent @AssistedInject constructor(
                     sendAmount = sendAmount,
                     destinationAddress = destinationAddress,
                     callback = model,
+                    analyticsSendSource = model.analyticsSendSource,
                 ),
             )
         } else {
@@ -238,6 +251,7 @@ internal class DefaultSendComponent @AssistedInject constructor(
                     onSendTransaction = {
                         innerRouter.replaceAll(CommonSendRoute.ConfirmSuccess)
                     },
+                    analyticsSendSource = model.analyticsSendSource,
                 ),
                 feeSelectorComponentFactory = feeSelectorComponentFactory,
             )
@@ -268,6 +282,7 @@ internal class DefaultSendComponent @AssistedInject constructor(
                 params = SendDestinationComponentParams.DestinationBlockParams(
                     state = model.uiState.value.destinationUM,
                     analyticsCategoryName = model.analyticCategoryName,
+                    analyticsSendSource = model.analyticsSendSource,
                     userWalletId = model.userWallet.walletId,
                     cryptoCurrency = cryptoCurrencyStatus.currency,
                     blockClickEnableFlow = MutableStateFlow(true),

@@ -13,7 +13,7 @@ internal sealed interface WelcomeAction : Action {
     object ProceedWithCard : WelcomeAction {
         object Success : WelcomeAction
         data class Error(val error: TangemError) : WelcomeAction
-        data class ChangeProgress(val showProgress: Boolean) : WelcomeAction
+        data class ChangeProgress(val isProgress: Boolean) : WelcomeAction
     }
 
     object CloseError : WelcomeAction
