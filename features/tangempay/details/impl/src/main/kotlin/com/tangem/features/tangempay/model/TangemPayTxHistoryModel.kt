@@ -31,7 +31,7 @@ internal class TangemPayTxHistoryModel @Inject constructor(
     private val listManager = TangemPayTxHistoryListManager(
         repository = tangemPayTxHistoryRepository,
         dispatchers = dispatchers,
-        userWalletId = params.userWalletId,
+        customerWalletAddress = params.customerWalletAddress,
         txHistoryUiActions = this,
     )
 
@@ -86,7 +86,7 @@ internal class TangemPayTxHistoryModel @Inject constructor(
     }
 
     private fun loadMoreItems(): Boolean {
-        modelScope.launch { listManager.loadMore(params.userWalletId) }
+        modelScope.launch { listManager.loadMore(params.customerWalletAddress) }
         return true
     }
 
