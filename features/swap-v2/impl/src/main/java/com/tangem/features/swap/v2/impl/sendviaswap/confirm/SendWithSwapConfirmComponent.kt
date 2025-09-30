@@ -17,6 +17,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.swap.models.SwapDirection
 import com.tangem.features.send.v2.api.FeeSelectorBlockComponent
 import com.tangem.features.send.v2.api.SendNotificationsComponent
+import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.v2.api.entity.PredefinedValues
 import com.tangem.features.send.v2.api.params.FeeSelectorParams.*
 import com.tangem.features.send.v2.api.subcomponents.destination.SendDestinationBlockComponent
@@ -62,6 +63,7 @@ internal class SendWithSwapConfirmComponent @AssistedInject constructor(
             isBalanceHidingFlow = params.isBalanceHidingFlow,
             swapDirection = params.swapDirection,
             filterProviderTypes = SEND_WITH_SWAP_PROVIDER_TYPES,
+            analyticsSendSource = params.analyticsSendSource,
         ),
         onResult = model::onAmountResult,
         onClick = model::showEditAmount,
@@ -72,6 +74,7 @@ internal class SendWithSwapConfirmComponent @AssistedInject constructor(
         params = SendDestinationComponentParams.DestinationBlockParams(
             state = model.uiState.value.destinationUM,
             analyticsCategoryName = params.analyticsCategoryName,
+            analyticsSendSource = params.analyticsSendSource,
             userWalletId = params.userWallet.walletId,
             blockClickEnableFlow = blockClickEnableFlow.asStateFlow(),
             cryptoCurrency = model.secondaryCurrency,
@@ -91,6 +94,7 @@ internal class SendWithSwapConfirmComponent @AssistedInject constructor(
             feeStateConfiguration = FeeStateConfiguration.ExcludeLow,
             feeDisplaySource = FeeDisplaySource.Screen,
             analyticsCategoryName = params.analyticsCategoryName,
+            analyticsSendSource = params.analyticsSendSource,
         ),
         onResult = model::onFeeResult,
     )
@@ -166,6 +170,7 @@ internal class SendWithSwapConfirmComponent @AssistedInject constructor(
     data class Params(
         val sendWithSwapUM: SendWithSwapUM,
         val analyticsCategoryName: String,
+        val analyticsSendSource: CommonSendAnalyticEvents.CommonSendSource,
         val userWallet: UserWallet,
         val appCurrency: AppCurrency,
         val currentRoute: Flow<SendWithSwapRoute>,
