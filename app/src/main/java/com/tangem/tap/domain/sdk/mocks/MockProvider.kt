@@ -5,27 +5,25 @@ import com.tangem.common.core.TangemError
 import com.tangem.common.core.TangemSdkError
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.sdk.api.CreateProductWalletTaskResponse
-import com.tangem.tap.domain.sdk.mocks.content.Wallet2WithSeedPhraseMockContent
-import com.tangem.tap.domain.sdk.mocks.content.NoteMockContent
-import com.tangem.tap.domain.sdk.mocks.content.WalletMockContent
+import com.tangem.tap.domain.sdk.mocks.content.*
 
 object MockProvider {
 
     private var content: MockContent = getMockContent(ProductType.Wallet)
 
-    private var emulateError: Boolean = false
+    private var isEmulatingError: Boolean = false
 
     private var emulatedError: TangemError = TangemSdkError.TagLost()
 
     fun setEmulateError(error: TangemError? = null) {
-        emulateError = true
+        isEmulatingError = true
         error?.let {
             emulatedError = it
         }
     }
 
     fun resetEmulateError() {
-        emulateError = false
+        isEmulatingError = false
     }
 
     fun setMocks(productType: ProductType) {
@@ -69,12 +67,14 @@ object MockProvider {
             ProductType.Wallet -> WalletMockContent
             ProductType.Wallet2 -> Wallet2WithSeedPhraseMockContent
             ProductType.Note -> NoteMockContent
+            ProductType.Ring -> RingMockContent
+            ProductType.Twins -> TwinsMockContent
             else -> TODO()
         }
     }
 
     private fun <T> CompletionResult.Success<T>.orFailure(): CompletionResult<T> {
-        return if (emulateError) {
+        return if (isEmulatingError) {
             CompletionResult.Failure(emulatedError)
         } else {
             this
