@@ -100,6 +100,12 @@ abstract class BaseTestCase : TestCase(
                     value = false
                 )
             }
+            appPreferencesStore.editData { mutablePreferences ->
+                mutablePreferences.set(
+                    key = PreferencesKeys.getShouldShowNotificationKey("EnablePushesReminderNotification"),
+                    value = false
+                )
+            }
             promoRepository.setNeverToShowWalletPromo(PromoId.Sepa)
         }
         apiEnvironmentRule.setup(apiConfigsManager)
