@@ -236,6 +236,29 @@ sealed class WcAnalyticEvents(
         enum class Source { Domain, SmartContract }
     }
 
+    data class SolanaLargeTransaction(
+        val dappName: String,
+    ) : WcAnalyticEvents(
+        event = "Solana Large Transaction",
+        params = mapOf(
+            AnalyticsParam.Key.DAPP_NAME to dappName,
+        ),
+    )
+
+    data class SolanaLargeTransactionStatus(
+        val status: Status,
+    ) : WcAnalyticEvents(
+        event = "Solana Large Transaction Status",
+        params = mapOf(
+            AnalyticsParam.Key.STATUS to status.value,
+        ),
+    ) {
+        enum class Status(val value: String) {
+            Success("Success"),
+            Failed("Failed"),
+        }
+    }
+
     enum class DAppVerificationStatus(val status: String) {
         Verified("Verified"),
         Risky("Risky"),
