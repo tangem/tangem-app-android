@@ -110,6 +110,10 @@ sealed interface StakingIntegrationID {
 
             val integrationId = blockchain.integrationId ?: return null
 
+            if (integrationId is Coin && currencyId.contractAddress != null) {
+                return null
+            }
+
             return when (integrationId) {
                 is Coin -> integrationId
                 is EthereumToken -> {
