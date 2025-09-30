@@ -40,7 +40,7 @@ internal fun YieldSupplyDepositedWarningContent(warningUM: YieldSupplyDepositedW
             onDismissRequest = onDismiss,
             content = TangemBottomSheetConfigContent.Empty,
         ),
-        containerColor = TangemTheme.colors.background.primary,
+        containerColor = TangemTheme.colors.background.tertiary,
         onBack = null,
         title = {
             TangemModalBottomSheetTitle(
@@ -57,7 +57,7 @@ internal fun YieldSupplyDepositedWarningContent(warningUM: YieldSupplyDepositedW
                     .padding(horizontal = 16.dp)
                     .fillMaxWidth(),
                 text = stringResourceSafe(CoreUiR.string.balance_hidden_got_it_button),
-                onClick = onDismiss,
+                onClick = warningUM.onWarningAcknowledged,
             )
         },
     )
@@ -68,7 +68,6 @@ private fun Content(warningUM: YieldSupplyDepositedWarningUM) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(color = TangemTheme.colors.background.primary)
             .padding(
                 start = 16.dp,
                 end = 16.dp,
@@ -109,7 +108,7 @@ private fun Content(warningUM: YieldSupplyDepositedWarningUM) {
 
         Text(
             textAlign = TextAlign.Center,
-            text = stringResourceSafe(R.string.yield_module_explore_sheet_title, warningUM.network),
+            text = stringResourceSafe(R.string.yield_module_balance_info_sheet_title, warningUM.network),
             style = TangemTheme.typography.h3,
             color = TangemTheme.colors.text.primary1,
         )
