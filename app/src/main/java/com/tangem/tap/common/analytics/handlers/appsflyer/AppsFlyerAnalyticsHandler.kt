@@ -23,10 +23,12 @@ class AppsFlyerAnalyticsHandler(
     }
 
     class Builder : AnalyticsHandlerBuilder {
-        override fun build(data: AnalyticsHandlerBuilder.Data): AnalyticsHandler? = when {
-            !data.isDebug -> AppsFlyerClient(data.application, data.config.appsFlyerApiKey, data.config.appsAppId)
-            data.isDebug && data.logConfig.appsflyer -> AppsFlyerLogClient(data.jsonConverter)
-            else -> null
-        }?.let { AppsFlyerAnalyticsHandler(it) }
+        override fun build(data: AnalyticsHandlerBuilder.Data): AnalyticsHandler? = null
+        // disabled for now until analytics strategy is defined
+        // when {
+        // !data.isDebug -> AppsFlyerClient(data.application, data.config.appsFlyerApiKey, data.config.appsAppId)
+        // data.isDebug && data.logConfig.appsflyer -> AppsFlyerLogClient(data.jsonConverter)
+        // else -> null
+        // }?.let { AppsFlyerAnalyticsHandler(it) }
     }
 }
