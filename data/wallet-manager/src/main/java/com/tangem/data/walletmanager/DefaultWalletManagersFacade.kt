@@ -502,9 +502,8 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         ) ?: error("Wallet manager not found")
 
         val destination = when (amount.type) {
-            is AmountType.Token -> estimationFeeAddressFactory.makeAddress(blockchain)
             is AmountType.TokenYieldSupply -> walletManager.getYieldModuleAddress()
-            else -> return@withContext null
+            else -> estimationFeeAddressFactory.makeAddress(blockchain)
         }
 
         val callData = when (val amountType = amount.type) {
