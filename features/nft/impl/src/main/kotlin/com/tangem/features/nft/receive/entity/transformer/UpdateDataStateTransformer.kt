@@ -43,10 +43,10 @@ internal class UpdateDataStateTransformer(
                     url = null,
                     fallbackResId = getActiveIconRes(rawId),
                     isGrayscale = !enabled,
-                    showCustomBadge = custom,
+                    shouldShowCustomBadge = custom,
                 ),
-                showCustom = custom,
-                enabled = enabled,
+                shouldShowCustom = custom,
+                isEnabled = enabled,
             ),
             onItemClick = {
                 onNetworkClick(this, enabled)

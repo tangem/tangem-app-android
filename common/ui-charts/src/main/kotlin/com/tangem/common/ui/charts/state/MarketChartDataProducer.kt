@@ -85,7 +85,7 @@ class TransactionSuspend(
 class MarketChartDataProducer private constructor(
     initialData: MarketChartData,
     initialLook: MarketChartLook,
-    val pointsValuesConverter: PointValuesConverter = PriceAndTimePointValuesConverter(needToFormatAxis = true),
+    val pointsValuesConverter: PointValuesConverter = PriceAndTimePointValuesConverter(shouldFormatAxis = true),
     private val dispatcher: CoroutineDispatcher = Dispatchers.Default,
 ) {
     internal val dataState = MutableStateFlow(initialData)
@@ -166,7 +166,7 @@ class MarketChartDataProducer private constructor(
          * @return A MarketChartDataProducer.
          */
         suspend fun buildSuspend(
-            pointsValuesConverter: PointValuesConverter = PriceAndTimePointValuesConverter(needToFormatAxis = true),
+            pointsValuesConverter: PointValuesConverter = PriceAndTimePointValuesConverter(shouldFormatAxis = true),
             dispatcher: CoroutineDispatcher = Dispatchers.Default,
             block: TransactionSuspend.() -> Unit,
         ): MarketChartDataProducer {
@@ -191,7 +191,7 @@ class MarketChartDataProducer private constructor(
          * @return A MarketChartDataProducer.
          */
         fun build(
-            pointsValuesConverter: PointValuesConverter = PriceAndTimePointValuesConverter(needToFormatAxis = true),
+            pointsValuesConverter: PointValuesConverter = PriceAndTimePointValuesConverter(shouldFormatAxis = true),
             dispatcher: CoroutineDispatcher = Dispatchers.Default,
             block: Transaction.() -> Unit,
         ): MarketChartDataProducer {
