@@ -84,7 +84,7 @@ internal fun Content(model: MessageBottomSheetUM, modifier: Modifier = Modifier)
                 PrimaryButton(
                     modifier = Modifier.fillMaxWidth(),
                     text = model.primaryAction.text.resolveReference(),
-                    enabled = model.primaryAction.enabled,
+                    enabled = model.primaryAction.isEnabled,
                     onClick = model.primaryAction.onClick,
                 )
             }
@@ -93,7 +93,7 @@ internal fun Content(model: MessageBottomSheetUM, modifier: Modifier = Modifier)
                 SecondaryButton(
                     modifier = Modifier.fillMaxWidth(),
                     text = model.secondaryAction.text.resolveReference(),
-                    enabled = model.secondaryAction.enabled,
+                    enabled = model.secondaryAction.isEnabled,
                     onClick = model.secondaryAction.onClick,
                 )
             }
