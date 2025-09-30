@@ -27,6 +27,7 @@ import androidx.compose.ui.util.fastForEach
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.res.getStringSafe
 import com.tangem.core.ui.R
+import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.SpacerH12
 import com.tangem.core.ui.components.SpacerH8
 import com.tangem.core.ui.components.SpacerW
@@ -35,6 +36,8 @@ import com.tangem.core.ui.components.atoms.text.EllipsisText
 import com.tangem.core.ui.components.atoms.text.TextEllipsis
 import com.tangem.core.ui.components.buttons.small.TangemIconButton
 import com.tangem.core.ui.components.icons.identicon.IdentIcon
+import com.tangem.core.ui.components.currency.icon.CurrencyIcon
+import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
@@ -68,6 +71,7 @@ internal fun TokenReceiveAssetsContent(assetsUM: ReceiveAssetsUM) {
             Info(
                 showMemoDisclaimer = assetsUM.showMemoDisclaimer,
                 notificationConfigs = assetsUM.notificationConfigs,
+                currencyIconState = assetsUM.currencyIconState,
             )
 
             SpacerH12()
@@ -88,6 +92,7 @@ internal fun TokenReceiveAssetsContent(assetsUM: ReceiveAssetsUM) {
 
 @Composable
 private fun Info(
+    currencyIconState: CurrencyIconState,
     notificationConfigs: ImmutableList<NotificationUM>,
     showMemoDisclaimer: Boolean,
     modifier: Modifier = Modifier,
@@ -109,9 +114,86 @@ private fun Info(
             )
         }
 
-        notificationConfigs.fastForEach {
-            key(it.hashCode()) {
-                Notification(config = it.config)
+        notificationConfigs.fastForEach { notificationConfig ->
+            key(notificationConfig.hashCode()) {
+                // TODO remove after new design system
+                if (notificationConfig is NotificationUM.Warning.YieldSupplyIsActive) {
+                    YieldSupplyDepositedWarning(
+                        currencyIconState = currencyIconState,
+                        title = stringResourceSafe(
+                            R.string.yield_module_balance_info_sheet_title,
+                            notificationConfig.tokenName,
+                        ),
+                        subtitle = stringResourceSafe(R.string.yield_module_balance_info_sheet_subtitle),
+                    )
+                } else {
+                    Notification(config = notificationConfig.config)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun YieldSupplyDepositedWarning(
+    currencyIconState: CurrencyIconState,
+    title: String,
+    subtitle: String,
+    modifier: Modifier = Modifier,
+) {
+    Surface(
+        modifier = modifier
+            .defaultMinSize(minHeight = TangemTheme.dimens.size44)
+            .fillMaxWidth(),
+        shape = TangemTheme.shapes.roundedCornersXMedium,
+        color = TangemTheme.colors.button.disabled,
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(all = TangemTheme.dimens.spacing12),
+        ) {
+            Box(
+                modifier = Modifier
+                    .height(22.dp)
+                    .width(22.dp),
+                contentAlignment = Alignment.TopStart,
+            ) {
+                CurrencyIcon(
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .size(13.dp),
+                    state = currencyIconState,
+                    shouldDisplayNetwork = false,
+                    iconSize = 13.dp,
+                )
+
+                Image(
+                    modifier = Modifier
+                        .background(TangemTheme.colors.background.tertiary, RoundedCornerShape(15.dp))
+                        .padding(1.dp)
+                        .size(15.dp)
+                        .align(Alignment.BottomEnd),
+                    imageVector = ImageVector.vectorResource(R.drawable.img_aave_22),
+                    contentDescription = null,
+                )
+            }
+
+            SpacerW(width = TangemTheme.dimens.spacing8)
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = title,
+                    color = TangemTheme.colors.text.primary1,
+                    style = TangemTheme.typography.button,
+                )
+
+                SpacerH(height = TangemTheme.dimens.spacing2)
+
+                Text(
+                    text = subtitle,
+                    color = TangemTheme.colors.text.tertiary,
+                    style = TangemTheme.typography.caption2,
+                )
             }
         }
     }
@@ -340,6 +422,8 @@ private class TokenReceiveAssetsContentProvider : PreviewParameterProvider<Recei
         onCopyClick = {},
         onOpenQrCodeClick = {},
         isEnsResultLoading = true,
+        network = "USDT",
+        currencyIconState = CurrencyIconState.Locked,
     )
 
     override val values: Sequence<ReceiveAssetsUM>
