@@ -38,12 +38,12 @@ fun keyboardAsState(): State<Keyboard> {
     val keyboardState = remember { mutableStateOf(keyboardStateInternal) }
 
     LaunchedEffect(keyboardStateInternal) {
-        val falsePositive = Build.VERSION.SDK_INT <= Build.VERSION_CODES.Q &&
+        val isFalsePositive = Build.VERSION.SDK_INT <= Build.VERSION_CODES.Q &&
             keyboardStateInternal is Keyboard.Opened &&
             keyboardStateInternal.height < 50.dp
         // FIX android <=10 devices can randomly send ime paddings,
         // which leads to a false positive keyboard opening ([REDACTED_TASK_KEY])
-        if (falsePositive) return@LaunchedEffect
+        if (isFalsePositive) return@LaunchedEffect
 
         keyboardState.value = keyboardStateInternal
     }

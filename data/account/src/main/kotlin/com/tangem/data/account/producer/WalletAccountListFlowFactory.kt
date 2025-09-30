@@ -50,7 +50,7 @@ internal class WalletAccountListFlowFactory @Inject constructor(
         val currencies = if (isSingleWalletWithToken) {
             cardCryptoCurrencyFactory.createCurrenciesForSingleCurrencyCardWithToken(userWallet = userWallet).toSet()
         } else {
-            cardCryptoCurrencyFactory.createPrimaryCurrencyForSingleCurrencyCard(userWallet = userWallet).let(::setOf)
+            setOf(cardCryptoCurrencyFactory.createPrimaryCurrencyForSingleCurrencyCard(userWallet = userWallet))
         }
 
         return AccountList.empty(userWallet = userWallet, cryptoCurrencies = currencies)

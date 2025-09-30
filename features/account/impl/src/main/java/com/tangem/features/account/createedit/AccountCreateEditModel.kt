@@ -75,7 +75,7 @@ internal class AccountCreateEditModel @Inject constructor(
         )
         val firstAction = EventMessageAction(
             title = resourceReference(R.string.account_unsaved_dialog_action_second),
-            warning = true,
+            isWarning = true,
             onClick = { router.pop() },
         )
         messageSender.send(
