@@ -23,7 +23,7 @@ internal class DefaultTangemPayDetailsComponent @AssistedInject constructor(
     private val model: TangemPayDetailsModel = getOrCreateModel(params = params)
     private val txHistoryComponent = DefaultTangemPayTxHistoryComponent(
         appComponentContext = child("txHistoryComponent"),
-        params = DefaultTangemPayTxHistoryComponent.Params(userWalletId = params.userWalletId),
+        params = DefaultTangemPayTxHistoryComponent.Params(customerWalletAddress = params.customerWalletAddress),
     )
 
     @Composable
