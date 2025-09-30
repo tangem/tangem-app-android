@@ -7,7 +7,7 @@ import com.tangem.core.ui.decompose.ComposableContentComponent
 interface AskBiometryComponent : ComposableContentComponent, ComposableBottomSheetComponent {
 
     data class Params(
-        val bottomSheetVariant: Boolean,
+        val isBottomSheetVariant: Boolean,
         val modelCallbacks: ModelCallbacks,
     )
 
