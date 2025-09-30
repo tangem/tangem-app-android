@@ -14,6 +14,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.nft.models.NFTAsset
 import com.tangem.features.nft.component.NFTDetailsBlockComponent
+import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.v2.api.entity.PredefinedValues
 import com.tangem.features.send.v2.api.subcomponents.destination.SendDestinationBlockComponent
 import com.tangem.features.send.v2.api.subcomponents.destination.SendDestinationComponentParams.DestinationBlockParams
@@ -54,6 +55,7 @@ internal class NFTSendSuccessComponent @AssistedInject constructor(
         params = DestinationBlockParams(
             state = model.uiState.value.destinationUM,
             analyticsCategoryName = params.analyticsCategoryName,
+            analyticsSendSource = params.analyticsSendSource,
             userWalletId = params.userWallet.walletId,
             cryptoCurrency = params.cryptoCurrencyStatus.currency,
             blockClickEnableFlow = MutableStateFlow(false),
@@ -77,6 +79,7 @@ internal class NFTSendSuccessComponent @AssistedInject constructor(
     data class Params(
         val nftSendUMFlow: StateFlow<NFTSendUM>,
         val analyticsCategoryName: String,
+        val analyticsSendSource: CommonSendAnalyticEvents.CommonSendSource,
         val currentRoute: Flow<CommonSendRoute>,
         val cryptoCurrencyStatus: CryptoCurrencyStatus,
         val userWallet: UserWallet,
