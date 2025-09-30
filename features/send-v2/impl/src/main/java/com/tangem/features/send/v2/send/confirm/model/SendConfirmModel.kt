@@ -510,7 +510,7 @@ internal class SendConfirmModel @Inject constructor(
         val txUrl = getExplorerTransactionUrlUseCase(
             txHash = txData.hash.orEmpty(),
             networkId = cryptoCurrency.network.id,
-        ).getOrElse { "" }
+        ).getOrNull().orEmpty()
         _uiState.update(SendConfirmSentStateTransformer(txData, txUrl))
     }
 
