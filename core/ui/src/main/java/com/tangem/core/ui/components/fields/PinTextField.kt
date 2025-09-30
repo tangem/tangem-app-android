@@ -47,9 +47,9 @@ fun PinTextField(
 
     BasicTextField(
         value = textFieldValue,
-        onValueChange = {
-            if (it.text.length <= length) {
-                onValueChange(it.text)
+        onValueChange = { value ->
+            if (value.text.length <= length) {
+                onValueChange(value.text)
             }
         },
         modifier = modifier

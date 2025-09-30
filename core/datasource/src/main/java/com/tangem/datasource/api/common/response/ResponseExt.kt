@@ -58,10 +58,10 @@ internal fun Throwable.toApiError(): ApiResponseError = when (this) {
     is ConnectException,
     is UnknownHostException,
     is SSLHandshakeException,
-    -> ApiResponseError.NetworkException
+    -> ApiResponseError.NetworkException()
     is TimeoutException,
     is TimeoutCancellationException,
     is SocketTimeoutException,
-    -> ApiResponseError.TimeoutException
+    -> ApiResponseError.TimeoutException()
     else -> ApiResponseError.UnknownException(cause = this)
 }
