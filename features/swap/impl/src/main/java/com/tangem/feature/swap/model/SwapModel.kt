@@ -785,7 +785,7 @@ internal class SwapModel @Inject constructor(
                     fromGroup = tokenDataState.fromGroup.copy(
                         available = available,
                         unavailable = unavailable,
-                        afterSearch = true,
+                        isAfterSearch = true,
                     ),
                 )
             } else {
@@ -793,7 +793,7 @@ internal class SwapModel @Inject constructor(
                     toGroup = tokenDataState.toGroup.copy(
                         available = available,
                         unavailable = unavailable,
-                        afterSearch = true,
+                        isAfterSearch = true,
                     ),
                 )
             }
