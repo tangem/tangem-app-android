@@ -39,8 +39,8 @@ enum class ApproveType(val text: TextReference) {
 }
 
 data class ApprovePermissionButton(
-    val enabled: Boolean,
-    val loading: Boolean = false,
+    val isEnabled: Boolean,
+    val isLoading: Boolean = false,
     val onClick: () -> Unit,
 )
 

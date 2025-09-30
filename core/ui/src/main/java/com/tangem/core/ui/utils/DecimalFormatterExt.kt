@@ -162,15 +162,15 @@ fun String.parseBigDecimalOrNull() = runCatching {
     // We assume there will be only decimal separator, otherwise parsing will fail.
 
     // Step 1. Exclude formatted (100,000.0) except scientific notation (100.000e10)
-    val excludeFormatted = this.count {
+    val shouldExcludeFormatted = this.count {
         !it.isDigit() && !it.equals(SCIENTIFIC_NOTATION, ignoreCase = true)
     } > DECIMAL_SEPARATOR_LIMIT
 
     // Step 2. Exclude wrong scientific notation (100e100e100)
-    val excludeWrongScientific = this.count {
+    val shouldExcludeWrongScientific = this.count {
         it.equals(SCIENTIFIC_NOTATION, ignoreCase = true)
     } > DECIMAL_SEPARATOR_LIMIT
-    if (excludeFormatted || excludeWrongScientific) return null
+    if (shouldExcludeFormatted || shouldExcludeWrongScientific) return null
 
     // An attempt to parse value with POINT decimal separator
     val parsed = this.toBigDecimalOrNull()
