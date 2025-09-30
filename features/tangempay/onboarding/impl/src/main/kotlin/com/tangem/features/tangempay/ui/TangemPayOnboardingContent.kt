@@ -75,7 +75,7 @@ internal fun TangemPayOnboardingContent(
                     textReference = resourceReference(R.string.tangempay_onboarding_get_card_button_text),
                     iconRes = R.drawable.ic_tangem_24,
                     isIconVisible = true,
-                    showProgress = state.buttonLoading,
+                    shouldShowProgress = state.buttonLoading,
                     onClick = onButtonClick,
                 ),
             )
