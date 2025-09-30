@@ -10,7 +10,7 @@ import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
-import com.tangem.domain.core.wallets.UserWalletsListRepository
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
@@ -18,6 +18,8 @@ import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.nft.ObserveAndClearNFTCacheIfNeedUseCase
 import com.tangem.domain.notifications.GetIsHuaweiDeviceWithoutGoogleServicesUseCase
 import com.tangem.domain.notifications.repository.NotificationsRepository
+import com.tangem.domain.pay.usecase.TangemPayIssueOrderUseCase
+import com.tangem.domain.pay.usecase.TangemPayMainScreenCustomerInfoUseCase
 import com.tangem.domain.settings.*
 import com.tangem.domain.tokens.RefreshMultiCurrencyWalletQuotesUseCase
 import com.tangem.domain.wallets.usecase.*
@@ -39,6 +41,7 @@ import com.tangem.features.biometry.AskBiometryComponent
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.pushnotifications.api.PushNotificationsModelCallbacks
 import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.wallet.deeplink.WalletDeepLinkActionListener
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
@@ -47,6 +50,8 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.*
 import timber.log.Timber
 import javax.inject.Inject
+
+private const val TANGEM_PAY_UPDATE_INTERVAL = 60_000L
 
 @Suppress("LongParameterList", "LargeClass")
 @Stable
@@ -84,6 +89,9 @@ internal class WalletModel @Inject constructor(
     private val getIsHuaweiDeviceWithoutGoogleServicesUseCase: GetIsHuaweiDeviceWithoutGoogleServicesUseCase,
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
     private val userWalletsListRepository: UserWalletsListRepository,
+    private val tangemPayMainScreenCustomerInfoUseCase: TangemPayMainScreenCustomerInfoUseCase,
+    private val tangemPayIssueOrderUseCase: TangemPayIssueOrderUseCase,
+    private val tangemPayFeatureToggles: TangemPayFeatureToggles,
     val screenLifecycleProvider: ScreenLifecycleProvider,
     val innerWalletRouter: InnerWalletRouter,
 ) : Model() {
@@ -96,6 +104,7 @@ internal class WalletModel @Inject constructor(
     private val refreshWalletJobHolder = JobHolder()
     private var needToRefreshWallet = false
     private val clearNFTCacheJobHolder = JobHolder()
+    private val updateTangemPayJobHolder = JobHolder()
 
     private var expressTxStatusTaskScheduler = SingleTaskScheduler<Unit>()
 
@@ -112,6 +121,7 @@ internal class WalletModel @Inject constructor(
         subscribeOnSelectedWalletFlow()
         subscribeToScreenBackgroundState()
         subscribeOnPushNotificationsPermission()
+        subscribeToTangemPayInfo()
         enableNotificationsIfNeeded()
 
         clickIntents.initialize(innerWalletRouter, modelScope)
@@ -313,6 +323,62 @@ internal class WalletModel @Inject constructor(
             .saveIn(clearNFTCacheJobHolder)
     }
 
+    private fun subscribeToTangemPayInfo() {
+        /**
+         * Update state each time a user opens/returns to wallet screen
+         * and every minute while user stays on the main screen
+         */
+        screenLifecycleProvider.isBackgroundState.onEach { inBackground ->
+            updateTangemPayJobHolder.cancel()
+            if (!inBackground && tangemPayFeatureToggles.isTangemPayEnabled) {
+                modelScope.launch {
+                    refreshTangemPayInfo()
+                    while (isActive) {
+                        delay(TANGEM_PAY_UPDATE_INTERVAL)
+                        refreshTangemPayInfo()
+                    }
+                }.saveIn(updateTangemPayJobHolder)
+            }
+        }.launchIn(modelScope)
+    }
+
+    private suspend fun refreshTangemPayInfo() {
+        val newState = withContext(dispatchers.io) {
+            tangemPayMainScreenCustomerInfoUseCase()?.let { info ->
+                TangemPayStateTransformer(
+                    value = info,
+                    onIssueOrderClick = ::issueOrder,
+                    onContinueKycClick = innerWalletRouter::openTangemPayOnboarding,
+                    cardOnClick = ::tangemPayCardOnClick,
+                ).transform(stateHolder.uiState.value.tangemPayState)
+            }
+        } ?: return
+        stateHolder.update { it.copy(tangemPayState = newState) }
+    }
+
+    private fun issueOrder() {
+        modelScope.launch {
+            stateHolder.update {
+                it.copy(
+                    tangemPayState = TangemPayStateTransformer(issueProgressState = true)
+                        .transform(it.tangemPayState),
+                )
+            }
+            withContext(dispatchers.io) {
+                tangemPayIssueOrderUseCase()
+            } ?: stateHolder.update {
+                it.copy(
+                    tangemPayState = TangemPayStateTransformer(issueState = true, onIssueOrderClick = ::issueOrder)
+                        .transform(it.tangemPayState),
+                )
+            }
+        }
+    }
+
+    private fun tangemPayCardOnClick(customerWalletAddress: String) {
+        innerWalletRouter.openTangemPayDetails(customerWalletAddress)
+    }
+
     private fun needToRefreshTimer() {
         modelScope.launch {
             delay(REFRESH_WALLET_BACKGROUND_TIMER_MILLIS)
@@ -366,7 +432,7 @@ internal class WalletModel @Inject constructor(
             is WalletsUpdateActionResolver.Action.RenameWallets -> {
                 stateHolder.update(transformer = RenameWalletsTransformer(renamedWallets = action.renamedWallets))
             }
-            is WalletsUpdateActionResolver.Action.ReloadWarningsForWallets -> {
+            is WalletsUpdateActionResolver.Action.ReloadWallets -> {
                 reloadWarnings(action)
             }
             WalletsUpdateActionResolver.Action.EmptyWallets -> {
@@ -378,7 +444,7 @@ internal class WalletModel @Inject constructor(
         }
     }
 
-    private fun reloadWarnings(action: WalletsUpdateActionResolver.Action.ReloadWarningsForWallets) {
+    private fun reloadWarnings(action: WalletsUpdateActionResolver.Action.ReloadWallets) {
         action.wallets.forEach {
             walletScreenContentLoader.load(
                 userWallet = it,

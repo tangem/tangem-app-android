@@ -44,6 +44,7 @@ data class NotificationConfig(
             val text: TextReference,
             @DrawableRes val iconResId: Int? = null,
             val onClick: () -> Unit,
+            val showProgress: Boolean = false,
         ) : ButtonsState()
 
         data class PairButtonsConfig(
