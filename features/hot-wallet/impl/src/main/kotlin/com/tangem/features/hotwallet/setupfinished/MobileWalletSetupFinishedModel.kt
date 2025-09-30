@@ -18,9 +18,9 @@ internal class MobileWalletSetupFinishedModel @Inject constructor(
     private val params: MobileWalletSetupFinishedComponent.Params = paramsContainer.require()
 
     internal val uiState: StateFlow<MobileWalletSetupFinishedUM>
-    field = MutableStateFlow(
-        MobileWalletSetupFinishedUM(
-            onContinueClick = params.callbacks::onContinueClick,
-        ),
-    )
+        field = MutableStateFlow(
+            MobileWalletSetupFinishedUM(
+                onContinueClick = params.callbacks::onContinueClick,
+            ),
+        )
 }

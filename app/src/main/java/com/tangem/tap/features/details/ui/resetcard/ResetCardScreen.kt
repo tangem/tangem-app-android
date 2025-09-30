@@ -27,11 +27,11 @@ import com.tangem.tap.features.details.ui.resetcard.ResetCardScreenState.Dialog 
 @Composable
 internal fun ResetCardScreen(state: ResetCardScreenState, onBackClick: () -> Unit, modifier: Modifier = Modifier) {
     SettingsScreensScaffold(
+        onBackClick = onBackClick,
         modifier = modifier,
         content = {
             ResetCardView(state = state)
         },
-        onBackClick = onBackClick,
     )
 
     when (val dialog = state.dialog) {
@@ -65,7 +65,7 @@ private fun ResetCardView(state: ResetCardScreenState) {
         Conditions(state)
         DynamicSpacer(scrollState = scrollState)
         SpacerH16()
-        ResetButton(enabled = state.resetButtonEnabled, onResetButtonClick = state.onResetButtonClick)
+        ResetButton(enabled = state.isResetButtonEnabled, onResetButtonClick = state.onResetButtonClick)
         SpacerH16()
     }
 }
@@ -113,18 +113,18 @@ private fun Description(text: TextReference) {
 
 @Composable
 private fun Conditions(state: ResetCardScreenState) {
-    state.warningsToShow.forEach {
-        when (it) {
+    state.warningsToShow.forEach { warning ->
+        when (warning) {
             ResetCardScreenState.WarningsToReset.LOST_WALLET_ACCESS -> {
                 ConditionCheckBox(
-                    checkedState = state.acceptCondition1Checked,
+                    checkedState = state.isAcceptCondition1Checked,
                     onCheckedChange = state.onAcceptCondition1ToggleClick,
                     description = TextReference.Res(R.string.reset_card_to_factory_condition_1),
                 )
             }
             ResetCardScreenState.WarningsToReset.LOST_PASSWORD_RESTORE -> {
                 ConditionCheckBox(
-                    checkedState = state.acceptCondition2Checked,
+                    checkedState = state.isAcceptCondition2Checked,
                     onCheckedChange = state.onAcceptCondition2ToggleClick,
                     description = TextReference.Res(R.string.reset_card_to_factory_condition_2),
                 )
@@ -238,12 +238,12 @@ private fun ResetCardScreenSample(modifier: Modifier = Modifier) {
     ) {
         ResetCardScreen(
             state = ResetCardScreenState(
-                resetButtonEnabled = true,
-                showResetPasswordButton = false,
+                isResetButtonEnabled = true,
+                isResetPasswordButtonShown = false,
                 warningsToShow = listOf(ResetCardScreenState.WarningsToReset.LOST_WALLET_ACCESS),
                 descriptionText = TextReference.Res(R.string.reset_card_with_backup_to_factory_message),
-                acceptCondition1Checked = false,
-                acceptCondition2Checked = false,
+                isAcceptCondition1Checked = false,
+                isAcceptCondition2Checked = false,
                 onAcceptCondition1ToggleClick = {},
                 onAcceptCondition2ToggleClick = {},
                 onResetButtonClick = {},
