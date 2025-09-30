@@ -12,6 +12,7 @@ internal interface ConfirmResidencyComponent : ComposableBottomSheetComponent {
         val userWalletId: UserWalletId,
         val cryptoCurrency: CryptoCurrency,
         val country: OnrampCountry,
+        val launchSepa: Boolean,
         val onDismiss: () -> Unit,
     )
 
