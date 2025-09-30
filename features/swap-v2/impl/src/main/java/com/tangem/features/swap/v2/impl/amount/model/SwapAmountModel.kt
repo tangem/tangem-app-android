@@ -281,7 +281,7 @@ internal class SwapAmountModel @Inject constructor(
                     initialCurrency = primaryCryptoCurrency,
                     selectedCurrency = selectedCurrency.takeIf { isEditMode },
                     source = AppRoute.ChooseManagedTokens.Source.SendViaSwap,
-                    showSendViaSwapNotification = showSendViaSwapNotification,
+                    shouldShowSendViaSwapNotification = showSendViaSwapNotification,
                     analyticsCategoryName = params.analyticsCategoryName,
                 ),
             )
