@@ -38,7 +38,7 @@ import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.card.ScanCardUseCase
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.card.repository.CardSdkConfigRepository
-import com.tangem.domain.core.wallets.UserWalletsListRepository
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.settings.SetGooglePayAvailabilityUseCase
 import com.tangem.domain.settings.SetGoogleServicesAvailabilityUseCase
 import com.tangem.domain.settings.ShouldInitiallyAskPermissionUseCase
@@ -264,7 +264,7 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
         tangemSdkManager = injectedTangemSdkManager
 
         backupServiceHolder.createAndSetService(cardSdkConfigRepository.sdk, this)
-        backupService = backupServiceHolder.backupService.get()!! // will be deleted eventually
+        backupService = requireNotNull(backupServiceHolder.backupService.get()) // will be deleted eventually
 
         lockUserWalletsTimer = LockUserWalletsTimer(
             context = this,
@@ -371,17 +371,15 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
         }
     }
 
-    override fun onNewIntent(intent: Intent?) {
+    override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
 
-        val fromPush = intent?.extras?.containsKey(OPENED_FROM_GCM_PUSH) ?: false
-        if (fromPush) {
+        val isFromPush = intent.extras?.containsKey(OPENED_FROM_GCM_PUSH) == true
+        if (isFromPush) {
             analyticsEventsHandler.send(Push.PushNotificationOpened)
         }
 
-        if (intent != null) {
-            handleDeepLink(intent = intent, isFromOnNewIntent = true)
-        }
+        handleDeepLink(intent = intent, isFromOnNewIntent = true)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -406,8 +404,8 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
     }
 
     override fun dispatchTouchEvent(event: MotionEvent): Boolean {
-        val result = WindowObscurationObserver.dispatchTouchEvent(event, analyticsEventsHandler)
-        return if (result) super.dispatchTouchEvent(event) else false
+        val isHandled = WindowObscurationObserver.dispatchTouchEvent(event, analyticsEventsHandler)
+        return if (isHandled) super.dispatchTouchEvent(event) else false
     }
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
@@ -451,9 +449,9 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
             getPolkadotCheckHasImmortalUseCase()
                 .flowWithLifecycle(lifecycle, minActiveState = Lifecycle.State.CREATED)
                 .distinctUntilChanged()
-                .collect {
+                .collect { (_, hasImmortalTransaction) ->
                     analyticsEventsHandler.send(
-                        WalletScreenAnalyticsEvent.Token.PolkadotImmortalTransactions(it.second),
+                        WalletScreenAnalyticsEvent.Token.PolkadotImmortalTransactions(hasImmortalTransaction),
                     )
                 }
         }
