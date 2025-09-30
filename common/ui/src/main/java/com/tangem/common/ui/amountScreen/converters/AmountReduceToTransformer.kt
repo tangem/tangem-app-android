@@ -52,7 +52,7 @@ class AmountReduceToTransformer(
 
         val checkValue = if (amountTextField.isFiatValue) fiatValue else cryptoValue
         val isExceedBalance = checkValue.checkExceedBalance(maxEnterAmount, amountTextField)
-        val isLessThanMinimumIfProvided = minimumTransactionAmount?.amount?.let { decimalCryptoValue < it } ?: false
+        val isLessThanMinimumIfProvided = minimumTransactionAmount?.amount?.let { decimalCryptoValue < it } == true
         val isZero = if (amountTextField.isFiatValue) decimalFiatValue.isNullOrZero() else value.isNullOrZero()
         val isCheckFailed = isExceedBalance || isLessThanMinimumIfProvided
         return prevState.copy(
