@@ -34,7 +34,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.core.ui.test.TokenDetailsScreenTestTags
+import com.tangem.core.ui.test.BaseActionButtonsBlockTestTags
 
 /**
  * Rounded action button
@@ -100,7 +100,7 @@ fun ActionButton(
                 ),
             )
         },
-        modifier = modifier.testTag(TokenDetailsScreenTestTags.ACTION_BUTTON),
+        modifier = modifier,
         color = color,
         containerColor = containerColor,
     )
@@ -111,10 +111,10 @@ fun ActionButton(
 fun ActionBaseButton(
     config: ActionButtonConfig,
     shape: RoundedCornerShape,
-    content: @Composable (modifier: Modifier) -> Unit,
     modifier: Modifier = Modifier,
     color: Color = TangemTheme.colors.button.secondary,
     containerColor: Color = TangemTheme.colors.background.secondary,
+    content: @Composable (modifier: Modifier) -> Unit,
 ) {
     val context = LocalContext.current
     val backgroundColor by animateColorAsState(
@@ -145,7 +145,8 @@ fun ActionBaseButton(
                     }
                 },
             )
-            .background(color = backgroundColor),
+            .background(color = backgroundColor)
+            .testTag(BaseActionButtonsBlockTestTags.ACTION_BUTTON),
     ) {
         content(Modifier.align(Alignment.Center))
 
@@ -163,9 +164,9 @@ fun ActionBaseButton(
 @Composable
 fun ActionButtonContent(
     config: ActionButtonConfig,
-    text: @Composable (Color) -> Unit,
     modifier: Modifier = Modifier,
     paddingBetweenIconAndText: Dp = 8.dp,
+    text: @Composable (Color) -> Unit,
 ) {
     Row(
         modifier = modifier

@@ -35,8 +35,9 @@ internal class YieldSupplyActiveComponent(
     @Composable
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
+        val isBalanceHidden by params.isBalanceHiddenFlow.collectAsStateWithLifecycle()
 
-        YieldSupplyActiveContent(state = state, modifier = Modifier)
+        YieldSupplyActiveContent(state = state, isBalanceHidden = isBalanceHidden, modifier = Modifier)
     }
 
     @Composable
@@ -53,11 +54,13 @@ internal class YieldSupplyActiveComponent(
     data class Params(
         val userWallet: UserWallet,
         val cryptoCurrencyStatusFlow: StateFlow<CryptoCurrencyStatus>,
+        val isBalanceHiddenFlow: StateFlow<Boolean>,
         val callback: ModelCallback,
     )
 
     interface ModelCallback {
         fun onBackClick()
         fun onStopEarning()
+        fun onApprove()
     }
 }
