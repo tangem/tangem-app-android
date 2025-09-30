@@ -103,11 +103,11 @@ fun SearchBar(
 @OptIn(ExperimentalMaterial3Api::class)
 private fun DecorationBox(
     state: SearchBarUM,
-    innerTextField: @Composable () -> Unit,
     interactionSource: MutableInteractionSource,
     colors: TextFieldColors,
     focusManager: FocusManager,
     keyboardController: SoftwareKeyboardController?,
+    innerTextField: @Composable () -> Unit,
 ) {
     TextFieldDefaults.DecorationBox(
         value = state.query,
