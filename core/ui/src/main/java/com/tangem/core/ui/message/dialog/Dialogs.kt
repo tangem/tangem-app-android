@@ -49,7 +49,7 @@ object Dialogs {
                 title = resourceReference(R.string.common_ok),
                 onClick = {},
             ),
-            dismissOnFirstAction = true,
+            shouldDismissOnFirstAction = true,
             onDismissRequest = onDismiss,
         )
     }

@@ -13,7 +13,7 @@ internal object NavigationButtonsPreview {
         iconRes = R.drawable.ic_tangem_24,
         isSecondary = true,
         isIconVisible = true,
-        showProgress = false,
+        shouldShowProgress = false,
         isEnabled = true,
         onClick = {},
     ) to NavigationButton(
@@ -21,7 +21,7 @@ internal object NavigationButtonsPreview {
         iconRes = R.drawable.ic_tangem_24,
         isSecondary = true,
         isIconVisible = true,
-        showProgress = false,
+        shouldShowProgress = false,
         isEnabled = true,
         onClick = {},
     )
@@ -31,7 +31,7 @@ internal object NavigationButtonsPreview {
         iconRes = R.drawable.ic_back_24,
         isSecondary = true,
         isIconVisible = true,
-        showProgress = false,
+        shouldShowProgress = false,
         isEnabled = true,
         onClick = {},
     )
@@ -40,7 +40,7 @@ internal object NavigationButtonsPreview {
         textReference = resourceReference(R.string.common_close),
         isSecondary = false,
         isIconVisible = false,
-        showProgress = false,
+        shouldShowProgress = false,
         isEnabled = true,
         onClick = {},
     )

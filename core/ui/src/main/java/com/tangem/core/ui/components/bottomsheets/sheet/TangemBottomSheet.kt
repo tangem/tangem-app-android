@@ -163,11 +163,11 @@ inline fun <reified T : TangemBottomSheetConfigContent> BasicBottomSheet(
 
     val bsContent: @Composable ColumnScope.() -> Unit = {
         Column(
-            modifier = Modifier.let {
+            modifier = Modifier.let { modifier ->
                 if (addBottomInsets) {
-                    it.padding(bottom = bottomBarHeight)
+                    modifier.padding(bottom = bottomBarHeight)
                 } else {
-                    it
+                    modifier
                 }
             },
         ) {
