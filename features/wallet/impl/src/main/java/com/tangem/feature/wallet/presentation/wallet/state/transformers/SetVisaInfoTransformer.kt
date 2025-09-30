@@ -9,6 +9,7 @@ import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.card.common.util.getCardsCount
+import com.tangem.domain.models.PortfolioId
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.visa.exception.RefreshTokenExpiredException
@@ -105,7 +106,10 @@ internal class SetVisaInfoTransformer(
             },
         )
 
-        return WalletAdditionalInfo(hideable = true, infoContent)
+        return WalletAdditionalInfo(
+            hideable = true,
+            content = infoContent,
+        )
     }
 
     private fun getRefreshTokenExpiredState(prevState: WalletState.Visa.Content): WalletState {
@@ -148,7 +152,11 @@ internal class SetVisaInfoTransformer(
                 enabled = true,
                 dimContent = false,
                 onClick = {
-                    clickIntents.onReceiveClick(cryptoCurrencyStatus, MainScreenAnalyticsEvent.ButtonReceive)
+                    clickIntents.onReceiveClick(
+                        portfolioId = PortfolioId(userWalletId), // todo account Visa use Main account?
+                        cryptoCurrencyStatus = cryptoCurrencyStatus,
+                        event = MainScreenAnalyticsEvent.ButtonReceive,
+                    )
                 },
                 onLongClick = {
                     clickIntents.onCopyAddressLongClick(cryptoCurrencyStatus)
