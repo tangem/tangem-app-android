@@ -185,7 +185,7 @@ internal class ChildFactory @Inject constructor(
                     params = MarketsTokenDetailsComponent.Params(
                         token = route.token,
                         appCurrency = route.appCurrency,
-                        showPortfolio = route.showPortfolio,
+                        shouldShowPortfolio = route.shouldShowPortfolio,
                         analyticsParams = route.analyticsParams?.let { params ->
                             MarketsTokenDetailsComponent.AnalyticsParams(
                                 blockchain = params.blockchain,
@@ -203,7 +203,7 @@ internal class ChildFactory @Inject constructor(
                         userWalletId = route.portfolioId.userWalletId, // todo account portfolioId param,
                         cryptoCurrency = route.currency,
                         source = route.source,
-                        launchSepa = route.launchSepa,
+                        shouldLaunchSepa = route.shouldLaunchSepa,
                     ),
                     componentFactory = onrampComponentFactory,
                 )
@@ -462,7 +462,7 @@ internal class ChildFactory @Inject constructor(
                         initialCurrency = route.initialCurrency,
                         selectedCurrency = route.selectedCurrency,
                         source = ChooseManagedTokensComponent.Source.valueOf(route.source.name),
-                        showSendViaSwapNotification = route.showSendViaSwapNotification,
+                        shouldShowSendViaSwapNotification = route.shouldShowSendViaSwapNotification,
                         analyticsCategoryName = route.analyticsCategoryName,
                     ),
                     componentFactory = chooseManagedTokensComponentFactory,
