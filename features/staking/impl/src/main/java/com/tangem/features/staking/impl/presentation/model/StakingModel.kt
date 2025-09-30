@@ -263,7 +263,7 @@ internal class StakingModel @Inject constructor(
                 isInitialInfoStep && noBalanceState && !isAccountInitialized -> {
                     analyticsEventHandler.send(StakingAnalyticsEvent.UnitializedAddress(
                         token = cryptoCurrencyStatus.currency.symbol,
-                    ),)
+                    ))
                     stakingEventFactory.createInitializeAccountAlert()
                     return@launch
                 }
@@ -662,7 +662,7 @@ internal class StakingModel @Inject constructor(
                 contractAddress = tokenCryptoCurrency.contractAddress,
                 spenderAddress = approval.spenderAddress,
                 fee = fee,
-                cryptoCurrency = tokenCryptoCurrency,
+                cryptoCurrencyStatus = cryptoCurrencyStatus,
                 userWalletId = userWalletId,
             ).fold(
                 ifLeft = { error ->

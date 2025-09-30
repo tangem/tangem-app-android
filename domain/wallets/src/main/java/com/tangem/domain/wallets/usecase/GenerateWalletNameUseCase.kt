@@ -1,9 +1,9 @@
 package com.tangem.domain.wallets.usecase
 
+import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.common.wallets.requireUserWalletsSync
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
-import com.tangem.domain.core.wallets.UserWalletsListRepository
-import com.tangem.domain.core.wallets.requireUserWalletsSync
 
 /**
  * Use case for user wallet name generation
