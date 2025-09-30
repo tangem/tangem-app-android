@@ -1,6 +1,5 @@
 package com.tangem.features.tangempay.utils
 
-import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tangempay.model.TangemPayTxHistoryListBatchingContext
 import com.tangem.domain.tangempay.model.TangemPayTxHistoryListConfig
 import com.tangem.domain.tangempay.repository.TangemPayTxHistoryRepository
@@ -23,7 +22,7 @@ private typealias TangemPayTxHistoryBatchAction = BatchAction<Int, TangemPayTxHi
 internal class TangemPayTxHistoryListManager(
     private val repository: TangemPayTxHistoryRepository,
     private val dispatchers: CoroutineDispatcherProvider,
-    private val userWalletId: UserWalletId,
+    private val customerWalletAddress: String,
     private val txHistoryUiActions: TxHistoryUiActions,
 ) {
     private val jobHolder = JobHolder()
@@ -56,15 +55,18 @@ internal class TangemPayTxHistoryListManager(
     suspend fun reload() {
         actionsFlow.emit(
             BatchAction.Reload(
-                requestParams = TangemPayTxHistoryListConfig(userWalletId = userWalletId, refresh = true),
+                requestParams = TangemPayTxHistoryListConfig(
+                    customerWalletAddress = customerWalletAddress,
+                    refresh = true,
+                ),
             ),
         )
     }
 
-    suspend fun loadMore(userWalletId: UserWalletId) {
+    suspend fun loadMore(customerWalletAddress: String) {
         actionsFlow.emit(
             BatchAction.LoadMore(
-                requestParams = TangemPayTxHistoryListConfig(userWalletId, refresh = false),
+                requestParams = TangemPayTxHistoryListConfig(customerWalletAddress, refresh = false),
             ),
         )
     }

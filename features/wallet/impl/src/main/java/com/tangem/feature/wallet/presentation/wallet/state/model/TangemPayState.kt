@@ -20,5 +20,6 @@ internal sealed class TangemPayState {
     data class Card(
         val lastFourDigits: TextReference,
         val balanceText: TextReference,
+        val onClick: () -> Unit,
     ) : TangemPayState()
 }
