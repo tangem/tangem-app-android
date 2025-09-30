@@ -16,7 +16,8 @@ internal class DefaultOnboardVisaDeepLinkHandler @AssistedInject constructor(
 
     init {
         if (tangemPayFeatureToggles.isTangemPayEnabled) {
-            appRouter.push(AppRoute.TangemPayOnboarding(uri.toString()))
+            val mode = AppRoute.TangemPayOnboarding.Mode.Deeplink(uri.toString())
+            appRouter.push(AppRoute.TangemPayOnboarding(mode))
         } else {
             appRouter.push(AppRoute.Home())
         }

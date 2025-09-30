@@ -20,6 +20,7 @@ import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.features.nft.component.NFTDetailsBlockComponent
 import com.tangem.features.send.v2.api.FeeSelectorBlockComponent
 import com.tangem.features.send.v2.api.SendNotificationsComponent
+import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.v2.api.entity.PredefinedValues
 import com.tangem.features.send.v2.api.params.FeeSelectorParams
 import com.tangem.features.send.v2.api.params.FeeSelectorParams.FeeStateConfiguration
@@ -57,6 +58,7 @@ internal class NFTSendConfirmComponent @AssistedInject constructor(
             params = DestinationBlockParams(
                 state = model.uiState.value.destinationUM,
                 analyticsCategoryName = params.analyticsCategoryName,
+                analyticsSendSource = params.analyticsSendSource,
                 userWalletId = params.userWallet.walletId,
                 cryptoCurrency = params.cryptoCurrencyStatus.currency,
                 blockClickEnableFlow = blockClickEnableFlow.asStateFlow(),
@@ -79,6 +81,7 @@ internal class NFTSendConfirmComponent @AssistedInject constructor(
             onLoadFee = params.onLoadFee,
             destinationAddress = model.confirmData.enteredDestination.orEmpty(),
             blockClickEnableFlow = blockClickEnableFlow.asStateFlow(),
+            analyticsSendSource = params.analyticsSendSource,
         ),
         onResult = model::onFeeResult,
         onClick = model::showEditFee,
@@ -94,6 +97,7 @@ internal class NFTSendConfirmComponent @AssistedInject constructor(
             feeStateConfiguration = FeeStateConfiguration.None,
             feeDisplaySource = FeeSelectorParams.FeeDisplaySource.Screen,
             analyticsCategoryName = params.analyticsCategoryName,
+            analyticsSendSource = params.analyticsSendSource,
         ),
         onResult = model::onFeeResult,
     )
@@ -162,6 +166,7 @@ internal class NFTSendConfirmComponent @AssistedInject constructor(
     data class Params(
         val state: NFTSendUM,
         val analyticsCategoryName: String,
+        val analyticsSendSource: CommonSendAnalyticEvents.CommonSendSource,
         val userWallet: UserWallet,
         val appCurrency: AppCurrency,
         val nftAsset: NFTAsset,
