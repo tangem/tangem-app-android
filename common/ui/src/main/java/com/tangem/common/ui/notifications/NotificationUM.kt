@@ -148,13 +148,17 @@ sealed class NotificationUM(val config: NotificationConfig) {
             },
         )
 
-        data class ExistentialDeposit(val deposit: String, val onConfirmClick: () -> Unit) : Error(
+        data class ExistentialDeposit(
+            val deposit: String,
+            val onConfirmClick: () -> Unit,
+            val isActionable: Boolean,
+        ) : Error(
             title = resourceReference(R.string.send_notification_existential_deposit_title),
             subtitle = resourceReference(R.string.send_notification_existential_deposit_text, wrappedList(deposit)),
             buttonState = NotificationConfig.ButtonsState.PrimaryButtonConfig(
                 text = resourceReference(R.string.send_notification_leave_button, wrappedList(deposit)),
                 onClick = onConfirmClick,
-            ),
+            ).takeIf { isActionable },
         )
 
         data class ReserveAmount(val amount: String) : Error(
@@ -264,6 +268,11 @@ sealed class NotificationUM(val config: NotificationConfig) {
         data object InsufficientBalanceForSelling : Warning(
             title = resourceReference(id = R.string.selling_insufficient_balance_alert_title),
             subtitle = resourceReference(id = R.string.selling_insufficient_balance_alert_message),
+        )
+
+        data class YieldSupplyIsActive(val tokenName: String) : Warning(
+            title = resourceReference(id = R.string.yield_module_balance_info_sheet_title, wrappedList(tokenName)),
+            subtitle = resourceReference(id = R.string.yield_module_balance_info_sheet_subtitle),
         )
     }
 

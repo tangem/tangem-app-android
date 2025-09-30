@@ -272,6 +272,7 @@ include(":features:tangempay:main:impl")
 include(":features:tangempay:details:api")
 include(":features:tangempay:details:impl")
 
+include(":features:tangempay:onboarding")
 include(":features:tangempay:onboarding:api")
 include(":features:tangempay:onboarding:impl")
 
@@ -297,7 +298,9 @@ include(":domain:models")
 include(":domain:legacy")
 
 include(":domain:account")
+include(":domain:account:status")
 include(":domain:card")
+include(":domain:common")
 include(":domain:core")
 include(":domain:demo")
 include(":domain:demo:models")
@@ -351,6 +354,7 @@ include(":domain:swap:models")
 include(":domain:wallet-manager")
 include(":domain:wallet-manager:models")
 include(":domain:yield-supply")
+include(":domain:yield-supply:models")
 // endregion Domain modules
 
 // region Data modules
@@ -386,4 +390,3 @@ include(":data:express")
 include(":data:wallet-manager")
 include(":data:yield-supply")
 // endregion Data modules
-include(":features:tangempay:onboarding")
