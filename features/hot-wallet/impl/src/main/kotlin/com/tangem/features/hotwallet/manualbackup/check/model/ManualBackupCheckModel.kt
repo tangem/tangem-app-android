@@ -44,7 +44,7 @@ internal class ManualBackupCheckModel @Inject constructor(
     private val callbacks = params.callbacks
 
     internal val uiState: StateFlow<ManualBackupCheckUM>
-    field = MutableStateFlow(getInitialUIState())
+        field = MutableStateFlow(getInitialUIState())
 
     init {
         modelScope.launch {

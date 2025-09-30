@@ -1,6 +1,6 @@
 package com.tangem.tap.di.domain
 
-import com.tangem.domain.core.wallets.UserWalletsListRepository
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.transaction.WalletAddressServiceRepository

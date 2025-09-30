@@ -3,7 +3,7 @@ package com.tangem.tap.data
 import com.tangem.common.CompletionResult
 import com.tangem.common.catching
 import com.tangem.datasource.local.userwallet.UserWalletsStore
-import com.tangem.domain.core.wallets.UserWalletsListRepository
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import kotlinx.coroutines.flow.Flow
