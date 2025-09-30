@@ -98,9 +98,9 @@ fun ShowcaseButtons(
                     bottom = TangemTheme.dimens.spacing16,
                 ),
         )
-        hint?.let {
+        if (hint != null) {
             Text(
-                text = it.resolveReference(),
+                text = hint.resolveReference(),
                 style = TangemTheme.typography.body2,
                 color = TangemTheme.colors.text.secondary,
                 modifier = Modifier

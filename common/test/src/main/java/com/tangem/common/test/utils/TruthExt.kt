@@ -8,11 +8,11 @@ import com.google.common.truth.Truth
 fun <B> assertEither(actual: Either<Throwable, B>, expected: Either<Throwable, B>) {
     actual
         .onRight { Truth.assertThat(actual).isEqualTo(expected) }
-        .onLeft {
-            val expectedError = expected.leftOrNull() ?: error("Actual is Either.Left: $it")
+        .onLeft { throwable ->
+            val expectedError = expected.leftOrNull() ?: error("Actual is Either.Left: $throwable")
 
-            Truth.assertThat(it).isInstanceOf(expectedError::class.java)
-            Truth.assertThat(it).hasMessageThat().isEqualTo(expectedError.message)
+            Truth.assertThat(throwable).isInstanceOf(expectedError::class.java)
+            Truth.assertThat(throwable).hasMessageThat().isEqualTo(expectedError.message)
         }
 }
 
@@ -24,6 +24,7 @@ fun assertEitherRight(actual: Either<Throwable, Unit>) {
         }
 }
 
+@Suppress("NullableToStringCall")
 fun <B> assertEitherLeft(actual: Either<Throwable, B>, expected: Throwable) {
     actual
         .onRight { error("Actual is Either.Right: $it") }

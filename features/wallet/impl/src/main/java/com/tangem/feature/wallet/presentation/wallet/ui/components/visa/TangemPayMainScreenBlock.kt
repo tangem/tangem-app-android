@@ -33,7 +33,7 @@ internal fun TangemPayMainScreenBlock(state: TangemPayState, modifier: Modifier 
                     buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
                         text = state.buttonText,
                         onClick = state.onButtonClick,
-                        showProgress = state.showProgress,
+                        shouldShowProgress = state.showProgress,
                     ),
                 ),
             )
