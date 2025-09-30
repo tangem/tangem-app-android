@@ -45,8 +45,8 @@ fun ResizableText(
         overflow = overflow,
         softWrap = false,
         maxLines = maxLines,
-        onTextLayout = {
-            if (it.hasVisualOverflow) {
+        onTextLayout = { textLayoutResult ->
+            if (textLayoutResult.hasVisualOverflow) {
                 val nextFontSizeValue = fontSizeValue.floatValue - fontSizeRange.step.value
                 if (nextFontSizeValue <= fontSizeRange.min.value) {
                     fontSizeValue.floatValue = fontSizeRange.min.value
@@ -150,8 +150,8 @@ fun ResizableText(
         overflow = overflow,
         softWrap = false,
         maxLines = maxLines,
-        onTextLayout = {
-            if (it.hasVisualOverflow) {
+        onTextLayout = { result ->
+            if (result.hasVisualOverflow) {
                 val nextFontSizeValue = fontSizeValue.value - fontSizeRange.step.value
                 if (nextFontSizeValue <= fontSizeRange.min.value) {
                     onFontSizeChange(fontSizeRange.min.value)

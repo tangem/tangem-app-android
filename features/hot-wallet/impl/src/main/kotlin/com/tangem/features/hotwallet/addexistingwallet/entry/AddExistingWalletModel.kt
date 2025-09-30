@@ -87,7 +87,7 @@ internal class AddExistingWalletModel @Inject constructor(
                     title = resourceReference(R.string.access_code_alert_skip_ok),
                     onClick = { navigateToPushNotificationsOrNext() },
                 ),
-                dismissOnFirstAction = true,
+                shouldDismissOnFirstAction = true,
             ),
         )
     }
