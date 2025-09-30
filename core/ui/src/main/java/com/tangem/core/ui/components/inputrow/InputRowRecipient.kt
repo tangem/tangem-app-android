@@ -89,9 +89,9 @@ fun InputRowRecipient(
                 .fillMaxWidth()
                 .padding(TangemTheme.dimens.spacing12),
         ) {
-            AnimatedContent(targetState = titleText, label = "Title Change") {
+            AnimatedContent(targetState = titleText, label = "Title Change") { title ->
                 Text(
-                    text = it.resolveReference(),
+                    text = title.resolveReference(),
                     style = TangemTheme.typography.subtitle2,
                     color = color,
                     modifier = Modifier.testTag(SendAddressScreenTestTags.ADDRESS_TEXT_FIELD_TITLE),
