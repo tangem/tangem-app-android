@@ -55,7 +55,7 @@ internal class AskBiometryModel @Inject constructor(
 
     private val _uiState = MutableStateFlow(
         AskBiometryUM(
-            bottomSheetVariant = params.bottomSheetVariant,
+            bottomSheetVariant = params.isBottomSheetVariant,
             onAllowClick = ::onAllowClick,
             onDontAllowClick = ::dontAllow,
             onDismiss = ::dismiss,
@@ -160,7 +160,7 @@ internal class AskBiometryModel @Inject constructor(
                     title = resourceReference(R.string.common_cancel),
                     onClick = {},
                 ),
-                dismissOnFirstAction = true,
+                shouldDismissOnFirstAction = true,
             ),
         )
     }

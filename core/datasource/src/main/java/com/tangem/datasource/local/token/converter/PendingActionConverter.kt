@@ -19,11 +19,11 @@ internal object PendingActionConverter : Converter<BalanceDTO.PendingAction, Pen
                             maximum = it.maximum,
                         )
                     },
-                    duration = this?.duration?.let {
+                    duration = this?.duration?.let { duration ->
                         PendingAction.PendingActionArgs.Duration(
-                            required = it.required,
-                            minimum = it.minimum,
-                            maximum = it.maximum,
+                            required = duration.required,
+                            minimum = duration.minimum,
+                            maximum = duration.maximum,
                         )
                     },
                     validatorAddress = this?.validatorAddress?.required,
