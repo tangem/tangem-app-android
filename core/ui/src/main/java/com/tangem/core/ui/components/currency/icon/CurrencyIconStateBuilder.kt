@@ -28,7 +28,7 @@ object CurrencyIconStateBuilder {
         url = url,
         fallbackResId = fallbackResId,
         isGrayscale = isGrayscale,
-        showCustomBadge = showCustomBadge,
+        shouldShowCustomBadge = showCustomBadge,
     )
 
     private fun createTokenIcon(
@@ -44,7 +44,7 @@ object CurrencyIconStateBuilder {
         isGrayscale = isGrayscale,
         fallbackTint = fallbackTint,
         fallbackBackground = fallbackBackground,
-        showCustomBadge = showCustomBadge,
+        shouldShowCustomBadge = showCustomBadge,
     )
 
     private fun createCustomTokenIcon(
@@ -58,7 +58,7 @@ object CurrencyIconStateBuilder {
         background = background,
         topBadgeIconResId = topBadgeIconResId,
         isGrayscale = isGrayscale,
-        showCustomBadge = showCustomBadge,
+        shouldShowCustomBadge = showCustomBadge,
     )
 
     private fun fromCoin(
@@ -77,8 +77,8 @@ object CurrencyIconStateBuilder {
         isGrayscale: Boolean = false,
         showCustomBadge: Boolean = true,
     ): CurrencyIconState {
-        val grayScale = isGrayscale || token.network.isTestnet
-        val background = token.tryGetBackgroundForTokenIcon(grayScale)
+        val isGrayscaleOrTestnet = isGrayscale || token.network.isTestnet
+        val background = token.tryGetBackgroundForTokenIcon(isGrayscaleOrTestnet)
         val tint = getTintForTokenIcon(background)
 
         return if (token.isCustom && token.iconUrl == null) {
@@ -86,14 +86,14 @@ object CurrencyIconStateBuilder {
                 tint = tint,
                 background = background,
                 topBadgeIconResId = token.networkIconResId,
-                isGrayscale = grayScale,
+                isGrayscale = isGrayscaleOrTestnet,
                 showCustomBadge = showCustomBadge,
             )
         } else {
             createTokenIcon(
                 url = token.iconUrl,
                 topBadgeIconResId = token.networkIconResId,
-                isGrayscale = grayScale,
+                isGrayscale = isGrayscaleOrTestnet,
                 fallbackTint = tint,
                 fallbackBackground = background,
                 showCustomBadge = token.isCustom && showCustomBadge,
