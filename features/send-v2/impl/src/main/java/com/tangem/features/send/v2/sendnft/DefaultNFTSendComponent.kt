@@ -124,6 +124,7 @@ internal class DefaultNFTSendComponent @AssistedInject constructor(
         BackHandler(onBack = model::onBackClick)
         SendContent(
             navigationUM = state.navigationUM,
+            confirmUM = state.confirmUM,
             stackState = stackState,
         )
     }
