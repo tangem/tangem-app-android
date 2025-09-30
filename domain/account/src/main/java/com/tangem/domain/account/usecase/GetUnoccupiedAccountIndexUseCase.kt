@@ -28,7 +28,7 @@ class GetUnoccupiedAccountIndexUseCase(
     suspend operator fun invoke(userWalletId: UserWalletId): Either<Error, DerivationIndex> = either {
         val totalAccountsCount = getTotalAccountsCount(userWalletId = userWalletId)
 
-        DerivationIndex(totalAccountsCount + 1).getOrElse {
+        DerivationIndex(value = totalAccountsCount).getOrElse {
             raise(Error.InvalidDerivationIndex(it))
         }
     }

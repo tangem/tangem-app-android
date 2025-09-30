@@ -79,7 +79,7 @@ internal class SendAmountModel @Inject constructor(
 
     private var isAvailableForSwap: Boolean = false
     val isSendWithSwapAvailable: StateFlow<Boolean>
-    field = MutableStateFlow(false)
+        field = MutableStateFlow(false)
 
     private val analyticsCategoryName = params.analyticsCategoryName
     private var cryptoCurrencyStatus: CryptoCurrencyStatus = CryptoCurrencyStatus(
@@ -246,6 +246,7 @@ internal class SendAmountModel @Inject constructor(
                 categoryName = analyticsCategoryName,
                 token = params.cryptoCurrency.symbol,
                 blockchain = params.cryptoCurrency.network.name,
+                source = params.analyticsSendSource,
             ),
         )
     }

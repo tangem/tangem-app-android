@@ -22,13 +22,13 @@ import com.tangem.features.send.v2.subcomponents.fee.model.transformers.*
 import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeSelectorUM
 import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeType
 import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeUM
+import com.tangem.utils.TangemLinks
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import com.tangem.utils.transformer.update
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import java.util.Locale
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -136,13 +136,7 @@ internal class SendFeeModel @Inject constructor(
     }
 
     override fun onReadMoreClick() {
-        val locale = if (Locale.getDefault().language == RU_LOCALE) RU_LOCALE else EN_LOCALE
-        val url = buildString {
-            append(FEE_READ_MORE_URL_FIRST_PART)
-            append(locale)
-            append(FEE_READ_MORE_URL_SECOND_PART)
-        }
-        urlOpener.openUrl(url)
+        urlOpener.openUrl(TangemLinks.FEE_BLOG_LINK)
     }
 
     override fun onNextClick() {
@@ -162,6 +156,7 @@ internal class SendFeeModel @Inject constructor(
                     CommonSendFeeAnalyticEvents.SelectedFee(
                         categoryName = analyticsCategoryName,
                         feeType = feeSelectorUM.selectedType.toAnalyticType(feeSelectorUM),
+                        source = params.analyticsSendSource,
                     ),
                 )
 
@@ -296,12 +291,5 @@ internal class SendFeeModel @Inject constructor(
                 ),
             )
         }.launchIn(modelScope)
-    }
-
-    private companion object {
-        const val RU_LOCALE = "ru"
-        const val EN_LOCALE = "en"
-        const val FEE_READ_MORE_URL_FIRST_PART = "https://tangem.com/"
-        const val FEE_READ_MORE_URL_SECOND_PART = "/blog/post/what-is-a-transaction-fee-and-why-do-we-need-it/"
     }
 }
