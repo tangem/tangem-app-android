@@ -17,6 +17,7 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.decompose.navigation.inner.InnerRouter
+import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.swap.models.R
@@ -47,6 +48,7 @@ internal class DefaultSendWithSwapComponent @AssistedInject constructor(
     private val sendDestinationComponentFactory: SendDestinationComponent.Factory,
     private val confirmComponentFactory: SendWithSwapConfirmComponent.Factory,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val urlOpener: UrlOpener,
 ) : SendWithSwapComponent, AppComponentContext by appComponentContext {
 
     private val stackNavigation = StackNavigation<SendWithSwapRoute>()
@@ -127,7 +129,12 @@ internal class DefaultSendWithSwapComponent @AssistedInject constructor(
                 (state.navigationUM as? NavigationUM.Content)?.backIconClick() ?: onChildBack()
             },
         )
-        SendWithSwapContent(navigationUM = state.navigationUM, stackState = stackState)
+        SendWithSwapContent(
+            navigationUM = state.navigationUM,
+            confirmUM = state.confirmUM,
+            stackState = stackState,
+            onLinkClick = urlOpener::openUrl,
+        )
     }
 
     private fun createChild(route: SendWithSwapRoute, childContext: AppComponentContext) = when (route) {
