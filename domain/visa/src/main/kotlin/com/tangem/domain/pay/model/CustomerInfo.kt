@@ -24,6 +24,7 @@ data class CustomerInfo(
         val lastFourDigits: String,
         val balance: BigDecimal,
         val currencyCode: String,
+        val customerWalletAddress: String,
     )
 
     fun isKycApproved() = kycStatus == APPROVED_KYC_STATUS
