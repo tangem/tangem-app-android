@@ -14,7 +14,7 @@ data class MessageBottomSheetUM(
 
     data class ActionUM(
         val text: TextReference,
-        val enabled: Boolean = true,
+        val isEnabled: Boolean = true,
         val onClick: () -> Unit,
     )
 }

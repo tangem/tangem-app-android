@@ -29,7 +29,7 @@ internal fun interruptBackupDialog(onConfirm: () -> Unit) = DialogMessage(
     message = resourceReference(R.string.onboarding_exit_alert_message),
     firstAction = EventMessageAction(
         title = resourceReference(R.string.common_ok),
-        warning = true,
+        isWarning = true,
         onClick = onConfirm,
     ),
     secondAction = EventMessageAction(
