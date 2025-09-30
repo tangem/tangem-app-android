@@ -139,8 +139,12 @@ class StakingIntegrationIDTest {
                 expected = StakingIntegrationID.Coin.Cardano,
             ),
             CreateModel(
-                currencyId = CryptoCurrency.ID.fromValue(value = "coin⟨ETH⟩polygon-ecosystem-token⚓"),
+                currencyId = CryptoCurrency.ID.fromValue(value = "token⟨ETH⟩polygon-ecosystem-token⚓1234567890"),
                 expected = StakingIntegrationID.EthereumToken.Polygon,
+            ),
+            CreateModel(
+                currencyId = CryptoCurrency.ID.fromValue(value = "token⟨SOLANA⟩solana⚓1234567890"),
+                expected = null,
             ),
         )
     }
