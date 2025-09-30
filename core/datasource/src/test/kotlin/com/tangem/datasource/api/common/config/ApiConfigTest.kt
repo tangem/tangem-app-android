@@ -39,6 +39,7 @@ class ApiConfigTest {
                 }
                 ApiConfig.ID.TangemTech -> {
                     TangemTech(
+                        environmentConfigStorage = mockk(),
                         appVersionProvider = mockk(),
                         authProvider = mockk(),
                         appInfoProvider = mockk(),
