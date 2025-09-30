@@ -18,6 +18,7 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDeta
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.*
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsActionButton
 import com.tangem.features.tokendetails.impl.R
+import com.tangem.features.yield.supply.api.YieldSupplyFeatureToggles
 import com.tangem.lib.crypto.BlockchainUtils.isBitcoin
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.ImmutableList
@@ -29,6 +30,7 @@ internal class TokenDetailsSkeletonStateConverter(
     private val networkHasDerivationUseCase: NetworkHasDerivationUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val userWalletId: UserWalletId,
+    private val yieldSupplyFeatureToggles: YieldSupplyFeatureToggles,
 ) : Converter<CryptoCurrency, TokenDetailsState> {
 
     private val iconStateConverter by lazy { TokenDetailsIconStateConverter() }
@@ -69,6 +71,7 @@ internal class TokenDetailsSkeletonStateConverter(
             bottomSheetConfig = null,
             isBalanceHidden = true,
             isMarketPriceAvailable = value.id.rawCurrencyId != null,
+            isYieldSupplyFeatureEnabled = yieldSupplyFeatureToggles.isYieldSupplyFeatureEnabled,
         )
     }
 
