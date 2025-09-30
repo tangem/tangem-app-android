@@ -60,4 +60,6 @@ internal interface InnerWalletRouter {
     fun openTokenReceiveBottomSheet(tokenReceiveConfig: TokenReceiveConfig)
 
     fun openTangemPayOnboarding()
+
+    fun openTangemPayDetails(custoemrWalletAddress: String)
 }
