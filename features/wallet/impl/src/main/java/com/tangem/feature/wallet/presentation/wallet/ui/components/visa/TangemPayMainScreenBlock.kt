@@ -81,6 +81,7 @@ private fun ResetCardScreenPreview() {
                 TangemPayState.Card(
                     lastFourDigits = TextReference.Str("*1234"),
                     balanceText = TextReference.Str("$ 0.00"),
+                    onClick = {},
                 ),
             )
         }
