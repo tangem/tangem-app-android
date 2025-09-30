@@ -21,7 +21,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.core.ui.test.WalletConnectDetailsBottomSheetTestTags
+import com.tangem.core.ui.test.BaseBottomSheetTestTags
 
 /**
  * Title component for [TangemModalBottomSheet] with [TangemIconButton] for buttons.
@@ -58,7 +58,7 @@ fun TangemModalBottomSheetTitle(
                     color = TangemTheme.colors.text.primary1,
                     modifier = Modifier
                         .align(Alignment.CenterHorizontally)
-                        .testTag(WalletConnectDetailsBottomSheetTestTags.TITLE),
+                        .testTag(BaseBottomSheetTestTags.TITLE),
                 )
             }
             if (subtitle != null) {
@@ -68,7 +68,7 @@ fun TangemModalBottomSheetTitle(
                     color = TangemTheme.colors.text.tertiary,
                     modifier = Modifier
                         .align(Alignment.CenterHorizontally)
-                        .testTag(WalletConnectDetailsBottomSheetTestTags.DATE),
+                        .testTag(BaseBottomSheetTestTags.SUBTITLE),
                 )
             }
         }
@@ -79,7 +79,7 @@ fun TangemModalBottomSheetTitle(
                 modifier = Modifier
                     .padding(16.dp)
                     .align(Alignment.CenterEnd)
-                    .testTag(WalletConnectDetailsBottomSheetTestTags.CLOSE_BUTTON),
+                    .testTag(BaseBottomSheetTestTags.CLOSE_BUTTON),
             )
         }
     }
