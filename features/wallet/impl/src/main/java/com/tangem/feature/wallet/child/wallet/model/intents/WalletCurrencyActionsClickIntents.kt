@@ -450,7 +450,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
                 AppRoute.MarketsTokenDetails(
                     token = tokenMarketParams,
                     appCurrency = getSelectedAppCurrencyUseCase.unwrap(),
-                    showPortfolio = false,
+                    shouldShowPortfolio = false,
                     analyticsParams = AppRoute.MarketsTokenDetails.AnalyticsParams(
                         blockchain = cryptoCurrencyStatus.currency.network.name,
                         source = "Main",

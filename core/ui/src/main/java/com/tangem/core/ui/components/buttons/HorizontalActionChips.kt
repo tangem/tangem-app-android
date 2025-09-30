@@ -77,7 +77,7 @@ private class ActionButtonConfigProvider : CollectionPreviewParameterProvider<Ho
                     text = TextReference.Str(value = "Exchange"),
                     iconResId = R.drawable.ic_exchange_vertical_24,
                     onClick = {},
-                    showBadge = true,
+                    shouldShowBadge = true,
                 ),
                 ActionButtonConfig(
                     text = TextReference.Str(value = "Send"),

@@ -55,11 +55,11 @@ fun RoundedActionButton(
     ActionBaseButton(
         config = config,
         shape = RoundedCornerShape(size = TangemTheme.dimens.radius24),
-        content = {
+        content = { modifier ->
             ActionButtonContent(
                 config = config,
-                text = { Text(text = config.text, textColor = it) },
-                modifier = it.padding(
+                text = { color -> Text(text = config.text, textColor = color) },
+                modifier = modifier.padding(
                     start = TangemTheme.dimens.spacing16,
                     end = TangemTheme.dimens.spacing24,
                 ),
@@ -118,7 +118,7 @@ fun ActionBaseButton(
 ) {
     val context = LocalContext.current
     val backgroundColor by animateColorAsState(
-        targetValue = if (config.enabled) color else TangemTheme.colors.button.disabled,
+        targetValue = if (config.isEnabled) color else TangemTheme.colors.button.disabled,
         label = "Update background color",
     )
 
@@ -128,17 +128,17 @@ fun ActionBaseButton(
             .widthIn(min = 100.dp)
             .drawWithContent {
                 drawContent()
-                if (config.showBadge) {
+                if (config.shouldShowBadge) {
                     drawBadge(containerColor = containerColor)
                 }
             }
             .clip(shape)
             .combinedClickable(
-                enabled = config.enabled,
+                enabled = config.isEnabled,
                 onClick = config.onClick,
                 onLongClick = {
                     val toastReference = config.onLongClick?.invoke()
-                    toastReference?.let {
+                    toastReference?.let { toastReference ->
                         Toast
                             .makeText(context, toastReference.resolveReference(context.resources), Toast.LENGTH_SHORT)
                             .show()
@@ -175,8 +175,8 @@ fun ActionButtonContent(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         val iconTint = when {
-            !config.enabled -> TangemTheme.colors.icon.informative
-            config.dimContent -> TangemTheme.colors.icon.informative
+            !config.isEnabled -> TangemTheme.colors.icon.informative
+            config.shouldDimContent -> TangemTheme.colors.icon.informative
             else -> TangemTheme.colors.icon.primary1
         }
         Icon(
@@ -220,8 +220,8 @@ private fun Loading(backgroundColor: Color, modifier: Modifier = Modifier) {
 @ReadOnlyComposable
 fun getTextColor(config: ActionButtonConfig): Color {
     return when {
-        !config.enabled -> TangemTheme.colors.text.disabled
-        config.dimContent -> TangemTheme.colors.text.tertiary
+        !config.isEnabled -> TangemTheme.colors.text.disabled
+        config.shouldDimContent -> TangemTheme.colors.text.tertiary
         else -> TangemTheme.colors.text.primary1
     }
 }
@@ -249,27 +249,27 @@ private class ActionStateProvider : CollectionPreviewParameterProvider<ActionBut
         ActionButtonConfig(
             text = TextReference.Str(value = "Enabled"),
             iconResId = R.drawable.ic_arrow_up_24,
-            enabled = true,
+            isEnabled = true,
             onClick = {},
-            showBadge = true,
+            shouldShowBadge = true,
         ),
         ActionButtonConfig(
             text = TextReference.Str(value = "Dimmed"),
             iconResId = R.drawable.ic_arrow_up_24,
-            enabled = true,
-            dimContent = true,
+            isEnabled = true,
+            shouldDimContent = true,
             onClick = {},
         ),
         ActionButtonConfig(
             text = TextReference.Str(value = "Disabled"),
             iconResId = R.drawable.ic_arrow_down_24,
-            enabled = false,
+            isEnabled = false,
             onClick = {},
         ),
         ActionButtonConfig(
             text = TextReference.Str(value = "Loading"),
             iconResId = R.drawable.ic_arrow_down_24,
-            enabled = false,
+            isEnabled = false,
             onClick = {},
             isInProgress = true,
         ),

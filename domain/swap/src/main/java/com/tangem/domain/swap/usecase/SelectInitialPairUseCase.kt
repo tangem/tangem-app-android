@@ -43,8 +43,8 @@ class SelectInitialPairUseCase(
         swapCurrenciesGroup: SwapCurrenciesGroup,
     ): CryptoCurrencyStatus? {
         return secondaryCryptoCurrency?.let {
-            swapCurrenciesGroup.available.firstOrNull {
-                secondaryCryptoCurrency.id == it.currencyStatus.currency.id
+            swapCurrenciesGroup.available.firstOrNull { currency ->
+                secondaryCryptoCurrency.id == currency.currencyStatus.currency.id
             }?.currencyStatus
         }
     }
