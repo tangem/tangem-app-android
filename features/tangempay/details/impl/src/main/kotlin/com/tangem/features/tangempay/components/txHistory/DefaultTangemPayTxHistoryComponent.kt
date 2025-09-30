@@ -4,7 +4,6 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
-import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.tangempay.model.TangemPayTxHistoryModel
 import com.tangem.features.txhistory.entity.TxHistoryUM
 import com.tangem.features.txhistory.ui.txHistoryItems
@@ -22,5 +21,5 @@ internal class DefaultTangemPayTxHistoryComponent(
         txHistoryItems(listState, state)
     }
 
-    data class Params(val userWalletId: UserWalletId)
+    data class Params(val customerWalletAddress: String)
 }
