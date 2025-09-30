@@ -116,7 +116,7 @@ fun NavigationPrimaryButton(primaryButton: NavigationButton?, modifier: Modifier
                     }
                     button.onClick()
                 },
-                showProgress = button.showProgress,
+                showProgress = button.shouldShowProgress,
                 colors = color,
                 textStyle = TangemTheme.typography.subtitle1,
                 icon = icon,
@@ -232,7 +232,7 @@ private fun rememberNavigationButton(button: NavigationButton?): MutableState<Na
         button?.iconRes,
         button?.isIconVisible,
         button?.isEnabled,
-        button?.showProgress,
+        button?.shouldShowProgress,
         button?.textReference,
     ) { mutableStateOf(button) }
 }

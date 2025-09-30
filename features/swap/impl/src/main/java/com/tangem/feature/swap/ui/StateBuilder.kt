@@ -964,7 +964,7 @@ internal class StateBuilder(
                     spenderAddress = getShortAddressValue(permissionDataState.spenderAddress),
                     fee = TextReference.Str("${permissionFee.feeCryptoFormatted} (${permissionFee.feeFiatFormatted})"),
                     approveButton = ApprovePermissionButton(
-                        enabled = true,
+                        isEnabled = true,
                         onClick = onGivePermissionClick,
                     ),
                     cancelButton = CancelPermissionButton(
