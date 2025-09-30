@@ -12,9 +12,9 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.domain.card.CardTypesResolver
 import com.tangem.domain.card.ScanCardProcessor
-import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.card.common.util.getBackupCardsCount
+import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.requireColdWallet
@@ -34,6 +34,7 @@ import com.tangem.tap.features.details.ui.cardsettings.domain.CardSettingsIntera
 import com.tangem.tap.features.details.ui.common.utils.*
 import com.tangem.tap.store
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.extensions.addIf
 import com.tangem.wallet.R
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -57,7 +58,7 @@ internal class CardSettingsModel @Inject constructor(
 
     private val params = paramsContainer.require<CardSettingsComponent.Params>()
 
-    private var previousBiometricsRequestPolicy: Boolean = false
+    private var isBiometricsRequestPolicyPrevious: Boolean = false
 
     private val userWalletId = params.userWalletId
 
@@ -77,20 +78,19 @@ internal class CardSettingsModel @Inject constructor(
         // Reset card scanned data
         cardSettingsInteractor.clear()
         // Restore the previous value of access code request policy
-        cardSdkConfigRepository.isBiometricsRequestPolicy = previousBiometricsRequestPolicy
+        cardSdkConfigRepository.isBiometricsRequestPolicy = isBiometricsRequestPolicyPrevious
     }
 
     private fun updateAccessCodeRequestPolicy() {
         runBlocking {
             // !!!IMPORTANT!!!: Do not forget to restore the previous value in onCleared() method
-            previousBiometricsRequestPolicy = cardSdkConfigRepository.isBiometricsRequestPolicy
+            isBiometricsRequestPolicyPrevious = cardSdkConfigRepository.isBiometricsRequestPolicy
 
             val userWallet = getUserWalletUseCase(userWalletId)
                 .getOrElse { error("User wallet $userWalletId not found") }
                 .requireColdWallet()
 
-            cardSdkConfigRepository.isBiometricsRequestPolicy =
-                userWallet.scanResponse.card.isAccessCodeSet &&
+            cardSdkConfigRepository.isBiometricsRequestPolicy = userWallet.scanResponse.card.isAccessCodeSet &&
                 settingsRepository.shouldSaveAccessCodes()
         }
     }
@@ -135,34 +135,39 @@ internal class CardSettingsModel @Inject constructor(
         )
         val isResetCardAllowed = isResetToFactoryAllowedByCard(card, cardTypesResolver)
 
-        val cardDetails = buildList {
-            CardInfo.CardId(cardId).let(::add)
-            CardInfo.Issuer(card.issuer.name).let(::add)
+        val cardDetails: List<CardInfo> = buildList {
+            add(CardInfo.CardId(cardId))
+            add(CardInfo.Issuer(card.issuer.name))
 
-            if (!cardTypesResolver.isTangemTwins()) {
-                CardInfo.SignedHashes(card.signedHashesCount().toString()).let(::add)
-            }
+            addIf(
+                condition = !cardTypesResolver.isTangemTwins(),
+                element = CardInfo.SignedHashes(card.signedHashesCount().toString()),
+            )
 
-            CardInfo.SecurityMode(
-                currentSecurityOption,
-                clickable = allowedSecurityOptions.size > 1,
-            ).let(::add)
+            add(
+                CardInfo.SecurityMode(
+                    securityOption = currentSecurityOption,
+                    clickable = allowedSecurityOptions.size > 1,
+                ),
+            )
 
-            if (card.backupStatus?.isActive == true && card.isAccessCodeSet) {
-                CardInfo.ChangeAccessCode.let(::add)
-            }
+            addIf(
+                condition = card.backupStatus?.isActive == true && card.isAccessCodeSet,
+                element = CardInfo.ChangeAccessCode,
+            )
 
-            if (isAccessCodeRecoveryAllowed(cardTypesResolver)) {
-                CardInfo.AccessCodeRecovery(isAccessCodeRecoveryEnabled(cardTypesResolver, card)).let(::add)
-            }
+            addIf(
+                condition = isAccessCodeRecoveryAllowed(cardTypesResolver),
+                element = CardInfo.AccessCodeRecovery(isAccessCodeRecoveryEnabled(cardTypesResolver, card)),
+            )
 
-            if (isResetCardAllowed) {
+            addIf(isResetCardAllowed) {
                 CardInfo.ResetToFactorySettings(
                     description = getResetToFactoryDescription(
                         isActiveBackupStatus = card.backupStatus?.isActive == true,
                         typesResolver = cardTypesResolver,
                     ),
-                ).let(::add)
+                )
             }
         }
 

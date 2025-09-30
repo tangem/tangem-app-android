@@ -40,6 +40,7 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.s
 import com.tangem.features.markets.token.block.TokenMarketBlockComponent
 import com.tangem.features.txhistory.component.TxHistoryComponent
 import com.tangem.features.txhistory.entity.TxHistoryUM
+import com.tangem.features.yield.supply.api.YieldSupplyComponent
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -50,6 +51,7 @@ internal fun TokenDetailsScreen(
     state: TokenDetailsState,
     tokenMarketBlockComponent: TokenMarketBlockComponent?,
     txHistoryComponent: TxHistoryComponent,
+    yieldSupplyComponent: YieldSupplyComponent,
 ) {
     val bottomBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getBottom(this).toDp() }
 
@@ -145,6 +147,12 @@ internal fun TokenDetailsScreen(
                     )
                 }
 
+                if (state.isYieldSupplyFeatureEnabled) {
+                    item {
+                        yieldSupplyComponent.Content(modifier = itemModifier)
+                    }
+                }
+
                 expressTransactionsItems(
                     expressTxs = state.expressTxsToDisplay,
                     modifier = itemModifier,
@@ -189,6 +197,11 @@ private fun TokenDetailsScreenPreview(
                 )
 
                 override fun LazyListScope.txHistoryContent(listState: LazyListState, state: TxHistoryUM) = Unit
+            },
+            yieldSupplyComponent = object : YieldSupplyComponent {
+                @Composable
+                override fun Content(modifier: Modifier) {
+                }
             },
         )
     }
