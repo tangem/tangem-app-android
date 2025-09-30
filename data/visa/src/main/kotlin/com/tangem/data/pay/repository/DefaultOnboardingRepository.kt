@@ -68,11 +68,14 @@ internal class DefaultOnboardingRepository @Inject constructor(
     private fun getCustomerInfo(response: CustomerMeResponse.Result?): CustomerInfo {
         val card = response?.card
         val balance = response?.balance
-        val cardInfo = if (card != null && balance != null) {
+        val productInstance = response?.productInstance
+        val cardInfo = if (productInstance != null && card != null && balance != null) {
             CardInfo(
                 lastFourDigits = card.cardNumberEnd,
                 balance = balance.availableBalance,
                 currencyCode = balance.currency,
+                customerWalletAddress = productInstance.cardWalletAddress,
+
             )
         } else {
             null
