@@ -1,8 +1,10 @@
 package com.tangem.data.pay.di
 
+import com.tangem.data.pay.repository.DefaultCardDetailsRepository
 import com.tangem.data.pay.repository.DefaultKycRepository
 import com.tangem.data.pay.repository.DefaultTangemPayTxHistoryRepository
 import com.tangem.data.pay.repository.DefaultOnboardingRepository
+import com.tangem.domain.pay.repository.CardDetailsRepository
 import com.tangem.domain.pay.repository.KycRepository
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.usecase.TangemPayIssueOrderUseCase
@@ -30,6 +32,10 @@ internal interface TangemPayDataModule {
     @Binds
     @Singleton
     fun bindTangemPayTxHistoryRepository(repository: DefaultTangemPayTxHistoryRepository): TangemPayTxHistoryRepository
+
+    @Binds
+    @Singleton
+    fun bindCardDetailsRepository(repository: DefaultCardDetailsRepository): CardDetailsRepository
 
     companion object {
         @Provides
