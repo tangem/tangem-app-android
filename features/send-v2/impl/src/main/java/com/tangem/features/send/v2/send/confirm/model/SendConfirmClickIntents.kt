@@ -6,8 +6,6 @@ internal interface SendConfirmClickIntents {
 
     fun showEditAmount()
 
-    fun showEditFee()
-
     fun onSendClick()
 
     fun onExploreClick()
