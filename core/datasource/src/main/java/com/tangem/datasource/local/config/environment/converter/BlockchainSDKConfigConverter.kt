@@ -44,6 +44,7 @@ internal object BlockchainSDKConfigConverter : Converter<EnvironmentConfigModel,
             koinosProApiKey = value.koinosProApiKey,
             alephiumApiKey = value.alephiumTangemApiKey,
             moralisApiKey = value.moralisApiKey,
+            etherscanApiKey = value.etherScanApiKey,
         )
     }
 

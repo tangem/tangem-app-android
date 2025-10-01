@@ -650,7 +650,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
         }
     }
 
-    override suspend fun checkUtxoConsolidationAvailability(userWalletId: UserWalletId, network: Network): Boolean {
+    override suspend fun checkSelfSendAvailability(userWalletId: UserWalletId, network: Network): Boolean {
         val blockchain = network.toBlockchain()
         val walletManager = getOrCreateWalletManager(
             userWalletId = userWalletId,
@@ -658,7 +658,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
             derivationPath = network.derivationPath.value,
         ) ?: return false
 
-        return (walletManager as? UtxoBlockchainManager)?.allowConsolidation == true
+        return walletManager.isSelfSendAvailable
     }
 
     override suspend fun getNFTCollections(userWalletId: UserWalletId, network: Network): List<NFTCollection> {
