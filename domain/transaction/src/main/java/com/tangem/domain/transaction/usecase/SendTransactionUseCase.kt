@@ -139,7 +139,7 @@ class SendTransactionUseCase(
         internal fun handleError(result: Result.Failure): SendTransactionError {
             if (ResultChecker.isNetworkError(result)) {
                 return SendTransactionError.NetworkError(
-                    code = result.error.message,
+                    code = result.error.code.toString(),
                     message = result.error.customMessage,
                 )
             }

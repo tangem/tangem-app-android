@@ -1,14 +1,11 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails
 
 import androidx.compose.ui.graphics.Color
-import androidx.paging.PagingData
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.components.dropdownmenu.TangemDropdownMenuItem
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.marketprice.PriceChangeState
 import com.tangem.core.ui.components.marketprice.PriceChangeType
-import com.tangem.core.ui.components.transactions.state.TransactionState
-import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
@@ -18,7 +15,6 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.*
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsActionButton
 import com.tangem.features.tokendetails.impl.R
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.coroutines.flow.MutableStateFlow
 import java.math.BigDecimal
 
 @Suppress("LargeClass")
@@ -168,130 +164,6 @@ internal object TokenDetailsPreviewData {
         onRefresh = {},
     )
 
-    private val txHistoryItems = listOf(
-        TxHistoryState.TxHistoryItemState.Title(onExploreClick = {}),
-        TxHistoryState.TxHistoryItemState.GroupTitle(
-            title = "Today",
-            itemKey = "Today",
-        ),
-        TxHistoryState.TxHistoryItemState.Transaction(
-            state = TransactionState.Content(
-                txHash = "1",
-                amount = "-0.500913 XLM",
-                time = "8:41",
-                status = TransactionState.Content.Status.Confirmed,
-                direction = TransactionState.Content.Direction.OUTGOING,
-                onClick = {},
-                iconRes = R.drawable.ic_arrow_up_24,
-                title = stringReference(value = "Sending"),
-                subtitle = stringReference(value = "to: 33BddS...ga2B"),
-                timestamp = 0,
-            ),
-        ),
-        TxHistoryState.TxHistoryItemState.Transaction(
-            state = TransactionState.Content(
-                txHash = "2",
-                amount = "+0.500913 XLM",
-                time = "8:41",
-                status = TransactionState.Content.Status.Confirmed,
-                direction = TransactionState.Content.Direction.INCOMING,
-                onClick = {},
-                iconRes = R.drawable.ic_arrow_down_24,
-                title = stringReference(value = "Receiving"),
-                subtitle = stringReference(value = "from: 33BddS...ga2B"),
-                timestamp = 0,
-            ),
-        ),
-        TxHistoryState.TxHistoryItemState.Transaction(
-            state = TransactionState.Content(
-                txHash = "3",
-                amount = "+0.500913 XLM",
-                time = "8:41",
-                status = TransactionState.Content.Status.Confirmed,
-                direction = TransactionState.Content.Direction.INCOMING,
-                onClick = {},
-                iconRes = R.drawable.ic_doc_24,
-                title = stringReference(value = "Approving"),
-                subtitle = stringReference(value = "from: 33BddS...ga2B"),
-                timestamp = 0,
-            ),
-        ),
-        TxHistoryState.TxHistoryItemState.Transaction(
-            state = TransactionState.Content(
-                txHash = "4",
-                amount = "+0.500913 XLM",
-                time = "8:41",
-                status = TransactionState.Content.Status.Confirmed,
-                direction = TransactionState.Content.Direction.INCOMING,
-                onClick = {},
-                iconRes = R.drawable.ic_exchange_vertical_24,
-                title = stringReference(value = "Swapping"),
-                subtitle = stringReference(value = "contract: 33BddS...ga2B"),
-                timestamp = 0,
-            ),
-        ),
-        TxHistoryState.TxHistoryItemState.GroupTitle(
-            title = "Yesterday",
-            itemKey = "Yesterday",
-        ),
-        TxHistoryState.TxHistoryItemState.Transaction(
-            state = TransactionState.Content(
-                txHash = "5",
-                amount = "-0.500913 XLM",
-                time = "8:41",
-                status = TransactionState.Content.Status.Confirmed,
-                direction = TransactionState.Content.Direction.OUTGOING,
-                onClick = {},
-                iconRes = R.drawable.ic_arrow_up_24,
-                title = stringReference(value = "Sending"),
-                subtitle = stringReference(value = "to: 33BddS...ga2B"),
-                timestamp = 0,
-            ),
-        ),
-        TxHistoryState.TxHistoryItemState.Transaction(
-            state = TransactionState.Content(
-                txHash = "6",
-                amount = "+0.500913 XLM",
-                time = "8:41",
-                status = TransactionState.Content.Status.Confirmed,
-                direction = TransactionState.Content.Direction.INCOMING,
-                onClick = {},
-                iconRes = R.drawable.ic_arrow_down_24,
-                title = stringReference(value = "Receiving"),
-                subtitle = stringReference(value = "from: 33BddS...ga2B"),
-                timestamp = 0,
-            ),
-        ),
-        TxHistoryState.TxHistoryItemState.Transaction(
-            state = TransactionState.Content(
-                txHash = "7",
-                amount = "+0.500913 XLM",
-                time = "8:41",
-                status = TransactionState.Content.Status.Confirmed,
-                direction = TransactionState.Content.Direction.INCOMING,
-                onClick = {},
-                iconRes = R.drawable.ic_doc_24,
-                title = stringReference(value = "Approving"),
-                subtitle = stringReference(value = "from: 33BddS...ga2B"),
-                timestamp = 0,
-            ),
-        ),
-        TxHistoryState.TxHistoryItemState.Transaction(
-            state = TransactionState.Content(
-                txHash = "8",
-                amount = "+0.500913 XLM",
-                time = "8:41",
-                status = TransactionState.Content.Status.Confirmed,
-                direction = TransactionState.Content.Direction.INCOMING,
-                onClick = {},
-                iconRes = R.drawable.ic_exchange_vertical_24,
-                title = stringReference(value = "Swapping"),
-                subtitle = stringReference(value = "contract: 33BddS...ga2B"),
-                timestamp = 0,
-            ),
-        ),
-    )
-
     val tokenDetailsState_1 = TokenDetailsState(
         topAppBarConfig = tokenDetailsTopAppBarConfig,
         tokenInfoBlockState = tokenInfoBlockState,
@@ -299,13 +171,7 @@ internal object TokenDetailsPreviewData {
         marketPriceBlockState = marketPriceLoading,
         stakingBlocksState = stakingLoadingBlock,
         notifications = persistentListOf(),
-        txHistoryState = TxHistoryState.Content(
-            contentItems = MutableStateFlow(
-                value = TxHistoryState.getDefaultLoadingTransactions {},
-            ),
-        ),
         dialogConfig = null,
-        pendingTxs = persistentListOf(),
         expressTxs = persistentListOf(),
         expressTxsToDisplay = persistentListOf(),
         pullToRefreshConfig = pullToRefreshConfig,
@@ -330,12 +196,7 @@ internal object TokenDetailsPreviewData {
         ),
         stakingBlocksState = stakingAvailableBlock,
         notifications = persistentListOf(),
-        txHistoryState = TxHistoryState.NotSupported(
-            onExploreClick = {},
-            pendingTransactions = persistentListOf(),
-        ),
         dialogConfig = null,
-        pendingTxs = persistentListOf(),
         expressTxs = persistentListOf(),
         expressTxsToDisplay = persistentListOf(),
         pullToRefreshConfig = pullToRefreshConfig,
@@ -344,12 +205,5 @@ internal object TokenDetailsPreviewData {
         isMarketPriceAvailable = true,
     )
 
-    val tokenDetailsState_3 = tokenDetailsState_2.copy(
-        txHistoryState = TxHistoryState.Content(
-            contentItems = MutableStateFlow(
-                value = PagingData.from(txHistoryItems),
-            ),
-        ),
-        stakingBlocksState = stakingBalanceBlock,
-    )
+    val tokenDetailsState_3 = tokenDetailsState_2.copy(stakingBlocksState = stakingBalanceBlock)
 }
