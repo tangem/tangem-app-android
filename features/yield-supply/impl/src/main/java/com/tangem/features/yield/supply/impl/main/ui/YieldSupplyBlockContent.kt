@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -52,55 +53,36 @@ internal fun YieldSupplyBlockContent(
             YieldSupplyUM.Processing.Exit -> SupplyProcessing(
                 resourceReference(R.string.yield_module_stop_earning),
             )
+            YieldSupplyUM.Unavailable -> SupplyUnavailable()
         }
     }
 }
 
 @Composable
 private fun SupplyInitial(supplyUM: YieldSupplyUM.Initial) {
-    Column(
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
-            .clip(RoundedCornerShape(16.dp))
-            .background(TangemTheme.colors.background.primary)
-            .padding(12.dp),
-    ) {
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Icon(
-                imageVector = ImageVector.vectorResource(R.drawable.ic_analytics_up_24),
-                contentDescription = null,
-                tint = TangemTheme.colors.icon.accent,
-                modifier = Modifier
-                    .background(TangemTheme.colors.icon.accent.copy(alpha = 0.1f), CircleShape)
-                    .padding(6.dp)
-                    .size(24.dp),
+    SupplyInfo(
+        title = supplyUM.title,
+        subtitle = resourceReference(R.string.yield_module_token_details_earn_notification_description),
+        iconTint = TangemTheme.colors.icon.accent,
+        button = {
+            SecondaryButton(
+                text = stringResourceSafe(R.string.common_learn_more),
+                onClick = supplyUM.onClick,
+                size = TangemButtonSize.WideAction,
+                modifier = Modifier.fillMaxWidth(),
             )
-            Column(
-                verticalArrangement = Arrangement.spacedBy(2.dp),
-            ) {
-                Text(
-                    text = supplyUM.title.resolveReference(),
-                    style = TangemTheme.typography.button,
-                    color = TangemTheme.colors.text.primary1,
-                )
-                Text(
-                    text = stringResourceSafe(R.string.yield_module_token_details_earn_notification_description),
-                    style = TangemTheme.typography.caption2,
-                    color = TangemTheme.colors.text.tertiary,
-                )
-            }
-        }
-        SecondaryButton(
-            text = stringResourceSafe(R.string.common_learn_more),
-            onClick = supplyUM.onClick,
-            size = TangemButtonSize.WideAction,
-            modifier = Modifier.fillMaxWidth(),
-        )
-    }
+        },
+    )
+}
+
+@Composable
+private fun SupplyUnavailable() {
+    SupplyInfo(
+        title = resourceReference(R.string.yield_module_unavailable_title),
+        subtitle = resourceReference(R.string.yield_module_unavailable_subtitle),
+        iconTint = TangemTheme.colors.icon.inactive,
+        button = null,
+    )
 }
 
 @Composable
@@ -199,26 +181,101 @@ private fun SupplyProcessing(text: TextReference) {
 @Composable
 private fun SupplyLoading() {
     Column(
-        verticalArrangement = Arrangement.spacedBy(4.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
-            .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
             .background(TangemTheme.colors.background.primary)
             .padding(12.dp),
     ) {
-        Text(
-            text = stringResourceSafe(
-                R.string.yield_module_token_details_earn_notification_earning_on_your_balance_title,
-            ),
-            style = TangemTheme.typography.subtitle2,
-            color = TangemTheme.colors.text.tertiary,
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                imageVector = ImageVector.vectorResource(R.drawable.ic_analytics_up_24),
+                contentDescription = null,
+                tint = TangemTheme.colors.icon.inactive,
+                modifier = Modifier
+                    .background(TangemTheme.colors.icon.inactive.copy(alpha = 0.1f), CircleShape)
+                    .padding(6.dp)
+                    .size(24.dp),
+            )
+            Column(
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+            ) {
+                TextShimmer(
+                    text = stringResourceSafe(R.string.yield_module_unavailable_title),
+                    style = TangemTheme.typography.button,
+                )
+                TextShimmer(
+                    modifier = Modifier.fillMaxWidth(),
+                    text = stringResourceSafe(R.string.yield_module_unavailable_subtitle),
+                    style = TangemTheme.typography.caption2,
+                )
+                TextShimmer(
+                    modifier = Modifier.width(100.dp),
+                    text = stringResourceSafe(R.string.yield_module_unavailable_subtitle),
+                    style = TangemTheme.typography.caption2,
+                )
+            }
+        }
+        SecondaryButton(
+            text = stringResourceSafe(R.string.common_learn_more),
+            onClick = { },
+            showProgress = true,
+            enabled = false,
+            size = TangemButtonSize.WideAction,
+            modifier = Modifier.fillMaxWidth(),
         )
-        TextShimmer(
-            style = TangemTheme.typography.subtitle2,
-            text = stringResourceSafe(
-                R.string.yield_module_token_details_earn_notification_earning_on_your_balance_title,
-            ),
-        )
+    }
+}
+
+@Composable
+private fun SupplyInfo(
+    title: TextReference,
+    subtitle: TextReference,
+    iconTint: Color,
+    modifier: Modifier = Modifier,
+    button: (@Composable () -> Unit)? = null,
+) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = modifier
+            .clip(RoundedCornerShape(16.dp))
+            .background(TangemTheme.colors.background.primary)
+            .padding(12.dp),
+    ) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                imageVector = ImageVector.vectorResource(R.drawable.ic_analytics_up_24),
+                contentDescription = null,
+                tint = iconTint,
+                modifier = Modifier
+                    .background(iconTint.copy(alpha = 0.1f), CircleShape)
+                    .padding(6.dp)
+                    .size(24.dp),
+            )
+            Column(
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+            ) {
+                Text(
+                    text = title.resolveReference(),
+                    style = TangemTheme.typography.button,
+                    color = TangemTheme.colors.text.primary1,
+                )
+                Text(
+                    text = subtitle.resolveReference(),
+                    style = TangemTheme.typography.caption2,
+                    color = TangemTheme.colors.text.tertiary,
+                )
+            }
+        }
+        button?.invoke()
     }
 }
 
@@ -257,6 +314,7 @@ private class PreviewProvider : PreviewParameterProvider<YieldSupplyUM> {
             YieldSupplyUM.Loading,
             YieldSupplyUM.Processing.Enter,
             YieldSupplyUM.Processing.Exit,
+            YieldSupplyUM.Unavailable,
         )
 }
 // endregion
