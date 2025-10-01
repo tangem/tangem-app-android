@@ -11,12 +11,14 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.tokens.FetchCurrencyStatusUseCase
 import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.domain.yield.supply.usecase.YieldSupplyGetTokenStatusUseCase
 import com.tangem.features.yield.supply.api.YieldSupplyComponent
 import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.impl.main.entity.YieldSupplyUM
@@ -41,6 +43,7 @@ internal class YieldSupplyModel @Inject constructor(
     private val fetchCurrencyStatusUseCase: FetchCurrencyStatusUseCase,
     @DelayedWork private val coroutineScope: CoroutineScope,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
+    private val yieldSupplyGetTokenStatusUseCase: YieldSupplyGetTokenStatusUseCase,
 ) : Model(), YieldSupplyClickIntents {
 
     private val params = paramsContainer.require<YieldSupplyComponent.Params>()
@@ -99,6 +102,28 @@ internal class YieldSupplyModel @Inject constructor(
         }
     }
 
+    private fun loadTokenStatus(cryptoCurrency: CryptoCurrency.Token) {
+        modelScope.launch(dispatchers.default) {
+            yieldSupplyGetTokenStatusUseCase(cryptoCurrency)
+                .onRight { tokenStatus ->
+                    val newState = if (tokenStatus.isActive) {
+                        YieldSupplyUM.Initial(
+                            title = resourceReference(
+                                id = R.string.yield_module_token_details_earn_notification_title,
+                                formatArgs = wrappedList("5.1"),
+                            ),
+                            onClick = ::onStartEarningClick,
+                        )
+                    } else {
+                        YieldSupplyUM.Unavailable
+                    }
+                    uiState.update { newState }
+                }.onLeft {
+                    uiState.update { YieldSupplyUM.Unavailable }
+                }
+        }
+    }
+
     override fun onStartEarningClick() {
         appRouter.push(
             YieldSupplyPromo(
@@ -148,16 +173,12 @@ internal class YieldSupplyModel @Inject constructor(
                     onClick = ::onActiveClick,
                     isAllowedToSpend = yieldSupplyStatus.isAllowedToSpend,
                 )
-            else -> YieldSupplyUM.Initial(
-                title = resourceReference(
-                    id = R.string.yield_module_token_details_earn_notification_title,
-                    formatArgs = wrappedList("5.1"),
-                ),
-                onClick = ::onStartEarningClick,
-            )
+            else -> YieldSupplyUM.Loading
         }
 
         uiState.update { yieldSupplyUM }
+
+        (cryptoCurrency as? CryptoCurrency.Token)?.let(::loadTokenStatus)
     }
 
     private companion object {
