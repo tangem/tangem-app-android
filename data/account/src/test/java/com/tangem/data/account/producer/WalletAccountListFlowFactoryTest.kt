@@ -48,8 +48,13 @@ class WalletAccountListFlowFactoryTest {
 
     @AfterEach
     fun tearDownEach() {
-        clearMocks(accountListConverter)
-
+        clearMocks(
+            accountsResponseStoreFactory,
+            accountsResponseStore,
+            accountListConverterFactory,
+            accountListConverter,
+            cardCryptoCurrencyFactory,
+        )
         accountsResponseStoreFlow.value = null
     }
 
