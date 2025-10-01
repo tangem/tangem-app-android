@@ -124,19 +124,16 @@ class BlockchainTest : BaseTestCase() {
         val balance = "$0.00"
         val userTokensScenarioName = "user_tokens_api"
         val userTokensScenarioState = "XRP"
-        val ripplePostServerStateScenarioName = "ripple_post_server_state_android"
-        val ripplePostServerStateScenarioState = "Started"
-        val rippleAccountInfoScenarioName = "ripple_account_info_android"
+        val rippleAccountInfoScenarioName = "ripple_account_info"
         val rippleAccountInfoStartedState = "Started"
         val rippleAccountInfoErrorState = "AccountNotFound"
-        val rippleAccountLinesScenarioName = "ripple_account_lines_android"
+        val rippleAccountLinesScenarioName = "ripple_account_lines"
         val rippleAccountLinesStartedState = "Started"
         val rippleAccountLinesErrorState = "AccountNotFound"
 
         setupHooks(
             additionalAfterSection = {
                 resetWireMockScenarioState(userTokensScenarioName)
-                resetWireMockScenarioState(ripplePostServerStateScenarioName)
                 resetWireMockScenarioState(rippleAccountInfoScenarioName)
                 resetWireMockScenarioState(rippleAccountLinesScenarioName)
             }
@@ -176,9 +173,6 @@ class BlockchainTest : BaseTestCase() {
             }
             step("Set WireMock scenario: '$userTokensScenarioName' to state: '$userTokensScenarioState'") {
                 setWireMockScenarioState(scenarioName = userTokensScenarioName, state = userTokensScenarioState)
-            }
-            step("Set WireMock scenario: '$ripplePostServerStateScenarioName' to state: '$ripplePostServerStateScenarioState'") {
-                setWireMockScenarioState(scenarioName = ripplePostServerStateScenarioName, state = ripplePostServerStateScenarioState)
             }
             step("Set WireMock scenario: '$rippleAccountInfoScenarioName' to state: '$rippleAccountInfoStartedState'") {
                 setWireMockScenarioState(scenarioName = rippleAccountInfoScenarioName, state = rippleAccountInfoStartedState)
