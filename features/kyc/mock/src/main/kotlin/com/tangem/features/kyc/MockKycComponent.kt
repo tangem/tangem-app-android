@@ -11,8 +11,10 @@ import dagger.assisted.AssistedInject
  * Mocking it for release/external builds to exclude SumSub dependency
  * This will never be called if the FT [isTangemPayEnabled] is off
  */
+@Suppress("UnusedPrivateProperty")
 internal class MockKycComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
+    @Assisted params: KycComponent.Params,
 ) : KycComponent, AppComponentContext by appComponentContext {
 
     @Composable
