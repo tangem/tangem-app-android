@@ -158,7 +158,7 @@ class FetchWalletAccountsErrorHandlerTest {
     @Test
     fun `uses default accounts when savedAccountsResponse is null`() = runTest {
         // Arrange
-        val error = ApiResponseError.TimeoutException
+        val error = ApiResponseError.TimeoutException()
 
         val accounts = AccountList.empty(userWallet).accounts
             .filterIsInstance<Account.CryptoPortfolio>()
