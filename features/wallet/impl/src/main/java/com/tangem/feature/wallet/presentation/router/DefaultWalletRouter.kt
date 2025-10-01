@@ -9,12 +9,14 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.domain.models.PortfolioId
 import com.tangem.domain.models.TokenReceiveConfig
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.redux.StateDialog
+import com.tangem.domain.tokens.model.details.TokenAction
 import com.tangem.feature.wallet.navigation.WalletRoute
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletDialogConfig
 import kotlinx.coroutines.channels.BufferOverflow
@@ -114,5 +116,19 @@ internal class DefaultWalletRouter @Inject constructor(
 
     override fun openTangemPayDetails(custoemrWalletAddress: String) {
         router.push(AppRoute.TangemPayDetails(custoemrWalletAddress))
+    }
+
+    override fun openYieldSupplyBottomSheet(
+        cryptoCurrency: CryptoCurrency,
+        tokenAction: TokenAction,
+        onWarningAcknowledged: (TokenAction) -> Unit,
+    ) {
+        dialogNavigation.activate(
+            configuration = WalletDialogConfig.YieldSupplyWarning(
+                cryptoCurrency = cryptoCurrency,
+                tokenAction = tokenAction,
+                onWarningAcknowledged = onWarningAcknowledged,
+            ),
+        )
     }
 }
