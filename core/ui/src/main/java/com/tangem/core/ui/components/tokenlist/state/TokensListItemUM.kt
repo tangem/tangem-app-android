@@ -29,16 +29,29 @@ sealed interface TokensListItemUM {
      * @property id   id
      * @property text title value
      */
-    data class GroupTitle(override val id: Any, val text: TextReference) : TokensListItemUM
+    data class GroupTitle(override val id: Any, val text: TextReference) : TokensListItemUM, PortfolioTokensListItemUM
 
     /**
      * Token item
      *
      * @property state token state
      */
-    data class Token(val state: TokenItemState) : TokensListItemUM {
+    data class Token(val state: TokenItemState) : TokensListItemUM, PortfolioTokensListItemUM {
+        override val id: String = state.id
+    }
+
+    data class Portfolio(
+        val state: TokenItemState,
+        val isExpanded: Boolean,
+        val tokens: List<PortfolioTokensListItemUM>,
+    ) : TokensListItemUM {
         override val id: String = state.id
     }
 
     data class Text(override val id: Any, val text: TextReference) : TokensListItemUM
+}
+
+sealed interface PortfolioTokensListItemUM {
+    /** Unique ID */
+    val id: Any
 }

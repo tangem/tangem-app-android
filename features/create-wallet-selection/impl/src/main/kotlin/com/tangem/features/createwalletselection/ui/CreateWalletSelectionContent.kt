@@ -1,6 +1,7 @@
 package com.tangem.features.createwalletselection.ui
 
 import android.content.res.Configuration
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -128,10 +129,12 @@ internal fun CreateWalletSelectionContent(state: CreateWalletSelectionUM, modifi
                 onClick = state.onHardwareWalletClick,
             )
         }
-        AlreadyHaveTangemWalletBlock(
-            onScanClick = state.onScanClick,
-            isScanInProgress = state.isScanInProgress,
-        )
+        AnimatedVisibility(state.showAlreadyHaveWallet) {
+            AlreadyHaveTangemWalletBlock(
+                onScanClick = state.onScanClick,
+                isScanInProgress = state.isScanInProgress,
+            )
+        }
     }
 }
 
@@ -149,7 +152,7 @@ private fun WalletBlock(
             .padding(top = 8.dp)
             .clip(TangemTheme.shapes.roundedCornersXMedium)
             .background(
-                color = TangemTheme.colors.background.secondary,
+                color = TangemTheme.colors.field.primary,
                 shape = TangemTheme.shapes.roundedCornersXMedium,
             )
             .clickable(onClick = onClick)
@@ -238,6 +241,7 @@ private fun PreviewCreateWalletContent() {
     TangemThemePreview {
         CreateWalletSelectionContent(
             state = CreateWalletSelectionUM(
+                showAlreadyHaveWallet = true,
                 onBackClick = {},
                 onMobileWalletClick = {},
                 onHardwareWalletClick = {},
