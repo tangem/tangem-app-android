@@ -1,41 +1,30 @@
 package com.tangem.core.configtoggle.feature.impl
 
 import androidx.annotation.VisibleForTesting
+import com.tangem.core.configtoggle.FeatureToggles
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
-import com.tangem.core.configtoggle.storage.TogglesStorage
-import com.tangem.core.configtoggle.utils.associateToggles
+import com.tangem.core.configtoggle.utils.defineTogglesAvailability
 import com.tangem.core.configtoggle.version.VersionProvider
 
 /**
  * Feature toggles manager implementation in PROD build
  *
- * @property localTogglesStorage local feature toggles storage
- * @property versionProvider            application version provider
+ * @property versionProvider application version provider
  */
 internal class ProdFeatureTogglesManager(
-    private val localTogglesStorage: TogglesStorage,
     private val versionProvider: VersionProvider,
 ) : FeatureTogglesManager {
 
-    private var featureToggles: Map<String, Boolean>? = null
+    private val featureToggles: Map<String, Boolean> = getFileFeatureToggles()
 
-    override suspend fun init() {
-        if (featureToggles != null) {
-            return // Already initialized
-        }
+    override fun isFeatureEnabled(name: String): Boolean = featureToggles[name] == true
 
-        localTogglesStorage.populate(FeatureTogglesConstants.LOCAL_CONFIG_PATH)
-        featureToggles = localTogglesStorage.toggles
-            .associateToggles(currentVersion = versionProvider.get() ?: "")
+    private fun getFileFeatureToggles(): Map<String, Boolean> {
+        val appVersion = versionProvider.get()
+
+        return FeatureToggles.values.defineTogglesAvailability(appVersion = appVersion)
     }
 
-    override fun isFeatureEnabled(name: String): Boolean = featureToggles!![name] ?: false
-
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
-    fun getProdFeatureToggles() = featureToggles!!
-
-    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
-    fun setProdFeatureToggles(map: Map<String, Boolean>) {
-        featureToggles = map
-    }
+    fun getProdFeatureToggles() = featureToggles
 }
