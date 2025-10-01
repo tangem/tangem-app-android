@@ -5,32 +5,52 @@ import arrow.core.getOrElse
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.message.DialogMessage
+import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.domain.core.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.settings.CanUseBiometryUseCase
+import com.tangem.domain.settings.SetAskBiometryShownUseCase
+import com.tangem.domain.settings.ShouldShowAskBiometryUseCase
 import com.tangem.domain.wallets.repository.WalletsRepository
+import com.tangem.domain.wallets.usecase.ClearHotWalletContextualUnlockUseCase
+import com.tangem.domain.wallets.usecase.GetHotWalletContextualUnlockUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.hotwallet.accesscode.entity.AccessCodeUM
+import com.tangem.features.hotwallet.impl.R
 import com.tangem.hot.sdk.TangemHotSdk
 import com.tangem.hot.sdk.model.HotAuth
 import com.tangem.hot.sdk.model.UnlockHotWallet
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 import timber.log.Timber
 import javax.inject.Inject
+import kotlin.coroutines.resume
 
+@Suppress("LongParameterList")
 @Stable
 @ModelScoped
 internal class AccessCodeModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val getUserWalletUseCase: GetUserWalletUseCase,
+    private val getHotWalletContextualUnlockUseCase: GetHotWalletContextualUnlockUseCase,
+    private val clearHotWalletContextualUnlockUseCase: ClearHotWalletContextualUnlockUseCase,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val walletsRepository: WalletsRepository,
     private val tangemHotSdk: TangemHotSdk,
+    private val shouldShowAskBiometryUseCase: ShouldShowAskBiometryUseCase,
+    private val setAskBiometryShownUseCase: SetAskBiometryShownUseCase,
+    private val canUseBiometryUseCase: CanUseBiometryUseCase,
+    private val uiMessageSender: UiMessageSender,
 ) : Model() {
 
     private val params = paramsContainer.require<AccessCodeComponent.Params>()
@@ -41,7 +61,7 @@ internal class AccessCodeModel @Inject constructor(
     private fun getInitialState() = AccessCodeUM(
         accessCode = "",
         onAccessCodeChange = ::onAccessCodeChange,
-        isConfirmMode = params.isConfirmMode,
+        isConfirmMode = params.accessCodeToConfirm != null,
         buttonEnabled = false,
         buttonInProgress = false,
         onButtonClick = ::onButtonClick,
@@ -51,7 +71,7 @@ internal class AccessCodeModel @Inject constructor(
         uiState.update {
             it.copy(
                 accessCode = value,
-                buttonEnabled = if (params.isConfirmMode) {
+                buttonEnabled = if (params.accessCodeToConfirm != null) {
                     value == params.accessCodeToConfirm
                 } else {
                     value.length == uiState.value.accessCodeLength
@@ -61,12 +81,10 @@ internal class AccessCodeModel @Inject constructor(
     }
 
     private fun onButtonClick() {
-        if (!params.isConfirmMode) {
-            params.callbacks.onAccessCodeSet(params.userWalletId, uiState.value.accessCode)
+        if (params.accessCodeToConfirm == null) {
+            params.callbacks.onNewAccessCodeInput(params.userWalletId, uiState.value.accessCode)
         } else {
-            params.accessCodeToConfirm?.let {
-                setCode(params.userWalletId, it)
-            }
+            setCode(params.userWalletId, params.accessCodeToConfirm)
         }
     }
 
@@ -81,11 +99,15 @@ internal class AccessCodeModel @Inject constructor(
                     .getOrElse { error("User wallet with id $userWalletId not found") }
                 if (userWallet !is UserWallet.Hot) return@launch
 
-                val unlockHotWallet = UnlockHotWallet(userWallet.hotWalletId, HotAuth.NoAuth)
+                val unlockHotWallet = getHotWalletContextualUnlockUseCase(userWallet.hotWalletId)
+                    .getOrNull()
+                    ?: UnlockHotWallet(userWallet.hotWalletId, HotAuth.NoAuth)
                 var updatedHotWalletId = tangemHotSdk.changeAuth(
                     unlockHotWallet = unlockHotWallet,
                     auth = HotAuth.Password(accessCode.toCharArray()),
                 )
+
+                tryToAskForBiometry()
 
                 if (walletsRepository.requireAccessCode().not()) {
                     updatedHotWalletId = tangemHotSdk.changeAuth(
@@ -117,7 +139,7 @@ internal class AccessCodeModel @Inject constructor(
                     )
                 }
 
-                params.callbacks.onAccessCodeConfirmed(params.userWalletId)
+                params.callbacks.onAccessCodeUpdated(params.userWalletId)
             }.onFailure {
                 Timber.e(it)
 
@@ -126,5 +148,63 @@ internal class AccessCodeModel @Inject constructor(
                 }
             }
         }
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private suspend fun tryToAskForBiometry() {
+        if (!shouldAskForBiometry()) return
+
+        suspendCancellableCoroutine { continuation ->
+            var buttonClicked = false
+            uiMessageSender.send(
+                DialogMessage(
+                    title = resourceReference(R.string.common_attention),
+                    message = resourceReference(R.string.hot_access_code_set_biometric_ask),
+                    firstAction = EventMessageAction(
+                        title = resourceReference(R.string.common_allow),
+                        onClick = {
+                            buttonClicked = true
+                            modelScope.launch {
+                                setAskBiometryShownUseCase()
+                                walletsRepository.setUseBiometricAuthentication(true)
+                                walletsRepository.setRequireAccessCode(false)
+                                if (continuation.isActive) {
+                                    continuation.resume(Unit)
+                                }
+                            }
+                        },
+                    ),
+                    secondAction = EventMessageAction(
+                        title = resourceReference(R.string.save_user_wallet_agreement_dont_allow),
+                        onClick = {
+                            buttonClicked = true
+                            modelScope.launch {
+                                setAskBiometryShownUseCase()
+                                if (continuation.isActive) {
+                                    continuation.resume(Unit)
+                                }
+                            }
+                        },
+                    ),
+                    onDismissRequest = {
+                        if (continuation.isActive && buttonClicked.not()) {
+                            continuation.resume(Unit)
+                        }
+                    },
+                ),
+            )
+        }
+    }
+
+    private suspend fun shouldAskForBiometry(): Boolean {
+        val canUseBiometry = canUseBiometryUseCase()
+        val shouldShowAskBiometry = shouldShowAskBiometryUseCase()
+
+        return canUseBiometry && shouldShowAskBiometry
+    }
+
+    override fun onDestroy() {
+        clearHotWalletContextualUnlockUseCase.invoke(params.userWalletId)
+        super.onDestroy()
     }
 }
