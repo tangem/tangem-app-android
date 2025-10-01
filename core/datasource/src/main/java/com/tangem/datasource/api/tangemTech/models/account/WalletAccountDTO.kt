@@ -7,7 +7,7 @@ import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 @JsonClass(generateAdapter = true)
 data class WalletAccountDTO(
     @Json(name = "id") val id: String,
-    @Json(name = "name") val name: String,
+    @Json(name = "name") val name: String?,
     @Json(name = "derivation") val derivationIndex: Int,
     @Json(name = "icon") val icon: String,
     @Json(name = "iconColor") val iconColor: String,

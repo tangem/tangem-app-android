@@ -7,7 +7,6 @@ import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
-import com.tangem.domain.notifications.toggles.NotificationsFeatureToggles
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
@@ -23,7 +22,6 @@ import org.junit.Test
 
 class UserTokensResponseAddressesEnricherTest {
 
-    private lateinit var notificationsFeatureToggles: NotificationsFeatureToggles
     private lateinit var walletsRepository: WalletsRepository
     private val dispatchers: CoroutineDispatcherProvider = TestingCoroutineDispatcherProvider()
     private lateinit var multiNetworkStatusSupplier: MultiNetworkStatusSupplier
@@ -31,12 +29,10 @@ class UserTokensResponseAddressesEnricherTest {
 
     @Before
     fun setup() {
-        notificationsFeatureToggles = mockk()
         walletsRepository = mockk()
         multiNetworkStatusSupplier = mockk()
 
         enricher = UserTokensResponseAddressesEnricher(
-            notificationsFeatureToggles = notificationsFeatureToggles,
             walletsRepository = walletsRepository,
             dispatchers = dispatchers,
             multiNetworkStatusSupplier = multiNetworkStatusSupplier,
@@ -54,7 +50,6 @@ class UserTokensResponseAddressesEnricherTest {
         val userWalletId = UserWalletId("1234567890abcdef")
         val token = createToken()
         val response = createUserTokensResponse(tokens = listOf(token))
-        every { notificationsFeatureToggles.isNotificationsEnabled } returns false
 
         // WHEN
         val result = enricher(userWalletId, response)
@@ -70,7 +65,6 @@ class UserTokensResponseAddressesEnricherTest {
             val userWalletId = UserWalletId("1234567890abcdef")
             val token = createToken()
             val response = createUserTokensResponse(tokens = listOf(token))
-            every { notificationsFeatureToggles.isNotificationsEnabled } returns true
             coEvery { walletsRepository.isNotificationsEnabled(userWalletId) } returns false
             coEvery {
                 multiNetworkStatusSupplier.invoke(any())
@@ -87,6 +81,7 @@ class UserTokensResponseAddressesEnricherTest {
                             },
                             amounts = emptyMap(),
                             pendingTransactions = emptyMap(),
+                            yieldSupplyStatuses = emptyMap(),
                             source = StatusSource.ACTUAL,
                         ),
                     ),
@@ -110,7 +105,6 @@ class UserTokensResponseAddressesEnricherTest {
             val response = createUserTokensResponse(tokens = listOf(token))
             val addresses = listOf("0x123", "0x456")
 
-            every { notificationsFeatureToggles.isNotificationsEnabled } returns true
             coEvery { walletsRepository.isNotificationsEnabled(userWalletId) } returns true
             coEvery {
                 multiNetworkStatusSupplier.invoke(any())
@@ -131,6 +125,7 @@ class UserTokensResponseAddressesEnricherTest {
                             },
                             amounts = emptyMap(),
                             pendingTransactions = emptyMap(),
+                            yieldSupplyStatuses = emptyMap(),
                             source = StatusSource.ACTUAL,
                         ),
                     ),
@@ -152,7 +147,6 @@ class UserTokensResponseAddressesEnricherTest {
         val token = createToken()
         val response = createUserTokensResponse(tokens = listOf(token))
 
-        every { notificationsFeatureToggles.isNotificationsEnabled } returns true
         coEvery { walletsRepository.isNotificationsEnabled(userWalletId) } returns true
         coEvery {
             multiNetworkStatusSupplier.invoke(any())
@@ -169,6 +163,7 @@ class UserTokensResponseAddressesEnricherTest {
                         },
                         amounts = emptyMap(),
                         pendingTransactions = emptyMap(),
+                        yieldSupplyStatuses = emptyMap(),
                         source = StatusSource.ACTUAL,
                     ),
                 ),
