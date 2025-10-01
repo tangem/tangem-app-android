@@ -13,12 +13,14 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.card.common.util.cardTypesResolver
+import com.tangem.domain.core.wallets.UserWalletsListRepository
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.legacy.asLockable
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.features.biometry.AskBiometryComponent
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.onboarding.v2.TitleProvider
 import com.tangem.features.onboarding.v2.common.ui.CantLeaveBackupDialog
 import com.tangem.features.onboarding.v2.done.api.OnboardingDoneComponent
@@ -46,6 +48,8 @@ internal class OnboardingEntryModel @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val uiMessageSender: UiMessageSender,
     private val userWalletsListManager: UserWalletsListManager,
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
+    private val userWalletsListRepository: UserWalletsListRepository,
 ) : Model() {
 
     private val params = paramsContainer.require<OnboardingEntryComponent.Params>()
@@ -69,16 +73,20 @@ internal class OnboardingEntryModel @Inject constructor(
         uiMessageSender.send(CantLeaveBackupDialog)
     }
 
+    @Suppress("CyclomaticComplexMethod")
     private fun routeByProductType(scanResponse: ScanResponse): OnboardingRoute {
         return when (scanResponse.productType) {
             ProductType.Wallet,
             ProductType.Wallet2,
             ProductType.Ring,
             -> {
-                val multiWalletNavigationMode = when (params.mode) {
-                    Mode.Onboarding -> OnboardingMultiWalletComponent.Mode.Onboarding
-                    Mode.AddBackupWallet1 -> OnboardingMultiWalletComponent.Mode.AddBackup
-                    Mode.ContinueFinalize -> OnboardingMultiWalletComponent.Mode.ContinueFinalize
+                val multiWalletNavigationMode = when (val mode = params.mode) {
+                    is Mode.Onboarding -> OnboardingMultiWalletComponent.Mode.Onboarding
+                    is Mode.AddBackupWallet1 -> OnboardingMultiWalletComponent.Mode.AddBackup
+                    is Mode.ContinueFinalize -> OnboardingMultiWalletComponent.Mode.ContinueFinalize
+                    is Mode.UpgradeHotWallet -> OnboardingMultiWalletComponent.Mode.UpgradeHotWallet(
+                        userWalletId = mode.userWalletId,
+                    )
                     else -> error("Incorrect onboarding type")
                 }
 
@@ -145,7 +153,7 @@ internal class OnboardingEntryModel @Inject constructor(
         doneMode: OnboardingDoneComponent.Mode = OnboardingDoneComponent.Mode.WalletCreated,
     ) {
         modelScope.launch {
-            if (tangemSdkManager.checkCanUseBiometry() && settingsRepository.shouldShowSaveUserWalletScreen()) {
+            if (tangemSdkManager.checkCanUseBiometry() && settingsRepository.shouldShowAskBiometry()) {
                 doIfVisa {
                     analyticsEventHandler.send(OnboardingVisaAnalyticsEvent.BiometricScreenOpened)
                 }
@@ -197,6 +205,19 @@ internal class OnboardingEntryModel @Inject constructor(
     }
 
     private fun exitComponentScreen() {
+        // new flow
+        if (hotWalletFeatureToggles.isHotWalletEnabled) {
+            modelScope.launch {
+                if (userWalletsListRepository.userWalletsSync().isEmpty()) {
+                    router.replaceAll(AppRoute.Home())
+                } else {
+                    router.replaceAll(AppRoute.Wallet)
+                }
+            }
+            return
+        }
+
+        // legacy flow
         if (userWalletsListManager.hasUserWallets) {
             val isLocked = runCatching { userWalletsListManager.asLockable()?.isLockedSync!! }.getOrElse { false }
 

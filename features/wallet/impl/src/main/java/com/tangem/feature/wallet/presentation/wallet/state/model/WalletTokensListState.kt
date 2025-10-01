@@ -29,8 +29,13 @@ internal sealed class WalletTokensListState {
             override val organizeTokensButtonConfig: OrganizeTokensButtonConfig?,
         ) : ContentState()
 
+        data class PortfolioContent(
+            override val items: ImmutableList<TokensListItemUM.Portfolio>,
+            override val organizeTokensButtonConfig: OrganizeTokensButtonConfig?,
+        ) : ContentState()
+
         data object Locked : ContentState() {
-            override val items = persistentListOf(
+            override val items: ImmutableList<TokensListItemUM> = persistentListOf(
                 TokensListItemUM.GroupTitle(
                     id = 42,
                     text = resourceReference(
