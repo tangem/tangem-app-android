@@ -20,7 +20,6 @@ internal sealed class SendAmountComponentParams {
     abstract val userWalletId: UserWalletId
     abstract val appCurrency: AppCurrency
     abstract val predefinedValues: PredefinedValues
-    abstract val isRedesignEnabled: Boolean
     abstract val cryptoCurrency: CryptoCurrency
     abstract val cryptoCurrencyStatusFlow: StateFlow<CryptoCurrencyStatus>
     abstract val isBalanceHidingFlow: StateFlow<Boolean>
@@ -31,7 +30,6 @@ internal sealed class SendAmountComponentParams {
         override val userWalletId: UserWalletId,
         override val appCurrency: AppCurrency,
         override val predefinedValues: PredefinedValues,
-        override val isRedesignEnabled: Boolean,
         override val cryptoCurrency: CryptoCurrency,
         override val cryptoCurrencyStatusFlow: StateFlow<CryptoCurrencyStatus>,
         override val isBalanceHidingFlow: StateFlow<Boolean>,
@@ -46,7 +44,6 @@ internal sealed class SendAmountComponentParams {
         override val appCurrency: AppCurrency,
         override val userWalletId: UserWalletId,
         override val predefinedValues: PredefinedValues,
-        override val isRedesignEnabled: Boolean,
         override val cryptoCurrency: CryptoCurrency,
         override val cryptoCurrencyStatusFlow: StateFlow<CryptoCurrencyStatus>,
         override val isBalanceHidingFlow: StateFlow<Boolean>,
