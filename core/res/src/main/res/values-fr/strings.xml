@@ -418,7 +418,6 @@
   <string name="home_button_scan">Scannez</string>
   <string name="hot_crypto_add_token_subtitle">à %s</string>
   <string name="hot_crypto_token_network">Via %s</string>
-  <string name="hw_create_seed_description">Restez informé des dernières fonctionnalités et actualités</string>
   <string name="information_generated_with_ai">Ces informations ont été générées avec l\'IA.\nAppuyez ici si vous trouvez des erreurs.</string>
   <string name="initial_message_change_access_code_body">Touchez, pour modifier le code d\'accès</string>
   <string name="initial_message_change_passcode_body">Touchez, pour modifier le mot de passe</string>
@@ -460,7 +459,7 @@
     <item quantity="other">%1$d des %2$d portefeuilles</item>
   </plurals>
   <string name="manage_tokens_remove">Enlever</string>
-  <string name="manage_tokens_search_placeholder">par exemple, BTC I trust, hodl I must</string>
+  <string name="manage_tokens_search_placeholder">Par exemple, Bitcoin</string>
   <string name="manage_tokens_toast_portfolio_updated">Votre portfolio a été mis à jour</string>
   <string name="manage_tokens_unavailable_description">Le jeton sélectionné n\'est actuellement pas disponible pour des actions dans le portefeuille crypto. Mais ne vous inquiétez pas, vous pouvez exprimer votre intérêt en votant positivement.</string>
   <string name="manage_tokens_unavailable_vote">Vote positif</string>
@@ -623,6 +622,9 @@
   <string name="notification_referral_promo_button">Rejoignez maintenant</string>
   <string name="notification_referral_promo_text">Partagez votre code et gagnez 5 USDT par vente. Votre ami bénéficie de 10 % de réduction.</string>
   <string name="notification_referral_promo_title">Recevez des RÉCOMPENSES pour chaque ami !</string>
+  <string name="notification_sepa_button">Acheter crypto</string>
+  <string name="notification_sepa_text">Profitez de **0% de frais** lors de l\'achat de cryptomonnaies via des virements SEPA.</string>
+  <string name="notification_sepa_title">Acheter des cryptomonnaies avec SEPA</string>
   <string name="onboarding_access_code_feature_1_description">Vous devez définir un seul code d\'accès pour protéger tous vos appareils.</string>
   <string name="onboarding_access_code_feature_1_title">Protéger</string>
   <string name="onboarding_access_code_feature_2_description">Vous pourrez définir un code d\'accès individuel sur chaque carte plus tard</string>
@@ -897,7 +899,7 @@
   <string name="send_recipient_address_error">Adresse non valide</string>
   <string name="send_recipient_address_footer">Assurez-vous que l\'adresse du portefeuille de réception est sur **le réseau %s** pour éviter de perdre vos jetons</string>
   <string name="send_recipient_label">Envoyer à</string>
-  <string name="send_recipient_memo_footer">Un Memo/Destination Tag est un identifiant unique permettant de différencier les transactions envoyées au même destinataire sur le même réseau. Attention : L\'omission d\'un mémo peut entraîner des fonds mal placés</string>
+  <string name="send_recipient_memo_footer">Un Memo/Destination Tag est un identifiant unique permettant de différencier les transactions envoyées au même destinataire sur le même réseau.\n**Attention : L\'omission d\'un mémo peut entraîner des fonds mal placés**</string>
   <string name="send_recipient_memo_footer_v2">Le Memo / Destination Tag est un code qui distingue les transactions envoyées à un destinataire partagé sur un réseau crypto.</string>
   <string name="send_recipient_memo_footer_v2_highlighted">Attention : l\'absence de Memo peut entraîner une perte de fonds.</string>
   <string name="send_recipient_wallets_title">Mes portefeuilles</string>
