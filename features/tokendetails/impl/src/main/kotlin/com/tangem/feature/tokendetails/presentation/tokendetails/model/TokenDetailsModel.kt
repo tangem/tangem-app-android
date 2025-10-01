@@ -8,7 +8,6 @@ import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRoute.*
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.bottomsheet.receive.AddressModel
 import com.tangem.common.ui.bottomsheet.receive.mapToAddressModels
@@ -81,7 +80,6 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenBala
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.TokenDetailsStateFactory
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.express.ExpressStatusFactory
-import com.tangem.features.send.v2.api.SendFeatureToggles
 import com.tangem.features.tokendetails.TokenDetailsComponent
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.features.tokenreceive.TokenReceiveFeatureToggle
@@ -140,7 +138,6 @@ internal class TokenDetailsModel @Inject constructor(
     private val router: InnerTokenDetailsRouter,
     private val tokenDetailsDeepLinkActionListener: TokenDetailsDeepLinkActionListener,
     private val analyticsExceptionHandler: AnalyticsExceptionHandler,
-    private val sendFeatureToggles: SendFeatureToggles,
     private val tokenReceiveFeatureToggle: TokenReceiveFeatureToggle,
     private val getViewedTokenReceiveWarningUseCase: GetViewedTokenReceiveWarningUseCase,
     private val getEnsNameUseCase: GetEnsNameUseCase,
@@ -551,17 +548,10 @@ internal class TokenDetailsModel @Inject constructor(
     }
 
     private fun sendCurrency() {
-        val route = if (sendFeatureToggles.isSendWithSwapEnabled) {
-            AppRoute.SendEntryPoint(
-                currency = cryptoCurrency,
-                userWalletId = userWallet.walletId,
-            )
-        } else {
-            AppRoute.Send(
-                currency = cryptoCurrency,
-                userWalletId = userWallet.walletId,
-            )
-        }
+        val route = AppRoute.SendEntryPoint(
+            currency = cryptoCurrency,
+            userWalletId = userWallet.walletId,
+        )
 
         appRouter.push(route)
     }
@@ -1181,7 +1171,7 @@ internal class TokenDetailsModel @Inject constructor(
                 TokenAction.Receive -> navigateToReceive()
                 TokenAction.Send -> sendCurrency()
                 TokenAction.Swap -> appRouter.push(
-                    Swap(
+                    AppRoute.Swap(
                         currencyFrom = cryptoCurrency,
                         userWalletId = userWalletId,
                         screenSource = AnalyticsParam.ScreensSources.Token.value,
