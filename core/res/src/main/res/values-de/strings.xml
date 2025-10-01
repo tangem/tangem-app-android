@@ -280,7 +280,7 @@
   <string name="common_origin_ring">Primärring</string>
   <string name="common_passphrase">Passphrase</string>
   <string name="common_paste">Einfügen</string>
-  <string name="common_privacy_policy">Datenschutzbestimmungen</string>
+  <string name="common_privacy_policy">Datenschutzrichtlinie</string>
   <string name="common_range">%1$s-%2$s</string>
   <string name="common_range_with_space">%1$s — %2$s</string>
   <string name="common_read_more">Weiterlesen</string>
@@ -317,6 +317,7 @@
   <string name="common_supported_networks">Unterstützte Netzwerke</string>
   <string name="common_swap">Tauschen</string>
   <string name="common_tangem">Tangem</string>
+  <string name="common_tangem_wallet">Tangem Wallet</string>
   <string name="common_terms_and_conditions">Allgemeine Geschäftsbedingungen</string>
   <string name="common_terms_of_use">Nutzungsbedingungen</string>
   <string name="common_today">Heute</string>
@@ -418,7 +419,7 @@
   <string name="express_exchange_by">Getauscht von %s</string>
   <string name="express_exchange_notification_failed_text">Besuche die Website des Anbieters, um dein Geld zurückzuerhalten</string>
   <string name="express_exchange_notification_failed_title">Fehler beim Vorgang durch Anbieter</string>
-  <string name="express_exchange_notification_long_transaction_time_text">Dein Wechsel dauert länger als erwartet. Wende Dich für Hilfe bitte an den Support Deines Anbieters.</string>
+  <string name="express_exchange_notification_long_transaction_time_text">Dein Swap dauert länger als üblich, aber Dein Geld ist absolut sicher und wird geliefert. Bei Fragen kannst Du Dich an das Support-Team des Anbieters wenden.</string>
   <string name="express_exchange_notification_long_transaction_time_title">Lange Transaktionszeit</string>
   <string name="express_exchange_notification_refund_text">Der Transaktionsbetrag wurde aufgrund von OKX- oder Bridge-Regeln in %1$s auf deine Wallet zurückerstattet. %2$s</string>
   <string name="express_exchange_notification_refund_title">Der Betrag wurde in %1$s (%2$s Netzwerk) zurückerstattet.</string>
@@ -521,12 +522,9 @@
   <string name="hw_backup_need_action">Gehe zum Backup</string>
   <string name="hw_backup_need_description">Um Deine Wallet mit einem Zugangscode zu sichern, führe zuerst die Sicherung durch.</string>
   <string name="hw_backup_need_title">Sicherung zuerst beenden</string>
-  <string name="hw_backup_no_backup">Kein Backup</string>
   <string name="hw_backup_seed_description">Physische Karten, die Deine Kryptowährung sicher offline speichern.</string>
   <string name="hw_backup_seed_title">Wiederherstellungs-Phrase</string>
-  <string name="hw_create_keys_description">Über eingehende Transaktionen benachrichtigt werden</string>
   <string name="hw_create_keys_title">Schlüssel werden in der App gespeichert</string>
-  <string name="hw_create_seed_description">Bleibe über die neuesten Funktionen und Neuigkeiten auf dem Laufenden</string>
   <string name="hw_create_seed_title">Sicherung der Seed-Phrase</string>
   <string name="hw_create_title">Mobile Wallet erstellen</string>
   <string name="hw_import_seed_phrase_already_imported">Diese Wiederherstellungsphrase wurde bereits importiert</string>
@@ -585,7 +583,7 @@
     <item quantity="other">%1$d von %2$d Wallets</item>
   </plurals>
   <string name="manage_tokens_remove">Entfernen</string>
-  <string name="manage_tokens_search_placeholder">z.B. BTC vertraue ich, hodl muss ich</string>
+  <string name="manage_tokens_search_placeholder">Zum Beispiel, Bitcoin</string>
   <string name="manage_tokens_toast_portfolio_updated">Dein Portfolio wurde aktualisiert</string>
   <string name="manage_tokens_unavailable_description">Der ausgewählte Token ist derzeit nicht für Aktionen innerhalb der Krypto-Wallet verfügbar. Aber keine Sorge, du kannst dein Interesse bekunden, indem du den Token hochstufen.</string>
   <string name="manage_tokens_unavailable_vote">Hochstimmen</string>
@@ -1027,7 +1025,7 @@
   <string name="send_recipient_address_error">Keine gültige Adresse</string>
   <string name="send_recipient_address_footer">Stelle sicher, dass sich die empfangende Wallet-Adresse im **%s -Netzwerk** befindet, um den Verlust Deiner Token zu vermeiden.</string>
   <string name="send_recipient_label">Senden an</string>
-  <string name="send_recipient_memo_footer">Ein Memo/Destination Tag ist eine eindeutige ID zur Unterscheidung von Transaktionen, die an denselben Empfänger im selben Netzwerk gesendet werden. Vorsicht! Das Weglassen eines Vermerks kann dazu führen, dass Gelder für immer verloren sind!</string>
+  <string name="send_recipient_memo_footer">Ein Memo/Destination Tag ist eine eindeutige ID zur Unterscheidung von Transaktionen, die an denselben Empfänger im selben Netzwerk gesendet werden.\n**Vorsicht! Das Weglassen eines Vermerks kann dazu führen, dass Gelder für immer verloren sind!**</string>
   <string name="send_recipient_memo_footer_v2">Memo / Destination Tag ist ein Code, der Transaktionen an einen gemeinsamen Empfänger im Kryptonetzwerk voneinander trennt.</string>
   <string name="send_recipient_memo_footer_v2_highlighted">Achtung: Das Fehlen eines Memos kann zum Verlust von Geldern führen.</string>
   <string name="send_recipient_wallets_title">Meine Wallet</string>

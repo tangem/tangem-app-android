@@ -6,7 +6,6 @@ import com.tangem.domain.nft.repository.NFTRepository
 import com.tangem.domain.quotes.single.SingleQuoteStatusFetcher
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
-import com.tangem.domain.tokens.TokensFeatureToggles
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -33,29 +32,21 @@ internal object NFTDomainModule {
     @Provides
     @Singleton
     fun providesFetchNFTCollectionsUseCase(
-        currenciesRepository: CurrenciesRepository,
         nftRepository: NFTRepository,
         multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
-        tokensFeatureToggles: TokensFeatureToggles,
     ): FetchNFTCollectionsUseCase = FetchNFTCollectionsUseCase(
-        currenciesRepository = currenciesRepository,
         nftRepository = nftRepository,
         multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
-        tokensFeatureToggles = tokensFeatureToggles,
     )
 
     @Provides
     @Singleton
     fun providesRefreshAllNFTUseCase(
-        currenciesRepository: CurrenciesRepository,
         nftRepository: NFTRepository,
         multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
-        tokensFeatureToggles: TokensFeatureToggles,
     ): RefreshAllNFTUseCase = RefreshAllNFTUseCase(
-        currenciesRepository = currenciesRepository,
         nftRepository = nftRepository,
         multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
-        tokensFeatureToggles = tokensFeatureToggles,
     )
 
     @Provides
@@ -127,16 +118,12 @@ internal object NFTDomainModule {
     fun provideDisableWalletNFTUseCase(
         walletsRepository: WalletsRepository,
         nftRepository: NFTRepository,
-        currenciesRepository: CurrenciesRepository,
         multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
-        tokensFeatureToggles: TokensFeatureToggles,
     ): DisableWalletNFTUseCase {
         return DisableWalletNFTUseCase(
             walletsRepository = walletsRepository,
             nftRepository = nftRepository,
-            currenciesRepository = currenciesRepository,
             multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
-            tokensFeatureToggles = tokensFeatureToggles,
         )
     }
 

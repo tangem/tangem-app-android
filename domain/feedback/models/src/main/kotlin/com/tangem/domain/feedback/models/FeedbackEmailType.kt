@@ -9,32 +9,32 @@ import com.tangem.domain.visa.model.VisaTxDetails
  */
 sealed interface FeedbackEmailType {
 
-    val cardInfo: CardInfo?
+    val walletMetaInfo: WalletMetaInfo?
 
     /** User initiate request yourself. Example, button on DetailsScreen or OnboardingScreen */
-    data class DirectUserRequest(override val cardInfo: CardInfo) : FeedbackEmailType
+    data class DirectUserRequest(override val walletMetaInfo: WalletMetaInfo) : FeedbackEmailType
 
     /** User rate the app as "can be better" */
-    data class RateCanBeBetter(override val cardInfo: CardInfo) : FeedbackEmailType
+    data class RateCanBeBetter(override val walletMetaInfo: WalletMetaInfo) : FeedbackEmailType
 
     /** User has problem with scanning */
     data object ScanningProblem : FeedbackEmailType {
-        override val cardInfo: CardInfo? = null
+        override val walletMetaInfo: WalletMetaInfo? = null
     }
 
     /** User has problem with sending transaction */
-    data class TransactionSendingProblem(override val cardInfo: CardInfo) : FeedbackEmailType
+    data class TransactionSendingProblem(override val walletMetaInfo: WalletMetaInfo) : FeedbackEmailType
 
     /** User has problem with staking */
     data class StakingProblem(
-        override val cardInfo: CardInfo,
+        override val walletMetaInfo: WalletMetaInfo,
         val validatorName: String?,
         val transactionTypes: List<String>,
         val unsignedTransactions: List<String?>,
     ) : FeedbackEmailType
 
     data class SwapProblem(
-        override val cardInfo: CardInfo,
+        override val walletMetaInfo: WalletMetaInfo,
         val providerName: String,
         val txId: String,
     ) : FeedbackEmailType
@@ -46,23 +46,23 @@ sealed interface FeedbackEmailType {
      * @property currencyName currency name
      */
     data class CurrencyDescriptionError(val currencyId: String, val currencyName: String) : FeedbackEmailType {
-        override val cardInfo: CardInfo? = null
+        override val walletMetaInfo: WalletMetaInfo? = null
     }
 
-    data class PreActivatedWallet(override val cardInfo: CardInfo) : FeedbackEmailType
+    data class PreActivatedWallet(override val walletMetaInfo: WalletMetaInfo) : FeedbackEmailType
 
     data object CardAttestationFailed : FeedbackEmailType {
-        override val cardInfo: CardInfo? = null
+        override val walletMetaInfo: WalletMetaInfo? = null
     }
 
     sealed class Visa : FeedbackEmailType {
-        data class DirectUserRequest(override val cardInfo: CardInfo) : Visa()
+        data class DirectUserRequest(override val walletMetaInfo: WalletMetaInfo) : Visa()
 
-        data class Activation(override val cardInfo: CardInfo) : Visa()
+        data class Activation(override val walletMetaInfo: WalletMetaInfo) : Visa()
 
         data class Dispute(
             val visaTxDetails: VisaTxDetails,
-            override val cardInfo: CardInfo,
+            override val walletMetaInfo: WalletMetaInfo,
         ) : Visa()
     }
 }
