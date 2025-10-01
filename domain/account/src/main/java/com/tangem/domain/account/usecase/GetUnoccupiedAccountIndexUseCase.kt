@@ -35,9 +35,10 @@ class GetUnoccupiedAccountIndexUseCase(
 
     private suspend fun Raise<Error>.getTotalAccountsCount(userWalletId: UserWalletId): Int {
         return catch(
-            block = { crudRepository.getTotalAccountsCount(userWalletId = userWalletId) },
+            block = { crudRepository.getTotalAccountsCountSync(userWalletId = userWalletId) },
             catch = { raise(Error.DataOperationFailed(cause = it)) },
         )
+            .getOrElse { raise(Error.DataNotFound) }
     }
 
     /**
@@ -47,6 +48,10 @@ class GetUnoccupiedAccountIndexUseCase(
 
         val tag: String
             get() = this::class.simpleName ?: "GetUnoccupiedAccountIndexUseCase.Error"
+
+        data object DataNotFound : Error {
+            override fun toString(): String = "$tag: Data not found"
+        }
 
         /** Error indicating that the derivation index is invalid */
         data class InvalidDerivationIndex(val cause: DerivationIndex.Error) : Error {
