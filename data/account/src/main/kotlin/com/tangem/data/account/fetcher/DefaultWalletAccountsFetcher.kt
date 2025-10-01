@@ -11,7 +11,7 @@ import com.tangem.data.common.cache.etag.ETagsStore
 import com.tangem.data.common.currency.UserTokensSaver
 import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.common.response.ApiResponseError.HttpException.Code
-import com.tangem.datasource.api.common.response.IF_NONE_MATCH_HEADER
+import com.tangem.datasource.api.common.response.ETAG_HEADER
 import com.tangem.datasource.api.common.response.isNetworkError
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
@@ -86,7 +86,11 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
                     tangemTechApi.saveWalletAccounts(
                         walletId = userWalletId.stringValue,
                         eTag = eTag,
-                        body = body,
+                        body = body.copy(
+                            accounts = body.accounts.map {
+                                it.copy(tokens = null, totalTokens = null, totalNetworks = null)
+                            },
+                        ),
                     )
                 }
 
@@ -140,7 +144,7 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
     private suspend fun assignTokens(userWalletId: UserWalletId, accountsResponse: GetWalletAccountsResponse) {
         val accountsResponseWithTokens = accountsResponse.assignTokens(userWalletId)
 
-        pushAndStore(userWalletId = userWalletId, response = accountsResponseWithTokens)
+        store(userWalletId = userWalletId, response = accountsResponseWithTokens)
 
         userTokensSaver.push(
             userWalletId = userWalletId,
@@ -153,7 +157,7 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
     }
 
     private suspend fun saveETag(userWalletId: UserWalletId, apiResponse: ApiResponse<*>) {
-        val eTag = apiResponse.headers[IF_NONE_MATCH_HEADER]?.firstOrNull()
+        val eTag = apiResponse.headers[ETAG_HEADER]?.firstOrNull()
 
         if (eTag != null) {
             eTagsStore.store(userWalletId = userWalletId, key = ETagsStore.Key.WalletAccounts, value = eTag)
