@@ -6,6 +6,7 @@ import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.event.triggeredEvent
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.features.staking.impl.presentation.state.events.StakingEvent
 import com.tangem.features.staking.impl.presentation.state.stub.StakingClickIntentsStub
@@ -32,6 +33,14 @@ internal class StakingStateController @Inject constructor(
 
     private val buttonsTransformer = SetButtonsStateTransformer(urlOpener)
     private val titleTransformer = SetTitleTransformer
+
+    fun initializeWithUserWallet(userWallet: UserWallet) {
+        mutableUiState.update {
+            it.copy(
+                showColdWalletInteractionIcon = userWallet is UserWallet.Cold,
+            )
+        }
+    }
 
     fun update(function: (StakingUiState) -> StakingUiState) {
         mutableUiState.update(function = function)
@@ -88,6 +97,7 @@ internal class StakingStateController @Inject constructor(
             actionType = StakingActionCommonType.Enter(skipEnterAmount = false),
             buttonsState = NavigationButtonsState.Empty,
             balanceState = null,
+            showColdWalletInteractionIcon = true,
         )
     }
 }

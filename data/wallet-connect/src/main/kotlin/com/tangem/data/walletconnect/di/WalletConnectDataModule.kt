@@ -17,16 +17,14 @@ import com.tangem.data.walletconnect.respond.WcRespondService
 import com.tangem.data.walletconnect.sessions.DefaultWcSessionsManager
 import com.tangem.data.walletconnect.utils.WcNamespaceConverter
 import com.tangem.data.walletconnect.utils.WcNetworksConverter
+import com.tangem.data.walletconnect.utils.WcScope
 import com.tangem.datasource.di.SdkMoshi
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.datasource.local.walletconnect.WalletConnectStore
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
-import com.tangem.domain.tokens.TokensFeatureToggles
-import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.walletconnect.WcPairService
 import com.tangem.domain.walletconnect.WcRequestService
 import com.tangem.domain.walletconnect.WcRequestUseCaseFactory
-import com.tangem.domain.walletconnect.model.legacy.WalletConnectSessionsRepository
 import com.tangem.domain.walletconnect.repository.WalletConnectRepository
 import com.tangem.domain.walletconnect.repository.WcSessionsManager
 import com.tangem.domain.walletconnect.usecase.disconnect.WcDisconnectUseCase
@@ -39,8 +37,6 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
 import javax.inject.Singleton
 
 @Module
@@ -83,33 +79,38 @@ internal object WalletConnectDataModule {
 
     @Provides
     @Singleton
-    fun sdkDelegate(): WcPairSdkDelegate = WcPairSdkDelegate()
+    fun sdkDelegate(wcScope: WcScope, store: WalletConnectStore): WcPairSdkDelegate = WcPairSdkDelegate(
+        scope = wcScope,
+        store = store,
+    )
 
     @Provides
     @Singleton
     fun defaultWcSessionsManager(
         store: WalletConnectStore,
         dispatchers: CoroutineDispatcherProvider,
-        legacyStore: WalletConnectSessionsRepository,
         getWallets: GetWalletsUseCase,
         wcNetworksConverter: WcNetworksConverter,
         analytics: AnalyticsEventHandler,
+        wcScope: WcScope,
     ): DefaultWcSessionsManager {
-        val scope = CoroutineScope(SupervisorJob() + dispatchers.io)
         return DefaultWcSessionsManager(
             store = store,
             dispatchers = dispatchers,
-            legacyStore = legacyStore,
             getWallets = getWallets,
             wcNetworksConverter = wcNetworksConverter,
             analytics = analytics,
-            scope = scope,
+            scope = wcScope,
         )
     }
 
     @Provides
     @Singleton
     fun wcSessionsManager(default: DefaultWcSessionsManager): WcSessionsManager = default
+
+    @Provides
+    @Singleton
+    fun wcScope(dispatchers: CoroutineDispatcherProvider): WcScope = WcScope(dispatchers)
 
     @Provides
     @Singleton
@@ -177,15 +178,11 @@ internal object WalletConnectDataModule {
     fun wcNetworksConverter(
         namespaceConverters: Set<@JvmSuppressWildcards WcNamespaceConverter>,
         walletManagersFacade: WalletManagersFacade,
-        currenciesRepository: CurrenciesRepository,
         multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
-        tokensFeatureToggles: TokensFeatureToggles,
     ): WcNetworksConverter = WcNetworksConverter(
         namespaceConverters = namespaceConverters,
         walletManagersFacade = walletManagersFacade,
-        currenciesRepository = currenciesRepository,
         multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
-        tokensFeatureToggles = tokensFeatureToggles,
     )
 
     @Provides
@@ -193,15 +190,11 @@ internal object WalletConnectDataModule {
     fun associateNetworksDelegate(
         namespaceConverters: Set<@JvmSuppressWildcards WcNamespaceConverter>,
         getWallets: GetWalletsUseCase,
-        currenciesRepository: CurrenciesRepository,
         multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
-        tokensFeatureToggles: TokensFeatureToggles,
     ): AssociateNetworksDelegate = AssociateNetworksDelegate(
         namespaceConverters = namespaceConverters,
         getWallets = getWallets,
-        currenciesRepository = currenciesRepository,
         multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
-        tokensFeatureToggles = tokensFeatureToggles,
     )
 
     @Provides

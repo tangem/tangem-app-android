@@ -8,7 +8,7 @@ sealed class ExpressTransactionModel {
 
     abstract val fromAmount: SwapAmount
     abstract val toAmount: SwapAmount
-    abstract val txValue: String
+    abstract val txValue: String?
     abstract val txId: String
     abstract val txTo: String
     abstract val txExtraId: String?
@@ -19,7 +19,7 @@ sealed class ExpressTransactionModel {
     data class DEX(
         override val fromAmount: SwapAmount,
         override val toAmount: SwapAmount,
-        override val txValue: String,
+        override val txValue: String?,
         override val txId: String,
         override val txTo: String,
         override val txExtraId: String?,
@@ -32,7 +32,7 @@ sealed class ExpressTransactionModel {
     data class CEX(
         override val fromAmount: SwapAmount,
         override val toAmount: SwapAmount,
-        override val txValue: String,
+        override val txValue: String?,
         override val txId: String,
         override val txTo: String,
         override val txExtraId: String?,
