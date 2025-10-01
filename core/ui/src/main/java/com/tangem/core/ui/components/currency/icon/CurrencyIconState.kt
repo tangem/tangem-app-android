@@ -4,6 +4,7 @@ import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
 import com.tangem.core.ui.R
+import com.tangem.core.ui.extensions.TextReference
 
 /**
  * Represents the various states an icon can be in.
@@ -86,6 +87,25 @@ sealed class CurrencyIconState {
         override val topBadgeIconResId: Int? = null
     }
 
+    @Immutable
+    sealed class CryptoPortfolio : CurrencyIconState() {
+        override val showCustomBadge: Boolean = false
+        override val topBadgeIconResId: Int? = null
+        abstract val color: Color
+
+        data class Icon(
+            @DrawableRes val resId: Int,
+            override val color: Color,
+            override val isGrayscale: Boolean,
+        ) : CryptoPortfolio()
+
+        data class Letter(
+            val char: TextReference,
+            override val color: Color,
+            override val isGrayscale: Boolean,
+        ) : CryptoPortfolio()
+    }
+
     data object Loading : CurrencyIconState() {
         override val isGrayscale: Boolean = false
         override val showCustomBadge: Boolean = false
@@ -124,6 +144,12 @@ sealed class CurrencyIconState {
             isGrayscale = isGrayscale,
             showCustomBadge = showCustomBadge,
             topBadgeIconResId = topBadgeIconResId,
+        )
+        is CryptoPortfolio.Icon -> copy(
+            isGrayscale = isGrayscale,
+        )
+        is CryptoPortfolio.Letter -> copy(
+            isGrayscale = isGrayscale,
         )
         is Loading,
         is Locked,
