@@ -63,7 +63,7 @@ internal interface InnerWalletRouter {
 
     fun openTangemPayOnboarding()
 
-    fun openTangemPayDetails(custoemrWalletAddress: String)
+    fun openTangemPayDetails(customerWalletAddress: String, cardNumberEnd: String)
 
     /** Open BS abput yield supply active and all money deposited in AAVE */
     fun openYieldSupplyBottomSheet(
