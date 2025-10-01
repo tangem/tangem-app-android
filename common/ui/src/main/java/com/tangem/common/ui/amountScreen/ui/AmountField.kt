@@ -29,7 +29,7 @@ import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.test.StakingSendScreenTestTags
+import com.tangem.core.ui.test.SendScreenTestTags
 import com.tangem.core.ui.utils.rememberDecimalFormat
 import kotlinx.coroutines.delay
 
@@ -119,7 +119,7 @@ private fun AmountSecondary(amountField: AmountFieldModel, appCurrencyCode: Stri
             modifier = Modifier
                 .align(TopCenter)
                 .padding(bottom = TangemTheme.dimens.spacing32)
-                .testTag(StakingSendScreenTestTags.SECONDARY_AMOUNT),
+                .testTag(SendScreenTestTags.SECONDARY_AMOUNT),
         )
         AmountFieldError(
             isError = amountField.isError,
