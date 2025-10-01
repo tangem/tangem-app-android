@@ -25,7 +25,7 @@ fun BaseTestCase.pullToRefresh() {
         direction = SwipeDirection.DOWN,
         startHeightRatio = 0.2f,
         endHeightRatio = 0.8f,
-        steps = 2000
+        steps = 1000
     )
 }
 
