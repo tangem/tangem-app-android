@@ -218,6 +218,13 @@ class TokenItemStateConverter(
                         text = status.getFormattedFiatAmount(appCurrency = appCurrency),
                         isFlickering = status.value.isFlickering(),
                         icons = buildList {
+                            if (status.value.yieldSupplyStatus?.isActive == true &&
+                                status.value.yieldSupplyStatus?.isAllowedToSpend == false) {
+                                TokenItemState.FiatAmountState.Content.IconUM(
+                                    iconRes = R.drawable.ic_alert_triangle_20,
+                                    tint = IconTint.Warning,
+                                ).let(::add)
+                            }
                             if (!status.getStakedBalance().isZero()) {
                                 add(
                                     TokenItemState.FiatAmountState.Content.IconUM(
