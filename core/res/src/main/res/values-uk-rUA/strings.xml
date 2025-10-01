@@ -412,7 +412,6 @@
   <string name="home_button_scan">Сканувати</string>
   <string name="hot_crypto_add_token_subtitle">в %s</string>
   <string name="hot_crypto_token_network">В мережі %s</string>
-  <string name="hw_create_seed_description">Будьте в курсі нових можливостей і новин</string>
   <string name="information_generated_with_ai">Ця інформація була створена за допомогою ШІ.\nНатисніть тут, якщо знайшли помилку.</string>
   <string name="initial_message_change_access_code_body">Щоб змінити код доступу, прикладіть картку або кільце, як показано вище, і не прибирайте її до закінчення операції</string>
   <string name="initial_message_change_passcode_body">Щоб змінити пароль, прикладіть картку, як показано вище, і не прибирайте її до закінчення операції</string>
@@ -456,7 +455,7 @@
     <item quantity="other">%1$d із %2$d гаманців</item>
   </plurals>
   <string name="manage_tokens_remove">Видалити</string>
-  <string name="manage_tokens_search_placeholder">наприклад Bitcoin</string>
+  <string name="manage_tokens_search_placeholder">Наприклад Bitcoin</string>
   <string name="manage_tokens_toast_portfolio_updated">Ваше портфоліо оновлено</string>
   <string name="manage_tokens_unavailable_description">Обраний токен наразі недоступний для дій у криптогаманці. Але не хвилюйтеся, ви можете висловити свою зацікавленість, проголосувавши за його інтеграцію.</string>
   <string name="manage_tokens_unavailable_vote">Проголосувати</string>
@@ -626,6 +625,9 @@
   <string name="notification_referral_promo_button">Приєднатися</string>
   <string name="notification_referral_promo_text">Поділіться промокодом — заробіть 5 USDT з кожної покупки. Ваші друзі отримають знижку 10% на картку Tangem!</string>
   <string name="notification_referral_promo_title">Отримуй бонуси за кожного друга!</string>
+  <string name="notification_sepa_button">Купити криптовалюту</string>
+  <string name="notification_sepa_text">Насолоджуйтесь **нульовою комісією** при купівлі криптовалюти через перекази SEPA.</string>
+  <string name="notification_sepa_title">Купуйте криптовалюту через SEPA</string>
   <string name="onboarding_access_code_feature_1_description">Налаштуйте єдиний код доступу для захисту всіх ваших карток або кілець</string>
   <string name="onboarding_access_code_feature_1_title">Захист</string>
   <string name="onboarding_access_code_feature_2_description">Встановіть індивідуальний код доступу для кожної картки або кільця пізніше.</string>
@@ -904,7 +906,7 @@
   <string name="send_recipient_address_error">Недійсна адреса</string>
   <string name="send_recipient_address_footer">Переконайтеся, що адреса отримувача знаходиться **в мережі %s**, щоб уникнути втрати ваших коштів.</string>
   <string name="send_recipient_label">Надіслати до</string>
-  <string name="send_recipient_memo_footer">Memo/ Тег призначення — це унікальний ідентифікатор для розрізнення транзакцій, надісланих тому самому одержувачу в тій самій мережі. Застереження: відсутність тегу може призвести до втрати коштів.</string>
+  <string name="send_recipient_memo_footer">Memo/ Тег призначення — це унікальний ідентифікатор для розрізнення транзакцій, надісланих тому самому одержувачу в тій самій мережі.\n**Застереження: відсутність тегу може призвести до втрати коштів.**</string>
   <string name="send_recipient_memo_footer_v2">Мемо / Destination Tag — це код, що розділяє транзакції до спільного одержувача в криптовалютній мережі.</string>
   <string name="send_recipient_memo_footer_v2_highlighted">Увага: відсутність Memo може призвести до втрати коштів.</string>
   <string name="send_recipient_wallets_title">Мої гаманці</string>

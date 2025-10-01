@@ -2,6 +2,7 @@ package com.tangem.domain.walletconnect.usecase.pair
 
 import arrow.core.Either
 import com.tangem.domain.walletconnect.model.*
+import com.tangem.domain.walletconnect.model.sdkcopy.WcAppMetaData
 import kotlinx.coroutines.flow.Flow
 
 interface WcPairUseCase {
@@ -27,7 +28,7 @@ sealed interface WcPairState {
         data class Loading(override val session: WcSessionApprove) : Approving
         data class Result(
             override val session: WcSessionApprove,
-            val result: Either<WcPairError, WcSession>,
+            val result: Either<WcPairError, WcAppMetaData>,
         ) : Approving
     }
 }
