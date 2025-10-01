@@ -78,7 +78,7 @@ internal fun SwapScreenContent(state: SwapStateHolder, modifier: Modifier = Modi
 
             if (state.notifications.isNotEmpty()) SwapNotifications(notifications = state.notifications)
 
-            MainButton(state = state, onPermissionWarningClick = state.onShowPermissionBottomSheet)
+            SpacerHMax()
 
             if (state.tosState != null && state.providerState !is ProviderState.Empty) {
                 ProviderTos(
@@ -87,6 +87,8 @@ internal fun SwapScreenContent(state: SwapStateHolder, modifier: Modifier = Modi
                         .padding(top = TangemTheme.dimens.spacing16),
                 )
             }
+
+            MainButton(state = state)
         }
 
         if (state.shouldShowMaxAmount && keyboard is Keyboard.Opened) {
@@ -359,34 +361,22 @@ private fun SwapNotifications(notifications: List<NotificationUM>) {
 }
 
 @Composable
-private fun MainButton(state: SwapStateHolder, onPermissionWarningClick: () -> Unit) {
-    // order is important
-    when {
-        state.isInsufficientFunds -> {
-            PrimaryButton(
-                modifier = Modifier.fillMaxWidth(),
-                text = stringResourceSafe(id = R.string.swapping_insufficient_funds),
-                enabled = false,
-                onClick = state.swapButton.onClick,
-            )
-        }
-        state.notifications.any { it is SwapNotificationUM.Info.PermissionNeeded } -> {
-            PrimaryButton(
-                modifier = Modifier.fillMaxWidth(),
-                text = stringResourceSafe(id = R.string.give_permission_title),
-                enabled = true,
-                onClick = onPermissionWarningClick,
-            )
-        }
-        else -> {
-            PrimaryButtonIconEnd(
-                modifier = Modifier.fillMaxWidth(),
-                text = stringResourceSafe(id = R.string.swapping_swap_action),
-                iconResId = state.swapButton.walletInteractionIcon,
-                enabled = state.swapButton.enabled,
-                onClick = state.swapButton.onClick,
-            )
-        }
+private fun MainButton(state: SwapStateHolder) {
+    if (state.isInsufficientFunds) {
+        PrimaryButton(
+            modifier = Modifier.fillMaxWidth(),
+            text = stringResourceSafe(id = R.string.swapping_insufficient_funds),
+            enabled = false,
+            onClick = state.swapButton.onClick,
+        )
+    } else {
+        PrimaryButtonIconEnd(
+            modifier = Modifier.fillMaxWidth(),
+            text = stringResourceSafe(id = R.string.swapping_swap_action),
+            iconResId = state.swapButton.walletInteractionIcon,
+            enabled = state.swapButton.enabled,
+            onClick = state.swapButton.onClick,
+        )
     }
 }
 
@@ -438,6 +428,7 @@ private val state = SwapStateHolder(
         SwapNotificationUM.Info.PermissionNeeded(
             providerName = "Provider",
             fromTokenSymbol = "POL",
+            onApproveClick = {},
         ),
         SwapNotificationUM.Warning.NoAvailableTokensToSwap("POLYGON"),
     ),
