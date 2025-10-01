@@ -38,7 +38,7 @@ internal class DefaultAddCustomTokenComponent @AssistedInject constructor(
 ) : AddCustomTokenComponent, AppComponentContext by context {
 
     private val initialConfiguration = AddCustomTokenConfig(
-        userWalletId = params.userWalletId,
+        mode = params.mode,
         step = AddCustomTokenConfig.Step.INITIAL_NETWORK_SELECTOR,
     )
 
@@ -105,7 +105,7 @@ internal class DefaultAddCustomTokenComponent @AssistedInject constructor(
             selectorComponentFactory.create(
                 context = childByContext(componentContext),
                 params = CustomTokenSelectorComponent.Params.NetworkSelector(
-                    userWalletId = config.userWalletId,
+                    mode = config.mode,
                     selectedNetwork = null,
                     onNetworkSelected = ::changeSelectedNetwork,
                 ),
@@ -115,7 +115,7 @@ internal class DefaultAddCustomTokenComponent @AssistedInject constructor(
             selectorComponentFactory.create(
                 context = childByContext(componentContext),
                 params = CustomTokenSelectorComponent.Params.NetworkSelector(
-                    userWalletId = config.userWalletId,
+                    mode = config.mode,
                     selectedNetwork = config.selectedNetwork,
                     onNetworkSelected = ::changeSelectedNetwork,
                 ),
@@ -125,7 +125,7 @@ internal class DefaultAddCustomTokenComponent @AssistedInject constructor(
             selectorComponentFactory.create(
                 context = childByContext(componentContext),
                 params = CustomTokenSelectorComponent.Params.DerivationPathSelector(
-                    userWalletId = config.userWalletId,
+                    mode = config.mode,
                     selectedNetwork = requireNotNull(config.selectedNetwork) {
                         "Network is not selected"
                     },
@@ -138,7 +138,7 @@ internal class DefaultAddCustomTokenComponent @AssistedInject constructor(
             formComponentFactory.create(
                 context = childByContext(componentContext),
                 params = CustomTokenFormComponent.Params(
-                    userWalletId = config.userWalletId,
+                    mode = config.mode,
                     network = requireNotNull(config.selectedNetwork) {
                         "Network is not selected"
                     },
