@@ -33,7 +33,8 @@ internal class OnrampAmountStateFactory(
         currentStateProvider = currentStateProvider,
     )
 
-    fun getOnAmountValueChange(value: String) = onrampAmountFieldChangeConverter.convert(value)
+    fun getOnAmountValueChange(value: String, isValuePasted: Boolean) =
+        onrampAmountFieldChangeConverter.convert(OnrampAmountFieldChangeConverter.Input(value, isValuePasted))
 
     fun getUpdatedCurrencyState(currency: OnrampCurrency): OnrampMainComponentUM {
         val currentState = currentStateProvider()

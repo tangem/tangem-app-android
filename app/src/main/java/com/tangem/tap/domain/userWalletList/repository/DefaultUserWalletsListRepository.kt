@@ -4,6 +4,7 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.raise.either
 import arrow.core.right
+import com.tangem.common.CompletionResult
 import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
 import com.tangem.common.flatMap
@@ -11,21 +12,16 @@ import com.tangem.common.map
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
+import com.tangem.domain.core.wallets.UserWalletsListRepository
+import com.tangem.domain.core.wallets.UserWalletsListRepository.LockMethod
+import com.tangem.domain.core.wallets.error.*
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.wallets.R
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
-import com.tangem.domain.wallets.hot.HotWalletPasswordRequester
-import com.tangem.domain.core.wallets.error.DeleteWalletError
-import com.tangem.domain.core.wallets.error.LockWalletsError
-import com.tangem.domain.core.wallets.error.SaveWalletError
-import com.tangem.domain.core.wallets.error.SelectWalletError
-import com.tangem.domain.core.wallets.error.SetLockError
-import com.tangem.domain.core.wallets.error.UnlockWalletError
-import com.tangem.domain.core.wallets.UserWalletsListRepository
-import com.tangem.domain.core.wallets.UserWalletsListRepository.LockMethod
 import com.tangem.domain.wallets.hot.HotWalletAccessCodeAttemptsRepository
+import com.tangem.domain.wallets.hot.HotWalletPasswordRequester
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.tap.domain.userWalletList.model.UserWalletEncryptionKey
@@ -38,6 +34,8 @@ import com.tangem.utils.ProviderSuspend
 import com.tangem.utils.extensions.indexOfFirstOrNull
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 @Suppress("LongParameterList", "LargeClass")
 internal class DefaultUserWalletsListRepository(
@@ -54,32 +52,40 @@ internal class DefaultUserWalletsListRepository(
 
     override val userWallets = MutableStateFlow<List<UserWallet>?>(null)
     override val selectedUserWallet = MutableStateFlow<UserWallet?>(null)
+    private val mutex = Mutex()
 
     override suspend fun load() {
-        if (userWallets.value != null) return
+        mutex.withLock {
+            if (userWallets.value != null) return
 
-        if (savePersistentInformation().not()) {
-            // If we don't save persistent information, we don't need to load user wallets
-            // and we should clear any existing data
-            clearPersistentData()
-            userWallets.value = emptyList()
-            return
-        }
-
-        val unsecuredEncryptionKeys = userWalletEncryptionKeysRepository.getAllUnsecured()
-
-        publicInformationRepository.getAll()
-            .map { it.toUserWallets() }
-            .flatMap { wallets ->
-                sensitiveInformationRepository.getAll(unsecuredEncryptionKeys)
-                    .map { wallets.updateWith(it) }
-            }.doOnSuccess {
-                userWallets.value = it
+            if (savePersistentInformation().not()) {
+                // If we don't save persistent information, we don't need to load user wallets
+                // and we should clear any existing data
+                clearPersistentData()
+                updateWallets { emptyList() }
+                return
             }
 
-        val selectedUserWalletId = selectedUserWalletRepository.get()
-        selectedUserWallet.value = userWallets.value?.firstOrNull { it.walletId == selectedUserWalletId }
-            ?: userWallets.value?.firstOrNull()
+            val unsecuredEncryptionKeys = userWalletEncryptionKeysRepository.getAllUnsecured()
+
+            publicInformationRepository.getAll()
+                .map { it.toUserWallets() }
+                .flatMap { wallets ->
+                    sensitiveInformationRepository.getAll(unsecuredEncryptionKeys)
+                        .map { wallets.updateWith(it) }
+                }
+                .doOnSuccess { loadedWallets ->
+                    userWallets.update { toUpdate ->
+                        val selectedUserWalletId = selectedUserWalletRepository.get()
+                        selectedUserWallet.value = loadedWallets.firstOrNull { it.walletId == selectedUserWalletId }
+                            ?: loadedWallets.firstOrNull()?.also {
+                                selectedUserWalletRepository.set(it.walletId)
+                            }
+
+                        loadedWallets
+                    }
+                }
+        }
     }
 
     override suspend fun userWalletsSync(): List<UserWallet> {
@@ -118,7 +124,7 @@ internal class DefaultUserWalletsListRepository(
         }
 
         // update the userWallets state and add if it doesn't exist
-        userWallets.update { currentWallets ->
+        updateWallets { currentWallets ->
             val wallets = currentWallets ?: emptyList()
             if (wallets.any { it.walletId == userWallet.walletId }) {
                 wallets.map { if (it.walletId == userWallet.walletId) userWallet else it }
@@ -191,21 +197,21 @@ internal class DefaultUserWalletsListRepository(
 
         userWalletEncryptionKeysRepository.delete(userWalletIds)
 
-        val userWalletsBeforeDelete = userWallets.value ?: return@either
-
         userWallets.update { currentWallets ->
-            currentWallets?.filterNot { it.walletId in userWalletIds }
-        }
-
-        selectedUserWallet.update { currentSelected ->
-            if (currentSelected == null) return@update null
-
-            userWallets.value?.findAvailableUserWallet(
-                userWalletsBeforeDelete.indexOfFirstOrNull { it.walletId == currentSelected.walletId } ?: 0,
-            )
+            val updatedWallets = currentWallets?.filter { userWalletIds.contains(it.walletId).not() }
+            selectedUserWallet.update { currentSelected ->
+                if (currentSelected == null) return@update null
+                val newSelected = updatedWallets?.findAvailableUserWallet(
+                    currentWallets.indexOfFirstOrNull { it.walletId == currentSelected.walletId } ?: 0,
+                )
+                selectedUserWalletRepository.set(newSelected?.walletId)
+                newSelected
+            }
+            updatedWallets
         }
     }
 
+    @Suppress("CyclomaticComplexMethod")
     override suspend fun unlock(
         userWalletId: UserWalletId,
         unlockMethod: UserWalletsListRepository.UnlockMethod,
@@ -248,37 +254,45 @@ internal class DefaultUserWalletsListRepository(
                 removePasswordAttempts(userWallet)
 
                 sensitiveInformationRepository.getAll(listOf(encryptionKey))
-                    .doOnSuccess { sensitiveInfo -> userWallets.update { it?.updateWith(sensitiveInfo) } }
+                    .doOnSuccess { sensitiveInfo -> updateWallets { it?.updateWith(sensitiveInfo) } }
                     .doOnFailure { error ->
                         raise(UnlockWalletError.UnableToUnlock)
                     }
             }
-            UserWalletsListRepository.UnlockMethod.Scan -> {
+            is UserWalletsListRepository.UnlockMethod.Scan -> {
                 if (userWallet !is UserWallet.Cold) {
                     raise(UnlockWalletError.UnableToUnlock)
                 }
 
-                tangemSdkManagerProvider().scanProduct()
-                    .doOnSuccess { scanResponse ->
-                        val expectedId = UserWalletIdBuilder.scanResponse(scanResponse).build()
-
-                        if (expectedId != userWallet.walletId) {
-                            raise(UnlockWalletError.ScannedCardWalletNotMatched)
-                        }
-
-                        saveWithoutLock(userWallet.copy(scanResponse = scanResponse), canOverride = true)
-                            .mapLeft { UnlockWalletError.UnableToUnlock }
-                            .bind()
+                val scanResponse = unlockMethod.scanResponse ?: run {
+                    val res = tangemSdkManagerProvider().scanProduct()
+                    when (res) {
+                        is CompletionResult.Failure -> raise(UnlockWalletError.UserCancelled)
+                        is CompletionResult.Success -> res.data
                     }
-                    .doOnFailure {
-                        raise(UnlockWalletError.UserCancelled)
-                    }
+                }
+
+                val expectedId = UserWalletIdBuilder.scanResponse(scanResponse).build()
+
+                if (expectedId != userWallet.walletId) {
+                    raise(UnlockWalletError.ScannedCardWalletNotMatched)
+                }
+
+                val encryptionKey = UserWalletEncryptionKey(
+                    walletId = userWallet.walletId,
+                    encryptionKey = scanResponse.encryptionKey ?: raise(UnlockWalletError.UnableToUnlock),
+                )
+
+                sensitiveInformationRepository.getAll(listOf(encryptionKey))
+                    .doOnSuccess { sensitiveInfo -> updateWallets { it?.updateWith(sensitiveInfo) } }
+                    .doOnFailure { error -> raise(UnlockWalletError.UnableToUnlock) }
             }
         }
     }
 
     override suspend fun unlockAllWallets(): Either<UnlockWalletError, Unit> = either {
-        val userWalletIds = userWalletsSync().map { it.walletId }.toSet()
+        val userWallets = userWalletsSync()
+        val userWalletIds = userWallets.map { it.walletId }.toSet()
         val biometricKeys = runCatching {
             userWalletEncryptionKeysRepository.getAllBiometric()
         }.getOrElse {
@@ -291,7 +305,7 @@ internal class DefaultUserWalletsListRepository(
         val unlockedWalletsIds = allKeys.map { it.walletId }
 
         val unlockedWallets = unlockedWalletsIds.mapNotNull { id ->
-            userWalletsSync().firstOrNull { it.walletId == id }
+            userWallets.firstOrNull { it.walletId == id }
         }
 
         // Remove all password attempts for unlocked hot wallets
@@ -306,7 +320,7 @@ internal class DefaultUserWalletsListRepository(
 
         sensitiveInformationRepository.getAll(allKeys)
             .doOnSuccess { sensitiveInfo ->
-                userWallets.update { it?.updateWith(sensitiveInfo) }
+                updateWallets { userWallets.updateWith(sensitiveInfo) }
             }
             .doOnFailure { raise(UnlockWalletError.UnableToUnlock) }
     }
@@ -318,7 +332,7 @@ internal class DefaultUserWalletsListRepository(
             raise(LockWalletsError.NothingToLock)
         }
 
-        userWallets.update {
+        updateWallets {
             it?.map {
                 if (it.walletId !in unsecuredWalletIds) {
                     it.lock()
@@ -387,6 +401,17 @@ internal class DefaultUserWalletsListRepository(
         )
 
         return tangemSdkManagerProvider.invoke().canUseBiometry && useBiometricAuthentication
+    }
+
+    private fun updateWallets(block: (List<UserWallet>?) -> List<UserWallet>?) {
+        userWallets.update {
+            val updated = block(it)
+            selectedUserWallet.update { currentSelected ->
+                if (currentSelected == null) return@update null
+                updated?.find { it.walletId == currentSelected.walletId }
+            }
+            updated
+        }
     }
 
     /**
