@@ -8,9 +8,9 @@ import retrofit2.http.Path
 
 interface YieldSupplyApi {
 
-    @GET("v1/yield/markets")
+    @GET("api/v1/yield/markets")
     suspend fun getYieldMarkets(): ApiResponse<YieldMarketsResponse>
 
-    @GET("v1/yield/token/{tokenAddress}")
+    @GET("api/v1/yield/token/{tokenAddress}")
     suspend fun getYieldTokenStatus(@Path("tokenAddress") tokenAddress: String): ApiResponse<YieldTokenStatusResponse>
 }
