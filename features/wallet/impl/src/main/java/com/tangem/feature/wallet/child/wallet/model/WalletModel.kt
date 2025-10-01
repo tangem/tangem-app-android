@@ -23,6 +23,7 @@ import com.tangem.domain.pay.usecase.TangemPayMainScreenCustomerInfoUseCase
 import com.tangem.domain.settings.*
 import com.tangem.domain.tokens.RefreshMultiCurrencyWalletQuotesUseCase
 import com.tangem.domain.wallets.usecase.*
+import com.tangem.domain.yield.supply.usecase.YieldSupplyApyUpdateUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
@@ -43,6 +44,7 @@ import com.tangem.features.pushnotifications.api.PushNotificationsModelCallbacks
 import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
 import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.wallet.deeplink.WalletDeepLinkActionListener
+import com.tangem.features.yield.supply.api.YieldSupplyFeatureToggles
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
 import kotlinx.coroutines.*
@@ -92,6 +94,8 @@ internal class WalletModel @Inject constructor(
     private val tangemPayMainScreenCustomerInfoUseCase: TangemPayMainScreenCustomerInfoUseCase,
     private val tangemPayIssueOrderUseCase: TangemPayIssueOrderUseCase,
     private val tangemPayFeatureToggles: TangemPayFeatureToggles,
+    private val yieldSupplyApyUpdateUseCase: YieldSupplyApyUpdateUseCase,
+    private val yieldSupplyFeatureToggles: YieldSupplyFeatureToggles,
     val screenLifecycleProvider: ScreenLifecycleProvider,
     val innerWalletRouter: InnerWalletRouter,
 ) : Model() {
@@ -116,6 +120,7 @@ internal class WalletModel @Inject constructor(
 
         maybeMigrateNames()
         maybeSetWalletFirstTimeUsage()
+        updateYieldSupplyApy()
         subscribeToUserWalletsUpdates()
         subscribeOnBalanceHiding()
         subscribeOnSelectedWalletFlow()
@@ -125,6 +130,14 @@ internal class WalletModel @Inject constructor(
         enableNotificationsIfNeeded()
 
         clickIntents.initialize(innerWalletRouter, modelScope)
+    }
+
+    private fun updateYieldSupplyApy() {
+        if (yieldSupplyFeatureToggles.isYieldSupplyFeatureEnabled) {
+            modelScope.launch(dispatchers.default) {
+                yieldSupplyApyUpdateUseCase()
+            }
+        }
     }
 
     private fun maybeMigrateNames() {
