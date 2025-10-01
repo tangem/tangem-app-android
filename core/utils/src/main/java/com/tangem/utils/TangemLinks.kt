@@ -18,4 +18,6 @@ object TangemLinks {
                 append("/blog/post/what-is-a-transaction-fee-and-why-do-we-need-it/")
             }
         }
+
+    const val RESOURCE_TO_LEARN_ABOUT_APPROVING_IN_SWAP = "https://tangem.com/en/blog/post/give-revoke-permission/"
 }
