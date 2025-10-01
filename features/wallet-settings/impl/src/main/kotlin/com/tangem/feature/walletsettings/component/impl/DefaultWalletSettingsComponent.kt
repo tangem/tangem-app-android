@@ -1,6 +1,7 @@
 package com.tangem.feature.walletsettings.component.impl
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -13,6 +14,7 @@ import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableDialogComponent
+import com.tangem.core.ui.utils.requestPermission
 import com.tangem.feature.walletsettings.component.NetworksAvailableForNotificationsComponent
 import com.tangem.feature.walletsettings.component.RenameWalletComponent
 import com.tangem.feature.walletsettings.component.WalletSettingsComponent
@@ -20,6 +22,7 @@ import com.tangem.feature.walletsettings.entity.DialogConfig
 import com.tangem.feature.walletsettings.entity.NetworksAvailableForNotificationBSConfig
 import com.tangem.feature.walletsettings.model.WalletSettingsModel
 import com.tangem.feature.walletsettings.ui.WalletSettingsScreen
+import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -60,6 +63,18 @@ internal class DefaultWalletSettingsComponent @AssistedInject constructor(
             state = state,
             dialog = { dialog.child?.instance?.Dialog() },
         )
+
+        val requestPushPermission = requestPermission(
+            onAllow = { state.onPushNotificationPermissionGranted(true) },
+            onDeny = { state.onPushNotificationPermissionGranted(false) },
+            permission = PUSH_PERMISSION,
+        )
+
+        if (state.requestPushNotificationsPermission) {
+            LaunchedEffect(Unit) {
+                requestPushPermission()
+            }
+        }
 
         bottomSheet.child?.instance?.BottomSheet()
     }
