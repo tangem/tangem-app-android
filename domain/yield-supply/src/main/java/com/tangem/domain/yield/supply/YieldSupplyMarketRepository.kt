@@ -1,6 +1,7 @@
 package com.tangem.domain.yield.supply
 
 import com.tangem.domain.yield.supply.models.YieldMarketToken
+import com.tangem.domain.yield.supply.models.YieldTokenStatus
 import kotlinx.coroutines.flow.Flow
 
 interface YieldSupplyMarketRepository {
@@ -20,4 +21,10 @@ interface YieldSupplyMarketRepository {
      * Observe runtime markets updates.
      */
     fun getMarketsFlow(): Flow<List<YieldMarketToken>>
+
+    /**
+     * Get yield token status by contract address.
+     */
+    @Throws
+    suspend fun getTokenStatus(contractAddress: String): YieldTokenStatus
 }
