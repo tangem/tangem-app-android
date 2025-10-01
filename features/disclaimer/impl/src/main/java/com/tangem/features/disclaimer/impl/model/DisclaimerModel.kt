@@ -7,7 +7,6 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.finisher.AppFinisher
 import com.tangem.domain.card.repository.CardRepository
-import com.tangem.domain.notifications.GetIsHuaweiDeviceWithoutGoogleServicesUseCase
 import com.tangem.domain.notifications.repository.NotificationsRepository
 import com.tangem.domain.settings.NeverRequestPermissionUseCase
 import com.tangem.domain.settings.NeverToInitiallyAskPermissionUseCase
@@ -29,8 +28,6 @@ internal class DisclaimerModel @Inject constructor(
     private val neverRequestPermissionUseCase: NeverRequestPermissionUseCase,
     private val appFinisher: AppFinisher,
     private val notificationsRepository: NotificationsRepository,
-    private val getIsHuaweiDeviceWithoutGoogleServicesUseCase: GetIsHuaweiDeviceWithoutGoogleServicesUseCase,
-
     paramsContainer: ParamsContainer,
 ) : Model() {
 
@@ -51,8 +48,7 @@ internal class DisclaimerModel @Inject constructor(
         } else {
             cardRepository.acceptTangemTOS()
             val shouldAskPushPermission = notificationsRepository.shouldShowSubscribeOnNotificationsAfterUpdate()
-            val isHuaweiDevice = getIsHuaweiDeviceWithoutGoogleServicesUseCase()
-            if (shouldAskPushPermission && !isHuaweiDevice) {
+            if (shouldAskPushPermission) {
                 router.push(AppRoute.PushNotification(AppRoute.PushNotification.Source.Stories))
             } else {
                 neverToInitiallyAskPermissionUseCase(PUSH_PERMISSION)
