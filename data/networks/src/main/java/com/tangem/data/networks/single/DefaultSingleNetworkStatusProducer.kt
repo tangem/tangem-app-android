@@ -1,5 +1,7 @@
 package com.tangem.data.networks.single
 
+import arrow.core.Option
+import arrow.core.some
 import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.networks.multi.MultiNetworkStatusProducer
 import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
@@ -28,8 +30,8 @@ internal class DefaultSingleNetworkStatusProducer @AssistedInject constructor(
     private val dispatchers: CoroutineDispatcherProvider,
 ) : SingleNetworkStatusProducer {
 
-    override val fallback: NetworkStatus
-        get() = NetworkStatus(network = params.network, value = NetworkStatus.Unreachable(address = null))
+    override val fallback: Option<NetworkStatus>
+        get() = NetworkStatus(network = params.network, value = NetworkStatus.Unreachable(address = null)).some()
 
     override fun produce(): Flow<NetworkStatus> {
         return multiNetworkStatusSupplier(

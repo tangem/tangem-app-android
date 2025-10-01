@@ -20,7 +20,7 @@ import com.tangem.domain.qrscanning.usecases.ListenToQrScanningUseCase
 import com.tangem.domain.qrscanning.usecases.ParseQrCodeUseCase
 import com.tangem.domain.tokens.GetCryptoCurrencyUseCase
 import com.tangem.domain.tokens.GetNetworkAddressesUseCase
-import com.tangem.domain.transaction.usecase.IsUtxoConsolidationAvailableUseCase
+import com.tangem.domain.transaction.usecase.IsSelfSendAvailableUseCase
 import com.tangem.domain.transaction.usecase.ValidateWalletAddressUseCase
 import com.tangem.domain.transaction.usecase.ValidateWalletMemoUseCase
 import com.tangem.domain.txhistory.usecase.GetFixedTxHistoryItemsUseCase
@@ -62,7 +62,7 @@ internal class SendDestinationModel @Inject constructor(
     private val getCryptoCurrencyUseCase: GetCryptoCurrencyUseCase,
     private val getNetworkAddressesUseCase: GetNetworkAddressesUseCase,
     private val getFixedTxHistoryItemsUseCase: GetFixedTxHistoryItemsUseCase,
-    private val isUtxoConsolidationAvailableUseCase: IsUtxoConsolidationAvailableUseCase,
+    private val isSelfSendAvailableUseCase: IsSelfSendAvailableUseCase,
     private val listenToQrScanningUseCase: ListenToQrScanningUseCase,
     private val parseQrCodeUseCase: ParseQrCodeUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
@@ -197,7 +197,7 @@ internal class SendDestinationModel @Inject constructor(
                 waitForDelay(RECENT_LOAD_DELAY) { it }
             }.conflate(),
         ) { destinationWalletList, txHistoryList ->
-            val isUtxoConsolidationAvailable = isUtxoConsolidationAvailableUseCase.invokeSync(
+            val isSelfSendAvailable = isSelfSendAvailableUseCase.invokeSync(
                 userWalletId = userWalletId,
                 network = cryptoCurrency.network,
             )
@@ -206,7 +206,7 @@ internal class SendDestinationModel @Inject constructor(
                 SendDestinationRecentListTransformer(
                     cryptoCurrency = cryptoCurrency,
                     senderAddress = senderAddresses.value.firstOrNull()?.address,
-                    isUtxoConsolidationAvailable = isUtxoConsolidationAvailable,
+                    isSelfSendAvailable = isSelfSendAvailable,
                     destinationWalletList = destinationWalletList,
                     txHistoryList = txHistoryList,
                 ),

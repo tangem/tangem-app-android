@@ -1,5 +1,7 @@
 package com.tangem.domain.core.flow
 
+import arrow.core.Option
+import arrow.core.some
 import com.google.common.truth.Truth
 import io.mockk.every
 import io.mockk.mockk
@@ -105,8 +107,8 @@ internal class FlowCachingSupplierTest {
 
     private class MockFlowProducer(private val params: Int) : FlowProducer<String> {
 
-        override val fallback: String
-            get() = "fallback"
+        override val fallback: Option<String>
+            get() = "fallback".some()
 
         override fun produce(): Flow<String> = flowOf("test_$params")
 
@@ -125,8 +127,8 @@ internal class FlowCachingSupplierTest {
 
     private class MockErrorFlowProducer : FlowProducer<String> {
 
-        override val fallback: String
-            get() = "fallback"
+        override val fallback: Option<String>
+            get() = "fallback".some()
 
         override fun produce(): Flow<String> = flow {
             throw IllegalStateException()
