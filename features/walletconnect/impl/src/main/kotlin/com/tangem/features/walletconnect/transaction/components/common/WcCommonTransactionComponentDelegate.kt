@@ -62,6 +62,8 @@ internal abstract class WcCommonTransactionComponentDelegate(
             is WcTransactionRoutes.Alert,
             is WcTransactionRoutes.CustomAllowance,
             is WcTransactionRoutes.SelectFee,
+            is WcTransactionRoutes.MultipleTransactions,
+            WcTransactionRoutes.TransactionProcess,
             -> stackNavigation?.pop()
             null -> Unit
         }
