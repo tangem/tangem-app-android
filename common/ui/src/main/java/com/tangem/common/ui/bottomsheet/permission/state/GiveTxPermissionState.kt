@@ -26,6 +26,7 @@ sealed class GiveTxPermissionState {
         val approveButton: ApprovePermissionButton,
         val cancelButton: CancelPermissionButton,
         val onChangeApproveType: ((ApproveType) -> Unit)? = null,
+        val onOpenLearnMoreAboutApproveClick: () -> Unit,
     ) : GiveTxPermissionState()
 
     fun GiveTxPermissionState.getApproveTypeOrNull(): ApproveType? {
