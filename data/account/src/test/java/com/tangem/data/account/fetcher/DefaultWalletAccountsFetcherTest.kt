@@ -8,7 +8,7 @@ import com.tangem.data.common.cache.etag.ETagsStore
 import com.tangem.data.common.currency.UserTokensSaver
 import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.common.response.ApiResponseError
-import com.tangem.datasource.api.common.response.IF_NONE_MATCH_HEADER
+import com.tangem.datasource.api.common.response.ETAG_HEADER
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
@@ -85,7 +85,7 @@ class DefaultWalletAccountsFetcherTest {
             val newETag = "newEtag"
             val apiResponse = ApiResponse.Success(
                 data = accountsResponse,
-                headers = mapOf(IF_NONE_MATCH_HEADER to listOf(newETag)),
+                headers = mapOf(ETAG_HEADER to listOf(newETag)),
             )
 
             accountsResponseStoreFlow.value = savedAccountsResponse
@@ -156,7 +156,7 @@ class DefaultWalletAccountsFetcherTest {
             val newETag = "newEtag"
             val apiResponse = ApiResponse.Success(
                 data = accountsResponse,
-                headers = mapOf(IF_NONE_MATCH_HEADER to listOf(newETag)),
+                headers = mapOf(ETAG_HEADER to listOf(newETag)),
             )
 
             accountsResponseStoreFlow.value = savedAccountsResponse
@@ -247,7 +247,7 @@ class DefaultWalletAccountsFetcherTest {
             val newETag = "newEtag"
             val apiResponse = ApiResponse.Success(
                 data = accountsResponse,
-                headers = mapOf(IF_NONE_MATCH_HEADER to listOf(newETag)),
+                headers = mapOf(ETAG_HEADER to listOf(newETag)),
             )
 
             val apiError = ApiResponseError.HttpException(
