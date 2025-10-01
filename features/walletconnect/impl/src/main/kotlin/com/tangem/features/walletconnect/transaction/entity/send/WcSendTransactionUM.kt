@@ -32,4 +32,5 @@ internal data class WcSendTransactionItemUM(
     val sendEnabled: Boolean,
     val feeErrorNotification: NotificationUM.Info?,
     val isLoading: Boolean = false,
+    val walletInteractionIcon: Int? = null,
 ) : TangemBottomSheetConfigContent

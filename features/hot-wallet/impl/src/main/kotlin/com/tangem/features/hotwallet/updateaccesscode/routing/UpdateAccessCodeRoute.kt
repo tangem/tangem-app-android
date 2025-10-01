@@ -7,8 +7,13 @@ import kotlinx.serialization.Serializable
 internal sealed class UpdateAccessCodeRoute : Route {
 
     @Serializable
-    data class SetAccessCode(val userWalletId: UserWalletId) : UpdateAccessCodeRoute()
+    data class SetAccessCode(
+        val userWalletId: UserWalletId,
+    ) : UpdateAccessCodeRoute()
 
     @Serializable
-    data class ConfirmAccessCode(val userWalletId: UserWalletId, val accessCode: String) : UpdateAccessCodeRoute()
+    data class ConfirmAccessCode(
+        val userWalletId: UserWalletId,
+        val accessCode: String,
+    ) : UpdateAccessCodeRoute()
 }
