@@ -16,6 +16,7 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.navigation.share.ShareManager
+import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.haptic.TangemHapticEffect
@@ -73,6 +74,7 @@ import com.tangem.features.staking.impl.presentation.state.utils.checkAndCalcula
 import com.tangem.features.staking.impl.presentation.state.utils.isSingleAction
 import com.tangem.features.staking.impl.presentation.state.utils.withStubUnstakeAction
 import com.tangem.utils.Provider
+import com.tangem.utils.TangemLinks.RESOURCE_TO_LEARN_ABOUT_APPROVING_IN_SWAP
 import com.tangem.utils.coroutines.*
 import com.tangem.utils.extensions.isSingleItem
 import com.tangem.utils.extensions.orZero
@@ -123,6 +125,7 @@ internal class StakingModel @Inject constructor(
     private val getActionRequirementAmountUseCase: GetActionRequirementAmountUseCase,
     private val paramsInterceptorHolder: ParamsInterceptorHolder,
     private val shareManager: ShareManager,
+    private val urlOpener: UrlOpener,
     @DelayedWork private val coroutineScope: CoroutineScope,
     private val innerRouter: InnerStakingRouter,
     appRouter: AppRouter,
@@ -925,6 +928,10 @@ internal class StakingModel @Inject constructor(
                 StakingAlertUM.StakeMoreClickUnavailable(cryptoCurrencyStatus.currency),
             ),
         )
+    }
+
+    override fun onOpenLearnMoreAboutApproveClick() {
+        urlOpener.openUrl(RESOURCE_TO_LEARN_ABOUT_APPROVING_IN_SWAP)
     }
 
     private suspend fun setupApprovalNeeded() {
