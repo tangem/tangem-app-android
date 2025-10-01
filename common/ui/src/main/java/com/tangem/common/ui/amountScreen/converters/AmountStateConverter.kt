@@ -104,7 +104,6 @@ class AmountStateConverterV2(
     private val cryptoCurrencyStatus: CryptoCurrencyStatus,
     private val maxEnterAmount: EnterAmountBoundary,
     private val iconStateConverter: CryptoCurrencyToIconStateConverter,
-    private val isRedesignEnabled: Boolean,
     private val isBalanceHidden: Boolean,
 ) : Converter<AmountParameters, AmountState> {
 
@@ -122,23 +121,16 @@ class AmountStateConverterV2(
         val noFeeRate = cryptoCurrencyStatus.value.fiatRate.isNullOrZero()
 
         if (cryptoCurrencyStatus.value is CryptoCurrencyStatus.Loading) {
-            return AmountState.Empty(
-                isRedesignEnabled = isRedesignEnabled,
-            )
+            return AmountState.Empty(isRedesignEnabled = true)
         }
 
         return AmountState.Data(
             title = value.title,
-            availableBalance = if (isRedesignEnabled) {
-                combinedReference(
-                    stringReference(crypto),
-                    stringReference(" $DOT "),
-                    stringReference(fiat),
-                ).orMaskWithStars(isBalanceHidden)
-            } else {
-                resourceReference(R.string.common_crypto_fiat_format, wrappedList(crypto, fiat))
-                    .orMaskWithStars(isBalanceHidden)
-            },
+            availableBalance = combinedReference(
+                stringReference(crypto),
+                stringReference(" $DOT "),
+                stringReference(fiat),
+            ).orMaskWithStars(isBalanceHidden),
             availableBalanceCrypto = stringReference(crypto).orMaskWithStars(isBalanceHidden),
             availableBalanceFiat = if (isBalanceHidden) {
                 TextReference.EMPTY
@@ -171,7 +163,7 @@ class AmountStateConverterV2(
             ),
             isSegmentedButtonsEnabled = !noFeeRate,
             selectedButton = 0,
-            isRedesignEnabled = isRedesignEnabled,
+            isRedesignEnabled = true,
         )
     }
 }
