@@ -94,8 +94,8 @@ internal fun CustomTokenFormContent(model: CustomTokenFormUM, modifier: Modifier
             enabled = model.canAddToken,
             showProgress = model.isValidating,
             animateContentChange = true,
-            icon = if (model.needToAddDerivation) {
-                TangemButtonIconPosition.End(R.drawable.ic_tangem_24)
+            icon = if (model.walletInteractionIcon != null) {
+                TangemButtonIconPosition.End(model.walletInteractionIcon)
             } else {
                 TangemButtonIconPosition.None
             },
