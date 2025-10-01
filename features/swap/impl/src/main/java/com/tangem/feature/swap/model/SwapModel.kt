@@ -63,6 +63,7 @@ import com.tangem.feature.swap.ui.StateBuilder
 import com.tangem.feature.swap.utils.formatToUIRepresentation
 import com.tangem.features.swap.SwapComponent
 import com.tangem.utils.Provider
+import com.tangem.utils.TangemLinks.RESOURCE_TO_LEARN_ABOUT_APPROVING_IN_SWAP
 import com.tangem.utils.coroutines.*
 import com.tangem.utils.isNullOrZero
 import kotlinx.coroutines.NonCancellable
@@ -1163,6 +1164,9 @@ internal class SwapModel @Inject constructor(
                 )
                 modelScope.launch { shouldShowStoriesUseCase.neverToShow(StoryContentIds.STORY_FIRST_TIME_SWAP.id) }
                 swapRouter.openScreen(SwapNavScreen.Main)
+            },
+            onOpenLearnMoreAboutApproveClick = {
+                urlOpener.openUrl(RESOURCE_TO_LEARN_ABOUT_APPROVING_IN_SWAP)
             },
         )
     }
