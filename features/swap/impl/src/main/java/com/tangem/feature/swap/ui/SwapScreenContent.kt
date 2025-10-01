@@ -382,7 +382,7 @@ private fun MainButton(state: SwapStateHolder, onPermissionWarningClick: () -> U
             PrimaryButtonIconEnd(
                 modifier = Modifier.fillMaxWidth(),
                 text = stringResourceSafe(id = R.string.swapping_swap_action),
-                iconResId = R.drawable.ic_tangem_24,
+                iconResId = state.swapButton.walletInteractionIcon,
                 enabled = state.swapButton.enabled,
                 onClick = state.swapButton.onClick,
             )
@@ -441,7 +441,7 @@ private val state = SwapStateHolder(
         ),
         SwapNotificationUM.Warning.NoAvailableTokensToSwap("POLYGON"),
     ),
-    swapButton = SwapButton(enabled = true, onClick = {}),
+    swapButton = SwapButton(enabled = true, onClick = {}, walletInteractionIcon = null),
     onRefresh = {},
     onBackClicked = {},
     onChangeCardsClicked = {},

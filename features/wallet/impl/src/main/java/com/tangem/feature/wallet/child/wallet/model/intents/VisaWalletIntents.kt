@@ -4,7 +4,7 @@ import arrow.core.getOrElse
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
-import com.tangem.domain.feedback.GetCardInfoUseCase
+import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.visa.GetVisaCurrencyUseCase
@@ -39,7 +39,7 @@ internal class VisaWalletIntentsImplementor @Inject constructor(
     private val eventSender: WalletEventSender,
     private val getVisaCurrencyUseCase: GetVisaCurrencyUseCase,
     private val getVisaTxDetailsUseCase: GetVisaTxDetailsUseCase,
-    private val getCardInfoUseCase: GetCardInfoUseCase,
+    private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase,
     private val getUserWalletsUseCase: GetWalletsUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val dispatchers: CoroutineDispatcherProvider,
@@ -101,13 +101,13 @@ internal class VisaWalletIntentsImplementor @Inject constructor(
             val userWalletId = stateController.getSelectedWalletId()
             val userWallet = getUserWalletsUseCase.invokeSync()
                 .firstOrNull { it.walletId == userWalletId } ?: return@launch
-            val cardInfo = getCardInfoUseCase.invoke(
+            val cardInfo = getWalletMetaInfoUseCase.invoke(
                 userWallet.requireColdWallet().scanResponse,
             ).getOrNull() ?: return@launch
 
             sendFeedbackEmailUseCase(
                 FeedbackEmailType.Visa.Dispute(
-                    cardInfo = cardInfo,
+                    walletMetaInfo = cardInfo,
                     visaTxDetails = txDetails,
                 ),
             )
