@@ -9,12 +9,14 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.onramp.OnrampSaveDefaultCountryUseCase
+import com.tangem.domain.onramp.OnrampSaveDefaultCurrencyUseCase
 import com.tangem.domain.onramp.analytics.OnrampAnalyticsEvent
 import com.tangem.domain.onramp.model.OnrampCountry
 import com.tangem.features.onramp.confirmresidency.ConfirmResidencyComponent
 import com.tangem.features.onramp.confirmresidency.entity.ConfirmResidencyBottomSheetConfig
 import com.tangem.features.onramp.confirmresidency.entity.ConfirmResidencyUM
 import com.tangem.features.onramp.impl.R
+import com.tangem.features.onramp.utils.model.EUR_CURRENCY
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
@@ -26,6 +28,7 @@ internal class ConfirmResidencyModel @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val router: Router,
     private val saveDefaultCountryUseCase: OnrampSaveDefaultCountryUseCase,
+    private val onrampSaveDefaultCurrencyUseCase: OnrampSaveDefaultCurrencyUseCase,
     paramsContainer: ParamsContainer,
 ) : Model() {
 
@@ -54,6 +57,10 @@ internal class ConfirmResidencyModel @Inject constructor(
                 analyticsEventHandler.send(OnrampAnalyticsEvent.OnResidenceConfirm(country.name))
                 modelScope.launch {
                     saveDefaultCountryUseCase.invoke(country)
+                    if (params.launchSepa) {
+                        onrampSaveDefaultCurrencyUseCase.invoke(EUR_CURRENCY)
+                    }
+
                     params.onDismiss()
                 }
             },
