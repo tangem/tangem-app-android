@@ -4,10 +4,12 @@ import androidx.compose.runtime.Stable
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.tangem.domain.models.PortfolioId
 import com.tangem.domain.models.TokenReceiveConfig
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.tokens.model.details.TokenAction
 import com.tangem.feature.wallet.navigation.WalletRoute
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletDialogConfig
 import kotlinx.coroutines.flow.SharedFlow
@@ -62,4 +64,11 @@ internal interface InnerWalletRouter {
     fun openTangemPayOnboarding()
 
     fun openTangemPayDetails(custoemrWalletAddress: String)
+
+    /** Open BS abput yield supply active and all money deposited in AAVE */
+    fun openYieldSupplyBottomSheet(
+        cryptoCurrency: CryptoCurrency,
+        tokenAction: TokenAction,
+        onWarningAcknowledged: (TokenAction) -> Unit,
+    )
 }
