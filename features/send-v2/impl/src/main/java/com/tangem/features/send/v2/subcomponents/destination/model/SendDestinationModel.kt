@@ -25,7 +25,6 @@ import com.tangem.domain.transaction.usecase.ValidateWalletAddressUseCase
 import com.tangem.domain.transaction.usecase.ValidateWalletMemoUseCase
 import com.tangem.domain.txhistory.usecase.GetFixedTxHistoryItemsUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
-import com.tangem.features.send.v2.api.SendFeatureToggles
 import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents.SendScreenSource
 import com.tangem.features.send.v2.api.entity.PredefinedValues
@@ -66,7 +65,6 @@ internal class SendDestinationModel @Inject constructor(
     private val listenToQrScanningUseCase: ListenToQrScanningUseCase,
     private val parseQrCodeUseCase: ParseQrCodeUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
-    private val sendFeatureToggles: SendFeatureToggles,
 ) : Model(), SendDestinationClickIntents {
     private val params: SendDestinationComponentParams = paramsContainer.require()
 
@@ -92,7 +90,6 @@ internal class SendDestinationModel @Inject constructor(
             _uiState.update(
                 SendDestinationInitialStateTransformer(
                     cryptoCurrency = cryptoCurrency,
-                    isRedesignEnabled = sendFeatureToggles.isSendRedesignEnabled,
                     isInitialized = true,
                 ),
             )
@@ -301,12 +298,11 @@ internal class SendDestinationModel @Inject constructor(
             flow2 = params.currentRoute,
             transform = { state, route -> state to route },
         ).onEach { (state, route) ->
-            val isRedesignEnabled = sendFeatureToggles.isSendRedesignEnabled
             params.callback.onNavigationResult(
                 NavigationUM.Content(
                     title = params.title,
                     subtitle = null,
-                    backIconRes = if (route.isEditMode || isRedesignEnabled) {
+                    backIconRes = if (route.isEditMode) {
                         R.drawable.ic_back_24
                     } else {
                         R.drawable.ic_close_24
@@ -324,16 +320,6 @@ internal class SendDestinationModel @Inject constructor(
                             saveResult()
                         }
                         params.callback.onBackClick()
-                    },
-                    additionalIconRes = if (isRedesignEnabled) {
-                        null
-                    } else {
-                        R.drawable.ic_qrcode_scan_24
-                    },
-                    additionalIconClick = if (isRedesignEnabled) {
-                        null
-                    } else {
-                        ::onQrCodeScanClick
                     },
                     primaryButton = NavigationButton(
                         textReference = if (route.isEditMode) {
