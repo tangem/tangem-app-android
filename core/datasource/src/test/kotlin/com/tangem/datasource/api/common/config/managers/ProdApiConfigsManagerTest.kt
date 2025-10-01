@@ -84,6 +84,14 @@ internal class ProdApiConfigsManagerTest {
                         appInfoProvider = appInfoProvider,
                     )
                 }
+                ApiConfig.ID.YieldSupply -> {
+                    YieldSupply(
+                        environmentConfigStorage = environmentConfigStorage,
+                        appVersionProvider = appVersionProvider,
+                        authProvider = appAuthProvider,
+                        appInfoProvider = appInfoProvider,
+                    )
+                }
                 ApiConfig.ID.TangemTech -> {
                     TangemTech(
                         environmentConfigStorage = environmentConfigStorage,
@@ -102,6 +110,7 @@ internal class ProdApiConfigsManagerTest {
     private fun provideTestModels() = ApiConfig.ID.entries.map {
         when (it) {
             ApiConfig.ID.Express -> createExpressModel()
+            ApiConfig.ID.YieldSupply -> createYieldSupplyModel()
             ApiConfig.ID.TangemTech -> createTangemTechModel()
             ApiConfig.ID.StakeKit -> createStakeKitModel()
             ApiConfig.ID.TangemPay -> createTangemPayModel()
@@ -166,6 +175,30 @@ internal class ProdApiConfigsManagerTest {
                 environment = ApiEnvironment.PROD,
                 baseUrl = "https://api.tangem.org/",
                 headers = mapOf(
+                    "api-key" to ProviderSuspend { MockEnvironmentConfigStorage.TANGEM_API_KEY },
+                    "card_id" to ProviderSuspend { APP_CARD_ID },
+                    "card_public_key" to ProviderSuspend { APP_CARD_PUBLIC_KEY },
+                    "version" to ProviderSuspend { VERSION_NAME },
+                    "platform" to ProviderSuspend { "android" },
+                    "system_version" to ProviderSuspend { "Android 16" },
+                    "language" to ProviderSuspend { Locale.getDefault().language.checkHeaderValueOrEmpty() },
+                    "timezone" to ProviderSuspend {
+                        TimeZone.getDefault().getDisplayName(false, TimeZone.SHORT).checkHeaderValueOrEmpty()
+                    },
+                    "device" to ProviderSuspend { "${Build.MANUFACTURER} ${Build.MODEL}".checkHeaderValueOrEmpty() },
+                ),
+            ),
+        )
+    }
+
+    private fun createYieldSupplyModel(): TestModel {
+        return TestModel(
+            id = ApiConfig.ID.YieldSupply,
+            expected = ApiEnvironmentConfig(
+                environment = ApiEnvironment.PROD,
+                baseUrl = "https://yield.tangem.org/",
+                headers = mapOf(
+                    "api-key" to ProviderSuspend { MockEnvironmentConfigStorage.TANGEM_API_KEY },
                     "card_id" to ProviderSuspend { APP_CARD_ID },
                     "card_public_key" to ProviderSuspend { APP_CARD_PUBLIC_KEY },
                     "version" to ProviderSuspend { VERSION_NAME },
