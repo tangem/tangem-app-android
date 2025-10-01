@@ -5,7 +5,6 @@ import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.networks.multi.MultiNetworkStatusProducer
 import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
-import com.tangem.domain.notifications.toggles.NotificationsFeatureToggles
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.first
@@ -15,17 +14,12 @@ import javax.inject.Inject
 import kotlin.time.Duration.Companion.seconds
 
 class UserTokensResponseAddressesEnricher @Inject constructor(
-    private val notificationsFeatureToggles: NotificationsFeatureToggles,
     private val walletsRepository: WalletsRepository,
     private val dispatchers: CoroutineDispatcherProvider,
     private val multiNetworkStatusSupplier: MultiNetworkStatusSupplier,
 ) {
 
     suspend operator fun invoke(userWalletId: UserWalletId, response: UserTokensResponse): UserTokensResponse {
-        if (!notificationsFeatureToggles.isNotificationsEnabled) {
-            return response
-        }
-
         val isNotificationsEnabled = walletsRepository.isNotificationsEnabled(userWalletId)
 
         return withContext(dispatchers.default) {
