@@ -41,7 +41,7 @@ internal class DefaultCustomTokenSelectorComponent @AssistedInject constructor(
         is CustomTokenSelectorDialogConfig.CustomDerivationInput -> customTokenDerivationInputComponentFactory.create(
             context = childByContext(context),
             params = CustomTokenDerivationInputComponent.Params(
-                userWalletId = config.userWalletId,
+                mode = config.mode,
                 onConfirm = model::selectCustomDerivationPath,
                 onDismiss = model.dialogNavigation::dismiss,
             ),

@@ -122,7 +122,7 @@ internal class OnrampStateFactory(
             amountFieldModel = AmountFieldModel(
                 value = "",
                 fiatValue = "",
-                onValueChange = onrampIntents::onAmountValueChanged,
+                onValueChange = { onrampIntents.onAmountValueChanged(value = it, isValuePasted = false) },
                 keyboardOptions = KeyboardOptions(
                     imeAction = ImeAction.None,
                     keyboardType = KeyboardType.Number,
@@ -148,4 +148,8 @@ internal class OnrampStateFactory(
         decimals = currency.precision,
         type = AmountType.FiatType(currency.code),
     )
+
+    companion object {
+        const val PREDEFINED_SEPA_AMOUNT = "100"
+    }
 }

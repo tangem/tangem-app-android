@@ -7,6 +7,7 @@ import com.tangem.domain.core.wallets.error.SaveWalletError
 import com.tangem.domain.core.wallets.error.SelectWalletError
 import com.tangem.domain.core.wallets.error.SetLockError
 import com.tangem.domain.core.wallets.error.UnlockWalletError
+import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import kotlinx.coroutines.flow.StateFlow
@@ -133,10 +134,10 @@ interface UserWalletsListRepository {
         data object NoLock : LockMethod()
     }
 
-    enum class UnlockMethod {
-        Biometric,
-        AccessCode,
-        Scan,
+    sealed class UnlockMethod {
+        data object Biometric : UnlockMethod()
+        data object AccessCode : UnlockMethod()
+        data class Scan(val scanResponse: ScanResponse? = null) : UnlockMethod()
     }
 }
 
