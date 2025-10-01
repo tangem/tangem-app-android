@@ -4,8 +4,10 @@ import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.local.yieldsupply.YieldMarketsStore
 import com.tangem.data.yield.supply.converters.YieldMarketTokenConverter
 import com.tangem.datasource.api.tangemTech.YieldSupplyApi
+import com.tangem.data.yield.supply.converters.YieldTokenStatusConverter
 import com.tangem.domain.yield.supply.YieldSupplyMarketRepository
 import com.tangem.domain.yield.supply.models.YieldMarketToken
+import com.tangem.domain.yield.supply.models.YieldTokenStatus
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
@@ -28,4 +30,9 @@ internal class DefaultYieldSupplyMarketRepository(
     }
 
     override fun getMarketsFlow(): Flow<List<YieldMarketToken>> = store.get()
+
+    override suspend fun getTokenStatus(contractAddress: String): YieldTokenStatus {
+        val response = yieldSupplyApi.getYieldTokenStatus(contractAddress).getOrThrow()
+        return YieldTokenStatusConverter.convert(response)
+    }
 }
