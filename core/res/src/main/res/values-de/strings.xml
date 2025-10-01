@@ -747,7 +747,7 @@
   <string name="notification_referral_promo_text">Teile Deinen Code – verdiene 5 USDT pro Verkauf. Deine Freunde erhalten 10 % Rabatt.</string>
   <string name="notification_referral_promo_title">Erhalte BELOHNUNGEN für jeden Freund!</string>
   <string name="notification_sepa_button">Krypto kaufen</string>
-  <string name="notification_sepa_text">Profitiere von null Gebühren beim Kauf von Kryptowährungen per SEPA-Überweisung.</string>
+  <string name="notification_sepa_text">Profitiere von **0 % Gebühren** beim Kauf von Kryptowährungen per SEPA-Überweisung.</string>
   <string name="notification_sepa_title">Krypto mit SEPA kaufen</string>
   <string name="onboarding_access_code_feature_1_description">Du musst einen einzigen Zugangscode einrichten, um alle deine Geräte zu schützen</string>
   <string name="onboarding_access_code_feature_1_title">Schützen</string>
