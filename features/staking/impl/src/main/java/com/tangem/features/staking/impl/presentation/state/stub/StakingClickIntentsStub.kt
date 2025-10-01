@@ -76,4 +76,6 @@ internal object StakingClickIntentsStub : StakingClickIntents {
     override fun onActiveStakeAnalytic() {}
 
     override fun showPrimaryClickAlert() {}
+
+    override fun onOpenLearnMoreAboutApproveClick() {}
 }
