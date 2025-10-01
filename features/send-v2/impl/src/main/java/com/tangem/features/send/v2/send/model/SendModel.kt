@@ -39,7 +39,6 @@ import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.wallets.models.GetUserWalletError
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.send.v2.api.SendComponent
-import com.tangem.features.send.v2.api.SendFeatureToggles
 import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents.SendScreenSource
 import com.tangem.features.send.v2.api.entity.FeeSelectorUM
@@ -57,8 +56,6 @@ import com.tangem.features.send.v2.send.ui.state.SendUM
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountComponent
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountUpdateTrigger
 import com.tangem.features.send.v2.subcomponents.destination.model.transformers.SendDestinationInitialStateTransformer
-import com.tangem.features.send.v2.subcomponents.fee.SendFeeComponent
-import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
@@ -70,7 +67,6 @@ import kotlin.properties.Delegates
 
 internal interface SendComponentCallback :
     SendAmountComponent.ModelCallback,
-    SendFeeComponent.ModelCallback,
     SendDestinationComponent.ModelCallback,
     SendConfirmComponent.ModelCallback,
     SendConfirmSuccessComponent.ModelCallback
@@ -96,7 +92,6 @@ internal class SendModel @Inject constructor(
     private val createTransferTransactionUseCase: CreateTransferTransactionUseCase,
     private val getFeeUseCase: GetFeeUseCase,
     private val sendAmountUpdateTrigger: SendAmountUpdateTrigger,
-    private val sendFeatureToggles: SendFeatureToggles,
     private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model(), SendComponentCallback {
 
@@ -113,11 +108,7 @@ internal class SendModel @Inject constructor(
         field = MutableStateFlow(false)
 
     val initialRoute = if (params.amount == null) {
-        if (uiState.value.isRedesignEnabled) {
-            Amount(isEditMode = false)
-        } else {
-            Destination(isEditMode = false)
-        }
+        Amount(isEditMode = false)
     } else {
         Empty
     }
@@ -167,19 +158,13 @@ internal class SendModel @Inject constructor(
         uiState.update { it.copy(amountUM = amountUM) }
     }
 
-    override fun onFeeResult(feeUM: FeeUM) {
-        uiState.update { it.copy(feeUM = feeUM) }
-    }
-
     override fun onResult(sendUM: SendUM) {
         uiState.update { sendUM }
     }
 
     override fun onBackClick() {
-        val isRedesignEnabled = uiState.value.isRedesignEnabled
-
         when (val route = currentRoute.value) {
-            is Amount -> if (isRedesignEnabled && !route.isEditMode) {
+            is Amount -> if (!route.isEditMode) {
                 analyticsEventHandler.send(
                     CommonSendAnalyticEvents.CloseButtonClicked(
                         categoryName = analyticCategoryName,
@@ -189,7 +174,7 @@ internal class SendModel @Inject constructor(
                     ),
                 )
             }
-            is Destination -> if (isRedesignEnabled && !route.isEditMode) {
+            is Destination -> if (!route.isEditMode) {
                 analyticsEventHandler.send(
                     CommonSendAnalyticEvents.CloseButtonClicked(
                         categoryName = analyticCategoryName,
@@ -206,21 +191,12 @@ internal class SendModel @Inject constructor(
     }
 
     override fun onNextClick() {
-        val isRedesignEnabled = uiState.value.isRedesignEnabled
         if (currentRoute.value.isEditMode) {
             onBackClick()
         } else {
             when (currentRoute.value) {
-                is Amount -> if (isRedesignEnabled) {
-                    router.push(Destination(isEditMode = false))
-                } else {
-                    router.push(Confirm)
-                }
-                is Destination -> if (isRedesignEnabled) {
-                    router.push(Confirm)
-                } else {
-                    router.push(Amount(isEditMode = false))
-                }
+                is Amount -> router.push(Destination(isEditMode = false))
+                is Destination -> router.push(Confirm)
                 Confirm -> router.push(ConfirmSuccess)
                 else -> onBackClick()
             }
@@ -242,9 +218,7 @@ internal class SendModel @Inject constructor(
             it.copy(
                 destinationUM = SendDestinationInitialStateTransformer(
                     cryptoCurrency = cryptoCurrency,
-                    isRedesignEnabled = sendFeatureToggles.isSendRedesignEnabled,
                 ).transform(DestinationUM.Empty()),
-                feeUM = FeeUM.Empty(),
                 feeSelectorUM = FeeSelectorUM.Loading,
                 confirmUM = ConfirmUM.Empty,
                 confirmData = null,
@@ -480,15 +454,12 @@ internal class SendModel @Inject constructor(
     }
 
     private fun initialState(): SendUM = SendUM(
-        amountUM = AmountState.Empty(isRedesignEnabled = sendFeatureToggles.isSendRedesignEnabled),
+        amountUM = AmountState.Empty(isRedesignEnabled = true),
         destinationUM = SendDestinationInitialStateTransformer(
             cryptoCurrency = cryptoCurrency,
-            isRedesignEnabled = sendFeatureToggles.isSendRedesignEnabled,
         ).transform(DestinationUM.Empty()),
-        feeUM = FeeUM.Empty(),
         confirmUM = ConfirmUM.Empty,
         navigationUM = NavigationUM.Empty,
-        isRedesignEnabled = sendFeatureToggles.isSendRedesignEnabled,
         confirmData = null,
         feeSelectorUM = FeeSelectorUM.Loading,
     )
