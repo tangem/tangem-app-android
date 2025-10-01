@@ -388,8 +388,8 @@ internal class WalletModel @Inject constructor(
         }
     }
 
-    private fun tangemPayCardOnClick(customerWalletAddress: String) {
-        innerWalletRouter.openTangemPayDetails(customerWalletAddress)
+    private fun tangemPayCardOnClick(customerWalletAddress: String, cardNumberEnd: String) {
+        innerWalletRouter.openTangemPayDetails(customerWalletAddress, cardNumberEnd)
     }
 
     private fun needToRefreshTimer() {

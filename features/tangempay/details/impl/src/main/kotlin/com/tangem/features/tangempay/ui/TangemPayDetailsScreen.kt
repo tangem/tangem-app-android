@@ -133,11 +133,12 @@ internal fun TangemPayDetailsBalanceBlock(
             state = state,
             isBalanceHidden = isBalanceHidden,
         )
-        CryptoBalance(
-            modifier = Modifier.padding(start = 12.dp, top = 4.dp),
-            state = state,
-            isBalanceHidden = isBalanceHidden,
-        )
+        // TODO [REDACTED_TASK_KEY]: Uncomment after adding crypto balance when the BFF is ready
+        // CryptoBalance(
+        //     modifier = Modifier.padding(start = 12.dp, top = 4.dp),
+        //     state = state,
+        //     isBalanceHidden = isBalanceHidden,
+        // )
         if (state.actionButtons.isNotEmpty()) {
             HorizontalActionChips(
                 modifier = Modifier.padding(top = 12.dp),
@@ -179,6 +180,7 @@ private fun FiatBalance(
     }
 }
 
+@Suppress("UnusedPrivateMember")
 @Composable
 private fun CryptoBalance(
     state: TangemPayDetailsBalanceBlockState,
