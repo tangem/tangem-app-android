@@ -52,11 +52,9 @@ fun TangemIconButton(
         modifier = modifier
             .size(24.dp)
             .clip(shape)
+            .clickable(onClick = onClick)
             .background(background)
-            .padding(innerPadding)
-            .clickable(
-                onClick = onClick,
-            ),
+            .padding(innerPadding),
     )
 }
 
