@@ -41,6 +41,7 @@ class DefaultYieldSupplyTransactionRepositoryTest {
     private val cryptoCurrencyStatus = mockk<CryptoCurrencyStatus>(relaxed = true) {
         every { currency } returns cryptoCurrency
         every { value.yieldSupplyStatus } returns null
+        every { value.amount } returns BigDecimal.TEN
     }
 
     private val walletManager = mockk<WalletManager>(relaxed = true) {
