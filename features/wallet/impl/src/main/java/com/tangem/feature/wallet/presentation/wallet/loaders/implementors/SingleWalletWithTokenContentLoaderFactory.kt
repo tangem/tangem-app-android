@@ -6,6 +6,7 @@ import com.tangem.domain.promo.GetStoryContentUseCase
 import com.tangem.domain.tokens.RunPolkadotAccountHealthCheckUseCase
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.usecase.ShouldSaveUserWalletsUseCase
+import com.tangem.domain.yield.supply.usecase.YieldSupplyApyFlowUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.TokenListAnalyticsSender
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.WalletWarningsAnalyticsSender
@@ -33,6 +34,7 @@ internal class SingleWalletWithTokenContentLoaderFactory @Inject constructor(
     private val shouldSaveUserWalletsUseCase: ShouldSaveUserWalletsUseCase,
     private val getStoryContentUseCase: GetStoryContentUseCase,
     private val accountDependencies: AccountDependencies,
+    private val yieldSupplyApyFlowUseCase: YieldSupplyApyFlowUseCase,
 ) {
 
     fun create(userWallet: UserWallet.Cold, clickIntents: WalletClickIntents): SingleWalletWithTokenContentLoader {
@@ -51,6 +53,7 @@ internal class SingleWalletWithTokenContentLoaderFactory @Inject constructor(
             getStoryContentUseCase = getStoryContentUseCase,
             shouldSaveUserWalletsUseCase = shouldSaveUserWalletsUseCase,
             accountDependencies = accountDependencies,
+            yieldSupplyApyFlowUseCase = yieldSupplyApyFlowUseCase,
         )
     }
 }
