@@ -3,7 +3,9 @@ package com.tangem.features.managetokens.ui
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
 import com.tangem.core.ui.components.appbar.TangemTopAppBar
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.components.fields.SearchBar
@@ -14,7 +16,12 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.managetokens.entity.managetokens.ManageTokensTopBarUM
 
 @Composable
-internal fun ManageTokensTopBar(topBar: ManageTokensTopBarUM?, search: SearchBarUM, modifier: Modifier = Modifier) {
+internal fun ManageTokensTopBar(
+    topBar: ManageTokensTopBarUM?,
+    search: SearchBarUM,
+    modifier: Modifier = Modifier,
+    focusRequester: FocusRequester = remember { FocusRequester() },
+) {
     Column(
         modifier = modifier,
     ) {
@@ -31,6 +38,7 @@ internal fun ManageTokensTopBar(topBar: ManageTokensTopBarUM?, search: SearchBar
         SearchBar(
             colors = TangemSearchBarDefaults.secondaryTextFieldColors,
             state = search,
+            focusRequester = focusRequester,
             modifier = Modifier
                 .padding(bottom = TangemTheme.dimens.spacing12)
                 .padding(horizontal = TangemTheme.dimens.spacing16),
