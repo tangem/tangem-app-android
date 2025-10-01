@@ -3,11 +3,10 @@ package com.tangem.core.configtoggle.di
 import android.content.Context
 import com.tangem.core.configtoggle.BuildConfig
 import com.tangem.core.configtoggle.blockchain.ExcludedBlockchainsManager
-import com.tangem.core.configtoggle.blockchain.MutableExcludedBlockchainsManager
-import com.tangem.core.configtoggle.blockchain.impl.DefaultExcludedBlockchainsManager
+import com.tangem.core.configtoggle.blockchain.impl.DevExcludedBlockchainsManager
+import com.tangem.core.configtoggle.blockchain.impl.ProdExcludedBlockchainsManager
 import com.tangem.core.configtoggle.storage.LocalTogglesStorage
 import com.tangem.core.configtoggle.version.DefaultVersionProvider
-import com.tangem.datasource.asset.loader.AssetLoader
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import dagger.Module
 import dagger.Provides
@@ -24,26 +23,20 @@ internal object ExcludedBlockchainsManagerModule {
     @Singleton
     fun provideExcludedBlockchainsManager(
         @ApplicationContext context: Context,
-        assetLoader: AssetLoader,
         appPreferencesStore: AppPreferencesStore,
     ): ExcludedBlockchainsManager {
-        val localTogglesStorage = LocalTogglesStorage(assetLoader)
         val versionProvider = DefaultVersionProvider(context)
 
-        return DefaultExcludedBlockchainsManager(
-            localTogglesStorage,
-            appPreferencesStore,
-            versionProvider,
-        )
-    }
-
-    @Provides
-    @Singleton
-    fun provideMutableExcludedBlockchainsManager(
-        manager: ExcludedBlockchainsManager,
-    ): MutableExcludedBlockchainsManager? {
-        if (!BuildConfig.TESTER_MENU_ENABLED) return null
-
-        return manager as MutableExcludedBlockchainsManager
+        return if (BuildConfig.TESTER_MENU_ENABLED) {
+            DevExcludedBlockchainsManager(
+                versionProvider = versionProvider,
+                localTogglesStorage = LocalTogglesStorage(
+                    appPreferencesStore = appPreferencesStore,
+                    preferencesKey = LocalTogglesStorage.EXCLUDED_BLOCKCHAINS_KEY,
+                ),
+            )
+        } else {
+            ProdExcludedBlockchainsManager(versionProvider = versionProvider)
+        }
     }
 }
