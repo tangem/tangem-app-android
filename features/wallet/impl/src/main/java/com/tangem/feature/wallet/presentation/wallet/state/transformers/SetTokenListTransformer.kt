@@ -16,6 +16,7 @@ internal class SetTokenListTransformer(
     private val userWallet: UserWallet,
     private val appCurrency: AppCurrency,
     private val clickIntents: WalletClickIntents,
+    private val yieldSupplyApyMap: Map<String, String> = emptyMap(),
 ) : WalletStateTransformer(userWallet.walletId) {
 
     override fun transform(prevState: WalletState): WalletState {
@@ -58,6 +59,7 @@ internal class SetTokenListTransformer(
             selectedWallet = userWallet,
             appCurrency = appCurrency,
             clickIntents = clickIntents,
+            apyMap = yieldSupplyApyMap,
         ).convert(value = this)
     }
 }
