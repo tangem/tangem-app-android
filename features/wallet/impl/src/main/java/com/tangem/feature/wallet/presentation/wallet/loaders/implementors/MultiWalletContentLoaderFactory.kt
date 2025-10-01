@@ -10,6 +10,7 @@ import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.ShouldSaveUserWalletsUseCase
+import com.tangem.domain.yield.supply.usecase.YieldSupplyApyFlowUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.TokenListAnalyticsSender
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.WalletWarningsAnalyticsSender
@@ -40,6 +41,7 @@ internal class MultiWalletContentLoaderFactory @Inject constructor(
     private val getNFTCollectionsUseCase: GetNFTCollectionsUseCase,
     private val currenciesRepository: CurrenciesRepository,
     private val accountDependencies: AccountDependencies,
+    private val yieldSupplyApyFlowUseCase: YieldSupplyApyFlowUseCase,
 ) {
 
     fun create(userWallet: UserWallet, clickIntents: WalletClickIntents): WalletContentLoader {
@@ -62,6 +64,7 @@ internal class MultiWalletContentLoaderFactory @Inject constructor(
             getNFTCollectionsUseCase = getNFTCollectionsUseCase,
             currenciesRepository = currenciesRepository,
             accountDependencies = accountDependencies,
+            yieldSupplyApyFlowUseCase = yieldSupplyApyFlowUseCase,
         )
     }
 }
