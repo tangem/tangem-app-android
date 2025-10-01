@@ -7,6 +7,13 @@
 -keep class com.google.android.gms.internal.** { *; }
 -keepclasseswithmembers class com.google.firebase.FirebaseException
 
+# huawei push kit
+-ignorewarnings
+-keepattributes SourceFile,LineNumberTable
+-keep class com.huawei.hianalytics.**{*;}
+-keep class com.huawei.updatesdk.**{*;}
+-keep class com.huawei.hms.**{*;}
+
 # hedera sdk
 -keep class com.hedera.hashgraph.sdk.** { *; }
 -keep interface com.hedera.hashgraph.sdk.** { *; }
@@ -206,3 +213,7 @@
 -keep class **.R$* {
     <fields>;
 }
+
+# appsflyer
+-keep class com.appsflyer.** { *; }
+-keep class kotlin.jvm.internal.** { *; }
