@@ -29,8 +29,6 @@ import com.tangem.features.send.v2.send.ui.state.SendUM
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountBlockComponent
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountComponentParams
 import com.tangem.features.send.v2.subcomponents.destination.DefaultSendDestinationBlockComponent
-import com.tangem.features.send.v2.subcomponents.fee.SendFeeBlockComponent
-import com.tangem.features.send.v2.subcomponents.fee.SendFeeComponentParams
 import com.tangem.features.send.v2.subcomponents.notifications.DefaultSendNotificationsComponent
 import com.tangem.utils.extensions.orZero
 import kotlinx.coroutines.flow.*
@@ -38,7 +36,7 @@ import kotlinx.coroutines.flow.*
 internal class SendConfirmComponent(
     appComponentContext: AppComponentContext,
     params: Params,
-    private val feeSelectorComponentFactory: FeeSelectorBlockComponent.Factory,
+    feeSelectorComponentFactory: FeeSelectorBlockComponent.Factory,
 ) : ComposableContentComponent, AppComponentContext by appComponentContext {
 
     private val model: SendConfirmModel = getOrCreateModel(params = params)
@@ -70,7 +68,6 @@ internal class SendConfirmComponent(
             appCurrency = params.appCurrency,
             blockClickEnableFlow = blockClickEnableFlow.asStateFlow(),
             predefinedValues = params.predefinedValues,
-            isRedesignEnabled = model.uiState.value.isRedesignEnabled,
             userWalletId = params.userWallet.walletId,
             cryptoCurrency = params.cryptoCurrencyStatus.currency,
             cryptoCurrencyStatusFlow = params.cryptoCurrencyStatusFlow,
@@ -79,25 +76,6 @@ internal class SendConfirmComponent(
         ),
         onResult = model::onAmountResult,
         onClick = model::showEditAmount,
-    )
-
-    private val feeBlockComponent = SendFeeBlockComponent(
-        appComponentContext = child("sendConfirmFeeBlock"),
-        params = SendFeeComponentParams.FeeBlockParams(
-            state = model.uiState.value.feeUM,
-            analyticsCategoryName = params.analyticsCategoryName,
-            userWallet = params.userWallet,
-            cryptoCurrencyStatus = params.cryptoCurrencyStatus,
-            feeCryptoCurrencyStatus = params.feeCryptoCurrencyStatus,
-            appCurrency = params.appCurrency,
-            sendAmount = model.confirmData.enteredAmount.orZero(),
-            destinationAddress = model.confirmData.enteredDestination.orEmpty(),
-            blockClickEnableFlow = blockClickEnableFlow.asStateFlow(),
-            analyticsSendSource = params.analyticsSendSource,
-            onLoadFee = params.onLoadFee,
-        ),
-        onResult = model::onFeeResult,
-        onClick = model::showEditFee,
     )
 
     private val feeSelectorBlockComponent = feeSelectorComponentFactory.create(
@@ -146,7 +124,6 @@ internal class SendConfirmComponent(
     fun updateState(state: SendUM) {
         destinationBlockComponent.updateState(state.destinationUM)
         amountBlockComponent.updateState(state.amountUM)
-        feeBlockComponent.updateState(state.feeUM)
         feeSelectorBlockComponent.updateState(state.feeSelectorUM)
         model.updateState(state)
     }
@@ -160,7 +137,6 @@ internal class SendConfirmComponent(
             sendUM = state,
             destinationBlockComponent = destinationBlockComponent,
             amountBlockComponent = amountBlockComponent,
-            feeBlockComponent = feeBlockComponent,
             feeSelectorBlockComponent = feeSelectorBlockComponent,
             notificationsComponent = notificationsComponent,
             notificationsUM = notificationState,
