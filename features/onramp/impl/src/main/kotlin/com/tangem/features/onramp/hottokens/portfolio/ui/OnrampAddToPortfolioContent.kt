@@ -149,7 +149,11 @@ private fun PreviewOnrampAddToPortfolioContent() {
                             isGrayscale = false,
                             showCustomBadge = false,
                         ),
-                        addButtonUM = OnrampAddToPortfolioUM.AddButtonUM(isProgress = false, onClick = {}),
+                        addButtonUM = OnrampAddToPortfolioUM.AddButtonUM(
+                            isProgress = false,
+                            onClick = {},
+                            isTangemIconVisible = true,
+                        ),
                     ),
                 )
             },
