@@ -137,4 +137,13 @@ interface TangemPayApi {
         @Header("Authorization") authHeader: String,
         @Body body: OrderRequest,
     ): ApiResponse<OrderResponse>
+
+    @GET("v1/customer/balance")
+    suspend fun getCardBalance(@Header("Authorization") authHeader: String): ApiResponse<CardBalanceResponse>
+
+    @POST("v1/customer/card/details")
+    suspend fun revealCardDetails(
+        @Header("Authorization") authHeader: String,
+        @Body body: CardDetailsRequest,
+    ): ApiResponse<CardDetailsResponse>
 }
