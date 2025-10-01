@@ -13,6 +13,7 @@ import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.features.managetokens.component.AddCustomTokenComponent
+import com.tangem.features.managetokens.component.AddCustomTokenMode
 import com.tangem.features.managetokens.component.ManageTokensComponent
 import com.tangem.features.managetokens.entity.managetokens.ManageTokensBottomSheetConfig
 import com.tangem.features.managetokens.model.ManageTokensModel
@@ -52,18 +53,20 @@ internal class DefaultManageTokensComponent @AssistedInject constructor(
     private fun bottomSheetChild(
         config: ManageTokensBottomSheetConfig,
         componentContext: ComponentContext,
-    ): ComposableBottomSheetComponent = when (config) {
-        is ManageTokensBottomSheetConfig.AddCustomToken -> {
-            addCustomTokenComponentFactory.create(
-                context = childByContext(componentContext),
-                params = AddCustomTokenComponent.Params(
-                    userWalletId = config.userWalletId,
-                    source = params.source,
-                    onDismiss = model.bottomSheetNavigation::dismiss,
-                    onCurrencyAdded = model::reloadList,
-                ),
-            )
+    ): ComposableBottomSheetComponent {
+        val mode = when (config) {
+            is ManageTokensBottomSheetConfig.AddWalletCustomToken -> AddCustomTokenMode.Wallet(config.userWalletId)
+            is ManageTokensBottomSheetConfig.AddAccountCustomToken -> AddCustomTokenMode.Account(config.accountId)
         }
+        return addCustomTokenComponentFactory.create(
+            context = childByContext(componentContext),
+            params = AddCustomTokenComponent.Params(
+                mode = mode,
+                source = params.source,
+                onDismiss = model.bottomSheetNavigation::dismiss,
+                onCurrencyAdded = model::reloadList,
+            ),
+        )
     }
 
     @AssistedFactory

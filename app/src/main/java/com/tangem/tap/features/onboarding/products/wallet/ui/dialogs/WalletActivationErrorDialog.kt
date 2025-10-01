@@ -30,7 +30,7 @@ object WalletActivationErrorDialog {
                 val scanResponse = store.state.globalState.scanResponse
                     ?: error("ScanResponse must be not null")
 
-                val cardInfo = store.inject(DaggerGraphState::getCardInfoUseCase).invoke(scanResponse).getOrNull()
+                val cardInfo = store.inject(DaggerGraphState::getWalletMetaInfoUseCase).invoke(scanResponse).getOrNull()
                     ?: error("CardInfo must be not null")
 
                 scope.launch {
