@@ -1731,6 +1731,7 @@
   <string name="yield_module_approve_sheet_title">Confirm approval</string>
   <string name="yield_module_balance_info_sheet_subtitle">Text about your money in balance [PLACEHOLDER]</string>
   <string name="yield_module_balance_info_sheet_title">Your %s is deposited in Aave</string>
+  <string name="yield_module_deposit_error_notification_title">The amount received, %1$s %2$s was not deposited to Aave.</string>
   <string name="yield_module_earn_badge">Earn %1$s%%</string>
   <string name="yield_module_earn_sheet_available_title">Available</string>
   <string name="yield_module_earn_sheet_current_apy_title">Current APY</string>
@@ -1746,6 +1747,7 @@
   <string name="yield_module_fee_policy_sheet_max_fee_note">If network fees rise above maximum fee, the transaction won’t go through until they decrease. You can change this limit later.</string>
   <string name="yield_module_fee_policy_sheet_max_fee_title">Maximum fee</string>
   <string name="yield_module_fee_policy_sheet_title">Fee policy</string>
+  <string name="yield_module_high_fee_error">Network fee is too high right now. Waiting until it falls below your limit.</string>
   <string name="yield_module_main_view_approve_notification_description">Write description here. In one, two or three lines will be awesome. [PLACEHOLDER]</string>
   <string name="yield_module_main_view_approve_notification_title">Some token approve needed</string>
   <string name="yield_module_network_fee_unreachable_notification_description">Check your network connection</string>
@@ -1784,4 +1786,6 @@
   <string name="yield_module_transfer_mode_automatic">Automatic</string>
   <string name="yield_module_unable_to_cover_fee_description">Deposit some %1$s %2$s to cover the network fee for transactions</string>
   <string name="yield_module_unable_to_cover_fee_title">Unable to cover %s fee</string>
+  <string name="yield_module_unavailable_subtitle">The interest service isn’t available at the moment. Please try again later.</string>
+  <string name="yield_module_unavailable_title">Earnings unavailable</string>
 </resources>
