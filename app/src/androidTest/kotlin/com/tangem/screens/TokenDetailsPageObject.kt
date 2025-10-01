@@ -132,6 +132,18 @@ class TokenDetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvide
         useUnmergedTree = true
     }
 
+    val topUpYourWalletNotificationTitle: KNode = child {
+        hasTestTag(NotificationTestTags.TITLE)
+        hasText(getResourceString(R.string.warning_no_account_title))
+        useUnmergedTree = true
+    }
+
+    val topUpYourWalletNotificationIcon: KNode = child {
+        hasAnySibling(withText(getResourceString(R.string.warning_no_account_title)))
+        hasTestTag(NotificationTestTags.ICON)
+        useUnmergedTree = true
+    }
+
     fun networkFeeNotificationMessage(
         currencyName: String,
         networkName: String,
@@ -147,6 +159,23 @@ class TokenDetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvide
                 currencyName,
                 feeCurrencyName,
                 feeCurrencySymbol
+            )
+        )
+        useUnmergedTree = true
+    }
+
+    fun topUpYourWalletNotificationMessage(
+        networkName: String,
+        amount: String,
+        currencySymbol: String,
+    ): KNode = child {
+        hasTestTag(NotificationTestTags.MESSAGE)
+        hasText(
+            getResourceString(
+                R.string.no_account_generic,
+                networkName,
+                amount,
+                currencySymbol,
             )
         )
         useUnmergedTree = true
