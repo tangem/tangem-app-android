@@ -16,6 +16,7 @@ dependencies {
     implementation(projects.core.configToggles)
     implementation(projects.core.decompose)
     implementation(projects.core.ui)
+    implementation(projects.core.error)
 
     /** Features api */
     implementation(projects.features.tangempay.details.api)
