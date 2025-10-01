@@ -235,7 +235,7 @@ internal class DefaultYieldSupplyTransactionRepository(
                 isInitialized = sdkSupplyStatus?.isInitialized == true,
                 isAllowedToSpend = isAllowedToSpend,
             )
-        }.onFailure(Timber::e).getOrThrow()
+        }.onFailure(Timber::e).getOrNull()
     }
 
     private fun createDeployTransaction(
