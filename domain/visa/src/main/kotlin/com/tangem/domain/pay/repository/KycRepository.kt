@@ -6,9 +6,8 @@ import com.tangem.domain.pay.KycStartInfo
 
 interface KycRepository {
 
-    suspend fun getKycStartInfo(address: String, cardId: String): Either<UniversalError, KycStartInfo>
-
-    interface Factory {
-        fun create(): KycRepository
-    }
+    /**
+     * Returns KYC data to start or continue the survey
+     */
+    suspend fun getKycStartInfo(): Either<UniversalError, KycStartInfo>
 }

@@ -65,11 +65,11 @@ internal class WcSignUseCaseDelegate<MiddleAction, SignModel>(
             .onEach { state ->
                 val step = state.domainStep as? WcSignStep.Result ?: return@onEach
                 step.result.leftOrNull()?.let { error ->
-                    val errorMessage = error.message() ?: ""
+                    val errorMessage = error.message()
                     val event = WcAnalyticEvents.SignatureRequestFailed(
                         rawRequest = context.rawSdkRequest,
                         network = context.network,
-                        errorCode = error.code() ?: error::class.simpleName.orEmpty(),
+                        errorCode = error.code(),
                         errorMessage = errorMessage,
                     )
                     analytics.send(event)
