@@ -183,6 +183,7 @@ private fun ReferralInfo(
             NonParticipateBottomBlock(
                 onAgreementClick = onAgreementClick,
                 onParticipateClick = state.onParticipateClicked,
+                buttonIconRes = state.participateButtonIcon,
             )
         }
 
@@ -465,6 +466,7 @@ private fun Preview_ReferralScreen_NonParticipant() {
                     discount = "10%",
                     url = "",
                     onParticipateClicked = {},
+                    participateButtonIcon = R.drawable.ic_tangem_24,
                 ),
                 errorSnackbar = null,
                 analytics = Analytics(

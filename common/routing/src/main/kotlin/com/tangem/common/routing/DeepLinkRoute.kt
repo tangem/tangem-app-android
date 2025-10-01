@@ -59,6 +59,10 @@ sealed class DeepLinkRoute {
     data object Promo : DeepLinkRoute() {
         override val host: String = "promo"
     }
+
+    data object OnboardVisa : DeepLinkRoute() {
+        override val host: String = "onboard-visa"
+    }
 }
 
 enum class DeepLinkScheme(val scheme: String) {
