@@ -95,6 +95,7 @@ internal fun WcSignTransactionModalBottomSheetContent(
                 onClickActiveButton = state.onSign,
                 activeButtonText = resourceReference(R.string.common_sign),
                 isLoading = state.isLoading,
+                walletInteractionIcon = state.walletInteractionIcon,
                 validationResult = null,
             )
         },
@@ -184,6 +185,7 @@ private class WcSignTransactionStateProvider : CollectionPreviewParameterProvide
             walletName = "Tangem 2.0",
             networkInfo = WcNetworkInfoUM(name = "Ethereum", iconRes = R.drawable.img_eth_22),
             address = null,
+            walletInteractionIcon = R.drawable.ic_tangem_24,
         ),
         WcSignTransactionItemUM(
             onDismiss = {},
@@ -197,6 +199,7 @@ private class WcSignTransactionStateProvider : CollectionPreviewParameterProvide
             walletName = null,
             networkInfo = WcNetworkInfoUM(name = "Ethereum", iconRes = R.drawable.img_eth_22),
             address = "0xdac17f958d2ee523a2206206994597c13d831ec7",
+            walletInteractionIcon = R.drawable.ic_tangem_24,
         ),
     ),
 )
