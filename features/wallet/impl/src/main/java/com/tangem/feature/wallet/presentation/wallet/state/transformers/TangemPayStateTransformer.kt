@@ -17,7 +17,7 @@ internal class TangemPayStateTransformer(
     private val value: MainScreenCustomerInfo? = null,
     private val onIssueOrderClick: () -> Unit = {},
     private val onContinueKycClick: () -> Unit = {},
-    private val cardOnClick: (String) -> Unit = {},
+    private val cardOnClick: (customerWalletAddress: String, cardNumberEnd: String) -> Unit = { _, _ -> },
     private val issueProgressState: Boolean = false,
     private val issueState: Boolean = false,
 ) : Transformer<TangemPayState> {
@@ -33,8 +33,8 @@ internal class TangemPayStateTransformer(
         return when {
             value == null -> TangemPayState.Empty
             !value.info.isKycApproved() -> createKycInProgressState(onContinueKycClick)
-            value.orderStatus == NOT_ISSUED || value.orderStatus == CANCELED -> createIssueState()
             cardInfo != null -> getCardInfoState(cardInfo)
+            value.orderStatus == NOT_ISSUED || value.orderStatus == CANCELED -> createIssueState()
             else -> createIssueProgressState()
         }
     }
@@ -64,7 +64,7 @@ internal class TangemPayStateTransformer(
     private fun getCardInfoState(cardInfo: CardInfo): TangemPayState = TangemPayState.Card(
         lastFourDigits = TextReference.Str("*${cardInfo.lastFourDigits}"),
         balanceText = TextReference.Str(getBalanceText(cardInfo)),
-        onClick = { cardOnClick(cardInfo.customerWalletAddress) },
+        onClick = { cardOnClick(cardInfo.customerWalletAddress, cardInfo.lastFourDigits) },
     )
 
     private fun getBalanceText(cardInfo: CardInfo): String {
