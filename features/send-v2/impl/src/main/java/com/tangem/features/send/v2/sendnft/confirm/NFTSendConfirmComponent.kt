@@ -32,8 +32,6 @@ import com.tangem.features.send.v2.sendnft.confirm.model.NFTSendConfirmModel
 import com.tangem.features.send.v2.sendnft.confirm.ui.NFTSendConfirmContent
 import com.tangem.features.send.v2.sendnft.ui.state.NFTSendUM
 import com.tangem.features.send.v2.subcomponents.destination.DefaultSendDestinationBlockComponent
-import com.tangem.features.send.v2.subcomponents.fee.SendFeeBlockComponent
-import com.tangem.features.send.v2.subcomponents.fee.SendFeeComponentParams
 import com.tangem.features.send.v2.subcomponents.notifications.DefaultSendNotificationsComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -67,25 +65,6 @@ internal class NFTSendConfirmComponent @AssistedInject constructor(
             onResult = model::onDestinationResult,
             onClick = model::showEditDestination,
         )
-
-    private val feeBlockComponent = SendFeeBlockComponent(
-        appComponentContext = child("NFTSendConfirmFeeBlock"),
-        params = SendFeeComponentParams.FeeBlockParams(
-            state = model.uiState.value.feeUM,
-            analyticsCategoryName = params.analyticsCategoryName,
-            userWallet = params.userWallet,
-            cryptoCurrencyStatus = params.cryptoCurrencyStatus,
-            feeCryptoCurrencyStatus = params.feeCryptoCurrencyStatus,
-            appCurrency = params.appCurrency,
-            sendAmount = BigDecimal.ZERO,
-            onLoadFee = params.onLoadFee,
-            destinationAddress = model.confirmData.enteredDestination.orEmpty(),
-            blockClickEnableFlow = blockClickEnableFlow.asStateFlow(),
-            analyticsSendSource = params.analyticsSendSource,
-        ),
-        onResult = model::onFeeResult,
-        onClick = model::showEditFee,
-    )
 
     private val feeSelectorBlockComponent = feeSelectorComponentFactory.create(
         context = child("NFTSendConfirmFeeSelectorBlock"),
@@ -143,7 +122,6 @@ internal class NFTSendConfirmComponent @AssistedInject constructor(
 
     fun updateState(state: NFTSendUM) {
         destinationBlockComponent.updateState(state.destinationUM)
-        feeBlockComponent.updateState(state.feeUM)
         model.updateState(state)
     }
 
@@ -155,7 +133,6 @@ internal class NFTSendConfirmComponent @AssistedInject constructor(
         NFTSendConfirmContent(
             nftSendUM = state,
             destinationBlockComponent = destinationBlockComponent,
-            feeBlockComponent = feeBlockComponent,
             feeSelectorBlockComponent = feeSelectorBlockComponent,
             nftDetailsBlockComponent = nftDetailsBlockComponent,
             notificationsComponent = notificationsComponent,
