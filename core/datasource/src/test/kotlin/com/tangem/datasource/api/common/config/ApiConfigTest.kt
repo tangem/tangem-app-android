@@ -37,6 +37,14 @@ class ApiConfigTest {
                         appInfoProvider = mockk(),
                     )
                 }
+                ApiConfig.ID.YieldSupply -> {
+                    YieldSupply(
+                        environmentConfigStorage = mockk(),
+                        appVersionProvider = mockk(),
+                        authProvider = mockk(),
+                        appInfoProvider = mockk(),
+                    )
+                }
                 ApiConfig.ID.TangemTech -> {
                     TangemTech(
                         environmentConfigStorage = mockk(),
