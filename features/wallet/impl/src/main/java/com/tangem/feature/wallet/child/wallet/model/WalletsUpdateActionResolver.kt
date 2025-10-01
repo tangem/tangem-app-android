@@ -9,6 +9,7 @@ import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.feature.wallet.presentation.wallet.state.model.NOT_INITIALIZED_WALLET_INDEX
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletCardState
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotification
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletScreenState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 import timber.log.Timber
@@ -25,6 +26,10 @@ internal class WalletsUpdateActionResolver @Inject constructor(
 ) {
 
     fun resolve(wallets: List<UserWallet>, currentState: WalletScreenState): Action {
+        if (wallets.isEmpty()) {
+            return Action.EmptyWallets
+        }
+
         val selectedWallet = getSelectedWalletSyncUseCase().getOrElse {
             /* Selected user wallet can be null after reset if remaining user wallets is locked */
             return Action.Unknown
@@ -71,8 +76,19 @@ internal class WalletsUpdateActionResolver @Inject constructor(
             isAnyWalletNameChanged(state, wallets) -> {
                 getRenameWalletsAction(state, wallets)
             }
+            isAnyHotWalletBackedUpChange(state, wallets) -> {
+                getHotWalletsBackedUpAction(state, wallets)
+            }
             else -> getUpdateSelectedWalletAction(state, wallets, selectedWallet)
         }
+    }
+
+    private fun isAnyHotWalletBackedUpChange(state: WalletScreenState, wallets: List<UserWallet>): Boolean {
+        val incompleteActivationWalletIds = state.incompleteActivationWalletIds()
+        val walletsToUpdate = wallets.filter {
+            it is UserWallet.Hot && it.backedUp == incompleteActivationWalletIds.contains(it.walletId)
+        }
+        return walletsToUpdate.isNotEmpty()
     }
 
     private fun isWalletsCountChanged(state: WalletScreenState, wallets: List<UserWallet>): Boolean {
@@ -141,6 +157,19 @@ internal class WalletsUpdateActionResolver @Inject constructor(
         return prevWalletsIds == newWalletsIds && isAnyNameChanged
     }
 
+    private fun getHotWalletsBackedUpAction(
+        state: WalletScreenState,
+        wallets: List<UserWallet>,
+    ): Action.ReloadWarningsForWallets {
+        val incompleteActivationWalletIds = state.incompleteActivationWalletIds()
+
+        val walletsToUpdate = wallets.filter {
+            it is UserWallet.Hot && it.backedUp == incompleteActivationWalletIds.contains(it.walletId)
+        }
+
+        return Action.ReloadWarningsForWallets(walletsToUpdate)
+    }
+
     private fun getRenameWalletsAction(state: WalletScreenState, wallets: List<UserWallet>): Action.RenameWallets {
         val prevWallets = state.wallets.map { it.walletCardState.id to it.walletCardState.title }
         val newWallets = wallets.map { it.walletId to it.name }
@@ -193,6 +222,16 @@ internal class WalletsUpdateActionResolver @Inject constructor(
             .map(WalletState::walletCardState)
             .getOrNull(selectedWalletIndex)
             ?: error("Previous selected wallet is not found")
+    }
+
+    private fun WalletScreenState.incompleteActivationWalletIds(): List<UserWalletId> {
+        return wallets.mapNotNull {
+            if (it.warnings.any { it is WalletNotification.FinishWalletActivation }) {
+                it.walletCardState.id
+            } else {
+                null
+            }
+        }
     }
 
     private fun List<UserWallet>.indexOfWallet(id: UserWalletId): Int {
@@ -318,6 +357,12 @@ internal class WalletsUpdateActionResolver @Inject constructor(
                 return "UpdateWalletCardCount(selectedWallet = ${selectedWallet.walletId})"
             }
         }
+
+        data class ReloadWarningsForWallets(
+            val wallets: List<UserWallet>,
+        ) : Action()
+
+        data object EmptyWallets : Action()
 
         data object Unknown : Action()
     }

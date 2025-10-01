@@ -3,7 +3,6 @@ package com.tangem.feature.wallet.presentation.wallet.ui.components.common
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.notifications.NoteMigrationNotification
 import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.res.TangemTheme
@@ -35,15 +34,16 @@ internal fun LazyListScope.notifications(configs: ImmutableList<WalletNotificati
                         modifier = modifier.animateItem(fadeInSpec = null, fadeOutSpec = null),
                     )
                 }
+                is WalletNotification.FinishWalletActivation -> {
+                    Notification(
+                        config = it.config,
+                        modifier = modifier.animateItem(fadeInSpec = null, fadeOutSpec = null),
+                    )
+                }
                 else -> {
                     Notification(
                         config = it.config,
                         modifier = modifier.animateItem(fadeInSpec = null, fadeOutSpec = null),
-                        iconSize = if (it is WalletNotification.ReferralPromo) {
-                            54.dp
-                        } else {
-                            20.dp
-                        },
                         iconTint = when (it) {
                             is WalletNotification.Critical -> TangemTheme.colors.icon.warning
                             is WalletNotification.Informational -> TangemTheme.colors.icon.accent

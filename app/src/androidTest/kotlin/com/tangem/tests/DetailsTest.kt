@@ -3,7 +3,7 @@ package com.tangem.tests
 import com.tangem.common.BaseTestCase
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.domain.models.scan.ProductType
-import com.tangem.scenarios.OpenMainScreenScenario
+import com.tangem.scenarios.openMainScreen
 import com.tangem.screens.onDetailsScreen
 import com.tangem.screens.onReferralProgramScreen
 import com.tangem.screens.onTopBar
@@ -19,7 +19,9 @@ class DetailsTest : BaseTestCase() {
     @Test
     fun walletWithoutBackupDetailsTest() =
         setupHooks().run {
-            scenario(OpenMainScreenScenario(composeTestRule))
+            step("Open 'Main Screen'") {
+                openMainScreen()
+            }
             onTopBar {
                 step("Open wallet details") {
                     moreButton.clickWithAssertion()
@@ -53,7 +55,7 @@ class DetailsTest : BaseTestCase() {
                     linkMoreCardsButton.assertIsDisplayed()
                 }
                 step("Assert 'Card Settings' button is visible") {
-                    cardSettingsButton.assertIsDisplayed()
+                    deviceSettingsButton.assertIsDisplayed()
                 }
                 step("Assert 'Referral program' button is visible") {
                     referralProgramButton.assertIsDisplayed()
@@ -67,7 +69,9 @@ class DetailsTest : BaseTestCase() {
     // @Test
     fun wallet2DetailsTest() =
         setupHooks().run {
-            scenario(OpenMainScreenScenario(composeTestRule, ProductType.Wallet2))
+            step("Open 'Main Screen'") {
+                openMainScreen(productType = ProductType.Wallet2, alreadyActivatedDialogIsShown = true)
+            }
             onTopBar {
                 step("Open wallet details") {
                     moreButton.clickWithAssertion()
@@ -101,7 +105,7 @@ class DetailsTest : BaseTestCase() {
                     linkMoreCardsButton.assertIsNotDisplayed()
                 }
                 step("Assert 'Card Settings' button is visible") {
-                    cardSettingsButton.assertIsDisplayed()
+                    deviceSettingsButton.assertIsDisplayed()
                 }
                 step("Assert 'Referral program' button is visible") {
                     referralProgramButton.assertIsDisplayed()
@@ -115,7 +119,9 @@ class DetailsTest : BaseTestCase() {
     @Test
     fun noteDetailsTest() =
         setupHooks().run {
-            scenario(OpenMainScreenScenario(composeTestRule, ProductType.Note))
+            step("Open 'Main Screen'") {
+                openMainScreen(ProductType.Note)
+            }
             onTopBar {
                 step("Open wallet details") {
                     moreButton.clickWithAssertion()
@@ -146,7 +152,7 @@ class DetailsTest : BaseTestCase() {
             }
             onWalletSettingsScreen {
                 step("Assert 'Card Settings' button is visible") {
-                    cardSettingsButton.assertIsDisplayed()
+                    deviceSettingsButton.assertIsDisplayed()
                 }
                 step("Assert 'Referral program' button does not exist") {
                     referralProgramButton.assertIsNotDisplayed()
@@ -162,7 +168,9 @@ class DetailsTest : BaseTestCase() {
     @Test
     fun validateReferralProgramScreenTest() =
         setupHooks().run {
-            scenario(OpenMainScreenScenario(composeTestRule))
+            step("Open 'Main Screen'") {
+                openMainScreen()
+            }
             step("Open wallet details") {
                 onTopBar { moreButton.clickWithAssertion() }
             }

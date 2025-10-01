@@ -1,5 +1,6 @@
 package com.tangem.domain.core.flow
 
+import arrow.core.Option
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.retryWhen
@@ -14,7 +15,7 @@ import kotlinx.coroutines.flow.retryWhen
 interface FlowProducer<Data : Any> {
 
     /** Fallback value if [Flow] throws exception */
-    val fallback: Data
+    val fallback: Option<Data>
 
     /** Produce [Flow] */
     fun produce(): Flow<Data>
@@ -22,7 +23,7 @@ interface FlowProducer<Data : Any> {
     /** Produce [Flow] with retry mechanism */
     fun produceWithFallback(): Flow<Data> {
         return produce().retryWhen { _, _ ->
-            emit(value = fallback)
+            fallback.onSome { emit(value = it) }
 
             delay(timeMillis = 2000)
 
