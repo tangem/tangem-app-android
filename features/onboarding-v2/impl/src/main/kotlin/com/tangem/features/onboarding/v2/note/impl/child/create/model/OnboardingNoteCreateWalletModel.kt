@@ -63,7 +63,6 @@ internal class OnboardingNoteCreateWalletModel @Inject constructor(
             when (result) {
                 is CompletionResult.Success -> {
                     Analytics.send(OnboardingEvent.CreateWallet.WalletCreatedSuccessfully())
-                    cardRepository.startCardActivation(scanResponse.card.cardId)
                     createWalletAndNavigateBackWithDone(scanResponse.copy(card = result.data.card))
                 }
                 is CompletionResult.Failure -> _uiState.update {
