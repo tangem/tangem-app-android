@@ -23,11 +23,11 @@ import com.tangem.domain.card.analytics.ParamCardCurrencyConverter
 import com.tangem.domain.card.analytics.Shop
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.card.repository.CardSdkConfigRepository
+import com.tangem.domain.core.wallets.UserWalletsListRepository
 import com.tangem.domain.core.wallets.error.SaveWalletError
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
-import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
 import com.tangem.features.createwalletselection.entity.CreateWalletSelectionUM
@@ -56,7 +56,7 @@ internal class CreateWalletSelectionModel @Inject constructor(
     private val saveWalletUseCase: SaveWalletUseCase,
     private val generateBuyTangemCardLinkUseCase: GenerateBuyTangemCardLinkUseCase,
     private val urlOpener: UrlOpener,
-    private val userWalletsListManager: UserWalletsListManager,
+    private val userWalletsListRepository: UserWalletsListRepository,
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
 ) : Model() {
 
@@ -69,6 +69,17 @@ internal class CreateWalletSelectionModel @Inject constructor(
             onScanClick = ::onScanClick,
         ),
     )
+
+    init {
+        showAlreadyHaveWalletWithDelay()
+    }
+
+    private fun showAlreadyHaveWalletWithDelay() {
+        modelScope.launch {
+            delay(SHOW_ALREADY_HAVE_WALLET_DELAY)
+            uiState.update { it.copy(showAlreadyHaveWallet = true) }
+        }
+    }
 
     private fun onMobileWalletClick() {
         router.push(AppRoute.CreateMobileWallet)
@@ -129,13 +140,20 @@ internal class CreateWalletSelectionModel @Inject constructor(
             return
         }
 
-        saveWalletUseCase(userWallet).fold(
+        saveWalletUseCase(userWallet = userWallet).fold(
             ifLeft = {
                 delay(HIDE_PROGRESS_DELAY)
                 setLoading(false)
                 when (it) {
                     is SaveWalletError.DataError -> Timber.e(it.toString(), "Unable to save user wallet")
-                    is SaveWalletError.WalletAlreadySaved -> appRouter.replaceAll(AppRoute.Wallet)
+                    is SaveWalletError.WalletAlreadySaved -> {
+                        userWalletsListRepository.unlock(
+                            userWalletId = userWallet.walletId,
+                            unlockMethod = UserWalletsListRepository.UnlockMethod.Scan(scanResponse),
+                        ).onRight {
+                            appRouter.replaceAll(AppRoute.Wallet)
+                        }
+                    }
                 }
             },
             ifRight = {
@@ -146,7 +164,7 @@ internal class CreateWalletSelectionModel @Inject constructor(
         )
     }
 
-    private fun sendSignedInCardAnalyticsEvent(scanResponse: ScanResponse) {
+    private suspend fun sendSignedInCardAnalyticsEvent(scanResponse: ScanResponse) {
         val currency = ParamCardCurrencyConverter().convert(value = scanResponse.cardTypesResolver)
         if (currency != null) {
             analyticsEventHandler.send(
@@ -154,7 +172,7 @@ internal class CreateWalletSelectionModel @Inject constructor(
                     currency = currency,
                     batch = scanResponse.card.batchId,
                     signInType = SignInType.Card,
-                    walletsCount = userWalletsListManager.walletsCount.toString(),
+                    walletsCount = userWalletsListRepository.userWalletsSync().size.toString(),
                     hasBackup = scanResponse.card.backupStatus?.isActive,
                 ),
             )
@@ -180,5 +198,9 @@ internal class CreateWalletSelectionModel @Inject constructor(
                 title = resourceReference(id = R.string.common_error),
             ),
         )
+    }
+
+    companion object {
+        private const val SHOW_ALREADY_HAVE_WALLET_DELAY = 3000L
     }
 }

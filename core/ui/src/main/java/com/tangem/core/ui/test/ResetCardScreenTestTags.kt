@@ -1,0 +1,10 @@
+package com.tangem.core.ui.test
+
+object ResetCardScreenTestTags {
+    const val TITLE = "RESET_CARD_SCREEN_TITLE"
+    const val ATTENTION_IMAGE = "RESET_CARD_SCREEN_ATTENTION_IMAGE"
+    const val SUBTITLE = "RESET_CARD_SCREEN_SUBTITLE"
+    const val DESCRIPTION = "RESET_CARD_SCREEN_DESCRIPTION"
+    const val CHECKBOX = "RESET_CARD_SCREEN_CHECKBOX"
+    const val CHECKBOX_TEXT = "RESET_CARD_SCREEN_CHECKBOX_TEXT"
+}

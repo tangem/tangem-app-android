@@ -32,6 +32,7 @@ import com.tangem.domain.transaction.error.SendTransactionError.UserCancelledErr
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.walletconnect.WcAnalyticEvents
 import com.tangem.domain.walletconnect.WcAnalyticEvents.SignatureRequestReceived.EmulationStatus
+import com.tangem.domain.walletconnect.WcAnalyticEvents.SolanaLargeTransaction
 import com.tangem.domain.walletconnect.WcRequestUseCaseFactory
 import com.tangem.domain.walletconnect.model.WcRequestError
 import com.tangem.domain.walletconnect.model.WcRequestError.Companion.message
@@ -141,7 +142,14 @@ internal class WcSendTransactionModel @Inject constructor(
                             val isApprovalMethod = isSecurityCheckContent &&
                                 securityCheck.content is BlockAidTransactionCheck.Result.Approval
                             wcApproval = useCase as? WcApproval
-                            sign = { useCase.sign() }
+                            sign = {
+                                if (isMultipleSignRequired(useCase)) {
+                                    analytics.send(SolanaLargeTransaction(useCase.rawSdkRequest.dAppMetaData.name))
+                                    openMultipleTransaction(useCase)
+                                } else {
+                                    useCase.sign()
+                                }
+                            }
                             buildUiState(securityCheck, useCase, signState, isApprovalMethod)
                             if (feeReloadState.value) {
                                 triggerFeeReload()
@@ -160,6 +168,17 @@ internal class WcSendTransactionModel @Inject constructor(
                 FeeSelectorData(removeSuggestedFee = feeStateConfiguration !is FeeStateConfiguration.Suggestion),
             )
         }
+    }
+
+    private fun openMultipleTransaction(useCase: WcSignUseCase<*>) {
+        stackNavigation.pushNew(
+            WcTransactionRoutes.MultipleTransactions(
+                onConfirm = {
+                    useCase.sign()
+                    stackNavigation.pushNew(WcTransactionRoutes.TransactionProcess)
+                },
+            ),
+        )
     }
 
     /**
@@ -270,6 +289,14 @@ internal class WcSendTransactionModel @Inject constructor(
 
     override fun popBack() {
         stackNavigation.pop()
+    }
+
+    private fun isMultipleSignRequired(useCase: WcSignUseCase<*>): Boolean {
+        return if (useCase is SignRequirements) {
+            useCase.isMultipleSignRequired()
+        } else {
+            false
+        }
     }
 
     fun showTransactionRequest() {

@@ -10,7 +10,7 @@ import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
-import com.tangem.domain.card.common.util.cardTypesResolver
+import com.tangem.domain.core.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
@@ -18,11 +18,8 @@ import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.nft.ObserveAndClearNFTCacheIfNeedUseCase
 import com.tangem.domain.notifications.GetIsHuaweiDeviceWithoutGoogleServicesUseCase
 import com.tangem.domain.notifications.repository.NotificationsRepository
-import com.tangem.domain.notifications.toggles.NotificationsFeatureToggles
 import com.tangem.domain.settings.*
-import com.tangem.domain.tokens.FetchCurrencyStatusUseCase
 import com.tangem.domain.tokens.RefreshMultiCurrencyWalletQuotesUseCase
-import com.tangem.domain.tokens.TokensFeatureToggles
 import com.tangem.domain.wallets.usecase.*
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
@@ -39,6 +36,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.transformers.*
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
 import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvider
 import com.tangem.features.biometry.AskBiometryComponent
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.pushnotifications.api.PushNotificationsModelCallbacks
 import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
 import com.tangem.features.wallet.deeplink.WalletDeepLinkActionListener
@@ -62,7 +60,7 @@ internal class WalletModel @Inject constructor(
     private val walletScreenContentLoader: WalletScreenContentLoader,
     private val getSelectedWalletUseCase: GetSelectedWalletUseCase,
     private val getWalletsUseCase: GetWalletsUseCase,
-    private val shouldShowSaveWalletScreenUseCase: ShouldShowSaveWalletScreenUseCase,
+    private val shouldShowAskBiometryUseCase: ShouldShowAskBiometryUseCase,
     private val shouldShowMarketsTooltipUseCase: ShouldShowMarketsTooltipUseCase,
     private val setWalletFirstTimeUsageUseCase: SetWalletFirstTimeUsageUseCase,
     private val canUseBiometryUseCase: CanUseBiometryUseCase,
@@ -76,17 +74,16 @@ internal class WalletModel @Inject constructor(
     private val tokenListStore: MultiWalletTokenListStore,
     private val onrampStatusFactory: OnrampStatusFactory,
     private val analyticsEventsHandler: AnalyticsEventHandler,
-    private val fetchCurrencyStatusUseCase: FetchCurrencyStatusUseCase,
     private val walletContentFetcher: WalletContentFetcher,
-    private val tokensFeatureToggles: TokensFeatureToggles,
     private val observeAndClearNFTCacheIfNeedUseCase: ObserveAndClearNFTCacheIfNeedUseCase,
     private val walletDeepLinkActionListener: WalletDeepLinkActionListener,
     private val notificationsRepository: NotificationsRepository,
     private val getWalletsListForEnablingUseCase: GetWalletsForAutomaticallyPushEnablingUseCase,
     private val setNotificationsEnabledUseCase: SetNotificationsEnabledUseCase,
-    private val notificationsFeatureToggles: NotificationsFeatureToggles,
     private val shouldSaveUserWalletsSyncUseCase: ShouldSaveUserWalletsSyncUseCase,
     private val getIsHuaweiDeviceWithoutGoogleServicesUseCase: GetIsHuaweiDeviceWithoutGoogleServicesUseCase,
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
+    private val userWalletsListRepository: UserWalletsListRepository,
     val screenLifecycleProvider: ScreenLifecycleProvider,
     val innerWalletRouter: InnerWalletRouter,
 ) : Model() {
@@ -144,7 +141,7 @@ internal class WalletModel @Inject constructor(
         modelScope.launch(dispatchers.main) {
             withContext(dispatchers.io) { delay(timeMillis = 1_800) }
 
-            if (isShowSaveWalletScreenEnabled()) {
+            if (shouldShowAskBiometryBottomSheet()) {
                 innerWalletRouter.dialogNavigation.activate(
                     configuration = WalletDialogConfig.AskForBiometry,
                 )
@@ -166,8 +163,15 @@ internal class WalletModel @Inject constructor(
         }
     }
 
-    private suspend fun isShowSaveWalletScreenEnabled(): Boolean {
-        return innerWalletRouter.isWalletLastScreen() && shouldShowSaveWalletScreenUseCase() && canUseBiometryUseCase()
+    private suspend fun shouldShowAskBiometryBottomSheet(): Boolean {
+        return if (hotWalletFeatureToggles.isHotWalletEnabled) {
+            userWalletsListRepository.userWalletsSync().any { it is UserWallet.Cold } &&
+                innerWalletRouter.isWalletLastScreen() &&
+                shouldShowAskBiometryUseCase() &&
+                canUseBiometryUseCase()
+        } else {
+            innerWalletRouter.isWalletLastScreen() && shouldShowAskBiometryUseCase() && canUseBiometryUseCase()
+        }
     }
 
     private fun subscribeToUserWalletsUpdates() = channelFlow<Unit> {
@@ -223,7 +227,6 @@ internal class WalletModel @Inject constructor(
                     "isHuaweiDevice $isHuaweiDevice",
             )
             if (!isBiometricsEnabled) return@launch
-            if (isHuaweiDevice) return@launch
             if (!shouldShowBottomSheet) return@launch
 
             delay(timeMillis = 1_800)
@@ -363,9 +366,26 @@ internal class WalletModel @Inject constructor(
             is WalletsUpdateActionResolver.Action.RenameWallets -> {
                 stateHolder.update(transformer = RenameWalletsTransformer(renamedWallets = action.renamedWallets))
             }
+            is WalletsUpdateActionResolver.Action.ReloadWarningsForWallets -> {
+                reloadWarnings(action)
+            }
+            WalletsUpdateActionResolver.Action.EmptyWallets -> {
+                Timber.w("Wallets list is empty!")
+            }
             is WalletsUpdateActionResolver.Action.Unknown -> {
                 Timber.w("Unable to perform action: $action")
             }
+        }
+    }
+
+    private fun reloadWarnings(action: WalletsUpdateActionResolver.Action.ReloadWarningsForWallets) {
+        action.wallets.forEach {
+            walletScreenContentLoader.load(
+                userWallet = it,
+                clickIntents = clickIntents,
+                coroutineScope = modelScope,
+                isRefresh = true,
+            )
         }
     }
 
@@ -389,13 +409,11 @@ internal class WalletModel @Inject constructor(
 
         val otherWallets = action.wallets.minus(action.selectedWallet)
 
-        if (tokensFeatureToggles.isWalletBalanceFetcherEnabled) {
-            otherWallets
-                .filterNot(UserWallet::isLocked)
-                .onEach { userWallet ->
-                    modelScope.launch { walletContentFetcher(userWalletId = userWallet.walletId) }
-                }
-        }
+        otherWallets
+            .filterNot(UserWallet::isLocked)
+            .onEach { userWallet ->
+                modelScope.launch { walletContentFetcher(userWalletId = userWallet.walletId) }
+            }
 
         if (action.wallets.size > 1 && isWalletsScrollPreviewEnabled()) {
             val direction = if (action.selectedWalletIndex == action.wallets.lastIndex) {
@@ -553,32 +571,18 @@ internal class WalletModel @Inject constructor(
     }
 
     private suspend fun fetchWalletContent(userWallet: UserWallet) {
-        if (tokensFeatureToggles.isWalletBalanceFetcherEnabled) {
-            if (userWallet.isLocked) return
+        if (userWallet.isLocked) return
 
-            /*
-             * Updating the balance of the current wallet is an essential part of InitializationWallets,
-             * so the coroutine is launched in the current context
-             */
-            supervisorScope {
-                launch { walletContentFetcher(userWalletId = userWallet.walletId) }
-            }
-        } else {
-            fetchIfSingleWallet(userWallet = userWallet)
-        }
-    }
-
-    private fun fetchIfSingleWallet(userWallet: UserWallet) {
-        if (userWallet is UserWallet.Cold && userWallet.scanResponse.cardTypesResolver.isSingleWallet()) {
-            modelScope.launch {
-                fetchCurrencyStatusUseCase(userWalletId = userWallet.walletId)
-                    .onLeft { Timber.e(it.toString()) }
-            }
+        /*
+         * Updating the balance of the current wallet is an essential part of InitializationWallets,
+         * so the coroutine is launched in the current context
+         */
+        supervisorScope {
+            launch { walletContentFetcher(userWalletId = userWallet.walletId) }
         }
     }
 
     private fun enableNotificationsIfNeeded() {
-        if (!notificationsFeatureToggles.isNotificationsEnabled) return
         modelScope.launch {
             val isUserAllowToEnableNotifications = notificationsRepository.isUserAllowToSubscribeOnPushNotifications()
             if (isUserAllowToEnableNotifications) {
