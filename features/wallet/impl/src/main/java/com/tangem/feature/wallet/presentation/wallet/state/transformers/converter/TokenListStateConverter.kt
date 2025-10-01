@@ -2,6 +2,7 @@ package com.tangem.feature.wallet.presentation.wallet.state.transformers.convert
 
 import com.tangem.common.ui.account.AccountCryptoPortfolioItemStateConverter
 import com.tangem.common.ui.tokens.TokenItemStateConverter
+import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.components.tokenlist.state.PortfolioTokensListItemUM
 import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
 import com.tangem.core.ui.extensions.resourceReference
@@ -13,6 +14,7 @@ import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.models.tokenlist.TokenList.GroupedByNetwork.NetworkGroup
@@ -34,6 +36,7 @@ internal class TokenListStateConverter(
     private val params: TokenConverterParams,
     private val selectedWallet: UserWallet,
     private val clickIntents: WalletClickIntents,
+    private val apyMap: Map<String, String> = emptyMap(),
 ) : Converter<WalletTokensListState, WalletTokensListState> {
 
     private val onTokenClick: (accountId: AccountId?, currencyStatus: CryptoCurrencyStatus) -> Unit =
@@ -165,10 +168,52 @@ internal class TokenListStateConverter(
         tokenConverter: TokenItemStateConverter,
         token: CryptoCurrencyStatus,
     ): List<TokensListItemUM> {
-        val tokenItemState = tokenConverter.convert(token)
+        val tokenItemState = tokenConverter.convert(token).withEarnApyBadge(token)
+
         add(TokensListItemUM.Token(tokenItemState))
 
         return this
+    }
+
+    private fun TokenItemState.withEarnApyBadge(cryptoCurrencyStatus: CryptoCurrencyStatus): TokenItemState {
+        val apy: String? = resolveEarnApy(cryptoCurrencyStatus)
+
+        val shouldApply = apy != null && this.titleState is TokenItemState.TitleState.Content
+
+        return if (!shouldApply) {
+            this
+        } else {
+            val contentTitle = this.titleState as TokenItemState.TitleState.Content
+            val newTitle = contentTitle.copy(
+                earnApy = resourceReference(
+                    R.string.yield_module_earn_badge,
+                    wrappedList(apy),
+                ),
+            )
+
+            when (this) {
+                is TokenItemState.Content -> this.copy(titleState = newTitle)
+                is TokenItemState.Unreachable -> this.copy(titleState = newTitle)
+                is TokenItemState.NoAddress -> this.copy(titleState = newTitle)
+                is TokenItemState.Loading -> this.copy(titleState = newTitle)
+                is TokenItemState.Draggable -> this.copy(titleState = newTitle)
+                is TokenItemState.Locked -> this
+            }
+        }
+    }
+
+    private fun resolveEarnApy(cryptoCurrencyStatus: CryptoCurrencyStatus): String? {
+        if (apyMap.isEmpty()) return null
+
+        val isYieldSupplyActive = (cryptoCurrencyStatus.value as? CryptoCurrencyStatus.Loaded)
+            ?.yieldSupplyStatus?.isActive == true
+        if (isYieldSupplyActive) return null
+
+        val contract = (cryptoCurrencyStatus.currency as? CryptoCurrency.Token)
+            ?.contractAddress
+            ?.lowercase() ?: return null
+
+        return apyMap[contract]
     }
 
     private fun getOrganizeTokensButtonState(tokenList: TokenList): WalletOrganizeTokensButtonConfig? {
