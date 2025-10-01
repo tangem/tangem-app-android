@@ -377,22 +377,26 @@ internal class MainViewModel @Inject constructor(
     private fun preloadImages() {
         try {
             viewModelScope.launch {
-                val swapStories = getStoryContentUseCase.invokeSync(
+                getStoryContentUseCase.invokeSync(
                     id = StoryContentIds.STORY_FIRST_TIME_SWAP.id,
                     refresh = true,
-                ).getOrNull()
-
-                if (swapStories == null) {
-                    analyticsEventHandler.send(
-                        StoriesEvents.Error(
-                            type = StoryContentIds.STORY_FIRST_TIME_SWAP.analyticType,
-                        ),
-                    )
-                } else {
-                    val storiesImages = swapStories.getImageUrls()
-                    // try to preload images for stories
-                    storiesImages.forEach(imagePreloader::preload)
-                }
+                ).fold(
+                    ifLeft = { error ->
+                        Timber.e(error)
+                        analyticsEventHandler.send(
+                            StoriesEvents.Error(
+                                type = StoryContentIds.STORY_FIRST_TIME_SWAP.analyticType,
+                            ),
+                        )
+                    },
+                    ifRight = { swapStories ->
+                        if (swapStories != null) {
+                            val storiesImages = swapStories.getImageUrls()
+                            // try to preload images for stories
+                            storiesImages.forEach(imagePreloader::preload)
+                        }
+                    },
+                )
             }
         } catch (ex: Exception) {
             Timber.e(ex)
