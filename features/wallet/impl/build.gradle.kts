@@ -98,6 +98,8 @@ dependencies {
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.notifications)
     implementation(projects.domain.transaction)
+    implementation(projects.domain.yieldSupply)
+    implementation(projects.domain.yieldSupply.models)
 
     /** Feature Apis */
     implementation(projects.features.details.api)
