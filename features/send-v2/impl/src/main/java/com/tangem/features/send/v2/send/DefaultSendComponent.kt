@@ -38,8 +38,6 @@ import com.tangem.features.send.v2.subcomponents.amount.SendAmountComponent
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountComponentParams
 import com.tangem.features.send.v2.subcomponents.destination.DefaultSendDestinationBlockComponent
 import com.tangem.features.send.v2.subcomponents.destination.DefaultSendDestinationComponent
-import com.tangem.features.send.v2.subcomponents.fee.SendFeeComponent
-import com.tangem.features.send.v2.subcomponents.fee.SendFeeComponentParams
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -118,14 +116,6 @@ internal class DefaultSendComponent @AssistedInject constructor(
                         )
                         activeComponent.updateState(model.uiState.value.destinationUM)
                     }
-                    is SendFeeComponent -> {
-                        analyticsEventHandler.send(
-                            CommonSendAnalyticEvents.FeeScreenOpened(
-                                categoryName = model.analyticCategoryName,
-                                source = model.analyticsSendSource,
-                            ),
-                        )
-                    }
                 }
                 model.currentRoute.emit(stack.active.configuration)
             }
@@ -153,7 +143,6 @@ internal class DefaultSendComponent @AssistedInject constructor(
         CommonSendRoute.Empty -> getStubComponent()
         is CommonSendRoute.Destination -> getDestinationComponent(factoryContext)
         is CommonSendRoute.Amount -> getAmountComponent(factoryContext)
-        is CommonSendRoute.Fee -> getFeeComponent(factoryContext)
         is CommonSendRoute.Confirm -> getConfirmComponent(factoryContext)
         is CommonSendRoute.ConfirmSuccess -> getConfirmSuccessComponent(factoryContext)
     }
@@ -188,42 +177,9 @@ internal class DefaultSendComponent @AssistedInject constructor(
                 cryptoCurrencyStatusFlow = model.cryptoCurrencyStatusFlow,
                 callback = model,
                 predefinedValues = model.predefinedValues,
-                isRedesignEnabled = model.uiState.value.isRedesignEnabled,
                 analyticsSendSource = model.analyticsSendSource,
             ),
         )
-    }
-
-    @Suppress("ComplexCondition")
-    private fun getFeeComponent(factoryContext: AppComponentContext): ComposableContentComponent {
-        val state = model.uiState.value
-        val sendAmount = (state.amountUM as? AmountState.Data)?.amountTextField?.cryptoAmount?.value
-        val destinationAddress = (state.destinationUM as? DestinationUM.Content)?.addressTextField?.actualAddress
-        val cryptoCurrencyStatus = model.cryptoCurrencyStatusFlow.value
-        val feeCryptoCurrencyStatus = model.feeCryptoCurrencyStatusFlow.value
-
-        return if (sendAmount != null && destinationAddress != null) {
-            SendFeeComponent(
-                appComponentContext = factoryContext,
-                params = SendFeeComponentParams.FeeParams(
-                    state = model.uiState.value.feeUM,
-                    currentRoute = model.currentRoute.filterIsInstance<CommonSendRoute.Fee>(),
-                    analyticsCategoryName = model.analyticCategoryName,
-                    userWallet = model.userWallet,
-                    cryptoCurrencyStatus = cryptoCurrencyStatus,
-                    feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
-                    appCurrency = model.appCurrency,
-                    onLoadFee = model::loadFee,
-                    sendAmount = sendAmount,
-                    destinationAddress = destinationAddress,
-                    callback = model,
-                    analyticsSendSource = model.analyticsSendSource,
-                ),
-            )
-        } else {
-            model.showAlertError()
-            getStubComponent()
-        }
     }
 
     private fun getConfirmComponent(factoryContext: AppComponentContext): ComposableContentComponent {
