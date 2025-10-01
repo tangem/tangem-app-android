@@ -5,8 +5,8 @@ import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import com.tangem.common.BaseTestCase
 import com.tangem.common.extensions.hasLazyListItemPosition
 import com.tangem.common.utils.LazyListItemNode
-import com.tangem.core.ui.test.TokenElementsTestTags
 import com.tangem.core.ui.test.OrganizeTokensScreenTestTags
+import com.tangem.core.ui.test.TokenElementsTestTags
 import com.tangem.core.ui.utils.LazyListItemPositionSemantics
 import com.tangem.feature.wallet.impl.R
 import io.github.kakaocup.compose.node.element.ComposeScreen
@@ -14,10 +14,10 @@ import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onCompose
 import io.github.kakaocup.compose.node.element.KNode
 import io.github.kakaocup.compose.node.element.lazylist.KLazyListNode
 import io.github.kakaocup.kakao.common.utilities.getResourceString
-import androidx.compose.ui.test.hasText as withText
-import androidx.compose.ui.test.hasTestTag as withTestTag
-import androidx.compose.ui.test.hasAnySibling as withAnySibling
 import androidx.compose.ui.test.hasAnyChild as withAnyChild
+import androidx.compose.ui.test.hasAnySibling as withAnySibling
+import androidx.compose.ui.test.hasTestTag as withTestTag
+import androidx.compose.ui.test.hasText as withText
 
 class OrganizeTokensPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
     ComposeScreen<OrganizeTokensPageObject>(semanticsProvider = semanticsProvider) {
@@ -25,10 +25,12 @@ class OrganizeTokensPageObject(semanticsProvider: SemanticsNodeInteractionsProvi
     // region TopBar
     val title: KNode = child {
         hasText(getResourceString(R.string.organize_tokens_title))
+        useUnmergedTree = true
     }
 
     private val topBarGroupButton: KNode = child {
         hasTestTag(OrganizeTokensScreenTestTags.GROUP_BUTTON)
+        useUnmergedTree = true
     }
 
     val groupButton: KNode = topBarGroupButton.child {
@@ -100,10 +102,14 @@ class OrganizeTokensPageObject(semanticsProvider: SemanticsNodeInteractionsProvi
         return lazyList.child {
             hasTestTag(OrganizeTokensScreenTestTags.DRAGGABLE_IMAGE)
             useUnmergedTree = true
-            hasParent(withTestTag(TokenElementsTestTags.TOKEN_NON_FIAT_BLOCK)
-                .and(withAnySibling(withTestTag(TokenElementsTestTags.TOKEN_TITLE)
-                    .and(withAnyChild(withText(tokenTitle))))
-                )
+            hasParent(
+                withTestTag(TokenElementsTestTags.TOKEN_NON_FIAT_BLOCK)
+                    .and(
+                        withAnySibling(
+                            withTestTag(TokenElementsTestTags.TOKEN_TITLE)
+                                .and(withAnyChild(withText(tokenTitle)))
+                        )
+                    )
             )
         }
     }

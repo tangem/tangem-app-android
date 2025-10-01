@@ -18,6 +18,7 @@ import com.tangem.domain.wallets.legacy.asLockable
 import com.tangem.domain.wallets.usecase.DeleteWalletUseCase
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.tap.common.analytics.events.Settings
 import com.tangem.tap.common.extensions.dispatchNavigationAction
 import com.tangem.tap.common.extensions.onUserWalletSelected
@@ -50,6 +51,7 @@ internal class ResetCardModel @Inject constructor(
     private val userWalletsListManager: UserWalletsListManager,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val cardSettingsInteractor: CardSettingsInteractor,
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
 ) : Model() {
 
     private val params = paramsContainer.require<ResetCardComponent.Params>()
@@ -259,16 +261,20 @@ internal class ResetCardModel @Inject constructor(
     private fun finishFullReset() {
         cardSettingsInteractor.clear()
 
-        val newSelectedWallet = userWalletsListManager.selectedUserWalletSync
+        val newSelectedWallet = getSelectedWalletSyncUseCase.invoke().getOrNull()
 
         if (newSelectedWallet != null) {
             store.dispatchNavigationAction { popTo<AppRoute.Wallet>() }
         } else {
-            val isLocked = runCatching { userWalletsListManager.asLockable()?.isLockedSync }.isSuccess
-            if (isLocked && userWalletsListManager.hasUserWallets) {
-                store.dispatchNavigationAction { popTo<AppRoute.Welcome>() }
-            } else {
+            if (hotWalletFeatureToggles.isHotWalletEnabled) {
                 store.dispatchNavigationAction { replaceAll(AppRoute.Home()) }
+            } else {
+                val isLocked = runCatching { userWalletsListManager.asLockable()?.isLockedSync }.isSuccess
+                if (isLocked && userWalletsListManager.hasUserWallets) {
+                    store.dispatchNavigationAction { popTo<AppRoute.Welcome>() }
+                } else {
+                    store.dispatchNavigationAction { replaceAll(AppRoute.Home()) }
+                }
             }
         }
     }
