@@ -41,6 +41,7 @@ dependencies {
     implementation(projects.domain.tokens)
     implementation(projects.domain.transaction.models)
     implementation(projects.domain.transaction)
+    implementation(projects.domain.yieldSupply.models)
     implementation(projects.domain.yieldSupply)
     implementation(projects.domain.feedback.models)
     implementation(projects.domain.feedback)
