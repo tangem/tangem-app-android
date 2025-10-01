@@ -28,6 +28,8 @@ data class UserWalletItemUM(
 
         data object Hidden : Balance()
 
+        data object NotShowing : Balance()
+
         data object Locked : Balance()
 
         data object Failed : Balance()

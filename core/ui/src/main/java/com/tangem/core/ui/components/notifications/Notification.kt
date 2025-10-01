@@ -32,6 +32,7 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.components.*
 import com.tangem.core.ui.components.buttons.common.TangemButtonSize
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resolveAnnotatedReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
@@ -63,8 +64,8 @@ fun Notification(
         NotificationConfig.IconTint.Unspecified -> null
         NotificationConfig.IconTint.Accent -> TangemTheme.colors.icon.accent
         NotificationConfig.IconTint.Attention -> TangemTheme.colors.icon.attention
+        NotificationConfig.IconTint.Warning -> TangemTheme.colors.icon.warning
     },
-    iconSize: Dp = 20.dp,
     isEnabled: Boolean = true,
 ) {
     NotificationBaseContainer(
@@ -78,7 +79,7 @@ fun Notification(
         MainContent(
             iconResId = config.iconResId,
             iconTint = iconTint,
-            iconSize = iconSize,
+            iconSize = config.iconSize,
             title = config.title,
             titleColor = titleColor,
             subtitle = config.subtitle,
@@ -117,7 +118,9 @@ internal fun NotificationBaseContainer(
     ) {
         Box {
             Column(
-                modifier = Modifier.padding(all = TangemTheme.dimens.spacing12),
+                modifier = Modifier
+                    .padding(all = TangemTheme.dimens.spacing12)
+                    .testTag(NotificationTestTags.CONTAINER),
                 verticalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing12),
             ) {
                 content()
@@ -152,7 +155,8 @@ private fun MainContent(
             tint = iconTint,
             modifier = Modifier
                 .size(size = iconSize)
-                .align(alignment = Alignment.Top),
+                .align(alignment = Alignment.Top)
+                .testTag(NotificationTestTags.ICON),
         )
 
         SpacerW(width = TangemTheme.dimens.spacing10)
@@ -214,13 +218,13 @@ internal fun TextsBlock(
             SpacerH(height = TangemTheme.dimens.spacing2)
         }
 
-        val subtitleText = subtitle.resolveReference()
+        val subtitleText = subtitle.resolveAnnotatedReference()
         if (subtitleText.isNotEmpty()) {
             Text(
                 text = subtitleText,
                 color = subtitleColor,
                 style = TangemTheme.typography.caption2,
-                modifier = Modifier.testTag(NotificationTestTags.TEXT),
+                modifier = Modifier.testTag(NotificationTestTags.MESSAGE),
             )
         }
     }
@@ -456,6 +460,16 @@ private class NotificationConfigProvider : CollectionPreviewParameterProvider<No
         NotificationConfig(
             subtitle = resourceReference(id = R.string.information_generated_with_ai),
             iconResId = R.drawable.ic_magic_28,
+        ),
+        NotificationConfig(
+            title = resourceReference(R.string.notification_sepa_title),
+            subtitle = resourceReference(R.string.notification_sepa_text),
+            iconResId = R.drawable.img_notification_sepa,
+            buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
+                text = resourceReference(R.string.notification_sepa_button),
+                onClick = { },
+            ),
+            iconSize = 54.dp,
         ),
     ),
 )

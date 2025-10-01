@@ -11,7 +11,9 @@ import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
+import com.tangem.core.ui.message.ToastMessage
 import com.tangem.domain.account.usecase.ArchiveCryptoPortfolioUseCase
+import com.tangem.domain.models.account.Account
 import com.tangem.features.account.AccountDetailsComponent
 import com.tangem.features.account.createedit.entity.AccountCreateEditUMBuilder.Companion.portfolioIcon
 import com.tangem.features.account.details.entity.AccountDetailsUM
@@ -70,16 +72,30 @@ internal class AccountDetailsModel @Inject constructor(
 
     private fun archiveCryptoPortfolio() = modelScope.launch {
         archiveCryptoPortfolioUseCase(params.account.accountId)
+            .onRight {
+                val message = resourceReference(R.string.account_archive_success_message)
+                messageSender.send(ToastMessage(message = message))
+                router.pop()
+            }
     }
 
     private fun getInitialState(): AccountDetailsUM {
+        val account = params.account
+        val archiveMode = when (account) {
+            is Account.CryptoPortfolio -> when (account.isMainAccount) {
+                true -> AccountDetailsUM.ArchiveMode.None
+                false -> AccountDetailsUM.ArchiveMode.Available(
+                    onArchiveAccountClick = ::onArchiveAccountClick,
+                )
+            }
+        }
         return AccountDetailsUM(
-            accountName = params.account.accountName.value,
+            accountName = params.account.accountName.toUM().value,
             accountIcon = params.account.portfolioIcon.toUM(),
             onCloseClick = { router.pop() },
             onAccountEditClick = ::onEditAccountClick,
             onManageTokensClick = ::onManageTokensClick,
-            onArchiveAccountClick = ::onArchiveAccountClick,
+            archiveMode = archiveMode,
         )
     }
 }
