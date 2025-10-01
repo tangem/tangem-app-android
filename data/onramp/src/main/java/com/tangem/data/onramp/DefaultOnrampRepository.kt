@@ -30,6 +30,9 @@ import com.tangem.datasource.local.onramp.currencies.OnrampCurrenciesStore
 import com.tangem.datasource.local.onramp.pairs.OnrampPairsStore
 import com.tangem.datasource.local.onramp.paymentmethods.OnrampPaymentMethodsStore
 import com.tangem.datasource.local.onramp.quotes.OnrampQuotesStore
+import com.tangem.datasource.local.onramp.sepa.OnrampCurrentCountryByIPStore
+import com.tangem.datasource.local.onramp.sepa.OnrampSepaAvailabilityStore
+import com.tangem.datasource.local.onramp.sepa.OnrampSepaAvailabilityStoreKey
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObject
@@ -64,6 +67,8 @@ internal class DefaultOnrampRepository(
     private val dispatchers: CoroutineDispatcherProvider,
     private val appPreferencesStore: AppPreferencesStore,
     private val paymentMethodsStore: OnrampPaymentMethodsStore,
+    private val onrampSepaAvailabilityStore: OnrampSepaAvailabilityStore,
+    private val onrampCurrentCountryByIPStore: OnrampCurrentCountryByIPStore,
     private val pairsStore: OnrampPairsStore,
     private val quotesStore: OnrampQuotesStore,
     private val countriesStore: OnrampCountriesStore,
@@ -123,17 +128,30 @@ internal class DefaultOnrampRepository(
         result
     }
 
-    override suspend fun getCountryByIp(userWallet: UserWallet): OnrampCountry = withContext(dispatchers.io) {
-        onrampApi.getCountryByIp(
-            userWalletId = userWallet.walletId.stringValue,
-            refCode = ExpressUtils.getRefCode(
-                userWallet = userWallet,
-                appPreferencesStore = appPreferencesStore,
-            ),
-        )
-            .getOrThrow()
-            .let(countryConverter::convert)
-    }
+    override suspend fun getCountryByIp(userWallet: UserWallet, fromCache: Boolean): OnrampCountry =
+        withContext(dispatchers.io) {
+            if (fromCache) {
+                val country = onrampCurrentCountryByIPStore.getSyncOrNull()
+
+                if (country != null) {
+                    return@withContext country
+                }
+            }
+
+            val country = onrampApi.getCountryByIp(
+                userWalletId = userWallet.walletId.stringValue,
+                refCode = ExpressUtils.getRefCode(
+                    userWallet = userWallet,
+                    appPreferencesStore = appPreferencesStore,
+                ),
+            )
+                .getOrThrow()
+                .let(countryConverter::convert)
+
+            onrampCurrentCountryByIPStore.store(country)
+
+            country
+        }
 
     override suspend fun getStatus(userWallet: UserWallet, txId: String): OnrampStatus = withContext(dispatchers.io) {
         onrampApi.getStatus(
@@ -259,6 +277,62 @@ internal class DefaultOnrampRepository(
             )
         }
         storeOnrampPairs(pairs = onrampPairs.await(), providers = providers.await())
+    }
+
+    override suspend fun hasSepaMethod(
+        userWallet: UserWallet,
+        country: OnrampCountry,
+        cryptoCurrency: CryptoCurrency,
+    ): Boolean {
+        return withContext(dispatchers.io) {
+            val key = OnrampSepaAvailabilityStoreKey(
+                userWallet = userWallet,
+                country = country,
+                cryptoCurrency = cryptoCurrency,
+            )
+
+            val cachedValue = onrampSepaAvailabilityStore.getSyncOrNull(key)
+
+            if (cachedValue != null) {
+                return@withContext cachedValue
+            }
+
+            val onrampPairs =
+                safeApiCall(
+                    call = {
+                        onrampApi.getPairs(
+                            userWalletId = userWallet.walletId.stringValue,
+                            refCode = ExpressUtils.getRefCode(
+                                userWallet = userWallet,
+                                appPreferencesStore = appPreferencesStore,
+                            ),
+                            body = OnrampPairsRequest(
+                                fromCurrencyCode = EUR_CURRENCY_CODE,
+                                countryCode = country.code,
+                                to = listOf(
+                                    OnrampDestinationDTO(
+                                        contractAddress = cryptoCurrency.getContractAddress(),
+                                        network = cryptoCurrency.network.backendId,
+                                    ),
+                                ),
+                            ),
+                        ).bind()
+                    },
+                    onError = {
+                        Timber.w(it, "Unable to fetch onramp pairs")
+                        throw it
+                    },
+                )
+
+            val hasSepaMethod = onrampPairs
+                .flatMap { it.providers }
+                .flatMap { it.paymentMethods }
+                .any { it == SEPA_METHOD_ID }
+
+            onrampSepaAvailabilityStore.store(key, hasSepaMethod)
+
+            hasSepaMethod
+        }
     }
 
     override suspend fun fetchQuotes(userWallet: UserWallet, cryptoCurrency: CryptoCurrency, amount: Amount) =
@@ -554,5 +628,8 @@ internal class DefaultOnrampRepository(
         const val PROVIDER_THEME_LIGHT = "light"
 
         const val REDIRECT_URL = "https://tangem.com/onramp"
+
+        const val SEPA_METHOD_ID = "sepa"
+        const val EUR_CURRENCY_CODE = "EUR"
     }
 }

@@ -17,43 +17,41 @@ sealed class WcRequestError {
 
     companion object {
 
-        fun WcRequestError.message(): String? = when (this) {
-            is UnknownError -> ex?.message
+        fun WcRequestError.message(): String = when (this) {
+            is UnknownError -> ex?.message ?: "UnknownError"
             is WcRespondError -> message
             is WrappedSendError -> sendTransactionError.message()
             is HandleMethodError -> message
         }
 
-        fun WcRequestError.code(): String? = when (this) {
-            is HandleMethodError,
-            is UnknownError,
-            -> null
+        fun WcRequestError.code(): String = when (this) {
+            is HandleMethodError -> "HandleMethodError"
+            is UnknownError -> "UnknownError"
             is WcRespondError -> this.code.toString()
             is WrappedSendError -> sendTransactionError.code()
         }
 
-        private fun SendTransactionError.code(): String? = when (this) {
+        private fun SendTransactionError.code(): String = when (this) {
             is SendTransactionError.BlockchainSdkError -> code.toString()
-            is SendTransactionError.NetworkError -> code
+            is SendTransactionError.NetworkError -> code ?: "NetworkError"
             is SendTransactionError.TangemSdkError -> code.toString()
-            is SendTransactionError.DataError,
-            SendTransactionError.DemoCardError,
-            is SendTransactionError.UnknownError,
-            SendTransactionError.UserCancelledError,
-            is SendTransactionError.CreateAccountUnderfunded,
-            -> null
+            is SendTransactionError.DataError -> "DataError"
+            SendTransactionError.DemoCardError -> "DemoCardError"
+            is SendTransactionError.UnknownError -> "UnknownError"
+            SendTransactionError.UserCancelledError -> "UserCancelledError"
+            is SendTransactionError.CreateAccountUnderfunded -> "CreateAccountUnderfunded"
         }
 
-        private fun SendTransactionError.message(): String? = when (this) {
-            is SendTransactionError.BlockchainSdkError -> message
-            is SendTransactionError.NetworkError -> message
-            is SendTransactionError.DataError -> message
-            is SendTransactionError.UnknownError -> ex?.message
+        private fun SendTransactionError.message(): String = when (this) {
+            is SendTransactionError.BlockchainSdkError -> message ?: "BlockchainSdkError"
+            is SendTransactionError.NetworkError -> message ?: "NetworkError"
+            is SendTransactionError.DataError -> message ?: "DataError"
+            is SendTransactionError.UnknownError -> ex?.message ?: "UnknownError"
             is SendTransactionError.TangemSdkError -> "TangemSdkError code: ${this.code}"
             SendTransactionError.DemoCardError -> "DemoCardError"
-            SendTransactionError.UserCancelledError,
+            SendTransactionError.UserCancelledError -> "UserCancelledError"
             is SendTransactionError.CreateAccountUnderfunded,
-            -> null
+            -> "CreateAccountUnderfunded"
         }
     }
 }
