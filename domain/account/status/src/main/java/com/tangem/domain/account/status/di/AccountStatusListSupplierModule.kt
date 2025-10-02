@@ -4,6 +4,10 @@ import com.tangem.domain.account.status.producer.MultiAccountStatusListProducer
 import com.tangem.domain.account.status.producer.SingleAccountStatusListProducer
 import com.tangem.domain.account.status.supplier.MultiAccountStatusListSupplier
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
+import com.tangem.domain.account.status.usecase.GetAccountCurrencyByAddressUseCase
+import com.tangem.domain.account.supplier.SingleAccountListSupplier
+import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -34,5 +38,19 @@ internal object AccountStatusListSupplierModule {
             factory = factory,
             keyCreator = { "multi_account_status_list" },
         ) {}
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetAccountCurrencyByAddressUseCase(
+        userWalletsListRepository: UserWalletsListRepository,
+        multiNetworkStatusSupplier: MultiNetworkStatusSupplier,
+        singleAccountListSupplier: SingleAccountListSupplier,
+    ): GetAccountCurrencyByAddressUseCase {
+        return GetAccountCurrencyByAddressUseCase(
+            userWalletsListRepository = userWalletsListRepository,
+            multiNetworkStatusSupplier = multiNetworkStatusSupplier,
+            singleAccountListSupplier = singleAccountListSupplier,
+        )
     }
 }
