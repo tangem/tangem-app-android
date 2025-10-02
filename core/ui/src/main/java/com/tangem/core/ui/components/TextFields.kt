@@ -174,7 +174,7 @@ private fun TangemTextField(
                         null
                     },
                 )
-                iconRes?.let { iconRes ->
+                iconRes?.let { resId ->
                     IconButton(
                         modifier = Modifier.size(32.dp),
                         onClick = onClear,
@@ -182,7 +182,7 @@ private fun TangemTextField(
                     ) {
                         Icon(
                             modifier = Modifier.size(24.dp),
-                            painter = painterResource(id = iconRes),
+                            painter = painterResource(id = resId),
                             tint = colors.trailingIconColor(enabled = enabled, isError = isError).value,
                             contentDescription = "Clear input",
                         )
