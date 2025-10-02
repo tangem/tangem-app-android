@@ -39,8 +39,8 @@ internal class DevApiConfigsManager(
             .onEach { savedEnvironments ->
                 val apiConfigs = configs.value
 
-                configs.value = apiConfigs.mapValues {
-                    val (config, currentEnvironment) = it
+                configs.value = apiConfigs.mapValues { entry ->
+                    val (config, currentEnvironment) = entry
 
                     savedEnvironments[config.id.name] ?: currentEnvironment
                 }
