@@ -84,12 +84,12 @@ fun ResizableText(
     reduceFactor: Double = 0.9,
 ) {
     var fontSize by remember { mutableStateOf(style.fontSize) }
-    var readyToDraw by remember { mutableStateOf(value = false) }
+    var isReadyToDraw by remember { mutableStateOf(value = false) }
 
     Text(
         modifier = modifier
             .drawWithContent {
-                if (readyToDraw) drawContent()
+                if (isReadyToDraw) drawContent()
             }
             .wrapContentHeight(),
         text = text,
@@ -106,7 +106,7 @@ fun ResizableText(
 
                 if (minFontSize != TextUnit.Unspecified && reducedFontSize <= minFontSize) {
                     fontSize = minFontSize
-                    readyToDraw = true
+                    isReadyToDraw = true
                 } else {
                     fontSize = reducedFontSize
                 }
@@ -115,7 +115,7 @@ fun ResizableText(
             if (result.hasVisualOverflow) {
                 reduceFontSize()
             } else {
-                readyToDraw = true
+                isReadyToDraw = true
             }
         },
     )
