@@ -28,9 +28,9 @@ fun assertEitherRight(actual: Either<Throwable, Unit>) {
 fun <B> assertEitherLeft(actual: Either<Throwable, B>, expected: Throwable) {
     actual
         .onRight { error("Actual is Either.Right: $it") }
-        .onLeft {
-            Truth.assertThat(it::class.java).isEqualTo(expected::class.java)
-            Truth.assertThat(it).hasMessageThat().isEqualTo(expected.message)
+        .onLeft { throwable ->
+            Truth.assertThat(throwable::class.java).isEqualTo(expected::class.java)
+            Truth.assertThat(throwable).hasMessageThat().isEqualTo(expected.message)
         }
 }
 
