@@ -222,10 +222,8 @@ private fun AmountItem(
                 isExpanded = isExpandSelector,
                 onDismiss = { isExpandSelector = false },
                 onItemClick = { approveType ->
-                    onChangeApproveType.let {
-                        isExpandSelector = false
-                        onChangeApproveType.invoke(approveType)
-                    }
+                    isExpandSelector = false
+                    onChangeApproveType.invoke(approveType)
                 },
                 items = approveItems,
                 selectedType = approveType,
