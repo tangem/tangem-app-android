@@ -14,7 +14,9 @@ class ParamCardCurrencyConverter : Converter<CardTypesResolver, WalletType?> {
             value.isTangemNote() -> AnalyticsParam.CurrencyType.Blockchain(value.getBlockchain())
             value.isTangemTwins() -> AnalyticsParam.CurrencyType.Blockchain(Blockchain.Bitcoin)
             value.getBlockchain() != Blockchain.Unknown -> AnalyticsParam.CurrencyType.Blockchain(value.getBlockchain())
-            value.getPrimaryToken() != null -> AnalyticsParam.CurrencyType.Token(value.getPrimaryToken()!!)
+            value.getPrimaryToken() != null -> {
+                AnalyticsParam.CurrencyType.Token(requireNotNull(value.getPrimaryToken()))
+            }
             else -> null
         } ?: return null
 
