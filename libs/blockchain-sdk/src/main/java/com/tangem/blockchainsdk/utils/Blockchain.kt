@@ -439,7 +439,7 @@ fun Blockchain.toCoinId(): String {
         Blockchain.ZkLinkNova, Blockchain.ZkLinkNovaTestnet -> "zklink-ethereum"
         Blockchain.Pepecoin, Blockchain.PepecoinTestnet -> "pepecoin-network"
         Blockchain.Hyperliquid, Blockchain.HyperliquidTestnet -> "hyperliquid"
-        Blockchain.Quai, Blockchain.QuaiTestnet -> "quai"
+        Blockchain.Quai, Blockchain.QuaiTestnet -> "quai-network"
     }
 }
 
