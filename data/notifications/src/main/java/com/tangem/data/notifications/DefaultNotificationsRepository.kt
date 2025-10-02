@@ -67,10 +67,12 @@ class DefaultNotificationsRepository @Inject constructor(
         }
 
     override suspend fun setNotificationsWasEnabledAutomatically(userWalletId: String) {
-        appPreferencesStore.editData {
-            it.setObjectMap(
+        appPreferencesStore.editData { preferences ->
+            preferences.setObjectMap(
                 key = PreferencesKeys.NOTIFICATIONS_AUTOMATICALLY_ENABLED_STATES_KEY,
-                value = it.getObjectMap<Boolean>(PreferencesKeys.NOTIFICATIONS_AUTOMATICALLY_ENABLED_STATES_KEY)
+                value = preferences.getObjectMap<Boolean>(
+                    PreferencesKeys.NOTIFICATIONS_AUTOMATICALLY_ENABLED_STATES_KEY,
+                )
                     .plus(userWalletId to true),
             )
         }

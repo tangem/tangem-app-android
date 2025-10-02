@@ -141,11 +141,11 @@ fun TangemLinearProgressIndicator(
         drawLinearIndicatorBackground(backgroundColor, strokeWidth, strokeCap)
         if (firstLineHead - firstLineTail > 0) {
             drawLinearIndicator(
-                firstLineHead,
-                firstLineTail,
-                color,
-                strokeWidth,
-                strokeCap,
+                startFraction = firstLineHead,
+                endFraction = firstLineTail,
+                color = color,
+                strokeWidth = strokeWidth,
+                strokeCap = strokeCap,
             )
         }
         if ((secondLineHead - secondLineTail) > 0) {
@@ -204,7 +204,12 @@ private fun DrawScope.drawLinearIndicator(
     // if there isn't enough space to draw the stroke caps, fall back to StrokeCap.Butt
     if (strokeCap == StrokeCap.Butt || height > width) {
         // Progress line
-        drawLine(color, Offset(barStart, yOffset), Offset(barEnd, yOffset), strokeWidth)
+        drawLine(
+            color = color,
+            start = Offset(barStart, yOffset),
+            end = Offset(barEnd, yOffset),
+            strokeWidth = strokeWidth,
+        )
     } else {
         // need to adjust barStart and barEnd for the stroke caps
         val strokeCapOffset = strokeWidth / 2
@@ -253,7 +258,7 @@ private const val SECOND_LINE_TAIL_DELAY = 1267
 private val FIRST_LINE_HEAD_EASING = CubicBezierEasing(a = 0.2f, b = 0f, c = 0.8f, d = 1f)
 private val FIRST_LINE_TAIL_EASING = CubicBezierEasing(a = 0.4f, b = 0f, c = 1f, d = 1f)
 private val SECOND_LINE_HEAD_EASING = CubicBezierEasing(a = 0f, b = 0f, c = 0.65f, d = 1f)
-private val SECOND_LINE_TAIL_EASING = CubicBezierEasing(a = 0.1f, 0f, 0.45f, d = 1f)
+private val SECOND_LINE_TAIL_EASING = CubicBezierEasing(a = 0.1f, b = 0f, c = 0.45f, d = 1f)
 
 // region Preview
 @Preview(showBackground = true, widthDp = 360)
