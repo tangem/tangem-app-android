@@ -160,7 +160,7 @@
   <string name="common_enable">Activer</string>
   <string name="common_enabled">Activé</string>
   <string name="common_error">Erreur</string>
-  <string name="common_exchange">Échangez</string>
+  <string name="common_exchange">Echanger</string>
   <string name="common_explore">Explorez</string>
   <string name="common_explore_transaction_history">Explorez l\'historique des transactions</string>
   <string name="common_explorer">Explorateur</string>
@@ -953,6 +953,7 @@
   <string name="staking_details_annual_percentage_rate">Pourcentage de rendement annuel</string>
   <string name="staking_details_annual_percentage_rate_info">Le pourcentage de rendement annuel que vous pouvez gagner en participant au staking.</string>
   <string name="staking_details_apr">APR</string>
+  <string name="staking_details_apy">APY</string>
   <string name="staking_details_auto_claiming_rewards_daily_text">Les récompenses s\'accumulent automatiquement sur votre solde de staking quotidiennement.</string>
   <string name="staking_details_available">Disponible</string>
   <string name="staking_details_average_reward_rate">Taux de récompense moyen</string>
