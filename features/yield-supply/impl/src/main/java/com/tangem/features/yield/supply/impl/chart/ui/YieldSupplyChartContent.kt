@@ -51,7 +51,7 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.yield.supply.impl.chart.entity.YieldSupplyChartUM
-import com.tangem.features.yield.supply.impl.chart.entity.YieldSupplyMarketChartData
+import com.tangem.features.yield.supply.impl.chart.entity.YieldSupplyMarketChartDataUM
 
 @Composable
 internal fun YieldSupplyChartContent(state: YieldSupplyChartUM, modifier: Modifier = Modifier) {
@@ -199,7 +199,7 @@ private class YieldSupplyChartPreviewProvider : PreviewParameterProvider<YieldSu
         get() = sequenceOf(
             YieldSupplyChartUM.Loading,
             YieldSupplyChartUM.Error(onRetry = {}),
-            YieldSupplyChartUM.Data(chartData = YieldSupplyMarketChartData.mock()),
+            YieldSupplyChartUM.Data(chartData = YieldSupplyMarketChartDataUM.mock()),
         )
 }
 // endregion
