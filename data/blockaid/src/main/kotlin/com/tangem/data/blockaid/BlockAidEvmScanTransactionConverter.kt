@@ -13,16 +13,17 @@ internal class BlockAidEvmScanTransactionConverter(
     private val blockchain: Blockchain,
 ) : Converter<List<SDKTransactionData.Uncompiled>, EvmTransactionBulkScanRequest> {
 
+    @Suppress("NullableToStringCall")
     override fun convert(value: List<SDKTransactionData.Uncompiled>): EvmTransactionBulkScanRequest {
         return EvmTransactionBulkScanRequest(
             chain = blockchain.getChainId().toString(),
             options = listOf(BlockAidScanOptions.GasEstimation.value),
             metadata = TransactionMetadata(domain = "https://tangem.com"),
-            data = value.map {
+            data = value.map { transactionData ->
                 Data(
-                    from = it.sourceAddress,
-                    to = it.destinationAddress,
-                    data = (it.extras as? EthereumTransactionExtras)?.callData?.dataHex.orEmpty(),
+                    from = transactionData.sourceAddress,
+                    to = transactionData.destinationAddress,
+                    data = (transactionData.extras as? EthereumTransactionExtras)?.callData?.dataHex.orEmpty(),
                 )
             },
             aggregated = false,
