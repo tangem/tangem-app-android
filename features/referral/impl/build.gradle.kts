@@ -13,6 +13,7 @@ android {
 dependencies {
     /** Api */
     api(projects.features.referral.api)
+    api(projects.features.account.api)
 
     /** Core modules */
     implementation(projects.core.analytics)
@@ -44,10 +45,18 @@ dependencies {
     implementation(projects.domain.card)
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.notifications.models)
+    implementation(projects.domain.account.status)
+    implementation(projects.domain.account)
+    implementation(projects.domain.balanceHiding)
+    implementation(projects.domain.balanceHiding.models)
+    implementation(projects.domain.appCurrency)
+    implementation(projects.domain.appCurrency.models)
     implementation(projects.features.referral.domain)
 
     /** Other libraries */
     implementation(deps.compose.shimmer)
+    implementation(deps.kotlin.immutable.collections)
+    implementation(deps.decompose.ext.compose)
     implementation(deps.compose.accompanist.systemUiController)
     implementation(deps.timber)
 
