@@ -65,7 +65,7 @@ internal class DefaultTangemPayTxHistoryRepository @Inject constructor(
     ): List<TangemPayTxHistoryItem> {
         cacheRegistry.invokeOnExpire(
             key = getCacheKey(customerWalletAddress = config.customerWalletAddress, cursor = cursor),
-            skipCache = config.refresh,
+            skipCache = config.shouldRefresh,
             block = { fetch(customerWalletAddress = config.customerWalletAddress, cursor = cursor, pageSize = limit) },
         )
 

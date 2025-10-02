@@ -4,7 +4,7 @@ import com.tangem.core.analytics.models.AnalyticsEvent
 
 sealed class IntroductionProcess(
     event: String,
-    params: Map<String, String> = mapOf(),
+    params: Map<String, String> = emptyMap(),
 ) : AnalyticsEvent("Introduction Process", event, params) {
 
     object ScreenOpened : IntroductionProcess("Introduction Process Screen Opened")
