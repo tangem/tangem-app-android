@@ -74,7 +74,7 @@ internal class DefaultExpressServiceLoader @Inject constructor(
 
     @Suppress("SuspendFunWithFlowReturnType")
     private suspend fun getInitializationStatusInternal(userWalletId: UserWalletId): InitializationStatusFlow {
-        val initializationStatus = initializationStatuses.value.get(key = userWalletId)
+        val initializationStatus = initializationStatuses.value[userWalletId]
         if (initializationStatus != null) return initializationStatus
 
         val cached = expressAssetsStore.getSyncOrNull(userWalletId)

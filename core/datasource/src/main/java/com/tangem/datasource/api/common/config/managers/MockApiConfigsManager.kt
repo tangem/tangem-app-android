@@ -63,7 +63,7 @@ internal class MockApiConfigsManager(
         super.addListener(listener)
 
         configs
-            .map { it.entries.firstOrNull { it.key.id == listener.id } }
+            .map { map -> map.entries.firstOrNull { it.key.id == listener.id } }
             .filterNotNull()
             .onEach { (apiConfig, currentEnvironment) ->
                 listener.onChange(
