@@ -32,16 +32,16 @@ object NFTSdkAssetConverter : TwoWayConverter<Pair<Network, SdkNFTAsset>, NFTAss
                     label = rarity.label,
                 )
             },
-            media = asset.media?.let {
+            media = asset.media?.let { media ->
                 NFTAsset.Media(
-                    animationUrl = it.animationUrl,
-                    imageUrl = it.imageUrl,
+                    animationUrl = media.animationUrl,
+                    imageUrl = media.imageUrl,
                 )
             },
-            traits = asset.traits.map {
+            traits = asset.traits.map { trait ->
                 NFTAsset.Trait(
-                    name = it.name,
-                    value = it.value,
+                    name = trait.name,
+                    value = trait.value,
                 )
             },
             source = StatusSource.CACHE,
