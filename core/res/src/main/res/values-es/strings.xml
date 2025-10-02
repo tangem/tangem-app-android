@@ -979,6 +979,7 @@
   <string name="staking_details_annual_percentage_rate">Porcentaje de rendimiento anual</string>
   <string name="staking_details_annual_percentage_rate_info">El porcentaje de rendimiento anual que podrá ganar como participante en el staking.</string>
   <string name="staking_details_apr">APR</string>
+  <string name="staking_details_apy">APY</string>
   <string name="staking_details_auto_claiming_rewards_daily_text">Las recompensas se acumulan automáticamente en su saldo de staking diariamente.</string>
   <string name="staking_details_available">Disponible</string>
   <string name="staking_details_average_reward_rate">Tasa de recompensa promedio</string>
