@@ -13,7 +13,6 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.ToastMessage
@@ -131,7 +130,6 @@ internal class AccountCreateEditModel @Inject constructor(
         // TODO: show alert https://www.figma.com/design/09KKG4ZVuFDZhj8WLv5rGJ/%F0%9F%9A%A7-App-experience?node-id=38882-113775&t=vk6TCy4MkYol1cPb-4
         logError(
             error = AccountFeatureError.CreateAccount.FailedToCreateAccount(cause = error),
-
         )
     }
 
@@ -141,6 +139,7 @@ internal class AccountCreateEditModel @Inject constructor(
         val icon = state.account.portfolioIcon.toDomain()
         val isNewName = name != params.account.accountName
         val isNewIcon = icon != params.account.portfolioIcon
+
         uiState.value = uiState.value.toggleProgress(showProgress = true)
         val result = updateCryptoPortfolioUseCase(
             icon = if (isNewIcon) icon else null,
@@ -148,21 +147,32 @@ internal class AccountCreateEditModel @Inject constructor(
             accountId = params.account.accountId,
         )
         uiState.value = uiState.value.toggleProgress(showProgress = false)
+
         result
-            .onLeft { showMessage(it.toString()) }
+            .onLeft(::handleEditAccountError)
             .onRight {
                 showMessage(R.string.account_edit_success_message)
                 router.pop()
             }
     }
 
+    private fun handleEditAccountError(error: UpdateCryptoPortfolioUseCase.Error) {
+        if (error is UpdateCryptoPortfolioUseCase.Error.AccountListRequirementsNotMet &&
+            error.cause is AccountList.Error.DuplicateAccountNames
+        ) {
+            // TODO("account") show alert that the account name already exists
+            return
+        }
+
+        // TODO: show alert like in create account flow
+        logError(
+            error = AccountFeatureError.EditAccount.FailedToEditAccount(cause = error),
+        )
+    }
+
     private fun showMessage(@StringRes id: Int) {
         val message = resourceReference(id)
         messageSender.send(ToastMessage(message = message))
-    }
-
-    private fun showMessage(text: String) {
-        messageSender.send(ToastMessage(message = stringReference(text)))
     }
 
     private fun onCloseClick() = unsaveChangeDialog()
