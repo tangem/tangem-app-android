@@ -1,11 +1,9 @@
 package com.tangem.features.account.fetcher
 
-import arrow.core.getOrElse
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.status.producer.SingleAccountStatusListProducer
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
-import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.isMultiCurrency
@@ -60,8 +58,8 @@ internal class DefaultPortfolioFetcher @AssistedInject constructor(
             .map { it.filterWallets(mode) }
             .distinctUntilChanged()
             .flatMapLatest { wallets -> balancesForWallets(wallets) },
-        flow2 = appCurrencyFlow(),
-        flow3 = balanceHidingFlow(),
+        flow2 = getSelectedAppCurrencyUseCase.invokeOrDefault(),
+        flow3 = getBalanceHidingSettingsUseCase.isBalanceHidden(),
     ) { balances, appCurrency, isBalanceHiding ->
         Data(
             appCurrency = appCurrency,
@@ -93,18 +91,6 @@ internal class DefaultPortfolioFetcher @AssistedInject constructor(
 
     private fun accountStatusListFlow(wallet: UserWallet): Flow<AccountStatusList> =
         singleAccountStatusListSupplier(SingleAccountStatusListProducer.Params(wallet.walletId))
-
-    private fun appCurrencyFlow(): Flow<AppCurrency> {
-        return getSelectedAppCurrencyUseCase()
-            .map { it.getOrElse { AppCurrency.Default } }
-            .distinctUntilChanged()
-    }
-
-    private fun balanceHidingFlow(): Flow<Boolean> {
-        return getBalanceHidingSettingsUseCase()
-            .map { it.isBalanceHidden }
-            .distinctUntilChanged()
-    }
 
     @AssistedFactory
     interface Factory : PortfolioFetcher.Factory {
