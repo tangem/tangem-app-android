@@ -3,6 +3,7 @@ package com.tangem.datasource.api.tangemTech
 import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.tangemTech.models.YieldMarketsResponse
 import com.tangem.datasource.api.tangemTech.models.YieldTokenStatusResponse
+import com.tangem.datasource.api.tangemTech.models.YieldTokenChartResponse
 import retrofit2.http.GET
 import retrofit2.http.Path
 
@@ -13,4 +14,7 @@ interface YieldSupplyApi {
 
     @GET("api/v1/yield/token/{tokenAddress}")
     suspend fun getYieldTokenStatus(@Path("tokenAddress") tokenAddress: String): ApiResponse<YieldTokenStatusResponse>
+
+    @GET("api/v1/yield/token/{tokenAddress}/chart")
+    suspend fun getYieldTokenChart(@Path("tokenAddress") tokenAddress: String): ApiResponse<YieldTokenChartResponse>
 }
