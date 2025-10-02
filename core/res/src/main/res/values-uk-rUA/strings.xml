@@ -959,6 +959,7 @@
   <string name="staking_details_annual_percentage_rate">Процентна ставка</string>
   <string name="staking_details_annual_percentage_rate_info">Річний відсоток, який ви можете отримати, беручи участь у стейкінгу.</string>
   <string name="staking_details_apr">APR</string>
+  <string name="staking_details_apy">APY</string>
   <string name="staking_details_auto_claiming_rewards_daily_text">Винагороди автоматично накопичуються на вашому балансі щодня.</string>
   <string name="staking_details_available">Доступно</string>
   <string name="staking_details_average_reward_rate">Середня ставка винагороди</string>
