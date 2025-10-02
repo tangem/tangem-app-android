@@ -4,7 +4,7 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.features.yield.supply.impl.chart.entity.YieldSupplyChartUM
-import com.tangem.features.yield.supply.impl.chart.entity.YieldSupplyMarketChartData
+import com.tangem.features.yield.supply.impl.chart.entity.YieldSupplyMarketChartDataUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -30,7 +30,7 @@ internal class YieldSupplyChartModel @Inject constructor(
 
     init {
         // TODO [REDACTED_TASK_KEY]
-        val chartData = YieldSupplyMarketChartData.mock()
+        val chartData = YieldSupplyMarketChartDataUM.mock()
         uiState.update { YieldSupplyChartUM.Data(chartData = chartData) }
     }
 }
