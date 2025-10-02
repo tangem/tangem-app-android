@@ -15,6 +15,7 @@ data class EvmTransactionScanRequest(
 )
 
 @JsonClass(generateAdapter = true)
+@Suppress("BooleanPropertyNaming")
 data class EvmTransactionBulkScanRequest(
     @Json(name = "chain") val chain: String,
     @Json(name = "options") val options: List<String>,
