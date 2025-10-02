@@ -33,6 +33,7 @@
   <string name="account_form_create_button">Add account</string>
   <string name="account_form_edit_button">Save</string>
   <string name="account_form_name">Account name</string>
+  <string name="account_form_name_already_exist_error_description">Account name already exists</string>
   <string name="account_form_placeholder_edit_account">Account</string>
   <string name="account_form_placeholder_new_account">New account</string>
   <string name="account_form_title_create">Add account</string>
@@ -905,6 +906,7 @@
   </plurals>
   <string name="onramp_timing_minutes">%s min</string>
   <string name="onramp_title_you_get">You get</string>
+  <string name="onramp_tos_external_providers">Service is provided by an external provider. \nTangem is not responsible.</string>
   <string name="onramp_transaction_status_footer_text">You can close this screen and check the transaction status on the token details screen.</string>
   <string name="onramp_up_to_rate">Up to</string>
   <string name="onramp_via">Via</string>
@@ -1116,7 +1118,10 @@
   <string name="staking_details_account_fee_info">A staking account is a special account where staked SOL tokens are stored. It is created when you delegate your tokens to a validator to participate in transaction validation and receive rewards. A small fee is charged for creating the staking account, which is returned after the staking is completed.</string>
   <string name="staking_details_annual_percentage_rate">Annual percentage rate</string>
   <string name="staking_details_annual_percentage_rate_info">The annual percentage return you can earn from participating in staking.</string>
+  <string name="staking_details_annual_percentage_yield">Annual percentage yield</string>
+  <string name="staking_details_annual_percentage_yield_info">APY shows the validator’s annual percentage yield based on its performance</string>
   <string name="staking_details_apr">APR</string>
+  <string name="staking_details_apy">APY</string>
   <string name="staking_details_auto_claiming_rewards_daily_text">Rewards automatically accumulate in your staking balance daily.</string>
   <string name="staking_details_available">Available</string>
   <string name="staking_details_average_reward_rate">Average Reward Rate</string>
@@ -1314,6 +1319,7 @@
   <string name="token_details_token_type_subtitle_no_standard">Token in %%image%% %1$s network</string>
   <string name="token_details_unable_hide_alert_message">The %1$s (%2$s) token is the main currency on the %3$s network and cannot be hidden as long as you have other tokens on this network in the list</string>
   <string name="token_details_unable_hide_alert_title">Unable to hide %s</string>
+  <string name="token_receive_show_qr_code_title">Show QR code</string>
   <string name="token_swap_changelly_promotion_message">Exchange this token for another at %1$s service fees from February %2$s-%3$s.</string>
   <string name="token_swap_changelly_promotion_title">Swap with Changelly, %s fees</string>
   <string name="token_swap_promotion_button">Swap now</string>
@@ -1788,4 +1794,5 @@
   <string name="yield_module_unable_to_cover_fee_title">Unable to cover %s fee</string>
   <string name="yield_module_unavailable_subtitle">The interest service isn’t available at the moment. Please try again later.</string>
   <string name="yield_module_unavailable_title">Earnings unavailable</string>
+  <string name="yield_supply_chart_loading_error">Unable to load chart...</string>
 </resources>
