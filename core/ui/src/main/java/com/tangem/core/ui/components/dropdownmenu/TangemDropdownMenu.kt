@@ -228,7 +228,12 @@ internal data class DropdownMenuPositionProvider(
 
         onPositionCalculated(
             anchorBounds,
-            IntRect(x, y, x + popupContentSize.width, y + popupContentSize.height),
+            IntRect(
+                left = x,
+                top = y,
+                right = x + popupContentSize.width,
+                bottom = y + popupContentSize.height,
+            ),
         )
         return IntOffset(x, y)
     }
