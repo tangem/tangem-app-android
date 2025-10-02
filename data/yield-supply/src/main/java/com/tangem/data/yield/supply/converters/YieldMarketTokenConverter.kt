@@ -11,14 +11,7 @@ internal object YieldMarketTokenConverter : Converter<YieldMarketsResponse.Marke
             tokenSymbol = value.tokenSymbol,
             tokenName = value.tokenName,
             apy = value.apy,
-            totalSupplied = value.totalSupplied,
-            totalBorrowed = value.totalBorrowed,
-            liquidityRate = value.liquidityRate,
-            borrowRate = value.borrowRate,
-            utilizationRate = value.utilizationRate,
             isActive = value.isActive,
-            ltv = value.ltv,
-            liquidationThreshold = value.liquidationThreshold,
         )
     }
 }
