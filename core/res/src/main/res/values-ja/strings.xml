@@ -911,6 +911,7 @@
   <string name="receive_bottom_sheet_warning_message_full">このアドレスには%sのみを送金してください。他のトークンを送信すると、取り返しのつかない損失が発生します。</string>
   <string name="receive_bottom_sheet_warning_title">%2$sネットワークの%1$sのみを送信してください</string>
   <string name="receive_token_description">ウォレットや取引所から資金を送金する</string>
+  <string name="referral_address_for_rewards">報酬の送付先アドレス</string>
   <string name="referral_button_participate">参加する</string>
   <string name="referral_error_failed_to_load_info">紹介プログラムに関する情報を読み込めませんでした。しばらくしてからもう一度お試しください。</string>
   <string name="referral_error_failed_to_load_info_with_reason">紹介プログラムに関する情報を読み込めませんでした。エラー コード: %s 。しばらくしてからもう一度お試しください。</string>
@@ -1094,6 +1095,7 @@
   <string name="staking_details_annual_percentage_rate">年率</string>
   <string name="staking_details_annual_percentage_rate_info">ステーキングに参加することで得られる年間収益率。</string>
   <string name="staking_details_apr">APR</string>
+  <string name="staking_details_apy">APY</string>
   <string name="staking_details_auto_claiming_rewards_daily_text">報酬は毎日自動的にステーキング残高に蓄積されます。</string>
   <string name="staking_details_available">利用可能</string>
   <string name="staking_details_average_reward_rate">平均報酬率</string>
@@ -1391,8 +1393,8 @@
   <string name="wallet_connect_error_wrong_card_selected">Tangemアプリで誤ったカードまたはリングが選択されました</string>
   <string name="wallet_connect_failed_to_build_tx">Dappデータから取引を作成できませんでした。コード: %s</string>
   <string name="wallet_connect_generic_error_with_code">不明なエラーが発生しました。エラーコード: %d 。問題が解決しない場合は、お気軽にサポートにお問い合わせください。</string>
-  <string name="wallet_connect_multiple_transactions">複数の取引</string>
-  <string name="wallet_connect_multiple_transactions_description">このプロセスを完了するには、Tangemデバイスを数回タップする必要があります。</string>
+  <string name="wallet_connect_multiple_transactions">マルチパート取引</string>
+  <string name="wallet_connect_multiple_transactions_description">正常に処理するため、取引は複数に分割されます。完了するにはカードを数回タップする必要があります。</string>
   <string name="wallet_connect_no_sessions_message">WalletConnectセッションが開かれていません</string>
   <string name="wallet_connect_no_sessions_title">おっと。セッションがありません。</string>
   <string name="wallet_connect_pairing_error">WalletConnectセッションのペアリングに失敗しました: %1$s</string>
@@ -1404,8 +1406,8 @@
   <string name="wallet_connect_scanner_error_not_valid_card">このカードは、WalletConnectセッションの確立には使用できません。</string>
   <string name="wallet_connect_scanner_error_unsupported_network">このネットワークはサポートされていません。別のネットワークを選択してください。</string>
   <string name="wallet_connect_select_network">ネットワークを選択</string>
-  <string name="wallet_connect_sending_multiple_explanation">取引を処理中です</string>
-  <string name="wallet_connect_sending_multiple_tx">送金しています...</string>
+  <string name="wallet_connect_sending_multiple_explanation">取引を処理中です。完了するにはカードを複数回タップしてください。</string>
+  <string name="wallet_connect_sending_multiple_tx">取引進行中</string>
   <string name="wallet_connect_sessions_title">WalletConnectセッション</string>
   <string name="wallet_connect_subtitle">dAppsに接続する</string>
   <string name="wallet_connect_title">WalletConnect</string>
@@ -1659,6 +1661,7 @@
   <string name="yield_module_approve_sheet_title">承認を確定する</string>
   <string name="yield_module_balance_info_sheet_subtitle">資産残高に関するテキスト [プレースホルダー]</string>
   <string name="yield_module_balance_info_sheet_title">あなたの%sはAaveに預けられています</string>
+  <string name="yield_module_deposit_error_notification_title">受け取った金額%1$s %2$sはAaveに入金されませんでした。</string>
   <string name="yield_module_earn_badge">%1$s%% を獲得</string>
   <string name="yield_module_earn_sheet_available_title">利用可能</string>
   <string name="yield_module_earn_sheet_current_apy_title">現在のAPY</string>
@@ -1674,6 +1677,7 @@
   <string name="yield_module_fee_policy_sheet_max_fee_note">ネットワーク手数料が上限手数料を超えた場合、手数料が下がるまで取引は成立しません。この制限は後で変更できます。</string>
   <string name="yield_module_fee_policy_sheet_max_fee_title">最大手数料</string>
   <string name="yield_module_fee_policy_sheet_title">手数料ポリシー</string>
+  <string name="yield_module_high_fee_error">ネットワーク手数料が現在高すぎます。設定した上限を下回るまで待機しています。</string>
   <string name="yield_module_main_view_approve_notification_description">ここに説明を入力してください。1〜3行が理想的です。[プレースホルダー]</string>
   <string name="yield_module_main_view_approve_notification_title">トークン承認が必要</string>
   <string name="yield_module_network_fee_unreachable_notification_description">ネットワーク接続を確認してください</string>
