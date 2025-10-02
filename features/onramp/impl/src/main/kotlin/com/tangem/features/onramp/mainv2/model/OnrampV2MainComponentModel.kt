@@ -41,7 +41,7 @@ internal class OnrampV2MainComponentModel @Inject constructor(
     private val getOnrampCountryUseCase: GetOnrampCountryUseCase,
     private val clearOnrampCacheUseCase: ClearOnrampCacheUseCase,
     private val fetchQuotesUseCase: OnrampFetchQuotesUseCase,
-    private val getOnrampQuotesUseCase: GetOnrampQuotesUseCase,
+    private val getOnrampQuotesUseCase: GetOnrampV2QuotesUseCase,
     private val fetchPairsUseCase: OnrampFetchPairsUseCase,
     private val amountInputManager: InputManager,
     private val getOnrampOffersUseCase: GetOnrampOffersUseCase,
