@@ -2,6 +2,8 @@
   <component name="ExportableFileTemplateSettings">
     <default_templates>
       <template name="Decompose component.kt" file-name="${NAME}Component" reformat="true" live-template-enabled="false">
+        <template name="Decompose component.kt.child.5.kt" file-name="di/${NAME}ModelModule" reformat="true" live-template-enabled="false" />
+        <template name="Decompose component.kt.child.4.kt" file-name="di/${NAME}ComponentModule" reformat="true" live-template-enabled="false" />
         <template name="Decompose component.kt.child.0.kt" file-name="entity/${NAME}UM" reformat="true" live-template-enabled="false" />
         <template name="Decompose component.kt.child.1.kt" file-name="ui/${NAME}Content" reformat="true" live-template-enabled="false" />
         <template name="Decompose component.kt.child.2.kt" file-name="model/${NAME}Model" reformat="true" live-template-enabled="false" />
@@ -11,6 +13,8 @@
       <template name="Decompose component.kt.child.1.kt" file-name="ui/${NAME}Content" reformat="true" live-template-enabled="false" />
       <template name="Decompose component.kt.child.2.kt" file-name="model/${NAME}Model" reformat="true" live-template-enabled="false" />
       <template name="Decompose component.kt.child.3.kt" file-name="Default${NAME}Component" reformat="true" live-template-enabled="false" />
+      <template name="Decompose component.kt.child.4.kt" file-name="di/${NAME}ComponentModule" reformat="true" live-template-enabled="false" />
+      <template name="Decompose component.kt.child.5.kt" file-name="di/${NAME}ModelModule" reformat="true" live-template-enabled="false" />
       <template name="FeatureToggles.kt" file-name="${NAME}FeatureToggles" reformat="true" live-template-enabled="false">
         <template name="FeatureToggles.kt.child.0.kt" file-name="Default${NAME}FeatureToggles" reformat="true" live-template-enabled="false" />
       </template>
