@@ -2,9 +2,11 @@ package com.tangem.feature.referral.domain
 
 import arrow.core.getOrElse
 import com.tangem.common.core.TangemSdkError
-import com.tangem.domain.wallets.usecase.DerivePublicKeysUseCase
-import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
+import com.tangem.domain.models.PortfolioId
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
+import com.tangem.domain.wallets.usecase.DerivePublicKeysUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.feature.referral.domain.errors.ReferralError
 import com.tangem.feature.referral.domain.models.ReferralData
@@ -31,10 +33,11 @@ internal class ReferralInteractorImpl(
         return referralData
     }
 
-    override suspend fun startReferral(userWalletId: UserWalletId): ReferralData {
+    override suspend fun startReferral(portfolioId: PortfolioId): ReferralData {
         if (tokensForReferral.isEmpty()) error("Tokens for ref is empty")
 
         val tokenData = tokensForReferral.first()
+        val userWalletId = portfolioId.userWalletId
         val userWallet = getUserWalletUseCase(userWalletId).getOrElse {
             error("Failed to get user wallet $userWalletId: $it")
         }
@@ -42,20 +45,27 @@ internal class ReferralInteractorImpl(
         val cryptoCurrency = repository.getCryptoCurrency(userWalletId = userWallet.walletId, tokenData = tokenData)
             ?: error("Failed to create crypto currency")
 
+        // todo account different for account?
         derivePublicKeysUseCase(userWallet.walletId, listOfNotNull(cryptoCurrency)).getOrElse {
             Timber.e("Failed to derive public keys: $it")
             throw it.mapToDomainError()
         }
 
-        addCryptoCurrenciesUseCase(
-            userWalletId = userWallet.walletId,
-            currency = cryptoCurrency,
-        )
+        when (portfolioId) {
+            is PortfolioId.Account -> TODO("account")
+            is PortfolioId.Wallet -> addCryptoCurrenciesUseCase(
+                userWalletId = userWallet.walletId,
+                currency = cryptoCurrency,
+            )
+        }
 
-        val publicAddress = userWalletManager.getWalletAddress(
-            networkId = tokenData.networkId,
-            derivationPath = cryptoCurrency.network.derivationPath.value,
-        )
+        val publicAddress = when (portfolioId) {
+            is PortfolioId.Account -> TODO("account")
+            is PortfolioId.Wallet -> userWalletManager.getWalletAddress(
+                networkId = tokenData.networkId,
+                derivationPath = cryptoCurrency.network.derivationPath.value,
+            )
+        }
 
         return repository.startReferral(
             walletId = userWalletManager.getWalletId(),
@@ -64,6 +74,9 @@ internal class ReferralInteractorImpl(
             address = publicAddress,
         )
     }
+
+    override suspend fun getCryptoCurrency(userWalletId: UserWalletId, tokenData: TokenData): CryptoCurrency? =
+        repository.getCryptoCurrency(userWalletId = userWalletId, tokenData = tokenData)
 
     private fun saveReferralTokens(tokens: List<TokenData>) {
         tokensForReferral.clear()
