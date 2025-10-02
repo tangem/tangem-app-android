@@ -16,14 +16,6 @@ data class YieldMarketsResponse(
         @Json(name = "tokenSymbol") val tokenSymbol: String,
         @Json(name = "tokenName") val tokenName: String,
         @Json(name = "apy") val apy: BigDecimal,
-        @Json(name = "totalSupplied") val totalSupplied: String,
-        @Json(name = "totalBorrowed") val totalBorrowed: String,
-        @Json(name = "liquidityRate") val liquidityRate: String,
-        @Json(name = "borrowRate") val borrowRate: String,
-        @Json(name = "utilizationRate") val utilizationRate: BigDecimal,
         @Json(name = "isActive") val isActive: Boolean,
-        @Json(name = "ltv") val ltv: BigDecimal,
-        @Json(name = "liquidationThreshold") val liquidationThreshold: BigDecimal,
-        @Json(name = "decimals") val decimals: Int,
     )
 }
