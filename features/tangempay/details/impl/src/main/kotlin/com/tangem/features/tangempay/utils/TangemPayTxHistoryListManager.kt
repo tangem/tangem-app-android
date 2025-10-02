@@ -57,7 +57,7 @@ internal class TangemPayTxHistoryListManager(
             BatchAction.Reload(
                 requestParams = TangemPayTxHistoryListConfig(
                     customerWalletAddress = customerWalletAddress,
-                    refresh = true,
+                    shouldRefresh = true,
                 ),
             ),
         )
@@ -66,7 +66,7 @@ internal class TangemPayTxHistoryListManager(
     suspend fun loadMore(customerWalletAddress: String) {
         actionsFlow.emit(
             BatchAction.LoadMore(
-                requestParams = TangemPayTxHistoryListConfig(customerWalletAddress, refresh = false),
+                requestParams = TangemPayTxHistoryListConfig(customerWalletAddress, shouldRefresh = false),
             ),
         )
     }

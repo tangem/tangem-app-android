@@ -12,11 +12,11 @@ internal object PendingActionConverter : Converter<BalanceDTO.PendingAction, Pen
             passthrough = value.passthrough,
             args = with(value.args) {
                 PendingAction.PendingActionArgs(
-                    amount = this?.amount?.let {
+                    amount = this?.amount?.let { amount ->
                         PendingAction.PendingActionArgs.Amount(
-                            required = it.required,
-                            minimum = it.minimum,
-                            maximum = it.maximum,
+                            required = amount.required,
+                            minimum = amount.minimum,
+                            maximum = amount.maximum,
                         )
                     },
                     duration = this?.duration?.let { duration ->
@@ -28,10 +28,10 @@ internal object PendingActionConverter : Converter<BalanceDTO.PendingAction, Pen
                     },
                     validatorAddress = this?.validatorAddress?.required,
                     validatorAddresses = this?.validatorAddresses?.required,
-                    tronResource = this?.tronResource?.let {
+                    tronResource = this?.tronResource?.let { tronResource ->
                         PendingAction.PendingActionArgs.TronResource(
-                            required = it.required,
-                            options = it.options,
+                            required = tronResource.required,
+                            options = tronResource.options,
                         )
                     },
                     signatureVerification = this?.signatureVerification?.required,
