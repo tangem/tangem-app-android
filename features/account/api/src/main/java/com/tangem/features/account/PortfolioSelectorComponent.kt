@@ -1,11 +1,11 @@
 package com.tangem.features.account
 
-import com.tangem.core.decompose.context.AppComponentContext
+import com.tangem.core.decompose.factory.ComponentFactory
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
+import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.wallet.UserWallet
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
@@ -20,9 +20,7 @@ interface PortfolioSelectorComponent : ComposableBottomSheetComponent, Composabl
         val controller: PortfolioSelectorController,
     )
 
-    interface Factory {
-        fun create(appComponentContext: AppComponentContext, params: Params): PortfolioSelectorComponent
-    }
+    interface Factory : ComponentFactory<Params, PortfolioSelectorComponent>
 }
 
 /**
@@ -30,8 +28,8 @@ interface PortfolioSelectorComponent : ComposableBottomSheetComponent, Composabl
  */
 interface PortfolioSelectorController {
     val isAccountMode: Flow<Boolean>
-    val selectedAccount: Flow<AccountId?>
+    val selectedAccount: StateFlow<AccountId?>
 
     fun selectAccount(accountId: AccountId?)
-    fun selectedAccountWithData(portfolioFetcher: PortfolioFetcher): Flow<Pair<UserWallet, Account>?>
+    fun selectedAccountWithData(portfolioFetcher: PortfolioFetcher): Flow<Pair<UserWallet, AccountStatus>?>
 }
