@@ -178,7 +178,9 @@ internal class YieldSupplyModel @Inject constructor(
 
         uiState.update { yieldSupplyUM }
 
-        (cryptoCurrency as? CryptoCurrency.Token)?.let(::loadTokenStatus)
+        if (yieldSupplyUM is YieldSupplyUM.Loading) {
+            (cryptoCurrency as? CryptoCurrency.Token)?.let(::loadTokenStatus)
+        }
     }
 
     private companion object {
