@@ -1,8 +1,8 @@
 package com.tangem.features.account.selector
 
 import com.tangem.domain.account.usecase.IsAccountsModeEnabledUseCase
-import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
+import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.features.account.PortfolioSelectorController
 import com.tangem.features.account.PortfolioFetcher
@@ -23,18 +23,18 @@ internal class DefaultPortfolioSelectorController @Inject constructor(
         _selectedAccount.update { accountId }
     }
 
-    override fun selectedAccountWithData(portfolioFetcher: PortfolioFetcher): Flow<Pair<UserWallet, Account>?> =
+    override fun selectedAccountWithData(portfolioFetcher: PortfolioFetcher): Flow<Pair<UserWallet, AccountStatus>?> =
         combine(
             flow = _selectedAccount,
             flow2 = portfolioFetcher.data,
             transform = { accountId, data ->
                 accountId ?: return@combine null
-                var result: Pair<UserWallet, Account>? = null
+                var result: Pair<UserWallet, AccountStatus>? = null
 
                 data.balances.forEach { wallet, balance ->
                     val accountStatuses = balance.accountsBalance.accountStatuses
                         .find { accountId == it.account.accountId }
-                    if (accountStatuses != null) result = wallet to accountStatuses.account
+                    if (accountStatuses != null) result = wallet to accountStatuses
                 }
 
                 return@combine result
