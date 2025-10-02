@@ -7,7 +7,7 @@ import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.datasource.local.token.UserTokensResponseStore
 import com.tangem.domain.wallets.derivations.DerivationStyleProvider
-import com.tangem.domain.card.common.TapWorkarounds.useOldStyleDerivation
+import com.tangem.domain.card.common.TapWorkarounds.hasOldStyleDerivation
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
@@ -54,7 +54,7 @@ internal class DerivationsFinder(
         }
 
         // pay attention to this
-        if (!card.useOldStyleDerivation) {
+        if (!card.hasOldStyleDerivation) {
             blockchains.removeUnnecessaryBlockchains()
         }
 
