@@ -22,6 +22,11 @@ dependencies {
     implementation(projects.core.ui)
     implementation(projects.core.navigation)
 
+    /** Compose */
+    implementation(tangemDeps.vico.core)
+    implementation(tangemDeps.vico.compose)
+    implementation(tangemDeps.vico.compose.m3)
+
     /** Common */
     implementation(projects.common.ui)
     implementation(projects.common.routing)
