@@ -127,7 +127,7 @@ data class AccountList private constructor(
 
     companion object {
 
-        private const val MAX_ACCOUNTS_COUNT = 20
+        const val MAX_ACCOUNTS_COUNT = 20
         private const val MAX_MAIN_ACCOUNTS_COUNT = 1
 
         /**
