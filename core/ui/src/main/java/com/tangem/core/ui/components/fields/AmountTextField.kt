@@ -75,7 +75,12 @@ fun AmountTextField(
     val decimalFormat = rememberDecimalFormat()
     BoxWithConstraints(modifier = modifier) {
         val fontSize = if (isAutoResize) {
-            resizeFont(visualTransformation, value, textStyle, reduceFactor)
+            resizeFont(
+                visualTransformation = visualTransformation,
+                value = value,
+                textStyle = textStyle,
+                reduceFactor = reduceFactor,
+            )
         } else {
             textStyle.fontSize
         }
