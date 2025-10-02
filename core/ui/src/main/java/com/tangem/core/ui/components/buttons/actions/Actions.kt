@@ -55,11 +55,11 @@ fun RoundedActionButton(
     ActionBaseButton(
         config = config,
         shape = RoundedCornerShape(size = TangemTheme.dimens.radius24),
-        content = { modifier ->
+        content = { contentModifier ->
             ActionButtonContent(
                 config = config,
                 text = { color -> Text(text = config.text, textColor = color) },
-                modifier = modifier.padding(
+                modifier = contentModifier.padding(
                     start = TangemTheme.dimens.spacing16,
                     end = TangemTheme.dimens.spacing24,
                 ),
@@ -138,9 +138,13 @@ fun ActionBaseButton(
                 onClick = config.onClick,
                 onLongClick = {
                     val toastReference = config.onLongClick?.invoke()
-                    toastReference?.let { toastReference ->
+                    if (toastReference != null) {
                         Toast
-                            .makeText(context, toastReference.resolveReference(context.resources), Toast.LENGTH_SHORT)
+                            .makeText(
+                                context,
+                                toastReference.resolveReference(context.resources),
+                                Toast.LENGTH_SHORT,
+                            )
                             .show()
                     }
                 },
