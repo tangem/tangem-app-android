@@ -130,13 +130,12 @@ class AddCryptoPortfolioUseCaseTest {
             accountName = newAccount.accountName,
             icon = newAccount.icon,
             derivationIndex = newAccount.derivationIndex,
-        )
+        ).leftOrNull() as Error.DataOperationFailed
 
         // Assert
-        val expected = IllegalStateException("Accounts for $userWalletId are not created")
-        Truth.assertThat((actual.leftOrNull() as Error.DataOperationFailed).cause).isInstanceOf(expected::class.java)
-        Truth.assertThat((actual.leftOrNull() as Error.DataOperationFailed).cause).hasMessageThat()
-            .isEqualTo(expected.message)
+        val expected = IllegalStateException("Account list not found for wallet $userWalletId")
+        Truth.assertThat(actual.cause).isInstanceOf(expected::class.java)
+        Truth.assertThat(actual.cause).hasMessageThat().isEqualTo(expected.message)
 
         coVerifySequence {
             singleAccountListFetcher(SingleAccountListFetcher.Params(userWalletId))
