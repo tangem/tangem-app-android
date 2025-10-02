@@ -78,10 +78,14 @@ internal class AccountCreateEditModel @Inject constructor(
             isWarning = true,
             onClick = { router.pop() },
         )
+        val messageRes = when (params) {
+            is AccountCreateEditComponent.Params.Create -> R.string.account_unsaved_dialog_message_create
+            is AccountCreateEditComponent.Params.Edit -> R.string.account_unsaved_dialog_message_edit
+        }
         messageSender.send(
             DialogMessage(
                 title = resourceReference(R.string.account_unsaved_dialog_title),
-                message = resourceReference(R.string.account_unsaved_dialog_message_create),
+                message = resourceReference(messageRes),
                 firstActionBuilder = { firstAction },
                 secondActionBuilder = { secondAction },
             ),
@@ -120,17 +124,15 @@ internal class AccountCreateEditModel @Inject constructor(
     }
 
     private fun handleAddAccountError(error: AddCryptoPortfolioUseCase.Error) {
-        if (error is AddCryptoPortfolioUseCase.Error.AccountListRequirementsNotMet &&
-            error.cause is AccountList.Error.DuplicateAccountNames
-        ) {
-            // TODO("account") show alert that the account name already exists
-            return
+        val duplicateAccountNames = (error as? AddCryptoPortfolioUseCase.Error.AccountListRequirementsNotMet)
+            ?.cause is AccountList.Error.DuplicateAccountNames
+        when {
+            duplicateAccountNames -> showAccountNameExist()
+            else -> {
+                showSomethingWrong()
+                logError(error = AccountFeatureError.CreateAccount.FailedToCreateAccount(cause = error))
+            }
         }
-
-        // TODO: show alert https://www.figma.com/design/09KKG4ZVuFDZhj8WLv5rGJ/%F0%9F%9A%A7-App-experience?node-id=38882-113775&t=vk6TCy4MkYol1cPb-4
-        logError(
-            error = AccountFeatureError.CreateAccount.FailedToCreateAccount(cause = error),
-        )
     }
 
     private suspend fun editCryptoPortfolio(params: AccountCreateEditComponent.Params.Edit) {
@@ -157,17 +159,15 @@ internal class AccountCreateEditModel @Inject constructor(
     }
 
     private fun handleEditAccountError(error: UpdateCryptoPortfolioUseCase.Error) {
-        if (error is UpdateCryptoPortfolioUseCase.Error.AccountListRequirementsNotMet &&
-            error.cause is AccountList.Error.DuplicateAccountNames
-        ) {
-            // TODO("account") show alert that the account name already exists
-            return
+        val duplicateAccountNames = (error as? UpdateCryptoPortfolioUseCase.Error.AccountListRequirementsNotMet)
+            ?.cause is AccountList.Error.DuplicateAccountNames
+        when {
+            duplicateAccountNames -> showAccountNameExist()
+            else -> {
+                showSomethingWrong()
+                logError(error = AccountFeatureError.EditAccount.FailedToEditAccount(cause = error))
+            }
         }
-
-        // TODO: show alert like in create account flow
-        logError(
-            error = AccountFeatureError.EditAccount.FailedToEditAccount(cause = error),
-        )
     }
 
     private fun showMessage(@StringRes id: Int) {
@@ -175,7 +175,10 @@ internal class AccountCreateEditModel @Inject constructor(
         messageSender.send(ToastMessage(message = message))
     }
 
-    private fun onCloseClick() = unsaveChangeDialog()
+    private fun onCloseClick() {
+        val showConfirmDialog = uiState.value.buttonState.isButtonEnabled
+        if (showConfirmDialog) unsaveChangeDialog() else router.pop()
+    }
 
     private fun onIconSelect(icon: CryptoPortfolioIcon.Icon) {
         uiState.value = uiState.value
@@ -255,5 +258,21 @@ internal class AccountCreateEditModel @Inject constructor(
         analyticsExceptionHandler.sendException(
             event = ExceptionAnalyticsEvent(exception = exception, params = params),
         )
+    }
+
+    private fun showSomethingWrong() {
+        val dialogMessage = DialogMessage(
+            title = resourceReference(R.string.common_something_went_wrong),
+            message = resourceReference(R.string.account_could_not_create),
+        )
+        messageSender.send(dialogMessage)
+    }
+
+    private fun showAccountNameExist() {
+        val dialogMessage = DialogMessage(
+            title = resourceReference(R.string.common_something_went_wrong),
+            message = resourceReference(R.string.account_form_name_already_exist_error_description),
+        )
+        messageSender.send(dialogMessage)
     }
 }
