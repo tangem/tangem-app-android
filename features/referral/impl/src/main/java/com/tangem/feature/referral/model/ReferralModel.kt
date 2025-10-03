@@ -86,21 +86,27 @@ internal class ReferralModel @Inject constructor(
 
     init {
         analyticsEventHandler.send(ReferralEvents.ReferralScreenOpened)
-        loadReferralData()
-        combine(
-            flow = referralData.filterNotNull().onEach(::selectAccount),
-            flow2 = portfolioSelectorController.isAccountMode,
-            transform = { referralData, isAccountMode -> referralData to isAccountMode },
-        ).transformLatest { (referralData, isAccountMode) ->
-            when (isAccountMode) {
-                false -> showContent(referralData)
-                true -> combineAccountUI(referralData)
-                    .map { referralData to it }
-                    .collect(::emit)
+        if (accountsFeatureToggles.isFeatureEnabled) {
+            combine(
+                flow = referralData.filterNotNull().onEach(::selectAccount),
+                flow2 = portfolioSelectorController.isAccountMode,
+                transform = { referralData, isAccountMode -> referralData to isAccountMode },
+            ).transformLatest { (referralData, isAccountMode) ->
+                when (isAccountMode) {
+                    false -> showContent(referralData)
+                    true -> combineAccountUI(referralData)
+                        .map { referralData to it }
+                        .collect(::emit)
+                }
             }
+                .onEach { (referralData, accountAward) -> showContent(referralData, accountAward) }
+                .launchIn(modelScope)
+        } else {
+            referralData.filterNotNull()
+                .onEach(::showContent)
+                .launchIn(modelScope)
         }
-            .onEach { (referralData, accountAward) -> showContent(referralData, accountAward) }
-            .launchIn(modelScope)
+        loadReferralData()
     }
 
     private fun combineAccountUI(referralData: ReferralData): Flow<AccountAward?> = combine(
