@@ -6,26 +6,29 @@ import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.pay.model.CustomerInfo.CardInfo
 import com.tangem.domain.pay.model.MainScreenCustomerInfo
-import com.tangem.domain.pay.model.OrderStatus.NOT_ISSUED
 import com.tangem.domain.pay.model.OrderStatus.CANCELED
+import com.tangem.domain.pay.model.OrderStatus.NOT_ISSUED
 import com.tangem.feature.wallet.presentation.wallet.state.model.TangemPayState
 import com.tangem.feature.wallet.presentation.wallet.state.model.TangemPayState.Progress
-import com.tangem.utils.transformer.Transformer
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletScreenState
 import java.util.Currency
 
 internal class TangemPayStateTransformer(
     private val value: MainScreenCustomerInfo? = null,
     private val onIssueOrderClick: () -> Unit = {},
     private val onContinueKycClick: () -> Unit = {},
-    private val cardOnClick: (customerWalletAddress: String, cardNumberEnd: String) -> Unit = { _, _ -> },
+    private val openDetails: (customerWalletAddress: String, cardNumberEnd: String) -> Unit = { _, _ -> },
     private val issueProgressState: Boolean = false,
     private val issueState: Boolean = false,
-) : Transformer<TangemPayState> {
+) : WalletScreenStateTransformer {
 
-    override fun transform(prevState: TangemPayState): TangemPayState = when {
-        issueProgressState -> createIssueProgressState()
-        issueState -> createIssueState()
-        else -> createInitialState()
+    override fun transform(prevState: WalletScreenState): WalletScreenState {
+        val tangemPayState = when {
+            issueProgressState -> createIssueProgressState()
+            issueState -> createIssueState()
+            else -> createInitialState()
+        }
+        return prevState.copy(tangemPayState = tangemPayState)
     }
 
     private fun createInitialState(): TangemPayState {
@@ -64,7 +67,7 @@ internal class TangemPayStateTransformer(
     private fun getCardInfoState(cardInfo: CardInfo): TangemPayState = TangemPayState.Card(
         lastFourDigits = TextReference.Str("*${cardInfo.lastFourDigits}"),
         balanceText = TextReference.Str(getBalanceText(cardInfo)),
-        onClick = { cardOnClick(cardInfo.customerWalletAddress, cardInfo.lastFourDigits) },
+        onClick = { openDetails(cardInfo.customerWalletAddress, cardInfo.lastFourDigits) },
     )
 
     private fun getBalanceText(cardInfo: CardInfo): String {
