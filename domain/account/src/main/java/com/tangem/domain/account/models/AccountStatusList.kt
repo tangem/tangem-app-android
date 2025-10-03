@@ -2,6 +2,7 @@ package com.tangem.domain.account.models
 
 import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import kotlinx.serialization.Serializable
 
@@ -29,4 +30,8 @@ data class AccountStatusList(
                 is AccountStatus.CryptoPortfolio -> accountStatus.account.isMainAccount
             }
         }
+
+    fun flattenCurrencies(): List<CryptoCurrencyStatus> = accountStatuses
+        .map { accountStatus -> accountStatus.flattenCurrencies() }
+        .flatten()
 }
