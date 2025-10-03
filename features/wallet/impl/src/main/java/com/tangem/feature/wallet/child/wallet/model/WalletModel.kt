@@ -356,40 +356,26 @@ internal class WalletModel @Inject constructor(
     }
 
     private suspend fun refreshTangemPayInfo() {
-        val newState = withContext(dispatchers.io) {
-            tangemPayMainScreenCustomerInfoUseCase()?.let { info ->
-                TangemPayStateTransformer(
+        val info = tangemPayMainScreenCustomerInfoUseCase()
+        if (info != null) {
+            stateHolder.update(
+                transformer = TangemPayStateTransformer(
                     value = info,
                     onIssueOrderClick = ::issueOrder,
                     onContinueKycClick = innerWalletRouter::openTangemPayOnboarding,
-                    cardOnClick = ::tangemPayCardOnClick,
-                ).transform(stateHolder.uiState.value.tangemPayState)
-            }
-        } ?: return
-        stateHolder.update { it.copy(tangemPayState = newState) }
+                    openDetails = innerWalletRouter::openTangemPayDetails,
+                ),
+            )
+        }
     }
 
     private fun issueOrder() {
         modelScope.launch {
-            stateHolder.update {
-                it.copy(
-                    tangemPayState = TangemPayStateTransformer(issueProgressState = true)
-                        .transform(it.tangemPayState),
-                )
-            }
-            withContext(dispatchers.io) {
-                tangemPayIssueOrderUseCase()
-            } ?: stateHolder.update {
-                it.copy(
-                    tangemPayState = TangemPayStateTransformer(issueState = true, onIssueOrderClick = ::issueOrder)
-                        .transform(it.tangemPayState),
-                )
+            stateHolder.update(TangemPayStateTransformer(issueProgressState = true))
+            tangemPayIssueOrderUseCase().onLeft {
+                stateHolder.update(TangemPayStateTransformer(issueState = true, onIssueOrderClick = ::issueOrder))
             }
         }
-    }
-
-    private fun tangemPayCardOnClick(customerWalletAddress: String, cardNumberEnd: String) {
-        innerWalletRouter.openTangemPayDetails(customerWalletAddress, cardNumberEnd)
     }
 
     private fun needToRefreshTimer() {
