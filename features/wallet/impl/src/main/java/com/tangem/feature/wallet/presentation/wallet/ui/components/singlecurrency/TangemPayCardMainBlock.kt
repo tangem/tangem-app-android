@@ -1,7 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.ui.components.singlecurrency
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Surface
@@ -22,11 +21,10 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.TangemPayState
 @Composable
 internal fun TangemPayCardMainBlock(state: TangemPayState.Card, modifier: Modifier = Modifier) {
     Surface(
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable { state.onClick() },
+        modifier = modifier.fillMaxWidth(),
         shape = TangemTheme.shapes.roundedCornersXMedium,
         color = TangemTheme.colors.background.primary,
+        onClick = state.onClick,
     ) {
         Row(
             modifier = Modifier
