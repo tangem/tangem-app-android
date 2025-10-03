@@ -4,8 +4,7 @@ import com.tangem.domain.tangempay.model.TangemPayTxHistoryListBatchingContext
 import com.tangem.domain.tangempay.model.TangemPayTxHistoryListConfig
 import com.tangem.domain.tangempay.repository.TangemPayTxHistoryRepository
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
-import com.tangem.features.txhistory.entity.TxHistoryUM
-import com.tangem.features.txhistory.utils.TxHistoryUiActions
+import com.tangem.features.tangempay.entity.TangemPayTxHistoryUM
 import com.tangem.pagination.BatchAction
 import com.tangem.pagination.BatchListState
 import com.tangem.pagination.PaginationStatus
@@ -23,7 +22,7 @@ internal class TangemPayTxHistoryListManager(
     private val repository: TangemPayTxHistoryRepository,
     private val dispatchers: CoroutineDispatcherProvider,
     private val customerWalletAddress: String,
-    private val txHistoryUiActions: TxHistoryUiActions,
+    private val txHistoryUiActions: TangemPayTxHistoryUiActions,
 ) {
     private val jobHolder = JobHolder()
     private val actionsFlow: MutableSharedFlow<TangemPayTxHistoryBatchAction> = MutableSharedFlow(
@@ -33,7 +32,7 @@ internal class TangemPayTxHistoryListManager(
     private val state: MutableStateFlow<TangemPayTxHistoryState> = MutableStateFlow(TangemPayTxHistoryState())
     private val uiManager = TangemPayTxHistoryUiManager(state = state, txHistoryUiActions = txHistoryUiActions)
 
-    val uiItems: Flow<ImmutableList<TxHistoryUM.TxHistoryItemUM>> = uiManager.items
+    val uiItems: Flow<ImmutableList<TangemPayTxHistoryUM.TangemPayTxHistoryItemUM>> = uiManager.items
     val paginationStatus: Flow<PaginationStatus<*>> = state.map { it.status }.distinctUntilChanged()
 
     suspend fun launchPagination() = coroutineScope {
