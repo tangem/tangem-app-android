@@ -84,7 +84,7 @@ internal class DefaultTangemPayTxHistoryRepository @Inject constructor(
             val result = requestPerformer.request { authHeader ->
                 visaApi.getTangemPayTxHistory(authHeader = authHeader, limit = pageSize, cursor = cursor)
             }.result
-            val items = TangemPayTxHistoryItemConverter.convertList(result.transactions)
+            val items = TangemPayTxHistoryItemConverter.convertList(result.transactions).filterNotNull()
             txHistoryItemsStore.store(key = customerWalletAddress, cursor = cursor ?: INITIAL_CURSOR, value = items)
         }
     }
