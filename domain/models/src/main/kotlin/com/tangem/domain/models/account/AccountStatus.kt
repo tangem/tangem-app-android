@@ -1,6 +1,7 @@
 package com.tangem.domain.models.account
 
 import com.tangem.domain.core.lce.Lce
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.quote.PriceChange
 import com.tangem.domain.models.tokenlist.TokenList
 import kotlinx.serialization.Serializable
@@ -29,4 +30,8 @@ sealed interface AccountStatus {
         val tokenList: TokenList,
         val priceChangeLce: Lce<Unit, PriceChange>,
     ) : AccountStatus
+
+    fun flattenCurrencies(): List<CryptoCurrencyStatus> = when (this) {
+        is CryptoPortfolio -> tokenList.flattenCurrencies()
+    }
 }
