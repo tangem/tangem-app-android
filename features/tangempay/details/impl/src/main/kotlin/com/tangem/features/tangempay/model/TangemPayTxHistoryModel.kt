@@ -6,10 +6,11 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.tangempay.repository.TangemPayTxHistoryRepository
+import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import com.tangem.features.tangempay.components.txHistory.DefaultTangemPayTxHistoryComponent
+import com.tangem.features.tangempay.entity.TangemPayTxHistoryUM
 import com.tangem.features.tangempay.utils.TangemPayTxHistoryListManager
-import com.tangem.features.txhistory.entity.TxHistoryUM
-import com.tangem.features.txhistory.utils.TxHistoryUiActions
+import com.tangem.features.tangempay.utils.TangemPayTxHistoryUiActions
 import com.tangem.pagination.PaginationStatus
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.ImmutableList
@@ -25,7 +26,7 @@ internal class TangemPayTxHistoryModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     tangemPayTxHistoryRepository: TangemPayTxHistoryRepository,
     paramsContainer: ParamsContainer,
-) : Model(), TxHistoryUiActions {
+) : Model(), TangemPayTxHistoryUiActions {
 
     private val params: DefaultTangemPayTxHistoryComponent.Params = paramsContainer.require()
     private val listManager = TangemPayTxHistoryListManager(
@@ -35,8 +36,8 @@ internal class TangemPayTxHistoryModel @Inject constructor(
         txHistoryUiActions = this,
     )
 
-    val uiState: StateFlow<TxHistoryUM>
-        field = MutableStateFlow<TxHistoryUM>(getLoadingState(isBalanceHidden = true))
+    val uiState: StateFlow<TangemPayTxHistoryUM>
+        field = MutableStateFlow<TangemPayTxHistoryUM>(getLoadingState(isBalanceHidden = true))
 
     init {
         handleBalanceHiding()
@@ -50,19 +51,19 @@ internal class TangemPayTxHistoryModel @Inject constructor(
 
     private fun subscribeToUiItemChanges() {
         listManager.uiItems
-            .onEach { updateState(it) }
+            .onEach(::updateState)
             .launchIn(modelScope)
         listManager.paginationStatus
             .onEach { paginationStatus -> handlePaginationStatus(paginationStatus) }
             .launchIn(modelScope)
     }
 
-    private fun updateState(items: ImmutableList<TxHistoryUM.TxHistoryItemUM>) {
+    private fun updateState(items: ImmutableList<TangemPayTxHistoryUM.TangemPayTxHistoryItemUM>) {
         uiState.update { state ->
-            if (state is TxHistoryUM.Content) {
+            if (state is TangemPayTxHistoryUM.Content) {
                 state.copy(items = items)
             } else {
-                TxHistoryUM.Content(
+                TangemPayTxHistoryUM.Content(
                     items = items,
                     isBalanceHidden = state.isBalanceHidden,
                     loadMore = ::loadMoreItems,
@@ -91,11 +92,8 @@ internal class TangemPayTxHistoryModel @Inject constructor(
     }
 
     fun reload() {
-        // fast exit
-        if (uiState.value is TxHistoryUM.NotSupported) return
-
         uiState.update { state ->
-            state as? TxHistoryUM.Content ?: getLoadingState(state.isBalanceHidden)
+            state as? TangemPayTxHistoryUM.Content ?: getLoadingState(state.isBalanceHidden)
         }
         modelScope.launch { listManager.reload() }
     }
@@ -106,23 +104,15 @@ internal class TangemPayTxHistoryModel @Inject constructor(
             .launchIn(modelScope)
     }
 
-    override fun openExplorer() {
-        Timber.d("onExploreClick: open explorer")
+    override fun onTransactionClick(item: TangemPayTxHistoryItem) {
+        Timber.d("onTransactionClick: $item")
     }
 
-    override fun openTxInExplorer(txHash: String) {
-        Timber.d("openTxInExplorer: $txHash")
+    private fun getErrorState(isBalanceHidden: Boolean): TangemPayTxHistoryUM.Error {
+        return TangemPayTxHistoryUM.Error(isBalanceHidden = isBalanceHidden, onReload = ::reload)
     }
 
-    private fun getErrorState(isBalanceHidden: Boolean): TxHistoryUM.Error {
-        return TxHistoryUM.Error(
-            isBalanceHidden = isBalanceHidden,
-            onReloadClick = ::reload,
-            onExploreClick = ::openExplorer,
-        )
-    }
-
-    private fun getLoadingState(isBalanceHidden: Boolean): TxHistoryUM.Loading {
-        return TxHistoryUM.Loading(isBalanceHidden = isBalanceHidden, onExploreClick = ::openExplorer)
+    private fun getLoadingState(isBalanceHidden: Boolean): TangemPayTxHistoryUM.Loading {
+        return TangemPayTxHistoryUM.Loading(isBalanceHidden = isBalanceHidden)
     }
 }
