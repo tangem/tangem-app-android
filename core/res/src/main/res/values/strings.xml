@@ -1280,6 +1280,10 @@
   <string name="swapping_to_title">You receive</string>
   <string name="swapping_token_list_title">Choose token</string>
   <string name="swapping_token_not_available">not available</string>
+  <string name="tangempay_card_details_error_text">Failed to load data. Try again later.</string>
+  <string name="tangempay_card_details_hide_text">Hide</string>
+  <string name="tangempay_card_details_reveal_text">Reveal</string>
+  <string name="tangempay_card_details_title">Card details</string>
   <string name="tangempay_issue_card_notification_title">Create account and issue a card</string>
   <string name="tangempay_kyc_card_ready_notification_title">Tangem Pay</string>
   <string name="tangempay_kyc_in_progress_notification_button">View Status</string>
@@ -1292,6 +1296,7 @@
   <string name="tangempay_onboarding_security_description">Your card details are protected — full control in the app.</string>
   <string name="tangempay_onboarding_security_title">Built-in security</string>
   <string name="tangempay_onboarding_title">Get your free Crypto Card\nin minutes</string>
+  <string name="tangempay_title">Tangem Pay</string>
   <string name="this_is_my_wallet_title">This is my wallet</string>
   <string name="toast_balances_hidden">Balances hidden</string>
   <string name="toast_balances_shown">Balances shown</string>
