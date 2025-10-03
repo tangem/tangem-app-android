@@ -1,4 +1,4 @@
-package com.tangem.features.tangempay.transformer
+package com.tangem.features.tangempay.model.transformers
 
 import arrow.core.Either
 import com.tangem.core.error.UniversalError
@@ -11,7 +11,7 @@ import com.tangem.utils.transformer.Transformer
 import kotlinx.collections.immutable.persistentListOf
 import java.util.Currency
 
-internal class CardDetailsStateTransformer(
+internal class DetailsBalanceTransformer(
     private val balance: Either<UniversalError, TangemPayCardBalance>,
 ) : Transformer<TangemPayDetailsUM> {
 
