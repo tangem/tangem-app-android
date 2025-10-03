@@ -30,6 +30,8 @@ dependencies {
     implementation(projects.domain.visa.models)
 
     /** Compose */
+    implementation(deps.compose.coil)
+    implementation(deps.compose.constraintLayout)
     implementation(deps.compose.foundation)
     implementation(deps.compose.material3)
     implementation(deps.compose.ui)
