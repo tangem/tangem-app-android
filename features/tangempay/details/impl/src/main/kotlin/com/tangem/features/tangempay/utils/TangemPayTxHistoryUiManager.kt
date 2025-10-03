@@ -2,9 +2,8 @@ package com.tangem.features.tangempay.utils
 
 import com.tangem.core.ui.utils.toDateFormatWithTodayYesterday
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
+import com.tangem.features.tangempay.entity.TangemPayTxHistoryUM
 import com.tangem.features.tangempay.model.transformers.TangemPayTxHistoryItemsConverter
-import com.tangem.features.txhistory.entity.TxHistoryUM
-import com.tangem.features.txhistory.utils.TxHistoryUiActions
 import com.tangem.pagination.Batch
 import com.tangem.pagination.PaginationStatus
 import kotlinx.collections.immutable.ImmutableList
@@ -15,11 +14,11 @@ import java.util.UUID
 
 internal class TangemPayTxHistoryUiManager(
     private val state: MutableStateFlow<TangemPayTxHistoryState>,
-    private val txHistoryUiActions: TxHistoryUiActions,
+    private val txHistoryUiActions: TangemPayTxHistoryUiActions,
 ) {
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val items: Flow<ImmutableList<TxHistoryUM.TxHistoryItemUM>> = state
+    val items: Flow<ImmutableList<TangemPayTxHistoryUM.TangemPayTxHistoryItemUM>> = state
         // filter initial states, since we dont emit loading items as UI items
         .filter {
             it.status !is PaginationStatus.None &&
@@ -38,7 +37,7 @@ internal class TangemPayTxHistoryUiManager(
     fun createOrUpdateUiBatches(
         newCurrencyBatches: List<Batch<Int, List<TangemPayTxHistoryItem>>>,
         clearUiBatches: Boolean,
-    ): List<Batch<Int, List<TxHistoryUM.TxHistoryItemUM>>> {
+    ): List<Batch<Int, List<TangemPayTxHistoryUM.TangemPayTxHistoryItemUM>>> {
         val currentUiBatches = state.value.uiBatches
         val batches = if (clearUiBatches) mutableListOf() else currentUiBatches.toMutableList()
 
@@ -68,51 +67,58 @@ internal class TangemPayTxHistoryUiManager(
         return batches
     }
 
-    private fun generateUiItems(key: Int, data: List<TangemPayTxHistoryItem>): List<TxHistoryUM.TxHistoryItemUM> {
-        val items = mutableListOf<TxHistoryUM.TxHistoryItemUM>()
+    private fun generateUiItems(
+        key: Int,
+        data: List<TangemPayTxHistoryItem>,
+    ): List<TangemPayTxHistoryUM.TangemPayTxHistoryItemUM> {
+        val items = mutableListOf<TangemPayTxHistoryUM.TangemPayTxHistoryItemUM>()
 
         // Add title for the first batch
         if (key == 0) {
-            items.add(TxHistoryUM.TxHistoryItemUM.Title(onExploreClick = txHistoryUiActions::openExplorer))
+            items.add(TangemPayTxHistoryUM.TangemPayTxHistoryItemUM.Title)
         }
 
         // Process batch items only if there are any
         if (data.isNotEmpty()) {
             // Add first item with its group title
             val firstItem = data.first()
-            val firstDate = firstItem.timeStampInMillis.toDateFormatWithTodayYesterday()
+            val firstDate = firstItem.date.millis.toDateFormatWithTodayYesterday()
 
             items.add(
-                TxHistoryUM.TxHistoryItemUM.GroupTitle(
+                TangemPayTxHistoryUM.TangemPayTxHistoryItemUM.GroupTitle(
                     title = firstDate,
                     itemKey = UUID.randomUUID().toString(),
                 ),
             )
-            items.add(TxHistoryUM.TxHistoryItemUM.Transaction(txHistoryItemConverter.convert(firstItem)))
+            items.add(
+                TangemPayTxHistoryUM.TangemPayTxHistoryItemUM.Transaction(txHistoryItemConverter.convert(firstItem)),
+            )
 
             // Process remaining items with date separators when needed
             data.zipWithNext { current, next ->
-                val currentDate = current.timeStampInMillis.toDateFormatWithTodayYesterday()
-                val nextDate = next.timeStampInMillis.toDateFormatWithTodayYesterday()
+                val currentDate = current.date.millis.toDateFormatWithTodayYesterday()
+                val nextDate = next.date.millis.toDateFormatWithTodayYesterday()
 
                 if (currentDate != nextDate) {
                     items.add(
-                        TxHistoryUM.TxHistoryItemUM.GroupTitle(
+                        TangemPayTxHistoryUM.TangemPayTxHistoryItemUM.GroupTitle(
                             title = nextDate,
                             itemKey = UUID.randomUUID().toString(),
                         ),
                     )
                 }
-                items.add(TxHistoryUM.TxHistoryItemUM.Transaction(txHistoryItemConverter.convert(next)))
+                items.add(
+                    TangemPayTxHistoryUM.TangemPayTxHistoryItemUM.Transaction(txHistoryItemConverter.convert(next)),
+                )
             }
         }
 
         return items
     }
 
-    private fun List<TxHistoryUM.TxHistoryItemUM>.transactionItemsSizeNotEqual(
+    private fun List<TangemPayTxHistoryUM.TangemPayTxHistoryItemUM>.transactionItemsSizeNotEqual(
         txInfos: List<TangemPayTxHistoryItem>,
     ): Boolean {
-        return this.filterIsInstance<TxHistoryUM.TxHistoryItemUM.Transaction>().size != txInfos.size
+        return this.filterIsInstance<TangemPayTxHistoryUM.TangemPayTxHistoryItemUM.Transaction>().size != txInfos.size
     }
 }
