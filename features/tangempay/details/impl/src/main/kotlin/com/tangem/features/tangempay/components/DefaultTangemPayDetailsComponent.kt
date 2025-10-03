@@ -29,8 +29,13 @@ internal class DefaultTangemPayDetailsComponent @AssistedInject constructor(
     @Composable
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
+
         NavigationBar3ButtonsScrim()
-        TangemPayDetailsScreen(state = state, txHistoryComponent = txHistoryComponent, modifier = modifier)
+        TangemPayDetailsScreen(
+            state = state,
+            txHistoryComponent = txHistoryComponent,
+            modifier = modifier,
+        )
     }
 
     @AssistedFactory
