@@ -13,12 +13,15 @@ import com.tangem.domain.pay.model.CustomerInfo.ProductInstance
 import com.tangem.domain.pay.model.MainScreenCustomerInfo
 import com.tangem.domain.pay.model.OrderStatus
 import com.tangem.domain.pay.repository.OnboardingRepository
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 private const val VALID_STATUS = "valid"
 private const val TAG = "TangemPay: OnboardingRepository"
 
 internal class DefaultOnboardingRepository @Inject constructor(
+    private val dispatcherProvider: CoroutineDispatcherProvider,
     private val tangemPayApi: TangemPayApi,
     private val requestHelper: TangemPayRequestPerformer,
     private val tangemPayStorage: TangemPayStorage,
@@ -54,8 +57,8 @@ internal class DefaultOnboardingRepository @Inject constructor(
         }
     }
 
-    override suspend fun createOrder(): Either<UniversalError, Unit> {
-        return requestHelper.runWithErrorLogs(TAG) {
+    override suspend fun createOrder(): Either<UniversalError, Unit> = withContext(dispatcherProvider.io) {
+        requestHelper.runWithErrorLogs(TAG) {
             val walletAddress = requestHelper.getCustomerWalletAddress()
             val result = requestHelper.requestWithPersistedToken { authHeader ->
                 tangemPayApi.createOrder(authHeader, body = OrderRequest(walletAddress))
@@ -68,14 +71,13 @@ internal class DefaultOnboardingRepository @Inject constructor(
     private fun getCustomerInfo(response: CustomerMeResponse.Result?): CustomerInfo {
         val card = response?.card
         val balance = response?.balance
-        val productInstance = response?.productInstance
-        val cardInfo = if (productInstance != null && card != null && balance != null) {
+        val paymentAccount = response?.paymentAccount
+        val cardInfo = if (paymentAccount != null && card != null && balance != null) {
             CardInfo(
                 lastFourDigits = card.cardNumberEnd,
                 balance = balance.availableBalance,
                 currencyCode = balance.currency,
-                customerWalletAddress = productInstance.cardWalletAddress,
-
+                customerWalletAddress = paymentAccount.customerWalletAddress,
             )
         } else {
             null
