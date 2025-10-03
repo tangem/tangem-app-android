@@ -2,6 +2,12 @@ package com.tangem.features.tangempay.ui
 
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -12,10 +18,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
@@ -33,9 +42,13 @@ import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfi
 import com.tangem.core.ui.components.containers.pullToRefresh.TangemPullToRefreshContainer
 import com.tangem.core.ui.components.dropdownmenu.TangemDropdownItem
 import com.tangem.core.ui.components.dropdownmenu.TangemDropdownMenu
+import com.tangem.core.ui.components.snackbar.TangemSnackbarHost
 import com.tangem.core.ui.components.text.applyBladeBrush
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.orMaskWithStars
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.TokenDetailsTopBarTestTags
@@ -49,17 +62,26 @@ import com.tangem.features.tangempay.entity.TangemPayDetailsUM
 import com.tangem.utils.StringsSigns.DASH_SIGN
 import kotlinx.collections.immutable.persistentListOf
 
+private const val REVEAL_ANIMATION_MILLIS = 500
+
 @Composable
 internal fun TangemPayDetailsScreen(
     state: TangemPayDetailsUM,
     txHistoryComponent: TangemPayTxHistoryComponent,
     modifier: Modifier = Modifier,
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ) {
     Scaffold(
         modifier = modifier,
         topBar = { TangemPayDetailsTopAppBar(config = state.topBarConfig) },
         contentWindowInsets = ScaffoldDefaults.contentWindowInsets.exclude(WindowInsets.navigationBars),
         containerColor = TangemTheme.colors.background.secondary,
+        snackbarHost = {
+            TangemSnackbarHost(
+                modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
+                hostState = snackbarHostState,
+            )
+        },
     ) { scaffoldPaddings ->
         val listState = rememberLazyListState()
         val bottomBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getBottom(this).toDp() }
@@ -124,7 +146,7 @@ internal fun TangemPayDetailsBalanceBlock(
     ) {
         Text(
             modifier = Modifier.padding(start = 12.dp),
-            text = "Tangem Pay",
+            text = stringResourceSafe(R.string.tangempay_title),
             color = TangemTheme.colors.text.tertiary,
             style = TangemTheme.typography.subtitle2,
         )
@@ -215,52 +237,97 @@ private fun CryptoBalance(
 // region Card details block
 @Composable
 private fun TangemPayCardDetailsBlock(state: TangemPayCardDetailsUM, modifier: Modifier = Modifier) {
+    val alpha = if (state.isLoading) {
+        val infiniteTransition = rememberInfiniteTransition()
+        val animation by infiniteTransition.animateFloat(
+            initialValue = 1f,
+            targetValue = 0.3f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(REVEAL_ANIMATION_MILLIS, easing = LinearEasing),
+                repeatMode = RepeatMode.Reverse,
+            ),
+        )
+        animation
+    } else {
+        1f
+    }
     Column(
         modifier = modifier
             .background(
                 color = TangemTheme.colors.background.primary,
                 shape = TangemTheme.shapes.roundedCornersMedium,
-            )
-            .padding(all = 12.dp),
+            ),
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 8.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            Text(
-                text = "Card details",
-                color = TangemTheme.colors.text.tertiary,
-                style = TangemTheme.typography.subtitle2,
-            )
-            Text(
-                modifier = Modifier.clickable(onClick = state.onReveal),
-                text = "Reveal",
-                color = TangemTheme.colors.text.accent,
-                style = TangemTheme.typography.body2,
-            )
-        }
+        CardDetailsBlockHeader(state)
         CardDetailsTextContainer(
             modifier = Modifier
+                .graphicsLayer { this.alpha = alpha }
                 .fillMaxWidth()
-                .padding(top = 4.dp),
+                .padding(start = 12.dp, end = 12.dp, top = 4.dp),
             text = state.number,
+            onCopy = { state.onCopy(state.number) },
+            isHidden = state.isHidden,
         )
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 8.dp),
+                .padding(start = 12.dp, end = 12.dp, bottom = 12.dp, top = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            CardDetailsTextContainer(modifier = Modifier.weight(1f), text = state.expiry)
-            CardDetailsTextContainer(modifier = Modifier.weight(1f), text = state.cvv)
+            CardDetailsTextContainer(
+                modifier = Modifier
+                    .graphicsLayer { this.alpha = alpha }
+                    .weight(1f),
+                text = state.expiry,
+                onCopy = { state.onCopy(state.expiry) },
+                isHidden = state.isHidden,
+            )
+            CardDetailsTextContainer(
+                modifier = Modifier
+                    .graphicsLayer { this.alpha = alpha }
+                    .weight(1f),
+                text = state.cvv,
+                onCopy = { state.onCopy(state.cvv) },
+                isHidden = state.isHidden,
+            )
         }
     }
 }
 
 @Composable
-private fun CardDetailsTextContainer(text: String, modifier: Modifier = Modifier) {
+private fun CardDetailsBlockHeader(state: TangemPayCardDetailsUM, modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Text(
+            modifier = Modifier
+                .padding(start = 12.dp, top = 12.dp),
+            text = stringResourceSafe(R.string.tangempay_card_details_title),
+            color = TangemTheme.colors.text.tertiary,
+            style = TangemTheme.typography.subtitle2,
+        )
+        Text(
+            modifier = Modifier
+                .padding(top = 8.dp, end = 4.dp)
+                .clip(TangemTheme.shapes.roundedCornersMedium)
+                .clickable(onClick = state.onClick)
+                .padding(horizontal = 8.dp, vertical = 4.dp),
+            text = state.buttonText.resolveReference(),
+            color = TangemTheme.colors.text.accent,
+            style = TangemTheme.typography.body2,
+        )
+    }
+}
+
+@Composable
+private fun CardDetailsTextContainer(
+    text: String,
+    isHidden: Boolean,
+    onCopy: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Row(
         modifier = modifier
             .heightIn(min = 48.dp)
@@ -271,9 +338,27 @@ private fun CardDetailsTextContainer(text: String, modifier: Modifier = Modifier
             modifier = Modifier.padding(vertical = 4.dp, horizontal = 12.dp),
             text = text,
             maxLines = 1,
-            color = TangemTheme.colors.text.disabled,
+            color = if (isHidden) TangemTheme.colors.text.disabled else TangemTheme.colors.text.primary1,
             style = TangemTheme.typography.body2,
         )
+
+        if (!isHidden) {
+            Spacer(modifier = Modifier.weight(1f))
+
+            IconButton(
+                modifier = Modifier
+                    .padding(end = TangemTheme.dimens.spacing8)
+                    .size(TangemTheme.dimens.size32),
+                onClick = onCopy,
+            ) {
+                Icon(
+                    modifier = Modifier.size(TangemTheme.dimens.size24),
+                    painter = painterResource(id = R.drawable.ic_copy_new_24),
+                    tint = TangemTheme.colors.icon.informative,
+                    contentDescription = null,
+                )
+            }
+        }
     }
 }
 
@@ -367,7 +452,9 @@ private class TangemPayDetailsUMProvider : CollectionPreviewParameterProvider<Ta
                 number = "•••• •••• •••• 1245",
                 expiry = "••/••",
                 cvv = "•••",
-                onReveal = {},
+                onCopy = {},
+                onClick = {},
+                buttonText = TextReference.Res(R.string.tangempay_card_details_reveal_text),
             ),
             isBalanceHidden = false,
         ),
@@ -379,7 +466,9 @@ private class TangemPayDetailsUMProvider : CollectionPreviewParameterProvider<Ta
                 number = "•••• •••• •••• 1245",
                 expiry = "••/••",
                 cvv = "•••",
-                onReveal = {},
+                onCopy = {},
+                onClick = {},
+                buttonText = TextReference.Res(R.string.tangempay_card_details_hide_text),
             ),
             isBalanceHidden = false,
         ),
