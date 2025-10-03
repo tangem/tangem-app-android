@@ -16,7 +16,13 @@ data class CardDetailsResponse(
         @Json(name = "card_type") val cardType: String,
         @Json(name = "card_status") val cardStatus: String,
         @Json(name = "card_number_end") val cardNumberEnd: String,
-        @Json(name = "pan") val pan: String,
-        @Json(name = "cvv") val cvv: String,
+        @Json(name = "pan") val pan: Secret,
+        @Json(name = "cvv") val cvv: Secret,
+    )
+
+    @JsonClass(generateAdapter = true)
+    data class Secret(
+        @Json(name = "secret") val secret: String,
+        @Json(name = "iv") val iv: String,
     )
 }
