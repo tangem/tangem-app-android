@@ -21,6 +21,7 @@ import com.tangem.domain.wallets.derivations.derivationStyleProvider
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -58,8 +59,15 @@ internal class TangemPayRequestPerformer @Inject constructor(
             val result = requestBlock()
             Either.Right(result)
         } catch (exception: Exception) {
-            Timber.e("$tag: $exception")
-            Either.Left(mapError(exception))
+            when (exception) {
+                is CancellationException -> {
+                    throw exception
+                }
+                else -> {
+                    Timber.tag(tag).e(exception)
+                    Either.Left(mapError(exception))
+                }
+            }
         }
     }
 
