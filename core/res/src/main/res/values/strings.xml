@@ -542,6 +542,7 @@
   <string name="hw_create_seed_description">Create or restore your wallet using a recovery phrase — your built-in backup.</string>
   <string name="hw_create_seed_title">Seed phrase backup</string>
   <string name="hw_create_title">Create Mobile Wallet</string>
+  <string name="hw_import_existing_wallet">Import existing wallet</string>
   <string name="hw_import_seed_phrase_already_imported">This recovery phrase has already been imported</string>
   <string name="hw_mobile_wallet">Mobile Wallet</string>
   <string name="hw_upgrade_error_card_already_has_wallet">Can’t upgrade. A wallet already exists on this device.</string>
