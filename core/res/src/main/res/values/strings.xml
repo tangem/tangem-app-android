@@ -1743,6 +1743,7 @@
   <string name="yield_module_approve_sheet_title">Confirm approval</string>
   <string name="yield_module_balance_info_sheet_subtitle">Text about your money in balance [PLACEHOLDER]</string>
   <string name="yield_module_balance_info_sheet_title">Your %s is deposited in Aave</string>
+  <string name="yield_module_chart_loading_error">Unable to load chart...</string>
   <string name="yield_module_deposit_error_notification_title">The amount received, %1$s %2$s was not deposited to Aave.</string>
   <string name="yield_module_earn_badge">Earn %1$s%%</string>
   <string name="yield_module_earn_sheet_available_title">Available</string>
@@ -1760,6 +1761,7 @@
   <string name="yield_module_fee_policy_sheet_max_fee_title">Maximum fee</string>
   <string name="yield_module_fee_policy_sheet_title">Fee policy</string>
   <string name="yield_module_high_fee_error">Network fee is too high right now. Waiting until it falls below your limit.</string>
+  <string name="yield_module_historical_returns">Historical returns</string>
   <string name="yield_module_main_view_approve_notification_description">Write description here. In one, two or three lines will be awesome. [PLACEHOLDER]</string>
   <string name="yield_module_main_view_approve_notification_title">Some token approve needed</string>
   <string name="yield_module_network_fee_unreachable_notification_description">Check your network connection</string>
@@ -1790,6 +1792,7 @@
   <string name="yield_module_stop_earning">Stop earning</string>
   <string name="yield_module_stop_earning_sheet_description">Turning off will withdraw your funds from Aave, return them to %s in your wallet, and stop earning rewards.</string>
   <string name="yield_module_stop_earning_sheet_fee_note">The network fee will be deducted from the amount you withdraw.</string>
+  <string name="yield_module_supply_apr">Supply APR</string>
   <string name="yield_module_token_details_earn_notification_apy">APY</string>
   <string name="yield_module_token_details_earn_notification_description">Make your money work — earn interest on your balance.</string>
   <string name="yield_module_token_details_earn_notification_earning_on_your_balance_title">Earning on your balance</string>
