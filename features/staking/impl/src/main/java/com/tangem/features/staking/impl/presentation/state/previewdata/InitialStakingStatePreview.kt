@@ -18,7 +18,6 @@ internal object InitialStakingStatePreview {
     val defaultState = StakingStates.InitialInfoState.Data(
         isPrimaryButtonEnabled = true,
         showBanner = true,
-        aprRange = stringReference("2.54-5.12%"),
         infoItems = persistentListOf(
             RoundedListWithDividersItemData(
                 id = R.string.staking_details_available,
@@ -88,7 +87,6 @@ internal object InitialStakingStatePreview {
                         name = "Binance",
                         image = null,
                         website = null,
-                        apr = "5".toBigDecimal(),
                         commission = null,
                         stakedBalance = null,
                         votingPower = null,
