@@ -31,10 +31,15 @@ internal class CreateMobileWalletModel @Inject constructor(
         field = MutableStateFlow(
             CreateMobileWalletUM(
                 onBackClick = { router.pop() },
+                onImportClick = ::onImportClick,
                 onCreateClick = ::onCreateClick,
                 createButtonLoading = false,
             ),
         )
+
+    private fun onImportClick() {
+        router.push(AppRoute.AddExistingWallet)
+    }
 
     private fun onCreateClick() {
         modelScope.launch {
