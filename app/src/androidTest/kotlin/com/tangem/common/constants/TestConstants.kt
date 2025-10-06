@@ -7,6 +7,7 @@ object TestConstants {
     const val CARDANO_ADDRESS = "addr1q8f9499e58k4hhfd9vhawprxt3xd94x7rmlyp33ee4xkatakcl2zgkrg0p6ceqkndtkw4cumfe9enhdph8yhuswn785srksm9p"
 
     const val WAIT_UNTIL_TIMEOUT = 20_000L
+    const val WAIT_UNTIL_TIMEOUT_LONG = 30_000L
 
     const val MARKETS_MAIN_NETWORK_SUFFIX = "MAIN"
 
