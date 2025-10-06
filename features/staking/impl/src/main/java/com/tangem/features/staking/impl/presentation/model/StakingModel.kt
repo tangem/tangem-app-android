@@ -74,7 +74,7 @@ import com.tangem.features.staking.impl.presentation.state.utils.checkAndCalcula
 import com.tangem.features.staking.impl.presentation.state.utils.isSingleAction
 import com.tangem.features.staking.impl.presentation.state.utils.withStubUnstakeAction
 import com.tangem.utils.Provider
-import com.tangem.utils.TangemLinks.RESOURCE_TO_LEARN_ABOUT_APPROVING_IN_SWAP
+import com.tangem.utils.TangemBlogUrlBuilder.RESOURCE_TO_LEARN_ABOUT_APPROVING_IN_SWAP
 import com.tangem.utils.coroutines.*
 import com.tangem.utils.extensions.isSingleItem
 import com.tangem.utils.extensions.orZero
