@@ -1333,7 +1333,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
 
                     val formattedHash = getFormattedHash(transactionBytes)
 
-                    if (formattedHash.size > SOLANA_TRANSACTION_SIZE_THRESHOLD_BYTES) {
+                    if (formattedHash.size > SOLANA_TRANSACTION_SIZE_THRESHOLD_BYTES && userWallet is UserWallet.Cold) {
                         return produceDexSwapDataError(
                             error = ExpressDataError.TooLargeSolanaTransactionError,
                             fromToken = fromToken,
