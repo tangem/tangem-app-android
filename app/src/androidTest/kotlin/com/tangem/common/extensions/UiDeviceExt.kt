@@ -53,6 +53,31 @@ fun BaseTestCase.openTheAppFromRecents() {
     device.uiDevice.click(centerX, centerY)
 }
 
+fun BaseTestCase.disableWiFi() {
+    device.uiDevice.executeShellCommand("svc wifi disable")
+}
+
+fun BaseTestCase.disableMobileData() {
+    device.uiDevice.executeShellCommand("svc data disable")
+}
+
+fun BaseTestCase.enableWiFi() {
+    device.uiDevice.executeShellCommand("svc wifi enable")
+}
+
+fun BaseTestCase.enableMobileData() {
+    device.uiDevice.executeShellCommand("svc data enable")
+}
+
+fun BaseTestCase.stopApp(packageName: String) {
+    device.apps.kill(packageName)
+}
+
+fun BaseTestCase.launchApp(packageName: String) {
+    device.apps.waitForAppLaunchAndReady(packageName = packageName)
+    device.apps.launch(packageName)
+}
+
 enum class SwipeDirection {
     UP, DOWN
 }
