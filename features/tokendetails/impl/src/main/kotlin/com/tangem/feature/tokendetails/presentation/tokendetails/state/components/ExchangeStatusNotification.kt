@@ -45,13 +45,16 @@ internal sealed interface ExchangeStatusNotification {
         ),
     )
 
-    data class LongTimeExchange(val onGoToProviderClick: () -> Unit) : CommonNotification(
+    data class LongTimeExchange(
+        private val onGoToProviderClick: () -> Unit,
+        private val providerName: String,
+    ) : CommonNotification(
         config = NotificationConfig(
             title = resourceReference(R.string.express_exchange_notification_long_transaction_time_title),
             subtitle = resourceReference(R.string.express_exchange_notification_long_transaction_time_text),
             iconResId = R.drawable.ic_alert_triangle_20,
             buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
-                text = resourceReference(R.string.common_go_to_provider),
+                text = resourceReference(R.string.provider_name_support, wrappedList(providerName)),
                 onClick = onGoToProviderClick,
             ),
         ),
