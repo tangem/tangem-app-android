@@ -5,18 +5,22 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.ui.components.notifications.NotificationConfig
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetProtocolBalanceUseCase
+import com.tangem.domain.yield.supply.usecase.YieldSupplyGetTokenStatusUseCase
 import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.impl.subcomponents.active.YieldSupplyActiveComponent
 import com.tangem.features.yield.supply.impl.subcomponents.active.entity.YieldSupplyActiveContentUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 @ModelScoped
@@ -24,6 +28,7 @@ internal class YieldSupplyActiveModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val yieldSupplyGetProtocolBalanceUseCase: YieldSupplyGetProtocolBalanceUseCase,
+    private val yieldSupplyGetTokenStatusUseCase: YieldSupplyGetTokenStatusUseCase,
 ) : Model() {
 
     private val params: YieldSupplyActiveComponent.Params = paramsContainer.require()
@@ -87,6 +92,8 @@ internal class YieldSupplyActiveModel @Inject constructor(
                 null
             }
 
+            loadApy()
+
             uiState.update {
                 it.copy(
                     notificationUM = approvalNotification,
@@ -102,6 +109,21 @@ internal class YieldSupplyActiveModel @Inject constructor(
             }
         }.flowOn(dispatchers.default)
             .launchIn(modelScope)
+    }
+
+    private fun loadApy() {
+        val cryptoCurrencyToken = cryptoCurrency as? CryptoCurrency.Token ?: return
+        modelScope.launch(dispatchers.default) {
+            yieldSupplyGetTokenStatusUseCase(cryptoCurrencyToken).onRight { tokenStatus ->
+                uiState.update {
+                    it.copy(
+                        apy = TextReference.Str("${tokenStatus.apy}%"),
+                    )
+                }
+            }.onLeft {
+                Timber.e("Error loading token status")
+            }
+        }
     }
 
     private companion object {
