@@ -213,7 +213,8 @@ internal class TokenListStateConverter(
             ?.contractAddress
             ?.lowercase() ?: return null
 
-        return apyMap[contract]
+        val yieldSupplyKey = "${cryptoCurrencyStatus.currency.network.backendId}_$contract"
+        return apyMap[yieldSupplyKey]
     }
 
     private fun getOrganizeTokensButtonState(tokenList: TokenList): WalletOrganizeTokensButtonConfig? {
