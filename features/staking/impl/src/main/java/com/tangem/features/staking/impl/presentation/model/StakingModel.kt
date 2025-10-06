@@ -546,7 +546,7 @@ internal class StakingModel @Inject constructor(
         val rewardBlockType = yieldBalance?.reward?.rewardBlockType
         val rewardPendingActionConstraints = yieldBalance?.reward?.rewardConstraints
 
-        if (rewardBlockType == RewardBlockType.RewardsRequirementsError) {
+        if (rewardBlockType is RewardBlockType.RewardsRequirementsError) {
             val minimumAmount = rewardPendingActionConstraints?.amountArg?.minimum
             // Temporary fix, until StakeKit adds minimum requirement amount to balance response
             val minimumAmountValue = if (minimumAmount == null && yieldBalance.integrationId != null) {
