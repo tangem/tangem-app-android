@@ -31,6 +31,7 @@ internal class TokenReceiveAssetsComponent(
     internal interface TokenReceiveAssetsModelCallback {
         fun onQrCodeClick(address: String)
         fun onCopyClick(address: ReceiveAddress, source: TokenReceiveCopyActionSource)
+        fun onShareClick(address: String)
     }
 
     data class TokenReceiveAssetsParams(
