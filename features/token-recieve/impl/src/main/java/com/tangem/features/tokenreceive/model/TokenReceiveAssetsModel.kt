@@ -52,6 +52,7 @@ internal class TokenReceiveAssetsModel @Inject constructor(
                 notificationConfigs = params.notificationConfigs,
                 currencyIconState = params.currencyIconState,
                 network = params.tokenName,
+                onShareClick = params.callback::onShareClick,
             ),
         )
 
