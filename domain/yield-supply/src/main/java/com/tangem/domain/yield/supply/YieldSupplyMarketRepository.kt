@@ -1,6 +1,8 @@
 package com.tangem.domain.yield.supply
 
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.yield.supply.models.YieldMarketToken
+import com.tangem.domain.yield.supply.models.YieldMarketTokenStatus
 import com.tangem.domain.yield.supply.models.YieldSupplyMarketChartData
 import kotlinx.coroutines.flow.Flow
 
@@ -26,11 +28,11 @@ interface YieldSupplyMarketRepository {
      * Get yield token status by contract address.
      */
     @Throws
-    suspend fun getTokenStatus(contractAddress: String): YieldMarketToken
+    suspend fun getTokenStatus(cryptoCurrencyToken: CryptoCurrency.Token): YieldMarketTokenStatus
 
     /**
      * Get yield token APY chart by contract address.
      */
     @Throws
-    suspend fun getTokenChart(contractAddress: String): YieldSupplyMarketChartData
+    suspend fun getTokenChart(cryptoCurrencyToken: CryptoCurrency.Token): YieldSupplyMarketChartData
 }
