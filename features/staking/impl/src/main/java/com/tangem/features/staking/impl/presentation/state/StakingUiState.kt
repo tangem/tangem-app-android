@@ -68,7 +68,6 @@ internal sealed class StakingStates {
             override val isPrimaryButtonEnabled: Boolean,
             val showBanner: Boolean,
             val infoItems: ImmutableList<RoundedListWithDividersItemData>,
-            val aprRange: TextReference,
             val onInfoClick: (InfoType) -> Unit,
             val yieldBalance: InnerYieldBalanceState,
             val pullToRefreshConfig: PullToRefreshConfig,
