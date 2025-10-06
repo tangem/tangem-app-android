@@ -233,8 +233,12 @@ private fun StakingRewardBlock(
                 append(reward.rewardsCrypto.orMaskWithStars(isBalanceHidden))
             } to TangemTheme.colors.text.primary1
         }
-        RewardBlockType.RewardUnavailable -> {
+        RewardBlockType.RewardUnavailable.DefaultRewardUnavailable -> {
             resourceReference(R.string.staking_details_auto_claiming_rewards_daily_text) to
+                TangemTheme.colors.text.tertiary
+        }
+        RewardBlockType.RewardUnavailable.SolanaRewardUnavailable -> {
+            resourceReference(R.string.staking_soloana_details_auto_claiming_rewards_daily_text) to
                 TangemTheme.colors.text.tertiary
         }
         RewardBlockType.NoRewards -> {
