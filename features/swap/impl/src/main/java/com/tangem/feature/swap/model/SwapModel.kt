@@ -504,6 +504,7 @@ internal class SwapModel @Inject constructor(
                 receiveToken = receiveToken ?: "",
                 provider = provider,
                 errorCode = error.code,
+                errorMessage = error.message,
             ),
         )
     }
