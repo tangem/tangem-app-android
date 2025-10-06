@@ -6,9 +6,12 @@ import java.math.BigDecimal
 
 @JsonClass(generateAdapter = true)
 data class YieldTokenStatusResponse(
-    @Json(name = "tokenAddress") val tokenAddress: String,
-    @Json(name = "tokenSymbol") val tokenSymbol: String,
-    @Json(name = "tokenName") val tokenName: String,
-    @Json(name = "apy") val apy: BigDecimal,
-    @Json(name = "isActive") val isActive: Boolean,
+    @Json(name = "tokenAddress") val tokenAddress: String? = null,
+    @Json(name = "tokenSymbol") val tokenSymbol: String? = null,
+    @Json(name = "tokenName") val tokenName: String? = null,
+    @Json(name = "apy") val apy: BigDecimal? = null,
+    @Json(name = "isActive") val isActive: Boolean? = null,
+    @Json(name = "chainId") val chainId: Int? = null,
+    @Json(name = "maxFeeNative") val maxFeeNative: String? = null,
+    @Json(name = "maxFeeUSD") val maxFeeUSD: String? = null,
 )
