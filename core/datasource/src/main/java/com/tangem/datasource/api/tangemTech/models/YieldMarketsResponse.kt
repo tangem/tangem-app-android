@@ -12,10 +12,11 @@ data class YieldMarketsResponse(
 
     @JsonClass(generateAdapter = true)
     data class MarketDto(
-        @Json(name = "tokenAddress") val tokenAddress: String,
-        @Json(name = "tokenSymbol") val tokenSymbol: String,
-        @Json(name = "tokenName") val tokenName: String,
+        @Json(name = "tokenAddress") val tokenAddress: String? = null,
+        @Json(name = "tokenSymbol") val tokenSymbol: String? = null,
+        @Json(name = "tokenName") val tokenName: String? = null,
         @Json(name = "apy") val apy: BigDecimal,
         @Json(name = "isActive") val isActive: Boolean,
+        @Json(name = "chainId") val chainId: Int? = null,
     )
 }
