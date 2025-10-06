@@ -198,6 +198,7 @@ internal class ProdApiConfigsManagerTest {
                 environment = ApiEnvironment.PROD,
                 baseUrl = "https://yield.tangem.org/",
                 headers = mapOf(
+                    "Authorization" to ProviderSuspend { "Bearer " + MockEnvironmentConfigStorage.YIELD_MODULE_KEY },
                     "api-key" to ProviderSuspend { MockEnvironmentConfigStorage.TANGEM_API_KEY },
                     "card_id" to ProviderSuspend { APP_CARD_ID },
                     "card_public_key" to ProviderSuspend { APP_CARD_PUBLIC_KEY },
@@ -276,6 +277,6 @@ internal class ProdApiConfigsManagerTest {
         const val EXPRESS_SESSION_ID = "express_session_id"
         const val STAKE_KIT_API_KEY = "stake_kit_api_key"
         const val APP_CARD_ID = "app_card_id"
-        const val APP_CARD_PUBLIC_KEY = "app_public_key"
+        const val APP_CARD_PUBLIC_KEY = "Bearer app_public_key"
     }
 }
