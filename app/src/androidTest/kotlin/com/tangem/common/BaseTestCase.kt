@@ -136,6 +136,7 @@ abstract class BaseTestCase : TestCase(
         composeTestRule.onRoot(useUnmergedTree = useUnmergedTree).printToLog(tag, maxDepth)
     }
 
+    fun waitForIdle() = composeTestRule.waitForIdle()
 
     private fun setFeatureToggles() {
         runBlocking {
