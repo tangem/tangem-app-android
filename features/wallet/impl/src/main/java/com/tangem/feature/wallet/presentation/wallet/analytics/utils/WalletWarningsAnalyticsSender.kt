@@ -6,6 +6,7 @@ import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.domain.tokens.model.analytics.TokenSwapPromoAnalyticsEvent.*
 import com.tangem.domain.tokens.model.analytics.TokenSwapPromoAnalyticsEvent.Program
+import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent.MainScreen
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotification
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
@@ -70,7 +71,7 @@ internal class WalletWarningsAnalyticsSender @Inject constructor(
             -> null
             is WalletNotification.Critical.SeedPhraseNotification -> MainScreen.NoticeSeedPhraseSupport
             is WalletNotification.Critical.SeedPhraseSecondNotification -> MainScreen.NoticeSeedPhraseSupportSecond
-            is WalletNotification.PushNotifications -> null
+            is WalletNotification.PushNotifications -> WalletScreenAnalyticsEvent.PushBannerPromo.PushBanner
         }
     }
 }
