@@ -2,7 +2,7 @@ package com.tangem.utils
 
 import java.util.Locale
 
-object TangemLinks {
+object TangemBlogUrlBuilder {
 
     private const val RU_LOCALE = "ru"
     private const val EN_LOCALE = "en"
