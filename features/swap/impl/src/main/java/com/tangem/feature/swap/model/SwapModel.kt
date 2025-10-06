@@ -63,7 +63,7 @@ import com.tangem.feature.swap.ui.StateBuilder
 import com.tangem.feature.swap.utils.formatToUIRepresentation
 import com.tangem.features.swap.SwapComponent
 import com.tangem.utils.Provider
-import com.tangem.utils.TangemLinks.RESOURCE_TO_LEARN_ABOUT_APPROVING_IN_SWAP
+import com.tangem.utils.TangemBlogUrlBuilder.RESOURCE_TO_LEARN_ABOUT_APPROVING_IN_SWAP
 import com.tangem.utils.coroutines.*
 import com.tangem.utils.isNullOrZero
 import kotlinx.coroutines.NonCancellable
