@@ -18,8 +18,8 @@ class YieldSupplyApyFlowUseCase(
     operator fun invoke(): Flow<Map<String, String>> {
         return yieldSupplyMarketRepository.getMarketsFlow()
             .map { yieldMarketTokenList ->
-                yieldMarketTokenList.filter { it.isActive }.associate {
-                    it.tokenAddress to it.apy.toString()
+                yieldMarketTokenList.filter { it.isActive }.associate { token ->
+                    token.yieldSupplyKey to token.apy.toString()
                 }
             }
     }
