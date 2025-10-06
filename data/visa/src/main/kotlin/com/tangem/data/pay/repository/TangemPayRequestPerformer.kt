@@ -4,6 +4,7 @@ import arrow.core.Either
 import com.squareup.moshi.Moshi
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.core.error.UniversalError
+import com.tangem.data.common.network.NetworkFactory
 import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.common.response.getOrThrow
@@ -11,27 +12,22 @@ import com.tangem.datasource.api.pay.models.response.VisaErrorResponseJsonAdapte
 import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.local.visa.TangemPayStorage
 import com.tangem.domain.common.wallets.UserWalletsListRepository
-import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.networks.repository.NetworksRepository
 import com.tangem.domain.pay.datasource.TangemPayAuthDataSource
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.domain.visa.model.VisaAuthTokens
+import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.derivations.derivationStyleProvider
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlinx.coroutines.withContext
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -40,11 +36,12 @@ internal class TangemPayRequestPerformer @Inject constructor(
     @NetworkMoshi moshi: Moshi,
     private val dispatchers: CoroutineDispatcherProvider,
     private val tangemPayStorage: TangemPayStorage,
-    private val networksRepository: NetworksRepository,
     private val authDataSource: TangemPayAuthDataSource,
     private val userWalletsListManager: UserWalletsListManager,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
+    private val walletManagersFacade: WalletManagersFacade,
+    private val networkFactory: NetworkFactory,
 ) {
 
     private var customerWalletAddress: String? = null
@@ -152,20 +149,20 @@ internal class TangemPayRequestPerformer @Inject constructor(
         val wallet = userWallets.find { it is UserWallet.Cold } as? UserWallet.Cold
             ?: error("Cannot find cold user wallet")
 
-        val blockchain = Blockchain.Polygon
-        val derivationPath = getDerivationPath(blockchain, wallet)
-        val address = networksRepository.getNetworkAddresses(wallet.walletId, Network.RawID(blockchain.id))
-            .find { it.cryptoCurrency.network.derivationPath.value == derivationPath }?.address
+        val network = networkFactory.create(
+            blockchain = Blockchain.Polygon,
+            extraDerivationPath = null,
+            derivationStyleProvider = wallet.derivationStyleProvider,
+            canHandleTokens = true,
+        ) ?: error("Cannot create network")
+
+        val address = walletManagersFacade.getDefaultAddress(wallet.walletId, network)
             ?: error("Cannot get polygon address")
 
         customerWalletAddress = address
 
         return AuthInputData(address, wallet.cardId)
     }
-
-    private fun getDerivationPath(blockchain: Blockchain, wallet: UserWallet) =
-        blockchain.derivationPath(wallet.derivationStyleProvider.getDerivationStyle())?.rawPath
-            ?: error("Cannot get derivation path")
 
     private suspend fun fetchTokens(): VisaAuthTokens {
         val inputData = fetchAuthInputData()
