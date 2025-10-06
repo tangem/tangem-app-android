@@ -29,7 +29,7 @@ import com.tangem.features.send.v2.api.subcomponents.feeSelector.FeeSelectorRelo
 import com.tangem.features.send.v2.api.subcomponents.feeSelector.analytics.CommonSendFeeAnalyticEvents
 import com.tangem.features.send.v2.api.subcomponents.feeSelector.analytics.CommonSendFeeAnalyticEvents.GasPriceInserter
 import com.tangem.features.send.v2.feeselector.model.transformers.*
-import com.tangem.utils.TangemLinks
+import com.tangem.utils.TangemBlogUrlBuilder
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.transformer.update
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -77,7 +77,7 @@ internal class FeeSelectorModel @Inject constructor(
     }
 
     fun onReadMoreClicked() {
-        urlOpener.openUrl(TangemLinks.FEE_BLOG_LINK)
+        urlOpener.openUrl(TangemBlogUrlBuilder.FEE_BLOG_LINK)
     }
 
     private fun initAppCurrency() {
