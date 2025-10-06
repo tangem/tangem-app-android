@@ -19,6 +19,7 @@ internal class MockEnvironmentConfigStorage : EnvironmentConfigStorage {
         tangemApiKey = TANGEM_API_KEY,
         tangemApiKeyDev = TANGEM_API_KEY_DEV,
         tangemApiKeyStage = TANGEM_API_KEY_STAGE,
+        yieldModuleApiKey = YIELD_MODULE_KEY,
     )
 
     override suspend fun initialize() = environmentConfig
@@ -32,5 +33,6 @@ internal class MockEnvironmentConfigStorage : EnvironmentConfigStorage {
         const val TANGEM_API_KEY = "tangem_api_key"
         const val TANGEM_API_KEY_DEV = "tangem_api_key_dev"
         const val TANGEM_API_KEY_STAGE = "tangem_api_key_stage"
+        const val YIELD_MODULE_KEY = "yield_module_api_key"
     }
 }
