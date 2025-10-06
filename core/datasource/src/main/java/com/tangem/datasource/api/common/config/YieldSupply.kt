@@ -41,47 +41,32 @@ internal class YieldSupply(
     private fun createDevEnvironment(): ApiEnvironmentConfig = ApiEnvironmentConfig(
         environment = ApiEnvironment.DEV,
         baseUrl = "[REDACTED_ENV_URL]",
-        headers = createHeaders(ApiEnvironment.DEV),
+        headers = createHeaders(),
     )
 
     private fun createStageEnvironment(): ApiEnvironmentConfig = ApiEnvironmentConfig(
         environment = ApiEnvironment.STAGE,
         baseUrl = "[REDACTED_ENV_URL]",
-        headers = createHeaders(ApiEnvironment.STAGE),
+        headers = createHeaders(),
     )
 
     private fun createMockedEnvironment(): ApiEnvironmentConfig = ApiEnvironmentConfig(
         environment = ApiEnvironment.MOCK,
         baseUrl = "[REDACTED_ENV_URL]",
-        headers = createHeaders(ApiEnvironment.MOCK),
+        headers = createHeaders(),
     )
 
     private fun createProdEnvironment(): ApiEnvironmentConfig = ApiEnvironmentConfig(
         environment = ApiEnvironment.PROD,
         baseUrl = "https://yield.tangem.org/",
-        headers = createHeaders(ApiEnvironment.PROD),
+        headers = createHeaders(),
     )
 
-    private fun createHeaders(apiEnvironment: ApiEnvironment) = buildMap {
-        put(
-            key = "Authorization",
-            value = ProviderSuspend {
-                "Bearer " + environmentConfigStorage.getConfigSync().yieldModuleApiKey
-            },
-        )
-        put(key = "api-key", value = ProviderSuspend { getApiKey(apiEnvironment) })
+    private fun createHeaders() = buildMap {
+        put(key = "api-key", value = ProviderSuspend {
+            environmentConfigStorage.getConfigSync().yieldModuleApiKey.orEmpty()
+        })
         putAll(from = RequestHeader.AppVersionPlatformHeaders(appVersionProvider, appInfoProvider).values)
         putAll(from = RequestHeader.AuthenticationHeader(authProvider).values)
-    }
-
-    private fun getApiKey(apiEnvironment: ApiEnvironment): String {
-        return when (apiEnvironment) {
-            ApiEnvironment.MOCK,
-            ApiEnvironment.DEV,
-            ApiEnvironment.DEV_2,
-            -> environmentConfigStorage.getConfigSync().tangemApiKeyDev
-            ApiEnvironment.STAGE -> environmentConfigStorage.getConfigSync().tangemApiKeyStage
-            ApiEnvironment.PROD -> environmentConfigStorage.getConfigSync().tangemApiKey
-        } ?: error("No tangem tech api config provided")
     }
 }
