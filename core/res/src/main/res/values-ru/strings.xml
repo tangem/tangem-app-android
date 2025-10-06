@@ -1266,8 +1266,12 @@
   <string name="unlock_wallet_description_full">Используйте %s или отсканируйте карту/кольцо, чтобы получить доступ к своему кошельку</string>
   <string name="unsupported_wc_version">Соединение не удалось: это dApp использует Wallet Connect версии 1.0, которая не поддерживается. Убедитесь, что dApp поддерживает Wallet Connect версии 2.0 для успешного подключения.</string>
   <string name="user_push_notification_agreement_argument_one">Будьте в курсе новых функций и новостей</string>
+  <string name="user_push_notification_agreement_argument_one_subtitle">Мгновенные уведомления о транзакциях, обменах и важных обновлениях.</string>
+  <string name="user_push_notification_agreement_argument_one_title">Уведомления о транзакциях</string>
   <string name="user_push_notification_agreement_argument_three">Получайте уведомления о входящих транзакциях</string>
   <string name="user_push_notification_agreement_argument_two">Узнавайте первым о новых акциях</string>
+  <string name="user_push_notification_agreement_argument_two_subtitle">Ранний доступ к новым функциям и эксклюзивным предложениям.</string>
+  <string name="user_push_notification_agreement_argument_two_title">Новые функции и важные новости</string>
   <string name="user_push_notification_agreement_header">Хотите использовать Push-уведомления?</string>
   <string name="user_wallet_list_add_button">Добавить новый кошелек</string>
   <string name="user_wallet_list_delete_prompt">Вы уверены, что хотите забыть этот кошелек?</string>
