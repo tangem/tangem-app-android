@@ -10,6 +10,7 @@ internal data class ReceiveAssetsUM(
     val addresses: ImmutableList<ReceiveAddress>,
     val onOpenQrCodeClick: (address: String) -> Unit,
     val onCopyClick: (address: ReceiveAddress) -> Unit,
+    val onShareClick: (address: String) -> Unit,
     val isEnsResultLoading: Boolean,
     val currencyIconState: CurrencyIconState,
     val network: String,
