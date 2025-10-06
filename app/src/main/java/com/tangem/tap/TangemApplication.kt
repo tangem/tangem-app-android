@@ -290,7 +290,7 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
     /**
      * Initialize components that need to be initialized before [super.onCreate] is called
      */
-    private fun preInit() {
+    fun preInit() {
         tangemAppLoggerInitializer.initialize()
         registerActivityLifecycleCallbacks(foregroundActivityObserver.callbacks)
     }
