@@ -27,18 +27,20 @@ internal class DefaultYieldSupplyMarketRepository(
 ) : YieldSupplyMarketRepository {
 
     override suspend fun getCachedMarkets(): List<YieldMarketToken>? = withContext(dispatchers.io) {
-        store.getSyncOrNull()?.enrichNetworkIds()
+        val cache = store.getSyncOrNull().orEmpty()
+        val domain = cache.map(YieldMarketTokenConverter::convert)
+        domain.enrichNetworkIds()
     }
 
     override suspend fun updateMarkets(): List<YieldMarketToken> = withContext(dispatchers.io) {
         val response = yieldSupplyApi.getYieldMarkets().getOrThrow()
         val domain = response.marketDtos.map(YieldMarketTokenConverter::convert)
-        store.store(domain)
+        store.store(response.marketDtos)
         domain
     }
 
     override fun getMarketsFlow(): Flow<List<YieldMarketToken>> = store.get().map {
-        it.enrichNetworkIds()
+        it.map(YieldMarketTokenConverter::convert).enrichNetworkIds()
     }
 
     override suspend fun getTokenStatus(cryptoCurrencyToken: CryptoCurrency.Token): YieldMarketTokenStatus {
