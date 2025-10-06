@@ -29,7 +29,7 @@ fun BaseTestCase.scanCard(
     }
     if (alreadyActivatedDialogIsShown) {
         step("Click on 'This is my wallet' button") {
-            composeTestRule.waitForIdle()
+            waitForIdle()
             AlreadyUsedWalletDialogPageObject { thisIsMyWalletButton.click() }
         }
     }
@@ -76,6 +76,7 @@ fun BaseTestCase.synchronizeAddresses(balance: String) {
 
 fun BaseTestCase.openDeviceSettingsScreen() {
     step("Open wallet details") {
+        waitForIdle()
         onTopBar { moreButton.clickWithAssertion() }
     }
     step("Open 'Wallet settings' screen") {
