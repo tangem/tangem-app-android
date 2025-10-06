@@ -41,7 +41,7 @@ internal fun PushNotificationsBottomSheet(config: TangemBottomSheetConfig, conte
 @Composable
 internal fun PushNotificationsContent(
     onAllowClick: () -> Unit,
-    onLaterClick: () -> Unit,
+    onLaterClick: (isFromBs: Boolean) -> Unit,
     onAllowPermission: () -> Unit,
     onDenyPermission: () -> Unit,
 ) {
@@ -78,7 +78,7 @@ internal fun PushNotificationsContent(
             },
             secondaryButtonText = resourceReference(R.string.common_later),
             onSecondaryClick = {
-                onLaterClick()
+                onLaterClick(true)
             },
         )
     }
