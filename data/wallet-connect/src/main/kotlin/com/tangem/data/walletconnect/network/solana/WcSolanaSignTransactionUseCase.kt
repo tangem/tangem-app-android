@@ -21,6 +21,7 @@ import com.tangem.domain.walletconnect.usecase.method.BlockAidTransactionCheck
 import com.tangem.domain.walletconnect.usecase.method.SignRequirements
 import com.tangem.domain.walletconnect.usecase.method.WcSignState
 import com.tangem.domain.walletconnect.usecase.method.WcTransactionUseCase
+import com.tangem.lib.crypto.BlockchainUtils.SOLANA_TRANSACTION_SIZE_THRESHOLD_BYTES
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -107,7 +108,7 @@ internal class WcSolanaSignTransactionUseCase @AssistedInject constructor(
     }
 
     private fun isLargeHash(hash: ByteArray): Boolean {
-        return hash.size > LARGE_HASH_SIZE
+        return hash.size > SOLANA_TRANSACTION_SIZE_THRESHOLD_BYTES
     }
 
     private fun getFormattedHash(hash: ByteArray): ByteArray {
@@ -122,10 +123,6 @@ internal class WcSolanaSignTransactionUseCase @AssistedInject constructor(
     override fun isMultipleSignRequired(): Boolean {
         val data = method.transaction.decodeBase64()?.toByteArray() ?: ByteArray(0)
         return isLargeHash(data)
-    }
-
-    private companion object {
-        private const val LARGE_HASH_SIZE = 930 // bytes
     }
 
     @AssistedFactory
