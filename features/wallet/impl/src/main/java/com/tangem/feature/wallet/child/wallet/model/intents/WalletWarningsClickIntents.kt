@@ -44,6 +44,7 @@ import com.tangem.domain.wallets.usecase.SeedPhraseNotificationUseCase
 import com.tangem.domain.wallets.usecase.UnlockWalletsUseCase
 import com.tangem.feature.wallet.child.wallet.model.WalletActivationBannerType
 import com.tangem.feature.wallet.impl.R
+import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent.Basic
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent.MainScreen
 import com.tangem.feature.wallet.presentation.wallet.domain.ScanCardToUnlockWalletClickHandler
@@ -55,6 +56,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.WalletEvent
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.CloseBottomSheetTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
+import com.tangem.features.pushnotifications.api.analytics.PushNotificationAnalyticEvents
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -474,19 +476,33 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     }
 
     override fun onAllowPermissions() {
+        analyticsEventHandler.send(WalletScreenAnalyticsEvent.PushBannerPromo.ButtonAllowPush)
         if (isNotificationsPermissionGranted()) {
             updateSubscribeOnPushPermissions(true)
         } else {
             walletEventSender.send(
                 event = WalletEvent.RequestPushPermissions(
-                    onAllow = { updateSubscribeOnPushPermissions(true) },
-                    onDeny = { updateSubscribeOnPushPermissions(false) },
+                    onAllow = {
+                        updateSubscribeOnPushPermissions(true)
+                        analyticsEventHandler.send(
+                            PushNotificationAnalyticEvents.PermissionStatus(isAllowed = true),
+                        )
+                    },
+                    onDeny = {
+                        updateSubscribeOnPushPermissions(false)
+                        analyticsEventHandler.send(
+                            PushNotificationAnalyticEvents.PermissionStatus(isAllowed = false),
+                        )
+                    },
                 ),
             )
         }
     }
 
-    override fun onDenyPermissions() = updateSubscribeOnPushPermissions(false)
+    override fun onDenyPermissions() {
+        analyticsEventHandler.send(WalletScreenAnalyticsEvent.PushBannerPromo.ButtonLaterPush)
+        updateSubscribeOnPushPermissions(false)
+    }
 
     private fun updateSubscribeOnPushPermissions(shouldAllow: Boolean) {
         modelScope.launch {
