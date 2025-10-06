@@ -1,6 +1,8 @@
 package com.tangem.scenarios
 
 import com.tangem.common.BaseTestCase
+import com.tangem.common.extensions.SwipeDirection
+import com.tangem.common.extensions.swipeVertical
 import com.tangem.screens.onMainScreen
 import io.qameta.allure.kotlin.Allure.step
 
@@ -42,6 +44,9 @@ fun BaseTestCase.checkSingleCurrencyMainScreen(
     }
     step("Assert 'Market Price' title equals $cardBlockchain Market Price") {
         onMainScreen { marketPriceText.assertTextContains("$cardBlockchain Market Price") }
+    }
+    step("Swipe up") {
+        swipeVertical(SwipeDirection.UP)
     }
     if (withTransactions) {
         step("Assert 'Transactions' block is displayed") {
