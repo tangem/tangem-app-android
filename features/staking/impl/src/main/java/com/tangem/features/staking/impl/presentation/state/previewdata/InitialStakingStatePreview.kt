@@ -68,7 +68,7 @@ internal object InitialStakingStatePreview {
             reward = YieldReward(
                 rewardsFiat = "100 $",
                 rewardsCrypto = "100 SOL",
-                rewardBlockType = RewardBlockType.RewardUnavailable,
+                rewardBlockType = RewardBlockType.RewardUnavailable.DefaultRewardUnavailable,
                 rewardConstraints = null,
             ),
             isActionable = true,
