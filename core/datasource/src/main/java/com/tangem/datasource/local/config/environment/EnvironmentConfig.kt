@@ -20,4 +20,5 @@ data class EnvironmentConfig(
     val tangemApiKey: String? = null,
     val tangemApiKeyDev: String? = null,
     val tangemApiKeyStage: String? = null,
+    val yieldModuleApiKey: String? = null,
 )
