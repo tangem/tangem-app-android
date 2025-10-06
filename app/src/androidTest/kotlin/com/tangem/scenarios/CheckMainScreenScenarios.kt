@@ -1,7 +1,6 @@
 package com.tangem.scenarios
 
 import com.tangem.common.BaseTestCase
-import com.tangem.common.extensions.assertElementDoesNotExist
 import com.tangem.screens.onMainScreen
 import io.qameta.allure.kotlin.Allure.step
 
@@ -13,30 +12,6 @@ fun BaseTestCase.checkSingleCurrencyMainScreen(
 ) {
     step("Assert card title equal '$cardTitle'") {
         onMainScreen { walletNameText.assertTextEquals(cardTitle) }
-    }
-    if (withTransactions) {
-        step("Assert 'Transactions' block is displayed") {
-            onMainScreen { transactionsExplorerText().assertExists() }
-        }
-        step("Assert 'Transactions' title is displayed") {
-            onMainScreen { transactionsTitle.assertIsDisplayed() }
-        }
-        step("Assert 'Explorer' icon is displayed") {
-            onMainScreen { transactionsExplorerIcon.assertIsDisplayed() }
-        }
-    } else {
-        step("Assert empty 'Transactions' block is displayed") {
-            onMainScreen { emptyTransactionBlock.assertIsDisplayed() }
-        }
-        step("Assert empty 'Transactions' block icon is displayed") {
-            onMainScreen { emptyTransactionBlockIcon.assertIsDisplayed() }
-        }
-        step("Assert empty 'Transactions' block text is displayed") {
-            onMainScreen { emptyTransactionBlockText.assertIsDisplayed() }
-        }
-        step("Assert empty 'Transactions' block 'Explore' button is displayed") {
-            onMainScreen { emptyTransactionBlockExploreButton.assertIsDisplayed() }
-        }
     }
     if (withWalletImage) {
         step("Assert card image is displayed") { //TODO: create assertion method for checking images
@@ -63,15 +38,37 @@ fun BaseTestCase.checkSingleCurrencyMainScreen(
         onMainScreen { swapButton.assertIsNotDisplayed() }
     }
     step("Assert 'Market Price' on single card main screen is displayed") {
-        onMainScreen { marketPriceBlock.assertIsDisplayed() }
+        onMainScreen { marketPriceBlock().assertIsDisplayed() }
     }
     step("Assert 'Market Price' title equals $cardBlockchain Market Price") {
         onMainScreen { marketPriceText.assertTextContains("$cardBlockchain Market Price") }
     }
-    step("Assert 'Organize tokens' button is not displayed") {
-        onMainScreen {
-            assertElementDoesNotExist({ organizeTokensButtonWithoutLazySearch() }, "Organize tokens button")
+    if (withTransactions) {
+        step("Assert 'Transactions' block is displayed") {
+            onMainScreen { transactionsExplorerText.assertIsDisplayed() }
         }
+        step("Assert 'Transactions' title is displayed") {
+            onMainScreen { transactionsTitle.assertIsDisplayed() }
+        }
+        step("Assert 'Explorer' icon is displayed") {
+            onMainScreen { transactionsExplorerIcon.assertIsDisplayed() }
+        }
+    } else {
+        step("Assert empty 'Transactions' block is displayed") {
+            onMainScreen { emptyTransactionBlock.assertIsDisplayed() }
+        }
+        step("Assert empty 'Transactions' block icon is displayed") {
+            onMainScreen { emptyTransactionBlockIcon.assertIsDisplayed() }
+        }
+        step("Assert empty 'Transactions' block text is displayed") {
+            onMainScreen { emptyTransactionBlockText.assertIsDisplayed() }
+        }
+        step("Assert empty 'Transactions' block 'Explore' button is displayed") {
+            onMainScreen { emptyTransactionBlockExploreButton.assertIsDisplayed() }
+        }
+    }
+    step("Assert 'Organize tokens' button is not displayed") {
+        onMainScreen { organizeTokensButtonWithoutLazySearch.assertIsNotDisplayed() }
     }
 }
 
