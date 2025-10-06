@@ -41,6 +41,8 @@ class EnvironmentConfigModel(
     @Json(name = "nftScanApiKey") val nftScanApiKey: String?,
     @Json(name = "blockaidApiKey") val blockaidApiKey: String?,
     @Json(name = "etherscanApiKey") val etherScanApiKey: String?,
+    @Json(name = "yieldModuleApiKey") val yieldModuleApiKey: String?,
+    @Json(name = "blinkApiKey") val blinkApiKey: String?,
 )
 
 @JsonClass(generateAdapter = true)
