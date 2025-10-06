@@ -83,9 +83,12 @@ class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider)
         useUnmergedTree = true
     }
 
-    val marketPriceBlock: KNode = child {
-        hasTestTag(MarketPriceBlockTestTags.BLOCK)
-        useUnmergedTree = true
+    @OptIn(ExperimentalTestApi::class)
+    fun marketPriceBlock(): LazyListItemNode {
+        return lazyList.childWith<LazyListItemNode> {
+            hasTestTag(MarketPriceBlockTestTags.BLOCK)
+            useUnmergedTree = true
+        }
     }
 
     val marketPriceText: KNode = child {
@@ -104,12 +107,10 @@ class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider)
         useUnmergedTree = true
     }
 
-    fun transactionsExplorerText(): KNode {
-        return child {
-            hasTestTag(TransactionHistoryBlockTestTags.EXPLORER_TEXT)
-            hasText(getResourceString(R.string.common_explorer))
-            useUnmergedTree = true
-        }
+    val transactionsExplorerText: KNode = child {
+        hasTestTag(TransactionHistoryBlockTestTags.EXPLORER_TEXT)
+        hasText(getResourceString(R.string.common_explorer))
+        useUnmergedTree = true
     }
 
     val emptyTransactionBlock: KNode = child {
@@ -223,12 +224,10 @@ class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider)
         }
     }
 
-    fun organizeTokensButtonWithoutLazySearch(): KNode {
-        return child {
-            hasTestTag(MainScreenTestTags.ORGANIZE_TOKENS_BUTTON)
-            hasText(getResourceString(R.string.organize_tokens_title))
-            useUnmergedTree = true
-        }
+    val organizeTokensButtonWithoutLazySearch: KNode = child {
+        hasTestTag(MainScreenTestTags.ORGANIZE_TOKENS_BUTTON)
+        hasText(getResourceString(R.string.organize_tokens_title))
+        useUnmergedTree = true
     }
 
     fun tokenNetworkGroupTitle(tokenNetwork: String): KNode {
