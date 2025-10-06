@@ -7,14 +7,13 @@ import kotlinx.serialization.Serializable
  * Domain model representing a token entry in the Yield Markets list.
  */
 @Serializable
-data class YieldMarketToken(
+data class YieldMarketTokenStatus(
     val tokenAddress: String,
+    val tokenSymbol: String,
+    val tokenName: String,
     val chainId: Int,
     val apy: SerializedBigDecimal,
     val isActive: Boolean,
-    val backendId: String? = null,
-) {
-
-    val yieldSupplyKey: String
-        get() = "${backendId}_$tokenAddress"
-}
+    val maxFeeNative: String,
+    val maxFeeUSD: String,
+)
