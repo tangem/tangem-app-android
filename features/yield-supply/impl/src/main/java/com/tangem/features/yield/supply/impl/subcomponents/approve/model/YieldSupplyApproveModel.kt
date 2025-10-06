@@ -30,7 +30,7 @@ import com.tangem.features.yield.supply.impl.subcomponents.notifications.YieldSu
 import com.tangem.features.yield.supply.impl.subcomponents.notifications.YieldSupplyNotificationsUpdateTrigger
 import com.tangem.features.yield.supply.impl.subcomponents.notifications.entity.YieldSupplyNotificationData
 import com.tangem.utils.StringsSigns.DOT
-import com.tangem.utils.TangemLinks
+import com.tangem.utils.TangemBlogUrlBuilder
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.transformer.update
 import kotlinx.collections.immutable.persistentListOf
@@ -101,7 +101,7 @@ internal class YieldSupplyApproveModel @Inject constructor(
     }
 
     fun onReadMoreClick() {
-        urlOpener.openUrl(TangemLinks.FEE_BLOG_LINK)
+        urlOpener.openUrl(TangemBlogUrlBuilder.FEE_BLOG_LINK)
     }
 
     override fun onFeeReload() {
