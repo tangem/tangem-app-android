@@ -110,7 +110,7 @@ internal class YieldSupplyModel @Inject constructor(
                         YieldSupplyUM.Initial(
                             title = resourceReference(
                                 id = R.string.yield_module_token_details_earn_notification_title,
-                                formatArgs = wrappedList("5.1"),
+                                formatArgs = wrappedList(tokenStatus.apy),
                             ),
                             onClick = ::onStartEarningClick,
                         )
