@@ -48,7 +48,7 @@ data class TangemPayTxHistoryResponse(
         @Json(name = "status") val status: String,
         @Json(name = "declined_reason") val declinedReason: String? = null,
         @Json(name = "authorized_at") val authorizedAt: DateTime,
-        @Json(name = "posted_at") val postedAt: DateTime,
+        @Json(name = "posted_at") val postedAt: DateTime?,
     )
 
     @JsonClass(generateAdapter = true)
