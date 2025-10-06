@@ -88,4 +88,24 @@ internal object YieldSupplyDomainModule {
             yieldSupplyMarketRepository = yieldSupplyMarketRepository,
         )
     }
+
+    @Provides
+    @Singleton
+    fun provideYieldSupplyGetApyUseCase(
+        yieldSupplyMarketRepository: YieldSupplyMarketRepository,
+    ): YieldSupplyGetApyUseCase {
+        return YieldSupplyGetApyUseCase(
+            yieldSupplyMarketRepository = yieldSupplyMarketRepository,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideYieldSupplyGetChartUseCase(
+        yieldSupplyMarketRepository: YieldSupplyMarketRepository,
+    ): YieldSupplyGetChartUseCase {
+        return YieldSupplyGetChartUseCase(
+            yieldSupplyMarketRepository = yieldSupplyMarketRepository,
+        )
+    }
 }
