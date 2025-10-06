@@ -87,12 +87,13 @@ class FeedbackTest : BaseTestCase() {
                 onSendScreen { nextButton.clickWithAssertion() }
             }
             step("Enter address") {
-                onSendAddressScreen { addressTextField.performTextReplacement(recipientAddress) }
+                onSendAddressScreen { addressTextField.performTextInput(recipientAddress) }
             }
             step("Click 'Next' button") {
                 onSendAddressScreen { nextButton.clickWithAssertion() }
             }
             step("Click 'Send' button") {
+                waitForIdle()
                 onSendConfirmScreen {
                     sendButton.assertIsEnabled()
                     sendButton.performClick()
@@ -138,6 +139,7 @@ class FeedbackTest : BaseTestCase() {
                 }
             }
             step("Check 'Scan warning' dialog") {
+                waitForIdle()
                 checkScanWarningDialog()
             }
             step("Click on 'Request support' button") {
