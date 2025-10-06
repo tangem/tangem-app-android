@@ -11,8 +11,8 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
-import com.tangem.core.ui.decompose.EmptyComposableBottomSheetComponent
 import com.tangem.features.yield.supply.api.YieldSupplyPromoComponent
+import com.tangem.features.yield.supply.impl.apy.YieldSupplyApyComponent
 import com.tangem.features.yield.supply.impl.promo.model.YieldSupplyPromoModel
 import com.tangem.features.yield.supply.impl.promo.ui.YieldSupplyPromoContent
 import com.tangem.features.yield.supply.impl.subcomponents.startearning.YieldSupplyStartEarningEntryComponent
@@ -52,7 +52,15 @@ internal class DefaultYieldSupplyPromoComponent @AssistedInject constructor(
         config: YieldSupplyPromoConfig,
         componentContext: ComponentContext,
     ): ComposableBottomSheetComponent = when (config) {
-        YieldSupplyPromoConfig.Apy -> EmptyComposableBottomSheetComponent
+        YieldSupplyPromoConfig.Apy -> YieldSupplyApyComponent(
+            appComponentContext = childByContext(componentContext),
+            params = YieldSupplyApyComponent.Params(
+                cryptoCurrency = params.currency,
+                onBackClick = {
+                    model.bottomSheetNavigation.dismiss()
+                },
+            ),
+        )
         YieldSupplyPromoConfig.Action -> YieldSupplyStartEarningEntryComponent(
             appComponentContext = childByContext(componentContext),
             params = YieldSupplyStartEarningEntryComponent.Params(
