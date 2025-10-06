@@ -916,6 +916,7 @@
   <string name="organize_tokens_sort_by_balance">By balance</string>
   <string name="organize_tokens_title">Organize tokens</string>
   <string name="organize_tokens_ungroup">Ungroup</string>
+  <string name="provider_name_support">%s support</string>
   <string name="push_notifications_more_info">More info</string>
   <string name="push_notifications_permission_alert_description">You can enable Notifications for Tangem in Settings.</string>
   <string name="push_notifications_permission_alert_negative_button">Enable Later</string>
