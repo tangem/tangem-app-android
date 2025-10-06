@@ -63,6 +63,12 @@ internal class YieldSupply(
     )
 
     private fun createHeaders(apiEnvironment: ApiEnvironment) = buildMap {
+        put(
+            key = "Authorization",
+            value = ProviderSuspend {
+                "Bearer " + environmentConfigStorage.getConfigSync().yieldModuleApiKey
+            },
+        )
         put(key = "api-key", value = ProviderSuspend { getApiKey(apiEnvironment) })
         putAll(from = RequestHeader.AppVersionPlatformHeaders(appVersionProvider, appInfoProvider).values)
         putAll(from = RequestHeader.AuthenticationHeader(authProvider).values)
