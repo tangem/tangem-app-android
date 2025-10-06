@@ -72,7 +72,10 @@ class ExpressStatusBottomSheetStateProvider : PreviewParameterProvider<ExpressSt
                             isDone = false,
                         ),
                     ),
-                    notification = ExchangeStatusNotification.LongTimeExchange {},
+                    notification = ExchangeStatusNotification.LongTimeExchange(
+                        onGoToProviderClick = {},
+                        providerName = "Unlimit",
+                    ),
                     showProviderLink = false,
                     fromCryptoCurrency = token,
                     toCryptoCurrency = token,
