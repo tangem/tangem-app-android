@@ -22,7 +22,8 @@ internal object TangemPayTxHistoryItemConverter :
     private fun convertSpend(id: String, spend: TangemPayTxHistoryResponse.Spend): TangemPayTxHistoryItem.Spend {
         return TangemPayTxHistoryItem.Spend(
             id = id,
-            date = spend.postedAt,
+            // If postedAt is null, it means transaction wasn't posted and was likely declined. Use authorizedAt
+            date = spend.postedAt ?: spend.authorizedAt,
             amount = spend.amount,
             currency = Currency.getInstance(spend.currency),
             enrichedMerchantName = spend.enrichedMerchantName,
