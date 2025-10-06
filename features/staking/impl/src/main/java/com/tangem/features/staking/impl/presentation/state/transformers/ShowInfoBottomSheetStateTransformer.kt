@@ -23,6 +23,10 @@ internal class ShowInfoBottomSheetStateTransformer(
                         title = resourceReference(R.string.staking_details_annual_percentage_rate),
                         text = resourceReference(R.string.staking_details_annual_percentage_rate_info),
                     )
+                    InfoType.ANNUAL_PERCENTAGE_YIELD -> StakingInfoBottomSheetConfig(
+                        title = resourceReference(R.string.staking_details_annual_percentage_yield),
+                        text = resourceReference(R.string.staking_details_annual_percentage_yield_info),
+                    )
                     InfoType.UNBONDING_PERIOD -> StakingInfoBottomSheetConfig(
                         title = resourceReference(R.string.staking_details_unbonding_period),
                         text = resourceReference(R.string.staking_details_unbonding_period_info),
