@@ -198,8 +198,7 @@ internal class ProdApiConfigsManagerTest {
                 environment = ApiEnvironment.PROD,
                 baseUrl = "https://yield.tangem.org/",
                 headers = mapOf(
-                    "Authorization" to ProviderSuspend { "Bearer " + MockEnvironmentConfigStorage.YIELD_MODULE_KEY },
-                    "api-key" to ProviderSuspend { MockEnvironmentConfigStorage.TANGEM_API_KEY },
+                    "api-key" to ProviderSuspend { MockEnvironmentConfigStorage.YIELD_MODULE_KEY },
                     "card_id" to ProviderSuspend { APP_CARD_ID },
                     "card_public_key" to ProviderSuspend { APP_CARD_PUBLIC_KEY },
                     "version" to ProviderSuspend { VERSION_NAME },
