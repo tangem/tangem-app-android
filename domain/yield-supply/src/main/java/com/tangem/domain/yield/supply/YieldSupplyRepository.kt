@@ -38,4 +38,23 @@ interface YieldSupplyRepository {
     suspend fun getTokenChart(cryptoCurrencyToken: CryptoCurrency.Token): YieldSupplyMarketChartData
 
     suspend fun isYieldSupplySupported(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): Boolean
+
+    /**
+     * Activate yield protocol for the specified token.
+     *
+     * Returns whether the token is active after the operation completes.
+     * May throw on network/backend errors or if required chain id cannot be resolved.
+     */
+    @Throws
+    suspend fun activateProtocol(cryptoCurrencyToken: CryptoCurrency.Token): Boolean
+
+    /**
+     * Deactivate yield protocol for the specified token.
+     *
+     * Returns whether the token is active after the operation completes
+     * (expected to be false when deactivation succeeds). May throw on
+     * network/backend errors or if required chain id cannot be resolved.
+     */
+    @Throws
+    suspend fun deactivateProtocol(cryptoCurrencyToken: CryptoCurrency.Token): Boolean
 }
