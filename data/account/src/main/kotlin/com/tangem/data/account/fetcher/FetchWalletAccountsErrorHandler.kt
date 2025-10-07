@@ -87,7 +87,7 @@ internal class FetchWalletAccountsErrorHandler @Inject constructor(
     }
 
     private fun createDefaultAccountDTOs(userWallet: UserWallet): List<WalletAccountDTO> {
-        val accounts = AccountList.empty(userWallet).accounts
+        val accounts = AccountList.empty(userWallet.walletId).accounts
             .filterIsInstance<Account.CryptoPortfolio>()
 
         val converter = cryptoPortfolioCF.create(userWallet = userWallet)
