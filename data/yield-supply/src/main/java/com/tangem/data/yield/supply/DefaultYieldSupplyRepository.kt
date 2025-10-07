@@ -11,6 +11,7 @@ import com.tangem.data.yield.supply.converters.YieldMarketTokenConverter
 import com.tangem.datasource.api.tangemTech.YieldSupplyApi
 import com.tangem.data.yield.supply.converters.YieldTokenStatusConverter
 import com.tangem.data.yield.supply.converters.YieldTokenChartConverter
+import com.tangem.datasource.api.tangemTech.models.YieldSupplyChangeTokenStatusBody
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.walletmanager.WalletManagersFacade
@@ -71,6 +72,30 @@ internal class DefaultYieldSupplyRepository(
             ) ?: error("Wallet manager not found")
 
             (walletManager as? YieldSupplyProvider)?.isSupported() ?: false
+        }
+
+    override suspend fun activateProtocol(cryptoCurrencyToken: CryptoCurrency.Token): Boolean =
+        withContext(dispatchers.io) {
+            val chainId = Blockchain.fromNetworkId(cryptoCurrencyToken.network.backendId)?.getChainId()
+                ?: error("Chain id is required for evm's")
+            yieldSupplyApi.activateYieldModule(
+                YieldSupplyChangeTokenStatusBody(
+                    tokenAddress = cryptoCurrencyToken.contractAddress,
+                    chainId = chainId,
+                ),
+            ).getOrThrow().isActive
+        }
+
+    override suspend fun deactivateProtocol(cryptoCurrencyToken: CryptoCurrency.Token): Boolean =
+        withContext(dispatchers.io) {
+            val chainId = Blockchain.fromNetworkId(cryptoCurrencyToken.network.backendId)?.getChainId()
+                ?: error("Chain id is required for evm's")
+            yieldSupplyApi.deactivateYieldModule(
+                YieldSupplyChangeTokenStatusBody(
+                    tokenAddress = cryptoCurrencyToken.contractAddress,
+                    chainId = chainId,
+                ),
+            ).getOrThrow().isActive
         }
 
     private fun List<YieldMarketToken>.enrichNetworkIds(): List<YieldMarketToken> {
