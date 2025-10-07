@@ -140,7 +140,7 @@ internal class AccountsViewModel @Inject constructor(
 
             // It's temporary solution to create main account for testing purposes
             val accountList = AccountList(
-                userWallet = userWallet,
+                userWalletId = userWallet.walletId,
                 accounts = setOf(
                     Account.CryptoPortfolio.createMainAccount(userWallet.walletId).copy(
                         accountName = AccountName.invoke(value = "Main Account").getOrNull()!!,
