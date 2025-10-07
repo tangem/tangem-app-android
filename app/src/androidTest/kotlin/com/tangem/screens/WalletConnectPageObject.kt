@@ -53,6 +53,21 @@ class WalletConnectPageObject(semanticsProvider: SemanticsNodeInteractionsProvid
         hasText(getResourceString(R.string.wc_new_connection))
         useUnmergedTree = true
     }
+
+    val walletConnectImage: KNode = child {
+        hasTestTag(WalletConnectScreenTestTags.WALLET_CONNECT_IMAGE)
+        useUnmergedTree = true
+    }
+
+    val noSessionTitle: KNode = child {
+        hasText(getResourceString(R.string.wc_no_sessions_title))
+        useUnmergedTree = true
+    }
+
+    val noSessionText: KNode = child {
+        hasText(getResourceString(R.string.wc_no_sessions_desc))
+        useUnmergedTree = true
+    }
 }
 
 internal fun BaseTestCase.onWalletConnectScreen(function: WalletConnectPageObject.() -> Unit) =
