@@ -15,7 +15,7 @@ import retrofit2.http.Query
 interface YieldSupplyApi {
 
     @GET("api/v1/yield/markets")
-    suspend fun getYieldMarkets(@Query("chainId") chainId: Int? = null): ApiResponse<YieldMarketsResponse>
+    suspend fun getYieldMarkets(@Query("chainId") chainId: String? = null): ApiResponse<YieldMarketsResponse>
 
     @GET("api/v1/yield/token/{chainId}/{tokenAddress}")
     suspend fun getYieldTokenStatus(
