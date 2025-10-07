@@ -17,6 +17,7 @@ import com.tangem.domain.tokens.FetchCurrencyStatusUseCase
 import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetTokenStatusUseCase
+import com.tangem.domain.yield.supply.usecase.YieldSupplyIsAvailableUseCase
 import com.tangem.features.yield.supply.api.YieldSupplyComponent
 import com.tangem.features.yield.supply.impl.main.entity.YieldSupplyUM
 import com.tangem.features.yield.supply.impl.main.entity.LoadingStatusMode
@@ -45,12 +46,13 @@ internal class YieldSupplyModel @Inject constructor(
     @DelayedWork private val coroutineScope: CoroutineScope,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val yieldSupplyGetTokenStatusUseCase: YieldSupplyGetTokenStatusUseCase,
+    private val yieldSupplyIsAvailableUseCase: YieldSupplyIsAvailableUseCase,
 ) : Model(), YieldSupplyClickIntents {
 
     private val params = paramsContainer.require<YieldSupplyComponent.Params>()
 
     val uiState: StateFlow<YieldSupplyUM>
-        field = MutableStateFlow<YieldSupplyUM>(YieldSupplyUM.Loading)
+        field = MutableStateFlow<YieldSupplyUM>(YieldSupplyUM.Initial)
 
     val bottomSheetNavigation: SlotNavigation<Unit> = SlotNavigation()
 
@@ -69,8 +71,17 @@ internal class YieldSupplyModel @Inject constructor(
         field = MutableStateFlow(false)
 
     init {
-        subscribeOnCurrencyStatusUpdates()
-        subscribeOnBalanceHidden()
+        checkIfYieldSupplyIsAvailable()
+    }
+
+    private fun checkIfYieldSupplyIsAvailable() {
+        modelScope.launch(dispatchers.io) {
+            val isAvailable = yieldSupplyIsAvailableUseCase(params.userWalletId, params.cryptoCurrency)
+            if (isAvailable) {
+                subscribeOnCurrencyStatusUpdates()
+                subscribeOnBalanceHidden()
+            }
+        }
     }
 
     private fun subscribeOnCurrencyStatusUpdates() {
