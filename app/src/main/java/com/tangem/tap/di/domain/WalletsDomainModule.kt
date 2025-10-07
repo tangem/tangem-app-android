@@ -16,7 +16,7 @@ import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.repository.WalletNamesMigrationRepository
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.*
-import com.tangem.domain.yield.supply.YieldSupplyMarketRepository
+import com.tangem.domain.yield.supply.YieldSupplyRepository
 import com.tangem.domain.yield.supply.usecase.YieldSupplyApyFlowUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyApyUpdateUseCase
 import com.tangem.feature.wallet.presentation.wallet.domain.IsWalletNFTEnabledSyncUseCase
@@ -454,21 +454,17 @@ internal object WalletsDomainModule {
 
     @Provides
     @Singleton
-    fun provideYieldSupplyApyFlowUseCase(
-        yieldSupplyMarketRepository: YieldSupplyMarketRepository,
-    ): YieldSupplyApyFlowUseCase {
+    fun provideYieldSupplyApyFlowUseCase(yieldSupplyRepository: YieldSupplyRepository): YieldSupplyApyFlowUseCase {
         return YieldSupplyApyFlowUseCase(
-            yieldSupplyMarketRepository = yieldSupplyMarketRepository,
+            yieldSupplyRepository = yieldSupplyRepository,
         )
     }
 
     @Provides
     @Singleton
-    fun provideYieldSupplyApyUpdateUseCase(
-        yieldSupplyMarketRepository: YieldSupplyMarketRepository,
-    ): YieldSupplyApyUpdateUseCase {
+    fun provideYieldSupplyApyUpdateUseCase(yieldSupplyRepository: YieldSupplyRepository): YieldSupplyApyUpdateUseCase {
         return YieldSupplyApyUpdateUseCase(
-            yieldSupplyMarketRepository = yieldSupplyMarketRepository,
+            yieldSupplyRepository = yieldSupplyRepository,
         )
     }
 }
