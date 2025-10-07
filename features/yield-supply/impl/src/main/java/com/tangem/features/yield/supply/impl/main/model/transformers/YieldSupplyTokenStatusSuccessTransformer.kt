@@ -20,7 +20,7 @@ internal class YieldSupplyTokenStatusSuccessTransformer(
 
         return when (mode) {
             LoadingStatusMode.Initial -> {
-                YieldSupplyUM.Initial(
+                YieldSupplyUM.Available(
                     title = resourceReference(
                         id = R.string.yield_module_token_details_earn_notification_title,
                         formatArgs = wrappedList(tokenStatus.apy),
