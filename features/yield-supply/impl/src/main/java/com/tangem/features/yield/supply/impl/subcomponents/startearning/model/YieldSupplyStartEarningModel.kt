@@ -19,6 +19,7 @@ import com.tangem.domain.tokens.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.domain.yield.supply.usecase.YieldSupplyActivateUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyEstimateEnterFeeUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetTokenStatusUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyStartEarningUseCase
@@ -58,6 +59,7 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
     private val yieldSupplyNotificationsUpdateTrigger: YieldSupplyNotificationsUpdateTrigger,
     private val fetchCurrencyStatusUseCase: FetchCurrencyStatusUseCase,
     private val yieldSupplyAlertFactory: YieldSupplyAlertFactory,
+    private val yieldSupplyActivateUseCase: YieldSupplyActivateUseCase,
     private val yieldSupplyGetTokenStatusUseCase: YieldSupplyGetTokenStatusUseCase,
 ) : Model(), YieldSupplyNotificationsComponent.ModelCallback {
 
@@ -206,6 +208,7 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
                 },
                 ifRight = {
                     fetchCurrencyStatusUseCase(userWalletId = userWallet.walletId, cryptoCurrency.id)
+                    yieldSupplyActivateUseCase(cryptoCurrency as CryptoCurrency.Token)
                     modelScope.launch {
                         params.callback.onTransactionSent()
                     }
