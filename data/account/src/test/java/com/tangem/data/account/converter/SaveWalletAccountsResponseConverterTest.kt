@@ -2,7 +2,6 @@ package com.tangem.data.account.converter
 
 import com.google.common.truth.Truth
 import com.tangem.datasource.api.tangemTech.models.account.SaveWalletAccountsResponse
-import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountName
@@ -31,7 +30,7 @@ class SaveWalletAccountsResponseConverterTest {
         // Assert
         val expected = SaveWalletAccountsResponse(
             accounts = listOf(
-                WalletAccountDTO(
+                SaveWalletAccountsResponse.AccountDTO(
                     id = accountList.mainAccount.accountId.value,
                     name = (accountList.mainAccount.accountName as? AccountName.Custom)?.value,
                     derivationIndex = accountList.mainAccount.derivationIndex.value,

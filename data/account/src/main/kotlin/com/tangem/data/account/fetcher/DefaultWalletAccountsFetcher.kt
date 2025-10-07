@@ -86,11 +86,7 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
                     tangemTechApi.saveWalletAccounts(
                         walletId = userWalletId.stringValue,
                         eTag = eTag,
-                        body = body.copy(
-                            accounts = body.accounts.map {
-                                it.copy(tokens = null, totalTokens = null, totalNetworks = null)
-                            },
-                        ),
+                        body = body,
                     )
                 }
 
