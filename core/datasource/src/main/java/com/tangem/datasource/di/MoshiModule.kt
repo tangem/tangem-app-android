@@ -9,6 +9,7 @@ import com.tangem.common.json.MoshiJsonConverter
 import com.tangem.datasource.api.common.adapter.*
 import com.tangem.datasource.local.config.providers.models.ProviderModel
 import com.tangem.datasource.local.network.entity.NetworkStatusDM
+import com.tangem.datasource.utils.SerializeNullsFactory
 import com.tangem.domain.models.scan.serialization.*
 import com.tangem.domain.visa.model.VisaActivationRemoteState
 import com.tangem.domain.visa.model.VisaCardActivationStatus
@@ -28,6 +29,7 @@ class MoshiModule {
     @NetworkMoshi
     fun provideNetworkMoshi(): Moshi {
         return Moshi.Builder()
+            .add(SerializeNullsFactory)
             .add(
                 PolymorphicJsonAdapterFactory.of(ProviderModel::class.java, "type")
                     .withSubtype(ProviderModel.Public::class.java, "public")
