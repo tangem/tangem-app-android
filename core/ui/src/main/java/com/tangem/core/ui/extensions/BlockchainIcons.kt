@@ -96,6 +96,7 @@ fun getActiveIconRes(blockchainId: String): Int {
         "pepecoin", "pepecoin/test" -> R.drawable.img_pepecoin_22
         "hyperliquid", "hyperliquid/test" -> R.drawable.img_hyperliquid_22
         "quai", "quai/test" -> R.drawable.img_quai_22
+        "linea", "linea/test" -> R.drawable.img_linea_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -190,6 +191,7 @@ fun getActiveIconResByCoinId(coinId: String): Int {
         "pepecoin-network", "pepecoin-network/test" -> R.drawable.img_pepecoin_22
         "hyperliquid", "hyperliquid/test" -> R.drawable.img_hyperliquid_22
         "quai", "quai/test" -> R.drawable.img_quai_22
+        "linea", "linea/test" -> R.drawable.img_linea_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -287,6 +289,7 @@ fun getGreyedOutIconRes(blockchainId: String): Int {
         "pepecoin", "pepecoin/test" -> R.drawable.ic_pepecoin_22
         "hyperliquid", "hyperliquid/test" -> R.drawable.ic_hyperliquid_22
         "quai", "quai/test" -> R.drawable.ic_quai_22
+        "linea", "linea/test" -> R.drawable.ic_linea_22
         else -> R.drawable.ic_alert_24
     }
 }
