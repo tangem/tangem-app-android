@@ -86,6 +86,6 @@ internal class DefaultTangemPayTxHistoryRepository @Inject constructor(
             }.result
             val items = TangemPayTxHistoryItemConverter.convertList(result.transactions).filterNotNull()
             txHistoryItemsStore.store(key = customerWalletAddress, cursor = cursor ?: INITIAL_CURSOR, value = items)
-        }
+        }.onLeft { error(it.toString()) }
     }
 }
