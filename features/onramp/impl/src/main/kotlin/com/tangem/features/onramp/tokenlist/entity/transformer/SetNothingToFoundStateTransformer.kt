@@ -26,8 +26,7 @@ internal class SetNothingToFoundStateTransformer(
                     id = emptySearchMessageReference.hashCode(),
                     text = emptySearchMessageReference,
                 ).let(::add)
-            }
-                .toImmutableList(),
+            }.toImmutableList(),
             unavailableItems = persistentListOf(),
             isBalanceHidden = isBalanceHidden,
         )
