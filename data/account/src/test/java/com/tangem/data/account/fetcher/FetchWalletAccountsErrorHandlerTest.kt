@@ -160,7 +160,7 @@ class FetchWalletAccountsErrorHandlerTest {
         // Arrange
         val error = ApiResponseError.TimeoutException()
 
-        val accounts = AccountList.empty(userWallet).accounts
+        val accounts = AccountList.empty(userWalletId).accounts
             .filterIsInstance<Account.CryptoPortfolio>()
 
         val accountDTO = WalletAccountDTO(
