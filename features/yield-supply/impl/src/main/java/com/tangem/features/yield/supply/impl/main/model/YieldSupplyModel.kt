@@ -16,6 +16,8 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.tokens.FetchCurrencyStatusUseCase
 import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.domain.yield.supply.usecase.YieldSupplyActivateUseCase
+import com.tangem.domain.yield.supply.usecase.YieldSupplyDeactivateUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetTokenStatusUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyIsAvailableUseCase
 import com.tangem.features.yield.supply.api.YieldSupplyComponent
@@ -47,6 +49,8 @@ internal class YieldSupplyModel @Inject constructor(
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val yieldSupplyGetTokenStatusUseCase: YieldSupplyGetTokenStatusUseCase,
     private val yieldSupplyIsAvailableUseCase: YieldSupplyIsAvailableUseCase,
+    private val yieldSupplyActivateUseCase: YieldSupplyActivateUseCase,
+    private val yieldSupplyDeactivateUseCase: YieldSupplyDeactivateUseCase,
 ) : Model(), YieldSupplyClickIntents {
 
     private val params = paramsContainer.require<YieldSupplyComponent.Params>()
@@ -162,6 +166,7 @@ internal class YieldSupplyModel @Inject constructor(
         val yieldTransaction = cryptoCurrencyStatus.value.pendingTransactions.firstOrNull {
             it.type is TxInfo.TransactionType.YieldSupply
         }?.type as? TxInfo.TransactionType.YieldSupply
+        sendInfoAboutProtocolStatus(yieldSupplyStatus?.isActive == true)
 
         val yieldSupplyUM = when {
             hasActiveTransaction && yieldTransaction != null -> {
@@ -190,6 +195,17 @@ internal class YieldSupplyModel @Inject constructor(
             is YieldSupplyUM.Loading -> loadTokenStatus(LoadingStatusMode.Initial)
             is YieldSupplyUM.Content -> loadTokenStatus(LoadingStatusMode.LoadApy)
             else -> Unit
+        }
+    }
+
+    private fun sendInfoAboutProtocolStatus(isActivated: Boolean) {
+        val token = cryptoCurrency as? CryptoCurrency.Token ?: return
+        modelScope.launch(dispatchers.default) {
+            if (isActivated) {
+                yieldSupplyActivateUseCase(token)
+            } else {
+                yieldSupplyDeactivateUseCase(token)
+            }
         }
     }
 
