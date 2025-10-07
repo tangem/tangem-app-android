@@ -114,4 +114,22 @@ internal object YieldSupplyDomainModule {
             yieldSupplyRepository = yieldSupplyRepository,
         )
     }
+
+    @Provides
+    @Singleton
+    fun provideYieldSupplyActivateUseCase(yieldSupplyRepository: YieldSupplyRepository): YieldSupplyActivateUseCase {
+        return YieldSupplyActivateUseCase(
+            yieldSupplyRepository = yieldSupplyRepository,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideYieldSupplyDeactivateUseCase(
+        yieldSupplyRepository: YieldSupplyRepository,
+    ): YieldSupplyDeactivateUseCase {
+        return YieldSupplyDeactivateUseCase(
+            yieldSupplyRepository = yieldSupplyRepository,
+        )
+    }
 }
