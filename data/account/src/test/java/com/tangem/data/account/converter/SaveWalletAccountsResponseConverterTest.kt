@@ -6,10 +6,7 @@ import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountName
-import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
-import io.mockk.every
-import io.mockk.mockk
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 
@@ -19,13 +16,11 @@ class SaveWalletAccountsResponseConverterTest {
     @Test
     fun convert() {
         // Arrange
-        val userWallet = mockk<UserWallet> {
-            every { this@mockk.walletId } returns UserWalletId("011")
-        }
+        val userWalletId = UserWalletId("011")
 
         val accountList = AccountList(
-            userWallet = userWallet,
-            accounts = setOf(Account.CryptoPortfolio.createMainAccount(userWalletId = userWallet.walletId)),
+            userWalletId = userWalletId,
+            accounts = setOf(Account.CryptoPortfolio.createMainAccount(userWalletId = userWalletId)),
             totalAccounts = 1,
         )
             .getOrNull()!!

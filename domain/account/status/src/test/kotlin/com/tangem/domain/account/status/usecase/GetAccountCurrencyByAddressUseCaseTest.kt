@@ -218,7 +218,7 @@ class GetAccountCurrencyByAddressUseCaseTest {
             },
             value = NetworkStatus.Unreachable(address = validNetworkAddress),
         )
-        val accountList = AccountList.empty(multiUserWallet)
+        val accountList = AccountList.empty(userWalletId)
 
         every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(multiUserWallet))
         coEvery {
@@ -253,7 +253,7 @@ class GetAccountCurrencyByAddressUseCaseTest {
             network = currency.network,
             value = NetworkStatus.Unreachable(address = validNetworkAddress),
         )
-        val accountList = AccountList.empty(userWallet = multiUserWallet, cryptoCurrencies = setOf(currency))
+        val accountList = AccountList.empty(userWalletId = userWalletId, cryptoCurrencies = setOf(currency))
 
         every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(multiUserWallet))
         coEvery {
