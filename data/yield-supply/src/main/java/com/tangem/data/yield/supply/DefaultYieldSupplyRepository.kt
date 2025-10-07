@@ -39,7 +39,8 @@ internal class DefaultYieldSupplyRepository(
     }
 
     override suspend fun updateMarkets(): List<YieldMarketToken> = withContext(dispatchers.io) {
-        val response = yieldSupplyApi.getYieldMarkets().getOrThrow()
+        val chains = Blockchain.yieldSupplySupportedBlockchains().map { it.getChainId() }.joinToString(",")
+        val response = yieldSupplyApi.getYieldMarkets(chainId = chains).getOrThrow()
         val domain = response.marketDtos.map(YieldMarketTokenConverter::convert)
         store.store(response.marketDtos)
         domain
