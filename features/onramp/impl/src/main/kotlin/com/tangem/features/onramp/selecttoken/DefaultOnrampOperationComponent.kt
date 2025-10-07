@@ -1,6 +1,7 @@
 package com.tangem.features.onramp.selecttoken
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
@@ -41,11 +42,13 @@ internal class DefaultOnrampOperationComponent @AssistedInject constructor(
 
     @Composable
     override fun Content(modifier: Modifier) {
-        val state = model.state.collectAsStateWithLifecycle()
+        val state by model.state.collectAsStateWithLifecycle()
+        val onrampTokenListState by onrampTokenListComponent.uiState.collectAsStateWithLifecycle()
 
         OnrampSelectToken(
-            state = state.value,
+            state = state,
             onrampTokenListComponent = onrampTokenListComponent,
+            onrampTokenListState = onrampTokenListState,
             hotCryptoComponent = hotCryptoComponent,
             modifier = modifier,
         )
