@@ -5,6 +5,7 @@ import com.tangem.data.account.converter.createGetWalletAccountsResponse
 import com.tangem.data.account.converter.createWalletAccountDTO
 import com.tangem.data.account.store.AccountsResponseStore
 import com.tangem.data.account.store.AccountsResponseStoreFactory
+import com.tangem.data.account.utils.DefaultWalletAccountsResponseFactory
 import com.tangem.data.common.cache.etag.ETagsStore
 import com.tangem.data.common.currency.UserTokensSaver
 import com.tangem.datasource.api.common.response.ApiResponse
@@ -36,6 +37,7 @@ class DefaultWalletAccountsFetcherTest {
 
     private val userTokensSaver: UserTokensSaver = mockk(relaxUnitFun = true)
     private val fetchWalletAccountsErrorHandler: FetchWalletAccountsErrorHandler = mockk(relaxUnitFun = true)
+    private val defaultWalletAccountsResponseFactory: DefaultWalletAccountsResponseFactory = mockk()
     private val eTagsStore: ETagsStore = mockk(relaxUnitFun = true)
 
     private val fetcher: DefaultWalletAccountsFetcher = DefaultWalletAccountsFetcher(
@@ -43,6 +45,7 @@ class DefaultWalletAccountsFetcherTest {
         accountsResponseStoreFactory = accountsResponseStoreFactory,
         userTokensSaver = userTokensSaver,
         fetchWalletAccountsErrorHandler = fetchWalletAccountsErrorHandler,
+        defaultWalletAccountsResponseFactory = defaultWalletAccountsResponseFactory,
         eTagsStore = eTagsStore,
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
@@ -204,6 +207,16 @@ class DefaultWalletAccountsFetcherTest {
             coEvery {
                 tangemTechApi.getWalletAccounts(walletId = userWalletId.stringValue, eTag = eTag)
             } returns apiError as ApiResponse<GetWalletAccountsResponse>
+
+            coEvery {
+                fetchWalletAccountsErrorHandler.handle(
+                    error = apiError.cause,
+                    userWalletId = userWalletId,
+                    savedAccountsResponse = null,
+                    pushWalletAccounts = any(),
+                    storeWalletAccounts = any(),
+                )
+            } returns savedAccountsResponse
 
             // Act
             fetcher.fetch(userWalletId)
