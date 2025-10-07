@@ -2,6 +2,7 @@ package com.tangem.features.onramp.swap
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -54,12 +55,16 @@ internal class DefaultSwapSelectTokensComponent @AssistedInject constructor(
 
     @Composable
     override fun Content(modifier: Modifier) {
-        val state = model.state.collectAsStateWithLifecycle()
+        val state by model.state.collectAsStateWithLifecycle()
+        val fromTokensState by selectFromTokenListComponent.uiState.collectAsStateWithLifecycle()
+        val toTokensState by selectToTokenListComponent.uiState.collectAsStateWithLifecycle()
 
         SwapSelectTokens(
-            state = state.value,
+            state = state,
             selectFromTokenListComponent = selectFromTokenListComponent,
+            selectFromTokenListState = fromTokensState,
             selectToTokenListComponent = selectToTokenListComponent,
+            selectToTokenListState = toTokensState,
             modifier = modifier,
         )
     }
