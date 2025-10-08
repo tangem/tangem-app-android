@@ -25,6 +25,9 @@ interface AnalyticsUserIdHandler {
 
 interface AnalyticsHandler : AnalyticsEventHandler {
 
+    val isSpecific: Boolean
+        get() = false
+
     fun id(): String
 
     fun send(eventId: String, params: Map<String, String> = emptyMap())
