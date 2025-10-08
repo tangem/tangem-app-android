@@ -97,9 +97,7 @@ internal data object SwapAmountContentPreview {
     val defaultState = SwapAmountUM.Content(
         primaryAmount = SwapAmountFieldUM.Content(
             amountType = SwapAmountType.From,
-            amountField = AmountStatePreviewData.amountState.copy(
-                availableBalance = stringReference("Balance: 100 BTC"),
-            ),
+            amountField = AmountStatePreviewData.amountState,
             title = stringReference("Tether"),
             subtitleLeft = stringReference("11 101,123123456 BTC"),
             subtitleRight = stringReference(" ${StringsSigns.DOT} 1 212,12 $"),
@@ -112,7 +110,6 @@ internal data object SwapAmountContentPreview {
             amountType = SwapAmountType.To,
             amountField = AmountStatePreviewData.amountState.copy(
                 title = stringReference("Amount to receive"),
-                availableBalance = TextReference.EMPTY,
             ),
             title = stringReference("Shiba Inu"),
             priceImpact = stringReference("(-10%)"),
