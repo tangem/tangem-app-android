@@ -2,11 +2,8 @@ package com.tangem.features.account
 
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.core.lce.Lce
-import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.tokens.error.TokenListError
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
@@ -25,10 +22,11 @@ interface PortfolioFetcher {
     )
 
     data class PortfolioBalance(
-        val walletBalance: Lce<TokenListError, TotalFiatBalance>,
+        val userWallet: UserWallet,
         val accountsBalance: AccountStatusList,
     ) {
-        val userWalletId: UserWalletId get() = accountsBalance.userWalletId
+        val walletBalance get() = accountsBalance.totalFiatBalance
+        val userWalletId: UserWalletId get() = userWallet.walletId
     }
 
     sealed interface Mode {

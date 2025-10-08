@@ -128,6 +128,9 @@ internal object PortfolioSelectorPreviewData {
             label = null,
         )
 
+    private val lockedAccountItem: UserWalletItemUM
+        get() = accountItem.copy(isEnabled = false)
+
     private val walletItem: UserWalletItemUM
         get() = UserWalletItemUM(
             id = UserWalletId(UUID.randomUUID().toString().encodeToByteArray()),
@@ -152,7 +155,7 @@ internal object PortfolioSelectorPreviewData {
             accountItem
                 .let { PortfolioSelectorItemUM.Portfolio(it) }
                 .let(::add)
-            accountItem
+            lockedAccountItem
                 .let { PortfolioSelectorItemUM.Portfolio(it) }
                 .let(::add)
             PortfolioSelectorItemUM.GroupTitle(

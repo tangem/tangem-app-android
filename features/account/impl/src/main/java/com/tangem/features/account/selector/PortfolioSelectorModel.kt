@@ -79,11 +79,10 @@ internal class PortfolioSelectorModel @Inject constructor(
         val isBalanceHidden = portfolioData.isBalanceHidden
         val lockedWallets = mutableListOf<PortfolioSelectorItemUM>()
         portfolioData.balances.forEach { wallet, portfolio ->
-            val balance = portfolio.walletBalance.getOrNull()
+            val balance = portfolio.walletBalance
             val walletItemUM = UserWalletItemUMConverter(
                 onClick = {
-                    // todo account
-                    // selectorController.selectAccount(portfolio.accountsBalance.mainAccount)
+                    selectorController.selectAccount(portfolio.accountsBalance.mainAccount.account.accountId)
                 },
                 appCurrency = appCurrency,
                 balance = balance,
@@ -92,7 +91,11 @@ internal class PortfolioSelectorModel @Inject constructor(
                 isAuthMode = false,
             ).convert(wallet)
             if (walletItemUM.isEnabled) {
-                add(PortfolioSelectorItemUM.Portfolio(walletItemUM))
+                val isEnabledByFeature = selectorController
+                    .isEnabled(wallet, portfolio.accountsBalance.mainAccount)
+                val finalWalletItemUM =
+                    if (isEnabledByFeature) walletItemUM else walletItemUM.copy(isEnabled = false)
+                add(PortfolioSelectorItemUM.Portfolio(finalWalletItemUM))
             } else {
                 lockedWallets.add(PortfolioSelectorItemUM.Portfolio(walletItemUM))
             }
@@ -115,11 +118,10 @@ internal class PortfolioSelectorModel @Inject constructor(
         val isBalanceHidden = portfolioData.isBalanceHidden
         val lockedWallets = mutableListOf<PortfolioSelectorItemUM>()
         portfolioData.balances.forEach { wallet, portfolio ->
-            val balance = portfolio.walletBalance.getOrNull()
+            val balance = portfolio.walletBalance
             val walletItemUM = UserWalletItemUMConverter(
                 onClick = {
-                    // todo account
-                    // selectorController.selectAccount(portfolio.accountsBalance.mainAccount)
+                    selectorController.selectAccount(portfolio.accountsBalance.mainAccount.account.accountId)
                 },
                 appCurrency = appCurrency,
                 balance = balance,
@@ -140,6 +142,7 @@ internal class PortfolioSelectorModel @Inject constructor(
 
             add(PortfolioSelectorItemUM.Portfolio(walletItemUM))
             portfolio.accountsBalance.accountStatuses.forEach { accountStatus ->
+                val isEnabledByFeature = selectorController.isEnabled(wallet, accountStatus)
                 val account = accountStatus.account
                 val accountBalance = when (accountStatus) {
                     is AccountStatus.CryptoPortfolio -> accountStatus.tokenList.totalFiatBalance
@@ -148,6 +151,7 @@ internal class PortfolioSelectorModel @Inject constructor(
                     onClick = { selectorController.selectAccount(account.accountId) },
                     appCurrency = appCurrency,
                     accountBalance = accountBalance,
+                    isEnabled = isEnabledByFeature,
                     isBalanceHidden = isBalanceHidden,
                 ).convert(account)
                 add(PortfolioSelectorItemUM.Portfolio(accountItemUM))

@@ -4,8 +4,8 @@ import com.tangem.domain.account.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.features.account.PortfolioSelectorController
 import com.tangem.features.account.PortfolioFetcher
+import com.tangem.features.account.PortfolioSelectorController
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
@@ -18,6 +18,8 @@ internal class DefaultPortfolioSelectorController @Inject constructor(
     override val isAccountMode: Flow<Boolean> by lazy { isAccountsModeEnabledUseCase() }
 
     override val selectedAccount: StateFlow<AccountId?> get() = _selectedAccount
+
+    override var isEnabled: (UserWallet, AccountStatus) -> Boolean = { _, _ -> true }
 
     override fun selectAccount(accountId: AccountId?) {
         _selectedAccount.update { accountId }
