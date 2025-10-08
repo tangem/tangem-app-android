@@ -220,7 +220,7 @@ internal class SendDestinationModel @Inject constructor(
                     async {
                         val addresses = if (!wallet.isMultiCurrency) {
                             getCryptoCurrencyUseCase(wallet.walletId).getOrNull()?.let {
-                                if (it.network.id == cryptoCurrencyNetwork.id) {
+                                if (it.network.rawId == cryptoCurrencyNetwork.rawId) {
                                     getNetworkAddressesUseCase.invokeSync(
                                         userWalletId = wallet.walletId,
                                         networkRawId = it.network.id.rawId,
