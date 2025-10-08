@@ -43,6 +43,7 @@ sealed interface TokensListItemUM {
     data class Portfolio(
         val state: TokenItemState,
         val isExpanded: Boolean,
+        val isCollapsable: Boolean,
         val tokens: List<PortfolioTokensListItemUM>,
     ) : TokensListItemUM {
         override val id: String = state.id
