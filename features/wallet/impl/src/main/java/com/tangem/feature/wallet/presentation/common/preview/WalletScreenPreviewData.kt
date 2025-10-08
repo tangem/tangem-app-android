@@ -88,12 +88,14 @@ internal object WalletScreenPreviewData {
             TokensListItemUM.Portfolio(
                 tokens = textContentTokensState.items.filterIsInstance<PortfolioTokensListItemUM>(),
                 isExpanded = false,
+                isCollapsable = true,
                 state = AccountItemPreviewData.accountItem
                     .copy(iconState = AccountItemPreviewData.accountLetterIcon),
             ),
             TokensListItemUM.Portfolio(
                 tokens = textContentTokensState.items.filterIsInstance<PortfolioTokensListItemUM>(),
                 isExpanded = true,
+                isCollapsable = true,
                 state = AccountItemPreviewData.accountItem,
             ),
         ),
