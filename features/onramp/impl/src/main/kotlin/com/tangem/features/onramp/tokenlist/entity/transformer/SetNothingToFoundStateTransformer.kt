@@ -5,6 +5,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.tokenlist.entity.TokenListUM
+import com.tangem.features.onramp.tokenlist.entity.TokenListUMData
 import com.tangem.features.onramp.tokenlist.entity.TokenListUMTransformer
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -28,6 +29,7 @@ internal class SetNothingToFoundStateTransformer(
                 ).let(::add)
             }.toImmutableList(),
             unavailableItems = persistentListOf(),
+            tokensListData = TokenListUMData.EmptyList,
             isBalanceHidden = isBalanceHidden,
         )
     }
