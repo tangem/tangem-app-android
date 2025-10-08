@@ -43,12 +43,7 @@ import com.tangem.domain.promo.GetStoryContentUseCase
 import com.tangem.domain.promo.models.StoryContentIds
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.staking.model.stakekit.Yield
-import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
-import com.tangem.domain.tokens.GetViewedTokenReceiveWarningUseCase
-import com.tangem.domain.tokens.NeedShowYieldSupplyDepositedWarningUseCase
-import com.tangem.domain.tokens.SaveViewedTokenReceiveWarningUseCase
-import com.tangem.domain.tokens.SaveViewedYieldSupplyWarningUseCase
-import com.tangem.domain.tokens.model.details.TokenAction
+import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.analytics.TokenReceiveAnalyticsEvent
@@ -57,6 +52,7 @@ import com.tangem.domain.tokens.model.analytics.TokenReceiveNewAnalyticsEvent
 import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent
 import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent.Companion.AVAILABLE
 import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent.Companion.toReasonAnalyticsText
+import com.tangem.domain.tokens.model.details.TokenAction
 import com.tangem.domain.transaction.usecase.GetEnsNameUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.usecase.GetExploreUrlUseCase
@@ -519,15 +515,19 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
 
     override fun onMultiWalletSwapClick(userWalletId: UserWalletId) {
         val selectedWallet = stateHolder.getSelectedWallet() as? WalletState.MultiCurrency.Content ?: return
-        val tokenListState = selectedWallet.tokensListState as? WalletTokensListState.ContentState.Content ?: return
+        val tokenListState = selectedWallet.tokensListState
 
-        if (tokenListState.items.count { it is TokensListItemUM.Token } < 2) {
-            handleError(
-                alertState = WalletAlertState.InsufficientTokensCountForSwapping,
-                eventCreator = MainScreenAnalyticsEvent::ButtonSwap,
+        when (tokenListState) {
+            is WalletTokensListState.ContentState.Content -> checkSwapCryptoAvailability(
+                tokenCount = tokenListState.items.count { it is TokensListItemUM.Token },
             )
-
-            return
+            is WalletTokensListState.ContentState.PortfolioContent -> checkSwapCryptoAvailability(
+                tokenCount = tokenListState.items.sumOf { it.tokens.count { it is TokensListItemUM.Token } },
+            )
+            WalletTokensListState.ContentState.Loading,
+            WalletTokensListState.ContentState.Locked,
+            WalletTokensListState.Empty,
+            -> return
         }
 
         modelScope.launch {
@@ -806,6 +806,17 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
                 ),
                 userWalletId,
             )
+        }
+    }
+
+    private fun checkSwapCryptoAvailability(tokenCount: Int) {
+        if (tokenCount < 2) {
+            handleError(
+                alertState = WalletAlertState.InsufficientTokensCountForSwapping,
+                eventCreator = MainScreenAnalyticsEvent::ButtonSwap,
+            )
+
+            return
         }
     }
 }
