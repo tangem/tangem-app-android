@@ -3,6 +3,7 @@ package com.tangem.lib.crypto.derivation
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.isUTXO
 import com.tangem.crypto.hdWallet.DerivationPath
+import com.tangem.domain.models.network.Network
 
 /**
  * Utility class to recognize the account node in a derivation path based on the blockchain type.
@@ -21,12 +22,21 @@ class AccountNodeRecognizer(blockchain: Blockchain) {
         NON_UTXO_BLOCKCHAIN_NODE_INDEX
     }
 
+    /** Recognizes the account node value from the given [derivationPath] */
+    fun recognize(derivationPath: Network.DerivationPath): Long? {
+        val derivationPathValue = derivationPath.value ?: return null
+
+        return recognize(derivationPathValue = derivationPathValue)
+    }
+
     /** Recognizes the account node value from the given derivation path string [derivationPathValue] */
     fun recognize(derivationPathValue: String): Long? {
+        if (derivationPathValue.isBlank()) return null
+
         return runCatching {
-            recognize(derivationPath = DerivationPath(rawPath = derivationPathValue))
-        }
-            .getOrNull()
+            val cardSdkDerivationPath = DerivationPath(rawPath = derivationPathValue)
+            recognize(derivationPath = cardSdkDerivationPath)
+        }.getOrNull()
     }
 
     /** Recognizes the account node value from the given [derivationPath] */
