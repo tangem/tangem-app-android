@@ -1,7 +1,6 @@
 package com.tangem.features.staking.impl.presentation.ui
 
 import android.content.res.Configuration
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -14,7 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.preview.AmountStatePreviewData
-import com.tangem.common.ui.amountScreen.ui.AmountBlockV2
+import com.tangem.common.ui.amountScreen.ui.AmountBlock
 import com.tangem.core.ui.components.transactions.TransactionDoneTitle
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
@@ -24,7 +23,6 @@ import com.tangem.features.staking.impl.presentation.model.StakingClickIntents
 import com.tangem.features.staking.impl.presentation.state.InnerConfirmationStakingState
 import com.tangem.features.staking.impl.presentation.state.StakingNotification
 import com.tangem.features.staking.impl.presentation.state.StakingStates
-import com.tangem.features.staking.impl.presentation.state.TransactionDoneState
 import com.tangem.features.staking.impl.presentation.state.previewdata.ConfirmationStatePreviewData
 import com.tangem.features.staking.impl.presentation.state.previewdata.ValidatorStatePreviewData
 import com.tangem.features.staking.impl.presentation.state.stub.StakingClickIntentsStub
@@ -34,7 +32,7 @@ import com.tangem.features.staking.impl.presentation.ui.block.ValidatorBlock
 
 @Suppress("LongParameterList")
 @Composable
-internal fun StakingConfirmationContent(
+internal fun StakingSuccessContent(
     amountState: AmountState,
     state: StakingStates.ConfirmationState,
     validatorState: StakingStates.ValidatorState,
@@ -50,17 +48,11 @@ internal fun StakingConfirmationContent(
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
     ) {
-        val doneState = state.transactionDoneState
-        AnimatedVisibility(
-            visible = doneState is TransactionDoneState.Content,
-            modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing12),
-        ) {
-            TransactionDoneTitle(
-                title = resourceReference(R.string.common_in_progress),
-                subtitle = resourceReference(R.string.staking_transaction_in_progress_text),
-            )
-        }
-        AmountBlockV2(
+        TransactionDoneTitle(
+            title = resourceReference(R.string.common_in_progress),
+            subtitle = resourceReference(R.string.staking_transaction_in_progress_text),
+        )
+        AmountBlock(
             amountState = amountState,
             isClickDisabled = !state.isAmountEditable || isTransactionSent || isTransactionInProgress,
             isEditingDisabled = !state.isAmountEditable && state.innerState != InnerConfirmationStakingState.COMPLETED,
