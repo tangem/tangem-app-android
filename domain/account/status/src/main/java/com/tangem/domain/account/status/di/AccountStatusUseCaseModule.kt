@@ -1,5 +1,6 @@
 package com.tangem.domain.account.status.di
 
+import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyByAddressUseCase
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
@@ -31,7 +32,9 @@ internal object AccountStatusUseCaseModule {
 
     @Provides
     @Singleton
-    fun provideGetAccountCurrencyStatusUseCase(): GetAccountCurrencyStatusUseCase {
-        return GetAccountCurrencyStatusUseCase()
+    fun provideGetAccountCurrencyStatusUseCase(
+        singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
+    ): GetAccountCurrencyStatusUseCase {
+        return GetAccountCurrencyStatusUseCase(singleAccountStatusListSupplier = singleAccountStatusListSupplier)
     }
 }
