@@ -25,5 +25,6 @@ internal enum class ProviderTypeIdMapping(val id: String, val providerType: Prov
     KoinosPro(id = "koinospro", providerType = ProviderType.Koinos.KoinosPro),
     AlephiumTangem(id = "tangemAlephium", providerType = ProviderType.Alephium.Tangem),
     Blink(id = "blink", providerType = ProviderType.Blink),
+    Tatum(id = "tatum", providerType = ProviderType.Kusama.Tatum),
     ;
 }
