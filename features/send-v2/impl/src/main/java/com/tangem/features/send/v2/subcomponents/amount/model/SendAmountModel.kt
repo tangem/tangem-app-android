@@ -172,7 +172,7 @@ internal class SendAmountModel @Inject constructor(
         if (uiState.value is AmountState.Empty && userWallet != null) {
             val isOnlyOneWallet = getWalletsUseCase.invokeSync().size == 1
             _uiState.update {
-                AmountStateConverterV2(
+                AmountStateConverter(
                     clickIntents = this,
                     appCurrency = appCurrency,
                     cryptoCurrencyStatus = cryptoCurrencyStatus,
