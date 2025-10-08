@@ -56,15 +56,20 @@ import com.tangem.features.send.v2.common.ui.state.ConfirmUM
 import com.tangem.features.send.v2.impl.R
 import com.tangem.features.send.v2.send.analytics.SendAnalyticHelper
 import com.tangem.features.send.v2.send.confirm.SendConfirmComponent
-import com.tangem.features.send.v2.send.confirm.model.transformers.*
+import com.tangem.features.send.v2.send.confirm.model.transformers.SendConfirmInitialStateTransformer
+import com.tangem.features.send.v2.send.confirm.model.transformers.SendConfirmSendingStateTransformer
+import com.tangem.features.send.v2.send.confirm.model.transformers.SendConfirmSentStateTransformer
+import com.tangem.features.send.v2.send.confirm.model.transformers.SendConfirmationNotificationsTransformerV2
 import com.tangem.features.send.v2.send.ui.state.SendUM
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountReduceTrigger
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.orZero
 import com.tangem.utils.extensions.stripZeroPlainString
 import com.tangem.utils.transformer.update
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.math.BigDecimal
 import javax.inject.Inject
@@ -422,12 +427,14 @@ internal class SendConfirmModel @Inject constructor(
         val userWalletId = receivingUserWallet.userWalletId ?: return
         val network = receivingUserWallet.network ?: return
 
-        modelScope.launch {
-            addCryptoCurrenciesUseCase(
-                userWalletId = userWalletId,
-                cryptoCurrency = cryptoCurrency,
-                network = network,
-            )
+        modelScope.launch(dispatchers.default) {
+            withContext(NonCancellable) {
+                addCryptoCurrenciesUseCase(
+                    userWalletId = userWalletId,
+                    cryptoCurrency = cryptoCurrency,
+                    network = network,
+                )
+            }
         }
     }
 
