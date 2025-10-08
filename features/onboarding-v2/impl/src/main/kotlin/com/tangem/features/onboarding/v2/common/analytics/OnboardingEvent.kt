@@ -2,7 +2,6 @@ package com.tangem.features.onboarding.v2.common.analytics
 
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
-import com.tangem.domain.models.currency.CryptoCurrency
 
 sealed class OnboardingEvent(
     category: String,
@@ -38,21 +37,6 @@ sealed class OnboardingEvent(
             data object NewSeed : WalletCreationType(value = "New Seed")
             data object SeedImport : WalletCreationType(value = "Seed Import")
         }
-    }
-
-    sealed class Topup(
-        event: String,
-        params: Map<String, String> = mapOf(),
-    ) : OnboardingEvent("Onboarding / Top Up", event, params) {
-
-        object ScreenOpened : Topup("Activation Screen Opened")
-
-        object ButtonShowWalletAddress : Topup("Button - Show the Wallet Address")
-
-        class ButtonBuyCrypto(currency: CryptoCurrency) : Topup(
-            event = "Button - Buy Crypto",
-            params = mapOf(AnalyticsParam.CURRENCY to currency.symbol),
-        )
     }
 
     sealed class Backup(
@@ -99,7 +83,6 @@ sealed class OnboardingEvent(
     ) : OnboardingEvent("Onboarding / Twins", event, params) {
 
         data object ScreenOpened : Twins("Twinning Screen Opened")
-        data object SetupStarted : Twins("Twin Setup Started")
         data object SetupFinished : Twins("Twin Setup Finished")
     }
 
