@@ -127,7 +127,6 @@ private fun ConstraintLayoutScope.SwapAmountBlock(
     AmountBlockV2(
         amountState = (amountUM.secondaryAmount.amountField as? AmountState.Data)?.copy(
             title = resourceReference(R.string.send_with_swap_recipient_amount_title),
-            availableBalance = TextReference.EMPTY,
             availableBalanceCrypto = TextReference.EMPTY,
         ) ?: amountUM.secondaryAmount.amountField,
         isClickDisabled = true,
