@@ -1,7 +1,7 @@
 package com.tangem.features.swap.v2.impl.amount.model.converter
 
 import com.tangem.common.ui.amountScreen.AmountScreenClickIntents
-import com.tangem.common.ui.amountScreen.converters.AmountStateConverterV2
+import com.tangem.common.ui.amountScreen.converters.AmountStateConverter
 import com.tangem.common.ui.amountScreen.converters.MaxEnterAmountConverter
 import com.tangem.common.ui.amountScreen.models.AmountParameters
 import com.tangem.core.ui.components.atoms.text.TextEllipsis
@@ -44,7 +44,7 @@ internal class SwapAmountFieldConverter(
             subtitleEllipsisRight = TextEllipsis.OffsetEnd(appCurrency.symbol.length),
             priceImpact = null,
             isClickEnabled = selectedType.isViewingField(),
-            amountField = AmountStateConverterV2(
+            amountField = AmountStateConverter(
                 clickIntents = clickIntents,
                 appCurrency = appCurrency,
                 cryptoCurrencyStatus = cryptoCurrencyStatus,
