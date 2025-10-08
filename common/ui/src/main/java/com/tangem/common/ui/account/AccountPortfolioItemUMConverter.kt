@@ -19,6 +19,7 @@ class AccountPortfolioItemUMConverter(
     private val appCurrency: AppCurrency? = null,
     private val accountBalance: TotalFiatBalance? = null,
     private val isBalanceHidden: Boolean = false,
+    private val isEnabled: Boolean = true,
     private val endIcon: UserWalletItemUM.EndIcon = UserWalletItemUM.EndIcon.None,
 ) : Converter<Account, UserWalletItemUM> {
 
@@ -29,7 +30,7 @@ class AccountPortfolioItemUMConverter(
                 name = value.accountName.toUM().value,
                 information = getInfo(value),
                 balance = getBalanceInfo(),
-                isEnabled = true,
+                isEnabled = isEnabled,
                 endIcon = endIcon,
                 onClick = { onClick(value.accountId) },
                 imageState = getImageState(value),
