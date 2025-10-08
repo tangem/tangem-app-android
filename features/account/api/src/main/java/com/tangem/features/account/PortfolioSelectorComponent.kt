@@ -30,6 +30,11 @@ interface PortfolioSelectorController {
     val isAccountMode: Flow<Boolean>
     val selectedAccount: StateFlow<AccountId?>
 
+    /**
+     * for some Feature specific filtering
+     */
+    var isEnabled: ((UserWallet, AccountStatus) -> Boolean)
+
     fun selectAccount(accountId: AccountId?)
     fun selectedAccountWithData(portfolioFetcher: PortfolioFetcher): Flow<Pair<UserWallet, AccountStatus>?>
 }
