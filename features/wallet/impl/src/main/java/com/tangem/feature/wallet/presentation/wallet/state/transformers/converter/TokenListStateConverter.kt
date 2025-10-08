@@ -114,6 +114,7 @@ internal class TokenListStateConverter(
             return TokensListItemUM.Portfolio(
                 state = accountItem,
                 isExpanded = isExtend,
+                isCollapsable = true,
                 tokens = items.filterIsInstance<PortfolioTokensListItemUM>(),
             )
         }
