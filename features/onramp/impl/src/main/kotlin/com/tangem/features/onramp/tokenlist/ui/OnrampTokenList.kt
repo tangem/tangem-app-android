@@ -30,6 +30,7 @@ import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.BuyTokenScreenTestTags
 import com.tangem.core.ui.utils.lazyListItemPosition
 import com.tangem.features.onramp.tokenlist.entity.TokenListUM
+import com.tangem.features.onramp.tokenlist.entity.TokenListUMData
 import com.tangem.features.onramp.tokenlist.ui.preview.PreviewTokenListUMProvider
 import kotlinx.collections.immutable.ImmutableList
 
@@ -70,6 +71,22 @@ internal fun LazyListScope.onrampTokenList(state: TokenListUM) {
     tokensList(items = state.availableItems, isBalanceHidden = state.isBalanceHidden)
 
     tokensList(items = state.unavailableItems, isBalanceHidden = state.isBalanceHidden)
+
+    when (val list = state.tokensListData) {
+        is TokenListUMData.AccountList -> list.tokensList.forEach { item ->
+            portfolioTokensList(
+                portfolio = item,
+                isBalanceHidden = state.isBalanceHidden,
+            )
+        }
+        is TokenListUMData.TokenList -> {
+            tokensList(
+                items = list.tokensList,
+                isBalanceHidden = state.isBalanceHidden,
+            )
+        }
+        TokenListUMData.EmptyList -> Unit
+    }
 }
 
 private fun LazyListScope.searchBarItem(searchBarUM: SearchBarUM, modifier: Modifier = Modifier) {
