@@ -229,10 +229,11 @@ internal class SetInitialDataStateTransformer(
         )
         return AmountStateConverter(
             clickIntents = clickIntents,
-            cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
-            appCurrencyProvider = appCurrencyProvider,
+            cryptoCurrencyStatus = cryptoCurrencyStatus,
+            appCurrency = appCurrencyProvider(),
             iconStateConverter = iconStateConverter,
             maxEnterAmount = maxEnterAmount,
+            isBalanceHidden = false,
         ).convert(
             AmountParameters(
                 title = stringReference(userWalletProvider().name),
