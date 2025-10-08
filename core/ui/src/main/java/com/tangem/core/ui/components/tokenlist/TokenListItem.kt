@@ -60,7 +60,7 @@ fun TokenListItem(state: TokensListItemUM, isBalanceHidden: Boolean, modifier: M
 @Composable
 fun PortfolioListItem(state: TokensListItemUM.Portfolio, isBalanceHidden: Boolean, modifier: Modifier = Modifier) {
     if (state.isExpanded) {
-        ExpandedPortfolioHeader(state.state, modifier)
+        ExpandedPortfolioHeader(state = state.state, isCollapsable = state.isCollapsable, modifier = modifier)
     } else {
         TokenItem(
             state = state.state,
@@ -83,7 +83,7 @@ fun PortfolioTokensListItem(state: PortfolioTokensListItemUM, isBalanceHidden: B
 }
 
 @Composable
-private fun ExpandedPortfolioHeader(state: TokenItemState, modifier: Modifier = Modifier) {
+private fun ExpandedPortfolioHeader(state: TokenItemState, isCollapsable: Boolean, modifier: Modifier = Modifier) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier
@@ -130,11 +130,13 @@ private fun ExpandedPortfolioHeader(state: TokenItemState, modifier: Modifier = 
             )
         }
 
-        Icon(
-            modifier = Modifier.size(TangemTheme.dimens.size16),
-            painter = painterResource(id = R.drawable.ic_minimize_24),
-            tint = TangemTheme.colors.icon.inactive,
-            contentDescription = null,
-        )
+        if (isCollapsable) {
+            Icon(
+                modifier = Modifier.size(TangemTheme.dimens.size16),
+                painter = painterResource(id = R.drawable.ic_minimize_24),
+                tint = TangemTheme.colors.icon.inactive,
+                contentDescription = null,
+            )
+        }
     }
 }
