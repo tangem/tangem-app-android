@@ -137,6 +137,12 @@ internal class DefaultTransactionRepository(
     ): TransactionData.Uncompiled = withContext(dispatchers.io) {
         val blockchain = network.toBlockchain()
 
+        val walletManager = walletManagersFacade.getOrCreateWalletManager(
+            userWalletId = userWalletId,
+            blockchain = blockchain,
+            derivationPath = network.derivationPath.value,
+        ) ?: error("Wallet manager not found")
+
         val extras = createTransactionDataExtras(
             callData = SmartContractCallDataProviderFactory.getApprovalCallData(
                 spenderAddress = spenderAddress,
@@ -148,15 +154,23 @@ internal class DefaultTransactionRepository(
             gasLimit = null,
         )
 
-        return@withContext createTransaction(
-            amount = amount,
-            fee = fee,
-            memo = null,
-            destination = contractAddress,
-            userWalletId = userWalletId,
-            network = network,
-            txExtras = extras,
-        )
+        return@withContext if (fee != null) {
+            walletManager.createTransaction(
+                amount = amount,
+                fee = fee,
+                destination = contractAddress,
+            ).copy(
+                extras = extras,
+            )
+        } else {
+            TransactionData.Uncompiled(
+                amount = amount,
+                sourceAddress = walletManager.wallet.address,
+                destinationAddress = contractAddress,
+                extras = extras,
+                fee = null,
+            )
+        }
     }
 
     override suspend fun createNFTTransferTransaction(
