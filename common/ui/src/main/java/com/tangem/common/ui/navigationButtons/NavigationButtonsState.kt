@@ -8,7 +8,6 @@ sealed class NavigationButtonsState {
 
     data class Data(
         val primaryButton: NavigationButton?,
-        val prevButton: NavigationButton?,
         val extraButtons: Pair<NavigationButton, NavigationButton>?,
         val txUrl: String? = null,
         val onTextClick: (String) -> Unit,
