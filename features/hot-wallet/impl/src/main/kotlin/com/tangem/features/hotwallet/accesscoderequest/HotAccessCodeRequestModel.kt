@@ -8,6 +8,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.settings.CanUseBiometryUseCase
 import com.tangem.domain.wallets.hot.HotWalletAccessCodeAttemptsRepository
 import com.tangem.domain.wallets.hot.HotWalletAccessCodeAttemptsRepository.Attempts
 import com.tangem.domain.wallets.hot.HotWalletAccessCodeAttemptsRepository.Companion.MAX_FAST_FORWARD_ATTEMPTS
@@ -31,6 +32,7 @@ internal class HotAccessCodeRequestModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val hotAccessCodeAttemptsRepository: HotWalletAccessCodeAttemptsRepository,
     private val userWalletsListRepository: UserWalletsListRepository,
+    private val canUseBiometryUseCase: CanUseBiometryUseCase,
 ) : Model() {
 
     private val result = MutableStateFlow<HotWalletPasswordRequester.Result?>(null)
@@ -60,7 +62,7 @@ internal class HotAccessCodeRequestModel @Inject constructor(
             it.copy(
                 isShown = true,
                 accessCode = "",
-                useBiometricVisible = attemptRequest.hasBiometry,
+                useBiometricVisible = attemptRequest.isBiometryButtonVisible(),
                 onAccessCodeChange = ::onAccessCodeChange,
             )
         }
@@ -83,7 +85,7 @@ internal class HotAccessCodeRequestModel @Inject constructor(
             it.copy(
                 accessCodeColor = PinTextColor.WrongCode,
                 onAccessCodeChange = {},
-                useBiometricVisible = currentRequest.hasBiometry,
+                useBiometricVisible = currentRequest.isBiometryButtonVisible(),
             )
         }
         delay(timeMillis = 500) // Delay to show the wrong access code state
@@ -211,6 +213,9 @@ internal class HotAccessCodeRequestModel @Inject constructor(
         userWalletsListRepository.delete(listOf(userWallet.walletId))
         dismiss()
     }
+
+    private suspend fun HotWalletPasswordRequester.AttemptRequest.isBiometryButtonVisible(): Boolean =
+        hasBiometry && canUseBiometryUseCase()
 
     private fun dismissState() {
         uiState.update {
