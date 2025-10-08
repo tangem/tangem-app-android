@@ -26,12 +26,10 @@ internal class SendAmountComponent(
     @Composable
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
-        val isBalanceHidden by params.isBalanceHidingFlow.collectAsStateWithLifecycle()
         val isSendWithSwapAvailable by model.isSendWithSwapAvailable.collectAsStateWithLifecycle()
 
         SendAmountContent(
             amountState = state,
-            isBalanceHidden = isBalanceHidden,
             clickIntents = model,
             isSendWithSwapAvailable = isSendWithSwapAvailable,
             modifier = modifier,
