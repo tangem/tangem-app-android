@@ -19,7 +19,7 @@
   <string name="account_archived_recover">Recover</string>
   <string name="account_archived_recover_dialog_description">You’re about to recover “%1$s”.</string>
   <string name="account_archived_recover_dialog_title">Recover account</string>
-  <string name="account_archived_recover_error_message">You have already exceeded the limit of 20 active accounts. Archive one to recover</string>
+  <string name="account_archived_recover_error_message">You have already exceeded the limit of 20 active accounts. Archive one to recover.</string>
   <string name="account_archived_recover_error_title">Can\'t recover account</string>
   <string name="account_archived_title">Archived</string>
   <string name="account_could_not_create">We couldn’t create account. Please try again later.</string>
@@ -33,6 +33,7 @@
   <string name="account_form_create_button">Add account</string>
   <string name="account_form_edit_button">Save</string>
   <string name="account_form_name">Account name</string>
+  <string name="account_form_name_already_exist_error_description">Account name already exists</string>
   <string name="account_form_placeholder_edit_account">Account</string>
   <string name="account_form_placeholder_new_account">New account</string>
   <string name="account_form_title_create">Add account</string>
@@ -134,7 +135,7 @@
   <string name="biometric_unavailable_warning">You have disabled biometric authentication on your phone and will not be able to save wallets in the app. To save wallets, please enable the biometric authentication function in your phone settings.</string>
   <string name="bitcoin_promo_activation_error">An error occurred while processing your promo code. Please try again later.</string>
   <string name="bitcoin_promo_activation_error_title">Activation error</string>
-  <string name="bitcoin_promo_activation_success">Your promo code was successfully activated. A bonus of 10 USDT in Bitcoin will be credited to your account within 14 days.</string>
+  <string name="bitcoin_promo_activation_success">Your promo code was successfully activated. A reward will be credited to your account within 14 days.</string>
   <string name="bitcoin_promo_activation_success_title">Promo Code Activated</string>
   <string name="bitcoin_promo_already_activated">This promo code has already been used and cannot be activated again.</string>
   <string name="bitcoin_promo_already_activated_title">Code unavailable</string>
@@ -178,6 +179,7 @@
   <string name="common_accept">Accept</string>
   <string name="common_access_denied">Access denied</string>
   <string name="common_accounts">Accounts</string>
+  <string name="common_activate">Activate</string>
   <string name="common_add">Add</string>
   <string name="common_add_to_portfolio">Add to portfolio</string>
   <string name="common_add_token">Add token</string>
@@ -252,6 +254,7 @@
   <string name="common_fee_selector_title">Speed and fee</string>
   <string name="common_finish">Finish</string>
   <string name="common_free">Free</string>
+  <string name="common_from">From</string>
   <string name="common_generate_addresses">Synchronize addresses</string>
   <string name="common_get_started">Get started</string>
   <string name="common_go_to_provider">Go to provider</string>
@@ -330,6 +333,7 @@
   <string name="common_tangem_wallet">Tangem Wallet</string>
   <string name="common_terms_and_conditions">terms and conditions</string>
   <string name="common_terms_of_use">Terms of Use</string>
+  <string name="common_to">To</string>
   <string name="common_today">Today</string>
   <plurals name="common_tokens_count">
     <item quantity="one">%d token</item>
@@ -351,6 +355,8 @@
   <string name="common_yes">Yes</string>
   <string name="contract_address_copied_message">Contract address copied!</string>
   <string name="currency_subtitle_expanded">Available networks</string>
+  <string name="custom_token_another_account_dialog_description">Derivation of your token matches the derivation of %1$s. Your token will be added to this account.</string>
+  <string name="custom_token_another_account_dialog_title">Derivation belongs to another account.</string>
   <string name="custom_token_contract_address_input_title">Contract address</string>
   <string name="custom_token_creation_error_invalid_contract_address">Contract address is invalid</string>
   <string name="custom_token_creation_error_network_not_selected">Please select the network</string>
@@ -541,6 +547,7 @@
   <string name="hw_create_seed_description">Create or restore your wallet using a recovery phrase — your built-in backup.</string>
   <string name="hw_create_seed_title">Seed phrase backup</string>
   <string name="hw_create_title">Create Mobile Wallet</string>
+  <string name="hw_import_existing_wallet">Import existing wallet</string>
   <string name="hw_import_seed_phrase_already_imported">This recovery phrase has already been imported</string>
   <string name="hw_mobile_wallet">Mobile Wallet</string>
   <string name="hw_upgrade_error_card_already_has_wallet">Can’t upgrade. A wallet already exists on this device.</string>
@@ -905,6 +912,7 @@
   </plurals>
   <string name="onramp_timing_minutes">%s min</string>
   <string name="onramp_title_you_get">You get</string>
+  <string name="onramp_tos_external_providers">Service is provided by an external provider. \nTangem is not responsible.</string>
   <string name="onramp_transaction_status_footer_text">You can close this screen and check the transaction status on the token details screen.</string>
   <string name="onramp_up_to_rate">Up to</string>
   <string name="onramp_via">Via</string>
@@ -913,6 +921,7 @@
   <string name="organize_tokens_sort_by_balance">By balance</string>
   <string name="organize_tokens_title">Organize tokens</string>
   <string name="organize_tokens_ungroup">Ungroup</string>
+  <string name="provider_name_support">%s support</string>
   <string name="push_notifications_more_info">More info</string>
   <string name="push_notifications_permission_alert_description">You can enable Notifications for Tangem in Settings.</string>
   <string name="push_notifications_permission_alert_negative_button">Enable Later</string>
@@ -1108,6 +1117,9 @@
   <string name="settings_forget_wallet_footer">This will remove the wallet from the application. The wallet itself can be added again.</string>
   <string name="settings_wallet_name_title">Name</string>
   <string name="stake_token_description">Put your token to work</string>
+  <string name="staking_account_initialization_footer">A network fee is a small payment required to process and confirm your transaction on the blockchain.</string>
+  <string name="staking_account_initialization_message">To start staking, your TON account must be activated with a self-transaction of 1 TON. The funds stay in your wallet — this step only enables your account for staking.</string>
+  <string name="staking_account_initialization_title">Account activation</string>
   <string name="staking_amount_requirement_error">The amount to stake must be at least %s</string>
   <string name="staking_amount_tron_integer_error">Staking amount will be rounded to %1$s TRX due to network rules.</string>
   <string name="staking_amount_tron_integer_error_unstaking">Unstaking amount will be rounded to %1$s TRX due to network rules.</string>
@@ -1116,7 +1128,10 @@
   <string name="staking_details_account_fee_info">A staking account is a special account where staked SOL tokens are stored. It is created when you delegate your tokens to a validator to participate in transaction validation and receive rewards. A small fee is charged for creating the staking account, which is returned after the staking is completed.</string>
   <string name="staking_details_annual_percentage_rate">Annual percentage rate</string>
   <string name="staking_details_annual_percentage_rate_info">The annual percentage return you can earn from participating in staking.</string>
+  <string name="staking_details_annual_percentage_yield">Annual percentage yield</string>
+  <string name="staking_details_annual_percentage_yield_info">APY shows the validator’s annual percentage yield based on its performance</string>
   <string name="staking_details_apr">APR</string>
+  <string name="staking_details_apy">APY</string>
   <string name="staking_details_auto_claiming_rewards_daily_text">Rewards automatically accumulate in your staking balance daily.</string>
   <string name="staking_details_available">Available</string>
   <string name="staking_details_average_reward_rate">Average Reward Rate</string>
@@ -1171,6 +1186,8 @@
   <string name="staking_notification_restake_rewards_text">Reinvests your earned rewards in your staked amount, increasing potential earnings.</string>
   <string name="staking_notification_restake_text">Restake lets you move your funds from one validator to another without the need to unstake</string>
   <string name="staking_notification_stake_entire_balance_text">You’re about to stake your entire balance. We recommend leaving a small amount to cover network fees for unstaking or claiming rewards.</string>
+  <string name="staking_notification_ton_account_initialization_message">To start staking, your TON account must be activated with a self-transaction of 1 TON. The funds stay in your wallet — this step only enables your account for staking.</string>
+  <string name="staking_notification_ton_account_initialization_title">Account activation</string>
   <string name="staking_notification_ton_activate_account">To start staking in TON, first send a small transaction to your own address — this will activate your wallet.</string>
   <string name="staking_notification_ton_extra_reserve_info">Up to 0.2 TON may be required in addition to the network fee to complete the transaction. Any unused amount will be refunded.</string>
   <string name="staking_notification_ton_extra_reserve_is_required">0.2 TON is required to proceed with this operation, in addition to the network fee. Please top up your balance.</string>
@@ -1203,6 +1220,7 @@
   <string name="staking_reward_schedule_month">Monthly</string>
   <string name="staking_reward_schedule_week">Weekly</string>
   <string name="staking_rewards">Rewards</string>
+  <string name="staking_soloana_details_auto_claiming_rewards_daily_text">Rewards on Solana are automatically added to your staking balance and cannot be shown separately.</string>
   <string name="staking_stake_locked">Stake locked</string>
   <string name="staking_stake_more">Stake more</string>
   <string name="staking_stake_more_button_unavailability_reason">When staking %1$s, your entire %2$s balance is staked. Any additional %2$s you deposit to your Tangem Wallet will also be automatically staked.</string>
@@ -1275,6 +1293,10 @@
   <string name="swapping_to_title">You receive</string>
   <string name="swapping_token_list_title">Choose token</string>
   <string name="swapping_token_not_available">not available</string>
+  <string name="tangempay_card_details_error_text">Failed to load data. Try again later.</string>
+  <string name="tangempay_card_details_hide_text">Hide</string>
+  <string name="tangempay_card_details_reveal_text">Reveal</string>
+  <string name="tangempay_card_details_title">Card details</string>
   <string name="tangempay_issue_card_notification_title">Create account and issue a card</string>
   <string name="tangempay_kyc_card_ready_notification_title">Tangem Pay</string>
   <string name="tangempay_kyc_in_progress_notification_button">View Status</string>
@@ -1287,6 +1309,7 @@
   <string name="tangempay_onboarding_security_description">Your card details are protected — full control in the app.</string>
   <string name="tangempay_onboarding_security_title">Built-in security</string>
   <string name="tangempay_onboarding_title">Get your free Crypto Card\nin minutes</string>
+  <string name="tangempay_title">Tangem Pay</string>
   <string name="this_is_my_wallet_title">This is my wallet</string>
   <string name="toast_balances_hidden">Balances hidden</string>
   <string name="toast_balances_shown">Balances shown</string>
@@ -1314,6 +1337,7 @@
   <string name="token_details_token_type_subtitle_no_standard">Token in %%image%% %1$s network</string>
   <string name="token_details_unable_hide_alert_message">The %1$s (%2$s) token is the main currency on the %3$s network and cannot be hidden as long as you have other tokens on this network in the list</string>
   <string name="token_details_unable_hide_alert_title">Unable to hide %s</string>
+  <string name="token_receive_show_qr_code_title">Show QR code</string>
   <string name="token_swap_changelly_promotion_message">Exchange this token for another at %1$s service fees from February %2$s-%3$s.</string>
   <string name="token_swap_changelly_promotion_title">Swap with Changelly, %s fees</string>
   <string name="token_swap_promotion_button">Swap now</string>
@@ -1691,7 +1715,7 @@
   <string name="wc_no_wallet_changes_detected">No wallet changes detected</string>
   <string name="wc_notification_security_risk_subtitle">Potential risks or malicious behavior have been detected. Connecting or signing transactions may lead to loss of funds.</string>
   <string name="wc_notification_security_risk_title">Known security risk</string>
-  <string name="wc_qr_scan_hint">Open Web3 app and chose WalletConnect option</string>
+  <string name="wc_qr_scan_hint">Open the Web3 app and choose the WalletConnect option.</string>
   <string name="wc_request_from">Request from</string>
   <string name="wc_send_anyway">Sign anyway</string>
   <string name="wc_signature_type">Signature Type</string>
@@ -1707,6 +1731,20 @@
   <string name="wc_uri_already_used_title">URI already used</string>
   <string name="wc_wallet_connect">WalletConnect</string>
   <string name="wc_warning_transaction">Suspicious transaction</string>
+  <string name="welcome_create_wallet_already_have">Already have Tangem?</string>
+  <string name="welcome_create_wallet_feature_assets">Thousands of assets</string>
+  <string name="welcome_create_wallet_feature_class">Best in class hardware wallet</string>
+  <string name="welcome_create_wallet_feature_delivery">Fast delivery</string>
+  <string name="welcome_create_wallet_feature_one_tap">Start in one tap</string>
+  <string name="welcome_create_wallet_feature_seamless">Seamless and secure</string>
+  <string name="welcome_create_wallet_feature_use">Simple to use</string>
+  <string name="welcome_create_wallet_hardware_description">Create a hardware wallet with Tangem. Slim as a bank card, secure as a bank vault.</string>
+  <string name="welcome_create_wallet_mobile_description">Create or import a software wallet</string>
+  <string name="welcome_create_wallet_mobile_description_full">Create or import a software wallet on your phone </string>
+  <string name="welcome_create_wallet_mobile_title">Start with Mobile Wallet</string>
+  <string name="welcome_create_wallet_other_method">Other method</string>
+  <string name="welcome_create_wallet_use_hardware_description">Use Tangem Hardware Wallet</string>
+  <string name="welcome_create_wallet_use_hardware_title">Learn more &amp; buy</string>
   <string name="welcome_interrupted_backup_alert_discard">Discard</string>
   <string name="welcome_interrupted_backup_alert_message">You have an interrupted backup. Do you want to resume?</string>
   <string name="welcome_interrupted_backup_alert_resume">Yes, resume</string>
@@ -1731,6 +1769,8 @@
   <string name="yield_module_approve_sheet_title">Confirm approval</string>
   <string name="yield_module_balance_info_sheet_subtitle">Text about your money in balance [PLACEHOLDER]</string>
   <string name="yield_module_balance_info_sheet_title">Your %s is deposited in Aave</string>
+  <string name="yield_module_chart_loading_error">Unable to load chart...</string>
+  <string name="yield_module_deposit_error_notification_title">The amount received, %1$s %2$s was not deposited to Aave.</string>
   <string name="yield_module_earn_badge">Earn %1$s%%</string>
   <string name="yield_module_earn_sheet_available_title">Available</string>
   <string name="yield_module_earn_sheet_current_apy_title">Current APY</string>
@@ -1747,6 +1787,8 @@
   <string name="yield_module_fee_policy_sheet_max_fee_note">If network fees rise above maximum fee, the transaction won’t go through until they decrease. You can change this limit later.</string>
   <string name="yield_module_fee_policy_sheet_max_fee_title">Maximum fee</string>
   <string name="yield_module_fee_policy_sheet_title">Fee policy</string>
+  <string name="yield_module_high_fee_error">Network fee is too high right now. Waiting until it falls below your limit.</string>
+  <string name="yield_module_historical_returns">Historical returns</string>
   <string name="yield_module_main_view_approve_notification_description">Write description here. In one, two or three lines will be awesome. [PLACEHOLDER]</string>
   <string name="yield_module_main_view_approve_notification_title">Some token approve needed</string>
   <string name="yield_module_network_fee_unreachable_notification_description">Check your network connection</string>
@@ -1777,6 +1819,7 @@
   <string name="yield_module_stop_earning">Stop earning</string>
   <string name="yield_module_stop_earning_sheet_description">Turning off will withdraw your funds from Aave, return them to %s in your wallet, and stop earning rewards.</string>
   <string name="yield_module_stop_earning_sheet_fee_note">The network fee will be deducted from the amount you withdraw.</string>
+  <string name="yield_module_supply_apr">Supply APR</string>
   <string name="yield_module_token_details_earn_notification_apy">APY</string>
   <string name="yield_module_token_details_earn_notification_description">Make your money work — earn interest on your balance.</string>
   <string name="yield_module_token_details_earn_notification_earning_on_your_balance_title">Earning on your balance</string>
@@ -1785,4 +1828,7 @@
   <string name="yield_module_transfer_mode_automatic">Automatic</string>
   <string name="yield_module_unable_to_cover_fee_description">Deposit some %1$s %2$s to cover the network fee for transactions</string>
   <string name="yield_module_unable_to_cover_fee_title">Unable to cover %s fee</string>
+  <string name="yield_module_unavailable_subtitle">The interest service isn’t available at the moment. Please try again later.</string>
+  <string name="yield_module_unavailable_title">Earnings unavailable</string>
+  <string name="yield_supply_chart_loading_error">Unable to load chart...</string>
 </resources>
