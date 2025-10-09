@@ -62,7 +62,7 @@
   <string name="biometric_unavailable_warning">Vous avez désactivé l\'authentification biométrique sur votre téléphone et ne pourrez pas enregistrer de portefeuilles dans l\'application. Pour enregistrer des portefeuilles, veuillez activer la fonction d\'authentification biométrique dans les paramètres de votre téléphone.</string>
   <string name="bitcoin_promo_activation_error">Une erreur s\'est produite lors du traitement de votre code promo. Veuillez réessayer plus tard.</string>
   <string name="bitcoin_promo_activation_error_title">Erreur d\'activation</string>
-  <string name="bitcoin_promo_activation_success">Votre code promo a été activé avec succès. Un bonus de 10 USDT en Bitcoin sera crédité dans 14 jours.</string>
+  <string name="bitcoin_promo_activation_success">Votre code promotionnel a été activé avec succès. Une récompense sera créditée sur votre compte dans un délai de 14 jours.</string>
   <string name="bitcoin_promo_activation_success_title">Code promo activé</string>
   <string name="bitcoin_promo_already_activated">Ce code promo a déjà été utilisé et ne peut pas être activé à nouveau.</string>
   <string name="bitcoin_promo_already_activated_title">Code indisponible</string>
