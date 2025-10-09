@@ -250,6 +250,7 @@
   <string name="common_swap">Обменять</string>
   <string name="common_terms_and_conditions">условия участия</string>
   <string name="common_terms_of_use">Условиями использования</string>
+  <string name="common_to">На</string>
   <string name="common_today">Сегодня</string>
   <plurals name="common_tokens_count">
     <item quantity="one">%d токен</item>
