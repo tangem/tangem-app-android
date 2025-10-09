@@ -69,7 +69,7 @@ fun InputRowDefault(
                     .weight(1f)
                     .testTag(BaseBlockTestTags.BLOCK),
             ) {
-                title?.let {
+                title?.let { title ->
                     Text(
                         text = title.resolveReference(),
                         style = TangemTheme.typography.subtitle2,
@@ -86,7 +86,7 @@ fun InputRowDefault(
                     modifier = Modifier.testTag(BaseBlockTestTags.BLOCK_TEXT),
                 )
             }
-            iconRes?.let {
+            iconRes?.let { iconRes ->
                 Icon(
                     painter = painterResource(id = iconRes),
                     contentDescription = null,
@@ -120,7 +120,7 @@ private fun InputRowDefaultPreview(
             title = TextReference.Str(data.title),
             text = TextReference.Str(data.text),
             iconRes = data.iconRes,
-            showDivider = data.showDivider,
+            showDivider = data.shouldShowDivider,
             modifier = Modifier.background(TangemTheme.colors.background.action),
         )
     }
@@ -130,7 +130,7 @@ private data class InputRowDefaultPreviewData(
     val title: String,
     val text: String,
     val iconRes: Int?,
-    val showDivider: Boolean,
+    val shouldShowDivider: Boolean,
 )
 
 private class InputRowDefaultPreviewDataProvider : PreviewParameterProvider<InputRowDefaultPreviewData> {
@@ -140,13 +140,13 @@ private class InputRowDefaultPreviewDataProvider : PreviewParameterProvider<Inpu
                 title = "title",
                 text = "text",
                 iconRes = null,
-                showDivider = true,
+                shouldShowDivider = true,
             ),
             InputRowDefaultPreviewData(
                 title = "title",
                 text = "text",
                 iconRes = R.drawable.ic_chevron_right_24,
-                showDivider = false,
+                shouldShowDivider = false,
             ),
         )
 }

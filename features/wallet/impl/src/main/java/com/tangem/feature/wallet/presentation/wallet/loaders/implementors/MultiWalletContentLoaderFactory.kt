@@ -10,6 +10,7 @@ import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.ShouldSaveUserWalletsUseCase
+import com.tangem.domain.yield.supply.usecase.YieldSupplyApyFlowUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.TokenListAnalyticsSender
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.WalletWarningsAnalyticsSender
@@ -18,6 +19,7 @@ import com.tangem.feature.wallet.presentation.wallet.domain.GetMultiWalletWarnin
 import com.tangem.feature.wallet.presentation.wallet.domain.MultiWalletTokenListStore
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletWithFundsChecker
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
+import com.tangem.feature.wallet.presentation.account.AccountDependencies
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -38,6 +40,8 @@ internal class MultiWalletContentLoaderFactory @Inject constructor(
     private val walletsRepository: WalletsRepository,
     private val getNFTCollectionsUseCase: GetNFTCollectionsUseCase,
     private val currenciesRepository: CurrenciesRepository,
+    private val accountDependencies: AccountDependencies,
+    private val yieldSupplyApyFlowUseCase: YieldSupplyApyFlowUseCase,
 ) {
 
     fun create(userWallet: UserWallet, clickIntents: WalletClickIntents): WalletContentLoader {
@@ -59,6 +63,8 @@ internal class MultiWalletContentLoaderFactory @Inject constructor(
             walletsRepository = walletsRepository,
             getNFTCollectionsUseCase = getNFTCollectionsUseCase,
             currenciesRepository = currenciesRepository,
+            accountDependencies = accountDependencies,
+            yieldSupplyApyFlowUseCase = yieldSupplyApyFlowUseCase,
         )
     }
 }
