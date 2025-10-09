@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.tokenlist.PortfolioListItem
 import com.tangem.core.ui.components.tokenlist.PortfolioTokensListItem
 import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
@@ -59,6 +60,7 @@ internal fun LazyListScope.portfolioTokensList(
         contentType = { _, item -> item::class.java },
         itemContent = { tokenIndex, token ->
             val indexWithHeader = tokenIndex.inc()
+            val lastIndex = tokens.lastIndex.inc()
             val isPreview = LocalInspectionMode.current
             val appear = remember {
                 MutableTransitionState(isPreview).apply { targetState = true }
@@ -69,11 +71,12 @@ internal fun LazyListScope.portfolioTokensList(
                     .animateItem()
                     .roundedShapeItemDecoration(
                         currentIndex = indexWithHeader,
-                        lastIndex = tokens.lastIndex.inc(),
+                        lastIndex = lastIndex,
                         backgroundColor = TangemTheme.colors.background.primary,
                     ),
                 visibleState = appear,
             ) {
+                val modifier = if (indexWithHeader == lastIndex) Modifier.padding(bottom = 8.dp) else Modifier
                 PortfolioTokensListItem(
                     state = token,
                     isBalanceHidden = isBalanceHidden,
@@ -114,10 +117,15 @@ private fun LazyListScope.portfolioItem(
                 modifier = anchorModifier,
                 visibleState = appear,
             ) {
+                val modifier = if (portfolio.tokens.isEmpty()) {
+                    Modifier.padding(vertical = 8.dp)
+                } else {
+                    Modifier.padding(top = 8.dp)
+                }
                 PortfolioListItem(
                     state = portfolio,
                     isBalanceHidden = isBalanceHidden,
-                    modifier = Modifier.padding(top = TangemTheme.dimens.spacing8),
+                    modifier = modifier,
                 )
             }
         } else {
