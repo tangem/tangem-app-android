@@ -14,7 +14,6 @@ import com.tangem.domain.account.utils.createAccount
 import com.tangem.domain.account.utils.createAccounts
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.CryptoPortfolioIcon
-import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
@@ -35,20 +34,16 @@ class AddCryptoPortfolioUseCaseTest {
         mainAccountTokensMigration = mainAccountTokensMigration,
     )
 
-    private val userWallet = mockk<UserWallet>()
-
     @BeforeEach
     fun resetMocks() {
-        clearMocks(crudRepository, singleAccountListFetcher, mainAccountTokensMigration, userWallet)
-
-        every { userWallet.walletId } returns userWalletId
+        clearMocks(crudRepository, singleAccountListFetcher, mainAccountTokensMigration)
     }
 
     @Test
     fun `invoke should add new crypto portfolio account to existing list`() = runTest {
         // Arrange
         val newAccount = createNewAccount()
-        val accountList = AccountList.empty(userWallet)
+        val accountList = AccountList.empty(userWalletId)
         val updatedAccountList = (accountList + newAccount).getOrNull()!!
 
         coEvery {
@@ -152,7 +147,7 @@ class AddCryptoPortfolioUseCaseTest {
     fun `invoke should return error if account list requirements not met`() = runTest {
         // Arrange
         val accountList = AccountList(
-            userWallet = userWallet,
+            userWalletId = userWalletId,
             accounts = createAccounts(userWalletId = userWalletId, count = 20),
             totalAccounts = 20,
         ).getOrNull()!!
@@ -228,7 +223,7 @@ class AddCryptoPortfolioUseCaseTest {
     fun `invoke should return error if saveAccounts throws exception`() = runTest {
         // Arrange
         val newAccount = createNewAccount()
-        val accountList = AccountList.empty(userWallet)
+        val accountList = AccountList.empty(userWalletId)
         val updatedAccountList = (accountList + newAccount).getOrNull()!!
 
         val exception = IllegalStateException("Test error")
@@ -266,7 +261,7 @@ class AddCryptoPortfolioUseCaseTest {
     fun `invoke should return new account if migrate returns error`() = runTest {
         // Arrange
         val newAccount = createNewAccount()
-        val accountList = AccountList.empty(userWallet)
+        val accountList = AccountList.empty(userWalletId)
         val updatedAccountList = (accountList + newAccount).getOrNull()!!
 
         val exception = Exception("Migration error")

@@ -1,12 +1,12 @@
 package com.tangem.data.yield.supply.di
 
-import com.tangem.data.yield.supply.DefaultYieldSupplyMarketRepository
+import com.tangem.data.yield.supply.DefaultYieldSupplyRepository
 import com.tangem.data.yield.supply.DefaultYieldSupplyErrorResolver
 import com.tangem.data.yield.supply.DefaultYieldSupplyTransactionRepository
 import com.tangem.datasource.api.tangemTech.YieldSupplyApi
 import com.tangem.datasource.local.yieldsupply.YieldMarketsStore
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.domain.yield.supply.YieldSupplyMarketRepository
+import com.tangem.domain.yield.supply.YieldSupplyRepository
 import com.tangem.domain.yield.supply.YieldSupplyErrorResolver
 import com.tangem.domain.yield.supply.YieldSupplyTransactionRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -37,12 +37,14 @@ internal object YieldSupplyDataModule {
     fun provideYieldSupplyMarketRepository(
         yieldSupplyApi: YieldSupplyApi,
         store: YieldMarketsStore,
+        walletManagersFacade: WalletManagersFacade,
         dispatchers: CoroutineDispatcherProvider,
-    ): YieldSupplyMarketRepository {
-        return DefaultYieldSupplyMarketRepository(
+    ): YieldSupplyRepository {
+        return DefaultYieldSupplyRepository(
             yieldSupplyApi = yieldSupplyApi,
             store = store,
             dispatchers = dispatchers,
+            walletManagersFacade = walletManagersFacade,
         )
     }
 
