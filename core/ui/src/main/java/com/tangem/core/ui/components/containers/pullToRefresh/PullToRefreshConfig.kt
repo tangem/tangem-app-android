@@ -9,6 +9,7 @@ package com.tangem.core.ui.components.containers.pullToRefresh
 data class PullToRefreshConfig(val isRefreshing: Boolean, val onRefresh: (ShowRefreshState) -> Unit) {
 
     @JvmInline
+    @Suppress("BooleanPropertyNaming")
     value class ShowRefreshState(
         val value: Boolean = true,
     )
