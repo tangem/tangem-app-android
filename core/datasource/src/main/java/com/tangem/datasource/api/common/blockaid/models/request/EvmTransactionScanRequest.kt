@@ -15,8 +15,25 @@ data class EvmTransactionScanRequest(
 )
 
 @JsonClass(generateAdapter = true)
+@Suppress("BooleanPropertyNaming")
+data class EvmTransactionBulkScanRequest(
+    @Json(name = "chain") val chain: String,
+    @Json(name = "options") val options: List<String>,
+    @Json(name = "metadata") val metadata: TransactionMetadata,
+    @Json(name = "data") val data: List<Data>,
+    @Json(name = "aggregated") val aggregated: Boolean = false,
+)
+
+@JsonClass(generateAdapter = true)
 data class RpcData(
     @Json(name = "jsonrpc") val jsonrpc: String = "2.0",
     @Json(name = "method") val method: String,
     @Json(name = "params") val params: List<Map<String, String>>,
+)
+
+@JsonClass(generateAdapter = true)
+data class Data(
+    @Json(name = "from") val from: String,
+    @Json(name = "to") val to: String,
+    @Json(name = "data") val data: String,
 )
