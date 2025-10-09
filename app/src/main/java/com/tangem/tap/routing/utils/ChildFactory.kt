@@ -2,6 +2,7 @@ package com.tangem.tap.routing.utils
 
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.context.AppComponentContext
+import com.tangem.domain.models.PortfolioId
 import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.feature.qrscanning.QrScanningComponent
 import com.tangem.feature.referral.api.ReferralComponent
@@ -19,6 +20,7 @@ import com.tangem.features.hotwallet.*
 import com.tangem.features.kyc.KycComponent
 import com.tangem.features.managetokens.component.ChooseManagedTokensComponent
 import com.tangem.features.managetokens.component.ManageTokensComponent
+import com.tangem.features.managetokens.component.ManageTokensMode
 import com.tangem.features.managetokens.component.ManageTokensSource
 import com.tangem.features.markets.details.MarketsTokenDetailsComponent
 import com.tangem.features.markets.tokenlist.MarketsTokenListComponent
@@ -140,9 +142,15 @@ internal class ChildFactory @Inject constructor(
                     AppRoute.ManageTokens.Source.STORIES -> ManageTokensSource.STORIES
                 }
 
+                val mode = when (val portfolio = route.portfolioId) {
+                    is PortfolioId.Account -> ManageTokensMode.Account(portfolio.accountId)
+                    is PortfolioId.Wallet -> ManageTokensMode.Wallet(portfolio.userWalletId)
+                    null -> ManageTokensMode.None
+                }
+
                 createComponentChild(
                     context = context,
-                    params = ManageTokensComponent.Params(route.userWalletId, source),
+                    params = ManageTokensComponent.Params(mode, source),
                     componentFactory = manageTokensComponentFactory,
                 )
             }
@@ -200,7 +208,7 @@ internal class ChildFactory @Inject constructor(
                 createComponentChild(
                     context = context,
                     params = OnrampComponent.Params(
-                        userWalletId = route.portfolioId.userWalletId, // todo account portfolioId param,
+                        userWalletId = route.userWalletId,
                         cryptoCurrency = route.currency,
                         source = route.source,
                         shouldLaunchSepa = route.shouldLaunchSepa,
@@ -274,7 +282,7 @@ internal class ChildFactory @Inject constructor(
                 createComponentChild(
                     context = context,
                     params = TokenDetailsComponent.Params(
-                        userWalletId = route.portfolioId.userWalletId, // todo account portfolioId param
+                        userWalletId = route.userWalletId,
                         currency = route.currency,
                     ),
                     componentFactory = tokenDetailsComponentFactory,
@@ -284,7 +292,7 @@ internal class ChildFactory @Inject constructor(
                 createComponentChild(
                     context = context,
                     params = StakingComponent.Params(
-                        userWalletId = route.portfolioId.userWalletId, // todo account portfolioId param,
+                        userWalletId = route.userWalletId,
                         cryptoCurrencyId = route.cryptoCurrencyId,
                         yieldId = route.yieldId,
                     ),
@@ -297,7 +305,7 @@ internal class ChildFactory @Inject constructor(
                     params = SwapComponent.Params(
                         currencyFrom = route.currencyFrom,
                         currencyTo = route.currencyTo,
-                        userWalletId = route.portfolioId.userWalletId, // todo account portfolioId param,
+                        userWalletId = route.userWalletId,
                         isInitialReverseOrder = route.isInitialReverseOrder,
                         screenSource = route.screenSource,
                     ),
@@ -308,7 +316,7 @@ internal class ChildFactory @Inject constructor(
                 createComponentChild(
                     context = context,
                     params = SendComponent.Params(
-                        userWalletId = route.portfolioId.userWalletId, // todo account portfolioId param,
+                        userWalletId = route.userWalletId,
                         currency = route.currency,
                         transactionId = route.transactionId,
                         amount = route.amount,
