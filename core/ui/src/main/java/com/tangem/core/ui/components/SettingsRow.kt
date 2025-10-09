@@ -66,7 +66,7 @@ fun SimpleSettingsRow(
                 visible = !subtitle.isNullOrEmpty(),
             ) {
                 Text(
-                    text = subtitle ?: "",
+                    text = subtitle.orEmpty(),
                     style = TangemTheme.typography.body2,
                     color = rowColors.subtitleColor(enabled = enabled).value,
                 )

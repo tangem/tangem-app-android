@@ -47,9 +47,9 @@ fun PinTextField(
 
     BasicTextField(
         value = textFieldValue,
-        onValueChange = {
-            if (it.text.length <= length) {
-                onValueChange(it.text)
+        onValueChange = { value ->
+            if (value.text.length <= length) {
+                onValueChange(value.text)
             }
         },
         modifier = modifier
@@ -108,9 +108,9 @@ private fun CellDecoration(
         modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        repeat(length) {
-            val char = if (it < value.length) {
-                if (isPasswordVisual) PASSWORD_VISUAL_CHAR.toString() else value[it].toString()
+        repeat(length) { i ->
+            val char = if (i < value.length) {
+                if (isPasswordVisual) PASSWORD_VISUAL_CHAR.toString() else value[i].toString()
             } else {
                 ""
             }
