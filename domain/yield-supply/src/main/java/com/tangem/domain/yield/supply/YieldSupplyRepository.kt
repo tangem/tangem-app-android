@@ -3,7 +3,6 @@ package com.tangem.domain.yield.supply
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.yield.supply.models.YieldMarketToken
-import com.tangem.domain.yield.supply.models.YieldMarketTokenStatus
 import com.tangem.domain.yield.supply.models.YieldSupplyMarketChartData
 import kotlinx.coroutines.flow.Flow
 
@@ -26,10 +25,10 @@ interface YieldSupplyRepository {
     fun getMarketsFlow(): Flow<List<YieldMarketToken>>
 
     /**
-     * Get yield token status by contract address.
+     * Get yield token status by contract address from cache
      */
     @Throws
-    suspend fun getTokenStatus(cryptoCurrencyToken: CryptoCurrency.Token): YieldMarketTokenStatus
+    suspend fun getTokenStatus(cryptoCurrencyToken: CryptoCurrency.Token): YieldMarketToken
 
     /**
      * Get yield token APY chart by contract address.
