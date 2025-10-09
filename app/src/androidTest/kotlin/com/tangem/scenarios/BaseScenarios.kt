@@ -9,10 +9,11 @@ import com.tangem.tap.domain.sdk.mocks.MockContent
 import com.tangem.tap.domain.sdk.mocks.MockProvider
 import io.qameta.allure.kotlin.Allure.step
 
-fun BaseTestCase.openMainScreen(
+fun BaseTestCase.scanCard(
     productType: ProductType? = null,
     mockContent: MockContent? = null,
-    alreadyActivatedDialogIsShown : Boolean = false
+    alreadyActivatedDialogIsShown: Boolean = false,
+    isTwinsCard: Boolean = false,
 ) {
     if (productType != null) {
         MockProvider.setMocks(productType)
@@ -28,9 +29,33 @@ fun BaseTestCase.openMainScreen(
     }
     if (alreadyActivatedDialogIsShown) {
         step("Click on 'This is my wallet' button") {
-            composeTestRule.waitForIdle()
+            waitForIdle()
             AlreadyUsedWalletDialogPageObject { thisIsMyWalletButton.click() }
         }
+    }
+    if (isTwinsCard) {
+        step("Click on 'Continue' button") {
+            onOnboardingScreen { continueButton.clickWithAssertion() }
+        }
+        step("Click on 'Continue to my wallet' button") {
+            onOnboardingScreen { continueToMyWalletButton.clickWithAssertion() }
+        }
+    }
+}
+
+fun BaseTestCase.openMainScreen(
+    productType: ProductType? = null,
+    mockContent: MockContent? = null,
+    alreadyActivatedDialogIsShown: Boolean = false,
+    isTwinsCard: Boolean = false,
+) {
+    step("Scan card") {
+        scanCard(
+            productType = productType,
+            mockContent = mockContent,
+            alreadyActivatedDialogIsShown = alreadyActivatedDialogIsShown,
+            isTwinsCard = isTwinsCard,
+        )
     }
     step("Assert 'Main' screen is displayed") {
         onMainScreen { screenContainer.assertIsDisplayed() }
@@ -51,6 +76,7 @@ fun BaseTestCase.synchronizeAddresses(balance: String) {
 
 fun BaseTestCase.openDeviceSettingsScreen() {
     step("Open wallet details") {
+        waitForIdle()
         onTopBar { moreButton.clickWithAssertion() }
     }
     step("Open 'Wallet settings' screen") {
