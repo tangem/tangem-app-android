@@ -110,18 +110,18 @@ internal class DefaultUserWalletsSensitiveInformationRepository(
 
     private suspend fun ByteArray.decodeToEncryptedSensitiveInformation(): Map<String, ByteArray>? {
         return withContext(Dispatchers.Default) {
-            this@decodeToEncryptedSensitiveInformation
-                .decodeToString(throwOnInvalidSequence = true)
-                .let(encryptedSensitiveInformationMapAdapter::fromJson)
+            encryptedSensitiveInformationMapAdapter.fromJson(
+                this@decodeToEncryptedSensitiveInformation.decodeToString(throwOnInvalidSequence = true),
+            )
         }
     }
 
     private suspend fun ByteArray.decodeToSensitiveInformation(): UserWalletSensitiveInformation? {
         return withContext(Dispatchers.Default) {
             try {
-                this@decodeToSensitiveInformation
-                    .decodeToString(throwOnInvalidSequence = true)
-                    .let(sensitiveInformationAdapter::fromJson)
+                sensitiveInformationAdapter.fromJson(
+                    this@decodeToSensitiveInformation.decodeToString(throwOnInvalidSequence = true),
+                )
             } catch (e: CharacterCodingException) {
                 Timber.e(e, "Unable to decode sensitive information")
 
@@ -132,16 +132,14 @@ internal class DefaultUserWalletsSensitiveInformationRepository(
 
     private suspend fun UserWalletSensitiveInformation.encode(): ByteArray {
         return withContext(Dispatchers.Default) {
-            this@encode
-                .let(sensitiveInformationAdapter::toJson)
+            sensitiveInformationAdapter.toJson(this@encode)
                 .encodeToByteArray(throwOnInvalidSequence = true)
         }
     }
 
     private suspend fun Map<String, ByteArray>.encode(): ByteArray {
         return withContext(Dispatchers.Default) {
-            this@encode
-                .let(encryptedSensitiveInformationMapAdapter::toJson)
+            encryptedSensitiveInformationMapAdapter.toJson(this@encode)
                 .encodeToByteArray(throwOnInvalidSequence = true)
         }
     }

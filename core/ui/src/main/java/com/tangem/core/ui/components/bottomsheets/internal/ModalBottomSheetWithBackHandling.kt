@@ -50,8 +50,11 @@ fun ModalBottomSheetWithBackHandling(
         modifier = modifier
             .focusRequester(requester)
             .focusable()
-            .onPreviewKeyEvent {
-                if (it.key == Key.Back && it.type == KeyEventType.KeyUp && !it.nativeKeyEvent.isCanceled) {
+            .onPreviewKeyEvent { keyEvent ->
+                if (keyEvent.key == Key.Back &&
+                    keyEvent.type == KeyEventType.KeyUp &&
+                    !keyEvent.nativeKeyEvent.isCanceled
+                ) {
                     backPressedDispatcherOwner?.onBackPressedDispatcher?.onBackPressed()
                     return@onPreviewKeyEvent true
                 }
