@@ -80,7 +80,7 @@
   <string name="biometric_unavailable_warning">Ha desactivado la autenticación biométrica en su teléfono y no podrá guardar billeteras en la aplicación. Para guardar billeteras, active la función de autenticación biométrica en los ajustes de su teléfono.</string>
   <string name="bitcoin_promo_activation_error">Se produjo un error al procesar tu código promocional. Inténtalo de nuevo más tarde.</string>
   <string name="bitcoin_promo_activation_error_title">Error de activación</string>
-  <string name="bitcoin_promo_activation_success">Su código promocional se ha activado correctamente. Un bono de 10 USDT en Bitcoin se abonará en su cuenta en un plazo de 14 días.</string>
+  <string name="bitcoin_promo_activation_success">Tu código promocional se activó correctamente. Una recompensa se acreditará en tu cuenta dentro de 14 días.</string>
   <string name="bitcoin_promo_activation_success_title">Código promocional activado</string>
   <string name="bitcoin_promo_already_activated">Este código promocional ya ha sido utilizado y no puede activarse de nuevo.</string>
   <string name="bitcoin_promo_already_activated_title">Código no disponible</string>
