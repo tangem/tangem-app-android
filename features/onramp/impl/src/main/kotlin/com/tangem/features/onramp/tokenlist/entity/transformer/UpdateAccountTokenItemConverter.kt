@@ -26,7 +26,7 @@ internal class UpdateAccountTokenItemConverter(
 
     override fun convert(value: AccountAvailabilityUM): TokensListItemUM.Portfolio {
         return TokensListItemUM.Portfolio(
-            state = AccountCryptoPortfolioItemStateConverter(
+            tokenItemUM = AccountCryptoPortfolioItemStateConverter(
                 appCurrency = appCurrency,
                 account = value.account,
                 onItemClick = null,
