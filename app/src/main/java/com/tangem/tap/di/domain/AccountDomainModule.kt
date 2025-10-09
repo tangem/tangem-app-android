@@ -1,7 +1,9 @@
 package com.tangem.tap.di.domain
 
 import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
+import com.tangem.domain.account.fetcher.SingleAccountListFetcher
 import com.tangem.domain.account.repository.AccountsCRUDRepository
+import com.tangem.domain.account.tokens.MainAccountTokensMigration
 import com.tangem.domain.account.usecase.*
 import dagger.Module
 import dagger.Provides
@@ -15,8 +17,16 @@ internal object AccountDomainModule {
 
     @Provides
     @Singleton
-    fun provideAddCryptoPortfolioUseCase(accountsCRUDRepository: AccountsCRUDRepository): AddCryptoPortfolioUseCase {
-        return AddCryptoPortfolioUseCase(crudRepository = accountsCRUDRepository)
+    fun provideAddCryptoPortfolioUseCase(
+        accountsCRUDRepository: AccountsCRUDRepository,
+        singleAccountListFetcher: SingleAccountListFetcher,
+        mainAccountTokensMigration: MainAccountTokensMigration,
+    ): AddCryptoPortfolioUseCase {
+        return AddCryptoPortfolioUseCase(
+            crudRepository = accountsCRUDRepository,
+            singleAccountListFetcher = singleAccountListFetcher,
+            mainAccountTokensMigration = mainAccountTokensMigration,
+        )
     }
 
     @Provides
