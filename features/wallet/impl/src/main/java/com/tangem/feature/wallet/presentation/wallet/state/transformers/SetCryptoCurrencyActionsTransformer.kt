@@ -50,7 +50,7 @@ internal class SetCryptoCurrencyActionsTransformer(
                             dimContent = action.unavailabilityReason != ScenarioUnavailabilityReason.None,
                             onClick = {
                                 clickIntents.onBuyClick(
-                                    portfolioId = portfolioId,
+                                    userWalletId = portfolioId.userWalletId,
                                     cryptoCurrencyStatus = cryptoCurrencyStatus,
                                     unavailabilityReason = action.unavailabilityReason,
                                 )
@@ -62,7 +62,10 @@ internal class SetCryptoCurrencyActionsTransformer(
                             enabled = true,
                             dimContent = action.unavailabilityReason != ScenarioUnavailabilityReason.None,
                             onClick = {
-                                clickIntents.onReceiveClick(portfolioId, cryptoCurrencyStatus = cryptoCurrencyStatus)
+                                clickIntents.onReceiveClick(
+                                    portfolioId.userWalletId,
+                                    cryptoCurrencyStatus = cryptoCurrencyStatus,
+                                )
                             },
                             onLongClick = {
                                 clickIntents.onCopyAddressLongClick(cryptoCurrencyStatus = cryptoCurrencyStatus)
@@ -87,7 +90,7 @@ internal class SetCryptoCurrencyActionsTransformer(
                             dimContent = action.unavailabilityReason != ScenarioUnavailabilityReason.None,
                             onClick = {
                                 clickIntents.onSendClick(
-                                    portfolioId = portfolioId,
+                                    userWalletId = portfolioId.userWalletId,
                                     cryptoCurrencyStatus = cryptoCurrencyStatus,
                                     unavailabilityReason = action.unavailabilityReason,
                                 )
