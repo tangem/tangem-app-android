@@ -16,6 +16,7 @@ import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.currency.yieldSupplyKey
 import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.models.tokenlist.TokenList.GroupedByNetwork.NetworkGroup
 import com.tangem.domain.models.wallet.UserWallet
@@ -208,12 +209,9 @@ internal class TokenListStateConverter(
             ?.yieldSupplyStatus?.isActive == true
         if (isYieldSupplyActive) return null
 
-        val contract = (cryptoCurrencyStatus.currency as? CryptoCurrency.Token)
-            ?.contractAddress
-            ?.lowercase() ?: return null
+        val token = cryptoCurrencyStatus.currency as? CryptoCurrency.Token ?: return null
 
-        val yieldSupplyKey = "${cryptoCurrencyStatus.currency.network.backendId}_$contract"
-        return apyMap[yieldSupplyKey]
+        return apyMap[token.yieldSupplyKey()]
     }
 
     private fun getOrganizeTokensButtonState(tokenList: TokenList): WalletOrganizeTokensButtonConfig? {
