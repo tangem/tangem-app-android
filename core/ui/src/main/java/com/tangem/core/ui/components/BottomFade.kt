@@ -7,6 +7,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.res.TangemTheme
 
 /**
@@ -23,6 +25,32 @@ fun BottomFade(modifier: Modifier = Modifier, backgroundColor: Color = TangemThe
             .height(TangemTheme.dimens.size100 + bottomBarHeight)
             .background(
                 brush = Brush.verticalGradient(
+                    colors = listOf(
+                        Color.Transparent,
+                        backgroundColor,
+                    ),
+                ),
+            ),
+    )
+}
+
+/**
+ * A composable that draws a fade effect. Used on screens with a list of repeating
+ * elements and floating button at the bottom of the screen.
+ */
+@Composable
+fun Fade(
+    modifier: Modifier = Modifier,
+    backgroundColor: Color = TangemTheme.colors.background.secondary,
+    height: Dp = 40.dp,
+) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(height)
+            .background(
+                brush = Brush.verticalGradient(
+                    endY = 100f,
                     colors = listOf(
                         Color.Transparent,
                         backgroundColor,
