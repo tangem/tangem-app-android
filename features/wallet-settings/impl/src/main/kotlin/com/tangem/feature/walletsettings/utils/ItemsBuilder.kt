@@ -9,6 +9,7 @@ import com.tangem.core.ui.components.block.model.BlockUM
 import com.tangem.core.ui.components.label.entity.LabelStyle
 import com.tangem.core.ui.components.label.entity.LabelUM
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.domain.models.PortfolioId
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.feature.walletsettings.analytics.Settings
 import com.tangem.feature.walletsettings.entity.WalletSettingsAccountsUM
@@ -207,7 +208,7 @@ internal class ItemsBuilder @Inject constructor(
                     iconRes = R.drawable.ic_tether_24,
                     onClick = {
                         analyticsEventHandler.send(Settings.ButtonManageTokens)
-                        router.push(AppRoute.ManageTokens(Source.SETTINGS, userWalletId))
+                        router.push(AppRoute.ManageTokens(Source.SETTINGS, PortfolioId(userWalletId)))
                     },
                 ).let(::add)
             }
