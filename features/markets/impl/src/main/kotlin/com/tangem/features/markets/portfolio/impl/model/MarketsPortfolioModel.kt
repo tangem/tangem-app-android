@@ -2,9 +2,9 @@ package com.tangem.features.markets.portfolio.impl.model
 
 import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
-import com.tangem.common.ui.userwallet.state.UserWalletItemUM
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
+import com.tangem.common.ui.userwallet.state.UserWalletItemUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -25,6 +25,7 @@ import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.domain.models.ReceiveAddressModel
 import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.wallet.UserWallet
@@ -374,50 +375,66 @@ internal class MarketsPortfolioModel @Inject constructor(
     }
 
     private fun configureReceiveAddresses(quickAction: TokenActionsHandler.HandledQuickAction) {
-        when (quickAction.action) {
-            TokenActionsBSContentUM.Action.Receive -> {
-                val addresses = quickAction.cryptoCurrencyData.status.value.networkAddress ?: return
-                val cryptoCurrency = quickAction.cryptoCurrencyData.status.currency
-                modelScope.launch {
-                    val ensName = getEnsNameUseCase.invoke(
-                        userWalletId = quickAction.cryptoCurrencyData.userWallet.walletId,
-                        network = cryptoCurrency.network,
-                        address = addresses.defaultAddress.value,
-                    )
+        val isNewReceive = quickAction.action == TokenActionsBSContentUM.Action.Receive &&
+            tokenReceiveFeatureToggle.isNewTokenReceiveEnabled
+        if (isNewReceive) {
+            modelScope.launch {
+                val tokenConfig = configureReceiveAddresses(
+                    status = quickAction.cryptoCurrencyData.status,
+                    userWalletId = quickAction.cryptoCurrencyData.userWallet.walletId,
+                    getEnsNameUseCase = getEnsNameUseCase,
+                    getViewedTokenReceiveWarningUseCase = getViewedTokenReceiveWarningUseCase,
+                ) ?: return@launch
+                bottomSheetNavigation.activate(tokenConfig)
+            }
+        }
+    }
 
-                    val receiveAddresses = buildList {
-                        ensName?.let { ens ->
-                            add(
-                                ReceiveAddressModel(
-                                    nameService = ReceiveAddressModel.NameService.Ens,
-                                    value = ens,
-                                ),
-                            )
-                        }
-                        addresses.availableAddresses.map { address ->
-                            add(
-                                ReceiveAddressModel(
-                                    nameService = when (address.type) {
-                                        NetworkAddress.Address.Type.Primary -> ReceiveAddressModel.NameService.Default
-                                        NetworkAddress.Address.Type.Secondary -> ReceiveAddressModel.NameService.Legacy
-                                    },
-                                    value = address.value,
-                                ),
-                            )
-                        }
-                    }
-                    val tokenConfig = TokenReceiveConfig(
-                        shouldShowWarning = cryptoCurrency.name !in getViewedTokenReceiveWarningUseCase(),
-                        cryptoCurrency = cryptoCurrency,
-                        userWalletId = quickAction.cryptoCurrencyData.userWallet.walletId,
-                        showMemoDisclaimer = cryptoCurrency.network.transactionExtrasType != Network
-                            .TransactionExtrasType.NONE,
-                        receiveAddress = receiveAddresses,
+    companion object {
+        suspend fun configureReceiveAddresses(
+            status: CryptoCurrencyStatus,
+            userWalletId: UserWalletId,
+            getEnsNameUseCase: GetEnsNameUseCase,
+            getViewedTokenReceiveWarningUseCase: GetViewedTokenReceiveWarningUseCase,
+        ): TokenReceiveConfig? {
+            val addresses = status.value.networkAddress ?: return null
+            val cryptoCurrency = status.currency
+
+            val ensName = getEnsNameUseCase.invoke(
+                userWalletId = userWalletId,
+                network = cryptoCurrency.network,
+                address = addresses.defaultAddress.value,
+            )
+
+            val receiveAddresses = buildList {
+                ensName?.let { ens ->
+                    add(
+                        ReceiveAddressModel(
+                            nameService = ReceiveAddressModel.NameService.Ens,
+                            value = ens,
+                        ),
                     )
-                    bottomSheetNavigation.activate(tokenConfig)
+                }
+                addresses.availableAddresses.map { address ->
+                    add(
+                        ReceiveAddressModel(
+                            nameService = when (address.type) {
+                                NetworkAddress.Address.Type.Primary -> ReceiveAddressModel.NameService.Default
+                                NetworkAddress.Address.Type.Secondary -> ReceiveAddressModel.NameService.Legacy
+                            },
+                            value = address.value,
+                        ),
+                    )
                 }
             }
-            else -> Unit
+            return TokenReceiveConfig(
+                shouldShowWarning = cryptoCurrency.name !in getViewedTokenReceiveWarningUseCase(),
+                cryptoCurrency = cryptoCurrency,
+                userWalletId = userWalletId,
+                showMemoDisclaimer = cryptoCurrency.network.transactionExtrasType != Network
+                    .TransactionExtrasType.NONE,
+                receiveAddress = receiveAddresses,
+            )
         }
     }
 }
