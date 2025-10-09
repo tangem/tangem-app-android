@@ -8,6 +8,7 @@ import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.wallet.UserWallet
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
 interface PortfolioSelectorComponent : ComposableBottomSheetComponent, ComposableContentComponent {
@@ -28,12 +29,13 @@ interface PortfolioSelectorComponent : ComposableBottomSheetComponent, Composabl
  */
 interface PortfolioSelectorController {
     val isAccountMode: Flow<Boolean>
-    val selectedAccount: StateFlow<AccountId?>
+    val selectedAccount: Flow<AccountId?>
+    val selectedAccountSync: AccountId?
 
     /**
      * for some Feature specific filtering
      */
-    var isEnabled: ((UserWallet, AccountStatus) -> Boolean)
+    var isEnabled: MutableStateFlow<(UserWallet, AccountStatus) -> Boolean>
 
     fun selectAccount(accountId: AccountId?)
     fun selectedAccountWithData(portfolioFetcher: PortfolioFetcher): Flow<Pair<UserWallet, AccountStatus>?>

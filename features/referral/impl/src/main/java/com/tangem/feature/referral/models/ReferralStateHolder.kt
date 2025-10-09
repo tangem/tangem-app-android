@@ -62,6 +62,7 @@ internal data class ReferralStateHolder(
     )
 
     data class AccountAward(
+        val accountId: String,
         val tokenState: TokenItemState,
         val isBalanceHidden: Boolean,
         val accountName: TextReference,
