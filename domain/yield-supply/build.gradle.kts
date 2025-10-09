@@ -15,15 +15,19 @@ tasks.withType<Test>().configureEach {
 dependencies {
     /** Domain */
     implementation(projects.domain.models)
+    implementation(projects.domain.yieldSupply.models)
     implementation(projects.domain.transaction.models)
     implementation(projects.domain.transaction)
     implementation(projects.domain.legacy)
+    implementation(projects.domain.blockaid.models)
+    implementation(projects.domain.blockaid)
 
     /** Tandem SDK */
     implementation(tangemDeps.blockchain)
 
     /** Other */
     implementation(deps.arrow.core)
+    implementation(deps.timber)
 
     /** tests */
     testImplementation(projects.common.test)
