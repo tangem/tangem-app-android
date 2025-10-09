@@ -260,9 +260,9 @@ private fun TopBar(
                 config = ActionButtonConfig(
                     text = TextReference.Res(id = R.string.organize_tokens_sort_by_balance),
                     iconResId = R.drawable.ic_sort_24,
-                    enabled = config.isEnabled,
+                    isEnabled = config.isEnabled,
                     onClick = config.onSortClick,
-                    dimContent = config.isSortedByBalance,
+                    shouldDimContent = config.isSortedByBalance,
                 ),
                 color = TangemTheme.colors.background.primary,
             )
@@ -279,7 +279,7 @@ private fun TopBar(
                         },
                     ),
                     iconResId = R.drawable.ic_group_24,
-                    enabled = config.isEnabled,
+                    isEnabled = config.isEnabled,
                     onClick = config.onGroupClick,
                 ),
                 color = TangemTheme.colors.background.primary,
