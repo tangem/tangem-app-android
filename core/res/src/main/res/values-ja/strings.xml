@@ -134,7 +134,7 @@
   <string name="biometric_unavailable_warning">お使いの携帯電話で生体認証が無効になっているため、アプリにウォレットを保存できません。ウォレットを保存するには、携帯電話の設定で生体認証機能を有効にしてください。</string>
   <string name="bitcoin_promo_activation_error">プロモーションコードの処理中にエラーが発生しました。しばらくしてからもう一度お試しください。</string>
   <string name="bitcoin_promo_activation_error_title">アクティベーションエラー</string>
-  <string name="bitcoin_promo_activation_success">プロモーションコードが正常に有効化されました。14日以内に10 USDT相当のビットコインがアカウントに入金されます。</string>
+  <string name="bitcoin_promo_activation_success">プロモコードが正常に有効化されました。リワードは14日以内にあなたのアカウントに付与されます。</string>
   <string name="bitcoin_promo_activation_success_title">プロモーションコードが有効になりました</string>
   <string name="bitcoin_promo_already_activated">このプロモーションコードは既に使用されているため、再度使うことはできません。</string>
   <string name="bitcoin_promo_already_activated_title">コードが利用できません</string>
