@@ -11,7 +11,6 @@ import com.tangem.core.decompose.navigation.Route
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.feedback.models.WalletMetaInfo
 import com.tangem.domain.markets.TokenMarketParams
-import com.tangem.domain.models.PortfolioId
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.scan.ScanResponse
@@ -51,50 +50,25 @@ sealed class AppRoute(val path: String) : Route {
 
     @Serializable
     data class CurrencyDetails(
-        val portfolioId: PortfolioId,
+        val userWalletId: UserWalletId,
         val currency: CryptoCurrency,
-    ) : AppRoute(path = "/currency_details/${portfolioId.stringValue}/${currency.id.value}") {
-        companion object {
-            operator fun invoke(userWalletId: UserWalletId, currency: CryptoCurrency) = CurrencyDetails(
-                portfolioId = PortfolioId(userWalletId),
-                currency = currency,
-            )
-        }
-    }
+    ) : AppRoute(path = "/currency_details/${userWalletId.stringValue}/${currency.id.value}")
 
     @Serializable
     data class Send(
-        val portfolioId: PortfolioId,
+        val userWalletId: UserWalletId,
         val currency: CryptoCurrency,
         val transactionId: String? = null,
         val amount: String? = null,
         val tag: String? = null,
         val destinationAddress: String? = null,
     ) : AppRoute(
-        path = "/send/${portfolioId.stringValue}/${currency.id.value}?" +
+        path = "/send/${userWalletId.stringValue}/${currency.id.value}?" +
             "&$transactionId" +
             "&$amount" +
             "&$tag" +
             "&$destinationAddress",
-    ) {
-        companion object {
-            operator fun invoke(
-                userWalletId: UserWalletId,
-                currency: CryptoCurrency,
-                transactionId: String? = null,
-                amount: String? = null,
-                tag: String? = null,
-                destinationAddress: String? = null,
-            ) = Send(
-                portfolioId = PortfolioId(userWalletId),
-                currency = currency,
-                transactionId = transactionId,
-                amount = amount,
-                tag = tag,
-                destinationAddress = destinationAddress,
-            )
-        }
-    }
+    )
 
     @Serializable
     data class Details(
@@ -147,8 +121,8 @@ sealed class AppRoute(val path: String) : Route {
     @Serializable
     data class ManageTokens(
         val source: Source,
-        val userWalletId: UserWalletId? = null,
-    ) : AppRoute(path = "${source.name.lowercase()}/manage_tokens/$userWalletId") {
+        val portfolioId: PortfolioId? = null,
+    ) : AppRoute(path = "${source.name.lowercase()}/manage_tokens/${portfolioId?.stringValue}") {
 
         enum class Source {
             STORIES,
@@ -199,51 +173,26 @@ sealed class AppRoute(val path: String) : Route {
     data class Swap(
         val currencyFrom: CryptoCurrency,
         val currencyTo: CryptoCurrency? = null,
-        val portfolioId: PortfolioId,
+        val userWalletId: UserWalletId,
         val isInitialReverseOrder: Boolean = false,
         val screenSource: String,
     ) : AppRoute(
         path = "/swap" +
             "/${currencyFrom.id.value}" +
             "/${currencyTo?.id?.value}" +
-            "/${portfolioId.stringValue}" +
+            "/${userWalletId.stringValue}" +
             "/$isInitialReverseOrder",
-    ) {
-        companion object {
-            operator fun invoke(
-                userWalletId: UserWalletId,
-                currencyFrom: CryptoCurrency,
-                currencyTo: CryptoCurrency? = null,
-                isInitialReverseOrder: Boolean = false,
-                screenSource: String,
-            ) = Swap(
-                portfolioId = PortfolioId(userWalletId),
-                currencyFrom = currencyFrom,
-                currencyTo = currencyTo,
-                isInitialReverseOrder = isInitialReverseOrder,
-                screenSource = screenSource,
-            )
-        }
-    }
+    )
 
     @Serializable
     data object AppCurrencySelector : AppRoute(path = "/app_currency_selector")
 
     @Serializable
     data class Staking(
-        val portfolioId: PortfolioId,
+        val userWalletId: UserWalletId,
         val cryptoCurrencyId: CryptoCurrency.ID,
         val yieldId: String,
-    ) : AppRoute(path = "/staking/${portfolioId.stringValue}/${cryptoCurrencyId.value}/$yieldId") {
-        companion object {
-            operator fun invoke(userWalletId: UserWalletId, cryptoCurrencyId: CryptoCurrency.ID, yieldId: String) =
-                Staking(
-                    portfolioId = PortfolioId(userWalletId),
-                    cryptoCurrencyId = cryptoCurrencyId,
-                    yieldId = yieldId,
-                )
-        }
-    }
+    ) : AppRoute(path = "/staking/${userWalletId.stringValue}/${cryptoCurrencyId.value}/$yieldId")
 
     @Serializable
     data class PushNotification(
@@ -287,25 +236,11 @@ sealed class AppRoute(val path: String) : Route {
     @Serializable
     data class Onramp(
         val source: OnrampSource,
-        val portfolioId: PortfolioId,
+        val userWalletId: UserWalletId,
         val currency: CryptoCurrency,
         val shouldLaunchSepa: Boolean = false,
-    ) : AppRoute(path = "/onramp/${portfolioId.stringValue}/${currency.symbol}"), RouteBundleParams {
+    ) : AppRoute(path = "/onramp/${userWalletId.stringValue}/${currency.symbol}"), RouteBundleParams {
         override fun getBundle(): Bundle = bundle(serializer())
-
-        companion object {
-            operator fun invoke(
-                source: OnrampSource,
-                userWalletId: UserWalletId,
-                currency: CryptoCurrency,
-                launchSepa: Boolean = false,
-            ) = Onramp(
-                source = source,
-                portfolioId = PortfolioId(userWalletId),
-                currency = currency,
-                shouldLaunchSepa = launchSepa,
-            )
-        }
     }
 
     @Serializable
