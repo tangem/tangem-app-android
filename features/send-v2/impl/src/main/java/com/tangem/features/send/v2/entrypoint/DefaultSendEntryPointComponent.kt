@@ -125,7 +125,7 @@ internal class DefaultSendEntryPointComponent @AssistedInject constructor(
                 initialCurrency = params.cryptoCurrency,
                 source = ChooseManagedTokensComponent.Source.SendViaSwap,
                 selectedCurrency = null,
-                showSendViaSwapNotification = showSendViaSwapNotification,
+                shouldShowSendViaSwapNotification = showSendViaSwapNotification,
                 callback = model,
                 analyticsCategoryName = CommonSendAnalyticEvents.SEND_CATEGORY,
             ),

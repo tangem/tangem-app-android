@@ -1,8 +1,8 @@
 package com.tangem.features.account.createedit
 
+import androidx.annotation.StringRes
 import com.tangem.common.ui.account.AccountNameUM
 import com.tangem.common.ui.account.toDomain
-import androidx.annotation.StringRes
 import com.tangem.common.ui.account.toUM
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
@@ -13,11 +13,11 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.res.R
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.ToastMessage
 import com.tangem.core.ui.utils.showErrorDialog
+import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.usecase.AddCryptoPortfolioUseCase
 import com.tangem.domain.account.usecase.GetUnoccupiedAccountIndexUseCase
 import com.tangem.domain.account.usecase.UpdateCryptoPortfolioUseCase
@@ -60,7 +60,7 @@ internal class AccountCreateEditModel @Inject constructor(
     private val umBuilder = AccountCreateEditUMBuilder(params)
 
     val uiState: StateFlow<AccountCreateEditUM>
-    field = MutableStateFlow(value = getInitialState())
+        field = MutableStateFlow(value = getInitialState())
 
     init {
         if (params is AccountCreateEditComponent.Params.Create) {
@@ -75,13 +75,17 @@ internal class AccountCreateEditModel @Inject constructor(
         )
         val firstAction = EventMessageAction(
             title = resourceReference(R.string.account_unsaved_dialog_action_second),
-            warning = true,
+            isWarning = true,
             onClick = { router.pop() },
         )
+        val messageRes = when (params) {
+            is AccountCreateEditComponent.Params.Create -> R.string.account_unsaved_dialog_message_create
+            is AccountCreateEditComponent.Params.Edit -> R.string.account_unsaved_dialog_message_edit
+        }
         messageSender.send(
             DialogMessage(
                 title = resourceReference(R.string.account_unsaved_dialog_title),
-                message = resourceReference(R.string.account_unsaved_dialog_message_create),
+                message = resourceReference(messageRes),
                 firstActionBuilder = { firstAction },
                 secondActionBuilder = { secondAction },
             ),
@@ -110,12 +114,25 @@ internal class AccountCreateEditModel @Inject constructor(
             derivationIndex = derivationIndex,
         )
         uiState.value = uiState.value.toggleProgress(showProgress = false)
+
         result
-            .onLeft { showMessage(it.toString()) }
+            .onLeft(::handleAddAccountError)
             .onRight {
                 showMessage(R.string.account_create_success_message)
                 router.pop()
             }
+    }
+
+    private fun handleAddAccountError(error: AddCryptoPortfolioUseCase.Error) {
+        val duplicateAccountNames = (error as? AddCryptoPortfolioUseCase.Error.AccountListRequirementsNotMet)
+            ?.cause is AccountList.Error.DuplicateAccountNames
+        when {
+            duplicateAccountNames -> showAccountNameExist()
+            else -> {
+                showSomethingWrong()
+                logError(error = AccountFeatureError.CreateAccount.FailedToCreateAccount(cause = error))
+            }
+        }
     }
 
     private suspend fun editCryptoPortfolio(params: AccountCreateEditComponent.Params.Edit) {
@@ -124,6 +141,7 @@ internal class AccountCreateEditModel @Inject constructor(
         val icon = state.account.portfolioIcon.toDomain()
         val isNewName = name != params.account.accountName
         val isNewIcon = icon != params.account.portfolioIcon
+
         uiState.value = uiState.value.toggleProgress(showProgress = true)
         val result = updateCryptoPortfolioUseCase(
             icon = if (isNewIcon) icon else null,
@@ -131,12 +149,25 @@ internal class AccountCreateEditModel @Inject constructor(
             accountId = params.account.accountId,
         )
         uiState.value = uiState.value.toggleProgress(showProgress = false)
+
         result
-            .onLeft { showMessage(it.toString()) }
+            .onLeft(::handleEditAccountError)
             .onRight {
                 showMessage(R.string.account_edit_success_message)
                 router.pop()
             }
+    }
+
+    private fun handleEditAccountError(error: UpdateCryptoPortfolioUseCase.Error) {
+        val duplicateAccountNames = (error as? UpdateCryptoPortfolioUseCase.Error.AccountListRequirementsNotMet)
+            ?.cause is AccountList.Error.DuplicateAccountNames
+        when {
+            duplicateAccountNames -> showAccountNameExist()
+            else -> {
+                showSomethingWrong()
+                logError(error = AccountFeatureError.EditAccount.FailedToEditAccount(cause = error))
+            }
+        }
     }
 
     private fun showMessage(@StringRes id: Int) {
@@ -144,11 +175,10 @@ internal class AccountCreateEditModel @Inject constructor(
         messageSender.send(ToastMessage(message = message))
     }
 
-    private fun showMessage(text: String) {
-        messageSender.send(ToastMessage(message = stringReference(text)))
+    private fun onCloseClick() {
+        val showConfirmDialog = uiState.value.buttonState.isButtonEnabled
+        if (showConfirmDialog) unsaveChangeDialog() else router.pop()
     }
-
-    private fun onCloseClick() = unsaveChangeDialog()
 
     private fun onIconSelect(icon: CryptoPortfolioIcon.Icon) {
         uiState.value = uiState.value
@@ -203,33 +233,46 @@ internal class AccountCreateEditModel @Inject constructor(
                     }
                 }
                 .onLeft { cause ->
-                    handleError(
-                        error = AccountFeatureError.CreateAccount.UnableToGetDerivationIndex,
-                        message = cause.toString(),
+                    val error = AccountFeatureError.CreateAccount.UnableToGetDerivationIndex(cause)
+
+                    logError(
+                        error = error,
                         params = mapOf(
                             "userWalletId" to userWalletId.stringValue,
                             "cause" to cause.toString(),
                         ),
                     )
 
+                    messageSender.showErrorDialog(universalError = error, onDismiss = router::pop)
+
                     return@launch
                 }
         }
     }
 
-    private fun handleError(
-        error: AccountFeatureError,
-        message: String? = null,
-        params: Map<String, String> = mapOf(),
-    ) {
-        val exception = IllegalStateException("$error. Cause: $message")
+    private fun logError(error: AccountFeatureError, params: Map<String, String> = mapOf()) {
+        val exception = IllegalStateException(error.toString())
 
         Timber.e(exception)
 
         analyticsExceptionHandler.sendException(
             event = ExceptionAnalyticsEvent(exception = exception, params = params),
         )
+    }
 
-        messageSender.showErrorDialog(universalError = error, onDismiss = router::pop)
+    private fun showSomethingWrong() {
+        val dialogMessage = DialogMessage(
+            title = resourceReference(R.string.common_something_went_wrong),
+            message = resourceReference(R.string.account_could_not_create),
+        )
+        messageSender.send(dialogMessage)
+    }
+
+    private fun showAccountNameExist() {
+        val dialogMessage = DialogMessage(
+            title = resourceReference(R.string.common_something_went_wrong),
+            message = resourceReference(R.string.account_form_name_already_exist_error_description),
+        )
+        messageSender.send(dialogMessage)
     }
 }

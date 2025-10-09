@@ -38,6 +38,7 @@ import com.tangem.feature.walletsettings.analytics.WalletSettingsAnalyticEvents
 import com.tangem.feature.walletsettings.component.WalletSettingsComponent
 import com.tangem.feature.walletsettings.entity.DialogConfig
 import com.tangem.feature.walletsettings.entity.NetworksAvailableForNotificationBSConfig
+import com.tangem.feature.walletsettings.entity.WalletSettingsAccountsUM
 import com.tangem.feature.walletsettings.entity.WalletSettingsItemUM
 import com.tangem.feature.walletsettings.entity.WalletSettingsUM
 import com.tangem.feature.walletsettings.impl.R
@@ -123,7 +124,8 @@ internal class WalletSettingsModel @Inject constructor(
             getWalletNotificationsEnabledUseCase(params.userWalletId),
             isUpgradeWalletNotificationEnabledUseCase(params.userWalletId),
             walletCardItemDelegate.cardItemFlow(wallet),
-        ) { nftEnabled, notificationsEnabled, isUpgradeNotificationEnabled, cardItem ->
+            accountItemsDelegate.loadAccount(),
+        ) { nftEnabled, notificationsEnabled, isUpgradeNotificationEnabled, cardItem, accountList ->
             val isWalletBackedUp = when (wallet) {
                 is UserWallet.Hot -> wallet.backedUp
                 is UserWallet.Cold -> true
@@ -138,6 +140,7 @@ internal class WalletSettingsModel @Inject constructor(
                         isNotificationsFeatureEnabled = true,
                         isNotificationsPermissionGranted = isNotificationsPermissionGranted(),
                         isUpgradeNotificationEnabled = isUpgradeNotificationEnabled,
+                        accountList = accountList,
                     ),
                     isWalletBackedUp = isWalletBackedUp,
                 )
@@ -168,6 +171,7 @@ internal class WalletSettingsModel @Inject constructor(
         isNotificationsEnabled: Boolean,
         isNotificationsPermissionGranted: Boolean,
         isUpgradeNotificationEnabled: Boolean,
+        accountList: List<WalletSettingsAccountsUM>,
     ): PersistentList<WalletSettingsItemUM> {
         val isMultiCurrency = when (userWallet) {
             is UserWallet.Cold -> userWallet.isMultiCurrency
@@ -194,7 +198,7 @@ internal class WalletSettingsModel @Inject constructor(
                     firstActionBuilder = {
                         EventMessageAction(
                             title = resourceReference(R.string.common_delete),
-                            warning = true,
+                            isWarning = true,
                             onClick = ::forgetWallet,
                         )
                     },
@@ -219,7 +223,7 @@ internal class WalletSettingsModel @Inject constructor(
             walletUpgradeDismissed = isUpgradeNotificationEnabled,
             onUpgradeWalletClick = ::onUpgradeWalletClick,
             onDismissUpgradeWalletClick = ::onDismissUpgradeWalletClick,
-            accountsUM = with(accountItemsDelegate) { listOf() }, // todo account
+            accountsUM = accountList,
         )
     }
 

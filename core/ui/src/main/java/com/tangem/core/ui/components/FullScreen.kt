@@ -33,7 +33,7 @@ fun FullScreen(
 
     val fullScreenLayout = remember {
         FullScreenLayout(
-            notTouchable = notTouchable,
+            isNotTouchable = notTouchable,
             focusable = focusable,
             composeView = view,
             onBackClick = onBackClick,
@@ -53,7 +53,7 @@ fun FullScreen(
 
 @SuppressLint("ViewConstructor", "ClickableViewAccessibility")
 private class FullScreenLayout(
-    private val notTouchable: Boolean,
+    private val isNotTouchable: Boolean,
     private val focusable: Boolean,
     private val composeView: View,
     private val onBackClick: () -> Unit,
@@ -68,10 +68,10 @@ private class FullScreenLayout(
     override var shouldCreateCompositionOnAttachedToWindow: Boolean = false
         private set
 
-    private var viewShowing = false
+    private var isViewShowing = false
 
     init {
-        if (notTouchable) {
+        if (isNotTouchable) {
             setOnTouchListener { _, _ -> false }
         }
 
@@ -110,19 +110,19 @@ private class FullScreenLayout(
     }
 
     fun show() {
-        if (viewShowing) dismiss()
+        if (isViewShowing) dismiss()
         windowManager.addView(this, params)
 
         if (focusable.not()) {
             params.flags = params.flags or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
         }
 
-        if (notTouchable) {
+        if (isNotTouchable) {
             params.flags = params.flags or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
         }
 
         windowManager.updateViewLayout(this, params)
-        viewShowing = true
+        isViewShowing = true
     }
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
@@ -139,10 +139,10 @@ private class FullScreenLayout(
     }
 
     fun dismiss() {
-        if (!viewShowing) return
+        if (!isViewShowing) return
         disposeComposition()
         windowManager.removeViewImmediate(this)
-        viewShowing = false
+        isViewShowing = false
     }
 
     fun dispose() {

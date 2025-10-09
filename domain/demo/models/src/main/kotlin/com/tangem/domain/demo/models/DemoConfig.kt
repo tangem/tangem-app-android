@@ -432,5 +432,5 @@ class DemoConfig {
     )
 
     @Suppress("ClassOrdering")
-    private val debugTestDemoCardIds = listOf<String>()
+    private val debugTestDemoCardIds = emptyList<String>()
 }

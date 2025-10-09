@@ -7,7 +7,10 @@ import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.POST
+import retrofit2.http.Path
 import retrofit2.http.Query
+
+private const val TX_HISTORY_PAGING_DEFAULT_LIMIT = 20
 
 @Suppress("TooManyFunctions")
 interface TangemPayApi {
@@ -107,6 +110,13 @@ interface TangemPayApi {
         @Query("offset") offset: Int,
     ): ApiResponse<VisaTxHistoryResponse>
 
+    @GET("v1/customer/transactions")
+    suspend fun getTangemPayTxHistory(
+        @Header("Authorization") authHeader: String,
+        @Query("cursor") cursor: String?,
+        @Query("limit") limit: Int = TX_HISTORY_PAGING_DEFAULT_LIMIT,
+    ): ApiResponse<TangemPayTxHistoryResponse>
+
     @GET("v1/customer/kyc")
     suspend fun getKycAccess(@Header("Authorization") authHeader: String): ApiResponse<KycAccessInfoResponse>
 
@@ -115,4 +125,25 @@ interface TangemPayApi {
 
     @POST("v1/deeplink/validate")
     suspend fun validateDeeplink(@Body body: DeeplinkValidityRequest): ApiResponse<DeeplinkValidityResponse>
+
+    @GET("v1/order/{order_id}")
+    suspend fun getOrder(
+        @Header("Authorization") authHeader: String,
+        @Path("order_id") orderId: String,
+    ): ApiResponse<OrderResponse>
+
+    @POST("v1/order")
+    suspend fun createOrder(
+        @Header("Authorization") authHeader: String,
+        @Body body: OrderRequest,
+    ): ApiResponse<OrderResponse>
+
+    @GET("v1/customer/balance")
+    suspend fun getCardBalance(@Header("Authorization") authHeader: String): ApiResponse<CardBalanceResponse>
+
+    @POST("v1/customer/card/details")
+    suspend fun revealCardDetails(
+        @Header("Authorization") authHeader: String,
+        @Body body: CardDetailsRequest,
+    ): ApiResponse<CardDetailsResponse>
 }
