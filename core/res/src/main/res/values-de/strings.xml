@@ -4,8 +4,8 @@
   <string name="access_code_alert_skip_ok">Trotzdem überspringen</string>
   <string name="access_code_alert_skip_title">Zugangscode nicht festgelegt</string>
   <string name="access_code_check_title">Zugangscode eingeben</string>
-  <string name="access_code_check_warining_delete">Falscher Zugangscode. Deine Hot-Wallet wird nach %s weiteren Fehlversuchen gelöscht.</string>
-  <string name="access_code_check_warining_lock">Falscher Zugangscode. App wird bei %s weiteren Eingabefehlern gesperrt</string>
+  <string name="access_code_check_warining_delete">Falscher Zugangscode. Deine mobile Wallet wird nach %s weiteren Fehlversuchen gelöscht.</string>
+  <string name="access_code_check_warining_lock">Falscher Zugangscode. Die App wird nach %s weiteren Fehlversuchen gesperrt.</string>
   <string name="access_code_check_warining_wait">Falscher Zugangscode.\nBitte warte %s Sekunden und versuche es erneut.</string>
   <string name="access_code_confirm_description">Bestätige Deinen zuvor eingegebenen Code, um fortzufahren</string>
   <string name="access_code_confirm_title">Zugangscode erneut eingeben</string>
@@ -19,6 +19,7 @@
   <string name="account_archived_recover">Wiederherstellen</string>
   <string name="account_archived_recover_dialog_description">Du bist dabei, dich zu erholen \"%1$s”.</string>
   <string name="account_archived_recover_dialog_title">Konto wiederherstellen</string>
+  <string name="account_archived_recover_error_message">Du hast das Limit von 20 aktiven Konten bereits überschritten. Archiviere eines, um es wiederherzustellen.</string>
   <string name="account_archived_title">Archiviert</string>
   <string name="account_create_success_message">Konto erstellt</string>
   <string name="account_details_archive">Archivkonto</string>
@@ -30,6 +31,7 @@
   <string name="account_form_create_button">Konto hinzufügen</string>
   <string name="account_form_edit_button">Speichern</string>
   <string name="account_form_name">Kontoname</string>
+  <string name="account_form_name_already_exist_error_description">Der Kontoname ist bereits vorhanden</string>
   <string name="account_form_placeholder_edit_account">Konto</string>
   <string name="account_form_placeholder_new_account">Neues Konto</string>
   <string name="account_form_title_create">Konto hinzufügen</string>
@@ -104,7 +106,7 @@
     <item quantity="one">%s Karte</item>
     <item quantity="other">%s Karten</item>
   </plurals>
-  <string name="auth_wallet_mobile_description">Handy-Wallet</string>
+  <string name="auth_wallet_mobile_description">Mobile-Wallet</string>
   <string name="backup_complete_description">Du hast Deine Wallet erfolgreich gesichert.</string>
   <string name="backup_complete_seed_description">Diese Wörter können bei Verlust nicht wiederhergestellt werden. Bewahre diese an einem sicheren Ort auf.</string>
   <string name="backup_complete_title">Sicherung abgeschlossen</string>
@@ -130,7 +132,7 @@
   <string name="biometric_unavailable_warning">Du hast die biometrische Authentifizierung auf deinem Telefon deaktiviert und kannst keine Wallets in der App speichern. Um Wallets zu speichern, aktiviere bitte die biometrische Authentifizierung in deinen Telefoneinstellungen.</string>
   <string name="bitcoin_promo_activation_error">Bei der Bearbeitung Deines Aktionscodes ist ein Fehler aufgetreten. Bitte versuche es später noch einmal.</string>
   <string name="bitcoin_promo_activation_error_title">Fehler bei der Aktivierung</string>
-  <string name="bitcoin_promo_activation_success">Dein Promo-Code wurde erfolgreich aktiviert. Ein Bonus von 10 USDT in Bitcoin wird Deinem Konto innerhalb von 14 Tagen gutgeschrieben.</string>
+  <string name="bitcoin_promo_activation_success">Ihr Aktionscode wurde erfolgreich aktiviert. Eine Belohnung wird innerhalb von 14 Tagen auf Ihr Konto gutgeschrieben.</string>
   <string name="bitcoin_promo_activation_success_title">Promo-Code aktiviert</string>
   <string name="bitcoin_promo_already_activated">Dieser Aktionscode wurde bereits verwendet und kann nicht erneut aktiviert werden.</string>
   <string name="bitcoin_promo_already_activated_title">Code nicht verfügbar</string>
@@ -174,6 +176,7 @@
   <string name="common_accept">Akzeptieren</string>
   <string name="common_access_denied">Zugang verweigert</string>
   <string name="common_accounts">Konten</string>
+  <string name="common_activate">Aktivieren</string>
   <string name="common_add">Hinzufügen</string>
   <string name="common_add_to_portfolio">Zum Portfolio hinzufügen</string>
   <string name="common_add_token">Token hinzufügen</string>
@@ -182,6 +185,7 @@
   <string name="common_allow">Erlauben</string>
   <string name="common_amount">Betrag</string>
   <string name="common_analytics">Analysen</string>
+  <string name="common_and">und</string>
   <string name="common_apply">Anwenden</string>
   <string name="common_approval">Genehmigung</string>
   <string name="common_approve">Genehmigen</string>
@@ -198,6 +202,7 @@
   <string name="common_camera_denied_alert_message">D hast keinen Zugang zur Kamera erteilt, bitte passe deine Datenschutzeinstellungen an</string>
   <string name="common_cancel">Abbrechen</string>
   <string name="common_change">Ändern</string>
+  <string name="common_choose_account">Konto auswählen</string>
   <string name="common_choose_action">Aktion wählen</string>
   <string name="common_choose_network">Netzwerk auswählen</string>
   <string name="common_choose_token">Token auswählen</string>
@@ -246,7 +251,9 @@
   <string name="common_fee_selector_title">Gebühren</string>
   <string name="common_finish">Beenden</string>
   <string name="common_free">Kostenlos</string>
+  <string name="common_from">Vom</string>
   <string name="common_generate_addresses">Adressen synchronisieren</string>
+  <string name="common_get_started">Erste Schritte</string>
   <string name="common_go_to_provider">Zum Anbieter gehen</string>
   <string name="common_go_to_token">Zum Token</string>
   <string name="common_got_it">Verstanden</string>
@@ -255,6 +262,7 @@
   <string name="common_import">Importieren</string>
   <string name="common_in_progress">In Arbeit</string>
   <string name="common_later">Später</string>
+  <string name="common_learn_more">Mehr erfahren</string>
   <string name="common_left">%1$s übrig</string>
   <string name="common_legacy_bitcoin_address">Legacy Bitcoin</string>
   <string name="common_locked">Gesperrt</string>
@@ -320,6 +328,7 @@
   <string name="common_tangem_wallet">Tangem Wallet</string>
   <string name="common_terms_and_conditions">Allgemeine Geschäftsbedingungen</string>
   <string name="common_terms_of_use">Nutzungsbedingungen</string>
+  <string name="common_to">An</string>
   <string name="common_today">Heute</string>
   <plurals name="common_tokens_count">
     <item quantity="one">%d Token</item>
@@ -504,6 +513,7 @@
   <string name="home_button_create_new_wallet">Neues Wallet erstellen</string>
   <string name="home_button_order">Karte oder Ring bestellen</string>
   <string name="home_button_scan">Karte oder Ring scannen</string>
+  <string name="hot_access_code_set_biometric_ask">Möchtest Du „Tangem“ die biometrische Authentifizierung erlauben? Um Deine Identität zu bestätigen und die App zu öffnen</string>
   <string name="hot_crypto_add_token_subtitle">An %s</string>
   <string name="hot_crypto_token_network">Im %s Netzwerk</string>
   <string name="hw_access_code_create_alert_title">Willst Du den Vorgang zur Erstellung des Zugangscodes wirklich beenden?</string>
@@ -515,7 +525,7 @@
   <string name="hw_backup_alert_description">Wenn dies der Fall ist, musst Du von vorne beginnen.</string>
   <string name="hw_backup_alert_title">Bist Du sicher, dass Du den Aktivierungsprozess beenden willst?</string>
   <string name="hw_backup_close_description">Wenn dies der Fall ist, musst Du von vorne beginnen.</string>
-  <string name="hw_backup_google_drive_description">Wiederherstellung einer bestehenden Wallet, die in Ihrem Google Drive-Backup gespeichert ist</string>
+  <string name="hw_backup_google_drive_description">Vorhandene Wallet über Google Drive-Backup wiederherstellen</string>
   <string name="hw_backup_google_drive_title">Google Drive-Backup</string>
   <string name="hw_backup_hardware_description">Verbesser Deine Sicherheit sofort mit einer erstklassigen Hardware-Wallet von Tangem.</string>
   <string name="hw_backup_hardware_title">Hardware-Wallet</string>
@@ -527,6 +537,7 @@
   <string name="hw_create_keys_title">Schlüssel werden in der App gespeichert</string>
   <string name="hw_create_seed_title">Sicherung der Seed-Phrase</string>
   <string name="hw_create_title">Mobile Wallet erstellen</string>
+  <string name="hw_import_existing_wallet">Vorhandene Wallet importieren</string>
   <string name="hw_import_seed_phrase_already_imported">Diese Wiederherstellungsphrase wurde bereits importiert</string>
   <string name="hw_mobile_wallet">Mobile Wallet</string>
   <string name="hw_upgrade_funds_access_description">Dein Geld bleibt während des gesamten Prozesses sicher und vollständig zugänglich</string>
@@ -847,6 +858,7 @@
   <string name="onboarding_wallet_info_title_fourth">Zugangscode wiederherstellen</string>
   <string name="onboarding_wallet_info_title_second">Identische Karten oder Ring</string>
   <string name="onboarding_wallet_info_title_third">Zugangscode</string>
+  <string name="onramp_all_offers_button_title">Alle Angebote</string>
   <string name="onramp_avaiable_with_payment_methods">Verfügbar mit %s</string>
   <string name="onramp_choose_provider_title_hint">Anbieter erleichtern Transaktionen</string>
   <string name="onramp_country_search">Suche nach Land</string>
@@ -854,13 +866,24 @@
   <string name="onramp_currency_other">Andere Währungen</string>
   <string name="onramp_currency_popular">Beliebte Fiats</string>
   <string name="onramp_currency_search">Suche nach Währung</string>
+  <string name="onramp_instant_status">Sofort</string>
   <string name="onramp_legal">Durch die Nutzung der Onramp-Funktionalität stimmst Du den %1$s und %2$s des Anbieters zu.</string>
+  <string name="onramp_legal_text">Der Service wird von einem externen Anbieter bereitgestellt. \n Tangem übernimmt keine Verantwortung.</string>
   <string name="onramp_max_amount_restriction">Der Kaufbetrag sollte nicht höher sein als %s</string>
   <string name="onramp_min_amount_restriction">Der zu kaufende Betrag muss mindestens %s betragen</string>
   <string name="onramp_no_available_providers">Keine verfügbaren Anbieter für diese Währung</string>
+  <string name="onramp_offer_type_fastet">Schnellste</string>
   <string name="onramp_pay_with">Bezahlen mit</string>
+  <string name="onramp_payment_method_subtitle">Zahlungsmethode</string>
   <string name="onramp_provider_max_amount">Verfügbar bis zu %s</string>
   <string name="onramp_provider_min_amount">Erhältlich bei %s</string>
+  <plurals name="onramp_providers_count">
+    <item quantity="one">Anbieter</item>
+    <item quantity="other">Anbieter</item>
+  </plurals>
+  <string name="onramp_providers_subtitle">Anbieter</string>
+  <string name="onramp_recently_used_title">Kürzlich verwendet</string>
+  <string name="onramp_recommended_title">Empfohlen</string>
   <string name="onramp_redirecting_to_provider_subtitle">Du kannst Deine Transaktion beim Drittanbieter %s abschließen.</string>
   <string name="onramp_redirecting_to_provider_title">Umleitung auf %s…</string>
   <string name="onramp_residency_bottomsheet_country_not_supported">Unsere Dienstleistungen sind in diesem Land nicht verfügbar</string>
@@ -869,13 +892,18 @@
   <string name="onramp_settings_residence_description">Bitte wähle das richtige Land aus, um korrekte Zahlungsoptionen und Dienstleistungen zu gewährleisten.</string>
   <string name="onramp_settings_title">Einstellungen</string>
   <string name="onramp_statuses_view_footer">Du kannst diesen Bildschirm schließen und den Transaktionsstatus auf dem Bildschirm mit den Token-Details überprüfen.</string>
+  <string name="onramp_timing_minutes">%s min</string>
+  <string name="onramp_title_you_get">Du erhältst</string>
+  <string name="onramp_tos_external_providers">Der Service wird von einem externen Anbieter bereitgestellt. \n Tangem übernimmt keine Verantwortung.</string>
   <string name="onramp_transaction_status_footer_text">Du kannst diesen Bildschirm schließen und den Transaktionsstatus auf dem Bildschirm mit den Token-Details überprüfen.</string>
+  <string name="onramp_up_to_rate">Bis zu</string>
   <string name="onramp_via">Über</string>
   <string name="onramp_you_will_pay_title">Du zahlst</string>
   <string name="organize_tokens_group">Gruppe erstellen</string>
   <string name="organize_tokens_sort_by_balance">Nach Guthaben</string>
   <string name="organize_tokens_title">Token organisieren</string>
   <string name="organize_tokens_ungroup">Gruppe löschen</string>
+  <string name="provider_name_support">%s Unterstützung</string>
   <string name="push_notifications_more_info">Mehr Infos</string>
   <string name="push_notifications_permission_alert_description">Du kannst Benachrichtigungen für Tangem in den Einstellungen aktivieren.</string>
   <string name="push_notifications_permission_alert_negative_button">Später aktivieren</string>
@@ -894,6 +922,7 @@
   <string name="receive_bottom_sheet_warning_message_full">Sende nur %s an diese Adresse. Der Versand einer anderen Währung führt zu ihrem unwiderruflichen Verlust.</string>
   <string name="receive_bottom_sheet_warning_title">Senden nur %1$s im Netzwerk %2$s</string>
   <string name="receive_token_description">Überweise Geld von einem anderen Wallet oder einer anderen Börse</string>
+  <string name="referral_address_for_rewards">Adresse für Prämien</string>
   <string name="referral_button_participate">Teilnehmen</string>
   <string name="referral_error_failed_to_load_info">Die Informationen zum Empfehlungsprogramm konnten nicht geladen werden. Bitte versuche es später noch einmal.</string>
   <string name="referral_error_failed_to_load_info_with_reason">Die Informationen über das Empfehlungsprogramm konnten nicht geladen werden. Fehlercode: %s. Bitte versuche es später noch einmal.</string>
@@ -1070,6 +1099,9 @@
   <string name="settings_forget_wallet_footer">Hiermit wird die Wallet aus der Anwendung entfernt. Die Wallet selbst kann wieder hinzugefügt werden.</string>
   <string name="settings_wallet_name_title">Name</string>
   <string name="stake_token_description">Lass deinen Token für dich arbeiten</string>
+  <string name="staking_account_initialization_footer">Eine Netzwerkgebühr ist eine kleine Zahlung, die erforderlich ist, um Deine Transaktion auf der Blockchain zu verarbeiten und zu bestätigen.</string>
+  <string name="staking_account_initialization_message">Um mit dem Staking zu beginnen, muss Dein TON-Konto mit einer Selbsttransaktion von 1 TON aktiviert werden. Das Guthaben verbleibt in Deiner Wallet – dieser Schritt aktiviert Dein Konto lediglich für das Staking.</string>
+  <string name="staking_account_initialization_title">Kontoaktivierung</string>
   <string name="staking_amount_requirement_error">Die Anzahl der zu stakenden Krypros muss mindesten %s betragen</string>
   <string name="staking_amount_tron_integer_error">Der Stakingbetrag wird aufgrund der Netzwerkregeln auf %1$s TRX aufgerundet.</string>
   <string name="staking_amount_tron_integer_error_unstaking">Der Betrag der unstaked wird, wird aufgrund der Netzwerkregeln auf %1$s TRX gerundet.</string>
@@ -1078,6 +1110,7 @@
   <string name="staking_details_account_fee_info">Ein Staking-Konto ist ein spezielles Konto, auf dem eingesetzte SOL-Token gespeichert werden. Es wird erstellt, indem Sie Ihre Token an einen Validator delegieren, um an der Transaktionsvalidierung teilzunehmen und Belohnungen zu erhalten. Für die Einrichtung des Staking-Kontos wird eine geringe Gebühr erhoben, die nach Abschluss des Stakings zurückerstattet wird.</string>
   <string name="staking_details_annual_percentage_rate">Jährliche prozentuale Rendite</string>
   <string name="staking_details_annual_percentage_rate_info">Die jährliche prozentuale Rendite, die du durch die Teilnahme am Staking erzielen kannst.</string>
+  <string name="staking_details_annual_percentage_yield_info">APY zeigt den jährlichen prozentualen Ertrag des Validators basierend auf seiner Leistung</string>
   <string name="staking_details_apr">Effektiver Jahreszins</string>
   <string name="staking_details_auto_claiming_rewards_daily_text">Belohnungen sammeln sich täglich automatisch in deinem Staking-Konto an.</string>
   <string name="staking_details_available">Verfügbar</string>
@@ -1133,6 +1166,8 @@
   <string name="staking_notification_restake_rewards_text">Reinvestiert Deine verdienten Prämien in Deinen Einsatzbetrag und erhöht so den potenziellen Gewinn.</string>
   <string name="staking_notification_restake_text">Mit Restake kannst Du Dein Guthaben von einem Validator zu einem anderen verschieben, ohne dass Du den Stake aufheben musst.</string>
   <string name="staking_notification_stake_entire_balance_text">Du bist dabei, Dein gesamtes Guthaben zu staken. Wir empfehlen, einen kleinen Betrag übrig zu lassen, um die Netzwerkgebühren für die Aufhebung des Stakes oder das Einfordern von Prämien abzudecken.</string>
+  <string name="staking_notification_ton_account_initialization_message">Um mit dem Staking zu beginnen, muss Dein TON-Konto mit einer Selbsttransaktion von 1 TON aktiviert werden. Das Guthaben verbleibt in Deiner Wallet – dieser Schritt aktiviert Dein Konto lediglich für das Staking.</string>
+  <string name="staking_notification_ton_account_initialization_title">Kontoaktivierung</string>
   <string name="staking_notification_ton_activate_account">Um mit dem Staking bei TON zu beginnen, führe zunächst eine ausgehende Transaktion in beliebiger Höhe durch – dadurch wird Deine Wallet aktiviert.</string>
   <string name="staking_notification_ton_extra_reserve_info">Für den Abschluss der Transaktion können zusätzlich zur Netzwerkgebühr bis zu 0,2 TON erforderlich sein. Nicht genutzte Beträge werden zurückerstattet.</string>
   <string name="staking_notification_ton_extra_reserve_is_required">Für diesen Vorgang sind zusätzlich zur Netzwerkgebühr 0,2 TON erforderlich. Bitte lade Dein Guthaben auf.</string>
@@ -1165,6 +1200,7 @@
   <string name="staking_reward_schedule_month">Monatlich</string>
   <string name="staking_reward_schedule_week">Wöchentlich</string>
   <string name="staking_rewards">Belohnungen</string>
+  <string name="staking_soloana_details_auto_claiming_rewards_daily_text">Belohnungen auf Solana werden automatisch Deinem Staking-Guthaben hinzugefügt und können nicht separat angezeigt werden.</string>
   <string name="staking_stake_locked">Stake gesperrt</string>
   <string name="staking_stake_more">Mehr staken</string>
   <string name="staking_stake_more_button_unavailability_reason">Beim Staking %1$s wird Dein gesamtes %2$s -Guthaben eingesetzt. Alle weiteren %2$s due Du in Deine Tangem-Wallet einzahlst, werden ebenfalls automatisch eingesetzt.</string>
@@ -1204,6 +1240,7 @@
   <string name="story_web3_title">Web 3.0-kompatibel</string>
   <string name="sui_not_enough_coin_for_fee_description">Zum Fortfahren ist eine eingehende Transaktion von mindestens %1$s erforderlich</string>
   <string name="sui_not_enough_coin_for_fee_title">Unzureichende Mittel</string>
+  <string name="swap_approve_description">Durch die Genehmigung erlaubst Du dem Smart Contract, Deine Token in zukünftigen Transaktionen zu verwenden.</string>
   <string name="swap_fixed_rate">Fester Zinssatz</string>
   <string name="swap_give_permission_fee_footer">Das Netzwerk erhebt eine Token-Genehmigungsgebühr, um zu überprüfen, ob Sie die Verwendung Ihres Tokens für den Swap genehmigen.</string>
   <string name="swap_promo_text">Tausche mehr Token zu besseren Kursen direkt in deiner Brieftasche.</string>
@@ -1236,6 +1273,19 @@
   <string name="swapping_to_title">Du erhältst</string>
   <string name="swapping_token_list_title">Token auswählen</string>
   <string name="swapping_token_not_available">Nicht verfügbar</string>
+  <string name="tangempay_card_details_error_text">Daten konnten nicht geladen werden. Versuche es später noch einmal.</string>
+  <string name="tangempay_card_details_hide_text">Verstecken</string>
+  <string name="tangempay_card_details_reveal_text">Aufdecken</string>
+  <string name="tangempay_card_details_title">Kartendetails</string>
+  <string name="tangempay_onboarding_get_card_button_text">Karte erhalten</string>
+  <string name="tangempay_onboarding_pay_description">Füge es Deiner Wallet hinzu und bezahle überall mit Deinem Smartphone.</string>
+  <string name="tangempay_onboarding_pay_title">Apple Pay &amp; Google Pay</string>
+  <string name="tangempay_onboarding_purchases_description">Verwende Dein USDC-Guthaben, um alltägliche Einkäufe problemlos zu bezahlen.</string>
+  <string name="tangempay_onboarding_purchases_title">Einkäufe im Alltag</string>
+  <string name="tangempay_onboarding_security_description">Deine Kartendaten sind geschützt – volle Kontrolle in der App.</string>
+  <string name="tangempay_onboarding_security_title">Integrierte Sicherheit</string>
+  <string name="tangempay_onboarding_title">Hol Dir Deine kostenlose Crypto Card \n in wenigen Minuten</string>
+  <string name="tangempay_title">Tangem Pay</string>
   <string name="this_is_my_wallet_title">Das ist meine Wallet</string>
   <string name="toast_balances_hidden">Guthaben versteckt</string>
   <string name="toast_balances_shown">Angezeigte Salden</string>
@@ -1263,6 +1313,7 @@
   <string name="token_details_token_type_subtitle_no_standard">Token in %%image%% %1$s Netzwerk</string>
   <string name="token_details_unable_hide_alert_message">Der %1$s (%2$s) Token ist die Hauptwährung im %3$s Netzwerk und kann nicht versteckt werden, solange du andere Token dieses Netzwerks in der Liste aktiv hast.</string>
   <string name="token_details_unable_hide_alert_title">%s kann nicht ausgeblendet werden</string>
+  <string name="token_receive_show_qr_code_title">QR-Code anzeigen</string>
   <string name="token_swap_changelly_promotion_message">Tausche diesen Token gegen einen anderen zu %1$s Servicegebühren von Februar %2$s-%3$s.</string>
   <string name="token_swap_changelly_promotion_title">Tausche mit Changelly, %s Gebühren</string>
   <string name="token_swap_promotion_button">Jetzt tauschen</string>
@@ -1304,9 +1355,15 @@
   <string name="unlock_wallet_description_full">Verwende %s oder scanne eine Karte oder Ring, um Zugriff auf deine Wallet zu erhalten.</string>
   <string name="unsupported_wc_version">Verbindung fehlgeschlagen: Diese dApp verwendet Wallet Connect Version 1.0, die nicht unterstützt wird. Bitte stelle sicher, dass die dApp Wallet Connect Version 2.0 unterstützt, um eine erfolgreiche Verbindung herzustellen.</string>
   <string name="user_push_notification_agreement_argument_one">Bleib auf dem Laufenden mit den neuesten Funktionen und Neuigkeiten</string>
+  <string name="user_push_notification_agreement_argument_one_subtitle">Echtzeit-Warnungen für Transaktionen, Umtausch und wichtige Aktualisierungen.</string>
+  <string name="user_push_notification_agreement_argument_one_title">Transaktionswarnungen</string>
   <string name="user_push_notification_agreement_argument_three">Genehmigung für Transaktionen anfordern</string>
   <string name="user_push_notification_agreement_argument_two">Sei der Erste, der von neuen Aktionen erfährt</string>
+  <string name="user_push_notification_agreement_argument_two_subtitle">Frühzeitiger Zugriff auf neue Funktionen und exklusive Angebote.</string>
+  <string name="user_push_notification_agreement_argument_two_title">Updates zu Funktionen und Neuigkeiten</string>
   <string name="user_push_notification_agreement_header">Möchtest du Push-Benachrichtigungen verwenden?</string>
+  <string name="user_push_notification_banner_subtitle">Aktiviere Push-Benachrichtigungen und wir benachrichtigen Dich sofort, wenn Gelder eintreffen \n</string>
+  <string name="user_push_notification_banner_title">Verpasse keine Transaktion</string>
   <string name="user_wallet_list_add_button">Neues Wallet hinzufügen</string>
   <string name="user_wallet_list_delete_prompt">Möchtest Du diese Wallet wirklich entfernen?</string>
   <string name="user_wallet_list_error_unable_to_unlock">Es ist ein Fehler aufgetreten, bitte scanne deine Karte oder Ring, um sich anzumelden</string>
@@ -1543,6 +1600,7 @@
   <string name="wc_alert_wrong_card_title">Wir haben eine Art Problem</string>
   <string name="wc_all_dapps_disconnected">Alle dApps getrennt</string>
   <string name="wc_allow_to_spend">Erlaubnis auszugeben</string>
+  <string name="wc_approve_description">Durch die Genehmigung erlaubst Du dApps oder Smart Contracts, Token in zukünftigen Transaktionen zu verwenden.</string>
   <string name="wc_common_address">Vertragsadresse</string>
   <string name="wc_common_connect">Verbinden</string>
   <string name="wc_common_loading">Laden</string>
@@ -1617,4 +1675,31 @@
   <string name="xtz_withdrawal_message_ignore">Nein, alles senden</string>
   <string name="xtz_withdrawal_message_reduce">Um %s XTZ reduziert</string>
   <string name="xtz_withdrawal_message_warning">Damit Sie beim nächsten Aufladen Ihrer Brieftasche keine erhöhte Provision zahlen, soll der Betrag um %s XTZ reduziert werden</string>
+  <string name="yield_module_chart_loading_error">Chart konnte nicht geladen werden...</string>
+  <string name="yield_module_deposit_error_notification_title">Der erhaltene Betrag %1$s %2$s wurde nicht auf Aave eingezahlt.</string>
+  <string name="yield_module_fee_policy_sheet_current_fee_title">Aktuelle Gebühr</string>
+  <string name="yield_module_fee_policy_sheet_max_fee_title">Maximale Gebühr</string>
+  <string name="yield_module_fee_policy_sheet_title">Gebührenpolitik</string>
+  <string name="yield_module_high_fee_error">Die Netzwerkgebühr ist derzeit zu hoch. Warte, bis sie unter Dein Limit fällt.</string>
+  <string name="yield_module_historical_returns">Historische Renditen</string>
+  <string name="yield_module_promo_screen_cash_out_title">Sofortige Auszahlung</string>
+  <string name="yield_module_promo_screen_how_it_works_button_title">Wie funktioniert das?</string>
+  <string name="yield_module_promo_screen_title">Verdiene %s%% jährlich</string>
+  <string name="yield_module_promo_screen_variable_rate_info">Aave • Variabler Zinssatz</string>
+  <string name="yield_module_provider">Aave</string>
+  <string name="yield_module_rate_info_sheet_chart_average">Durchschnitt %s</string>
+  <string name="yield_module_rate_info_sheet_chart_title">Renditen des letzten Jahres</string>
+  <string name="yield_module_rate_info_sheet_powered_by">Unterstützt durch</string>
+  <string name="yield_module_rate_info_sheet_title">Der Zinssatz ist variabel</string>
+  <string name="yield_module_start_earning">Beginn des Verdienstes</string>
+  <string name="yield_module_start_earning_sheet_fee_policy">Siehe Gebührenrichtlinie</string>
+  <string name="yield_module_status_active">Aktiv</string>
+  <string name="yield_module_status_paused">Pausiert</string>
+  <string name="yield_module_supply_apr">Effektiver Jahreszins für Versorgung</string>
+  <string name="yield_module_token_details_earn_notification_description">Lass Dein Geld arbeiten – verdiene Zinsen auf Dein Guthaben.</string>
+  <string name="yield_module_token_details_earn_notification_earning_on_your_balance_title">Verdienst auf Dein Guthaben</string>
+  <string name="yield_module_token_details_earn_notification_title">Verdienen %1$s%% pro Jahr</string>
+  <string name="yield_module_unavailable_subtitle">Der Stakingservice ist derzeit nicht verfügbar. Bitte versuche es später erneut.</string>
+  <string name="yield_module_unavailable_title">Einnahmen nicht verfügbar</string>
+  <string name="yield_supply_chart_loading_error">Chart konnte nicht geladen werden...</string>
 </resources>
