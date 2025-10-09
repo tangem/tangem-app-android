@@ -7,7 +7,7 @@ import com.tangem.core.analytics.models.AnalyticsEvent
  */
 sealed class Chat(
     event: String,
-    params: Map<String, String> = mapOf(),
+    params: Map<String, String> = emptyMap(),
 ) : AnalyticsEvent("Chat", event, params) {
 
     class ScreenOpened : Chat("Chat Screen Opened")

@@ -77,9 +77,9 @@ fun InputRowEnterInfo(
                         .padding(top = TangemTheme.dimens.spacing8)
                         .weight(1f),
                 )
-                info?.let {
+                info?.let { info ->
                     Text(
-                        text = it.resolveReference(),
+                        text = info.resolveReference(),
                         style = TangemTheme.typography.body2,
                         color = infoColor,
                         modifier = Modifier
@@ -104,7 +104,7 @@ private fun InputRowEnterInfoPreview(
             title = data.title,
             text = data.text,
             info = data.info,
-            showDivider = data.showDivider,
+            showDivider = data.shouldShowDivider,
             onValueChange = {},
             modifier = Modifier.background(TangemTheme.colors.background.action),
         )
@@ -114,7 +114,7 @@ private fun InputRowEnterInfoPreview(
 private data class InputRowEnterInfoPreviewData(
     val title: TextReference,
     val text: String,
-    val showDivider: Boolean,
+    val shouldShowDivider: Boolean,
     val info: TextReference?,
 )
 
@@ -125,13 +125,13 @@ private class InputRowEnterInfoPreviewDataProvider :
             InputRowEnterInfoPreviewData(
                 title = TextReference.Str("title"),
                 text = "text",
-                showDivider = true,
+                shouldShowDivider = true,
                 info = TextReference.Str("info"),
             ),
             InputRowEnterInfoPreviewData(
                 title = TextReference.Str("title"),
                 text = "text",
-                showDivider = false,
+                shouldShowDivider = false,
                 info = null,
             ),
         )
