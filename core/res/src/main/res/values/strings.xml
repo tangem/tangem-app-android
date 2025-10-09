@@ -19,7 +19,7 @@
   <string name="account_archived_recover">Recover</string>
   <string name="account_archived_recover_dialog_description">You’re about to recover “%1$s”.</string>
   <string name="account_archived_recover_dialog_title">Recover account</string>
-  <string name="account_archived_recover_error_message">You have already exceeded the limit of 20 active accounts. Archive one to recover</string>
+  <string name="account_archived_recover_error_message">You have already exceeded the limit of 20 active accounts. Archive one to recover.</string>
   <string name="account_archived_recover_error_title">Can\'t recover account</string>
   <string name="account_archived_title">Archived</string>
   <string name="account_could_not_create">We couldn’t create account. Please try again later.</string>
@@ -355,6 +355,8 @@
   <string name="common_yes">Yes</string>
   <string name="contract_address_copied_message">Contract address copied!</string>
   <string name="currency_subtitle_expanded">Available networks</string>
+  <string name="custom_token_another_account_dialog_description">Derivation of your token matches the derivation of %1$s. Your token will be added to this account.</string>
+  <string name="custom_token_another_account_dialog_title">Derivation belongs to another account.</string>
   <string name="custom_token_contract_address_input_title">Contract address</string>
   <string name="custom_token_creation_error_invalid_contract_address">Contract address is invalid</string>
   <string name="custom_token_creation_error_network_not_selected">Please select the network</string>
@@ -1713,7 +1715,7 @@
   <string name="wc_no_wallet_changes_detected">No wallet changes detected</string>
   <string name="wc_notification_security_risk_subtitle">Potential risks or malicious behavior have been detected. Connecting or signing transactions may lead to loss of funds.</string>
   <string name="wc_notification_security_risk_title">Known security risk</string>
-  <string name="wc_qr_scan_hint">Open Web3 app and chose WalletConnect option</string>
+  <string name="wc_qr_scan_hint">Open the Web3 app and choose the WalletConnect option.</string>
   <string name="wc_request_from">Request from</string>
   <string name="wc_send_anyway">Sign anyway</string>
   <string name="wc_signature_type">Signature Type</string>
@@ -1729,6 +1731,13 @@
   <string name="wc_uri_already_used_title">URI already used</string>
   <string name="wc_wallet_connect">WalletConnect</string>
   <string name="wc_warning_transaction">Suspicious transaction</string>
+  <string name="welcome_create_wallet_feature_class">Best in class hardware wallet</string>
+  <string name="welcome_create_wallet_feature_delivery">Fast delivery</string>
+  <string name="welcome_create_wallet_feature_use">Simple to use</string>
+  <string name="welcome_create_wallet_hardware_description">Create a hardware wallet with Tangem. Slim as a bank card, secure as a bank vault.</string>
+  <string name="welcome_create_wallet_mobile_description">Create or import a software wallet</string>
+  <string name="welcome_create_wallet_mobile_title">Start with Mobile Wallet</string>
+  <string name="welcome_create_wallet_other_method">Other method</string>
   <string name="welcome_interrupted_backup_alert_discard">Discard</string>
   <string name="welcome_interrupted_backup_alert_message">You have an interrupted backup. Do you want to resume?</string>
   <string name="welcome_interrupted_backup_alert_resume">Yes, resume</string>
