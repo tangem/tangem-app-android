@@ -22,6 +22,7 @@ import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.core.ui.message.bottomSheetMessage
+import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.models.scan.CardDTO
@@ -81,6 +82,7 @@ internal class WalletSettingsModel @Inject constructor(
     private val isUpgradeWalletNotificationEnabledUseCase: IsUpgradeWalletNotificationEnabledUseCase,
     private val dismissUpgradeWalletNotificationUseCase: DismissUpgradeWalletNotificationUseCase,
     private val unlockHotWalletContextualUseCase: UnlockHotWalletContextualUseCase,
+    private val accountsFeatureToggles: AccountsFeatureToggles,
 ) : Model() {
 
     val params: WalletSettingsComponent.Params = paramsContainer.require()
@@ -173,6 +175,7 @@ internal class WalletSettingsModel @Inject constructor(
         isUpgradeNotificationEnabled: Boolean,
         accountList: List<WalletSettingsAccountsUM>,
     ): PersistentList<WalletSettingsItemUM> {
+        val accountsFeatureEnabled = accountsFeatureToggles.isFeatureEnabled
         val isMultiCurrency = when (userWallet) {
             is UserWallet.Cold -> userWallet.isMultiCurrency
             is UserWallet.Hot -> true
@@ -188,7 +191,7 @@ internal class WalletSettingsModel @Inject constructor(
                 is UserWallet.Cold -> userWallet.scanResponse.card.backupStatus == CardDTO.BackupStatus.NoBackup
                 is UserWallet.Hot -> false
             },
-            isManageTokensAvailable = isMultiCurrency,
+            isManageTokensAvailable = !accountsFeatureEnabled && isMultiCurrency,
             isNFTFeatureEnabled = isMultiCurrency,
             isNFTEnabled = isNFTEnabled,
             onCheckedNFTChange = ::onCheckedNFTChange,
