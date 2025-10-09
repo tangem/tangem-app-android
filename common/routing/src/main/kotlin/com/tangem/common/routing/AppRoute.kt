@@ -11,6 +11,7 @@ import com.tangem.core.decompose.navigation.Route
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.feedback.models.WalletMetaInfo
 import com.tangem.domain.markets.TokenMarketParams
+import com.tangem.domain.models.PortfolioId
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.scan.ScanResponse
