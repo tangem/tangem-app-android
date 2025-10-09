@@ -33,6 +33,11 @@ dependencies {
     implementation(projects.common.ui)
 
     /* Project - Domain */
+    implementation(projects.domain.account.status)
+    implementation(projects.domain.appCurrency)
+    implementation(projects.domain.appCurrency.models)
+    implementation(projects.domain.balanceHiding)
+    implementation(projects.domain.balanceHiding.models)
     implementation(projects.domain.legacy)
     implementation(projects.domain.card)
     implementation(projects.domain.models)
