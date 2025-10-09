@@ -101,12 +101,12 @@ internal class DefaultAccountsCRUDRepository(
     }
 
     override suspend fun saveAccounts(accountList: AccountList) {
-        val userWalletId = accountList.userWallet.walletId
+        val userWallet = userWalletsStore.getSyncStrict(accountList.userWalletId)
 
-        val converter = convertersContainer.getWalletAccountsResponseCF.create(userWallet = accountList.userWallet)
+        val converter = convertersContainer.getWalletAccountsResponseCF.create(userWallet = userWallet)
         val accountsResponse = converter.convert(value = accountList)
 
-        walletAccountsSaver.pushAndStore(userWalletId = userWalletId, response = accountsResponse)
+        walletAccountsSaver.pushAndStore(userWalletId = userWallet.walletId, response = accountsResponse)
     }
 
     override suspend fun getTotalAccountsCountSync(userWalletId: UserWalletId): Option<Int> = option {
