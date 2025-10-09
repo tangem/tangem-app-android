@@ -17,6 +17,7 @@ import io.github.kakaocup.compose.node.element.lazylist.KLazyListNode
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 import androidx.compose.ui.test.hasTestTag as withTestTag
 import androidx.compose.ui.test.hasText as withText
+import com.tangem.core.ui.R as CoreUiR
 
 class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
     ComposeScreen<MainScreenPageObject>(semanticsProvider = semanticsProvider) {
@@ -198,6 +199,10 @@ class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider)
         hasTestTag(BaseButtonTestTags.TEXT)
         hasText(getResourceString(R.string.common_no))
         useUnmergedTree = true
+    }
+
+    val snackbarCopiedAddressMessage: KNode = child {
+        hasText(getResourceString(CoreUiR.string.wallet_notification_address_copied))
     }
 
     /**
