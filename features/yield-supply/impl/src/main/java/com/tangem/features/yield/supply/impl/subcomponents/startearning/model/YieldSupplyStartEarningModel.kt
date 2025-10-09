@@ -208,7 +208,7 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
                 },
                 ifRight = {
                     fetchCurrencyStatusUseCase(userWalletId = userWallet.walletId, cryptoCurrency.id)
-                    yieldSupplyActivateUseCase(cryptoCurrency as CryptoCurrency.Token)
+                    yieldSupplyActivateUseCase(cryptoCurrency)
                     modelScope.launch {
                         params.callback.onTransactionSent()
                     }
