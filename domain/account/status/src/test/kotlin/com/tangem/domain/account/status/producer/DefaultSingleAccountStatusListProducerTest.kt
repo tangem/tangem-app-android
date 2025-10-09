@@ -9,6 +9,7 @@ import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.producer.SingleAccountListProducer
 import com.tangem.domain.account.status.utils.CryptoCurrencyStatusesFlowFactory
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.core.utils.lceContent
 import com.tangem.domain.core.utils.lceLoading
 import com.tangem.domain.models.StatusSource
@@ -37,6 +38,7 @@ import java.math.BigDecimal
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class DefaultSingleAccountStatusListProducerTest {
 
+    private val userWalletsListRepository: UserWalletsListRepository = mockk()
     private val singleAccountListSupplier: SingleAccountListSupplier = mockk()
     private val cryptoCurrencyStatusesFlowFactory: CryptoCurrencyStatusesFlowFactory = mockk()
 
@@ -47,6 +49,7 @@ class DefaultSingleAccountStatusListProducerTest {
 
     private val producer = DefaultSingleAccountStatusListProducer(
         params = SingleAccountStatusListProducer.Params(userWalletId),
+        userWalletsListRepository = userWalletsListRepository,
         singleAccountListSupplier = singleAccountListSupplier,
         cryptoCurrencyStatusesFlowFactory = cryptoCurrencyStatusesFlowFactory,
         dispatchers = TestingCoroutineDispatcherProvider(),
@@ -60,7 +63,7 @@ class DefaultSingleAccountStatusListProducerTest {
     @Test
     fun `flow is mapped for user wallet id from params`() = runTest {
         // Arrange
-        val accountList = AccountList.empty(userWallet)
+        val accountList = AccountList.empty(userWalletId = userWalletId)
 
         every {
             singleAccountListSupplier(params = SingleAccountListProducer.Params(userWalletId))
@@ -71,7 +74,7 @@ class DefaultSingleAccountStatusListProducerTest {
 
         // Assert
         val expected = AccountStatusList(
-            userWallet = userWallet,
+            userWalletId = userWalletId,
             accountStatuses = setOf(
                 AccountStatus.CryptoPortfolio(
                     account = accountList.mainAccount,
@@ -92,8 +95,8 @@ class DefaultSingleAccountStatusListProducerTest {
     @Test
     fun `flow will updated if balances are updated`() = runTest {
         // Arrange
-        val accountList = AccountList.empty(userWallet)
-        val updatedAccountList = AccountList.empty(userWallet = userWallet, sortType = TokensSortType.BALANCE)
+        val accountList = AccountList.empty(userWalletId)
+        val updatedAccountList = AccountList.empty(userWalletId = userWalletId, sortType = TokensSortType.BALANCE)
 
         val accountListFlow = MutableStateFlow(value = accountList)
 
@@ -106,7 +109,7 @@ class DefaultSingleAccountStatusListProducerTest {
 
         // Assert (first emission)
         val expected = AccountStatusList(
-            userWallet = userWallet,
+            userWalletId = userWalletId,
             accountStatuses = setOf(
                 AccountStatus.CryptoPortfolio(
                     account = accountList.mainAccount,
@@ -125,7 +128,7 @@ class DefaultSingleAccountStatusListProducerTest {
 
         // Assert (second emission)
         val expected2 = AccountStatusList(
-            userWallet = userWallet,
+            userWalletId = userWalletId,
             accountStatuses = setOf(
                 AccountStatus.CryptoPortfolio(
                     account = updatedAccountList.mainAccount,
@@ -147,7 +150,7 @@ class DefaultSingleAccountStatusListProducerTest {
     @Test
     fun `flow is filtered the same balance`() = runTest {
         // Arrange
-        val accountList = AccountList.empty(userWallet)
+        val accountList = AccountList.empty(userWalletId)
         val accountListFlow = MutableStateFlow(value = accountList)
 
         every {
@@ -155,7 +158,7 @@ class DefaultSingleAccountStatusListProducerTest {
         } returns accountListFlow
 
         val expected = AccountStatusList(
-            userWallet = userWallet,
+            userWalletId = userWalletId,
             accountStatuses = setOf(
                 AccountStatus.CryptoPortfolio(
                     account = accountList.mainAccount,
@@ -191,9 +194,11 @@ class DefaultSingleAccountStatusListProducerTest {
         // Arrange
         val cryptoCurrencyFactory = MockCryptoCurrencyFactory()
         val accountList = AccountList.empty(
-            userWallet = userWallet,
+            userWalletId = userWalletId,
             cryptoCurrencies = cryptoCurrencyFactory.ethereumAndStellar.toSet(),
         )
+
+        coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(userWallet)
 
         every {
             singleAccountListSupplier(params = SingleAccountListProducer.Params(userWalletId))
@@ -220,7 +225,7 @@ class DefaultSingleAccountStatusListProducerTest {
 
         // Assert
         val expected = AccountStatusList(
-            userWallet = userWallet,
+            userWalletId = userWalletId,
             accountStatuses = setOf(
                 AccountStatus.CryptoPortfolio(
                     account = accountList.mainAccount,

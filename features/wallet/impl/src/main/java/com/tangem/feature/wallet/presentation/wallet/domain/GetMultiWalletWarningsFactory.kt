@@ -9,17 +9,16 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.ui.components.notifications.NotificationConfig.ButtonsState
 import com.tangem.core.ui.components.notifications.NotificationConfig.IconTint
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.status.producer.SingleAccountStatusListProducer
 import com.tangem.domain.card.CardTypesResolver
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.core.lce.Lce
+import com.tangem.domain.core.lce.LceFlow
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.notifications.repository.NotificationsRepository
 import com.tangem.domain.onramp.GetOnrampCountryUseCase
@@ -45,6 +44,7 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -70,72 +70,81 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
     fun create(userWallet: UserWallet, clickIntents: WalletClickIntents): Flow<ImmutableList<WalletNotification>> {
         val cardTypesResolver = (userWallet as? UserWallet.Cold)?.scanResponse?.cardTypesResolver
 
-        val tokenListFlow = if (accountDependencies.accountsFeatureToggles.isFeatureEnabled) {
+        val accountStatusList by lazy {
             val params = SingleAccountStatusListProducer.Params(userWallet.walletId)
             accountDependencies.singleAccountStatusListSupplier(params)
-        } else {
-            tokenListStore.getOrThrow(userWallet.walletId)
+                .map { it.totalFiatBalance to it.flattenCurrencies() }
+                .map { Lce.Content(it) }
         }
+
+        fun tokenListFlow(): LceFlow<TokenListError, Pair<TotalFiatBalance, List<CryptoCurrencyStatus>>> {
+            return if (accountDependencies.accountsFeatureToggles.isFeatureEnabled) {
+                accountStatusList
+            } else {
+                runCatching { tokenListStore.getOrThrow(userWallet.walletId) }
+                    .map { result -> result.map { lce -> lce.map { it.totalFiatBalance to it.flattenCurrencies() } } }
+                    .getOrNull()
+                    // in case of runtime change ft in tester menu
+                    ?: accountStatusList
+            }
+        }
+
+        // val params = SingleAccountStatusListProducer.Params(userWallet.walletId)
+        // val accountStatusListFlow = accountDependencies.singleAccountStatusListSupplier(params)
         return combine(
-            tokenListFlow,
+            // todo account just use it, after delete accountsFeatureToggles
+            // accountStatusListFlow,
             isReadyToShowRateAppUseCase(),
             isNeedToBackupUseCase(userWallet.walletId),
             seedPhraseNotificationUseCase(userWalletId = userWallet.walletId),
             shouldShowPromoWalletUseCase(userWalletId = userWallet.walletId, promoId = PromoId.Referral),
             shouldShowPromoWalletUseCase(userWalletId = userWallet.walletId, promoId = PromoId.Sepa),
             notificationsRepository.getShouldShowNotification(NotificationId.EnablePushesReminderNotification.key),
-        ) { array ->
-            val totalFiatBalance: Lce<TokenListError, TotalFiatBalance>
-            val flattenCurrencies: Lce<TokenListError, List<CryptoCurrencyStatus>>
-            if (accountDependencies.accountsFeatureToggles.isFeatureEnabled) {
-                val accountStatusList = array[0] as AccountStatusList
-                totalFiatBalance = Lce.Content(accountStatusList.totalFiatBalance)
-                flattenCurrencies = Lce.Content(accountStatusList.flattenCurrencies())
-            } else {
-                val maybeTokenList = array[0] as Lce<TokenListError, TokenList>
-                totalFiatBalance = maybeTokenList.map { it.totalFiatBalance }
-                flattenCurrencies = maybeTokenList.map { it.flattenCurrencies() }
+        ) { array -> array }
+            .combine(tokenListFlow()) { array, any: Any -> arrayOf(any).plus(elements = array) }
+            .map { array ->
+                val lceTokens = array[0] as Lce<TokenListError, Pair<TotalFiatBalance, List<CryptoCurrencyStatus>>>
+                val totalFiatBalance = lceTokens.map { it.first }
+                val flattenCurrencies = lceTokens.map { it.second }
+                val isReadyToShowRating = array[1] as Boolean
+                val isNeedToBackup = array[2] as Boolean
+                val seedPhraseIssueStatus = array[3] as SeedPhraseNotificationsStatus
+                val shouldShowReferralPromo = array[4] as Boolean
+                val shouldShowSepaBanner = array[5] as Boolean
+                val shouldShowEnablePushesReminderNotification = array[6] as Boolean
+
+                buildList {
+                    addUsedOutdatedDataNotification(totalFiatBalance)
+
+                    addCriticalNotifications(userWallet, seedPhraseIssueStatus, clickIntents)
+
+                    addFinishWalletActivationNotification(userWallet, totalFiatBalance, clickIntents)
+
+                    addReferralPromoNotification(cardTypesResolver, clickIntents, shouldShowReferralPromo)
+
+                    addSepaPromoNotification(userWallet, clickIntents, shouldShowSepaBanner)
+
+                    addInformationalNotifications(userWallet, cardTypesResolver, flattenCurrencies, clickIntents)
+
+                    addWarningNotifications(cardTypesResolver, flattenCurrencies, isNeedToBackup, clickIntents)
+
+                    addPushReminderNotification(
+                        clickIntents = clickIntents,
+                        shouldShowPushReminderBanner = shouldShowEnablePushesReminderNotification &&
+                            !notificationsRepository.isUserAllowToSubscribeOnPushNotifications(),
+                    )
+
+                    addYieldSupplyNotifications(flattenCurrencies)
+
+                    val hasCriticalOrWarning = any { notification ->
+                        notification is WalletNotification.Critical || notification is WalletNotification.Warning
+                    }
+
+                    if (!hasCriticalOrWarning) {
+                        addRateTheAppNotification(isReadyToShowRating, clickIntents)
+                    }
+                }.toImmutableList()
             }
-
-            val isReadyToShowRating = array[1] as Boolean
-            val isNeedToBackup = array[2] as Boolean
-            val seedPhraseIssueStatus = array[3] as SeedPhraseNotificationsStatus
-            val shouldShowReferralPromo = array[4] as Boolean
-            val shouldShowSepaBanner = array[5] as Boolean
-            val shouldShowEnablePushesReminderNotification = array[6] as Boolean
-
-            buildList {
-                addUsedOutdatedDataNotification(totalFiatBalance)
-
-                addCriticalNotifications(userWallet, seedPhraseIssueStatus, clickIntents)
-
-                addFinishWalletActivationNotification(userWallet, totalFiatBalance, clickIntents)
-
-                addReferralPromoNotification(cardTypesResolver, clickIntents, shouldShowReferralPromo)
-
-                addSepaPromoNotification(userWallet, clickIntents, shouldShowSepaBanner)
-
-                addInformationalNotifications(userWallet, cardTypesResolver, flattenCurrencies, clickIntents)
-
-                addWarningNotifications(cardTypesResolver, flattenCurrencies, isNeedToBackup, clickIntents)
-
-                addPushReminderNotification(
-                    clickIntents = clickIntents,
-                    shouldShowPushReminderBanner = shouldShowEnablePushesReminderNotification &&
-                        !notificationsRepository.isUserAllowToSubscribeOnPushNotifications(),
-                )
-
-                addYieldSupplyNotifications(flattenCurrencies)
-
-                val hasCriticalOrWarning = any { notification ->
-                    notification is WalletNotification.Critical || notification is WalletNotification.Warning
-                }
-
-                if (!hasCriticalOrWarning) {
-                    addRateTheAppNotification(isReadyToShowRating, clickIntents)
-                }
-            }.toImmutableList()
-        }
     }
 
     private fun MutableList<WalletNotification>.addUsedOutdatedDataNotification(
