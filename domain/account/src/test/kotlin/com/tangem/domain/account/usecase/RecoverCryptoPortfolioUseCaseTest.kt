@@ -12,7 +12,6 @@ import com.tangem.domain.account.usecase.RecoverCryptoPortfolioUseCase.Error
 import com.tangem.domain.account.utils.createAccount
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.DerivationIndex
-import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
@@ -28,19 +27,17 @@ class RecoverCryptoPortfolioUseCaseTest {
 
     private val crudRepository: AccountsCRUDRepository = mockk(relaxUnitFun = true)
     private val useCase = RecoverCryptoPortfolioUseCase(crudRepository)
-    private val userWallet = mockk<UserWallet>()
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(crudRepository, userWallet)
-        every { userWallet.walletId } returns userWalletId
+        clearMocks(crudRepository)
     }
 
     @Test
     fun `invoke should recover archived crypto portfolio account`() = runTest {
         // Arrange
         val account = createAccount(userWalletId)
-        val accountList = AccountList.empty(userWallet)
+        val accountList = AccountList.empty(userWalletId)
         val archivedAccount = ArchivedAccount(
             accountId = account.accountId,
             name = account.accountName,
@@ -122,7 +119,7 @@ class RecoverCryptoPortfolioUseCaseTest {
     fun `invoke should return error if getArchivedAccount throws exception`() = runTest {
         // Arrange
         val account = createAccount(userWalletId)
-        val accountList = AccountList.empty(userWallet)
+        val accountList = AccountList.empty(userWalletId)
         val exception = IllegalStateException("Test error")
 
         coEvery { crudRepository.getAccountListSync(userWalletId) } returns accountList.toOption()
@@ -146,7 +143,7 @@ class RecoverCryptoPortfolioUseCaseTest {
     fun `invoke should return error if getArchivedAccount returns null`() = runTest {
         // Arrange
         val account = createAccount(userWalletId)
-        val accountList = AccountList.empty(userWallet)
+        val accountList = AccountList.empty(userWalletId)
 
         coEvery { crudRepository.getAccountListSync(userWalletId) } returns accountList.toOption()
         coEvery { crudRepository.getArchivedAccountSync(account.accountId) } returns None
@@ -169,7 +166,7 @@ class RecoverCryptoPortfolioUseCaseTest {
     fun `invoke should return error if saveAccounts throws exception`() = runTest {
         // Arrange
         val account = createAccount(userWalletId)
-        val accountList = AccountList.empty(userWallet)
+        val accountList = AccountList.empty(userWalletId)
         val archivedAccount = ArchivedAccount(
             accountId = account.accountId,
             name = account.accountName,

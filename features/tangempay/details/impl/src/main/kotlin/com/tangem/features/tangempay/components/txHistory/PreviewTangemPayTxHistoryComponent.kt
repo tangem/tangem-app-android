@@ -21,6 +21,7 @@ internal class PreviewTangemPayTxHistoryComponent(txHistoryUM: TangemPayTxHistor
     companion object {
         val loadingUM = TangemPayTxHistoryUM.Loading(isBalanceHidden = true)
         val emptyUM = TangemPayTxHistoryUM.Empty(isBalanceHidden = true)
+        val errorUM = TangemPayTxHistoryUM.Error(isBalanceHidden = true, onReload = {})
         val contentUM = TangemPayTxHistoryUM.Content(
             isBalanceHidden = false,
             loadMore = { false },
