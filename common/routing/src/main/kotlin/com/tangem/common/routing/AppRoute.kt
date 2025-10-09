@@ -121,8 +121,8 @@ sealed class AppRoute(val path: String) : Route {
     @Serializable
     data class ManageTokens(
         val source: Source,
-        val userWalletId: UserWalletId? = null,
-    ) : AppRoute(path = "${source.name.lowercase()}/manage_tokens/$userWalletId") {
+        val portfolioId: PortfolioId? = null,
+    ) : AppRoute(path = "${source.name.lowercase()}/manage_tokens/${portfolioId?.stringValue}") {
 
         enum class Source {
             STORIES,
