@@ -17,6 +17,7 @@ import com.tangem.core.ui.event.triggeredEvent
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.features.managetokens.analytics.CustomTokenAnalyticsEvent
 import com.tangem.features.managetokens.analytics.ManageTokensAnalyticEvent
 import com.tangem.features.managetokens.component.ManageTokensComponent
@@ -40,13 +41,14 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 @ModelScoped
 internal class ManageTokensModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
     private val messageSender: UiMessageSender,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     manageTokensListManagerFactory: ManageTokensListManager.Factory,
     manageTokensUseCasesFacadeFactory: ManageTokensUseCasesFacade.Factory,
     paramsContainer: ParamsContainer,
@@ -86,6 +88,7 @@ internal class ManageTokensModel @Inject constructor(
         modelScope.launch {
             manageTokensListManager.launchPagination(isCollapsed = true)
         }
+        checkIsSupportAddCustomTokens()
     }
 
     fun reloadList() {
@@ -105,16 +108,34 @@ internal class ManageTokensModel @Inject constructor(
         }
     }
 
+    private fun getTopBarInitialState(): ManageTokensTopBarUM = when (params.mode) {
+        is ManageTokensMode.Wallet -> manageContentTopBar()
+        is ManageTokensMode.Account -> ManageTokensTopBarUM.ReadContent(
+            title = resourceReference(id = R.string.main_manage_tokens),
+            onBackButtonClick = router::pop,
+        )
+        ManageTokensMode.None -> ManageTokensTopBarUM.ReadContent(
+            title = resourceReference(R.string.common_search_tokens),
+            onBackButtonClick = router::pop,
+        )
+    }
+
+    private fun manageContentTopBar() = ManageTokensTopBarUM.ManageContent(
+        title = resourceReference(id = R.string.main_manage_tokens),
+        onBackButtonClick = router::pop,
+        endButton = TopAppBarButtonUM.Icon(
+            iconRes = R.drawable.ic_plus_24,
+            onClicked = ::navigateToAddCustomToken,
+        ),
+    )
+
     private fun createReadContentModel(): ManageTokensUM.ReadContent {
         return ManageTokensUM.ReadContent(
             popBack = router::pop,
             isInitialBatchLoading = true,
             isNextBatchLoading = false,
             items = getLoadingItems(),
-            topBar = ManageTokensTopBarUM.ReadContent(
-                title = resourceReference(R.string.common_search_tokens),
-                onBackButtonClick = router::pop,
-            ),
+            topBar = getTopBarInitialState(),
             search = SearchBarUM(
                 placeholderText = resourceReference(R.string.common_search),
                 query = "",
@@ -132,14 +153,7 @@ internal class ManageTokensModel @Inject constructor(
             isInitialBatchLoading = true,
             isNextBatchLoading = false,
             items = getLoadingItems(),
-            topBar = ManageTokensTopBarUM.ManageContent(
-                title = resourceReference(id = R.string.main_manage_tokens),
-                onBackButtonClick = router::pop,
-                endButton = TopAppBarButtonUM.Icon(
-                    iconRes = R.drawable.ic_plus_24,
-                    onClicked = ::navigateToAddCustomToken,
-                ),
-            ),
+            topBar = getTopBarInitialState(),
             search = SearchBarUM(
                 placeholderText = resourceReference(R.string.common_search),
                 query = "",
@@ -172,6 +186,20 @@ internal class ManageTokensModel @Inject constructor(
             .sample(periodMillis = 1_000)
             .onEach { query -> manageTokensListManager.search(query = query) }
             .launchIn(modelScope)
+    }
+
+    private fun checkIsSupportAddCustomTokens() {
+        when (val mode = params.mode) {
+            is ManageTokensMode.Account -> modelScope.launch {
+                val mainAccount = singleAccountStatusListSupplier(mode.accountId.userWalletId).first().mainAccount
+                if (mode.accountId == mainAccount.account.accountId) {
+                    state.update { it.copySealed(topBar = manageContentTopBar()) }
+                }
+            }
+            ManageTokensMode.None,
+            is ManageTokensMode.Wallet,
+            -> Unit // use init state
+        }
     }
 
     private fun updateItems(items: ImmutableList<CurrencyItemUM>) {
