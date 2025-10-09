@@ -162,7 +162,7 @@ class TotalBalanceUpdateTest : BaseTestCase() {
                 }
             }
             step("Click 'Hide token' button") {
-                onBottomSheet { hideButton.clickWithAssertion() }
+                onTokenActionsBottomSheet { hideTokenButton.clickWithAssertion() }
             }
             step("Click 'Hide' button in dialog") {
                 onDialog {
