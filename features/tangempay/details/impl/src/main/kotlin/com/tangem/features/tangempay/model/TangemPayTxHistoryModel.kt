@@ -5,16 +5,16 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
+import com.tangem.domain.tangempay.repository.TangemPayTxHistoryRepository
+import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import com.tangem.features.tangempay.components.txHistory.DefaultTangemPayTxHistoryComponent
-import com.tangem.features.tangempay.components.txHistory.PreviewTangemPayTxHistoryComponent
-import com.tangem.features.txhistory.entity.TxHistoryUM
+import com.tangem.features.tangempay.entity.TangemPayTxHistoryUM
+import com.tangem.features.tangempay.utils.TangemPayTxHistoryListManager
+import com.tangem.features.tangempay.utils.TangemPayTxHistoryUiActions
+import com.tangem.pagination.PaginationStatus
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.update
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
@@ -24,26 +24,78 @@ import javax.inject.Inject
 internal class TangemPayTxHistoryModel @Inject constructor(
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     override val dispatchers: CoroutineDispatcherProvider,
+    tangemPayTxHistoryRepository: TangemPayTxHistoryRepository,
     paramsContainer: ParamsContainer,
-) : Model() {
+) : Model(), TangemPayTxHistoryUiActions {
 
     private val params: DefaultTangemPayTxHistoryComponent.Params = paramsContainer.require()
+    private val listManager = TangemPayTxHistoryListManager(
+        repository = tangemPayTxHistoryRepository,
+        dispatchers = dispatchers,
+        customerWalletAddress = params.customerWalletAddress,
+        txHistoryUiActions = this,
+    )
 
-    val uiState: StateFlow<TxHistoryUM>
-    field = MutableStateFlow(getInitialState())
+    val uiState: StateFlow<TangemPayTxHistoryUM>
+        field = MutableStateFlow<TangemPayTxHistoryUM>(getLoadingState(isBalanceHidden = true))
 
     init {
         handleBalanceHiding()
+        launchPagination()
         subscribeToUiItemChanges()
     }
 
-    @Suppress("MagicNumber")
+    private fun launchPagination() {
+        modelScope.launch { listManager.launchPagination() }
+    }
+
     private fun subscribeToUiItemChanges() {
-        modelScope.launch {
-            Timber.d("subscribeToUiItemChanges: ${params.userWalletId}")
-            delay(2000)
-            uiState.update { PreviewTangemPayTxHistoryComponent.contentUM }
+        listManager.uiItems
+            .onEach(::updateState)
+            .launchIn(modelScope)
+        listManager.paginationStatus
+            .onEach { paginationStatus -> handlePaginationStatus(paginationStatus) }
+            .launchIn(modelScope)
+    }
+
+    private fun updateState(items: ImmutableList<TangemPayTxHistoryUM.TangemPayTxHistoryItemUM>) {
+        uiState.update { state ->
+            if (state is TangemPayTxHistoryUM.Content) {
+                state.copy(items = items)
+            } else {
+                TangemPayTxHistoryUM.Content(
+                    items = items,
+                    isBalanceHidden = state.isBalanceHidden,
+                    loadMore = ::loadMoreItems,
+                )
+            }
         }
+    }
+
+    private fun handlePaginationStatus(status: PaginationStatus<*>) {
+        uiState.update { state ->
+            when (status) {
+                is PaginationStatus.InitialLoadingError -> getErrorState(state.isBalanceHidden)
+                PaginationStatus.EndOfPagination,
+                PaginationStatus.InitialLoading,
+                PaginationStatus.NextBatchLoading,
+                PaginationStatus.None,
+                is PaginationStatus.Paginating<*>,
+                -> state
+            }
+        }
+    }
+
+    private fun loadMoreItems(): Boolean {
+        modelScope.launch { listManager.loadMore(params.customerWalletAddress) }
+        return true
+    }
+
+    fun reload() {
+        uiState.update { state ->
+            state as? TangemPayTxHistoryUM.Content ?: getLoadingState(state.isBalanceHidden)
+        }
+        modelScope.launch { listManager.reload() }
     }
 
     private fun handleBalanceHiding() {
@@ -52,11 +104,15 @@ internal class TangemPayTxHistoryModel @Inject constructor(
             .launchIn(modelScope)
     }
 
-    private fun onExploreClick() {
-        Timber.d("onExploreClick: open explorer")
+    override fun onTransactionClick(item: TangemPayTxHistoryItem) {
+        Timber.d("onTransactionClick: $item")
     }
 
-    private fun getInitialState(): TxHistoryUM {
-        return TxHistoryUM.Loading(isBalanceHidden = true, onExploreClick = ::onExploreClick)
+    private fun getErrorState(isBalanceHidden: Boolean): TangemPayTxHistoryUM.Error {
+        return TangemPayTxHistoryUM.Error(isBalanceHidden = isBalanceHidden, onReload = ::reload)
+    }
+
+    private fun getLoadingState(isBalanceHidden: Boolean): TangemPayTxHistoryUM.Loading {
+        return TangemPayTxHistoryUM.Loading(isBalanceHidden = isBalanceHidden)
     }
 }
