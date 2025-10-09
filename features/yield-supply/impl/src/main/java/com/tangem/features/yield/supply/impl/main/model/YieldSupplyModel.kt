@@ -8,8 +8,6 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -18,10 +16,15 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.tokens.FetchCurrencyStatusUseCase
 import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.domain.yield.supply.usecase.YieldSupplyActivateUseCase
+import com.tangem.domain.yield.supply.usecase.YieldSupplyDeactivateUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetTokenStatusUseCase
+import com.tangem.domain.yield.supply.usecase.YieldSupplyIsAvailableUseCase
 import com.tangem.features.yield.supply.api.YieldSupplyComponent
-import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.impl.main.entity.YieldSupplyUM
+import com.tangem.features.yield.supply.impl.main.entity.LoadingStatusMode
+import com.tangem.features.yield.supply.impl.main.model.transformers.YieldSupplyTokenStatusFailureTransformer
+import com.tangem.features.yield.supply.impl.main.model.transformers.YieldSupplyTokenStatusSuccessTransformer
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.DelayedWork
 import kotlinx.coroutines.CoroutineScope
@@ -29,6 +32,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import com.tangem.utils.transformer.update
 import javax.inject.Inject
 import kotlin.properties.Delegates
 
@@ -44,12 +48,15 @@ internal class YieldSupplyModel @Inject constructor(
     @DelayedWork private val coroutineScope: CoroutineScope,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val yieldSupplyGetTokenStatusUseCase: YieldSupplyGetTokenStatusUseCase,
+    private val yieldSupplyIsAvailableUseCase: YieldSupplyIsAvailableUseCase,
+    private val yieldSupplyActivateUseCase: YieldSupplyActivateUseCase,
+    private val yieldSupplyDeactivateUseCase: YieldSupplyDeactivateUseCase,
 ) : Model(), YieldSupplyClickIntents {
 
     private val params = paramsContainer.require<YieldSupplyComponent.Params>()
 
     val uiState: StateFlow<YieldSupplyUM>
-        field = MutableStateFlow<YieldSupplyUM>(YieldSupplyUM.Loading)
+        field = MutableStateFlow<YieldSupplyUM>(YieldSupplyUM.Initial)
 
     val bottomSheetNavigation: SlotNavigation<Unit> = SlotNavigation()
 
@@ -68,8 +75,17 @@ internal class YieldSupplyModel @Inject constructor(
         field = MutableStateFlow(false)
 
     init {
-        subscribeOnCurrencyStatusUpdates()
-        subscribeOnBalanceHidden()
+        checkIfYieldSupplyIsAvailable()
+    }
+
+    private fun checkIfYieldSupplyIsAvailable() {
+        modelScope.launch(dispatchers.io) {
+            val isAvailable = yieldSupplyIsAvailableUseCase(params.userWalletId, params.cryptoCurrency)
+            if (isAvailable) {
+                subscribeOnCurrencyStatusUpdates()
+                subscribeOnBalanceHidden()
+            }
+        }
     }
 
     private fun subscribeOnCurrencyStatusUpdates() {
@@ -102,24 +118,20 @@ internal class YieldSupplyModel @Inject constructor(
         }
     }
 
-    private fun loadTokenStatus(cryptoCurrency: CryptoCurrency.Token) {
+    private fun loadTokenStatus(mode: LoadingStatusMode) {
+        val cryptoCurrencyToken = cryptoCurrency as? CryptoCurrency.Token ?: return
         modelScope.launch(dispatchers.default) {
-            yieldSupplyGetTokenStatusUseCase(cryptoCurrency)
+            yieldSupplyGetTokenStatusUseCase(cryptoCurrencyToken)
                 .onRight { tokenStatus ->
-                    val newState = if (tokenStatus.isActive) {
-                        YieldSupplyUM.Initial(
-                            title = resourceReference(
-                                id = R.string.yield_module_token_details_earn_notification_title,
-                                formatArgs = wrappedList(tokenStatus.apy),
-                            ),
-                            onClick = ::onStartEarningClick,
-                        )
-                    } else {
-                        YieldSupplyUM.Unavailable
-                    }
-                    uiState.update { newState }
+                    uiState.update(
+                        YieldSupplyTokenStatusSuccessTransformer(
+                            tokenStatus = tokenStatus,
+                            onStartEarningClick = ::onStartEarningClick,
+                            mode = mode,
+                        ),
+                    )
                 }.onLeft {
-                    uiState.update { YieldSupplyUM.Unavailable }
+                    uiState.update(YieldSupplyTokenStatusFailureTransformer(mode))
                 }
         }
     }
@@ -154,6 +166,7 @@ internal class YieldSupplyModel @Inject constructor(
         val yieldTransaction = cryptoCurrencyStatus.value.pendingTransactions.firstOrNull {
             it.type is TxInfo.TransactionType.YieldSupply
         }?.type as? TxInfo.TransactionType.YieldSupply
+        sendInfoAboutProtocolStatus(yieldSupplyStatus?.isActive == true)
 
         val yieldSupplyUM = when {
             hasActiveTransaction && yieldTransaction != null -> {
@@ -178,8 +191,21 @@ internal class YieldSupplyModel @Inject constructor(
 
         uiState.update { yieldSupplyUM }
 
-        if (yieldSupplyUM is YieldSupplyUM.Loading) {
-            (cryptoCurrency as? CryptoCurrency.Token)?.let(::loadTokenStatus)
+        when (yieldSupplyUM) {
+            is YieldSupplyUM.Loading -> loadTokenStatus(LoadingStatusMode.Initial)
+            is YieldSupplyUM.Content -> loadTokenStatus(LoadingStatusMode.LoadApy)
+            else -> Unit
+        }
+    }
+
+    private fun sendInfoAboutProtocolStatus(isActivated: Boolean) {
+        val token = cryptoCurrency as? CryptoCurrency.Token ?: return
+        modelScope.launch(dispatchers.default) {
+            if (isActivated) {
+                yieldSupplyActivateUseCase(token)
+            } else {
+                yieldSupplyDeactivateUseCase(token)
+            }
         }
     }
 
