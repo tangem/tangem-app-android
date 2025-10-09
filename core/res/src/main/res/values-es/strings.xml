@@ -80,7 +80,7 @@
   <string name="biometric_unavailable_warning">Ha desactivado la autenticación biométrica en su teléfono y no podrá guardar billeteras en la aplicación. Para guardar billeteras, active la función de autenticación biométrica en los ajustes de su teléfono.</string>
   <string name="bitcoin_promo_activation_error">Se produjo un error al procesar tu código promocional. Inténtalo de nuevo más tarde.</string>
   <string name="bitcoin_promo_activation_error_title">Error de activación</string>
-  <string name="bitcoin_promo_activation_success">Su código promocional se ha activado correctamente. Un bono de 10 USDT en Bitcoin se abonará en su cuenta en un plazo de 14 días.</string>
+  <string name="bitcoin_promo_activation_success">Tu código promocional se activó correctamente. Una recompensa se acreditará en tu cuenta dentro de 14 días.</string>
   <string name="bitcoin_promo_activation_success_title">Código promocional activado</string>
   <string name="bitcoin_promo_already_activated">Este código promocional ya ha sido utilizado y no puede activarse de nuevo.</string>
   <string name="bitcoin_promo_already_activated_title">Código no disponible</string>
@@ -258,6 +258,7 @@
   <string name="common_swap">Intercambiar</string>
   <string name="common_terms_and_conditions">términos y condiciones</string>
   <string name="common_terms_of_use">Condiciones de uso</string>
+  <string name="common_to">A</string>
   <string name="common_today">Hoy</string>
   <plurals name="common_tokens_count">
     <item quantity="one">%d token</item>
@@ -1204,8 +1205,12 @@
   <string name="unlock_wallet_description_full">Use %s o escanee una tarjeta/anillo para tener acceso a su billetera</string>
   <string name="unsupported_wc_version">Error de conexión: Esta dApp utiliza la versión 1.0 de Wallet Connect, que no es compatible. Asegúrese de que la dApp sea compatible con la versión 2.0 de Wallet Connect para conectarse correctamente.</string>
   <string name="user_push_notification_agreement_argument_one">Manténgase actualizado con las últimas funciones y noticias</string>
+  <string name="user_push_notification_agreement_argument_one_subtitle">Alertas en tiempo real de transacciones, intercambios y actualizaciones críticas.</string>
+  <string name="user_push_notification_agreement_argument_one_title">Alertas de transacciones</string>
   <string name="user_push_notification_agreement_argument_three">Recibir notificaciones de las transacciones entrantes</string>
   <string name="user_push_notification_agreement_argument_two">Sea el primero en enterarte de nuevas promociones</string>
+  <string name="user_push_notification_agreement_argument_two_subtitle">Acceso anticipado a nuevas funciones y ofertas exclusivas.</string>
+  <string name="user_push_notification_agreement_argument_two_title">Actualizaciones de características y noticias</string>
   <string name="user_push_notification_agreement_header">¿Quiere utilizar\nnotificaciones push?</string>
   <string name="user_wallet_list_add_button">Agregar una nueva billetera</string>
   <string name="user_wallet_list_delete_prompt">¿Estás seguro de que deseas olvidar esta billetera?</string>
