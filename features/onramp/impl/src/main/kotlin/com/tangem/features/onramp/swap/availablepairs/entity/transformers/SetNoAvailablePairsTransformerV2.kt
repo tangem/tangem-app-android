@@ -33,7 +33,7 @@ internal class SetNoAvailablePairsTransformerV2(
                 TokenListUMData.AccountList(
                     tokensList = accountList.map { (account, cryptoCurrencies) ->
                         TokensListItemUM.Portfolio(
-                            state = AccountCryptoPortfolioItemStateConverter(
+                            tokenItemUM = AccountCryptoPortfolioItemStateConverter(
                                 appCurrency = appCurrency,
                                 account = account,
                                 onItemClick = null,
