@@ -200,7 +200,7 @@ internal class ChildFactory @Inject constructor(
                 createComponentChild(
                     context = context,
                     params = OnrampComponent.Params(
-                        userWalletId = route.portfolioId.userWalletId, // todo account portfolioId param,
+                        userWalletId = route.userWalletId,
                         cryptoCurrency = route.currency,
                         source = route.source,
                         shouldLaunchSepa = route.shouldLaunchSepa,
@@ -274,7 +274,7 @@ internal class ChildFactory @Inject constructor(
                 createComponentChild(
                     context = context,
                     params = TokenDetailsComponent.Params(
-                        userWalletId = route.portfolioId.userWalletId, // todo account portfolioId param
+                        userWalletId = route.userWalletId,
                         currency = route.currency,
                     ),
                     componentFactory = tokenDetailsComponentFactory,
@@ -284,7 +284,7 @@ internal class ChildFactory @Inject constructor(
                 createComponentChild(
                     context = context,
                     params = StakingComponent.Params(
-                        userWalletId = route.portfolioId.userWalletId, // todo account portfolioId param,
+                        userWalletId = route.userWalletId,
                         cryptoCurrencyId = route.cryptoCurrencyId,
                         yieldId = route.yieldId,
                     ),
@@ -297,7 +297,7 @@ internal class ChildFactory @Inject constructor(
                     params = SwapComponent.Params(
                         currencyFrom = route.currencyFrom,
                         currencyTo = route.currencyTo,
-                        userWalletId = route.portfolioId.userWalletId, // todo account portfolioId param,
+                        userWalletId = route.userWalletId,
                         isInitialReverseOrder = route.isInitialReverseOrder,
                         screenSource = route.screenSource,
                     ),
@@ -308,7 +308,7 @@ internal class ChildFactory @Inject constructor(
                 createComponentChild(
                     context = context,
                     params = SendComponent.Params(
-                        userWalletId = route.portfolioId.userWalletId, // todo account portfolioId param,
+                        userWalletId = route.userWalletId,
                         currency = route.currency,
                         transactionId = route.transactionId,
                         amount = route.amount,
