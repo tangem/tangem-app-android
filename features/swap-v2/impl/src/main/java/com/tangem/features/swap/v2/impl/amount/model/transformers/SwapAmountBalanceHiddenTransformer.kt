@@ -46,9 +46,7 @@ internal class SwapAmountBalanceHiddenTransformer(
             val newData = recalculatedPrimary.amountField
             newData.copy(
                 amountTextField = oldData.amountTextField,
-                selectedButton = oldData.selectedButton,
                 isPrimaryButtonEnabled = oldData.isPrimaryButtonEnabled,
-                isSegmentedButtonsEnabled = oldData.isSegmentedButtonsEnabled,
                 isEditingDisabled = oldData.isEditingDisabled,
                 reduceAmountBy = oldData.reduceAmountBy,
                 isIgnoreReduce = oldData.isIgnoreReduce,

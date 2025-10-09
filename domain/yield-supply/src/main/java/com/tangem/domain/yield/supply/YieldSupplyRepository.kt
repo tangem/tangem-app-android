@@ -1,12 +1,13 @@
 package com.tangem.domain.yield.supply
 
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.yield.supply.models.YieldMarketToken
 import com.tangem.domain.yield.supply.models.YieldMarketTokenStatus
 import com.tangem.domain.yield.supply.models.YieldSupplyMarketChartData
 import kotlinx.coroutines.flow.Flow
 
-interface YieldSupplyMarketRepository {
+interface YieldSupplyRepository {
 
     /**
      * Get cached yield markets or null if nothing cached yet.
@@ -35,4 +36,25 @@ interface YieldSupplyMarketRepository {
      */
     @Throws
     suspend fun getTokenChart(cryptoCurrencyToken: CryptoCurrency.Token): YieldSupplyMarketChartData
+
+    suspend fun isYieldSupplySupported(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): Boolean
+
+    /**
+     * Activate yield protocol for the specified token.
+     *
+     * Returns whether the token is active after the operation completes.
+     * May throw on network/backend errors or if required chain id cannot be resolved.
+     */
+    @Throws
+    suspend fun activateProtocol(cryptoCurrencyToken: CryptoCurrency.Token): Boolean
+
+    /**
+     * Deactivate yield protocol for the specified token.
+     *
+     * Returns whether the token is active after the operation completes
+     * (expected to be false when deactivation succeeds). May throw on
+     * network/backend errors or if required chain id cannot be resolved.
+     */
+    @Throws
+    suspend fun deactivateProtocol(cryptoCurrencyToken: CryptoCurrency.Token): Boolean
 }
