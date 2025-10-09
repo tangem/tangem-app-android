@@ -61,7 +61,7 @@
   <string name="biometric_unavailable_warning">Ви вимкнули біометричну автентифікацію на своєму телефоні і не зможете зберігати гаманці в додатку. Щоб зберегти гаманці, будь ласка, увімкніть функцію біометричної автентифікації в налаштуваннях телефону.</string>
   <string name="bitcoin_promo_activation_error">Під час обробки промокоду сталася помилка. Будь ласка, спробуйте пізніше.</string>
   <string name="bitcoin_promo_activation_error_title">Помилка активації</string>
-  <string name="bitcoin_promo_activation_success">Ваш промокод успішно активовано. Бонус 10 USDT у Bitcoin буде зараховано через 14 днів.</string>
+  <string name="bitcoin_promo_activation_success">Ваш промокод було успішно активовано. Винагороду буде зараховано на ваш рахунок протягом 14 днів.</string>
   <string name="bitcoin_promo_activation_success_title">Промокод активовано</string>
   <string name="bitcoin_promo_already_activated">Цей промокод уже був використаний і не може бути активований повторно.</string>
   <string name="bitcoin_promo_already_activated_title">Код недоступний</string>
