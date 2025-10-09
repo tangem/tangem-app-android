@@ -90,7 +90,7 @@ fun MarketChart(
         backgroundLineColor = state.chartColor.copy(alpha = backgroundColorAlpha),
         secondLineColor = splitChartSegmentColor,
         backgroundSecondLineColor = splitChartSegmentColor.copy(alpha = backgroundSplitChartSegmentColorAlpha),
-        secondColorOnTheRightSide = state.markerHighlightRightSide.not(),
+        secondColorOnTheRightSide = state.shouldMarkerHighlightRightSide.not(),
         markerFraction = state.markerFraction,
         axisValueOverrider = AxisValueOverrider.fixed(),
         canvasHeight = chartHeight,
@@ -114,10 +114,10 @@ fun MarketChart(
 
     CartesianChartHost(
         modifier = modifier
-            .onGloballyPositioned {
-                canvasWidth = it.size.width
-                chartHeight = if (it.size.height != 0) {
-                    it.size.height - bottomAxisHeight
+            .onGloballyPositioned { layoutCoordinates ->
+                canvasWidth = layoutCoordinates.size.width
+                chartHeight = if (layoutCoordinates.size.height != 0) {
+                    layoutCoordinates.size.height - bottomAxisHeight
                 } else {
                     0
                 }
@@ -126,7 +126,7 @@ fun MarketChart(
             .drawBehind {
                 state.markerFraction
                 state.chartColor
-                state.markerHighlightRightSide
+                state.shouldMarkerHighlightRightSide
             },
         chart = chart,
         modelProducer = state.modelProducer,
@@ -269,7 +269,7 @@ private fun rememberChartAxisGuidelineComponent(color: Color): LineComponent {
 
 // region Preview
 
-@Suppress("LongMethod")
+@Suppress("LongMethod", "NullableToStringCall")
 @Preview(showBackground = true, widthDp = 360)
 @Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
@@ -283,7 +283,7 @@ private fun MarketChartPreview(
         MarketChartDataProducer.build {
             chartLook = MarketChartLook(
                 type = MarketChartLook.Type.Growing,
-                markerHighlightRightSide = true,
+                shouldMarkerHighlightRightSide = true,
             )
         }
     }
@@ -294,8 +294,8 @@ private fun MarketChartPreview(
                 x = x.toImmutableList(),
                 y = y.toImmutableList(),
             )
-            updateLook {
-                it.copy(
+            updateLook { marketChartLook ->
+                marketChartLook.copy(
                     xAxisFormatter = { value ->
                         value.toLong().toTimeFormat(DateTimeFormatters.dateMMMdd)
                     },
@@ -311,7 +311,6 @@ private fun MarketChartPreview(
     }
 
     val coroutineScope = rememberCoroutineScope()
-    val look by dataProducer.lookState.collectAsState()
 
     TangemThemePreview {
         val growingColor = TangemTheme.colors.icon.accent
@@ -323,8 +322,8 @@ private fun MarketChartPreview(
             onMarkerShown = { x, y ->
                 markerPoint = Pair(x, y)
             },
-            colorMapper = {
-                when (it) {
+            colorMapper = { type ->
+                when (type) {
                     MarketChartLook.Type.Growing -> growingColor
                     MarketChartLook.Type.Falling -> fallingColor
                     MarketChartLook.Type.Neutral -> neutralColor
@@ -355,7 +354,7 @@ private fun MarketChartPreview(
                 onClick = {
                     dataProducer.runTransaction {
                         updateLook {
-                            it.copy(markerHighlightRightSide = !it.markerHighlightRightSide)
+                            it.copy(shouldMarkerHighlightRightSide = !it.shouldMarkerHighlightRightSide)
                         }
                     }
                 },
@@ -368,10 +367,10 @@ private fun MarketChartPreview(
                 onClick = {
                     coroutineScope.launch {
                         dataProducer.runTransactionSuspend {
-                            updateData {
+                            updateData { data ->
                                 MarketChartData.Data(
-                                    x = it.x,
-                                    y = it.y.reversed().toImmutableList(),
+                                    x = data.x,
+                                    y = data.y.reversed().toImmutableList(),
                                 )
                             }
                         }
@@ -384,9 +383,9 @@ private fun MarketChartPreview(
             Button(
                 onClick = {
                     dataProducer.runTransaction {
-                        updateLook {
-                            it.copy(
-                                type = when (it.type) {
+                        updateLook { look ->
+                            look.copy(
+                                type = when (look.type) {
                                     MarketChartLook.Type.Growing -> MarketChartLook.Type.Falling
                                     MarketChartLook.Type.Falling -> MarketChartLook.Type.Neutral
                                     MarketChartLook.Type.Neutral -> MarketChartLook.Type.Growing

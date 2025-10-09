@@ -2,7 +2,9 @@ package com.tangem.tests
 
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.TOTAL_BALANCE
+import com.tangem.common.extensions.SwipeDirection
 import com.tangem.common.extensions.clickWithAssertion
+import com.tangem.common.extensions.swipeVertical
 import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.screens.*
@@ -43,6 +45,9 @@ class StakingTest : BaseTestCase() {
             }
             step("Assert 'Organize tokens' button is displayed") {
                 onMainScreen { organizeTokensButton().assertIsDisplayed() }
+            }
+            step("Swipe up") {
+                swipeVertical(SwipeDirection.UP)
             }
             step("Click on token with name: '$tokenTitle'") {
                 onMainScreen { tokenWithTitleAndAddress(tokenTitle).clickWithAssertion() }
@@ -99,6 +104,9 @@ class StakingTest : BaseTestCase() {
             }
             step("Assert 'Organize tokens' button is displayed") {
                 onMainScreen { organizeTokensButton().assertIsDisplayed() }
+            }
+            step("Swipe up") {
+                swipeVertical(SwipeDirection.UP)
             }
             step("Click on token with name: '$tokenTitle'") {
                 onMainScreen { tokenWithTitleAndAddress(tokenTitle).clickWithAssertion() }
@@ -251,6 +259,9 @@ class StakingTest : BaseTestCase() {
             }
             step("Assert 'Organize tokens' button is displayed") {
                 onMainScreen { organizeTokensButton().assertIsDisplayed() }
+            }
+            step("Swipe up") {
+                swipeVertical(SwipeDirection.UP)
             }
             step("Click on token with name: '$tokenTitle'") {
                 onMainScreen { tokenWithTitleAndAddress(tokenTitle).clickWithAssertion() }
