@@ -15,7 +15,7 @@ import kotlinx.collections.immutable.persistentListOf
 @Composable
 internal fun PushNotificationsScreen(
     onAllowClick: () -> Unit,
-    onLaterClick: () -> Unit,
+    onLaterClick: (isFromBs: Boolean) -> Unit,
     onAllowPermission: () -> Unit,
     onDenyPermission: () -> Unit,
 ) {
@@ -26,20 +26,18 @@ internal fun PushNotificationsScreen(
     )
 
     Showcase(
-        headerIconRes = R.drawable.ic_notifications_unread_24,
+        headerIconRes = R.drawable.ic_notification_56,
         headerText = resourceReference(R.string.user_push_notification_agreement_header),
         showcaseItems = persistentListOf(
             ShowcaseItemModel(
-                R.drawable.ic_rocket_launch_24,
-                resourceReference(R.string.user_push_notification_agreement_argument_one),
+                iconRes = R.drawable.ic_notification_square_24,
+                title = resourceReference(R.string.user_push_notification_agreement_argument_one_title),
+                subTitle = resourceReference(R.string.user_push_notification_agreement_argument_one_subtitle),
             ),
             ShowcaseItemModel(
-                R.drawable.ic_storefront_24,
-                resourceReference(R.string.user_push_notification_agreement_argument_two),
-            ),
-            ShowcaseItemModel(
-                R.drawable.ic_notifications_24,
-                resourceReference(R.string.user_push_notification_agreement_argument_three),
+                iconRes = R.drawable.ic_stars_24,
+                title = resourceReference(R.string.user_push_notification_agreement_argument_two_title),
+                subTitle = resourceReference(R.string.user_push_notification_agreement_argument_two_subtitle),
             ),
         ),
         primaryButton = ShowcaseButtonModel(
@@ -52,7 +50,7 @@ internal fun PushNotificationsScreen(
         secondaryButton = ShowcaseButtonModel(
             buttonText = resourceReference(R.string.common_later),
             onClick = {
-                onLaterClick()
+                onLaterClick(false)
             },
         ),
         modifier = Modifier.systemBarsPadding(),

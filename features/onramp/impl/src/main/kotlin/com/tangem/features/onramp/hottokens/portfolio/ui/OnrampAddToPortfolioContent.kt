@@ -147,7 +147,7 @@ private fun PreviewOnrampAddToPortfolioContent() {
                             fallbackTint = TangemColorPalette.Black,
                             fallbackBackground = TangemColorPalette.Meadow,
                             isGrayscale = false,
-                            showCustomBadge = false,
+                            shouldShowCustomBadge = false,
                         ),
                         addButtonUM = OnrampAddToPortfolioUM.AddButtonUM(
                             isProgress = false,

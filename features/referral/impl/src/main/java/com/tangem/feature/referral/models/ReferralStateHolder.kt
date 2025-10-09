@@ -1,6 +1,9 @@
 package com.tangem.feature.referral.models
 
 import androidx.annotation.DrawableRes
+import com.tangem.common.ui.account.CryptoPortfolioIconUM
+import com.tangem.core.ui.components.token.state.TokenItemState
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.feature.referral.domain.models.ExpectedAwards
 
 internal data class ReferralStateHolder(
@@ -17,6 +20,7 @@ internal data class ReferralStateHolder(
         val networkName: String
         val discount: String
         val url: String
+        val accountAward: AccountAward?
     }
 
     sealed interface ReferralInfoState {
@@ -29,6 +33,7 @@ internal data class ReferralStateHolder(
             val code: String,
             val shareLink: String,
             override val url: String,
+            override val accountAward: AccountAward? = null,
             val expectedAwards: ExpectedAwards?,
         ) : ReferralInfoState, ReferralInfoContentState
 
@@ -37,6 +42,7 @@ internal data class ReferralStateHolder(
             override val networkName: String,
             override val discount: String,
             override val url: String,
+            override val accountAward: AccountAward? = null,
             @DrawableRes val participateButtonIcon: Int?,
             val onParticipateClicked: () -> Unit,
         ) : ReferralInfoState, ReferralInfoContentState
@@ -53,5 +59,13 @@ internal data class ReferralStateHolder(
         val onAgreementClicked: () -> Unit,
         val onCopyClicked: () -> Unit,
         val onShareClicked: (String) -> Unit,
+    )
+
+    data class AccountAward(
+        val tokenState: TokenItemState,
+        val isBalanceHidden: Boolean,
+        val accountName: TextReference,
+        val accountIcon: CryptoPortfolioIconUM,
+        val onAccountClick: () -> Unit,
     )
 }
