@@ -290,7 +290,7 @@ private fun CustomCurrencyItem(item: CurrencyItemUM.Custom, modifier: Modifier =
                 name = name,
                 type = symbol,
                 icon = icon,
-                showCustom = true,
+                shouldShowCustom = true,
             )
         },
         action = {
@@ -316,7 +316,7 @@ private fun BasicCurrencyItem(item: CurrencyItemUM.Basic, isEditable: Boolean, m
                     name = name,
                     type = symbol,
                     icon = icon,
-                    showCustom = false,
+                    shouldShowCustom = false,
                 )
             },
             action = {
@@ -442,7 +442,7 @@ private class PreviewManageTokensComponentProvider : PreviewParameterProvider<Ma
                 showTangemIcon = true,
                 params = ManageTokensComponent.Params(
                     source = ManageTokensSource.ONBOARDING,
-                    userWalletId = UserWalletId("wallet_id"),
+                    userWalletId = UserWalletId("0x"),
                 ),
             ),
             PreviewManageTokensComponent(
@@ -455,7 +455,7 @@ private class PreviewManageTokensComponentProvider : PreviewParameterProvider<Ma
                 showTangemIcon = false,
                 params = ManageTokensComponent.Params(
                     source = ManageTokensSource.ONBOARDING,
-                    userWalletId = UserWalletId("wallet_id"),
+                    userWalletId = UserWalletId("0x"),
                 ),
             ),
         )

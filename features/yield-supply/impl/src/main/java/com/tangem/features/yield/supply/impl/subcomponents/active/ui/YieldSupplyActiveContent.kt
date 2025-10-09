@@ -1,6 +1,8 @@
 package com.tangem.features.yield.supply.impl.subcomponents.active.ui
 
 import android.content.res.Configuration
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -8,19 +10,21 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.LinkAnnotation
+import androidx.compose.ui.text.withLink
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
-import com.tangem.core.ui.components.ResizableText
-import com.tangem.core.ui.components.SpacerH4
-import com.tangem.core.ui.components.SpacerH8
-import com.tangem.core.ui.components.SpacerWMax
+import com.tangem.common.ui.notifications.NotificationUM
+import com.tangem.core.ui.components.*
+import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -28,7 +32,11 @@ import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.impl.subcomponents.active.entity.YieldSupplyActiveContentUM
 
 @Composable
-internal fun YieldSupplyActiveContent(state: YieldSupplyActiveContentUM, modifier: Modifier = Modifier) {
+internal fun YieldSupplyActiveContent(
+    state: YieldSupplyActiveContentUM,
+    isBalanceHidden: Boolean,
+    modifier: Modifier = Modifier,
+) {
     Column(
         verticalArrangement = Arrangement.spacedBy(14.dp),
         modifier = modifier.padding(
@@ -50,17 +58,26 @@ internal fun YieldSupplyActiveContent(state: YieldSupplyActiveContentUM, modifie
                 color = TangemTheme.colors.text.tertiary,
             )
             ResizableText(
-                text = state.totalEarnings.resolveReference(),
+                text = state.totalEarnings.orMaskWithStars(isBalanceHidden).resolveReference(),
                 style = TangemTheme.typography.h2,
                 color = TangemTheme.colors.text.primary1,
             )
         }
-        YieldSupplyActiveMyFunds(state = state)
+        YieldSupplyActiveMyFunds(state = state, isBalanceHidden = isBalanceHidden)
+
+        AnimatedVisibility(state.notificationUM != null) {
+            val wrappedNotification = remember(this) { requireNotNull(state.notificationUM) }
+            Notification(
+                config = wrappedNotification.config,
+                iconTint = null,
+                containerColor = TangemTheme.colors.background.action,
+            )
+        }
     }
 }
 
 @Composable
-private fun YieldSupplyActiveMyFunds(state: YieldSupplyActiveContentUM) {
+private fun YieldSupplyActiveMyFunds(state: YieldSupplyActiveContentUM, isBalanceHidden: Boolean) {
     Column(
         modifier = Modifier
             .clip(RoundedCornerShape(16.dp))
@@ -90,11 +107,7 @@ private fun YieldSupplyActiveMyFunds(state: YieldSupplyActiveContentUM) {
             )
         }
         SpacerH8()
-        Text(
-            text = state.subtitle.resolveReference(),
-            style = TangemTheme.typography.caption2,
-            color = TangemTheme.colors.text.tertiary,
-        )
+        DescriptionText(state = state)
         SpacerH8()
         HorizontalDivider(
             thickness = 0.5.dp,
@@ -103,6 +116,7 @@ private fun YieldSupplyActiveMyFunds(state: YieldSupplyActiveContentUM) {
         InfoRow(
             title = resourceReference(R.string.yield_module_earn_sheet_transfers_title),
             info = resourceReference(R.string.yield_module_transfer_mode_automatic),
+            isBalanceHidden = false,
         )
         HorizontalDivider(
             thickness = 0.5.dp,
@@ -111,12 +125,38 @@ private fun YieldSupplyActiveMyFunds(state: YieldSupplyActiveContentUM) {
         InfoRow(
             title = resourceReference(R.string.yield_module_earn_sheet_available_title),
             info = state.availableBalance,
+            isBalanceHidden = isBalanceHidden,
         )
     }
 }
 
 @Composable
-private fun InfoRow(title: TextReference, info: TextReference) {
+private fun DescriptionText(state: YieldSupplyActiveContentUM) {
+    val subtitle = annotatedReference {
+        append(state.subtitle.resolveReference())
+        appendSpace()
+        withLink(
+            LinkAnnotation.Clickable(
+                tag = "LINK_TAG",
+                linkInteractionListener = {},
+            ),
+            {
+                appendColored(
+                    text = state.subtitleLink.resolveReference(),
+                    color = TangemTheme.colors.icon.accent,
+                )
+            },
+        )
+    }
+    Text(
+        text = subtitle.resolveAnnotatedReference(),
+        style = TangemTheme.typography.caption2,
+        color = TangemTheme.colors.text.tertiary,
+    )
+}
+
+@Composable
+private fun InfoRow(title: TextReference, isBalanceHidden: Boolean, info: TextReference?) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         modifier = Modifier.padding(horizontal = 4.dp, vertical = 12.dp),
@@ -127,11 +167,21 @@ private fun InfoRow(title: TextReference, info: TextReference) {
             color = TangemTheme.colors.text.primary1,
         )
         SpacerWMax()
-        Text(
-            text = info.resolveReference(),
-            style = TangemTheme.typography.body1,
-            color = TangemTheme.colors.text.tertiary,
-        )
+
+        AnimatedContent(info) { currentInfo ->
+            if (currentInfo != null) {
+                Text(
+                    text = currentInfo.orMaskWithStars(isBalanceHidden).resolveReference(),
+                    style = TangemTheme.typography.body1,
+                    color = TangemTheme.colors.text.tertiary,
+                )
+            } else {
+                TextShimmer(
+                    text = title.resolveReference(),
+                    style = TangemTheme.typography.body1,
+                )
+            }
+        }
     }
 }
 
@@ -143,7 +193,7 @@ private fun YieldSupplyActiveBottomSheet_Preview(
     @PreviewParameter(YieldSupplyActiveBottomSheetPreviewProvider::class) params: YieldSupplyActiveContentUM,
 ) {
     TangemThemePreview {
-        YieldSupplyActiveContent(params)
+        YieldSupplyActiveContent(params, true)
     }
 }
 
@@ -158,6 +208,8 @@ private class YieldSupplyActiveBottomSheetPreviewProvider : PreviewParameterProv
                     R.string.yield_module_earn_sheet_provider_description,
                     wrappedList("USDT", "USDT"),
                 ),
+                subtitleLink = resourceReference(R.string.common_read_more),
+                notificationUM = NotificationUM.Error.InvalidAmount,
             ),
         )
 }

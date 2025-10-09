@@ -37,7 +37,7 @@ object MockUserWalletFactory {
         return UserWallet.Cold(
             name = "NODL",
             walletId = UserWalletId("011"),
-            cardsInWallet = setOf(),
+            cardsInWallet = emptySet(),
             isMultiCurrency = false,
             scanResponse = MockScanResponseFactory.create(
                 cardConfig = GenericCardConfig(maxWalletCount = 2),
