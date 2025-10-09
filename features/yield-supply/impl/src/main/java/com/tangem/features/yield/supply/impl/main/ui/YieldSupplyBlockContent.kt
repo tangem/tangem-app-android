@@ -44,7 +44,7 @@ internal fun YieldSupplyBlockContent(
         modifier = modifier,
     ) { supplyUM ->
         when (supplyUM) {
-            is YieldSupplyUM.Initial -> SupplyInitial(supplyUM)
+            is YieldSupplyUM.Available -> SupplyAvailable(supplyUM)
             YieldSupplyUM.Loading -> SupplyLoading()
             is YieldSupplyUM.Content -> SupplyContent(supplyUM, isBalanceHidden)
             YieldSupplyUM.Processing.Enter -> SupplyProcessing(
@@ -54,12 +54,13 @@ internal fun YieldSupplyBlockContent(
                 resourceReference(R.string.yield_module_stop_earning),
             )
             YieldSupplyUM.Unavailable -> SupplyUnavailable()
+            YieldSupplyUM.Initial -> {}
         }
     }
 }
 
 @Composable
-private fun SupplyInitial(supplyUM: YieldSupplyUM.Initial) {
+private fun SupplyAvailable(supplyUM: YieldSupplyUM.Available) {
     SupplyInfo(
         title = supplyUM.title,
         subtitle = resourceReference(R.string.yield_module_token_details_earn_notification_description),
@@ -292,7 +293,7 @@ private fun YieldSupplyBlockContent_Preview(@PreviewParameter(PreviewProvider::c
 private class PreviewProvider : PreviewParameterProvider<YieldSupplyUM> {
     override val values: Sequence<YieldSupplyUM>
         get() = sequenceOf(
-            YieldSupplyUM.Initial(
+            YieldSupplyUM.Available(
                 title = TextReference.Res(
                     R.string.yield_module_token_details_earn_notification_title,
                     wrappedList("5.1"),

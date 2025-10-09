@@ -6,13 +6,9 @@ import com.tangem.data.common.cache.etag.ETagsStore
 import com.tangem.domain.account.fetcher.SingleAccountListFetcher
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.producer.SingleAccountListProducer
-import com.tangem.domain.account.repository.AccountsCRUDRepository
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.common.wallets.UserWalletsListRepository
-import com.tangem.domain.models.TokensGroupType
-import com.tangem.domain.models.TokensSortType
 import com.tangem.domain.models.account.Account
-import com.tangem.domain.models.account.AccountName
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.feature.tester.presentation.accounts.entity.AccountsUM
@@ -28,11 +24,10 @@ import javax.inject.Inject
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
-internal class AccountsViewModel @Inject constructor(
+internal class TesterAccountsViewModel @Inject constructor(
     private val userWalletsListRepository: UserWalletsListRepository,
     private val singleAccountListFetcher: SingleAccountListFetcher,
     private val singleAccountListSupplier: SingleAccountListSupplier,
-    private val accountsCRUDRepository: AccountsCRUDRepository,
     private val eTagsStore: ETagsStore,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : ViewModel() {
@@ -88,7 +83,6 @@ internal class AccountsViewModel @Inject constructor(
             ),
             onAccountsClick = ::updateAccountsList,
             onFetchAccountsClick = ::fetchAccounts,
-            onCreateMainAccountClick = ::createMainAccount,
             onClearETagClick = ::clearETag,
         )
     }
@@ -107,8 +101,8 @@ internal class AccountsViewModel @Inject constructor(
         }
     }
 
-    private fun updateAccountsList() {
-        val userWalletId = uiState.value.walletSelector.selected?.walletId ?: return
+    private fun updateAccountsList(): Boolean {
+        val userWalletId = uiState.value.walletSelector.selected?.walletId ?: return false
 
         val accounts = walletAccounts.value[userWalletId]?.accounts
             ?.filterIsInstance<Account.CryptoPortfolio>()
@@ -122,6 +116,8 @@ internal class AccountsViewModel @Inject constructor(
                 ),
             )
         }
+
+        return accounts.isEmpty()
     }
 
     private fun fetchAccounts() {
@@ -131,28 +127,6 @@ internal class AccountsViewModel @Inject constructor(
             singleAccountListFetcher(
                 params = SingleAccountListFetcher.Params(userWalletId = userWalletId),
             )
-        }
-    }
-
-    private fun createMainAccount() {
-        viewModelScope.launch {
-            val userWallet = uiState.value.walletSelector.selected ?: return@launch
-
-            // It's temporary solution to create main account for testing purposes
-            val accountList = AccountList(
-                userWallet = userWallet,
-                accounts = setOf(
-                    Account.CryptoPortfolio.createMainAccount(userWallet.walletId).copy(
-                        accountName = AccountName.invoke(value = "Main Account").getOrNull()!!,
-                    ),
-                ),
-                totalAccounts = 1,
-                sortType = TokensSortType.NONE,
-                groupType = TokensGroupType.NONE,
-            )
-                .getOrNull()!!
-
-            accountsCRUDRepository.saveAccounts(accountList)
         }
     }
 
