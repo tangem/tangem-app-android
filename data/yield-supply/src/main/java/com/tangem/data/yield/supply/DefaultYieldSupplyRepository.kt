@@ -9,7 +9,6 @@ import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.local.yieldsupply.YieldMarketsStore
 import com.tangem.data.yield.supply.converters.YieldMarketTokenConverter
 import com.tangem.datasource.api.tangemTech.YieldSupplyApi
-import com.tangem.data.yield.supply.converters.YieldTokenStatusConverter
 import com.tangem.data.yield.supply.converters.YieldTokenChartConverter
 import com.tangem.datasource.api.tangemTech.models.YieldSupplyChangeTokenStatusBody
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -17,7 +16,6 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.yield.supply.YieldSupplyRepository
 import com.tangem.domain.yield.supply.models.YieldMarketToken
-import com.tangem.domain.yield.supply.models.YieldMarketTokenStatus
 import com.tangem.domain.yield.supply.models.YieldSupplyMarketChartData
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.Flow
@@ -50,11 +48,11 @@ internal class DefaultYieldSupplyRepository(
         it.map(YieldMarketTokenConverter::convert).enrichNetworkIds()
     }
 
-    override suspend fun getTokenStatus(cryptoCurrencyToken: CryptoCurrency.Token): YieldMarketTokenStatus {
+    override suspend fun getTokenStatus(cryptoCurrencyToken: CryptoCurrency.Token): YieldMarketToken {
         val chainId = Blockchain.fromNetworkId(cryptoCurrencyToken.network.backendId)?.getChainId()
             ?: error("Chain id is required for evm's")
         val response = yieldSupplyApi.getYieldTokenStatus(chainId, cryptoCurrencyToken.contractAddress).getOrThrow()
-        return YieldTokenStatusConverter.convert(response)
+        return YieldMarketTokenConverter.convert(response)
     }
 
     override suspend fun getTokenChart(cryptoCurrencyToken: CryptoCurrency.Token): YieldSupplyMarketChartData {
