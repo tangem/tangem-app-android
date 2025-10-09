@@ -42,8 +42,8 @@ internal class DefaultExpressAssetsStore(
                 runtimeStore.store(userWalletId.stringValue, item)
             }
             launch {
-                persistenceStore.updateData {
-                    it.toMutableMap().apply {
+                persistenceStore.updateData { assetsByWalletId ->
+                    assetsByWalletId.toMutableMap().apply {
                         put(userWalletId.stringValue, item)
                     }
                 }

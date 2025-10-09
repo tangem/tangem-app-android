@@ -16,6 +16,7 @@ import com.tangem.features.details.component.DetailsComponent
 import com.tangem.features.disclaimer.api.components.DisclaimerComponent
 import com.tangem.features.home.api.HomeComponent
 import com.tangem.features.hotwallet.*
+import com.tangem.features.kyc.KycComponent
 import com.tangem.features.managetokens.component.ChooseManagedTokensComponent
 import com.tangem.features.managetokens.component.ManageTokensComponent
 import com.tangem.features.managetokens.component.ManageTokensSource
@@ -35,6 +36,7 @@ import com.tangem.features.swap.SwapComponent
 import com.tangem.features.swap.v2.api.SendWithSwapComponent
 import com.tangem.features.tangempay.components.TangemPayDetailsComponent
 import com.tangem.features.tangempay.components.TangemPayOnboardingComponent
+import com.tangem.features.tangempay.components.TangemPayOnboardingComponent.Params.*
 import com.tangem.features.tokendetails.TokenDetailsComponent
 import com.tangem.features.wallet.WalletEntryComponent
 import com.tangem.features.walletconnect.components.WalletConnectEntryComponent
@@ -106,6 +108,7 @@ internal class ChildFactory @Inject constructor(
     private val sendEntryPointComponentFactory: SendEntryPointComponent.Factory,
     private val tangemPayDetailsComponentFactory: TangemPayDetailsComponent.Factory,
     private val tangemPayOnboardingComponentFactory: TangemPayOnboardingComponent.Factory,
+    private val kycComponentFactory: KycComponent.Factory,
     private val yieldSupplyPromoComponentFactory: YieldSupplyPromoComponent.Factory,
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
 ) {
@@ -182,11 +185,11 @@ internal class ChildFactory @Inject constructor(
                     params = MarketsTokenDetailsComponent.Params(
                         token = route.token,
                         appCurrency = route.appCurrency,
-                        showPortfolio = route.showPortfolio,
-                        analyticsParams = route.analyticsParams?.let {
+                        shouldShowPortfolio = route.shouldShowPortfolio,
+                        analyticsParams = route.analyticsParams?.let { params ->
                             MarketsTokenDetailsComponent.AnalyticsParams(
-                                blockchain = it.blockchain,
-                                source = it.source,
+                                blockchain = params.blockchain,
+                                source = params.source,
                             )
                         },
                     ),
@@ -197,10 +200,10 @@ internal class ChildFactory @Inject constructor(
                 createComponentChild(
                     context = context,
                     params = OnrampComponent.Params(
-                        userWalletId = route.userWalletId,
+                        userWalletId = route.portfolioId.userWalletId, // todo account portfolioId param,
                         cryptoCurrency = route.currency,
                         source = route.source,
-                        launchSepa = route.launchSepa,
+                        shouldLaunchSepa = route.shouldLaunchSepa,
                     ),
                     componentFactory = onrampComponentFactory,
                 )
@@ -271,7 +274,7 @@ internal class ChildFactory @Inject constructor(
                 createComponentChild(
                     context = context,
                     params = TokenDetailsComponent.Params(
-                        userWalletId = route.userWalletId,
+                        userWalletId = route.portfolioId.userWalletId, // todo account portfolioId param
                         currency = route.currency,
                     ),
                     componentFactory = tokenDetailsComponentFactory,
@@ -281,7 +284,7 @@ internal class ChildFactory @Inject constructor(
                 createComponentChild(
                     context = context,
                     params = StakingComponent.Params(
-                        userWalletId = route.userWalletId,
+                        userWalletId = route.portfolioId.userWalletId, // todo account portfolioId param,
                         cryptoCurrencyId = route.cryptoCurrencyId,
                         yieldId = route.yieldId,
                     ),
@@ -294,7 +297,7 @@ internal class ChildFactory @Inject constructor(
                     params = SwapComponent.Params(
                         currencyFrom = route.currencyFrom,
                         currencyTo = route.currencyTo,
-                        userWalletId = route.userWalletId,
+                        userWalletId = route.portfolioId.userWalletId, // todo account portfolioId param,
                         isInitialReverseOrder = route.isInitialReverseOrder,
                         screenSource = route.screenSource,
                     ),
@@ -305,7 +308,7 @@ internal class ChildFactory @Inject constructor(
                 createComponentChild(
                     context = context,
                     params = SendComponent.Params(
-                        userWalletId = route.userWalletId,
+                        userWalletId = route.portfolioId.userWalletId, // todo account portfolioId param,
                         currency = route.currency,
                         transactionId = route.transactionId,
                         amount = route.amount,
@@ -459,7 +462,7 @@ internal class ChildFactory @Inject constructor(
                         initialCurrency = route.initialCurrency,
                         selectedCurrency = route.selectedCurrency,
                         source = ChooseManagedTokensComponent.Source.valueOf(route.source.name),
-                        showSendViaSwapNotification = route.showSendViaSwapNotification,
+                        shouldShowSendViaSwapNotification = route.shouldShowSendViaSwapNotification,
                         analyticsCategoryName = route.analyticsCategoryName,
                     ),
                     componentFactory = chooseManagedTokensComponentFactory,
@@ -590,15 +593,28 @@ internal class ChildFactory @Inject constructor(
             is AppRoute.TangemPayDetails -> {
                 createComponentChild(
                     context = context,
-                    params = TangemPayDetailsComponent.Params(userWalletId = route.userWalletId),
+                    params = TangemPayDetailsComponent.Params(
+                        customerWalletAddress = route.customerWalletAddress,
+                        cardNumberEnd = route.cardNumberEnd,
+                    ),
                     componentFactory = tangemPayDetailsComponentFactory,
                 )
             }
             is AppRoute.TangemPayOnboarding -> {
                 createComponentChild(
                     context = context,
-                    params = TangemPayOnboardingComponent.Params(route.deeplink),
+                    params = when (val mode = route.mode) {
+                        is AppRoute.TangemPayOnboarding.Mode.ContinueOnboarding -> ContinueOnboarding
+                        is AppRoute.TangemPayOnboarding.Mode.Deeplink -> Deeplink(deeplink = mode.deeplink)
+                    },
                     componentFactory = tangemPayOnboardingComponentFactory,
+                )
+            }
+            is AppRoute.Kyc -> {
+                createComponentChild(
+                    context = context,
+                    params = KycComponent.Params,
+                    componentFactory = kycComponentFactory,
                 )
             }
             is AppRoute.YieldSupplyPromo -> {
