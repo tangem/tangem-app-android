@@ -1,6 +1,8 @@
 package com.tangem.data.swap
 
-import arrow.core.right
+import arrow.core.none
+import arrow.core.some
+import arrow.core.toOption
 import com.squareup.moshi.Moshi
 import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.swap.converter.SwapDataConverter
@@ -28,7 +30,7 @@ import com.tangem.domain.quotes.single.SingleQuoteStatusProducer
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import com.tangem.domain.swap.SwapRepositoryV2
 import com.tangem.domain.swap.models.*
-import com.tangem.domain.tokens.utils.CurrencyStatusProxyCreator
+import com.tangem.domain.tokens.operations.CryptoCurrencyStatusFactory
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.async
@@ -49,7 +51,6 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
     private val dataSignatureVerifier: DataSignatureVerifier,
     private val singleQuoteStatusSupplier: SingleQuoteStatusSupplier,
     private val singleQuoteStatusFetcher: SingleQuoteStatusFetcher,
-    private val currencyStatusProxyCreator: CurrencyStatusProxyCreator,
     @NetworkMoshi moshi: Moshi,
 ) : SwapRepositoryV2 {
 
@@ -95,7 +96,7 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
 
                 val mappedProviders = pair.providers.mapNotNull {
                     mappedProviders[it.providerId]
-                }
+                }.filterYieldSupplyProvider(statusFrom)
 
                 if (statusFrom != null && statusTo != null && mappedProviders.isNotEmpty()) {
                     SwapPairModel(
@@ -152,7 +153,7 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
 
                 val mappedProvider = pair.providers.mapNotNull {
                     mappedProviders[it.providerId]
-                }
+                }.filterYieldSupplyProvider(currencyStatusFrom)
 
                 if (currencyStatusFrom != null && currencyStatusTo != null && mappedProvider.isNotEmpty()) {
                     SwapPairModel(
@@ -391,17 +392,19 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
             )
         }
 
-        return currencyStatusProxyCreator.createCurrencyStatus(
+        val quoteStatus = quote ?: singleQuoteStatusSupplier.getSyncOrNull(
+            params = SingleQuoteStatusProducer.Params(rawCurrencyId = rawCurrencyId),
+        )
+
+        return CryptoCurrencyStatusFactory.create(
             currency = cryptoCurrency,
-            maybeQuoteStatus = quote?.right() ?: singleQuoteStatusSupplier.getSyncOrNull(
-                params = SingleQuoteStatusProducer.Params(rawCurrencyId = rawCurrencyId),
-            ).right(),
             maybeNetworkStatus = NetworkStatus(
                 network = cryptoCurrency.network,
                 value = NetworkStatus.MissedDerivation, // Caution!!! Do not change this status
-            ).right(),
-            maybeYieldBalance = null,
-        ).getOrNull()
+            ).some(),
+            maybeQuoteStatus = quoteStatus.toOption(),
+            maybeYieldBalance = none(),
+        )
     }
 
     private fun parseTxDetails(txDetailsJson: String): TxDetails? {
@@ -419,4 +422,15 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
             is CryptoCurrency.Coin -> "0"
         }
     }
+
+    private fun List<ExpressProvider>.filterYieldSupplyProvider(cryptoCurrencyStatus: CryptoCurrencyStatus?) =
+        filter { provider ->
+            // !!!WARNING!!! Filter out dex provider if yield supply is active
+            val yieldSupplyStatus = cryptoCurrencyStatus?.value?.yieldSupplyStatus
+            if (yieldSupplyStatus != null && yieldSupplyStatus.isActive) {
+                provider.type == ExpressProviderType.CEX
+            } else {
+                true
+            }
+        }
 }

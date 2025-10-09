@@ -15,6 +15,8 @@ dependencies {
     /** Core */
     implementation(projects.core.decompose)
     implementation(projects.core.ui)
+    implementation(projects.core.error)
+    implementation(deps.arrow.core)
 
     /** Common */
     implementation(projects.common.routing)
@@ -24,6 +26,9 @@ dependencies {
     implementation(projects.features.tangempay.onboarding.api)
     implementation(projects.features.tangempay.details.api)
     implementation(projects.features.kyc.api)
+
+    /** Domain */
+    implementation(projects.domain.visa)
 
     /** Compose */
     implementation(deps.compose.foundation)

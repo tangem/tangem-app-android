@@ -11,6 +11,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.util.concurrent.ConcurrentHashMap
+import javax.inject.Inject
 
 /**
  * Implementation of [MultiAccountListFetcher]
@@ -20,7 +21,7 @@ import java.util.concurrent.ConcurrentHashMap
  *
 [REDACTED_AUTHOR]
  */
-internal class DefaultMultiAccountListFetcher(
+internal class DefaultMultiAccountListFetcher @Inject constructor(
     private val singleAccountListFetcher: SingleAccountListFetcher,
     private val userWalletsStore: UserWalletsStore,
 ) : MultiAccountListFetcher {

@@ -1780,7 +1780,6 @@
   <string name="yield_module_earn_sheet_total_earnings_title">Total earnings</string>
   <string name="yield_module_earn_sheet_transfers_title">Transfers to Aave</string>
   <string name="yield_module_explore_sheet_explore_aave_button_title">Explore Aave</string>
-  <string name="yield_module_explore_sheet_title">Your %s is deposited in Aave </string>
   <string name="yield_module_fee_policy_sheet_current_fee_note">This is the current supply fee on %s. The live cost will be shown on the Receive Screen.</string>
   <string name="yield_module_fee_policy_sheet_current_fee_title">Current fee</string>
   <string name="yield_module_fee_policy_sheet_description">All future %s top-ups will be supplied to Aave automatically, with the transaction fee deducted.</string>

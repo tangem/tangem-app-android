@@ -111,13 +111,13 @@ internal class ScanProductTask(
     }
 
     private fun getErrorIfExcludedCard(cardDto: CardDTO, card: Card): TangemError? {
-        if (cardDto.isExcluded) return TapSdkError.CardForDifferentApp
-        if (cardDto.isNotSupportedInThatRelease) return TapSdkError.CardNotSupportedByRelease
+        if (cardDto.isExcluded) return TapSdkError.CardForDifferentApp()
+        if (cardDto.isNotSupportedInThatRelease) return TapSdkError.CardNotSupportedByRelease()
         // according ios decline card lower Ed25519Slip0010Available version and contains imported wallets
         if (card.firmwareVersion < FirmwareVersion.Ed25519Slip0010Available &&
             card.wallets.any { it.isImported }
         ) {
-            return TapSdkError.CardNotSupportedByRelease
+            return TapSdkError.CardNotSupportedByRelease()
         }
         return null
     }
@@ -253,12 +253,13 @@ private class ScanWalletProcessor(
         callback: (result: CompletionResult<ScanResponse>) -> Unit,
     ) {
         mainScope.launch {
-            val activationInProgress = store.inject(DaggerGraphState::cardRepository)
+            val isActivationInProgress = store.inject(DaggerGraphState::cardRepository)
                 .isActivationInProgress(card.cardId)
 
             @Suppress("ComplexCondition")
-            if (card.backupStatus == CardDTO.BackupStatus.NoBackup && card.wallets.isNotEmpty() &&
-                activationInProgress
+            if (card.backupStatus == CardDTO.BackupStatus.NoBackup &&
+                card.wallets.isNotEmpty() &&
+                isActivationInProgress
             ) {
                 StartPrimaryCardLinkingTask().run(session) { linkingResult ->
                     when (linkingResult) {
@@ -372,8 +373,8 @@ private class ScanTwinProcessor : ProductCommandProcessor<ScanResponse> {
                         return@run
                     }
 
-                    val verified = TwinsHelper.verifyTwinPublicKey(readDataResult.data.issuerData, publicKey)
-                    val response = if (verified) {
+                    val isVerified = TwinsHelper.verifyTwinPublicKey(readDataResult.data.issuerData, publicKey)
+                    val response = if (isVerified) {
                         val twinPublicKey = readDataResult.data.issuerData.sliceArray(0 until 65)
                         val walletData = session.environment.walletData
                         ScanResponse(

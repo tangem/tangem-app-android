@@ -12,11 +12,9 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.models.yield.supply.YieldSupplyStatus
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
-import com.tangem.blockchain.yieldsupply.providers.YieldSupplyStatus as SDKYieldSupplyStatus
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -26,6 +24,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.math.BigDecimal
+import com.tangem.blockchain.yieldsupply.providers.YieldSupplyStatus as SDKYieldSupplyStatus
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class DefaultYieldSupplyTransactionRepositoryTest {
@@ -42,6 +41,7 @@ class DefaultYieldSupplyTransactionRepositoryTest {
     private val cryptoCurrencyStatus = mockk<CryptoCurrencyStatus>(relaxed = true) {
         every { currency } returns cryptoCurrency
         every { value.yieldSupplyStatus } returns null
+        every { value.amount } returns BigDecimal.TEN
     }
 
     private val walletManager = mockk<WalletManager>(relaxed = true) {
@@ -69,12 +69,16 @@ class DefaultYieldSupplyTransactionRepositoryTest {
 
     @Test
     fun `createEnterTransactions returns deploy-approve-enter transactions`() = runTest {
-        coEvery { walletManager.getYieldContract() } returns EthereumUtils.ZERO_ADDRESS
+        coEvery { walletManager.getYieldModuleAddress() } returns EthereumUtils.ZERO_ADDRESS
         coEvery { walletManager.getYieldSupplyStatus(any()) } returns null
         coEvery { walletManager.isAllowedToSpend(any()) } returns false
-        coEvery { walletManager.calculateYieldContract() } returns yieldContractAddress
+        coEvery { walletManager.calculateYieldModuleAddress() } returns yieldContractAddress
 
-        val result = repository.createEnterTransactions(userWalletId, cryptoCurrencyStatus)
+        val result = repository.createEnterTransactions(
+            userWalletId = userWalletId,
+            cryptoCurrencyStatus = cryptoCurrencyStatus,
+            maxNetworkFee = BigDecimal.TEN,
+        )
 
         // Assert that 3 transactions are returned: deploy, approve, enter
         Truth.assertThat(result).isNotNull()
@@ -84,7 +88,7 @@ class DefaultYieldSupplyTransactionRepositoryTest {
         val firstExpectedCallData = YieldSupplyContractCallDataProviderFactory.getDeployCallData(
             walletAddress = walletManager.wallet.address,
             tokenContractAddress = mockedContractAddress,
-            maxNetworkFee = BigDecimal.TEN.convertToSdkAmount(cryptoCurrency),
+            maxNetworkFee = BigDecimal.TEN.convertToSdkAmount(cryptoCurrencyStatus),
         )
         val firstTransaction = result.first()
 
@@ -115,15 +119,20 @@ class DefaultYieldSupplyTransactionRepositoryTest {
 
     @Test
     fun `createEnterTransactions returns init-approve-enter transactions`() = runTest {
-        coEvery { walletManager.getYieldContract() } returns yieldContractAddress
-        coEvery { walletManager.calculateYieldContract() } returns yieldContractAddress
+        coEvery { walletManager.getYieldModuleAddress() } returns yieldContractAddress
+        coEvery { walletManager.calculateYieldModuleAddress() } returns yieldContractAddress
+        coEvery { walletManager.isAllowedToSpend(any()) } returns false
         coEvery { walletManager.getYieldSupplyStatus(any()) } returns SDKYieldSupplyStatus(
             isActive = false,
             isInitialized = false,
             maxNetworkFee = BigDecimal.TEN,
         )
 
-        val result = repository.createEnterTransactions(userWalletId, cryptoCurrencyStatus)
+        val result = repository.createEnterTransactions(
+            userWalletId = userWalletId,
+            cryptoCurrencyStatus = cryptoCurrencyStatus,
+            maxNetworkFee = BigDecimal.TEN,
+        )
 
         // Assert that 3 transactions are returned: init token, approve, enter
         Truth.assertThat(result).isNotNull()
@@ -132,7 +141,7 @@ class DefaultYieldSupplyTransactionRepositoryTest {
         // Check transaction - init token
         val firstExpectedCallData = YieldSupplyContractCallDataProviderFactory.getInitTokenCallData(
             tokenContractAddress = mockedContractAddress,
-            maxNetworkFee = BigDecimal.TEN.convertToSdkAmount(cryptoCurrency),
+            maxNetworkFee = BigDecimal.TEN.convertToSdkAmount(cryptoCurrencyStatus),
         )
         val firstTransaction = result.first()
 
@@ -163,15 +172,20 @@ class DefaultYieldSupplyTransactionRepositoryTest {
 
     @Test
     fun `createEnterTransactions returns reactivate-approve-enter transactions`() = runTest {
-        coEvery { walletManager.getYieldContract() } returns yieldContractAddress
-        coEvery { walletManager.calculateYieldContract() } returns yieldContractAddress
+        coEvery { walletManager.getYieldModuleAddress() } returns yieldContractAddress
+        coEvery { walletManager.calculateYieldModuleAddress() } returns yieldContractAddress
+        coEvery { walletManager.isAllowedToSpend(any()) } returns false
         coEvery { walletManager.getYieldSupplyStatus(any()) } returns SDKYieldSupplyStatus(
             isActive = false,
             isInitialized = true,
             maxNetworkFee = BigDecimal.TEN,
         )
 
-        val result = repository.createEnterTransactions(userWalletId, cryptoCurrencyStatus)
+        val result = repository.createEnterTransactions(
+            userWalletId = userWalletId,
+            cryptoCurrencyStatus = cryptoCurrencyStatus,
+            maxNetworkFee = BigDecimal.TEN,
+        )
 
         // Assert that 3 transactions are returned: reactivate token, approve, enter
         Truth.assertThat(result).isNotNull()
@@ -180,7 +194,7 @@ class DefaultYieldSupplyTransactionRepositoryTest {
         // Check transaction - reactivate token
         val firstExpectedCallData = YieldSupplyContractCallDataProviderFactory.getReactivateTokenCallData(
             tokenContractAddress = mockedContractAddress,
-            maxNetworkFee = BigDecimal.TEN.convertToSdkAmount(cryptoCurrency),
+            maxNetworkFee = BigDecimal.TEN.convertToSdkAmount(cryptoCurrencyStatus),
         )
         val firstTransaction = result.first()
 
@@ -211,8 +225,8 @@ class DefaultYieldSupplyTransactionRepositoryTest {
 
     @Test
     fun `createEnterTransactions returns reactivate-enter transactions`() = runTest {
-        coEvery { walletManager.getYieldContract() } returns yieldContractAddress
-        coEvery { walletManager.calculateYieldContract() } returns yieldContractAddress
+        coEvery { walletManager.getYieldModuleAddress() } returns yieldContractAddress
+        coEvery { walletManager.calculateYieldModuleAddress() } returns yieldContractAddress
         coEvery { walletManager.getYieldSupplyStatus(any()) } returns SDKYieldSupplyStatus(
             isActive = false,
             isInitialized = true,
@@ -220,7 +234,11 @@ class DefaultYieldSupplyTransactionRepositoryTest {
         )
         coEvery { walletManager.isAllowedToSpend(any()) } returns true
 
-        val result = repository.createEnterTransactions(userWalletId, cryptoCurrencyStatus)
+        val result = repository.createEnterTransactions(
+            userWalletId = userWalletId,
+            cryptoCurrencyStatus = cryptoCurrencyStatus,
+            maxNetworkFee = BigDecimal.TEN,
+        )
 
         // Assert that 2 transactions are returned: approve, enter
         Truth.assertThat(result).isNotNull()
@@ -229,7 +247,7 @@ class DefaultYieldSupplyTransactionRepositoryTest {
         // Check transaction - reactivate token
         val firstExpectedCallData = YieldSupplyContractCallDataProviderFactory.getReactivateTokenCallData(
             tokenContractAddress = mockedContractAddress,
-            maxNetworkFee = BigDecimal.TEN.convertToSdkAmount(cryptoCurrency),
+            maxNetworkFee = BigDecimal.TEN.convertToSdkAmount(cryptoCurrencyStatus),
         )
         val firstTransaction = result.first()
 
@@ -248,8 +266,8 @@ class DefaultYieldSupplyTransactionRepositoryTest {
 
     @Test
     fun `createEnterTransactions returns enter transactions`() = runTest {
-        coEvery { walletManager.getYieldContract() } returns yieldContractAddress
-        coEvery { walletManager.calculateYieldContract() } returns yieldContractAddress
+        coEvery { walletManager.getYieldModuleAddress() } returns yieldContractAddress
+        coEvery { walletManager.calculateYieldModuleAddress() } returns yieldContractAddress
         coEvery { walletManager.getYieldSupplyStatus(any()) } returns SDKYieldSupplyStatus(
             isActive = true,
             isInitialized = true,
@@ -257,7 +275,11 @@ class DefaultYieldSupplyTransactionRepositoryTest {
         )
         coEvery { walletManager.isAllowedToSpend(any()) } returns true
 
-        val result = repository.createEnterTransactions(userWalletId, cryptoCurrencyStatus)
+        val result = repository.createEnterTransactions(
+            userWalletId = userWalletId,
+            cryptoCurrencyStatus = cryptoCurrencyStatus,
+            maxNetworkFee = BigDecimal.TEN,
+        )
 
         // Assert that transaction is returned: enter
         Truth.assertThat(result).isNotNull()
@@ -277,9 +299,7 @@ class DefaultYieldSupplyTransactionRepositoryTest {
         val expectedCallData =
             YieldSupplyContractCallDataProviderFactory.getExitCallData(mockedContractAddress)
 
-        val yieldSupplyStatus = mockk<YieldSupplyStatus>(relaxed = true)
-
-        val result = repository.createExitTransaction(userWalletId, cryptoCurrency, yieldSupplyStatus, null)
+        val result = repository.createExitTransaction(userWalletId, cryptoCurrencyStatus, null)
 
         Truth.assertThat(result).isNotNull()
         Truth.assertThat(result.extras).isInstanceOf(EthereumTransactionExtras::class.java)
