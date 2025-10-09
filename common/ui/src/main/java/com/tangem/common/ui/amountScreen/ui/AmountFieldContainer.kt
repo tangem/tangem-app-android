@@ -15,6 +15,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.R
 import com.tangem.common.ui.amountScreen.models.AmountState
@@ -26,6 +27,7 @@ import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.test.SendScreenTestTags
 
 private const val AMOUNT_FIELD_KEY = "amountFieldKey"
 
@@ -60,6 +62,7 @@ internal fun LazyListScope.amountFieldV2(
                         text = amountState.title.resolveReference(),
                         style = TangemTheme.typography.subtitle2,
                         color = TangemTheme.colors.text.tertiary,
+                        modifier = Modifier.testTag(SendScreenTestTags.AMOUNT_CONTAINER_TITLE),
                     )
                 }
                 AmountFieldV2(
@@ -117,7 +120,8 @@ private fun AmountInfo(amountUM: AmountState, onMaxAmountClick: () -> Unit, modi
                     indication = ripple(),
                     onClick = onMaxAmountClick,
                 )
-                .padding(horizontal = 12.dp, vertical = 4.dp),
+                .padding(horizontal = 12.dp, vertical = 4.dp)
+                .testTag(SendScreenTestTags.MAX_BUTTON),
         )
     }
 }
@@ -139,6 +143,7 @@ private fun AmountInfoMain(amountUM: AmountState, modifier: Modifier = Modifier)
                         style = TangemTheme.typography.subtitle2,
                         color = TangemTheme.colors.text.primary1,
                         maxLines = 1,
+                        modifier = Modifier.testTag(SendScreenTestTags.TOKEN_NAME),
                     )
                     Row {
                         EllipsisText(
@@ -148,7 +153,9 @@ private fun AmountInfoMain(amountUM: AmountState, modifier: Modifier = Modifier)
                             ellipsis = TextEllipsis.OffsetEnd(
                                 amountUM.amountTextField.cryptoAmount.currencySymbol.length,
                             ),
-                            modifier = Modifier.weight(1f, fill = false),
+                            modifier = Modifier
+                                .weight(1f, fill = false)
+                                .testTag(SendScreenTestTags.PRIMARY_AMOUNT),
                         )
                         EllipsisText(
                             text = amountUM.availableBalanceFiat.resolveReference(),
@@ -157,6 +164,7 @@ private fun AmountInfoMain(amountUM: AmountState, modifier: Modifier = Modifier)
                             ellipsis = TextEllipsis.OffsetEnd(
                                 amountUM.amountTextField.fiatAmount.currencySymbol.length,
                             ),
+                            modifier = Modifier.testTag(SendScreenTestTags.SECONDARY_AMOUNT),
                         )
                     }
                 }
