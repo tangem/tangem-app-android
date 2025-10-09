@@ -172,7 +172,7 @@ internal class ReferralModel @Inject constructor(
             modelScope.launch {
                 val lastInfoState = uiState.referralInfoState
                 val portfolioId = when (accountsFeatureToggles.isFeatureEnabled) {
-                    true -> PortfolioId(requireNotNull(portfolioSelectorController.selectedAccount.value))
+                    true -> PortfolioId(requireNotNull(portfolioSelectorController.selectedAccountSync))
                     false -> PortfolioId(params.userWalletId)
                 }
                 runCatching { referralInteractor.startReferral(portfolioId) }
@@ -259,7 +259,7 @@ internal class ReferralModel @Inject constructor(
 
     private suspend fun selectAccount(referralData: ReferralData) {
         when (referralData) {
-            is ReferralData.NonParticipantData -> if (portfolioSelectorController.selectedAccount.value == null) {
+            is ReferralData.NonParticipantData -> if (portfolioSelectorController.selectedAccountSync == null) {
                 portfolioSelectorController.selectAccount(
                     accountId = walletAccounts(params.userWalletId).first().mainAccount.account.accountId,
                 )
