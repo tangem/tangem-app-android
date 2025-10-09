@@ -5,7 +5,7 @@ import com.squareup.moshi.JsonClass
 import java.math.BigDecimal
 
 @JsonClass(generateAdapter = true)
-data class YieldTokenStatusResponse(
+data class YieldSupplyMarketTokenDto(
     @Json(name = "tokenAddress") val tokenAddress: String? = null,
     @Json(name = "tokenSymbol") val tokenSymbol: String? = null,
     @Json(name = "tokenName") val tokenName: String? = null,
