@@ -2,6 +2,9 @@ package com.tangem.features.send.v2.api.subcomponents.feeSelector.analytics
 
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.AnalyticsParam.Key.FEE_TYPE
+import com.tangem.core.analytics.models.AnalyticsParam.Key.SOURCE
+import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents.CommonSendSource
 
 sealed class CommonSendFeeAnalyticEvents(
     category: String,
@@ -15,10 +18,14 @@ sealed class CommonSendFeeAnalyticEvents(
     data class SelectedFee(
         override val categoryName: String,
         val feeType: AnalyticsParam.FeeType,
+        val source: CommonSendSource,
     ) : CommonSendFeeAnalyticEvents(
         category = categoryName,
         event = "Fee Selected",
-        params = mapOf("Fee Type" to feeType.value),
+        params = mapOf(
+            FEE_TYPE to feeType.value,
+            SOURCE to source.analyticsName,
+        ),
     )
 
     /** Custom fee selected */
