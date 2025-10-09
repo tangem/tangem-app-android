@@ -36,10 +36,10 @@ import com.tangem.domain.transaction.usecase.ValidateTransactionUseCase
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.features.send.v2.api.SendNotificationsComponent
 import com.tangem.features.send.v2.api.SendNotificationsComponent.Params.NotificationData
+import com.tangem.features.send.v2.api.subcomponents.feeSelector.utils.FeeCalculationUtils.checkAndCalculateSubtractedAmount
+import com.tangem.features.send.v2.api.subcomponents.feeSelector.utils.FeeCalculationUtils.checkFeeCoverage
 import com.tangem.features.send.v2.api.subcomponents.notifications.SendNotificationsUpdateListener
 import com.tangem.features.send.v2.api.subcomponents.notifications.SendNotificationsUpdateTrigger
-import com.tangem.features.send.v2.subcomponents.fee.model.checkAndCalculateSubtractedAmount
-import com.tangem.features.send.v2.subcomponents.fee.model.checkFeeCoverage
 import com.tangem.features.send.v2.subcomponents.notifications.analytics.NotificationsAnalyticEvents
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.lib.crypto.BlockchainUtils.isTron
@@ -287,7 +287,7 @@ internal class NotificationsModel @Inject constructor(
     ) {
         val validationError = validateTransactionUseCase(
             userWalletId = userWalletId,
-            amount = enteredAmount.convertToSdkAmount(currency),
+            amount = enteredAmount.convertToSdkAmount(cryptoCurrencyStatus),
             fee = fee,
             memo = memo,
             destination = destinationAddress,

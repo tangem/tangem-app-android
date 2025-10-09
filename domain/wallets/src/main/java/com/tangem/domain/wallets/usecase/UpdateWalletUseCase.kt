@@ -3,13 +3,13 @@ package com.tangem.domain.wallets.usecase
 import arrow.core.Either
 import arrow.core.raise.either
 import com.tangem.common.CompletionResult
-import com.tangem.domain.wallets.legacy.UserWalletsListManager
-import com.tangem.domain.wallets.models.UpdateWalletError
+import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.common.wallets.error.SaveWalletError
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.core.wallets.error.SaveWalletError
-import com.tangem.domain.wallets.models.UpdateWalletError.*
-import com.tangem.domain.core.wallets.UserWalletsListRepository
+import com.tangem.domain.wallets.legacy.UserWalletsListManager
+import com.tangem.domain.wallets.models.UpdateWalletError
+import com.tangem.domain.wallets.models.UpdateWalletError.DataError
 
 /**
  * Use case for updating user wallet
@@ -31,7 +31,7 @@ class UpdateWalletUseCase(
         if (useNewRepository) {
             val userWallet = userWalletsListRepository.userWallets.value?.find { it.walletId == userWalletId }
                 ?: return Either.Left(
-                    UpdateWalletError.DataError(IllegalStateException("User wallet with id $userWalletId not found")),
+                    DataError(IllegalStateException("User wallet with id $userWalletId not found")),
                 )
             val updatedWallet = update(userWallet)
             return userWalletsListRepository.saveWithoutLock(updatedWallet, canOverride = true)
@@ -47,7 +47,7 @@ class UpdateWalletUseCase(
 
         return either {
             when (val result = userWalletsListManager.update(userWalletId, update)) {
-                is CompletionResult.Failure -> raise(UpdateWalletError.DataError(result.error))
+                is CompletionResult.Failure -> raise(DataError(result.error))
                 is CompletionResult.Success -> result.data
             }
         }
