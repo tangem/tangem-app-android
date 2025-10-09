@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
@@ -28,6 +29,7 @@ import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.uncapped
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.BaseAmountBlockTestTags
 
 @Composable
 fun AmountBlockV2(
@@ -133,6 +135,7 @@ private fun AmountBlockV2(
                     style = TangemTheme.typography.h2,
                     color = TangemTheme.colors.text.primary1,
                     maxLines = 1,
+                    modifier = Modifier.testTag(BaseAmountBlockTestTags.PRIMARY_AMOUNT),
                 )
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -142,6 +145,7 @@ private fun AmountBlockV2(
                         style = TangemTheme.typography.body2,
                         color = TangemTheme.colors.text.tertiary,
                         maxLines = 1,
+                        modifier = Modifier.testTag(BaseAmountBlockTestTags.SECONDARY_AMOUNT),
                     )
                     extraContent()
                 }
