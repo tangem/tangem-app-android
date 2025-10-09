@@ -243,6 +243,7 @@ internal class SwapNotificationsFactory(
                 SwapNotificationUM.Info.PermissionNeeded(
                     providerName = fromToken.symbol,
                     fromTokenSymbol = providerName,
+                    onApproveClick = actions.openPermissionBottomSheet,
                 ),
             )
         }
