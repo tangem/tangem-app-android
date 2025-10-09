@@ -38,6 +38,7 @@ internal class PortfolioAnalyticsEvent(
                     TokenActionsBSContentUM.Action.Buy -> "Button - Buy"
                     TokenActionsBSContentUM.Action.Receive -> "Button - Receive"
                     TokenActionsBSContentUM.Action.Exchange -> "Button - Swap"
+                    TokenActionsBSContentUM.Action.Stake -> "Button - Stake"
                     else -> "error"
                 },
                 params = buildMap {

@@ -1,6 +1,10 @@
 package com.tangem.features.account.createedit.error
 
 import com.tangem.core.error.UniversalError
+import com.tangem.domain.account.usecase.AddCryptoPortfolioUseCase
+import com.tangem.domain.account.usecase.GetUnoccupiedAccountIndexUseCase
+import com.tangem.domain.account.usecase.RecoverCryptoPortfolioUseCase
+import com.tangem.domain.account.usecase.UpdateCryptoPortfolioUseCase
 
 sealed interface AccountFeatureError : UniversalError {
 
@@ -14,8 +18,12 @@ sealed interface AccountFeatureError : UniversalError {
 
         override val subsystemCode: String get() = "001"
 
-        data object UnableToGetDerivationIndex : CreateAccount {
+        data class UnableToGetDerivationIndex(val cause: GetUnoccupiedAccountIndexUseCase.Error) : CreateAccount {
             override val specificErrorCode: String = "001"
+        }
+
+        data class FailedToCreateAccount(val cause: AddCryptoPortfolioUseCase.Error) : CreateAccount {
+            override val specificErrorCode: String = "002"
         }
     }
 
@@ -23,7 +31,16 @@ sealed interface AccountFeatureError : UniversalError {
 
         override val subsystemCode: String get() = "002"
 
-        data object RequiredCryptoPortfolio : EditAccount {
+        data class FailedToEditAccount(val cause: UpdateCryptoPortfolioUseCase.Error) : EditAccount {
+            override val specificErrorCode: String = "001"
+        }
+    }
+
+    sealed interface ArchivedAccountList : AccountFeatureError {
+
+        override val subsystemCode: String get() = "003"
+
+        data class FailedToRecoverAccount(val cause: RecoverCryptoPortfolioUseCase.Error) : ArchivedAccountList {
             override val specificErrorCode: String = "001"
         }
     }
