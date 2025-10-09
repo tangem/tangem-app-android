@@ -60,10 +60,10 @@ fun TokenListItem(state: TokensListItemUM, isBalanceHidden: Boolean, modifier: M
 @Composable
 fun PortfolioListItem(state: TokensListItemUM.Portfolio, isBalanceHidden: Boolean, modifier: Modifier = Modifier) {
     if (state.isExpanded) {
-        ExpandedPortfolioHeader(state = state.state, isCollapsable = state.isCollapsable, modifier = modifier)
+        ExpandedPortfolioHeader(state = state.tokenItemUM, isCollapsable = state.isCollapsable, modifier = modifier)
     } else {
         TokenItem(
-            state = state.state,
+            state = state.tokenItemUM,
             isBalanceHidden = isBalanceHidden,
             modifier = modifier,
         )

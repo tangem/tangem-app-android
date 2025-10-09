@@ -112,10 +112,10 @@ internal class TokenListStateConverter(
                 is WalletTokensListState.Empty -> listOf()
             }
             return TokensListItemUM.Portfolio(
-                state = accountItem,
+                tokenItemUM = accountItem,
                 isExpanded = isExtend,
                 isCollapsable = true,
-                tokens = items.filterIsInstance<PortfolioTokensListItemUM>(),
+                tokens = items.filterIsInstance<PortfolioTokensListItemUM>().toPersistentList(),
             )
         }
 
