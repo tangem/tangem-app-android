@@ -120,14 +120,14 @@ data class AccountList private constructor(
         }
 
         @Serializable
-        data class DuplicateAccountNames(val message: String) : Error {
-            override fun toString(): String = "$tag: Account list contains duplicate account names. $message"
+        data object DuplicateAccountNames : Error {
+            override fun toString(): String = "$tag: Account list contains duplicate account names"
         }
     }
 
     companion object {
 
-        private const val MAX_ACCOUNTS_COUNT = 20
+        const val MAX_ACCOUNTS_COUNT = 20
         private const val MAX_MAIN_ACCOUNTS_COUNT = 1
 
         /**
@@ -161,17 +161,11 @@ data class AccountList private constructor(
             val uniqueAccountIdsCount = accounts.map { it.accountId.value }.distinct().size
             ensure(accounts.size == uniqueAccountIdsCount) { Error.DuplicateAccountIds }
 
-            val defaultMainNameCount = accounts.count { it.accountName is AccountName.DefaultMain }
-
             val customNames = accounts.mapNotNull { (it.accountName as? AccountName.Custom)?.value }
             val uniqueCustomNameCount = customNames.distinct().size
 
-            ensure(defaultMainNameCount == 0 || defaultMainNameCount == 1) {
-                Error.DuplicateAccountNames("Only one account can have the default main name.")
-            }
-
             ensure(customNames.size == uniqueCustomNameCount) {
-                Error.DuplicateAccountNames("Custom account names must be unique.")
+                Error.DuplicateAccountNames
             }
 
             AccountList(

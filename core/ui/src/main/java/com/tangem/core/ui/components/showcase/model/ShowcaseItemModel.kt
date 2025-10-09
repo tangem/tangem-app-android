@@ -5,5 +5,6 @@ import com.tangem.core.ui.extensions.TextReference
 
 data class ShowcaseItemModel(
     @DrawableRes val iconRes: Int,
-    val text: TextReference,
+    val title: TextReference,
+    val subTitle: TextReference,
 )
