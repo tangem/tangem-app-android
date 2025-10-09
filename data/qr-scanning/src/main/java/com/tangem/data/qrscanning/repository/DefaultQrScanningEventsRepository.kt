@@ -50,16 +50,16 @@ internal class DefaultQrScanningEventsRepository : QrScanningEventsRepository {
         val result = QrResult(address = address)
 
         extractParameters(withoutSchema)
-            .forEach {
-                when (it.key) {
+            .forEach { entry ->
+                when (entry.key) {
                     Parameter.Amount -> {
                         // According to BIP-0021, the value is specified in decimals. No conversion needed
-                        result.amount = it.value.parseBigDecimalOrNull()
+                        result.amount = entry.value.parseBigDecimalOrNull()
                     }
                     Parameter.Message,
                     Parameter.Memo,
                     -> {
-                        result.memo = URLDecoder.decode(it.value, "UTF-8")
+                        result.memo = URLDecoder.decode(entry.value, "UTF-8")
                     }
                     Parameter.Address -> {
                         // If 'address' parameter is exists, then currency must be TOKEN.
@@ -70,7 +70,7 @@ internal class DefaultQrScanningEventsRepository : QrScanningEventsRepository {
                         // matches the contract address of the token.
                         // Otherwise, the scanned string is likely malformed, and we stop the entire parsing routin
                         if (tokenCurrency.contractAddress.equals(address, ignoreCase = true)) {
-                            result.address = it.value
+                            result.address = entry.value
                         } else {
                             return QrResult()
                         }
@@ -80,7 +80,7 @@ internal class DefaultQrScanningEventsRepository : QrScanningEventsRepository {
                     -> {
                         // Extra convert parses scientific notation to decimal
                         // This is necessary to be able comparing BigDecimal values
-                        result.amount = it.value.parseBigDecimalOrNull()
+                        result.amount = entry.value.parseBigDecimalOrNull()
                             ?.toPlainString()?.toBigDecimalOrNull()
                             ?.divide(BigDecimal.TEN.pow(cryptoCurrency.decimals))
                     }
