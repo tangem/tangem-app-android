@@ -320,6 +320,7 @@
   <string name="common_tangem_wallet">Tangem Wallet</string>
   <string name="common_terms_and_conditions">Allgemeine Geschäftsbedingungen</string>
   <string name="common_terms_of_use">Nutzungsbedingungen</string>
+  <string name="common_to">An</string>
   <string name="common_today">Heute</string>
   <plurals name="common_tokens_count">
     <item quantity="one">%d Token</item>
@@ -1304,8 +1305,12 @@
   <string name="unlock_wallet_description_full">Verwende %s oder scanne eine Karte oder Ring, um Zugriff auf deine Wallet zu erhalten.</string>
   <string name="unsupported_wc_version">Verbindung fehlgeschlagen: Diese dApp verwendet Wallet Connect Version 1.0, die nicht unterstützt wird. Bitte stelle sicher, dass die dApp Wallet Connect Version 2.0 unterstützt, um eine erfolgreiche Verbindung herzustellen.</string>
   <string name="user_push_notification_agreement_argument_one">Bleib auf dem Laufenden mit den neuesten Funktionen und Neuigkeiten</string>
+  <string name="user_push_notification_agreement_argument_one_subtitle">Echtzeit-Warnungen für Transaktionen, Umtausch und wichtige Aktualisierungen.</string>
+  <string name="user_push_notification_agreement_argument_one_title">Transaktionswarnungen</string>
   <string name="user_push_notification_agreement_argument_three">Genehmigung für Transaktionen anfordern</string>
   <string name="user_push_notification_agreement_argument_two">Sei der Erste, der von neuen Aktionen erfährt</string>
+  <string name="user_push_notification_agreement_argument_two_subtitle">Frühzeitiger Zugriff auf neue Funktionen und exklusive Angebote.</string>
+  <string name="user_push_notification_agreement_argument_two_title">Updates zu Funktionen und Neuigkeiten</string>
   <string name="user_push_notification_agreement_header">Möchtest du Push-Benachrichtigungen verwenden?</string>
   <string name="user_wallet_list_add_button">Neues Wallet hinzufügen</string>
   <string name="user_wallet_list_delete_prompt">Möchtest Du diese Wallet wirklich entfernen?</string>
