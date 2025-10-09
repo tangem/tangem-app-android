@@ -6,9 +6,8 @@ import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.features.walletconnect.transaction.entity.blockaid.WcEstimatedWalletChangeUM
 import com.tangem.utils.converter.Converter
-import javax.inject.Inject
 
-internal class WcEstimatedWalletChangeUMConverter @Inject constructor() :
+internal class WcEstimatedWalletChangeUMConverter :
     Converter<WcEstimatedWalletChangeUMConverter.Input, WcEstimatedWalletChangeUM> {
 
     override fun convert(value: Input): WcEstimatedWalletChangeUM {
