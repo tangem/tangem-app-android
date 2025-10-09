@@ -8,6 +8,7 @@ import com.tangem.data.common.currency.CardCryptoCurrencyFactory
 import com.tangem.data.networks.repository.DefaultNetworksRepository
 import com.tangem.data.networks.store.DefaultNetworksStatusesStore
 import com.tangem.data.networks.store.NetworksStatusesStore
+import com.tangem.data.networks.utils.DefaultNetworksCleaner
 import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.local.datastore.RuntimeSharedStore
 import com.tangem.datasource.local.network.entity.NetworkStatusDM
@@ -15,6 +16,7 @@ import com.tangem.datasource.utils.MoshiDataStoreSerializer
 import com.tangem.datasource.utils.mapWithStringKeyTypes
 import com.tangem.datasource.utils.setTypes
 import com.tangem.domain.networks.repository.NetworksRepository
+import com.tangem.domain.networks.utils.NetworksCleaner
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
@@ -64,6 +66,20 @@ internal object NetworkDataModule {
             cardCryptoCurrencyFactory = cardCryptoCurrencyFactory,
             walletManagersFacade = walletManagersFacade,
             networksStatusesStore = networksStatusesStore,
+            dispatchers = dispatchers,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideNetworksCleaner(
+        networksStatusesStore: NetworksStatusesStore,
+        walletManagersFacade: WalletManagersFacade,
+        dispatchers: CoroutineDispatcherProvider,
+    ): NetworksCleaner {
+        return DefaultNetworksCleaner(
+            networksStatusesStore = networksStatusesStore,
+            walletManagersFacade = walletManagersFacade,
             dispatchers = dispatchers,
         )
     }
