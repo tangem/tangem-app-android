@@ -235,6 +235,7 @@
   <string name="common_swap">Échanger</string>
   <string name="common_terms_and_conditions">termes et conditions</string>
   <string name="common_terms_of_use">Conditions d\'utilisation</string>
+  <string name="common_to">À</string>
   <string name="common_today">Aujourd\'hui</string>
   <plurals name="common_tokens_count">
     <item quantity="one">%d jeton</item>
@@ -1106,7 +1107,7 @@
   <string name="swapping_high_price_impact_description">Échanger ce montant de jetons sélectionnés aura un impact significatif sur les prix et réduira votre résultat.</string>
   <string name="swapping_insufficient_funds">Fonds insuffisants</string>
   <string name="swapping_permission_header">Donner l\'autorisation</string>
-  <string name="swapping_swap_action">Échangez</string>
+  <string name="swapping_swap_action">Échanger</string>
   <string name="swapping_to_title">Vous recevez</string>
   <string name="swapping_token_list_title">Choisir le jeton</string>
   <string name="swapping_token_not_available">non disponible</string>
@@ -1177,8 +1178,12 @@
   <string name="unlock_wallet_description_full">Utilisez %s ou scannez une carte/bague pour avoir accès à votre portefeuille</string>
   <string name="unsupported_wc_version">Échec de la connexion : Cette dApp utilise Wallet Connect version1.0, qui n\'est pas prise en charge. Veuillez vous assurer que la dApp prend en charge Wallet Connect version2.0 pour réussir la connexion.</string>
   <string name="user_push_notification_agreement_argument_one">Restez à jour avec les dernières fonctionnalités et actualités</string>
+  <string name="user_push_notification_agreement_argument_one_subtitle">Alertes en temps réel pour les transactions, les échanges et les mises à jour importantes.</string>
+  <string name="user_push_notification_agreement_argument_one_title">Alertes de transaction</string>
   <string name="user_push_notification_agreement_argument_three">Recevez des notifications des transactions entrantes</string>
   <string name="user_push_notification_agreement_argument_two">Soyez le premier informé des nouvelles promotions</string>
+  <string name="user_push_notification_agreement_argument_two_subtitle">Accès anticipé à de nouvelles fonctionnalités et à des offres exclusives.</string>
+  <string name="user_push_notification_agreement_argument_two_title">Actualités et mises à jour</string>
   <string name="user_push_notification_agreement_header">Souhaitez-vous utiliser les\nnotifications push?</string>
   <string name="user_wallet_list_add_button">Ajouter un nouveau portefeuille</string>
   <string name="user_wallet_list_delete_prompt">Êtes-vous sûr de vouloir supprimer ce portefeuille ?</string>
