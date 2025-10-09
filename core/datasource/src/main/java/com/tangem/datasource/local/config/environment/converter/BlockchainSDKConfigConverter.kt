@@ -46,6 +46,7 @@ internal object BlockchainSDKConfigConverter : Converter<EnvironmentConfigModel,
             moralisApiKey = value.moralisApiKey,
             etherscanApiKey = value.etherScanApiKey,
             blinkApiKey = value.blinkApiKey,
+            tatumApiKey = value.tatumApiKey,
         )
     }
 

@@ -132,7 +132,7 @@
   <string name="biometric_unavailable_warning">Du hast die biometrische Authentifizierung auf deinem Telefon deaktiviert und kannst keine Wallets in der App speichern. Um Wallets zu speichern, aktiviere bitte die biometrische Authentifizierung in deinen Telefoneinstellungen.</string>
   <string name="bitcoin_promo_activation_error">Bei der Bearbeitung Deines Aktionscodes ist ein Fehler aufgetreten. Bitte versuche es später noch einmal.</string>
   <string name="bitcoin_promo_activation_error_title">Fehler bei der Aktivierung</string>
-  <string name="bitcoin_promo_activation_success">Dein Promo-Code wurde erfolgreich aktiviert. Ein Bonus von 10 USDT in Bitcoin wird Deinem Konto innerhalb von 14 Tagen gutgeschrieben.</string>
+  <string name="bitcoin_promo_activation_success">Ihr Aktionscode wurde erfolgreich aktiviert. Eine Belohnung wird innerhalb von 14 Tagen auf Ihr Konto gutgeschrieben.</string>
   <string name="bitcoin_promo_activation_success_title">Promo-Code aktiviert</string>
   <string name="bitcoin_promo_already_activated">Dieser Aktionscode wurde bereits verwendet und kann nicht erneut aktiviert werden.</string>
   <string name="bitcoin_promo_already_activated_title">Code nicht verfügbar</string>
