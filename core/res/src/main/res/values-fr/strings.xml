@@ -62,7 +62,7 @@
   <string name="biometric_unavailable_warning">Vous avez désactivé l\'authentification biométrique sur votre téléphone et ne pourrez pas enregistrer de portefeuilles dans l\'application. Pour enregistrer des portefeuilles, veuillez activer la fonction d\'authentification biométrique dans les paramètres de votre téléphone.</string>
   <string name="bitcoin_promo_activation_error">Une erreur s\'est produite lors du traitement de votre code promo. Veuillez réessayer plus tard.</string>
   <string name="bitcoin_promo_activation_error_title">Erreur d\'activation</string>
-  <string name="bitcoin_promo_activation_success">Votre code promo a été activé avec succès. Un bonus de 10 USDT en Bitcoin sera crédité dans 14 jours.</string>
+  <string name="bitcoin_promo_activation_success">Votre code promotionnel a été activé avec succès. Une récompense sera créditée sur votre compte dans un délai de 14 jours.</string>
   <string name="bitcoin_promo_activation_success_title">Code promo activé</string>
   <string name="bitcoin_promo_already_activated">Ce code promo a déjà été utilisé et ne peut pas être activé à nouveau.</string>
   <string name="bitcoin_promo_already_activated_title">Code indisponible</string>
@@ -160,7 +160,7 @@
   <string name="common_enable">Activer</string>
   <string name="common_enabled">Activé</string>
   <string name="common_error">Erreur</string>
-  <string name="common_exchange">Échangez</string>
+  <string name="common_exchange">Echanger</string>
   <string name="common_explore">Explorez</string>
   <string name="common_explore_transaction_history">Explorez l\'historique des transactions</string>
   <string name="common_explorer">Explorateur</string>
@@ -235,6 +235,7 @@
   <string name="common_swap">Échanger</string>
   <string name="common_terms_and_conditions">termes et conditions</string>
   <string name="common_terms_of_use">Conditions d\'utilisation</string>
+  <string name="common_to">À</string>
   <string name="common_today">Aujourd\'hui</string>
   <plurals name="common_tokens_count">
     <item quantity="one">%d jeton</item>
@@ -953,6 +954,7 @@
   <string name="staking_details_annual_percentage_rate">Pourcentage de rendement annuel</string>
   <string name="staking_details_annual_percentage_rate_info">Le pourcentage de rendement annuel que vous pouvez gagner en participant au staking.</string>
   <string name="staking_details_apr">APR</string>
+  <string name="staking_details_apy">APY</string>
   <string name="staking_details_auto_claiming_rewards_daily_text">Les récompenses s\'accumulent automatiquement sur votre solde de staking quotidiennement.</string>
   <string name="staking_details_available">Disponible</string>
   <string name="staking_details_average_reward_rate">Taux de récompense moyen</string>
@@ -1105,7 +1107,7 @@
   <string name="swapping_high_price_impact_description">Échanger ce montant de jetons sélectionnés aura un impact significatif sur les prix et réduira votre résultat.</string>
   <string name="swapping_insufficient_funds">Fonds insuffisants</string>
   <string name="swapping_permission_header">Donner l\'autorisation</string>
-  <string name="swapping_swap_action">Échangez</string>
+  <string name="swapping_swap_action">Échanger</string>
   <string name="swapping_to_title">Vous recevez</string>
   <string name="swapping_token_list_title">Choisir le jeton</string>
   <string name="swapping_token_not_available">non disponible</string>
@@ -1176,8 +1178,12 @@
   <string name="unlock_wallet_description_full">Utilisez %s ou scannez une carte/bague pour avoir accès à votre portefeuille</string>
   <string name="unsupported_wc_version">Échec de la connexion : Cette dApp utilise Wallet Connect version1.0, qui n\'est pas prise en charge. Veuillez vous assurer que la dApp prend en charge Wallet Connect version2.0 pour réussir la connexion.</string>
   <string name="user_push_notification_agreement_argument_one">Restez à jour avec les dernières fonctionnalités et actualités</string>
+  <string name="user_push_notification_agreement_argument_one_subtitle">Alertes en temps réel pour les transactions, les échanges et les mises à jour importantes.</string>
+  <string name="user_push_notification_agreement_argument_one_title">Alertes de transaction</string>
   <string name="user_push_notification_agreement_argument_three">Recevez des notifications des transactions entrantes</string>
   <string name="user_push_notification_agreement_argument_two">Soyez le premier informé des nouvelles promotions</string>
+  <string name="user_push_notification_agreement_argument_two_subtitle">Accès anticipé à de nouvelles fonctionnalités et à des offres exclusives.</string>
+  <string name="user_push_notification_agreement_argument_two_title">Actualités et mises à jour</string>
   <string name="user_push_notification_agreement_header">Souhaitez-vous utiliser les\nnotifications push?</string>
   <string name="user_wallet_list_add_button">Ajouter un nouveau portefeuille</string>
   <string name="user_wallet_list_delete_prompt">Êtes-vous sûr de vouloir supprimer ce portefeuille ?</string>
