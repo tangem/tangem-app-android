@@ -136,7 +136,7 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
                     )
                 },
                 ifRight = {
-                    yieldSupplyDeactivateUseCase(cryptoCurrency as CryptoCurrency.Token)
+                    yieldSupplyDeactivateUseCase(cryptoCurrency)
                     params.callback.onTransactionSent()
                 },
             )
