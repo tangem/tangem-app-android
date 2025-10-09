@@ -1,9 +1,7 @@
 package com.tangem.data.account.fetcher
 
-import com.tangem.data.account.converter.CryptoPortfolioConverter
+import com.tangem.data.account.utils.DefaultWalletAccountsResponseFactory
 import com.tangem.data.account.utils.toUserTokensResponse
-import com.tangem.data.common.currency.CardCryptoCurrencyFactory
-import com.tangem.data.common.currency.UserTokensResponseFactory
 import com.tangem.data.common.currency.UserTokensSaver
 import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.common.response.ApiResponseError.HttpException.Code
@@ -11,12 +9,11 @@ import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
 import com.tangem.datasource.local.token.UserTokensResponseStore
-import com.tangem.datasource.local.userwallet.UserWalletsStore
-import com.tangem.domain.account.models.AccountList
-import com.tangem.domain.models.account.Account
-import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
-import io.mockk.*
+import io.mockk.clearMocks
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -29,35 +26,21 @@ import org.junit.jupiter.api.TestInstance
 class FetchWalletAccountsErrorHandlerTest {
 
     private val userTokensSaver: UserTokensSaver = mockk(relaxUnitFun = true)
-    private val userWalletsStore: UserWalletsStore = mockk()
     private val userTokensResponseStore: UserTokensResponseStore = mockk(relaxUnitFun = true)
-    private val cryptoPortfolioCF: CryptoPortfolioConverter.Factory = mockk()
-    private val cryptoPortfolioConverter = mockk<CryptoPortfolioConverter>()
-    private val userTokensResponseFactory: UserTokensResponseFactory = mockk()
-    private val cardCryptoCurrencyFactory: CardCryptoCurrencyFactory = mockk()
+    private val defaultWalletAccountsResponseFactory: DefaultWalletAccountsResponseFactory = mockk()
 
     private val handler = FetchWalletAccountsErrorHandler(
         userTokensSaver = userTokensSaver,
-        userWalletsStore = userWalletsStore,
         userTokensResponseStore = userTokensResponseStore,
-        cryptoPortfolioCF = cryptoPortfolioCF,
-        userTokensResponseFactory = userTokensResponseFactory,
-        cardCryptoCurrencyFactory = cardCryptoCurrencyFactory,
+        defaultWalletAccountsResponseFactory = defaultWalletAccountsResponseFactory,
     )
-
-    private val userWallet = mockk<UserWallet> {
-        every { this@mockk.walletId } returns userWalletId
-    }
 
     @BeforeEach
     fun setupEach() {
         clearMocks(
             userTokensSaver,
-            userWalletsStore,
             userTokensResponseStore,
-            cryptoPortfolioCF,
-            cryptoPortfolioConverter,
-            cardCryptoCurrencyFactory,
+            defaultWalletAccountsResponseFactory,
         )
     }
 
@@ -84,12 +67,8 @@ class FetchWalletAccountsErrorHandlerTest {
 
         // Assert
         coVerify(inverse = true) {
-            userWalletsStore.getSyncStrict(key = any())
             userTokensResponseStore.getSyncOrNull(userWalletId = any())
-            userTokensResponseFactory.createUserTokensResponse(any(), any(), any())
-            cardCryptoCurrencyFactory.createDefaultCoinsForMultiCurrencyWallet(any())
-            cryptoPortfolioCF.create(any())
-            cryptoPortfolioConverter.convertListBack(any())
+            defaultWalletAccountsResponseFactory.create(userWalletId = any(), userTokensResponse = any())
             pushWalletAccounts(any(), any())
             userTokensSaver.push(userWalletId = any(), response = any())
             storeWalletAccounts(any(), any())
@@ -146,12 +125,8 @@ class FetchWalletAccountsErrorHandlerTest {
         }
 
         coVerify(inverse = true) {
-            userWalletsStore.getSyncStrict(key = any())
             userTokensResponseStore.getSyncOrNull(userWalletId = any())
-            userTokensResponseFactory.createUserTokensResponse(any(), any(), any())
-            cardCryptoCurrencyFactory.createDefaultCoinsForMultiCurrencyWallet(any())
-            cryptoPortfolioCF.create(any())
-            cryptoPortfolioConverter.convertListBack(any())
+            defaultWalletAccountsResponseFactory.create(userWalletId = any(), userTokensResponse = any())
         }
     }
 
@@ -159,9 +134,6 @@ class FetchWalletAccountsErrorHandlerTest {
     fun `uses default accounts when savedAccountsResponse is null`() = runTest {
         // Arrange
         val error = ApiResponseError.TimeoutException()
-
-        val accounts = AccountList.empty(userWallet).accounts
-            .filterIsInstance<Account.CryptoPortfolio>()
 
         val accountDTO = WalletAccountDTO(
             id = "nibh",
@@ -186,18 +158,10 @@ class FetchWalletAccountsErrorHandlerTest {
 
         val userTokensResponse = savedAccountsResponse.toUserTokensResponse()
 
-        every { userWalletsStore.getSyncStrict(userWalletId) } returns userWallet
-        every { cryptoPortfolioCF.create(userWallet) } returns cryptoPortfolioConverter
-        every { cryptoPortfolioConverter.convertListBack(accounts) } returns listOf(accountDTO)
-        coEvery { userTokensResponseStore.getSyncOrNull(userWalletId) } returns null
-        every {
-            userTokensResponseFactory.createUserTokensResponse(
-                currencies = emptyList(),
-                isGroupedByNetwork = false,
-                isSortedByBalance = false,
-            )
-        } returns userTokensResponse
-        every { cardCryptoCurrencyFactory.createDefaultCoinsForMultiCurrencyWallet(userWallet) } returns emptyList()
+        coEvery { userTokensResponseStore.getSyncOrNull(userWalletId) } returns userTokensResponse
+        coEvery {
+            defaultWalletAccountsResponseFactory.create(userWalletId, userTokensResponse)
+        } returns savedAccountsResponse
 
         val pushWalletAccounts: suspend (UserWalletId, List<WalletAccountDTO>) -> Unit = mockk(relaxed = true)
         val storeWalletAccounts: suspend (UserWalletId, GetWalletAccountsResponse) -> Unit = mockk(relaxed = true)
@@ -213,16 +177,8 @@ class FetchWalletAccountsErrorHandlerTest {
 
         // Assert
         coVerify {
-            userWalletsStore.getSyncStrict(userWalletId)
-            cryptoPortfolioCF.create(userWallet)
-            cryptoPortfolioConverter.convertListBack(accounts)
             userTokensResponseStore.getSyncOrNull(userWalletId)
-            userTokensResponseFactory.createUserTokensResponse(
-                currencies = emptyList(),
-                isGroupedByNetwork = false,
-                isSortedByBalance = false,
-            )
-            cardCryptoCurrencyFactory.createDefaultCoinsForMultiCurrencyWallet(userWallet)
+            defaultWalletAccountsResponseFactory.create(userWalletId, userTokensResponse)
             storeWalletAccounts(userWalletId, any())
         }
 
