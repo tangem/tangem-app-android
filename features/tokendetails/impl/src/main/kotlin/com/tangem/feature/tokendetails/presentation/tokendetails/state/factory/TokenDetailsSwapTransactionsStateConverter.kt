@@ -93,6 +93,7 @@ internal class TokenDetailsSwapTransactionsStateConverter(
                         txUrl = statusModel?.txExternalUrl,
                         refundToken = statusModel?.refundCurrency,
                         hasLongTime = statusModel?.hasLongTime,
+                        providerName = transaction.provider.name,
                     )
                     val showProviderLink = getShowProviderLink(notification, transaction.status)
                     result.add(
@@ -130,6 +131,7 @@ internal class TokenDetailsSwapTransactionsStateConverter(
             txUrl = statusModel.txExternalUrl,
             refundToken = statusModel.refundCurrency,
             hasLongTime = statusModel.hasLongTime,
+            providerName = tx.provider.name,
         )
         val showProviderLink = getShowProviderLink(notification, statusModel)
         return tx.copy(
@@ -201,6 +203,7 @@ internal class TokenDetailsSwapTransactionsStateConverter(
         txUrl: String?,
         refundToken: CryptoCurrency?,
         hasLongTime: Boolean?,
+        providerName: String,
     ): ExchangeStatusNotification? {
         return when {
             status == ExchangeStatus.Failed || status == ExchangeStatus.TxFailed -> {
@@ -233,12 +236,15 @@ internal class TokenDetailsSwapTransactionsStateConverter(
                 }
             }
             status?.isTerminal == false && txUrl != null && hasLongTime == true -> {
-                ExchangeStatusNotification.LongTimeExchange {
-                    analyticsEventsHandler.send(
-                        event = TokenExchangeAnalyticsEvent.GoToProviderLongTime(cryptoCurrency.symbol),
-                    )
-                    clickIntents.onGoToProviderClick(txUrl)
-                }
+                ExchangeStatusNotification.LongTimeExchange(
+                    onGoToProviderClick = {
+                        analyticsEventsHandler.send(
+                            event = TokenExchangeAnalyticsEvent.GoToProviderLongTime(cryptoCurrency.symbol),
+                        )
+                        clickIntents.onGoToProviderClick(txUrl)
+                    },
+                    providerName = providerName,
+                )
             }
             else -> null
         }
