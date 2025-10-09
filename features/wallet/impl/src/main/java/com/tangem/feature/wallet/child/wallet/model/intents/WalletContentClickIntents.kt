@@ -10,11 +10,9 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.nft.analytics.NFTAnalyticsEvent
-import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.settings.ShouldShowMarketsTooltipUseCase
 import com.tangem.domain.tokens.GetCryptoCurrencyActionsUseCase
 import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
-import com.tangem.domain.tokens.TokensAction
 import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
@@ -38,8 +36,6 @@ import javax.inject.Inject
 internal interface WalletContentClickIntents {
 
     fun onDetailsClick()
-
-    fun onManageTokensClick()
 
     fun onOrganizeTokensClick()
 
@@ -81,7 +77,6 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
     private val shouldShowMarketsTooltipUseCase: ShouldShowMarketsTooltipUseCase,
     private val dispatchers: CoroutineDispatcherProvider,
-    private val reduxStateHolder: ReduxStateHolder,
     private val walletEventSender: WalletEventSender,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
@@ -120,11 +115,6 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
                 router.openDetailsScreen(stateHolder.getSelectedWalletId())
             }
         }
-    }
-
-    override fun onManageTokensClick() {
-        reduxStateHolder.dispatch(action = TokensAction.SetArgs.ManageAccess)
-        router.openManageTokensScreen(userWalletId = stateHolder.getSelectedWalletId())
     }
 
     override fun onOrganizeTokensClick() {
