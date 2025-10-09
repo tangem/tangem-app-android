@@ -41,14 +41,12 @@ internal class TokenListStateConverter(
 
     private val onTokenClick: (accountId: AccountId?, currencyStatus: CryptoCurrencyStatus) -> Unit =
         { accountId, currencyStatus ->
-            val id = accountId?.let { PortfolioId(accountId) } ?: PortfolioId(selectedWallet.walletId)
-            clickIntents.onTokenItemClick(id, currencyStatus)
+            clickIntents.onTokenItemClick(selectedWallet.walletId, currencyStatus)
         }
 
     private val onTokenLongClick: (accountId: AccountId?, currencyStatus: CryptoCurrencyStatus) -> Unit =
         { accountId, currencyStatus ->
-            val id = accountId?.let { PortfolioId(accountId) } ?: PortfolioId(selectedWallet.walletId)
-            clickIntents.onTokenItemLongClick(id, currencyStatus)
+            clickIntents.onTokenItemLongClick(selectedWallet.walletId, currencyStatus)
         }
 
     private fun tokenStatusConverter(accountId: AccountId? = null) = TokenItemStateConverter(
