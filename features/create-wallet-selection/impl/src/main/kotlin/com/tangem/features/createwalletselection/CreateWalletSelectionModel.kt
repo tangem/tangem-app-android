@@ -23,8 +23,8 @@ import com.tangem.domain.card.analytics.ParamCardCurrencyConverter
 import com.tangem.domain.card.analytics.Shop
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.card.repository.CardSdkConfigRepository
-import com.tangem.domain.core.wallets.UserWalletsListRepository
-import com.tangem.domain.core.wallets.error.SaveWalletError
+import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.common.wallets.error.SaveWalletError
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
@@ -61,14 +61,14 @@ internal class CreateWalletSelectionModel @Inject constructor(
 ) : Model() {
 
     internal val uiState: StateFlow<CreateWalletSelectionUM>
-    field = MutableStateFlow(
-        CreateWalletSelectionUM(
-            onBackClick = { router.pop() },
-            onMobileWalletClick = ::onMobileWalletClick,
-            onHardwareWalletClick = ::onHardwareWalletClick,
-            onScanClick = ::onScanClick,
-        ),
-    )
+        field = MutableStateFlow(
+            CreateWalletSelectionUM(
+                onBackClick = { router.pop() },
+                onMobileWalletClick = ::onMobileWalletClick,
+                onHardwareWalletClick = ::onHardwareWalletClick,
+                onScanClick = ::onScanClick,
+            ),
+        )
 
     init {
         showAlreadyHaveWalletWithDelay()

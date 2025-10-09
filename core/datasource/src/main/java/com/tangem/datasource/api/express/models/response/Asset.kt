@@ -4,6 +4,7 @@ import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 
 @JsonClass(generateAdapter = true)
+@Suppress("BooleanPropertyNaming")
 data class Asset(
     @Json(name = "contractAddress")
     val contractAddress: String,

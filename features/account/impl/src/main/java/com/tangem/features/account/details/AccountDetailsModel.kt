@@ -57,7 +57,7 @@ internal class AccountDetailsModel @Inject constructor(
         )
         val firstAction = EventMessageAction(
             title = resourceReference(R.string.account_details_archive_action),
-            warning = true,
+            isWarning = true,
             onClick = ::archiveCryptoPortfolio,
         )
         messageSender.send(
