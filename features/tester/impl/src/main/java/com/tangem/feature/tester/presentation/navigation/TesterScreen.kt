@@ -13,4 +13,5 @@ internal enum class TesterScreen {
     EXCLUDED_BLOCKCHAINS,
     BLOCKCHAIN_PROVIDERS,
     TEST_PUSHES,
+    ACCOUNTS,
 }

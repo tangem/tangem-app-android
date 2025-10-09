@@ -1688,7 +1688,6 @@
   <string name="yield_module_approve_sheet_title">承認を確定する</string>
   <string name="yield_module_balance_info_sheet_subtitle">資産残高に関するテキスト [プレースホルダー]</string>
   <string name="yield_module_balance_info_sheet_title">あなたの%sはAaveに預けられています</string>
-  <string name="yield_module_chart_loading_error">チャートを読み込めません・・</string>
   <string name="yield_module_deposit_error_notification_title">受け取った金額%1$s %2$sはAaveに入金されませんでした。</string>
   <string name="yield_module_earn_badge">%1$s%% を獲得</string>
   <string name="yield_module_earn_sheet_available_title">利用可能</string>
@@ -1706,7 +1705,6 @@
   <string name="yield_module_fee_policy_sheet_max_fee_title">最大手数料</string>
   <string name="yield_module_fee_policy_sheet_title">手数料ポリシー</string>
   <string name="yield_module_high_fee_error">ネットワーク手数料が現在高すぎます。設定した上限を下回るまで待機しています。</string>
-  <string name="yield_module_historical_returns">過去のリターン</string>
   <string name="yield_module_main_view_approve_notification_description">ここに説明を入力してください。1〜3行が理想的です。[プレースホルダー]</string>
   <string name="yield_module_main_view_approve_notification_title">トークン承認が必要</string>
   <string name="yield_module_network_fee_unreachable_notification_description">ネットワーク接続を確認してください</string>

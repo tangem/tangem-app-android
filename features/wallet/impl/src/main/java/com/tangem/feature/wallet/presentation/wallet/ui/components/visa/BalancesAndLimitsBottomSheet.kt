@@ -133,10 +133,10 @@ private fun InfoButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
 
 @Composable
 private inline fun ContentContainer(
+    modifier: Modifier = Modifier,
     title: @Composable BoxScope.() -> Unit,
     firstBlock: @Composable ColumnScope.() -> Unit,
     secondBlock: @Composable ColumnScope.() -> Unit,
-    modifier: Modifier = Modifier,
 ) {
     Column(
         modifier = modifier.background(TangemTheme.colors.background.secondary),
