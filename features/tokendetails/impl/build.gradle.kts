@@ -1,5 +1,6 @@
 plugins {
     alias(deps.plugins.android.library)
+    alias(deps.plugins.kotlin.serialization)
     alias(deps.plugins.kotlin.android)
     alias(deps.plugins.kotlin.kapt)
     alias(deps.plugins.hilt.android)
@@ -102,6 +103,7 @@ dependencies {
     implementation(projects.features.txhistory.api)
     implementation(projects.features.sendV2.api)
     implementation(projects.features.tokenRecieve.api)
+    implementation(projects.features.yieldSupply.api)
 
     implementation(deps.decompose.ext.compose)
 

@@ -55,3 +55,13 @@ internal fun List<WalletAccountDTO>.assignTokens(
         )
     }
 }
+
+internal fun WalletAccountDTO.assignTokens(
+    userWalletId: UserWalletId,
+    tokens: List<UserTokensResponse.Token>,
+): WalletAccountDTO {
+    val enrichedTokens = UserTokensResponseAccountIdEnricher(userWalletId, tokens)
+        .filter { it.accountId == this.id }
+
+    return copy(tokens = enrichedTokens)
+}
