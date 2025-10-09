@@ -84,7 +84,7 @@ fun Notification(
             titleColor = titleColor,
             subtitle = config.subtitle,
             subtitleColor = subtitleColor,
-            showArrowIcon = isEnabled && config.showArrowIcon,
+            showArrowIcon = isEnabled && config.shouldShowArrowIcon,
         )
     }
 }
@@ -256,6 +256,7 @@ private fun SingleSecondaryButton(config: NotificationButtonsState.SecondaryButt
             modifier = Modifier.fillMaxWidth(),
             iconResId = config.iconResId,
             enabled = isEnabled,
+            showProgress = config.shouldShowProgress,
         )
     } else {
         SecondaryButton(
@@ -264,6 +265,7 @@ private fun SingleSecondaryButton(config: NotificationButtonsState.SecondaryButt
             modifier = Modifier.fillMaxWidth(),
             size = TangemButtonSize.WideAction,
             enabled = isEnabled,
+            showProgress = config.shouldShowProgress,
         )
     }
 }
