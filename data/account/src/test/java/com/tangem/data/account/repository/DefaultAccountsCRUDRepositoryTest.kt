@@ -584,7 +584,7 @@ class DefaultAccountsCRUDRepositoryTest {
                 every { this@mockk.walletId } returns userWalletId
             }
 
-            val accountList = AccountList.empty(userWallet = userWallet)
+            val accountList = AccountList.empty(userWalletId = userWalletId)
 
             val accountsResponse = mockk<GetWalletAccountsResponse>()
             accountsResponseStoreFlow.value = accountsResponse
@@ -592,6 +592,8 @@ class DefaultAccountsCRUDRepositoryTest {
             val converter = mockk<GetWalletAccountsResponseConverter> {
                 every { this@mockk.convert(accountList) } returns accountsResponse
             }
+
+            every { userWalletsStore.getSyncStrict(userWalletId) } returns userWallet
 
             every {
                 convertersContainer.getWalletAccountsResponseCF.create(userWallet = userWallet)
@@ -617,7 +619,7 @@ class DefaultAccountsCRUDRepositoryTest {
                 every { this@mockk.walletId } returns userWalletId
             }
 
-            val accountList = AccountList.empty(userWallet = userWallet)
+            val accountList = AccountList.empty(userWalletId = userWalletId)
 
             val accountsResponse = mockk<GetWalletAccountsResponse>()
             accountsResponseStoreFlow.value = accountsResponse
@@ -625,6 +627,8 @@ class DefaultAccountsCRUDRepositoryTest {
             val converter = mockk<GetWalletAccountsResponseConverter> {
                 every { this@mockk.convert(accountList) } returns accountsResponse
             }
+
+            every { userWalletsStore.getSyncStrict(userWalletId) } returns userWallet
 
             every {
                 convertersContainer.getWalletAccountsResponseCF.create(userWallet = userWallet)
