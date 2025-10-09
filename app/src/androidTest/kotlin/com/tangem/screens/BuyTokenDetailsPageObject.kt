@@ -3,15 +3,13 @@ package com.tangem.screens
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import com.tangem.common.BaseTestCase
 import com.tangem.core.ui.R
-import com.tangem.core.ui.test.BaseButtonTestTags
-import com.tangem.core.ui.test.BuyTokenDetailsScreenTestTags
-import com.tangem.core.ui.test.NotificationTestTags
-import com.tangem.core.ui.test.TopAppBarTestTags
+import com.tangem.core.ui.test.*
 import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
 import io.github.kakaocup.compose.node.element.KNode
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 import androidx.compose.ui.test.hasTestTag as withTestTag
+import com.tangem.features.onramp.impl.R as OnrampImplR
 
 class BuyTokenDetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
     ComposeScreen<BuyTokenDetailsPageObject>(semanticsProvider = semanticsProvider) {
@@ -68,31 +66,65 @@ class BuyTokenDetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProv
         useUnmergedTree = true
     }
 
-    val providerLoadingTitle: KNode = child {
-        hasTestTag(BuyTokenDetailsScreenTestTags.PROVIDER_LOADING_TITLE)
+    val recommendedTitle: KNode = child {
+        hasText(getResourceString(OnrampImplR.string.onramp_recommended_title))
     }
 
-    val providerLoadingText: KNode = child {
-        hasTestTag(BuyTokenDetailsScreenTestTags.PROVIDER_LOADING_TEXT)
-    }
-
-    val providerTitle: KNode = child {
-        hasTestTag(BuyTokenDetailsScreenTestTags.PROVIDER_TITLE)
+    val bestRateIcon: KNode = child {
+        hasTestTag(OnrampOffersBlockTestTags.BEST_RATE_ICON)
         useUnmergedTree = true
     }
 
-    val providerText: KNode = child {
-        hasTestTag(BuyTokenDetailsScreenTestTags.PROVIDER_TEXT)
+    val bestRateTitle: KNode = child {
+        hasTestTag(OnrampOffersBlockTestTags.BEST_RATE_TITLE)
+        useUnmergedTree = true
+    }
+
+    val offerTokenAmount: KNode = child {
+        hasTestTag(OnrampOffersBlockTestTags.OFFER_TOKEN_AMOUNT)
+        useUnmergedTree = true
+    }
+
+    val timingIcon: KNode = child {
+        hasTestTag(OnrampOffersBlockTestTags.TIMING_ICON)
+        useUnmergedTree = true
+    }
+
+    val payWith: KNode = child {
+        hasTestTag(OnrampOffersBlockTestTags.PAY_WITH)
+        useUnmergedTree = true
+    }
+
+    val paymentMethodIcon: KNode = child {
+        hasTestTag(OnrampOffersBlockTestTags.PAYMENT_METHOD_ICON)
+        useUnmergedTree = true
+    }
+
+    val instantProcessingSpeedText: KNode = child {
+        hasText(getResourceString(R.string.onramp_instant_status))
+        useUnmergedTree = true
+    }
+
+    val providerName: KNode = child {
+        hasTestTag(OnrampOffersBlockTestTags.PROVIDER_NAME)
         useUnmergedTree = true
     }
 
     val buyButton: KNode = child {
-        hasTestTag(BaseButtonTestTags.BUTTON)
+        hasTestTag(BaseButtonTestTags.TEXT)
         hasText(getResourceString(R.string.common_buy))
+        useUnmergedTree = true
     }
 
-    val toSBlock: KNode = child {
-        hasTestTag(BuyTokenDetailsScreenTestTags.TOS_BLOCK)
+    val continueButton: KNode = child {
+        hasTestTag(BaseButtonTestTags.TEXT)
+        hasText(getResourceString(R.string.common_continue))
+        useUnmergedTree = true
+    }
+
+    val allOffersButton: KNode = child {
+        hasTestTag(BaseButtonTestTags.TEXT)
+        hasText(getResourceString(R.string.onramp_all_offers_button_title))
         useUnmergedTree = true
     }
 }

@@ -146,7 +146,7 @@ private fun SubtitleView(subtitle: String, icon: Painter?) {
         horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing4),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        icon?.let {
+        icon?.let { icon ->
             Image(
                 painter = icon,
                 contentDescription = null,
@@ -202,9 +202,9 @@ private fun ExpandedSearchView(
         }
         TextField(
             value = textFieldValue,
-            onValueChange = {
-                textFieldValue = it
-                onSearchChange(it.text)
+            onValueChange = { value ->
+                textFieldValue = value
+                onSearchChange(value.text)
             },
             singleLine = true,
             modifier = Modifier

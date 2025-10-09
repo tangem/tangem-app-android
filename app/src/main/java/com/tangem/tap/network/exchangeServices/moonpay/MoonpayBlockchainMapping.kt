@@ -159,4 +159,5 @@ internal val Blockchain.moonPaySupportedCurrency: MoonPaySupportedCurrency?
         KaspaTestnet -> null
         Pepecoin, PepecoinTestnet -> null
         Hyperliquid, HyperliquidTestnet -> null
+        Quai, QuaiTestnet -> null
     }
