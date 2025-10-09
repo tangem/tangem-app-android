@@ -588,6 +588,7 @@ private fun Preview_ReferralScreen_NonParticipantAccount() {
                     onParticipateClicked = {},
                     participateButtonIcon = R.drawable.ic_tangem_24,
                     accountAward = AccountAward(
+                        accountId = "Main Account",
                         onAccountClick = {},
                         accountIcon = AccountIconPreviewData.randomAccountIcon(),
                         accountName = stringReference("Main Account"),

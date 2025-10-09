@@ -61,6 +61,7 @@ internal class AccountAwardConverter(
             onAccountClick = onAccountClick,
             isBalanceHidden = isBalanceHidden,
             tokenState = tokenState,
+            accountId = cryptoPortfolio.account.accountId.value,
         )
     }
 }
