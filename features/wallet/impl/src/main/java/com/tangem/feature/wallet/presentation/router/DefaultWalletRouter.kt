@@ -7,7 +7,6 @@ import com.tangem.common.routing.AppRoute.ManageTokens.Source
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.navigation.url.UrlOpener
-import com.tangem.domain.models.PortfolioId
 import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -67,12 +66,12 @@ internal class DefaultWalletRouter @Inject constructor(
         urlOpener.openUrl(url)
     }
 
-    override fun openTokenDetails(portfolioId: PortfolioId, currencyStatus: CryptoCurrencyStatus) {
+    override fun openTokenDetails(userWalletId: UserWalletId, currencyStatus: CryptoCurrencyStatus) {
         val networkAddress = currencyStatus.value.networkAddress
         if (networkAddress != null && networkAddress.defaultAddress.value.isNotEmpty()) {
             router.push(
                 AppRoute.CurrencyDetails(
-                    portfolioId = portfolioId,
+                    userWalletId = userWalletId,
                     currency = currencyStatus.currency,
                 ),
             )
