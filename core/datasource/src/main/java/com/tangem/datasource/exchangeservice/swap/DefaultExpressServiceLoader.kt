@@ -72,15 +72,16 @@ internal class DefaultExpressServiceLoader @Inject constructor(
         return flow { getInitializationStatusInternal(userWalletId).collect { emit(it) } }
     }
 
+    @Suppress("SuspendFunWithFlowReturnType")
     private suspend fun getInitializationStatusInternal(userWalletId: UserWalletId): InitializationStatusFlow {
-        val initializationStatus = initializationStatuses.value.get(key = userWalletId)
+        val initializationStatus = initializationStatuses.value[userWalletId]
         if (initializationStatus != null) return initializationStatus
 
         val cached = expressAssetsStore.getSyncOrNull(userWalletId)
         val default: InitializationStatusFlow = MutableStateFlow(value = cached?.lceContent() ?: lceLoading())
 
-        initializationStatuses.update {
-            it.toMutableMap().apply {
+        initializationStatuses.update { statuses ->
+            statuses.toMutableMap().apply {
                 put(key = userWalletId, value = default)
             }
         }
