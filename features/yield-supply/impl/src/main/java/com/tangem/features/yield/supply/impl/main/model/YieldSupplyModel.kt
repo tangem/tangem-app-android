@@ -22,8 +22,6 @@ import com.tangem.domain.yield.supply.usecase.YieldSupplyGetTokenStatusUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyIsAvailableUseCase
 import com.tangem.features.yield.supply.api.YieldSupplyComponent
 import com.tangem.features.yield.supply.impl.main.entity.YieldSupplyUM
-import com.tangem.features.yield.supply.impl.main.entity.LoadingStatusMode
-import com.tangem.features.yield.supply.impl.main.model.transformers.YieldSupplyTokenStatusFailureTransformer
 import com.tangem.features.yield.supply.impl.main.model.transformers.YieldSupplyTokenStatusSuccessTransformer
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.DelayedWork
@@ -118,7 +116,7 @@ internal class YieldSupplyModel @Inject constructor(
         }
     }
 
-    private fun loadTokenStatus(mode: LoadingStatusMode) {
+    private fun loadTokenStatus() {
         val cryptoCurrencyToken = cryptoCurrency as? CryptoCurrency.Token ?: return
         modelScope.launch(dispatchers.default) {
             yieldSupplyGetTokenStatusUseCase(cryptoCurrencyToken)
@@ -127,11 +125,10 @@ internal class YieldSupplyModel @Inject constructor(
                         YieldSupplyTokenStatusSuccessTransformer(
                             tokenStatus = tokenStatus,
                             onStartEarningClick = ::onStartEarningClick,
-                            mode = mode,
                         ),
                     )
                 }.onLeft {
-                    uiState.update(YieldSupplyTokenStatusFailureTransformer(mode))
+                    uiState.update { YieldSupplyUM.Unavailable }
                 }
         }
     }
@@ -186,14 +183,13 @@ internal class YieldSupplyModel @Inject constructor(
                     onClick = ::onActiveClick,
                     isAllowedToSpend = yieldSupplyStatus.isAllowedToSpend,
                 )
-            else -> YieldSupplyUM.Loading
+            else -> YieldSupplyUM.Initial
         }
 
         uiState.update { yieldSupplyUM }
 
         when (yieldSupplyUM) {
-            is YieldSupplyUM.Loading -> loadTokenStatus(LoadingStatusMode.Initial)
-            is YieldSupplyUM.Content -> loadTokenStatus(LoadingStatusMode.LoadApy)
+            is YieldSupplyUM.Initial -> loadTokenStatus()
             else -> Unit
         }
     }
