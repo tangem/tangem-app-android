@@ -19,6 +19,19 @@ internal data class TokenListUM(
     val searchBarUM: SearchBarUM,
     val availableItems: ImmutableList<TokensListItemUM>,
     val unavailableItems: ImmutableList<TokensListItemUM>,
+    val tokensListData: TokenListUMData,
     val isBalanceHidden: Boolean,
     val warning: NotificationUM? = null,
 )
+
+internal sealed interface TokenListUMData {
+    data class AccountList(
+        val tokensList: ImmutableList<TokensListItemUM.Portfolio>,
+    ) : TokenListUMData
+
+    data class TokenList(
+        val tokensList: ImmutableList<TokensListItemUM>,
+    ) : TokenListUMData
+
+    data object EmptyList : TokenListUMData
+}
