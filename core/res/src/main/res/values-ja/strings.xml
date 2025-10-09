@@ -33,6 +33,7 @@
   <string name="account_form_create_button">アカウントを追加</string>
   <string name="account_form_edit_button">保存</string>
   <string name="account_form_name">アカウント名</string>
+  <string name="account_form_name_already_exist_error_description">アカウント名はすでに存在しています</string>
   <string name="account_form_placeholder_edit_account">アカウント</string>
   <string name="account_form_placeholder_new_account">新しいアカウント</string>
   <string name="account_form_title_create">アカウントを追加</string>
@@ -323,6 +324,7 @@
   <string name="common_tangem">Tangem</string>
   <string name="common_terms_and_conditions">利用規約</string>
   <string name="common_terms_of_use">利用規約</string>
+  <string name="common_to">宛先</string>
   <string name="common_today">今日</string>
   <plurals name="common_tokens_count">
     <item quantity="other">%d トークン</item>
@@ -885,6 +887,7 @@
   </plurals>
   <string name="onramp_timing_minutes">%s分</string>
   <string name="onramp_title_you_get">以下が手に入ります。</string>
+  <string name="onramp_tos_external_providers">サービスは外部プロバイダーによって提供されます。 \nTangemは責任を負いません。</string>
   <string name="onramp_transaction_status_footer_text">この画面を閉じて、トークンの詳細画面で取引状況を確認できます。</string>
   <string name="onramp_up_to_rate">最大</string>
   <string name="onramp_via">経由</string>
@@ -1094,6 +1097,7 @@
   <string name="staking_details_account_fee_info">ステーキングアカウントとは、ステーキングされたSOLが保管される特別なアカウントです。トークンをバリデーターに委任し、取引の検証に参加して報酬を受け取る際に作成されます。ステーキングアカウントの作成には少額の手数料がかかりますが、ステーキング完了後に返金されます。</string>
   <string name="staking_details_annual_percentage_rate">年率</string>
   <string name="staking_details_annual_percentage_rate_info">ステーキングに参加することで得られる年間収益率。</string>
+  <string name="staking_details_annual_percentage_yield_info">APYは、バリデータのパフォーマンスに基づいた年間利回りを示します。</string>
   <string name="staking_details_apr">APR</string>
   <string name="staking_details_apy">APY</string>
   <string name="staking_details_auto_claiming_rewards_daily_text">報酬は毎日自動的にステーキング残高に蓄積されます。</string>
@@ -1254,6 +1258,10 @@
   <string name="swapping_to_title">受け取る</string>
   <string name="swapping_token_list_title">トークンを選択</string>
   <string name="swapping_token_not_available">利用不可</string>
+  <string name="tangempay_card_details_error_text">データの読み込みに失敗しました。しばらくしてからもう一度お試しください。</string>
+  <string name="tangempay_card_details_hide_text">非表示</string>
+  <string name="tangempay_card_details_reveal_text">表示</string>
+  <string name="tangempay_card_details_title">カードの詳細</string>
   <string name="tangempay_issue_card_notification_title">アカウントを作成してカードを発行</string>
   <string name="tangempay_kyc_card_ready_notification_title">Tangem Pay</string>
   <string name="tangempay_kyc_in_progress_notification_button">ステータスを表示</string>
@@ -1266,6 +1274,7 @@
   <string name="tangempay_onboarding_security_description">カードの詳細は保護されており、アプリ内で完全に制御できます。</string>
   <string name="tangempay_onboarding_security_title">内蔵セキュリティ</string>
   <string name="tangempay_onboarding_title">無料のCryptoカード\nを数分で入手しましょう</string>
+  <string name="tangempay_title">Tangem Pay</string>
   <string name="this_is_my_wallet_title">これは私のウォレットです</string>
   <string name="toast_balances_hidden">残高非表示</string>
   <string name="toast_balances_shown">残高表示</string>
@@ -1293,6 +1302,7 @@
   <string name="token_details_token_type_subtitle_no_standard">%%image%% %1$sネットワーク上のトークン</string>
   <string name="token_details_unable_hide_alert_message">%1$s ( %2$s ) トークンは%3$sネットワークの主要通貨であり、このネットワーク上の他のトークンがリストにある限り、非表示にすることはできません。</string>
   <string name="token_details_unable_hide_alert_title">%sを非表示にできません</string>
+  <string name="token_receive_show_qr_code_title">QRコードを表示</string>
   <string name="token_swap_changelly_promotion_message">このトークンは、2月%2$s-%3$s の間、%1$s のサービス手数料で別のトークンと交換できます。</string>
   <string name="token_swap_changelly_promotion_title">Changellyでスワップ、手数料%s</string>
   <string name="token_swap_promotion_button">今すぐスワップ</string>
@@ -1661,6 +1671,7 @@
   <string name="yield_module_approve_sheet_title">承認を確定する</string>
   <string name="yield_module_balance_info_sheet_subtitle">資産残高に関するテキスト [プレースホルダー]</string>
   <string name="yield_module_balance_info_sheet_title">あなたの%sはAaveに預けられています</string>
+  <string name="yield_module_chart_loading_error">チャートを読み込めません・・</string>
   <string name="yield_module_deposit_error_notification_title">受け取った金額%1$s %2$sはAaveに入金されませんでした。</string>
   <string name="yield_module_earn_badge">%1$s%% を獲得</string>
   <string name="yield_module_earn_sheet_available_title">利用可能</string>
@@ -1678,6 +1689,7 @@
   <string name="yield_module_fee_policy_sheet_max_fee_title">最大手数料</string>
   <string name="yield_module_fee_policy_sheet_title">手数料ポリシー</string>
   <string name="yield_module_high_fee_error">ネットワーク手数料が現在高すぎます。設定した上限を下回るまで待機しています。</string>
+  <string name="yield_module_historical_returns">過去のリターン</string>
   <string name="yield_module_main_view_approve_notification_description">ここに説明を入力してください。1〜3行が理想的です。[プレースホルダー]</string>
   <string name="yield_module_main_view_approve_notification_title">トークン承認が必要</string>
   <string name="yield_module_network_fee_unreachable_notification_description">ネットワーク接続を確認してください</string>
@@ -1708,6 +1720,7 @@
   <string name="yield_module_stop_earning">収益を停止する</string>
   <string name="yield_module_stop_earning_sheet_description">オフにすると、Aaveから資金が引き出され、ウォレットの%sに戻され、報酬の獲得が停止されます。</string>
   <string name="yield_module_stop_earning_sheet_fee_note">出金金額からネットワーク手数料が差し引かれます。</string>
+  <string name="yield_module_supply_apr">供給APR</string>
   <string name="yield_module_token_details_earn_notification_apy">APY</string>
   <string name="yield_module_token_details_earn_notification_description">あなたの資産を眠らせない — 残高を運用して利息を得ましょう。</string>
   <string name="yield_module_token_details_earn_notification_earning_on_your_balance_title">保有資産から報酬を得る</string>
@@ -1716,4 +1729,7 @@
   <string name="yield_module_transfer_mode_automatic">自動</string>
   <string name="yield_module_unable_to_cover_fee_description">取引のネットワーク手数料をカバーするために、 %1$s %2$sを入金してください</string>
   <string name="yield_module_unable_to_cover_fee_title">%s手数料を支払えません</string>
+  <string name="yield_module_unavailable_subtitle">利息サービスは現在利用できません。しばらくしてから再度お試しください。</string>
+  <string name="yield_module_unavailable_title">収益は利用できません</string>
+  <string name="yield_supply_chart_loading_error">チャートを読み込めません・・</string>
 </resources>
