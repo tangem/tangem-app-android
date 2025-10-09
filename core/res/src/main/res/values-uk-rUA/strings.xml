@@ -1183,8 +1183,12 @@
   <string name="unlock_wallet_description_full">Використовуйте %s або відскануйте картку/кільце, щоб отримати доступ до свого гаманця</string>
   <string name="unsupported_wc_version">Не вдалося встановити з\'єднання: Цей dApp використовує Wallet Connect версії 1.0, яка не підтримується. Будь ласка, переконайтеся, що dApp підтримує Wallet Connect версії 2.0 для успішного підключення.</string>
   <string name="user_push_notification_agreement_argument_one">Будьте в курсі останніх функцій та новин</string>
+  <string name="user_push_notification_agreement_argument_one_subtitle">Миттєві сповіщення про транзакції, обміни та важливі оновлення.</string>
+  <string name="user_push_notification_agreement_argument_one_title">Сповіщення про транзакції</string>
   <string name="user_push_notification_agreement_argument_three">Отримуйте сповіщення про вхідні транзакції</string>
   <string name="user_push_notification_agreement_argument_two">Дізнавайтеся першими про нові акції</string>
+  <string name="user_push_notification_agreement_argument_two_subtitle">Ранній доступ до нових функцій та ексклюзивних пропозицій.</string>
+  <string name="user_push_notification_agreement_argument_two_title">Нові функції та важливі новини</string>
   <string name="user_push_notification_agreement_header">Бажаєте використовувати Push-повідомлення?</string>
   <string name="user_wallet_list_add_button">Додати новий гаманець</string>
   <string name="user_wallet_list_delete_prompt">Ви впевнені, що хочете видалити цей гаманець?</string>
