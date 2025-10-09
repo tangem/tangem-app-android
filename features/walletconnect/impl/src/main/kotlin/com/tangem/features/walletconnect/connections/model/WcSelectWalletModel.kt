@@ -32,12 +32,12 @@ internal class WcSelectWalletModel @Inject constructor(
     private val params = paramsContainer.require<WcSelectWalletParams>()
 
     internal val state: StateFlow<WcAppInfoWalletUM>
-    field = MutableStateFlow<WcAppInfoWalletUM>(
-        WcAppInfoWalletUM(
-            wallets = persistentListOf(),
-            selectedUserWalletId = params.selectedWalletId,
-        ),
-    )
+        field = MutableStateFlow<WcAppInfoWalletUM>(
+            WcAppInfoWalletUM(
+                wallets = persistentListOf(),
+                selectedUserWalletId = params.selectedWalletId,
+            ),
+        )
 
     private val userWalletsFetcher = WcUserWalletsFetcher(
         userWalletsFetcherFactory = userWalletsFetcherFactory,
