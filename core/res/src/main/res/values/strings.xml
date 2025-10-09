@@ -179,6 +179,7 @@
   <string name="common_accept">Accept</string>
   <string name="common_access_denied">Access denied</string>
   <string name="common_accounts">Accounts</string>
+  <string name="common_activate">Activate</string>
   <string name="common_add">Add</string>
   <string name="common_add_to_portfolio">Add to portfolio</string>
   <string name="common_add_token">Add token</string>
@@ -253,6 +254,7 @@
   <string name="common_fee_selector_title">Speed and fee</string>
   <string name="common_finish">Finish</string>
   <string name="common_free">Free</string>
+  <string name="common_from">From</string>
   <string name="common_generate_addresses">Synchronize addresses</string>
   <string name="common_get_started">Get started</string>
   <string name="common_go_to_provider">Go to provider</string>
@@ -331,6 +333,7 @@
   <string name="common_tangem_wallet">Tangem Wallet</string>
   <string name="common_terms_and_conditions">terms and conditions</string>
   <string name="common_terms_of_use">Terms of Use</string>
+  <string name="common_to">To</string>
   <string name="common_today">Today</string>
   <plurals name="common_tokens_count">
     <item quantity="one">%d token</item>
@@ -1112,6 +1115,9 @@
   <string name="settings_forget_wallet_footer">This will remove the wallet from the application. The wallet itself can be added again.</string>
   <string name="settings_wallet_name_title">Name</string>
   <string name="stake_token_description">Put your token to work</string>
+  <string name="staking_account_initialization_footer">A network fee is a small payment to process and confirm your transaction on the blockchain.</string>
+  <string name="staking_account_initialization_message">To start staking, your TON account must be activated with a self-transaction of 1 TON. The funds stay in your wallet — this step only enables your account for staking.</string>
+  <string name="staking_account_initialization_title">Account activation</string>
   <string name="staking_amount_requirement_error">The amount to stake must be at least %s</string>
   <string name="staking_amount_tron_integer_error">Staking amount will be rounded to %1$s TRX due to network rules.</string>
   <string name="staking_amount_tron_integer_error_unstaking">Unstaking amount will be rounded to %1$s TRX due to network rules.</string>
@@ -1178,6 +1184,8 @@
   <string name="staking_notification_restake_rewards_text">Reinvests your earned rewards in your staked amount, increasing potential earnings.</string>
   <string name="staking_notification_restake_text">Restake lets you move your funds from one validator to another without the need to unstake</string>
   <string name="staking_notification_stake_entire_balance_text">You’re about to stake your entire balance. We recommend leaving a small amount to cover network fees for unstaking or claiming rewards.</string>
+  <string name="staking_notification_ton_account_initialization_message">To start staking, your TON account must be activated with a self-transaction of 1 TON. The funds stay in your wallet — this step only enables your account for staking.</string>
+  <string name="staking_notification_ton_account_initialization_title">Account activation</string>
   <string name="staking_notification_ton_activate_account">To start staking in TON, first send a small transaction to your own address — this will activate your wallet.</string>
   <string name="staking_notification_ton_extra_reserve_info">Up to 0.2 TON may be required in addition to the network fee to complete the transaction. Any unused amount will be refunded.</string>
   <string name="staking_notification_ton_extra_reserve_is_required">0.2 TON is required to proceed with this operation, in addition to the network fee. Please top up your balance.</string>
