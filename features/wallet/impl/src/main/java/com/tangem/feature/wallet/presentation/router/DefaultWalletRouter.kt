@@ -3,7 +3,6 @@ package com.tangem.feature.wallet.presentation.router
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRoute.ManageTokens.Source
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.navigation.url.UrlOpener
@@ -84,10 +83,6 @@ internal class DefaultWalletRouter @Inject constructor(
 
     override fun isWalletLastScreen(): Boolean {
         return router.stack.lastOrNull() is AppRoute.Wallet
-    }
-
-    override fun openManageTokensScreen(userWalletId: UserWalletId) {
-        router.push(AppRoute.ManageTokens(Source.SETTINGS, userWalletId))
     }
 
     override fun openScanFailedDialog(onTryAgain: () -> Unit) {
