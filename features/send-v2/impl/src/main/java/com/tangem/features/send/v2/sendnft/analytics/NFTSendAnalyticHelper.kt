@@ -6,11 +6,11 @@ import com.tangem.core.analytics.models.Basic
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents.Companion.NFT_SEND_CATEGORY
+import com.tangem.features.send.v2.api.entity.FeeNonce
+import com.tangem.features.send.v2.api.entity.FeeSelectorUM
 import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationTextFieldUM
 import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationUM
 import com.tangem.features.send.v2.sendnft.ui.state.NFTSendUM
-import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeSelectorUM
-import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeUM
 import javax.inject.Inject
 
 @ModelScoped
@@ -20,15 +20,14 @@ internal class NFTSendAnalyticHelper @Inject constructor(
 
     fun nftSendSuccessAnalytics(cryptoCurrency: CryptoCurrency, nftSendUM: NFTSendUM) {
         val destinationUM = nftSendUM.destinationUM as? DestinationUM.Content
-        val feeUM = nftSendUM.feeUM as? FeeUM.Content
-        val feeSelectorUM = feeUM?.feeSelectorUM as? FeeSelectorUM.Content ?: return
-        val feeType = feeSelectorUM.selectedType.toAnalyticType(feeSelectorUM)
+        val feeSelectorUM = nftSendUM.feeSelectorUM as? FeeSelectorUM.Content ?: return
+        val feeType = feeSelectorUM.toAnalyticType()
         analyticsEventHandler.send(
             NFTSendAnalyticEvents.TransactionScreenOpened(
                 token = cryptoCurrency.symbol,
                 feeType = feeType,
                 blockchain = cryptoCurrency.network.name,
-                nonceNotEmpty = feeSelectorUM.nonce != null,
+                nonceNotEmpty = feeSelectorUM.feeNonce is FeeNonce.Nonce,
             ),
         )
         analyticsEventHandler.send(
