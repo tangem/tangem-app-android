@@ -24,6 +24,7 @@ dependencies {
     api(projects.domain.networks)
     api(projects.domain.staking)
     api(projects.domain.tokens)
+    api(projects.domain.wallets)
 
     implementation(projects.libs.blockchainSdk)
     implementation(projects.libs.crypto)
