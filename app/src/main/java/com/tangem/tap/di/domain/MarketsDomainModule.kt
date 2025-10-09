@@ -1,7 +1,7 @@
 package com.tangem.tap.di.domain
 
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
-import com.tangem.domain.wallets.derivations.DerivationsRepository
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.markets.*
 import com.tangem.domain.markets.repositories.MarketsTokenRepository
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
@@ -12,8 +12,8 @@ import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
 import com.tangem.domain.tokens.repository.CurrenciesRepository
+import com.tangem.domain.wallets.derivations.DerivationsRepository
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
-import com.tangem.domain.core.wallets.UserWalletsListRepository
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import dagger.Module
 import dagger.Provides

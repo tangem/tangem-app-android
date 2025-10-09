@@ -5,9 +5,13 @@ import com.tangem.core.ui.decompose.ComposableContentComponent
 
 interface TangemPayOnboardingComponent : ComposableContentComponent {
 
-    data class Params(
-        val deeplink: String,
-    )
+    sealed class Params {
+        data class Deeplink(
+            val deeplink: String,
+        ) : Params()
+
+        object ContinueOnboarding : Params()
+    }
 
     interface Factory : ComponentFactory<Params, TangemPayOnboardingComponent>
 }

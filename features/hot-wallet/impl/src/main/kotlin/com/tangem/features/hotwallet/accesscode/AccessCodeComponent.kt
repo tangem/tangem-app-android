@@ -25,10 +25,7 @@ internal class AccessCodeComponent @AssistedInject constructor(
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
 
-        if (!state.isConfirmMode) {
-            DisableScreenshotsDisposableEffect()
-        }
-
+        DisableScreenshotsDisposableEffect()
         AccessCode(
             modifier = modifier,
             state = state,
