@@ -28,7 +28,7 @@ interface PortfolioFetcher {
         val walletBalance: Lce<TokenListError, TotalFiatBalance>,
         val accountsBalance: AccountStatusList,
     ) {
-        val userWallet: UserWallet get() = accountsBalance.userWallet
+        val userWalletId: UserWalletId get() = accountsBalance.userWalletId
     }
 
     sealed interface Mode {
