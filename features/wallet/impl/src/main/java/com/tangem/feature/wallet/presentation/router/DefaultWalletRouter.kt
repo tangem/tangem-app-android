@@ -3,11 +3,9 @@ package com.tangem.feature.wallet.presentation.router
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRoute.ManageTokens.Source
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.navigation.url.UrlOpener
-import com.tangem.domain.models.PortfolioId
 import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -67,12 +65,12 @@ internal class DefaultWalletRouter @Inject constructor(
         urlOpener.openUrl(url)
     }
 
-    override fun openTokenDetails(portfolioId: PortfolioId, currencyStatus: CryptoCurrencyStatus) {
+    override fun openTokenDetails(userWalletId: UserWalletId, currencyStatus: CryptoCurrencyStatus) {
         val networkAddress = currencyStatus.value.networkAddress
         if (networkAddress != null && networkAddress.defaultAddress.value.isNotEmpty()) {
             router.push(
                 AppRoute.CurrencyDetails(
-                    portfolioId = portfolioId,
+                    userWalletId = userWalletId,
                     currency = currencyStatus.currency,
                 ),
             )
@@ -85,10 +83,6 @@ internal class DefaultWalletRouter @Inject constructor(
 
     override fun isWalletLastScreen(): Boolean {
         return router.stack.lastOrNull() is AppRoute.Wallet
-    }
-
-    override fun openManageTokensScreen(userWalletId: UserWalletId) {
-        router.push(AppRoute.ManageTokens(Source.SETTINGS, userWalletId))
     }
 
     override fun openScanFailedDialog(onTryAgain: () -> Unit) {
