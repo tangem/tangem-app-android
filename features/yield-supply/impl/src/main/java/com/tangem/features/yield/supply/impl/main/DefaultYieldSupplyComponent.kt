@@ -38,9 +38,8 @@ internal class DefaultYieldSupplyComponent @AssistedInject constructor(
     override fun Content(modifier: Modifier) {
         val yieldSupplyUM by model.uiState.collectAsStateWithLifecycle()
         val bottomSheet by bottomSheetSlot.subscribeAsState()
-        val isBalanceHidden by model.isBalanceHiddenFlow.collectAsStateWithLifecycle()
 
-        YieldSupplyBlockContent(yieldSupplyUM = yieldSupplyUM, isBalanceHidden = isBalanceHidden, modifier = modifier)
+        YieldSupplyBlockContent(yieldSupplyUM = yieldSupplyUM, modifier = modifier)
 
         bottomSheet.child?.instance?.BottomSheet()
     }
