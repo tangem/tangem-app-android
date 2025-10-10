@@ -18,7 +18,8 @@ internal sealed class YieldSupplyUM {
     data object Unavailable : YieldSupplyUM()
 
     data class Content(
-        val rewardsBalance: TextReference,
+        val title: TextReference,
+        val subtitle: TextReference,
         val rewardsApy: TextReference,
         val onClick: () -> Unit,
         val isAllowedToSpend: Boolean,
