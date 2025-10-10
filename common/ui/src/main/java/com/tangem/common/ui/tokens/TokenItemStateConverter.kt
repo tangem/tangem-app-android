@@ -7,7 +7,9 @@ import com.tangem.core.ui.components.icons.IconTint
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.components.marketprice.utils.PriceChangeConverter
 import com.tangem.core.ui.components.token.state.TokenItemState
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
@@ -15,6 +17,8 @@ import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.yieldSupplyKey
 import com.tangem.domain.models.staking.YieldBalance
 import com.tangem.domain.staking.utils.getTotalWithRewardsStakingBalance
 import com.tangem.utils.StringsSigns.DASH_SIGN
@@ -35,10 +39,13 @@ import java.math.BigDecimal
  */
 class TokenItemStateConverter(
     private val appCurrency: AppCurrency,
+    private val apyMap: Map<String, String> = emptyMap(),
     private val iconStateProvider: (CryptoCurrencyStatus) -> CurrencyIconState = {
         CryptoCurrencyToIconStateConverter().convert(it)
     },
-    private val titleStateProvider: (CryptoCurrencyStatus) -> TokenItemState.TitleState = Companion::createTitleState,
+    private val titleStateProvider: (CryptoCurrencyStatus) -> TokenItemState.TitleState = {
+        createTitleState(it, apyMap)
+    },
     private val subtitleStateProvider: (CryptoCurrencyStatus) -> TokenItemState.SubtitleState? = {
         createSubtitleState(it, appCurrency)
     },
@@ -144,7 +151,10 @@ class TokenItemStateConverter(
         private fun CryptoCurrencyStatus.getStakedBalance() = (value.yieldBalance as? YieldBalance.Data)
             ?.getTotalWithRewardsStakingBalance(blockchainId = currency.network.rawId).orZero()
 
-        private fun createTitleState(currencyStatus: CryptoCurrencyStatus): TokenItemState.TitleState {
+        private fun createTitleState(
+            currencyStatus: CryptoCurrencyStatus,
+            apyMap: Map<String, String>,
+        ): TokenItemState.TitleState {
             return when (val value = currencyStatus.value) {
                 is CryptoCurrencyStatus.Loading,
                 is CryptoCurrencyStatus.MissedDerivation,
@@ -158,12 +168,31 @@ class TokenItemStateConverter(
                 is CryptoCurrencyStatus.NoQuote,
                 is CryptoCurrencyStatus.NoAccount,
                 -> {
+                    val earnApyText = resolveEarnApy(currencyStatus, apyMap)?.let { apy ->
+                        resourceReference(
+                            R.string.yield_module_earn_badge,
+                            wrappedList(apy),
+                        )
+                    }
                     TokenItemState.TitleState.Content(
                         text = stringReference(currencyStatus.currency.name),
                         hasPending = value.hasCurrentNetworkTransactions,
+                        earnApy = earnApyText,
                     )
                 }
             }
+        }
+
+        private fun resolveEarnApy(cryptoCurrencyStatus: CryptoCurrencyStatus, apyMap: Map<String, String>): String? {
+            if (apyMap.isEmpty()) return null
+
+            val isYieldSupplyActive = (cryptoCurrencyStatus.value as? CryptoCurrencyStatus.Loaded)
+                ?.yieldSupplyStatus?.isActive == true
+            if (isYieldSupplyActive) return null
+
+            val token = cryptoCurrencyStatus.currency as? CryptoCurrency.Token ?: return null
+
+            return apyMap[token.yieldSupplyKey()]
         }
 
         private fun createSubtitleState(
