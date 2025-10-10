@@ -56,17 +56,6 @@ internal fun YieldSupplyActiveContent(
                 .fillMaxWidth()
                 .padding(12.dp),
         ) {
-            Text(
-                text = stringResourceSafe(R.string.yield_module_earn_sheet_total_earnings_title),
-                style = TangemTheme.typography.subtitle2,
-                color = TangemTheme.colors.text.tertiary,
-            )
-            ResizableText(
-                text = state.totalEarnings.orMaskWithStars(isBalanceHidden).resolveReference(),
-                style = TangemTheme.typography.h2,
-                color = TangemTheme.colors.text.primary1,
-            )
-
             CurrentApy(state.apy)
             chartComponent.Content(Modifier.padding(bottom = 12.dp))
         }
@@ -85,22 +74,23 @@ internal fun YieldSupplyActiveContent(
 
 @Composable
 private fun CurrentApy(apy: TextReference?, modifier: Modifier = Modifier) {
-    Row(modifier = modifier.padding(vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+    Column(modifier = modifier.padding(vertical = 12.dp)) {
         Text(
-            modifier = modifier.weight(1.0f),
+            modifier = Modifier,
             text = stringResourceSafe(R.string.yield_module_earn_sheet_current_apy_title),
-            style = TangemTheme.typography.body1,
+            style = TangemTheme.typography.subtitle2,
             color = TangemTheme.colors.text.tertiary,
         )
         AnimatedContent(
+            modifier = Modifier.height(32.dp),
             targetState = apy?.resolveReference(),
             label = "CurrentApy",
         ) { apyText ->
             if (apyText == null) {
                 TextShimmer(
-                    modifier = modifier.width(56.dp),
+                    modifier = modifier.width(94.dp),
                     text = "",
-                    style = TangemTheme.typography.body1,
+                    style = TangemTheme.typography.head,
                 )
             } else {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -108,7 +98,7 @@ private fun CurrentApy(apy: TextReference?, modifier: Modifier = Modifier) {
                         painterResource(R.drawable.ic_arrow_up_8),
                         tint = TangemTheme.colors.text.accent,
                         contentDescription = null,
-                        modifier = Modifier.padding(end = 8.dp),
+                        modifier = Modifier.padding(end = 6.dp).size(12.dp),
                     )
                     Text(
                         modifier = modifier,
@@ -260,6 +250,7 @@ private class YieldSupplyActiveBottomSheetPreviewProvider : PreviewParameterProv
                 ),
                 subtitleLink = resourceReference(R.string.common_read_more),
                 notificationUM = NotificationUM.Error.InvalidAmount,
+                apy = stringReference("5,14%"),
             ),
         )
 }
