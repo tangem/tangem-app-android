@@ -241,7 +241,7 @@ private fun TangemPayTransaction(
                     bottom.linkTo(timestampItem.top)
                     start.linkTo(titleItem.end)
                     end.linkTo(parent.end)
-                    width = Dimension.fillToConstraints
+                    width = Dimension.preferredWrapContent
                 },
             )
 
@@ -363,7 +363,7 @@ private fun Amount(state: TangemPayTransactionState, isBalanceHidden: Boolean, m
         }
         is TangemPayTransactionState.Loading -> {
             RectangleShimmer(
-                modifier = modifier.size(width = TangemTheme.dimens.size40, height = TangemTheme.dimens.size12),
+                modifier = modifier.size(width = TangemTheme.dimens.size72, height = TangemTheme.dimens.size12),
             )
         }
     }
