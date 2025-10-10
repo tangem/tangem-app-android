@@ -312,6 +312,16 @@ sealed class AppRoute(val path: String) : Route {
     object CreateWalletSelection : AppRoute(path = "/create_wallet_selection")
 
     @Serializable
+    data class CreateWalletStart(
+        val mode: Mode,
+    ) : AppRoute(path = "/create_wallet_start") {
+        enum class Mode {
+            ColdWallet,
+            HotWallet,
+        }
+    }
+
+    @Serializable
     object CreateMobileWallet : AppRoute(path = "/create_mobile_wallet")
 
     @Serializable
