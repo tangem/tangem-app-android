@@ -86,8 +86,7 @@ internal class HomeModel @Inject constructor(
             onScanClick = ::onScanClick,
             onShopClick = ::onShopClick,
             onSearchTokensClick = ::onSearchTokensClick,
-            onCreateNewWalletClick = ::onCreateNewWalletClick,
-            onAddExistingWalletClick = ::onAddExistingWalletClick,
+            onGetStartedClick = ::onGetStartedClick,
         ),
     )
 
@@ -145,12 +144,8 @@ internal class HomeModel @Inject constructor(
         router.push(AppRoute.ManageTokens(Source.STORIES))
     }
 
-    private fun onCreateNewWalletClick() {
-        router.push(AppRoute.CreateWalletSelection)
-    }
-
-    private fun onAddExistingWalletClick() {
-        router.push(AppRoute.AddExistingWallet)
+    private fun onGetStartedClick() {
+        router.push(AppRoute.CreateWalletStart(mode = AppRoute.CreateWalletStart.Mode.ColdWallet))
     }
 
     private fun scanCard() {
@@ -240,7 +235,7 @@ internal class HomeModel @Inject constructor(
         _uiState.update { it.copy(scanInProgress = isLoading) }
     }
 
-    fun handleScanError(error: TangemError) {
+    private fun handleScanError(error: TangemError) {
         when (error) {
             is TangemSdkError.NfcFeatureIsUnavailable -> handleNfcFeatureUnavailable()
             is TangemSdkError -> Timber.e(error, "Scan error occurred")
