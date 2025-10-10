@@ -35,7 +35,7 @@ internal class PreviewTangemPayTxHistoryComponent(txHistoryUM: TangemPayTxHistor
                         amount = "-4.99 USD",
                         amountColor = { TangemTheme.colors.text.primary1 },
                         time = "16:41",
-                        title = stringReference("Starbucks"),
+                        title = stringReference("StarbucksStarbucksStarbucksStarbucks"),
                         subtitle = stringReference("Food&Drinks"),
                         iconUrl = null,
                     ),
