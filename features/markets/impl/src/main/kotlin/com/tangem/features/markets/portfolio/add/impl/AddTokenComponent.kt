@@ -1,6 +1,7 @@
 package com.tangem.features.markets.portfolio.add.impl
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
@@ -8,6 +9,7 @@ import com.tangem.core.decompose.factory.ComponentFactory
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.markets.TokenMarketParams
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.features.markets.portfolio.add.api.SelectedNetwork
 import com.tangem.features.markets.portfolio.add.api.SelectedPortfolio
 import com.tangem.features.markets.portfolio.add.impl.model.AddTokenModel
@@ -46,7 +48,7 @@ internal class AddTokenComponent @AssistedInject constructor(
     interface Callbacks {
         fun onChangeNetworkClick()
         fun onChangePortfolioClick()
-        fun onTokenAdded()
+        fun onTokenAdded(status: CryptoCurrencyStatus)
     }
 
     @AssistedFactory
