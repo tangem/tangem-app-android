@@ -4,7 +4,8 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
-import com.tangem.domain.markets.SaveMarketTokensUseCase
+import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
+import com.tangem.domain.account.status.usecase.SaveCryptoCurrenciesUseCase
 import com.tangem.domain.wallets.usecase.ColdWalletAndHasMissedDerivationsUseCase
 import com.tangem.features.markets.portfolio.add.api.SelectedNetwork
 import com.tangem.features.markets.portfolio.add.api.SelectedPortfolio
@@ -20,13 +21,15 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @ModelScoped
+@Suppress("LongParameterList")
 internal class AddTokenModel @Inject constructor(
     paramsContainer: ParamsContainer,
-    private val saveMarketTokensUseCase: SaveMarketTokensUseCase,
     private val uiBuilder: AddTokenUiBuilder,
     private val coldWalletAndHasMissedDerivationsUseCase: ColdWalletAndHasMissedDerivationsUseCase,
     override val dispatchers: CoroutineDispatcherProvider,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val saveCryptoCurrenciesUseCase: SaveCryptoCurrenciesUseCase,
+    private val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase,
 ) : Model() {
 
     private val params = paramsContainer.require<AddTokenComponent.Params>()
@@ -37,13 +40,10 @@ internal class AddTokenModel @Inject constructor(
         field = MutableStateFlow(value = null)
 
     init {
-        channelFlow {
-            val selectedNetwork = params.selectedNetwork.stateIn(this)
-            val selectedPortfolio = params.selectedPortfolio.stateIn(this)
-            combine(
-                flow = selectedNetwork,
-                flow2 = selectedPortfolio,
-            ) { selectedNetwork, selectedPortfolio ->
+        combine(
+            flow = params.selectedNetwork.distinctUntilChanged(),
+            flow2 = params.selectedPortfolio.distinctUntilChanged(),
+            transform = { selectedNetwork, selectedPortfolio ->
                 addTokenJob.cancel()
                 val isTangemIconVisible = needColdWalletInteraction(selectedNetwork, selectedPortfolio)
                 uiBuilder.updateContent(
@@ -52,29 +52,35 @@ internal class AddTokenModel @Inject constructor(
                     isTangemIconVisible = isTangemIconVisible,
                     onConfirmClick = { onAddClick(selectedNetwork, selectedPortfolio).saveIn(addTokenJob) },
                 )
-            }.collect { newUI -> send(newUI) }
-        }
-            .flowOn(dispatchers.default)
+            },
+        )
             .onEach { newUI -> uiState.value = newUI }
+            .flowOn(dispatchers.default)
             .launchIn(modelScope)
     }
 
-    private fun onAddClick(selectedNetwork: SelectedNetwork, selectedPortfolio: SelectedPortfolio) = modelScope.launch {
-        val um = uiState.value ?: return@launch
-        uiState.value = um.toggleProgress(true)
-        val blockchainNames = listOf(selectedNetwork.selectedNetwork)
-            .mapNotNull { BlockchainUtils.getNetworkInfo(it.networkId)?.name }
-        analyticsEventHandler.send(analyticsEventBuilder.addToPortfolioContinue(blockchainNames))
-        // todo account
-        saveMarketTokensUseCase(
-            userWalletId = selectedPortfolio.userWallet.walletId,
-            tokenMarketParams = params.marketParams,
-            addedNetworks = setOf(selectedNetwork.selectedNetwork),
-            removedNetworks = setOf(),
-        )
-        params.callbacks.onTokenAdded()
-        uiState.value = um.toggleProgress(false)
-    }
+    private fun onAddClick(selectedNetwork: SelectedNetwork, selectedPortfolio: SelectedPortfolio) =
+        modelScope.launch(dispatchers.default) {
+            val um = uiState.value ?: return@launch
+            uiState.value = um.toggleProgress(true)
+            val blockchainNames = listOf(selectedNetwork.selectedNetwork)
+                .mapNotNull { BlockchainUtils.getNetworkInfo(it.networkId)?.name }
+            analyticsEventHandler.send(analyticsEventBuilder.addToPortfolioContinue(blockchainNames))
+            val cryptoCurrency = selectedNetwork.cryptoCurrency
+            val accountId = selectedPortfolio.account.account.account.accountId
+            saveCryptoCurrenciesUseCase(
+                accountId = accountId,
+                add = listOf(cryptoCurrency),
+                remove = listOf(),
+            )
+            val status = getAccountCurrencyStatusUseCase.invokeSync(
+                userWalletId = accountId.userWalletId,
+                currencyId = cryptoCurrency.id,
+                network = cryptoCurrency.network,
+            ).getOrNull() ?: return@launch
+            params.callbacks.onTokenAdded(status.status)
+            uiState.value = um.toggleProgress(false)
+        }
 
     private suspend fun needColdWalletInteraction(
         selectedNetwork: SelectedNetwork,
