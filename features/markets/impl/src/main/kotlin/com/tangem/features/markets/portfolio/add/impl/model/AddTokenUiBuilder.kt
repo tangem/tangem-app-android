@@ -16,9 +16,10 @@ import com.tangem.features.markets.portfolio.add.api.SelectedNetwork
 import com.tangem.features.markets.portfolio.add.api.SelectedPortfolio
 import com.tangem.features.markets.portfolio.add.impl.AddTokenComponent
 import com.tangem.features.markets.portfolio.add.impl.ui.state.AddTokenUM
+import javax.inject.Inject
 
 @ModelScoped
-internal class AddTokenUiBuilder(
+internal class AddTokenUiBuilder @Inject constructor(
     paramsContainer: ParamsContainer,
 ) {
     private val params = paramsContainer.require<AddTokenComponent.Params>()
@@ -41,9 +42,10 @@ internal class AddTokenUiBuilder(
                 portfolioName = stringReference(selectedPortfolio.userWallet.name)
             }
             true -> {
-                portfolioName = selectedPortfolio.account.account.accountName.toUM().value
-                accountIcon = when (selectedPortfolio.account) {
-                    is AccountStatus.CryptoPortfolio -> selectedPortfolio.account.account.icon.toUM()
+                val accountStatus = selectedPortfolio.account.account
+                portfolioName = accountStatus.account.accountName.toUM().value
+                accountIcon = when (accountStatus) {
+                    is AccountStatus.CryptoPortfolio -> accountStatus.account.icon.toUM()
                 }
             }
         }
@@ -61,8 +63,11 @@ internal class AddTokenUiBuilder(
         isTangemIconVisible: Boolean,
         onConfirmClick: () -> Unit,
     ): AddTokenUM {
+        // its may happens when change portfolio after selected both params in line navigation
+        val isAvailableNetwork = selectedPortfolio.account.availableToAddNetworks
+            .any { selectedNetwork.selectedNetwork.networkId == it.networkId }
         val button = AddTokenUM.Button(
-            isEnabled = true,
+            isEnabled = isAvailableNetwork,
             showProgress = false,
             isTangemIconVisible = isTangemIconVisible,
             text = resourceReference(R.string.common_add),
