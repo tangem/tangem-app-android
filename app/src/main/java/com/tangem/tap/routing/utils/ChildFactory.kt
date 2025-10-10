@@ -13,6 +13,7 @@ import com.tangem.features.account.AccountCreateEditComponent
 import com.tangem.features.account.AccountDetailsComponent
 import com.tangem.features.account.ArchivedAccountListComponent
 import com.tangem.features.createwalletselection.CreateWalletSelectionComponent
+import com.tangem.features.createwalletstart.CreateWalletStartComponent
 import com.tangem.features.details.component.DetailsComponent
 import com.tangem.features.disclaimer.api.components.DisclaimerComponent
 import com.tangem.features.home.api.HomeComponent
@@ -99,6 +100,7 @@ internal class ChildFactory @Inject constructor(
     private val usedeskComponentFactory: UsedeskComponent.Factory,
     private val chooseManagedTokensComponentFactory: ChooseManagedTokensComponent.Factory,
     private val createWalletSelectionComponentFactory: CreateWalletSelectionComponent.Factory,
+    private val createWalletStartComponentFactory: CreateWalletStartComponent.Factory,
     private val createMobileWalletComponentFactory: CreateMobileWalletComponent.Factory,
     private val upgradeWalletComponentFactory: UpgradeWalletComponent.Factory,
     private val addExistingWalletComponentFactory: AddExistingWalletComponent.Factory,
@@ -474,6 +476,19 @@ internal class ChildFactory @Inject constructor(
                         analyticsCategoryName = route.analyticsCategoryName,
                     ),
                     componentFactory = chooseManagedTokensComponentFactory,
+                )
+            }
+            is AppRoute.CreateWalletStart -> {
+                val mode = when (route.mode) {
+                    AppRoute.CreateWalletStart.Mode.ColdWallet -> CreateWalletStartComponent.Mode.ColdWallet
+                    AppRoute.CreateWalletStart.Mode.HotWallet -> CreateWalletStartComponent.Mode.HotWallet
+                }
+                createComponentChild(
+                    context = context,
+                    params = CreateWalletStartComponent.Params(
+                        mode = mode,
+                    ),
+                    componentFactory = createWalletStartComponentFactory,
                 )
             }
             is AppRoute.CreateWalletSelection -> {
