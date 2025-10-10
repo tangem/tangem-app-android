@@ -1362,7 +1362,7 @@
   <string name="user_push_notification_agreement_argument_two_subtitle">Frühzeitiger Zugriff auf neue Funktionen und exklusive Angebote.</string>
   <string name="user_push_notification_agreement_argument_two_title">Updates zu Funktionen und Neuigkeiten</string>
   <string name="user_push_notification_agreement_header">Möchtest du Push-Benachrichtigungen verwenden?</string>
-  <string name="user_push_notification_banner_subtitle">Aktiviere Push-Benachrichtigungen und wir benachrichtigen Dich sofort, wenn Gelder eintreffen \n</string>
+  <string name="user_push_notification_banner_subtitle">Aktiviere Push-Benachrichtigungen und wir benachrichtigen Dich sofort, wenn Gelder eintreffen</string>
   <string name="user_push_notification_banner_title">Verpasse keine Transaktion</string>
   <string name="user_wallet_list_add_button">Neues Wallet hinzufügen</string>
   <string name="user_wallet_list_delete_prompt">Möchtest Du diese Wallet wirklich entfernen?</string>
