@@ -7,7 +7,6 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.isMultiCurrency
-import com.tangem.domain.tokens.GetWalletTotalBalanceUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.account.PortfolioFetcher
 import com.tangem.features.account.PortfolioFetcher.*
@@ -23,7 +22,6 @@ import kotlinx.coroutines.flow.*
 internal class DefaultPortfolioFetcher @AssistedInject constructor(
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
-    private val getWalletTotalBalanceUseCase: GetWalletTotalBalanceUseCase,
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     private val getWallets: GetWalletsUseCase,
     dispatchers: CoroutineDispatcherProvider,
@@ -80,14 +78,8 @@ internal class DefaultPortfolioFetcher @AssistedInject constructor(
         return combine(balanceFlows) { pairs -> pairs.toMap() }
     }
 
-    private fun walletAccountsBalancesFlow(wallet: UserWallet): Flow<Pair<UserWallet, PortfolioBalance>> = combine(
-        flow = accountStatusListFlow(wallet),
-        flow2 = getWalletTotalBalanceUseCase(wallet.walletId),
-        transform = { accountStatusList, walletBalance ->
-            val portfolioBalance = PortfolioBalance(walletBalance, accountStatusList)
-            wallet to portfolioBalance
-        },
-    )
+    private fun walletAccountsBalancesFlow(wallet: UserWallet): Flow<Pair<UserWallet, PortfolioBalance>> =
+        accountStatusListFlow(wallet).map { wallet to PortfolioBalance(wallet, it) }
 
     private fun accountStatusListFlow(wallet: UserWallet): Flow<AccountStatusList> =
         singleAccountStatusListSupplier(SingleAccountStatusListProducer.Params(wallet.walletId))
