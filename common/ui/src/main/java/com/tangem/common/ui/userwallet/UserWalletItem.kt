@@ -36,9 +36,6 @@ import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.account.AccountIconSize
 import com.tangem.core.ui.components.block.BlockCard
 import com.tangem.core.ui.components.block.TangemBlockCardColors
-import com.tangem.core.ui.components.label.Label
-import com.tangem.core.ui.components.label.entity.LabelStyle
-import com.tangem.core.ui.components.label.entity.LabelUM
 import com.tangem.core.ui.components.text.applyBladeBrush
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
@@ -76,8 +73,6 @@ fun UserWalletItem(
                 balance = state.balance,
             )
 
-            state.label?.let { Label(it) }
-
             when (state.endIcon) {
                 UserWalletItemUM.EndIcon.None -> Unit
                 UserWalletItemUM.EndIcon.Arrow -> {
@@ -91,6 +86,13 @@ fun UserWalletItem(
                     Icon(
                         imageVector = ImageVector.vectorResource(R.drawable.ic_check_24),
                         tint = TangemTheme.colors.icon.accent,
+                        contentDescription = null,
+                    )
+                }
+                UserWalletItemUM.EndIcon.Warning -> {
+                    Icon(
+                        imageVector = ImageVector.vectorResource(R.drawable.ic_alert_circle_24),
+                        tint = TangemTheme.colors.icon.warning,
                         contentDescription = null,
                     )
                 }
@@ -316,10 +318,7 @@ private class UserWalletItemUMPreviewProvider : PreviewParameterProvider<UserWal
                 name = stringReference("Mobile Wallet"),
                 information = getInformation(cardCount = 1),
                 balance = UserWalletItemUM.Balance.Locked,
-                label = LabelUM(
-                    text = resourceReference(R.string.hw_backup_no_backup),
-                    style = LabelStyle.WARNING,
-                ),
+                endIcon = UserWalletItemUM.EndIcon.Warning,
                 isEnabled = true,
                 onClick = {},
             ),
