@@ -104,7 +104,7 @@ internal class DefaultOnrampComponent @AssistedInject constructor(
                                 ),
                             )
                         },
-                        launchSepa = params.launchSepa,
+                        launchSepa = params.shouldLaunchSepa,
                     ),
                 )
             }
