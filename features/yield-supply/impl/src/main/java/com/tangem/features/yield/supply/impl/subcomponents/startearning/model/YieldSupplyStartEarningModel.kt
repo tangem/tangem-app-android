@@ -22,6 +22,7 @@ import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyActivateUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyEstimateEnterFeeUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetTokenStatusUseCase
+import com.tangem.domain.yield.supply.usecase.YieldSupplyMinAmountUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyStartEarningUseCase
 import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.impl.common.YieldSupplyAlertFactory
@@ -61,11 +62,13 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
     private val yieldSupplyAlertFactory: YieldSupplyAlertFactory,
     private val yieldSupplyActivateUseCase: YieldSupplyActivateUseCase,
     private val yieldSupplyGetTokenStatusUseCase: YieldSupplyGetTokenStatusUseCase,
+    private val yieldSupplyMinAmountUseCase: YieldSupplyMinAmountUseCase,
 ) : Model(), YieldSupplyNotificationsComponent.ModelCallback {
 
     private val params: YieldSupplyStartEarningComponent.Params = paramsContainer.require()
 
     private val cryptoCurrency = params.cryptoCurrency
+    private var minAmount: BigDecimal by Delegates.notNull()
     var userWallet: UserWallet by Delegates.notNull()
 
     val cryptoCurrencyStatusFlow: StateFlow<CryptoCurrencyStatus>
@@ -109,6 +112,14 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
             appCurrency = getSelectedAppCurrencyUseCase.invokeSync().getOrElse { AppCurrency.Default }
             subscribeOnCurrencyStatusUpdates()
             subscribeOnNotificationsErrors()
+        }
+    }
+
+    private suspend fun calculateMinAmount(userWallet: UserWallet, cryptoCurrencyStatus: CryptoCurrencyStatus) {
+        yieldSupplyMinAmountUseCase(userWallet, cryptoCurrencyStatus).onRight {
+            minAmount = it
+        }.onLeft {
+            minAmount = BigDecimal.ZERO
         }
     }
 
@@ -166,6 +177,7 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
                         updatedTransactionList = updatedTransactionList,
                         feeValue = feeSum,
                         maxNetworkFee = maxFee,
+                        minAmount = minAmount,
                     ),
                 )
                 yieldSupplyNotificationsUpdateTrigger.triggerUpdate(
@@ -276,6 +288,7 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
         feeCryptoCurrencyStatusFlow.update { feeCurrencyStatus }
 
         modelScope.launch {
+            calculateMinAmount(userWallet, currencyStatus)
             onLoadFee()
         }
     }
