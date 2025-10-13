@@ -110,7 +110,7 @@ sealed interface StakingIntegrationID {
 
             val integrationId = blockchain.integrationId ?: return null
 
-            if (integrationId is Coin && currencyId.contractAddress != null) {
+            if (integrationId is Coin && !currencyId.contractAddress.isNullOrBlank()) {
                 return null
             }
 

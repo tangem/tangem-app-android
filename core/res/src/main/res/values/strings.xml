@@ -135,7 +135,7 @@
   <string name="biometric_unavailable_warning">You have disabled biometric authentication on your phone and will not be able to save wallets in the app. To save wallets, please enable the biometric authentication function in your phone settings.</string>
   <string name="bitcoin_promo_activation_error">An error occurred while processing your promo code. Please try again later.</string>
   <string name="bitcoin_promo_activation_error_title">Activation error</string>
-  <string name="bitcoin_promo_activation_success">Your promo code was successfully activated. A reward will be credited to your account within 14 days.</string>
+  <string name="bitcoin_promo_activation_success">Your promo code was successfully activated. The reward will be credited to your Bitcoin account within 14 days.</string>
   <string name="bitcoin_promo_activation_success_title">Promo Code Activated</string>
   <string name="bitcoin_promo_already_activated">This promo code has already been used and cannot be activated again.</string>
   <string name="bitcoin_promo_already_activated_title">Code unavailable</string>
@@ -183,6 +183,7 @@
   <string name="common_add">Add</string>
   <string name="common_add_to_portfolio">Add to portfolio</string>
   <string name="common_add_token">Add token</string>
+  <string name="common_added">Added</string>
   <string name="common_address">Address</string>
   <string name="common_all">All</string>
   <string name="common_allow">Allow</string>
@@ -297,6 +298,7 @@
   <string name="common_range_with_space">%1$s — %2$s</string>
   <string name="common_read_more">Read more</string>
   <string name="common_receive">Receive</string>
+  <string name="common_recommended">Recommended</string>
   <string name="common_reject">Reject</string>
   <string name="common_reload">Reload</string>
   <string name="common_rename">Rename</string>
@@ -474,6 +476,7 @@
   <string name="express_provider">Provider</string>
   <string name="express_provider_best_rate">Best rate</string>
   <string name="express_provider_fca_warning_list">FCA Warning List</string>
+  <string name="express_provider_great_rate">Great rate</string>
   <string name="express_provider_in_fca_warning_list">Provider in FCA warning list</string>
   <string name="express_provider_max_amount">Available up to %s</string>
   <string name="express_provider_min_amount">Available from %s</string>
@@ -1386,9 +1389,10 @@
   <string name="user_push_notification_agreement_argument_two_subtitle">Early access to fresh features and exclusive offers.</string>
   <string name="user_push_notification_agreement_argument_two_title">Feature and News Updates</string>
   <string name="user_push_notification_agreement_header">Would you like to use\nPush-notifications?</string>
-  <string name="user_push_notification_banner_subtitle">Enable push notifications and we’ll notify you instantly when funds arrive\n</string>
-  <string name="user_push_notification_banner_title">Don’t Miss a Transaction</string>
+  <string name="user_push_notification_banner_subtitle">Enable push notifications to receive alerts when funds arrive in your wallet.</string>
+  <string name="user_push_notification_banner_title">Don\'t Miss a Transaction</string>
   <string name="user_wallet_list_add_button">Add new wallet</string>
+  <string name="user_wallet_list_delete_hw_prompt">If you delete this wallet without a backup, you will permanently lose access to your funds</string>
   <string name="user_wallet_list_delete_prompt">Are you sure you want to forget this wallet?</string>
   <string name="user_wallet_list_error_unable_to_unlock">An error has occurred, please scan your card or ring to log in</string>
   <string name="user_wallet_list_error_wallet_already_saved">This wallet has already been saved, you can add another one</string>
@@ -1465,6 +1469,13 @@
   <string name="visa_unlock_notification_button">Unlock</string>
   <string name="visa_unlock_notification_subtitle">Scan your card to unlock access</string>
   <string name="visa_unlock_notification_title">Needed unlock</string>
+  <string name="wallet_add_common_title">Choose how to add your wallet</string>
+  <string name="wallet_add_hardware_description">Scan your Tangem card or ring to restore it or import from another wallet.</string>
+  <string name="wallet_add_hardware_info_create">Create Hardware Wallet</string>
+  <string name="wallet_add_hardware_purchase">Want to purchase a Tangem Wallet?</string>
+  <string name="wallet_add_import_seed_phrase">Import seed phrase</string>
+  <string name="wallet_add_mobile_description">Restore your wallet on your phone or import from another app — convenient, but less secure than a Tangem card.</string>
+  <string name="wallet_add_support_title">What to choose?</string>
   <string name="wallet_balance_blockchain_unreachable_try_later">Blockchain is unreachable. Try later</string>
   <string name="wallet_balance_missing_derivation">Scan card or ring</string>
   <string name="wallet_been_activated_message">This wallet has already been activated earlier.\nIf it was not done by you, please contact support.\nTangem never sells wallets along with pre-generated access codes.</string>
@@ -1504,6 +1515,7 @@
   <string name="wallet_connect_subtitle">Connect to dApps</string>
   <string name="wallet_connect_title">WalletConnect</string>
   <string name="wallet_connect_toast_awaiting_session_proposal">Connecting may take a few seconds</string>
+  <string name="wallet_create_common_title">Create Tangem Wallet</string>
   <string name="wallet_create_hardware_badge">From %s</string>
   <string name="wallet_create_hardware_description">Buy Tangem Wallet—a physical device that securely stores your private key offline.</string>
   <string name="wallet_create_hardware_title">Hardware Wallet</string>
@@ -1780,13 +1792,15 @@
   <string name="yield_module_earn_sheet_total_earnings_title">Total earnings</string>
   <string name="yield_module_earn_sheet_transfers_title">Transfers to Aave</string>
   <string name="yield_module_explore_sheet_explore_aave_button_title">Explore Aave</string>
-  <string name="yield_module_explore_sheet_title">Your %s is deposited in Aave </string>
   <string name="yield_module_fee_policy_sheet_current_fee_note">This is the current supply fee on %s. The live cost will be shown on the Receive Screen.</string>
   <string name="yield_module_fee_policy_sheet_current_fee_title">Current fee</string>
   <string name="yield_module_fee_policy_sheet_description">All future %s top-ups will be supplied to Aave automatically, with the transaction fee deducted.</string>
   <string name="yield_module_fee_policy_sheet_max_fee_note">If network fees rise above maximum fee, the transaction won’t go through until they decrease. You can change this limit later.</string>
   <string name="yield_module_fee_policy_sheet_max_fee_title">Maximum fee</string>
+  <string name="yield_module_fee_policy_sheet_min_amount_note">The transaction fee must stay below 4% of your deposit. Tangem will transfer funds to Aave only once your balance is large enough to meet this condition. </string>
+  <string name="yield_module_fee_policy_sheet_min_amount_title">Minimal amount</string>
   <string name="yield_module_fee_policy_sheet_title">Fee policy</string>
+  <string name="yield_module_fee_policy_tangem_service_fee_title">Tangem also takes a 3% service fee on the yield earned.</string>
   <string name="yield_module_high_fee_error">Network fee is too high right now. Waiting until it falls below your limit.</string>
   <string name="yield_module_historical_returns">Historical returns</string>
   <string name="yield_module_main_view_approve_notification_description">Write description here. In one, two or three lines will be awesome. [PLACEHOLDER]</string>
@@ -1822,7 +1836,8 @@
   <string name="yield_module_supply_apr">Supply APR</string>
   <string name="yield_module_token_details_earn_notification_apy">APY</string>
   <string name="yield_module_token_details_earn_notification_description">Make your money work — earn interest on your balance.</string>
-  <string name="yield_module_token_details_earn_notification_earning_on_your_balance_title">Earning on your balance</string>
+  <string name="yield_module_token_details_earn_notification_earning_on_your_balance_subtitle">Interest accrues automatically</string>
+  <string name="yield_module_token_details_earn_notification_earning_on_your_balance_title">Aave lending</string>
   <string name="yield_module_token_details_earn_notification_processing">Processing your deposit</string>
   <string name="yield_module_token_details_earn_notification_title">Earn %1$s%% per year</string>
   <string name="yield_module_transfer_mode_automatic">Automatic</string>

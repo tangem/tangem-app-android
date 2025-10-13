@@ -1,18 +1,22 @@
 package com.tangem.feature.wallet.child.wallet.model.intents
 
+import android.os.Build
 import arrow.core.getOrElse
 import com.tangem.common.TangemBlogUrlBuilder
-import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.AppRoute.*
 import com.tangem.common.routing.AppRouter
+import com.tangem.common.ui.notifications.NotificationId
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
+import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.core.ui.components.bottomsheets.message.*
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.domain.wallets.usecase.DerivePublicKeysUseCase
+import com.tangem.core.ui.message.bottomSheetMessage
 import com.tangem.domain.card.SetCardWasScannedUseCase
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
-import com.tangem.domain.core.wallets.UserWalletsListRepository
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -20,21 +24,27 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.requireColdWallet
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
+import com.tangem.domain.notifications.SetShouldShowNotificationUseCase
+import com.tangem.domain.notifications.repository.NotificationsRepository
 import com.tangem.domain.onramp.model.OnrampSource
 import com.tangem.domain.promo.ShouldShowPromoWalletUseCase
 import com.tangem.domain.promo.models.PromoId
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.settings.NeverToSuggestRateAppUseCase
 import com.tangem.domain.settings.RemindToRateAppLaterUseCase
+import com.tangem.domain.settings.repositories.PermissionRepository
 import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
 import com.tangem.domain.tokens.model.analytics.TokenSwapPromoAnalyticsEvent
 import com.tangem.domain.wallets.legacy.UserWalletsListManager.Lockable.UnlockType
 import com.tangem.domain.wallets.models.UnlockWalletsError
+import com.tangem.domain.wallets.usecase.DerivePublicKeysUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.SeedPhraseNotificationUseCase
 import com.tangem.domain.wallets.usecase.UnlockWalletsUseCase
+import com.tangem.feature.wallet.child.wallet.model.WalletActivationBannerType
 import com.tangem.feature.wallet.impl.R
+import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent.Basic
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent.MainScreen
 import com.tangem.feature.wallet.presentation.wallet.domain.ScanCardToUnlockWalletClickHandler
@@ -46,6 +56,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.WalletEvent
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.CloseBottomSheetTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
+import com.tangem.features.pushnotifications.api.analytics.PushNotificationAnalyticEvents
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -54,6 +65,7 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
+@Suppress("TooManyFunctions")
 internal interface WalletWarningsClickIntents {
 
     fun onAddBackupCardClick()
@@ -92,10 +104,14 @@ internal interface WalletWarningsClickIntents {
 
     fun onSeedPhraseSecondNotificationReject()
 
-    fun onFinishWalletActivationClick()
+    fun onAllowPermissions()
+
+    fun onDenyPermissions()
+
+    fun onFinishWalletActivationClick(type: WalletActivationBannerType)
 }
 
-@Suppress("LargeClass", "LongParameterList")
+@Suppress("LargeClass", "LongParameterList", "TooManyFunctions")
 @ModelScoped
 internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     private val stateHolder: WalletStateController,
@@ -121,7 +137,37 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     private val appRouter: AppRouter,
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
     private val userWalletsListRepository: UserWalletsListRepository,
+    private val setShouldShowNotificationUseCase: SetShouldShowNotificationUseCase,
+    private val notificationsRepository: NotificationsRepository,
+    private val permissionRepository: PermissionRepository,
+    private val messageSender: UiMessageSender,
 ) : BaseWalletClickIntents(), WalletWarningsClickIntents {
+
+    private val finalizeWalletSetupAlertBS
+        get() = bottomSheetMessage {
+            infoBlock {
+                icon(R.drawable.img_knight_shield_32) {
+                    type = MessageBottomSheetUMV2.Icon.Type.Warning
+                    backgroundType = MessageBottomSheetUMV2.Icon.BackgroundType.SameAsTint
+                }
+                title = resourceReference(R.string.hw_activation_need_title)
+                body = resourceReference(R.string.hw_activation_need_description)
+            }
+            secondaryButton {
+                text = resourceReference(R.string.common_later)
+                onClick {
+                    closeBs()
+                }
+            }
+            primaryButton {
+                text = resourceReference(R.string.hw_activation_need_backup)
+                onClick {
+                    val userWallet = getSelectedUserWallet() ?: return@onClick
+                    appRouter.push(WalletActivation(userWallet.walletId))
+                    closeBs()
+                }
+            }
+        }
 
     override fun onAddBackupCardClick() {
         analyticsEventHandler.send(MainScreen.NoticeBackupYourWalletTapped)
@@ -303,7 +349,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
         when (promoId) {
             PromoId.Referral -> {
                 analyticsEventHandler.send(MainScreen.ReferralPromoButtonParticipate)
-                appRouter.push(AppRoute.ReferralProgram(userWalletId = userWallet.walletId))
+                appRouter.push(ReferralProgram(userWalletId = userWallet.walletId))
             }
             PromoId.Sepa -> {
                 analyticsEventHandler.send(
@@ -315,7 +361,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
                 )
                 cryptoCurrency ?: return
                 appRouter.push(
-                    AppRoute.Onramp(
+                    Onramp(
                         userWalletId = userWallet.walletId,
                         currency = cryptoCurrency,
                         source = OnrampSource.SEPA_BANNER,
@@ -417,9 +463,63 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
         }
     }
 
-    override fun onFinishWalletActivationClick() {
-        val userWallet = getSelectedUserWallet() ?: return
-        appRouter.push(AppRoute.WalletActivation(userWallet.walletId))
+    override fun onFinishWalletActivationClick(type: WalletActivationBannerType) {
+        when (type) {
+            WalletActivationBannerType.Attention -> {
+                val userWallet = getSelectedUserWallet() ?: return
+                appRouter.push(WalletActivation(userWallet.walletId))
+            }
+            WalletActivationBannerType.Warning -> {
+                messageSender.send(finalizeWalletSetupAlertBS)
+            }
+        }
+    }
+
+    override fun onAllowPermissions() {
+        analyticsEventHandler.send(WalletScreenAnalyticsEvent.PushBannerPromo.ButtonAllowPush)
+        if (isNotificationsPermissionGranted()) {
+            updateSubscribeOnPushPermissions(true)
+        } else {
+            walletEventSender.send(
+                event = WalletEvent.RequestPushPermissions(
+                    onAllow = {
+                        updateSubscribeOnPushPermissions(true)
+                        analyticsEventHandler.send(
+                            PushNotificationAnalyticEvents.PermissionStatus(isAllowed = true),
+                        )
+                    },
+                    onDeny = {
+                        updateSubscribeOnPushPermissions(false)
+                        analyticsEventHandler.send(
+                            PushNotificationAnalyticEvents.PermissionStatus(isAllowed = false),
+                        )
+                    },
+                ),
+            )
+        }
+    }
+
+    override fun onDenyPermissions() {
+        analyticsEventHandler.send(WalletScreenAnalyticsEvent.PushBannerPromo.ButtonLaterPush)
+        updateSubscribeOnPushPermissions(false)
+    }
+
+    private fun updateSubscribeOnPushPermissions(shouldAllow: Boolean) {
+        modelScope.launch {
+            notificationsRepository.setUserAllowToSubscribeOnPushNotifications(shouldAllow)
+            setShouldShowNotificationUseCase(
+                key = NotificationId.EnablePushesReminderNotification.key,
+                value = false,
+            )
+        }
+    }
+
+    private fun isNotificationsPermissionGranted(): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            permissionRepository.hasRuntimePermission(android.Manifest.permission.POST_NOTIFICATIONS)
+        } else {
+            true
+        }
     }
 
     private suspend fun fetchCryptoCurrencies(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) {
