@@ -125,7 +125,6 @@ internal object PortfolioSelectorPreviewData {
                 name = accountName,
                 icon = AccountIconPreviewData.randomAccountIcon(),
             ),
-            label = null,
         )
 
     private val walletItem: UserWalletItemUM
@@ -137,7 +136,6 @@ internal object PortfolioSelectorPreviewData {
             isEnabled = true,
             onClick = { },
             imageState = ImageState.MobileWallet,
-            label = null,
         )
 
     private val lockedWalletItem: UserWalletItemUM
