@@ -1,6 +1,8 @@
 package com.tangem.features.yield.supply.impl.subcomponents.approve.model
 
 import arrow.core.getOrElse
+import com.tangem.blockchain.common.TransactionData
+import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -194,40 +196,47 @@ internal class YieldSupplyApproveModel @Inject constructor(
                 }
             },
             ifRight = { fee ->
-                val feeCryptoValue = fee.normal.amount.value
+                applyFee(fee, approvalTransitionData)
+            },
+        )
+    }
 
-                val feeFiatValue = feeCryptoCurrencyStatus.value.fiatRate?.let { rate ->
-                    feeCryptoValue?.multiply(rate)
-                }
-                val cryptoFee = feeCryptoValue.format { crypto(feeCryptoCurrencyStatus.currency) }
-                val fiatFee = feeFiatValue.format { fiat(appCurrency.code, appCurrency.symbol) }
+    private suspend fun applyFee(transactionFee: TransactionFee, approvalTransitionData: TransactionData.Uncompiled) {
+        val feeCryptoValue = transactionFee.normal.amount.value
 
-                uiState.update {
-                    if (cryptoCurrencyStatus.value is CryptoCurrencyStatus.Loading) {
-                        it.copy(yieldSupplyFeeUM = YieldSupplyFeeUM.Loading)
-                    } else {
-                        it.copy(
-                            isPrimaryButtonEnabled = true,
-                            yieldSupplyFeeUM = YieldSupplyFeeUM.Content(
-                                transactionDataList = persistentListOf(approvalTransitionData.copy(fee = fee.normal)),
-                                feeValue = combinedReference(
-                                    stringReference(cryptoFee),
-                                    stringReference(" $DOT "),
-                                    stringReference(fiatFee),
-                                ),
-                                currentNetworkFeeValue = TextReference.EMPTY,
-                                maxNetworkFeeValue = TextReference.EMPTY,
-                            ),
-                        )
-                    }
-                }
-                yieldSupplyNotificationsUpdateTrigger.triggerUpdate(
-                    data = YieldSupplyNotificationData(
-                        feeValue = feeCryptoValue,
-                        feeError = null,
+        val feeFiatValue = feeCryptoCurrencyStatus.value.fiatRate?.let { rate ->
+            feeCryptoValue?.multiply(rate)
+        }
+        val cryptoFee = feeCryptoValue.format { crypto(feeCryptoCurrencyStatus.currency) }
+        val fiatFee = feeFiatValue.format { fiat(appCurrency.code, appCurrency.symbol) }
+
+        uiState.update {
+            if (cryptoCurrencyStatus.value is CryptoCurrencyStatus.Loading) {
+                it.copy(yieldSupplyFeeUM = YieldSupplyFeeUM.Loading)
+            } else {
+                it.copy(
+                    isPrimaryButtonEnabled = true,
+                    yieldSupplyFeeUM = YieldSupplyFeeUM.Content(
+                        transactionDataList = persistentListOf(
+                            approvalTransitionData.copy(fee = transactionFee.normal),
+                        ),
+                        feeValue = combinedReference(
+                            stringReference(cryptoFee),
+                            stringReference(" $DOT "),
+                            stringReference(fiatFee),
+                        ),
+                        currentNetworkFeeValue = TextReference.EMPTY,
+                        maxNetworkFeeValue = TextReference.EMPTY,
+                        minAmountFeeValue = TextReference.EMPTY,
                     ),
                 )
-            },
+            }
+        }
+        yieldSupplyNotificationsUpdateTrigger.triggerUpdate(
+            data = YieldSupplyNotificationData(
+                feeValue = feeCryptoValue,
+                feeError = null,
+            ),
         )
     }
 
