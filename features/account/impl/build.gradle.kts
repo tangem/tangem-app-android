@@ -14,6 +14,7 @@ android {
 dependencies {
     /** Api */
     implementation(projects.features.account.api)
+    implementation(projects.features.wallet.api)
 
     /** Core modules */
     implementation(projects.core.analytics)
@@ -29,6 +30,7 @@ dependencies {
     /** Domain */
     implementation(projects.domain.models)
     implementation(projects.domain.account)
+    implementation(projects.domain.account.status)
     implementation(projects.domain.core)
     implementation(projects.domain.appCurrency)
     implementation(projects.domain.appCurrency.models)
@@ -38,6 +40,9 @@ dependencies {
     implementation(projects.domain.balanceHiding.models)
     implementation(projects.domain.wallets)
     implementation(projects.domain.wallets.models)
+
+    /** Tangem libraries */
+    implementation(tangemDeps.card.core)
 
     /** Common */
     implementation(projects.common.ui)

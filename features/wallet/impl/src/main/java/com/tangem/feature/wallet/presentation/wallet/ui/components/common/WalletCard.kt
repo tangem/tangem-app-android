@@ -350,6 +350,7 @@ private fun AdditionalInfoText(text: TextReference) {
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
         style = TangemTheme.typography.caption2,
+        modifier = Modifier.testTag(MainScreenTestTags.DEVICES_COUNT),
     )
 }
 

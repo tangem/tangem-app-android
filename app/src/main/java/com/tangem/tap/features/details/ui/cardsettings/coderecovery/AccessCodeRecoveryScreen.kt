@@ -16,8 +16,8 @@ import com.tangem.wallet.R
 @Composable
 fun AccessCodeRecoveryScreen(state: AccessCodeRecoveryScreenState, onBackClick: () -> Unit) {
     SettingsScreensScaffold(
-        content = { AccessCodeRecoveryOptions(state = state) },
         onBackClick = onBackClick,
+        content = { AccessCodeRecoveryOptions(state = state) },
     )
 }
 
@@ -38,13 +38,13 @@ fun AccessCodeRecoveryOptions(state: AccessCodeRecoveryScreenState) {
         DetailsRadioButtonElement(
             title = stringResourceSafe(id = R.string.common_enabled),
             subtitle = stringResourceSafe(id = R.string.card_settings_access_code_recovery_enabled_description),
-            selected = state.enabledSelection,
+            isSelected = state.isEnabledSelection,
             onClick = { state.onOptionClick(true) },
         )
         DetailsRadioButtonElement(
             title = stringResourceSafe(id = R.string.common_disabled),
             subtitle = stringResourceSafe(id = R.string.card_settings_access_code_recovery_disabled_description),
-            selected = !state.enabledSelection,
+            isSelected = !state.isEnabledSelection,
             onClick = { state.onOptionClick(false) },
         )
 

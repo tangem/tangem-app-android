@@ -21,6 +21,7 @@ import java.math.BigDecimal
 object BlockchainUtils {
 
     private const val XRP_X_ADDRESS = 'X'
+    const val SOLANA_TRANSACTION_SIZE_THRESHOLD_BYTES = 930
 
     /** Decodes XRP Blockchain address */
     fun decodeRippleXAddress(xAddress: String, blockchainId: String): XrpTaggedAddress? {

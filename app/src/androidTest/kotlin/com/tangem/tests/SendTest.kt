@@ -1,7 +1,9 @@
 package com.tangem.tests
 
 import com.tangem.common.BaseTestCase
+import com.tangem.common.extensions.SwipeDirection
 import com.tangem.common.extensions.clickWithAssertion
+import com.tangem.common.extensions.swipeVertical
 import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.scenarios.openMainScreen
@@ -41,6 +43,9 @@ class SendTest : BaseTestCase() {
             }
             step("Synchronize addresses") {
                 synchronizeAddresses(balance)
+            }
+            step("Swipe up") {
+                swipeVertical(SwipeDirection.UP)
             }
             step("Click on token with name: $currencyName") {
                 onMainScreen { tokenWithTitleAndAddress(currencyName).clickWithAssertion() }
