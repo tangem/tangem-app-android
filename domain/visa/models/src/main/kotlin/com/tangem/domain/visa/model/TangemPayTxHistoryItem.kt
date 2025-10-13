@@ -19,7 +19,7 @@ sealed class TangemPayTxHistoryItem {
         val merchantName: String,
         val enrichedMerchantCategory: String?,
         val merchantCategory: String,
-        val status: String,
+        val status: Status,
         val enrichedMerchantIconUrl: String?,
     ) : TangemPayTxHistoryItem()
 
@@ -36,4 +36,12 @@ sealed class TangemPayTxHistoryItem {
         override val amount: BigDecimal,
         override val currency: Currency,
     ) : TangemPayTxHistoryItem()
+
+    enum class Status {
+        PENDING,
+        RESERVED,
+        COMPLETED,
+        DECLINED,
+        UNKNOWN,
+    }
 }
