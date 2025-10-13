@@ -166,6 +166,7 @@ class Wallet2CardConfigTest {
         Blockchain.PepecoinTestnet to EllipticCurve.Secp256k1,
         Blockchain.Hyperliquid to EllipticCurve.Secp256k1,
         Blockchain.HyperliquidTestnet to EllipticCurve.Secp256k1,
+        Blockchain.Bob to EllipticCurve.Secp256k1,
     )
 
     @Test
