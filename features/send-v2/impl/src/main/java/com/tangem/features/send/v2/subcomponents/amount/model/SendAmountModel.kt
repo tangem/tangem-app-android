@@ -21,6 +21,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.exchange.RampStateManager
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.isMultiCurrency
@@ -118,42 +119,7 @@ internal class SendAmountModel @Inject constructor(
 
     private fun subscribeOnBalanceHiddenUpdates() {
         params.isBalanceHidingFlow.onEach { isBalanceHidden ->
-            _uiState.update(
-                AmountBoundaryUpdateTransformer(
-                    cryptoCurrencyStatus = cryptoCurrencyStatus,
-                    maxEnterAmount = maxAmountBoundary,
-                    appCurrency = appCurrency,
-                    isBalanceHidden = params.isBalanceHidingFlow.value,
-                ),
-            )
-        }.launchIn(modelScope)
-    }
-
-    private fun subscribeOnCryptoCurrencyStatusFlow() {
-        params.cryptoCurrencyStatusFlow
-            .onEach { newCryptoCurrencyStatus ->
-                cryptoCurrencyStatus = newCryptoCurrencyStatus
-                maxAmountBoundary = MaxEnterAmountConverter().convert(cryptoCurrencyStatus)
-                initMinBoundary()
-            }
-            .launchIn(modelScope)
-    }
-
-    private fun initMinBoundary() {
-        modelScope.launch {
-            minAmountBoundary = getMinimumTransactionAmountSyncUseCase(
-                userWalletId = params.userWalletId,
-                cryptoCurrencyStatus = cryptoCurrencyStatus,
-            ).getOrNull()?.let {
-                EnterAmountBoundary(
-                    amount = it,
-                    fiatRate = cryptoCurrencyStatus.value.fiatRate.orZero(),
-                )
-            }
-
-            appCurrency = getSelectedAppCurrencyUseCase.invokeSync().getOrElse { AppCurrency.Default }
-
-            if (uiState.value is AmountState.Data) {
+            if (cryptoCurrencyStatus.value != CryptoCurrencyStatus.Loading) {
                 _uiState.update(
                     AmountBoundaryUpdateTransformer(
                         cryptoCurrencyStatus = cryptoCurrencyStatus,
@@ -162,13 +128,61 @@ internal class SendAmountModel @Inject constructor(
                         isBalanceHidden = params.isBalanceHidingFlow.value,
                     ),
                 )
-            } else {
-                initialState()
             }
+        }.launchIn(modelScope)
+    }
+
+    private fun subscribeOnCryptoCurrencyStatusFlow() {
+        combine(
+            flow = params.cryptoCurrencyStatusFlow.distinctUntilChanged { old, new ->
+                old.value.amount == new.value.amount
+            }, // Check only balance changes,
+            flow2 = params.accountFlow,
+            flow3 = params.isAccountModeFlow,
+        ) { newCryptoCurrencyStatus, account, isAccountsMode ->
+            cryptoCurrencyStatus = newCryptoCurrencyStatus
+            maxAmountBoundary = MaxEnterAmountConverter().convert(cryptoCurrencyStatus)
+            initMinBoundary(cryptoCurrencyStatus, account, isAccountsMode)
+        }.flowOn(dispatchers.default)
+            .launchIn(modelScope)
+    }
+
+    private suspend fun initMinBoundary(
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+        account: Account.CryptoPortfolio?,
+        isAccountsMode: Boolean,
+    ) {
+        minAmountBoundary = getMinimumTransactionAmountSyncUseCase(
+            userWalletId = params.userWalletId,
+            cryptoCurrencyStatus = cryptoCurrencyStatus,
+        ).getOrNull()?.let {
+            EnterAmountBoundary(
+                amount = it,
+                fiatRate = cryptoCurrencyStatus.value.fiatRate.orZero(),
+            )
+        }
+
+        appCurrency = getSelectedAppCurrencyUseCase.invokeSync().getOrElse { AppCurrency.Default }
+
+        if (uiState.value is AmountState.Data) {
+            _uiState.update(
+                AmountBoundaryUpdateTransformer(
+                    cryptoCurrencyStatus = cryptoCurrencyStatus,
+                    maxEnterAmount = maxAmountBoundary,
+                    appCurrency = appCurrency,
+                    isBalanceHidden = params.isBalanceHidingFlow.value,
+                ),
+            )
+        } else {
+            initialState(cryptoCurrencyStatus, account, isAccountsMode)
         }
     }
 
-    private fun initialState() {
+    private fun initialState(
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+        @Suppress("UnusedParameter") account: Account.CryptoPortfolio?,
+        @Suppress("UnusedParameter") isAccountsMode: Boolean,
+    ) {
         if (uiState.value is AmountState.Empty && userWallet != null) {
             val isOnlyOneWallet = getWalletsUseCase.invokeSync().size == 1
             _uiState.update {
