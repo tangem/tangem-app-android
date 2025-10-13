@@ -41,6 +41,30 @@ internal class PreviewTangemPayTxHistoryComponent(txHistoryUM: TangemPayTxHistor
                     ),
                 ),
                 TangemPayTxHistoryUM.TangemPayTxHistoryItemUM.Transaction(
+                    transaction = TangemPayTransactionState.Content.Payment(
+                        id = "signiferumque",
+                        amount = "-126.20 USD",
+                        amountColor = { TangemTheme.colors.text.primary1 },
+                        time = "12:04",
+                        onClick = {},
+                        title = stringReference("Wallmart"),
+                        subtitle = stringReference("Supermarket"),
+                        isIncome = false,
+                    ),
+                ),
+                TangemPayTxHistoryUM.TangemPayTxHistoryItemUM.Transaction(
+                    transaction = TangemPayTransactionState.Content.Payment(
+                        id = "signiferumque",
+                        amount = "+126.20 USD",
+                        amountColor = { TangemTheme.colors.text.accent },
+                        time = "12:04",
+                        onClick = {},
+                        title = stringReference("Wallmart"),
+                        subtitle = stringReference("Supermarket"),
+                        isIncome = true,
+                    ),
+                ),
+                TangemPayTxHistoryUM.TangemPayTxHistoryItemUM.Transaction(
                     transaction = TangemPayTransactionState.Content.Spend(
                         id = "signiferumque",
                         amount = "-126.20 USD",
