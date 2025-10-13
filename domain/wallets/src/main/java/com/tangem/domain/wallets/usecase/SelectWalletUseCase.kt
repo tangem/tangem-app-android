@@ -4,12 +4,12 @@ import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.right
 import com.tangem.common.CompletionResult
-import com.tangem.domain.core.wallets.error.SelectWalletError
-import com.tangem.domain.redux.ReduxStateHolder
-import com.tangem.domain.wallets.legacy.UserWalletsListManager
+import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.common.wallets.error.SelectWalletError
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.core.wallets.UserWalletsListRepository
+import com.tangem.domain.redux.ReduxStateHolder
+import com.tangem.domain.wallets.legacy.UserWalletsListManager
 
 /**
  * Use case for selecting wallet
