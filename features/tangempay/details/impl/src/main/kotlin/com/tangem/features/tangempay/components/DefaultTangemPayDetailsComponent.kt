@@ -23,14 +23,19 @@ internal class DefaultTangemPayDetailsComponent @AssistedInject constructor(
     private val model: TangemPayDetailsModel = getOrCreateModel(params = params)
     private val txHistoryComponent = DefaultTangemPayTxHistoryComponent(
         appComponentContext = child("txHistoryComponent"),
-        params = DefaultTangemPayTxHistoryComponent.Params(userWalletId = params.userWalletId),
+        params = DefaultTangemPayTxHistoryComponent.Params(customerWalletAddress = params.customerWalletAddress),
     )
 
     @Composable
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
+
         NavigationBar3ButtonsScrim()
-        TangemPayDetailsScreen(state = state, txHistoryComponent = txHistoryComponent, modifier = modifier)
+        TangemPayDetailsScreen(
+            state = state,
+            txHistoryComponent = txHistoryComponent,
+            modifier = modifier,
+        )
     }
 
     @AssistedFactory

@@ -1,11 +1,12 @@
 package com.tangem.tap.di.domain
 
+import com.tangem.domain.blockaid.BlockAidGasEstimate
 import com.tangem.domain.transaction.FeeRepository
 import com.tangem.domain.transaction.error.FeeErrorResolver
+import com.tangem.domain.yield.supply.YieldSupplyErrorResolver
+import com.tangem.domain.yield.supply.YieldSupplyMarketRepository
 import com.tangem.domain.yield.supply.YieldSupplyTransactionRepository
-import com.tangem.domain.yield.supply.usecase.YieldSupplyEstimateEnterFeeUseCase
-import com.tangem.domain.yield.supply.usecase.YieldSupplyStartEarningUseCase
-import com.tangem.domain.yield.supply.usecase.YieldSupplyStopEarningUseCase
+import com.tangem.domain.yield.supply.usecase.*
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -20,9 +21,11 @@ internal object YieldSupplyDomainModule {
     @Singleton
     fun provideYieldSupplyStartEarningUseCase(
         yieldSupplyTransactionRepository: YieldSupplyTransactionRepository,
+        yieldSupplyErrorResolver: YieldSupplyErrorResolver,
     ): YieldSupplyStartEarningUseCase {
         return YieldSupplyStartEarningUseCase(
             yieldSupplyTransactionRepository = yieldSupplyTransactionRepository,
+            yieldSupplyErrorResolver = yieldSupplyErrorResolver,
         )
     }
 
@@ -30,9 +33,11 @@ internal object YieldSupplyDomainModule {
     @Singleton
     fun provideYieldSupplyStopEarningUseCase(
         yieldSupplyTransactionRepository: YieldSupplyTransactionRepository,
+        yieldSupplyErrorResolver: YieldSupplyErrorResolver,
     ): YieldSupplyStopEarningUseCase {
         return YieldSupplyStopEarningUseCase(
             yieldSupplyTransactionRepository = yieldSupplyTransactionRepository,
+            yieldSupplyErrorResolver = yieldSupplyErrorResolver,
         )
     }
 
@@ -41,10 +46,66 @@ internal object YieldSupplyDomainModule {
     fun provideYieldSupplyEstimateEnterFeeUseCase(
         feeRepository: FeeRepository,
         feeErrorResolver: FeeErrorResolver,
+        blockAidGasEstimate: BlockAidGasEstimate,
     ): YieldSupplyEstimateEnterFeeUseCase {
         return YieldSupplyEstimateEnterFeeUseCase(
             feeRepository = feeRepository,
             feeErrorResolver = feeErrorResolver,
+            blockAidGasEstimate = blockAidGasEstimate,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideYieldSupplyGetContractAddressUseCase(
+        yieldSupplyTransactionRepository: YieldSupplyTransactionRepository,
+        yieldSupplyErrorResolver: YieldSupplyErrorResolver,
+    ): YieldSupplyGetContractAddressUseCase {
+        return YieldSupplyGetContractAddressUseCase(
+            yieldSupplyTransactionRepository = yieldSupplyTransactionRepository,
+            yieldSupplyErrorResolver = yieldSupplyErrorResolver,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideYieldSupplyGetProtocolBalanceUseCase(
+        yieldSupplyTransactionRepository: YieldSupplyTransactionRepository,
+        yieldSupplyErrorResolver: YieldSupplyErrorResolver,
+    ): YieldSupplyGetProtocolBalanceUseCase {
+        return YieldSupplyGetProtocolBalanceUseCase(
+            yieldSupplyTransactionRepository = yieldSupplyTransactionRepository,
+            yieldSupplyErrorResolver = yieldSupplyErrorResolver,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideYieldSupplyGetTokenStatusUseCase(
+        yieldSupplyMarketRepository: YieldSupplyMarketRepository,
+    ): YieldSupplyGetTokenStatusUseCase {
+        return YieldSupplyGetTokenStatusUseCase(
+            yieldSupplyMarketRepository = yieldSupplyMarketRepository,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideYieldSupplyGetApyUseCase(
+        yieldSupplyMarketRepository: YieldSupplyMarketRepository,
+    ): YieldSupplyGetApyUseCase {
+        return YieldSupplyGetApyUseCase(
+            yieldSupplyMarketRepository = yieldSupplyMarketRepository,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideYieldSupplyGetChartUseCase(
+        yieldSupplyMarketRepository: YieldSupplyMarketRepository,
+    ): YieldSupplyGetChartUseCase {
+        return YieldSupplyGetChartUseCase(
+            yieldSupplyMarketRepository = yieldSupplyMarketRepository,
         )
     }
 }
