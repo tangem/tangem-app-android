@@ -38,9 +38,7 @@ internal fun LazyListScope.buttons(
         key = AMOUNT_BUTTONS_KEY,
     ) {
         val hapticFeedback = LocalHapticFeedback.current
-        Row(
-            modifier = Modifier.padding(top = TangemTheme.dimens.spacing12),
-        ) {
+        Row {
             if (segmentedButtonConfig.isNotEmpty()) {
                 SegmentedButtons(
                     modifier = Modifier
