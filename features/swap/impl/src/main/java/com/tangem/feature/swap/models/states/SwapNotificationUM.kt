@@ -208,7 +208,7 @@ internal object SwapNotificationUM {
             ),
             iconResId = R.drawable.ic_locked_24,
             buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
-                text = TextReference.Res(R.string.common_approve),
+                text = TextReference.Res(R.string.give_permission_title),
                 onClick = onApproveClick,
             ),
         )
