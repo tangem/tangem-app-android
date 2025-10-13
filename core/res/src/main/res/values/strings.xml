@@ -135,7 +135,7 @@
   <string name="biometric_unavailable_warning">You have disabled biometric authentication on your phone and will not be able to save wallets in the app. To save wallets, please enable the biometric authentication function in your phone settings.</string>
   <string name="bitcoin_promo_activation_error">An error occurred while processing your promo code. Please try again later.</string>
   <string name="bitcoin_promo_activation_error_title">Activation error</string>
-  <string name="bitcoin_promo_activation_success">Your promo code was successfully activated. A reward will be credited to your account within 14 days.</string>
+  <string name="bitcoin_promo_activation_success">Your promo code was successfully activated. The reward will be credited to your Bitcoin account within 14 days.</string>
   <string name="bitcoin_promo_activation_success_title">Promo Code Activated</string>
   <string name="bitcoin_promo_already_activated">This promo code has already been used and cannot be activated again.</string>
   <string name="bitcoin_promo_already_activated_title">Code unavailable</string>
@@ -1797,7 +1797,10 @@
   <string name="yield_module_fee_policy_sheet_description">All future %s top-ups will be supplied to Aave automatically, with the transaction fee deducted.</string>
   <string name="yield_module_fee_policy_sheet_max_fee_note">If network fees rise above maximum fee, the transaction won’t go through until they decrease. You can change this limit later.</string>
   <string name="yield_module_fee_policy_sheet_max_fee_title">Maximum fee</string>
+  <string name="yield_module_fee_policy_sheet_min_amount_note">The transaction fee must stay below 4% of your deposit. Tangem will transfer funds to Aave only once your balance is large enough to meet this condition. </string>
+  <string name="yield_module_fee_policy_sheet_min_amount_title">Minimal amount</string>
   <string name="yield_module_fee_policy_sheet_title">Fee policy</string>
+  <string name="yield_module_fee_policy_tangem_service_fee_title">Tangem also takes a 3% service fee on the yield earned.</string>
   <string name="yield_module_high_fee_error">Network fee is too high right now. Waiting until it falls below your limit.</string>
   <string name="yield_module_historical_returns">Historical returns</string>
   <string name="yield_module_main_view_approve_notification_description">Write description here. In one, two or three lines will be awesome. [PLACEHOLDER]</string>
