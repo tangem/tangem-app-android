@@ -3,6 +3,7 @@ package com.tangem.common.ui.account
 import com.tangem.common.ui.R
 import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.components.token.state.TokenItemState.FiatAmountState
+import com.tangem.core.ui.components.token.state.TokenItemState.Subtitle2State
 import com.tangem.core.ui.extensions.pluralReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.fiat
@@ -17,7 +18,6 @@ class AccountCryptoPortfolioItemStateConverter(
     private val appCurrency: AppCurrency,
     private val account: Account.CryptoPortfolio,
     private val onItemClick: ((Account.CryptoPortfolio) -> Unit)? = null,
-    private val onItemLongClick: ((Account.CryptoPortfolio) -> Unit)? = null,
 ) : Converter<TotalFiatBalance, TokenItemState> {
 
     override fun convert(value: TotalFiatBalance): TokenItemState {
@@ -52,12 +52,12 @@ class AccountCryptoPortfolioItemStateConverter(
             ),
             subtitle2State = null,
             onItemClick = onItemClick?.let { onItemClick -> { onItemClick(account) } },
-            onItemLongClick = onItemLongClick?.let { onItemLongClick -> { onItemLongClick(account) } },
+            onItemLongClick = null,
         )
     }
 
-    private fun Account.CryptoPortfolio.mapToLoadingState(): TokenItemState.Loading {
-        return TokenItemState.Loading(
+    private fun Account.CryptoPortfolio.mapToLoadingState(): TokenItemState.Content {
+        return TokenItemState.Content(
             id = account.accountId.value,
             iconState = AccountIconItemStateConverter.convert(account),
             titleState = TokenItemState.TitleState.Content(
@@ -71,6 +71,10 @@ class AccountCryptoPortfolioItemStateConverter(
                 ),
                 isAvailable = false,
             ),
+            fiatAmountState = FiatAmountState.Loading,
+            subtitle2State = Subtitle2State.Loading,
+            onItemLongClick = null,
+            onItemClick = onItemClick?.let { onItemClick -> { onItemClick(account) } },
         )
     }
 
@@ -92,9 +96,7 @@ class AccountCryptoPortfolioItemStateConverter(
             onItemClick = onItemClick?.let { onItemClick ->
                 { onItemClick(account) }
             },
-            onItemLongClick = onItemLongClick?.let { onItemLongClick ->
-                { onItemLongClick(account) }
-            },
+            onItemLongClick = null,
         )
     }
 }
