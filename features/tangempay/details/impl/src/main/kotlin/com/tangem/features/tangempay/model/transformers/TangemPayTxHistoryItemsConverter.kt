@@ -8,6 +8,7 @@ import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import com.tangem.features.tangempay.entity.TangemPayTransactionState
 import com.tangem.features.tangempay.utils.TangemPayTxHistoryUiActions
+import com.tangem.utils.StringsSigns
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.extensions.isPositive
 import org.joda.time.DateTimeZone
@@ -25,14 +26,23 @@ internal class TangemPayTxHistoryItemsConverter(
 
     private fun convertSpend(spend: TangemPayTxHistoryItem.Spend): TangemPayTransactionState.Content.Spend {
         val localDate = spend.date.withZone(DateTimeZone.getDefault())
-        val amount = spend.amount.format {
+        val amountPrefix = when (spend.status) {
+            TangemPayTxHistoryItem.Status.DECLINED -> ""
+            else -> StringsSigns.MINUS
+        }
+        val amount = amountPrefix + spend.amount.format {
             fiat(fiatCurrencyCode = spend.currency.currencyCode, fiatCurrencySymbol = spend.currency.symbol)
         }
         return TangemPayTransactionState.Content.Spend(
             id = spend.id,
             onClick = { txHistoryUiActions.onTransactionClick(spend) },
             amount = amount,
-            amountColor = { TangemTheme.colors.text.primary1 },
+            amountColor = {
+                when (spend.status) {
+                    TangemPayTxHistoryItem.Status.DECLINED -> TangemTheme.colors.text.warning
+                    else -> TangemTheme.colors.text.primary1
+                }
+            },
             title = stringReference(spend.enrichedMerchantName ?: spend.merchantName),
             subtitle = stringReference(spend.enrichedMerchantCategory ?: spend.merchantCategory),
             time = DateTimeFormatters.formatDate(localDate, DateTimeFormatters.timeFormatter),
@@ -41,7 +51,8 @@ internal class TangemPayTxHistoryItemsConverter(
     }
 
     private fun convertPayment(payment: TangemPayTxHistoryItem.Payment): TangemPayTransactionState.Content.Payment {
-        val amount = payment.amount.format {
+        val amountPrefix = if (payment.amount.isPositive()) StringsSigns.PLUS else StringsSigns.MINUS
+        val amount = amountPrefix + payment.amount.format {
             fiat(fiatCurrencyCode = payment.currency.currencyCode, fiatCurrencySymbol = payment.currency.symbol)
         }
         val title = if (payment.amount.isPositive()) "Deposit" else "Withdrawal"
@@ -64,7 +75,7 @@ internal class TangemPayTxHistoryItemsConverter(
     }
 
     private fun convertFee(fee: TangemPayTxHistoryItem.Fee): TangemPayTransactionState.Content.Fee {
-        val amount = fee.amount.format {
+        val amount = StringsSigns.MINUS + fee.amount.format {
             fiat(fiatCurrencyCode = fee.currency.currencyCode, fiatCurrencySymbol = fee.currency.symbol)
         }
         return TangemPayTransactionState.Content.Fee(
