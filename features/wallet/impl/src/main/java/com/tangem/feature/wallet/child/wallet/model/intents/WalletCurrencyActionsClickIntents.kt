@@ -29,7 +29,6 @@ import com.tangem.domain.core.utils.lceError
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.markets.TokenMarketParams
-import com.tangem.domain.models.ReceiveAddressModel
 import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -52,7 +51,7 @@ import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent
 import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent.Companion.AVAILABLE
 import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent.Companion.toReasonAnalyticsText
 import com.tangem.domain.tokens.model.details.TokenAction
-import com.tangem.domain.transaction.usecase.GetEnsNameUseCase
+import com.tangem.domain.transaction.usecase.ReceiveAddressesFactory
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.usecase.GetExploreUrlUseCase
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
@@ -145,9 +144,8 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
     private val appRouter: AppRouter,
     private val rampStateManager: RampStateManager,
     private val tokenReceiveFeatureToggle: TokenReceiveFeatureToggle,
-    private val getViewedTokenReceiveWarningUseCase: GetViewedTokenReceiveWarningUseCase,
     private val saveViewedTokenReceiveWarningUseCase: SaveViewedTokenReceiveWarningUseCase,
-    private val getEnsNameUseCase: GetEnsNameUseCase,
+    private val receiveAddressesFactory: ReceiveAddressesFactory,
     private val yieldSupplyFeatureToggles: YieldSupplyFeatureToggles,
     private val needShowYieldSupplyDepositedWarningUseCase: NeedShowYieldSupplyDepositedWarningUseCase,
     private val saveViewedYieldSupplyWarningUseCase: SaveViewedYieldSupplyWarningUseCase,
@@ -708,44 +706,10 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
     }
 
     private suspend fun configureReceiveAddresses(cryptoCurrencyStatus: CryptoCurrencyStatus): TokenReceiveConfig? {
-        val networkAddress = cryptoCurrencyStatus.value.networkAddress ?: return null
         val userWalletId = stateHolder.getSelectedWalletId()
-
-        val ensName = getEnsNameUseCase.invoke(
+        return receiveAddressesFactory.create(
+            status = cryptoCurrencyStatus,
             userWalletId = userWalletId,
-            network = cryptoCurrencyStatus.currency.network,
-            address = networkAddress.defaultAddress.value,
-        )
-
-        val receiveAddresses = buildList {
-            ensName?.let { ens ->
-                add(
-                    ReceiveAddressModel(
-                        nameService = ReceiveAddressModel.NameService.Ens,
-                        value = ens,
-                    ),
-                )
-            }
-            networkAddress.availableAddresses.map { address ->
-                add(
-                    ReceiveAddressModel(
-                        nameService = when (address.type) {
-                            NetworkAddress.Address.Type.Primary -> ReceiveAddressModel.NameService.Default
-                            NetworkAddress.Address.Type.Secondary -> ReceiveAddressModel.NameService.Legacy
-                        },
-                        value = address.value,
-                    ),
-                )
-            }
-        }
-
-        return TokenReceiveConfig(
-            shouldShowWarning = cryptoCurrencyStatus.currency.name !in getViewedTokenReceiveWarningUseCase(),
-            cryptoCurrency = cryptoCurrencyStatus.currency,
-            userWalletId = userWalletId,
-            showMemoDisclaimer = cryptoCurrencyStatus.currency.network.transactionExtrasType != Network
-                .TransactionExtrasType.NONE,
-            receiveAddress = receiveAddresses,
         )
     }
 
