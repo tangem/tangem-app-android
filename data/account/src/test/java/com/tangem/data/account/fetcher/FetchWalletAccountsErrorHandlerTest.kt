@@ -1,5 +1,7 @@
 package com.tangem.data.account.fetcher
 
+import com.tangem.data.account.converter.createGetWalletAccountsResponse
+import com.tangem.data.account.converter.createWalletAccountDTO
 import com.tangem.data.account.utils.DefaultWalletAccountsResponseFactory
 import com.tangem.data.account.utils.toUserTokensResponse
 import com.tangem.data.common.currency.UserTokensSaver
@@ -35,6 +37,10 @@ class FetchWalletAccountsErrorHandlerTest {
         defaultWalletAccountsResponseFactory = defaultWalletAccountsResponseFactory,
     )
 
+    private val pushWalletAccounts: suspend (UserWalletId, List<WalletAccountDTO>) -> GetWalletAccountsResponse =
+        mockk(relaxed = true)
+    private val storeWalletAccounts: suspend (UserWalletId, GetWalletAccountsResponse) -> Unit = mockk(relaxed = true)
+
     @BeforeEach
     fun setupEach() {
         clearMocks(
@@ -52,9 +58,6 @@ class FetchWalletAccountsErrorHandlerTest {
             message = "Not Modified",
             errorBody = null,
         )
-
-        val pushWalletAccounts: suspend (UserWalletId, List<WalletAccountDTO>) -> Unit = mockk()
-        val storeWalletAccounts: suspend (UserWalletId, GetWalletAccountsResponse) -> Unit = mockk()
 
         // Act
         handler.handle(
@@ -84,29 +87,11 @@ class FetchWalletAccountsErrorHandlerTest {
             errorBody = null,
         )
 
-        val accountDTO = WalletAccountDTO(
-            id = "nibh",
-            name = "Michael Dotson",
-            derivationIndex = 7135,
-            icon = "consectetuer",
-            iconColor = "ferri",
-            tokens = listOf(),
-            totalTokens = 7738,
-            totalNetworks = 3348,
-        )
+        val accountDTO = createWalletAccountDTO(userWalletId)
 
-        val savedAccountsResponse = GetWalletAccountsResponse(
-            wallet = GetWalletAccountsResponse.Wallet(
-                group = UserTokensResponse.GroupType.NONE,
-                sort = UserTokensResponse.SortType.MANUAL,
-                totalAccounts = 1,
-            ),
-            accounts = listOf(accountDTO),
-            unassignedTokens = emptyList(),
-        )
+        val savedAccountsResponse = createGetWalletAccountsResponse(userWalletId)
 
-        val pushWalletAccounts: suspend (UserWalletId, List<WalletAccountDTO>) -> Unit = mockk(relaxed = true)
-        val storeWalletAccounts: suspend (UserWalletId, GetWalletAccountsResponse) -> Unit = mockk(relaxed = true)
+        coEvery { pushWalletAccounts(userWalletId, listOf(accountDTO)) } returns savedAccountsResponse
 
         // Act
         handler.handle(
@@ -119,8 +104,8 @@ class FetchWalletAccountsErrorHandlerTest {
 
         // Assert
         coVerify {
-            pushWalletAccounts(userWalletId, listOf(accountDTO))
             userTokensSaver.push(userWalletId, response = savedAccountsResponse.toUserTokensResponse())
+            pushWalletAccounts(userWalletId, listOf(accountDTO))
             storeWalletAccounts(userWalletId, savedAccountsResponse)
         }
 
@@ -162,9 +147,6 @@ class FetchWalletAccountsErrorHandlerTest {
         coEvery {
             defaultWalletAccountsResponseFactory.create(userWalletId, userTokensResponse)
         } returns savedAccountsResponse
-
-        val pushWalletAccounts: suspend (UserWalletId, List<WalletAccountDTO>) -> Unit = mockk(relaxed = true)
-        val storeWalletAccounts: suspend (UserWalletId, GetWalletAccountsResponse) -> Unit = mockk(relaxed = true)
 
         // Act
         handler.handle(
