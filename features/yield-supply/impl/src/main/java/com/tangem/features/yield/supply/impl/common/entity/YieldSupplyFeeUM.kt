@@ -16,6 +16,7 @@ internal sealed class YieldSupplyFeeUM {
         val feeValue: TextReference,
         val currentNetworkFeeValue: TextReference,
         val maxNetworkFeeValue: TextReference,
+        val minAmountFeeValue: TextReference,
     ) : YieldSupplyFeeUM()
 }
 
