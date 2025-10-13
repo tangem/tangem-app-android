@@ -203,7 +203,7 @@ internal class YieldSupplyModel @Inject constructor(
                                         resourceReference(
                                             R.string.yield_module_token_details_earn_notification_apy,
                                         ),
-                                        stringReference(tokenStatus.apy.toString() + "%"),
+                                        stringReference(" ${tokenStatus.apy}%"),
                                     ),
                                     onClick = ::onActiveClick,
                                     isAllowedToSpend = yieldSupplyStatus.isAllowedToSpend,
