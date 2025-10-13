@@ -19,7 +19,7 @@ internal class DefaultTokenDetailsDeepLinkActionTrigger @Inject constructor() :
     TokenDetailsDeepLinkActionListener {
 
     override val tokenDetailsActionFlow: SharedFlow<String>
-    field = MutableSharedFlow<String>()
+        field = MutableSharedFlow<String>()
 
     override suspend fun trigger(txId: String) {
         tokenDetailsActionFlow.emit(txId)
