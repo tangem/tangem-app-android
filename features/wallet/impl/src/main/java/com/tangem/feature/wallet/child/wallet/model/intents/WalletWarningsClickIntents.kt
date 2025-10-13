@@ -1,6 +1,5 @@
 package com.tangem.feature.wallet.child.wallet.model.intents
 
-import android.os.Build
 import arrow.core.getOrElse
 import com.tangem.common.TangemBlogUrlBuilder
 import com.tangem.common.routing.AppRoute.*
@@ -32,16 +31,12 @@ import com.tangem.domain.promo.models.PromoId
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.settings.NeverToSuggestRateAppUseCase
 import com.tangem.domain.settings.RemindToRateAppLaterUseCase
-import com.tangem.domain.settings.repositories.PermissionRepository
 import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
 import com.tangem.domain.tokens.model.analytics.TokenSwapPromoAnalyticsEvent
 import com.tangem.domain.wallets.legacy.UserWalletsListManager.Lockable.UnlockType
 import com.tangem.domain.wallets.models.UnlockWalletsError
-import com.tangem.domain.wallets.usecase.DerivePublicKeysUseCase
-import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
-import com.tangem.domain.wallets.usecase.SeedPhraseNotificationUseCase
-import com.tangem.domain.wallets.usecase.UnlockWalletsUseCase
+import com.tangem.domain.wallets.usecase.*
 import com.tangem.feature.wallet.child.wallet.model.WalletActivationBannerType
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
@@ -139,8 +134,9 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     private val userWalletsListRepository: UserWalletsListRepository,
     private val setShouldShowNotificationUseCase: SetShouldShowNotificationUseCase,
     private val notificationsRepository: NotificationsRepository,
-    private val permissionRepository: PermissionRepository,
     private val messageSender: UiMessageSender,
+    private val setNotificationsEnabledUseCase: SetNotificationsEnabledUseCase,
+    private val getWalletsListForEnablingUseCase: GetWalletsForAutomaticallyPushEnablingUseCase,
 ) : BaseWalletClickIntents(), WalletWarningsClickIntents {
 
     private val finalizeWalletSetupAlertBS
@@ -477,49 +473,42 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
 
     override fun onAllowPermissions() {
         analyticsEventHandler.send(WalletScreenAnalyticsEvent.PushBannerPromo.ButtonAllowPush)
-        if (isNotificationsPermissionGranted()) {
-            updateSubscribeOnPushPermissions(true)
-        } else {
-            walletEventSender.send(
-                event = WalletEvent.RequestPushPermissions(
-                    onAllow = {
+        walletEventSender.send(
+            event = WalletEvent.RequestPushPermissions(
+                onAllow = {
+                    modelScope.launch {
                         updateSubscribeOnPushPermissions(true)
                         analyticsEventHandler.send(
                             PushNotificationAnalyticEvents.PermissionStatus(isAllowed = true),
                         )
-                    },
-                    onDeny = {
+                        enableNotificationsIfNeeded()
+                    }
+                },
+                onDeny = {
+                    modelScope.launch {
                         updateSubscribeOnPushPermissions(false)
                         analyticsEventHandler.send(
                             PushNotificationAnalyticEvents.PermissionStatus(isAllowed = false),
                         )
-                    },
-                ),
-            )
-        }
+                    }
+                },
+            ),
+        )
     }
 
     override fun onDenyPermissions() {
-        analyticsEventHandler.send(WalletScreenAnalyticsEvent.PushBannerPromo.ButtonLaterPush)
-        updateSubscribeOnPushPermissions(false)
-    }
-
-    private fun updateSubscribeOnPushPermissions(shouldAllow: Boolean) {
         modelScope.launch {
-            notificationsRepository.setUserAllowToSubscribeOnPushNotifications(shouldAllow)
-            setShouldShowNotificationUseCase(
-                key = NotificationId.EnablePushesReminderNotification.key,
-                value = false,
-            )
+            analyticsEventHandler.send(WalletScreenAnalyticsEvent.PushBannerPromo.ButtonLaterPush)
+            updateSubscribeOnPushPermissions(false)
         }
     }
 
-    private fun isNotificationsPermissionGranted(): Boolean {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            permissionRepository.hasRuntimePermission(android.Manifest.permission.POST_NOTIFICATIONS)
-        } else {
-            true
-        }
+    private suspend fun updateSubscribeOnPushPermissions(shouldAllow: Boolean) {
+        notificationsRepository.setUserAllowToSubscribeOnPushNotifications(shouldAllow)
+        setShouldShowNotificationUseCase(
+            key = NotificationId.EnablePushesReminderNotification.key,
+            value = false,
+        )
     }
 
     private suspend fun fetchCryptoCurrencies(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) {
@@ -570,6 +559,20 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
             )
 
             null
+        }
+    }
+
+    private suspend fun enableNotificationsIfNeeded() {
+        val alreadyEnabledWallets = notificationsRepository.getWalletAutomaticallyEnabledList().map {
+            UserWalletId(it)
+        }
+        val walletsListWhichShouldBeEnabled = getWalletsListForEnablingUseCase(alreadyEnabledWallets)
+        walletsListWhichShouldBeEnabled.forEach { userWalletId ->
+            setNotificationsEnabledUseCase(userWalletId, true).onRight {
+                notificationsRepository.setNotificationsWasEnabledAutomatically(userWalletId.stringValue)
+            }.onLeft {
+                Timber.e(it)
+            }
         }
     }
 }
