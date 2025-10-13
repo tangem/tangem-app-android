@@ -133,7 +133,7 @@ internal class DefaultDerivationsRepositoryTest {
             scanResponse = MockScanResponseFactory.create(cardConfig = MultiWalletCardConfig, derivedKeys = emptyMap()),
         )
         coEvery { userWalletsStore.getSyncStrict(defaultUserWalletId) } returns userWallet
-        coEvery { tangemSdkManager.derivePublicKeys(null, any(), any()) } throws ScanCardException.UserCancelled
+        coEvery { tangemSdkManager.derivePublicKeys(null, any(), any()) } throws ScanCardException.UserCancelled()
 
         runCatching {
             repository.derivePublicKeys(
