@@ -11,6 +11,7 @@ import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.swap.models.SwapDirection
@@ -19,6 +20,7 @@ import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountFieldUM
 import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountType
 import com.tangem.utils.StringsSigns.DOT
 
+@Suppress("LongParameterList")
 internal class SwapAmountFieldConverter(
     private val swapDirection: SwapDirection,
     private val isBalanceHidden: Boolean,
@@ -26,6 +28,8 @@ internal class SwapAmountFieldConverter(
     private val appCurrency: AppCurrency,
     private val clickIntents: AmountScreenClickIntents,
     private val isSingleWallet: Boolean,
+    @Suppress("UnusedPrivateProperty") private val isAccountsMode: Boolean,
+    @Suppress("UnusedPrivateProperty") private val account: Account.CryptoPortfolio?,
 ) {
 
     private val iconStateConverter = CryptoCurrencyToIconStateConverter()
