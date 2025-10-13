@@ -156,14 +156,16 @@ internal class TokenDetailsStakingInfoConverter(
     private fun getRewardText(status: CryptoCurrencyStatus, stakingRewardAmount: BigDecimal?): TextReference {
         val blockchainId = status.currency.network.rawId
         val rewardBlockType = when {
-            isStakingRewardUnavailable(blockchainId) -> RewardBlockType.RewardUnavailable
+            isStakingRewardUnavailable(blockchainId) -> RewardBlockType.RewardUnavailable.DefaultRewardUnavailable
             stakingRewardAmount.isNullOrZero() -> RewardBlockType.NoRewards
             else -> RewardBlockType.Rewards
         }
 
         return when (rewardBlockType) {
             RewardBlockType.NoRewards -> resourceReference(R.string.staking_details_no_rewards_to_claim)
-            RewardBlockType.RewardUnavailable -> TextReference.EMPTY
+            RewardBlockType.RewardUnavailable.DefaultRewardUnavailable,
+            RewardBlockType.RewardUnavailable.SolanaRewardUnavailable,
+            -> TextReference.EMPTY
             RewardBlockType.RewardsRequirementsError,
             RewardBlockType.Rewards,
             -> resourceReference(
