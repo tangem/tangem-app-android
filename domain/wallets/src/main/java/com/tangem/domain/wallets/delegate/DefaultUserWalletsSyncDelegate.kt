@@ -4,13 +4,13 @@ import arrow.core.Either
 import arrow.core.raise.either
 import arrow.core.raise.ensure
 import com.tangem.common.CompletionResult
-import com.tangem.domain.wallets.legacy.UserWalletsListManager
-import com.tangem.domain.wallets.models.UpdateWalletError
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.wallets.models.UserWalletRemoteInfo
 import com.tangem.domain.models.wallet.copy
-import com.tangem.domain.core.wallets.UserWalletsListRepository
+import com.tangem.domain.wallets.legacy.UserWalletsListManager
+import com.tangem.domain.wallets.models.UpdateWalletError
+import com.tangem.domain.wallets.models.UserWalletRemoteInfo
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
 
