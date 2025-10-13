@@ -81,7 +81,7 @@ class GetSwapPairsUseCase(
         return SwapCurrenciesGroup(
             available = availableCryptoCurrencies,
             unavailable = unavailableCryptoCurrencies.map { pair -> SwapCryptoCurrency(pair, emptyList()) },
-            afterSearch = false,
+            isAfterSearch = false,
         )
     }
 }

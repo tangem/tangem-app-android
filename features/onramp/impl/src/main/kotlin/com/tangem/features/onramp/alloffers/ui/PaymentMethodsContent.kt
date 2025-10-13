@@ -16,6 +16,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -25,6 +26,7 @@ import com.tangem.core.ui.components.SpacerW
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.SelectPaymentMethodBottomSheetTestTags
 import com.tangem.domain.onramp.model.OnrampPaymentMethod
 import com.tangem.domain.onramp.model.PaymentMethodType
 import com.tangem.features.onramp.alloffers.entity.AllOffersPaymentMethodUM
@@ -74,10 +76,13 @@ private fun PaymentMethod(methodUM: AllOffersPaymentMethodUM, modifier: Modifier
                 end = 12.dp,
                 top = 14.dp,
                 bottom = 12.dp,
-            ),
+            )
+            .testTag(SelectPaymentMethodBottomSheetTestTags.PAYMENT_METHOD),
     ) {
         PaymentMethodIcon(
-            modifier = Modifier.size(36.dp),
+            modifier = Modifier
+                .size(36.dp)
+                .testTag(SelectPaymentMethodBottomSheetTestTags.PAYMENT_METHOD_ICON),
             imageUrl = methodUM.methodConfig.method.imageUrl,
         )
 
@@ -111,6 +116,7 @@ private fun PaymentMethodInfoBlock(
             text = paymentMethodName,
             style = TangemTheme.typography.subtitle2,
             color = TangemTheme.colors.text.primary1,
+            modifier = Modifier.testTag(SelectPaymentMethodBottomSheetTestTags.PAYMENT_METHOD_NAME),
         )
         SpacerH(2.dp)
         Row(
@@ -121,12 +127,14 @@ private fun PaymentMethodInfoBlock(
                 text = stringResourceSafe(R.string.onramp_up_to_rate),
                 style = TangemTheme.typography.caption2,
                 color = TangemTheme.colors.text.tertiary,
+                modifier = Modifier.testTag(SelectPaymentMethodBottomSheetTestTags.UP_TO_TEXT),
             )
 
             Text(
                 text = rate,
                 style = TangemTheme.typography.subtitle2,
                 color = TangemTheme.colors.text.primary1,
+                modifier = Modifier.testTag(SelectPaymentMethodBottomSheetTestTags.TOKEN_AMOUNT),
             )
 
             when {
@@ -134,6 +142,7 @@ private fun PaymentMethodInfoBlock(
                     Image(
                         imageVector = ImageVector.vectorResource(R.drawable.ic_best_rate_12),
                         contentDescription = null,
+                        modifier = Modifier.testTag(SelectPaymentMethodBottomSheetTestTags.BEST_RATE_ICON),
                     )
                 }
                 diff != null -> {
@@ -158,7 +167,9 @@ private fun PaymentMethodInfoBlock(
 private fun ProvidersCountBlockInfo(providersCount: Int) {
     BorderedRow {
         Icon(
-            modifier = Modifier.size(10.dp),
+            modifier = Modifier
+                .size(10.dp)
+                .testTag(SelectPaymentMethodBottomSheetTestTags.PROVIDER_COUNT_ICON),
             imageVector = ImageVector.vectorResource(R.drawable.ic_clock_24),
             tint = TangemTheme.colors.icon.informative,
             contentDescription = null,
@@ -172,6 +183,7 @@ private fun ProvidersCountBlockInfo(providersCount: Int) {
             ),
             style = TangemTheme.typography.caption2,
             color = TangemTheme.colors.text.tertiary,
+            modifier = Modifier.testTag(SelectPaymentMethodBottomSheetTestTags.PROVIDER_COUNT_TEXT),
         )
     }
 }
@@ -180,7 +192,9 @@ private fun ProvidersCountBlockInfo(providersCount: Int) {
 private fun TimingBlockInfo(speed: PaymentMethodType.PaymentSpeed) {
     BorderedRow {
         Icon(
-            modifier = Modifier.size(10.dp),
+            modifier = Modifier
+                .size(10.dp)
+                .testTag(SelectPaymentMethodBottomSheetTestTags.TIMING_ICON),
             imageVector = ImageVector.vectorResource(R.drawable.ic_staking_24),
             tint = TangemTheme.colors.icon.informative,
             contentDescription = null,

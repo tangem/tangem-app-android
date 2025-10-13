@@ -22,9 +22,9 @@ internal class MockApiConfigsManager(
 ) : MutableApiConfigsManager() {
 
     override val configs: StateFlow<Map<ApiConfig, ApiEnvironment>>
-    field = MutableStateFlow(value = getInitialConfigs())
+        field = MutableStateFlow(value = getInitialConfigs())
 
-    override val isInitialized: StateFlow<Boolean> = MutableStateFlow(value = true)
+    override val initializedState: StateFlow<Boolean> = MutableStateFlow(value = true)
 
     private val coroutineScope = CoroutineScope(SupervisorJob() + dispatchers.default)
 
@@ -63,7 +63,7 @@ internal class MockApiConfigsManager(
         super.addListener(listener)
 
         configs
-            .map { it.entries.firstOrNull { it.key.id == listener.id } }
+            .map { map -> map.entries.firstOrNull { it.key.id == listener.id } }
             .filterNotNull()
             .onEach { (apiConfig, currentEnvironment) ->
                 listener.onChange(

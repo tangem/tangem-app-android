@@ -137,8 +137,7 @@ internal class UserWalletEncryptionKeysRepository(
 
     private suspend fun UserWalletEncryptionKey.encode(): ByteArray {
         return withContext(dispatchers.default) {
-            this@encode
-                .let(encryptionKeyAdapter::toJson)
+            encryptionKeyAdapter.toJson(this@encode)
                 .encodeToByteArray(throwOnInvalidSequence = true)
         }
     }
@@ -153,8 +152,7 @@ internal class UserWalletEncryptionKeysRepository(
 
     private suspend fun List<UserWalletId>.encode(): ByteArray {
         return withContext(dispatchers.default) {
-            this@encode
-                .let(userWalletsIdsListAdapter::toJson)
+            userWalletsIdsListAdapter.toJson(this@encode)
                 .encodeToByteArray(throwOnInvalidSequence = true)
         }
     }

@@ -1,11 +1,12 @@
 package com.tangem.domain.tokens.operations
 
-import arrow.core.*
-import arrow.core.raise.Raise
+import arrow.core.Either
+import arrow.core.left
 import arrow.core.raise.either
-import arrow.core.raise.withError
+import arrow.core.right
+import arrow.core.toNonEmptyListOrNull
+import com.tangem.domain.models.TokensGroupType
 import com.tangem.domain.models.TokensSortType
-import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.models.wallet.UserWalletId
@@ -30,85 +31,13 @@ internal class TokenListOperations(
         }
     }
 
-    private fun Raise<Error>.createTokenList(isGrouped: Boolean, isSortedByBalance: Boolean): TokenList {
+    private fun createTokenList(isGrouped: Boolean, isSortedByBalance: Boolean): TokenList {
         val nonEmptyCurrencies = tokens.toNonEmptyListOrNull() ?: return TokenList.Empty
 
-        val isAnyTokenLoading = nonEmptyCurrencies.any { it.value is CryptoCurrencyStatus.Loading }
-        val fiatBalanceOperations = TokenListFiatBalanceOperations(nonEmptyCurrencies, isAnyTokenLoading)
-
-        return createTokenList(
-            currencies = nonEmptyCurrencies,
-            fiatBalance = fiatBalanceOperations.calculateFiatBalance(),
-            isAnyTokenLoading = isAnyTokenLoading,
-            isGrouped = isGrouped,
-            isSortedByBalance = isSortedByBalance,
-        )
-    }
-
-    private fun Raise<Error>.createTokenList(
-        currencies: NonEmptyList<CryptoCurrencyStatus>,
-        fiatBalance: TotalFiatBalance,
-        isAnyTokenLoading: Boolean,
-        isGrouped: Boolean,
-        isSortedByBalance: Boolean,
-    ): TokenList {
-        val sortingOperations = TokenListSortingOperations(
-            currencies = currencies,
-            isAnyTokenLoading = isAnyTokenLoading,
-            sortByBalance = isSortedByBalance,
-        )
-
-        return createTokenList(sortingOperations, fiatBalance, isGrouped)
-    }
-
-    private fun Raise<Error>.createTokenList(
-        sortingOperations: TokenListSortingOperations,
-        fiatBalance: TotalFiatBalance,
-        isGrouped: Boolean,
-    ): TokenList {
-        return if (isGrouped) {
-            createGroupedTokenList(sortingOperations, fiatBalance)
-        } else {
-            createUngroupedTokenList(sortingOperations, fiatBalance)
-        }
-    }
-
-    private fun Raise<Error>.createUngroupedTokenList(
-        sortingOperations: TokenListSortingOperations,
-        fiatBalance: TotalFiatBalance,
-    ): TokenList.Ungrouped = TokenList.Ungrouped(
-        sortedBy = sortingOperations.getSortType(),
-        totalFiatBalance = fiatBalance,
-        currencies = withError(
-            transform = { e ->
-                Error.fromTokenListOperations(e) { createUnsortedUngroupedTokenList(tokens, fiatBalance) }
-            },
-            block = { sortingOperations.getTokens().bind() },
-        ),
-    )
-
-    private fun Raise<Error>.createGroupedTokenList(
-        sortingOperations: TokenListSortingOperations,
-        fiatBalance: TotalFiatBalance,
-    ): TokenList.GroupedByNetwork = TokenList.GroupedByNetwork(
-        sortedBy = sortingOperations.getSortType(),
-        totalFiatBalance = fiatBalance,
-        groups = withError(
-            transform = { e ->
-                Error.fromTokenListOperations(e) { createUnsortedUngroupedTokenList(tokens, fiatBalance) }
-            },
-            block = { sortingOperations.getGroupedTokens().bind() },
-        ),
-    )
-
-    private fun createUnsortedUngroupedTokenList(
-        tokens: List<CryptoCurrencyStatus>,
-        fiatBalance: TotalFiatBalance,
-    ): TokenList.Ungrouped {
-        return TokenList.Ungrouped(
-            sortedBy = TokensSortType.NONE,
-            totalFiatBalance = fiatBalance,
-            currencies = tokens,
+        return TokenListFactory.create(
+            statuses = nonEmptyCurrencies,
+            groupType = if (isGrouped) TokensGroupType.NETWORK else TokensGroupType.NONE,
+            sortType = if (isSortedByBalance) TokensSortType.BALANCE else TokensSortType.NONE,
         )
     }
 
@@ -133,19 +62,5 @@ internal class TokenListOperations(
         data class UnableToSortTokenList(val unsortedTokenList: TokenList.Ungrouped) : Error()
 
         data class DataError(val cause: Throwable) : Error()
-
-        internal companion object {
-
-            fun fromTokenListOperations(
-                e: TokenListSortingOperations.Error,
-                createUnsortedUngroupedTokenList: () -> TokenList.Ungrouped,
-            ): Error = when (e) {
-                is TokenListSortingOperations.Error.EmptyTokens,
-                is TokenListSortingOperations.Error.NetworkNotFound,
-                -> UnableToSortTokenList(
-                    unsortedTokenList = createUnsortedUngroupedTokenList(),
-                )
-            }
-        }
     }
 }
