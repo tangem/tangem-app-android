@@ -2,6 +2,7 @@ package com.tangem.features.staking.impl.presentation.model
 
 import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
+import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.amountScreen.converters.AmountReduceByTransformer
@@ -48,8 +49,11 @@ import com.tangem.domain.staking.utils.getValidatorsCount
 import com.tangem.domain.tokens.*
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.usecase.CreateApprovalTransactionUseCase
+import com.tangem.domain.transaction.usecase.CreateTransferTransactionUseCase
 import com.tangem.domain.transaction.usecase.GetAllowanceUseCase
+import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
+import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.staking.api.StakingComponent
 import com.tangem.features.staking.impl.analytics.StakingParamsInterceptor
@@ -69,10 +73,15 @@ import com.tangem.features.staking.impl.presentation.state.transformers.approval
 import com.tangem.features.staking.impl.presentation.state.transformers.confirmation.SetUpdatedAllowanceTransformer
 import com.tangem.features.staking.impl.presentation.state.transformers.notifications.AddStakingNotificationsTransformer
 import com.tangem.features.staking.impl.presentation.state.transformers.notifications.DismissStakingNotificationsStateTransformer
+import com.tangem.features.staking.impl.presentation.state.transformers.ton.CompleteInitializeBottomSheetTransformer
+import com.tangem.features.staking.impl.presentation.state.transformers.ton.SetFeeToTonInitializeBottomSheetTransformer
+import com.tangem.features.staking.impl.presentation.state.transformers.ton.ShowTonInitializeBottomSheetTransformer
+import com.tangem.features.staking.impl.presentation.state.transformers.ton.SetFeeErrorToTonInitializeBottomSheetTransformer
 import com.tangem.features.staking.impl.presentation.state.transformers.validator.ValidatorSelectChangeTransformer
 import com.tangem.features.staking.impl.presentation.state.utils.checkAndCalculateSubtractedAmount
 import com.tangem.features.staking.impl.presentation.state.utils.isSingleAction
 import com.tangem.features.staking.impl.presentation.state.utils.withStubUnstakeAction
+import com.tangem.lib.crypto.BlockchainUtils.isTon
 import com.tangem.utils.Provider
 import com.tangem.utils.TangemBlogUrlBuilder.RESOURCE_TO_LEARN_ABOUT_APPROVING_IN_SWAP
 import com.tangem.utils.coroutines.*
@@ -122,6 +131,9 @@ internal class StakingModel @Inject constructor(
     private val getActionsUseCase: GetActionsUseCase,
     private val getYieldUseCase: GetYieldUseCase,
     private val checkAccountInitializedUseCase: CheckAccountInitializedUseCase,
+    private val createTransferTransactionUseCase: CreateTransferTransactionUseCase,
+    private val getFeeUseCase: GetFeeUseCase,
+    private val getNetworkAddressesUseCase: GetNetworkAddressesUseCase,
     private val getActionRequirementAmountUseCase: GetActionRequirementAmountUseCase,
     private val paramsInterceptorHolder: ParamsInterceptorHolder,
     private val shareManager: ShareManager,
@@ -150,10 +162,13 @@ internal class StakingModel @Inject constructor(
         }
     }
 
+    private var isAccountInitialized: Boolean = true
     private var cryptoCurrencyStatus: CryptoCurrencyStatus by Delegates.notNull()
     private var stakingActions: List<StakingAction> = emptyList()
     private var feeCryptoCurrencyStatus: CryptoCurrencyStatus? = null
     private var minimumTransactionAmount: EnterAmountBoundary? = null
+
+    private var tonAccountInitializeTransaction: TransactionData.Uncompiled? = null
 
     private val userWallet by lazy {
         requireNotNull(
@@ -250,24 +265,10 @@ internal class StakingModel @Inject constructor(
             val isInitialInfoStep = value.currentStep == StakingStep.InitialInfo
             val noBalanceState = balanceState == null
             val noYieldBalanceData = cryptoCurrencyStatus.value.yieldBalance !is YieldBalance.Data
-            val isAccountInitialized = checkAccountInitializedUseCase.invoke(
-                userWalletId = userWalletId,
-                network = cryptoCurrencyStatus.currency.network,
-            ).getOrElse {
-                Timber.e(it)
-                false
-            }
 
             when {
                 isInitialInfoStep && noBalanceState && yield.allValidatorsFull && noYieldBalanceData -> {
                     stakingEventFactory.createStakingValidatorsUnavailableAlert()
-                    return@launch
-                }
-                isInitialInfoStep && noBalanceState && !isAccountInitialized -> {
-                    analyticsEventHandler.send(StakingAnalyticsEvent.UnitializedAddress(
-                        token = cryptoCurrencyStatus.currency.symbol,
-                    ))
-                    stakingEventFactory.createInitializeAccountAlert()
                     return@launch
                 }
                 isInitialInfoStep && noBalanceState -> {
@@ -763,6 +764,7 @@ internal class StakingModel @Inject constructor(
                 AddStakingNotificationsTransformer(
                     cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
                     appCurrencyProvider = Provider { appCurrency },
+                    isAccountInitializedProvider = Provider { isAccountInitialized },
                     feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
                     currencyWarning = currencyWarning,
                     currencyCheck = currencyStatus,
@@ -934,6 +936,85 @@ internal class StakingModel @Inject constructor(
         urlOpener.openUrl(RESOURCE_TO_LEARN_ABOUT_APPROVING_IN_SWAP)
     }
 
+    override fun onActivateTonAccountNotificationClick() {
+        modelScope.launch {
+            stateController.update(
+                ShowTonInitializeBottomSheetTransformer(
+                    onDismiss = { stateController.update(DismissBottomSheetStateTransformer) },
+                ),
+            )
+
+            val tonAmount = BigDecimal(1)
+            val destination = getNetworkAddressesUseCase.invokeSync(
+                userWalletId = userWalletId,
+                network = cryptoCurrencyStatus.currency.network,
+            ).getOrNull(0)?.address ?: return@launch
+
+            val transaction = createTransferTransactionUseCase(
+                amount = tonAmount.convertToSdkAmount(cryptoCurrencyStatus),
+                destination = destination,
+                userWalletId = userWalletId,
+                network = cryptoCurrencyStatus.currency.network,
+                memo = null,
+            )
+            tonAccountInitializeTransaction = transaction.getOrElse {
+                stateController.update(
+                    SetFeeErrorToTonInitializeBottomSheetTransformer(),
+                )
+                return@launch
+            }
+
+            val transactionFee = getFeeUseCase(
+                userWallet = userWallet,
+                network = cryptoCurrencyStatus.currency.network,
+                transactionData = tonAccountInitializeTransaction!!,
+            )
+
+            transactionFee.fold(
+                ifLeft = {
+                    stateController.update(
+                        SetFeeErrorToTonInitializeBottomSheetTransformer(),
+                    )
+                },
+                ifRight = {
+                    stateController.update(
+                        SetFeeToTonInitializeBottomSheetTransformer(
+                            appCurrencyProvider = Provider { appCurrency },
+                            feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
+                            fee = it.normal,
+                            isFeeApproximate = false,
+                        ),
+                    )
+                },
+            )
+        }
+    }
+
+    override fun onActivateTonAccountClick() {
+        modelScope.launch {
+            tonAccountInitializeTransaction?.let { transaction ->
+                sendTransactionUseCase.invoke(
+                    txData = transaction,
+                    userWallet = userWallet,
+                    network = cryptoCurrencyStatus.currency.network,
+                ).fold(
+                    ifLeft = {
+                        stateController.update(DismissBottomSheetStateTransformer)
+                    },
+                    ifRight = {
+                        stateController.update(CompleteInitializeBottomSheetTransformer(
+                            cryptoCurrencyStatus = cryptoCurrencyStatus,
+                            minimumTransactionAmount = minimumTransactionAmount,
+                        ))
+
+                        balanceUpdater.partialUpdateWithDelay()
+                        stateController.update(DismissBottomSheetStateTransformer)
+                    },
+                )
+            }
+        }
+    }
+
     private suspend fun setupApprovalNeeded() {
         val approval = StakingIntegrationID.create(currencyId = cryptoCurrencyStatus.currency.id)?.approval
             ?: StakingApproval.Empty
@@ -961,7 +1042,9 @@ internal class StakingModel @Inject constructor(
         )
             .conflate()
             .distinctUntilChanged()
-            .filter { value.currentStep == StakingStep.InitialInfo }
+            .filter {
+                value.currentStep == StakingStep.InitialInfo || isCaseWithUnitializedTonAccount()
+            }
             .onEach { maybeStatus ->
                 maybeStatus.fold(
                     ifRight = { status ->
@@ -988,6 +1071,19 @@ internal class StakingModel @Inject constructor(
                                 )
                             }
                         cryptoCurrencyStatus = status
+
+                        val isAccountInitializedNew = checkAccountInitializedUseCase.invoke(
+                            userWalletId = userWalletId,
+                            network = cryptoCurrencyStatus.currency.network,
+                        ).getOrElse {
+                            Timber.e(it)
+                            false
+                        }
+                        if (isAccountInitializedNew && !isAccountInitialized) {
+                            isAccountInitialized = true
+                            updateNotifications()
+                        }
+                        isAccountInitialized = isAccountInitializedNew
 
                         setupApprovalNeeded()
                         setupIsAnyTokenStaked()
@@ -1148,6 +1244,12 @@ internal class StakingModel @Inject constructor(
     private suspend fun checkIfSubtractAvailable() {
         isAmountSubtractAvailable = isAmountSubtractAvailableUseCase(userWalletId, cryptoCurrencyStatus.currency)
             .getOrElse { false }
+    }
+
+    private fun isCaseWithUnitializedTonAccount(): Boolean {
+        return value.currentStep == StakingStep.Confirmation &&
+            isTon(cryptoCurrencyStatus.currency.network.rawId) &&
+            !isAccountInitialized
     }
 
     private companion object {
