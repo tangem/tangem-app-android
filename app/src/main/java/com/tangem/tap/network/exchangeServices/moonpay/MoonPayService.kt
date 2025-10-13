@@ -26,7 +26,7 @@ import javax.crypto.spec.SecretKeySpec
 class MoonPayService(
     private val apiKey: String,
     private val secretKey: String,
-    private val logEnabled: Boolean,
+    private val isLogEnabled: Boolean,
     private val userWalletProvider: () -> UserWallet?,
 ) : ExchangeService {
 
@@ -39,7 +39,7 @@ class MoonPayService(
     private val api: MoonPayApi by lazy {
         createRetrofitInstance(
             baseUrl = MoonPayApi.MOOONPAY_BASE_URL,
-            logEnabled = logEnabled,
+            logEnabled = isLogEnabled,
         ).create(MoonPayApi::class.java)
     }
 
@@ -104,24 +104,35 @@ class MoonPayService(
 
     override fun availableForSell(currency: Currency): Boolean {
         val userWallet = userWalletProvider() ?: return false
-        val checkCardExchange = userWallet !is UserWallet.Cold || !userWallet.scanResponse.card.isStart2Coin
+        val isExchangeSupported = userWallet !is UserWallet.Cold || !userWallet.scanResponse.card.isStart2Coin
 
-        if (!checkCardExchange) return false
+        if (!isExchangeSupported) return false
 
         if (!isSellAllowed()) return false
 
         val availableForSell = status?.availableForSell ?: return false
 
         val supportedCurrency = currency.blockchain.moonPaySupportedCurrency ?: return false
-        return availableForSell.any {
+        return availableForSell.any { availableCurrency ->
             when (currency) {
                 is Currency.Blockchain -> {
-                    it.networkCode.equals(other = supportedCurrency.networkCode, ignoreCase = true) &&
-                        it.currencyCode.equals(other = supportedCurrency.currencyCode, ignoreCase = true)
+                    availableCurrency.networkCode.equals(
+                        other = supportedCurrency.networkCode,
+                        ignoreCase = true,
+                    ) && availableCurrency.currencyCode.equals(
+                        other = supportedCurrency.currencyCode,
+                        ignoreCase = true,
+                    )
                 }
                 is Currency.Token -> {
-                    it.networkCode.equals(other = supportedCurrency.networkCode, ignoreCase = true) &&
-                        it.contractAddress.equals(other = currency.token.contractAddress, ignoreCase = true)
+                    availableCurrency.networkCode.equals(
+                        other = supportedCurrency.networkCode,
+                        ignoreCase = true,
+                    ) &&
+                        availableCurrency.contractAddress.equals(
+                            other = currency.token.contractAddress,
+                            ignoreCase = true,
+                        )
                 }
             }
         }
@@ -137,15 +148,18 @@ class MoonPayService(
         if (blockchain.isTestnet()) return blockchain.getTestnetTopUpUrl()
 
         val supportedCurrency = blockchain.moonPaySupportedCurrency ?: return null
-        val moonpayCurrency = status?.availableForSell?.firstOrNull {
+        val moonpayCurrency = status?.availableForSell?.firstOrNull { availableCurrency ->
             when (cryptoCurrency) {
                 is CryptoCurrency.Coin -> {
-                    it.networkCode.equals(other = supportedCurrency.networkCode, ignoreCase = true) &&
-                        it.currencyCode.equals(other = supportedCurrency.currencyCode, ignoreCase = true)
+                    availableCurrency.networkCode.equals(other = supportedCurrency.networkCode, ignoreCase = true) &&
+                        availableCurrency.currencyCode.equals(other = supportedCurrency.currencyCode, ignoreCase = true)
                 }
                 is CryptoCurrency.Token -> {
-                    it.networkCode.equals(other = supportedCurrency.networkCode, ignoreCase = true) &&
-                        it.contractAddress.equals(other = cryptoCurrency.contractAddress, ignoreCase = true)
+                    availableCurrency.networkCode.equals(other = supportedCurrency.networkCode, ignoreCase = true) &&
+                        availableCurrency.contractAddress.equals(
+                            other = cryptoCurrency.contractAddress,
+                            ignoreCase = true,
+                        )
                 }
             }
         } ?: return null
@@ -184,7 +198,7 @@ class MoonPayService(
     }
 
     private fun isSellAllowed(): Boolean {
-        return status?.responseUserStatus?.isSellAllowed ?: false
+        return status?.responseUserStatus?.isSellAllowed == true
     }
 
     private companion object {

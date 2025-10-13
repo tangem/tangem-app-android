@@ -1,8 +1,6 @@
 package com.tangem.features.markets.portfolio.impl.loader
 
-import arrow.core.getOrElse
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
-import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.models.TotalFiatBalance
@@ -15,7 +13,6 @@ import com.tangem.domain.tokens.GetWalletTotalBalanceUseCase
 import com.tangem.domain.tokens.error.TokenListError
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
-import timber.log.Timber
 import javax.inject.Inject
 
 /**
@@ -41,8 +38,8 @@ internal class PortfolioDataLoader @Inject constructor(
     fun load(currencyRawId: CryptoCurrency.RawID): Flow<PortfolioData> {
         return combine(
             flow = getAllWalletsCryptoCurrenciesData(currencyRawId = currencyRawId),
-            flow2 = getSelectedAppCurrencyFlow(),
-            flow3 = getBalanceHidingSettingsFlow(),
+            flow2 = getSelectedAppCurrencyUseCase.invokeOrDefault(),
+            flow3 = getBalanceHidingSettingsUseCase.isBalanceHidden(),
         ) { walletsWithCurrencies, appCurrency, isBalanceHidden ->
             PortfolioData(
                 walletsWithCurrencies = walletsWithCurrencies,
@@ -110,23 +107,6 @@ internal class PortfolioDataLoader @Inject constructor(
             }.onEmpty {
                 emit(emptyMap())
             }
-            .distinctUntilChanged()
-    }
-
-    private fun getSelectedAppCurrencyFlow(): Flow<AppCurrency> {
-        return getSelectedAppCurrencyUseCase()
-            .map {
-                it.getOrElse { e ->
-                    Timber.e("Failed to load app currency: $e")
-                    AppCurrency.Default
-                }
-            }
-            .distinctUntilChanged()
-    }
-
-    private fun getBalanceHidingSettingsFlow(): Flow<Boolean> {
-        return getBalanceHidingSettingsUseCase()
-            .map { it.isBalanceHidden }
             .distinctUntilChanged()
     }
 
