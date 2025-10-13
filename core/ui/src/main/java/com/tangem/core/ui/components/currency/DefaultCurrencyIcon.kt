@@ -24,8 +24,8 @@ internal inline fun DefaultCurrencyIcon(
     size: Dp,
     alpha: Float,
     colorFilter: ColorFilter?,
-    crossinline errorIcon: @Composable () -> Unit,
     modifier: Modifier = Modifier,
+    crossinline errorIcon: @Composable () -> Unit,
 ) {
     var iconBackgroundColor by remember { mutableStateOf(Color.Transparent) }
     var isBackgroundColorDefined by remember { mutableStateOf(false) }

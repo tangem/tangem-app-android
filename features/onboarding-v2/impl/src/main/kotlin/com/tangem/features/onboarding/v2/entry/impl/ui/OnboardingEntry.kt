@@ -14,8 +14,8 @@ import com.tangem.features.onboarding.v2.entry.impl.routing.OnboardingRoute
 
 @Composable
 internal inline fun OnboardingEntry(
-    modifier: Modifier = Modifier,
     childStack: ChildStack<OnboardingRoute, Any>,
+    modifier: Modifier = Modifier,
     stepperContent: @Composable (Modifier) -> Unit,
 ) {
     Column(

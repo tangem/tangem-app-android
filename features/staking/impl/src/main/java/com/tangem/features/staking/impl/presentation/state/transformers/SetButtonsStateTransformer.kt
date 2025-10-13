@@ -52,7 +52,7 @@ internal class SetButtonsStateTransformer(
             iconRes = R.drawable.ic_tangem_24.takeIf { prevState.showColdWalletInteractionIcon },
             isDimmed = isPrimaryButtonDisabled,
             isIconVisible = isIconVisible,
-            showProgress = isInProgress,
+            shouldShowProgress = isInProgress,
             isEnabled = prevState.isButtonEnabled(),
             onClick = {
                 if (isPrimaryButtonDisabled) {
@@ -70,7 +70,7 @@ internal class SetButtonsStateTransformer(
             iconRes = R.drawable.ic_back_24,
             isSecondary = true,
             isIconVisible = true,
-            showProgress = false,
+            shouldShowProgress = false,
             isEnabled = true,
             onClick = prevState.clickIntents::onPrevClick,
         ).takeIf { prevState.currentStep.isPrevButtonVisible() }
@@ -82,7 +82,7 @@ internal class SetButtonsStateTransformer(
             iconRes = R.drawable.ic_web_24,
             isSecondary = true,
             isIconVisible = true,
-            showProgress = false,
+            shouldShowProgress = false,
             isEnabled = true,
             onClick = prevState.clickIntents::onExploreClick,
         ) to NavigationButton(
@@ -90,7 +90,7 @@ internal class SetButtonsStateTransformer(
             iconRes = R.drawable.ic_share_24,
             isSecondary = true,
             isIconVisible = true,
-            showProgress = false,
+            shouldShowProgress = false,
             isEnabled = true,
             onClick = prevState.clickIntents::onShareClick,
         )

@@ -13,6 +13,7 @@ internal class WcSwitchNetworkComponent(
     params: WcTransactionModelParams,
 ) : AppComponentContext by appComponentContext, ComposableContentComponent {
 
+    @Suppress("UnusedPrivateProperty")
     private val model: WcSwitchNetworkModel = getOrCreateModel(params = params)
 
     @Composable
