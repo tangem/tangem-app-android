@@ -36,12 +36,9 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.demo.IsDemoCardUseCase
-import com.tangem.domain.models.ReceiveAddressModel
-import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.TokenReceiveNotification
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
@@ -139,8 +136,7 @@ internal class TokenDetailsModel @Inject constructor(
     private val tokenDetailsDeepLinkActionListener: TokenDetailsDeepLinkActionListener,
     private val analyticsExceptionHandler: AnalyticsExceptionHandler,
     private val tokenReceiveFeatureToggle: TokenReceiveFeatureToggle,
-    private val getViewedTokenReceiveWarningUseCase: GetViewedTokenReceiveWarningUseCase,
-    private val getEnsNameUseCase: GetEnsNameUseCase,
+    private val receiveAddressesFactory: ReceiveAddressesFactory,
     private val yieldSupplyFeatureToggles: YieldSupplyFeatureToggles,
     private val saveViewedYieldSupplyWarningUseCase: SaveViewedYieldSupplyWarningUseCase,
     private val saveViewedTokenReceiveWarningUseCase: SaveViewedTokenReceiveWarningUseCase,
@@ -1058,34 +1054,10 @@ internal class TokenDetailsModel @Inject constructor(
             .launchIn(modelScope)
     }
 
-    private suspend fun configureReceiveAddresses(addresses: NetworkAddress): TokenDetailsBottomSheetConfig {
-        val ensName = getEnsNameUseCase.invoke(
-            userWalletId = userWalletId,
-            network = cryptoCurrency.network,
-            address = addresses.defaultAddress.value,
-        )
-
-        val receiveAddresses = buildList {
-            ensName?.let { ens ->
-                add(
-                    ReceiveAddressModel(
-                        nameService = ReceiveAddressModel.NameService.Ens,
-                        value = ens,
-                    ),
-                )
-            }
-            addresses.availableAddresses.map { address ->
-                add(
-                    ReceiveAddressModel(
-                        nameService = when (address.type) {
-                            NetworkAddress.Address.Type.Primary -> ReceiveAddressModel.NameService.Default
-                            NetworkAddress.Address.Type.Secondary -> ReceiveAddressModel.NameService.Legacy
-                        },
-                        value = address.value,
-                    ),
-                )
-            }
-        }
+    private suspend fun configureReceiveAddresses(
+        cryptoCurrencyStatus: CryptoCurrencyStatus?,
+    ): TokenDetailsBottomSheetConfig? {
+        cryptoCurrencyStatus ?: return null
 
         val notifications = buildList {
             if (isActiveYieldSupply()) {
@@ -1099,16 +1071,13 @@ internal class TokenDetailsModel @Inject constructor(
             }
         }
 
-        return TokenDetailsBottomSheetConfig.Receive(
-            TokenReceiveConfig(
-                shouldShowWarning = cryptoCurrency.name !in getViewedTokenReceiveWarningUseCase(),
-                cryptoCurrency = cryptoCurrency,
-                userWalletId = userWalletId,
-                showMemoDisclaimer = cryptoCurrency.network.transactionExtrasType != Network.TransactionExtrasType.NONE,
-                tokenReceiveNotification = notifications,
-                receiveAddress = receiveAddresses,
-            ),
-        )
+        val receiveConfig = receiveAddressesFactory.create(
+            status = cryptoCurrencyStatus,
+            userWalletId = userWalletId,
+            notifications = notifications,
+        ) ?: return null
+
+        return TokenDetailsBottomSheetConfig.Receive(receiveConfig)
     }
 
     private fun sendOneTimeBalanceLoadedAnalyticsEvent(cryptoCurrencyStatus: CryptoCurrencyStatus?) {
@@ -1186,9 +1155,8 @@ internal class TokenDetailsModel @Inject constructor(
         val networkAddress = cryptoCurrencyStatus?.value?.networkAddress ?: return
         if (tokenReceiveFeatureToggle.isNewTokenReceiveEnabled) {
             modelScope.launch {
-                bottomSheetNavigation.activate(
-                    configuration = configureReceiveAddresses(addresses = networkAddress),
-                )
+                configureReceiveAddresses(cryptoCurrencyStatus = cryptoCurrencyStatus)
+                    ?.let { bottomSheetNavigation.activate(it) }
             }
         } else {
             analyticsEventsHandler.send(TokenReceiveAnalyticsEvent.ReceiveScreenOpened(cryptoCurrency.symbol))
