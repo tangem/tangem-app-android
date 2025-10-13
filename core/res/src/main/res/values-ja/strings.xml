@@ -134,7 +134,7 @@
   <string name="biometric_unavailable_warning">お使いの携帯電話で生体認証が無効になっているため、アプリにウォレットを保存できません。ウォレットを保存するには、携帯電話の設定で生体認証機能を有効にしてください。</string>
   <string name="bitcoin_promo_activation_error">プロモーションコードの処理中にエラーが発生しました。しばらくしてからもう一度お試しください。</string>
   <string name="bitcoin_promo_activation_error_title">アクティベーションエラー</string>
-  <string name="bitcoin_promo_activation_success">プロモコードが正常に有効化されました。リワードは14日以内にあなたのアカウントに付与されます。</string>
+  <string name="bitcoin_promo_activation_success">プロモーションコードが正常に有効化されました。報酬は14日以内にビットコインアカウントに入金されます。</string>
   <string name="bitcoin_promo_activation_success_title">プロモーションコードが有効になりました</string>
   <string name="bitcoin_promo_already_activated">このプロモーションコードは既に使用されているため、再度使うことはできません。</string>
   <string name="bitcoin_promo_already_activated_title">コードが利用できません</string>
@@ -180,6 +180,7 @@
   <string name="common_add">追加</string>
   <string name="common_add_to_portfolio">ポートフォリオに追加</string>
   <string name="common_add_token">トークンを追加</string>
+  <string name="common_added">追加済み</string>
   <string name="common_address">アドレス</string>
   <string name="common_all">すべて</string>
   <string name="common_allow">許可する</string>
@@ -1365,7 +1366,7 @@
   <string name="user_push_notification_agreement_argument_two_subtitle">新しい機能や限定オファーへの早期アクセス。</string>
   <string name="user_push_notification_agreement_argument_two_title">機能およびニュースのアップデート</string>
   <string name="user_push_notification_agreement_header">プッシュ通知を使用しますか?</string>
-  <string name="user_push_notification_banner_subtitle">プッシュ通知を有効にすると、資金が到着するとすぐに通知されます。</string>
+  <string name="user_push_notification_banner_subtitle">プッシュ通知を有効にすると、ウォレットに着金したときにアラートを受信できます。</string>
   <string name="user_push_notification_banner_title">取引を見逃さない</string>
   <string name="user_wallet_list_add_button">新しいウォレットを追加</string>
   <string name="user_wallet_list_delete_hw_prompt">バックアップせずにこのウォレットを削除すると、資金に永久にアクセスできなくなります。</string>
@@ -1444,6 +1445,7 @@
   <string name="wallet_connect_subtitle">dAppsに接続する</string>
   <string name="wallet_connect_title">WalletConnect</string>
   <string name="wallet_connect_toast_awaiting_session_proposal">接続には数秒かかる場合があります</string>
+  <string name="wallet_create_common_title">Tangemウォレットを作成する</string>
   <string name="wallet_create_hardware_badge">%sから</string>
   <string name="wallet_create_hardware_description">Tangemウォレットを購入ーこれは、あなたの秘密鍵をオフラインで安全に保管する物理デバイスです。</string>
   <string name="wallet_create_hardware_title">ハードウェアウォレット</string>
@@ -1759,7 +1761,8 @@
   <string name="yield_module_supply_apr">供給APR</string>
   <string name="yield_module_token_details_earn_notification_apy">APY</string>
   <string name="yield_module_token_details_earn_notification_description">あなたの資産を眠らせない — 残高を運用して利息を得ましょう。</string>
-  <string name="yield_module_token_details_earn_notification_earning_on_your_balance_title">保有資産から報酬を得る</string>
+  <string name="yield_module_token_details_earn_notification_earning_on_your_balance_subtitle">利息は自動的に発生します</string>
+  <string name="yield_module_token_details_earn_notification_earning_on_your_balance_title">Aaveレンディング</string>
   <string name="yield_module_token_details_earn_notification_processing">入金の処理中</string>
   <string name="yield_module_token_details_earn_notification_title">年間%1$s%%の収益</string>
   <string name="yield_module_transfer_mode_automatic">自動</string>
