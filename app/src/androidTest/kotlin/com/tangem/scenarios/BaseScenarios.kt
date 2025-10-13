@@ -86,3 +86,12 @@ fun BaseTestCase.openDeviceSettingsScreen() {
         onWalletSettingsScreen { deviceSettingsButton.clickWithAssertion() }
     }
 }
+
+fun BaseTestCase.openWalletConnectScreen() {
+    step("Click 'More' button on TopBar") {
+        onTopBar { moreButton.clickWithAssertion() }
+    }
+    step("Click on 'Wallet Connect' button") {
+        onDetailsScreen { walletConnectButton.clickWithAssertion() }
+    }
+}
