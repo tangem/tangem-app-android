@@ -63,23 +63,24 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
         }
     }
 
-    override suspend fun pushAndStore(userWalletId: UserWalletId, response: GetWalletAccountsResponse) {
-        push(userWalletId = userWalletId, accounts = response.accounts)
-        store(userWalletId = userWalletId, response = response)
-    }
-
     override suspend fun store(userWalletId: UserWalletId, response: GetWalletAccountsResponse) {
         val store = getAccountsResponseStore(userWalletId = userWalletId)
 
         store.updateData { response }
     }
 
-    override suspend fun push(userWalletId: UserWalletId, accounts: List<WalletAccountDTO>) {
-        push(userWalletId = userWalletId, body = SaveWalletAccountsResponse(accounts = accounts))
+    override suspend fun push(
+        userWalletId: UserWalletId,
+        accounts: List<WalletAccountDTO>,
+    ): GetWalletAccountsResponse? {
+        return push(userWalletId = userWalletId, body = SaveWalletAccountsResponse(accounts = accounts))
     }
 
-    override suspend fun push(userWalletId: UserWalletId, body: SaveWalletAccountsResponse) {
-        safeApiCall(
+    override suspend fun push(
+        userWalletId: UserWalletId,
+        body: SaveWalletAccountsResponse,
+    ): GetWalletAccountsResponse? {
+        return safeApiCall(
             call = {
                 var eTag = getETag(userWalletId)
 
@@ -105,6 +106,8 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
                 if (error.isNetworkError(code = Code.PRECONDITION_FAILED)) {
                     throw error
                 }
+
+                null
             },
         )
     }
@@ -152,7 +155,12 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
             ),
         )
 
-        pushAndStore(userWalletId, response)
+        userTokensSaver.push(userWalletId = userWalletId, response = response.toUserTokensResponse())
+        val syncedResponse = push(userWalletId = userWalletId, accounts = response.accounts)
+
+        if (syncedResponse != null) {
+            store(userWalletId = userWalletId, response = syncedResponse)
+        }
     }
 
     private suspend fun assignTokens(userWalletId: UserWalletId, accountsResponse: GetWalletAccountsResponse) {
