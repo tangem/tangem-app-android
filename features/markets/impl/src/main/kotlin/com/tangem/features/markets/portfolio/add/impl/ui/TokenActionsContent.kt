@@ -29,7 +29,6 @@ import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.icons.badge.drawBadge
 import com.tangem.core.ui.components.token.TokenItem
 import com.tangem.core.ui.components.token.state.TokenItemState
-import com.tangem.core.ui.components.token.state.TokenItemState.FiatAmountState
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
@@ -179,8 +178,8 @@ private class TokenActionsContentPreviewProvider : PreviewParameterProvider<Toke
             titleState = TokenItemState.TitleState.Content(
                 text = stringReference(value = "Tether"),
             ),
-            fiatAmountState = FiatAmountState.Content(text = ""),
-            subtitle2State = TokenItemState.Subtitle2State.TextContent(text = ""),
+            fiatAmountState = null,
+            subtitle2State = null,
             subtitleState = TokenItemState.SubtitleState.TextContent(value = stringReference("USDT")),
             onItemClick = {},
             onItemLongClick = {},
