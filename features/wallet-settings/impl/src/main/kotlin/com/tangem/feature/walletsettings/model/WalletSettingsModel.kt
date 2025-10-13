@@ -197,7 +197,12 @@ internal class WalletSettingsModel @Inject constructor(
             onCheckedNFTChange = ::onCheckedNFTChange,
             forgetWallet = {
                 val message = DialogMessage(
-                    message = resourceReference(R.string.user_wallet_list_delete_prompt),
+                    message = resourceReference(
+                        id = when (userWallet) {
+                            is UserWallet.Cold -> R.string.user_wallet_list_delete_prompt
+                            is UserWallet.Hot -> R.string.user_wallet_list_delete_hw_prompt
+                        },
+                    ),
                     firstActionBuilder = {
                         EventMessageAction(
                             title = resourceReference(R.string.common_delete),
