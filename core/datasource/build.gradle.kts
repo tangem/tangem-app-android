@@ -40,6 +40,7 @@ dependencies {
     implementation(projects.domain.models)
     implementation(projects.domain.nft.models)
     implementation(projects.domain.walletConnect.models)
+    implementation(projects.domain.yieldSupply.models)
 
     /** Tangem libraries */
     implementation(tangemDeps.blockchain)

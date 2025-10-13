@@ -241,8 +241,8 @@ internal class AvailableSwapPairsModel @Inject constructor(
 
     private fun getAppCurrencyAndBalanceHidingFlow(): Flow<Pair<AppCurrency, Boolean>> {
         return combine(
-            flow = getSelectedAppCurrencyUseCase().map { it.getOrElse { AppCurrency.Default } }.distinctUntilChanged(),
-            flow2 = getBalanceHidingSettingsUseCase().map { it.isBalanceHidden }.distinctUntilChanged(),
+            flow = getSelectedAppCurrencyUseCase.invokeOrDefault(),
+            flow2 = getBalanceHidingSettingsUseCase.isBalanceHidden(),
             transform = ::Pair,
         )
     }
