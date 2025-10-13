@@ -199,13 +199,13 @@ internal class CreateWalletStartModel @Inject constructor(
             },
             ifRight = {
                 setLoading(false)
-                sendSignedInCardAnalyticsEvent(scanResponse)
+                sendSignedInCardAnalyticsEvent(scanResponse = scanResponse, isImported = userWallet.isImported)
                 appRouter.replaceAll(AppRoute.Wallet)
             },
         )
     }
 
-    private suspend fun sendSignedInCardAnalyticsEvent(scanResponse: ScanResponse) {
+    private suspend fun sendSignedInCardAnalyticsEvent(scanResponse: ScanResponse, isImported: Boolean) {
         val currency = ParamCardCurrencyConverter().convert(value = scanResponse.cardTypesResolver)
         if (currency != null) {
             analyticsEventHandler.send(
@@ -214,6 +214,7 @@ internal class CreateWalletStartModel @Inject constructor(
                     batch = scanResponse.card.batchId,
                     signInType = SignInType.Card,
                     walletsCount = userWalletsListRepository.userWalletsSync().size.toString(),
+                    isImported = isImported,
                     hasBackup = scanResponse.card.backupStatus?.isActive,
                 ),
             )
