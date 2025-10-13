@@ -4,6 +4,7 @@ import androidx.compose.runtime.Stable
 import androidx.compose.ui.graphics.toArgb
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
+import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -20,9 +21,11 @@ import com.tangem.domain.pay.DataForReceiveFactory
 import com.tangem.domain.pay.repository.CardDetailsRepository
 import com.tangem.features.tangempay.components.TangemPayDetailsComponent
 import com.tangem.features.tangempay.details.impl.R
+import com.tangem.features.tangempay.entity.TangemPayDetailsErrorType
 import com.tangem.features.tangempay.entity.TangemPayDetailsStateFactory
 import com.tangem.features.tangempay.entity.TangemPayDetailsUM
 import com.tangem.features.tangempay.model.transformers.*
+import com.tangem.features.tangempay.utils.TangemPayErrorMessageFactory
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
@@ -70,7 +73,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     private val fetchBalanceJobHolder = JobHolder()
     private val revealCardDetailsJobHolder = JobHolder()
 
-    val bottomSheetNavigation: SlotNavigation<TokenReceiveConfig> = SlotNavigation()
+    val bottomSheetNavigation: SlotNavigation<TangemPayDetailsNavigation> = SlotNavigation()
 
     init {
         fetchBalance()
@@ -96,9 +99,15 @@ internal class TangemPayDetailsModel @Inject constructor(
                             fallbackBackground = TangemColorPalette.Meadow.toArgb(),
                         ),
                     )
-                    bottomSheetNavigation.activate(config)
+                    bottomSheetNavigation.activate(TangemPayDetailsNavigation.Receive(config))
                 }
-                .onLeft { showError() }
+                .onLeft {
+                    val messageUM = TangemPayErrorMessageFactory.createError(
+                        type = TangemPayDetailsErrorType.Receive,
+                        onDismiss = bottomSheetNavigation::dismiss,
+                    )
+                    bottomSheetNavigation.activate(TangemPayDetailsNavigation.Error(messageUM))
+                }
         }
     }
 
