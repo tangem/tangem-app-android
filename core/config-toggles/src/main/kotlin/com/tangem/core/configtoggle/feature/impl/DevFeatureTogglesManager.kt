@@ -21,7 +21,7 @@ internal class DevFeatureTogglesManager(
     private val featureTogglesLocalStorage: LocalTogglesStorage,
 ) : MutableFeatureTogglesManager {
 
-    private var fileFeatureTogglesMap: Map<String, Boolean> = getFileFeatureToggles()
+    private val fileFeatureTogglesMap: Map<String, Boolean> = getFileFeatureToggles()
     private var featureTogglesMap: MutableMap<String, Boolean> by Delegates.notNull()
 
     init {

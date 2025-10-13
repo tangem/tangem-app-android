@@ -169,7 +169,7 @@ internal object BlockAidMapper {
         val tokenInfo = TokenInfo(
             chainId = exposure.asset.chainId,
             logoUrl = exposure.asset.logoUrl,
-            symbol = exposure.asset.symbol ?: "",
+            symbol = exposure.asset.symbol.orEmpty(),
             decimals = exposure.asset.decimals ?: 0,
         )
         return exposure.spenders.flatMap { (_, spender) ->
@@ -188,8 +188,8 @@ internal object BlockAidMapper {
     private fun mapApproveNftTransaction(exposure: Exposure): ApproveInfo.NonFungibleToken {
         return ApproveInfo.NonFungibleToken(
             name = exposure.asset.name.orEmpty(),
-            logoUrl = exposure.spenders.values.firstOrNull()?.exposure?.firstOrNull()?.logoUrl
-                ?: exposure.asset.logoUrl,
+            logoUrl = exposure.spenders.values.firstOrNull()
+                ?.exposure?.firstOrNull()?.logoUrl ?: exposure.asset.logoUrl,
         )
     }
 
@@ -201,7 +201,7 @@ internal object BlockAidMapper {
             val token = TokenInfo(
                 chainId = diff.asset.chainId,
                 logoUrl = diff.asset.logoUrl,
-                symbol = diff.asset.symbol ?: "",
+                symbol = diff.asset.symbol.orEmpty(),
                 decimals = diff.asset.decimals ?: 0,
             )
             diff.outTransfer.orEmpty().forEach { transfer ->

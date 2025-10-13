@@ -108,6 +108,16 @@ data class TxInfo(
         data class Operation(val name: String) : TransactionType
 
         @Serializable
+        sealed interface YieldSupply : TransactionType {
+
+            @Serializable
+            data object Enter : YieldSupply
+
+            @Serializable
+            data object Exit : YieldSupply
+        }
+
+        @Serializable
         sealed interface Staking : TransactionType {
 
             @Serializable
