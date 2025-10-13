@@ -31,13 +31,13 @@ internal fun createEmptyExchangeTo(): ExchangeCardUM.Empty {
  */
 internal fun ExchangeCardUM.toFilled(
     selectedTokenItemState: TokenItemState,
-    account: Account.CryptoPortfolio,
+    account: Account.CryptoPortfolio?,
     isAccountsMode: Boolean,
     isFromCurrency: Boolean,
     removeButtonUM: ExchangeCardUM.RemoveButtonUM? = null,
 ): ExchangeCardUM.Filled {
     return ExchangeCardUM.Filled(
-        titleUM = if (isAccountsMode) {
+        titleUM = if (account != null && isAccountsMode) {
             ExchangeCardUM.TitleUM.Account(
                 prefixText = if (isFromCurrency) {
                     resourceReference(R.string.common_from)
