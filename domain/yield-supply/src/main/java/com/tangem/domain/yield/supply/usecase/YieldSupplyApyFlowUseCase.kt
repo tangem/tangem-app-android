@@ -1,6 +1,6 @@
 package com.tangem.domain.yield.supply.usecase
 
-import com.tangem.domain.yield.supply.YieldSupplyMarketRepository
+import com.tangem.domain.yield.supply.YieldSupplyRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -12,11 +12,11 @@ import kotlinx.coroutines.flow.map
  * - value: APY as string
  */
 class YieldSupplyApyFlowUseCase(
-    private val yieldSupplyMarketRepository: YieldSupplyMarketRepository,
+    private val yieldSupplyRepository: YieldSupplyRepository,
 ) {
 
     operator fun invoke(): Flow<Map<String, String>> {
-        return yieldSupplyMarketRepository.getMarketsFlow()
+        return yieldSupplyRepository.getMarketsFlow()
             .map { yieldMarketTokenList ->
                 yieldMarketTokenList.filter { it.isActive }.associate { token ->
                     token.yieldSupplyKey to token.apy.toString()
