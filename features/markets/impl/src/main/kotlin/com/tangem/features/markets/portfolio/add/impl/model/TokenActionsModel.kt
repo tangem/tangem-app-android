@@ -9,11 +9,9 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.TokenReceiveConfig
-import com.tangem.domain.tokens.GetViewedTokenReceiveWarningUseCase
-import com.tangem.domain.transaction.usecase.GetEnsNameUseCase
+import com.tangem.domain.transaction.usecase.ReceiveAddressesFactory
 import com.tangem.features.markets.portfolio.add.impl.TokenActionsComponent
 import com.tangem.features.markets.portfolio.add.impl.ui.state.TokenActionsUM
-import com.tangem.features.markets.portfolio.impl.model.MarketsPortfolioModel
 import com.tangem.features.markets.portfolio.impl.model.TokenActionsHandler
 import com.tangem.features.markets.portfolio.impl.model.TokenActionsHandler.HandledQuickAction
 import com.tangem.features.markets.portfolio.impl.ui.state.TokenActionsBSContentUM
@@ -35,8 +33,7 @@ internal class TokenActionsModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val uiBuilder: TokenActionsUiBuilder,
     private val analyticsEventHandler: AnalyticsEventHandler,
-    private val getEnsNameUseCase: GetEnsNameUseCase,
-    private val getViewedTokenReceiveWarningUseCase: GetViewedTokenReceiveWarningUseCase,
+    private val receiveAddressesFactory: ReceiveAddressesFactory,
 ) : Model() {
 
     private val params = paramsContainer.require<TokenActionsComponent.Params>()
@@ -73,11 +70,9 @@ internal class TokenActionsModel @Inject constructor(
         val isReceive = handledAction.action == TokenActionsBSContentUM.Action.Receive
         if (!isReceive) return
         modelScope.launch {
-            val tokenConfig = MarketsPortfolioModel.Companion.configureReceiveAddresses(
+            val tokenConfig = receiveAddressesFactory.create(
                 status = handledAction.cryptoCurrencyData.status,
                 userWalletId = handledAction.cryptoCurrencyData.userWallet.walletId,
-                getEnsNameUseCase = getEnsNameUseCase,
-                getViewedTokenReceiveWarningUseCase = getViewedTokenReceiveWarningUseCase,
             ) ?: return@launch
             bottomSheetNavigation.activate(tokenConfig)
         }
