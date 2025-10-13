@@ -236,6 +236,7 @@ internal class WalletModel @Inject constructor(
 
     private fun subscribeOnPushNotificationsPermission() {
         modelScope.launch {
+            val shouldAskNotificationPermissionsViaBs = notificationsRepository.shouldAskNotificationPermissionsViaBs()
             val shouldShow = notificationsRepository.shouldShowSubscribeOnNotificationsAfterUpdate()
             val isBiometricsEnabled = shouldSaveUserWalletsSyncUseCase()
             val isHuaweiDevice = getIsHuaweiDeviceWithoutGoogleServicesUseCase()
@@ -245,7 +246,13 @@ internal class WalletModel @Inject constructor(
                     "isHuaweiDevice $isHuaweiDevice",
             )
             if (!isBiometricsEnabled) return@launch
-            if (!shouldShow) return@launch
+            if (!shouldShow) {
+                return@launch
+            }
+            if (!shouldAskNotificationPermissionsViaBs) {
+                notificationsRepository.setShouldAskNotificationPermissionsViaBs(true)
+                return@launch
+            }
 
             delay(timeMillis = 1_800)
 
