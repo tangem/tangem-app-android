@@ -15,6 +15,7 @@ import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.staking.utils.getRewardStakingBalance
 import com.tangem.features.staking.impl.presentation.state.InnerYieldBalanceState
 import com.tangem.features.staking.impl.presentation.state.YieldReward
+import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.lib.crypto.BlockchainUtils.isStakingRewardUnavailable
 import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
@@ -91,7 +92,13 @@ internal class YieldBalancesConverter(
         val isRewardsClaimable = rewards?.isNotEmpty() == true
 
         return when {
-            isStakingRewardUnavailable(blockchainId) -> RewardBlockType.RewardUnavailable
+            isStakingRewardUnavailable(blockchainId) -> {
+                if (BlockchainUtils.isSolana(blockchainId)) {
+                    RewardBlockType.RewardUnavailable.SolanaRewardUnavailable
+                } else {
+                    RewardBlockType.RewardUnavailable.DefaultRewardUnavailable
+                }
+            }
             isRewardsClaimable && isActionable -> RewardBlockType.Rewards
             isRewardsClaimable && !isActionable -> RewardBlockType.RewardsRequirementsError
             else -> RewardBlockType.NoRewards

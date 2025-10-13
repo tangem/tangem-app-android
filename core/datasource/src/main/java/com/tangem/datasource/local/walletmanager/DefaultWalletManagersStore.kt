@@ -28,14 +28,14 @@ internal class DefaultWalletManagersStore(
     ): WalletManager? {
         val walletManagers = getSyncOrNull(userWalletId)
 
-        return walletManagers?.singleOrNull {
-            it.wallet.blockchain == blockchain &&
-                it.wallet.publicKey.derivationPath?.rawPath == derivationPath
+        return walletManagers?.singleOrNull { walletManager ->
+            walletManager.wallet.blockchain == blockchain &&
+                walletManager.wallet.publicKey.derivationPath?.rawPath == derivationPath
         }
     }
 
     override suspend fun getAllSync(userWalletId: UserWalletId): List<WalletManager> {
-        return getSyncOrNull(userWalletId) ?: emptyList()
+        return getSyncOrNull(userWalletId).orEmpty()
     }
 
     override suspend fun store(userWalletId: UserWalletId, walletManager: WalletManager) {

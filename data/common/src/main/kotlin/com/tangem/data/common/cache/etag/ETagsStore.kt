@@ -25,10 +25,17 @@ interface ETagsStore {
      */
     suspend fun store(userWalletId: UserWalletId, key: Key, value: String)
 
+    /**
+     * Clears the stored ETag value for the specified wallet and key
+     *
+     * @param userWalletId identifier of the user wallet
+     * @param key          the key for which to get the ETag value
+     */
+    suspend fun clear(userWalletId: UserWalletId, key: Key)
+
     /** Enumeration of possible keys for storing ETag values */
     enum class Key {
         WalletAccounts,
         UserTokens,
-        ;
     }
 }

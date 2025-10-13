@@ -9,7 +9,7 @@ import com.tangem.common.extensions.toMapKey
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
 import com.tangem.domain.card.common.TapWorkarounds.isTestCard
-import com.tangem.domain.card.common.TapWorkarounds.useOldStyleDerivation
+import com.tangem.domain.card.common.TapWorkarounds.hasOldStyleDerivation
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.card.configs.CardConfig
 import com.tangem.domain.card.configs.Wallet2CardConfig
@@ -112,7 +112,7 @@ fun makePublicKey(
 private fun getDerivationParams(card: CardDTO): DerivationParams? {
     return if (!card.settings.isHDWalletAllowed) {
         null
-    } else if (card.useOldStyleDerivation) {
+    } else if (card.hasOldStyleDerivation) {
         DerivationParams.Default(DerivationStyle.LEGACY)
     } else {
         DerivationParams.Default(DerivationStyle.NEW)
