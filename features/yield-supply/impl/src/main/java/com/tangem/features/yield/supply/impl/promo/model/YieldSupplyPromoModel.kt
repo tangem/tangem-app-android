@@ -42,10 +42,14 @@ internal class YieldSupplyPromoModel @Inject constructor(
     }
 
     override fun onHowItWorksClick() {
-        urlOpener.openUrl("https://tangem.com/") // TODO replace with real link
+        urlOpener.openUrl(HOW_IT_WORKS_URL)
     }
 
     override fun onStartEarningClick() {
         bottomSheetNavigation.activate(YieldSupplyPromoConfig.Action)
+    }
+
+    companion object {
+        private const val HOW_IT_WORKS_URL = "https://tangem.com/en/blog/post/savings-account "
     }
 }
