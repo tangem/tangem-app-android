@@ -191,12 +191,14 @@ internal class ItemsBuilder @Inject constructor(
                     text = resourceReference(R.string.common_backup),
                     iconRes = R.drawable.ic_more_cards_24,
                     onClick = { router.push(AppRoute.WalletBackup(userWalletId)) },
-                    label = if (hasBackup) {
-                        null
+                    endContent = if (hasBackup) {
+                        BlockUM.EndContent.None
                     } else {
-                        LabelUM(
-                            text = resourceReference(R.string.hw_backup_no_backup),
-                            style = LabelStyle.WARNING,
+                        BlockUM.EndContent.Label(
+                            label = LabelUM(
+                                text = resourceReference(R.string.hw_backup_no_backup),
+                                style = LabelStyle.WARNING,
+                            ),
                         )
                     },
                 ).let(::add)
