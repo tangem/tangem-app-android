@@ -21,6 +21,8 @@ dependencies {
     implementation(projects.domain.legacy)
     implementation(projects.domain.blockaid.models)
     implementation(projects.domain.blockaid)
+    implementation(projects.domain.quotes)
+    implementation(projects.domain.tokens)
 
     /** Tandem SDK */
     implementation(tangemDeps.blockchain)
