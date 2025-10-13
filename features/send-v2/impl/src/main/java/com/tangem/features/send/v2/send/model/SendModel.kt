@@ -454,7 +454,7 @@ internal class SendModel @Inject constructor(
     }
 
     private fun initialState(): SendUM = SendUM(
-        amountUM = AmountState.Empty(isRedesignEnabled = true),
+        amountUM = AmountState.Empty,
         destinationUM = SendDestinationInitialStateTransformer(
             cryptoCurrency = cryptoCurrency,
         ).transform(DestinationUM.Empty()),
