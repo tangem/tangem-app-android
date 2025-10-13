@@ -18,6 +18,7 @@ import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.nft.models.NFTAsset
 import com.tangem.domain.onramp.model.OnrampSource
+import com.tangem.domain.pay.TangemPayDetailsConfig
 import kotlinx.serialization.Serializable
 
 @SuppressLint("UnsafeOptInUsageError")
@@ -388,8 +389,7 @@ sealed class AppRoute(val path: String) : Route {
 
     @Serializable
     data class TangemPayDetails(
-        val customerWalletAddress: String,
-        val cardNumberEnd: String,
+        val config: TangemPayDetailsConfig,
     ) : AppRoute(path = "/tangem_pay_details")
 
     @Serializable
