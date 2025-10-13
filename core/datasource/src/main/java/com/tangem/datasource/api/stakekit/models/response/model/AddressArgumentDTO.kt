@@ -5,6 +5,7 @@ import com.squareup.moshi.JsonClass
 import java.math.BigDecimal
 
 @JsonClass(generateAdapter = true)
+@Suppress("BooleanPropertyNaming")
 data class AddressArgumentDTO(
     @Json(name = "required")
     val required: Boolean,
