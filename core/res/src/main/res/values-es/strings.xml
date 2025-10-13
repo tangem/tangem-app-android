@@ -1212,6 +1212,8 @@
   <string name="user_push_notification_agreement_argument_two_subtitle">Acceso anticipado a nuevas funciones y ofertas exclusivas.</string>
   <string name="user_push_notification_agreement_argument_two_title">Actualizaciones de características y noticias</string>
   <string name="user_push_notification_agreement_header">¿Quiere utilizar\nnotificaciones push?</string>
+  <string name="user_push_notification_banner_subtitle">Active las notificaciones push y le avisaremos al instante cuando le lleguen fondos.</string>
+  <string name="user_push_notification_banner_title">No se pierda ninguna transacción</string>
   <string name="user_wallet_list_add_button">Agregar una nueva billetera</string>
   <string name="user_wallet_list_delete_prompt">¿Estás seguro de que deseas olvidar esta billetera?</string>
   <string name="user_wallet_list_error_unable_to_unlock">Ha ocurrido un error, por favor escanee su tarjeta o anillo para iniciar sesión</string>
