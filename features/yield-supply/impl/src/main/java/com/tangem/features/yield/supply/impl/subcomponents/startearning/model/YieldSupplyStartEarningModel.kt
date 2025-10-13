@@ -8,8 +8,10 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.utils.parseToBigDecimal
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.tokens.FetchCurrencyStatusUseCase
@@ -17,7 +19,9 @@ import com.tangem.domain.tokens.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.domain.yield.supply.usecase.YieldSupplyActivateUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyEstimateEnterFeeUseCase
+import com.tangem.domain.yield.supply.usecase.YieldSupplyGetTokenStatusUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyStartEarningUseCase
 import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.impl.common.YieldSupplyAlertFactory
@@ -55,6 +59,8 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
     private val yieldSupplyNotificationsUpdateTrigger: YieldSupplyNotificationsUpdateTrigger,
     private val fetchCurrencyStatusUseCase: FetchCurrencyStatusUseCase,
     private val yieldSupplyAlertFactory: YieldSupplyAlertFactory,
+    private val yieldSupplyActivateUseCase: YieldSupplyActivateUseCase,
+    private val yieldSupplyGetTokenStatusUseCase: YieldSupplyGetTokenStatusUseCase,
 ) : Model(), YieldSupplyNotificationsComponent.ModelCallback {
 
     private val params: YieldSupplyStartEarningComponent.Params = paramsContainer.require()
@@ -106,13 +112,26 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
         }
     }
 
+    private suspend fun getMaxFee(): BigDecimal? {
+        if (uiState.value.maxFee != BigDecimal.ZERO) return uiState.value.maxFee
+        val yieldTokenStatus = yieldSupplyGetTokenStatusUseCase(cryptoCurrency as CryptoCurrency.Token)
+            .getOrNull()
+        return yieldTokenStatus?.maxFeeNative?.parseToBigDecimal(cryptoCurrency.decimals)
+    }
+
     private suspend fun onLoadFee() {
         if (cryptoCurrencyStatus.value is CryptoCurrencyStatus.Loading || uiState.value.isTransactionSending) return
+
+        val maxFee = if (uiState.value.maxFee == BigDecimal.ZERO) {
+            getMaxFee()
+        } else {
+            uiState.value.maxFee
+        } ?: return
 
         val transactionListData = yieldSupplyStartEarningUseCase(
             userWalletId = userWallet.walletId,
             cryptoCurrencyStatus = cryptoCurrencyStatus,
-            maxNetworkFee = MAX_NETWORK_FEE,
+            maxNetworkFee = maxFee,
         ).getOrNull() ?: return
 
         uiState.update {
@@ -146,7 +165,7 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
                         appCurrency = appCurrency,
                         updatedTransactionList = updatedTransactionList,
                         feeValue = feeSum,
-                        maxNetworkFee = MAX_NETWORK_FEE,
+                        maxNetworkFee = maxFee,
                     ),
                 )
                 yieldSupplyNotificationsUpdateTrigger.triggerUpdate(
@@ -189,6 +208,7 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
                 },
                 ifRight = {
                     fetchCurrencyStatusUseCase(userWalletId = userWallet.walletId, cryptoCurrency.id)
+                    yieldSupplyActivateUseCase(cryptoCurrency)
                     modelScope.launch {
                         params.callback.onTransactionSent()
                     }
@@ -273,9 +293,5 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
             },
             popBack = params.callback::onBackClick,
         )
-    }
-
-    private companion object {
-        val MAX_NETWORK_FEE: BigDecimal = BigDecimal.TEN // TODO replace with value from api
     }
 }
