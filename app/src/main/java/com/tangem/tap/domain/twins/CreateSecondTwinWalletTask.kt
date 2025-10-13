@@ -37,7 +37,7 @@ class CreateSecondTwinWalletTask(
             }
 
             if (!TwinsHelper.isTwinsCompatible(firstCardId, card.cardId)) {
-                callback(CompletionResult.Failure(IncompatibleTwinCard))
+                callback(CompletionResult.Failure(IncompatibleTwinCard()))
                 return
             }
 

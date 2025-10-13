@@ -74,7 +74,7 @@ class TotalBalanceUpdateTest : BaseTestCase() {
             }
             step("Open 'Markets screen'") {
                 swipeMarketsBlock(SwipeDirection.UP)
-                composeTestRule.waitForIdle()
+                waitForIdle()
             }
             step("Click on $tokenTitle token") {
                 onMarketsScreen { tokenWithTitle(tokenTitle).clickWithAssertion() }
@@ -95,7 +95,7 @@ class TotalBalanceUpdateTest : BaseTestCase() {
                 onDialog { continueButton.assertIsNotDisplayed() }
             }
             step("Go back to 'Markets: tokens list'") {
-                composeTestRule.waitForIdle()
+                waitForIdle()
                 onMarketsScreen { topBarBackButton.clickWithAssertion() }
             }
             step("Close 'Markets screen'") {
@@ -151,7 +151,7 @@ class TotalBalanceUpdateTest : BaseTestCase() {
                 onMainScreen { totalBalanceText.assertTextContains(TOTAL_BALANCE) }
             }
             step("Long click on token with name: '$tokenTitle'") {
-                composeTestRule.waitForIdle()
+                waitForIdle()
                 onMainScreen {
                     tokenWithTitleAndAddress(tokenTitle).performTouchInput {
                         longClick(

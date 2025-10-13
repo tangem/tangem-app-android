@@ -93,7 +93,7 @@ fun InputRowEnterAmount(
                         .padding(top = TangemTheme.dimens.spacing8),
                 )
             }
-            iconRes?.let {
+            iconRes?.let { iconRes ->
                 Icon(
                     painter = painterResource(id = iconRes),
                     contentDescription = null,

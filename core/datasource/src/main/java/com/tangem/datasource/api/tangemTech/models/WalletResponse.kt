@@ -4,6 +4,7 @@ import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 
 @JsonClass(generateAdapter = true)
+@Suppress("BooleanPropertyNaming")
 data class WalletResponse(
     @Json(name = "notifyStatus") val notifyStatus: Boolean,
     @Json(name = "id") val id: String,
