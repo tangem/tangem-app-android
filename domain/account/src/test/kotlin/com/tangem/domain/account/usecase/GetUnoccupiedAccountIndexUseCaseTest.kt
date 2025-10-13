@@ -4,6 +4,7 @@ import arrow.core.left
 import arrow.core.toOption
 import com.google.common.truth.Truth
 import com.tangem.domain.account.repository.AccountsCRUDRepository
+import com.tangem.domain.account.usecase.GetUnoccupiedAccountIndexUseCase.Error
 import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.wallet.UserWalletId
 import io.mockk.clearMocks
@@ -28,6 +29,23 @@ class GetUnoccupiedAccountIndexUseCaseTest {
     }
 
     @Test
+    fun `invoke should return error if repository returns 0`() = runTest {
+        // Arrange
+        coEvery { crudRepository.getTotalAccountsCountSync(userWalletId) } returns 0.toOption()
+
+        // Act
+        val actual = useCase(userWalletId = userWalletId).leftOrNull() as Error.DataOperationFailed
+
+        // Assert
+        val expected =
+            IllegalStateException("DerivationIndex cannot be zero because it is reserved for the main account")
+        Truth.assertThat(actual.cause).isInstanceOf(expected::class.java)
+        Truth.assertThat(actual.cause).hasMessageThat().isEqualTo(expected.message)
+
+        coVerify { crudRepository.getTotalAccountsCountSync(userWalletId) }
+    }
+
+    @Test
     fun `invoke should return next unoccupied index when repository returns count`() = runTest {
         // Arrange
         coEvery { crudRepository.getTotalAccountsCountSync(userWalletId) } returns 3.toOption()
@@ -36,7 +54,7 @@ class GetUnoccupiedAccountIndexUseCaseTest {
         val actual = useCase(userWalletId = userWalletId)
 
         // Assert
-        val expected = DerivationIndex(4)
+        val expected = DerivationIndex(3)
         Truth.assertThat(actual).isEqualTo(expected)
 
         coVerify { crudRepository.getTotalAccountsCountSync(userWalletId) }
@@ -52,7 +70,7 @@ class GetUnoccupiedAccountIndexUseCaseTest {
         val actual = useCase(userWalletId = userWalletId)
 
         // Assert
-        val expected = GetUnoccupiedAccountIndexUseCase.Error.DataOperationFailed(exception).left()
+        val expected = Error.DataOperationFailed(exception).left()
         Truth.assertThat(actual).isEqualTo(expected)
 
         coVerify { crudRepository.getTotalAccountsCountSync(userWalletId) }

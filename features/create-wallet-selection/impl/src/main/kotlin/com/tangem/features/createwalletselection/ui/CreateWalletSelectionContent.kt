@@ -140,11 +140,11 @@ internal fun CreateWalletSelectionContent(state: CreateWalletSelectionUM, modifi
 
 @Composable
 private fun WalletBlock(
-    modifier: Modifier = Modifier,
     title: String,
     description: String,
-    badge: @Composable () -> Unit,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    badge: @Composable () -> Unit,
 ) {
     Column(
         modifier = modifier

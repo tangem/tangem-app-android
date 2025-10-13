@@ -325,7 +325,7 @@ private fun AddPublicProviderDialog(state: BlockchainProvidersUM.AddPublicProvid
         fieldValue = value,
         confirmButton = DialogButtonUM(
             title = stringResourceSafe(R.string.common_save),
-            enabled = value.text.isNotBlank() && !state.hasError,
+            isEnabled = value.text.isNotBlank() && !state.hasError,
             onClick = {
                 state.onSaveClick(
                     buildString {
