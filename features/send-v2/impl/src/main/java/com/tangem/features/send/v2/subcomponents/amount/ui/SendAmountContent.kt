@@ -30,7 +30,6 @@ import com.tangem.features.send.v2.subcomponents.amount.ui.preview.SendAmountCli
 @Composable
 fun SendAmountContent(
     amountState: AmountState,
-    isBalanceHidden: Boolean,
     clickIntents: SendAmountClickIntents,
     isSendWithSwapAvailable: Boolean,
     modifier: Modifier = Modifier,
@@ -38,7 +37,6 @@ fun SendAmountContent(
     Column(modifier = modifier.background(TangemTheme.colors.background.tertiary)) {
         AmountScreenContent(
             amountState = amountState,
-            isBalanceHidden = isBalanceHidden,
             clickIntents = clickIntents,
             extraContent = {
                 SendConvertTokenButton(
@@ -95,7 +93,6 @@ private fun SendAmountContent_Preview(@PreviewParameter(SendAmountContentPreview
     TangemThemePreview {
         SendAmountContent(
             amountState = params,
-            isBalanceHidden = true,
             clickIntents = SendAmountClickIntentsStub,
             isSendWithSwapAvailable = true,
         )
