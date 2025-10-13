@@ -4,6 +4,7 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.domain.walletconnect.WcAnalyticEvents
 import com.tangem.features.send.v2.api.FeeSelectorComponent
+import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.v2.api.params.FeeSelectorParams.FeeDisplaySource
 import com.tangem.features.send.v2.api.params.FeeSelectorParams.FeeSelectorDetailsParams
 import com.tangem.features.walletconnect.connections.components.AlertsComponentV2
@@ -55,6 +56,7 @@ internal fun getWcCommonScreen(
                     feeStateConfiguration = model.feeStateConfiguration,
                     feeDisplaySource = FeeDisplaySource.BottomSheet,
                     analyticsCategoryName = WcAnalyticEvents.WC_CATEGORY_NAME,
+                    analyticsSendSource = CommonSendAnalyticEvents.CommonSendSource.WalletConnect,
                 ),
             )
         }
