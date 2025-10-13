@@ -68,6 +68,8 @@ dependencies {
     implementation(projects.domain.nft)
     implementation(projects.domain.notifications)
     implementation(projects.domain.swap.models)
+    implementation(projects.domain.account)
+    implementation(projects.domain.account.status)
 
 
     /** Compose libraries */
