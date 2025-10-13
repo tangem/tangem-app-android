@@ -77,7 +77,7 @@ fun AmountBlockV2(
     )
 }
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LongMethod")
 @Composable
 private fun AmountBlockV2(
     title: TextReference,
@@ -97,7 +97,10 @@ private fun AmountBlockV2(
             .clip(TangemTheme.shapes.roundedCornersXMedium)
             .background(TangemTheme.colors.background.action)
             .conditional(onClick != null) {
-                clickable(enabled = !isClickDisabled && !isEditingDisabled, onClick = onClick!!)
+                clickable(
+                    enabled = !isClickDisabled && !isEditingDisabled,
+                    onClick = requireNotNull(onClick),
+                )
             }
             .padding(TangemTheme.dimens.spacing16),
     ) {
@@ -121,7 +124,9 @@ private fun AmountBlockV2(
         ) {
             Column(
                 verticalArrangement = Arrangement.spacedBy(4.dp),
-                modifier = Modifier.padding(top = 8.dp).weight(1f),
+                modifier = Modifier
+                    .padding(top = 8.dp)
+                    .weight(1f),
             ) {
                 ResizableText(
                     text = firstAmount,
