@@ -9,7 +9,6 @@ import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetV2Ds
 import com.tangem.core.ui.components.bottomsheets.message.messageBottomSheetUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.message.SnackbarMessage.Duration
 
 /**
  * Event that is used to show a message in the UI.
@@ -88,7 +87,7 @@ data class SnackbarMessage(
  * @param secondAction The second dialog action to perform. Optional, `null` by default.
  * Performing the second action always dismisses the dialog.
  * @param isDismissable If `false` then dialog can not be dismissed by back button click or by outside click.
- * @param dismissOnFirstAction If `true` then dialog is dismissed when first action is performed,
+ * @param shouldDismissOnFirstAction If `true` then dialog is dismissed when first action is performed,
  * ignoring lambda passed to [EventMessageAction.onClick].
  * `true` by default.
  * @param onDismissRequest The action to perform when the dialog is dismissed.
@@ -99,7 +98,7 @@ data class DialogMessage(
     val firstAction: EventMessageAction,
     val secondAction: EventMessageAction? = null,
     val isDismissable: Boolean = true,
-    val dismissOnFirstAction: Boolean = true,
+    val shouldDismissOnFirstAction: Boolean = true,
     val onDismissRequest: () -> Unit = {},
 ) : EventMessage {
 
@@ -138,7 +137,7 @@ data class DialogMessage(
                 message = message,
                 title = title,
                 isDismissable = isDismissable,
-                dismissOnFirstAction = dismissOnFirstAction,
+                shouldDismissOnFirstAction = dismissOnFirstAction,
                 onDismissRequest = onDismissRequest,
                 firstAction = firstActionBuilder(buttonsScope),
                 secondAction = secondActionBuilder?.invoke(buttonsScope),
@@ -214,14 +213,14 @@ fun bottomSheetMessage(init: @MessageBottomSheetV2Dsl MessageBottomSheetUMV2.() 
  * Represents an action button in the dialog.
  *
  * @param title The title of the action.
- * @param warning If `true` then the action is highlighted as a warning.
- * @param enabled If `false` then the action is disabled.
+ * @param isWarning If `true` then the action is highlighted as a warning.
+ * @param isEnabled If `false` then the action is disabled.
  * @param onClick The action to perform when the button is clicked.
  * */
 data class EventMessageAction(
     val title: TextReference,
-    val warning: Boolean = false,
-    val enabled: Boolean = true,
+    val isWarning: Boolean = false,
+    val isEnabled: Boolean = true,
     val onClick: () -> Unit,
 ) {
 
