@@ -24,12 +24,16 @@ dependencies {
     api(projects.domain.networks)
     api(projects.domain.staking)
     api(projects.domain.tokens)
+    api(projects.domain.wallets)
 
+    implementation(projects.libs.blockchainSdk)
     implementation(projects.libs.crypto)
 
     implementation(deps.kotlin.datetime)
     implementation(deps.kotlin.serialization)
     implementation(deps.timber)
+
+    implementation(tangemDeps.blockchain)
 
     // region DI
     implementation(deps.hilt.android)
