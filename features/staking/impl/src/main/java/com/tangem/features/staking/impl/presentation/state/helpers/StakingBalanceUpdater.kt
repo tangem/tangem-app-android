@@ -76,6 +76,11 @@ internal class StakingBalanceUpdater @AssistedInject constructor(
         }
     }
 
+    suspend fun partialUpdateWithDelay() {
+        delay(BALANCE_UPDATE_DELAY)
+        partialUpdate()
+    }
+
     private suspend fun fetchCurrencyStatus(delayMillis: Long = 0L) {
         delay(delayMillis)
         fetchCurrencyStatusUseCase(

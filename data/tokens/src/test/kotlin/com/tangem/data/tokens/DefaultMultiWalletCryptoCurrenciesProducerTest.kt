@@ -261,7 +261,7 @@ internal class DefaultMultiWalletCryptoCurrenciesProducerTest {
         val actual1 = getEmittedValues(flow = producerFlow)
 
         // Assert
-        val expected1 = producer.fallback
+        val expected1 = producer.fallback.getOrNull()
         Truth.assertThat(actual1.size).isEqualTo(1)
         Truth.assertThat(actual1.first()).isEqualTo(expected1)
 
@@ -297,7 +297,7 @@ internal class DefaultMultiWalletCryptoCurrenciesProducerTest {
         val actual = producer.produce().let(::getEmittedValues)
 
         // Assert
-        val expected = producer.fallback
+        val expected = producer.fallback.getOrNull()
         Truth.assertThat(actual.size).isEqualTo(1)
         Truth.assertThat(actual.first()).isEqualTo(expected)
 
