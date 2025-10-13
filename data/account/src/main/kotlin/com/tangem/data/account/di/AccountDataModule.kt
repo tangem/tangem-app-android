@@ -7,13 +7,16 @@ import com.tangem.data.account.fetcher.DefaultWalletAccountsFetcher
 import com.tangem.data.account.repository.DefaultAccountsCRUDRepository
 import com.tangem.data.account.store.AccountsResponseStoreFactory
 import com.tangem.data.account.store.ArchivedAccountsStoreFactory
+import com.tangem.data.account.tokens.DefaultMainAccountTokensMigration
 import com.tangem.data.common.account.WalletAccountsFetcher
 import com.tangem.data.common.account.WalletAccountsSaver
 import com.tangem.data.common.cache.etag.ETagsStore
+import com.tangem.data.common.currency.UserTokensSaver
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.account.repository.AccountsCRUDRepository
+import com.tangem.domain.account.tokens.MainAccountTokensMigration
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
@@ -61,4 +64,16 @@ internal object AccountDataModule {
     @Provides
     @Singleton
     fun provideWalletAccountsSaver(impl: DefaultWalletAccountsFetcher): WalletAccountsSaver = impl
+
+    @Provides
+    @Singleton
+    fun provideMainAccountTokensMigration(
+        accountsResponseStoreFactory: AccountsResponseStoreFactory,
+        userTokensSaver: UserTokensSaver,
+    ): MainAccountTokensMigration {
+        return DefaultMainAccountTokensMigration(
+            accountsResponseStoreFactory = accountsResponseStoreFactory,
+            userTokensSaver = userTokensSaver,
+        )
+    }
 }

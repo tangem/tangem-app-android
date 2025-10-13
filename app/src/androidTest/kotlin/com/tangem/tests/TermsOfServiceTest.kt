@@ -2,9 +2,9 @@ package com.tangem.tests
 
 import androidx.test.InstrumentationRegistry.getTargetContext
 import com.tangem.common.BaseTestCase
-import com.tangem.common.extensions.SwipeDirection
 import com.tangem.common.extensions.clickWithAssertion
-import com.tangem.common.extensions.swipeVertical
+import com.tangem.common.extensions.launchApp
+import com.tangem.common.extensions.stopApp
 import com.tangem.screens.onDisclaimerScreen
 import com.tangem.screens.onStoriesScreen
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -49,8 +49,9 @@ class TermsOfServiceTest : BaseTestCase() {
     @Test
     fun acceptTermsOfServiceAfterAppRestart() {
         val packageName = getTargetContext().packageName
+        val tosUrl = "https://tangem.com/tangem_tos.html"
+
         setupHooks().run {
-            val tosUrl = "https://tangem.com/tangem_tos.html"
             step("Assert title of 'Disclaimer screen' is displayed") {
                 onDisclaimerScreen { title.assertIsDisplayed() }
             }
@@ -65,14 +66,11 @@ class TermsOfServiceTest : BaseTestCase() {
             step("'Accept' button is displayed") {
                 onDisclaimerScreen { acceptButton.assertIsDisplayed() }
             }
-            step("Open recent apps") {
-                device.uiDevice.pressRecentApps()
-            }
-            step("Stop app by swipe") {
-                swipeVertical(SwipeDirection.UP, startHeightRatio = 0.5f)
+            step("Stop app") {
+                stopApp(packageName)
             }
             step("Launch app") {
-                device.apps.launch(packageName)
+                launchApp(packageName)
             }
             step("Assert title of 'Disclaimer screen' is displayed") {
                 onDisclaimerScreen { title.assertIsDisplayed() }
@@ -86,16 +84,22 @@ class TermsOfServiceTest : BaseTestCase() {
                 }
             }
             step("Click on 'Accept' button") {
-                onDisclaimerScreen { acceptButton.clickWithAssertion() }
+                onDisclaimerScreen {
+                    waitForIdle()
+                    acceptButton.clickWithAssertion()
+                }
             }
-            step("Open recent apps") {
-                device.uiDevice.pressRecentApps()
+            step("Assert 'Stories' screen is opened") {
+                onStoriesScreen {
+                    scanButton.assertIsDisplayed()
+                    orderButton.assertIsDisplayed()
+                }
             }
-            step("Stop app by swipe") {
-                swipeVertical(SwipeDirection.UP, startHeightRatio = 0.5f)
+            step("Stop app") {
+                stopApp(packageName)
             }
             step("Launch app") {
-                device.apps.launch(packageName)
+                launchApp(packageName)
             }
             step("Assert 'Stories' screen is opened") {
                 onStoriesScreen {

@@ -15,5 +15,4 @@ enum class TokensGroupType {
 
     /** Grouping by network */
     NETWORK,
-    ;
 }
