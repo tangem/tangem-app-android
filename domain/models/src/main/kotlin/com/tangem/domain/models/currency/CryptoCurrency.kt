@@ -99,7 +99,7 @@ sealed class CryptoCurrency {
         val rawCurrencyId: RawID? get() = (suffix as? Suffix.RawID)?.rawId?.let { RawID(it) }
 
         /** Represents a contract address */
-        val contractAddress: String? get() = (suffix as? Suffix.RawID)?.contractAddress
+        val contractAddress: String? get() = suffix.contractAddress
 
         /** Represents a raw cryptocurrency's network ID */
         val rawNetworkId: String
@@ -170,10 +170,11 @@ sealed class CryptoCurrency {
 
             /** The value of the suffix, which could be either a raw ID or a contract address. */
             abstract val value: String
+            abstract val contractAddress: String?
 
             /** Represents a raw ID suffix. */
             @Serializable
-            data class RawID(val rawId: String, val contractAddress: String? = null) : Suffix() {
+            data class RawID(val rawId: String, override val contractAddress: String? = null) : Suffix() {
                 override val value: String
                     get() = buildString {
                         append(rawId)
@@ -186,7 +187,7 @@ sealed class CryptoCurrency {
 
             /** Represents a contract address suffix. */
             @Serializable
-            data class ContractAddress(val contractAddress: String) : Suffix() {
+            data class ContractAddress(override val contractAddress: String) : Suffix() {
                 override val value: String get() = contractAddress
             }
         }
