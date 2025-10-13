@@ -77,7 +77,7 @@ internal class SwapSelectTokensModel @Inject constructor(
                     selectedTokenItemState = selectedTokenItemState,
                     onRemoveClick = ::onRemoveFromTokenClick,
                     isAccountsMode = isAccountsMode,
-                    account = getAccountCurrencyStatusUseCase.invoke(
+                    account = getAccountCurrencyStatusUseCase.invokeSync(
                         userWalletId = params.userWalletId,
                         currency = status.currency,
                     ).getOrNull()?.account,
@@ -104,7 +104,7 @@ internal class SwapSelectTokensModel @Inject constructor(
                 transformer = SelectToTokenTransformer(
                     selectedTokenItemState = selectedTokenItemState,
                     isAccountsMode = isAccountsMode,
-                    account = getAccountCurrencyStatusUseCase.invoke(
+                    account = getAccountCurrencyStatusUseCase.invokeSync(
                         userWalletId = params.userWalletId,
                         currency = status.currency,
                     ).getOrNull()?.account,
