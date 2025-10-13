@@ -28,9 +28,12 @@ import androidx.compose.ui.unit.dp
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.tangem.common.ui.R
+import com.tangem.common.ui.account.AccountIcon
+import com.tangem.common.ui.account.AccountIconPreviewData
 import com.tangem.common.ui.userwallet.state.UserWalletItemUM
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.TextShimmer
+import com.tangem.core.ui.components.account.AccountIconSize
 import com.tangem.core.ui.components.block.BlockCard
 import com.tangem.core.ui.components.block.TangemBlockCardColors
 import com.tangem.core.ui.components.label.Label
@@ -198,7 +201,7 @@ private fun BalanceContent(balance: UserWalletItemUM.Balance, modifier: Modifier
     }
 }
 
-@Suppress("MagicNumber")
+@Suppress("MagicNumber", "LongMethod")
 @Composable
 fun CardImage(imageState: UserWalletItemUM.ImageState, modifier: Modifier = Modifier) {
     val imageModifier = modifier
@@ -264,6 +267,11 @@ fun CardImage(imageState: UserWalletItemUM.ImageState, modifier: Modifier = Modi
                 )
             }
         }
+        is UserWalletItemUM.ImageState.Account -> AccountIcon(
+            name = imageState.name,
+            icon = imageState.icon,
+            size = AccountIconSize.Default,
+        )
     }
 }
 
@@ -423,6 +431,18 @@ private class UserWalletItemUMPreviewProvider : PreviewParameterProvider<UserWal
                 information = getInformation(cardCount = 3),
                 balance = UserWalletItemUM.Balance.NotShowing,
                 imageState = UserWalletItemUM.ImageState.MobileWallet,
+                isEnabled = true,
+                onClick = {},
+            ),
+            UserWalletItemUM(
+                id = UserWalletId("user_wallet_4".encodeToByteArray()),
+                name = stringReference("Main account"),
+                information = getInformation(cardCount = 3),
+                balance = UserWalletItemUM.Balance.NotShowing,
+                imageState = UserWalletItemUM.ImageState.Account(
+                    name = stringReference("Main account"),
+                    icon = AccountIconPreviewData.randomAccountIcon(),
+                ),
                 isEnabled = true,
                 onClick = {},
             ),
