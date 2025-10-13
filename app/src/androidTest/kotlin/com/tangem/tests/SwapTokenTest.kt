@@ -6,7 +6,9 @@ import com.tangem.common.annotations.ApiEnv
 import com.tangem.common.annotations.ApiEnvConfig
 import com.tangem.common.constants.TestConstants.TOTAL_BALANCE
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
-import com.tangem.common.extensions.clickWithAssertion
+import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
+import com.tangem.common.extensions.*
+import com.tangem.common.utils.*
 import com.tangem.datasource.api.common.config.ApiConfig
 import com.tangem.datasource.api.common.config.ApiEnvironment
 import com.tangem.screens.*
@@ -28,10 +30,12 @@ class SwapTokenTest : BaseTestCase() {
     @Test
     fun networkFeeTest() {
         val inputAmount = "100"
-        setupHooks().run {
-            val tokenTitle = "Polygon"
-            val balance = TOTAL_BALANCE
+        val tokenTitle = "Polygon"
+        val balance = TOTAL_BALANCE
 
+        setupHooks().run {
+
+            resetWireMockScenarios()
             step("Open 'Main Screen'") {
                 openMainScreen()
             }
@@ -71,7 +75,7 @@ class SwapTokenTest : BaseTestCase() {
                 }
             }
             step("Input swap amount = '$inputAmount'") {
-                composeTestRule.waitForIdle()
+                waitForIdle()
                 onSwapTokenScreen {
                     textInput.clickWithAssertion()
                     textInput.performTextReplacement(inputAmount)
@@ -89,7 +93,7 @@ class SwapTokenTest : BaseTestCase() {
             }
             step("Assert 'Network fee' block is displayed") {
                 onSwapTokenScreen {
-                    flakySafely(WAIT_UNTIL_TIMEOUT) {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
                         networkFeeBlock.assertIsDisplayed()
                     }
                 }
@@ -104,7 +108,12 @@ class SwapTokenTest : BaseTestCase() {
     @DisplayName("Swap: network error test")
     @Test
     fun networkErrorSwapTest() {
-        setupHooks().run {
+        setupHooks(
+            additionalAfterSection = {
+                enableWiFi()
+                enableMobileData()
+            }
+        ).run {
             val tokenTitle = "Polygon"
             val balance = TOTAL_BALANCE
 
@@ -119,6 +128,10 @@ class SwapTokenTest : BaseTestCase() {
             }
             step("Click on token with name: '$tokenTitle'") {
                 onTokenDetailsScreen { title.assertIsDisplayed() }
+            }
+            step("Turn off Wi-Fi and Mobile Data") {
+                disableWiFi()
+                disableMobileData()
             }
             step("Click on 'Swap' button") {
                 onTokenDetailsScreen { swapButton.performClick() }
@@ -189,7 +202,7 @@ class SwapTokenTest : BaseTestCase() {
                 }
             }
             step("Input swap amount = '$inputAmount'") {
-                composeTestRule.waitForIdle()
+                waitForIdle()
                 onSwapTokenScreen {
                     textInput.clickWithAssertion()
                     textInput.performTextReplacement(inputAmount)
@@ -200,7 +213,7 @@ class SwapTokenTest : BaseTestCase() {
             }
             step("Click on 'Network fee' block") {
                 onSwapTokenScreen {
-                    flakySafely(WAIT_UNTIL_TIMEOUT) {
+                    flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
                         networkFeeBlock.clickWithAssertion()
                     }
                 }
