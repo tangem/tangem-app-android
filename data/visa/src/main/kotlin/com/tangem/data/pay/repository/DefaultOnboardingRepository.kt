@@ -102,6 +102,7 @@ internal class DefaultOnboardingRepository @Inject constructor(
                 balance = balance.availableBalance,
                 currencyCode = balance.currency,
                 customerWalletAddress = paymentAccount.customerWalletAddress,
+                depositAddress = response.depositAddress,
             )
         } else {
             null
