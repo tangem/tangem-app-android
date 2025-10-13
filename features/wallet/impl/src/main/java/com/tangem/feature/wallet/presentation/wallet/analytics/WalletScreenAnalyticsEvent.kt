@@ -144,4 +144,14 @@ sealed class WalletScreenAnalyticsEvent {
         data object ReferralPromoButtonDismiss : MainScreen(event = "Button - Referral Dismiss")
         //endregion
     }
+
+    sealed class PushBannerPromo(
+        event: String,
+        params: Map<String, String> = mapOf(),
+    ) : AnalyticsEvent(category = "Promo", event = event, params = params) {
+
+        data object PushBanner : PushBannerPromo(event = "Push Banner")
+        data object ButtonAllowPush : PushBannerPromo(event = "Button - Allow Push")
+        data object ButtonLaterPush : PushBannerPromo(event = "Button - Later Push")
+    }
 }

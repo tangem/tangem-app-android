@@ -7,13 +7,16 @@ import com.tangem.common.routing.AppRoute.ManageTokens.Source
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.domain.models.PortfolioId
 import com.tangem.domain.models.TokenReceiveConfig
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.redux.StateDialog
+import com.tangem.domain.tokens.model.details.TokenAction
 import com.tangem.feature.wallet.navigation.WalletRoute
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletDialogConfig
 import kotlinx.coroutines.channels.BufferOverflow
@@ -64,12 +67,12 @@ internal class DefaultWalletRouter @Inject constructor(
         urlOpener.openUrl(url)
     }
 
-    override fun openTokenDetails(userWalletId: UserWalletId, currencyStatus: CryptoCurrencyStatus) {
+    override fun openTokenDetails(portfolioId: PortfolioId, currencyStatus: CryptoCurrencyStatus) {
         val networkAddress = currencyStatus.value.networkAddress
         if (networkAddress != null && networkAddress.defaultAddress.value.isNotEmpty()) {
             router.push(
                 AppRoute.CurrencyDetails(
-                    userWalletId = userWalletId,
+                    portfolioId = portfolioId,
                     currency = currencyStatus.currency,
                 ),
             )
@@ -104,6 +107,28 @@ internal class DefaultWalletRouter @Inject constructor(
     override fun openTokenReceiveBottomSheet(tokenReceiveConfig: TokenReceiveConfig) {
         dialogNavigation.activate(
             configuration = WalletDialogConfig.TokenReceive(tokenReceiveConfig),
+        )
+    }
+
+    override fun openTangemPayOnboarding() {
+        router.push(AppRoute.TangemPayOnboarding(AppRoute.TangemPayOnboarding.Mode.ContinueOnboarding))
+    }
+
+    override fun openTangemPayDetails(customerWalletAddress: String, cardNumberEnd: String) {
+        router.push(AppRoute.TangemPayDetails(customerWalletAddress, cardNumberEnd))
+    }
+
+    override fun openYieldSupplyBottomSheet(
+        cryptoCurrency: CryptoCurrency,
+        tokenAction: TokenAction,
+        onWarningAcknowledged: (TokenAction) -> Unit,
+    ) {
+        dialogNavigation.activate(
+            configuration = WalletDialogConfig.YieldSupplyWarning(
+                cryptoCurrency = cryptoCurrency,
+                tokenAction = tokenAction,
+                onWarningAcknowledged = onWarningAcknowledged,
+            ),
         )
     }
 }
