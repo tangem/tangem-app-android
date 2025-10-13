@@ -8,6 +8,7 @@ import com.google.common.truth.Truth
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.models.ArchivedAccount
 import com.tangem.domain.account.repository.AccountsCRUDRepository
+import com.tangem.domain.account.tokens.MainAccountTokensMigration
 import com.tangem.domain.account.usecase.RecoverCryptoPortfolioUseCase.Error
 import com.tangem.domain.account.utils.createAccount
 import com.tangem.domain.models.account.AccountId
@@ -26,7 +27,11 @@ import org.junit.jupiter.api.TestInstance
 class RecoverCryptoPortfolioUseCaseTest {
 
     private val crudRepository: AccountsCRUDRepository = mockk(relaxUnitFun = true)
-    private val useCase = RecoverCryptoPortfolioUseCase(crudRepository)
+    private val mainAccountTokensMigration: MainAccountTokensMigration = mockk()
+    private val useCase = RecoverCryptoPortfolioUseCase(
+        crudRepository = crudRepository,
+        mainAccountTokensMigration = mainAccountTokensMigration,
+    )
 
     @BeforeEach
     fun resetMocks() {
@@ -51,6 +56,7 @@ class RecoverCryptoPortfolioUseCaseTest {
 
         coEvery { crudRepository.getAccountListSync(userWalletId) } returns accountList.toOption()
         coEvery { crudRepository.getArchivedAccountSync(account.accountId) } returns archivedAccount.toOption()
+        coEvery { mainAccountTokensMigration.migrate(userWalletId, account.derivationIndex) } returns Unit.right()
 
         // Act
         val actual = useCase(account.accountId)
@@ -59,7 +65,7 @@ class RecoverCryptoPortfolioUseCaseTest {
         val expected = account.right()
         Truth.assertThat(actual).isEqualTo(expected)
 
-        coVerifyOrder {
+        coVerifySequence {
             crudRepository.getAccountListSync(userWalletId)
             crudRepository.getArchivedAccountSync(account.accountId)
             crudRepository.saveAccounts(updatedAccountList)
@@ -77,13 +83,14 @@ class RecoverCryptoPortfolioUseCaseTest {
         coEvery { crudRepository.getAccountListSync(userWalletId) } returns None
 
         // Act
-        val actual = useCase(accountId)
+        val actual = useCase(accountId).leftOrNull() as Error.DataOperationFailed
 
         // Assert
-        val expected = Error.CriticalTechError.AccountsNotCreated(userWalletId).left()
-        Truth.assertThat(actual).isEqualTo(expected)
+        val expected = IllegalStateException("Account list not found for wallet $userWalletId")
+        Truth.assertThat(actual.cause).isInstanceOf(expected::class.java)
+        Truth.assertThat(actual.cause).hasMessageThat().isEqualTo(expected.message)
 
-        coVerifyOrder { crudRepository.getAccountListSync(userWalletId) }
+        coVerifySequence { crudRepository.getAccountListSync(userWalletId) }
         coVerify(inverse = true) {
             crudRepository.getArchivedAccountSync(any())
             crudRepository.saveAccounts(any())
@@ -108,7 +115,7 @@ class RecoverCryptoPortfolioUseCaseTest {
         val expected = Error.DataOperationFailed(exception).left()
         Truth.assertThat(actual).isEqualTo(expected)
 
-        coVerifyOrder { crudRepository.getAccountListSync(userWalletId) }
+        coVerifySequence { crudRepository.getAccountListSync(userWalletId) }
         coVerify(inverse = true) {
             crudRepository.getArchivedAccountSync(any())
             crudRepository.saveAccounts(any())
@@ -132,7 +139,7 @@ class RecoverCryptoPortfolioUseCaseTest {
         val expected = Error.DataOperationFailed(exception).left()
         Truth.assertThat(actual).isEqualTo(expected)
 
-        coVerifyOrder {
+        coVerifySequence {
             crudRepository.getAccountListSync(userWalletId)
             crudRepository.getArchivedAccountSync(account.accountId)
         }
@@ -149,13 +156,14 @@ class RecoverCryptoPortfolioUseCaseTest {
         coEvery { crudRepository.getArchivedAccountSync(account.accountId) } returns None
 
         // Act
-        val actual = useCase(account.accountId)
+        val actual = useCase(account.accountId).leftOrNull() as Error.DataOperationFailed
 
         // Assert
-        val expected = Error.CriticalTechError.AccountNotFound(account.accountId).left()
-        Truth.assertThat(actual).isEqualTo(expected)
+        val expected = IllegalStateException("Account not found: ${account.accountId}")
+        Truth.assertThat(actual.cause).isInstanceOf(expected::class.java)
+        Truth.assertThat(actual.cause).hasMessageThat().isEqualTo(expected.message)
 
-        coVerifyOrder {
+        coVerifySequence {
             crudRepository.getAccountListSync(userWalletId)
             crudRepository.getArchivedAccountSync(account.accountId)
         }
@@ -190,7 +198,7 @@ class RecoverCryptoPortfolioUseCaseTest {
         val expected = Error.DataOperationFailed(exception).left()
         Truth.assertThat(actual).isEqualTo(expected)
 
-        coVerifyOrder {
+        coVerifySequence {
             crudRepository.getAccountListSync(userWalletId)
             crudRepository.getArchivedAccountSync(account.accountId)
             crudRepository.saveAccounts(updatedAccountList)
