@@ -22,17 +22,29 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import com.tangem.common.ui.account.AccountIcon
+import com.tangem.common.ui.account.AccountIconPreviewData
 import com.tangem.core.res.getStringSafe
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.SpacerH16
 import com.tangem.core.ui.components.SpacerH24
 import com.tangem.core.ui.components.SpacerH32
+import com.tangem.core.ui.components.account.AccountIconSize
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
+import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.snackbar.CopiedTextSnackbar
 import com.tangem.core.ui.components.snackbar.TangemSnackbar
+import com.tangem.core.ui.components.token.TokenItem
+import com.tangem.core.ui.components.token.state.TokenItemState
+import com.tangem.core.ui.components.token.state.TokenItemState.FiatAmountState
+import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.ReferralProgramScreenTestTags
@@ -43,6 +55,7 @@ import com.tangem.feature.referral.models.ReferralStateHolder
 import com.tangem.feature.referral.models.ReferralStateHolder.*
 import com.tangem.feature.referral.presentation.R
 import kotlinx.coroutines.launch
+import java.util.UUID
 
 /**
  * Referral program screen for participant and non-participant
@@ -179,7 +192,13 @@ private fun ReferralInfo(
 
         is ReferralInfoState.NonParticipantContent -> {
             Conditions(state = state)
-            Spacer(modifier = Modifier.height(TangemTheme.dimens.spacing44))
+            if (state.accountAward != null) {
+                SpacerH16()
+                NonParticipateAccountAwardBlock(state.accountAward)
+                SpacerH24()
+            } else {
+                Spacer(modifier = Modifier.height(TangemTheme.dimens.spacing44))
+            }
             NonParticipateBottomBlock(
                 onAgreementClick = onAgreementClick,
                 onParticipateClick = state.onParticipateClicked,
@@ -366,6 +385,80 @@ private fun ShimmerInfo() {
     }
 }
 
+@Composable
+private fun NonParticipateAccountAwardBlock(accountAward: AccountAward) {
+    Column(
+        modifier = Modifier
+            .padding(horizontal = TangemTheme.dimens.spacing16)
+            .background(
+                color = TangemTheme.colors.background.primary,
+                shape = RoundedCornerShape(TangemTheme.dimens.spacing16),
+            ),
+    ) {
+        Text(
+            modifier = Modifier.padding(
+                start = TangemTheme.dimens.spacing16,
+                end = TangemTheme.dimens.spacing16,
+                top = TangemTheme.dimens.spacing12,
+            ),
+            text = stringResourceSafe(R.string.referral_address_for_rewards),
+            style = TangemTheme.typography.subtitle2,
+            color = TangemTheme.colors.text.tertiary,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+
+        TokenItem(
+            state = accountAward.tokenState,
+            isBalanceHidden = accountAward.isBalanceHidden,
+        )
+
+        HorizontalDivider(
+            thickness = 0.5.dp,
+            color = TangemTheme.colors.stroke.primary,
+            modifier = Modifier.padding(horizontal = 12.dp),
+        )
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(TangemTheme.dimens.spacing12),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                modifier = Modifier.weight(1f),
+                text = stringResourceSafe(R.string.account_details_title),
+                style = TangemTheme.typography.body1,
+                color = TangemTheme.colors.text.primary1,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+
+            AccountIcon(
+                name = accountAward.accountName,
+                icon = accountAward.accountIcon,
+                size = AccountIconSize.Small,
+            )
+
+            Text(
+                modifier = Modifier.padding(horizontal = 4.dp),
+                text = accountAward.accountName.resolveReference(),
+                style = TangemTheme.typography.body1,
+                color = TangemTheme.colors.text.primary1,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+
+            Icon(
+                modifier = Modifier.size(width = 18.dp, height = 24.dp),
+                painter = painterResource(id = R.drawable.ic_select_18_24),
+                contentDescription = null,
+                tint = TangemTheme.colors.icon.informative,
+            )
+        }
+    }
+}
+
 private fun Resources.getMessageForErrorSnackbar(throwable: Throwable): String {
     return when {
         throwable is DemoModeException -> getStringSafe(R.string.alert_demo_feature_disabled)
@@ -467,6 +560,60 @@ private fun Preview_ReferralScreen_NonParticipant() {
                     url = "",
                     onParticipateClicked = {},
                     participateButtonIcon = R.drawable.ic_tangem_24,
+                ),
+                errorSnackbar = null,
+                analytics = Analytics(
+                    onAgreementClicked = {},
+                    onCopyClicked = {},
+                    onShareClicked = {},
+                ),
+            ),
+        )
+    }
+}
+
+@Preview(widthDp = 360, showBackground = true)
+@Preview(widthDp = 360, showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun Preview_ReferralScreen_NonParticipantAccount() {
+    TangemThemePreview {
+        ReferralScreen(
+            stateHolder = ReferralStateHolder(
+                headerState = HeaderState(onBackClicked = {}),
+                referralInfoState = ReferralInfoState.NonParticipantContent(
+                    award = "10 USDT",
+                    networkName = "Tron",
+                    discount = "10%",
+                    url = "",
+                    onParticipateClicked = {},
+                    participateButtonIcon = R.drawable.ic_tangem_24,
+                    accountAward = AccountAward(
+                        onAccountClick = {},
+                        accountIcon = AccountIconPreviewData.randomAccountIcon(),
+                        accountName = stringReference("Main Account"),
+                        isBalanceHidden = false,
+                        tokenState = TokenItemState.Content(
+                            id = UUID.randomUUID().toString(),
+                            iconState = CurrencyIconState.TokenIcon(
+                                url = null,
+                                topBadgeIconResId = R.drawable.img_tron_22,
+                                fallbackTint = TangemColorPalette.Black,
+                                fallbackBackground = TangemColorPalette.Meadow,
+                                isGrayscale = false,
+                                shouldShowCustomBadge = false,
+                            ),
+                            titleState = TokenItemState.TitleState.Content(
+                                text = stringReference(value = "Tether"),
+                            ),
+                            fiatAmountState = FiatAmountState.Content(
+                                text = "129,65 $",
+                            ),
+                            subtitle2State = TokenItemState.Subtitle2State.TextContent(text = "129,65 USDT"),
+                            subtitleState = TokenItemState.SubtitleState.TextContent(value = stringReference("USDT")),
+                            onItemClick = {},
+                            onItemLongClick = {},
+                        ),
+                    ),
                 ),
                 errorSnackbar = null,
                 analytics = Analytics(
