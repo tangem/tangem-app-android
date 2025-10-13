@@ -1725,7 +1725,10 @@
   <string name="yield_module_fee_policy_sheet_description">今後の%sの入金はすべて、取引手数料が差し引かれて自動的にAaveに供給されます。</string>
   <string name="yield_module_fee_policy_sheet_max_fee_note">ネットワーク手数料が上限手数料を超えた場合、手数料が下がるまで取引は成立しません。この制限は後で変更できます。</string>
   <string name="yield_module_fee_policy_sheet_max_fee_title">最大手数料</string>
+  <string name="yield_module_fee_policy_sheet_min_amount_note">取引手数料は、預入額の4％未満である必要があります。Tangemは、この条件を満たす十分な残高が貯まった時点で、Aaveへの資金移動を行います。</string>
+  <string name="yield_module_fee_policy_sheet_min_amount_title">最低額</string>
   <string name="yield_module_fee_policy_sheet_title">手数料ポリシー</string>
+  <string name="yield_module_fee_policy_tangem_service_fee_title">Tangemはまた、得られた利回りに対して3％のサービス手数料を差し引きます。</string>
   <string name="yield_module_high_fee_error">ネットワーク手数料が現在高すぎます。設定した上限を下回るまで待機しています。</string>
   <string name="yield_module_historical_returns">過去のリターン</string>
   <string name="yield_module_main_view_approve_notification_description">ここに説明を入力してください。1〜3行が理想的です。[プレースホルダー]</string>
@@ -1758,7 +1761,7 @@
   <string name="yield_module_stop_earning">収益を停止する</string>
   <string name="yield_module_stop_earning_sheet_description">オフにすると、Aaveから資金が引き出され、ウォレットの%sに戻され、報酬の獲得が停止されます。</string>
   <string name="yield_module_stop_earning_sheet_fee_note">出金金額からネットワーク手数料が差し引かれます。</string>
-  <string name="yield_module_supply_apr">供給APR</string>
+  <string name="yield_module_supply_apr">供給APY</string>
   <string name="yield_module_token_details_earn_notification_apy">APY</string>
   <string name="yield_module_token_details_earn_notification_description">あなたの資産を眠らせない — 残高を運用して利息を得ましょう。</string>
   <string name="yield_module_token_details_earn_notification_earning_on_your_balance_subtitle">利息は自動的に発生します</string>
