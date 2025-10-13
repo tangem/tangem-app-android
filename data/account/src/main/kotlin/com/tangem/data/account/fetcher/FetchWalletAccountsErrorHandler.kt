@@ -47,8 +47,8 @@ internal class FetchWalletAccountsErrorHandler @Inject constructor(
         error: ApiResponseError,
         userWalletId: UserWalletId,
         savedAccountsResponse: GetWalletAccountsResponse?,
-        pushWalletAccounts: suspend (userWalletId: UserWalletId, accounts: List<WalletAccountDTO>) -> Unit,
-        storeWalletAccounts: suspend (userWalletId: UserWalletId, response: GetWalletAccountsResponse) -> Unit,
+        pushWalletAccounts: suspend (UserWalletId, List<WalletAccountDTO>) -> GetWalletAccountsResponse?,
+        storeWalletAccounts: suspend (UserWalletId, GetWalletAccountsResponse) -> Unit,
     ): GetWalletAccountsResponse? {
         val isResponseUpToDate = error.isNetworkError(code = Code.NOT_MODIFIED)
         if (isResponseUpToDate) {
@@ -56,22 +56,29 @@ internal class FetchWalletAccountsErrorHandler @Inject constructor(
             return savedAccountsResponse
         }
 
-        val response = savedAccountsResponse ?: defaultWalletAccountsResponseFactory.create(
-            userWalletId = userWalletId,
-            userTokensResponse = getFromLegacyStore(userWalletId),
-        )
-
+        var response = savedAccountsResponse ?: createDefaultResponse(userWalletId)
         val (accountDTOs, userTokensResponse) = response.accounts to response.toUserTokensResponse()
 
         val isNotFoundError = error.isNetworkError(code = Code.NOT_FOUND)
         if (isNotFoundError) {
-            pushWalletAccounts(userWalletId, accountDTOs)
             userTokensSaver.push(userWalletId = userWalletId, response = userTokensResponse)
+            val updatedResponse = pushWalletAccounts(userWalletId, accountDTOs)
+
+            if (updatedResponse != null) {
+                response = updatedResponse
+            }
         }
 
         storeWalletAccounts(userWalletId, response)
 
         return response
+    }
+
+    private suspend fun createDefaultResponse(userWalletId: UserWalletId): GetWalletAccountsResponse {
+        return defaultWalletAccountsResponseFactory.create(
+            userWalletId = userWalletId,
+            userTokensResponse = getFromLegacyStore(userWalletId),
+        )
     }
 
     private suspend fun getFromLegacyStore(userWalletId: UserWalletId): UserTokensResponse? {
