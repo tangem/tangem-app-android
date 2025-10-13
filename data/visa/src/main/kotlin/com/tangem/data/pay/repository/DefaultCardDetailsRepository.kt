@@ -74,6 +74,7 @@ internal class DefaultCardDetailsRepository @Inject constructor(
         return when (env) {
             ApiEnvironment.DEV,
             ApiEnvironment.DEV_2,
+            ApiEnvironment.DEV_3,
             ApiEnvironment.STAGE,
             ApiEnvironment.MOCK,
             -> visaLibLoader.getOrCreateConfig().rainRSAPublicKey.dev
