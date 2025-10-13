@@ -5,6 +5,7 @@ import com.squareup.moshi.JsonClass
 import com.tangem.common.extensions.calculateHashCode
 
 @JsonClass(generateAdapter = true)
+@Suppress("BooleanPropertyNaming")
 data class UserTokensResponse(
     @Json(name = "version") val version: Int = 0,
     @Json(name = "group") val group: GroupType,
