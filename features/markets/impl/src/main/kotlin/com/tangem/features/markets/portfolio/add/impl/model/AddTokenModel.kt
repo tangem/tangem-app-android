@@ -73,7 +73,7 @@ internal class AddTokenModel @Inject constructor(
                 add = listOf(cryptoCurrency),
                 remove = listOf(),
             )
-            val status = getAccountCurrencyStatusUseCase(
+            val status = getAccountCurrencyStatusUseCase.invokeSync(
                 userWalletId = accountId.userWalletId,
                 currencyId = cryptoCurrency.id,
                 network = cryptoCurrency.network,

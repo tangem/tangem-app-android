@@ -30,7 +30,7 @@ internal class AvailableToAddDataConverter @Inject constructor(
         suspend fun AccountStatus.getAvailableToAddAccount(wallet: UserWallet): AvailableToAddAccount {
             val addedNetworks = availableNetworks
                 .mapNotNull { createCryptoCurrency(wallet, it, marketParams) }
-                .mapNotNull { getAccountCurrencyStatusUseCase(wallet.walletId, it) }
+                .mapNotNull { getAccountCurrencyStatusUseCase.invokeSync(wallet.walletId, it) }
                 .mapNotNull { it.getOrNull()?.status?.currency?.network }
                 .toSet()
             return AvailableToAddAccount(
