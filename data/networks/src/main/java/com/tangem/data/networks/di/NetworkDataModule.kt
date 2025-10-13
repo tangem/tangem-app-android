@@ -40,6 +40,7 @@ internal object NetworkDataModule {
         dispatchers: CoroutineDispatcherProvider,
     ): NetworksStatusesStore {
         return DefaultNetworksStatusesStore(
+            context = context,
             runtimeStore = RuntimeSharedStore(),
             persistenceDataStore = DataStoreFactory.create(
                 serializer = MoshiDataStoreSerializer(
@@ -47,7 +48,7 @@ internal object NetworkDataModule {
                     types = mapWithStringKeyTypes(valueTypes = setTypes<NetworkStatusDM>()),
                     defaultValue = emptyMap(),
                 ),
-                produceFile = { context.dataStoreFile(fileName = "networks_statuses") },
+                produceFile = { context.dataStoreFile(fileName = "networks_statuses_2") },
                 scope = CoroutineScope(context = dispatchers.io + SupervisorJob()),
             ),
             dispatchers = dispatchers,
