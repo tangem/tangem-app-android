@@ -102,12 +102,16 @@ internal class DefaultAccountsCRUDRepository(
     }
 
     override suspend fun saveAccounts(accountList: AccountList) {
-        val userWallet = userWalletsStore.getSyncStrict(accountList.userWalletId)
+        val converter = convertersContainer.createCryptoPortfolioConverter(userWalletId = accountList.userWalletId)
 
-        val converter = convertersContainer.getWalletAccountsResponseCF.create(userWallet = userWallet)
-        val accountsResponse = converter.convert(value = accountList)
+        val accountDTOs = converter.convertListBack(
+            input = accountList.accounts.filterIsInstance<Account.CryptoPortfolio>(),
+        )
 
-        walletAccountsSaver.pushAndStore(userWalletId = userWallet.walletId, response = accountsResponse)
+        val syncedResponse = walletAccountsSaver.push(userWalletId = accountList.userWalletId, accounts = accountDTOs)
+        if (syncedResponse != null) {
+            walletAccountsSaver.store(userWalletId = accountList.userWalletId, response = syncedResponse)
+        }
     }
 
     override suspend fun saveAccount(account: Account.CryptoPortfolio) {
