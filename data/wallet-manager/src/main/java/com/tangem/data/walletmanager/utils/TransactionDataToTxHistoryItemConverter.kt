@@ -1,6 +1,10 @@
 package com.tangem.data.walletmanager.utils
 
+import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
 import com.tangem.blockchain.common.*
+import com.tangem.blockchain.yieldsupply.providers.ethereum.factory.EthereumYieldSupplyDeployCallData
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyEnterCallData
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyExitCallData
 import com.tangem.blockchainsdk.models.UpdateWalletManagerResult.Address
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.utils.converter.Converter
@@ -40,7 +44,18 @@ internal class TransactionDataToTxHistoryItemConverter(
                 TransactionStatus.Confirmed -> TxInfo.TransactionStatus.Confirmed
                 TransactionStatus.Unconfirmed -> TxInfo.TransactionStatus.Unconfirmed
             },
-            type = TxInfo.TransactionType.Transfer,
+            type = when (val extras = value.extras) {
+                is EthereumTransactionExtras -> {
+                    when (extras.callData) {
+                        is EthereumYieldSupplyDeployCallData,
+                        is EthereumYieldSupplyEnterCallData,
+                        -> TxInfo.TransactionType.YieldSupply.Enter
+                        is EthereumYieldSupplyExitCallData -> TxInfo.TransactionType.YieldSupply.Exit
+                        else -> TxInfo.TransactionType.Transfer
+                    }
+                }
+                else -> TxInfo.TransactionType.Transfer
+            },
             amount = amount,
         )
     }

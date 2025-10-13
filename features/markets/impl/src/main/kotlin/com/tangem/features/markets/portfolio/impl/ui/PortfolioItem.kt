@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
+import com.tangem.core.ui.components.icons.IconTint
 import com.tangem.core.ui.components.token.TokenItem
 import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.haptic.TangemHapticEffect
@@ -100,9 +101,9 @@ private class PortfolioTokenUMProvider : CollectionPreviewParameterProvider<Port
             tokenItemState = (tokenUM.tokenItemState as TokenItemState.Content).copy(
                 fiatAmountState = contentFiatAmount.copy(
                     icons = persistentListOf(
-                        TokenItemState.FiatAmountState.Content.IconUM(
+                        TokenFiatAmountState.Content.IconUM(
                             iconRes = R.drawable.ic_staking_24,
-                            useAccentColor = true,
+                            tint = IconTint.Accent,
                         ),
                     ),
                 ),

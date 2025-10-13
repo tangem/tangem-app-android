@@ -62,7 +62,7 @@ object NotificationsFactory {
                     currencyName = tokenStatus.currency.name,
                     feeName = coinStatus.currency.name,
                     feeSymbol = coinStatus.currency.symbol,
-                    mergeFeeNetworkName = false,
+                    shouldMergeFeeNetworkName = false,
                     onClick = {
                         onClick(coinStatus.currency)
                     },
@@ -206,6 +206,7 @@ object NotificationsFactory {
                             NotificationUM.Error.ExistentialDeposit::class.java,
                         )
                     },
+                    isActionable = balance > existentialDeposit,
                 ),
             )
         }
@@ -302,7 +303,7 @@ object NotificationsFactory {
                         currencyName = cryptoCurrencyStatus.currency.name,
                         feeName = cryptoCurrencyWarning.coinCurrency.name,
                         feeSymbol = cryptoCurrencyWarning.coinCurrency.symbol,
-                        mergeFeeNetworkName = shouldMergeFeeNetworkName,
+                        shouldMergeFeeNetworkName = shouldMergeFeeNetworkName,
                         onClick = {
                             onClick(cryptoCurrencyWarning.coinCurrency)
                         },
@@ -319,9 +320,9 @@ object NotificationsFactory {
                         feeName = cryptoCurrencyWarning.feeCurrencyName,
                         feeSymbol = cryptoCurrencyWarning.feeCurrencySymbol,
                         networkName = cryptoCurrencyWarning.networkName,
-                        mergeFeeNetworkName = shouldMergeFeeNetworkName,
+                        shouldMergeFeeNetworkName = shouldMergeFeeNetworkName,
                         onClick = {
-                            currency?.let {
+                            if (currency != null) {
                                 onClick(currency)
                             }
                         },
@@ -380,20 +381,22 @@ object NotificationsFactory {
                 add(NotificationUM.Cardano.InsufficientBalanceToTransferToken(sendingCurrency.name))
             }
             BlockchainSdkError.Cardano.InsufficientRemainingBalanceToWithdrawTokens -> {
-                when (sendingCurrency) {
-                    is CryptoCurrency.Coin -> NotificationUM.Cardano.InsufficientBalanceToTransferCoin
-                    is CryptoCurrency.Token -> {
-                        NotificationUM.Cardano.InsufficientBalanceToTransferToken(sendingCurrency.name)
-                    }
-                }.let(::add)
+                add(
+                    when (sendingCurrency) {
+                        is CryptoCurrency.Coin -> NotificationUM.Cardano.InsufficientBalanceToTransferCoin
+                        is CryptoCurrency.Token -> {
+                            NotificationUM.Cardano.InsufficientBalanceToTransferToken(sendingCurrency.name)
+                        }
+                    },
+                )
             }
             BlockchainSdkError.Cardano.InsufficientRemainingBalance,
             BlockchainSdkError.Cardano.InsufficientSendingAdaAmount,
             -> {
-                dustValue?.let {
+                dustValue?.let { value ->
                     add(
                         NotificationUM.Error.MinimumAmountError(
-                            amount = it.format { crypto(sendingCurrency) },
+                            amount = value.format { crypto(sendingCurrency) },
                         ),
                     )
                 }
