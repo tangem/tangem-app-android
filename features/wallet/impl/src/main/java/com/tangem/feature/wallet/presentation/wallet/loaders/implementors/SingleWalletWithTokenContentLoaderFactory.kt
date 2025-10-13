@@ -6,6 +6,7 @@ import com.tangem.domain.promo.GetStoryContentUseCase
 import com.tangem.domain.tokens.RunPolkadotAccountHealthCheckUseCase
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.usecase.ShouldSaveUserWalletsUseCase
+import com.tangem.domain.yield.supply.usecase.YieldSupplyApyFlowUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.TokenListAnalyticsSender
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.WalletWarningsAnalyticsSender
@@ -14,6 +15,7 @@ import com.tangem.feature.wallet.presentation.wallet.domain.GetMultiWalletWarnin
 import com.tangem.feature.wallet.presentation.wallet.domain.MultiWalletTokenListStore
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletWithFundsChecker
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
+import com.tangem.feature.wallet.presentation.account.AccountDependencies
 import javax.inject.Inject
 
 // TODO: Refactor
@@ -31,6 +33,8 @@ internal class SingleWalletWithTokenContentLoaderFactory @Inject constructor(
     private val runPolkadotAccountHealthCheckUseCase: RunPolkadotAccountHealthCheckUseCase,
     private val shouldSaveUserWalletsUseCase: ShouldSaveUserWalletsUseCase,
     private val getStoryContentUseCase: GetStoryContentUseCase,
+    private val accountDependencies: AccountDependencies,
+    private val yieldSupplyApyFlowUseCase: YieldSupplyApyFlowUseCase,
 ) {
 
     fun create(userWallet: UserWallet.Cold, clickIntents: WalletClickIntents): SingleWalletWithTokenContentLoader {
@@ -48,6 +52,8 @@ internal class SingleWalletWithTokenContentLoaderFactory @Inject constructor(
             runPolkadotAccountHealthCheckUseCase = runPolkadotAccountHealthCheckUseCase,
             getStoryContentUseCase = getStoryContentUseCase,
             shouldSaveUserWalletsUseCase = shouldSaveUserWalletsUseCase,
+            accountDependencies = accountDependencies,
+            yieldSupplyApyFlowUseCase = yieldSupplyApyFlowUseCase,
         )
     }
 }
