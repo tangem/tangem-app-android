@@ -3,6 +3,7 @@ package com.tangem.common.ui.tokens
 import com.tangem.common.ui.R
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
+import com.tangem.core.ui.components.icons.IconTint
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.components.marketprice.utils.PriceChangeConverter
 import com.tangem.core.ui.components.token.state.TokenItemState
@@ -217,17 +218,27 @@ class TokenItemStateConverter(
                         text = status.getFormattedFiatAmount(appCurrency = appCurrency),
                         isFlickering = status.value.isFlickering(),
                         icons = buildList {
-                            if (!status.getStakedBalance().isZero()) {
+                            if (status.value.yieldSupplyStatus?.isActive == true &&
+                                status.value.yieldSupplyStatus?.isAllowedToSpend == false) {
                                 TokenItemState.FiatAmountState.Content.IconUM(
-                                    iconRes = R.drawable.ic_staking_24,
-                                    useAccentColor = true,
+                                    iconRes = R.drawable.ic_alert_triangle_20,
+                                    tint = IconTint.Warning,
                                 ).let(::add)
                             }
+                            if (!status.getStakedBalance().isZero()) {
+                                add(
+                                    TokenItemState.FiatAmountState.Content.IconUM(
+                                        iconRes = R.drawable.ic_staking_24,
+                                        tint = IconTint.Accent,
+                                    ),
+                                )
+                            }
                             if (status.value.sources.total == StatusSource.ONLY_CACHE) {
-                                TokenItemState.FiatAmountState.Content.IconUM(
-                                    iconRes = R.drawable.ic_error_sync_24,
-                                    useAccentColor = false,
-                                ).let(::add)
+                                add(
+                                    TokenItemState.FiatAmountState.Content.IconUM(
+                                        iconRes = R.drawable.ic_error_sync_24,
+                                    ),
+                                )
                             }
                         }.toImmutableList(),
                     )
