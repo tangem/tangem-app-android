@@ -415,6 +415,6 @@ internal class DefaultWalletsRepository(
                 else -> ActivatePromoCodeError.ActivationFailed
             }
             return@fold error.left()
-        },)
+        })
     }
 }
