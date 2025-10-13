@@ -4,7 +4,7 @@ import com.tangem.domain.blockaid.BlockAidGasEstimate
 import com.tangem.domain.transaction.FeeRepository
 import com.tangem.domain.transaction.error.FeeErrorResolver
 import com.tangem.domain.yield.supply.YieldSupplyErrorResolver
-import com.tangem.domain.yield.supply.YieldSupplyMarketRepository
+import com.tangem.domain.yield.supply.YieldSupplyRepository
 import com.tangem.domain.yield.supply.YieldSupplyTransactionRepository
 import com.tangem.domain.yield.supply.usecase.*
 import dagger.Module
@@ -82,30 +82,54 @@ internal object YieldSupplyDomainModule {
     @Provides
     @Singleton
     fun provideYieldSupplyGetTokenStatusUseCase(
-        yieldSupplyMarketRepository: YieldSupplyMarketRepository,
+        yieldSupplyRepository: YieldSupplyRepository,
     ): YieldSupplyGetTokenStatusUseCase {
         return YieldSupplyGetTokenStatusUseCase(
-            yieldSupplyMarketRepository = yieldSupplyMarketRepository,
+            yieldSupplyRepository = yieldSupplyRepository,
         )
     }
 
     @Provides
     @Singleton
-    fun provideYieldSupplyGetApyUseCase(
-        yieldSupplyMarketRepository: YieldSupplyMarketRepository,
-    ): YieldSupplyGetApyUseCase {
+    fun provideYieldSupplyGetApyUseCase(yieldSupplyRepository: YieldSupplyRepository): YieldSupplyGetApyUseCase {
         return YieldSupplyGetApyUseCase(
-            yieldSupplyMarketRepository = yieldSupplyMarketRepository,
+            yieldSupplyRepository = yieldSupplyRepository,
         )
     }
 
     @Provides
     @Singleton
-    fun provideYieldSupplyGetChartUseCase(
-        yieldSupplyMarketRepository: YieldSupplyMarketRepository,
-    ): YieldSupplyGetChartUseCase {
+    fun provideYieldSupplyGetChartUseCase(yieldSupplyRepository: YieldSupplyRepository): YieldSupplyGetChartUseCase {
         return YieldSupplyGetChartUseCase(
-            yieldSupplyMarketRepository = yieldSupplyMarketRepository,
+            yieldSupplyRepository = yieldSupplyRepository,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideYieldSupplyIsAvailableUseCase(
+        yieldSupplyRepository: YieldSupplyRepository,
+    ): YieldSupplyIsAvailableUseCase {
+        return YieldSupplyIsAvailableUseCase(
+            yieldSupplyRepository = yieldSupplyRepository,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideYieldSupplyActivateUseCase(yieldSupplyRepository: YieldSupplyRepository): YieldSupplyActivateUseCase {
+        return YieldSupplyActivateUseCase(
+            yieldSupplyRepository = yieldSupplyRepository,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideYieldSupplyDeactivateUseCase(
+        yieldSupplyRepository: YieldSupplyRepository,
+    ): YieldSupplyDeactivateUseCase {
+        return YieldSupplyDeactivateUseCase(
+            yieldSupplyRepository = yieldSupplyRepository,
         )
     }
 }
