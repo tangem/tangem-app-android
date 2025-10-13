@@ -69,6 +69,13 @@ interface AccountsCRUDRepository {
     suspend fun saveAccounts(accountList: AccountList)
 
     /**
+     * Save account
+     *
+     * @param account account to be saved
+     */
+    suspend fun saveAccount(account: Account.CryptoPortfolio)
+
+    /**
      * Retrieves the total count of accounts associated with a specific user wallet including archived accounts
      *
      * @param userWalletId the unique identifier of the user wallet

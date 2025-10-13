@@ -20,6 +20,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ChainStyle
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
@@ -27,6 +28,7 @@ import coil.compose.rememberAsyncImagePainter
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.CircleShimmer
 import com.tangem.core.ui.components.RectangleShimmer
+import com.tangem.core.ui.components.buttons.actions.ActionButton
 import com.tangem.core.ui.components.list.InfiniteListHandler
 import com.tangem.core.ui.components.transactions.TxHistoryGroupTitle
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
@@ -34,7 +36,9 @@ import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.test.EmptyTransactionBlockTestTags
 import com.tangem.core.ui.test.TransactionHistoryBlockTestTags
+import com.tangem.features.tangempay.entity.TangemPayEmptyTransactionHistoryState
 import com.tangem.features.tangempay.entity.TangemPayTransactionState
 import com.tangem.features.tangempay.entity.TangemPayTxHistoryUM
 
@@ -43,9 +47,22 @@ private const val LOAD_ITEMS_BUFFER = 20
 internal fun LazyListScope.tangemPayTxHistoryItems(listState: LazyListState, state: TangemPayTxHistoryUM) {
     when (state) {
         is TangemPayTxHistoryUM.Content -> contentItems(listState = listState, state = state)
-        is TangemPayTxHistoryUM.Empty -> TODO("[REDACTED_JIRA]")
-        is TangemPayTxHistoryUM.Error -> TODO("[REDACTED_JIRA]")
+        is TangemPayTxHistoryUM.Empty -> nonContentItem(state = TangemPayEmptyTransactionHistoryState.Empty)
+        is TangemPayTxHistoryUM.Error -> nonContentItem(
+            state = TangemPayEmptyTransactionHistoryState.FailedToLoad(onReload = state.onReload),
+        )
         is TangemPayTxHistoryUM.Loading -> loadingItems(state = state)
+    }
+}
+
+private fun LazyListScope.nonContentItem(state: TangemPayEmptyTransactionHistoryState, modifier: Modifier = Modifier) {
+    item(key = state::class.java, contentType = state::class.java) {
+        TangemPayEmptyTransactionBlock(
+            state = state,
+            modifier = modifier
+                .padding(horizontal = TangemTheme.dimens.spacing16, vertical = TangemTheme.dimens.spacing12)
+                .fillMaxWidth(),
+        )
     }
 }
 
@@ -224,7 +241,7 @@ private fun TangemPayTransaction(
                     bottom.linkTo(timestampItem.top)
                     start.linkTo(titleItem.end)
                     end.linkTo(parent.end)
-                    width = Dimension.fillToConstraints
+                    width = Dimension.preferredWrapContent
                 },
             )
 
@@ -346,7 +363,7 @@ private fun Amount(state: TangemPayTransactionState, isBalanceHidden: Boolean, m
         }
         is TangemPayTransactionState.Loading -> {
             RectangleShimmer(
-                modifier = modifier.size(width = TangemTheme.dimens.size40, height = TangemTheme.dimens.size12),
+                modifier = modifier.size(width = TangemTheme.dimens.size72, height = TangemTheme.dimens.size12),
             )
         }
     }
@@ -367,6 +384,51 @@ private fun Timestamp(state: TangemPayTransactionState, modifier: Modifier = Mod
         is TangemPayTransactionState.Loading -> {
             RectangleShimmer(
                 modifier = modifier.size(width = TangemTheme.dimens.size40, height = TangemTheme.dimens.size12),
+            )
+        }
+    }
+}
+
+@Composable
+private fun TangemPayEmptyTransactionBlock(
+    state: TangemPayEmptyTransactionHistoryState,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
+            .clip(TangemTheme.shapes.roundedCornersXMedium)
+            .background(color = TangemTheme.colors.background.primary)
+            .padding(vertical = TangemTheme.dimens.spacing24)
+            .testTag(EmptyTransactionBlockTestTags.BLOCK),
+        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing24),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Icon(
+            modifier = Modifier
+                .size(TangemTheme.dimens.size64)
+                .testTag(EmptyTransactionBlockTestTags.ICON),
+            painter = painterResource(id = state.iconRes),
+            tint = TangemTheme.colors.icon.inactive,
+            contentDescription = null,
+        )
+
+        Text(
+            modifier = Modifier
+                .padding(horizontal = TangemTheme.dimens.spacing32)
+                .testTag(EmptyTransactionBlockTestTags.TEXT),
+            textAlign = TextAlign.Center,
+            text = state.text.resolveReference(),
+            style = TangemTheme.typography.body2,
+            color = TangemTheme.colors.text.tertiary,
+        )
+
+        when (state) {
+            is TangemPayEmptyTransactionHistoryState.Empty -> Unit
+            is TangemPayEmptyTransactionHistoryState.FailedToLoad -> ActionButton(
+                modifier = Modifier
+                    .padding(horizontal = 24.dp)
+                    .fillMaxWidth(),
+                config = state.actionButtonConfig,
             )
         }
     }
