@@ -178,11 +178,12 @@ class UpdateCryptoPortfolioUseCaseTest {
         coEvery { crudRepository.getAccountListSync(userWalletId = userWalletId) } returns accountList
 
         // Act
-        val actual = useCase(accountId = accountId, accountName = newAccountName)
+        val actual = useCase(accountId, newAccountName).leftOrNull() as Error.DataOperationFailed
 
         // Assert
-        val expected = Error.CriticalTechError.AccountsNotCreated(userWalletId = userWalletId).left()
-        Truth.assertThat(actual).isEqualTo(expected)
+        val expected = IllegalStateException("Account list not found for wallet $userWalletId")
+        Truth.assertThat(actual.cause).isInstanceOf(expected::class.java)
+        Truth.assertThat(actual.cause).hasMessageThat().isEqualTo(expected.message)
 
         coVerifyOrder { crudRepository.getAccountListSync(userWalletId = userWalletId) }
         coVerify(inverse = true) { crudRepository.saveAccounts(accountList = any()) }
@@ -202,11 +203,12 @@ class UpdateCryptoPortfolioUseCaseTest {
         coEvery { crudRepository.getAccountListSync(userWalletId = userWalletId) } returns accountList.toOption()
 
         // Act
-        val actual = useCase(accountId = accountId, accountName = newAccountName)
+        val actual = useCase(accountId, newAccountName).leftOrNull() as Error.DataOperationFailed
 
         // Assert
-        val expected = Error.CriticalTechError.AccountNotFound(accountId = accountId).left()
-        Truth.assertThat(actual).isEqualTo(expected)
+        val expected = IllegalStateException("Account not found: $accountId")
+        Truth.assertThat(actual.cause).isInstanceOf(expected::class.java)
+        Truth.assertThat(actual.cause).hasMessageThat().isEqualTo(expected.message)
 
         coVerifyOrder { crudRepository.getAccountListSync(userWalletId = userWalletId) }
         coVerify(inverse = true) { crudRepository.saveAccounts(accountList = any()) }
