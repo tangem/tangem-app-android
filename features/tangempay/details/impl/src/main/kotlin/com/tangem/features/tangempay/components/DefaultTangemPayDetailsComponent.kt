@@ -5,18 +5,18 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.decompose.ComponentContext
+import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.slot.childSlot
 import com.arkivanov.decompose.router.slot.dismiss
-import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.components.NavigationBar3ButtonsScrim
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
-import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.features.tangempay.components.txHistory.DefaultTangemPayTxHistoryComponent
 import com.tangem.features.tangempay.model.TangemPayDetailsModel
+import com.tangem.features.tangempay.model.TangemPayDetailsNavigation
 import com.tangem.features.tangempay.ui.TangemPayDetailsScreen
 import com.tangem.features.tokenreceive.TokenReceiveComponent
 import dagger.assisted.Assisted
@@ -33,7 +33,7 @@ internal class DefaultTangemPayDetailsComponent @AssistedInject constructor(
 
     private val bottomSheetSlot = childSlot(
         source = model.bottomSheetNavigation,
-        serializer = TokenReceiveConfig.serializer(),
+        serializer = TangemPayDetailsNavigation.serializer(),
         handleBackButton = false,
         childFactory = ::bottomSheetChild,
     )
@@ -57,15 +57,22 @@ internal class DefaultTangemPayDetailsComponent @AssistedInject constructor(
     }
 
     private fun bottomSheetChild(
-        config: TokenReceiveConfig,
+        navigation: TangemPayDetailsNavigation,
         componentContext: ComponentContext,
-    ): ComposableBottomSheetComponent = tokenReceiveComponentFactory.create(
-        context = childByContext(componentContext),
-        params = TokenReceiveComponent.Params(
-            config = config,
+    ): ComposableBottomSheetComponent = when (navigation) {
+        is TangemPayDetailsNavigation.Error -> TangemPayErrorBottomSheetComponent(
+            appComponentContext = appComponentContext,
+            messageUM = navigation.messageUM,
             onDismiss = model.bottomSheetNavigation::dismiss,
-        ),
-    )
+        )
+        is TangemPayDetailsNavigation.Receive -> tokenReceiveComponentFactory.create(
+            context = childByContext(componentContext),
+            params = TokenReceiveComponent.Params(
+                config = navigation.config,
+                onDismiss = model.bottomSheetNavigation::dismiss,
+            ),
+        )
+    }
 
     @AssistedFactory
     interface Factory : TangemPayDetailsComponent.Factory {
