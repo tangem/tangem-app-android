@@ -114,7 +114,7 @@ internal class SwapAmountModel @Inject constructor(
     private var showBestRateAnimation: Boolean = false
 
     val uiState: StateFlow<SwapAmountUM>
-    field = MutableStateFlow(params.amountUM)
+        field = MutableStateFlow(params.amountUM)
 
     private val amountDebouncer = Debouncer()
     private val quoteTaskScheduler = SingleTaskScheduler<Unit>()
@@ -224,6 +224,7 @@ internal class SwapAmountModel @Inject constructor(
                 categoryName = params.analyticsCategoryName,
                 token = primaryCryptoCurrency.symbol,
                 blockchain = primaryCryptoCurrency.network.name,
+                source = params.analyticsSendSource,
             ),
         )
         uiState.transformerUpdate(
@@ -280,7 +281,7 @@ internal class SwapAmountModel @Inject constructor(
                     initialCurrency = primaryCryptoCurrency,
                     selectedCurrency = selectedCurrency.takeIf { isEditMode },
                     source = AppRoute.ChooseManagedTokens.Source.SendViaSwap,
-                    showSendViaSwapNotification = showSendViaSwapNotification,
+                    shouldShowSendViaSwapNotification = showSendViaSwapNotification,
                     analyticsCategoryName = params.analyticsCategoryName,
                 ),
             )

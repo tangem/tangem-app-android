@@ -159,6 +159,7 @@ internal object WalletScreenPreviewData {
                 isFlickering = false,
                 onItemClick = { },
             ),
+            type = WalletState.MultiCurrency.WalletType.Cold,
         )
     }
 
