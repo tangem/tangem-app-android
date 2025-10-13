@@ -69,4 +69,8 @@ internal interface StakingClickIntents : AmountScreenClickIntents {
     fun showPrimaryClickAlert()
 
     fun onOpenLearnMoreAboutApproveClick()
+
+    fun onActivateTonAccountNotificationClick()
+
+    fun onActivateTonAccountClick()
 }
