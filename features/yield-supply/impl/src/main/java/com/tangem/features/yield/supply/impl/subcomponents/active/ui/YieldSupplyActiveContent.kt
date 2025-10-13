@@ -59,7 +59,6 @@ internal fun YieldSupplyActiveContent(
             CurrentApy(state.apy)
             chartComponent.Content(Modifier.padding(bottom = 12.dp))
         }
-        YieldSupplyActiveMyFunds(state = state, isBalanceHidden = isBalanceHidden)
 
         AnimatedVisibility(state.notificationUM != null) {
             val wrappedNotification = remember(this) { requireNotNull(state.notificationUM) }
@@ -69,6 +68,8 @@ internal fun YieldSupplyActiveContent(
                 containerColor = TangemTheme.colors.background.action,
             )
         }
+
+        YieldSupplyActiveMyFunds(state = state, isBalanceHidden = isBalanceHidden)
     }
 }
 
@@ -163,6 +164,15 @@ private fun YieldSupplyActiveMyFunds(state: YieldSupplyActiveContentUM, isBalanc
             info = state.availableBalance,
             isBalanceHidden = isBalanceHidden,
         )
+        HorizontalDivider(
+            thickness = 0.5.dp,
+            color = TangemTheme.colors.stroke.primary,
+        )
+        InfoRow(
+            title = resourceReference(R.string.yield_module_fee_policy_sheet_min_amount_title),
+            info = state.minAmount,
+            isBalanceHidden = false,
+        )
     }
 }
 
@@ -251,6 +261,7 @@ private class YieldSupplyActiveBottomSheetPreviewProvider : PreviewParameterProv
                 subtitleLink = resourceReference(R.string.common_read_more),
                 notificationUM = NotificationUM.Error.InvalidAmount,
                 apy = stringReference("5,14%"),
+                minAmount = stringReference("50 USDT"),
             ),
         )
 }
