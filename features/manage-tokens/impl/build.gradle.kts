@@ -25,6 +25,8 @@ dependencies {
     implementation(projects.common.ui)
 
     /* Project - Domain */
+    implementation(projects.domain.account.status)
+    implementation(projects.domain.account)
     implementation(projects.domain.card)
     implementation(projects.domain.legacy)
     implementation(projects.domain.manageTokens)
@@ -34,6 +36,14 @@ dependencies {
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.swap.models)
     implementation(projects.domain.notifications)
+
+    // region Project - Libs
+    implementation(projects.libs.crypto)
+    // endregion
+
+    // region Tangem SDKs
+    implementation(tangemDeps.blockchain)
+    // endregion
 
     /* AndroidX */
     implementation(deps.androidx.activity.compose)
