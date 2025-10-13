@@ -2,6 +2,7 @@ package com.tangem.data.notifications
 
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.datasource.local.preferences.PreferencesKeys.getShouldShowAskNotificationPermissionViaBs
 import com.tangem.datasource.local.preferences.utils.*
 import com.tangem.domain.notifications.repository.NotificationsRepository
 import kotlinx.coroutines.flow.Flow
@@ -72,5 +73,13 @@ class DefaultNotificationsRepository @Inject constructor(
                     .plus(userWalletId to true),
             )
         }
+    }
+
+    override suspend fun shouldAskNotificationPermissionsViaBs(): Boolean {
+        return appPreferencesStore.getSyncOrDefault(getShouldShowAskNotificationPermissionViaBs(), false)
+    }
+
+    override suspend fun setShouldAskNotificationPermissionsViaBs(shouldAsk: Boolean) {
+        appPreferencesStore.store(key = getShouldShowAskNotificationPermissionViaBs(), value = shouldAsk)
     }
 }
