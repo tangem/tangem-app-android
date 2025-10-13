@@ -8,6 +8,7 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.components.token.state.TokenItemState
+import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.account.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.models.account.Account
@@ -35,6 +36,7 @@ internal class SwapSelectTokensModel @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
+    private val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase,
 ) : Model() {
 
     val state: StateFlow<SwapSelectTokensUM> = controller.state
@@ -47,6 +49,7 @@ internal class SwapSelectTokensModel @Inject constructor(
     private val params = paramsContainer.require<SwapSelectTokensComponent.Params>()
 
     private var isAccountsMode: Boolean = false
+    private var account: Account.CryptoPortfolio? = null
 
     init {
         controller.update { it.copy(onBackClick = ::onBackClick) }
@@ -68,17 +71,19 @@ internal class SwapSelectTokensModel @Inject constructor(
 
         _fromCurrencyStatus.value = status
 
-        controller.update(
-            transformer = SelectFromTokenTransformer(
-                selectedTokenItemState = selectedTokenItemState,
-                onRemoveClick = ::onRemoveFromTokenClick,
-                isAccountsMode = isAccountsMode,
-                account = Account.CryptoPortfolio.createMainAccount(
-                    userWalletId = params.userWalletId,
-                    cryptoCurrencies = setOf(status.currency),
-                ), // todo account from from cryptocurrency
-            ),
-        )
+        modelScope.launch {
+            controller.update(
+                transformer = SelectFromTokenTransformer(
+                    selectedTokenItemState = selectedTokenItemState,
+                    onRemoveClick = ::onRemoveFromTokenClick,
+                    isAccountsMode = isAccountsMode,
+                    account = getAccountCurrencyStatusUseCase.invoke(
+                        userWalletId = params.userWalletId,
+                        currency = status.currency,
+                    ).getOrNull()?.account,
+                ),
+            )
+        }
     }
 
     /**
@@ -99,10 +104,10 @@ internal class SwapSelectTokensModel @Inject constructor(
                 transformer = SelectToTokenTransformer(
                     selectedTokenItemState = selectedTokenItemState,
                     isAccountsMode = isAccountsMode,
-                    account = Account.CryptoPortfolio.createMainAccount(
+                    account = getAccountCurrencyStatusUseCase.invoke(
                         userWalletId = params.userWalletId,
-                        cryptoCurrencies = setOf(status.currency),
-                    ), // todo account from from cryptocurrency
+                        currency = status.currency,
+                    ).getOrNull()?.account,
                 ),
             )
 
