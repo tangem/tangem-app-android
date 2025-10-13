@@ -117,7 +117,7 @@ class DefaultWalletAccountsFetcherTest {
                     eTag = eTag,
                     body = SaveWalletAccountsResponse(updatedAccountsResponse.accounts),
                 )
-            } returns ApiResponse.Success(data = Unit)
+            } returns ApiResponse.Success(data = updatedAccountsResponse)
 
             // Act
             fetcher.fetch(userWalletId)
@@ -273,26 +273,26 @@ class DefaultWalletAccountsFetcherTest {
         @Test
         fun `push should call saveWalletAccounts with correct params`() = runTest {
             // Arrange
-            val accounts = listOf(createWalletAccountDTO(userWalletId = userWalletId, tokens = null))
-            val response = SaveWalletAccountsResponse(accounts)
+            val getResponse = createGetWalletAccountsResponse(userWalletId, tokens = null)
+            val saveResponse = SaveWalletAccountsResponse(getResponse.accounts)
 
             coEvery {
                 tangemTechApi.saveWalletAccounts(
                     walletId = userWalletId.stringValue,
                     eTag = eTag,
-                    body = response,
+                    body = saveResponse,
                 )
-            } returns ApiResponse.Success(data = Unit)
+            } returns ApiResponse.Success(data = getResponse)
 
             // Act
-            fetcher.push(userWalletId, response)
+            fetcher.push(userWalletId, saveResponse)
 
             // Assert
             coVerify {
                 tangemTechApi.saveWalletAccounts(
                     walletId = userWalletId.stringValue,
                     eTag = eTag,
-                    body = response,
+                    body = saveResponse,
                 )
             }
         }
@@ -316,49 +316,13 @@ class DefaultWalletAccountsFetcherTest {
                     eTag = eTag,
                     body = response,
                 )
-            } returns saveApiResponse as ApiResponse<Unit>
+            } returns saveApiResponse as ApiResponse<GetWalletAccountsResponse>
 
             // Act
             val actual = runCatching { fetcher.push(userWalletId, response) }.exceptionOrNull()!!
 
             // Assert
             Truth.assertThat(actual).isEqualTo(apiError)
-        }
-    }
-
-    @Nested
-    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    inner class PushAndStore {
-
-        @Test
-        fun `pushAndStore should call push and store with correct params`() = runTest {
-            // Arrange
-            val accounts = listOf(createWalletAccountDTO(userWalletId = userWalletId, tokens = null))
-            val response = createGetWalletAccountsResponse(userWalletId).copy(accounts = accounts)
-
-            coEvery {
-                tangemTechApi.saveWalletAccounts(
-                    walletId = userWalletId.stringValue,
-                    eTag = eTag,
-                    body = SaveWalletAccountsResponse(accounts = response.accounts),
-                )
-            } returns ApiResponse.Success(data = Unit)
-
-            coEvery { accountsResponseStore.updateData(any()) } returns mockk()
-
-            // Act
-            fetcher.pushAndStore(userWalletId, response)
-
-            // Assert
-            coVerifyOrder {
-                tangemTechApi.saveWalletAccounts(
-                    walletId = userWalletId.stringValue,
-                    eTag = eTag,
-                    body = SaveWalletAccountsResponse(accounts = response.accounts),
-                )
-                accountsResponseStoreFactory.create(userWalletId)
-                accountsResponseStore.updateData(any())
-            }
         }
     }
 
