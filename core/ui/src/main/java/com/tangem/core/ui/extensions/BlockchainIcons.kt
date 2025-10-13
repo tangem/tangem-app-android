@@ -97,6 +97,7 @@ fun getActiveIconRes(blockchainId: String): Int {
         "hyperliquid", "hyperliquid/test" -> R.drawable.img_hyperliquid_22
         "quai", "quai/test" -> R.drawable.img_quai_22
         "linea", "linea/test" -> R.drawable.img_linea_22
+        "arbitrum-nova" -> R.drawable.img_arbitrum_nova_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -192,6 +193,7 @@ fun getActiveIconResByCoinId(coinId: String): Int {
         "hyperliquid", "hyperliquid/test" -> R.drawable.img_hyperliquid_22
         "quai", "quai/test" -> R.drawable.img_quai_22
         "linea", "linea/test" -> R.drawable.img_linea_22
+        "arbitrum-nova" -> R.drawable.img_arbitrum_nova_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -290,6 +292,7 @@ fun getGreyedOutIconRes(blockchainId: String): Int {
         "hyperliquid", "hyperliquid/test" -> R.drawable.ic_hyperliquid_22
         "quai", "quai/test" -> R.drawable.ic_quai_22
         "linea", "linea/test" -> R.drawable.ic_linea_22
+        "arbitrum-nova" -> R.drawable.ic_arbitrum_nova_22
         else -> R.drawable.ic_alert_24
     }
 }
