@@ -53,7 +53,7 @@ internal class DefaultMarketsTokenListComponent @AssistedInject constructor(
                         AppRoute.MarketsTokenDetails(
                             token = token.toSerializableParam(),
                             appCurrency = appCurrency,
-                            showPortfolio = true,
+                            shouldShowPortfolio = true,
                             analyticsParams = AnalyticsParams(
                                 blockchain = null,
                                 source = "Market",

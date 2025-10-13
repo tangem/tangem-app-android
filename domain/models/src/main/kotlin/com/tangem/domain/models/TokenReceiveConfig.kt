@@ -29,6 +29,7 @@ data class ReceiveAddressModel(
 data class TokenReceiveNotification(
     val title: Int,
     val subtitle: Int,
+    val isYieldSupplyNotification: Boolean = false,
 )
 
 enum class Asset {
