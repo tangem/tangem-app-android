@@ -49,8 +49,12 @@ internal object AccountDomainModule {
     @Singleton
     fun provideRecoverCryptoPortfolioUseCase(
         accountsCRUDRepository: AccountsCRUDRepository,
+        mainAccountTokensMigration: MainAccountTokensMigration,
     ): RecoverCryptoPortfolioUseCase {
-        return RecoverCryptoPortfolioUseCase(crudRepository = accountsCRUDRepository)
+        return RecoverCryptoPortfolioUseCase(
+            crudRepository = accountsCRUDRepository,
+            mainAccountTokensMigration = mainAccountTokensMigration,
+        )
     }
 
     @Provides
