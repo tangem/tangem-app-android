@@ -120,7 +120,7 @@ private class TokenReceiveWarningContentProvider : PreviewParameterProvider<Warn
         fallbackTint = TangemColorPalette.Black,
         fallbackBackground = TangemColorPalette.Meadow,
         isGrayscale = false,
-        showCustomBadge = false,
+        shouldShowCustomBadge = false,
     )
 
     override val values: Sequence<WarningUM>

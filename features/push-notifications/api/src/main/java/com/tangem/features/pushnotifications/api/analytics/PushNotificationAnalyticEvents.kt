@@ -5,7 +5,7 @@ import com.tangem.core.analytics.models.AnalyticsParam
 
 sealed class PushNotificationAnalyticEvents(
     event: String,
-    params: Map<String, String> = mapOf(),
+    params: Map<String, String> = emptyMap(),
 ) : AnalyticsEvent(category = "Push", event = event, params = params) {
 
     data class ButtonAllow(
