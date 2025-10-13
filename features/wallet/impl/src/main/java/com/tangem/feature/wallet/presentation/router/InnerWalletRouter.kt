@@ -8,6 +8,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.TangemPayDetailsConfig
 import com.tangem.domain.tokens.model.details.TokenAction
 import com.tangem.feature.wallet.navigation.WalletRoute
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletDialogConfig
@@ -59,7 +60,7 @@ internal interface InnerWalletRouter {
 
     fun openTangemPayOnboarding()
 
-    fun openTangemPayDetails(customerWalletAddress: String, cardNumberEnd: String)
+    fun openTangemPayDetails(config: TangemPayDetailsConfig)
 
     /** Open BS abput yield supply active and all money deposited in AAVE */
     fun openYieldSupplyBottomSheet(
