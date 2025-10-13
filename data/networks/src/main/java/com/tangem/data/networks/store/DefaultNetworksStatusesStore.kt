@@ -96,6 +96,20 @@ internal class DefaultNetworksStatusesStore(
         }
     }
 
+    override suspend fun clear(userWalletId: UserWalletId, networks: Set<Network>) {
+        persistenceDataStore.updateData { storedStatuses ->
+            storedStatuses.toMutableMap().apply {
+                val updatedValues = this[userWalletId.stringValue].orEmpty().filterNot {
+                    networks.any { network ->
+                        it.networkId.value == network.rawId && it.derivationPath.value == network.derivationPath.value
+                    }
+                }
+
+                this[userWalletId.stringValue] = updatedValues.toSet()
+            }
+        }
+    }
+
     private suspend fun updateInRuntime(
         userWalletId: UserWalletId,
         networks: Set<Network>,
