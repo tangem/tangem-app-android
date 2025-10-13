@@ -32,7 +32,6 @@ import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.nft.entity.NFTSendSuccessTrigger
 import com.tangem.features.send.v2.api.NFTSendComponent
-import com.tangem.features.send.v2.api.SendFeatureToggles
 import com.tangem.features.send.v2.api.entity.FeeSelectorUM
 import com.tangem.features.send.v2.api.subcomponents.destination.SendDestinationComponent
 import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationUM
@@ -43,8 +42,6 @@ import com.tangem.features.send.v2.common.ui.state.ConfirmUM
 import com.tangem.features.send.v2.sendnft.confirm.NFTSendConfirmComponent
 import com.tangem.features.send.v2.sendnft.success.NFTSendSuccessComponent
 import com.tangem.features.send.v2.sendnft.ui.state.NFTSendUM
-import com.tangem.features.send.v2.subcomponents.fee.SendFeeComponent
-import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -52,7 +49,6 @@ import javax.inject.Inject
 import kotlin.properties.Delegates
 
 internal interface SendNFTComponentCallback :
-    SendFeeComponent.ModelCallback,
     SendDestinationComponent.ModelCallback,
     NFTSendConfirmComponent.ModelCallback
 
@@ -74,7 +70,6 @@ internal class NFTSendModel @Inject constructor(
     private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val alertFactory: SendConfirmAlertFactory,
-    private val sendFeatureToggles: SendFeatureToggles,
     private val nftSendSuccessTrigger: NFTSendSuccessTrigger,
 ) : Model(), SendNFTComponentCallback, NFTSendSuccessComponent.ModelCallback {
 
@@ -88,10 +83,10 @@ internal class NFTSendModel @Inject constructor(
     private val nftAsset = params.nftAsset
 
     val uiState: StateFlow<NFTSendUM>
-    field = MutableStateFlow(initialState())
+        field = MutableStateFlow(initialState())
 
     val isBalanceHiddenFlow: StateFlow<Boolean>
-    field = MutableStateFlow(false)
+        field = MutableStateFlow(false)
 
     var cryptoCurrency: CryptoCurrency by Delegates.notNull()
     var userWallet: UserWallet by Delegates.notNull()
@@ -114,10 +109,6 @@ internal class NFTSendModel @Inject constructor(
 
     override fun onDestinationResult(destinationUM: DestinationUM) {
         uiState.update { it.copy(destinationUM = destinationUM) }
-    }
-
-    override fun onFeeResult(feeUM: FeeUM) {
-        uiState.update { it.copy(feeUM = feeUM) }
     }
 
     override fun onBackClick() {
@@ -254,10 +245,8 @@ internal class NFTSendModel @Inject constructor(
 
     private fun initialState(): NFTSendUM = NFTSendUM(
         destinationUM = DestinationUM.Empty(),
-        feeUM = FeeUM.Empty(),
         feeSelectorUM = FeeSelectorUM.Loading,
         confirmUM = ConfirmUM.Empty,
         navigationUM = NavigationUM.Empty,
-        isRedesignEnabled = sendFeatureToggles.isNFTSendRedesignEnabled,
     )
 }
