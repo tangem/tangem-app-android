@@ -46,10 +46,11 @@ internal class SetAmountDataTransformer(
         return prevState.copy(
             amountState = AmountStateConverter(
                 clickIntents = clickIntents,
-                cryptoCurrencyStatusProvider = cryptoCurrencyStatusProvider,
-                appCurrencyProvider = appCurrencyProvider,
                 iconStateConverter = iconStateConverter,
                 maxEnterAmount = maxEnterAmount,
+                appCurrency = appCurrencyProvider(),
+                cryptoCurrencyStatus = cryptoCurrencyStatusProvider(),
+                isBalanceHidden = false,
             ).convert(
                 AmountParameters(
                     title = title,

@@ -24,6 +24,7 @@ import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.extensions.replaceBy
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
@@ -101,12 +102,33 @@ internal class DefaultAccountsCRUDRepository(
     }
 
     override suspend fun saveAccounts(accountList: AccountList) {
-        val userWalletId = accountList.userWallet.walletId
+        val converter = convertersContainer.createCryptoPortfolioConverter(userWalletId = accountList.userWalletId)
 
-        val converter = convertersContainer.getWalletAccountsResponseCF.create(userWallet = accountList.userWallet)
-        val accountsResponse = converter.convert(value = accountList)
+        val accountDTOs = converter.convertListBack(
+            input = accountList.accounts.filterIsInstance<Account.CryptoPortfolio>(),
+        )
 
-        walletAccountsSaver.pushAndStore(userWalletId = userWalletId, response = accountsResponse)
+        val syncedResponse = walletAccountsSaver.push(userWalletId = accountList.userWalletId, accounts = accountDTOs)
+        if (syncedResponse != null) {
+            walletAccountsSaver.store(userWalletId = accountList.userWalletId, response = syncedResponse)
+        }
+    }
+
+    override suspend fun saveAccount(account: Account.CryptoPortfolio) {
+        val store = getAccountsResponseStore(userWalletId = account.userWalletId)
+
+        val converter = convertersContainer.createCryptoPortfolioConverter(userWalletId = account.userWalletId)
+        val newAccountDTO = converter.convertBack(value = account)
+
+        store.updateData { response ->
+            response ?: return@updateData response
+
+            response.copy(
+                accounts = response.accounts.toMutableList().apply {
+                    replaceBy(newAccountDTO) { it.id == newAccountDTO.id }
+                },
+            )
+        }
     }
 
     override suspend fun getTotalAccountsCountSync(userWalletId: UserWalletId): Option<Int> = option {
