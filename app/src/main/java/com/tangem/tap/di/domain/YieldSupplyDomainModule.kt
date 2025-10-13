@@ -3,6 +3,8 @@ package com.tangem.tap.di.domain
 import com.tangem.domain.blockaid.BlockAidGasEstimate
 import com.tangem.domain.transaction.FeeRepository
 import com.tangem.domain.transaction.error.FeeErrorResolver
+import com.tangem.domain.quotes.QuotesRepository
+import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.yield.supply.YieldSupplyErrorResolver
 import com.tangem.domain.yield.supply.YieldSupplyRepository
 import com.tangem.domain.yield.supply.YieldSupplyTransactionRepository
@@ -130,6 +132,20 @@ internal object YieldSupplyDomainModule {
     ): YieldSupplyDeactivateUseCase {
         return YieldSupplyDeactivateUseCase(
             yieldSupplyRepository = yieldSupplyRepository,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideYieldSupplyMinAmountUseCase(
+        feeRepository: FeeRepository,
+        quotesRepository: QuotesRepository,
+        currenciesRepository: CurrenciesRepository,
+    ): YieldSupplyMinAmountUseCase {
+        return YieldSupplyMinAmountUseCase(
+            feeRepository = feeRepository,
+            quotesRepository = quotesRepository,
+            currenciesRepository = currenciesRepository,
         )
     }
 }
