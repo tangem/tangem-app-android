@@ -202,13 +202,13 @@ internal class HomeModel @Inject constructor(
             ifRight = {
                 reduxStateHolder.onUserWalletSelected(userWallet)
                 setLoading(false)
-                sendSignedInCardAnalyticsEvent(scanResponse)
+                sendSignedInCardAnalyticsEvent(scanResponse, userWallet.isImported)
                 appRouter.replaceAll(AppRoute.Wallet)
             },
         )
     }
 
-    private suspend fun sendSignedInCardAnalyticsEvent(scanResponse: ScanResponse) {
+    private suspend fun sendSignedInCardAnalyticsEvent(scanResponse: ScanResponse, isImported: Boolean) {
         val currency = ParamCardCurrencyConverter().convert(value = scanResponse.cardTypesResolver)
         if (currency != null) {
             analyticsEventHandler.send(
@@ -217,6 +217,7 @@ internal class HomeModel @Inject constructor(
                     batch = scanResponse.card.batchId,
                     signInType = SignInType.Card,
                     walletsCount = getWalletsCount().toString(),
+                    isImported = isImported,
                     hasBackup = scanResponse.card.backupStatus?.isActive,
                 ),
             )
