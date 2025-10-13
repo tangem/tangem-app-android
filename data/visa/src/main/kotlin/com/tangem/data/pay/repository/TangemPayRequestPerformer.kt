@@ -5,27 +5,19 @@ import com.squareup.moshi.Moshi
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.core.error.UniversalError
 import com.tangem.data.common.network.NetworkFactory
+import com.tangem.data.pay.util.TangemPayErrorConverter
+import com.tangem.data.pay.util.TangemPayWalletsManager
 import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.common.response.getOrThrow
-import com.tangem.datasource.api.pay.models.response.VisaErrorResponseJsonAdapter
 import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.local.visa.TangemPayStorage
-import com.tangem.domain.common.wallets.UserWalletsListRepository
-import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.pay.datasource.TangemPayAuthDataSource
-import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.domain.visa.model.VisaAuthTokens
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.derivations.derivationStyleProvider
-import com.tangem.domain.wallets.legacy.UserWalletsListManager
-import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import timber.log.Timber
@@ -37,9 +29,7 @@ internal class TangemPayRequestPerformer @Inject constructor(
     private val dispatchers: CoroutineDispatcherProvider,
     private val tangemPayStorage: TangemPayStorage,
     private val authDataSource: TangemPayAuthDataSource,
-    private val userWalletsListManager: UserWalletsListManager,
-    private val userWalletsListRepository: UserWalletsListRepository,
-    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
+    private val tangemPayWalletsManager: TangemPayWalletsManager,
     private val walletManagersFacade: WalletManagersFacade,
     private val networkFactory: NetworkFactory,
 ) {
@@ -49,7 +39,7 @@ internal class TangemPayRequestPerformer @Inject constructor(
     private val refreshTokensMutex = Mutex()
     private var refreshTokensJob: Deferred<VisaAuthTokens>? = null
 
-    private val visaErrorAdapter = VisaErrorResponseJsonAdapter(moshi)
+    private val errorConverter = TangemPayErrorConverter(moshi)
 
     suspend fun <T : Any> runWithErrorLogs(tag: String, requestBlock: suspend () -> T): Either<UniversalError, T> {
         return try {
@@ -62,7 +52,7 @@ internal class TangemPayRequestPerformer @Inject constructor(
                 }
                 else -> {
                     Timber.tag(tag).e(exception)
-                    Either.Left(mapError(exception))
+                    Either.Left(errorConverter.convert(exception))
                 }
             }
         }
@@ -85,12 +75,6 @@ internal class TangemPayRequestPerformer @Inject constructor(
                 refreshTokens = ::refreshAuthTokens,
             )
         }
-
-    private fun getWallets(): Flow<List<UserWallet>> = if (hotWalletFeatureToggles.isHotWalletEnabled) {
-        userWalletsListRepository.userWallets.map { requireNotNull(it) }
-    } else {
-        userWalletsListManager.userWallets
-    }
 
     private suspend fun <T : Any> performRequest(
         requestBlock: suspend (header: String) -> ApiResponse<T>,
@@ -143,11 +127,7 @@ internal class TangemPayRequestPerformer @Inject constructor(
     }
 
     private suspend fun fetchAuthInputData(): AuthInputData {
-        val userWallets = getWallets()
-            .filter { it.isNotEmpty() }
-            .first()
-        val wallet = userWallets.find { it is UserWallet.Cold } as? UserWallet.Cold
-            ?: error("Cannot find cold user wallet")
+        val wallet = tangemPayWalletsManager.getDefaultWalletForTangemPay()
 
         val network = networkFactory.create(
             blockchain = Blockchain.Polygon,
@@ -178,21 +158,6 @@ internal class TangemPayRequestPerformer @Inject constructor(
         val tokens = authDataSource.refreshAuthTokens(refreshToken).getOrNull() ?: error("Cannot refresh tokens")
         tangemPayStorage.storeAuthTokens(customerWalletAddress, tokens)
         return tokens
-    }
-
-    private fun mapError(throwable: Throwable): UniversalError {
-        return if (throwable is ApiResponseError.HttpException) {
-            val errorBody = throwable.errorBody ?: return VisaApiError.UnknownWithoutCode
-            return runCatching {
-                visaErrorAdapter.fromJson(errorBody)?.error?.code ?: throwable.code.numericCode
-            }.map {
-                VisaApiError.fromBackendError(it)
-            }.getOrElse {
-                VisaApiError.UnknownWithoutCode
-            }
-        } else {
-            VisaApiError.UnknownWithoutCode
-        }
     }
 }
 
