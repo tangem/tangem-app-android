@@ -3,6 +3,7 @@ package com.tangem.feature.wallet.presentation.wallet.state.transformers
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.domain.pay.TangemPayDetailsConfig
 import com.tangem.domain.pay.model.CustomerInfo.CardInfo
 import com.tangem.domain.pay.model.MainScreenCustomerInfo
 import com.tangem.domain.pay.model.OrderStatus.CANCELED
@@ -14,11 +15,17 @@ import com.tangem.feature.wallet.presentation.wallet.state.util.TangemPayStateCr
 import com.tangem.feature.wallet.presentation.wallet.state.util.TangemPayStateCreator.createKycInProgressState
 import java.util.Currency
 
+/**
+ * Hardcode Polygon chain id only for F&F.
+ * Later chain id will be fetched from BFF.
+ */
+private const val POLYGON_CHAIN_ID = 137
+
 internal class TangemPayInitialStateTransformer(
     private val value: MainScreenCustomerInfo? = null,
     private val onClickIssue: () -> Unit = {},
     private val onClickKyc: () -> Unit = {},
-    private val openDetails: (customerWalletAddress: String, cardNumberEnd: String) -> Unit = { _, _ -> },
+    private val openDetails: (config: TangemPayDetailsConfig) -> Unit = {},
 ) : WalletScreenStateTransformer {
 
     override fun transform(prevState: WalletScreenState): WalletScreenState {
@@ -40,7 +47,16 @@ internal class TangemPayInitialStateTransformer(
     private fun getCardInfoState(cardInfo: CardInfo): TangemPayState = TangemPayState.Card(
         lastFourDigits = TextReference.Str("*${cardInfo.lastFourDigits}"),
         balanceText = TextReference.Str(getBalanceText(cardInfo)),
-        onClick = { openDetails(cardInfo.customerWalletAddress, cardInfo.lastFourDigits) },
+        onClick = {
+            openDetails(
+                TangemPayDetailsConfig(
+                    customerWalletAddress = cardInfo.customerWalletAddress,
+                    cardNumberEnd = cardInfo.lastFourDigits,
+                    chainId = POLYGON_CHAIN_ID,
+                    depositAddress = cardInfo.depositAddress,
+                ),
+            )
+        },
     )
 
     private fun getBalanceText(cardInfo: CardInfo): String {
