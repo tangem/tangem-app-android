@@ -100,6 +100,12 @@ abstract class BaseTestCase : TestCase(
                     value = false
                 )
             }
+            appPreferencesStore.editData { mutablePreferences ->
+                mutablePreferences.set(
+                    key = PreferencesKeys.getShouldShowNotificationKey("EnablePushesReminderNotification"),
+                    value = false
+                )
+            }
             promoRepository.setNeverToShowWalletPromo(PromoId.Sepa)
         }
         apiEnvironmentRule.setup(apiConfigsManager)
@@ -130,15 +136,14 @@ abstract class BaseTestCase : TestCase(
         composeTestRule.onRoot(useUnmergedTree = useUnmergedTree).printToLog(tag, maxDepth)
     }
 
+    fun waitForIdle() = composeTestRule.waitForIdle()
 
     private fun setFeatureToggles() {
         runBlocking {
             with(featureTogglesManager as MutableFeatureTogglesManager) {
                 changeToggle("WALLET_CONNECT_REDESIGN_ENABLED", true)
                 changeToggle("WALLET_BALANCE_FETCHER_ENABLED", true)
-                changeToggle("SEND_VIA_SWAP_ENABLED", true)
                 changeToggle("SWAP_REDESIGN_ENABLED", true)
-                changeToggle("SEND_REDESIGN_ENABLED", true)
                 changeToggle("NEW_ONRAMP_MAIN_ENABLED", true)
             }
         }

@@ -1185,6 +1185,8 @@
   <string name="user_push_notification_agreement_argument_two_subtitle">Accès anticipé à de nouvelles fonctionnalités et à des offres exclusives.</string>
   <string name="user_push_notification_agreement_argument_two_title">Actualités et mises à jour</string>
   <string name="user_push_notification_agreement_header">Souhaitez-vous utiliser les\nnotifications push?</string>
+  <string name="user_push_notification_banner_subtitle">Activez les notifications pour recevoir des alertes lorsque des fonds arrivent dans votre portefeuille.</string>
+  <string name="user_push_notification_banner_title">Ne manquez aucune transaction</string>
   <string name="user_wallet_list_add_button">Ajouter un nouveau portefeuille</string>
   <string name="user_wallet_list_delete_prompt">Êtes-vous sûr de vouloir supprimer ce portefeuille ?</string>
   <string name="user_wallet_list_error_unable_to_unlock">Une erreur s\'est produite, veuillez scanner votre carte ou bague pour vous connecter</string>

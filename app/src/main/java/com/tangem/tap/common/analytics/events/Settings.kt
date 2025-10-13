@@ -8,7 +8,7 @@ import com.tangem.core.analytics.models.AnalyticsEvent
 sealed class Settings(
     category: String = "Settings",
     event: String,
-    params: Map<String, String> = mapOf(),
+    params: Map<String, String> = emptyMap(),
 ) : AnalyticsEvent(category, event, params) {
 
     class ScreenOpened : Settings(event = "Settings Screen Opened")
@@ -17,7 +17,7 @@ sealed class Settings(
 
     sealed class CardSettings(
         event: String,
-        params: Map<String, String> = mapOf(),
+        params: Map<String, String> = emptyMap(),
     ) : Settings("Settings / Card Settings", event, params) {
 
         class ButtonFactoryReset : CardSettings("Button - Factory Reset")
@@ -54,7 +54,7 @@ sealed class Settings(
 
     sealed class AppSettings(
         event: String,
-        params: Map<String, String> = mapOf(),
+        params: Map<String, String> = emptyMap(),
     ) : Settings(category = "Settings / App Settings", event = event, params = params) {
 
         class SaveWalletSwitcherChanged(state: AnalyticsParam.OnOffState) : AppSettings(
