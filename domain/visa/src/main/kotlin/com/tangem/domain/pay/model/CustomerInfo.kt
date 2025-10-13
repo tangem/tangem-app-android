@@ -23,5 +23,6 @@ data class CustomerInfo(
         val balance: BigDecimal,
         val currencyCode: String,
         val customerWalletAddress: String,
+        val depositAddress: String?,
     )
 }
