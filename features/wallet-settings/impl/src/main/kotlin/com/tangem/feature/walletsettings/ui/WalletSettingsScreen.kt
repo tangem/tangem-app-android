@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -22,9 +23,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.tangem.common.ui.account.AccountRow
 import com.tangem.common.ui.userwallet.CardImage
-import com.tangem.core.ui.components.SpacerH
+import com.tangem.common.ui.userwallet.UserWalletItem
 import com.tangem.core.ui.components.SpacerH8
 import com.tangem.core.ui.components.TangemSwitch
 import com.tangem.core.ui.components.appbar.TangemTopAppBar
@@ -52,8 +52,8 @@ import com.tangem.feature.walletsettings.impl.R
 @Composable
 internal fun WalletSettingsScreen(
     state: WalletSettingsUM,
-    dialog: @Composable () -> Unit,
     modifier: Modifier = Modifier,
+    dialog: @Composable () -> Unit,
 ) {
     val backgroundColor = TangemTheme.colors.background.secondary
 
@@ -214,7 +214,7 @@ private fun CardBlock(model: WalletSettingsItemUM.CardBlock, modifier: Modifier 
             }
             SecondarySmallButton(
                 config = SmallButtonConfig(
-                    enabled = model.isEnabled,
+                    isEnabled = model.isEnabled,
                     text = resourceReference(R.string.common_rename),
                     onClick = model.onClick,
                 ),
@@ -292,7 +292,7 @@ private fun AccountsHeader(model: WalletSettingsAccountsUM.Header, modifier: Mod
             .padding(
                 start = TangemTheme.dimens.spacing12,
                 end = TangemTheme.dimens.spacing12,
-                top = TangemTheme.dimens.spacing8,
+                top = TangemTheme.dimens.spacing12,
                 bottom = TangemTheme.dimens.spacing4,
             ),
         text = model.text.resolveReference(),
@@ -305,21 +305,10 @@ private fun AccountsHeader(model: WalletSettingsAccountsUM.Header, modifier: Mod
 
 @Composable
 private fun AccountItem(model: WalletSettingsAccountsUM.Account, modifier: Modifier = Modifier) {
-    val subtitle = stringResourceSafe(
-        id = R.string.account_label_tokens_info,
-        formatArgs = arrayOf(
-            model.tokensInfo.resolveReference(),
-            model.networksInfo.resolveReference(),
-        ),
-    )
-    AccountRow(
+    UserWalletItem(
+        state = model.state,
         modifier = modifier
-            .background(color = TangemTheme.colors.background.primary)
-            .clickable(onClick = model.onClick)
-            .padding(12.dp),
-        title = model.accountName,
-        subtitle = stringReference(subtitle),
-        icon = model.accountIconUM,
+            .background(color = TangemTheme.colors.background.primary),
     )
 }
 
@@ -336,18 +325,19 @@ private fun AccountsFooter(model: WalletSettingsAccountsUM.Footer, modifier: Mod
             ),
         ) {
             AddAccountRow(model.addAccount)
-            SpacerH(
-                height = TangemTheme.dimens.size0_5,
+            HorizontalDivider(
+                thickness = TangemTheme.dimens.size0_5,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = TangemTheme.dimens.spacing12)
-                    .background(TangemTheme.colors.stroke.primary),
+                    .padding(horizontal = TangemTheme.dimens.spacing12),
+                color = TangemTheme.colors.stroke.primary,
             )
             BlockItem(
                 modifier = Modifier.fillMaxWidth(),
                 model = model.archivedAccounts,
             )
         }
+        if (!model.showDescription) return
         SpacerH8()
         Text(
             modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing12),

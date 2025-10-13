@@ -56,8 +56,8 @@ fun SearchBar(
         modifier = modifier
             .fillMaxWidth()
             .heightIn(min = TangemTheme.dimens.size48)
-            .onFocusChanged {
-                if (it.isFocused) {
+            .onFocusChanged { focusState ->
+                if (focusState.isFocused) {
                     state.onActiveChange(true)
                 } else {
                     state.onActiveChange(false)
@@ -103,11 +103,11 @@ fun SearchBar(
 @OptIn(ExperimentalMaterial3Api::class)
 private fun DecorationBox(
     state: SearchBarUM,
-    innerTextField: @Composable () -> Unit,
     interactionSource: MutableInteractionSource,
     colors: TextFieldColors,
     focusManager: FocusManager,
     keyboardController: SoftwareKeyboardController?,
+    innerTextField: @Composable () -> Unit,
 ) {
     TextFieldDefaults.DecorationBox(
         value = state.query,

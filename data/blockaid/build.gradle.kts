@@ -12,6 +12,7 @@ android {
 dependencies {
     /* Project - Domain */
     implementation(projects.data.common)
+    implementation(projects.domain.models)
     implementation(projects.domain.blockaid)
     implementation(projects.domain.blockaid.models)
 
@@ -20,6 +21,7 @@ dependencies {
 
     /* Project - Core */
     implementation(projects.core.utils)
+    implementation(projects.libs.blockchainSdk)
 
     /* DI */
     implementation(deps.hilt.core)
