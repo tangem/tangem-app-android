@@ -16,6 +16,9 @@ enum class ApiEnvironment {
     @Json(name = "DEV_2")
     DEV_2,
 
+    @Json(name = "DEV_3")
+    DEV_3,
+
     @Json(name = "STAGE")
     STAGE,
 
