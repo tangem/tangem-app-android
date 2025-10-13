@@ -1,6 +1,5 @@
 package com.tangem.domain.markets
 
-import kotlinx.serialization.Serializable
 import org.joda.time.DateTime
 import java.math.BigDecimal
 
@@ -20,7 +19,6 @@ data class TokenMarketInfo(
     val exchangesAmount: Int?,
 ) {
 
-    @Serializable
     data class Network(
         val networkId: String,
         val exchangeable: Boolean,
