@@ -32,6 +32,8 @@ sealed class DestinationTextFieldUM {
         // if value is human-readable address, this field contains the actual brief blockchain address
         val briefBlockchainAddress: String?
             get() = blockchainAddress?.toBriefAddressFormat(BRIEF_ADDRESS_EDGE_LENGTH, BRIEF_ADDRESS_EDGE_LENGTH)
+
+        val isAddressEns = blockchainAddress != null
     }
 
     data class RecipientMemo(
