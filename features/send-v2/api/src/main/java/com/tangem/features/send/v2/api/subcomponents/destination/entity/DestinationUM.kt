@@ -17,7 +17,6 @@ sealed class DestinationUM {
         val networkName: String,
         val isValidating: Boolean = false,
         val isInitialized: Boolean = false,
-        val isRedesignEnabled: Boolean = false,
         val isRecentHidden: Boolean,
     ) : DestinationUM()
 

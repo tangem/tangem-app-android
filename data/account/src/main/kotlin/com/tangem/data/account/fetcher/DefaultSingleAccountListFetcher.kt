@@ -3,6 +3,7 @@ package com.tangem.data.account.fetcher
 import arrow.core.Either
 import com.tangem.data.common.account.WalletAccountsFetcher
 import com.tangem.domain.account.fetcher.SingleAccountListFetcher
+import javax.inject.Inject
 
 /**
  * Implementation of [SingleAccountListFetcher]
@@ -11,7 +12,7 @@ import com.tangem.domain.account.fetcher.SingleAccountListFetcher
  *
 [REDACTED_AUTHOR]
  */
-internal class DefaultSingleAccountListFetcher(
+internal class DefaultSingleAccountListFetcher @Inject constructor(
     private val walletAccountsFetcher: WalletAccountsFetcher,
 ) : SingleAccountListFetcher {
 

@@ -31,6 +31,7 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDeta
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsDialogConfig
 import com.tangem.features.tokendetails.impl.R
+import com.tangem.features.yield.supply.api.YieldSupplyFeatureToggles
 import com.tangem.utils.Provider
 import kotlinx.collections.immutable.toImmutableList
 
@@ -43,6 +44,7 @@ internal class TokenDetailsStateFactory(
     private val networkHasDerivationUseCase: NetworkHasDerivationUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val userWalletId: UserWalletId,
+    private val yieldSupplyFeatureToggles: YieldSupplyFeatureToggles,
 ) {
 
     private val skeletonStateConverter by lazy {
@@ -51,6 +53,7 @@ internal class TokenDetailsStateFactory(
             networkHasDerivationUseCase = networkHasDerivationUseCase,
             getUserWalletUseCase = getUserWalletUseCase,
             userWalletId = userWalletId,
+            yieldSupplyFeatureToggles = yieldSupplyFeatureToggles,
         )
     }
 
@@ -67,6 +70,7 @@ internal class TokenDetailsStateFactory(
             currentStateProvider = currentStateProvider,
             appCurrencyProvider = appCurrencyProvider,
             clickIntents = clickIntents,
+            yieldSupplyFeatureToggles = yieldSupplyFeatureToggles,
         )
     }
 

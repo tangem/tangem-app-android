@@ -20,7 +20,22 @@ fun <T> Collection<T>.copy(): Collection<T> {
     return this.map { it }
 }
 
-inline fun <T> List<T>.indexOfFirstOrNull(predicate: (T) -> Boolean): Int? {
-    val index = indexOfFirst(predicate)
-    return if (index == -1) null else index
+/**
+ * Adds an element to the mutable list if the specified condition is true.
+ *
+ * @param condition The condition to evaluate.
+ * @param create A lambda function that creates the element to be added.
+ */
+inline fun <T> MutableCollection<T>.addIf(condition: Boolean, create: () -> T) {
+    addIf(condition = condition, element = create())
+}
+
+/**
+ * Adds an element to the mutable list if the specified condition is true.
+ *
+ * @param condition The condition to evaluate.
+ * @param element The element to be added.
+ */
+fun <T> MutableCollection<T>.addIf(condition: Boolean, element: T) {
+    if (condition) this.add(element)
 }
