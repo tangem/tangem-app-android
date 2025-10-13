@@ -1,3 +1,5 @@
+@file:Suppress("BooleanPropertyNaming")
+
 package com.tangem.datasource.api.stakekit.models.response.model
 
 import com.squareup.moshi.Json
@@ -198,6 +200,7 @@ data class YieldDTO(
     enum class RewardTypeDTO {
         @Json(name = "apy")
         APY, // compound rate
+
         @Json(name = "apr")
         APR, // simple rate,
 

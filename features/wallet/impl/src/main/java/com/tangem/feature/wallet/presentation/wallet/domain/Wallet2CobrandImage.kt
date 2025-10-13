@@ -351,6 +351,12 @@ internal enum class Wallet2CobrandImage(
         batchIds = setOf("AF85", "AF86", "AF87", "AF990013", "AF990012", "AF990011"),
     ),
 
+    WinterSakura(
+        cards2ResId = R.drawable.ill_winter_sakura_card2_120_106,
+        cards3ResId = R.drawable.ill_winter_sakura_card3_120_106,
+        batchIds = setOf("AF990053", "AF990054", "AF990055"),
+    ),
+
     LockedMoney(
         cards2ResId = R.drawable.ill_locked_money_card2_120_106,
         cards3ResId = R.drawable.ill_locked_money_card3_120_106,
