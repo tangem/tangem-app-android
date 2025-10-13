@@ -8,6 +8,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -15,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.withLink
@@ -25,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.components.*
 import com.tangem.core.ui.components.notifications.Notification
+import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -35,6 +38,7 @@ import com.tangem.features.yield.supply.impl.subcomponents.active.entity.YieldSu
 internal fun YieldSupplyActiveContent(
     state: YieldSupplyActiveContentUM,
     isBalanceHidden: Boolean,
+    chartComponent: ComposableContentComponent,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -52,16 +56,8 @@ internal fun YieldSupplyActiveContent(
                 .fillMaxWidth()
                 .padding(12.dp),
         ) {
-            Text(
-                text = stringResourceSafe(R.string.yield_module_earn_sheet_total_earnings_title),
-                style = TangemTheme.typography.subtitle2,
-                color = TangemTheme.colors.text.tertiary,
-            )
-            ResizableText(
-                text = state.totalEarnings.orMaskWithStars(isBalanceHidden).resolveReference(),
-                style = TangemTheme.typography.h2,
-                color = TangemTheme.colors.text.primary1,
-            )
+            CurrentApy(state.apy)
+            chartComponent.Content(Modifier.padding(bottom = 12.dp))
         }
         YieldSupplyActiveMyFunds(state = state, isBalanceHidden = isBalanceHidden)
 
@@ -72,6 +68,46 @@ internal fun YieldSupplyActiveContent(
                 iconTint = null,
                 containerColor = TangemTheme.colors.background.action,
             )
+        }
+    }
+}
+
+@Composable
+private fun CurrentApy(apy: TextReference?, modifier: Modifier = Modifier) {
+    Column(modifier = modifier.padding(vertical = 12.dp)) {
+        Text(
+            modifier = Modifier,
+            text = stringResourceSafe(R.string.yield_module_earn_sheet_current_apy_title),
+            style = TangemTheme.typography.subtitle2,
+            color = TangemTheme.colors.text.tertiary,
+        )
+        AnimatedContent(
+            modifier = Modifier.height(32.dp),
+            targetState = apy?.resolveReference(),
+            label = "CurrentApy",
+        ) { apyText ->
+            if (apyText == null) {
+                TextShimmer(
+                    modifier = modifier.width(94.dp),
+                    text = "",
+                    style = TangemTheme.typography.head,
+                )
+            } else {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        painterResource(R.drawable.ic_arrow_up_8),
+                        tint = TangemTheme.colors.text.accent,
+                        contentDescription = null,
+                        modifier = Modifier.padding(end = 6.dp).size(12.dp),
+                    )
+                    Text(
+                        modifier = modifier,
+                        text = apyText,
+                        style = TangemTheme.typography.body1,
+                        color = TangemTheme.colors.text.accent,
+                    )
+                }
+            }
         }
     }
 }
@@ -193,7 +229,11 @@ private fun YieldSupplyActiveBottomSheet_Preview(
     @PreviewParameter(YieldSupplyActiveBottomSheetPreviewProvider::class) params: YieldSupplyActiveContentUM,
 ) {
     TangemThemePreview {
-        YieldSupplyActiveContent(params, true)
+        YieldSupplyActiveContent(
+            state = params,
+            isBalanceHidden = true,
+            chartComponent = ComposableContentComponent.EMPTY,
+        )
     }
 }
 
@@ -210,6 +250,7 @@ private class YieldSupplyActiveBottomSheetPreviewProvider : PreviewParameterProv
                 ),
                 subtitleLink = resourceReference(R.string.common_read_more),
                 notificationUM = NotificationUM.Error.InvalidAmount,
+                apy = stringReference("5,14%"),
             ),
         )
 }

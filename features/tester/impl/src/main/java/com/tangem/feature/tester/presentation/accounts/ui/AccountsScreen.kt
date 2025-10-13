@@ -62,8 +62,9 @@ internal fun AccountsScreen(state: AccountsUM, modifier: Modifier = Modifier) {
             ManageAccountsButtons(
                 state = state,
                 onAccountsClick = { context ->
-                    if (state.accountListBottomSheetConfig.accounts.isNotEmpty()) {
-                        state.onAccountsClick()
+                    val isEmpty = state.onAccountsClick()
+
+                    if (!isEmpty) {
                         isAccountListShown = true
                     } else {
                         Toast.makeText(context, "No accounts found", Toast.LENGTH_SHORT).show()
@@ -241,17 +242,5 @@ private fun LazyListScope.ManageAccountsButtons(state: AccountsUM, onAccountsCli
                 .padding(horizontal = 16.dp, vertical = 8.dp)
                 .fillMaxWidth(),
         )
-    }
-
-    if (state.accountListBottomSheetConfig.accounts.none { it.isMainAccount }) {
-        item {
-            PrimaryButton(
-                text = "Create Main account",
-                onClick = state.onCreateMainAccountClick,
-                modifier = Modifier
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
-                    .fillMaxWidth(),
-            )
-        }
     }
 }

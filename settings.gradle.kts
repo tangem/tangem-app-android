@@ -279,6 +279,9 @@ include(":features:tangempay:onboarding:impl")
 include(":features:create-wallet-selection:api")
 include(":features:create-wallet-selection:impl")
 
+include(":features:create-wallet-start:api")
+include(":features:create-wallet-start:impl")
+
 include(":features:welcome:api")
 include(":features:welcome:impl")
 
