@@ -87,7 +87,7 @@ internal fun OnboardingVisaPinCode(state: OnboardingVisaPinCodeUM, modifier: Mod
             primaryButton = NavigationButton(
                 textReference = resourceReference(R.string.common_submit),
                 onClick = state.onSubmitClick,
-                showProgress = state.submitButtonLoading,
+                shouldShowProgress = state.submitButtonLoading,
                 isEnabled = state.submitButtonEnabled,
             ),
         )

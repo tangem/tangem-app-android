@@ -28,7 +28,7 @@ object MockYieldBalanceWrapperDTOFactory {
                     amount = BigDecimal.ONE,
                     date = null,
                     pricePerShare = BigDecimal.ZERO,
-                    pendingActions = listOf(),
+                    pendingActions = emptyList(),
                     pendingActionConstraints = null,
                     tokenDTO = TokenDTO(
                         name = "The-Open-Network",

@@ -178,14 +178,14 @@ fun SelectorDialog(
  * Dialog button params
  *
  * @param title Button text. If not provided default values will be used
- * @param warning If true then button text will be in theme warning color
- * @param enabled If false button will be disabled
+ * @param isWarning If true then button text will be in theme warning color
+ * @param isEnabled If false button will be disabled
  * @param onClick Button click callback
  */
 data class DialogButtonUM(
     val title: String? = null,
-    val warning: Boolean = false,
-    val enabled: Boolean = true,
+    val isWarning: Boolean = false,
+    val isEnabled: Boolean = true,
     val onClick: () -> Unit,
 )
 
@@ -196,7 +196,7 @@ data class AdditionalTextInputDialogUM(
     val label: String? = null,
     val placeholder: String? = null,
     val caption: String? = null,
-    val enabled: Boolean = true,
+    val isEnabled: Boolean = true,
     val isError: Boolean = false,
     val errorText: String? = null,
 )
@@ -276,7 +276,7 @@ private fun DialogContent(type: DialogType, modifier: Modifier = Modifier) {
                     onValueChange = type.onValueChange,
                     isError = type.params.isError,
                     errorText = type.params.errorText,
-                    isEnabled = type.params.enabled,
+                    isEnabled = type.params.isEnabled,
                     placeholder = type.params.placeholder,
                 )
             }
@@ -289,7 +289,7 @@ private fun DialogContent(type: DialogType, modifier: Modifier = Modifier) {
                     label = type.params.label,
                     placeholder = type.params.placeholder,
                     caption = type.params.caption,
-                    enabled = type.params.enabled,
+                    enabled = type.params.isEnabled,
                     isError = type.params.isError,
                     onValueChange = { newValue ->
                         type.onValueChange(newValue)
@@ -324,15 +324,15 @@ private fun DialogButtons(
         if (dismissButton != null) {
             DialogButton(
                 text = dismissButton.title ?: stringResourceSafe(id = R.string.common_cancel),
-                warning = dismissButton.warning,
-                enabled = dismissButton.enabled,
+                warning = dismissButton.isWarning,
+                enabled = dismissButton.isEnabled,
                 onClick = dismissButton.onClick,
             )
         }
         DialogButton(
             text = confirmButton.title ?: stringResourceSafe(id = R.string.common_ok),
-            warning = confirmButton.warning,
-            enabled = confirmButton.enabled,
+            warning = confirmButton.isWarning,
+            enabled = confirmButton.isEnabled,
             onClick = confirmButton.onClick,
         )
     }
@@ -487,7 +487,7 @@ private fun WarningBasicDialogSample(modifier: Modifier = Modifier) {
             message = "All protected passwords will be deleted from the secure storage, you must enter the wallet " +
                 "password to work with the app",
             title = "Attention",
-            confirmButton = DialogButtonUM(warning = true) {},
+            confirmButton = DialogButtonUM(isWarning = true) {},
             dismissButton = DialogButtonUM {},
             onDismissDialog = {},
         )

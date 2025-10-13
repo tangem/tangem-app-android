@@ -26,7 +26,7 @@ data class NotificationConfig(
     val buttonsState: ButtonsState? = null,
     val onClick: (() -> Unit)? = null,
     val onCloseClick: (() -> Unit)? = null,
-    val showArrowIcon: Boolean = onClick != null,
+    val shouldShowArrowIcon: Boolean = onClick != null,
     val iconTint: IconTint = IconTint.Unspecified,
     val iconSize: Dp = 20.dp,
 ) {
@@ -44,6 +44,7 @@ data class NotificationConfig(
             val text: TextReference,
             @DrawableRes val iconResId: Int? = null,
             val onClick: () -> Unit,
+            val shouldShowProgress: Boolean = false,
         ) : ButtonsState()
 
         data class PairButtonsConfig(

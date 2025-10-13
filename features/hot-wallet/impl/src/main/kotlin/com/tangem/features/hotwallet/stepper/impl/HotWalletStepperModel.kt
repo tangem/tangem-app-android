@@ -20,7 +20,7 @@ internal class HotWalletStepperModel @Inject constructor(
     val params = paramsContainer.require<HotWalletStepperComponent.Params>()
 
     val uiState: StateFlow<HotWalletStepperComponent.StepperUM>
-    field = MutableStateFlow(params.initState)
+        field = MutableStateFlow(params.initState)
 
     fun updateState(newState: HotWalletStepperComponent.StepperUM) {
         uiState.value = newState

@@ -31,7 +31,7 @@ internal fun LazyListScope.organizeTokensButton(
                 text = resourceReference(id = R.string.organize_tokens_title),
                 iconResId = R.drawable.ic_filter_24,
                 onClick = onClick,
-                enabled = isEnabled,
+                isEnabled = isEnabled,
             ),
         )
     }
