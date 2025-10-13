@@ -5,6 +5,7 @@ import arrow.core.getOrElse
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.tangem.common.ui.userwallet.state.UserWalletItemUM
+import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -16,6 +17,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.managetokens.CheckCurrencyUnsupportedUseCase
@@ -32,6 +34,7 @@ import com.tangem.domain.transaction.usecase.ReceiveAddressesFactory
 import com.tangem.domain.wallets.usecase.ColdWalletAndHasMissedDerivationsUseCase
 import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
 import com.tangem.features.markets.impl.R
+import com.tangem.features.markets.portfolio.add.api.AddToPortfolioComponent
 import com.tangem.features.markets.portfolio.api.MarketsPortfolioComponent
 import com.tangem.features.markets.portfolio.impl.analytics.PortfolioAnalyticsEvent
 import com.tangem.features.markets.portfolio.impl.loader.PortfolioData
@@ -69,8 +72,10 @@ internal class MarketsPortfolioModel @Inject constructor(
     private val tokenReceiveFeatureToggle: TokenReceiveFeatureToggle,
     private val userWalletImageFetcher: UserWalletImageFetcher,
     private val receiveAddressesFactory: ReceiveAddressesFactory,
+    private val accountsFeatureToggles: AccountsFeatureToggles,
 ) : Model() {
 
+    val addToPortfolioState = MutableStateFlow<AddToPortfolioComponent.State>(AddToPortfolioComponent.State.Init)
     val state: StateFlow<MyPortfolioUM> get() = _state
     private val _state: MutableStateFlow<MyPortfolioUM> = MutableStateFlow(value = MyPortfolioUM.Loading)
 
@@ -86,6 +91,10 @@ internal class MarketsPortfolioModel @Inject constructor(
     private val portfolioBSVisibilityModelFlow = MutableStateFlow(value = PortfolioBSVisibilityModel())
 
     val bottomSheetNavigation: SlotNavigation<TokenReceiveConfig> = SlotNavigation()
+    val addToPortfolioNavigation: SlotNavigation<Unit> = SlotNavigation()
+    val addToPortfolioCallback = object : AddToPortfolioComponent.Callback {
+        override fun onDismiss() = addToPortfolioNavigation.dismiss()
+    }
 
     private val currentAppCurrency = getSelectedAppCurrencyUseCase()
         .map { maybeAppCurrency ->
@@ -98,8 +107,13 @@ internal class MarketsPortfolioModel @Inject constructor(
         )
 
     private val factory = MyPortfolioUMFactory(
+        accountsFeatureToggles = accountsFeatureToggles,
         onAddClick = {
-            onAddToPortfolioBSVisibilityChange(isShow = true)
+            if (accountsFeatureToggles.isFeatureEnabled) {
+                addToPortfolioNavigation.activate(Unit)
+            } else {
+                onAddToPortfolioBSVisibilityChange(isShow = true)
+            }
             // === Analytics ===
             analyticsEventHandler.send(
                 analyticsEventBuilder.addToPortfolioClicked(),
@@ -191,9 +205,10 @@ internal class MarketsPortfolioModel @Inject constructor(
         combine(
             flow = loadPortfolioDataWithArtworks(params.token.id),
             flow2 = getPortfolioUIDataFlow(),
-            transform = { pair, portfolioUIData ->
+            flow3 = addToPortfolioState,
+            transform = { pair, portfolioUIData, addToPortfolioState ->
                 val (portfolioData, artworks) = pair
-                factory.create(portfolioData, portfolioUIData, artworks)
+                factory.create(portfolioData, portfolioUIData, artworks, addToPortfolioState)
             },
         )
             .onEach { _state.value = it }
