@@ -33,7 +33,6 @@ class AccountPortfolioItemUMConverter(
                 endIcon = endIcon,
                 onClick = { onClick(value.accountId) },
                 imageState = getImageState(value),
-                label = null,
             )
         }
     }
