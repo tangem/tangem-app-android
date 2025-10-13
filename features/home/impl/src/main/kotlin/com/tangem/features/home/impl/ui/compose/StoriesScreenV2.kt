@@ -29,13 +29,7 @@ import com.tangem.core.ui.R
 import com.tangem.features.home.impl.ui.state.HomeUM
 
 @Composable
-internal fun StoriesScreenV2(
-    state: HomeUM,
-    onCreateNewWalletButtonClick: () -> Unit,
-    onAddExistingWalletButtonClick: () -> Unit,
-    onScanButtonClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+internal fun StoriesScreenV2(state: HomeUM, onGetStartedClick: () -> Unit, modifier: Modifier = Modifier) {
     var currentStory by remember { mutableStateOf(state.firstStory) }
     val currentStoryIndex by rememberUpdatedState(newValue = state.stepOf(currentStory))
 
@@ -64,9 +58,7 @@ internal fun StoriesScreenV2(
             isScanInProgress = state.scanInProgress,
             onGoToPreviousStory = goToPreviousStory,
             onGoToNextStory = goToNextStory,
-            onCreateNewWalletButtonClick = onCreateNewWalletButtonClick,
-            onAddExistingWalletButtonClick = onAddExistingWalletButtonClick,
-            onScanButtonClick = onScanButtonClick,
+            onGetStartedClick = onGetStartedClick,
         ),
     )
 }
@@ -176,10 +168,7 @@ private fun StoriesScreenContentV2(config: StoriesScreenContentV2Config, modifie
         ) {
             HomeButtonsV2(
                 modifier = Modifier.fillMaxWidth(),
-                btnScanStateInProgress = config.isScanInProgress,
-                onScanButtonClick = config.onScanButtonClick,
-                onCreateNewWalletButtonClick = config.onCreateNewWalletButtonClick,
-                onAddExistingWalletButtonClick = config.onAddExistingWalletButtonClick,
+                onGetStartedClick = config.onGetStartedClick,
             )
         }
     }
@@ -192,9 +181,7 @@ private data class StoriesScreenContentV2Config(
     val isScanInProgress: Boolean,
     val onGoToPreviousStory: () -> Unit = {},
     val onGoToNextStory: () -> Unit = {},
-    val onCreateNewWalletButtonClick: () -> Unit = {},
-    val onAddExistingWalletButtonClick: () -> Unit = {},
-    val onScanButtonClick: () -> Unit = {},
+    val onGetStartedClick: () -> Unit = {},
 )
 
 // region Preview
