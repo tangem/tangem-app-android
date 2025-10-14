@@ -4,7 +4,6 @@ import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ACTION
 import com.tangem.core.analytics.models.AnalyticsParam.Key.BLOCKCHAIN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ERROR_DESCRIPTION
-import com.tangem.core.analytics.models.AnalyticsParam.Key.STATUS
 import com.tangem.core.analytics.models.AnalyticsParam.Key.TOKEN_PARAM
 
 sealed class YieldSupplyAnalytics(
@@ -147,24 +146,6 @@ sealed class YieldSupplyAnalytics(
         },
     )
 
-    data class AssetStatusLoaded(
-        val status: AssetStatus,
-    ) : YieldSupplyAnalytics(
-        event = "Asset Status Loaded",
-        params = mapOf(
-            STATUS to status.value,
-        ),
-    )
-
-    data class ActionBlockedByStatus(
-        val status: AssetStatus,
-    ) : YieldSupplyAnalytics(
-        event = "Action Blocked by Status",
-        params = mapOf(
-            STATUS to status.value,
-        ),
-    )
-
     data object ApyChartViewed : YieldSupplyAnalytics(
         event = "APY Chart",
     )
@@ -194,10 +175,5 @@ sealed class YieldSupplyAnalytics(
     enum class Action(val value: String) {
         Approve("Approve"),
         Stop("Stop"),
-    }
-
-    enum class AssetStatus(val value: String) {
-        Active("ACTIVE"),
-        Inactive("Inactive"),
     }
 }
