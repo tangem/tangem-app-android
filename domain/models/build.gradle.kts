@@ -10,7 +10,6 @@ tasks.withType<Test>().configureEach {
 }
 
 dependencies {
-    api(projects.domain.visa.models)
     api(projects.domain.core)
     api(projects.core.utils)
 
