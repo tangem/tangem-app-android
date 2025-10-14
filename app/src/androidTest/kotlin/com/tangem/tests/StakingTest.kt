@@ -1,7 +1,6 @@
 package com.tangem.tests
 
 import com.tangem.common.BaseTestCase
-import com.tangem.common.constants.TestConstants.TOTAL_BALANCE
 import com.tangem.common.extensions.SwipeDirection
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.extensions.swipeVertical
@@ -22,7 +21,6 @@ class StakingTest : BaseTestCase() {
     @Test
     fun validateStakingBlockTest() {
         val tokenTitle = "POL (ex-MATIC)"
-        val balance = "$3,299.37"
         val scenarioName = "staking_eth_pol_balances_android"
         val scenarioState = "Staked"
 
@@ -40,7 +38,7 @@ class StakingTest : BaseTestCase() {
                 openMainScreen()
             }
             step("Synchronize addresses") {
-                synchronizeAddresses(balance)
+                synchronizeAddresses()
             }
             step("Assert 'Organize tokens' button is displayed") {
                 onMainScreen { organizeTokensButton().assertIsDisplayed() }
@@ -80,7 +78,6 @@ class StakingTest : BaseTestCase() {
     @Test
     fun validateStakingMoreScreensTest() {
         val tokenTitle = "POL (ex-MATIC)"
-        val balance = "$3,299.37"
         val scenarioName = "staking_eth_pol_balances_android"
         val scenarioState = "Staked"
         val stakingAmount = "1"
@@ -99,7 +96,7 @@ class StakingTest : BaseTestCase() {
                 openMainScreen()
             }
             step("Synchronize addresses") {
-                synchronizeAddresses(balance)
+                synchronizeAddresses()
             }
             step("Assert 'Organize tokens' button is displayed") {
                 onMainScreen { organizeTokensButton().assertIsDisplayed() }
@@ -139,7 +136,6 @@ class StakingTest : BaseTestCase() {
     @Test
     fun validateStakingScreensTest() {
         val tokenTitle = "POL (ex-MATIC)"
-        val balance = TOTAL_BALANCE
         val scenarioName = "staking_eth_pol_balances_android"
         val scenarioState = "Started"
         val stakingAmount = "1"
@@ -158,7 +154,7 @@ class StakingTest : BaseTestCase() {
                 openMainScreen()
             }
             step("Synchronize addresses") {
-                synchronizeAddresses(balance)
+                synchronizeAddresses()
             }
             step("Assert 'Organize tokens' button is displayed") {
                 onMainScreen { organizeTokensButton().assertIsDisplayed() }
