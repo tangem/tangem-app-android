@@ -7,7 +7,7 @@ import androidx.test.uiautomator.UiObject2
 import androidx.test.uiautomator.Until
 import com.kaspersky.kaspresso.screens.KScreen
 
-object ChromeBrowserPageObject : KScreen<ChromeBrowserPageObject>() {
+object ThirdPartyAppPageObject : KScreen<ThirdPartyAppPageObject>() {
 
     override val layoutId: Int? = null
     override val viewClass: Class<*>? = null
