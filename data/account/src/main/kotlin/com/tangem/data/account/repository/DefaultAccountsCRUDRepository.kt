@@ -9,8 +9,10 @@ import com.tangem.data.account.store.AccountsResponseStore
 import com.tangem.data.account.store.AccountsResponseStoreFactory
 import com.tangem.data.account.store.ArchivedAccountsStore
 import com.tangem.data.account.store.ArchivedAccountsStoreFactory
+import com.tangem.data.account.utils.toUserTokensResponse
 import com.tangem.data.common.account.WalletAccountsSaver
 import com.tangem.data.common.cache.etag.ETagsStore
+import com.tangem.data.common.currency.UserTokensSaver
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
@@ -28,6 +30,7 @@ import com.tangem.utils.extensions.replaceBy
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 
 /**
 [REDACTED_AUTHOR]
@@ -39,6 +42,7 @@ internal class DefaultAccountsCRUDRepository(
     private val accountsResponseStoreFactory: AccountsResponseStoreFactory,
     private val archivedAccountsStoreFactory: ArchivedAccountsStoreFactory,
     private val userWalletsStore: UserWalletsStore,
+    private val userTokensSaver: UserTokensSaver,
     private val eTagsStore: ETagsStore,
     private val convertersContainer: AccountConverterFactoryContainer,
     private val dispatchers: CoroutineDispatcherProvider,
@@ -129,6 +133,17 @@ internal class DefaultAccountsCRUDRepository(
                 },
             )
         }
+    }
+
+    override suspend fun syncTokens(userWalletId: UserWalletId) {
+        val response = getAccountsResponseSync(userWalletId = userWalletId)
+
+        if (response == null) {
+            Timber.e("Can't sync tokens. No accounts response found for wallet: $userWalletId")
+            return
+        }
+
+        userTokensSaver.push(userWalletId = userWalletId, response = response.toUserTokensResponse())
     }
 
     override suspend fun getTotalAccountsCountSync(userWalletId: UserWalletId): Option<Int> = option {
