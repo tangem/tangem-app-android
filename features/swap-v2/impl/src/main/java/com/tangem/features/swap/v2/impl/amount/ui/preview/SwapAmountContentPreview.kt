@@ -1,5 +1,6 @@
 package com.tangem.features.swap.v2.impl.amount.ui.preview
 
+import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.common.ui.amountScreen.preview.AmountStatePreviewData
 import com.tangem.core.ui.components.atoms.text.TextEllipsis
 import com.tangem.core.ui.extensions.TextReference
@@ -41,7 +42,6 @@ internal data object SwapAmountContentPreview {
                 canHandleTokens = false,
                 transactionExtrasType = Network.TransactionExtrasType.NONE,
                 nameResolvingType = Network.NameResolvingType.NONE,
-
             ),
             name = "Bitcoin",
             symbol = "BTC",
@@ -109,7 +109,7 @@ internal data object SwapAmountContentPreview {
         secondaryAmount = SwapAmountFieldUM.Content(
             amountType = SwapAmountType.To,
             amountField = AmountStatePreviewData.amountState.copy(
-                title = stringReference("Amount to receive"),
+                accountTitleUM = AccountTitleUM.Text(stringReference("Amount to receive")),
             ),
             title = stringReference("Shiba Inu"),
             priceImpact = stringReference("(-10%)"),
@@ -132,4 +132,16 @@ internal data object SwapAmountContentPreview {
         showBestRateAnimation = false,
         showFCAWarning = true,
     )
+
+    val defaultStateAccount: SwapAmountUM.Content
+        get() = defaultState.copy(
+            primaryAmount = (defaultState.primaryAmount as SwapAmountFieldUM.Content).copy(
+                amountField = AmountStatePreviewData.amountStateV2Accounts,
+            ),
+            secondaryAmount = (defaultState.secondaryAmount as SwapAmountFieldUM.Content).copy(
+                amountField = AmountStatePreviewData.amountStateV2Accounts.copy(
+                    accountTitleUM = AccountTitleUM.Text(stringReference("Amount to receive")),
+                ),
+            ),
+        )
 }
