@@ -3,6 +3,7 @@ package com.tangem.features.yield.supply.impl.subcomponents.approve.model
 import arrow.core.getOrElse
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.TransactionFee
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -21,6 +22,7 @@ import com.tangem.domain.transaction.usecase.CreateApprovalTransactionUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetContractAddressUseCase
+import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
 import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.impl.common.YieldSupplyAlertFactory
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyActionUM
@@ -46,6 +48,7 @@ import javax.inject.Inject
 internal class YieldSupplyApproveModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     paramsContainer: ParamsContainer,
+    private val analyticsEventHandler: AnalyticsEventHandler,
     private val urlOpener: UrlOpener,
     private val yieldSupplyNotificationsUpdateTrigger: YieldSupplyNotificationsUpdateTrigger,
     private val createApprovalTransactionUseCase: CreateApprovalTransactionUseCase,
@@ -140,6 +143,11 @@ internal class YieldSupplyApproveModel @Inject constructor(
                     )
                 },
                 ifRight = {
+                    analyticsEventHandler.send(YieldSupplyAnalytics.ApprovalAction(
+                        token = cryptoCurrency.symbol,
+                        blockchain = cryptoCurrency.network.name,
+                        action = YieldSupplyAnalytics.Action.Approve,
+                    ))
                     params.callback.onTransactionSent()
                 },
             )
