@@ -12,6 +12,8 @@ dependencies {
     /** Core */
     implementation(projects.core.decompose)
     implementation(projects.core.ui)
+    implementation(projects.core.analytics)
+    implementation(projects.core.analytics.models)
 
     /** Domain */
     implementation(projects.domain.models)
