@@ -2,6 +2,7 @@ package com.tangem.features.yield.supply.impl.subcomponents.active.model
 
 import arrow.core.getOrElse
 import com.tangem.common.ui.notifications.NotificationUM
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -19,6 +20,7 @@ import com.tangem.domain.yield.supply.usecase.YieldSupplyGetProtocolBalanceUseCa
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetTokenStatusUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyMinAmountUseCase
 import com.tangem.features.yield.supply.impl.R
+import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
 import com.tangem.features.yield.supply.impl.common.formatter.YieldSupplyMinAmountFormatter
 import com.tangem.features.yield.supply.impl.subcomponents.active.YieldSupplyActiveComponent
 import com.tangem.features.yield.supply.impl.subcomponents.active.entity.YieldSupplyActiveContentUM
@@ -29,10 +31,12 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 @ModelScoped
 internal class YieldSupplyActiveModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
+    analyticsHandler: AnalyticsEventHandler,
     private val yieldSupplyGetProtocolBalanceUseCase: YieldSupplyGetProtocolBalanceUseCase,
     private val yieldSupplyGetTokenStatusUseCase: YieldSupplyGetTokenStatusUseCase,
     private val yieldSupplyMinAmountUseCase: YieldSupplyMinAmountUseCase,
@@ -62,6 +66,12 @@ internal class YieldSupplyActiveModel @Inject constructor(
         )
 
     init {
+        analyticsHandler.send(
+            YieldSupplyAnalytics.EarningScreenInfoOpened(
+                token = cryptoCurrency.symbol,
+                blockchain = cryptoCurrency.network.name,
+            ),
+        )
         subscribeOnCurrencyUpdates()
 
         modelScope.launch(dispatchers.default) {
