@@ -2,6 +2,8 @@ package com.tangem.features.managetokens.utils.list
 
 import arrow.core.Either
 import arrow.core.NonEmptyList
+import arrow.core.right
+import com.tangem.domain.account.status.usecase.SaveCryptoCurrenciesUseCase
 import com.tangem.domain.managetokens.CheckIsCurrencyNotAddedUseCase
 import com.tangem.domain.managetokens.CreateCryptoCurrencyUseCase
 import com.tangem.domain.managetokens.FindTokenUseCase
@@ -28,6 +30,7 @@ internal class CustomTokenFormUseCasesFacade @AssistedInject constructor(
     private val findTokenUseCase: FindTokenUseCase,
     private val checkIsCurrencyNotAddedUseCase: CheckIsCurrencyNotAddedUseCase,
     private val coldWalletAndHasMissedDerivationsUseCase: ColdWalletAndHasMissedDerivationsUseCase,
+    private val saveCryptoCurrenciesUseCase: SaveCryptoCurrenciesUseCase,
     @Assisted private val mode: AddCustomTokenMode,
 ) {
 
@@ -40,15 +43,19 @@ internal class CustomTokenFormUseCasesFacade @AssistedInject constructor(
     }
 
     suspend fun addCryptoCurrenciesUseCase(currency: CryptoCurrency): Either<Throwable, Unit> = when (mode) {
-        is AddCustomTokenMode.Account -> TODO("Account")
-        is AddCustomTokenMode.Wallet -> addCryptoCurrenciesUseCase.invoke(
-            userWalletId = mode.userWalletId,
-            currency = currency,
-        )
+        is AddCustomTokenMode.Account -> {
+            saveCryptoCurrenciesUseCase(accountId = mode.accountId, add = currency)
+        }
+        is AddCustomTokenMode.Wallet -> {
+            addCryptoCurrenciesUseCase.invoke(
+                userWalletId = mode.userWalletId,
+                currency = currency,
+            )
+        }
     }
 
     suspend fun derivePublicKeysUseCase(currencies: List<CryptoCurrency>): Either<Throwable, Unit> = when (mode) {
-        is AddCustomTokenMode.Account -> TODO("Account")
+        is AddCustomTokenMode.Account -> Unit.right()
         is AddCustomTokenMode.Wallet -> derivePublicKeysUseCase.invoke(
             userWalletId = mode.userWalletId,
             currencies = currencies,
