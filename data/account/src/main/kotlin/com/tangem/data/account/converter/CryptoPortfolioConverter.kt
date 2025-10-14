@@ -50,7 +50,9 @@ internal class CryptoPortfolioConverter @AssistedInject constructor(
             derivationIndex = value.derivationIndex.value,
             icon = value.icon.value.name,
             iconColor = value.icon.color.name,
-            tokens = value.cryptoCurrencies.map(userTokensResponseFactory::createResponseToken),
+            tokens = value.cryptoCurrencies.map {
+                userTokensResponseFactory.createResponseToken(currency = it, accountId = value.accountId)
+            },
         )
     }
 
