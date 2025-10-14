@@ -57,8 +57,16 @@ class SaveCryptoCurrenciesUseCase(
 
     suspend operator fun invoke(
         accountId: AccountId,
-        add: List<CryptoCurrency>,
-        remove: List<CryptoCurrency>,
+        add: CryptoCurrency? = null,
+        remove: CryptoCurrency? = null,
+    ): Either<Throwable, Unit> {
+        return invoke(accountId = accountId, add = listOfNotNull(add), remove = listOfNotNull(remove))
+    }
+
+    suspend operator fun invoke(
+        accountId: AccountId,
+        add: List<CryptoCurrency> = emptyList(),
+        remove: List<CryptoCurrency> = emptyList(),
     ): Either<Throwable, Unit> = eitherOn(dispatchers.default) {
         if (add.isEmpty() && remove.isEmpty()) {
             Timber.d("No currencies to add or remove, skipping")
@@ -81,6 +89,34 @@ class SaveCryptoCurrenciesUseCase(
                 clearMetadata(userWalletId = userWalletId, currencies = modifiedCurrencyList.removed)
 
             jobs.joinAll()
+        }
+    }
+
+    suspend fun add(
+        accountId: AccountId,
+        networkId: String,
+        contractAddress: String,
+    ): Either<Throwable, CryptoCurrency> = eitherOn(dispatchers.default) {
+        val userWalletId = accountId.userWalletId
+
+        withContext(NonCancellable) {
+            val account = getAccount(accountId = accountId)
+
+            val foundToken = account.cryptoCurrencies
+                .filterIsInstance<CryptoCurrency.Token>()
+                .firstOrNull {
+                    it.network.backendId == networkId &&
+                        !it.isCustom &&
+                        it.contractAddress.equals(contractAddress, true)
+                }
+
+            if (foundToken != null) return@withContext foundToken
+
+            val tokenToAdd = findToken(userWalletId, contractAddress, networkId)
+
+            refreshBalances(userWalletId = userWalletId, currencies = listOf(tokenToAdd)).joinAll()
+
+            tokenToAdd
         }
     }
 
@@ -179,6 +215,23 @@ class SaveCryptoCurrenciesUseCase(
         }
 
         return destination
+    }
+
+    private suspend fun Raise<Throwable>.findToken(
+        userWalletId: UserWalletId,
+        networkId: String,
+        contractAddress: String,
+    ): CryptoCurrency.Token {
+        return catch(
+            block = {
+                currenciesRepository.createTokenCurrency(
+                    userWalletId = userWalletId,
+                    networkId = networkId,
+                    contractAddress = contractAddress,
+                )
+            },
+            catch = ::raise,
+        )
     }
 
     private suspend fun refreshBalances(userWalletId: UserWalletId, currencies: List<CryptoCurrency>): List<Job> {
