@@ -446,8 +446,8 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Pepecoin, Blockchain.PepecoinTestnet -> "pepecoin-network"
         Blockchain.Hyperliquid, Blockchain.HyperliquidTestnet -> "hyperliquid"
         Blockchain.Quai, Blockchain.QuaiTestnet -> "quai-network"
-        Blockchain.Linea, Blockchain.LineaTestnet -> "linea"
-        Blockchain.ArbitrumNova -> "arbitrum-nova"
+        Blockchain.Linea, Blockchain.LineaTestnet -> "linea-ethereum"
+        Blockchain.ArbitrumNova -> "arbitrum-nova-ethereum"
     }
 }
 
