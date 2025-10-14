@@ -185,6 +185,14 @@ internal class SendAmountModel @Inject constructor(
     ) {
         if (uiState.value is AmountState.Empty && userWallet != null) {
             val isOnlyOneWallet = getWalletsUseCase.invokeSync().size == 1
+            val walletTitle = if (isOnlyOneWallet) {
+                resourceReference(R.string.send_from_title)
+            } else {
+                resourceReference(
+                    R.string.send_from_wallet_name,
+                    WrappedList(listOf(userWallet?.name.orEmpty())), // TODO [REDACTED_TASK_KEY]
+                )
+            }
             _uiState.update {
                 AmountStateConverter(
                     clickIntents = this,
@@ -193,16 +201,14 @@ internal class SendAmountModel @Inject constructor(
                     maxEnterAmount = maxAmountBoundary,
                     iconStateConverter = CryptoCurrencyToIconStateConverter(),
                     isBalanceHidden = params.isBalanceHidingFlow.value,
+                    accountTitleUM = AmountAccountConverter(
+                        isAccountsMode = isAccountsMode,
+                        walletTitle = walletTitle,
+                        prefixText = resourceReference(R.string.common_from),
+                    ).convert(account),
                 ).convert(
                     AmountParameters(
-                        title = if (isOnlyOneWallet) {
-                            resourceReference(R.string.send_from_title)
-                        } else {
-                            resourceReference(
-                                R.string.send_from_wallet_name,
-                                WrappedList(listOf(userWallet?.name.orEmpty())), // TODO [REDACTED_TASK_KEY]
-                            )
-                        },
+                        title = walletTitle,
                         value = "",
                     ),
                 )
