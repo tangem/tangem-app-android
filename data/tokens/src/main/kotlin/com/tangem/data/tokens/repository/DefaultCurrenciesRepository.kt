@@ -74,26 +74,6 @@ internal class DefaultCurrenciesRepository(
         userTokensSaver.storeAndPush(userWalletId, response)
     }
 
-    override suspend fun saveCurrenciesLocal(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) {
-        withContext(dispatchers.io) {
-            val savedResponse = requireNotNull(
-                value = getSavedUserTokensResponseSync(key = userWalletId),
-                lazyMessage = { "Saved tokens empty. Can not perform add currencies action." },
-            )
-
-            val updatedResponse = savedResponse.copy(
-                tokens = currencies.map(userTokensResponseFactory::createResponseToken),
-            )
-
-            userTokensSaver.store(userWalletId = userWalletId, response = updatedResponse)
-
-            fetchExpressAssetsByNetworkIds(
-                userWallet = userWalletsStore.getSyncStrict(key = userWalletId),
-                userTokens = updatedResponse,
-            )
-        }
-    }
-
     override suspend fun addCurrenciesCache(
         userWalletId: UserWalletId,
         currencies: List<CryptoCurrency>,
@@ -667,6 +647,7 @@ internal class DefaultCurrenciesRepository(
         return demoConfig.isDemoCardId(userWallet.cardId) && response == null
     }
 
+    // TODO [REDACTED_JIRA]
     private suspend fun fetchExpressAssetsByNetworkIds(userWallet: UserWallet, userTokens: UserTokensResponse) {
         val tokens = userTokens.tokens.map { token ->
             LeastTokenInfo(
@@ -731,6 +712,7 @@ internal class DefaultCurrenciesRepository(
             ),
             isGroupedByNetwork = false,
             isSortedByBalance = false,
+            accountId = null,
         )
 
     private fun ensureIsCorrectUserWallet(userWalletId: UserWalletId, isMultiCurrencyWalletExpected: Boolean) {
