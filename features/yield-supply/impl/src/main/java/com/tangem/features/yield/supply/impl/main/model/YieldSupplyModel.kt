@@ -4,6 +4,7 @@ import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.tangem.common.routing.AppRoute.YieldSupplyPromo
 import com.tangem.common.routing.AppRouter
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -25,6 +26,7 @@ import com.tangem.domain.yield.supply.usecase.YieldSupplyGetTokenStatusUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyIsAvailableUseCase
 import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.api.YieldSupplyComponent
+import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
 import com.tangem.features.yield.supply.impl.main.entity.YieldSupplyUM
 import com.tangem.features.yield.supply.impl.main.model.transformers.YieldSupplyTokenStatusSuccessTransformer
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -43,6 +45,7 @@ import kotlin.properties.Delegates
 internal class YieldSupplyModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
+    private val analyticsEventsHandler: AnalyticsEventHandler,
     private val appRouter: AppRouter,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val getSingleCryptoCurrencyStatusUseCase: GetSingleCryptoCurrencyStatusUseCase,
@@ -188,6 +191,14 @@ internal class YieldSupplyModel @Inject constructor(
             }
             yieldSupplyStatus?.isActive == true -> {
                 val cryptoCurrencyToken = cryptoCurrency as? CryptoCurrency.Token ?: return
+                if (!yieldSupplyStatus.isAllowedToSpend) {
+                    analyticsEventsHandler.send(
+                        YieldSupplyAnalytics.NoticeApproveNeeded(
+                            token = cryptoCurrency.symbol,
+                            blockchain = cryptoCurrency.network.name,
+                        ),
+                    )
+                }
                 modelScope.launch(dispatchers.default) {
                     yieldSupplyGetTokenStatusUseCase(cryptoCurrencyToken)
                         .onRight { tokenStatus ->
