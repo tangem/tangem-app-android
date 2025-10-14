@@ -9,6 +9,8 @@ import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.account.AccountId
+import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import javax.inject.Inject
@@ -63,6 +65,9 @@ internal class DefaultWalletAccountsResponseFactory @Inject constructor(
             currencies = userWallet?.let(cardCryptoCurrencyFactory::createDefaultCoinsForMultiCurrencyWallet).orEmpty(),
             isGroupedByNetwork = false,
             isSortedByBalance = false,
+            accountId = userWallet?.let {
+                AccountId.forCryptoPortfolio(userWalletId = it.walletId, derivationIndex = DerivationIndex.Main)
+            },
         )
     }
 }

@@ -104,6 +104,9 @@ class DefaultWalletAccountsResponseFactoryTest {
             every { walletId } returns userWalletId
         }
 
+        val accounts = AccountList.empty(userWallet.walletId).accounts
+            .filterIsInstance<Account.CryptoPortfolio>()
+
         val defaultCoins = listOf(mockk<CryptoCurrency.Coin>())
         coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(userWallet)
         every { cardCryptoCurrencyFactory.createDefaultCoinsForMultiCurrencyWallet(userWallet) } returns defaultCoins
@@ -119,11 +122,9 @@ class DefaultWalletAccountsResponseFactoryTest {
                 currencies = defaultCoins,
                 isGroupedByNetwork = false,
                 isSortedByBalance = false,
+                accountId = accounts.first().accountId,
             )
         } returns defaultResponse
-
-        val accounts = AccountList.empty(userWallet.walletId).accounts
-            .filterIsInstance<Account.CryptoPortfolio>()
 
         val accountsDTO = createWalletAccountDTO(userWalletId)
         every { cryptoPortfolioConverter.convertListBack(accounts) } returns listOf(accountsDTO)
@@ -152,6 +153,7 @@ class DefaultWalletAccountsResponseFactoryTest {
                 currencies = defaultCoins,
                 isGroupedByNetwork = false,
                 isSortedByBalance = false,
+                accountId = accounts.first().accountId,
             )
         }
     }
@@ -162,6 +164,10 @@ class DefaultWalletAccountsResponseFactoryTest {
         val userWallet = mockk<UserWallet>(relaxed = true) {
             every { walletId } returns userWalletId
         }
+
+        val accounts = AccountList.empty(userWallet.walletId).accounts
+            .filterIsInstance<Account.CryptoPortfolio>()
+
         coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(userWallet)
         every { cardCryptoCurrencyFactory.createDefaultCoinsForMultiCurrencyWallet(userWallet) } returns emptyList()
         val defaultResponse = UserTokensResponse(
@@ -174,10 +180,10 @@ class DefaultWalletAccountsResponseFactoryTest {
                 currencies = emptyList(),
                 isGroupedByNetwork = false,
                 isSortedByBalance = false,
+                accountId = accounts.first().accountId,
             )
         } returns defaultResponse
-        val accounts = AccountList.empty(userWallet.walletId).accounts
-            .filterIsInstance<Account.CryptoPortfolio>()
+
         every { cryptoPortfolioConverter.convertListBack(accounts) } returns emptyList()
 
         // Act

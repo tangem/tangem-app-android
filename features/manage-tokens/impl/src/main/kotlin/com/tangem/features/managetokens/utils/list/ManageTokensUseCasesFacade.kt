@@ -2,10 +2,13 @@ package com.tangem.features.managetokens.utils.list
 
 import arrow.core.Either
 import arrow.core.left
+import com.tangem.domain.account.status.usecase.SaveCryptoCurrenciesUseCase
 import com.tangem.domain.managetokens.*
 import com.tangem.domain.managetokens.model.CurrencyUnsupportedState
 import com.tangem.domain.managetokens.model.ManageTokensListConfig
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency
+import com.tangem.domain.managetokens.repository.CustomTokensRepository
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.usecase.ColdWalletAndHasMissedDerivationsUseCase
@@ -23,6 +26,8 @@ internal class ManageTokensUseCasesFacade @AssistedInject constructor(
     private val checkCurrencyUnsupportedUseCase: CheckCurrencyUnsupportedUseCase,
     private val coldWalletAndHasMissedDerivationsUseCase: ColdWalletAndHasMissedDerivationsUseCase,
     private val saveManagedTokensUseCase: SaveManagedTokensUseCase,
+    private val saveCryptoCurrenciesUseCase: SaveCryptoCurrenciesUseCase,
+    private val customTokensRepository: CustomTokensRepository,
     @Assisted private val mode: ManageTokensMode,
 ) {
 
@@ -40,7 +45,14 @@ internal class ManageTokensUseCasesFacade @AssistedInject constructor(
 
     suspend fun removeCustomCurrencyUseCase(customCurrency: ManagedCryptoCurrency.Custom): Either<Throwable, Unit> {
         return when (mode) {
-            is ManageTokensMode.Account -> TODO("Account")
+            is ManageTokensMode.Account -> {
+                val currency = customTokensRepository.convertToCryptoCurrency(
+                    userWalletId = mode.accountId.userWalletId,
+                    currency = customCurrency,
+                )
+
+                saveCryptoCurrenciesUseCase(accountId = mode.accountId, remove = currency)
+            }
             is ManageTokensMode.Wallet -> removeCustomCurrencyUseCase.invoke(
                 userWalletId = mode.userWalletId,
                 customCurrency = customCurrency,
@@ -92,13 +104,44 @@ internal class ManageTokensUseCasesFacade @AssistedInject constructor(
         currenciesToAdd: Map<ManagedCryptoCurrency.Token, Set<Network>>,
         currenciesToRemove: Map<ManagedCryptoCurrency.Token, Set<Network>>,
     ): Either<Throwable, Unit> = when (mode) {
-        is ManageTokensMode.Account -> TODO("Account")
-        is ManageTokensMode.Wallet -> saveManagedTokensUseCase.invoke(
-            userWalletId = mode.userWalletId,
-            currenciesToAdd = currenciesToAdd,
-            currenciesToRemove = currenciesToRemove,
-        )
+        is ManageTokensMode.Account -> {
+            saveCryptoCurrenciesUseCase(
+                accountId = mode.accountId,
+                add = currenciesToAdd.mapToCryptoCurrencies(userWalletId = mode.accountId.userWalletId),
+                remove = currenciesToRemove.mapToCryptoCurrencies(userWalletId = mode.accountId.userWalletId),
+            )
+        }
+        is ManageTokensMode.Wallet -> {
+            saveManagedTokensUseCase.invoke(
+                userWalletId = mode.userWalletId,
+                currenciesToAdd = currenciesToAdd,
+                currenciesToRemove = currenciesToRemove,
+            )
+        }
         ManageTokensMode.None -> nonePortfolioError.left()
+    }
+
+    private suspend fun Map<ManagedCryptoCurrency.Token, Set<Network>>.mapToCryptoCurrencies(
+        userWalletId: UserWalletId,
+    ): List<CryptoCurrency> {
+        return flatMap { (token, networks) ->
+            token.availableNetworks
+                .filter { sourceNetwork -> networks.contains(sourceNetwork.network) }
+                .map { sourceNetwork ->
+                    when (sourceNetwork) {
+                        is ManagedCryptoCurrency.SourceNetwork.Default -> customTokensRepository.createToken(
+                            managedCryptoCurrency = token,
+                            sourceNetwork = sourceNetwork,
+                            rawId = CryptoCurrency.RawID(token.id.value),
+                        )
+                        is ManagedCryptoCurrency.SourceNetwork.Main -> customTokensRepository.createCoin(
+                            userWalletId = userWalletId,
+                            networkId = sourceNetwork.id,
+                            derivationPath = sourceNetwork.network.derivationPath,
+                        )
+                    }
+                }
+        }
     }
 
     @AssistedFactory
