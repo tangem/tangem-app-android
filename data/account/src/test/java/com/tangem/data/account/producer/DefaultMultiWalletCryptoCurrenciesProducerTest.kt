@@ -1,4 +1,4 @@
-package com.tangem.data.tokens
+package com.tangem.data.account.producer
 
 import com.google.common.truth.Truth
 import com.tangem.blockchain.common.Blockchain
