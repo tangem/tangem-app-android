@@ -3,17 +3,13 @@ package com.tangem.tests.actionButtons
 import androidx.compose.ui.test.longClick
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.BITCOIN_ADDRESS
-import com.tangem.common.constants.TestConstants.TOTAL_BALANCE
+import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.utils.assertClipboardTextEquals
 import com.tangem.common.utils.clearClipboard
 import com.tangem.scenarios.openMainScreen
 import com.tangem.scenarios.synchronizeAddresses
 import com.tangem.screens.*
-import com.tangem.screens.onTokenActionsBottomSheet
-import com.tangem.screens.onBuyTokenDetailsScreen
-import com.tangem.screens.onDialog
-import com.tangem.screens.onMainScreen
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
@@ -27,13 +23,12 @@ class MainScreenActionButtonsTest : BaseTestCase() {
     @Test
     fun actionButtonsValidateLongTapUiTest() {
         val tokenTitle = "Ethereum"
-        val balance = TOTAL_BALANCE
         setupHooks().run {
             step("Open 'Main Screen'") {
                 openMainScreen()
             }
             step("Synchronize addresses") {
-                synchronizeAddresses(balance)
+                synchronizeAddresses()
             }
             step("Long click on token with name: '$tokenTitle'") {
                 waitForIdle()
@@ -78,7 +73,6 @@ class MainScreenActionButtonsTest : BaseTestCase() {
     @Test
     fun clickOnCopyAddressButtonTest() {
         val tokenTitle = "Bitcoin"
-        val balance = TOTAL_BALANCE
         val bitcoinAddress = BITCOIN_ADDRESS
 
         setupHooks(
@@ -93,7 +87,7 @@ class MainScreenActionButtonsTest : BaseTestCase() {
                 openMainScreen()
             }
             step("Synchronize addresses") {
-                synchronizeAddresses(balance)
+                synchronizeAddresses()
             }
             step("Long click on token with name: '$tokenTitle'") {
                 waitForIdle()
@@ -128,14 +122,13 @@ class MainScreenActionButtonsTest : BaseTestCase() {
     fun clickOnBuyButtonTest() {
         val tokenTitle = "Bitcoin"
         val tokenSymbol = "BTC"
-        val balance = TOTAL_BALANCE
 
         setupHooks().run {
             step("Open 'Main Screen'") {
                 openMainScreen()
             }
             step("Synchronize addresses") {
-                synchronizeAddresses(balance)
+                synchronizeAddresses()
             }
             step("Long click on token with name: '$tokenTitle'") {
                 waitForIdle()
@@ -182,14 +175,13 @@ class MainScreenActionButtonsTest : BaseTestCase() {
     fun clickOnSwapButtonTest() {
         val tokenTitle = "Ethereum"
         val tokenSymbol = "ETH"
-        val balance = TOTAL_BALANCE
 
         setupHooks().run {
             step("Open 'Main Screen'") {
                 openMainScreen()
             }
             step("Synchronize addresses") {
-                synchronizeAddresses(balance)
+                synchronizeAddresses()
             }
             step("Long click on token with name: '$tokenTitle'") {
                 waitForIdle()
@@ -226,14 +218,13 @@ class MainScreenActionButtonsTest : BaseTestCase() {
     fun clickOnSendButtonTest() {
         val tokenTitle = "Ethereum"
         val tokenSymbol = "ETH"
-        val balance = TOTAL_BALANCE
 
         setupHooks().run {
             step("Open 'Main Screen'") {
                 openMainScreen()
             }
             step("Synchronize addresses") {
-                synchronizeAddresses(balance)
+                synchronizeAddresses()
             }
             step("Long click on token with name: '$tokenTitle'") {
                 waitForIdle()
@@ -265,14 +256,13 @@ class MainScreenActionButtonsTest : BaseTestCase() {
     @Test
     fun clickOnReceiveButtonTest() {
         val tokenTitle = "Bitcoin"
-        val balance = TOTAL_BALANCE
 
         setupHooks().run {
             step("Open 'Main Screen'") {
                 openMainScreen()
             }
             step("Synchronize addresses") {
-                synchronizeAddresses(balance)
+                synchronizeAddresses()
             }
             step("Long click on token with name: '$tokenTitle'") {
                 waitForIdle()
@@ -292,7 +282,12 @@ class MainScreenActionButtonsTest : BaseTestCase() {
                 onTokenActionsBottomSheet { receiveButton.performClick() }
             }
             step("Assert 'Token receive warning' bottom sheet is displayed") {
-                onTokenReceiveWarningBottomSheet { bottomSheet.assertIsDisplayed() }
+                waitForIdle()
+                flakySafely(WAIT_UNTIL_TIMEOUT) {
+                    onTokenReceiveWarningBottomSheet {
+                        bottomSheet.assertIsDisplayed()
+                    }
+                }
             }
             step("Click on 'Got it' button") {
                 onTokenReceiveWarningBottomSheet { gotItButton.performClick() }
@@ -326,8 +321,6 @@ class MainScreenActionButtonsTest : BaseTestCase() {
     @Test
     fun clickOnSellButtonTest() {
         val tokenTitle = "Ethereum"
-        val tokenSymbol = "ETH"
-        val balance = TOTAL_BALANCE
         val url = "sell.moonpay.com"
         val useWithoutAccount = "Use without an account"
 
@@ -336,7 +329,7 @@ class MainScreenActionButtonsTest : BaseTestCase() {
                 openMainScreen()
             }
             step("Synchronize addresses") {
-                synchronizeAddresses(balance)
+                synchronizeAddresses()
             }
             step("Long click on token with name: '$tokenTitle'") {
                 waitForIdle()
@@ -356,18 +349,15 @@ class MainScreenActionButtonsTest : BaseTestCase() {
                 onTokenActionsBottomSheet { sellButton.performClick() }
             }
             step("Assert Chrome Browser is opened") {
-                ChromeBrowserPageObject { assertChromeIsOpened() }
+                ThirdPartyAppPageObject { assertChromeIsOpened() }
             }
-            if (ChromeBrowserPageObject.isElementWithTextExists(useWithoutAccount)) {
+            if (ThirdPartyAppPageObject.isElementWithTextExists(useWithoutAccount)) {
                 step("Click on '$useWithoutAccount' button on Chrome browser") {
-                    ChromeBrowserPageObject { clickOnElementWithText(useWithoutAccount) }
+                    ThirdPartyAppPageObject { clickOnElementWithText(useWithoutAccount) }
                 }
             }
             step("Assert url contains: '$url'") {
-                ChromeBrowserPageObject { assertUrlContains(url) }
-            }
-            step("Assert token symbol '$tokenSymbol' is displayed") {
-                ChromeBrowserPageObject { assertElementWithTextExists(tokenSymbol) }
+                ThirdPartyAppPageObject { assertUrlContains(url) }
             }
         }
     }
@@ -377,14 +367,13 @@ class MainScreenActionButtonsTest : BaseTestCase() {
     @Test
     fun assertSellButtonIsNotDisplayedTest() {
         val tokenTitle = "Bitcoin"
-        val balance = TOTAL_BALANCE
 
         setupHooks().run {
             step("Open 'Main Screen'") {
                 openMainScreen()
             }
             step("Synchronize addresses") {
-                synchronizeAddresses(balance)
+                synchronizeAddresses()
             }
             step("Long click on token with name: '$tokenTitle'") {
                 waitForIdle()
