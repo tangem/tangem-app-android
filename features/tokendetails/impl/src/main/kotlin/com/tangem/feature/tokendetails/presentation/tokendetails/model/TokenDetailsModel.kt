@@ -88,6 +88,7 @@ import com.tangem.features.tokenreceive.TokenReceiveFeatureToggle
 import com.tangem.features.txhistory.entity.TxHistoryContentUpdateEmitter
 import com.tangem.features.yield.supply.api.YieldSupplyDepositedWarningComponent
 import com.tangem.features.yield.supply.api.YieldSupplyFeatureToggles
+import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
 import com.tangem.utils.extensions.isZero
@@ -1053,6 +1054,12 @@ internal class TokenDetailsModel @Inject constructor(
     }
 
     override fun onYieldInfoClick() {
+        analyticsEventsHandler.send(
+            YieldSupplyAnalytics.EarnedFundsInfo(
+                token = cryptoCurrency.symbol,
+                blockchain = cryptoCurrency.network.name,
+            ),
+        )
         bottomSheetNavigation.activate(
             configuration = TokenDetailsBottomSheetConfig.YieldSupplyWarning(
                 cryptoCurrency = cryptoCurrency,
