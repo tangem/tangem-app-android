@@ -11,6 +11,7 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.impl.promo.YieldSupplyPromoConfig
 import com.tangem.features.yield.supply.impl.promo.entity.YieldSupplyPromoUM
+import com.tangem.utils.TangemBlogUrlBuilder.YIELD_SUPPLY_HOW_IT_WORKS_URL
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import javax.inject.Inject
 
@@ -42,14 +43,10 @@ internal class YieldSupplyPromoModel @Inject constructor(
     }
 
     override fun onHowItWorksClick() {
-        urlOpener.openUrl(HOW_IT_WORKS_URL)
+        urlOpener.openUrl(YIELD_SUPPLY_HOW_IT_WORKS_URL)
     }
 
     override fun onStartEarningClick() {
         bottomSheetNavigation.activate(YieldSupplyPromoConfig.Action)
-    }
-
-    companion object {
-        private const val HOW_IT_WORKS_URL = "https://tangem.com/en/blog/post/savings-account "
     }
 }
