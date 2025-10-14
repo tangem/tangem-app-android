@@ -12,4 +12,7 @@ dependencies {
     implementation(deps.kotlin.serialization)
     implementation(deps.jodatime)
     implementation(projects.core.error)
+
+    /** Domain models */
+    implementation(projects.domain.models)
 }
