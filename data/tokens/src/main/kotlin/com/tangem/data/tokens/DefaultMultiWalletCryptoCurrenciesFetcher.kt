@@ -124,6 +124,7 @@ internal class DefaultMultiWalletCryptoCurrenciesFetcher(
             currencies = cardCryptoCurrencyFactory.createDefaultCoinsForMultiCurrencyWallet(userWallet),
             isGroupedByNetwork = false,
             isSortedByBalance = false,
+            accountId = null,
         )
     }
 }
