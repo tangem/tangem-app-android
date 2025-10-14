@@ -14,6 +14,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
+import com.tangem.common.ui.account.AccountTitle
+import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.preview.AmountStatePreviewData
 import com.tangem.core.ui.components.ResizableText
@@ -65,7 +67,7 @@ fun AmountBlockV2(
     val currencyTitle = amount.cryptoAmount.currencySymbol
 
     AmountBlockV2(
-        title = amountState.title,
+        accountTitleUM = amountState.accountTitleUM,
         balance = amountState.availableBalanceCrypto,
         currencyTitle = currencyTitle,
         currencyIconState = amountState.tokenIconState,
@@ -82,7 +84,7 @@ fun AmountBlockV2(
 @Suppress("LongParameterList", "LongMethod")
 @Composable
 private fun AmountBlockV2(
-    title: TextReference,
+    accountTitleUM: AccountTitleUM,
     balance: TextReference,
     currencyTitle: String,
     currencyIconState: CurrencyIconState,
@@ -107,11 +109,7 @@ private fun AmountBlockV2(
             .padding(TangemTheme.dimens.spacing16),
     ) {
         Row {
-            Text(
-                text = title.resolveReference(),
-                style = TangemTheme.typography.subtitle2,
-                color = TangemTheme.colors.text.tertiary,
-            )
+            AccountTitle(accountTitleUM)
             SpacerWMax()
             Text(
                 text = balance.resolveReference(),
@@ -188,6 +186,7 @@ private class AmountBlockV2PreviewProvider : PreviewParameterProvider<AmountStat
     override val values: Sequence<AmountState>
         get() = sequenceOf(
             AmountStatePreviewData.amountState,
+            AmountStatePreviewData.amountStateV2Accounts,
         )
 }
 // endregion

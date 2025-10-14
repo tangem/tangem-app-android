@@ -1,6 +1,7 @@
 package com.tangem.common.ui.amountScreen.models
 
 import androidx.compose.runtime.Stable
+import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -14,7 +15,7 @@ sealed class AmountState {
 
     /**
      * @param isPrimaryButtonEnabled indicates if next state button enabled
-     * @param title title
+     * @param accountTitleUM info about current account or wallet
      * @param availableBalanceCrypto user crypto currency balance in crypto
      * @param availableBalanceFiat user crypto currency balance in fiat
      * @param tokenIconState crypto currency icon state
@@ -26,7 +27,7 @@ sealed class AmountState {
      */
     data class Data(
         override val isPrimaryButtonEnabled: Boolean,
-        val title: TextReference,
+        val accountTitleUM: AccountTitleUM,
         val availableBalanceCrypto: TextReference,
         val availableBalanceFiat: TextReference,
         val tokenName: TextReference,
