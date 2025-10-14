@@ -22,6 +22,9 @@ import com.tangem.core.ui.extensions.WrappedList
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.haptic.TangemHapticEffect
 import com.tangem.core.ui.haptic.VibratorHapticManager
+import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
+import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
+import com.tangem.domain.account.status.usecase.SaveCryptoCurrenciesUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.extenstions.unwrap
 import com.tangem.domain.core.lce.Lce
@@ -71,6 +74,7 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import java.math.BigDecimal
 import javax.inject.Inject
 
@@ -151,6 +155,9 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
     private val saveViewedYieldSupplyWarningUseCase: SaveViewedYieldSupplyWarningUseCase,
     private val isCryptoCurrencyCoinCouldHide: IsCryptoCurrencyCoinCouldHideUseCase,
     private val removeCurrencyUseCase: RemoveCurrencyUseCase,
+    private val accountsFeatureToggles: AccountsFeatureToggles,
+    private val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase,
+    private val saveCryptoCurrenciesUseCase: SaveCryptoCurrenciesUseCase,
 ) : BaseWalletClickIntents(), WalletCurrencyActionsClickIntents {
 
     override fun onSendClick(
@@ -340,7 +347,23 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
 
     override fun onPerformHideToken(userWalletId: UserWalletId, cryptoCurrencyStatus: CryptoCurrencyStatus) {
         modelScope.launch(dispatchers.io) {
-            removeCurrencyUseCase(userWalletId, cryptoCurrencyStatus.currency)
+            if (accountsFeatureToggles.isFeatureEnabled) {
+                val accountId = getAccountCurrencyStatusUseCase.invokeSync(
+                    userWalletId = userWalletId,
+                    currency = cryptoCurrencyStatus.currency,
+                )
+                    .map { it.account.accountId }
+                    .getOrNull()
+
+                if (accountId == null) {
+                    Timber.e("Account ID is null, cannot hide currency ${cryptoCurrencyStatus.currency.id}")
+                    return@launch
+                }
+
+                saveCryptoCurrenciesUseCase(accountId = accountId, remove = cryptoCurrencyStatus.currency)
+            } else {
+                removeCurrencyUseCase(userWalletId, cryptoCurrencyStatus.currency)
+            }
                 .fold(
                     ifLeft = {
                         walletEventSender.send(
