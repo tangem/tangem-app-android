@@ -1,5 +1,6 @@
 package com.tangem.features.staking.impl.presentation.state.transformers
 
+import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.common.ui.amountScreen.converters.AmountStateConverter
 import com.tangem.common.ui.amountScreen.models.AmountParameters
 import com.tangem.common.ui.amountScreen.models.EnterAmountBoundary
@@ -51,6 +52,7 @@ internal class SetAmountDataTransformer(
                 appCurrency = appCurrencyProvider(),
                 cryptoCurrencyStatus = cryptoCurrencyStatusProvider(),
                 isBalanceHidden = false,
+                accountTitleUM = AccountTitleUM.Text(title),
             ).convert(
                 AmountParameters(
                     title = title,
