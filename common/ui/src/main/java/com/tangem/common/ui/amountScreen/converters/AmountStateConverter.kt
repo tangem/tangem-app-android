@@ -1,5 +1,6 @@
 package com.tangem.common.ui.amountScreen.converters
 
+import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.common.ui.amountScreen.AmountScreenClickIntents
 import com.tangem.common.ui.amountScreen.converters.field.AmountFieldConverter
 import com.tangem.common.ui.amountScreen.models.AmountParameters
@@ -36,6 +37,7 @@ class AmountStateConverter(
     private val maxEnterAmount: EnterAmountBoundary,
     private val iconStateConverter: CryptoCurrencyToIconStateConverter,
     private val isBalanceHidden: Boolean,
+    private val accountTitleUM: AccountTitleUM,
 ) : Converter<AmountParameters, AmountState> {
 
     private val amountFieldConverter by lazy(LazyThreadSafetyMode.NONE) {
@@ -55,7 +57,7 @@ class AmountStateConverter(
         }
 
         return AmountState.Data(
-            title = value.title,
+            accountTitleUM = accountTitleUM,
             availableBalanceCrypto = stringReference(crypto).orMaskWithStars(isBalanceHidden),
             availableBalanceFiat = if (isBalanceHidden) {
                 TextReference.EMPTY
