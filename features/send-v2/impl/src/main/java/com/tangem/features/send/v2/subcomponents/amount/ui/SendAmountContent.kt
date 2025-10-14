@@ -103,6 +103,7 @@ private class SendAmountContentPreviewProvider : PreviewParameterProvider<Amount
     override val values: Sequence<AmountState>
         get() = sequenceOf(
             AmountStatePreviewData.amountStateV2,
+            AmountStatePreviewData.amountStateV2Accounts,
         )
 }
 // endregion
