@@ -18,6 +18,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.R
+import com.tangem.common.ui.account.AccountTitle
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.atoms.text.EllipsisText
@@ -58,12 +59,7 @@ internal fun LazyListScope.amountFieldV2(
                         modifier = Modifier.width(60.dp),
                     )
                 } else {
-                    Text(
-                        text = amountState.title.resolveReference(),
-                        style = TangemTheme.typography.subtitle2,
-                        color = TangemTheme.colors.text.tertiary,
-                        modifier = Modifier.testTag(SendScreenTestTags.AMOUNT_CONTAINER_TITLE),
-                    )
+                    AccountTitle(amountState.accountTitleUM)
                 }
                 AmountFieldV2(
                     amountUM = amountState,
@@ -137,9 +133,8 @@ private fun AmountInfoMain(amountUM: AmountState, modifier: Modifier = Modifier)
         ) {
             when (currentAmount) {
                 is AmountState.Data -> {
-                    val amountUM = amountUM as AmountState.Data
                     Text(
-                        text = amountUM.tokenName.resolveReference(),
+                        text = currentAmount.tokenName.resolveReference(),
                         style = TangemTheme.typography.subtitle2,
                         color = TangemTheme.colors.text.primary1,
                         maxLines = 1,
@@ -147,22 +142,22 @@ private fun AmountInfoMain(amountUM: AmountState, modifier: Modifier = Modifier)
                     )
                     Row {
                         EllipsisText(
-                            text = amountUM.availableBalanceCrypto.resolveReference(),
+                            text = currentAmount.availableBalanceCrypto.resolveReference(),
                             style = TangemTheme.typography.caption2,
                             color = TangemTheme.colors.text.tertiary,
                             ellipsis = TextEllipsis.OffsetEnd(
-                                amountUM.amountTextField.cryptoAmount.currencySymbol.length,
+                                currentAmount.amountTextField.cryptoAmount.currencySymbol.length,
                             ),
                             modifier = Modifier
                                 .weight(1f, fill = false)
                                 .testTag(SendScreenTestTags.PRIMARY_AMOUNT),
                         )
                         EllipsisText(
-                            text = amountUM.availableBalanceFiat.resolveReference(),
+                            text = currentAmount.availableBalanceFiat.resolveReference(),
                             style = TangemTheme.typography.caption2,
                             color = TangemTheme.colors.text.tertiary,
                             ellipsis = TextEllipsis.OffsetEnd(
-                                amountUM.amountTextField.fiatAmount.currencySymbol.length,
+                                currentAmount.amountTextField.fiatAmount.currencySymbol.length,
                             ),
                             modifier = Modifier.testTag(SendScreenTestTags.SECONDARY_AMOUNT),
                         )
