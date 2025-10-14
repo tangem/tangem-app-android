@@ -145,7 +145,7 @@ abstract class BaseTestCase : TestCase(
     private fun setFeatureToggles() {
         runBlocking {
             with(featureTogglesManager as MutableFeatureTogglesManager) {
-                changeToggle("WALLET_CONNECT_REDESIGN_ENABLED", true)
+                changeToggle("NEW_TOKEN_RECEIVE_ENABLED", true)
                 changeToggle("WALLET_BALANCE_FETCHER_ENABLED", true)
                 changeToggle("SWAP_REDESIGN_ENABLED", true)
                 changeToggle("NEW_ONRAMP_MAIN_ENABLED", true)
