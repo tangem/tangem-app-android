@@ -201,7 +201,7 @@ class SaveCryptoCurrenciesUseCase(
             ),
         )
 
-        currenciesRepository.syncTokens(userWalletId)
+        accountsCRUDRepository.syncTokens(userWalletId)
     }
 
     private suspend fun refreshYieldBalances(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) {
