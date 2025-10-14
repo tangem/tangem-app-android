@@ -201,7 +201,7 @@ class SendConfirmationNotificationsTransformerV2Test {
 
         return AmountState.Data(
             isPrimaryButtonEnabled = true,
-            title = mockk(relaxed = true),
+            accountTitleUM = mockk(relaxed = true),
             availableBalanceCrypto = mockk(relaxed = true),
             availableBalanceFiat = mockk(relaxed = true),
             tokenName = mockk(relaxed = true),

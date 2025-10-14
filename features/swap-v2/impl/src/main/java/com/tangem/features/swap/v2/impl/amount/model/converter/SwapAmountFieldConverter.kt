@@ -1,6 +1,7 @@
 package com.tangem.features.swap.v2.impl.amount.model.converter
 
 import com.tangem.common.ui.amountScreen.AmountScreenClickIntents
+import com.tangem.common.ui.amountScreen.converters.AmountAccountConverter
 import com.tangem.common.ui.amountScreen.converters.AmountStateConverter
 import com.tangem.common.ui.amountScreen.converters.MaxEnterAmountConverter
 import com.tangem.common.ui.amountScreen.models.AmountParameters
@@ -28,14 +29,19 @@ internal class SwapAmountFieldConverter(
     private val appCurrency: AppCurrency,
     private val clickIntents: AmountScreenClickIntents,
     private val isSingleWallet: Boolean,
-    @Suppress("UnusedPrivateProperty") private val isAccountsMode: Boolean,
-    @Suppress("UnusedPrivateProperty") private val account: Account.CryptoPortfolio?,
+    private val isAccountsMode: Boolean,
+    private val account: Account.CryptoPortfolio?,
 ) {
 
     private val iconStateConverter = CryptoCurrencyToIconStateConverter()
     private val maxEnterAmountConverter = MaxEnterAmountConverter()
 
     fun convert(selectedType: SwapAmountType, cryptoCurrencyStatus: CryptoCurrencyStatus): SwapAmountFieldUM {
+        val walletTitle = if (isSingleWallet) {
+            resourceReference(R.string.send_from_title)
+        } else {
+            resourceReference(R.string.send_from_wallet_name, wrappedList(userWallet.name))
+        }
         return SwapAmountFieldUM.Content(
             amountType = selectedType,
             title = stringReference(cryptoCurrencyStatus.currency.name),
@@ -55,13 +61,18 @@ internal class SwapAmountFieldConverter(
                 maxEnterAmount = maxEnterAmountConverter.convert(cryptoCurrencyStatus),
                 iconStateConverter = iconStateConverter,
                 isBalanceHidden = isBalanceHidden,
+                accountTitleUM = AmountAccountConverter(
+                    isAccountsMode = isAccountsMode,
+                    walletTitle = walletTitle,
+                    prefixText = when {
+                        selectedType.isEnteringField() -> resourceReference(R.string.common_from)
+                        selectedType.isViewingField() -> resourceReference(R.string.common_to)
+                        else -> TextReference.Companion.EMPTY
+                    },
+                ).convert(account),
             ).convert(
                 AmountParameters(
-                    title = if (isSingleWallet) {
-                        resourceReference(R.string.send_from_title)
-                    } else {
-                        resourceReference(R.string.send_from_wallet_name, wrappedList(userWallet.name))
-                    },
+                    title = walletTitle,
                     value = "",
                 ),
             ),
