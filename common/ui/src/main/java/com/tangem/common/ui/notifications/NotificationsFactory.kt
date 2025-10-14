@@ -44,10 +44,12 @@ object NotificationsFactory {
         }
     }
 
+    @Suppress("LongParameterList")
     fun MutableList<NotificationUM>.addFeeUnreachableNotification(
         tokenStatus: CryptoCurrencyStatus,
         coinStatus: CryptoCurrencyStatus,
         feeError: GetFeeError?,
+        dustValue: BigDecimal?,
         onReload: () -> Unit,
         onClick: (currency: CryptoCurrency) -> Unit,
     ) {
@@ -70,7 +72,16 @@ object NotificationsFactory {
             )
             is GetFeeError.BlockchainErrors.SuiOneCoinRequired ->
                 add(NotificationUM.Sui.NotEnoughCoinForTokenTransaction)
-            is GetFeeError.DataError,
+            is GetFeeError.DataError -> when (feeError.cause) {
+                BlockchainSdkError.TransactionDustChangeError -> add(
+                    NotificationUM.Error.MinimumAmountError(
+                        amount = dustValue.format { crypto(tokenStatus.currency) },
+                    ),
+                )
+                else -> add(
+                    NotificationUM.Warning.NetworkFeeUnreachable(onReload),
+                )
+            }
             is GetFeeError.UnknownError,
             -> add(
                 NotificationUM.Warning.NetworkFeeUnreachable(onReload),
@@ -357,6 +368,11 @@ object NotificationsFactory {
             is BlockchainSdkError.DestinationTagRequired -> addRequireDestinationTagErrorNotification()
             is BlockchainSdkError.Solana.DestinationRentExemption -> addRentExemptionDestinationNotification(
                 rentExemptionAmount = validationError.rentAmount,
+            )
+            is BlockchainSdkError.TransactionDustChangeError -> add(
+                NotificationUM.Error.MinimumAmountError(
+                    amount = dustValue.format { crypto(cryptoCurrency) },
+                ),
             )
             null,
             -> minAdaValue?.let {
