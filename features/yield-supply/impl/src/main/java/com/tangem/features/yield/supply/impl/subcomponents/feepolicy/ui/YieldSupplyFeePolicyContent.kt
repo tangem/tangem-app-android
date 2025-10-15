@@ -29,6 +29,7 @@ import com.tangem.features.yield.supply.impl.common.ui.YieldSupplyFeeRow
 import com.tangem.utils.StringsSigns
 import kotlinx.collections.immutable.persistentListOf
 
+@Suppress("LongMethod")
 @Composable
 internal fun YieldSupplyFeePolicyContent(
     yieldSupplyFeeUM: YieldSupplyFeeUM,
@@ -61,6 +62,28 @@ internal fun YieldSupplyFeePolicyContent(
             modifier = Modifier.padding(horizontal = 16.dp),
         )
         SpacerH24()
+        FooterContainer(
+            footer = resourceReference(
+                id = R.string.yield_module_fee_policy_sheet_min_amount_note,
+                formatArgs = wrappedList(networkName),
+            ),
+            paddingValues = PaddingValues(
+                top = 8.dp,
+                start = 12.dp,
+                end = 12.dp,
+            ),
+        ) {
+            val minAmount = when (yieldSupplyFeeUM) {
+                is YieldSupplyFeeUM.Content -> yieldSupplyFeeUM.minAmountFeeValue
+                YieldSupplyFeeUM.Error -> stringReference(StringsSigns.DASH_SIGN)
+                YieldSupplyFeeUM.Loading -> null
+            }
+            YieldSupplyFeeRow(
+                title = resourceReference(R.string.yield_module_fee_policy_sheet_min_amount_title),
+                value = minAmount,
+            )
+        }
+        SpacerH16()
         FooterContainer(
             footer = resourceReference(
                 id = R.string.yield_module_fee_policy_sheet_current_fee_note,
@@ -101,6 +124,18 @@ internal fun YieldSupplyFeePolicyContent(
                 value = maxFee,
             )
         }
+        Text(
+            text = stringResourceSafe(R.string.yield_module_fee_policy_tangem_service_fee_title),
+            style = TangemTheme.typography.caption2,
+            color = TangemTheme.colors.text.tertiary,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    top = 8.dp,
+                    start = 12.dp,
+                    end = 12.dp,
+                ),
+        )
     }
 }
 
@@ -116,11 +151,11 @@ private fun YieldSupplyFeePolicyContent_Preview() {
                 feeValue = stringReference("0.0001 ETH • \$1.45"),
                 maxNetworkFeeValue = stringReference("8.50 USDT • \$8.50"),
                 currentNetworkFeeValue = stringReference("1.45 USDT • \$1.45"),
+                minAmountFeeValue = stringReference("50 USDT • \$50"),
             ),
             tokenSymbol = "USDT",
             networkName = "Ethereum",
             modifier = Modifier.background(TangemTheme.colors.background.primary),
-
         )
     }
 }
