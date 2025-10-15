@@ -30,5 +30,17 @@
     {
         "name": "zklink",
         "version": "undefined"
+    },
+    {
+        "name": "scroll",
+        "version": "undefined"
+    },
+    {
+        "name": "linea",
+        "version": "undefined"
+    },
+    {
+        "name": "arbitrum-nova",
+        "version": "undefined"
     }
 ]
