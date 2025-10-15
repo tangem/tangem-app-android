@@ -164,6 +164,9 @@ object PreferencesKeys {
     // region Permission
     fun getShouldShowPermission(permission: String) = booleanPreferencesKey("shouldShowPushPermission_$permission")
 
+    fun getShouldShowAskNotificationPermissionViaBs() =
+        booleanPreferencesKey("ShouldShowAskNotificationPermissionViaBs")
+
     fun getShouldShowInitialPermissionScreen(permission: String) =
         booleanPreferencesKey("shouldShowInitialPushPermissionScreen_$permission")
     // endregion
