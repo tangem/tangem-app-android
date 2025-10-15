@@ -467,4 +467,20 @@ internal object WalletsDomainModule {
             yieldSupplyRepository = yieldSupplyRepository,
         )
     }
+
+    @Provides
+    @Singleton
+    fun provideGetWalletsForAutomaticallyPushEnablingUseCase(
+        userWalletsListManager: UserWalletsListManager,
+        userWalletsListRepository: UserWalletsListRepository,
+        hotWalletFeatureToggles: HotWalletFeatureToggles,
+        dispatcherProvider: CoroutineDispatcherProvider,
+    ): GetWalletsForAutomaticallyPushEnablingUseCase {
+        return GetWalletsForAutomaticallyPushEnablingUseCase(
+            userWalletsListManager = userWalletsListManager,
+            userWalletsListRepository = userWalletsListRepository,
+            shouldUseNewListRepository = hotWalletFeatureToggles.isHotWalletEnabled,
+            dispatchers = dispatcherProvider,
+        )
+    }
 }
