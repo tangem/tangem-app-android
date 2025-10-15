@@ -141,6 +141,7 @@ private class YieldSupplyActionContentPreviewProvider : PreviewParameterProvider
                     feeValue = stringReference("0.00020 ETH • \$0.99"),
                     currentNetworkFeeValue = stringReference("1.45 USDT • \$1.45"),
                     maxNetworkFeeValue = stringReference("8.50 USDT • \$8.50"),
+                    minAmountFeeValue = stringReference("50 USDT • \$50"),
                 ),
                 isPrimaryButtonEnabled = false,
                 isTransactionSending = false,

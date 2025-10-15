@@ -1,5 +1,6 @@
 package com.tangem.scenarios
 
+import androidx.compose.ui.test.hasText
 import com.tangem.common.BaseTestCase
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.domain.models.scan.ProductType
@@ -7,6 +8,7 @@ import com.tangem.screens.*
 import com.tangem.screens.AlreadyUsedWalletDialogPageObject.thisIsMyWalletButton
 import com.tangem.tap.domain.sdk.mocks.MockContent
 import com.tangem.tap.domain.sdk.mocks.MockProvider
+import com.tangem.utils.StringsSigns.DASH_SIGN
 import io.qameta.allure.kotlin.Allure.step
 
 fun BaseTestCase.scanCard(
@@ -65,12 +67,29 @@ fun BaseTestCase.openMainScreen(
     }
 }
 
-fun BaseTestCase.synchronizeAddresses(balance: String) {
+fun BaseTestCase.synchronizeAddresses(
+    balance: String? = null,
+    isBalanceAvailable: Boolean = true
+) {
     step("Click on 'Synchronize addresses' button") {
         onMainScreen { synchronizeAddressesButton.clickWithAssertion() }
     }
-    step("Assert wallet balance = '$balance'") {
-        onMainScreen { totalBalanceText.assertTextContains(balance) }
+
+    when {
+        !isBalanceAvailable -> step("Assert wallet balance = '$DASH_SIGN'") {
+            onMainScreen { totalBalanceText.assertTextContains(DASH_SIGN) }
+        }
+        balance != null -> {
+            step("Assert wallet balance != '$DASH_SIGN'") {
+                onMainScreen { totalBalanceText.assert(!hasText(DASH_SIGN)) }
+            }
+            step("Assert wallet balance = '$balance'") {
+                onMainScreen { totalBalanceText.assertTextContains(balance) }
+            }
+        }
+        else -> step("Assert wallet balance != '$DASH_SIGN'") {
+            onMainScreen { totalBalanceText.assert(!hasText(DASH_SIGN)) }
+        }
     }
 }
 
