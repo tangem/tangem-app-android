@@ -2,13 +2,11 @@ package com.tangem.features.markets.portfolio.impl.model
 
 import com.tangem.common.ui.userwallet.state.UserWalletItemUM
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
-import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isMultiCurrency
-import com.tangem.features.markets.portfolio.add.api.AddToPortfolioComponent
 import com.tangem.features.markets.portfolio.impl.loader.PortfolioData
 import com.tangem.features.markets.portfolio.impl.ui.state.MyPortfolioUM
 import com.tangem.features.markets.portfolio.impl.ui.state.MyPortfolioUM.Tokens.AddButtonState
@@ -27,9 +25,7 @@ import kotlinx.collections.immutable.ImmutableList
  *
 [REDACTED_AUTHOR]
  */
-@Suppress("LongParameterList")
 internal class MyPortfolioUMFactory(
-    private val accountsFeatureToggles: AccountsFeatureToggles,
     private val onAddClick: () -> Unit,
     private val addToPortfolioBSContentUMFactory: AddToPortfolioBSContentUMFactory,
     private val tokenActionsHandler: TokenActionsHandler,
@@ -41,7 +37,6 @@ internal class MyPortfolioUMFactory(
         portfolioData: PortfolioData,
         portfolioUIData: PortfolioUIData,
         artworks: Map<UserWalletId, UserWalletItemUM.ImageState>,
-        addToPortfolioState: AddToPortfolioComponent.State,
     ): MyPortfolioUM {
         val addToPortfolioData = portfolioUIData.addToPortfolioData
 
@@ -72,20 +67,12 @@ internal class MyPortfolioUMFactory(
             }
         }
 
-        val addButtonState = if (accountsFeatureToggles.isFeatureEnabled) {
-            when (addToPortfolioState) {
-                AddToPortfolioComponent.State.Init -> AddButtonState.Loading
-                is AddToPortfolioComponent.State.AvailableToAdd -> AddButtonState.Available
-                AddToPortfolioComponent.State.NothingToAdd -> AddButtonState.Unavailable
-            }
-        } else {
-            walletsWithCurrencies.getAddButtonState(availableNetworks = addToPortfolioData.availableNetworks)
-        }
-
         return TokensPortfolioUMConverter(
             appCurrency = portfolioData.appCurrency,
             isBalanceHidden = portfolioData.isBalanceHidden,
-            addButtonState = addButtonState,
+            addButtonState = walletsWithCurrencies.getAddButtonState(
+                availableNetworks = addToPortfolioData.availableNetworks,
+            ),
             bsConfig = createAddToPortfolioBSConfig(
                 portfolioData = portfolioData,
                 portfolioUIData = portfolioUIData,

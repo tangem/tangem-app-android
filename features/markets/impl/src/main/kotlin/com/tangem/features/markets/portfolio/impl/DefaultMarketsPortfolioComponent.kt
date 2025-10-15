@@ -12,7 +12,6 @@ import com.arkivanov.decompose.router.slot.childSlot
 import com.arkivanov.decompose.router.slot.dismiss
 import com.arkivanov.decompose.value.Value
 import com.tangem.core.decompose.context.AppComponentContext
-import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
@@ -27,8 +26,6 @@ import com.tangem.features.tokenreceive.TokenReceiveComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
 import kotlinx.serialization.builtins.serializer
 
 @Stable
@@ -48,45 +45,36 @@ internal class DefaultMarketsPortfolioComponent @AssistedInject constructor(
         handleBackButton = false,
         childFactory = ::bottomSheetChild,
     )
-
     private val addToPortfolioSlot: Value<ChildSlot<Unit, ComposableBottomSheetComponent>>?
-    private val addToPortfolioComponent: AddToPortfolioComponent?
 
     init {
         if (accountsFeatureToggles.isFeatureEnabled) {
-            val addToPortfolioComponent = addToPortfolioComponentFactory.create(
-                context = child("addToPortfolioComponent"),
-                params = AddToPortfolioComponent.Params(
-                    token = params.token,
-                    analyticsParams = params.analyticsParams,
-                    callback = model.addToPortfolioCallback,
-                ),
-            )
-            this.addToPortfolioComponent = addToPortfolioComponent
             addToPortfolioSlot = childSlot(
                 key = "addToPortfolioSlot",
                 source = model.addToPortfolioNavigation,
                 serializer = Unit.serializer(),
                 handleBackButton = false,
-                childFactory = { _, _ -> addToPortfolioComponent },
+                childFactory = { _, componentContext ->
+                    addToPortfolioComponentFactory.create(
+                        context = childByContext(componentContext),
+                        params = AddToPortfolioComponent.Params(
+                            addToPortfolioManager = model.newAddToPortfolioManager!!,
+                            callback = model.addToPortfolioCallback,
+                        ),
+                    )
+                },
             )
         } else {
             addToPortfolioSlot = null
-            addToPortfolioComponent = null
         }
-        addToPortfolioComponent?.state
-            ?.onEach { model.addToPortfolioState.value = it }
-            ?.launchIn(componentScope)
     }
 
     override fun setTokenNetworks(networks: List<TokenMarketInfo.Network>) {
         model.setTokenNetworks(networks)
-        addToPortfolioComponent?.setTokenNetworks(networks)
     }
 
     override fun setNoNetworksAvailable() {
         model.setNoNetworksAvailable()
-        addToPortfolioComponent?.setTokenNetworks(listOf())
     }
 
     @Composable
