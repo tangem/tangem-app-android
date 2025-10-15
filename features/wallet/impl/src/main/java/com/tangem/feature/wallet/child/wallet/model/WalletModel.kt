@@ -41,7 +41,6 @@ import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvid
 import com.tangem.features.biometry.AskBiometryComponent
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.pushnotifications.api.PushNotificationsModelCallbacks
-import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
 import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.wallet.deeplink.WalletDeepLinkActionListener
 import com.tangem.features.yield.supply.api.YieldSupplyFeatureToggles
@@ -76,7 +75,6 @@ internal class WalletModel @Inject constructor(
     private val selectedWalletAnalyticsSender: SelectedWalletAnalyticsSender,
     private val walletNameMigrationUseCase: WalletNameMigrationUseCase,
     private val refreshMultiCurrencyWalletQuotesUseCase: RefreshMultiCurrencyWalletQuotesUseCase,
-    private val shouldAskPermissionUseCase: ShouldAskPermissionUseCase,
     private val walletImageResolver: WalletImageResolver,
     private val tokenListStore: MultiWalletTokenListStore,
     private val onrampStatusFactory: OnrampStatusFactory,
@@ -238,19 +236,23 @@ internal class WalletModel @Inject constructor(
 
     private fun subscribeOnPushNotificationsPermission() {
         modelScope.launch {
-            val shouldAskPermission = shouldAskPermissionUseCase(PUSH_PERMISSION)
-            val afterUpdate = notificationsRepository.shouldShowSubscribeOnNotificationsAfterUpdate()
+            val shouldAskNotificationPermissionsViaBs = notificationsRepository.shouldAskNotificationPermissionsViaBs()
+            val shouldShow = notificationsRepository.shouldShowSubscribeOnNotificationsAfterUpdate()
             val isBiometricsEnabled = shouldSaveUserWalletsSyncUseCase()
             val isHuaweiDevice = getIsHuaweiDeviceWithoutGoogleServicesUseCase()
-            val shouldShowBottomSheet = shouldAskPermission || afterUpdate
             Timber.d(
-                "push BS afterUpdate: $afterUpdate," +
-                    "shouldAskPermission $shouldAskPermission," +
+                "push BS afterUpdate: $shouldShow," +
                     "isBiometricsEnabled $isBiometricsEnabled," +
                     "isHuaweiDevice $isHuaweiDevice",
             )
             if (!isBiometricsEnabled) return@launch
-            if (!shouldShowBottomSheet) return@launch
+            if (!shouldShow) {
+                return@launch
+            }
+            if (!shouldAskNotificationPermissionsViaBs) {
+                notificationsRepository.setShouldAskNotificationPermissionsViaBs(true)
+                return@launch
+            }
 
             delay(timeMillis = 1_800)
 
