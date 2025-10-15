@@ -81,6 +81,16 @@ object MarketsDomainModule {
 
     @Provides
     @Singleton
+    fun provideGetTokenMarketCryptoCurrency(
+        marketsTokenRepository: MarketsTokenRepository,
+    ): GetTokenMarketCryptoCurrency {
+        return GetTokenMarketCryptoCurrency(
+            marketsTokenRepository = marketsTokenRepository,
+        )
+    }
+
+    @Provides
+    @Singleton
     fun provideFilterNetworksUseCase(
         userWalletsListManager: UserWalletsListManager,
         userWalletsListRepository: UserWalletsListRepository,

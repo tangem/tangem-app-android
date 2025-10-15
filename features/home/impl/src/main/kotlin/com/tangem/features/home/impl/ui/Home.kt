@@ -17,9 +17,7 @@ internal fun Home(state: HomeUM, isV2StoriesEnabled: Boolean, modifier: Modifier
         StoriesScreenV2(
             modifier = modifier,
             state = state,
-            onCreateNewWalletButtonClick = state.onCreateNewWalletClick,
-            onAddExistingWalletButtonClick = state.onAddExistingWalletClick,
-            onScanButtonClick = state.onScanClick,
+            onGetStartedClick = state.onGetStartedClick,
         )
     } else {
         StoriesScreen(
