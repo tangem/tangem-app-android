@@ -2,8 +2,6 @@ package com.tangem.domain.pay.model
 
 import java.math.BigDecimal
 
-private const val APPROVED_KYC_STATUS = "APPROVED"
-
 data class MainScreenCustomerInfo(
     val info: CustomerInfo,
     val orderStatus: OrderStatus,
@@ -11,7 +9,7 @@ data class MainScreenCustomerInfo(
 
 data class CustomerInfo(
     val productInstance: ProductInstance?,
-    val kycStatus: String?,
+    val isKycApproved: Boolean,
     val cardInfo: CardInfo?,
 ) {
 
@@ -25,7 +23,6 @@ data class CustomerInfo(
         val balance: BigDecimal,
         val currencyCode: String,
         val customerWalletAddress: String,
+        val depositAddress: String?,
     )
-
-    fun isKycApproved() = kycStatus == APPROVED_KYC_STATUS
 }
