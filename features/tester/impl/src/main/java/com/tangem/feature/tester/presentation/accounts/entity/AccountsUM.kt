@@ -9,9 +9,8 @@ internal data class AccountsUM(
     val onBackClick: () -> Unit,
     val walletSelector: WalletSelector,
     val accountListBottomSheetConfig: AccountListBottomSheetConfig,
-    val onAccountsClick: () -> Unit,
+    val onAccountsClick: () -> Boolean,
     val onFetchAccountsClick: () -> Unit,
-    val onCreateMainAccountClick: () -> Unit,
     val onClearETagClick: () -> Unit,
 ) {
 
