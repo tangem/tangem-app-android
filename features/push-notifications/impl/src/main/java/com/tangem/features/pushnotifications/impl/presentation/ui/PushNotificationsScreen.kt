@@ -15,7 +15,7 @@ import kotlinx.collections.immutable.persistentListOf
 @Composable
 internal fun PushNotificationsScreen(
     onAllowClick: () -> Unit,
-    onLaterClick: (isFromBs: Boolean) -> Unit,
+    onLaterClick: () -> Unit,
     onAllowPermission: () -> Unit,
     onDenyPermission: () -> Unit,
 ) {
@@ -49,9 +49,7 @@ internal fun PushNotificationsScreen(
         ),
         secondaryButton = ShowcaseButtonModel(
             buttonText = resourceReference(R.string.common_later),
-            onClick = {
-                onLaterClick(false)
-            },
+            onClick = onLaterClick,
         ),
         modifier = Modifier.systemBarsPadding(),
     )

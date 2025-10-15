@@ -71,6 +71,7 @@ internal class YieldSupplyNotificationsModel @Inject constructor(
                         coinStatus = feeCryptoCurrencyStatus,
                         feeError = data.feeError,
                         onClick = ::openTokenDetails,
+                        dustValue = null,
                         onReload = params.callback::onFeeReload,
                     )
                 }
