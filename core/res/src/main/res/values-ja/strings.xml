@@ -504,7 +504,7 @@
   <string name="generic_error_code">エラーが発生しました。コード: %s 。</string>
   <string name="generic_requires_memo_error">メモが必要</string>
   <string name="give_permission_current_transaction">取引</string>
-  <string name="give_permission_policy_type_footer">選択したトークンの承認制限を指定します</string>
+  <string name="give_permission_policy_type_footer">承認すると、このスマートコントラクトが今後の取引でトークンを利用できるようになります。</string>
   <string name="give_permission_rows_amount">金額%s</string>
   <string name="give_permission_staking_footer">承認機能は、別のアドレスに特定の量のトークンを使用する許可を与えるために必要です。設計上スマートコントラクトは、承認しない限りトークンにアクセスできません。トークンを「ロック解除」すると、StakeKitスマート コントラクトがトークンを使用する権限が与えられます。ネットワークのマイナーは、このアクションをブロックチェーンに記録するためにガス料金（あなたが支払う）を受け取ります。承認後、トークンをステーキングできます。</string>
   <string name="give_permission_staking_subtitle">続行するには、Polygonスマートコントラクトが%sを使用することを許可する必要があります</string>
@@ -865,6 +865,7 @@
   <string name="onramp_currency_other">その他の通貨</string>
   <string name="onramp_currency_popular">人気の法定通貨</string>
   <string name="onramp_currency_search">通貨で検索</string>
+  <string name="onramp_fetching_best_rates">最良のレートを取得しています...</string>
   <string name="onramp_instant_status">即時</string>
   <string name="onramp_legal">オンランプ機能を使用することにより、プロバイダの%1$sおよび%2$sに同意するものとします</string>
   <string name="onramp_legal_text">サービスは外部プロバイダーによって提供されます。 \nTangemは責任を負いません。</string>
@@ -894,6 +895,7 @@
     <item quantity="other">最大%d日</item>
   </plurals>
   <string name="onramp_timing_minutes">%s分</string>
+  <string name="onramp_title_available_from___">下記より利用可能</string>
   <string name="onramp_title_you_get">以下が手に入ります。</string>
   <string name="onramp_tos_external_providers">サービスは外部プロバイダーによって提供されます。 \nTangemは責任を負いません。</string>
   <string name="onramp_transaction_status_footer_text">この画面を閉じて、トークンの詳細画面で取引状況を確認できます。</string>
@@ -1165,7 +1167,7 @@
   <string name="staking_notification_new_validator_funds_transfer">新しいバリデーターを使用して%1$sネットワークにステーキングすると、以前にステーキングされた資金がすべてこのバリデーターに自動的に転送されます。</string>
   <string name="staking_notification_restake_rewards_text">獲得した報酬をステーキングに再投資し、潜在的な収益を増やします。</string>
   <string name="staking_notification_restake_text">再ステーキングを使うと、ステーキングを解除することなく、あるバリデータから別のバリデータに資金を移動できます。</string>
-  <string name="staking_notification_stake_entire_balance_text">残高のすべてをステーキングしようとしています。ステーキング解除や報酬請求にかかるネットワーク手数料をカバーするために、少額を残しておくことをお勧めします。</string>
+  <string name="staking_notification_stake_entire_balance_text">ウォレットの残高をすべてステーキングすると、ステーキング解除時にネットワーク手数料の支払いが必要になります。そのため、少額をウォレットに残しておくことをおすすめします。</string>
   <string name="staking_notification_ton_account_initialization_message">ステーキングを始めるには、TONアカウントを1 TONの自己取引で有効化する必要があります。資金はウォレット内にそのまま残り、この手順でステーキング用にアカウントを有効化できます。</string>
   <string name="staking_notification_ton_account_initialization_title">アカウントの有効化</string>
   <string name="staking_notification_ton_activate_account">TONのステーキングを開始するには、まず自分のアドレスに少額の取引を送信します。これによりウォレットが有効になります。</string>
@@ -1275,6 +1277,8 @@
   <string name="swapping_token_not_available">利用不可</string>
   <string name="tangempay_card_details_error_text">データの読み込みに失敗しました。しばらくしてからもう一度お試しください。</string>
   <string name="tangempay_card_details_hide_text">非表示</string>
+  <string name="tangempay_card_details_receive_error_description">技術的な問題が検出されました。しばらくしてからもう一度お試しいただくか、サポートにお問い合わせください。</string>
+  <string name="tangempay_card_details_receive_error_title">現在、受け取りは利用できません</string>
   <string name="tangempay_card_details_reveal_text">表示</string>
   <string name="tangempay_card_details_title">カードの詳細</string>
   <string name="tangempay_issue_card_notification_title">アカウントを作成してカードを発行</string>
@@ -1700,7 +1704,7 @@
   <string name="xtz_withdrawal_message_reduce">%s XTZを減らす</string>
   <string name="xtz_withdrawal_message_warning">次回ウォレットにチャージするときに手数料の増加を避けるには、金額を%s XTZ減らしてください。</string>
   <string name="yield_module_alert_description">資産残高に関するテキスト [プレースホルダー]</string>
-  <string name="yield_module_alert_title">%sはAaveに預け入れられています</string>
+  <string name="yield_module_alert_title">%sはAaveに預けられています</string>
   <string name="yield_module_approve_needed_notification_cta">承認する</string>
   <string name="yield_module_approve_needed_notification_description">前回の承認に問題があったため、新しい承認が必要です。手続き方法を選択してください。</string>
   <string name="yield_module_approve_needed_notification_title">承認が必要</string>
@@ -1711,7 +1715,7 @@
   <string name="yield_module_balance_info_sheet_title">あなたの%sはAaveに預けられています</string>
   <string name="yield_module_chart_loading_error">チャートを読み込めません・・</string>
   <string name="yield_module_deposit_error_notification_title">受け取った金額%1$s %2$sはAaveに入金されませんでした。</string>
-  <string name="yield_module_earn_badge">%1$s%% を獲得</string>
+  <string name="yield_module_earn_badge">年利%1$s%%</string>
   <string name="yield_module_earn_sheet_available_title">利用可能</string>
   <string name="yield_module_earn_sheet_current_apy_title">現在のAPY</string>
   <string name="yield_module_earn_sheet_my_funds_title">私の資金</string>
@@ -1725,7 +1729,10 @@
   <string name="yield_module_fee_policy_sheet_description">今後の%sの入金はすべて、取引手数料が差し引かれて自動的にAaveに供給されます。</string>
   <string name="yield_module_fee_policy_sheet_max_fee_note">ネットワーク手数料が上限手数料を超えた場合、手数料が下がるまで取引は成立しません。この制限は後で変更できます。</string>
   <string name="yield_module_fee_policy_sheet_max_fee_title">最大手数料</string>
+  <string name="yield_module_fee_policy_sheet_min_amount_note">取引手数料は、預入額の4％未満である必要があります。Tangemは、この条件を満たす十分な残高が貯まった時点で、Aaveへの資金移動を行います。</string>
+  <string name="yield_module_fee_policy_sheet_min_amount_title">最低入金額</string>
   <string name="yield_module_fee_policy_sheet_title">手数料ポリシー</string>
+  <string name="yield_module_fee_policy_tangem_service_fee_title">Tangemはまた、得られた利回りに対して3％のサービス手数料を差し引きます。</string>
   <string name="yield_module_high_fee_error">ネットワーク手数料が現在高すぎます。設定した上限を下回るまで待機しています。</string>
   <string name="yield_module_historical_returns">過去のリターン</string>
   <string name="yield_module_main_view_approve_notification_description">ここに説明を入力してください。1〜3行が理想的です。[プレースホルダー]</string>
@@ -1735,9 +1742,9 @@
   <string name="yield_module_promo_screen_auto_balance_subtitle">アカウントへの入金はすべて自動的にAaveに貸し出されます。</string>
   <string name="yield_module_promo_screen_auto_balance_title">残高は自動的に計算されます</string>
   <string name="yield_module_promo_screen_cash_out_subtitle">いつでも、即座に資金を送信、交換、売却できます。</string>
-  <string name="yield_module_promo_screen_cash_out_title">すぐに現金化</string>
+  <string name="yield_module_promo_screen_cash_out_title">いつでも資金にアクセス可能</string>
   <string name="yield_module_promo_screen_how_it_works_button_title">使い方</string>
-  <string name="yield_module_promo_screen_self_custodial_subtitle">Aaveは世界中で何百万人もの人々に信頼されています。総貸付額は104億ドルです。</string>
+  <string name="yield_module_promo_screen_self_custodial_subtitle">Aaveは、総額819億ドル以上の資産を管理する分散型プロトコルです。</string>
   <string name="yield_module_promo_screen_self_custodial_title">分散型・自己管理型</string>
   <string name="yield_module_promo_screen_terms_disclaimer">サービスを利用することにより、プロバイダー\n %1$sおよび%2$sに同意したことになります</string>
   <string name="yield_module_promo_screen_title">年間%s%%の収益</string>
@@ -1749,20 +1756,20 @@
   <string name="yield_module_rate_info_sheet_powered_by">提供</string>
   <string name="yield_module_rate_info_sheet_title">金利は変動します</string>
   <string name="yield_module_receive_sheet_description">入金すると、資金は自動的にAaveに送金され、利息が付き始めます。取引手数料として%s相当の少額の手数料が差し引かれます。</string>
-  <string name="yield_module_start_earning">利息の獲得を開始</string>
+  <string name="yield_module_start_earning">資産を供給する</string>
   <string name="yield_module_start_earning_sheet_description">%sはAaveに供給され、すぐに利用可能になります</string>
   <string name="yield_module_start_earning_sheet_fee_policy">手数料ポリシーを見る</string>
-  <string name="yield_module_start_earning_sheet_next_deposits">次回の入金は自動的にAaveに供給されます。</string>
+  <string name="yield_module_start_earning_sheet_next_deposits">次回以降の入金は自動的にAaveに供給されます。</string>
   <string name="yield_module_status_active">アクティブ</string>
   <string name="yield_module_status_paused">停止中</string>
   <string name="yield_module_stop_earning">収益を停止する</string>
   <string name="yield_module_stop_earning_sheet_description">オフにすると、Aaveから資金が引き出され、ウォレットの%sに戻され、報酬の獲得が停止されます。</string>
   <string name="yield_module_stop_earning_sheet_fee_note">出金金額からネットワーク手数料が差し引かれます。</string>
-  <string name="yield_module_supply_apr">供給APR</string>
+  <string name="yield_module_supply_apr">供給APY</string>
   <string name="yield_module_token_details_earn_notification_apy">APY</string>
   <string name="yield_module_token_details_earn_notification_description">あなたの資産を眠らせない — 残高を運用して利息を得ましょう。</string>
   <string name="yield_module_token_details_earn_notification_earning_on_your_balance_subtitle">利息は自動的に発生します</string>
-  <string name="yield_module_token_details_earn_notification_earning_on_your_balance_title">Aaveレンディング</string>
+  <string name="yield_module_token_details_earn_notification_earning_on_your_balance_title">Aaveの利回り</string>
   <string name="yield_module_token_details_earn_notification_processing">入金の処理中</string>
   <string name="yield_module_token_details_earn_notification_title">年間%1$s%%の収益</string>
   <string name="yield_module_transfer_mode_automatic">自動</string>
