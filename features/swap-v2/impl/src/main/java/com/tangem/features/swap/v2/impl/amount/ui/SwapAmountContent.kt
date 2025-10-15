@@ -24,6 +24,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
+import com.tangem.common.ui.account.AccountTitle
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.ui.AmountFieldV2
 import com.tangem.core.ui.components.SpacerH16
@@ -194,17 +195,14 @@ private fun SwapAmountEditBlock(
         verticalArrangement = Arrangement.spacedBy(12.dp),
         modifier = modifier.padding(top = 48.dp, bottom = 28.dp),
     ) {
-        if (amountFieldUM.amountField !is AmountState.Data) {
-            TextShimmer(
-                style = TangemTheme.typography.caption2,
-                modifier = Modifier.width(60.dp),
-            )
-        } else {
-            Text(
-                text = (amountFieldUM.amountField as AmountState.Data).title.resolveReference(),
-                style = TangemTheme.typography.subtitle2,
-                color = TangemTheme.colors.text.tertiary,
-            )
+        when (val amountFieldUM = amountFieldUM.amountField) {
+            !is AmountState.Data -> {
+                TextShimmer(
+                    style = TangemTheme.typography.caption2,
+                    modifier = Modifier.width(60.dp),
+                )
+            }
+            else -> AccountTitle(amountFieldUM.accountTitleUM)
         }
         AmountFieldV2(
             amountUM = amountFieldUM.amountField,
@@ -435,6 +433,7 @@ private class SwapAmountContentPreviewProvider : PreviewParameterProvider<SwapAm
         get() = sequenceOf(
             SwapAmountContentPreview.emptyState,
             SwapAmountContentPreview.defaultState,
+            SwapAmountContentPreview.defaultStateAccount,
         )
 }
 // endregion

@@ -54,11 +54,16 @@ internal class TangemPayTxHistoryModel @Inject constructor(
             .onEach(::updateState)
             .launchIn(modelScope)
         listManager.paginationStatus
-            .onEach { paginationStatus -> handlePaginationStatus(paginationStatus) }
+            .onEach(::handlePaginationStatus)
+            .launchIn(modelScope)
+        listManager.emptyStatus
+            .onEach(::handleEmptyState)
             .launchIn(modelScope)
     }
 
     private fun updateState(items: ImmutableList<TangemPayTxHistoryUM.TangemPayTxHistoryItemUM>) {
+        if (items.isEmpty()) return // fast exit. If items is empty, no need to update ui items
+
         uiState.update { state ->
             if (state is TangemPayTxHistoryUM.Content) {
                 state.copy(items = items)
@@ -69,6 +74,12 @@ internal class TangemPayTxHistoryModel @Inject constructor(
                     loadMore = ::loadMoreItems,
                 )
             }
+        }
+    }
+
+    private fun handleEmptyState(isEmpty: Boolean) {
+        if (isEmpty) {
+            uiState.update { getEmptyState(it.isBalanceHidden) }
         }
     }
 
@@ -106,6 +117,10 @@ internal class TangemPayTxHistoryModel @Inject constructor(
 
     override fun onTransactionClick(item: TangemPayTxHistoryItem) {
         Timber.d("onTransactionClick: $item")
+    }
+
+    private fun getEmptyState(isBalanceHidden: Boolean): TangemPayTxHistoryUM.Empty {
+        return TangemPayTxHistoryUM.Empty(isBalanceHidden = isBalanceHidden)
     }
 
     private fun getErrorState(isBalanceHidden: Boolean): TangemPayTxHistoryUM.Error {
