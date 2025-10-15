@@ -4,11 +4,11 @@ import android.content.Context
 import androidx.datastore.core.DataStoreFactory
 import androidx.datastore.dataStoreFile
 import com.squareup.moshi.Moshi
+import com.tangem.datasource.api.tangemTech.models.YieldSupplyMarketTokenDto
 import com.tangem.datasource.local.yieldsupply.DefaultYieldMarketsStore
 import com.tangem.datasource.local.yieldsupply.YieldMarketsStore
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
 import com.tangem.datasource.utils.listTypes
-import com.tangem.domain.yield.supply.models.YieldMarketToken
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
@@ -34,7 +34,7 @@ object YieldSupplyModule {
             persistenceStore = DataStoreFactory.create(
                 serializer = MoshiDataStoreSerializer(
                     moshi = moshi,
-                    types = listTypes<YieldMarketToken>(),
+                    types = listTypes<YieldSupplyMarketTokenDto>(),
                     defaultValue = emptyList(),
                 ),
                 produceFile = { context.dataStoreFile(fileName = "yield_markets_cache") },
