@@ -4,7 +4,6 @@ import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.card.common.util.twinsIsTwinned
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.visa.model.VisaCardActivationStatus
 import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.proxy.redux.DaggerGraphState
@@ -20,9 +19,10 @@ object OnboardingHelper {
 
         return when {
             response.cardTypesResolver.isVisaWallet() -> {
-                if (response.visaCardActivationStatus == null) error("Visa card activation status is null")
-
-                response.visaCardActivationStatus !is VisaCardActivationStatus.Activated
+                // if (response.visaCardActivationStatus == null) error("Visa card activation status is null")
+                //
+                // response.visaCardActivationStatus !is VisaCardActivationStatus.Activated
+                return true
             }
 
             response.cardTypesResolver.isTangemTwins() -> {

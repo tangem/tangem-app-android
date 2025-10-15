@@ -12,15 +12,15 @@ import com.tangem.core.ui.utils.showErrorDialog
 import com.tangem.datasource.local.visa.VisaAuthTokenStorage
 import com.tangem.datasource.local.visa.VisaOTPStorage
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.visa.datasource.VisaAuthRemoteDataSource
 import com.tangem.domain.visa.error.VisaActivationError
 import com.tangem.domain.visa.model.VisaActivationRemoteState
 import com.tangem.domain.visa.model.VisaAuthTokens
 import com.tangem.domain.visa.model.VisaCardActivationStatus
 import com.tangem.domain.visa.model.VisaCardId
 import com.tangem.domain.visa.repository.VisaActivationRepository
-import com.tangem.domain.visa.datasource.VisaAuthRemoteDataSource
 import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
-import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
 import com.tangem.features.onboarding.v2.visa.impl.child.inprogress.OnboardingVisaInProgressComponent.Config
 import com.tangem.features.onboarding.v2.visa.impl.child.inprogress.OnboardingVisaInProgressComponent.Params
@@ -180,13 +180,15 @@ internal class OnboardingVisaInProgressModel @Inject constructor(
         onDone.emit(Params.DoneEvent.Activated)
     }
 
+    @Suppress("UnusedPrivateProperty")
     private suspend fun createUserWallet(scanResponse: ScanResponse, authTokens: VisaAuthTokens): UserWallet =
         withContext(dispatchers.io) {
             val newActivationStatus = VisaCardActivationStatus.Activated(visaAuthTokens = authTokens)
 
             requireNotNull(
                 value = coldUserWalletBuilderFactory.create(
-                    scanResponse = scanResponse.copy(visaCardActivationStatus = newActivationStatus),
+                    // scanResponse = scanResponse.copy(visaCardActivationStatus = newActivationStatus),
+                    scanResponse = scanResponse,
                 ).build(),
                 lazyMessage = { "User wallet not created" },
             )

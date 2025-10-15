@@ -5,6 +5,7 @@ import com.tangem.common.BaseTestCase
 import com.tangem.core.ui.R
 import com.tangem.core.ui.test.BaseButtonTestTags
 import com.tangem.core.ui.test.NotificationTestTags
+import com.tangem.core.ui.test.SendConfirmScreenTestTags
 import com.tangem.core.ui.test.TopAppBarTestTags
 import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
@@ -31,6 +32,11 @@ class SendConfirmPageObject(semanticsProvider: SemanticsNodeInteractionsProvider
     val minimumSendAmountErrorTitle: KNode = child {
         hasTestTag(NotificationTestTags.TITLE)
         hasText(getResourceString(CommonUiR.string.send_notification_invalid_amount_title))
+        useUnmergedTree = true
+    }
+
+    val sendingText: KNode = child {
+        hasTestTag(SendConfirmScreenTestTags.SENDING_TEXT)
         useUnmergedTree = true
     }
 
