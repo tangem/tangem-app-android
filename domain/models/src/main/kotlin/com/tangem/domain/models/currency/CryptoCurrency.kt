@@ -108,6 +108,10 @@ sealed class CryptoCurrency {
                 is Body.NetworkIdWithDerivationPath -> body.rawId
             }
 
+        /** Flag indicating whether the cryptocurrency is a coin */
+        val isCoin: Boolean
+            get() = prefix == Prefix.COIN_PREFIX
+
         /**
          * Represents the different types of prefixes that can be associated with a cryptocurrency ID.
          * These prefixes can help in quickly categorizing the type of cryptocurrency.
@@ -131,16 +135,16 @@ sealed class CryptoCurrency {
             /** The value of the body. */
             abstract val value: String
 
+            /**
+             * Represents a raw network ID.
+             * Should be used for cryptocurrencies that do not support a derivation path.
+             */
             @Serializable
-            /** Represents a raw network ID. */
             data class NetworkId(val rawId: String) : Body() {
                 override val value: String get() = rawId
             }
 
-            /**
-             * Represents a raw network ID with a network derivation path.
-             * Should be used for a cryptocurrencies with custom derivation path.
-             */
+            /** Represents a raw network ID with a network derivation path */
             @Serializable
             data class NetworkIdWithDerivationPath(
                 val rawId: String,
@@ -227,9 +231,9 @@ sealed class CryptoCurrency {
              * Example:
              * 1. coin⟨BCH⟩bitcoin-cash
              * 2. coin⟨ETH→12367123⟩ethereum
+             * 3. token⟨ETH→12367123⟩usdt⚓0xdAC17F958D2ee523a2206206994597C13D831ec7
              */
             fun fromValue(value: String): ID {
-                // ID(value='coin⟨BCH⟩bitcoin-cash'
                 val parts = value.split(PREFIX_DELIMITER, SUFFIX_DELIMITER)
 
                 require(value = parts.size == ID_PARTS_COUNT) { "Invalid ID format: $value" }
