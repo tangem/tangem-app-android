@@ -117,6 +117,7 @@ internal class YieldSupplyStartEarningComponent(
             onClick = model::onClick,
             enabled = state.isPrimaryButtonEnabled,
             iconResId = icon,
+            showProgress = state.isTransactionSending,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
