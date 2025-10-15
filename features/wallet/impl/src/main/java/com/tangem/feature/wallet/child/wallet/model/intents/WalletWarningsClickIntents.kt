@@ -361,7 +361,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
                         userWalletId = userWallet.walletId,
                         currency = cryptoCurrency,
                         source = OnrampSource.SEPA_BANNER,
-                        launchSepa = true,
+                        shouldLaunchSepa = true,
                     ),
                 )
             }
