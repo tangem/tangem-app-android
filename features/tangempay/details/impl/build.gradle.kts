@@ -21,6 +21,7 @@ dependencies {
     /** Features api */
     implementation(projects.features.tangempay.details.api)
     implementation(projects.features.txhistory.api)
+    implementation(projects.features.tokenRecieve.api)
 
     /** Domain */
     implementation(projects.domain.balanceHiding)
@@ -36,6 +37,7 @@ dependencies {
     implementation(deps.compose.material3)
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
+    implementation(deps.decompose.ext.compose)
 
     /** DI */
     implementation(deps.hilt.android)
