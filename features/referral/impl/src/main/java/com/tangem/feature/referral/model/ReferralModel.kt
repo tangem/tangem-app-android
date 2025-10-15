@@ -7,6 +7,7 @@ import androidx.compose.runtime.setValue
 import arrow.core.getOrElse
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
+import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -41,6 +42,7 @@ import com.tangem.feature.referral.models.DemoModeException
 import com.tangem.feature.referral.models.ReferralStateHolder
 import com.tangem.feature.referral.models.ReferralStateHolder.*
 import com.tangem.features.account.PortfolioFetcher
+import com.tangem.features.account.PortfolioSelectorComponent
 import com.tangem.features.account.PortfolioSelectorController
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.*
@@ -83,6 +85,11 @@ internal class ReferralModel @Inject constructor(
 
     var uiState: ReferralStateHolder by mutableStateOf(createInitiallyUiState())
         private set
+
+    val portfolioSelectorCallback = object : PortfolioSelectorComponent.BottomSheetCallback {
+        override val onDismiss: () -> Unit = { bottomSheetNavigation::dismiss }
+        override val onBack: () -> Unit = { bottomSheetNavigation::dismiss }
+    }
 
     init {
         analyticsEventHandler.send(ReferralEvents.ReferralScreenOpened)
@@ -172,7 +179,7 @@ internal class ReferralModel @Inject constructor(
             modelScope.launch {
                 val lastInfoState = uiState.referralInfoState
                 val portfolioId = when (accountsFeatureToggles.isFeatureEnabled) {
-                    true -> PortfolioId(requireNotNull(portfolioSelectorController.selectedAccount.value))
+                    true -> PortfolioId(requireNotNull(portfolioSelectorController.selectedAccountSync))
                     false -> PortfolioId(params.userWalletId)
                 }
                 runCatching { referralInteractor.startReferral(portfolioId) }
@@ -259,7 +266,7 @@ internal class ReferralModel @Inject constructor(
 
     private suspend fun selectAccount(referralData: ReferralData) {
         when (referralData) {
-            is ReferralData.NonParticipantData -> if (portfolioSelectorController.selectedAccount.value == null) {
+            is ReferralData.NonParticipantData -> if (portfolioSelectorController.selectedAccountSync == null) {
                 portfolioSelectorController.selectAccount(
                     accountId = walletAccounts(params.userWalletId).first().mainAccount.account.accountId,
                 )
