@@ -201,16 +201,11 @@ class SendConfirmationNotificationsTransformerV2Test {
 
         return AmountState.Data(
             isPrimaryButtonEnabled = true,
-            isRedesignEnabled = false,
-            title = mockk(relaxed = true),
-            availableBalance = mockk(relaxed = true),
+            accountTitleUM = mockk(relaxed = true),
             availableBalanceCrypto = mockk(relaxed = true),
             availableBalanceFiat = mockk(relaxed = true),
             tokenName = mockk(relaxed = true),
             tokenIconState = mockk(relaxed = true),
-            segmentedButtonConfig = persistentListOf(),
-            selectedButton = 0,
-            isSegmentedButtonsEnabled = false,
             amountTextField = AmountFieldModel(
                 value = "1.5",
                 onValueChange = {},

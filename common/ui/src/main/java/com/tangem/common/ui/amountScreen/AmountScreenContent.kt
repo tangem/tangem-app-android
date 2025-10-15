@@ -13,21 +13,17 @@ import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.preview.AmountScreenClickIntentsStub
 import com.tangem.common.ui.amountScreen.preview.AmountStatePreviewData
-import com.tangem.common.ui.amountScreen.ui.amountField
 import com.tangem.common.ui.amountScreen.ui.amountFieldV2
-import com.tangem.common.ui.amountScreen.ui.buttons
 import com.tangem.core.ui.res.TangemThemePreview
 
 /**
  * Amount screen with field
  * @param amountState amount state
- * @param isBalanceHidden flag hidden balances
  * @param clickIntents amount screen clicks
  */
 @Composable
 fun AmountScreenContent(
     amountState: AmountState,
-    isBalanceHidden: Boolean,
     clickIntents: AmountScreenClickIntents,
     modifier: Modifier = Modifier,
     extraContent: (@Composable () -> Unit)? = null,
@@ -38,32 +34,17 @@ fun AmountScreenContent(
             .padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        if (amountState.isRedesignEnabled) {
-            amountFieldV2(
-                amountState = amountState,
-                onValueChange = clickIntents::onAmountValueChange,
-                onValuePastedTriggerDismiss = clickIntents::onAmountPasteTriggerDismiss,
-                onCurrencyChange = clickIntents::onCurrencyChangeClick,
-                onMaxAmountClick = clickIntents::onMaxValueClick,
-            )
-            if (extraContent != null) {
-                item("EXTRA_CONTENT_KEY") {
-                    extraContent()
-                }
+        amountFieldV2(
+            amountState = amountState,
+            onValueChange = clickIntents::onAmountValueChange,
+            onValuePastedTriggerDismiss = clickIntents::onAmountPasteTriggerDismiss,
+            onCurrencyChange = clickIntents::onCurrencyChangeClick,
+            onMaxAmountClick = clickIntents::onMaxValueClick,
+        )
+        if (extraContent != null) {
+            item("EXTRA_CONTENT_KEY") {
+                extraContent()
             }
-        } else if (amountState is AmountState.Data) {
-            amountField(
-                amountState = amountState,
-                isBalanceHidden = isBalanceHidden,
-                onValueChange = clickIntents::onAmountValueChange,
-                onValuePastedTriggerDismiss = clickIntents::onAmountPasteTriggerDismiss,
-            )
-            buttons(
-                segmentedButtonConfig = amountState.segmentedButtonConfig,
-                clickIntents = clickIntents,
-                isSegmentedButtonsEnabled = amountState.isSegmentedButtonsEnabled,
-                selectedButton = amountState.selectedButton,
-            )
         }
     }
 }
@@ -78,7 +59,6 @@ private fun SendAmountContentPreview(
     TangemThemePreview {
         AmountScreenContent(
             amountState = amountState,
-            isBalanceHidden = false,
             clickIntents = AmountScreenClickIntentsStub,
         )
     }
