@@ -94,6 +94,7 @@ private fun StakingAppBar(uiState: StakingUiState) {
     val (backIcon, click) = when (uiState.currentStep) {
         StakingStep.Amount,
         StakingStep.Confirmation,
+        StakingStep.Success,
         -> R.drawable.ic_close_24 to uiState.clickIntents::onBackClick
         StakingStep.Validators,
         StakingStep.RewardsValidators,
@@ -111,6 +112,7 @@ private fun StakingAppBar(uiState: StakingUiState) {
     )
 }
 
+@Suppress("LongMethod")
 @Composable
 private fun StakingScreenContent(uiState: StakingUiState, modifier: Modifier = Modifier) {
     val currentScreen = uiState.currentStep
@@ -139,10 +141,10 @@ private fun StakingScreenContent(uiState: StakingUiState, modifier: Modifier = M
             contentAlignment = Alignment.TopCenter,
             label = "Staking Screen Navigation",
             transitionSpec = {
-                val direction = if (initialState.ordinal < targetState.ordinal) {
-                    AnimatedContentTransitionScope.SlideDirection.Start
-                } else {
-                    AnimatedContentTransitionScope.SlideDirection.End
+                val direction = when {
+                    targetState == StakingStep.Success -> AnimatedContentTransitionScope.SlideDirection.Up
+                    initialState.ordinal < targetState.ordinal -> AnimatedContentTransitionScope.SlideDirection.Start
+                    else -> AnimatedContentTransitionScope.SlideDirection.End
                 }
 
                 slideIntoContainer(towards = direction, animationSpec = tween())
@@ -166,11 +168,16 @@ private fun StakingScreenContent(uiState: StakingUiState, modifier: Modifier = M
                 }
                 StakingStep.Amount -> AmountScreenContent(
                     amountState = uiState.amountState,
-                    isBalanceHidden = uiState.isBalanceHidden,
                     clickIntents = uiState.clickIntents,
                     modifier = Modifier.background(TangemTheme.colors.background.secondary),
                 )
                 StakingStep.Confirmation -> StakingConfirmationContent(
+                    amountState = uiState.amountState,
+                    state = uiState.confirmationState,
+                    validatorState = uiState.validatorState,
+                    clickIntents = uiState.clickIntents,
+                )
+                StakingStep.Success -> StakingSuccessContent(
                     amountState = uiState.amountState,
                     state = uiState.confirmationState,
                     validatorState = uiState.validatorState,
