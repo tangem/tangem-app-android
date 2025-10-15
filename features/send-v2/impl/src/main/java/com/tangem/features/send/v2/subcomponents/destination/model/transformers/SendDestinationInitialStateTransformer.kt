@@ -54,6 +54,7 @@ internal class SendDestinationInitialStateTransformer(
                     isValuePasted = false,
                 )
             },
+            accountTitleUM = null,
             wallets = loadingListState(WALLET_KEY_TAG, WALLET_DEFAULT_COUNT),
             recent = loadingListState(RECENT_KEY_TAG, RECENT_DEFAULT_COUNT),
             networkName = cryptoCurrency.network.name,
