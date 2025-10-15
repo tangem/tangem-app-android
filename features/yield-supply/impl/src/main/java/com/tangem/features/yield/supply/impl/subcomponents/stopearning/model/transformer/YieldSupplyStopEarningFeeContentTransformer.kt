@@ -44,6 +44,7 @@ internal class YieldSupplyStopEarningFeeContentTransformer(
                     ),
                     currentNetworkFeeValue = TextReference.EMPTY,
                     maxNetworkFeeValue = TextReference.EMPTY,
+                    minAmountFeeValue = TextReference.EMPTY,
                 ),
             )
         }

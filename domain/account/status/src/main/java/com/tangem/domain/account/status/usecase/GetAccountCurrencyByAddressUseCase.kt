@@ -117,7 +117,7 @@ class GetAccountCurrencyByAddressUseCase(
             .firstOrNull()
 
         return ensureNotNull(result) {
-            "No account found for network: $networkId in walletId: ${accountList.userWallet.walletId}"
+            "No account found for network: $networkId in walletId: ${accountList.userWalletId}"
         }
     }
 

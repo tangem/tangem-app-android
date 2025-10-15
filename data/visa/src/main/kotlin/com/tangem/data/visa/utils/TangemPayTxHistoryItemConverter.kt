@@ -30,7 +30,7 @@ internal object TangemPayTxHistoryItemConverter :
             merchantName = spend.merchantName,
             enrichedMerchantCategory = spend.enrichedMerchantCategory,
             merchantCategory = spend.merchantCategory,
-            status = spend.status,
+            status = TangemPayTxHistoryItemStatusConverter.convert(spend.status),
             enrichedMerchantIconUrl = spend.enrichedMerchantIcon,
         )
     }
