@@ -10,6 +10,7 @@ import com.tangem.features.staking.impl.presentation.state.StakingUiState
 import com.tangem.features.staking.impl.presentation.state.bottomsheet.TonInitializeAccountBottomSheetConfig
 import com.tangem.utils.transformer.Transformer
 import java.math.BigDecimal
+import java.math.RoundingMode
 
 internal class CompleteInitializeBottomSheetTransformer(
     private val cryptoCurrencyStatus: CryptoCurrencyStatus,
@@ -21,8 +22,10 @@ internal class CompleteInitializeBottomSheetTransformer(
         val prevBottomSheetConfigContent =
             prevBottomSheetConfig.content as? TonInitializeAccountBottomSheetConfig ?: return prevState
 
-        val feeAmount = (prevBottomSheetConfigContent.feeState as? FeeState.Content)
-            ?.fee?.amount?.value?.multiply(BigDecimal(FEE_MULTIPLIER)) ?: return prevState
+        val feeAmount = (prevBottomSheetConfigContent.feeState as? FeeState.Content)?.fee?.amount ?: return prevState
+
+        val multipliedFeeAmount = feeAmount.value?.multiply(BigDecimal(FEE_MULTIPLIER))
+            ?.setScale(feeAmount.decimals, RoundingMode.HALF_DOWN) ?: return prevState
 
         val confirmationState = prevState.confirmationState as? StakingStates.ConfirmationState.Data ?: return prevState
 
@@ -31,12 +34,12 @@ internal class CompleteInitializeBottomSheetTransformer(
                 cryptoCurrencyStatus = cryptoCurrencyStatus,
                 minimumTransactionAmount = minimumTransactionAmount,
                 value = ReduceByData(
-                    feeAmount,
-                    feeAmount,
+                    multipliedFeeAmount,
+                    multipliedFeeAmount,
                 ),
             ).transform(prevState.amountState),
             confirmationState = confirmationState.copy(
-                reduceAmountBy = feeAmount,
+                reduceAmountBy = multipliedFeeAmount,
             ),
             bottomSheetConfig = prevBottomSheetConfig.copy(
                 content = prevBottomSheetConfigContent.copy(
