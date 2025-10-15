@@ -20,4 +20,6 @@ object TangemBlogUrlBuilder {
         }
 
     const val RESOURCE_TO_LEARN_ABOUT_APPROVING_IN_SWAP = "https://tangem.com/en/blog/post/give-revoke-permission/"
+
+    const val YIELD_SUPPLY_HOW_IT_WORKS_URL = "https://tangem.com/en/blog/post/savings-account"
 }
