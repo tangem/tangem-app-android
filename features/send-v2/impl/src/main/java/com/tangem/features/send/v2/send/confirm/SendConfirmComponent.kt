@@ -11,6 +11,7 @@ import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.transaction.error.GetFeeError
@@ -73,6 +74,8 @@ internal class SendConfirmComponent(
             cryptoCurrencyStatusFlow = params.cryptoCurrencyStatusFlow,
             isBalanceHidingFlow = params.isBalanceHidingFlow,
             analyticsSendSource = params.analyticsSendSource,
+            accountFlow = params.accountFlow,
+            isAccountModeFlow = params.isAccountModeFlow,
         ),
         onResult = model::onAmountResult,
         onClick = model::showEditAmount,
@@ -152,6 +155,8 @@ internal class SendConfirmComponent(
         val feeCryptoCurrencyStatus: CryptoCurrencyStatus,
         val cryptoCurrencyStatusFlow: StateFlow<CryptoCurrencyStatus>,
         val feeCryptoCurrencyStatusFlow: StateFlow<CryptoCurrencyStatus>,
+        val accountFlow: StateFlow<Account.CryptoPortfolio?>,
+        val isAccountModeFlow: StateFlow<Boolean>,
         val appCurrency: AppCurrency,
         val callback: ModelCallback,
         val currentRoute: Flow<CommonSendRoute>,
