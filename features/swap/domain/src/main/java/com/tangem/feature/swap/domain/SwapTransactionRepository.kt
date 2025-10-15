@@ -1,5 +1,6 @@
 package com.tangem.feature.swap.domain
 
+import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
@@ -29,7 +30,11 @@ interface SwapTransactionRepository {
         txId: String,
     )
 
-    suspend fun storeTransactionState(txId: String, status: ExchangeStatusModel, refundTokenCurrency: CryptoCurrency?)
+    suspend fun storeTransactionState(
+        txId: String,
+        status: ExchangeStatusModel,
+        accountWithCurrency: Pair<AccountId?, CryptoCurrency>? = null,
+    )
 
     suspend fun storeLastSwappedCryptoCurrencyId(userWalletId: UserWalletId, cryptoCurrencyId: CryptoCurrency.ID)
 
