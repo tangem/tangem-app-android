@@ -16,12 +16,16 @@ import com.tangem.core.analytics.api.ParamsInterceptorHolder
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.haptic.TangemHapticEffect
 import com.tangem.core.ui.haptic.VibratorHapticManager
+import com.tangem.core.ui.message.DialogMessage
+import com.tangem.features.staking.impl.R
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
@@ -140,6 +144,7 @@ internal class StakingModel @Inject constructor(
     private val urlOpener: UrlOpener,
     @DelayedWork private val coroutineScope: CoroutineScope,
     private val innerRouter: InnerStakingRouter,
+    private val messageSender: UiMessageSender,
     appRouter: AppRouter,
 ) : Model(), StakingClickIntents {
 
@@ -999,7 +1004,12 @@ internal class StakingModel @Inject constructor(
                     network = cryptoCurrencyStatus.currency.network,
                 ).fold(
                     ifLeft = {
-                        stateController.update(DismissBottomSheetStateTransformer)
+                        messageSender.send(
+                            DialogMessage(
+                                title = resourceReference(id = R.string.send_alert_transaction_failed_title),
+                                message = resourceReference(id = R.string.common_unknown_error),
+                            ),
+                        )
                     },
                     ifRight = {
                         stateController.update(CompleteInitializeBottomSheetTransformer(
