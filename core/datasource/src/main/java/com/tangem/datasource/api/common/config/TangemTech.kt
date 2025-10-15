@@ -73,6 +73,7 @@ internal class TangemTech(
             ApiEnvironment.MOCK,
             ApiEnvironment.DEV,
             ApiEnvironment.DEV_2,
+            ApiEnvironment.DEV_3,
             -> environmentConfigStorage.getConfigSync().tangemApiKeyDev
             ApiEnvironment.STAGE -> environmentConfigStorage.getConfigSync().tangemApiKeyStage
             ApiEnvironment.PROD -> environmentConfigStorage.getConfigSync().tangemApiKey
