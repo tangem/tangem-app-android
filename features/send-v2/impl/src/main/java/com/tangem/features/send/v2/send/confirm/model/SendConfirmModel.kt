@@ -161,6 +161,7 @@ internal class SendConfirmModel @Inject constructor(
 
     fun updateState(state: SendUM) {
         _uiState.value = state
+        onFeeReload()
         updateConfirmNotifications()
     }
 
