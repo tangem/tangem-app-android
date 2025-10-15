@@ -24,8 +24,8 @@ class MutableDerivationPath internal constructor(val value: DerivationPath) {
     fun replaceAccountNode(value: Long, blockchain: Blockchain): MutableDerivationPath {
         val mutableNodes = this@MutableDerivationPath.value.nodes.toMutableList()
 
-        val accountNodeIndex = AccountNodeRecognizer(blockchain).accountNodeIndex
-        val accountNode = mutableNodes.getOrNull(accountNodeIndex)
+        val accountNodeIndex = AccountNodeRecognizer(blockchain).getAccountNodeIndex(this@MutableDerivationPath.value)
+        val accountNode = accountNodeIndex?.let(mutableNodes::getOrNull)
 
         if (accountNode != null) {
             mutableNodes[accountNodeIndex] = when (accountNode) {
