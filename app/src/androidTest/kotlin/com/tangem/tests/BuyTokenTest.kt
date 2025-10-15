@@ -1,7 +1,6 @@
 package com.tangem.tests
 
 import com.tangem.common.BaseTestCase
-import com.tangem.common.constants.TestConstants.TOTAL_BALANCE
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
@@ -22,7 +21,6 @@ class BuyTokenTest : BaseTestCase() {
     fun errorInProvidersLoadingTest() {
         val scenarioName = "payment_methods"
         val tokenTitle = "Bitcoin"
-        val balance = TOTAL_BALANCE
 
         setupHooks(
             additionalAfterSection = {
@@ -39,7 +37,7 @@ class BuyTokenTest : BaseTestCase() {
                 openMainScreen()
             }
             step("Synchronize addresses") {
-                synchronizeAddresses(balance)
+                synchronizeAddresses()
             }
             step("Click on 'Buy' button") {
                 onMainScreen { buyButton.clickWithAssertion() }
@@ -68,7 +66,6 @@ class BuyTokenTest : BaseTestCase() {
     fun validateCurrencySelectorTest() {
         setupHooks().run {
             val tokenTitle = "Polygon"
-            val balance = TOTAL_BALANCE
             val popularFiatsTitle = "Popular Fiats"
             val otherCurrenciesTitle = "Other currencies"
             val australianDollar = "AUD"
@@ -84,7 +81,7 @@ class BuyTokenTest : BaseTestCase() {
                 openMainScreen()
             }
             step("Synchronize addresses") {
-                synchronizeAddresses(balance)
+                synchronizeAddresses()
             }
             step("Click on 'Buy' button") {
                 onMainScreen { buyButton.clickWithAssertion() }
@@ -146,7 +143,6 @@ class BuyTokenTest : BaseTestCase() {
     fun validateBuyTokenScreenTest() {
         setupHooks().run {
             val tokenTitle = "Polygon"
-            val balance = TOTAL_BALANCE
             val euro = "EUR"
             val fiatAmount = "1"
             val tokenAmount = "~488.24938338 POL"
@@ -160,7 +156,7 @@ class BuyTokenTest : BaseTestCase() {
                 openMainScreen()
             }
             step("Synchronize addresses") {
-                synchronizeAddresses(balance)
+                synchronizeAddresses()
             }
             step("Click on 'Buy' button") {
                 onMainScreen { buyButton.clickWithAssertion() }
@@ -237,7 +233,6 @@ class BuyTokenTest : BaseTestCase() {
     fun validateResidenceSettingsScreenTest() {
         setupHooks().run {
             val tokenTitle = "Polygon"
-            val balance = TOTAL_BALANCE
             val country = "Albania"
             val unavailableCountry = "Lebanon"
             val scenarioName = "payment_methods"
@@ -250,7 +245,7 @@ class BuyTokenTest : BaseTestCase() {
                 openMainScreen()
             }
             step("Synchronize addresses") {
-                synchronizeAddresses(balance)
+                synchronizeAddresses()
             }
             step("Click on 'Buy' button") {
                 onMainScreen { buyButton.clickWithAssertion() }
@@ -318,7 +313,6 @@ class BuyTokenTest : BaseTestCase() {
     fun validateProvidersScreenTest() {
         setupHooks().run {
             val tokenTitle = "Polygon"
-            val balance = TOTAL_BALANCE
             val paymentMethod = "Invoice Revolut Pay"
             val fiatAmount = "1"
             val providerNameMercuryo = "Mercuryo"
@@ -333,7 +327,7 @@ class BuyTokenTest : BaseTestCase() {
                 openMainScreen()
             }
             step("Synchronize addresses") {
-                synchronizeAddresses(balance)
+                synchronizeAddresses()
             }
             step("Click on 'Buy' button") {
                 onMainScreen { buyButton.clickWithAssertion() }
@@ -407,7 +401,6 @@ class BuyTokenTest : BaseTestCase() {
     fun validatePaymentMethodScreenTest() {
         setupHooks().run {
             val tokenTitle = "Polygon"
-            val balance = TOTAL_BALANCE
             val card = "Card"
             val googlePay = "Google Pay"
             val invoiceRevolutPay = "Invoice Revolut Pay"
@@ -424,7 +417,7 @@ class BuyTokenTest : BaseTestCase() {
                 openMainScreen()
             }
             step("Synchronize addresses") {
-                synchronizeAddresses(balance)
+                synchronizeAddresses()
             }
             step("Click on 'Buy' button") {
                 onMainScreen { buyButton.clickWithAssertion() }
