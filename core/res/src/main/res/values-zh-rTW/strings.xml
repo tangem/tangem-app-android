@@ -275,6 +275,7 @@
   <string name="scan_card_settings_button">掃描卡片</string>
   <string name="scan_card_settings_message">掃描卡片以更改其設置。這些更改只會影響您掃描過的卡，不會影響綁定到您錢包的其他卡。</string>
   <string name="scan_card_settings_title">準備好您的卡!</string>
+  <string name="security_alert_title">安全警示：</string>
   <string name="send_amount_label">數量</string>
   <string name="send_error_address_same_as_wallet">地址與錢包地址相同</string>
   <string name="send_error_dust_amount_format">最小數量是 %s</string>
@@ -338,6 +339,7 @@
   <string name="user_wallet_list_unlock_all_with">用 %s 解鎖全部</string>
   <string name="wallet_balance_blockchain_unreachable_try_later">區塊鍊無法使用。稍後再試</string>
   <string name="wallet_balance_missing_derivation">掃描卡片</string>
+  <string name="wallet_been_activated_message">此钱包之前已被激活。\n如果不是您本人激活，请联系客服。\nTangem 绝不会出售附带预生成助记词的钱包。</string>
   <string name="wallet_connect_alert_sign_message">請求籤署消息。%s</string>
   <string name="wallet_connect_bnb_sign_message">Dapp %1$s，請求\n簽署 BNB 交易。\n%2$s</string>
   <string name="wallet_connect_bnb_trade_order_message">%1$s 的交易訂單\n價格： %2$s\n接收金額：%3$s\n支付數量： %4$s</string>
