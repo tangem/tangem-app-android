@@ -67,7 +67,11 @@ internal class DefaultTangemPayStorage @Inject constructor(
         secureStorage.get(createOrderIdKey(customerWalletAddress))?.decodeToString(throwOnInvalidSequence = true)
     }
 
-    override suspend fun clear(customerWalletAddress: String) = withContext(dispatcherProvider.io) {
+    override suspend fun clearOrderId(customerWalletAddress: String) = withContext(dispatcherProvider.io) {
+        secureStorage.delete(createOrderIdKey(customerWalletAddress))
+    }
+
+    override suspend fun clearAll(customerWalletAddress: String) = withContext(dispatcherProvider.io) {
         secureStorage.delete(createKey(customerWalletAddress))
         secureStorage.delete(createOrderIdKey(customerWalletAddress))
     }

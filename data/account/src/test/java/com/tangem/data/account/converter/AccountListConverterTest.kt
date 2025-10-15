@@ -96,7 +96,7 @@ class AccountListConverterTest {
                     ),
                     expected = Result.success(
                         createAccountList(
-                            userWallet = userWallet,
+                            userWalletId = userWallet.walletId,
                             sortType = TokensSortType.BALANCE,
                             groupType = TokensGroupType.NETWORK,
                         ),
@@ -110,7 +110,7 @@ class AccountListConverterTest {
                     ),
                     expected = Result.success(
                         createAccountList(
-                            userWallet = userWallet,
+                            userWalletId = userWallet.walletId,
                             sortType = TokensSortType.NONE,
                             groupType = TokensGroupType.NONE,
                         ),
@@ -124,7 +124,7 @@ class AccountListConverterTest {
                     ),
                     expected = Result.success(
                         createAccountList(
-                            userWallet = userWallet,
+                            userWalletId = userWallet.walletId,
                             sortType = TokensSortType.NONE,
                             groupType = TokensGroupType.NONE,
                         ),
