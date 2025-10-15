@@ -10,6 +10,7 @@ import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.nft.models.NFTAsset
@@ -46,7 +47,9 @@ internal class NFTSendSuccessComponent @AssistedInject constructor(
             nftAsset = params.nftAsset,
             nftCollectionName = params.nftCollectionName,
             isSuccessScreen = true,
-            title = resourceReference(R.string.nft_asset),
+            account = params.account,
+            isAccountsMode = params.isAccountsMode,
+            walletTitle = resourceReference(R.string.nft_asset),
         ),
     )
 
@@ -86,6 +89,8 @@ internal class NFTSendSuccessComponent @AssistedInject constructor(
         val nftAsset: NFTAsset,
         val nftCollectionName: String,
         val txUrl: String,
+        val account: Account.CryptoPortfolio?,
+        val isAccountsMode: Boolean,
         val callback: ModelCallback,
     )
 
