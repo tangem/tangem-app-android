@@ -101,6 +101,7 @@ internal class ChildFactory @Inject constructor(
     private val chooseManagedTokensComponentFactory: ChooseManagedTokensComponent.Factory,
     private val createWalletSelectionComponentFactory: CreateWalletSelectionComponent.Factory,
     private val createWalletStartComponentFactory: CreateWalletStartComponent.Factory,
+    private val createHardwareWalletComponentFactory: CreateHardwareWalletComponent.Factory,
     private val createMobileWalletComponentFactory: CreateMobileWalletComponent.Factory,
     private val upgradeWalletComponentFactory: UpgradeWalletComponent.Factory,
     private val addExistingWalletComponentFactory: AddExistingWalletComponent.Factory,
@@ -496,6 +497,13 @@ internal class ChildFactory @Inject constructor(
                     context = context,
                     params = Unit,
                     componentFactory = createWalletSelectionComponentFactory,
+                )
+            }
+            is AppRoute.CreateHardwareWallet -> {
+                createComponentChild(
+                    context = context,
+                    params = Unit,
+                    componentFactory = createHardwareWalletComponentFactory,
                 )
             }
             is AppRoute.CreateMobileWallet -> {

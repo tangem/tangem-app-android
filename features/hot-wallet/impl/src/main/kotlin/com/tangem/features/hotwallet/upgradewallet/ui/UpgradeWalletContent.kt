@@ -16,6 +16,7 @@ import com.tangem.core.ui.components.PrimaryButtonIconEnd
 import com.tangem.core.ui.components.SecondaryButton
 import com.tangem.core.ui.components.appbar.TangemTopAppBar
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
+import com.tangem.core.ui.components.feature.FeatureBlock
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
@@ -107,39 +108,6 @@ internal fun UpgradeWalletContent(state: UpgradeWalletUM, modifier: Modifier = M
                 text = stringResourceSafe(R.string.hw_upgrade_scan_device),
                 onClick = state.onScanDeviceClick,
                 iconResId = R.drawable.ic_tangem_24,
-            )
-        }
-    }
-}
-
-@Composable
-private fun FeatureBlock(title: String, description: String, iconRes: Int, modifier: Modifier = Modifier) {
-    Row(
-        modifier = modifier,
-    ) {
-        Icon(
-            modifier = Modifier
-                .padding(horizontal = 12.dp),
-            painter = painterResource(iconRes),
-            contentDescription = null,
-            tint = TangemTheme.colors.icon.primary1,
-        )
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 8.dp),
-        ) {
-            Text(
-                text = title,
-                style = TangemTheme.typography.subtitle1,
-                color = TangemTheme.colors.text.primary1,
-            )
-            Text(
-                modifier = Modifier
-                    .padding(top = 4.dp),
-                text = description,
-                style = TangemTheme.typography.body2,
-                color = TangemTheme.colors.text.secondary,
             )
         }
     }
