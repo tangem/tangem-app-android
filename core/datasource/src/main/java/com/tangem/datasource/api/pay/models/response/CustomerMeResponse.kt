@@ -17,6 +17,7 @@ data class CustomerMeResponse(
         @Json(name = "product_instance") val productInstance: ProductInstance?,
         @Json(name = "payment_account") val paymentAccount: PaymentAccount?,
         @Json(name = "kyc") val kyc: Kyc?,
+        @Json(name = "depositAddress") val depositAddress: String?,
         @Json(name = "card") val card: Card?,
         @Json(name = "balance") val balance: Balance?,
     )
