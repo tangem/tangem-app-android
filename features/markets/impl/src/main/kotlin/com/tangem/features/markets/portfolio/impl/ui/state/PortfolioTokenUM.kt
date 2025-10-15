@@ -1,6 +1,6 @@
 package com.tangem.features.markets.portfolio.impl.ui.state
 
-import com.tangem.common.ui.account.CryptoPortfolioIconUM
+import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.models.wallet.UserWalletId
@@ -15,10 +15,9 @@ internal data class WalletHeader(
     val name: TextReference,
 ) : PortfolioListItem
 
-internal data class AccountHeader(
+internal data class PortfolioHeader(
     override val id: String,
-    val name: TextReference,
-    val icon: CryptoPortfolioIconUM,
+    val state: AccountTitleUM,
 ) : PortfolioListItem
 
 internal data class PortfolioTokenUM(
