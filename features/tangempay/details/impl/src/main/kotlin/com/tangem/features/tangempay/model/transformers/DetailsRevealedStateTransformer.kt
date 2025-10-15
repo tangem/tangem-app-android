@@ -11,7 +11,6 @@ import com.tangem.utils.transformer.Transformer
 internal class DetailsRevealedStateTransformer(
     private val details: TangemPayCardDetails,
     private val onClickHide: (() -> Unit),
-    private val onClickCopy: ((String) -> Unit),
 ) : Transformer<TangemPayDetailsUM> {
 
     override fun transform(prevState: TangemPayDetailsUM): TangemPayDetailsUM {
@@ -21,7 +20,7 @@ internal class DetailsRevealedStateTransformer(
             cvv = details.cvv,
             onClick = onClickHide,
             buttonText = TextReference.Res(R.string.tangempay_card_details_hide_text),
-            onCopy = onClickCopy,
+            onCopy = prevState.cardDetailsUM.onCopy,
             isHidden = false,
         )
         return prevState.copy(cardDetailsUM = cardDetailsUM)
