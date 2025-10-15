@@ -1,5 +1,6 @@
 package com.tangem.domain.swap
 
+import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
@@ -59,9 +60,13 @@ interface SwapTransactionRepository {
      *
      * @param txId transaction id to update
      * @param status new transaction status
-     * @param refundTokenCurrency refund token
+     * @param accountWithCurrency account id with refund token
      */
-    suspend fun storeTransactionState(txId: String, status: SwapStatusModel, refundTokenCurrency: CryptoCurrency?)
+    suspend fun storeTransactionState(
+        txId: String,
+        status: SwapStatusModel,
+        accountWithCurrency: Pair<AccountId?, CryptoCurrency>? = null,
+    )
 
     /**
      * Save last swapped crypto currency token
