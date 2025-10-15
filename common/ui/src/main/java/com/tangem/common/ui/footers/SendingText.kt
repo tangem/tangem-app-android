@@ -52,7 +52,7 @@ fun SendingText(footerText: TextReference, modifier: Modifier = Modifier) {
             color = TangemTheme.colors.text.tertiary,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
         )
     }
 }
