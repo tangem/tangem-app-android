@@ -39,7 +39,6 @@ internal class PreviewWalletSettingsComponent : WalletSettingsComponent {
                 name = accountName,
                 icon = AccountIconPreviewData.randomAccountIcon(),
             ),
-            label = null,
         )
 
     private val previewState = WalletSettingsUM(
