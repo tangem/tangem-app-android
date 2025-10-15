@@ -42,7 +42,7 @@ fun BottomFade(modifier: Modifier = Modifier, backgroundColor: Color = TangemThe
 fun Fade(
     modifier: Modifier = Modifier,
     backgroundColor: Color = TangemTheme.colors.background.secondary,
-    height: Dp = 40.dp,
+    height: Dp = 32.dp,
 ) {
     Box(
         modifier = modifier
@@ -50,7 +50,6 @@ fun Fade(
             .height(height)
             .background(
                 brush = Brush.verticalGradient(
-                    endY = 100f,
                     colors = listOf(
                         Color.Transparent,
                         backgroundColor,
