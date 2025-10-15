@@ -2,6 +2,7 @@ package com.tangem.features.markets.portfolio.add.impl.model
 
 import androidx.compose.runtime.Immutable
 import com.tangem.core.decompose.navigation.Route
+import com.tangem.domain.markets.TokenMarketInfo
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -15,7 +16,10 @@ internal sealed interface AddToPortfolioRoutes : Route {
     data object PortfolioSelector : AddToPortfolioRoutes
 
     @Serializable
-    data object NetworkSelector : AddToPortfolioRoutes
+    data class NetworkSelector(
+        val alreadyAdded: Set<TokenMarketInfo.Network>,
+        val allAvailable: List<TokenMarketInfo.Network>,
+    ) : AddToPortfolioRoutes
 
     @Serializable
     data object AddToken : AddToPortfolioRoutes

@@ -12,6 +12,7 @@ import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.utils.extensions.isZero
 import com.tangem.utils.extensions.orZero
 import java.math.BigDecimal
+import java.math.RoundingMode
 
 /**
  * Utility object for calculating the [PriceChange] of a cryptocurrency portfolio.
@@ -50,7 +51,7 @@ object PriceChangeCalculator {
         }
 
         val total = statuses.sumOf {
-            val weight = it.value.fiatAmount.orZero().divide(balance)
+            val weight = it.value.fiatAmount.orZero().divide(balance, RoundingMode.HALF_UP)
             val priceChange = it.value.priceChange.orZero()
 
             weight * priceChange
