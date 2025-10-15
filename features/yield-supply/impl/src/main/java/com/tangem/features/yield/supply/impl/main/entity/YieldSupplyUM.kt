@@ -6,7 +6,9 @@ import com.tangem.core.ui.extensions.TextReference
 @Immutable
 internal sealed class YieldSupplyUM {
 
-    data class Initial(
+    data object Initial : YieldSupplyUM()
+
+    data class Available(
         val title: TextReference,
         val onClick: () -> Unit,
     ) : YieldSupplyUM()
@@ -16,7 +18,8 @@ internal sealed class YieldSupplyUM {
     data object Unavailable : YieldSupplyUM()
 
     data class Content(
-        val rewardsBalance: TextReference,
+        val title: TextReference,
+        val subtitle: TextReference,
         val rewardsApy: TextReference,
         val onClick: () -> Unit,
         val isAllowedToSpend: Boolean,

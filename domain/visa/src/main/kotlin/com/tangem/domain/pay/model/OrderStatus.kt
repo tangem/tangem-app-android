@@ -1,7 +1,7 @@
 package com.tangem.domain.pay.model
 
 enum class OrderStatus(val apiName: String) {
-    NOT_ISSUED(""),
+    UNKNOWN(""),
     NEW("NEW"),
     PROCESSING("PROCESSING"),
     COMPLETED("COMPLETED"),
