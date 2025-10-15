@@ -15,13 +15,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEachIndexed
-import com.tangem.common.ui.account.AccountLabel
+import com.tangem.common.ui.account.AccountTitle
 import com.tangem.common.ui.bottomsheet.receive.TokenReceiveBottomSheet
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.SmallButtonShimmer
 import com.tangem.core.ui.components.TextShimmer
-import com.tangem.core.ui.components.account.AccountIconSize
 import com.tangem.core.ui.components.block.information.InformationBlock
 import com.tangem.core.ui.components.buttons.SecondarySmallButton
 import com.tangem.core.ui.components.buttons.SmallButtonConfig
@@ -196,11 +195,11 @@ private fun Modifier.getBackgroundModifier(
     val allRound = RoundedCornerShape(size = radius)
     val backgroundModifier = when (item) {
         is WalletHeader -> this
-        is AccountHeader -> this
+        is PortfolioHeader -> this
             .clip(topRound)
             .background(color = color)
         is PortfolioTokenUM -> when {
-            previousItem is AccountHeader && nextItem !is PortfolioTokenUM -> this
+            previousItem is PortfolioHeader && nextItem !is PortfolioTokenUM -> this
                 .clip(bottomRound)
                 .background(color = color)
             previousItem is WalletHeader && nextItem !is PortfolioTokenUM -> this
@@ -217,7 +216,8 @@ private fun Modifier.getBackgroundModifier(
 
 private fun Modifier.getOffsetModifier(item: PortfolioListItem, previousItem: PortfolioListItem?): Modifier = when {
     item is WalletHeader -> this.padding(top = 20.dp, start = 4.dp, end = 4.dp)
-    item is AccountHeader && previousItem is PortfolioTokenUM -> this.padding(top = 12.dp)
+    item is PortfolioHeader && previousItem is PortfolioTokenUM -> this.padding(top = 12.dp)
+    item is PortfolioHeader && previousItem == null -> this.padding(top = 20.dp)
     previousItem is WalletHeader -> this.padding(top = 12.dp)
     previousItem is PortfolioTokenUM -> this
     else -> this
@@ -226,17 +226,15 @@ private fun Modifier.getOffsetModifier(item: PortfolioListItem, previousItem: Po
 @Composable
 private fun PortfolioItem(item: PortfolioListItem, lastInList: Boolean, modifier: Modifier = Modifier) {
     when (item) {
-        is AccountHeader -> AccountLabel(
-            name = item.name,
-            icon = item.icon,
-            iconSize = AccountIconSize.ExtraSmall,
+        is PortfolioHeader -> AccountTitle(
             modifier = modifier.padding(
                 start = 12.dp,
                 top = 12.dp,
                 bottom = 8.dp,
             ),
-            nameStyle = TangemTheme.typography.caption1,
-            nameColor = TangemTheme.colors.text.primary1,
+            accountTitleUM = item.state,
+            textStyle = TangemTheme.typography.caption1,
+            textColor = TangemTheme.colors.text.primary1,
         )
         is PortfolioTokenUM -> PortfolioItem(
             state = item,

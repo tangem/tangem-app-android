@@ -1,7 +1,9 @@
 package com.tangem.features.markets.portfolio.impl.model
 
+import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.common.ui.account.toUM
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.status.supplier.MultiAccountStatusListSupplier
@@ -22,9 +24,9 @@ import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.markets.portfolio.impl.loader.PortfolioData
-import com.tangem.features.markets.portfolio.impl.ui.state.AccountHeader
 import com.tangem.features.markets.portfolio.impl.ui.state.MyPortfolioUM
 import com.tangem.features.markets.portfolio.impl.ui.state.MyPortfolioUM.Tokens.AddButtonState
+import com.tangem.features.markets.portfolio.impl.ui.state.PortfolioHeader
 import com.tangem.features.markets.portfolio.impl.ui.state.PortfolioListItem
 import com.tangem.features.markets.portfolio.impl.ui.state.WalletHeader
 import com.tangem.utils.extensions.isZero
@@ -212,13 +214,17 @@ internal class NewMarketsPortfolioDelegate @AssistedInject constructor(
         portfolio.portfolios.forEach { portfolioItem ->
             if (portfolioItem.flattenAddedCurrency.isEmpty()) return@forEach
             val userWallet = portfolioItem.userWallet
-            uiItems.add(portfolioItem.userWallet.toWalletHeader())
+            if (isAccountMode) {
+                uiItems.add(portfolioItem.userWallet.toWalletHeader())
+            } else {
+                uiItems.add(portfolioItem.userWallet.toWalletPortfolioHeader())
+            }
 
             portfolioItem.accountsWithAdded.forEach { accountWithAdded ->
                 if (accountWithAdded.addedCurrency.isEmpty()) return@forEach
                 if (isAccountMode) {
                     val account = accountWithAdded.accountStatus.account
-                    uiItems.add(account.toAccountHeader())
+                    uiItems.add(account.toAccountPortfolioHeader())
                 }
 
                 accountWithAdded.addedCurrency.forEach { currencyStatus ->
@@ -251,12 +257,22 @@ internal class NewMarketsPortfolioDelegate @AssistedInject constructor(
         )
     }
 
-    private fun Account.toAccountHeader(): AccountHeader = AccountHeader(
+    private fun Account.toAccountPortfolioHeader(): PortfolioHeader = PortfolioHeader(
         id = this.accountId.value,
-        name = this.accountName.toUM().value,
-        icon = when (this) {
-            is Account.CryptoPortfolio -> this.icon.toUM()
-        },
+        state = AccountTitleUM.Account(
+            prefixText = TextReference.EMPTY,
+            name = this.accountName.toUM().value,
+            icon = when (this) {
+                is Account.CryptoPortfolio -> this.icon.toUM()
+            },
+        ),
+    )
+
+    private fun UserWallet.toWalletPortfolioHeader(): PortfolioHeader = PortfolioHeader(
+        id = this.walletId.stringValue,
+        state = AccountTitleUM.Text(
+            title = stringReference(this.name),
+        ),
     )
 
     private fun UserWallet.toWalletHeader(): WalletHeader = WalletHeader(

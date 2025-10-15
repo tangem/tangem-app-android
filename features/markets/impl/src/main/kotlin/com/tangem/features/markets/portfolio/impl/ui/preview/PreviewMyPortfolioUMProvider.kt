@@ -2,10 +2,12 @@ package com.tangem.features.markets.portfolio.impl.ui.preview
 
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import com.tangem.common.ui.account.AccountIconPreviewData
+import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.components.token.state.TokenItemState.FiatAmountState
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.markets.portfolio.impl.ui.state.*
@@ -44,6 +46,15 @@ internal class PreviewMyPortfolioUMProvider : PreviewParameterProvider<MyPortfol
             ),
             MyPortfolioUM.Content(
                 items = persistentListOf(
+                    walletPortfolioHeader,
+                    accountToken,
+                    accountToken,
+                ),
+                buttonState = Tokens.AddButtonState.Available,
+                onAddClick = {},
+            ),
+            MyPortfolioUM.Content(
+                items = persistentListOf(
                     walletHeader,
                     accountHeader,
                     accountToken,
@@ -73,11 +84,20 @@ internal class PreviewMyPortfolioUMProvider : PreviewParameterProvider<MyPortfol
             name = stringReference("Wallet 1"),
         )
 
-    val accountHeader
-        get() = AccountHeader(
+    val walletPortfolioHeader
+        get() = PortfolioHeader(
+            state = AccountTitleUM.Text(title = stringReference("Wallet 1")),
             id = UUID.randomUUID().toString(),
-            name = stringReference("Main Account"),
-            icon = AccountIconPreviewData.randomAccountIcon(),
+        )
+
+    val accountHeader
+        get() = PortfolioHeader(
+            state = AccountTitleUM.Account(
+                icon = AccountIconPreviewData.randomAccountIcon(),
+                name = stringReference("Main Account"),
+                prefixText = TextReference.EMPTY,
+            ),
+            id = UUID.randomUUID().toString(),
         )
     val coinIconState
         get() = CurrencyIconState.CoinIcon(
