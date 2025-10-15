@@ -5,9 +5,11 @@ import arrow.core.getOrElse
 import arrow.core.raise.Raise
 import arrow.core.raise.catch
 import arrow.core.raise.either
+import arrow.core.raise.ensure
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.models.ArchivedAccount
 import com.tangem.domain.account.repository.AccountsCRUDRepository
+import com.tangem.domain.account.tokens.MainAccountTokensMigration
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.wallet.UserWalletId
@@ -16,11 +18,13 @@ import com.tangem.domain.models.wallet.UserWalletId
  * Use case for recovering a crypto portfolio account from archived accounts
  *
  * @property crudRepository repository for performing CRUD operations on accounts
+ * @property mainAccountTokensMigration handles the migration of tokens from the main account to the recovered account
  *
 [REDACTED_AUTHOR]
  */
 class RecoverCryptoPortfolioUseCase(
     private val crudRepository: AccountsCRUDRepository,
+    private val mainAccountTokensMigration: MainAccountTokensMigration,
 ) {
 
     /**
@@ -30,14 +34,24 @@ class RecoverCryptoPortfolioUseCase(
      */
     suspend operator fun invoke(accountId: AccountId): Either<Error, Account.CryptoPortfolio> = either {
         val accountList = getAccountList(userWalletId = accountId.userWalletId)
+
+        ensure(accountList.canAddMoreAccounts) {
+            raise(Error.AccountListRequirementsNotMet(cause = AccountList.Error.ExceedsMaxAccountsCount))
+        }
+
         val archivedAccount = getArchivedAccount(accountId = accountId)
 
         val recoveredAccount = archivedAccount.recover()
 
         val updatedAccountList = (accountList + recoveredAccount)
-            .getOrElse { raise(Error.CriticalTechError.AccountListRequirementsNotMet(cause = it)) }
+            .getOrElse { raise(Error.AccountListRequirementsNotMet(cause = it)) }
 
         saveAccounts(updatedAccountList)
+
+        mainAccountTokensMigration.migrate(
+            userWalletId = accountId.userWalletId,
+            derivationIndex = recoveredAccount.derivationIndex,
+        )
 
         recoveredAccount
     }
@@ -47,7 +61,9 @@ class RecoverCryptoPortfolioUseCase(
             block = { crudRepository.getAccountListSync(userWalletId = userWalletId) },
             catch = { raise(Error.DataOperationFailed(cause = it)) },
         )
-            .getOrElse { raise(Error.CriticalTechError.AccountsNotCreated(userWalletId = userWalletId)) }
+            .getOrElse {
+                raise(Error.DataOperationFailed(message = "Account list not found for wallet $userWalletId"))
+            }
     }
 
     private suspend fun Raise<Error>.getArchivedAccount(accountId: AccountId): ArchivedAccount {
@@ -56,7 +72,7 @@ class RecoverCryptoPortfolioUseCase(
             catch = { raise(Error.DataOperationFailed(cause = it)) },
         )
             .getOrElse {
-                raise(Error.CriticalTechError.AccountNotFound(accountId = accountId))
+                raise(Error.DataOperationFailed(message = "Account not found: $accountId"))
             }
     }
 
@@ -66,7 +82,6 @@ class RecoverCryptoPortfolioUseCase(
             accountName = this.name,
             icon = this.icon,
             derivationIndex = this.derivationIndex,
-            // TODO: [REDACTED_JIRA]
             cryptoCurrencies = emptySet(),
         )
     }
@@ -87,37 +102,18 @@ class RecoverCryptoPortfolioUseCase(
             get() = this::class.simpleName ?: "RecoverCryptoPortfolioUseCase.Error"
 
         /**
-         * Critical technical errors that can occur during the recovery operation
+         * Error indicating that the account list requirements were not met.
+         *
+         * @property cause the underlying cause of the error
          */
-        sealed interface CriticalTechError : Error {
-
-            /**
-
-             *
-             * @property userWalletId the unique identifier of the user wallet
-             */
-            data class AccountsNotCreated(val userWalletId: UserWalletId) : CriticalTechError {
-                override fun toString(): String = "$tag: Accounts for $userWalletId are not created"
-            }
-
-            /** Error indicating that the account with [accountId] was not found */
-            data class AccountNotFound(val accountId: AccountId) : CriticalTechError {
-                override fun toString(): String = "$tag: Account with ID $accountId not found"
-            }
-
-            /**
-             * Error indicating that the account list requirements were not met.
-             *
-             * @property cause the underlying cause of the error
-             */
-            data class AccountListRequirementsNotMet(val cause: AccountList.Error) : Error {
-                override fun toString(): String = "$tag: Account list requirements not met: $cause"
-            }
+        data class AccountListRequirementsNotMet(val cause: AccountList.Error) : Error {
+            override fun toString(): String = "$tag: Account list requirements not met: $cause"
         }
 
         /** Error indicating that a data operation failed */
         data class DataOperationFailed(val cause: Throwable) : Error {
-            override fun toString(): String = "$tag: Data operation failed: ${cause.message ?: "Unknown error"}"
+
+            constructor(message: String) : this(cause = IllegalStateException(message))
         }
     }
 }
