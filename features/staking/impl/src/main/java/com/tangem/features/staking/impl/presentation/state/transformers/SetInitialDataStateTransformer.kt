@@ -2,6 +2,7 @@ package com.tangem.features.staking.impl.presentation.state.transformers
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.extensions.remove
+import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.common.ui.amountScreen.converters.AmountStateConverter
 import com.tangem.common.ui.amountScreen.models.AmountParameters
 import com.tangem.common.ui.amountScreen.models.AmountState
@@ -229,10 +230,12 @@ internal class SetInitialDataStateTransformer(
         )
         return AmountStateConverter(
             clickIntents = clickIntents,
-            cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
-            appCurrencyProvider = appCurrencyProvider,
+            cryptoCurrencyStatus = cryptoCurrencyStatus,
+            appCurrency = appCurrencyProvider(),
             iconStateConverter = iconStateConverter,
             maxEnterAmount = maxEnterAmount,
+            isBalanceHidden = false,
+            accountTitleUM = AccountTitleUM.Text(stringReference(userWalletProvider().name)),
         ).convert(
             AmountParameters(
                 title = stringReference(userWalletProvider().name),
