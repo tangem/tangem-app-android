@@ -12,6 +12,8 @@ data class YieldMarketToken(
     val chainId: Int,
     val apy: SerializedBigDecimal,
     val isActive: Boolean,
+    val maxFeeNative: String,
+    val maxFeeUSD: String,
     val backendId: String? = null,
 ) {
 

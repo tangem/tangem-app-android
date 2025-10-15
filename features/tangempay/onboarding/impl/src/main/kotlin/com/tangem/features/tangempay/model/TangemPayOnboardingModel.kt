@@ -56,7 +56,7 @@ internal class TangemPayOnboardingModel @Inject constructor(
         repository.getCustomerInfo()
             .onRight { customerInfo ->
                 when {
-                    !customerInfo.isKycApproved() -> {
+                    !customerInfo.isKycApproved -> {
                         when (params) {
                             is TangemPayOnboardingComponent.Params.Deeplink ->
                                 screenState.value = screenState.value.copy(fullScreenLoading = false)
