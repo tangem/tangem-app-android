@@ -273,6 +273,8 @@ dependencies {
     implementation(projects.features.welcome.impl)
     implementation(projects.features.createWalletSelection.api)
     implementation(projects.features.createWalletSelection.impl)
+    implementation(projects.features.createWalletStart.api)
+    implementation(projects.features.createWalletStart.impl)
     implementation(projects.features.home.api)
     implementation(projects.features.home.impl)
     implementation(projects.features.account.api)
