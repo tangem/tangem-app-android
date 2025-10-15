@@ -11,6 +11,9 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
+import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
+import com.tangem.domain.account.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.models.network.CryptoCurrencyAddress
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.isLocked
@@ -64,7 +67,10 @@ internal class SendDestinationModel @Inject constructor(
     private val isSelfSendAvailableUseCase: IsSelfSendAvailableUseCase,
     private val listenToQrScanningUseCase: ListenToQrScanningUseCase,
     private val parseQrCodeUseCase: ParseQrCodeUseCase,
+    private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
+    private val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val accountsFeatureToggles: AccountsFeatureToggles,
 ) : Model(), SendDestinationClickIntents {
     private val params: SendDestinationComponentParams = paramsContainer.require()
 
@@ -142,7 +148,7 @@ internal class SendDestinationModel @Inject constructor(
         )
     }
 
-    fun saveResult() {
+    private fun saveResult() {
         val params = params as? SendDestinationComponentParams.DestinationParams ?: return
         params.callback.onDestinationResult(uiState.value)
     }
@@ -193,12 +199,17 @@ internal class SendDestinationModel @Inject constructor(
             ).getOrElse { flowOf(emptyList()) }.map {
                 waitForDelay(RECENT_LOAD_DELAY) { it }
             }.conflate(),
-        ) { destinationWalletList, txHistoryList ->
+            flow3 = isAccountsModeEnabledUseCase().distinctUntilChanged(),
+            flow4 = if (accountsFeatureToggles.isFeatureEnabled) {
+                getAccountCurrencyStatusUseCase(userWalletId, cryptoCurrency).distinctUntilChanged()
+            } else {
+                flowOf(null)
+            },
+        ) { destinationWalletList, txHistoryList, isAccountsMode, accountCurrencyStatus ->
             val isSelfSendAvailable = isSelfSendAvailableUseCase.invokeSync(
                 userWalletId = userWalletId,
                 network = cryptoCurrency.network,
             )
-
             _uiState.update(
                 SendDestinationRecentListTransformer(
                     cryptoCurrency = cryptoCurrency,
@@ -206,9 +217,11 @@ internal class SendDestinationModel @Inject constructor(
                     isSelfSendAvailable = isSelfSendAvailable,
                     destinationWalletList = destinationWalletList,
                     txHistoryList = txHistoryList,
+                    account = accountCurrencyStatus?.account,
+                    isAccountsMode = isAccountsMode,
                 ),
             )
-        }.launchIn(modelScope)
+        }.flowOn(dispatchers.default).launchIn(modelScope)
     }
 
     private suspend fun List<UserWallet>.toAvailableWallets(): List<DestinationWalletUM> {

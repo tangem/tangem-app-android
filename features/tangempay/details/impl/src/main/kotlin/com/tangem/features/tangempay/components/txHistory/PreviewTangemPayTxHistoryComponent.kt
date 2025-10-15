@@ -21,6 +21,7 @@ internal class PreviewTangemPayTxHistoryComponent(txHistoryUM: TangemPayTxHistor
     companion object {
         val loadingUM = TangemPayTxHistoryUM.Loading(isBalanceHidden = true)
         val emptyUM = TangemPayTxHistoryUM.Empty(isBalanceHidden = true)
+        val errorUM = TangemPayTxHistoryUM.Error(isBalanceHidden = true, onReload = {})
         val contentUM = TangemPayTxHistoryUM.Content(
             isBalanceHidden = false,
             loadMore = { false },
@@ -34,9 +35,33 @@ internal class PreviewTangemPayTxHistoryComponent(txHistoryUM: TangemPayTxHistor
                         amount = "-4.99 USD",
                         amountColor = { TangemTheme.colors.text.primary1 },
                         time = "16:41",
-                        title = stringReference("Starbucks"),
+                        title = stringReference("StarbucksStarbucksStarbucksStarbucks"),
                         subtitle = stringReference("Food&Drinks"),
                         iconUrl = null,
+                    ),
+                ),
+                TangemPayTxHistoryUM.TangemPayTxHistoryItemUM.Transaction(
+                    transaction = TangemPayTransactionState.Content.Payment(
+                        id = "signiferumque",
+                        amount = "-126.20 USD",
+                        amountColor = { TangemTheme.colors.text.primary1 },
+                        time = "12:04",
+                        onClick = {},
+                        title = stringReference("Wallmart"),
+                        subtitle = stringReference("Supermarket"),
+                        isIncome = false,
+                    ),
+                ),
+                TangemPayTxHistoryUM.TangemPayTxHistoryItemUM.Transaction(
+                    transaction = TangemPayTransactionState.Content.Payment(
+                        id = "signiferumque",
+                        amount = "+126.20 USD",
+                        amountColor = { TangemTheme.colors.text.accent },
+                        time = "12:04",
+                        onClick = {},
+                        title = stringReference("Wallmart"),
+                        subtitle = stringReference("Supermarket"),
+                        isIncome = true,
                     ),
                 ),
                 TangemPayTxHistoryUM.TangemPayTxHistoryItemUM.Transaction(

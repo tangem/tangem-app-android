@@ -6,7 +6,6 @@ import androidx.compose.ui.Modifier
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.slot.childSlot
-import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
@@ -46,7 +45,7 @@ class DefaultReferralComponent @AssistedInject constructor(
             params = PortfolioSelectorComponent.Params(
                 portfolioFetcher = model.portfolioFetcher,
                 controller = model.portfolioSelectorController,
-                onDismiss = model.bottomSheetNavigation::dismiss,
+                bsCallback = model.portfolioSelectorCallback,
             ),
         )
 

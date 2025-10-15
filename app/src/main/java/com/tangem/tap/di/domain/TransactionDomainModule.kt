@@ -5,6 +5,7 @@ import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.networks.single.SingleNetworkStatusSupplier
+import com.tangem.domain.tokens.GetViewedTokenReceiveWarningUseCase
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
 import com.tangem.domain.transaction.FeeRepository
 import com.tangem.domain.transaction.TransactionRepository
@@ -228,6 +229,18 @@ internal object TransactionDomainModule {
         return GetEnsNameUseCase(
             walletManagersFacade = walletManagersFacade,
             walletAddressServiceRepository = walletAddressServiceRepository,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideReceiveAddressesFactory(
+        getEnsNameUseCase: GetEnsNameUseCase,
+        getViewedTokenReceiveWarningUseCase: GetViewedTokenReceiveWarningUseCase,
+    ): ReceiveAddressesFactory {
+        return ReceiveAddressesFactory(
+            getEnsNameUseCase = getEnsNameUseCase,
+            getViewedTokenReceiveWarningUseCase = getViewedTokenReceiveWarningUseCase,
         )
     }
 
