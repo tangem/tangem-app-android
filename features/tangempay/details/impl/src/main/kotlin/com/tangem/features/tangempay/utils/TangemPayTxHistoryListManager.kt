@@ -33,6 +33,7 @@ internal class TangemPayTxHistoryListManager(
     private val uiManager = TangemPayTxHistoryUiManager(state = state, txHistoryUiActions = txHistoryUiActions)
 
     val uiItems: Flow<ImmutableList<TangemPayTxHistoryUM.TangemPayTxHistoryItemUM>> = uiManager.items
+    val emptyStatus: Flow<Boolean> = state.map { it.isEmpty }.distinctUntilChanged()
     val paginationStatus: Flow<PaginationStatus<*>> = state.map { it.status }.distinctUntilChanged()
 
     suspend fun launchPagination() = coroutineScope {
@@ -80,6 +81,7 @@ internal class TangemPayTxHistoryListManager(
                     newCurrencyBatches = batchListState.data,
                     clearUiBatches = clearUiBatches,
                 ),
+                isEmpty = batchListState.status is PaginationStatus.EndOfPagination && batchListState.data.isEmpty(),
             )
         }
     }
