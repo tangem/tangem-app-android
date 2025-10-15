@@ -96,7 +96,7 @@ room = "2.6.1"
 markdown = "0.7.2"
 markdownComposeView = "0.5.4"
 usedesk = "4.4.0"
-sumsub = "1.37.1"
+sumsub = "1.38.0"
 # endregion Other libraries
 
 # region Tools
