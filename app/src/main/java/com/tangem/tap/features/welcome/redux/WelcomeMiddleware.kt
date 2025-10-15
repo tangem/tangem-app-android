@@ -110,6 +110,7 @@ internal class WelcomeMiddleware {
                     batch = scanResponse.card.batchId,
                     signInType = signInType,
                     walletsCount = userWalletsListManager.walletsCount.toString(),
+                    isImported = userWallet.isImported,
                     hasBackup = scanResponse.card.backupStatus?.isActive,
                 ),
             )

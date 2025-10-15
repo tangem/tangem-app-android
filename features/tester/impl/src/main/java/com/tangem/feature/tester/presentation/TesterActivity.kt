@@ -17,7 +17,7 @@ import com.tangem.core.ui.UiDependencies
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.screen.ComposeActivity
 import com.tangem.feature.tester.presentation.accounts.ui.AccountsScreen
-import com.tangem.feature.tester.presentation.accounts.viewmodel.AccountsViewModel
+import com.tangem.feature.tester.presentation.accounts.viewmodel.TesterAccountsViewModel
 import com.tangem.feature.tester.presentation.actions.TesterActionsScreen
 import com.tangem.feature.tester.presentation.actions.TesterActionsViewModel
 import com.tangem.feature.tester.presentation.environments.ui.EnvironmentTogglesScreen
@@ -155,7 +155,7 @@ internal class TesterActivity : ComposeActivity() {
             }
 
             composable(route = TesterScreen.ACCOUNTS.name) {
-                val viewModel = hiltViewModel<AccountsViewModel>().apply {
+                val viewModel = hiltViewModel<TesterAccountsViewModel>().apply {
                     setupNavigation(innerTesterRouter)
                 }
                 val state by viewModel.uiState.collectAsStateWithLifecycle()

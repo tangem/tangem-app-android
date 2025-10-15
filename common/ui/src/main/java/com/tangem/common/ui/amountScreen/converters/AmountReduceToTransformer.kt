@@ -64,10 +64,9 @@ class AmountReduceToTransformer(
                 error = when {
                     isExceedBalance -> resourceReference(R.string.send_validation_amount_exceeds_balance)
                     isLessThanMinimumIfProvided -> {
-                        val minimumAmount = minimumTransactionAmount
-                            ?.amount
-                            ?.format { crypto(cryptoCurrencyStatus.currency) }
-                            .orEmpty()
+                        val minimumAmount = minimumTransactionAmount.amount.format {
+                            crypto(cryptoCurrencyStatus.currency)
+                        }
                         resourceReference(
                             R.string.transfer_notification_invalid_minimum_transaction_amount_text,
                             wrappedList(minimumAmount, minimumAmount),

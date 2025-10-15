@@ -40,7 +40,7 @@ fun SimpleSettingsRow(
                         onItemsClick()
                     }
                 },
-            ).testTag(BaseBottomSheetTestTags.ACTION_TITLE),
+            ).testTag(BaseBottomSheetTestTags.ACTION_BUTTON),
         horizontalArrangement = Arrangement.Start,
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -48,7 +48,8 @@ fun SimpleSettingsRow(
             painter = painterResource(id = icon),
             contentDescription = null,
             modifier = Modifier
-                .padding(horizontal = if (redesign) TangemTheme.dimens.spacing12 else TangemTheme.dimens.spacing20),
+                .padding(horizontal = if (redesign) TangemTheme.dimens.spacing12 else TangemTheme.dimens.spacing20)
+                .testTag(BaseBottomSheetTestTags.ACTION_ICON),
             tint = rowColors.iconColor(enabled = enabled).value,
         )
         Column(
