@@ -12,18 +12,14 @@ import com.tangem.domain.models.wallet.UserWalletId
  */
 interface WalletAccountsSaver {
 
-    /** Push and store wallet accounts [response] by [userWalletId] */
-    @Throws
-    suspend fun pushAndStore(userWalletId: UserWalletId, response: GetWalletAccountsResponse)
-
     /** Store wallet accounts [response] by [userWalletId] */
     suspend fun store(userWalletId: UserWalletId, response: GetWalletAccountsResponse)
 
     /** Push wallet accounts [body] by [userWalletId] */
     @Throws
-    suspend fun push(userWalletId: UserWalletId, body: SaveWalletAccountsResponse)
+    suspend fun push(userWalletId: UserWalletId, body: SaveWalletAccountsResponse): GetWalletAccountsResponse?
 
     /** Push wallet accounts [accounts] by [userWalletId] */
     @Throws
-    suspend fun push(userWalletId: UserWalletId, accounts: List<WalletAccountDTO>)
+    suspend fun push(userWalletId: UserWalletId, accounts: List<WalletAccountDTO>): GetWalletAccountsResponse?
 }
