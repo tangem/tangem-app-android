@@ -4,8 +4,8 @@ import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
-import com.tangem.common.ui.userwallet.state.UserWalletItemUM
 import com.arkivanov.decompose.router.slot.dismiss
+import com.tangem.common.ui.userwallet.state.UserWalletItemUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -26,7 +26,6 @@ import com.tangem.domain.markets.SaveMarketTokensUseCase
 import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isMultiCurrency
@@ -40,6 +39,7 @@ import com.tangem.features.markets.portfolio.impl.analytics.PortfolioAnalyticsEv
 import com.tangem.features.markets.portfolio.impl.loader.PortfolioData
 import com.tangem.features.markets.portfolio.impl.loader.PortfolioDataLoader
 import com.tangem.features.markets.portfolio.impl.ui.state.MyPortfolioUM
+import com.tangem.features.markets.portfolio.impl.ui.state.MyPortfolioUM.Tokens.AddButtonState
 import com.tangem.features.markets.portfolio.impl.ui.state.TokenActionsBSContentUM
 import com.tangem.features.tokenreceive.TokenReceiveFeatureToggle
 import com.tangem.features.wallet.utils.UserWalletImageFetcher
@@ -52,6 +52,7 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
+import com.tangem.features.markets.portfolio.add.api.AddToPortfolioManager as NewAddToPortfolioManager
 
 @Suppress("LongParameterList", "LargeClass")
 @Stable
@@ -73,9 +74,9 @@ internal class MarketsPortfolioModel @Inject constructor(
     private val userWalletImageFetcher: UserWalletImageFetcher,
     private val receiveAddressesFactory: ReceiveAddressesFactory,
     private val accountsFeatureToggles: AccountsFeatureToggles,
+    newAddToPortfolioManagerFactory: NewAddToPortfolioManager.Factory,
+    private val newMarketsPortfolioDelegateFactory: NewMarketsPortfolioDelegate.Factory,
 ) : Model() {
-
-    val addToPortfolioState = MutableStateFlow<AddToPortfolioComponent.State>(AddToPortfolioComponent.State.Init)
     val state: StateFlow<MyPortfolioUM> get() = _state
     private val _state: MutableStateFlow<MyPortfolioUM> = MutableStateFlow(value = MyPortfolioUM.Loading)
 
@@ -84,6 +85,9 @@ internal class MarketsPortfolioModel @Inject constructor(
         token = params.token,
         source = params.analyticsParams?.source,
     )
+
+    val newAddToPortfolioManager: NewAddToPortfolioManager?
+    val newMarketsPortfolioDelegate: NewMarketsPortfolioDelegate?
 
     /** Multi-wallet [UserWalletId] that user uses to add new tokens in AddToPortfolio bottom sheet */
     private val selectedMultiWalletIdFlow = MutableStateFlow<UserWalletId?>(value = null)
@@ -96,6 +100,28 @@ internal class MarketsPortfolioModel @Inject constructor(
         override fun onDismiss() = addToPortfolioNavigation.dismiss()
     }
 
+    private val tokenActionsHandler = tokenActionsIntentsFactory.create(
+        currentAppCurrency = Provider { currentAppCurrency.value },
+        updateTokenReceiveBSConfig = { updateBlock ->
+            if (tokenReceiveFeatureToggle.isNewTokenReceiveEnabled.not()) {
+                updateTokensState {
+                    it.copy(tokenReceiveBSConfig = updateBlock(it.tokenReceiveBSConfig))
+                }
+            }
+        },
+        onHandleQuickAction = { handledAction ->
+            analyticsEventHandler.send(
+                analyticsEventBuilder.quickActionClick(
+                    actionUM = handledAction.action,
+                    blockchainName = handledAction.cryptoCurrencyData.status.currency.network.name,
+                ),
+            )
+            if (tokenReceiveFeatureToggle.isNewTokenReceiveEnabled) {
+                configureReceiveAddresses(handledAction)
+            }
+        },
+    )
+
     private val currentAppCurrency = getSelectedAppCurrencyUseCase()
         .map { maybeAppCurrency ->
             maybeAppCurrency.getOrElse { AppCurrency.Default }
@@ -107,13 +133,8 @@ internal class MarketsPortfolioModel @Inject constructor(
         )
 
     private val factory = MyPortfolioUMFactory(
-        accountsFeatureToggles = accountsFeatureToggles,
         onAddClick = {
-            if (accountsFeatureToggles.isFeatureEnabled) {
-                addToPortfolioNavigation.activate(Unit)
-            } else {
-                onAddToPortfolioBSVisibilityChange(isShow = true)
-            }
+            onAddToPortfolioBSVisibilityChange(isShow = true)
             // === Analytics ===
             analyticsEventHandler.send(
                 analyticsEventBuilder.addToPortfolioClicked(),
@@ -146,27 +167,7 @@ internal class MarketsPortfolioModel @Inject constructor(
             },
         ),
         currentState = Provider { _state.value },
-        tokenActionsHandler = tokenActionsIntentsFactory.create(
-            currentAppCurrency = Provider { currentAppCurrency.value },
-            updateTokenReceiveBSConfig = { updateBlock ->
-                if (tokenReceiveFeatureToggle.isNewTokenReceiveEnabled.not()) {
-                    updateTokensState {
-                        it.copy(tokenReceiveBSConfig = updateBlock(it.tokenReceiveBSConfig))
-                    }
-                }
-            },
-            onHandleQuickAction = { handledAction ->
-                analyticsEventHandler.send(
-                    analyticsEventBuilder.quickActionClick(
-                        actionUM = handledAction.action,
-                        blockchainName = handledAction.cryptoCurrencyData.status.currency.network.name,
-                    ),
-                )
-                if (tokenReceiveFeatureToggle.isNewTokenReceiveEnabled) {
-                    configureReceiveAddresses(handledAction)
-                }
-            },
-        ),
+        tokenActionsHandler = tokenActionsHandler,
         updateTokens = { updateBlock ->
             updateTokensState { state ->
                 state.copy(tokens = updateBlock(state.tokens))
@@ -175,18 +176,50 @@ internal class MarketsPortfolioModel @Inject constructor(
     )
 
     init {
-        // Subscribe on selected wallet flow to support actual selected wallet
-        subscribeOnSelectedMultiWalletUpdates()
+        if (accountsFeatureToggles.isFeatureEnabled) {
+            newAddToPortfolioManager = newAddToPortfolioManagerFactory
+                .create(
+                    modelScope,
+                    params.token,
+                    params.analyticsParams,
+                )
+            newMarketsPortfolioDelegate = newMarketsPortfolioDelegateFactory.create(
+                scope = modelScope,
+                token = params.token,
+                tokenActionsHandler = tokenActionsHandler,
+                buttonState = newAddToPortfolioManager.state.map {
+                    when (it) {
+                        is NewAddToPortfolioManager.State.AvailableToAdd -> AddButtonState.Available
+                        NewAddToPortfolioManager.State.Init -> AddButtonState.Loading
+                        NewAddToPortfolioManager.State.NothingToAdd -> AddButtonState.Unavailable
+                    }
+                },
+                onAddClick = { addToPortfolioNavigation.activate(Unit) },
+            )
+            newMarketsPortfolioDelegate.combineData()
+                .onEach { _state.value = it }
+                .flowOn(dispatchers.default)
+                .launchIn(modelScope)
+        } else {
+            newAddToPortfolioManager = null
+            newMarketsPortfolioDelegate = null
+            // Subscribe on selected wallet flow to support actual selected wallet
+            subscribeOnSelectedMultiWalletUpdates()
 
-        subscribeOnStateUpdates()
+            subscribeOnStateUpdates()
+        }
     }
 
     fun setTokenNetworks(networks: List<TokenMarketInfo.Network>) {
         addToPortfolioManager.setAvailableNetworks(networks)
+        newAddToPortfolioManager?.setTokenNetworks(networks)
+        newMarketsPortfolioDelegate?.setTokenNetworks(networks)
     }
 
     fun setNoNetworksAvailable() {
         addToPortfolioManager.setAvailableNetworks(emptyList())
+        newAddToPortfolioManager?.setTokenNetworks(emptyList())
+        newMarketsPortfolioDelegate?.setTokenNetworks(emptyList())
     }
 
     private fun subscribeOnSelectedMultiWalletUpdates() {
@@ -205,10 +238,9 @@ internal class MarketsPortfolioModel @Inject constructor(
         combine(
             flow = loadPortfolioDataWithArtworks(params.token.id),
             flow2 = getPortfolioUIDataFlow(),
-            flow3 = addToPortfolioState,
-            transform = { pair, portfolioUIData, addToPortfolioState ->
+            transform = { pair, portfolioUIData ->
                 val (portfolioData, artworks) = pair
-                factory.create(portfolioData, portfolioUIData, artworks, addToPortfolioState)
+                factory.create(portfolioData, portfolioUIData, artworks)
             },
         )
             .onEach { _state.value = it }
@@ -321,6 +353,7 @@ internal class MarketsPortfolioModel @Inject constructor(
         }
     }
 
+    // todo account add it to new AddToPortfolio
     private fun showUnsupportedWarning(unsupportedState: CurrencyUnsupportedState) {
         val message = DialogMessage(
             message = when (unsupportedState) {

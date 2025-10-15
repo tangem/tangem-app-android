@@ -30,21 +30,15 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.features.account.PortfolioSelectorComponent
 import com.tangem.features.markets.impl.R
 import com.tangem.features.markets.portfolio.add.api.AddToPortfolioComponent
 import com.tangem.features.markets.portfolio.add.api.AddToPortfolioComponent.Params
-import com.tangem.features.markets.portfolio.add.api.AddToPortfolioComponent.State
 import com.tangem.features.markets.portfolio.add.impl.model.AddToPortfolioModel
 import com.tangem.features.markets.portfolio.add.impl.model.AddToPortfolioRoutes
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.mapLatest
-import kotlinx.coroutines.flow.stateIn
 
 internal class DefaultAddToPortfolioComponent @AssistedInject constructor(
     @Assisted context: AppComponentContext,
@@ -76,7 +70,6 @@ internal class DefaultAddToPortfolioComponent @AssistedInject constructor(
     private val addTokenComponent: AddTokenComponent = addTokenComponentFactory.create(
         context = child("addTokenComponent"),
         params = AddTokenComponent.Params(
-            marketParams = params.token,
             eventBuilder = model.eventBuilder,
             callbacks = model,
             selectedPortfolio = model.selectedPortfolio,
@@ -98,23 +91,9 @@ internal class DefaultAddToPortfolioComponent @AssistedInject constructor(
         handleBackButton = true,
         source = model.navigation,
         serializer = AddToPortfolioRoutes.serializer(),
-        initialConfiguration = AddToPortfolioRoutes.Empty,
+        initialStack = { model.currentStack },
         childFactory = { config, _ -> contentChild(config) },
     )
-
-    override val state: StateFlow<State> = model.featureData
-        .mapLatest {
-            if (it.availableToAdd) {
-                State.AvailableToAdd(model.featureData)
-            } else {
-                State.NothingToAdd
-            }
-        }
-        .stateIn(
-            scope = componentScope,
-            started = SharingStarted.Eagerly,
-            initialValue = State.Init,
-        )
 
     private fun onBack() {
         if (childStack.backStack.isNotEmpty()) model.navigation.pop() else dismiss()
@@ -122,7 +101,6 @@ internal class DefaultAddToPortfolioComponent @AssistedInject constructor(
 
     override fun dismiss() {
         params.callback.onDismiss()
-        model.resetFeature()
     }
 
     @Composable
@@ -221,10 +199,6 @@ internal class DefaultAddToPortfolioComponent @AssistedInject constructor(
         AddToPortfolioRoutes.TokenActions -> tokenActionsComponent
         AddToPortfolioRoutes.Empty -> ComposableContentComponent.EMPTY
         is AddToPortfolioRoutes.NetworkSelector -> chooseNetworkComponent
-    }
-
-    override fun setTokenNetworks(networks: List<TokenMarketInfo.Network>) {
-        model.allAvailableNetworks.trySend(networks)
     }
 
     @AssistedFactory
