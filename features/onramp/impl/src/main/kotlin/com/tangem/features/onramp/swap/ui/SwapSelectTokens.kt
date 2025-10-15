@@ -14,6 +14,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
+import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
@@ -23,6 +24,7 @@ import com.tangem.features.onramp.swap.availablepairs.AvailableSwapPairsComponen
 import com.tangem.features.onramp.swap.entity.ExchangeCardUM
 import com.tangem.features.onramp.swap.entity.SwapSelectTokensUM
 import com.tangem.features.onramp.tokenlist.OnrampTokenListComponent
+import com.tangem.features.onramp.tokenlist.entity.TokenListUM
 
 /**
  * Swap select tokens
@@ -39,7 +41,9 @@ import com.tangem.features.onramp.tokenlist.OnrampTokenListComponent
 internal fun SwapSelectTokens(
     state: SwapSelectTokensUM,
     selectFromTokenListComponent: OnrampTokenListComponent,
+    selectFromTokenListState: TokenListUM,
     selectToTokenListComponent: AvailableSwapPairsComponent,
+    selectToTokenListState: TokenListUM,
     modifier: Modifier = Modifier,
 ) {
     BackHandler(onBack = state.onBackClick)
@@ -77,33 +81,33 @@ internal fun SwapSelectTokens(
         }
 
         if (state.exchangeFrom is ExchangeCardUM.Empty) {
-            item(key = "select_from", contentType = "select_from") {
-                selectFromTokenListComponent.Content(
-                    modifier = Modifier
-                        .padding(horizontal = 16.dp)
-                        .animateItem(),
+            with(selectFromTokenListComponent) {
+                content(
+                    uiState = selectFromTokenListState,
+                    modifier = Modifier,
                 )
             }
         }
 
         if (state.exchangeFrom is ExchangeCardUM.Filled) {
             item(key = "exchange_to", contentType = "exchange_to") {
-                ExchangeCard(
-                    state = state.exchangeTo,
-                    isBalanceHidden = state.isBalanceHidden,
-                    modifier = Modifier
-                        .padding(horizontal = 16.dp)
-                        .padding(bottom = 12.dp)
-                        .animateItem(),
-                )
+                if (selectToTokenListState.warning != NotificationUM.Warning.SwapNoAvailablePair) {
+                    ExchangeCard(
+                        state = state.exchangeTo,
+                        isBalanceHidden = state.isBalanceHidden,
+                        modifier = Modifier
+                            .padding(horizontal = 16.dp)
+                            .padding(bottom = 12.dp)
+                            .animateItem(),
+                    )
+                }
             }
 
             if (state.exchangeTo is ExchangeCardUM.Empty) {
-                item(key = "select_to", contentType = "select_to") {
-                    selectToTokenListComponent.Content(
-                        modifier = Modifier
-                            .padding(horizontal = 16.dp)
-                            .animateItem(),
+                with(selectToTokenListComponent) {
+                    content(
+                        uiState = selectToTokenListState,
+                        modifier = Modifier.padding(horizontal = 16.dp),
                     )
                 }
             }
