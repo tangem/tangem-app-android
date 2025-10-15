@@ -22,10 +22,12 @@ internal class SavedSwapTransactionListConverter(
         fromCryptoCurrencyId = value.fromCryptoCurrencyId,
         toCryptoCurrencyId = value.toCryptoCurrencyId,
         fromTokensResponse = userTokensResponseFactory.createResponseToken(
-            value.fromCryptoCurrency,
+            currency = value.fromCryptoCurrency,
+            accountId = null,
         ),
         toTokensResponse = userTokensResponseFactory.createResponseToken(
-            value.toCryptoCurrency,
+            currency = value.toCryptoCurrency,
+            accountId = null,
         ),
         transactions = value.transactions,
     )
@@ -82,8 +84,11 @@ internal class SavedSwapTransactionListConverter(
         userWalletId = userWalletId.stringValue,
         fromCryptoCurrencyId = fromCryptoCurrency.id.value,
         toCryptoCurrencyId = toCryptoCurrency.id.value,
-        fromTokensResponse = userTokensResponseFactory.createResponseToken(fromCryptoCurrency),
-        toTokensResponse = userTokensResponseFactory.createResponseToken(toCryptoCurrency),
+        fromTokensResponse = userTokensResponseFactory.createResponseToken(
+            currency = fromCryptoCurrency,
+            accountId = null,
+        ),
+        toTokensResponse = userTokensResponseFactory.createResponseToken(currency = toCryptoCurrency, accountId = null),
         transactions = tokenTransactions,
     )
 }

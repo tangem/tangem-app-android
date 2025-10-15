@@ -21,6 +21,8 @@ dependencies {
     implementation(projects.core.decompose)
     implementation(projects.core.ui)
     implementation(projects.core.navigation)
+    implementation(projects.core.analytics)
+    implementation(projects.core.analytics.models)
 
     /** Compose */
     implementation(tangemDeps.vico.core)
