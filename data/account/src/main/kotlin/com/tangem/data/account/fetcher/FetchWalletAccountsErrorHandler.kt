@@ -1,10 +1,8 @@
 package com.tangem.data.account.fetcher
 
-import com.tangem.data.account.converter.CryptoPortfolioConverter
-import com.tangem.data.account.utils.assignTokens
+import com.tangem.data.account.utils.DefaultWalletAccountsResponseFactory
 import com.tangem.data.account.utils.toUserTokensResponse
-import com.tangem.data.common.currency.CardCryptoCurrencyFactory
-import com.tangem.data.common.currency.UserTokensResponseFactory
+import com.tangem.data.common.currency.UserTokensResponseAccountIdEnricher
 import com.tangem.data.common.currency.UserTokensSaver
 import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.common.response.ApiResponseError.HttpException.Code
@@ -13,10 +11,6 @@ import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
 import com.tangem.datasource.local.token.UserTokensResponseStore
-import com.tangem.datasource.local.userwallet.UserWalletsStore
-import com.tangem.domain.account.models.AccountList
-import com.tangem.domain.models.account.Account
-import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import timber.log.Timber
 import javax.inject.Inject
@@ -24,12 +18,9 @@ import javax.inject.Inject
 /**
  * Handles errors that occur during the fetching of wallet accounts
  *
- * @property userTokensSaver           saves user tokens to the storage
- * @property userWalletsStore          provides access to user wallet data
- * @property userTokensResponseStore   provides access to user token responses.
- * @property cryptoPortfolioCF         factory for converting crypto portfolios
- * @property userTokensResponseFactory factory for creating user token responses
- * @property cardCryptoCurrencyFactory factory for creating default cryptocurrencies for multi-currency wallets
+ * @property userTokensSaver                      saves user tokens to the storage
+ * @property userTokensResponseStore              provides access to user token responses.
+ * @property defaultWalletAccountsResponseFactory creates [GetWalletAccountsResponse] from [UserTokensResponse]
  *
  * @see DefaultWalletAccountsFetcher
  *
@@ -37,11 +28,8 @@ import javax.inject.Inject
  */
 internal class FetchWalletAccountsErrorHandler @Inject constructor(
     private val userTokensSaver: UserTokensSaver,
-    private val userWalletsStore: UserWalletsStore,
     private val userTokensResponseStore: UserTokensResponseStore,
-    private val cryptoPortfolioCF: CryptoPortfolioConverter.Factory,
-    private val userTokensResponseFactory: UserTokensResponseFactory,
-    private val cardCryptoCurrencyFactory: CardCryptoCurrencyFactory,
+    private val defaultWalletAccountsResponseFactory: DefaultWalletAccountsResponseFactory,
 ) {
 
     /**
@@ -59,72 +47,47 @@ internal class FetchWalletAccountsErrorHandler @Inject constructor(
         error: ApiResponseError,
         userWalletId: UserWalletId,
         savedAccountsResponse: GetWalletAccountsResponse?,
-        pushWalletAccounts: suspend (userWalletId: UserWalletId, accounts: List<WalletAccountDTO>) -> Unit,
-        storeWalletAccounts: suspend (userWalletId: UserWalletId, response: GetWalletAccountsResponse) -> Unit,
-    ) {
+        pushWalletAccounts: suspend (UserWalletId, List<WalletAccountDTO>) -> GetWalletAccountsResponse?,
+        storeWalletAccounts: suspend (UserWalletId, GetWalletAccountsResponse) -> Unit,
+    ): GetWalletAccountsResponse? {
         val isResponseUpToDate = error.isNetworkError(code = Code.NOT_MODIFIED)
         if (isResponseUpToDate) {
             Timber.e("ETag is up to date, no need to update accounts for wallet: $userWalletId")
-            return
+            return savedAccountsResponse
         }
 
-        val (accountDTOs, userTokensResponse) = if (savedAccountsResponse == null) {
-            val userWallet = userWalletsStore.getSyncStrict(key = userWalletId)
-
-            createDefaultAccountDTOs(userWallet) to getFromLegacyStore(userWalletId).orDefault(userWallet)
-        } else {
-            savedAccountsResponse.accounts to savedAccountsResponse.toUserTokensResponse()
-        }
+        var response = savedAccountsResponse ?: createDefaultResponse(userWalletId)
+        val (accountDTOs, userTokensResponse) = response.accounts to response.toUserTokensResponse()
 
         val isNotFoundError = error.isNetworkError(code = Code.NOT_FOUND)
         if (isNotFoundError) {
-            pushWalletAccounts(userWalletId, accountDTOs)
             userTokensSaver.push(userWalletId = userWalletId, response = userTokensResponse)
+            val updatedResponse = pushWalletAccounts(userWalletId, accountDTOs)
+
+            if (updatedResponse != null) {
+                response = updatedResponse
+            }
         }
 
-        val response = savedAccountsResponse.orDefault(userWalletId, accountDTOs, userTokensResponse)
         storeWalletAccounts(userWalletId, response)
+
+        return response
     }
 
-    private fun createDefaultAccountDTOs(userWallet: UserWallet): List<WalletAccountDTO> {
-        val accounts = AccountList.empty(userWallet).accounts
-            .filterIsInstance<Account.CryptoPortfolio>()
-
-        val converter = cryptoPortfolioCF.create(userWallet = userWallet)
-
-        return converter.convertListBack(input = accounts)
+    private suspend fun createDefaultResponse(userWalletId: UserWalletId): GetWalletAccountsResponse {
+        return defaultWalletAccountsResponseFactory.create(
+            userWalletId = userWalletId,
+            userTokensResponse = getFromLegacyStore(userWalletId),
+        )
     }
 
     private suspend fun getFromLegacyStore(userWalletId: UserWalletId): UserTokensResponse? {
         return userTokensResponseStore.getSyncOrNull(userWalletId)
+            ?.let {
+                it.copy(
+                    tokens = UserTokensResponseAccountIdEnricher(userWalletId = userWalletId, tokens = it.tokens),
+                )
+            }
             .also { userTokensResponseStore.clear(userWalletId) }
-    }
-
-    private fun UserTokensResponse?.orDefault(userWallet: UserWallet): UserTokensResponse {
-        if (this != null) return this
-
-        return userTokensResponseFactory.createUserTokensResponse(
-            currencies = cardCryptoCurrencyFactory.createDefaultCoinsForMultiCurrencyWallet(userWallet = userWallet),
-            isGroupedByNetwork = false,
-            isSortedByBalance = false,
-        )
-    }
-
-    private fun GetWalletAccountsResponse?.orDefault(
-        userWalletId: UserWalletId,
-        accountDTOs: List<WalletAccountDTO>,
-        userTokensResponse: UserTokensResponse,
-    ): GetWalletAccountsResponse {
-        if (this != null) return this
-
-        return GetWalletAccountsResponse(
-            wallet = GetWalletAccountsResponse.Wallet(
-                group = userTokensResponse.group,
-                sort = userTokensResponse.sort,
-                totalAccounts = accountDTOs.size,
-            ),
-            accounts = accountDTOs.assignTokens(userWalletId = userWalletId, tokens = userTokensResponse.tokens),
-            unassignedTokens = emptyList(),
-        )
     }
 }
