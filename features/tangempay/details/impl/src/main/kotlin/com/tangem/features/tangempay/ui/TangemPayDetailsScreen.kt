@@ -2,12 +2,7 @@ package com.tangem.features.tangempay.ui
 
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -15,12 +10,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -44,21 +35,14 @@ import com.tangem.core.ui.components.dropdownmenu.TangemDropdownItem
 import com.tangem.core.ui.components.dropdownmenu.TangemDropdownMenu
 import com.tangem.core.ui.components.snackbar.TangemSnackbarHost
 import com.tangem.core.ui.components.text.applyBladeBrush
-import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.orMaskWithStars
-import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.TokenDetailsTopBarTestTags
 import com.tangem.features.tangempay.components.txHistory.PreviewTangemPayTxHistoryComponent
 import com.tangem.features.tangempay.components.txHistory.TangemPayTxHistoryComponent
 import com.tangem.features.tangempay.details.impl.R
-import com.tangem.features.tangempay.entity.TangemPayCardDetailsUM
-import com.tangem.features.tangempay.entity.TangemPayDetailsBalanceBlockState
-import com.tangem.features.tangempay.entity.TangemPayDetailsTopBarConfig
-import com.tangem.features.tangempay.entity.TangemPayDetailsUM
+import com.tangem.features.tangempay.entity.*
 import com.tangem.utils.StringsSigns.DASH_SIGN
 import kotlinx.collections.immutable.persistentListOf
 
@@ -415,8 +399,8 @@ private fun TangemPayDetailsTopAppBar(config: TangemPayDetailsTopBarConfig, modi
     )
 }
 
-@Preview(device = Devices.PIXEL_7_PRO, group = "day")
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, device = Devices.PIXEL_7_PRO, group = "night")
+@Preview(device = Devices.PIXEL_7_PRO)
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, device = Devices.PIXEL_7_PRO)
 @Composable
 private fun TangemPayDetailsScreenPreview(
     @PreviewParameter(TangemPayDetailsUMProvider::class) state: TangemPayDetailsUM,
@@ -472,5 +456,27 @@ private class TangemPayDetailsUMProvider : CollectionPreviewParameterProvider<Ta
             ),
             isBalanceHidden = false,
         ),
+    ),
+)
+
+@Preview(device = Devices.PIXEL_7_PRO)
+@Composable
+private fun TangemPayDetailsTxHistoryScreenPreview(
+    @PreviewParameter(TangemPayDetailsTxHistoryProvider::class) state: TangemPayTxHistoryUM,
+) {
+    TangemThemePreview {
+        TangemPayDetailsScreen(
+            state = TangemPayDetailsUMProvider().values.first(),
+            txHistoryComponent = PreviewTangemPayTxHistoryComponent(txHistoryUM = state),
+        )
+    }
+}
+
+private class TangemPayDetailsTxHistoryProvider : CollectionPreviewParameterProvider<TangemPayTxHistoryUM>(
+    collection = listOf(
+        PreviewTangemPayTxHistoryComponent.loadingUM,
+        PreviewTangemPayTxHistoryComponent.contentUM,
+        PreviewTangemPayTxHistoryComponent.emptyUM,
+        PreviewTangemPayTxHistoryComponent.errorUM,
     ),
 )

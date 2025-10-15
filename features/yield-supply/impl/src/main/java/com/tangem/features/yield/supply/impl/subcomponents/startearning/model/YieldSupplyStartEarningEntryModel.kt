@@ -1,5 +1,6 @@
 package com.tangem.features.yield.supply.impl.subcomponents.startearning.model
 
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -8,6 +9,7 @@ import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIco
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.features.yield.supply.impl.R
+import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyActionUM
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyFeeUM
 import com.tangem.features.yield.supply.impl.subcomponents.feepolicy.YieldSupplyFeePolicyComponent
@@ -24,6 +26,7 @@ import javax.inject.Inject
 internal class YieldSupplyStartEarningEntryModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
+    private val analyticsEventHandler: AnalyticsEventHandler,
     paramsContainer: ParamsContainer,
 ) : Model(), YieldSupplyStartEarningComponent.ModelCallback, YieldSupplyFeePolicyComponent.ModelCallback {
 
@@ -55,6 +58,9 @@ internal class YieldSupplyStartEarningEntryModel @Inject constructor(
     }
 
     override fun onFeePolicyClick() {
+        analyticsEventHandler.send(
+            YieldSupplyAnalytics.ButtonFeePolicy,
+        )
         router.push(YieldSupplyStartEarningRoute.FeePolicy)
     }
 
