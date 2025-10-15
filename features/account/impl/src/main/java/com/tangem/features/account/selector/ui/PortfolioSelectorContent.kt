@@ -2,8 +2,10 @@ package com.tangem.features.account.selector.ui
 
 import android.content.res.Configuration
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -18,9 +20,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import com.tangem.common.ui.account.AccountIconPreviewData
-import com.tangem.common.ui.userwallet.UserWalletItem
+import com.tangem.common.ui.userwallet.UserWalletItemRow
 import com.tangem.common.ui.userwallet.state.UserWalletItemUM
 import com.tangem.common.ui.userwallet.state.UserWalletItemUM.ImageState
+import com.tangem.core.ui.extensions.conditional
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
@@ -66,12 +69,16 @@ internal fun PortfolioSelectorContent(
             }
 
             when (item) {
-                is PortfolioSelectorItemUM.Portfolio -> UserWalletItem(
+                is PortfolioSelectorItemUM.Portfolio -> UserWalletItemRow(
                     state = item.item,
                     modifier = offsetModifier
+                        .fillMaxWidth()
+                        .heightIn(min = TangemTheme.dimens.size68)
                         .clip(RoundedCornerShape(TangemTheme.dimens.radius14))
-                        .background(color = TangemTheme.colors.background.primary)
-                        .let { if (!item.item.isEnabled) it.alpha(DISABLED_WALLET_ALPHA) else it },
+                        .background(TangemTheme.colors.background.action)
+                        .clickable(enabled = item.item.isEnabled, onClick = item.item.onClick)
+                        .padding(all = TangemTheme.dimens.spacing12)
+                        .conditional(!item.item.isEnabled) { alpha(DISABLED_WALLET_ALPHA) },
                 )
                 is PortfolioSelectorItemUM.GroupTitle -> WalletNameRow(
                     model = item,
@@ -103,7 +110,7 @@ private fun Preview(@PreviewParameter(PortfolioSelectorPreviewStateProvider::cla
     TangemThemePreview {
         PortfolioSelectorContent(
             state = params,
-            modifier = Modifier.background(color = TangemTheme.colors.background.secondary),
+            modifier = Modifier.background(color = TangemTheme.colors.background.tertiary),
         )
     }
 }
@@ -125,8 +132,10 @@ internal object PortfolioSelectorPreviewData {
                 name = accountName,
                 icon = AccountIconPreviewData.randomAccountIcon(),
             ),
-            label = null,
         )
+
+    private val lockedAccountItem: UserWalletItemUM
+        get() = accountItem.copy(isEnabled = false)
 
     private val walletItem: UserWalletItemUM
         get() = UserWalletItemUM(
@@ -137,7 +146,6 @@ internal object PortfolioSelectorPreviewData {
             isEnabled = true,
             onClick = { },
             imageState = ImageState.MobileWallet,
-            label = null,
         )
 
     private val lockedWalletItem: UserWalletItemUM
@@ -152,7 +160,7 @@ internal object PortfolioSelectorPreviewData {
             accountItem
                 .let { PortfolioSelectorItemUM.Portfolio(it) }
                 .let(::add)
-            accountItem
+            lockedAccountItem
                 .let { PortfolioSelectorItemUM.Portfolio(it) }
                 .let(::add)
             PortfolioSelectorItemUM.GroupTitle(

@@ -8,7 +8,9 @@ import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.core.lce.LceFlow
 import com.tangem.domain.core.utils.getOrElse
 import com.tangem.domain.models.PortfolioId
+import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.tokens.RunPolkadotAccountHealthCheckUseCase
@@ -63,7 +65,10 @@ internal abstract class BasicTokenListSubscriber : WalletSubscriber() {
             flow = tokenListFlow(coroutineScope)
                 .onEach { maybeTokenList ->
                     coroutineScope.launch {
-                        sendTokenListAnalytics(maybeTokenList)
+                        sendTokenListAnalytics(
+                            flattenCurrencies = maybeTokenList.getOrNull()?.flattenCurrencies(),
+                            totalFiatBalance = maybeTokenList.getOrNull()?.totalFiatBalance,
+                        )
                     }.saveIn(sendAnalyticsJobHolder)
                 }
                 .distinctUntilChanged()
@@ -140,12 +145,14 @@ internal abstract class BasicTokenListSubscriber : WalletSubscriber() {
 
     private fun createAccountListFlow(coroutineScope: CoroutineScope): Flow<*> = combine(
         flow = accountListFlow(coroutineScope)
-            // todo account analytics for account total balance
-            /*.onEach { maybeTokenList ->
+            .onEach { accountStatusList ->
                 coroutineScope.launch {
-                    sendTokenListAnalytics(maybeTokenList)
+                    sendTokenListAnalytics(
+                        flattenCurrencies = accountStatusList.flattenCurrencies(),
+                        totalFiatBalance = accountStatusList.totalFiatBalance,
+                    )
                 }.saveIn(sendAnalyticsJobHolder)
-            }*/
+            }
             .distinctUntilChanged()
             .onEach { accountList ->
                 // todo account see[onAccountListReceived]
@@ -207,13 +214,17 @@ internal abstract class BasicTokenListSubscriber : WalletSubscriber() {
         }
     }
 
-    private suspend fun sendTokenListAnalytics(maybeTokenList: Lce<TokenListError, TokenList>) {
+    private suspend fun sendTokenListAnalytics(
+        flattenCurrencies: List<CryptoCurrencyStatus>?,
+        totalFiatBalance: TotalFiatBalance?,
+    ) {
         val displayedState = stateHolder.getWalletStateIfSelected(userWallet.walletId)
 
         tokenListAnalyticsSender.send(
             displayedUiState = displayedState,
             userWallet = userWallet,
-            tokenList = maybeTokenList.getOrNull() ?: return,
+            flattenCurrencies = flattenCurrencies ?: return,
+            totalFiatBalance = totalFiatBalance ?: return,
         )
     }
 
