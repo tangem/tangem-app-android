@@ -9,9 +9,8 @@ import com.tangem.common.json.MoshiJsonConverter
 import com.tangem.datasource.api.common.adapter.*
 import com.tangem.datasource.local.config.providers.models.ProviderModel
 import com.tangem.datasource.local.network.entity.NetworkStatusDM
+import com.tangem.datasource.utils.SerializeNullsFactory
 import com.tangem.domain.models.scan.serialization.*
-import com.tangem.domain.visa.model.VisaActivationRemoteState
-import com.tangem.domain.visa.model.VisaCardActivationStatus
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -28,6 +27,7 @@ class MoshiModule {
     @NetworkMoshi
     fun provideNetworkMoshi(): Moshi {
         return Moshi.Builder()
+            .add(SerializeNullsFactory)
             .add(
                 PolymorphicJsonAdapterFactory.of(ProviderModel::class.java, "type")
                     .withSubtype(ProviderModel.Public::class.java, "public")
@@ -38,8 +38,8 @@ class MoshiModule {
             .add(BigIntegerAdapter())
             .add(LocalDateAdapter())
             .add(DateTimeAdapter())
-            .add(VisaActivationRemoteState.jsonAdapter)
-            .add(VisaCardActivationStatus.jsonAdapter)
+            // .add(VisaActivationRemoteState.jsonAdapter)
+            // .add(VisaCardActivationStatus.jsonAdapter)
             .add(
                 NamePolymorphicAdapterFactory.of(NetworkStatusDM::class.java)
                     .withSubtype(NetworkStatusDM.Verified::class.java, "amounts")
@@ -84,8 +84,8 @@ class MoshiModule {
         val typedAdapters = MoshiJsonConverter.getTangemSdkTypedAdapters()
 
         return Moshi.Builder().apply {
-            add(VisaActivationRemoteState.jsonAdapter)
-            add(VisaCardActivationStatus.jsonAdapter)
+            // add(VisaActivationRemoteState.jsonAdapter)
+            // add(VisaCardActivationStatus.jsonAdapter)
             adapters.forEach { this.add(it) }
             typedAdapters.forEach { add(it.key, it.value) }
             addLast(KotlinJsonAdapterFactory())
