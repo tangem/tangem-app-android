@@ -2,15 +2,15 @@ package com.tangem.features.account
 
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.core.lce.Lce
-import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.tokens.error.TokenListError
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 
+/**
+ * How to use see [PortfolioSelectorComponent]
+ */
 interface PortfolioFetcher {
 
     val data: Flow<Data>
@@ -25,10 +25,11 @@ interface PortfolioFetcher {
     )
 
     data class PortfolioBalance(
-        val walletBalance: Lce<TokenListError, TotalFiatBalance>,
+        val userWallet: UserWallet,
         val accountsBalance: AccountStatusList,
     ) {
-        val userWalletId: UserWalletId get() = accountsBalance.userWalletId
+        val walletBalance get() = accountsBalance.totalFiatBalance
+        val userWalletId: UserWalletId get() = userWallet.walletId
     }
 
     sealed interface Mode {
@@ -36,6 +37,9 @@ interface PortfolioFetcher {
         data class Wallet(val walletId: UserWalletId) : Mode
     }
 
+    /**
+     * @param[mode] supports runtime change [PortfolioFetcher.updateMode]
+     */
     interface Factory {
         fun create(mode: Mode, scope: CoroutineScope): PortfolioFetcher
     }
