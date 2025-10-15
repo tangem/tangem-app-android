@@ -33,7 +33,7 @@ class TotalBalanceUpdateTest : BaseTestCase() {
                 openMainScreen()
             }
             step("Synchronize addresses") {
-                synchronizeAddresses(TOTAL_BALANCE)
+                synchronizeAddresses()
             }
             step("Assert $TOTAL_BALANCE is displayed in total balance") {
                 onMainScreen { totalBalanceText.assertTextContains(TOTAL_BALANCE) }
@@ -67,7 +67,7 @@ class TotalBalanceUpdateTest : BaseTestCase() {
                 openMainScreen()
             }
             step("Synchronize addresses") {
-                synchronizeAddresses(TOTAL_BALANCE)
+                synchronizeAddresses()
             }
             step("Assert $TOTAL_BALANCE is displayed in total balance") {
                 onMainScreen { totalBalanceText.assertTextContains(TOTAL_BALANCE) }
@@ -117,7 +117,7 @@ class TotalBalanceUpdateTest : BaseTestCase() {
                 openMainScreen()
             }
             step("Synchronize addresses") {
-                synchronizeAddresses(TOTAL_BALANCE)
+                synchronizeAddresses()
             }
             step("Assert $TOTAL_BALANCE is displayed in total balance") {
                 onMainScreen { totalBalanceText.assertTextContains(TOTAL_BALANCE) }
@@ -145,7 +145,7 @@ class TotalBalanceUpdateTest : BaseTestCase() {
                 openMainScreen()
             }
             step("Synchronize addresses") {
-                synchronizeAddresses(TOTAL_BALANCE)
+                synchronizeAddresses()
             }
             step("Assert $TOTAL_BALANCE is displayed in total balance") {
                 onMainScreen { totalBalanceText.assertTextContains(TOTAL_BALANCE) }
@@ -162,7 +162,7 @@ class TotalBalanceUpdateTest : BaseTestCase() {
                 }
             }
             step("Click 'Hide token' button") {
-                onBottomSheet { hideButton.clickWithAssertion() }
+                onTokenActionsBottomSheet { hideTokenButton.clickWithAssertion() }
             }
             step("Click 'Hide' button in dialog") {
                 onDialog {
@@ -187,7 +187,7 @@ class TotalBalanceUpdateTest : BaseTestCase() {
                 openMainScreen()
             }
             step("Synchronize addresses") {
-                synchronizeAddresses(TOTAL_BALANCE)
+                synchronizeAddresses()
             }
             step("Assert $TOTAL_BALANCE is displayed in total balance") {
                 onMainScreen { totalBalanceText.assertTextContains(TOTAL_BALANCE) }

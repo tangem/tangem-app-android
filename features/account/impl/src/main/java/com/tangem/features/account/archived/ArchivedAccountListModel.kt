@@ -1,6 +1,8 @@
 package com.tangem.features.account.archived
 
 import com.tangem.common.ui.account.toUM
+import com.tangem.core.analytics.api.AnalyticsExceptionHandler
+import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
@@ -11,6 +13,8 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.ToastMessage
+import com.tangem.core.ui.utils.showErrorDialog
+import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.models.ArchivedAccount
 import com.tangem.domain.account.usecase.ArchivedAccountList
 import com.tangem.domain.account.usecase.GetArchivedAccountsUseCase
@@ -20,6 +24,7 @@ import com.tangem.domain.models.account.AccountId
 import com.tangem.features.account.ArchivedAccountListComponent
 import com.tangem.features.account.archived.entity.AccountArchivedUM
 import com.tangem.features.account.archived.entity.AccountArchivedUMBuilder
+import com.tangem.features.account.createedit.error.AccountFeatureError
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
@@ -37,6 +42,7 @@ internal class ArchivedAccountListModel @Inject constructor(
     private val recoverCryptoPortfolioUseCase: RecoverCryptoPortfolioUseCase,
     private val getArchivedAccountsUseCase: GetArchivedAccountsUseCase,
     private val umBuilder: AccountArchivedUMBuilder,
+    private val analyticsExceptionHandler: AnalyticsExceptionHandler,
 ) : Model() {
 
     private val params = paramsContainer.require<ArchivedAccountListComponent.Params>()
@@ -103,11 +109,37 @@ internal class ArchivedAccountListModel @Inject constructor(
         )
     }
 
-    private fun recoverCryptoPortfolio(accountId: AccountId) = modelScope.launch {
+    private fun recoverCryptoPortfolio(accountId: AccountId) = modelScope.launch(dispatchers.default) {
         recoverCryptoPortfolioUseCase(accountId)
-            .onLeft { Timber.e(it.toString()) }
-            .onRight { showSuccessRecoverMessage() }
-        router.pop()
+            .onLeft(::handleRecoverError)
+            .onRight {
+                showSuccessRecoverMessage()
+                router.pop()
+            }
+    }
+
+    private fun handleRecoverError(error: RecoverCryptoPortfolioUseCase.Error) {
+        if (error is RecoverCryptoPortfolioUseCase.Error.AccountListRequirementsNotMet &&
+            error.cause is AccountList.Error.ExceedsMaxAccountsCount
+        ) {
+            // TODO("account") show alert that max accounts count reached
+            //  https://www.figma.com/design/09KKG4ZVuFDZhj8WLv5rGJ/%F0%9F%9A%A7-App-experience?node-id=24765-180563&t=vk6TCy4MkYol1cPb-4
+            return
+        }
+
+        val featureError = AccountFeatureError.ArchivedAccountList.FailedToRecoverAccount(cause = error)
+        logError(error = featureError)
+        messageSender.showErrorDialog(universalError = featureError, onDismiss = router::pop)
+    }
+
+    private fun logError(error: AccountFeatureError, params: Map<String, String> = mapOf()) {
+        val exception = IllegalStateException(error.toString())
+
+        Timber.e(exception)
+
+        analyticsExceptionHandler.sendException(
+            event = ExceptionAnalyticsEvent(exception = exception, params = params),
+        )
     }
 
     private fun showSuccessRecoverMessage() {
