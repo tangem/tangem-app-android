@@ -31,13 +31,13 @@ internal class DefaultPortfolioSelectorComponent @AssistedInject constructor(
             .stateIn(componentScope, SharingStarted.Lazily, model.state.value.title)
 
     override fun dismiss() {
-        params.onDismiss()
+        params.bsCallback?.onDismiss()
     }
 
     @Composable
     override fun BottomSheet() {
         val state by model.state.collectAsStateWithLifecycle()
-        PortfolioSelectorBS(state, onDismiss = ::dismiss)
+        PortfolioSelectorBS(state = state, onDismiss = ::dismiss, onBack = { params.bsCallback?.onBack() })
     }
 
     @Composable
