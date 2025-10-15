@@ -29,6 +29,7 @@
   <string name="account_details_archive_description">You are archiving this account, but you can always get it back.</string>
   <string name="account_details_title">Account</string>
   <string name="account_edit_success_message">Account saved</string>
+  <string name="account_for_rewards">Account for rewards</string>
   <string name="account_form_account_index">Account #%s — used for address derivation.</string>
   <string name="account_form_create_button">Add account</string>
   <string name="account_form_edit_button">Save</string>
@@ -512,7 +513,7 @@
   <string name="generic_error_code">An error occurred. Code: %s.</string>
   <string name="generic_requires_memo_error">Requires memo</string>
   <string name="give_permission_current_transaction">Transaction</string>
-  <string name="give_permission_policy_type_footer">Specify the approve limit for the selected token</string>
+  <string name="give_permission_policy_type_footer">By approving, you allow the smart contract to use your tokens in future transactions.</string>
   <string name="give_permission_rows_amount">Amount %s</string>
   <string name="give_permission_staking_footer">The Approve function is needed to grant permission to another address to use a specific amount of your tokens. By design, smart contracts can\'t access your tokens unless you approve. By \"unlocking\" your tokens, you authorize the StakeKit smart contract to use them. The network\'s miners receive a gas fee (paid by you) to record this action on the blockchain. You can stake your token after giving approval.</string>
   <string name="give_permission_staking_subtitle">To continue you need to allow Polygon smart contract to use your %s</string>
@@ -883,6 +884,7 @@
   <string name="onramp_currency_other">Other currencies</string>
   <string name="onramp_currency_popular">Popular Fiats</string>
   <string name="onramp_currency_search">Search by currency</string>
+  <string name="onramp_fetching_best_rates">Fetching best rates...</string>
   <string name="onramp_instant_status">Instant</string>
   <string name="onramp_legal">By using onramp functionality, you agree with provider’s %1$s and %2$s</string>
   <string name="onramp_legal_text">Service is provided by an external provider.\nTangem is not responsible.</string>
@@ -914,6 +916,7 @@
     <item quantity="other">up to %d days</item>
   </plurals>
   <string name="onramp_timing_minutes">%s min</string>
+  <string name="onramp_title_available_from___">Available from   </string>
   <string name="onramp_title_you_get">You get</string>
   <string name="onramp_tos_external_providers">Service is provided by an external provider. \nTangem is not responsible.</string>
   <string name="onramp_transaction_status_footer_text">You can close this screen and check the transaction status on the token details screen.</string>
@@ -1188,7 +1191,7 @@
   <string name="staking_notification_new_validator_funds_transfer">Staking on the %1$s network with a new validator will automatically transfer all previously staked funds to this validator.</string>
   <string name="staking_notification_restake_rewards_text">Reinvests your earned rewards in your staked amount, increasing potential earnings.</string>
   <string name="staking_notification_restake_text">Restake lets you move your funds from one validator to another without the need to unstake</string>
-  <string name="staking_notification_stake_entire_balance_text">You’re about to stake your entire balance. We recommend leaving a small amount to cover network fees for unstaking or claiming rewards.</string>
+  <string name="staking_notification_stake_entire_balance_text">If you stake your entire balance, you’ll need to pay a network fee when you unstake. We recommend leaving a small amount in your wallet to cover network fees.</string>
   <string name="staking_notification_ton_account_initialization_message">To start staking, your TON account must be activated with a self-transaction of 1 TON. The funds stay in your wallet — this step only enables your account for staking.</string>
   <string name="staking_notification_ton_account_initialization_title">Account activation</string>
   <string name="staking_notification_ton_activate_account">To start staking in TON, first send a small transaction to your own address — this will activate your wallet.</string>
@@ -1298,6 +1301,8 @@
   <string name="swapping_token_not_available">not available</string>
   <string name="tangempay_card_details_error_text">Failed to load data. Try again later.</string>
   <string name="tangempay_card_details_hide_text">Hide</string>
+  <string name="tangempay_card_details_receive_error_description">Technical issues detected. Please try again later or contact support.</string>
+  <string name="tangempay_card_details_receive_error_title">Receive unavailable now</string>
   <string name="tangempay_card_details_reveal_text">Reveal</string>
   <string name="tangempay_card_details_title">Card details</string>
   <string name="tangempay_issue_card_notification_title">Create account and issue a card</string>
@@ -1772,7 +1777,8 @@
   <string name="xtz_withdrawal_message_reduce">Reduce by %s XTZ</string>
   <string name="xtz_withdrawal_message_warning">To avoid paying an increased commission the next time you top up your wallet, reduce the amount by %s XTZ</string>
   <string name="yield_module_alert_description">Text about your money in balance [PLACEHOLDER]</string>
-  <string name="yield_module_alert_title">Your %s is deposited in Aave</string>
+  <string name="yield_module_alert_title">Your %s is deposited in Aave</string>
+  <string name="yield_module_amount_not_transfered_to_aave_title">The amount received, %1$s %2$s was not deposited to Aave.</string>
   <string name="yield_module_approve_needed_notification_cta">Give Approve</string>
   <string name="yield_module_approve_needed_notification_description">Something went wrong with your previous approval, so we need a new one. Choose how you’d like to proceed.</string>
   <string name="yield_module_approve_needed_notification_title">Approve needed</string>
@@ -1783,10 +1789,10 @@
   <string name="yield_module_balance_info_sheet_title">Your %s is deposited in Aave</string>
   <string name="yield_module_chart_loading_error">Unable to load chart...</string>
   <string name="yield_module_deposit_error_notification_title">The amount received, %1$s %2$s was not deposited to Aave.</string>
-  <string name="yield_module_earn_badge">Earn %1$s%%</string>
+  <string name="yield_module_earn_badge">APY %1$s%%</string>
   <string name="yield_module_earn_sheet_available_title">Available</string>
   <string name="yield_module_earn_sheet_current_apy_title">Current APY</string>
-  <string name="yield_module_earn_sheet_my_funds_title">My Funds</string>
+  <string name="yield_module_earn_sheet_my_funds_title">My funds</string>
   <string name="yield_module_earn_sheet_provider_description">Your %1$s is now deposited in Aave and earning interest. You hold a%2$s token, which represents your balance and grows over time. When you top up, funds go to Aave to earn interest, minus a transaction fee.</string>
   <string name="yield_module_earn_sheet_title">Earn</string>
   <string name="yield_module_earn_sheet_total_earnings_title">Total earnings</string>
@@ -1798,7 +1804,7 @@
   <string name="yield_module_fee_policy_sheet_max_fee_note">If network fees rise above maximum fee, the transaction won’t go through until they decrease. You can change this limit later.</string>
   <string name="yield_module_fee_policy_sheet_max_fee_title">Maximum fee</string>
   <string name="yield_module_fee_policy_sheet_min_amount_note">The transaction fee must stay below 4% of your deposit. Tangem will transfer funds to Aave only once your balance is large enough to meet this condition. </string>
-  <string name="yield_module_fee_policy_sheet_min_amount_title">Minimal amount</string>
+  <string name="yield_module_fee_policy_sheet_min_amount_title">Minimal top-up</string>
   <string name="yield_module_fee_policy_sheet_title">Fee policy</string>
   <string name="yield_module_fee_policy_tangem_service_fee_title">Tangem also takes a 3% service fee on the yield earned.</string>
   <string name="yield_module_high_fee_error">Network fee is too high right now. Waiting until it falls below your limit.</string>
@@ -1810,9 +1816,9 @@
   <string name="yield_module_promo_screen_auto_balance_subtitle">Every top-up of your account will be lended to Aave automatically.</string>
   <string name="yield_module_promo_screen_auto_balance_title">Your balance works automatically</string>
   <string name="yield_module_promo_screen_cash_out_subtitle">Send, swap, or sell your funds instantly, anytime you want.</string>
-  <string name="yield_module_promo_screen_cash_out_title">Cash out instantly</string>
+  <string name="yield_module_promo_screen_cash_out_title">Access to funds at any time</string>
   <string name="yield_module_promo_screen_how_it_works_button_title">How it works?</string>
-  <string name="yield_module_promo_screen_self_custodial_subtitle">Aave is trusted by millions worldwide. Total lended value is $10.4B.</string>
+  <string name="yield_module_promo_screen_self_custodial_subtitle">Aave is a decentralized protocol managing over $81.9 billion in total value.</string>
   <string name="yield_module_promo_screen_self_custodial_title">Decentralized and self-custodial</string>
   <string name="yield_module_promo_screen_terms_disclaimer">By using service, you agree with provider\n%1$s and %2$s</string>
   <string name="yield_module_promo_screen_title">Earn %s%% yearly</string>
@@ -1824,20 +1830,20 @@
   <string name="yield_module_rate_info_sheet_powered_by">Powered by</string>
   <string name="yield_module_rate_info_sheet_title">Interest rate is variable</string>
   <string name="yield_module_receive_sheet_description">When you top up, your funds will be automatically sent to Aave to start earning interest. A small fee equal to %s will be deducted to cover the transaction.</string>
-  <string name="yield_module_start_earning">Start earning</string>
+  <string name="yield_module_start_earning">Supply assets</string>
   <string name="yield_module_start_earning_sheet_description">Your %s will be supplied to Aave and will stay instantly available</string>
   <string name="yield_module_start_earning_sheet_fee_policy">See fee policy</string>
-  <string name="yield_module_start_earning_sheet_next_deposits">Your next deposits will be automatically supplied to Aave.</string>
+  <string name="yield_module_start_earning_sheet_next_deposits">Your next top-ups will be automatically supplied to Aave.</string>
   <string name="yield_module_status_active">Active</string>
   <string name="yield_module_status_paused">Paused</string>
   <string name="yield_module_stop_earning">Stop earning</string>
   <string name="yield_module_stop_earning_sheet_description">Turning off will withdraw your funds from Aave, return them to %s in your wallet, and stop earning rewards.</string>
   <string name="yield_module_stop_earning_sheet_fee_note">The network fee will be deducted from the amount you withdraw.</string>
-  <string name="yield_module_supply_apr">Supply APR</string>
+  <string name="yield_module_supply_apr">Supply APY</string>
   <string name="yield_module_token_details_earn_notification_apy">APY</string>
   <string name="yield_module_token_details_earn_notification_description">Make your money work — earn interest on your balance.</string>
   <string name="yield_module_token_details_earn_notification_earning_on_your_balance_subtitle">Interest accrues automatically</string>
-  <string name="yield_module_token_details_earn_notification_earning_on_your_balance_title">Aave lending</string>
+  <string name="yield_module_token_details_earn_notification_earning_on_your_balance_title">Aave yield</string>
   <string name="yield_module_token_details_earn_notification_processing">Processing your deposit</string>
   <string name="yield_module_token_details_earn_notification_title">Earn %1$s%% per year</string>
   <string name="yield_module_transfer_mode_automatic">Automatic</string>
