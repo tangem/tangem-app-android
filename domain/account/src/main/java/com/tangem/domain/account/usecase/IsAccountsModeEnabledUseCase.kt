@@ -34,6 +34,7 @@ class IsAccountsModeEnabledUseCase(
                 combine(flows = totalAccountsCountList) { it.toList().isModeEnabled() }
             }
             .onEmpty { emit(false) }
+            .distinctUntilChanged()
     }
 
     suspend fun invokeSync(): Boolean {
