@@ -4,6 +4,7 @@ import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
+import com.tangem.common.ui.userwallet.state.UserWalletItemUM
 import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.common.ui.userwallet.state.UserWalletItemUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -26,6 +27,7 @@ import com.tangem.domain.markets.SaveMarketTokensUseCase
 import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isMultiCurrency
