@@ -18,6 +18,7 @@ import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 private const val VALID_STATUS = "valid"
+private const val APPROVED_KYC_STATUS = "APPROVED"
 private const val TAG = "TangemPay: OnboardingRepository"
 
 internal class DefaultOnboardingRepository @Inject constructor(
@@ -47,13 +48,36 @@ internal class DefaultOnboardingRepository @Inject constructor(
 
     override suspend fun getMainScreenCustomerInfo(): Either<UniversalError, MainScreenCustomerInfo> {
         return requestHelper.runWithErrorLogs(TAG) {
-            val result = requestHelper.requestWithPersistedToken { authHeader ->
-                tangemPayApi.getCustomerMe(authHeader)
-            }.result
+            val customerWalletAddress = requestHelper.getCustomerWalletAddress()
 
-            val orderStatus = getOrderStatus().getOrNull() ?: error("Order status is null")
+            when (val orderId = tangemPayStorage.getOrderId(customerWalletAddress)) {
+                // If order id wasn't saved -> get customer info
+                null -> {
+                    MainScreenCustomerInfo(
+                        info = getCustomerInfoWithPersistedToken(),
+                        orderStatus = OrderStatus.UNKNOWN,
+                    )
+                }
+                // If order id was saved -> check its status
+                else -> {
+                    val orderStatus = getOrderStatus(orderId)
+                    val customerInfo = when (orderStatus) {
+                        // Kyc is passed and user waits for order creation -> no need to get customer info
+                        OrderStatus.NEW,
+                        OrderStatus.PROCESSING,
+                        -> CustomerInfo(productInstance = null, isKycApproved = true, cardInfo = null)
 
-            MainScreenCustomerInfo(info = getCustomerInfo(result), orderStatus = orderStatus)
+                        // Order was created/cancelled -> clear order id and get customer info
+                        OrderStatus.UNKNOWN,
+                        OrderStatus.COMPLETED,
+                        OrderStatus.CANCELED,
+                        -> getCustomerInfoWithPersistedToken().also {
+                            tangemPayStorage.clearOrderId(customerWalletAddress)
+                        }
+                    }
+                    MainScreenCustomerInfo(info = customerInfo, orderStatus = orderStatus)
+                }
+            }
         }
     }
 
@@ -78,33 +102,35 @@ internal class DefaultOnboardingRepository @Inject constructor(
                 balance = balance.availableBalance,
                 currencyCode = balance.currency,
                 customerWalletAddress = paymentAccount.customerWalletAddress,
+                depositAddress = response.depositAddress,
             )
         } else {
             null
         }
         return CustomerInfo(
             productInstance = response?.productInstance?.let { ProductInstance(id = it.id, status = it.status) },
-            kycStatus = response?.kyc?.status,
+            isKycApproved = response?.kyc?.status == APPROVED_KYC_STATUS,
             cardInfo = cardInfo,
         )
     }
 
-    private suspend fun getOrderStatus(): Either<UniversalError, OrderStatus> {
-        return requestHelper.runWithErrorLogs(TAG) {
-            val walletAddress = requestHelper.getCustomerWalletAddress()
-            val orderId: String = tangemPayStorage.getOrderId(walletAddress)
-                ?: return@runWithErrorLogs OrderStatus.NOT_ISSUED
+    private suspend fun getOrderStatus(orderId: String): OrderStatus {
+        val result = requestHelper.request { authHeader ->
+            tangemPayApi.getOrder(authHeader, orderId)
+        }.result ?: error("Order result is null")
 
-            val result = requestHelper.request { authHeader ->
-                tangemPayApi.getOrder(authHeader, orderId)
-            }.result ?: error("Order result is null")
-
-            when (result.status) {
-                OrderStatus.NEW.apiName -> OrderStatus.NEW
-                OrderStatus.PROCESSING.apiName -> OrderStatus.PROCESSING
-                OrderStatus.COMPLETED.apiName -> OrderStatus.COMPLETED
-                else -> OrderStatus.CANCELED
-            }
+        return when (result.status) {
+            OrderStatus.NEW.apiName -> OrderStatus.NEW
+            OrderStatus.PROCESSING.apiName -> OrderStatus.PROCESSING
+            OrderStatus.COMPLETED.apiName -> OrderStatus.COMPLETED
+            else -> OrderStatus.CANCELED
         }
+    }
+
+    private suspend fun getCustomerInfoWithPersistedToken(): CustomerInfo {
+        val result = requestHelper.requestWithPersistedToken { authHeader ->
+            tangemPayApi.getCustomerMe(authHeader)
+        }.result
+        return getCustomerInfo(result)
     }
 }
