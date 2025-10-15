@@ -361,10 +361,10 @@ internal class WalletModel @Inject constructor(
         val info = tangemPayMainScreenCustomerInfoUseCase()
         if (info != null) {
             stateHolder.update(
-                transformer = TangemPayStateTransformer(
+                transformer = TangemPayInitialStateTransformer(
                     value = info,
-                    onIssueOrderClick = ::issueOrder,
-                    onContinueKycClick = innerWalletRouter::openTangemPayOnboarding,
+                    onClickIssue = ::issueOrder,
+                    onClickKyc = innerWalletRouter::openTangemPayOnboarding,
                     openDetails = innerWalletRouter::openTangemPayDetails,
                 ),
             )
@@ -373,9 +373,9 @@ internal class WalletModel @Inject constructor(
 
     private fun issueOrder() {
         modelScope.launch {
-            stateHolder.update(TangemPayStateTransformer(issueProgressState = true))
+            stateHolder.update(TangemPayIssueProgressStateTransformer())
             tangemPayIssueOrderUseCase().onLeft {
-                stateHolder.update(TangemPayStateTransformer(issueState = true, onIssueOrderClick = ::issueOrder))
+                stateHolder.update(TangemPayIssueAvailableStateTransformer(onClickIssue = ::issueOrder))
             }
         }
     }
