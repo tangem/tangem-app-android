@@ -1,13 +1,16 @@
 package com.tangem.tests
 
 import com.tangem.common.BaseTestCase
-import com.tangem.common.constants.TestConstants.TOTAL_BALANCE
-import com.tangem.common.extensions.SwipeDirection
+import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
 import com.tangem.common.extensions.clickWithAssertion
-import com.tangem.common.extensions.swipeVertical
 import com.tangem.common.utils.getWcUri
+import com.tangem.common.utils.setClipboardText
 import com.tangem.scenarios.*
-import com.tangem.screens.*
+import com.tangem.screens.onWalletConnectBottomSheet
+import com.tangem.screens.onWalletConnectDetailsBottomSheet
+import com.tangem.screens.onWalletConnectScanQrScreen
+import com.tangem.screens.onWalletConnectScreen
+import com.tangem.wallet.BuildConfig
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
@@ -21,8 +24,7 @@ class WalletConnectTest : BaseTestCase() {
     @DisplayName("WC (React App): open session from deeplink on main screen")
     @Ignore("TODO [REDACTED_JIRA] React app deeplink doesn't work")
     @Test
-    fun openWalletConnectSessionOnMainScreen() {
-        val balance = TOTAL_BALANCE
+    fun openWalletConnectSessionOnMainScreenTest() {
         val dAppName = "React App"
         val deepLinkUri = getWcUri()
 
@@ -31,25 +33,34 @@ class WalletConnectTest : BaseTestCase() {
                 openMainScreen()
             }
             step("Synchronize addresses") {
-                synchronizeAddresses(balance)
+                synchronizeAddresses()
             }
             step("Create WC session buy deeplink") {
                 openAppByDeepLink(deepLinkUri)
             }
             step("Check 'Wallet Connect' bottom sheet") {
-                checkWalletConnectBottomSheet()
+                flakySafely(WAIT_UNTIL_TIMEOUT) {
+                    checkWalletConnectBottomSheet()
+                }
+            }
+            step("Assert 'Connect' button is enabled") {
+                onWalletConnectBottomSheet { connectButton.assertIsEnabled() }
             }
             step("Click on 'Connect' button") {
+                waitForIdle()
                 onWalletConnectBottomSheet { connectButton.performClick() }
             }
-            step("Click 'More' button on TopBar") {
-                onTopBar { moreButton.clickWithAssertion() }
+            step("Assert 'Connect' button is not displayed") {
+                waitForIdle()
+                onWalletConnectBottomSheet { connectButton.assertIsNotDisplayed() }
             }
-            step("Click on 'Wallet Connect' button") {
-                onDetailsScreen { walletConnectButton.clickWithAssertion() }
+            step("Open 'Wallet Connect' screen") {
+                openWalletConnectScreen()
             }
-            step("Check 'Wallet Connect' screen") {
-                checkWalletConnectScreen()
+            step("Check 'Wallet Connect' screen with connections") {
+                flakySafely(WAIT_UNTIL_TIMEOUT) {
+                    checkWalletConnectScreen(withConnections = true)
+                }
             }
             step("Click on app icon") {
                 onWalletConnectScreen { appIcon.performClick() }
@@ -57,11 +68,11 @@ class WalletConnectTest : BaseTestCase() {
             step("Check 'Wallet Connect' details bottom sheet") {
                 checkWalletConnectDetailsBottomSheet(dAppName)
             }
-            step("Click on 'Disconnect button' is displayed") {
+            step("Click on 'Disconnect' button") {
                 onWalletConnectDetailsBottomSheet { disconnectButton.performClick() }
             }
-            step("Assert connection is not displayed") {
-                onWalletConnectScreen { appName.assertIsNotDisplayed() }
+            step("Check 'Wallet Connect' screen without connections") {
+                checkWalletConnectScreen(withConnections = false)
             }
         }
     }
@@ -70,8 +81,7 @@ class WalletConnectTest : BaseTestCase() {
     @DisplayName("WC (React App): open session from deeplink not on main screen")
     @Ignore("TODO [REDACTED_JIRA] React app deeplink doesn't work")
     @Test
-    fun openWalletConnectSessionNotOnMainScreen() {
-        val balance = TOTAL_BALANCE
+    fun openWalletConnectSessionNotOnMainScreenTest() {
         val dAppName = "React App"
         val deepLinkUri = getWcUri()
 
@@ -80,43 +90,46 @@ class WalletConnectTest : BaseTestCase() {
                 openMainScreen()
             }
             step("Synchronize addresses") {
-                synchronizeAddresses(balance)
+                synchronizeAddresses()
             }
-            step("Click on 'Buy' button") {
-                onMainScreen { buyButton.clickWithAssertion() }
+            step("Open 'Wallet Connect' screen") {
+                openWalletConnectScreen()
+                checkWalletConnectScreen(false)
             }
             step("Create WC session buy deeplink") {
                 openAppByDeepLink(deepLinkUri)
             }
             step("Check 'Wallet Connect' bottom sheet") {
-                checkWalletConnectBottomSheet()
+                flakySafely(WAIT_UNTIL_TIMEOUT) {
+                    checkWalletConnectBottomSheet()
+                }
             }
             step("Click on 'Connect' button") {
+                waitForIdle()
                 onWalletConnectBottomSheet { connectButton.performClick() }
             }
-            step("Click 'More' button on TopBar") {
-                onTopBar { moreButton.clickWithAssertion() }
+            step("Assert 'Connect' button is not displayed") {
+                waitForIdle()
+                onWalletConnectBottomSheet { connectButton.assertIsNotDisplayed() }
             }
-            step("Click on 'Wallet Connect' button") {
-                onDetailsScreen { walletConnectButton.clickWithAssertion() }
-            }
-            step("Assert 'Wallet Connect' bottom sheet is displayed") {
-                onWalletConnectBottomSheet { connectButton.clickWithAssertion() }
-            }
-            step("Check 'Wallet Connect' screen") {
-                checkWalletConnectScreen()
+            step("Check 'Wallet Connect' screen with connections") {
+                flakySafely(WAIT_UNTIL_TIMEOUT) {
+                    checkWalletConnectScreen(withConnections = true)
+                }
             }
             step("Click on app icon") {
                 onWalletConnectScreen { appIcon.performClick() }
             }
             step("Check 'Wallet Connect' details bottom sheet") {
-                checkWalletConnectDetailsBottomSheet(dAppName)
+                flakySafely(WAIT_UNTIL_TIMEOUT) {
+                    checkWalletConnectDetailsBottomSheet(dAppName)
+                }
             }
-            step("Click on 'Disconnect button' is displayed") {
+            step("Click on 'Disconnect' button") {
                 onWalletConnectDetailsBottomSheet { disconnectButton.performClick() }
             }
-            step("Assert connection is not displayed") {
-                onWalletConnectScreen { appName.assertIsNotDisplayed() }
+            step("Check 'Wallet Connect' screen without connections") {
+                checkWalletConnectScreen(withConnections = false)
             }
         }
     }
@@ -125,9 +138,9 @@ class WalletConnectTest : BaseTestCase() {
     @DisplayName("WC (React App): open session from deeplink ")
     @Ignore("TODO [REDACTED_JIRA] React app deeplink doesn't work")
     @Test
-    fun openWalletConnectSession() {
-        val balance = TOTAL_BALANCE
+    fun openWalletConnectSessionTest() {
         val dAppName = "React App"
+        val packageName = BuildConfig.APPLICATION_ID
         val deepLinkUri = getWcUri()
 
         setupHooks().run {
@@ -135,34 +148,30 @@ class WalletConnectTest : BaseTestCase() {
                 openMainScreen()
             }
             step("Synchronize addresses") {
-                synchronizeAddresses(balance)
+                synchronizeAddresses()
             }
-            step("Open recent apps") {
-                device.uiDevice.pressRecentApps()
-            }
-            step("Stop app by swipe") {
-                swipeVertical(SwipeDirection.UP, startHeightRatio = 0.8f)
+            step("Kill app") {
+                device.apps.kill(packageName)
             }
             step("Create WC session buy deeplink") {
                 openAppByDeepLink(deepLinkUri)
             }
-            step("Open 'Main Screen'") {
-                openMainScreen()
-            }
             step("Check 'Wallet Connect' bottom sheet") {
-                checkWalletConnectBottomSheet()
+                flakySafely(WAIT_UNTIL_TIMEOUT) {
+                    checkWalletConnectBottomSheet()
+                }
             }
             step("Click on 'Connect' button") {
                 onWalletConnectBottomSheet { connectButton.performClick() }
             }
-            step("Click 'More' button on TopBar") {
-                onTopBar { moreButton.clickWithAssertion() }
+            step("Assert 'Connect' button is not displayed") {
+                onWalletConnectBottomSheet { connectButton.assertIsNotDisplayed() }
             }
-            step("Click on 'Wallet Connect' button") {
-                onDetailsScreen { walletConnectButton.clickWithAssertion() }
+            step("Open 'Wallet Connect' screen") {
+                openWalletConnectScreen()
             }
-            step("Check 'Wallet Connect' screen") {
-                checkWalletConnectScreen()
+            step("Check 'Wallet Connect' screen with connections") {
+                checkWalletConnectScreen(withConnections = true)
             }
             step("Click on app icon") {
                 onWalletConnectScreen { appIcon.performClick() }
@@ -170,11 +179,71 @@ class WalletConnectTest : BaseTestCase() {
             step("Check 'Wallet Connect' details bottom sheet") {
                 checkWalletConnectDetailsBottomSheet(dAppName)
             }
-            step("Click on 'Disconnect button' is displayed") {
+            step("Click on 'Disconnect' button") {
                 onWalletConnectDetailsBottomSheet { disconnectButton.performClick() }
             }
-            step("Assert connection is not displayed") {
-                onWalletConnectScreen { appName.assertIsNotDisplayed() }
+            step("Check 'Wallet Connect' screen without connections") {
+                checkWalletConnectScreen(withConnections = false)
+            }
+        }
+    }
+
+    @AllureId("887")
+    @DisplayName("WC: open session by 'Paste from clipboard' button")
+    @Ignore("TODO [REDACTED_JIRA] React app deeplink doesn't work")
+    @Test
+    fun openWalletConnectSessionByClipboardLinkTest() {
+        val dAppName = "React App"
+        val context = device.context
+        val deepLinkUri = getWcUri()
+
+        setupHooks().run {
+            step("Set URI to clipboard") {
+                setClipboardText(context, deepLinkUri)
+            }
+            step("Open 'Main Screen'") {
+                openMainScreen()
+            }
+            step("Synchronize addresses") {
+                synchronizeAddresses()
+            }
+            step("Open 'Wallet Connect' screen") {
+                openWalletConnectScreen()
+            }
+            step("Click 'New connection' button") {
+                onWalletConnectScreen { newConnectionButton.performClick() }
+            }
+            step("CLick 'Paste from clipboard' button") {
+                onWalletConnectScanQrScreen { pasteFromClipboardButton.clickWithAssertion() }
+            }
+            step("Check 'Wallet Connect' bottom sheet") {
+                waitForIdle()
+                flakySafely(WAIT_UNTIL_TIMEOUT) {
+                    checkWalletConnectBottomSheet()
+                }
+            }
+            step("Click on 'Connect' button") {
+                waitForIdle()
+                onWalletConnectBottomSheet { connectButton.performClick() }
+            }
+            step("Assert 'Connect' button is not displayed") {
+                waitForIdle()
+                onWalletConnectBottomSheet { connectButton.assertIsNotDisplayed() }
+            }
+            step("Check 'Wallet Connect' screen with connections") {
+                checkWalletConnectScreen(withConnections = true)
+            }
+            step("Click on app icon") {
+                onWalletConnectScreen { appIcon.performClick() }
+            }
+            step("Check 'Wallet Connect' details bottom sheet") {
+                checkWalletConnectDetailsBottomSheet(dAppName)
+            }
+            step("Click on 'Disconnect' button") {
+                onWalletConnectDetailsBottomSheet { disconnectButton.performClick() }
+            }
+            step("Check 'Wallet Connect' screen without connections") {
+                checkWalletConnectScreen(withConnections = false)
             }
         }
     }
