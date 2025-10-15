@@ -14,6 +14,9 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.core.ui.utils.parseBigDecimalOrNull
+import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
+import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
+import com.tangem.domain.account.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
@@ -23,6 +26,7 @@ import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.BlockchainErrorInfo
 import com.tangem.domain.feedback.models.FeedbackEmailType
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.isMultiCurrency
@@ -91,8 +95,11 @@ internal class SendModel @Inject constructor(
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val createTransferTransactionUseCase: CreateTransferTransactionUseCase,
     private val getFeeUseCase: GetFeeUseCase,
+    private val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase,
+    private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     private val sendAmountUpdateTrigger: SendAmountUpdateTrigger,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val accountsFeatureToggles: AccountsFeatureToggles,
 ) : Model(), SendComponentCallback {
 
     private val params: SendComponent.Params = paramsContainer.require()
@@ -115,21 +122,26 @@ internal class SendModel @Inject constructor(
 
     val currentRoute = MutableStateFlow(initialRoute)
 
-    private val _cryptoCurrencyStatusFlow = MutableStateFlow(
-        CryptoCurrencyStatus(
-            params.currency,
-            value = CryptoCurrencyStatus.Loading,
-        ),
-    )
-    val cryptoCurrencyStatusFlow = _cryptoCurrencyStatusFlow.asStateFlow()
+    val cryptoCurrencyStatusFlow: StateFlow<CryptoCurrencyStatus>
+        field = MutableStateFlow(
+            CryptoCurrencyStatus(
+                params.currency,
+                value = CryptoCurrencyStatus.Loading,
+            ),
+        )
 
-    private val _feeCryptoCurrencyStatusFlow = MutableStateFlow(
-        CryptoCurrencyStatus(
-            params.currency,
-            value = CryptoCurrencyStatus.Loading,
-        ),
-    )
-    val feeCryptoCurrencyStatusFlow = _feeCryptoCurrencyStatusFlow.asStateFlow()
+    val feeCryptoCurrencyStatusFlow: StateFlow<CryptoCurrencyStatus>
+        field = MutableStateFlow(
+            CryptoCurrencyStatus(
+                params.currency,
+                value = CryptoCurrencyStatus.Loading,
+            ),
+        )
+
+    val accountFlow: StateFlow<Account.CryptoPortfolio?>
+        field = MutableStateFlow(null)
+    val isAccountModeFlow: StateFlow<Boolean>
+        field = MutableStateFlow(false)
 
     var userWallet: UserWallet by Delegates.notNull()
     var appCurrency: AppCurrency = AppCurrency.Default
@@ -317,13 +329,34 @@ internal class SendModel @Inject constructor(
                 ifRight = { wallet ->
                     userWallet = wallet
 
-                    val isSingleWalletWithToken = wallet is UserWallet.Cold &&
-                        wallet.scanResponse.cardTypesResolver.isSingleWalletWithToken()
-                    val isMultiCurrency = wallet.isMultiCurrency
-                    getCurrenciesStatusUpdates(
-                        isSingleWalletWithToken = isSingleWalletWithToken,
-                        isMultiCurrency = isMultiCurrency,
-                    )
+                    if (accountsFeatureToggles.isFeatureEnabled) {
+                        getAccountCurrencyStatusUseCase(
+                            userWalletId = params.userWalletId,
+                            currency = cryptoCurrency,
+                        ).onEach { (account, cryptoCurrencyStatus) ->
+                            cryptoCurrencyStatusFlow.value = cryptoCurrencyStatus
+                            feeCryptoCurrencyStatusFlow.value = getFeePaidCryptoCurrencyStatusSyncUseCase(
+                                userWalletId = params.userWalletId,
+                                cryptoCurrencyStatus = cryptoCurrencyStatus,
+                            ).getOrNull() ?: cryptoCurrencyStatus
+
+                            isAccountModeFlow.value = isAccountsModeEnabledUseCase.invokeSync()
+                            accountFlow.value = account
+
+                            if (params.amount != null) {
+                                router.replaceAll(Confirm)
+                            }
+                        }.flowOn(dispatchers.default)
+                            .launchIn(modelScope)
+                    } else {
+                        val isSingleWalletWithToken = wallet is UserWallet.Cold &&
+                            wallet.scanResponse.cardTypesResolver.isSingleWalletWithToken()
+                        val isMultiCurrency = wallet.isMultiCurrency
+                        getCurrenciesStatusUpdates(
+                            isSingleWalletWithToken = isSingleWalletWithToken,
+                            isMultiCurrency = isMultiCurrency,
+                        )
+                    }
                 },
                 ifLeft = {
                     Timber.w(it.toString())
@@ -352,10 +385,12 @@ internal class SendModel @Inject constructor(
         ).onEach { maybeCryptoCurrency ->
             maybeCryptoCurrency.fold(
                 ifRight = { cryptoCurrencyStatus ->
-                    onDataLoaded(
-                        currencyStatus = cryptoCurrencyStatus,
-                        feeCurrencyStatus = getFeeCurrencyStatus(cryptoCurrencyStatus, isMultiCurrency),
-                    )
+                    cryptoCurrencyStatusFlow.value = cryptoCurrencyStatus
+                    feeCryptoCurrencyStatusFlow.value = getFeeCurrencyStatus(cryptoCurrencyStatus, isMultiCurrency)
+
+                    if (params.amount != null) {
+                        router.replaceAll(CommonSendRoute.Confirm)
+                    }
                 },
                 ifLeft = {
                     sendConfirmAlertFactory.getGenericErrorState(
@@ -366,7 +401,8 @@ internal class SendModel @Inject constructor(
                     )
                 },
             )
-        }.launchIn(modelScope)
+        }.flowOn(dispatchers.default)
+            .launchIn(modelScope)
     }
 
     private fun getCurrencyStatus(
@@ -399,15 +435,6 @@ internal class SendModel @Inject constructor(
             ).getOrNull() ?: cryptoCurrencyStatus
         } else {
             cryptoCurrencyStatus
-        }
-    }
-
-    private fun onDataLoaded(currencyStatus: CryptoCurrencyStatus, feeCurrencyStatus: CryptoCurrencyStatus) {
-        _cryptoCurrencyStatusFlow.value = currencyStatus
-        _feeCryptoCurrencyStatusFlow.value = feeCurrencyStatus
-
-        if (params.amount != null) {
-            router.replaceAll(CommonSendRoute.Confirm)
         }
     }
 
@@ -454,7 +481,7 @@ internal class SendModel @Inject constructor(
     }
 
     private fun initialState(): SendUM = SendUM(
-        amountUM = AmountState.Empty(isRedesignEnabled = true),
+        amountUM = AmountState.Empty,
         destinationUM = SendDestinationInitialStateTransformer(
             cryptoCurrency = cryptoCurrency,
         ).transform(DestinationUM.Empty()),
