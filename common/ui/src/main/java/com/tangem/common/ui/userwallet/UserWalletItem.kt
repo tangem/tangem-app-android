@@ -57,45 +57,53 @@ fun UserWalletItem(
         onClick = state.onClick,
         enabled = state.isEnabled,
     ) {
-        Row(
+        UserWalletItemRow(
+            state = state,
             modifier = Modifier
                 .fillMaxWidth()
                 .heightIn(min = TangemTheme.dimens.size68)
                 .padding(all = TangemTheme.dimens.spacing12),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
-        ) {
-            CardImage(state.imageState)
-            NameAndInfo(
-                modifier = Modifier.weight(1f),
-                name = state.name,
-                information = state.information,
-                balance = state.balance,
-            )
+        )
+    }
+}
 
-            when (state.endIcon) {
-                UserWalletItemUM.EndIcon.None -> Unit
-                UserWalletItemUM.EndIcon.Arrow -> {
-                    Icon(
-                        imageVector = ImageVector.vectorResource(R.drawable.ic_chevron_right_24),
-                        tint = TangemTheme.colors.icon.informative,
-                        contentDescription = null,
-                    )
-                }
-                UserWalletItemUM.EndIcon.Checkmark -> {
-                    Icon(
-                        imageVector = ImageVector.vectorResource(R.drawable.ic_check_24),
-                        tint = TangemTheme.colors.icon.accent,
-                        contentDescription = null,
-                    )
-                }
-                UserWalletItemUM.EndIcon.Warning -> {
-                    Icon(
-                        imageVector = ImageVector.vectorResource(R.drawable.ic_alert_circle_24),
-                        tint = TangemTheme.colors.icon.warning,
-                        contentDescription = null,
-                    )
-                }
+@Composable
+fun UserWalletItemRow(state: UserWalletItemUM, modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
+    ) {
+        CardImage(state.imageState)
+        NameAndInfo(
+            modifier = Modifier.weight(1f),
+            name = state.name,
+            information = state.information,
+            balance = state.balance,
+        )
+
+        when (state.endIcon) {
+            UserWalletItemUM.EndIcon.None -> Unit
+            UserWalletItemUM.EndIcon.Arrow -> {
+                Icon(
+                    imageVector = ImageVector.vectorResource(R.drawable.ic_chevron_right_24),
+                    tint = TangemTheme.colors.icon.informative,
+                    contentDescription = null,
+                )
+            }
+            UserWalletItemUM.EndIcon.Checkmark -> {
+                Icon(
+                    imageVector = ImageVector.vectorResource(R.drawable.ic_check_24),
+                    tint = TangemTheme.colors.icon.accent,
+                    contentDescription = null,
+                )
+            }
+            UserWalletItemUM.EndIcon.Warning -> {
+                Icon(
+                    imageVector = ImageVector.vectorResource(R.drawable.ic_alert_circle_24),
+                    tint = TangemTheme.colors.icon.warning,
+                    contentDescription = null,
+                )
             }
         }
     }
