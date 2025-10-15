@@ -156,6 +156,8 @@ internal class DefaultNFTSendComponent @AssistedInject constructor(
             isBalanceHidingFlow = model.isBalanceHiddenFlow,
             onLoadFee = model::loadFee,
             analyticsSendSource = analyticsSendSource,
+            account = model.account,
+            isAccountsMode = model.isAccountsMode,
             onSendTransaction = { innerRouter.replaceAll(CommonSendRoute.ConfirmSuccess) },
         ),
     )
@@ -181,6 +183,8 @@ internal class DefaultNFTSendComponent @AssistedInject constructor(
                 callback = model,
                 currentRoute = model.currentRouteFlow.filterIsInstance<CommonSendRoute.ConfirmSuccess>(),
                 txUrl = txUrl,
+                account = model.account,
+                isAccountsMode = model.isAccountsMode,
             ),
         )
     }

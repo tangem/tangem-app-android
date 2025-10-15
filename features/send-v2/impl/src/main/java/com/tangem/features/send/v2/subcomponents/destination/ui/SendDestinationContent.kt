@@ -21,7 +21,9 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.core.ui.components.SpacerH
+import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.containers.FooterContainer
 import com.tangem.core.ui.components.inputrow.InputRowRecipient
 import com.tangem.core.ui.extensions.*
@@ -46,7 +48,6 @@ internal fun SendDestinationContent(
     if (state !is DestinationUM.Content) return
     val recipients = state.recent
     val wallets = state.wallets
-    val memoField = state.memoTextField
     val address = state.addressTextField
     val isValidating by remember(state.isValidating) { derivedStateOf { state.isValidating } }
     val isError by remember(address.isError) { derivedStateOf { address.isError } }
@@ -64,18 +65,23 @@ internal fun SendDestinationContent(
             onQrCodeClick = clickIntents::onQrCodeScanClick,
         )
         memoField(
-            memoField = memoField,
+            memoField = state.memoTextField,
             onMemoChange = clickIntents::onRecipientMemoValueChange,
         )
         listHeaderItem(
-            titleRes = R.string.send_recipient_wallets_title,
+            titleRes = when (state.accountTitleUM) {
+                is AccountTitleUM.Account -> R.string.common_accounts
+                else -> R.string.send_recipient_wallets_title
+            },
+            isLoading = state.accountTitleUM == null,
             isVisible = wallets.isNotEmpty() && wallets.first().isVisible && !state.isRecentHidden,
             isFirst = true,
         )
         listItem(
             list = wallets,
             isLast = recipients.any { !it.isVisible },
-            isBalanceHidden = isBalanceHidden,
+            accountTitleUM = state.accountTitleUM,
+            isBalanceHidden = false,
             isRecentHidden = state.isRecentHidden,
             onClick = { title ->
                 clickIntents.onRecipientAddressValueChange(
@@ -86,6 +92,7 @@ internal fun SendDestinationContent(
         )
         listHeaderItem(
             titleRes = R.string.send_recent_transactions,
+            isLoading = state.accountTitleUM == null,
             isVisible = recipients.isNotEmpty() && recipients.first().isVisible && !state.isRecentHidden,
             isFirst = wallets.any { !it.isVisible },
         )
@@ -180,7 +187,12 @@ private fun LazyListScope.memoField(
     }
 }
 
-private fun LazyListScope.listHeaderItem(@StringRes titleRes: Int, isVisible: Boolean, isFirst: Boolean) {
+private fun LazyListScope.listHeaderItem(
+    @StringRes titleRes: Int,
+    isVisible: Boolean,
+    isLoading: Boolean,
+    isFirst: Boolean,
+) {
     item(key = titleRes) {
         AnimateRecentAppearance(isVisible) {
             val (topPadding, paddingFromTop) = if (isFirst) {
@@ -189,10 +201,8 @@ private fun LazyListScope.listHeaderItem(@StringRes titleRes: Int, isVisible: Bo
                 0.dp to 8.dp
             }
             val topRadius = if (isFirst) 16.dp else 0.dp
-            Text(
-                text = stringResourceSafe(titleRes),
-                style = TangemTheme.typography.subtitle2,
-                color = TangemTheme.colors.text.tertiary,
+            AnimatedContent(
+                targetState = isLoading,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = topPadding)
@@ -209,7 +219,22 @@ private fun LazyListScope.listHeaderItem(@StringRes titleRes: Int, isVisible: Bo
                         start = 12.dp,
                         end = 12.dp,
                     ),
-            )
+            ) { currentIsLoading ->
+                if (currentIsLoading) {
+                    Box {
+                        TextShimmer(
+                            style = TangemTheme.typography.subtitle2,
+                            text = stringResourceSafe(titleRes),
+                        )
+                    }
+                } else {
+                    Text(
+                        text = stringResourceSafe(titleRes),
+                        style = TangemTheme.typography.subtitle2,
+                        color = TangemTheme.colors.text.tertiary,
+                    )
+                }
+            }
         }
     }
 }
@@ -220,6 +245,7 @@ private fun LazyListScope.listItem(
     isBalanceHidden: Boolean,
     isRecentHidden: Boolean,
     onClick: (String) -> Unit,
+    accountTitleUM: AccountTitleUM? = null,
 ) {
     items(
         count = list.size,
@@ -233,6 +259,7 @@ private fun LazyListScope.listItem(
             ListItemWithIcon(
                 title = title,
                 subtitle = item.subtitle.orMaskWithStars(isBalanceHidden).resolveReference(),
+                accountTitleUM = accountTitleUM,
                 info = item.timestamp?.resolveReference(),
                 subtitleEndOffset = item.subtitleEndOffset,
                 subtitleIconRes = item.subtitleIconRes,

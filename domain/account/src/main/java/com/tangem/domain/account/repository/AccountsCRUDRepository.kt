@@ -75,6 +75,9 @@ interface AccountsCRUDRepository {
      */
     suspend fun saveAccount(account: Account.CryptoPortfolio)
 
+    /** Synchronizes tokens for a specific [userWalletId] with remote data source */
+    suspend fun syncTokens(userWalletId: UserWalletId)
+
     /**
      * Retrieves the total count of accounts associated with a specific user wallet including archived accounts
      *

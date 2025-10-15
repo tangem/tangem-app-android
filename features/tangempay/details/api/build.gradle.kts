@@ -15,6 +15,7 @@ dependencies {
 
     /** Domain */
     implementation(projects.domain.models)
+    implementation(projects.domain.visa.models)
 
     /** Compose */
     implementation(deps.compose.runtime)

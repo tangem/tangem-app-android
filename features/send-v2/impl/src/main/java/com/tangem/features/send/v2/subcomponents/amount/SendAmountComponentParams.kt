@@ -2,6 +2,7 @@ package com.tangem.features.send.v2.subcomponents.amount
 
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
@@ -23,6 +24,8 @@ internal sealed class SendAmountComponentParams {
     abstract val cryptoCurrency: CryptoCurrency
     abstract val cryptoCurrencyStatusFlow: StateFlow<CryptoCurrencyStatus>
     abstract val isBalanceHidingFlow: StateFlow<Boolean>
+    abstract val accountFlow: StateFlow<Account.CryptoPortfolio?>
+    abstract val isAccountModeFlow: StateFlow<Boolean>
 
     data class AmountParams(
         override val state: AmountState,
@@ -34,6 +37,8 @@ internal sealed class SendAmountComponentParams {
         override val cryptoCurrencyStatusFlow: StateFlow<CryptoCurrencyStatus>,
         override val isBalanceHidingFlow: StateFlow<Boolean>,
         override val analyticsSendSource: CommonSendAnalyticEvents.CommonSendSource,
+        override val accountFlow: StateFlow<Account.CryptoPortfolio?>,
+        override val isAccountModeFlow: StateFlow<Boolean>,
         val callback: ModelCallback,
         val currentRoute: StateFlow<CommonSendRoute>,
     ) : SendAmountComponentParams()
@@ -48,6 +53,8 @@ internal sealed class SendAmountComponentParams {
         override val cryptoCurrencyStatusFlow: StateFlow<CryptoCurrencyStatus>,
         override val isBalanceHidingFlow: StateFlow<Boolean>,
         override val analyticsSendSource: CommonSendAnalyticEvents.CommonSendSource,
+        override val accountFlow: StateFlow<Account.CryptoPortfolio?>,
+        override val isAccountModeFlow: StateFlow<Boolean>,
         val userWallet: UserWallet,
         val blockClickEnableFlow: StateFlow<Boolean>,
     ) : SendAmountComponentParams()

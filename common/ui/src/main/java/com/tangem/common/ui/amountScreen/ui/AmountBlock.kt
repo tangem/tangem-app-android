@@ -16,12 +16,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
+import com.tangem.common.ui.account.AccountTitle
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.preview.AmountStatePreviewData
 import com.tangem.core.ui.components.ResizableText
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.currency.icon.CurrencyIcon
-import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
@@ -60,11 +60,7 @@ fun AmountBlock(amountState: AmountState, isClickDisabled: Boolean, isEditingDis
             .clickable(enabled = !isClickDisabled && !isEditingDisabled, onClick = onClick)
             .padding(TangemTheme.dimens.spacing16),
     ) {
-        Text(
-            text = amountState.title.resolveReference(),
-            style = TangemTheme.typography.subtitle2,
-            color = TangemTheme.colors.text.tertiary,
-        )
+        AccountTitle(accountTitleUM = amountState.accountTitleUM)
         SpacerH(20.dp)
         CurrencyIcon(
             state = amountState.tokenIconState,

@@ -14,6 +14,7 @@ import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObjectList
 import com.tangem.datasource.local.preferences.utils.getObjectListSync
 import com.tangem.datasource.local.preferences.utils.getObjectMap
+import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
@@ -54,7 +55,7 @@ internal class DefaultSwapTransactionRepository(
             storeTransactionState(
                 txId = transaction.txId,
                 status = it,
-                refundTokenCurrency = null,
+                accountWithCurrency = null,
             )
         }
         appPreferencesStore.editData { mutablePreferences ->
@@ -177,7 +178,7 @@ internal class DefaultSwapTransactionRepository(
     override suspend fun storeTransactionState(
         txId: String,
         status: SwapStatusModel,
-        refundTokenCurrency: CryptoCurrency?,
+        accountWithCurrency: Pair<AccountId?, CryptoCurrency>?,
     ) {
         appPreferencesStore.editData { mutablePreferences ->
             val savedMap = mutablePreferences.getObjectMap<SwapStatusDTO>(
@@ -187,8 +188,8 @@ internal class DefaultSwapTransactionRepository(
             val updatesMap = savedMap.toMutableMap()
             updatesMap[txId] = savedStatusConverter.convert(
                 status.copy(
-                    refundTokensResponse = refundTokenCurrency?.let {
-                        userTokensResponseFactory.createResponseToken(refundTokenCurrency)
+                    refundTokensResponse = accountWithCurrency?.let { (accountId, currency) ->
+                        userTokensResponseFactory.createResponseToken(currency, accountId)
                     },
                 ),
             )

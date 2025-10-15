@@ -2,6 +2,7 @@ package com.tangem.features.swap.v2.impl.amount
 
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.express.models.ExpressProviderType
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
@@ -23,6 +24,8 @@ internal sealed class SwapAmountComponentParams {
     abstract val primaryCryptoCurrencyStatusFlow: StateFlow<CryptoCurrencyStatus>
     abstract val secondaryCryptoCurrency: CryptoCurrency?
     abstract val filterProviderTypes: List<ExpressProviderType>
+    abstract val accountFlow: StateFlow<Account.CryptoPortfolio?>
+    abstract val isAccountModeFlow: StateFlow<Boolean>
 
     data class AmountParams(
         override val amountUM: SwapAmountUM,
@@ -34,6 +37,8 @@ internal sealed class SwapAmountComponentParams {
         override val secondaryCryptoCurrency: CryptoCurrency?,
         override val filterProviderTypes: List<ExpressProviderType> = emptyList(),
         override val analyticsSendSource: CommonSendAnalyticEvents.CommonSendSource,
+        override val accountFlow: StateFlow<Account.CryptoPortfolio?>,
+        override val isAccountModeFlow: StateFlow<Boolean>,
         val title: TextReference,
         val callback: SwapAmountComponent.ModelCallback,
         val currentRoute: Flow<SendWithSwapRoute>,
@@ -49,6 +54,8 @@ internal sealed class SwapAmountComponentParams {
         override val secondaryCryptoCurrency: CryptoCurrency?,
         override val filterProviderTypes: List<ExpressProviderType> = emptyList(),
         override val analyticsSendSource: CommonSendAnalyticEvents.CommonSendSource,
+        override val accountFlow: StateFlow<Account.CryptoPortfolio?>,
+        override val isAccountModeFlow: StateFlow<Boolean>,
         val blockClickEnableFlow: StateFlow<Boolean>,
     ) : SwapAmountComponentParams()
 }

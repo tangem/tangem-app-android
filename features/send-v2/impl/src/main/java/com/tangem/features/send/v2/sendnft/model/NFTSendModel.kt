@@ -11,6 +11,9 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.datasource.local.nft.converter.NFTSdkAssetConverter
+import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
+import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
+import com.tangem.domain.account.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.card.common.util.cardTypesResolver
@@ -19,6 +22,7 @@ import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.BlockchainErrorInfo
 import com.tangem.domain.feedback.models.FeedbackEmailType
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
@@ -71,6 +75,9 @@ internal class NFTSendModel @Inject constructor(
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val alertFactory: SendConfirmAlertFactory,
     private val nftSendSuccessTrigger: NFTSendSuccessTrigger,
+    private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
+    private val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase,
+    private val accountsFeatureToggles: AccountsFeatureToggles,
 ) : Model(), SendNFTComponentCallback, NFTSendSuccessComponent.ModelCallback {
 
     val params: NFTSendComponent.Params = paramsContainer.require()
@@ -93,6 +100,9 @@ internal class NFTSendModel @Inject constructor(
     var cryptoCurrencyStatus: CryptoCurrencyStatus by Delegates.notNull()
     var feeCryptoCurrencyStatus: CryptoCurrencyStatus by Delegates.notNull()
     var appCurrency: AppCurrency = AppCurrency.Default
+
+    var account: Account.CryptoPortfolio? = null
+    var isAccountsMode: Boolean = false
 
     init {
         subscribeOnCurrencyStatusUpdates()
@@ -176,10 +186,31 @@ internal class NFTSendModel @Inject constructor(
                         ?.firstOrNull { it is CryptoCurrency.Coin && it.network == nftAsset.network }
                         ?: return@launch
 
-                    getCurrenciesStatusUpdates(
-                        isSingleWalletWithToken = wallet is UserWallet.Cold &&
-                            wallet.scanResponse.cardTypesResolver.isSingleWalletWithToken(),
-                    )
+                    if (accountsFeatureToggles.isFeatureEnabled) {
+                        getAccountCurrencyStatusUseCase(
+                            userWalletId,
+                            cryptoCurrency,
+                        ).onEach { (maybeAccount, cryptoStatus) ->
+                            account = maybeAccount
+                            isAccountsMode = isAccountsModeEnabledUseCase.invokeSync()
+
+                            cryptoCurrencyStatus = cryptoStatus
+                            feeCryptoCurrencyStatus = getFeePaidCryptoCurrencyStatusSyncUseCase(
+                                userWalletId = userWalletId,
+                                cryptoCurrencyStatus = cryptoStatus,
+                            ).getOrNull() ?: cryptoStatus
+
+                            if (uiState.value.destinationUM is DestinationUM.Empty) {
+                                router.replaceAll(Destination(isEditMode = false))
+                            }
+                        }.flowOn(dispatchers.default)
+                            .launchIn(modelScope)
+                    } else {
+                        getCurrenciesStatusUpdates(
+                            isSingleWalletWithToken = wallet is UserWallet.Cold &&
+                                wallet.scanResponse.cardTypesResolver.isSingleWalletWithToken(),
+                        )
+                    }
                 },
                 ifLeft = {
                     alertFactory.getGenericErrorState(::onFailedTxEmailClick)

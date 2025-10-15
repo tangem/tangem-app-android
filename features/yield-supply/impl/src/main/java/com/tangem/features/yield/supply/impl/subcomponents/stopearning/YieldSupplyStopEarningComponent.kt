@@ -92,6 +92,7 @@ internal class YieldSupplyStopEarningComponent(
             onClick = model::onClick,
             iconResId = walletInterationIcon(params.userWallet),
             enabled = state.isPrimaryButtonEnabled,
+            showProgress = state.isTransactionSending,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),

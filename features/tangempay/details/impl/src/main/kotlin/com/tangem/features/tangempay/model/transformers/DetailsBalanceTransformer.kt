@@ -26,7 +26,7 @@ internal class DetailsBalanceTransformer(
                     fiatBalance = getBalanceText(balance.value),
                     // TODO [REDACTED_TASK_KEY]: Add crypto balance when the BFF is ready
                     cryptoBalance = "",
-                    actionButtons = persistentListOf(),
+                    actionButtons = prevState.balanceBlockState.actionButtons,
                 )
             }
         }

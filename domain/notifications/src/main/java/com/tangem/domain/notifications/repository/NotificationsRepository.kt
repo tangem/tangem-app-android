@@ -56,4 +56,12 @@ interface NotificationsRepository {
     suspend fun getWalletAutomaticallyEnabledList(): List<String>
 
     suspend fun setNotificationsWasEnabledAutomatically(userWalletId: String)
+
+    /**
+     * By default it is false cause for the first try to show should be skipped. Only should be shown on second time
+     * app launch.
+     */
+    suspend fun shouldAskNotificationPermissionsViaBs(): Boolean
+
+    suspend fun setShouldAskNotificationPermissionsViaBs(shouldAsk: Boolean)
 }

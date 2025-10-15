@@ -9,10 +9,6 @@ import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.scenarios.openMainScreen
 import com.tangem.scenarios.synchronizeAddresses
 import com.tangem.screens.*
-import com.tangem.screens.onMainScreen
-import com.tangem.screens.onSendAddressScreen
-import com.tangem.screens.onSendScreen
-import com.tangem.screens.onTokenDetailsScreen
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
@@ -26,7 +22,6 @@ class BlockchainTest : BaseTestCase() {
     @Test
     fun adaCheckMinAmountTest() {
         val tokenName = "Cardano"
-        val balance = "$0.00"
         val errorSendAmount = "0.1"
         val validSendAmount = "10"
         val minAmount = "ADA 1.00"
@@ -46,7 +41,7 @@ class BlockchainTest : BaseTestCase() {
                 openMainScreen()
             }
             step("Synchronize addresses") {
-                synchronizeAddresses(balance)
+                synchronizeAddresses()
             }
             step("Click on token with name: '$tokenName'") {
                 onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
@@ -121,7 +116,6 @@ class BlockchainTest : BaseTestCase() {
         val tokenName = "XRP Ledger"
         val amount = "1.00"
         val currencySymbol = "XRP"
-        val balance = "$0.00"
         val userTokensScenarioName = "user_tokens_api"
         val userTokensScenarioState = "XRP"
         val rippleAccountInfoScenarioName = "ripple_account_info"
@@ -151,7 +145,7 @@ class BlockchainTest : BaseTestCase() {
                 openMainScreen()
             }
             step("Synchronize addresses") {
-                synchronizeAddresses(balance)
+                synchronizeAddresses()
             }
             step("Click on token with name: '$tokenName'") {
                 onMainScreen { tokenWithTitleAndAddress(tokenName).performClick() }

@@ -9,7 +9,6 @@ import com.tangem.common.core.TangemError
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.deserialization.WalletDataDeserializer
 import com.tangem.common.extensions.*
-import com.tangem.common.map
 import com.tangem.common.tlv.Tlv
 import com.tangem.common.tlv.TlvDecoder
 import com.tangem.crypto.CryptoUtils
@@ -145,11 +144,11 @@ internal class ScanProductTask(
                         card = cardDto,
                         session = session,
                     ) { scanResponseResult ->
-                        callback(
-                            scanResponseResult.map { scanResponse ->
-                                scanResponse.copy(visaCardActivationStatus = result.data)
-                            },
-                        )
+                        // callback(
+                        // scanResponseResult.map { scanResponse ->
+                        //     scanResponse.copy(visaCardActivationStatus = result.data)
+                        // },
+                        // )
                     }
                 }
                 is CompletionResult.Failure -> {

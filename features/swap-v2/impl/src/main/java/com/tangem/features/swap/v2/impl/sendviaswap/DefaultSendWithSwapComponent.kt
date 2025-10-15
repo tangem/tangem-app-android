@@ -160,6 +160,8 @@ internal class DefaultSendWithSwapComponent @AssistedInject constructor(
                 userWallet = model.userWallet,
                 filterProviderTypes = SEND_WITH_SWAP_PROVIDER_TYPES,
                 analyticsSendSource = model.analyticsSendSource,
+                accountFlow = model.accountFlow,
+                isAccountModeFlow = model.isAccountModeFlow,
             ),
         )
     }
@@ -199,6 +201,8 @@ internal class DefaultSendWithSwapComponent @AssistedInject constructor(
                 analyticsCategoryName = model.analyticCategoryName,
                 primaryCryptoCurrencyStatusFlow = model.primaryCryptoCurrencyStatusFlow,
                 primaryFeePaidCurrencyStatusFlow = model.primaryFeePaidCurrencyStatusFlow,
+                accountFlow = model.accountFlow,
+                isAccountModeFlow = model.isAccountModeFlow,
                 analyticsSendSource = model.analyticsSendSource,
                 swapDirection = SwapDirection.Direct,
             ),

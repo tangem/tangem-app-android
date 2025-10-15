@@ -1,7 +1,6 @@
 package com.tangem.tests
 
 import com.tangem.common.BaseTestCase
-import com.tangem.common.constants.TestConstants.TOTAL_BALANCE
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.scenarios.openMainScreen
 import com.tangem.scenarios.synchronizeAddresses
@@ -19,13 +18,12 @@ class HideTokenTest : BaseTestCase() {
     @Test
     fun hideWalletTokenByHideButtonTest() {
         val tokenTitle = "Polygon"
-        val balance = TOTAL_BALANCE
         setupHooks().run {
             step("Open 'Main Screen'") {
                 openMainScreen()
             }
             step("Synchronize addresses") {
-                synchronizeAddresses(balance)
+                synchronizeAddresses()
             }
             step("Click on token with name: '$tokenTitle'") {
                 onMainScreen { tokenWithTitleAndAddress(tokenTitle).clickWithAssertion() }

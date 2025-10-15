@@ -22,14 +22,26 @@ internal object SimpleNetworkStatusConverter : Converter<NetworkStatusDM, Simple
             ),
         )
 
+        val derivationPath = NetworkDerivationPathConverter.convert(value = value.derivationPath)
+
+        val amountsConverter = NetworkAmountsConverter(
+            rawNetworkId = value.networkId.value,
+            derivationPath = derivationPath,
+        )
+
+        val yieldSupplyStatusConverter = NetworkYieldSupplyStatusConverter(
+            rawNetworkId = value.networkId.value,
+            derivationPath = derivationPath,
+        )
+
         val status = when (value) {
             is NetworkStatusDM.Verified -> {
                 NetworkStatus.Verified(
                     address = address,
-                    amounts = NetworkAmountsConverter.convert(value = value.amounts),
+                    amounts = amountsConverter.convert(value = value.amounts),
                     pendingTransactions = emptyMap(),
                     source = StatusSource.CACHE,
-                    yieldSupplyStatuses = NetworkYieldSupplyStatusConverter.convert(value = value.yieldSupplyStatuses),
+                    yieldSupplyStatuses = yieldSupplyStatusConverter.convert(value = value.yieldSupplyStatuses),
                 )
             }
             is NetworkStatusDM.NoAccount -> {
