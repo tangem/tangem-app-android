@@ -61,6 +61,7 @@ internal class AccountListCryptoCurrenciesFetcherTest {
         val mockUserWallet = mockk<UserWallet> { every { isMultiCurrency } returns true }
 
         every { userWalletsStore.getSyncStrict(key = params.userWalletId) } returns mockUserWallet
+        coEvery { walletAccountsFetcher.fetch(userWalletId = params.userWalletId) } returns mockk()
 
         // Act
         val actual = fetcher(params)
