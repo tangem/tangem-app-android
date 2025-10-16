@@ -1,6 +1,7 @@
 package com.tangem.data.managetokens.di
 
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
+import com.tangem.data.common.account.WalletAccountsFetcher
 import com.tangem.data.common.currency.CardCryptoCurrencyFactory
 import com.tangem.data.common.currency.UserTokensSaver
 import com.tangem.data.common.network.NetworkFactory
@@ -38,6 +39,7 @@ internal object ManageTokensDataModule {
         excludedBlockchains: ExcludedBlockchains,
         cardCryptoCurrencyFactory: CardCryptoCurrencyFactory,
         networkFactory: NetworkFactory,
+        walletAccountsFetcher: WalletAccountsFetcher,
     ): ManageTokensRepository {
         return DefaultManageTokensRepository(
             tangemTechApi = tangemTechApi,
@@ -50,6 +52,7 @@ internal object ManageTokensDataModule {
             cardCryptoCurrencyFactory = cardCryptoCurrencyFactory,
             networkFactory = networkFactory,
             dispatchers = dispatchers,
+            walletAccountsFetcher = walletAccountsFetcher,
         )
     }
 
