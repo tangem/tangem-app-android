@@ -2,7 +2,11 @@ package com.tangem.features.managetokens.utils.list
 
 import arrow.core.Either
 import arrow.core.left
+import arrow.core.right
+import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
+import com.tangem.domain.account.producer.SingleAccountProducer
 import com.tangem.domain.account.status.usecase.SaveCryptoCurrenciesUseCase
+import com.tangem.domain.account.supplier.SingleAccountSupplier
 import com.tangem.domain.managetokens.*
 import com.tangem.domain.managetokens.model.CurrencyUnsupportedState
 import com.tangem.domain.managetokens.model.ManageTokensListConfig
@@ -28,6 +32,8 @@ internal class ManageTokensUseCasesFacade @AssistedInject constructor(
     private val saveManagedTokensUseCase: SaveManagedTokensUseCase,
     private val saveCryptoCurrenciesUseCase: SaveCryptoCurrenciesUseCase,
     private val customTokensRepository: CustomTokensRepository,
+    private val accountsFeatureToggles: AccountsFeatureToggles,
+    private val singleAccountSupplier: SingleAccountSupplier,
     @Assisted private val mode: ManageTokensMode,
 ) {
 
@@ -35,12 +41,21 @@ internal class ManageTokensUseCasesFacade @AssistedInject constructor(
         get() = IllegalStateException("Unsupported")
 
     fun manageTokensListConfig(searchText: String?): ManageTokensListConfig {
-        val userWalletId: UserWalletId? = when (mode) {
-            is ManageTokensMode.Account -> TODO("Account")
-            ManageTokensMode.None -> null
-            is ManageTokensMode.Wallet -> mode.userWalletId
+        return when (mode) {
+            is ManageTokensMode.Account -> {
+                ManageTokensListConfig.Account(accountId = mode.accountId, searchText = searchText)
+            }
+            is ManageTokensMode.Wallet -> {
+                ManageTokensListConfig.Wallet(userWalletId = mode.userWalletId, searchText = searchText)
+            }
+            ManageTokensMode.None -> {
+                if (accountsFeatureToggles.isFeatureEnabled) {
+                    ManageTokensListConfig.Account(accountId = null, searchText = searchText)
+                } else {
+                    ManageTokensListConfig.Wallet(userWalletId = null, searchText = searchText)
+                }
+            }
         }
-        return ManageTokensListConfig(userWalletId, searchText)
     }
 
     suspend fun removeCustomCurrencyUseCase(customCurrency: ManagedCryptoCurrency.Custom): Either<Throwable, Unit> {
@@ -67,7 +82,21 @@ internal class ManageTokensUseCasesFacade @AssistedInject constructor(
         tempRemovedTokens: Map<ManagedCryptoCurrency.Token, Set<Network>>,
     ): Either<Throwable, Boolean> {
         return when (mode) {
-            is ManageTokensMode.Account -> TODO("Account")
+            is ManageTokensMode.Account -> {
+                val added = tempAddedTokens.mapToCryptoCurrencies(userWalletId = mode.accountId.userWalletId)
+                val removed = tempRemovedTokens.mapToCryptoCurrencies(userWalletId = mode.accountId.userWalletId)
+
+                val account = singleAccountSupplier.getSyncOrNull(
+                    params = SingleAccountProducer.Params(accountId = mode.accountId),
+                )
+                    ?: return IllegalStateException("Account not found").left()
+
+                (account.cryptoCurrencies + added - removed).any {
+                    it is CryptoCurrency.Token && it.network.backendId == network.backendId &&
+                        it.network.derivationPath == network.derivationPath
+                }
+                    .right()
+            }
             is ManageTokensMode.Wallet -> checkHasLinkedTokensUseCase.invoke(
                 userWalletId = mode.userWalletId,
                 network = network,
@@ -82,7 +111,10 @@ internal class ManageTokensUseCasesFacade @AssistedInject constructor(
         sourceNetwork: ManagedCryptoCurrency.SourceNetwork,
     ): Either<Throwable, CurrencyUnsupportedState?> {
         return when (mode) {
-            is ManageTokensMode.Account -> TODO("Account")
+            is ManageTokensMode.Account -> checkCurrencyUnsupportedUseCase.invoke(
+                userWalletId = mode.accountId.userWalletId,
+                sourceNetwork = sourceNetwork,
+            )
             is ManageTokensMode.Wallet -> checkCurrencyUnsupportedUseCase.invoke(
                 userWalletId = mode.userWalletId,
                 sourceNetwork = sourceNetwork,
@@ -92,7 +124,10 @@ internal class ManageTokensUseCasesFacade @AssistedInject constructor(
     }
 
     suspend fun needColdWalletInteraction(network: Map<String, Nothing?>): Boolean = when (mode) {
-        is ManageTokensMode.Account -> TODO("Account")
+        is ManageTokensMode.Account -> coldWalletAndHasMissedDerivationsUseCase.invoke(
+            userWalletId = mode.accountId.userWalletId,
+            networksWithDerivationPath = network,
+        )
         is ManageTokensMode.Wallet -> coldWalletAndHasMissedDerivationsUseCase.invoke(
             userWalletId = mode.userWalletId,
             networksWithDerivationPath = network,
