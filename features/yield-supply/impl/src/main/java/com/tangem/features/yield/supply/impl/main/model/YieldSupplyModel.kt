@@ -144,10 +144,17 @@ internal class YieldSupplyModel @Inject constructor(
     }
 
     override fun onStartEarningClick() {
+        val yieldSupplyUM = uiState.value
+        val apy = when (yieldSupplyUM) {
+            is YieldSupplyUM.Available -> yieldSupplyUM.apy
+            is YieldSupplyUM.Content -> yieldSupplyUM.apy
+            else -> ""
+        }
         appRouter.push(
             YieldSupplyPromo(
                 userWalletId = params.userWalletId,
                 cryptoCurrency = params.cryptoCurrency,
+                apy = apy,
             ),
         )
     }
@@ -218,6 +225,7 @@ internal class YieldSupplyModel @Inject constructor(
                                     ),
                                     onClick = ::onActiveClick,
                                     isAllowedToSpend = yieldSupplyStatus.isAllowedToSpend,
+                                    apy = tokenStatus.apy.toString(),
                                 )
                             }
                         }.onLeft {
