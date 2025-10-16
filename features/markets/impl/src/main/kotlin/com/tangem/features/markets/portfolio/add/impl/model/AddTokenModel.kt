@@ -70,8 +70,7 @@ internal class AddTokenModel @Inject constructor(
             val accountId = selectedPortfolio.account.account.account.accountId
             saveCryptoCurrenciesUseCase(
                 accountId = accountId,
-                add = listOf(cryptoCurrency),
-                remove = listOf(),
+                add = cryptoCurrency,
             )
             val status = getAccountCurrencyStatusUseCase.invokeSync(
                 userWalletId = accountId.userWalletId,
