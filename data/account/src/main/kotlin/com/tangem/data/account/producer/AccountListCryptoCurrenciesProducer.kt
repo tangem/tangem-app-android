@@ -54,6 +54,7 @@ internal class AccountListCryptoCurrenciesProducer @AssistedInject constructor(
                 ).toSet()
             }
             .onEmpty { emit(emptySet()) }
+            .distinctUntilChanged()
             .flowOn(dispatchers.default)
     }
 
