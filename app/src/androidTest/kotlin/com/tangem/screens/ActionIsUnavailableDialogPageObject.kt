@@ -9,9 +9,10 @@ import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
 import io.github.kakaocup.compose.node.element.KNode
 import io.github.kakaocup.kakao.common.utilities.getResourceString
+import com.tangem.common.ui.R as CommonUIR
 
-class DialogPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
-    ComposeScreen<DialogPageObject>(semanticsProvider = semanticsProvider) {
+class ActionIsUnavailableDialogPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
+    ComposeScreen<ActionIsUnavailableDialogPageObject>(semanticsProvider = semanticsProvider) {
 
     val dialogContainer: KNode = child {
         hasTestTag(BaseDialogTestTags.CONTAINER)
@@ -19,30 +20,14 @@ class DialogPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
 
     val title: KNode = child {
         hasTestTag(BaseDialogTestTags.TITLE)
+        hasText(getResourceString(CommonUIR.string.action_buttons_something_wrong_alert_title))
+        useUnmergedTree = true
     }
 
     val text: KNode = child {
         hasTestTag(BaseDialogTestTags.TEXT)
-    }
-
-    val cancelButton: KNode = child {
-        hasTestTag(BaseButtonTestTags.BUTTON)
-        hasText(getResourceString(R.string.common_cancel))
-    }
-
-    val hideButton: KNode = child {
-        hasTestTag(BaseButtonTestTags.BUTTON)
-        hasText(getResourceString(R.string.token_details_hide_alert_hide))
-    }
-
-    val confirmButton: KNode = child {
-        hasTestTag(BaseButtonTestTags.BUTTON)
-        hasText(getResourceString(R.string.common_confirm))
-    }
-
-    val continueButton: KNode = child {
-        hasTestTag(BaseButtonTestTags.BUTTON)
-        hasText(getResourceString(R.string.common_continue))
+        hasText(getResourceString(CommonUIR.string.action_buttons_something_wrong_alert_message))
+        useUnmergedTree = true
     }
 
     val okButton: KNode = child {
@@ -51,5 +36,5 @@ class DialogPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
     }
 }
 
-internal fun BaseTestCase.onDialog(function: DialogPageObject.() -> Unit) =
+internal fun BaseTestCase.onActionIsUnavailableDialog(function: ActionIsUnavailableDialogPageObject.() -> Unit) =
     onComposeScreen(composeTestRule, function)
