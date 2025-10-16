@@ -121,6 +121,10 @@ internal class WalletSettingsModel @Inject constructor(
         }
 
     init {
+        getUserWalletUseCase.invoke(params.userWalletId).onRight {
+            analyticsContextProxy.addContext(it)
+        }
+
         fun combineUI(wallet: UserWallet) = combine(
             getWalletNFTEnabledUseCase.invoke(params.userWalletId),
             getWalletNotificationsEnabledUseCase(params.userWalletId),
@@ -153,6 +157,11 @@ internal class WalletSettingsModel @Inject constructor(
             .filterIsInstance<Either.Right<UserWallet>>()
             .flatMapLatest { combineUI(it.value) }
             .launchIn(modelScope)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        analyticsContextProxy.removeContext()
     }
 
     private fun isNotificationsPermissionGranted(): Boolean {
