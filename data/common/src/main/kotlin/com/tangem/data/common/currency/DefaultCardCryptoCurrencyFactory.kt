@@ -1,12 +1,15 @@
 package com.tangem.data.common.currency
 
-import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.blockchainsdk.utils.toNetworkId
+import com.tangem.data.common.account.WalletAccountsFetcher
+import com.tangem.data.common.tokens.getDefaultWalletBlockchains
+import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
+import com.tangem.datasource.api.tangemTech.models.account.toUserTokensResponse
 import com.tangem.datasource.local.token.UserTokensResponseStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
-import com.tangem.domain.card.common.TapWorkarounds.isTestCard
+import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -23,10 +26,13 @@ import com.tangem.domain.models.wallet.isMultiCurrency
  * @property userWalletsStore        user wallets store
  * @property userTokensResponseStore user tokens response store
  */
+@Suppress("LongParameterList")
 internal class DefaultCardCryptoCurrencyFactory(
     private val demoConfig: DemoConfig,
     private val excludedBlockchains: ExcludedBlockchains,
     private val userWalletsStore: UserWalletsStore,
+    private val accountsFeatureToggles: AccountsFeatureToggles,
+    private val walletAccountsFetcher: WalletAccountsFetcher,
     private val userTokensResponseStore: UserTokensResponseStore,
     private val responseCryptoCurrenciesFactory: ResponseCryptoCurrenciesFactory,
 ) : CardCryptoCurrencyFactory {
@@ -99,25 +105,7 @@ internal class DefaultCardCryptoCurrencyFactory(
     override fun createDefaultCoinsForMultiCurrencyWallet(userWallet: UserWallet): List<CryptoCurrency.Coin> {
         require(userWallet.isMultiCurrency) { "It isn't multi-currency wallet" }
 
-        val blockchains = when (userWallet) {
-            is UserWallet.Cold -> {
-                val card = userWallet.scanResponse.card
-
-                var blockchainsInternal = if (demoConfig.isDemoCardId(card.cardId)) {
-                    demoConfig.demoBlockchains
-                } else {
-                    listOf(Blockchain.Bitcoin, Blockchain.Ethereum)
-                }
-
-                if (card.isTestCard) {
-                    blockchainsInternal = blockchainsInternal.mapNotNull { it.getTestnetVersion() }
-                }
-
-                blockchainsInternal
-            }
-
-            is UserWallet.Hot -> listOf(Blockchain.Bitcoin, Blockchain.Ethereum)
-        }
+        val blockchains = getDefaultWalletBlockchains(userWallet, demoConfig)
 
         return blockchains.mapNotNull {
             cryptoCurrencyFactory.createCoin(
@@ -152,7 +140,7 @@ internal class DefaultCardCryptoCurrencyFactory(
         userWallet: UserWallet,
         networks: Set<Network>,
     ): Map<Network, List<CryptoCurrency>> {
-        val response = userTokensResponseStore.getSyncOrNull(userWalletId = userWallet.walletId)
+        val response = getUserTokensResponse(userWalletId = userWallet.walletId)
             ?: return emptyMap()
 
         val existingNetworkWithCurrencies = responseCryptoCurrenciesFactory.createCurrencies(
@@ -170,7 +158,7 @@ internal class DefaultCardCryptoCurrencyFactory(
         userWallet: UserWallet,
         rawIds: Set<Network.RawID>,
     ): Map<Network.RawID, List<CryptoCurrency>> {
-        val response = userTokensResponseStore.getSyncOrNull(userWalletId = userWallet.walletId)
+        val response = getUserTokensResponse(userWalletId = userWallet.walletId)
             ?: return emptyMap()
 
         val networkIds = rawIds.map { it.toBlockchain().toNetworkId() }
@@ -180,6 +168,14 @@ internal class DefaultCardCryptoCurrencyFactory(
             userWallet = userWallet,
         )
             .groupBy { it.network.id.rawId }
+    }
+
+    private suspend fun getUserTokensResponse(userWalletId: UserWalletId): UserTokensResponse? {
+        return if (accountsFeatureToggles.isFeatureEnabled) {
+            walletAccountsFetcher.getSaved(userWalletId)?.toUserTokensResponse()
+        } else {
+            userTokensResponseStore.getSyncOrNull(userWalletId = userWalletId)
+        }
     }
 
     private fun getSingleWalletCurrencies(userWallet: UserWallet.Cold): SingleWalletCurrencies {
