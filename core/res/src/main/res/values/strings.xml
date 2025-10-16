@@ -22,6 +22,7 @@
   <string name="account_archived_recover_error_message">You have already exceeded the limit of 20 active accounts. Archive one to recover.</string>
   <string name="account_archived_recover_error_title">Can\'t recover account</string>
   <string name="account_archived_title">Archived</string>
+  <string name="account_could_not_archive">We couldn’t archive account. Please try again later.</string>
   <string name="account_could_not_create">We couldn’t create account. Please try again later.</string>
   <string name="account_create_success_message">Account created</string>
   <string name="account_details_archive">Archive account</string>
@@ -260,6 +261,7 @@
   <string name="common_from">From</string>
   <string name="common_generate_addresses">Synchronize addresses</string>
   <string name="common_get_started">Get started</string>
+  <string name="common_get_token">Get token</string>
   <string name="common_go_to_provider">Go to provider</string>
   <string name="common_go_to_token">Go to token</string>
   <string name="common_got_it">Got it</string>
@@ -268,7 +270,7 @@
   <string name="common_import">Import</string>
   <string name="common_in_progress">In progress</string>
   <string name="common_later">Later</string>
-  <string name="common_learn_more">Learn more</string>
+  <string name="common_learn_more">Learn more</string>
   <string name="common_left">%1$s left</string>
   <string name="common_legacy_bitcoin_address">Legacy Bitcoin</string>
   <string name="common_locked">Locked</string>
@@ -617,6 +619,7 @@
   <string name="manage_tokens_unavailable_description">The selected token is currently unavailable for actions within the crypto wallet. But worry not, you can express your interest by upvoting it.</string>
   <string name="manage_tokens_unavailable_vote">Upvote</string>
   <string name="manage_tokens_wallet_support_only_one_network_title">The wallet doesn\'t support more than one network</string>
+  <string name="markets_about_coin_header">About coin</string>
   <string name="markets_add_to_my_portfolio_description">To buy, exchange, or receive this asset, add it to your portfolio</string>
   <string name="markets_add_to_my_portfolio_unavailable_description">This asset is currently not supported in the wallet</string>
   <string name="markets_add_to_my_portfolio_unavailable_for_wallet_description">This asset is not available for this wallet</string>
@@ -652,6 +655,7 @@
   <string name="markets_sort_by_trending_title">Trending</string>
   <string name="markets_staking_banner_description_placeholder">Staking is the easiest way to receive rewards on your crypto. %s</string>
   <string name="markets_staking_banner_title">Earn up to %s APY</string>
+  <string name="markets_token_added">Token Added</string>
   <string name="markets_token_details_about_token_title">About %s</string>
   <plurals name="markets_token_details_amount_exchanges">
     <item quantity="one">%d exchange</item>
@@ -917,7 +921,7 @@
     <item quantity="other">up to %d days</item>
   </plurals>
   <string name="onramp_timing_minutes">%s min</string>
-  <string name="onramp_title_available_from___">Available from   </string>
+  <string name="onramp_title_available_from">Available from</string>
   <string name="onramp_title_you_get">You get</string>
   <string name="onramp_tos_external_providers">Service is provided by an external provider. \nTangem is not responsible.</string>
   <string name="onramp_transaction_status_footer_text">You can close this screen and check the transaction status on the token details screen.</string>
@@ -1300,6 +1304,10 @@
   <string name="swapping_to_title">You receive</string>
   <string name="swapping_token_list_title">Choose token</string>
   <string name="swapping_token_not_available">not available</string>
+  <string name="tangem_pay_deposit">Deposit</string>
+  <string name="tangem_pay_fee_subtitle">Service fees</string>
+  <string name="tangem_pay_fee_title">Fee</string>
+  <string name="tangem_pay_withdrawal">Withdrawal</string>
   <string name="tangempay_card_details_error_text">Failed to load data. Try again later.</string>
   <string name="tangempay_card_details_hide_text">Hide</string>
   <string name="tangempay_card_details_receive_error_description">Technical issues detected. Please try again later or contact support.</string>
@@ -1335,6 +1343,7 @@
   <string name="token_button_unavailability_reason_pending_transaction_send">Sending funds will be available once the pending transaction(s) in network %s is complete</string>
   <string name="token_button_unavailability_reason_sell_unavailable">Selling %s is not supported by current providers, but we are working to add more options.</string>
   <string name="token_button_unavailability_reason_staking_unavailable">Staking %s is not supported by current providers, but we are working to add more options.</string>
+  <string name="token_button_unavailability_reason_yield_supply_approval">Text here</string>
   <string name="token_details_generate_xpub">Generate XPUB</string>
   <string name="token_details_hide_alert_hide">Hide</string>
   <string name="token_details_hide_alert_message">You are about to hide this token from the main screen. You can add it back anytime through the manage tokens page.</string>
@@ -1822,8 +1831,8 @@
   <string name="yield_module_promo_screen_self_custodial_subtitle">Aave is a decentralized protocol managing over $81.9 billion in total value.</string>
   <string name="yield_module_promo_screen_self_custodial_title">Decentralized and self-custodial</string>
   <string name="yield_module_promo_screen_terms_disclaimer">By using service, you agree with provider\n%1$s and %2$s</string>
-  <string name="yield_module_promo_screen_title">Earn %s%% yearly</string>
-  <string name="yield_module_promo_screen_variable_rate_info">Aave • Variable Interest Rate</string>
+  <string name="yield_module_promo_screen_title">Connect Aave</string>
+  <string name="yield_module_promo_screen_variable_rate_info">Aave %1$s%% • Variable Interest Rate</string>
   <string name="yield_module_provider">Aave</string>
   <string name="yield_module_rate_info_sheet_chart_average">Avg %s</string>
   <string name="yield_module_rate_info_sheet_chart_title">Last year returns</string>

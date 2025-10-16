@@ -410,5 +410,6 @@ sealed class AppRoute(val path: String) : Route {
     data class YieldSupplyPromo(
         val userWalletId: UserWalletId,
         val cryptoCurrency: CryptoCurrency,
+        val apy: String,
     ) : AppRoute(path = "/yield_supply_promo/${userWalletId.stringValue}/${cryptoCurrency.symbol}")
 }
