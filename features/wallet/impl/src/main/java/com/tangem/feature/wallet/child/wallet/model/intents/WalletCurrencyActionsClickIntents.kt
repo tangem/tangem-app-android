@@ -507,7 +507,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
             appRouter.push(
                 AppRoute.Staking(
                     userWalletId = userWalletId,
-                    cryptoCurrencyId = cryptoCurrency.id,
+                    cryptoCurrency = cryptoCurrency,
                     yieldId = yield?.id ?: return@launch,
                 ),
             )
