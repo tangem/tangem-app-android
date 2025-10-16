@@ -9,6 +9,7 @@ internal sealed class YieldSupplyUM {
     data object Initial : YieldSupplyUM()
 
     data class Available(
+        val apy: String,
         val title: TextReference,
         val onClick: () -> Unit,
     ) : YieldSupplyUM()
@@ -18,6 +19,7 @@ internal sealed class YieldSupplyUM {
     data object Unavailable : YieldSupplyUM()
 
     data class Content(
+        val apy: String,
         val title: TextReference,
         val subtitle: TextReference,
         val rewardsApy: TextReference,
