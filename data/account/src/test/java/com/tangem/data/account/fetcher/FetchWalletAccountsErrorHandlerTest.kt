@@ -53,6 +53,8 @@ class FetchWalletAccountsErrorHandlerTest {
     @Test
     fun `does not update accounts when response is up to date`() = runTest {
         // Arrange
+        val response = createGetWalletAccountsResponse(userWalletId)
+
         val error = ApiResponseError.HttpException(
             code = Code.NOT_MODIFIED,
             message = "Not Modified",
@@ -63,7 +65,7 @@ class FetchWalletAccountsErrorHandlerTest {
         handler.handle(
             error = error,
             userWalletId = userWalletId,
-            savedAccountsResponse = null,
+            savedAccountsResponse = response,
             pushWalletAccounts = pushWalletAccounts,
             storeWalletAccounts = storeWalletAccounts,
         )

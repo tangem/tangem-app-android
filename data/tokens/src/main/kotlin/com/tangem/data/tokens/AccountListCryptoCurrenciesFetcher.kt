@@ -1,6 +1,7 @@
 package com.tangem.data.tokens
 
 import arrow.core.Either
+import arrow.core.right
 import com.tangem.data.common.account.WalletAccountsFetcher
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.core.utils.catchOn
@@ -25,11 +26,15 @@ internal class AccountListCryptoCurrenciesFetcher(
     private val dispatchers: CoroutineDispatcherProvider,
 ) : MultiWalletCryptoCurrenciesFetcher {
 
-    override suspend fun invoke(params: Params) = Either.catchOn(dispatchers.default) {
-        val userWallet = userWalletsStore.getSyncStrict(key = params.userWalletId)
+    override suspend fun invoke(params: Params): Either<Throwable, Unit> {
+        return Either.catchOn(dispatchers.default) {
+            val userWallet = userWalletsStore.getSyncStrict(key = params.userWalletId)
 
-        if (!userWallet.isMultiCurrency) error("${this::class.simpleName} supports only multi-currency wallet")
+            if (!userWallet.isMultiCurrency) error("${this::class.simpleName} supports only multi-currency wallet")
 
-        walletAccountsFetcher.fetch(userWalletId = params.userWalletId)
+            walletAccountsFetcher.fetch(userWalletId = params.userWalletId)
+
+            Unit.right()
+        }
     }
 }
