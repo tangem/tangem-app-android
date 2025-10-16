@@ -4,7 +4,9 @@ import com.tangem.blockchain.blockchains.polkadot.ExistentialDepositProvider
 import com.tangem.blockchain.common.FeeResourceAmountProvider
 import com.tangem.blockchain.common.MinimumSendAmountProvider
 import com.tangem.blockchain.common.ReserveAmountProvider
+import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.UtxoAmountLimitProvider
+import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.data.tokens.converters.UtxoConverter
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -21,6 +23,7 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.isZero
 import com.tangem.utils.extensions.orZero
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 import java.math.BigDecimal
 
 internal class DefaultCurrencyChecksRepository(
@@ -160,5 +163,23 @@ internal class DefaultCurrencyChecksRepository(
             }
             else -> null
         }
+    }
+
+    override suspend fun getProtocolBalance(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): BigDecimal? {
+        require(cryptoCurrency is CryptoCurrency.Token)
+        return runCatching {
+            val walletManager = walletManagersFacade.getOrCreateWalletManager(
+                userWalletId = userWalletId,
+                blockchain = cryptoCurrency.network.toBlockchain(),
+                derivationPath = cryptoCurrency.network.derivationPath.value,
+            ) ?: error("Wallet manager not found")
+            walletManager.getProtocolBalance(
+                token = Token(
+                    symbol = cryptoCurrency.symbol,
+                    contractAddress = cryptoCurrency.contractAddress,
+                    decimals = cryptoCurrency.decimals,
+                ),
+            )
+        }.onFailure(Timber::e).getOrThrow()
     }
 }
