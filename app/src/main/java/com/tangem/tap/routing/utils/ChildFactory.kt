@@ -620,7 +620,11 @@ internal class ChildFactory @Inject constructor(
             is AppRoute.YieldSupplyPromo -> {
                 createComponentChild(
                     context = context,
-                    params = YieldSupplyPromoComponent.Params(route.userWalletId, route.cryptoCurrency),
+                    params = YieldSupplyPromoComponent.Params(
+                        userWalletId = route.userWalletId,
+                        currency = route.cryptoCurrency,
+                        apy = route.apy,
+                    ),
                     componentFactory = yieldSupplyPromoComponentFactory,
                 )
             }
