@@ -51,16 +51,23 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
     private val dispatchers: CoroutineDispatcherProvider,
 ) : WalletAccountsFetcher, WalletAccountsSaver {
 
-    override suspend fun fetch(userWalletId: UserWalletId) {
+    override suspend fun fetch(userWalletId: UserWalletId): GetWalletAccountsResponse {
         val savedAccountsResponse = getAccountsResponseStore(userWalletId = userWalletId).getSyncOrNull()
         val accountsResponse = fetchWalletAccounts(userWalletId, savedAccountsResponse)
-            ?: return
 
-        if (accountsResponse.accounts.isEmpty()) {
-            initializeAccounts(userWalletId, accountsResponse)
-        } else if (accountsResponse.unassignedTokens.isNotEmpty()) {
-            assignTokens(userWalletId, accountsResponse)
+        return when {
+            accountsResponse.accounts.isEmpty() -> {
+                initializeAccounts(userWalletId, accountsResponse)
+            }
+            accountsResponse.unassignedTokens.isNotEmpty() -> {
+                assignTokens(userWalletId, accountsResponse)
+            }
+            else -> accountsResponse
         }
+    }
+
+    override suspend fun getSaved(userWalletId: UserWalletId): GetWalletAccountsResponse? {
+        return getAccountsResponseStore(userWalletId = userWalletId).getSyncOrNull()
     }
 
     override suspend fun store(userWalletId: UserWalletId, response: GetWalletAccountsResponse) {
@@ -115,7 +122,7 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
     private suspend fun fetchWalletAccounts(
         userWalletId: UserWalletId,
         savedAccountsResponse: GetWalletAccountsResponse?,
-    ): GetWalletAccountsResponse? {
+    ): GetWalletAccountsResponse {
         return safeApiCall(
             call = {
                 val apiResponse = withContext(dispatchers.io) {
@@ -145,7 +152,10 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
         )
     }
 
-    private suspend fun initializeAccounts(userWalletId: UserWalletId, accountsResponse: GetWalletAccountsResponse) {
+    private suspend fun initializeAccounts(
+        userWalletId: UserWalletId,
+        accountsResponse: GetWalletAccountsResponse,
+    ): GetWalletAccountsResponse {
         val response = defaultWalletAccountsResponseFactory.create(
             userWalletId = userWalletId,
             userTokensResponse = UserTokensResponse(
@@ -156,14 +166,17 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
         )
 
         userTokensSaver.push(userWalletId = userWalletId, response = response.toUserTokensResponse())
-        val syncedResponse = push(userWalletId = userWalletId, accounts = response.accounts)
+        val syncedResponse = push(userWalletId = userWalletId, accounts = response.accounts) ?: response
 
-        if (syncedResponse != null) {
-            store(userWalletId = userWalletId, response = syncedResponse)
-        }
+        store(userWalletId = userWalletId, response = syncedResponse)
+
+        return syncedResponse
     }
 
-    private suspend fun assignTokens(userWalletId: UserWalletId, accountsResponse: GetWalletAccountsResponse) {
+    private suspend fun assignTokens(
+        userWalletId: UserWalletId,
+        accountsResponse: GetWalletAccountsResponse,
+    ): GetWalletAccountsResponse {
         val accountsResponseWithTokens = accountsResponse.assignTokens(userWalletId)
 
         store(userWalletId = userWalletId, response = accountsResponseWithTokens)
@@ -172,6 +185,8 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
             userWalletId = userWalletId,
             response = accountsResponseWithTokens.toUserTokensResponse(),
         )
+
+        return accountsResponseWithTokens
     }
 
     private suspend fun getETag(userWalletId: UserWalletId): String? {
