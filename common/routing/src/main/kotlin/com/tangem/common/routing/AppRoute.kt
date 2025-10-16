@@ -192,9 +192,9 @@ sealed class AppRoute(val path: String) : Route {
     @Serializable
     data class Staking(
         val userWalletId: UserWalletId,
-        val cryptoCurrencyId: CryptoCurrency.ID,
+        val cryptoCurrency: CryptoCurrency,
         val yieldId: String,
-    ) : AppRoute(path = "/staking/${userWalletId.stringValue}/${cryptoCurrencyId.value}/$yieldId")
+    ) : AppRoute(path = "/staking/${userWalletId.stringValue}/${cryptoCurrency.id.value}/$yieldId")
 
     @Serializable
     data class PushNotification(
