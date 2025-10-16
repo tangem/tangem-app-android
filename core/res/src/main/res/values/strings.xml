@@ -259,6 +259,7 @@
   <string name="common_from">From</string>
   <string name="common_generate_addresses">Synchronize addresses</string>
   <string name="common_get_started">Get started</string>
+  <string name="common_get_token">Get token</string>
   <string name="common_go_to_provider">Go to provider</string>
   <string name="common_go_to_token">Go to token</string>
   <string name="common_got_it">Got it</string>
@@ -651,6 +652,7 @@
   <string name="markets_sort_by_trending_title">Trending</string>
   <string name="markets_staking_banner_description_placeholder">Staking is the easiest way to receive rewards on your crypto. %s</string>
   <string name="markets_staking_banner_title">Earn up to %s APY</string>
+  <string name="markets_token_added">Token Added</string>
   <string name="markets_token_details_about_token_title">About %s</string>
   <plurals name="markets_token_details_amount_exchanges">
     <item quantity="one">%d exchange</item>
@@ -1821,8 +1823,8 @@
   <string name="yield_module_promo_screen_self_custodial_subtitle">Aave is a decentralized protocol managing over $81.9 billion in total value.</string>
   <string name="yield_module_promo_screen_self_custodial_title">Decentralized and self-custodial</string>
   <string name="yield_module_promo_screen_terms_disclaimer">By using service, you agree with provider\n%1$s and %2$s</string>
-  <string name="yield_module_promo_screen_title">Earn %s%% yearly</string>
-  <string name="yield_module_promo_screen_variable_rate_info">Aave • Variable Interest Rate</string>
+  <string name="yield_module_promo_screen_title">Connect Aave</string>
+  <string name="yield_module_promo_screen_variable_rate_info">Aave %1$s% • Variable Interest Rate</string>
   <string name="yield_module_provider">Aave</string>
   <string name="yield_module_rate_info_sheet_chart_average">Avg %s</string>
   <string name="yield_module_rate_info_sheet_chart_title">Last year returns</string>
