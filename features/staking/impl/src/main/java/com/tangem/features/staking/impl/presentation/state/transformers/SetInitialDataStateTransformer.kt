@@ -2,7 +2,7 @@ package com.tangem.features.staking.impl.presentation.state.transformers
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.extensions.remove
-import com.tangem.common.ui.account.AccountTitleUM
+import com.tangem.common.ui.amountScreen.converters.AmountAccountConverter
 import com.tangem.common.ui.amountScreen.converters.AmountStateConverter
 import com.tangem.common.ui.amountScreen.models.AmountParameters
 import com.tangem.common.ui.amountScreen.models.AmountState
@@ -15,6 +15,7 @@ import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.staking.BalanceItem
 import com.tangem.domain.models.wallet.UserWallet
@@ -46,6 +47,9 @@ internal class SetInitialDataStateTransformer(
     private val userWalletProvider: Provider<UserWallet>,
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val balancesToShowProvider: Provider<List<BalanceItem>>,
+    private val isAccountsModeEnabled: Boolean,
+    private val account: Account.CryptoPortfolio?,
+    private val isBalanceHidden: Boolean,
 ) : Transformer<StakingUiState> {
 
     private val iconStateConverter by lazy(::CryptoCurrencyToIconStateConverter)
@@ -234,8 +238,12 @@ internal class SetInitialDataStateTransformer(
             appCurrency = appCurrencyProvider(),
             iconStateConverter = iconStateConverter,
             maxEnterAmount = maxEnterAmount,
-            isBalanceHidden = false,
-            accountTitleUM = AccountTitleUM.Text(stringReference(userWalletProvider().name)),
+            isBalanceHidden = isBalanceHidden,
+            accountTitleUM = AmountAccountConverter(
+                isAccountsMode = isAccountsModeEnabled,
+                walletTitle = stringReference(userWalletProvider().name),
+                prefixText = resourceReference(R.string.common_from),
+            ).convert(account),
         ).convert(
             AmountParameters(
                 title = stringReference(userWalletProvider().name),
