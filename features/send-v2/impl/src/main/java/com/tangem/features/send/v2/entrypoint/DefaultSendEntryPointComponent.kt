@@ -15,6 +15,8 @@ import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
+import com.arkivanov.decompose.value.ObserveLifecycleMode
+import com.arkivanov.decompose.value.subscribe
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.context.childByContext
@@ -25,11 +27,14 @@ import com.tangem.features.managetokens.component.ChooseManagedTokensComponent
 import com.tangem.features.send.v2.api.SendComponent
 import com.tangem.features.send.v2.api.SendEntryPointComponent
 import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents
+import com.tangem.features.send.v2.api.entry.SendEntryRoute
 import com.tangem.features.send.v2.entrypoint.model.SendEntryPointModel
 import com.tangem.features.swap.v2.api.SendWithSwapComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
 internal class DefaultSendEntryPointComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
@@ -54,6 +59,7 @@ internal class DefaultSendEntryPointComponent @AssistedInject constructor(
             userWalletId = params.userWalletId,
             currency = params.cryptoCurrency,
             callback = model,
+            currentRoute = model.currentRoute.asStateFlow(),
         ),
     )
 
@@ -82,6 +88,17 @@ internal class DefaultSendEntryPointComponent @AssistedInject constructor(
             )
         },
     )
+
+    init {
+        childStack.subscribe(
+            lifecycle = lifecycle,
+            mode = ObserveLifecycleMode.CREATE_DESTROY,
+        ) { stack ->
+            componentScope.launch {
+                model.currentRoute.emit(stack.active.configuration)
+            }
+        }
+    }
 
     @Composable
     override fun Content(modifier: Modifier) {
