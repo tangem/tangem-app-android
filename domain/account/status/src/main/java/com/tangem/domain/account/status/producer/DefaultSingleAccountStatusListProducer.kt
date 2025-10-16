@@ -53,25 +53,27 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
             params = SingleAccountListProducer.Params(params.userWalletId),
         )
 
+        @Suppress("UnusedFlow")
         return accountListFlow.flatMapLatest { accountList ->
-            val accountStatusFlows = accountList.accounts
-                .filterIsInstance<Account.CryptoPortfolio>()
-                .map { account ->
-                    if (account.cryptoCurrencies.isEmpty()) {
-                        createEmptyAccountStatusFlow(account)
-                    } else {
-                        val userWallet = userWalletsListRepository.userWalletsSync().first {
-                            it.walletId == params.userWalletId
-                        }
+            val accountStatusFlows = accountList.accounts.mapNotNull { account ->
+                if (account !is Account.CryptoPortfolio) return@mapNotNull null
 
-                        getAccountStatusFlow(
-                            userWallet = userWallet,
-                            account = account,
-                            groupType = accountList.groupType,
-                            sortType = accountList.sortType,
-                        )
+                if (account.cryptoCurrencies.isEmpty()) {
+                    createEmptyAccountStatusFlow(account)
+                } else {
+                    val userWallet = userWalletsListRepository.userWalletsSync().first {
+                        it.walletId == params.userWalletId
                     }
+
+                    getAccountStatusFlow(
+                        userWallet = userWallet,
+                        account = account,
+                        groupType = accountList.groupType,
+                        sortType = accountList.sortType,
+                    )
                 }
+                    .distinctUntilChanged()
+            }
 
             combine(accountStatusFlows) { accountStatuses ->
                 val balances = accountStatuses.map { it.tokenList.totalFiatBalance }
@@ -84,6 +86,7 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
                 )
             }
         }
+            .distinctUntilChanged()
             .flowOn(dispatchers.default)
     }
 
@@ -108,6 +111,7 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
     ): Flow<AccountStatus.CryptoPortfolio> {
         val statusesFlows = account.cryptoCurrencies.map { currency ->
             cryptoCurrencyStatusesFlowFactory.create(userWallet = userWallet, currency = currency)
+                .distinctUntilChanged()
         }
 
         return combine(statusesFlows) { statuses ->
@@ -123,6 +127,7 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
                 priceChangeLce = PriceChangeCalculator.calculate(statuses = statusList),
             )
         }
+            .distinctUntilChanged()
     }
 
     @AssistedFactory
