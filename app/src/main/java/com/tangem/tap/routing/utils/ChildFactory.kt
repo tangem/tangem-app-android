@@ -39,7 +39,8 @@ import com.tangem.features.swap.SwapComponent
 import com.tangem.features.swap.v2.api.SendWithSwapComponent
 import com.tangem.features.tangempay.components.TangemPayDetailsComponent
 import com.tangem.features.tangempay.components.TangemPayOnboardingComponent
-import com.tangem.features.tangempay.components.TangemPayOnboardingComponent.Params.*
+import com.tangem.features.tangempay.components.TangemPayOnboardingComponent.Params.ContinueOnboarding
+import com.tangem.features.tangempay.components.TangemPayOnboardingComponent.Params.Deeplink
 import com.tangem.features.tokendetails.TokenDetailsComponent
 import com.tangem.features.wallet.WalletEntryComponent
 import com.tangem.features.walletconnect.components.WalletConnectEntryComponent
@@ -141,7 +142,6 @@ internal class ChildFactory @Inject constructor(
             is AppRoute.ManageTokens -> {
                 val source = when (route.source) {
                     AppRoute.ManageTokens.Source.SETTINGS -> ManageTokensSource.SETTINGS
-                    AppRoute.ManageTokens.Source.ONBOARDING -> ManageTokensSource.ONBOARDING
                     AppRoute.ManageTokens.Source.STORIES -> ManageTokensSource.STORIES
                 }
 
