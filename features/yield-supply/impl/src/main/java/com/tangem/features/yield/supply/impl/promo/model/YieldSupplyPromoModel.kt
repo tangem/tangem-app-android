@@ -24,7 +24,11 @@ internal class YieldSupplyPromoModel @Inject constructor(
     val uiState: YieldSupplyPromoUM = YieldSupplyPromoUM(
         tosLink = "https://tangem.com/terms-of-service/", // TODO replace with real link
         policyLink = "https://tangem.com/privacy-policy/", // TODO replace with real link
-        title = resourceReference(R.string.yield_module_promo_screen_title, wrappedList("5.3")),
+        title = resourceReference(R.string.yield_module_promo_screen_title),
+        subtitle = resourceReference(
+            R.string.yield_module_promo_screen_variable_rate_info,
+            wrappedList(params.apy),
+        ),
     )
 
     val bottomSheetNavigation: SlotNavigation<YieldSupplyPromoConfig> = SlotNavigation()
