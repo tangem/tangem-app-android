@@ -73,7 +73,7 @@ internal fun YieldSupplyPromoContent(
             SpacerH8()
             Label(
                 state = LabelUM(
-                    text = resourceReference(R.string.yield_module_promo_screen_variable_rate_info),
+                    text = yieldSupplyPromoUM.subtitle,
                     style = LabelStyle.REGULAR,
                     icon = R.drawable.ic_information_24,
                     onIconClick = clickIntents::onApyInfoClick,
@@ -223,7 +223,8 @@ private fun YieldSupplyPromoContent_Preview() {
             yieldSupplyPromoUM = YieldSupplyPromoUM(
                 tosLink = "https://tangem.com/terms-of-service/",
                 policyLink = "https://tangem.com/privacy-policy/",
-                title = resourceReference(R.string.yield_module_promo_screen_title, wrappedList("5.3")),
+                title = resourceReference(R.string.yield_module_promo_screen_title),
+                subtitle = resourceReference(R.string.yield_module_promo_screen_variable_rate_info, wrappedList("5.3")),
             ),
             clickIntents = object : YieldSupplyPromoClickIntents {
                 override fun onBackClick() {}
