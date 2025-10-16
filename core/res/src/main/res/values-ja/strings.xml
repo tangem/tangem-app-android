@@ -19,7 +19,7 @@
   <string name="account_archived_recover">回復する</string>
   <string name="account_archived_recover_dialog_description">「 %1$s 」を回復しようとしています。</string>
   <string name="account_archived_recover_dialog_title">アカウントを回復する</string>
-  <string name="account_archived_recover_error_message">すでにアクティブアカウント数の上限（20件）を超えています。復元するには1件アーカイブしてください。</string>
+  <string name="account_archived_recover_error_message">すでにアクティブアカウントの上限（20件）に達しています。復元するには、1つをアーカイブしてください。</string>
   <string name="account_archived_recover_error_title">アカウントを復元できません</string>
   <string name="account_archived_title">アーカイブ済み</string>
   <string name="account_could_not_create">アカウントを作成できませんでした。しばらくしてからもう一度お試しください。</string>
@@ -33,6 +33,7 @@
   <string name="account_form_create_button">アカウントを追加</string>
   <string name="account_form_edit_button">保存</string>
   <string name="account_form_name">アカウント名</string>
+  <string name="account_form_name_already_exist_error_description">アカウント名はすでに存在しています</string>
   <string name="account_form_placeholder_edit_account">アカウント</string>
   <string name="account_form_placeholder_new_account">新しいアカウント</string>
   <string name="account_form_title_create">アカウントを追加</string>
@@ -133,7 +134,7 @@
   <string name="biometric_unavailable_warning">お使いの携帯電話で生体認証が無効になっているため、アプリにウォレットを保存できません。ウォレットを保存するには、携帯電話の設定で生体認証機能を有効にしてください。</string>
   <string name="bitcoin_promo_activation_error">プロモーションコードの処理中にエラーが発生しました。しばらくしてからもう一度お試しください。</string>
   <string name="bitcoin_promo_activation_error_title">アクティベーションエラー</string>
-  <string name="bitcoin_promo_activation_success">プロモーションコードが正常に有効化されました。14日以内に10 USDT相当のビットコインがアカウントに入金されます。</string>
+  <string name="bitcoin_promo_activation_success">プロモーションコードが正常に有効化されました。報酬は14日以内にビットコインアカウントに入金されます。</string>
   <string name="bitcoin_promo_activation_success_title">プロモーションコードが有効になりました</string>
   <string name="bitcoin_promo_already_activated">このプロモーションコードは既に使用されているため、再度使うことはできません。</string>
   <string name="bitcoin_promo_already_activated_title">コードが利用できません</string>
@@ -175,9 +176,11 @@
   <string name="common_accept">受け入れる</string>
   <string name="common_access_denied">アクセスが拒否されました</string>
   <string name="common_accounts">アカウント</string>
+  <string name="common_activate">有効化</string>
   <string name="common_add">追加</string>
   <string name="common_add_to_portfolio">ポートフォリオに追加</string>
   <string name="common_add_token">トークンを追加</string>
+  <string name="common_added">追加済み</string>
   <string name="common_address">アドレス</string>
   <string name="common_all">すべて</string>
   <string name="common_allow">許可する</string>
@@ -247,6 +250,7 @@
   <string name="common_fee_selector_title">速度と料金</string>
   <string name="common_finish">終了</string>
   <string name="common_free">無料</string>
+  <string name="common_from">送信元</string>
   <string name="common_generate_addresses">アドレスを同期する</string>
   <string name="common_get_started">はじめる</string>
   <string name="common_go_to_provider">プロバイダーへ移動</string>
@@ -288,6 +292,7 @@
   <string name="common_range_with_space">%1$s — %2$s</string>
   <string name="common_read_more">続きを読む</string>
   <string name="common_receive">受け取る</string>
+  <string name="common_recommended">おすすめ</string>
   <string name="common_reject">拒否</string>
   <string name="common_reload">リロード</string>
   <string name="common_rename">名前を変更</string>
@@ -323,6 +328,7 @@
   <string name="common_tangem">Tangem</string>
   <string name="common_terms_and_conditions">利用規約</string>
   <string name="common_terms_of_use">利用規約</string>
+  <string name="common_to">宛先</string>
   <string name="common_today">今日</string>
   <plurals name="common_tokens_count">
     <item quantity="other">%d トークン</item>
@@ -343,6 +349,8 @@
   <string name="common_yes">はい</string>
   <string name="contract_address_copied_message">コントラクトアドレスをコピーしました!</string>
   <string name="currency_subtitle_expanded">利用可能なネットワーク</string>
+  <string name="custom_token_another_account_dialog_description">このトークンの導出パスが%1$sの導出パスと一致しています。トークンはこのアカウントに追加されます。</string>
+  <string name="custom_token_another_account_dialog_title">導出パスは別のアカウントに属します。</string>
   <string name="custom_token_contract_address_input_title">コントラクトアドレス</string>
   <string name="custom_token_creation_error_invalid_contract_address">コントラクトアドレスが無効です</string>
   <string name="custom_token_creation_error_network_not_selected">ネットワークを選択してください</string>
@@ -460,6 +468,7 @@
   <string name="express_provider">プロバイダー</string>
   <string name="express_provider_best_rate">ベストレート</string>
   <string name="express_provider_fca_warning_list">FCA警告リスト</string>
+  <string name="express_provider_great_rate">お得なレート</string>
   <string name="express_provider_in_fca_warning_list">FCA警告リストに掲載されたプロバイダー</string>
   <string name="express_provider_max_amount">最大 %s まで使用可能</string>
   <string name="express_provider_min_amount">%s 以上で利用可能</string>
@@ -495,7 +504,7 @@
   <string name="generic_error_code">エラーが発生しました。コード: %s 。</string>
   <string name="generic_requires_memo_error">メモが必要</string>
   <string name="give_permission_current_transaction">取引</string>
-  <string name="give_permission_policy_type_footer">選択したトークンの承認制限を指定します</string>
+  <string name="give_permission_policy_type_footer">承認すると、このスマートコントラクトが今後の取引でトークンを利用できるようになります。</string>
   <string name="give_permission_rows_amount">金額%s</string>
   <string name="give_permission_staking_footer">承認機能は、別のアドレスに特定の量のトークンを使用する許可を与えるために必要です。設計上スマートコントラクトは、承認しない限りトークンにアクセスできません。トークンを「ロック解除」すると、StakeKitスマート コントラクトがトークンを使用する権限が与えられます。ネットワークのマイナーは、このアクションをブロックチェーンに記録するためにガス料金（あなたが支払う）を受け取ります。承認後、トークンをステーキングできます。</string>
   <string name="give_permission_staking_subtitle">続行するには、Polygonスマートコントラクトが%sを使用することを許可する必要があります</string>
@@ -530,6 +539,7 @@
   <string name="hw_create_keys_title">鍵はアプリに保存されます</string>
   <string name="hw_create_seed_title">シードフレーズのバックアップ</string>
   <string name="hw_create_title">モバイルウォレットを作成する</string>
+  <string name="hw_import_existing_wallet">既存のウォレットをインポートする</string>
   <string name="hw_import_seed_phrase_already_imported">このリカバリーフレーズはすでにインポートされています。</string>
   <string name="hw_mobile_wallet">モバイルウォレット</string>
   <string name="hw_upgrade_error_card_already_has_wallet">アップグレードできません。このデバイスにはすでにウォレットが存在します。</string>
@@ -855,6 +865,7 @@
   <string name="onramp_currency_other">その他の通貨</string>
   <string name="onramp_currency_popular">人気の法定通貨</string>
   <string name="onramp_currency_search">通貨で検索</string>
+  <string name="onramp_fetching_best_rates">最良のレートを取得しています...</string>
   <string name="onramp_instant_status">即時</string>
   <string name="onramp_legal">オンランプ機能を使用することにより、プロバイダの%1$sおよび%2$sに同意するものとします</string>
   <string name="onramp_legal_text">サービスは外部プロバイダーによって提供されます。 \nTangemは責任を負いません。</string>
@@ -884,7 +895,9 @@
     <item quantity="other">最大%d日</item>
   </plurals>
   <string name="onramp_timing_minutes">%s分</string>
+  <string name="onramp_title_available_from">下記より利用可能</string>
   <string name="onramp_title_you_get">以下が手に入ります。</string>
+  <string name="onramp_tos_external_providers">サービスは外部プロバイダーによって提供されます。 \nTangemは責任を負いません。</string>
   <string name="onramp_transaction_status_footer_text">この画面を閉じて、トークンの詳細画面で取引状況を確認できます。</string>
   <string name="onramp_up_to_rate">最大</string>
   <string name="onramp_via">経由</string>
@@ -893,6 +906,7 @@
   <string name="organize_tokens_sort_by_balance">残高順</string>
   <string name="organize_tokens_title">トークンを整理する</string>
   <string name="organize_tokens_ungroup">グループ解除</string>
+  <string name="provider_name_support">%sサポート</string>
   <string name="push_notifications_more_info">詳細はこちら</string>
   <string name="push_notifications_permission_alert_description">Tangemの通知は設定で有効にできます。</string>
   <string name="push_notifications_permission_alert_negative_button">後で有効にする</string>
@@ -1086,6 +1100,9 @@
   <string name="settings_forget_wallet_footer">これにより、ウォレットがアプリから削除されます。ウォレットは再度追加できます。</string>
   <string name="settings_wallet_name_title">名前</string>
   <string name="stake_token_description">トークンを活用しよう</string>
+  <string name="staking_account_initialization_footer">ネットワーク手数料とは、ブロックチェーン上で取引を処理し、承認するために支払う少額の料金です。</string>
+  <string name="staking_account_initialization_message">ステーキングを始めるには、1 TONの自己取引によってTONアカウントを有効化する必要があります。資金はウォレット内にそのまま残ります。これは、ステーキング有効化のためのステップにすぎません。</string>
+  <string name="staking_account_initialization_title">アカウントの有効化</string>
   <string name="staking_amount_requirement_error">ステーキング金額は %s 以上である必要があります</string>
   <string name="staking_amount_tron_integer_error">ネットワークルールにより、ステーキング金額は%1$s TRX に切り上げられます。</string>
   <string name="staking_amount_tron_integer_error_unstaking">ネットワークルールにより、ステーキング解除の量は%1$s TRX に切り上げられます。</string>
@@ -1094,6 +1111,7 @@
   <string name="staking_details_account_fee_info">ステーキングアカウントとは、ステーキングされたSOLが保管される特別なアカウントです。トークンをバリデーターに委任し、取引の検証に参加して報酬を受け取る際に作成されます。ステーキングアカウントの作成には少額の手数料がかかりますが、ステーキング完了後に返金されます。</string>
   <string name="staking_details_annual_percentage_rate">年率</string>
   <string name="staking_details_annual_percentage_rate_info">ステーキングに参加することで得られる年間収益率。</string>
+  <string name="staking_details_annual_percentage_yield_info">APYは、バリデータのパフォーマンスに基づいた年間利回りを示します。</string>
   <string name="staking_details_apr">APR</string>
   <string name="staking_details_apy">APY</string>
   <string name="staking_details_auto_claiming_rewards_daily_text">報酬は毎日自動的にステーキング残高に蓄積されます。</string>
@@ -1149,7 +1167,9 @@
   <string name="staking_notification_new_validator_funds_transfer">新しいバリデーターを使用して%1$sネットワークにステーキングすると、以前にステーキングされた資金がすべてこのバリデーターに自動的に転送されます。</string>
   <string name="staking_notification_restake_rewards_text">獲得した報酬をステーキングに再投資し、潜在的な収益を増やします。</string>
   <string name="staking_notification_restake_text">再ステーキングを使うと、ステーキングを解除することなく、あるバリデータから別のバリデータに資金を移動できます。</string>
-  <string name="staking_notification_stake_entire_balance_text">残高のすべてをステーキングしようとしています。ステーキング解除や報酬請求にかかるネットワーク手数料をカバーするために、少額を残しておくことをお勧めします。</string>
+  <string name="staking_notification_stake_entire_balance_text">ウォレットの残高をすべてステーキングすると、ステーキング解除時にネットワーク手数料の支払いが必要になります。そのため、少額をウォレットに残しておくことをおすすめします。</string>
+  <string name="staking_notification_ton_account_initialization_message">ステーキングを始めるには、TONアカウントを1 TONの自己取引で有効化する必要があります。資金はウォレット内にそのまま残り、この手順でステーキング用にアカウントを有効化できます。</string>
+  <string name="staking_notification_ton_account_initialization_title">アカウントの有効化</string>
   <string name="staking_notification_ton_activate_account">TONのステーキングを開始するには、まず自分のアドレスに少額の取引を送信します。これによりウォレットが有効になります。</string>
   <string name="staking_notification_ton_extra_reserve_info">取引を完了するには、ネットワーク手数料に加えて最大0.2TONが必要になる場合があります。未使用分は返金されます。</string>
   <string name="staking_notification_ton_extra_reserve_is_required">この操作を続行するには、ネットワーク手数料に加えて0.2 TONが必要です。残高を補充してください。</string>
@@ -1182,6 +1202,7 @@
   <string name="staking_reward_schedule_month">毎月</string>
   <string name="staking_reward_schedule_week">毎週</string>
   <string name="staking_rewards">報酬</string>
+  <string name="staking_solana_details_auto_claiming_rewards_daily_text">Solanaの報酬は自動的にステーキング残高に追加され、個別に表示することはできません。</string>
   <string name="staking_stake_locked">ステーキングはロックされています</string>
   <string name="staking_stake_more">もっとステーキングする</string>
   <string name="staking_stake_more_button_unavailability_reason">%1$sをステーキングすると、 %2$s残高全体がステーキングされます。Tangemウォレットに入金した追加の%2$sも、自動的にステーキングされます。</string>
@@ -1254,6 +1275,12 @@
   <string name="swapping_to_title">受け取る</string>
   <string name="swapping_token_list_title">トークンを選択</string>
   <string name="swapping_token_not_available">利用不可</string>
+  <string name="tangempay_card_details_error_text">データの読み込みに失敗しました。しばらくしてからもう一度お試しください。</string>
+  <string name="tangempay_card_details_hide_text">非表示</string>
+  <string name="tangempay_card_details_receive_error_description">技術的な問題が検出されました。しばらくしてからもう一度お試しいただくか、サポートにお問い合わせください。</string>
+  <string name="tangempay_card_details_receive_error_title">現在、受け取りは利用できません</string>
+  <string name="tangempay_card_details_reveal_text">表示</string>
+  <string name="tangempay_card_details_title">カードの詳細</string>
   <string name="tangempay_issue_card_notification_title">アカウントを作成してカードを発行</string>
   <string name="tangempay_kyc_card_ready_notification_title">Tangem Pay</string>
   <string name="tangempay_kyc_in_progress_notification_button">ステータスを表示</string>
@@ -1266,6 +1293,7 @@
   <string name="tangempay_onboarding_security_description">カードの詳細は保護されており、アプリ内で完全に制御できます。</string>
   <string name="tangempay_onboarding_security_title">内蔵セキュリティ</string>
   <string name="tangempay_onboarding_title">無料のCryptoカード\nを数分で入手しましょう</string>
+  <string name="tangempay_title">Tangem Pay</string>
   <string name="this_is_my_wallet_title">これは私のウォレットです</string>
   <string name="toast_balances_hidden">残高非表示</string>
   <string name="toast_balances_shown">残高表示</string>
@@ -1293,6 +1321,7 @@
   <string name="token_details_token_type_subtitle_no_standard">%%image%% %1$sネットワーク上のトークン</string>
   <string name="token_details_unable_hide_alert_message">%1$s ( %2$s ) トークンは%3$sネットワークの主要通貨であり、このネットワーク上の他のトークンがリストにある限り、非表示にすることはできません。</string>
   <string name="token_details_unable_hide_alert_title">%sを非表示にできません</string>
+  <string name="token_receive_show_qr_code_title">QRコードを表示</string>
   <string name="token_swap_changelly_promotion_message">このトークンは、2月%2$s-%3$s の間、%1$s のサービス手数料で別のトークンと交換できます。</string>
   <string name="token_swap_changelly_promotion_title">Changellyでスワップ、手数料%s</string>
   <string name="token_swap_promotion_button">今すぐスワップ</string>
@@ -1341,9 +1370,10 @@
   <string name="user_push_notification_agreement_argument_two_subtitle">新しい機能や限定オファーへの早期アクセス。</string>
   <string name="user_push_notification_agreement_argument_two_title">機能およびニュースのアップデート</string>
   <string name="user_push_notification_agreement_header">プッシュ通知を使用しますか?</string>
-  <string name="user_push_notification_banner_subtitle">プッシュ通知を有効にすると、資金が到着するとすぐに通知されます</string>
+  <string name="user_push_notification_banner_subtitle">プッシュ通知を有効にすると、ウォレットに着金したときにアラートを受信できます。</string>
   <string name="user_push_notification_banner_title">取引を見逃さない</string>
   <string name="user_wallet_list_add_button">新しいウォレットを追加</string>
+  <string name="user_wallet_list_delete_hw_prompt">バックアップせずにこのウォレットを削除すると、資金に永久にアクセスできなくなります。</string>
   <string name="user_wallet_list_delete_prompt">このウォレットを忘れてもよろしいですか？</string>
   <string name="user_wallet_list_error_unable_to_unlock">エラーが発生しました。カードまたはリングをスキャンしてログインしてください。</string>
   <string name="user_wallet_list_error_wallet_already_saved">このウォレットはすでに保存されています。別のウォレットを追加できます。</string>
@@ -1373,6 +1403,13 @@
   <string name="visa_unlock_notification_button">ロック解除</string>
   <string name="visa_unlock_notification_subtitle">カードをスキャンしてアクセスロックを解除する</string>
   <string name="visa_unlock_notification_title">ロック解除が必要</string>
+  <string name="wallet_add_common_title">ウォレットの追加方法を選択してください</string>
+  <string name="wallet_add_hardware_description">Tangemカードまたはリングをスキャンして復元するか、別のウォレットからインポートしてください。</string>
+  <string name="wallet_add_hardware_info_create">ハードウェアウォレットを作成</string>
+  <string name="wallet_add_hardware_purchase">Tangemウォレットを購入しますか？</string>
+  <string name="wallet_add_import_seed_phrase">シードフレーズをインポート</string>
+  <string name="wallet_add_mobile_description">スマートフォン上でウォレットを復元するか、他のアプリからインポートできますが、Tangemカードと比べるとセキュリティは劣ります。</string>
+  <string name="wallet_add_support_title">お選びください</string>
   <string name="wallet_balance_blockchain_unreachable_try_later">ブロックチェーンにアクセスできません。後でもう一度お試しください。</string>
   <string name="wallet_balance_missing_derivation">カードまたはリングをスキャン</string>
   <string name="wallet_been_activated_message">このウォレットはすでに有効化されています。\nあなたが行ったのでない場合は、サポートに連絡してください。\nTangemは、事前に生成されたアクセスコードと一緒にウォレットを販売することはありません。</string>
@@ -1412,6 +1449,7 @@
   <string name="wallet_connect_subtitle">dAppsに接続する</string>
   <string name="wallet_connect_title">WalletConnect</string>
   <string name="wallet_connect_toast_awaiting_session_proposal">接続には数秒かかる場合があります</string>
+  <string name="wallet_create_common_title">Tangemウォレットを作成する</string>
   <string name="wallet_create_hardware_badge">%sから</string>
   <string name="wallet_create_hardware_description">Tangemウォレットを購入ーこれは、あなたの秘密鍵をオフラインで安全に保管する物理デバイスです。</string>
   <string name="wallet_create_hardware_title">ハードウェアウォレット</string>
@@ -1637,6 +1675,20 @@
   <string name="wc_uri_already_used_title">URIはすでに使用されています</string>
   <string name="wc_wallet_connect">WalletConnect</string>
   <string name="wc_warning_transaction">不審な取引</string>
+  <string name="welcome_create_wallet_already_have">すでにTangemをお持ちですか？</string>
+  <string name="welcome_create_wallet_feature_assets">数千種類の資産</string>
+  <string name="welcome_create_wallet_feature_class">業界最高水準のハードウェアウォレット</string>
+  <string name="welcome_create_wallet_feature_delivery">迅速な配送</string>
+  <string name="welcome_create_wallet_feature_one_tap">ワンタップで開始</string>
+  <string name="welcome_create_wallet_feature_seamless">シームレスで安全</string>
+  <string name="welcome_create_wallet_feature_use">シンプルな操作</string>
+  <string name="welcome_create_wallet_hardware_description">Tangemでハードウェアウォレットを作成しましょう。銀行のカードのようにスリムで、金庫のように安全です。</string>
+  <string name="welcome_create_wallet_mobile_description">ソフトウェアウォレットを作成またはインポート</string>
+  <string name="welcome_create_wallet_mobile_description_full">スマートフォン上にソフトウェアウォレットを作成するか、インポートしてください。</string>
+  <string name="welcome_create_wallet_mobile_title">モバイルウォレットから始める</string>
+  <string name="welcome_create_wallet_other_method">その他の方法</string>
+  <string name="welcome_create_wallet_use_hardware_description">Tangemハードウェアウォレットを使用する</string>
+  <string name="welcome_create_wallet_use_hardware_title">詳細を見る・購入する</string>
   <string name="welcome_interrupted_backup_alert_discard">破棄</string>
   <string name="welcome_interrupted_backup_alert_message">バックアップが中断されました。再開しますか?</string>
   <string name="welcome_interrupted_backup_alert_resume">はい、再開します</string>
@@ -1652,7 +1704,7 @@
   <string name="xtz_withdrawal_message_reduce">%s XTZを減らす</string>
   <string name="xtz_withdrawal_message_warning">次回ウォレットにチャージするときに手数料の増加を避けるには、金額を%s XTZ減らしてください。</string>
   <string name="yield_module_alert_description">資産残高に関するテキスト [プレースホルダー]</string>
-  <string name="yield_module_alert_title">%sはAaveに預け入れられています</string>
+  <string name="yield_module_alert_title">%sはAaveに預けられています</string>
   <string name="yield_module_approve_needed_notification_cta">承認する</string>
   <string name="yield_module_approve_needed_notification_description">前回の承認に問題があったため、新しい承認が必要です。手続き方法を選択してください。</string>
   <string name="yield_module_approve_needed_notification_title">承認が必要</string>
@@ -1661,8 +1713,9 @@
   <string name="yield_module_approve_sheet_title">承認を確定する</string>
   <string name="yield_module_balance_info_sheet_subtitle">資産残高に関するテキスト [プレースホルダー]</string>
   <string name="yield_module_balance_info_sheet_title">あなたの%sはAaveに預けられています</string>
+  <string name="yield_module_chart_loading_error">チャートを読み込めません・・</string>
   <string name="yield_module_deposit_error_notification_title">受け取った金額%1$s %2$sはAaveに入金されませんでした。</string>
-  <string name="yield_module_earn_badge">%1$s%% を獲得</string>
+  <string name="yield_module_earn_badge">年利%1$s%%</string>
   <string name="yield_module_earn_sheet_available_title">利用可能</string>
   <string name="yield_module_earn_sheet_current_apy_title">現在のAPY</string>
   <string name="yield_module_earn_sheet_my_funds_title">私の資金</string>
@@ -1676,8 +1729,12 @@
   <string name="yield_module_fee_policy_sheet_description">今後の%sの入金はすべて、取引手数料が差し引かれて自動的にAaveに供給されます。</string>
   <string name="yield_module_fee_policy_sheet_max_fee_note">ネットワーク手数料が上限手数料を超えた場合、手数料が下がるまで取引は成立しません。この制限は後で変更できます。</string>
   <string name="yield_module_fee_policy_sheet_max_fee_title">最大手数料</string>
+  <string name="yield_module_fee_policy_sheet_min_amount_note">取引手数料は、預入額の4％未満である必要があります。Tangemは、この条件を満たす十分な残高が貯まった時点で、Aaveへの資金移動を行います。</string>
+  <string name="yield_module_fee_policy_sheet_min_amount_title">最低入金額</string>
   <string name="yield_module_fee_policy_sheet_title">手数料ポリシー</string>
+  <string name="yield_module_fee_policy_tangem_service_fee_title">Tangemはまた、得られた利回りに対して3％のサービス手数料を差し引きます。</string>
   <string name="yield_module_high_fee_error">ネットワーク手数料が現在高すぎます。設定した上限を下回るまで待機しています。</string>
+  <string name="yield_module_historical_returns">過去のリターン</string>
   <string name="yield_module_main_view_approve_notification_description">ここに説明を入力してください。1〜3行が理想的です。[プレースホルダー]</string>
   <string name="yield_module_main_view_approve_notification_title">トークン承認が必要</string>
   <string name="yield_module_network_fee_unreachable_notification_description">ネットワーク接続を確認してください</string>
@@ -1685,9 +1742,9 @@
   <string name="yield_module_promo_screen_auto_balance_subtitle">アカウントへの入金はすべて自動的にAaveに貸し出されます。</string>
   <string name="yield_module_promo_screen_auto_balance_title">残高は自動的に計算されます</string>
   <string name="yield_module_promo_screen_cash_out_subtitle">いつでも、即座に資金を送信、交換、売却できます。</string>
-  <string name="yield_module_promo_screen_cash_out_title">すぐに現金化</string>
+  <string name="yield_module_promo_screen_cash_out_title">いつでも資金にアクセス可能</string>
   <string name="yield_module_promo_screen_how_it_works_button_title">使い方</string>
-  <string name="yield_module_promo_screen_self_custodial_subtitle">Aaveは世界中で何百万人もの人々に信頼されています。総貸付額は104億ドルです。</string>
+  <string name="yield_module_promo_screen_self_custodial_subtitle">Aaveは、総額819億ドル以上の資産を管理する分散型プロトコルです。</string>
   <string name="yield_module_promo_screen_self_custodial_title">分散型・自己管理型</string>
   <string name="yield_module_promo_screen_terms_disclaimer">サービスを利用することにより、プロバイダー\n %1$sおよび%2$sに同意したことになります</string>
   <string name="yield_module_promo_screen_title">年間%s%%の収益</string>
@@ -1699,21 +1756,26 @@
   <string name="yield_module_rate_info_sheet_powered_by">提供</string>
   <string name="yield_module_rate_info_sheet_title">金利は変動します</string>
   <string name="yield_module_receive_sheet_description">入金すると、資金は自動的にAaveに送金され、利息が付き始めます。取引手数料として%s相当の少額の手数料が差し引かれます。</string>
-  <string name="yield_module_start_earning">利息の獲得を開始</string>
+  <string name="yield_module_start_earning">資産を供給する</string>
   <string name="yield_module_start_earning_sheet_description">%sはAaveに供給され、すぐに利用可能になります</string>
   <string name="yield_module_start_earning_sheet_fee_policy">手数料ポリシーを見る</string>
-  <string name="yield_module_start_earning_sheet_next_deposits">次回の入金は自動的にAaveに供給されます。</string>
+  <string name="yield_module_start_earning_sheet_next_deposits">次回以降の入金は自動的にAaveに供給されます。</string>
   <string name="yield_module_status_active">アクティブ</string>
   <string name="yield_module_status_paused">停止中</string>
   <string name="yield_module_stop_earning">収益を停止する</string>
   <string name="yield_module_stop_earning_sheet_description">オフにすると、Aaveから資金が引き出され、ウォレットの%sに戻され、報酬の獲得が停止されます。</string>
   <string name="yield_module_stop_earning_sheet_fee_note">出金金額からネットワーク手数料が差し引かれます。</string>
+  <string name="yield_module_supply_apr">供給APY</string>
   <string name="yield_module_token_details_earn_notification_apy">APY</string>
   <string name="yield_module_token_details_earn_notification_description">あなたの資産を眠らせない — 残高を運用して利息を得ましょう。</string>
-  <string name="yield_module_token_details_earn_notification_earning_on_your_balance_title">保有資産から報酬を得る</string>
+  <string name="yield_module_token_details_earn_notification_earning_on_your_balance_subtitle">利息は自動的に発生します</string>
+  <string name="yield_module_token_details_earn_notification_earning_on_your_balance_title">Aaveの利回り</string>
   <string name="yield_module_token_details_earn_notification_processing">入金の処理中</string>
   <string name="yield_module_token_details_earn_notification_title">年間%1$s%%の収益</string>
   <string name="yield_module_transfer_mode_automatic">自動</string>
   <string name="yield_module_unable_to_cover_fee_description">取引のネットワーク手数料をカバーするために、 %1$s %2$sを入金してください</string>
   <string name="yield_module_unable_to_cover_fee_title">%s手数料を支払えません</string>
+  <string name="yield_module_unavailable_subtitle">利息サービスは現在利用できません。しばらくしてから再度お試しください。</string>
+  <string name="yield_module_unavailable_title">収益は利用できません</string>
+  <string name="yield_supply_chart_loading_error">チャートを読み込めません・・</string>
 </resources>
