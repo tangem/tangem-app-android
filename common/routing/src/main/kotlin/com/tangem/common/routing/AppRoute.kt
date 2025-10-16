@@ -362,12 +362,6 @@ sealed class AppRoute(val path: String) : Route {
     )
 
     @Serializable
-    data class SendWithSwap(
-        val userWalletId: UserWalletId,
-        val currency: CryptoCurrency,
-    ) : AppRoute(path = "/send_with_swap/${userWalletId.stringValue}/${currency.symbol}")
-
-    @Serializable
     data class CreateAccount(
         val userWalletId: UserWalletId,
     ) : AppRoute(path = "/create_account/${userWalletId.stringValue}")
