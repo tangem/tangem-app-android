@@ -4,6 +4,7 @@ import com.tangem.domain.account.repository.AccountsCRUDRepository
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyByAddressUseCase
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
+import com.tangem.domain.account.status.usecase.GetCryptoCurrencyActionsUseCaseV2
 import com.tangem.domain.account.status.usecase.SaveCryptoCurrenciesUseCase
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.common.wallets.UserWalletsListRepository
@@ -14,6 +15,7 @@ import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
 import com.tangem.domain.staking.utils.StakingCleaner
+import com.tangem.domain.tokens.GetCryptoCurrencyActionsUseCase
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.wallets.derivations.DerivationsRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -38,6 +40,20 @@ internal object AccountStatusUseCaseModule {
             userWalletsListRepository = userWalletsListRepository,
             multiNetworkStatusSupplier = multiNetworkStatusSupplier,
             singleAccountListSupplier = singleAccountListSupplier,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetCryptoCurrencyActionsUseCaseV2(
+        accountsCRUDRepository: AccountsCRUDRepository,
+        singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
+        getCryptoCurrencyActionsUseCase: GetCryptoCurrencyActionsUseCase,
+    ): GetCryptoCurrencyActionsUseCaseV2 {
+        return GetCryptoCurrencyActionsUseCaseV2(
+            accountsCRUDRepository = accountsCRUDRepository,
+            singleAccountStatusListSupplier = singleAccountStatusListSupplier,
+            getCryptoCurrencyActionsUseCase = getCryptoCurrencyActionsUseCase,
         )
     }
 
