@@ -9,7 +9,7 @@ import com.tangem.domain.models.scan.ScanResponse
  */
 class LinkedCardContextInterceptor(
     scanResponse: ScanResponse,
-    val parent: LinkedCardContextInterceptor? = null,
+    val parent: ParamsInterceptor? = null,
 ) : ParamsInterceptor {
 
     private val contextInterceptor = CardContextInterceptor(scanResponse)

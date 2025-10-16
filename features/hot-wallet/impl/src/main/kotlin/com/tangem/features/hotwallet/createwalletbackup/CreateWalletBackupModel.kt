@@ -3,6 +3,7 @@ package com.tangem.features.hotwallet.createwalletbackup
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.push
+import com.tangem.core.analytics.utils.AnalyticsContextProxy
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -23,6 +24,7 @@ internal class CreateWalletBackupModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
+    private val analyticsContextProxy: AnalyticsContextProxy,
 ) : Model() {
 
     val params = paramsContainer.require<CreateWalletBackupComponent.Params>()
@@ -35,6 +37,15 @@ internal class CreateWalletBackupModel @Inject constructor(
     val stackNavigation = StackNavigation<CreateWalletBackupRoute>()
     val startRoute = CreateWalletBackupRoute.RecoveryPhraseStart
     val currentRoute: MutableStateFlow<CreateWalletBackupRoute> = MutableStateFlow(startRoute)
+
+    init {
+        analyticsContextProxy.addHotWalletContext()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        analyticsContextProxy.removeContext()
+    }
 
     fun onBack() {
         when (currentRoute.value) {
