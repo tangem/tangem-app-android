@@ -1,7 +1,6 @@
 package com.tangem.data.account.fetcher
 
 import com.tangem.data.account.utils.DefaultWalletAccountsResponseFactory
-import com.tangem.data.account.utils.toUserTokensResponse
 import com.tangem.data.common.currency.UserTokensResponseAccountIdEnricher
 import com.tangem.data.common.currency.UserTokensSaver
 import com.tangem.datasource.api.common.response.ApiResponseError
@@ -10,6 +9,7 @@ import com.tangem.datasource.api.common.response.isNetworkError
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
+import com.tangem.datasource.api.tangemTech.models.account.toUserTokensResponse
 import com.tangem.datasource.local.token.UserTokensResponseStore
 import com.tangem.domain.models.wallet.UserWalletId
 import timber.log.Timber
