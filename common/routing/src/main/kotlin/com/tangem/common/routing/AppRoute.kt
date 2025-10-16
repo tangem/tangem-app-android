@@ -126,9 +126,12 @@ sealed class AppRoute(val path: String) : Route {
         val portfolioId: PortfolioId? = null,
     ) : AppRoute(path = "${source.name.lowercase()}/manage_tokens/${portfolioId?.stringValue}") {
 
+        /**
+         * Source of launching the screen.
+         * ManageTokens screen launched from Onboarding by another route. See `OnboardingRoute.ManageTokens`.
+         */
         enum class Source {
             STORIES,
-            ONBOARDING,
             SETTINGS,
         }
     }
