@@ -49,11 +49,13 @@ internal class FetchWalletAccountsErrorHandler @Inject constructor(
         savedAccountsResponse: GetWalletAccountsResponse?,
         pushWalletAccounts: suspend (UserWalletId, List<WalletAccountDTO>) -> GetWalletAccountsResponse?,
         storeWalletAccounts: suspend (UserWalletId, GetWalletAccountsResponse) -> Unit,
-    ): GetWalletAccountsResponse? {
+    ): GetWalletAccountsResponse {
         val isResponseUpToDate = error.isNetworkError(code = Code.NOT_MODIFIED)
         if (isResponseUpToDate) {
             Timber.e("ETag is up to date, no need to update accounts for wallet: $userWalletId")
-            return savedAccountsResponse
+            return requireNotNull(savedAccountsResponse) {
+                "Saved accounts response is null for wallet: $userWalletId"
+            }
         }
 
         var response = savedAccountsResponse ?: createDefaultResponse(userWalletId)
