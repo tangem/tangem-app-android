@@ -37,7 +37,7 @@ import com.tangem.features.send.v2.api.SendEntryPointComponent
 import com.tangem.features.staking.api.StakingComponent
 import com.tangem.features.swap.SwapComponent
 import com.tangem.features.swap.v2.api.SendWithSwapComponent
-import com.tangem.features.tangempay.components.TangemPayDetailsComponent
+import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
 import com.tangem.features.tangempay.components.TangemPayOnboardingComponent
 import com.tangem.features.tangempay.components.TangemPayOnboardingComponent.Params.ContinueOnboarding
 import com.tangem.features.tangempay.components.TangemPayOnboardingComponent.Params.Deeplink
@@ -113,7 +113,7 @@ internal class ChildFactory @Inject constructor(
     private val forgetWalletComponentFactory: ForgetWalletComponent.Factory,
     private val sendWithSwapComponentFactory: SendWithSwapComponent.Factory,
     private val sendEntryPointComponentFactory: SendEntryPointComponent.Factory,
-    private val tangemPayDetailsComponentFactory: TangemPayDetailsComponent.Factory,
+    private val tangemPayDetailsContainerComponentFactory: TangemPayDetailsContainerComponent.Factory,
     private val tangemPayOnboardingComponentFactory: TangemPayOnboardingComponent.Factory,
     private val kycComponentFactory: KycComponent.Factory,
     private val yieldSupplyPromoComponentFactory: YieldSupplyPromoComponent.Factory,
@@ -634,8 +634,11 @@ internal class ChildFactory @Inject constructor(
             is AppRoute.TangemPayDetails -> {
                 createComponentChild(
                     context = context,
-                    params = TangemPayDetailsComponent.Params(userWalletId = route.userWalletId, config = route.config),
-                    componentFactory = tangemPayDetailsComponentFactory,
+                    params = TangemPayDetailsContainerComponent.Params(
+                        userWalletId = route.userWalletId,
+                        config = route.config,
+                    ),
+                    componentFactory = tangemPayDetailsContainerComponentFactory,
                 )
             }
             is AppRoute.TangemPayOnboarding -> {

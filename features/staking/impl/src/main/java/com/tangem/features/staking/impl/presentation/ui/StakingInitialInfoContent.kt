@@ -240,7 +240,7 @@ private fun StakingRewardBlock(
                 TangemTheme.colors.text.tertiary
         }
         RewardBlockType.RewardUnavailable.SolanaRewardUnavailable -> {
-            resourceReference(R.string.staking_soloana_details_auto_claiming_rewards_daily_text) to
+            resourceReference(R.string.staking_solana_details_auto_claiming_rewards_daily_text) to
                 TangemTheme.colors.text.tertiary
         }
         RewardBlockType.NoRewards -> {
