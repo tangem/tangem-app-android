@@ -67,5 +67,5 @@ interface CurrencyChecksRepository {
      * This represents the amount supplied to the protocol for the specified `userWalletId`
      * (e.g., aTokens balance). Returns null if not applicable or unknown.
      */
-    suspend fun getProtocolBalance(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): BigDecimal?
+    suspend fun getProtocolBalance(userWalletId: UserWalletId, cryptoCurrencyStatus: CryptoCurrencyStatus): BigDecimal?
 }
