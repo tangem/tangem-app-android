@@ -9,5 +9,4 @@ internal interface OnrampV2Intents {
     fun onBuyClick(quote: OnrampProviderWithQuote.Data, onrampOfferAdvantagesUM: OnrampOfferAdvantagesUM)
     fun openProviders()
     fun onRefresh()
-    fun onContinueClick()
 }
