@@ -110,6 +110,7 @@ internal class ChildFactory @Inject constructor(
     private val createWalletBackupComponentFactory: CreateWalletBackupComponent.Factory,
     private val updateAccessCodeComponentFactory: UpdateAccessCodeComponent.Factory,
     private val viewPhraseComponentFactory: ViewPhraseComponent.Factory,
+    private val forgetWalletComponentFactory: ForgetWalletComponent.Factory,
     private val sendWithSwapComponentFactory: SendWithSwapComponent.Factory,
     private val sendEntryPointComponentFactory: SendEntryPointComponent.Factory,
     private val tangemPayDetailsComponentFactory: TangemPayDetailsComponent.Factory,
@@ -563,6 +564,15 @@ internal class ChildFactory @Inject constructor(
                         userWalletId = route.userWalletId,
                     ),
                     componentFactory = viewPhraseComponentFactory,
+                )
+            }
+            is AppRoute.ForgetWallet -> {
+                createComponentChild(
+                    context = context,
+                    params = ForgetWalletComponent.Params(
+                        userWalletId = route.userWalletId,
+                    ),
+                    componentFactory = forgetWalletComponentFactory,
                 )
             }
             is AppRoute.SendEntryPoint -> {
