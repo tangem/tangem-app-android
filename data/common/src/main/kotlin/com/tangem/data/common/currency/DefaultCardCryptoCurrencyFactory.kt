@@ -5,13 +5,12 @@ import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.data.common.account.WalletAccountsFetcher
 import com.tangem.data.common.tokens.getDefaultWalletBlockchains
-import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
-import com.tangem.datasource.api.tangemTech.models.account.toUserTokensResponse
 import com.tangem.datasource.local.token.UserTokensResponseStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.demo.models.DemoConfig
+import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
@@ -140,15 +139,32 @@ internal class DefaultCardCryptoCurrencyFactory(
         userWallet: UserWallet,
         networks: Set<Network>,
     ): Map<Network, List<CryptoCurrency>> {
-        val response = getUserTokensResponse(userWalletId = userWallet.walletId)
-            ?: return emptyMap()
+        val existingNetworkWithCurrencies = if (accountsFeatureToggles.isFeatureEnabled) {
+            val response = walletAccountsFetcher.getSaved(userWallet.walletId)
+                ?: return emptyMap()
 
-        val existingNetworkWithCurrencies = responseCryptoCurrenciesFactory.createCurrencies(
-            tokens = response.tokens.filter { token ->
-                networks.any { it.backendId == token.networkId && it.derivationPath.value == token.derivationPath }
-            },
-            userWallet = userWallet,
-        )
+            response.accounts.flatMapTo(hashSetOf()) { accountDTO ->
+                responseCryptoCurrenciesFactory.createCurrencies(
+                    tokens = accountDTO.tokens.orEmpty().filter { token ->
+                        networks.any {
+                            it.backendId == token.networkId && it.derivationPath.value == token.derivationPath
+                        }
+                    },
+                    userWallet = userWallet,
+                    accountIndex = DerivationIndex(accountDTO.derivationIndex).getOrNull(),
+                )
+            }
+        } else {
+            val response = userTokensResponseStore.getSyncOrNull(userWalletId = userWallet.walletId)
+                ?: return emptyMap()
+
+            responseCryptoCurrenciesFactory.createCurrencies(
+                tokens = response.tokens.filter { token ->
+                    networks.any { it.backendId == token.networkId && it.derivationPath.value == token.derivationPath }
+                },
+                userWallet = userWallet,
+            )
+        }
             .groupBy(CryptoCurrency::network)
 
         return networks.associateWith { emptyList<CryptoCurrency>() } + existingNetworkWithCurrencies
@@ -158,24 +174,29 @@ internal class DefaultCardCryptoCurrencyFactory(
         userWallet: UserWallet,
         rawIds: Set<Network.RawID>,
     ): Map<Network.RawID, List<CryptoCurrency>> {
-        val response = getUserTokensResponse(userWalletId = userWallet.walletId)
-            ?: return emptyMap()
-
         val networkIds = rawIds.map { it.toBlockchain().toNetworkId() }
 
-        return responseCryptoCurrenciesFactory.createCurrencies(
-            tokens = response.tokens.filter { token -> token.networkId in networkIds },
-            userWallet = userWallet,
-        )
-            .groupBy { it.network.id.rawId }
-    }
-
-    private suspend fun getUserTokensResponse(userWalletId: UserWalletId): UserTokensResponse? {
         return if (accountsFeatureToggles.isFeatureEnabled) {
-            walletAccountsFetcher.getSaved(userWalletId)?.toUserTokensResponse()
+            val response = walletAccountsFetcher.getSaved(userWallet.walletId)
+                ?: return emptyMap()
+
+            response.accounts.flatMapTo(hashSetOf()) { accountDTO ->
+                responseCryptoCurrenciesFactory.createCurrencies(
+                    tokens = accountDTO.tokens.orEmpty().filter { token -> token.networkId in networkIds },
+                    userWallet = userWallet,
+                    accountIndex = DerivationIndex(accountDTO.derivationIndex).getOrNull(),
+                )
+            }
         } else {
-            userTokensResponseStore.getSyncOrNull(userWalletId = userWalletId)
+            val response = userTokensResponseStore.getSyncOrNull(userWalletId = userWallet.walletId)
+                ?: return emptyMap()
+
+            responseCryptoCurrenciesFactory.createCurrencies(
+                tokens = response.tokens.filter { token -> token.networkId in networkIds },
+                userWallet = userWallet,
+            )
         }
+            .groupBy { it.network.id.rawId }
     }
 
     private fun getSingleWalletCurrencies(userWallet: UserWallet.Cold): SingleWalletCurrencies {
