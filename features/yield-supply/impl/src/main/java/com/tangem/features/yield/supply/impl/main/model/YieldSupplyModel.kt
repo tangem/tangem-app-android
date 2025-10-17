@@ -27,6 +27,7 @@ import com.tangem.domain.yield.supply.usecase.YieldSupplyIsAvailableUseCase
 import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.api.YieldSupplyComponent
 import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
+import com.tangem.features.yield.supply.impl.common.YieldSupplyProtocolListener
 import com.tangem.features.yield.supply.impl.main.entity.YieldSupplyUM
 import com.tangem.features.yield.supply.impl.main.model.transformers.YieldSupplyTokenStatusSuccessTransformer
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -56,6 +57,7 @@ internal class YieldSupplyModel @Inject constructor(
     private val yieldSupplyIsAvailableUseCase: YieldSupplyIsAvailableUseCase,
     private val yieldSupplyActivateUseCase: YieldSupplyActivateUseCase,
     private val yieldSupplyDeactivateUseCase: YieldSupplyDeactivateUseCase,
+    private val yieldSupplyProtocolListener: YieldSupplyProtocolListener,
 ) : Model(), YieldSupplyClickIntents {
 
     private val params = paramsContainer.require<YieldSupplyComponent.Params>()
@@ -83,6 +85,28 @@ internal class YieldSupplyModel @Inject constructor(
 
     init {
         checkIfYieldSupplyIsAvailable()
+        observeProtocolEvents()
+    }
+
+    private fun observeProtocolEvents() {
+        yieldSupplyProtocolListener.exitProtocolTriggerFlow.onEach {
+            uiState.update {
+                YieldSupplyUM.Processing.Exit
+            }
+            coroutineScope.launch(dispatchers.io) {
+                delay(PROCESSING_UPDATE_DELAY)
+                fetchCurrencyStatusUseCase(userWalletId = userWallet.walletId, cryptoCurrency.id)
+            }
+        }.launchIn(modelScope)
+        yieldSupplyProtocolListener.enterProtocolTriggerFlow.onEach {
+            uiState.update {
+                YieldSupplyUM.Processing.Enter
+            }
+            coroutineScope.launch(dispatchers.io) {
+                delay(PROCESSING_UPDATE_DELAY)
+                fetchCurrencyStatusUseCase(userWalletId = userWallet.walletId, cryptoCurrency.id)
+            }
+        }.launchIn(modelScope)
     }
 
     private fun checkIfYieldSupplyIsAvailable() {
