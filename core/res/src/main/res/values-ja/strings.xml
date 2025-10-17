@@ -1202,7 +1202,7 @@
   <string name="staking_reward_schedule_month">毎月</string>
   <string name="staking_reward_schedule_week">毎週</string>
   <string name="staking_rewards">報酬</string>
-  <string name="staking_soloana_details_auto_claiming_rewards_daily_text">Solanaの報酬は自動的にステーキング残高に追加され、個別に表示することはできません。</string>
+  <string name="staking_solana_details_auto_claiming_rewards_daily_text">Solanaの報酬は自動的にステーキング残高に追加され、個別に表示することはできません。</string>
   <string name="staking_stake_locked">ステーキングはロックされています</string>
   <string name="staking_stake_more">もっとステーキングする</string>
   <string name="staking_stake_more_button_unavailability_reason">%1$sをステーキングすると、 %2$s残高全体がステーキングされます。Tangemウォレットに入金した追加の%2$sも、自動的にステーキングされます。</string>
