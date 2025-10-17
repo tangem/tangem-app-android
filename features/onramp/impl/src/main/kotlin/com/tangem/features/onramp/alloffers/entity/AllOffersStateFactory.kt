@@ -108,6 +108,7 @@ internal class AllOffersStateFactory(
             OnrampOfferAdvantages.Default -> OnrampOfferAdvantagesUM.Default
             OnrampOfferAdvantages.BestRate -> OnrampOfferAdvantagesUM.BestRate
             OnrampOfferAdvantages.Fastest -> OnrampOfferAdvantagesUM.Fastest
+            OnrampOfferAdvantages.GreatRate -> OnrampOfferAdvantagesUM.Default
         }
     }
 
@@ -121,7 +122,6 @@ internal class AllOffersStateFactory(
                                 category = OnrampOfferCategoryUM.Recommended,
                                 advantages = mapOfferAdvantagesDTOtoUM(offer.advantages),
                                 paymentMethod = quote.paymentMethod,
-                                providerId = quote.provider.id,
                                 providerName = quote.provider.info.name,
                                 rate = quote.toAmount.value.format {
                                     crypto(
