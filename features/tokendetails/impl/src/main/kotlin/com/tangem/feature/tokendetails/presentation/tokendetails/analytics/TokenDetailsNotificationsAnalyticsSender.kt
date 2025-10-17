@@ -45,7 +45,7 @@ internal class TokenDetailsNotificationsAnalyticsSender(
             is TokenDetailsNotification.KaspaIncompleteTransactionWarning -> TokenDetailsAnalyticsEvent.Notice.Reveal(
                 currency = cryptoCurrency,
             )
-            is TokenDetailsNotification.YieldSupplyNotTransferedToAave -> YieldSupplyAnalytics.NoticeNotEnoughMinAmount(
+            is TokenDetailsNotification.YieldSupplyNotTransferedToAave -> YieldSupplyAnalytics.NoticeAmountNotDeposited(
                 token = cryptoCurrency.symbol,
                 blockchain = cryptoCurrency.network.name,
             )
