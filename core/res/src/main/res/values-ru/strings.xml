@@ -202,7 +202,7 @@
   <string name="common_import">Импортировать</string>
   <string name="common_in_progress">В процессе</string>
   <string name="common_later">Позже</string>
-  <string name="common_learn_more">Узнать больше</string>
+  <string name="common_learn_more">Узнать больше</string>
   <string name="common_left">Осталось %1$s</string>
   <string name="common_locked">Заблокирован</string>
   <string name="common_main_network">Основная сеть</string>
@@ -1142,7 +1142,7 @@
   <string name="staking_reward_schedule_month">Месяц</string>
   <string name="staking_reward_schedule_week">Еженедельно</string>
   <string name="staking_rewards">Вознаграждения</string>
-  <string name="staking_soloana_details_auto_claiming_rewards_daily_text">Вознаграждения в сети Solana автоматически добавляются к вашему стейкинг-балансу и не могут отображаться отдельно.</string>
+  <string name="staking_solana_details_auto_claiming_rewards_daily_text">Вознаграждения в сети Solana автоматически добавляются к вашему стейкинг-балансу и не могут отображаться отдельно.</string>
   <string name="staking_stake_locked">Стейкинг закрыт</string>
   <string name="staking_stake_more">Застейкать еще</string>
   <string name="staking_stake_more_button_unavailability_reason">При стейкинге %1$s используется весь ваш баланс в %2$s. Любой дополнительный %2$s депозит будет автоматически застейкан.</string>
