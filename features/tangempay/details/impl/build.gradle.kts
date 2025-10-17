@@ -15,8 +15,9 @@ dependencies {
     /** Core */
     implementation(projects.core.configToggles)
     implementation(projects.core.decompose)
-    implementation(projects.core.ui)
     implementation(projects.core.error)
+    implementation(projects.core.navigation)
+    implementation(projects.core.ui)
 
     /** Features api */
     implementation(projects.features.tangempay.details.api)
@@ -26,9 +27,12 @@ dependencies {
     /** Domain */
     implementation(projects.domain.balanceHiding)
     implementation(projects.domain.balanceHiding.models)
+    implementation(projects.domain.feedback)
+    implementation(projects.domain.feedback.models)
     implementation(projects.domain.models)
     implementation(projects.domain.visa)
     implementation(projects.domain.visa.models)
+    implementation(projects.domain.wallets)
 
     /** Compose */
     implementation(deps.compose.coil)
