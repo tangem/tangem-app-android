@@ -3,6 +3,7 @@ package com.tangem.features.tangempay.di
 import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.model.Model
 import com.tangem.features.tangempay.model.TangemPayDetailsModel
+import com.tangem.features.tangempay.model.TangemPayTxHistoryDetailsModel
 import com.tangem.features.tangempay.model.TangemPayTxHistoryModel
 import dagger.Binds
 import dagger.Module
@@ -23,4 +24,9 @@ internal interface TangemPayModelModule {
     @IntoMap
     @ClassKey(TangemPayTxHistoryModel::class)
     fun bindTangemPayTxHistoryModel(model: TangemPayTxHistoryModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(TangemPayTxHistoryDetailsModel::class)
+    fun bindTangemPayTxHistoryDetailsModel(model: TangemPayTxHistoryDetailsModel): Model
 }
