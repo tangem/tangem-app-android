@@ -255,6 +255,7 @@
   <string name="common_fee_selector_option_slow">Slow</string>
   <string name="common_fee_selector_title">Speed and fee</string>
   <string name="common_finish">Finish</string>
+  <string name="common_forget">Forget</string>
   <string name="common_free">Free</string>
   <string name="common_from">From</string>
   <string name="common_generate_addresses">Synchronize addresses</string>
