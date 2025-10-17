@@ -15,7 +15,6 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.tokens.FetchCurrencyStatusUseCase
 import com.tangem.domain.tokens.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.domain.transaction.error.GetFeeError
@@ -29,6 +28,7 @@ import com.tangem.domain.yield.supply.usecase.YieldSupplyStartEarningUseCase
 import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
 import com.tangem.features.yield.supply.impl.common.YieldSupplyAlertFactory
+import com.tangem.features.yield.supply.impl.common.YieldSupplyProtocolTrigger
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyActionUM
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyFeeUM
 import com.tangem.features.yield.supply.impl.common.entity.transformer.YieldSupplyTransactionInProgressTransformer
@@ -41,7 +41,6 @@ import com.tangem.features.yield.supply.impl.subcomponents.startearning.model.tr
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.orZero
 import com.tangem.utils.transformer.update
-import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -63,11 +62,11 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
     private val yieldSupplyEstimateEnterFeeUseCase: YieldSupplyEstimateEnterFeeUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val yieldSupplyNotificationsUpdateTrigger: YieldSupplyNotificationsUpdateTrigger,
-    private val fetchCurrencyStatusUseCase: FetchCurrencyStatusUseCase,
     private val yieldSupplyAlertFactory: YieldSupplyAlertFactory,
     private val yieldSupplyActivateUseCase: YieldSupplyActivateUseCase,
     private val yieldSupplyGetTokenStatusUseCase: YieldSupplyGetTokenStatusUseCase,
     private val yieldSupplyMinAmountUseCase: YieldSupplyMinAmountUseCase,
+    private val yieldSupplyProtocolTrigger: YieldSupplyProtocolTrigger,
 ) : Model(), YieldSupplyNotificationsComponent.ModelCallback {
 
     private val params: YieldSupplyStartEarningComponent.Params = paramsContainer.require()
@@ -253,14 +252,9 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
                     )
                 },
                 ifRight = {
-                    yieldSupplyActivateUseCase(cryptoCurrency)
-                    modelScope.launch(NonCancellable) {
-                        fetchCurrencyStatusUseCase(
-                            userWalletId = userWallet.walletId,
-                            cryptoCurrency.id,
-                        )
-                    }
+                    yieldSupplyProtocolTrigger.onEnterProtocol()
                     analytics.send(YieldSupplyAnalytics.FundsEarned)
+                    yieldSupplyActivateUseCase(cryptoCurrency)
                     modelScope.launch {
                         params.callback.onTransactionSent()
                     }
