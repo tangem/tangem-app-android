@@ -262,7 +262,7 @@
   <string name="common_import">Importieren</string>
   <string name="common_in_progress">In Arbeit</string>
   <string name="common_later">Später</string>
-  <string name="common_learn_more">Mehr erfahren</string>
+  <string name="common_learn_more">Mehr erfahren</string>
   <string name="common_left">%1$s übrig</string>
   <string name="common_legacy_bitcoin_address">Legacy Bitcoin</string>
   <string name="common_locked">Gesperrt</string>
@@ -1200,7 +1200,7 @@
   <string name="staking_reward_schedule_month">Monatlich</string>
   <string name="staking_reward_schedule_week">Wöchentlich</string>
   <string name="staking_rewards">Belohnungen</string>
-  <string name="staking_soloana_details_auto_claiming_rewards_daily_text">Belohnungen auf Solana werden automatisch Deinem Staking-Guthaben hinzugefügt und können nicht separat angezeigt werden.</string>
+  <string name="staking_solana_details_auto_claiming_rewards_daily_text">Belohnungen auf Solana werden automatisch Deinem Staking-Guthaben hinzugefügt und können nicht separat angezeigt werden.</string>
   <string name="staking_stake_locked">Stake gesperrt</string>
   <string name="staking_stake_more">Mehr staken</string>
   <string name="staking_stake_more_button_unavailability_reason">Beim Staking %1$s wird Dein gesamtes %2$s -Guthaben eingesetzt. Alle weiteren %2$s due Du in Deine Tangem-Wallet einzahlst, werden ebenfalls automatisch eingesetzt.</string>
