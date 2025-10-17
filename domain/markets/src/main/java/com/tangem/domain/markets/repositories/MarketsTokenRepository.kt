@@ -1,6 +1,7 @@
 package com.tangem.domain.markets.repositories
 
 import com.tangem.domain.markets.*
+import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import kotlinx.coroutines.flow.Flow
@@ -45,6 +46,7 @@ interface MarketsTokenRepository {
         userWalletId: UserWalletId,
         token: TokenMarketParams,
         network: TokenMarketInfo.Network,
+        accountIndex: DerivationIndex? = null,
     ): CryptoCurrency?
 
     /**

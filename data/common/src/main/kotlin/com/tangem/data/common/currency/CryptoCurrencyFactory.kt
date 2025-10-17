@@ -7,6 +7,7 @@ import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.blockchainsdk.utils.toCoinId
 import com.tangem.data.common.network.NetworkFactory
+import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
@@ -18,7 +19,7 @@ class CryptoCurrencyFactory(
     private val excludedBlockchains: ExcludedBlockchains,
 ) {
 
-    private val networkFactory by lazy(LazyThreadSafetyMode.NONE) { NetworkFactory(excludedBlockchains) }
+    val networkFactory by lazy(LazyThreadSafetyMode.NONE) { NetworkFactory(excludedBlockchains) }
 
     @Suppress("LongParameterList") // Yep, it's long
     fun createToken(
@@ -89,6 +90,7 @@ class CryptoCurrencyFactory(
         blockchain: Blockchain,
         extraDerivationPath: String?,
         userWallet: UserWallet,
+        accountIndex: DerivationIndex? = null,
     ): CryptoCurrency.Coin? {
         if (blockchain == Blockchain.Unknown) {
             Timber.e("Unable to map the SDK token to the domain token with Unknown blockchain")
@@ -99,6 +101,7 @@ class CryptoCurrencyFactory(
             blockchain = blockchain,
             extraDerivationPath = extraDerivationPath,
             userWallet = userWallet,
+            accountIndex = accountIndex,
         ) ?: return null
 
         return createCoin(network)
