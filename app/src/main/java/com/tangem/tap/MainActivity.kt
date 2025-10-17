@@ -50,7 +50,6 @@ import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.usecase.ClearAllHotWalletContextualUnlockUseCase
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
-import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tester.api.TesterMenuLauncher
 import com.tangem.google.GoogleServicesHelper
 import com.tangem.operations.backup.BackupService
@@ -178,9 +177,6 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
 
     @Inject
     internal lateinit var clearAllHotWalletContextualUnlockUseCase: ClearAllHotWalletContextualUnlockUseCase
-
-    @Inject
-    internal lateinit var tangemPayFeatureToggles: TangemPayFeatureToggles
 
     private val viewModel: MainViewModel by viewModels()
 

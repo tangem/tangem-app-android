@@ -41,7 +41,6 @@ import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvid
 import com.tangem.features.biometry.AskBiometryComponent
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.pushnotifications.api.PushNotificationsModelCallbacks
-import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.wallet.deeplink.WalletDeepLinkActionListener
 import com.tangem.features.yield.supply.api.YieldSupplyFeatureToggles
 import com.tangem.utils.Provider
@@ -91,7 +90,6 @@ internal class WalletModel @Inject constructor(
     private val userWalletsListRepository: UserWalletsListRepository,
     private val tangemPayMainScreenCustomerInfoUseCase: TangemPayMainScreenCustomerInfoUseCase,
     private val tangemPayIssueOrderUseCase: TangemPayIssueOrderUseCase,
-    private val tangemPayFeatureToggles: TangemPayFeatureToggles,
     private val yieldSupplyApyUpdateUseCase: YieldSupplyApyUpdateUseCase,
     private val yieldSupplyFeatureToggles: YieldSupplyFeatureToggles,
     val screenLifecycleProvider: ScreenLifecycleProvider,
@@ -345,7 +343,7 @@ internal class WalletModel @Inject constructor(
          */
         screenLifecycleProvider.isBackgroundState.onEach { inBackground ->
             updateTangemPayJobHolder.cancel()
-            if (!inBackground && tangemPayFeatureToggles.isTangemPayEnabled) {
+            if (!inBackground) {
                 modelScope.launch {
                     refreshTangemPayInfo()
                     while (isActive) {
