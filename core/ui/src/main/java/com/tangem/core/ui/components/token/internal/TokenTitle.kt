@@ -63,6 +63,7 @@ private fun ContentTitle(state: TokenTitleState.Content, modifier: Modifier = Mo
 
         YieldSupplyApyLabel(
             apy = state.earnApy,
+            isActive = state.earnApyIsActive,
             modifier = Modifier.align(alignment = Alignment.CenterVertically),
         )
     }
@@ -81,18 +82,26 @@ private fun CurrencyNameText(name: String, isAvailable: Boolean, modifier: Modif
 }
 
 @Composable
-private fun YieldSupplyApyLabel(apy: TextReference?, modifier: Modifier = Modifier) {
+private fun YieldSupplyApyLabel(apy: TextReference?, isActive: Boolean, modifier: Modifier = Modifier) {
     AnimatedVisibility(visible = apy != null, modifier = modifier) {
         Box(
-            modifier = modifier.background(
-                color = TangemTheme.colors.text.accent.copy(alpha = 0.1f),
-                shape = TangemTheme.shapes.roundedCornersSmall2,
-            ),
+            modifier = if (isActive) {
+                modifier.background(
+                    color = TangemTheme.colors.text.accent.copy(alpha = 0.1f),
+                    shape = TangemTheme.shapes.roundedCornersSmall2,
+                )
+            } else {
+                modifier
+            },
         ) {
             Text(
                 text = apy?.resolveReference().orEmpty(),
                 style = TangemTheme.typography.caption1,
-                color = TangemTheme.colors.text.accent,
+                color = if (isActive) {
+                    TangemTheme.colors.text.accent
+                } else {
+                    TangemTheme.colors.text.tertiary
+                },
                 modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp),
             )
         }
