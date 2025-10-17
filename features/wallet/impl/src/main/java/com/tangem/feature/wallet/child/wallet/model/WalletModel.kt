@@ -375,7 +375,12 @@ internal class WalletModel @Inject constructor(
                     value = info,
                     onClickIssue = ::issueOrder,
                     onClickKyc = innerWalletRouter::openTangemPayOnboarding,
-                    openDetails = innerWalletRouter::openTangemPayDetails,
+                    openDetails = { config ->
+                        innerWalletRouter.openTangemPayDetails(
+                            userWalletId = stateHolder.getSelectedWalletId(),
+                            config = config,
+                        )
+                    },
                 ),
             )
         }
