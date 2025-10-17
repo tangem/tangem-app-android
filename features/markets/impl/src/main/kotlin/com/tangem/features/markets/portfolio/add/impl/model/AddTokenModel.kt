@@ -66,12 +66,11 @@ internal class AddTokenModel @Inject constructor(
             val blockchainNames = listOf(selectedNetwork.selectedNetwork)
                 .mapNotNull { BlockchainUtils.getNetworkInfo(it.networkId)?.name }
             analyticsEventHandler.send(analyticsEventBuilder.addToPortfolioContinue(blockchainNames))
+
             val cryptoCurrency = selectedNetwork.cryptoCurrency
             val accountId = selectedPortfolio.account.account.account.accountId
-            manageCryptoCurrenciesUseCase(
-                accountId = accountId,
-                add = cryptoCurrency,
-            )
+            manageCryptoCurrenciesUseCase(accountId = accountId, add = cryptoCurrency)
+
             val status = getAccountCurrencyStatusUseCase.invokeSync(
                 userWalletId = accountId.userWalletId,
                 currencyId = cryptoCurrency.id,
