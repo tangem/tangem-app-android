@@ -1200,7 +1200,7 @@
   <string name="staking_reward_schedule_month">Monatlich</string>
   <string name="staking_reward_schedule_week">Wöchentlich</string>
   <string name="staking_rewards">Belohnungen</string>
-  <string name="staking_soloana_details_auto_claiming_rewards_daily_text">Belohnungen auf Solana werden automatisch Deinem Staking-Guthaben hinzugefügt und können nicht separat angezeigt werden.</string>
+  <string name="staking_solana_details_auto_claiming_rewards_daily_text">Belohnungen auf Solana werden automatisch Deinem Staking-Guthaben hinzugefügt und können nicht separat angezeigt werden.</string>
   <string name="staking_stake_locked">Stake gesperrt</string>
   <string name="staking_stake_more">Mehr staken</string>
   <string name="staking_stake_more_button_unavailability_reason">Beim Staking %1$s wird Dein gesamtes %2$s -Guthaben eingesetzt. Alle weiteren %2$s due Du in Deine Tangem-Wallet einzahlst, werden ebenfalls automatisch eingesetzt.</string>
