@@ -7,10 +7,12 @@ import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.domain.card.common.extensions.canHandleToken
+import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.derivations.DerivationStyleProvider
 import com.tangem.domain.wallets.derivations.derivationStyleProvider
+import com.tangem.lib.crypto.derivation.toMutable
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -21,6 +23,7 @@ import javax.inject.Inject
  *
 [REDACTED_AUTHOR]
  */
+@Suppress("LargeClass")
 class NetworkFactory @Inject constructor(
     private val excludedBlockchains: ExcludedBlockchains,
 ) {
@@ -32,13 +35,19 @@ class NetworkFactory @Inject constructor(
      * @param extraDerivationPath extra derivation path
      * @param userWallet          user wallet
      */
-    fun create(blockchain: Blockchain, extraDerivationPath: String?, userWallet: UserWallet): Network? {
+    fun create(
+        blockchain: Blockchain,
+        extraDerivationPath: String?,
+        userWallet: UserWallet,
+        accountIndex: DerivationIndex? = null,
+    ): Network? {
         return create(
             blockchain = blockchain,
             derivationPath = createDerivationPath(
                 blockchain = blockchain,
                 extraDerivationPath = extraDerivationPath,
                 cardDerivationStyleProvider = userWallet.derivationStyleProvider,
+                accountIndex = accountIndex,
             ),
             canHandleTokens = userWallet.canHandleToken(
                 blockchain = blockchain,
@@ -80,6 +89,7 @@ class NetworkFactory @Inject constructor(
         extraDerivationPath: String?,
         derivationStyleProvider: DerivationStyleProvider?,
         canHandleTokens: Boolean,
+        accountIndex: DerivationIndex? = null,
     ): Network? {
         return create(
             blockchain = blockchain,
@@ -87,6 +97,7 @@ class NetworkFactory @Inject constructor(
                 blockchain = blockchain,
                 extraDerivationPath = extraDerivationPath,
                 cardDerivationStyleProvider = derivationStyleProvider,
+                accountIndex = accountIndex,
             ),
             canHandleTokens = canHandleTokens,
         )
@@ -134,10 +145,11 @@ class NetworkFactory @Inject constructor(
         blockchain: Blockchain,
         extraDerivationPath: String?,
         cardDerivationStyleProvider: DerivationStyleProvider?,
+        accountIndex: DerivationIndex? = null,
     ): Network.DerivationPath {
         if (cardDerivationStyleProvider == null) return Network.DerivationPath.None
 
-        val defaultDerivationPath = getDefaultDerivationPath(blockchain, cardDerivationStyleProvider)
+        val defaultDerivationPath = getDefaultDerivationPath(blockchain, cardDerivationStyleProvider, accountIndex)
 
         return if (extraDerivationPath.isNullOrBlank()) {
             if (defaultDerivationPath.isNullOrBlank()) {
@@ -146,10 +158,11 @@ class NetworkFactory @Inject constructor(
                 Network.DerivationPath.Card(defaultDerivationPath)
             }
         } else {
-            if (extraDerivationPath == defaultDerivationPath) {
-                Network.DerivationPath.Card(defaultDerivationPath)
-            } else {
+            val isMainIndexOrNull = accountIndex == null || accountIndex == DerivationIndex.Main
+            if (extraDerivationPath != defaultDerivationPath && isMainIndexOrNull) {
                 Network.DerivationPath.Custom(extraDerivationPath)
+            } else {
+                Network.DerivationPath.Card(extraDerivationPath)
             }
         }
     }
@@ -157,8 +170,19 @@ class NetworkFactory @Inject constructor(
     private fun getDefaultDerivationPath(
         blockchain: Blockchain,
         derivationStyleProvider: DerivationStyleProvider,
+        accountIndex: DerivationIndex?,
     ): String? {
-        return blockchain.derivationPath(derivationStyleProvider.getDerivationStyle())?.rawPath
+        val default = blockchain.derivationPath(derivationStyleProvider.getDerivationStyle())
+            ?: return null
+
+        return if (accountIndex == null || accountIndex == DerivationIndex.Main) {
+            default
+        } else {
+            default.toMutable()
+                .replaceAccountNode(value = accountIndex.value.toLong(), blockchain = blockchain)
+                .apply()
+        }
+            .rawPath
     }
 
     private fun getNetworkStandardType(blockchain: Blockchain): Network.StandardType {
