@@ -7,6 +7,8 @@ import com.tangem.domain.account.producer.SingleAccountProducer
 import com.tangem.domain.account.status.usecase.ManageCryptoCurrenciesUseCase
 import com.tangem.domain.account.supplier.SingleAccountSupplier
 import com.tangem.domain.managetokens.CheckIsCurrencyNotAddedUseCase
+import com.tangem.domain.models.account.AccountId
+import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
@@ -27,7 +29,13 @@ internal class CustomTokenFormUseCasesFacade @AssistedInject constructor(
 
     suspend fun addCryptoCurrenciesUseCase(currency: CryptoCurrency): Either<Throwable, Unit> = when (mode) {
         is AddCustomTokenMode.Account -> {
-            manageCryptoCurrenciesUseCase(accountId = mode.accountId, add = currency)
+            manageCryptoCurrenciesUseCase(
+                accountId = AccountId.forCryptoPortfolio(
+                    userWalletId = mode.userWalletId,
+                    derivationIndex = DerivationIndex.Main,
+                ),
+                add = currency,
+            )
         }
         is AddCustomTokenMode.Wallet -> {
             addCryptoCurrenciesUseCase.invoke(
