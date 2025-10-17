@@ -174,10 +174,12 @@ class TokenItemStateConverter(
                             wrappedList(apy),
                         )
                     }
+                    val isActive = currencyStatus.value.yieldSupplyStatus?.isActive ?: false
                     TokenItemState.TitleState.Content(
                         text = stringReference(currencyStatus.currency.name),
                         hasPending = value.hasCurrentNetworkTransactions,
                         earnApy = earnApyText,
+                        earnApyIsActive = isActive,
                     )
                 }
             }
@@ -185,10 +187,6 @@ class TokenItemStateConverter(
 
         private fun resolveEarnApy(cryptoCurrencyStatus: CryptoCurrencyStatus, apyMap: Map<String, String>): String? {
             if (apyMap.isEmpty()) return null
-
-            val isYieldSupplyActive = (cryptoCurrencyStatus.value as? CryptoCurrencyStatus.Loaded)
-                ?.yieldSupplyStatus?.isActive == true
-            if (isYieldSupplyActive) return null
 
             val token = cryptoCurrencyStatus.currency as? CryptoCurrency.Token ?: return null
 
