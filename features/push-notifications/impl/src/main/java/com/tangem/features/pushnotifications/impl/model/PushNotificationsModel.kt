@@ -54,12 +54,12 @@ internal class PushNotificationsModel @Inject constructor(
         modelScope.launch {
             neverRequestPermissionUseCase(PUSH_PERMISSION)
             neverToInitiallyAskPermissionUseCase(PUSH_PERMISSION)
-            params.modelCallbacks.onDenySystemPermission()
             if (params.isBottomSheet) {
                 notificationsRepository.setUserAllowToSubscribeOnPushNotifications(false)
             } else {
                 params.nextRoute?.let { appRouter.push(it) }
             }
+            params.modelCallbacks.onDenySystemPermission()
         }
     }
 
