@@ -19,8 +19,8 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetProtocolBalanceUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetTokenStatusUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyMinAmountUseCase
-import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
+import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.impl.common.formatter.YieldSupplyMinAmountFormatter
 import com.tangem.features.yield.supply.impl.subcomponents.active.YieldSupplyActiveComponent
 import com.tangem.features.yield.supply.impl.subcomponents.active.entity.YieldSupplyActiveContentUM
