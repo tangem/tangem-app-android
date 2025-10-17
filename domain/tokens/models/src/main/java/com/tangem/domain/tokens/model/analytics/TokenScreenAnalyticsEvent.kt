@@ -192,6 +192,7 @@ sealed class TokenScreenAnalyticsEvent(
                 is ScenarioUnavailabilityReason.NotExchangeable,
                 is ScenarioUnavailabilityReason.NotSupportedBySellService,
                 is ScenarioUnavailabilityReason.StakingUnavailable,
+                ScenarioUnavailabilityReason.YieldSupplyApprovalRequired,
                 -> UNAVAILABLE
                 ScenarioUnavailabilityReason.UnassociatedAsset -> ASSET_REQUIREMENT
                 ScenarioUnavailabilityReason.TrustlineRequired -> TRUSTLINE_REQUIREMENT
