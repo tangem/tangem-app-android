@@ -19,7 +19,7 @@ import com.tangem.domain.models.TokenReceiveType
 import com.tangem.domain.pay.DataForReceiveFactory
 import com.tangem.domain.pay.repository.CardDetailsRepository
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
-import com.tangem.features.tangempay.components.TangemPayDetailsComponent
+import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.entity.TangemPayDetailsErrorType
 import com.tangem.features.tangempay.entity.TangemPayDetailsNavigation
@@ -57,7 +57,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     private val uiMessageSender: UiMessageSender,
 ) : Model(), TangemPayTxHistoryUiActions {
 
-    private val params: TangemPayDetailsComponent.Params = paramsContainer.require()
+    private val params: TangemPayDetailsContainerComponent.Params = paramsContainer.require()
 
     private val stateFactory = TangemPayDetailsStateFactory(
         cardNumberEnd = params.config.cardNumberEnd,
@@ -66,6 +66,8 @@ internal class TangemPayDetailsModel @Inject constructor(
         onReceive = ::onClickReceive,
         onReveal = ::revealCardDetails,
         onCopy = ::copyData,
+        onClickChangePin = ::onClickChangePin,
+        onClickFreezeCard = ::onClickFreezeCard,
     )
 
     val uiState: StateFlow<TangemPayDetailsUM>
@@ -79,6 +81,14 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     init {
         fetchBalance()
+    }
+
+    private fun onClickChangePin() {
+        // TODO [REDACTED_JIRA]
+    }
+
+    private fun onClickFreezeCard() {
+        // TODO [REDACTED_JIRA]
     }
 
     private fun onClickReceive() {
