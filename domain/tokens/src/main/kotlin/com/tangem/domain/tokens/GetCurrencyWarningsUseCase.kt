@@ -51,7 +51,7 @@ class GetCurrencyWarningsUseCase(
             flowOf(currencyChecksRepository.getRentInfoWarning(userWalletId, currencyStatus)),
             flowOf(currencyChecksRepository.getExistentialDeposit(userWalletId, currency.network)),
             flowOf(currencyChecksRepository.getFeeResourceAmount(userWalletId, currency.network)),
-            flowOf(currencyChecksRepository.getProtocolBalance(userWalletId, currency)),
+            flowOf(currencyChecksRepository.getProtocolBalance(userWalletId, currencyStatus)),
         ) { coinRelatedWarnings, maybeRentWarning, maybeEdWarning, maybeFeeResource, yieldSupplyProtocolBalance ->
             setOfNotNull(
                 maybeRentWarning,
