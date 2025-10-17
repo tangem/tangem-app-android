@@ -12,6 +12,7 @@ import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.config.testnet.TestnetTokensStorage
 import com.tangem.datasource.local.token.UserTokensResponseStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
+import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.managetokens.repository.CustomTokensRepository
 import com.tangem.domain.managetokens.repository.ManageTokensRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
@@ -39,6 +40,7 @@ internal object ManageTokensDataModule {
         excludedBlockchains: ExcludedBlockchains,
         cardCryptoCurrencyFactory: CardCryptoCurrencyFactory,
         networkFactory: NetworkFactory,
+        accountsFeatureToggles: AccountsFeatureToggles,
         walletAccountsFetcher: WalletAccountsFetcher,
     ): ManageTokensRepository {
         return DefaultManageTokensRepository(
@@ -52,6 +54,7 @@ internal object ManageTokensDataModule {
             cardCryptoCurrencyFactory = cardCryptoCurrencyFactory,
             networkFactory = networkFactory,
             dispatchers = dispatchers,
+            accountsFeatureToggles = accountsFeatureToggles,
             walletAccountsFetcher = walletAccountsFetcher,
         )
     }
