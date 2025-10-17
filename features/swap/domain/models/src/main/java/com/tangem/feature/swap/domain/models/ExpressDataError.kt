@@ -64,4 +64,9 @@ sealed class ExpressDataError {
         override val code: Int = -2
         override val message: String = "tooLargeSolanaTransaction"
     }
+
+    data object DexActiveSupplyError : ExpressDataError() {
+        override val code: Int = -3
+        override val message: String = "dexActiveSupplyError"
+    }
 }
