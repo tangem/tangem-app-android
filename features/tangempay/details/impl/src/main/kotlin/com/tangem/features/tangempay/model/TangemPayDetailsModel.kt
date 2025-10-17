@@ -84,7 +84,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     private fun onClickReceive() {
         val depositAddress = params.config.depositAddress
         if (depositAddress == null) {
-            showError()
+            showBottomSheetError(TangemPayDetailsErrorType.Receive)
         } else {
             dataForReceiveFactory.getDataForReceive(depositAddress = depositAddress, chainId = params.config.chainId)
                 .onRight {
@@ -103,10 +103,7 @@ internal class TangemPayDetailsModel @Inject constructor(
                     )
                     bottomSheetNavigation.activate(TangemPayDetailsNavigation.Receive(config))
                 }
-                .onLeft {
-                    val messageUM = TangemPayErrorMessageFactory.createErrorMessage(TangemPayDetailsErrorType.Receive)
-                    uiMessageSender.send(message = messageUM)
-                }
+                .onLeft { showBottomSheetError(TangemPayDetailsErrorType.Receive) }
         }
     }
 
@@ -165,5 +162,9 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     override fun onTransactionClick(item: TangemPayTxHistoryItem) {
         bottomSheetNavigation.activate(TangemPayDetailsNavigation.TransactionDetails(item))
+    }
+
+    private fun showBottomSheetError(type: TangemPayDetailsErrorType) {
+        uiMessageSender.send(message = TangemPayErrorMessageFactory.createErrorMessage(type = type))
     }
 }
