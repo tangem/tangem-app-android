@@ -5,7 +5,7 @@ import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayDetailsConfig
 
-interface TangemPayDetailsComponent : ComposableContentComponent {
+interface TangemPayDetailsContainerComponent : ComposableContentComponent {
     data class Params(val userWalletId: UserWalletId, val config: TangemPayDetailsConfig)
-    interface Factory : ComponentFactory<Params, TangemPayDetailsComponent>
+    interface Factory : ComponentFactory<Params, TangemPayDetailsContainerComponent>
 }
