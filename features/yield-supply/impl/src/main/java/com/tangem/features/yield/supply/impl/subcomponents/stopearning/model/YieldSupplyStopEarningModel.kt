@@ -97,6 +97,13 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
         )
 
     init {
+        val currency = params.cryptoCurrencyStatusFlow.value.currency
+        analytics.send(
+            YieldSupplyAnalytics.StopEarningScreen(
+                token = currency.symbol,
+                blockchain = currency.network.name,
+            ),
+        )
         modelScope.launch {
             appCurrency = getSelectedAppCurrencyUseCase.invokeSync().getOrElse { AppCurrency.Default }
             subscribeOnCurrencyStatusUpdates()
@@ -133,6 +140,10 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
                 ifLeft = { error ->
                     Timber.e(error.toString())
                     uiState.update(YieldSupplyTransactionReadyTransformer)
+                    analytics.send(YieldSupplyAnalytics.EarnErrors(
+                        action = YieldSupplyAnalytics.Action.Stop,
+                        errorDescription = error.getAnalyticsDescription(),
+                    ))
                     yieldSupplyAlertFactory.getSendTransactionErrorState(
                         error = error,
                         popBack = params.callback::onBackClick,
