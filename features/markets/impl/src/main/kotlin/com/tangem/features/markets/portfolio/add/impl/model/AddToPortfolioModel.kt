@@ -13,6 +13,7 @@ import com.tangem.core.ui.message.ToastMessage
 import com.tangem.domain.account.status.usecase.GetCryptoCurrencyActionsUseCaseV2
 import com.tangem.domain.markets.GetTokenMarketCryptoCurrency
 import com.tangem.domain.markets.TokenMarketInfo
+import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
@@ -243,6 +244,7 @@ internal class AddToPortfolioModel @Inject constructor(
                 cryptoCurrency = createCryptoCurrency(
                     userWallet = selectedPortfolio.userWallet,
                     network = selectedNetwork,
+                    account = selectedPortfolio.account,
                 ) ?: return@transform null,
                 selectedNetwork = selectedNetwork,
                 availableMoreNetwork = !selectedPortfolio.account.isSingleNetwork,
@@ -254,10 +256,12 @@ internal class AddToPortfolioModel @Inject constructor(
     private suspend fun createCryptoCurrency(
         userWallet: UserWallet,
         network: TokenMarketInfo.Network,
+        account: AvailableToAddAccount,
     ): CryptoCurrency? = getTokenMarketCryptoCurrency(
         userWalletId = userWallet.walletId,
         tokenMarketParams = addToPortfolioManager.token,
         network = network,
+        accountIndex = (account.account as? AccountStatus.CryptoPortfolio)?.account?.derivationIndex,
     )
 
     private fun routeToNetworkSelector(portfolio: SelectedPortfolio): AddToPortfolioRoutes.NetworkSelector {
