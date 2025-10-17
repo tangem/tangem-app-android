@@ -402,7 +402,10 @@ internal class OnrampTokenListModel @Inject constructor(
                     cryptoCurrency = status.currency,
                 ).isAvailable() && !status.currency.isCustom
 
-                isAvailable && status.value !is CryptoCurrencyStatus.NoQuote
+                val supplyStatus = status.value.yieldSupplyStatus
+                val isUnavailableByYieldSupply = supplyStatus?.isAllowedToSpend == false && supplyStatus.isActive
+
+                isAvailable && status.value !is CryptoCurrencyStatus.NoQuote && !isUnavailableByYieldSupply
             }
         }
     }
