@@ -895,7 +895,7 @@
     <item quantity="other">最大%d日</item>
   </plurals>
   <string name="onramp_timing_minutes">%s分</string>
-  <string name="onramp_title_available_from___">下記より利用可能</string>
+  <string name="onramp_title_available_from">下記より利用可能</string>
   <string name="onramp_title_you_get">以下が手に入ります。</string>
   <string name="onramp_tos_external_providers">サービスは外部プロバイダーによって提供されます。 \nTangemは責任を負いません。</string>
   <string name="onramp_transaction_status_footer_text">この画面を閉じて、トークンの詳細画面で取引状況を確認できます。</string>
