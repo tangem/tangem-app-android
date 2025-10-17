@@ -90,6 +90,14 @@ class ManageCryptoCurrenciesUseCase(
             derivePublicKeys(userWalletId = userWalletId, currencies = modifiedCurrencyList.added)
 
             parallelUpdatingScope.launch {
+                /*
+                 * If only removal of currencies happened, we need to sync tokens. Otherwise, tokens will be synced
+                 * when balances are refreshed for added currencies.
+                 */
+                if (modifiedCurrencyList.added.isEmpty() && modifiedCurrencyList.removed.isNotEmpty()) {
+                    launch { accountsCRUDRepository.syncTokens(userWalletId) }
+                }
+
                 refreshBalances(userWalletId = userWalletId, currencies = modifiedCurrencyList.added)
                 refreshExpress(userWalletId = userWalletId, currencies = modifiedCurrencyList.total)
                 clearMetadata(userWalletId = userWalletId, currencies = modifiedCurrencyList.removed)
@@ -119,7 +127,7 @@ class ManageCryptoCurrenciesUseCase(
 
             val tokenToAdd = findToken(userWalletId, contractAddress, networkId)
 
-            val modifiedCurrencyList = account.cryptoCurrencies.modify(add = listOf(tokenToAdd), remove = emptyList())
+            val modifiedCurrencyList = account.cryptoCurrencies.modify(add = listOf(tokenToAdd))
 
             saveAccount(account = account.copy(cryptoCurrencies = modifiedCurrencyList.total.toSet()))
 
@@ -143,7 +151,7 @@ class ManageCryptoCurrenciesUseCase(
 
     private fun Set<CryptoCurrency>.modify(
         add: List<CryptoCurrency>,
-        remove: List<CryptoCurrency>,
+        remove: List<CryptoCurrency> = emptyList(),
     ): ModifiedCurrencyList {
         val mutableCurrencies = this.toMutableList()
         val added = mutableListOf<CryptoCurrency>()
@@ -176,9 +184,8 @@ class ManageCryptoCurrenciesUseCase(
 
         remove.groupByNetwork(valuePredicate = existingCurrenciesById::containsKey)
             .forEach { (network, currenciesById) ->
-                val coinTempId = TempID(network)
-
-                if (currenciesById.containsKey(coinTempId)) {
+                val isCoinBeingRemoved = currenciesById.any { it.value is CryptoCurrency.Coin }
+                if (isCoinBeingRemoved) {
                     val existingNetworkCurrenciesCount = mutableCurrencies.count { it.network == network }
 
                     if (existingNetworkCurrenciesCount != currenciesById.size) {
@@ -306,7 +313,7 @@ class ManageCryptoCurrenciesUseCase(
     private suspend fun clearMetadata(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) {
         if (currencies.isEmpty()) return
 
-        return coroutineScope {
+        coroutineScope {
             listOf(
                 launch { networksCleaner(userWalletId = userWalletId, currencies = currencies) },
                 launch { clearStaking(userWalletId = userWalletId, currencies = currencies) },
