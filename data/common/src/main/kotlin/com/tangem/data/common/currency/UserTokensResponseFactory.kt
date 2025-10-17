@@ -12,7 +12,6 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.derivations.derivationStyleProvider
 import javax.inject.Inject
 
-// TODO: [REDACTED_JIRA]
 class UserTokensResponseFactory @Inject constructor() {
 
     fun createUserTokensResponse(
