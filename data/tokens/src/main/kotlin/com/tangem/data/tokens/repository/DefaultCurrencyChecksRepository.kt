@@ -165,19 +165,23 @@ internal class DefaultCurrencyChecksRepository(
         }
     }
 
-    override suspend fun getProtocolBalance(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): BigDecimal? {
-        require(cryptoCurrency is CryptoCurrency.Token)
+    override suspend fun getProtocolBalance(
+        userWalletId: UserWalletId,
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+    ): BigDecimal? {
+        val token = cryptoCurrencyStatus.currency as? CryptoCurrency.Token ?: return null
+        if (cryptoCurrencyStatus.value.yieldSupplyStatus?.isActive == false) return null
         return runCatching {
             val walletManager = walletManagersFacade.getOrCreateWalletManager(
                 userWalletId = userWalletId,
-                blockchain = cryptoCurrency.network.toBlockchain(),
-                derivationPath = cryptoCurrency.network.derivationPath.value,
+                blockchain = token.network.toBlockchain(),
+                derivationPath = token.network.derivationPath.value,
             ) ?: error("Wallet manager not found")
             walletManager.getProtocolBalance(
                 token = Token(
-                    symbol = cryptoCurrency.symbol,
-                    contractAddress = cryptoCurrency.contractAddress,
-                    decimals = cryptoCurrency.decimals,
+                    symbol = token.symbol,
+                    contractAddress = token.contractAddress,
+                    decimals = token.decimals,
                 ),
             )
         }.onFailure(Timber::e).getOrThrow()
