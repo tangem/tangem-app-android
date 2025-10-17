@@ -617,6 +617,7 @@
   <string name="manage_tokens_unavailable_description">The selected token is currently unavailable for actions within the crypto wallet. But worry not, you can express your interest by upvoting it.</string>
   <string name="manage_tokens_unavailable_vote">Upvote</string>
   <string name="manage_tokens_wallet_support_only_one_network_title">The wallet doesn\'t support more than one network</string>
+  <string name="markets_about_coin_header">About coin</string>
   <string name="markets_add_to_my_portfolio_description">To buy, exchange, or receive this asset, add it to your portfolio</string>
   <string name="markets_add_to_my_portfolio_unavailable_description">This asset is currently not supported in the wallet</string>
   <string name="markets_add_to_my_portfolio_unavailable_for_wallet_description">This asset is not available for this wallet</string>
