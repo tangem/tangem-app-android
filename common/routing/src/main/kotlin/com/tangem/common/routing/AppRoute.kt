@@ -360,6 +360,11 @@ sealed class AppRoute(val path: String) : Route {
     ) : AppRoute(path = "/view_seed_phrase/${userWalletId.stringValue}")
 
     @Serializable
+    data class ForgetWallet(
+        val userWalletId: UserWalletId,
+    ) : AppRoute(path = "/forget_wallet/${userWalletId.stringValue}")
+
+    @Serializable
     data class SendEntryPoint(
         val userWalletId: UserWalletId,
         val currency: CryptoCurrency,
