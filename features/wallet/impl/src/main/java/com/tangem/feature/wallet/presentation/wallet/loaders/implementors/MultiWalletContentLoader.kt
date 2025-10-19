@@ -8,6 +8,7 @@ import com.tangem.domain.tokens.ApplyTokenListSortingUseCase
 import com.tangem.domain.tokens.RunPolkadotAccountHealthCheckUseCase
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.staking.usecase.StakingApyFlowUseCase
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.ShouldSaveUserWalletsUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyApyFlowUseCase
@@ -44,6 +45,7 @@ internal class MultiWalletContentLoader(
     private val currenciesRepository: CurrenciesRepository,
     private val accountDependencies: AccountDependencies,
     private val yieldSupplyApyFlowUseCase: YieldSupplyApyFlowUseCase,
+    private val stakingApyFlowUseCase: StakingApyFlowUseCase,
 ) : WalletContentLoader(id = userWallet.walletId) {
 
     override fun create(): List<WalletSubscriber> {
@@ -60,6 +62,7 @@ internal class MultiWalletContentLoader(
                 runPolkadotAccountHealthCheckUseCase = runPolkadotAccountHealthCheckUseCase,
                 accountDependencies = accountDependencies,
                 yieldSupplyApyFlowUseCase = yieldSupplyApyFlowUseCase,
+                stakingApyFlowUseCase = stakingApyFlowUseCase,
             ).let(::add)
 
             WalletNFTListSubscriber(
