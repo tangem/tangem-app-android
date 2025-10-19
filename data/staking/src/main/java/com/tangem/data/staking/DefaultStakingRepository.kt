@@ -500,7 +500,7 @@ internal class DefaultStakingRepository(
         )
     }
 
-    private fun getEnabledYields(): Flow<List<Yield>> {
+    override fun getEnabledYields(): Flow<List<Yield>> {
         return stakingYieldsStore.get().map {
             YieldConverter.convertListIgnoreErrors(
                 input = it,
