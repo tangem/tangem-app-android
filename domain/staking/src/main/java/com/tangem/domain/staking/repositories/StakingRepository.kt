@@ -22,6 +22,8 @@ interface StakingRepository {
 
     suspend fun fetchEnabledYields()
 
+    fun getEnabledYields(): Flow<List<Yield>>
+
     suspend fun getEntryInfo(cryptoCurrencyId: CryptoCurrency.ID, symbol: String): StakingEntryInfo
 
     suspend fun getYield(cryptoCurrencyId: CryptoCurrency.ID, symbol: String): Yield
