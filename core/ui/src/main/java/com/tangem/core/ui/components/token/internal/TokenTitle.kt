@@ -3,11 +3,7 @@ package com.tangem.core.ui.components.token.internal
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -85,14 +81,14 @@ private fun CurrencyNameText(name: String, isAvailable: Boolean, modifier: Modif
 private fun YieldSupplyApyLabel(apy: TextReference?, isActive: Boolean, modifier: Modifier = Modifier) {
     AnimatedVisibility(visible = apy != null, modifier = modifier) {
         Box(
-            modifier = if (isActive) {
-                modifier.background(
-                    color = TangemTheme.colors.text.accent.copy(alpha = 0.1f),
-                    shape = TangemTheme.shapes.roundedCornersSmall2,
-                )
-            } else {
-                modifier
-            },
+            modifier = Modifier.background(
+                color = if (isActive) {
+                    TangemTheme.colors.text.accent.copy(alpha = 0.1f)
+                } else {
+                    TangemTheme.colors.control.unchecked
+                },
+                shape = TangemTheme.shapes.roundedCornersSmall2,
+            ),
         ) {
             Text(
                 text = apy?.resolveReference().orEmpty(),
@@ -100,7 +96,7 @@ private fun YieldSupplyApyLabel(apy: TextReference?, isActive: Boolean, modifier
                 color = if (isActive) {
                     TangemTheme.colors.text.accent
                 } else {
-                    TangemTheme.colors.text.tertiary
+                    TangemTheme.colors.text.secondary
                 },
                 modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp),
             )
