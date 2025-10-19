@@ -16,6 +16,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.tokens.RunPolkadotAccountHealthCheckUseCase
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.yield.supply.usecase.YieldSupplyApyFlowUseCase
+import com.tangem.domain.staking.usecase.StakingApyFlowUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.account.AccountDependencies
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.TokenListAnalyticsSender
@@ -25,12 +26,14 @@ import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetToken
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetTokenListTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.TokenConverterParams
 import com.tangem.utils.coroutines.JobHolder
+import com.tangem.utils.coroutines.combine6
 import com.tangem.utils.coroutines.saveIn
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import java.math.BigDecimal
 
 @Suppress("LongParameterList")
 internal abstract class BasicTokenListSubscriber : WalletSubscriber() {
@@ -43,6 +46,7 @@ internal abstract class BasicTokenListSubscriber : WalletSubscriber() {
     protected abstract val runPolkadotAccountHealthCheckUseCase: RunPolkadotAccountHealthCheckUseCase
     protected abstract val accountDependencies: AccountDependencies
     protected abstract val yieldSupplyApyFlowUseCase: YieldSupplyApyFlowUseCase
+    protected abstract val stakingApyFlowUseCase: StakingApyFlowUseCase
 
     private val sendAnalyticsJobHolder = JobHolder()
     private val onTokenListReceivedJobHolder = JobHolder()
@@ -81,12 +85,14 @@ internal abstract class BasicTokenListSubscriber : WalletSubscriber() {
                 },
             flow2 = appCurrencyFlow(),
             flow3 = yieldSupplyApyFlow(),
-            transform = { maybeTokenList, appCurrency, yieldSupplyApyMap ->
+            flow4 = stakingApyFlow(),
+            transform = { maybeTokenList, appCurrency, yieldSupplyApyMap, stakingApyMap ->
                 singleAccountTransform(
                     maybeTokenList = maybeTokenList,
                     appCurrency = appCurrency,
                     portfolioId = PortfolioId(userWallet.walletId),
                     yieldSupplyApyMap = yieldSupplyApyMap,
+                    stakingApyMap = stakingApyMap,
                 )
             },
         )
@@ -97,6 +103,7 @@ internal abstract class BasicTokenListSubscriber : WalletSubscriber() {
         appCurrency: AppCurrency,
         portfolioId: PortfolioId,
         yieldSupplyApyMap: Map<String, String>,
+        stakingApyMap: Map<String, BigDecimal>,
     ) {
         val tokenList = maybeTokenList.getOrElse(
             ifLoading = { maybeContent ->
@@ -124,6 +131,7 @@ internal abstract class BasicTokenListSubscriber : WalletSubscriber() {
             params = TokenConverterParams.Wallet(portfolioId, tokenList),
             appCurrency = appCurrency,
             yieldSupplyApyMap = yieldSupplyApyMap,
+            stakingApyMap = stakingApyMap,
         )
 
         walletWithFundsChecker.check(tokenList)
@@ -143,8 +151,8 @@ internal abstract class BasicTokenListSubscriber : WalletSubscriber() {
         }
     }
 
-    private fun createAccountListFlow(coroutineScope: CoroutineScope): Flow<*> = combine(
-        flow = accountListFlow(coroutineScope)
+    private fun createAccountListFlow(coroutineScope: CoroutineScope): Flow<*> = combine6(
+        flow1 = accountListFlow(coroutineScope)
             .onEach { accountStatusList ->
                 coroutineScope.launch {
                     sendTokenListAnalytics(
@@ -165,7 +173,8 @@ internal abstract class BasicTokenListSubscriber : WalletSubscriber() {
         flow3 = accountDependencies.expandedAccountsHolder.expandedAccounts(userWallet),
         flow4 = accountDependencies.isAccountsModeEnabledUseCase(),
         flow5 = yieldSupplyApyFlow(),
-        transform = { accountList, appCurrency, expandedAccounts, isAccountMode, yieldSupplyApyMap ->
+        flow6 = stakingApyFlow(),
+        transform = { accountList, appCurrency, expandedAccounts, isAccountMode, yieldSupplyApyMap, stakingApyMap ->
             val accountFlattenTokensList = accountList.flattenTokens()
             val accountFlattenCurrencies = accountFlattenTokensList
                 .map { it.flattenCurrencies() }
@@ -180,6 +189,7 @@ internal abstract class BasicTokenListSubscriber : WalletSubscriber() {
                     appCurrency,
                     PortfolioId(mainAccount.account.accountId),
                     yieldSupplyApyMap,
+                    stakingApyMap,
                 )
 
             when {
@@ -198,7 +208,7 @@ internal abstract class BasicTokenListSubscriber : WalletSubscriber() {
                     )
                     false -> {
                         val convertParams = TokenConverterParams.Account(accountList, expandedAccounts)
-                        updateContent(convertParams, appCurrency, yieldSupplyApyMap)
+                        updateContent(convertParams, appCurrency, yieldSupplyApyMap, stakingApyMap)
                         accountFlattenTokensList
                             .map { tokenList -> coroutineScope.launch { walletWithFundsChecker.check(tokenList) } }
                             .joinAll()
@@ -232,6 +242,7 @@ internal abstract class BasicTokenListSubscriber : WalletSubscriber() {
         params: TokenConverterParams,
         appCurrency: AppCurrency,
         yieldSupplyApyMap: Map<String, String>,
+        stakingApyMap: Map<String, BigDecimal>,
     ) {
         stateHolder.update(
             SetTokenListTransformer(
@@ -240,6 +251,7 @@ internal abstract class BasicTokenListSubscriber : WalletSubscriber() {
                 appCurrency = appCurrency,
                 clickIntents = clickIntents,
                 yieldSupplyApyMap = yieldSupplyApyMap,
+                stakingApyMap = stakingApyMap,
             ),
         )
     }
@@ -254,5 +266,8 @@ internal abstract class BasicTokenListSubscriber : WalletSubscriber() {
         .distinctUntilChanged()
 
     private fun yieldSupplyApyFlow(): Flow<Map<String, String>> = yieldSupplyApyFlowUseCase()
+        .distinctUntilChanged()
+
+    private fun stakingApyFlow(): Flow<Map<String, BigDecimal>> = stakingApyFlowUseCase()
         .distinctUntilChanged()
 }
