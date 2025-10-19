@@ -4,6 +4,7 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.promo.GetStoryContentUseCase
 import com.tangem.domain.tokens.RunPolkadotAccountHealthCheckUseCase
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.staking.usecase.StakingApyFlowUseCase
 import com.tangem.domain.wallets.usecase.ShouldSaveUserWalletsUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyApyFlowUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
@@ -34,6 +35,7 @@ internal class SingleWalletWithTokenContentLoader(
     private val getStoryContentUseCase: GetStoryContentUseCase,
     private val accountDependencies: AccountDependencies,
     private val yieldSupplyApyFlowUseCase: YieldSupplyApyFlowUseCase,
+    private val stakingApyFlowUseCase: StakingApyFlowUseCase,
 ) : WalletContentLoader(id = userWallet.walletId) {
 
     override fun create(): List<WalletSubscriber> {
@@ -49,6 +51,7 @@ internal class SingleWalletWithTokenContentLoader(
                 runPolkadotAccountHealthCheckUseCase = runPolkadotAccountHealthCheckUseCase,
                 accountDependencies = accountDependencies,
                 yieldSupplyApyFlowUseCase = yieldSupplyApyFlowUseCase,
+                stakingApyFlowUseCase = stakingApyFlowUseCase,
             ).let(::add)
             MultiWalletWarningsSubscriber(
                 userWallet = userWallet,
