@@ -5,7 +5,7 @@ import arrow.core.left
 import arrow.core.right
 import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.account.producer.SingleAccountProducer
-import com.tangem.domain.account.status.usecase.SaveCryptoCurrenciesUseCase
+import com.tangem.domain.account.status.usecase.ManageCryptoCurrenciesUseCase
 import com.tangem.domain.account.supplier.SingleAccountSupplier
 import com.tangem.domain.managetokens.*
 import com.tangem.domain.managetokens.model.CurrencyUnsupportedState
@@ -30,7 +30,7 @@ internal class ManageTokensUseCasesFacade @AssistedInject constructor(
     private val checkCurrencyUnsupportedUseCase: CheckCurrencyUnsupportedUseCase,
     private val coldWalletAndHasMissedDerivationsUseCase: ColdWalletAndHasMissedDerivationsUseCase,
     private val saveManagedTokensUseCase: SaveManagedTokensUseCase,
-    private val saveCryptoCurrenciesUseCase: SaveCryptoCurrenciesUseCase,
+    private val manageCryptoCurrenciesUseCase: ManageCryptoCurrenciesUseCase,
     private val customTokensRepository: CustomTokensRepository,
     private val accountsFeatureToggles: AccountsFeatureToggles,
     private val singleAccountSupplier: SingleAccountSupplier,
@@ -66,7 +66,7 @@ internal class ManageTokensUseCasesFacade @AssistedInject constructor(
                     currency = customCurrency,
                 )
 
-                saveCryptoCurrenciesUseCase(accountId = mode.accountId, remove = currency)
+                manageCryptoCurrenciesUseCase(accountId = mode.accountId, remove = currency)
             }
             is ManageTokensMode.Wallet -> removeCustomCurrencyUseCase.invoke(
                 userWalletId = mode.userWalletId,
@@ -140,7 +140,7 @@ internal class ManageTokensUseCasesFacade @AssistedInject constructor(
         currenciesToRemove: Map<ManagedCryptoCurrency.Token, Set<Network>>,
     ): Either<Throwable, Unit> = when (mode) {
         is ManageTokensMode.Account -> {
-            saveCryptoCurrenciesUseCase(
+            manageCryptoCurrenciesUseCase(
                 accountId = mode.accountId,
                 add = currenciesToAdd.mapToCryptoCurrencies(userWalletId = mode.accountId.userWalletId),
                 remove = currenciesToRemove.mapToCryptoCurrencies(userWalletId = mode.accountId.userWalletId),

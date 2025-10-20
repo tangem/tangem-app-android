@@ -2,7 +2,7 @@ package com.tangem.feature.referral.domain
 
 import arrow.core.getOrElse
 import com.tangem.common.core.TangemSdkError
-import com.tangem.domain.account.status.usecase.SaveCryptoCurrenciesUseCase
+import com.tangem.domain.account.status.usecase.ManageCryptoCurrenciesUseCase
 import com.tangem.domain.models.PortfolioId
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
@@ -22,7 +22,7 @@ internal class ReferralInteractorImpl(
     private val derivePublicKeysUseCase: DerivePublicKeysUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val addCryptoCurrenciesUseCase: AddCryptoCurrenciesUseCase,
-    private val saveCryptoCurrenciesUseCase: SaveCryptoCurrenciesUseCase,
+    private val manageCryptoCurrenciesUseCase: ManageCryptoCurrenciesUseCase,
 ) : ReferralInteractor {
 
     private val tokensForReferral = mutableListOf<TokenData>()
@@ -49,7 +49,7 @@ internal class ReferralInteractorImpl(
 
         when (portfolioId) {
             is PortfolioId.Account -> {
-                saveCryptoCurrenciesUseCase(accountId = portfolioId.accountId, add = cryptoCurrency)
+                manageCryptoCurrenciesUseCase(accountId = portfolioId.accountId, add = cryptoCurrency)
             }
             is PortfolioId.Wallet -> {
                 derivePublicKeysUseCase(userWallet.walletId, listOfNotNull(cryptoCurrency)).getOrElse {
