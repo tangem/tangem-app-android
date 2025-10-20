@@ -10,7 +10,7 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyActionUM
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyFeeUM
-import com.tangem.features.yield.supply.impl.common.formatter.YieldSupplyMinAmountFormatter
+import com.tangem.features.yield.supply.impl.common.formatter.YieldSupplyAmountFormatter
 import com.tangem.utils.StringsSigns.DOT
 import com.tangem.utils.transformer.Transformer
 import kotlinx.collections.immutable.toPersistentList
@@ -49,7 +49,7 @@ internal class YieldSupplyStartEarningFeeContentTransformer(
         }
         val maxFiatFee = maxFiatFeeValue.format { fiat(appCurrency.code, appCurrency.symbol) }
 
-        val minAmountTextReference = YieldSupplyMinAmountFormatter(
+        val minAmountTextReference = YieldSupplyAmountFormatter(
             cryptoCurrency,
             appCurrency,
         ).invoke(minAmount, cryptoCurrencyStatus.value.fiatRate)
