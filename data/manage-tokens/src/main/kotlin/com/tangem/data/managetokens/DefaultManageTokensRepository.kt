@@ -6,6 +6,7 @@ import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.blockchainsdk.utils.toNetworkId
+import com.tangem.data.common.account.WalletAccountsFetcher
 import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.common.currency.CardCryptoCurrencyFactory
 import com.tangem.data.common.currency.UserTokensResponseFactory
@@ -21,15 +22,13 @@ import com.tangem.datasource.local.config.testnet.TestnetTokensStorage
 import com.tangem.datasource.local.token.UserTokensResponseStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.card.common.TapWorkarounds.isTestCard
-import com.tangem.domain.card.common.extensions.canHandleBlockchain
-import com.tangem.domain.card.common.extensions.canHandleToken
-import com.tangem.domain.card.common.extensions.hotWalletExcludedBlockchains
-import com.tangem.domain.card.common.extensions.supportedBlockchains
-import com.tangem.domain.card.common.extensions.supportedTokens
+import com.tangem.domain.card.common.extensions.*
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.managetokens.model.*
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency.SourceNetwork
 import com.tangem.domain.managetokens.repository.ManageTokensRepository
+import com.tangem.domain.models.account.AccountId
+import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
@@ -40,7 +39,7 @@ import com.tangem.pagination.fetcher.LimitOffsetBatchFetcher.Request
 import com.tangem.pagination.toBatchFlow
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 internal class DefaultManageTokensRepository(
     private val tangemTechApi: TangemTechApi,
     private val userWalletsStore: UserWalletsStore,
@@ -51,6 +50,7 @@ internal class DefaultManageTokensRepository(
     private val excludedBlockchains: ExcludedBlockchains,
     private val cardCryptoCurrencyFactory: CardCryptoCurrencyFactory,
     private val dispatchers: CoroutineDispatcherProvider,
+    private val walletAccountsFetcher: WalletAccountsFetcher,
     networkFactory: NetworkFactory,
 ) : ManageTokensRepository {
 
@@ -94,7 +94,6 @@ internal class DefaultManageTokensRepository(
         },
     )
 
-    @Suppress("ComplexCondition")
     private suspend fun fetchCurrencies(
         userWallet: UserWallet?,
         request: Request<ManageTokensListConfig>,
@@ -128,20 +127,22 @@ internal class DefaultManageTokensRepository(
         )
 
         val tokensResponse = request.params.userWalletId?.let { userWalletId ->
-            if (loadUserTokensFromRemote && userWallet != null) {
-                safeApiCall({ tangemTechApi.getUserTokens(userWalletId.stringValue).bind() }) {
-                    // save tokens response only if loadUserTokensFromRemote is true and it means onboarding call
-                    createAndSaveDefaultUserTokensResponse(userWallet = userWallet)
+            when (val params = request.params) {
+                is ManageTokensListConfig.Account -> {
+                    fetchUserTokens(userWallet, userWalletId, params, loadUserTokensFromRemote)
                 }
-            } else {
-                getSavedUserTokensResponseSync(userWalletId)
+                is ManageTokensListConfig.Wallet -> {
+                    fetchUserTokensLegacy(userWallet, userWalletId, loadUserTokensFromRemote)
+                }
             }
         }
-        val items = if (isFirstBatchFetching &&
+
+        val isCreateWithCustom = isFirstBatchFetching &&
             tokensResponse != null &&
             userWallet != null &&
             query == null
-        ) {
+
+        val items = if (isCreateWithCustom) {
             managedCryptoCurrencyFactory.createWithCustomTokens(
                 coinsResponse = updatedCoinsResponse,
                 tokensResponse = tokensResponse,
@@ -160,6 +161,56 @@ internal class DefaultManageTokensRepository(
             empty = items.isEmpty(),
             last = items.size < request.limit,
         )
+    }
+
+    private suspend fun fetchUserTokens(
+        userWallet: UserWallet?,
+        userWalletId: UserWalletId,
+        params: ManageTokensListConfig.Account,
+        loadUserTokensFromRemote: Boolean,
+    ): UserTokensResponse? {
+        val accountId = when {
+            params.accountId == null -> {
+                return null
+            }
+            loadUserTokensFromRemote -> {
+                AccountId.forCryptoPortfolio(userWalletId = userWalletId, derivationIndex = DerivationIndex.Main)
+            }
+            else -> requireNotNull(params.accountId)
+        }
+
+        val response = if (loadUserTokensFromRemote && userWallet != null) {
+            runCatching { walletAccountsFetcher.fetch(userWalletId = userWallet.walletId) }.getOrNull()
+        } else {
+            walletAccountsFetcher.getSaved(userWalletId)
+        }
+
+        val account = response?.accounts?.firstOrNull { it.id == accountId.value }
+            ?: return null
+
+        return UserTokensResponse(
+            group = response.wallet.group,
+            sort = response.wallet.sort,
+            tokens = account.tokens.orEmpty(),
+        )
+    }
+
+    private suspend fun fetchUserTokensLegacy(
+        userWallet: UserWallet?,
+        userWalletId: UserWalletId,
+        loadUserTokensFromRemote: Boolean,
+    ): UserTokensResponse? {
+        return if (loadUserTokensFromRemote && userWallet != null) {
+            safeApiCall(
+                call = { tangemTechApi.getUserTokens(userWalletId.stringValue).bind() },
+                onError = {
+                    // save tokens response only if loadUserTokensFromRemote is true and it means onboarding call
+                    createAndSaveDefaultUserTokensResponse(userWallet = userWallet)
+                },
+            )
+        } else {
+            getSavedUserTokensResponseSync(userWalletId)
+        }
     }
 
     private suspend fun createAndSaveDefaultUserTokensResponse(userWallet: UserWallet): UserTokensResponse {
