@@ -112,6 +112,7 @@ internal class DefaultRampManager(
         userWalletId: UserWalletId,
         cryptoCurrencyStatus: CryptoCurrencyStatus,
     ): ScenarioUnavailabilityReason {
+        val yieldSupplyStatus = cryptoCurrencyStatus.value.yieldSupplyStatus
         return when {
             cryptoCurrencyStatus.value.amount.isNullOrZero() -> {
                 ScenarioUnavailabilityReason.EmptyBalance(ScenarioUnavailabilityReason.WithdrawalScenario.SEND)
@@ -124,6 +125,9 @@ internal class DefaultRampManager(
                     withdrawalScenario = ScenarioUnavailabilityReason.WithdrawalScenario.SEND,
                     networkName = cryptoCurrencyStatus.currency.network.name,
                 )
+            }
+            yieldSupplyStatus?.isAllowedToSpend == false && yieldSupplyStatus.isActive -> {
+                ScenarioUnavailabilityReason.YieldSupplyApprovalRequired
             }
             else -> ScenarioUnavailabilityReason.None
         }
