@@ -10,6 +10,9 @@ internal data class YieldSupplyActiveContentUM(
     val subtitle: TextReference,
     val subtitleLink: TextReference,
     val notificationUM: NotificationUM?,
-    val apy: TextReference? = null,
     val minAmount: TextReference?,
+    val currentFee: TextReference?,
+    val feeDescription: TextReference?,
+    val apy: TextReference? = null,
+    val isHighFee: Boolean = false,
 )
