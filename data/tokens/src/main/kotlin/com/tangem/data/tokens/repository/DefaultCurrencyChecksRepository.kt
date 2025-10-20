@@ -181,7 +181,7 @@ internal class DefaultCurrencyChecksRepository(
                 blockchain = token.network.toBlockchain(),
                 derivationPath = token.network.derivationPath.value,
             ) ?: error("Wallet manager not found")
-            walletManager.getProtocolBalance(
+            walletManager.getEffectiveProtocolBalance(
                 token = Token(
                     symbol = token.symbol,
                     contractAddress = token.contractAddress,
