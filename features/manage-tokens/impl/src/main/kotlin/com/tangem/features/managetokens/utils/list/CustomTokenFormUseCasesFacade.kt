@@ -4,7 +4,7 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import com.tangem.domain.account.producer.SingleAccountProducer
-import com.tangem.domain.account.status.usecase.SaveCryptoCurrenciesUseCase
+import com.tangem.domain.account.status.usecase.ManageCryptoCurrenciesUseCase
 import com.tangem.domain.account.supplier.SingleAccountSupplier
 import com.tangem.domain.managetokens.CheckIsCurrencyNotAddedUseCase
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -20,14 +20,14 @@ internal class CustomTokenFormUseCasesFacade @AssistedInject constructor(
     private val addCryptoCurrenciesUseCase: AddCryptoCurrenciesUseCase,
     private val derivePublicKeysUseCase: DerivePublicKeysUseCase,
     private val checkIsCurrencyNotAddedUseCase: CheckIsCurrencyNotAddedUseCase,
-    private val saveCryptoCurrenciesUseCase: SaveCryptoCurrenciesUseCase,
+    private val manageCryptoCurrenciesUseCase: ManageCryptoCurrenciesUseCase,
     private val singleAccountSupplier: SingleAccountSupplier,
     @Assisted private val mode: AddCustomTokenMode,
 ) {
 
     suspend fun addCryptoCurrenciesUseCase(currency: CryptoCurrency): Either<Throwable, Unit> = when (mode) {
         is AddCustomTokenMode.Account -> {
-            saveCryptoCurrenciesUseCase(accountId = mode.accountId, add = currency)
+            manageCryptoCurrenciesUseCase(accountId = mode.accountId, add = currency)
         }
         is AddCustomTokenMode.Wallet -> {
             addCryptoCurrenciesUseCase.invoke(
