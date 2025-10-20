@@ -10,6 +10,7 @@ import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.staking.usecase.StakingApyFlowUseCase
 import com.tangem.domain.tokens.ApplyTokenListSortingUseCase
 import com.tangem.domain.tokens.RunPolkadotAccountHealthCheckUseCase
 import com.tangem.domain.tokens.error.TokenListError
@@ -36,6 +37,7 @@ internal class MultiWalletTokenListSubscriber(
     override val runPolkadotAccountHealthCheckUseCase: RunPolkadotAccountHealthCheckUseCase,
     override val accountDependencies: AccountDependencies,
     override val yieldSupplyApyFlowUseCase: YieldSupplyApyFlowUseCase,
+    override val stakingApyFlowUseCase: StakingApyFlowUseCase,
 ) : BasicTokenListSubscriber() {
 
     override fun tokenListFlow(coroutineScope: CoroutineScope): LceFlow<TokenListError, TokenList> {
