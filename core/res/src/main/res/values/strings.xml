@@ -542,8 +542,12 @@
   <string name="hw_backup_close_description">If you do, you\'ll need to start over.</string>
   <string name="hw_backup_google_drive_description">Recover existing wallet via Google Drive backup</string>
   <string name="hw_backup_google_drive_title">Google Drive backup</string>
+  <string name="hw_backup_hardware_create_description">Create a new secure wallet and transfer your funds for extra protection.</string>
+  <string name="hw_backup_hardware_create_title">Create new wallet</string>
   <string name="hw_backup_hardware_description">Level up your security with the superior Tangem hardware wallet.</string>
   <string name="hw_backup_hardware_title">Hardware Wallet</string>
+  <string name="hw_backup_hardware_upgrade_description">Move your current wallet into Tangem Wallet.</string>
+  <string name="hw_backup_hardware_upgrade_title">Upgrade current wallet</string>
   <string name="hw_backup_need_action">Go to backup</string>
   <string name="hw_backup_need_description">Please back up your wallet before creating an access code.</string>
   <string name="hw_backup_need_title">Finalize backup first</string>
@@ -1813,6 +1817,8 @@
   <string name="yield_module_earn_badge">APY %1$s%%</string>
   <string name="yield_module_earn_sheet_available_title">Available</string>
   <string name="yield_module_earn_sheet_current_apy_title">Current APY</string>
+  <string name="yield_module_earn_sheet_fee_description">When topping up for lending, a network fee will be deducted from the amount — never more than %1$s</string>
+  <string name="yield_module_earn_sheet_high_fee_description">The network fee is currently too high to execute lending. Funds will be supplied once it drops to %1$s or below. </string>
   <string name="yield_module_earn_sheet_my_funds_title">My funds</string>
   <string name="yield_module_earn_sheet_provider_description">Your %1$s is now deposited in Aave and earning interest. You hold a%2$s token, which represents your balance and grows over time. When you top up, funds go to Aave to earn interest, minus a transaction fee.</string>
   <string name="yield_module_earn_sheet_title">Earn</string>
@@ -1824,7 +1830,7 @@
   <string name="yield_module_fee_policy_sheet_description">All future %s top-ups will be supplied to Aave automatically, with the transaction fee deducted.</string>
   <string name="yield_module_fee_policy_sheet_max_fee_note">If network fees rise above maximum fee, the transaction won’t go through until they decrease. You can change this limit later.</string>
   <string name="yield_module_fee_policy_sheet_max_fee_title">Maximum fee</string>
-  <string name="yield_module_fee_policy_sheet_min_amount_note">The transaction fee must stay below 4% of your deposit. Tangem will transfer funds to Aave only once your balance is large enough to meet this condition. </string>
+  <string name="yield_module_fee_policy_sheet_min_amount_note">The transaction fee must stay below 4% of your deposit. Tangem will transfer funds to Aave only once your balance is large enough to meet this condition.</string>
   <string name="yield_module_fee_policy_sheet_min_amount_title">Minimal top-up</string>
   <string name="yield_module_fee_policy_sheet_title">Fee policy</string>
   <string name="yield_module_fee_policy_tangem_service_fee_title">Tangem also takes a 3% service fee on the yield earned.</string>
