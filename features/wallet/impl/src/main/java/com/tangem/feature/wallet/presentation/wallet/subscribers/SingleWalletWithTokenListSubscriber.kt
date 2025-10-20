@@ -7,6 +7,7 @@ import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.core.lce.LceFlow
 import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.staking.usecase.StakingApyFlowUseCase
 import com.tangem.domain.tokens.RunPolkadotAccountHealthCheckUseCase
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.yield.supply.usecase.YieldSupplyApyFlowUseCase
@@ -31,6 +32,7 @@ internal class SingleWalletWithTokenListSubscriber(
     override val runPolkadotAccountHealthCheckUseCase: RunPolkadotAccountHealthCheckUseCase,
     override val accountDependencies: AccountDependencies,
     override val yieldSupplyApyFlowUseCase: YieldSupplyApyFlowUseCase,
+    override val stakingApyFlowUseCase: StakingApyFlowUseCase,
 ) : BasicTokenListSubscriber() {
 
     override fun tokenListFlow(coroutineScope: CoroutineScope): LceFlow<TokenListError, TokenList> {
