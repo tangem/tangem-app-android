@@ -7,6 +7,7 @@ import com.tangem.core.ui.components.icons.IconTint
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.components.marketprice.utils.PriceChangeConverter
 import com.tangem.core.ui.components.token.state.TokenItemState
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
@@ -16,14 +17,14 @@ import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.StatusSource
-import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.currency.yieldSupplyKey
+import com.tangem.domain.models.currency.yieldSupplyNotAllAmountSupplied
 import com.tangem.domain.models.staking.YieldBalance
 import com.tangem.domain.staking.utils.getTotalWithRewardsStakingBalance
 import com.tangem.utils.StringsSigns.DASH_SIGN
 import com.tangem.utils.converter.Converter
-import com.tangem.utils.extensions.isZero
 import com.tangem.utils.extensions.orZero
 import kotlinx.collections.immutable.toImmutableList
 import java.math.BigDecimal
@@ -39,12 +40,13 @@ import java.math.BigDecimal
  */
 class TokenItemStateConverter(
     private val appCurrency: AppCurrency,
-    private val apyMap: Map<String, String> = emptyMap(),
+    private val yieldModuleApyMap: Map<String, String> = emptyMap(),
+    private val stakingApyMap: Map<String, BigDecimal> = emptyMap(),
     private val iconStateProvider: (CryptoCurrencyStatus) -> CurrencyIconState = {
         CryptoCurrencyToIconStateConverter().convert(it)
     },
     private val titleStateProvider: (CryptoCurrencyStatus) -> TokenItemState.TitleState = {
-        createTitleState(it, apyMap)
+        createTitleState(it, yieldModuleApyMap, stakingApyMap)
     },
     private val subtitleStateProvider: (CryptoCurrencyStatus) -> TokenItemState.SubtitleState? = {
         createSubtitleState(it, appCurrency)
@@ -153,7 +155,8 @@ class TokenItemStateConverter(
 
         private fun createTitleState(
             currencyStatus: CryptoCurrencyStatus,
-            apyMap: Map<String, String>,
+            yieldModuleApyMap: Map<String, String>,
+            stakingApyMap: Map<String, BigDecimal>,
         ): TokenItemState.TitleState {
             return when (val value = currencyStatus.value) {
                 is CryptoCurrencyStatus.Loading,
@@ -168,31 +171,51 @@ class TokenItemStateConverter(
                 is CryptoCurrencyStatus.NoQuote,
                 is CryptoCurrencyStatus.NoAccount,
                 -> {
-                    val earnApyText = resolveEarnApy(currencyStatus, apyMap)?.let { apy ->
-                        resourceReference(
-                            R.string.yield_module_earn_badge,
-                            wrappedList(apy),
-                        )
-                    }
+                    val (earnApyText, isActive) = resolveEarnApy(
+                        cryptoCurrencyStatus = currencyStatus,
+                        yieldModuleApyMap = yieldModuleApyMap,
+                        stakingApyMap = stakingApyMap,
+                    )
                     TokenItemState.TitleState.Content(
                         text = stringReference(currencyStatus.currency.name),
                         hasPending = value.hasCurrentNetworkTransactions,
                         earnApy = earnApyText,
+                        earnApyIsActive = isActive,
                     )
                 }
             }
         }
 
-        private fun resolveEarnApy(cryptoCurrencyStatus: CryptoCurrencyStatus, apyMap: Map<String, String>): String? {
-            if (apyMap.isEmpty()) return null
+        private fun resolveEarnApy(
+            cryptoCurrencyStatus: CryptoCurrencyStatus,
+            yieldModuleApyMap: Map<String, String>,
+            stakingApyMap: Map<String, BigDecimal>,
+        ): Pair<TextReference?, Boolean> {
+            val token = cryptoCurrencyStatus.currency as? CryptoCurrency.Token
+            if (token != null && yieldModuleApyMap.isNotEmpty()) {
+                val yieldSupplyApy = yieldModuleApyMap[token.yieldSupplyKey()]
+                if (yieldSupplyApy != null) {
+                    val isActive = cryptoCurrencyStatus.value.yieldSupplyStatus?.isActive ?: false
+                    return resourceReference(
+                        R.string.yield_module_earn_badge,
+                        wrappedList(yieldSupplyApy),
+                    ) to isActive
+                }
+            }
 
-            val isYieldSupplyActive = (cryptoCurrencyStatus.value as? CryptoCurrencyStatus.Loaded)
-                ?.yieldSupplyStatus?.isActive == true
-            if (isYieldSupplyActive) return null
+            if (stakingApyMap.isNotEmpty()) {
+                val stakingKey = cryptoCurrencyStatus.currency.stakingKey()
+                val stakingApy = stakingApyMap[stakingKey]?.format { percent(withPercentSign = false) }
+                if (stakingApy != null) {
+                    val hasStakedBalance = cryptoCurrencyStatus.value.yieldBalance is YieldBalance.Data
+                    return resourceReference(
+                        R.string.yield_module_earn_badge,
+                        wrappedList(stakingApy),
+                    ) to hasStakedBalance
+                }
+            }
 
-            val token = cryptoCurrencyStatus.currency as? CryptoCurrency.Token ?: return null
-
-            return apyMap[token.yieldSupplyKey()]
+            return null to false
         }
 
         private fun createSubtitleState(
@@ -248,19 +271,13 @@ class TokenItemStateConverter(
                         isFlickering = status.value.isFlickering(),
                         icons = buildList {
                             if (status.value.yieldSupplyStatus?.isActive == true &&
-                                status.value.yieldSupplyStatus?.isAllowedToSpend == false) {
+                                status.value.yieldSupplyStatus?.isAllowedToSpend == false ||
+                                status.yieldSupplyNotAllAmountSupplied()
+                            ) {
                                 TokenItemState.FiatAmountState.Content.IconUM(
                                     iconRes = R.drawable.ic_alert_triangle_20,
                                     tint = IconTint.Warning,
                                 ).let(::add)
-                            }
-                            if (!status.getStakedBalance().isZero()) {
-                                add(
-                                    TokenItemState.FiatAmountState.Content.IconUM(
-                                        iconRes = R.drawable.ic_staking_24,
-                                        tint = IconTint.Accent,
-                                    ),
-                                )
                             }
                             if (status.value.sources.total == StatusSource.ONLY_CACHE) {
                                 add(
@@ -307,5 +324,9 @@ class TokenItemStateConverter(
         }
 
         fun CryptoCurrencyStatus.Value.isFlickering(): Boolean = sources.total == StatusSource.CACHE
+
+        private fun CryptoCurrency.stakingKey(): String {
+            return "${network.backendId}_$symbol"
+        }
     }
 }
