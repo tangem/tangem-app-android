@@ -70,10 +70,11 @@ class VisaCustomerWalletApproveTask(
             return
         }
 
-        val derivationPath = VisaUtilities.visaDefaultDerivationPath(derivationStyle) ?: run {
-            callback(CompletionResult.Failure(VisaActivationError.FailedToCreateAddress.tangemError))
-            return
-        }
+        val derivationPath = VisaUtilities.customDerivationPath
+        // val derivationPath = VisaUtilities.visaDefaultDerivationPath(derivationStyle) ?: run {
+        //     callback(CompletionResult.Failure(VisaActivationError.FailedToCreateAddress.tangemError))
+        //     return
+        // }
 
         val wallet = card.wallets.firstOrNull { it.curve == EllipticCurve.Secp256k1 } ?: run {
             callback(CompletionResult.Failure(VisaActivationError.MissingWallet.tangemError))
