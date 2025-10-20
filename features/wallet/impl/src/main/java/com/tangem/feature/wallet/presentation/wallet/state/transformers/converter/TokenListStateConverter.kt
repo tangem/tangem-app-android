@@ -27,6 +27,7 @@ import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.mutate
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
+import java.math.BigDecimal
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListState.OrganizeTokensButtonConfig as WalletOrganizeTokensButtonConfig
 
 internal class TokenListStateConverter(
@@ -34,7 +35,8 @@ internal class TokenListStateConverter(
     private val params: TokenConverterParams,
     private val selectedWallet: UserWallet,
     private val clickIntents: WalletClickIntents,
-    private val apyMap: Map<String, String>,
+    private val yieldModuleApyMap: Map<String, String>,
+    private val stakingApyMap: Map<String, BigDecimal>,
 ) : Converter<WalletTokensListState, WalletTokensListState> {
 
     private val onTokenClick: (accountId: AccountId?, currencyStatus: CryptoCurrencyStatus) -> Unit =
@@ -49,7 +51,8 @@ internal class TokenListStateConverter(
 
     private fun tokenStatusConverter(accountId: AccountId? = null) = TokenItemStateConverter(
         appCurrency = appCurrency,
-        apyMap = apyMap,
+        yieldModuleApyMap = yieldModuleApyMap,
+        stakingApyMap = stakingApyMap,
         onItemClick = { _, status -> onTokenClick(accountId, status) },
         onItemLongClick = { _, status -> onTokenLongClick(accountId, status) },
     )
