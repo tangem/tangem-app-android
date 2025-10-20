@@ -18,26 +18,6 @@ enum class PaymentMethodType(val id: String?) {
     OTHER(id = null),
     ;
 
-    // TODO will be removed in next request [REDACTED_TASK_KEY]
-    @Suppress("MagicNumber")
-    fun getPriority(isGooglePayEnabled: Boolean): Int = if (isGooglePayEnabled) {
-        when (this) {
-            GOOGLE_PAY -> 0
-            CARD -> 1
-            REVOLUT_PAY -> 2
-            SEPA -> 3
-            OTHER -> 4
-        }
-    } else {
-        when (this) {
-            CARD -> 2
-            REVOLUT_PAY -> 1
-            SEPA -> 2
-            OTHER -> 3
-            GOOGLE_PAY -> 4
-        }
-    }
-
     /**
      * Get priority regardless of real speed. By business logic.
      */

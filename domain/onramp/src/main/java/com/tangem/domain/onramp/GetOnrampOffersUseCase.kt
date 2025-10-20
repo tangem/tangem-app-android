@@ -77,8 +77,7 @@ class GetOnrampOffersUseCase(
 
         return offers.find { offer ->
             offer.quote.provider.info.name == lastTransaction.providerName &&
-                offer.quote.paymentMethod.name == lastTransaction.paymentMethod &&
-                lastTransaction.status.isTerminal
+                offer.quote.paymentMethod.name == lastTransaction.paymentMethod && isRecentUsed(lastTransaction.status)
         }
     }
 
@@ -248,5 +247,24 @@ class GetOnrampOffersUseCase(
         if (offer1 == null || offer2 == null) return false
         return offer1.quote.provider.id == offer2.quote.provider.id &&
             offer1.quote.paymentMethod.id == offer2.quote.paymentMethod.id
+    }
+
+    private fun isRecentUsed(onrampStatus: OnrampStatus.Status): Boolean {
+        return when (onrampStatus) {
+            OnrampStatus.Status.Created,
+            OnrampStatus.Status.Expired,
+            OnrampStatus.Status.Paused,
+            OnrampStatus.Status.WaitingForPayment,
+            OnrampStatus.Status.PaymentProcessing,
+            OnrampStatus.Status.Verifying,
+            OnrampStatus.Status.Paid,
+            OnrampStatus.Status.Sending,
+            OnrampStatus.Status.RefundInProgress,
+            -> false
+            OnrampStatus.Status.Failed,
+            OnrampStatus.Status.Finished,
+            OnrampStatus.Status.Refunded,
+            -> true
+        }
     }
 }
