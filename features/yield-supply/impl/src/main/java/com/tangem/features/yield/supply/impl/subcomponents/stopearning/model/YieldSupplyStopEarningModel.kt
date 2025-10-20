@@ -13,7 +13,6 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.tokens.FetchCurrencyStatusUseCase
 import com.tangem.domain.tokens.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
@@ -22,6 +21,7 @@ import com.tangem.domain.yield.supply.usecase.YieldSupplyStopEarningUseCase
 import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
 import com.tangem.features.yield.supply.impl.common.YieldSupplyAlertFactory
+import com.tangem.features.yield.supply.impl.common.YieldSupplyProtocolTrigger
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyActionUM
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyFeeUM
 import com.tangem.features.yield.supply.impl.common.entity.transformer.YieldSupplyTransactionInProgressTransformer
@@ -35,7 +35,6 @@ import com.tangem.utils.TangemBlogUrlBuilder
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.orZero
 import com.tangem.utils.transformer.update
-import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -56,7 +55,7 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
     private val yieldSupplyNotificationsUpdateTrigger: YieldSupplyNotificationsUpdateTrigger,
     private val yieldSupplyAlertFactory: YieldSupplyAlertFactory,
     private val yieldSupplyDeactivateUseCase: YieldSupplyDeactivateUseCase,
-    private val fetchCurrencyStatusUseCase: FetchCurrencyStatusUseCase,
+    private val yieldSupplyProtocolTrigger: YieldSupplyProtocolTrigger,
 ) : Model(), YieldSupplyNotificationsComponent.ModelCallback {
 
     private val params: YieldSupplyStopEarningComponent.Params = paramsContainer.require()
@@ -97,6 +96,13 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
         )
 
     init {
+        val currency = params.cryptoCurrencyStatusFlow.value.currency
+        analytics.send(
+            YieldSupplyAnalytics.StopEarningScreen(
+                token = currency.symbol,
+                blockchain = currency.network.name,
+            ),
+        )
         modelScope.launch {
             appCurrency = getSelectedAppCurrencyUseCase.invokeSync().getOrElse { AppCurrency.Default }
             subscribeOnCurrencyStatusUpdates()
@@ -133,6 +139,10 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
                 ifLeft = { error ->
                     Timber.e(error.toString())
                     uiState.update(YieldSupplyTransactionReadyTransformer)
+                    analytics.send(YieldSupplyAnalytics.EarnErrors(
+                        action = YieldSupplyAnalytics.Action.Stop,
+                        errorDescription = error.getAnalyticsDescription(),
+                    ))
                     yieldSupplyAlertFactory.getSendTransactionErrorState(
                         error = error,
                         popBack = params.callback::onBackClick,
@@ -148,6 +158,7 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
                     )
                 },
                 ifRight = {
+                    yieldSupplyProtocolTrigger.onExitProtocol()
                     analytics.send(
                         YieldSupplyAnalytics.FundsWithdrawn(
                             token = cryptoCurrency.symbol,
@@ -155,10 +166,9 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
                         ),
                     )
                     yieldSupplyDeactivateUseCase(cryptoCurrency)
-                    modelScope.launch(NonCancellable) {
-                        fetchCurrencyStatusUseCase(userWalletId = userWallet.walletId, cryptoCurrency.id)
+                    modelScope.launch {
+                        params.callback.onTransactionSent()
                     }
-                    params.callback.onTransactionSent()
                 },
             )
         }
