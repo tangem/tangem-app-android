@@ -19,6 +19,7 @@ dependencies {
     api(projects.domain.account)
     api(projects.domain.core)
     api(projects.domain.common)
+    api(projects.domain.express)
     api(projects.domain.quotes)
     api(projects.domain.models)
     api(projects.domain.networks)
