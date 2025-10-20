@@ -8,6 +8,7 @@ import com.tangem.domain.tokens.ApplyTokenListSortingUseCase
 import com.tangem.domain.tokens.RunPolkadotAccountHealthCheckUseCase
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.staking.usecase.StakingApyFlowUseCase
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.ShouldSaveUserWalletsUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyApyFlowUseCase
@@ -42,6 +43,7 @@ internal class MultiWalletContentLoaderFactory @Inject constructor(
     private val currenciesRepository: CurrenciesRepository,
     private val accountDependencies: AccountDependencies,
     private val yieldSupplyApyFlowUseCase: YieldSupplyApyFlowUseCase,
+    private val stakingApyFlowUseCase: StakingApyFlowUseCase,
 ) {
 
     fun create(userWallet: UserWallet, clickIntents: WalletClickIntents): WalletContentLoader {
@@ -65,6 +67,7 @@ internal class MultiWalletContentLoaderFactory @Inject constructor(
             currenciesRepository = currenciesRepository,
             accountDependencies = accountDependencies,
             yieldSupplyApyFlowUseCase = yieldSupplyApyFlowUseCase,
+            stakingApyFlowUseCase = stakingApyFlowUseCase,
         )
     }
 }

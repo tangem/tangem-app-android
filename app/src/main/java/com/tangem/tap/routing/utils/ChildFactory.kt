@@ -36,7 +36,6 @@ import com.tangem.features.send.v2.api.SendComponent
 import com.tangem.features.send.v2.api.SendEntryPointComponent
 import com.tangem.features.staking.api.StakingComponent
 import com.tangem.features.swap.SwapComponent
-import com.tangem.features.swap.v2.api.SendWithSwapComponent
 import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
 import com.tangem.features.tangempay.components.TangemPayOnboardingComponent
 import com.tangem.features.tangempay.components.TangemPayOnboardingComponent.Params.ContinueOnboarding
@@ -111,7 +110,6 @@ internal class ChildFactory @Inject constructor(
     private val updateAccessCodeComponentFactory: UpdateAccessCodeComponent.Factory,
     private val viewPhraseComponentFactory: ViewPhraseComponent.Factory,
     private val forgetWalletComponentFactory: ForgetWalletComponent.Factory,
-    private val sendWithSwapComponentFactory: SendWithSwapComponent.Factory,
     private val sendEntryPointComponentFactory: SendEntryPointComponent.Factory,
     private val tangemPayDetailsContainerComponentFactory: TangemPayDetailsContainerComponent.Factory,
     private val tangemPayOnboardingComponentFactory: TangemPayOnboardingComponent.Factory,
@@ -585,16 +583,6 @@ internal class ChildFactory @Inject constructor(
                     componentFactory = sendEntryPointComponentFactory,
                 )
             }
-            is AppRoute.SendWithSwap -> {
-                createComponentChild(
-                    context = context,
-                    params = SendWithSwapComponent.Params(
-                        userWalletId = route.userWalletId,
-                        currency = route.currency,
-                    ),
-                    componentFactory = sendWithSwapComponentFactory,
-                )
-            }
             is AppRoute.CreateAccount -> {
                 createComponentChild(
                     context = context,
@@ -661,7 +649,11 @@ internal class ChildFactory @Inject constructor(
             is AppRoute.YieldSupplyPromo -> {
                 createComponentChild(
                     context = context,
-                    params = YieldSupplyPromoComponent.Params(route.userWalletId, route.cryptoCurrency),
+                    params = YieldSupplyPromoComponent.Params(
+                        userWalletId = route.userWalletId,
+                        currency = route.cryptoCurrency,
+                        apy = route.apy,
+                    ),
                     componentFactory = yieldSupplyPromoComponentFactory,
                 )
             }

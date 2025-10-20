@@ -23,6 +23,7 @@ internal class NetworkYieldSupplyStatusConverter(
                 isActive = it.isActive,
                 isInitialized = it.isInitialized,
                 isAllowedToSpend = it.isAllowedToSpend,
+                effectiveProtocolBalance = it.effectiveProtocolBalance,
             )
 
             id to status
@@ -38,6 +39,7 @@ internal class NetworkYieldSupplyStatusConverter(
                 isActive = yieldSupplyStatus.isActive,
                 isInitialized = yieldSupplyStatus.isInitialized,
                 isAllowedToSpend = yieldSupplyStatus.isAllowedToSpend,
+                effectiveProtocolBalance = yieldSupplyStatus.effectiveProtocolBalance,
             )
         }
     }

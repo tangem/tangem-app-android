@@ -1267,16 +1267,7 @@ internal class SwapModel @Inject constructor(
             toToken.currency.id.value
         }
 
-        return groupToFind.available.find { idToFind == it.currencyStatus.currency.id.value }?.providers
-            ?.filter { provider ->
-                // !!!WARNING!!! Filter out dex provider if yield supply is active
-                val yieldSupplyStatus = fromToken.value.yieldSupplyStatus
-                if (yieldSupplyStatus != null && yieldSupplyStatus.isActive) {
-                    provider.type == ExchangeProviderType.CEX
-                } else {
-                    true
-                }
-            }.orEmpty()
+        return groupToFind.available.find { idToFind == it.currencyStatus.currency.id.value }?.providers.orEmpty()
     }
 
     private fun Map<SwapProvider, SwapState>.getLastLoadedSuccessStates(): SuccessLoadedSwapData {

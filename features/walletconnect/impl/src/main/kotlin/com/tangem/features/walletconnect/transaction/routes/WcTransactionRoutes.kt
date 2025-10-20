@@ -44,9 +44,7 @@ internal sealed class WcTransactionRoutes : TangemBottomSheetConfigContent, Rout
     }
 
     @Serializable
-    data class MultipleTransactions(
-        val onConfirm: () -> Unit,
-    ) : WcTransactionRoutes()
+    data object MultipleTransactions : WcTransactionRoutes()
 
     @Serializable
     data object TransactionProcess : WcTransactionRoutes()

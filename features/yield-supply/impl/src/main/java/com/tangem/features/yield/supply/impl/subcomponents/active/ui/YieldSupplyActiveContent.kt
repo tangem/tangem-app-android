@@ -19,6 +19,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.LinkAnnotation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withLink
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -70,6 +71,22 @@ internal fun YieldSupplyActiveContent(
         }
 
         YieldSupplyActiveMyFunds(state = state, isBalanceHidden = isBalanceHidden)
+
+        AnimatedVisibility(state.feeDescription != null) {
+            Text(
+                modifier = Modifier.padding(horizontal = 12.dp),
+                text = state.feeDescription?.resolveReference().orEmpty(),
+                style = TangemTheme.typography.caption2,
+                color = TangemTheme.colors.text.tertiary,
+            )
+        }
+
+        Text(
+            modifier = Modifier.padding(horizontal = 12.dp),
+            text = stringResourceSafe(R.string.yield_module_fee_policy_sheet_min_amount_note),
+            style = TangemTheme.typography.caption2,
+            color = TangemTheme.colors.text.tertiary,
+        )
     }
 }
 
@@ -99,7 +116,9 @@ private fun CurrentApy(apy: TextReference?, modifier: Modifier = Modifier) {
                         painterResource(R.drawable.ic_arrow_up_8),
                         tint = TangemTheme.colors.text.accent,
                         contentDescription = null,
-                        modifier = Modifier.padding(end = 6.dp).size(12.dp),
+                        modifier = Modifier
+                            .padding(end = 6.dp)
+                            .size(12.dp),
                     )
                     Text(
                         modifier = modifier,
@@ -113,6 +132,7 @@ private fun CurrentApy(apy: TextReference?, modifier: Modifier = Modifier) {
     }
 }
 
+@Suppress("LongMethod")
 @Composable
 private fun YieldSupplyActiveMyFunds(state: YieldSupplyActiveContentUM, isBalanceHidden: Boolean) {
     Column(
@@ -173,6 +193,15 @@ private fun YieldSupplyActiveMyFunds(state: YieldSupplyActiveContentUM, isBalanc
             info = state.minAmount,
             isBalanceHidden = false,
         )
+        HorizontalDivider(
+            thickness = 0.5.dp,
+            color = TangemTheme.colors.stroke.primary,
+        )
+        HighComissionInfoRow(
+            title = resourceReference(R.string.common_network_fee_title),
+            info = state.currentFee,
+            isHighComission = state.isHighFee,
+        )
     }
 }
 
@@ -220,7 +249,59 @@ private fun InfoRow(title: TextReference, isBalanceHidden: Boolean, info: TextRe
                     text = currentInfo.orMaskWithStars(isBalanceHidden).resolveReference(),
                     style = TangemTheme.typography.body1,
                     color = TangemTheme.colors.text.tertiary,
+                    textAlign = TextAlign.End,
                 )
+            } else {
+                TextShimmer(
+                    text = title.resolveReference(),
+                    style = TangemTheme.typography.body1,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun HighComissionInfoRow(title: TextReference, info: TextReference?, isHighComission: Boolean) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        modifier = Modifier.padding(horizontal = 4.dp, vertical = 12.dp),
+    ) {
+        Text(
+            text = title.resolveReference(),
+            style = TangemTheme.typography.body1,
+            color = TangemTheme.colors.text.primary1,
+        )
+        SpacerWMax()
+
+        AnimatedContent(info) { currentInfo ->
+            if (currentInfo != null) {
+                if (isHighComission) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
+                        Icon(
+                            painterResource(R.drawable.ic_token_info_24),
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp),
+                            tint = TangemTheme.colors.text.warning,
+                        )
+                        Text(
+                            text = currentInfo.resolveReference(),
+                            style = TangemTheme.typography.body1,
+                            color = TangemTheme.colors.text.warning,
+                            textAlign = TextAlign.End,
+                        )
+                    }
+                } else {
+                    Text(
+                        text = currentInfo.resolveReference(),
+                        style = TangemTheme.typography.body1,
+                        color = TangemTheme.colors.text.tertiary,
+                        textAlign = TextAlign.End,
+                    )
+                }
             } else {
                 TextShimmer(
                     text = title.resolveReference(),
@@ -262,6 +343,12 @@ private class YieldSupplyActiveBottomSheetPreviewProvider : PreviewParameterProv
                 notificationUM = NotificationUM.Error.InvalidAmount,
                 apy = stringReference("5,14%"),
                 minAmount = stringReference("50 USDT"),
+                isHighFee = true,
+                feeDescription = stringReference(
+                    "The network fee is currently too high to execute lending." +
+                        "Funds will be supplied once it drops to \$12 or below. ",
+                ),
+                currentFee = stringReference("30 USDT"),
             ),
         )
 }

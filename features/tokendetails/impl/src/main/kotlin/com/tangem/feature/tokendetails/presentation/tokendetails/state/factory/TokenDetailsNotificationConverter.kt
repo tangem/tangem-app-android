@@ -24,6 +24,7 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import timber.log.Timber
 import java.math.BigDecimal
+import kotlin.String
 
 internal class TokenDetailsNotificationConverter(
     private val userWalletId: UserWalletId,
@@ -155,6 +156,10 @@ internal class TokenDetailsNotificationConverter(
             )
             is CryptoCurrencyWarning.MigrationMaticToPol -> MigrationMaticToPol
             is CryptoCurrencyWarning.UsedOutdatedDataWarning -> UsedOutdatedData
+            is CryptoCurrencyWarning.YieldSupplyNotDepositedAmount -> YieldSupplyNotTransferedToAave(
+                tokenName = warning.currencySymbol,
+                amount = warning.amount.format { crypto(symbol = "", decimals = warning.currency.decimals) },
+            )
         }
     }
 

@@ -308,6 +308,7 @@ private class PreviewProvider : PreviewParameterProvider<YieldSupplyUM> {
                     R.string.yield_module_token_details_earn_notification_title,
                     wrappedList("5.1"),
                 ),
+                apy = "5.1",
                 onClick = {},
             ),
             YieldSupplyUM.Content(
@@ -315,6 +316,7 @@ private class PreviewProvider : PreviewParameterProvider<YieldSupplyUM> {
                 subtitle = stringReference("Interest accrues automatically"),
                 rewardsApy = stringReference("5.1 % APY"),
                 onClick = {},
+                apy = "5.1",
                 isAllowedToSpend = false,
             ),
             YieldSupplyUM.Content(
@@ -322,6 +324,7 @@ private class PreviewProvider : PreviewParameterProvider<YieldSupplyUM> {
                 subtitle = stringReference("Interest accrues automatically"),
                 rewardsApy = stringReference("5.1 % APY"),
                 onClick = {},
+                apy = "5.1",
                 isAllowedToSpend = true,
             ),
             YieldSupplyUM.Loading,

@@ -33,6 +33,17 @@ sealed class YieldSupplyAnalytics(
         ),
     )
 
+    data class StopEarningScreen(
+        val token: String,
+        val blockchain: String,
+    ) : YieldSupplyAnalytics(
+        event = "Stop Earning Screen",
+        params = mapOf(
+            TOKEN_PARAM to token,
+            BLOCKCHAIN to blockchain,
+        ),
+    )
+
     data class ButtonStartEarning(
         val token: String,
         val blockchain: String,
@@ -49,6 +60,17 @@ sealed class YieldSupplyAnalytics(
         val blockchain: String,
     ) : YieldSupplyAnalytics(
         event = "Button - Stop Earning",
+        params = mapOf(
+            TOKEN_PARAM to token,
+            BLOCKCHAIN to blockchain,
+        ),
+    )
+
+    data class ButtonGiveApprove(
+        val token: String,
+        val blockchain: String,
+    ) : YieldSupplyAnalytics(
+        event = " Button - Give Approve",
         params = mapOf(
             TOKEN_PARAM to token,
             BLOCKCHAIN to blockchain,
@@ -150,22 +172,11 @@ sealed class YieldSupplyAnalytics(
         event = "APY Chart",
     )
 
-    data class NoticeCommissionTooHigh(
+    data class NoticeAmountNotDeposited(
         val token: String,
         val blockchain: String,
     ) : YieldSupplyAnalytics(
-        event = "Notice - Commission Is Too High",
-        params = mapOf(
-            TOKEN_PARAM to token,
-            BLOCKCHAIN to blockchain,
-        ),
-    )
-
-    data class NoticeNotEnoughMinAmount(
-        val token: String,
-        val blockchain: String,
-    ) : YieldSupplyAnalytics(
-        event = "Notice - Not Enough Min Amount",
+        event = "Notice - Amount Not Deposited",
         params = mapOf(
             TOKEN_PARAM to token,
             BLOCKCHAIN to blockchain,
