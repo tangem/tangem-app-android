@@ -381,7 +381,11 @@ sealed class NotificationUM(val config: NotificationConfig) {
             title = TextReference.Res(R.string.send_notification_invalid_amount_title),
             subtitle = TextReference.Res(
                 id = R.string.send_notification_invalid_amount_rent_fee,
-                formatArgs = wrappedList(rentInfo.exemptionAmount),
+                formatArgs = wrappedList(
+                    rentInfo.exemptionAmount.format {
+                        crypto(rentInfo.cryptoCurrency)
+                    },
+                ),
             ),
         )
 
