@@ -62,6 +62,7 @@ internal class NetworkStatusDataModelConverterTest {
                             isActive = false,
                             isInitialized = false,
                             isAllowedToSpend = false,
+                            effectiveProtocolBalance = BigDecimal.ONE,
                         ),
                         ID(
                             prefix = Prefix.COIN_PREFIX,
@@ -94,6 +95,7 @@ internal class NetworkStatusDataModelConverterTest {
                         isActive = false,
                         isInitialized = false,
                         isAllowedToSpend = false,
+                        effectiveProtocolBalance = BigDecimal.ONE,
                     ),
                 ),
             ),
