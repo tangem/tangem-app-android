@@ -263,6 +263,8 @@ internal sealed class TokenDetailsNotification(val config: NotificationConfig) {
             id = R.string.yield_module_amount_not_transfered_to_aave_title,
             wrappedList(amount, tokenName),
         ),
-        subtitle = TextReference.EMPTY,
+        subtitle = resourceReference(
+            id = R.string.yield_module_high_fee_error,
+        ),
     )
 }
