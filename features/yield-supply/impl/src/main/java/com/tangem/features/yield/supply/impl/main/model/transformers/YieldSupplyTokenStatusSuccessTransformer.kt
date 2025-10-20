@@ -21,6 +21,7 @@ internal class YieldSupplyTokenStatusSuccessTransformer(
                 formatArgs = wrappedList(tokenStatus.apy),
             ),
             onClick = onStartEarningClick,
+            apy = tokenStatus.apy.toString(),
         )
     }
 }
