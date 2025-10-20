@@ -2,6 +2,7 @@ package com.tangem.feature.referral.domain
 
 import arrow.core.getOrElse
 import com.tangem.common.core.TangemSdkError
+import com.tangem.domain.account.status.usecase.ManageCryptoCurrenciesUseCase
 import com.tangem.domain.models.PortfolioId
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
@@ -21,6 +22,7 @@ internal class ReferralInteractorImpl(
     private val derivePublicKeysUseCase: DerivePublicKeysUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val addCryptoCurrenciesUseCase: AddCryptoCurrenciesUseCase,
+    private val manageCryptoCurrenciesUseCase: ManageCryptoCurrenciesUseCase,
 ) : ReferralInteractor {
 
     private val tokensForReferral = mutableListOf<TokenData>()
@@ -45,19 +47,23 @@ internal class ReferralInteractorImpl(
         val cryptoCurrency = repository.getCryptoCurrency(userWalletId = userWallet.walletId, tokenData = tokenData)
             ?: error("Failed to create crypto currency")
 
-        // todo account different for account?
-        derivePublicKeysUseCase(userWallet.walletId, listOfNotNull(cryptoCurrency)).getOrElse {
-            Timber.e("Failed to derive public keys: $it")
-            throw it.mapToDomainError()
-        }
-
         when (portfolioId) {
-            is PortfolioId.Account -> TODO("account")
-            is PortfolioId.Wallet -> addCryptoCurrenciesUseCase(
-                userWalletId = userWallet.walletId,
-                currency = cryptoCurrency,
-            )
+            is PortfolioId.Account -> {
+                manageCryptoCurrenciesUseCase(accountId = portfolioId.accountId, add = cryptoCurrency)
+            }
+            is PortfolioId.Wallet -> {
+                derivePublicKeysUseCase(userWallet.walletId, listOfNotNull(cryptoCurrency)).getOrElse {
+                    Timber.e("Failed to derive public keys: $it")
+                    throw it.mapToDomainError()
+                }
+
+                addCryptoCurrenciesUseCase(
+                    userWalletId = userWallet.walletId,
+                    currency = cryptoCurrency,
+                )
+            }
         }
+            .onLeft(Timber::e)
 
         val publicAddress = when (portfolioId) {
             is PortfolioId.Account -> TODO("account")

@@ -7,15 +7,14 @@ import com.tangem.data.common.currency.UserTokensResponseFactory
 import com.tangem.data.common.currency.UserTokensSaver
 import com.tangem.data.tokens.utils.CustomTokensMerger
 import com.tangem.datasource.api.common.response.ApiResponseError
-import com.tangem.datasource.api.express.models.TangemExpressValues.EMPTY_CONTRACT_ADDRESS_VALUE
-import com.tangem.datasource.api.express.models.request.LeastTokenInfo
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
-import com.tangem.datasource.exchangeservice.swap.ExpressServiceLoader
 import com.tangem.datasource.local.token.UserTokensResponseStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.core.utils.catchOn
 import com.tangem.domain.demo.models.DemoConfig
+import com.tangem.domain.express.ExpressServiceFetcher
+import com.tangem.domain.express.models.ExpressAsset
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesFetcher
@@ -32,7 +31,7 @@ import timber.log.Timber
  * @property userTokensResponseStore   store of [UserTokensResponse]
  * @property userTokensSaver           user tokens saver
  * @property cardCryptoCurrencyFactory factory for creating crypto currencies for specified card
- * @property expressServiceLoader      express service loader
+ * @property expressServiceFetcher     express service loader
  * @property dispatchers               dispatchers
  *
 [REDACTED_AUTHOR]
@@ -46,7 +45,7 @@ internal class DefaultMultiWalletCryptoCurrenciesFetcher(
     private val userTokensResponseStore: UserTokensResponseStore,
     private val userTokensSaver: UserTokensSaver,
     private val cardCryptoCurrencyFactory: CardCryptoCurrencyFactory,
-    private val expressServiceLoader: ExpressServiceLoader,
+    private val expressServiceFetcher: ExpressServiceFetcher,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : MultiWalletCryptoCurrenciesFetcher {
 
@@ -109,14 +108,14 @@ internal class DefaultMultiWalletCryptoCurrenciesFetcher(
     }
 
     private suspend fun fetchExpressAssetsByNetworkIds(userWallet: UserWallet, userTokens: UserTokensResponse) {
-        val tokens = userTokens.tokens.map { token ->
-            LeastTokenInfo(
-                contractAddress = token.contractAddress ?: EMPTY_CONTRACT_ADDRESS_VALUE,
-                network = token.networkId,
+        val tokens = userTokens.tokens.mapTo(hashSetOf()) { token ->
+            ExpressAsset.ID(
+                networkId = token.networkId,
+                contractAddress = token.contractAddress,
             )
         }
 
-        expressServiceLoader.update(userWallet = userWallet, userTokens = tokens)
+        expressServiceFetcher.fetch(userWallet = userWallet, assetIds = tokens)
     }
 
     private fun createDefaultUserTokensResponse(userWallet: UserWallet): UserTokensResponse {
@@ -124,6 +123,7 @@ internal class DefaultMultiWalletCryptoCurrenciesFetcher(
             currencies = cardCryptoCurrencyFactory.createDefaultCoinsForMultiCurrencyWallet(userWallet),
             isGroupedByNetwork = false,
             isSortedByBalance = false,
+            accountId = null,
         )
     }
 }
