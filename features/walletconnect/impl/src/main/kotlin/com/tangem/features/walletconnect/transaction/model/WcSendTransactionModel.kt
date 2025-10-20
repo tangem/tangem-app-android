@@ -148,7 +148,7 @@ internal class WcSendTransactionModel @Inject constructor(
                             sign = {
                                 if (isMultipleSignRequired(useCase)) {
                                     analytics.send(SolanaLargeTransaction(useCase.rawSdkRequest.dAppMetaData.name))
-                                    openMultipleTransaction(useCase)
+                                    openMultipleTransaction()
                                 } else {
                                     useCase.sign()
                                 }
@@ -173,15 +173,13 @@ internal class WcSendTransactionModel @Inject constructor(
         }
     }
 
-    private fun openMultipleTransaction(useCase: WcSignUseCase<*>) {
-        stackNavigation.pushNew(
-            WcTransactionRoutes.MultipleTransactions(
-                onConfirm = {
-                    useCase.sign()
-                    stackNavigation.pushNew(WcTransactionRoutes.TransactionProcess)
-                },
-            ),
-        )
+    private fun openMultipleTransaction() {
+        stackNavigation.pushNew(WcTransactionRoutes.MultipleTransactions)
+    }
+
+    fun onMultiTransactionConfirm() {
+        useCase.sign()
+        stackNavigation.pushNew(WcTransactionRoutes.TransactionProcess)
     }
 
     /**
