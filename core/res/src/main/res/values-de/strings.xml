@@ -1684,8 +1684,8 @@
   <string name="yield_module_historical_returns">Historische Renditen</string>
   <string name="yield_module_promo_screen_cash_out_title">Sofortige Auszahlung</string>
   <string name="yield_module_promo_screen_how_it_works_button_title">Wie funktioniert das?</string>
-  <string name="yield_module_promo_screen_title">Verdiene %s%% jährlich</string>
-  <string name="yield_module_promo_screen_variable_rate_info">Aave • Variabler Zinssatz</string>
+  <string name="yield_module_promo_screen_title">Mit Aave verbinden</string>
+  <string name="yield_module_promo_screen_variable_rate_info">Aave %1$s • Variabler Zinssatz</string>
   <string name="yield_module_provider">Aave</string>
   <string name="yield_module_rate_info_sheet_chart_average">Durchschnitt %s</string>
   <string name="yield_module_rate_info_sheet_chart_title">Renditen des letzten Jahres</string>
@@ -1698,7 +1698,7 @@
   <string name="yield_module_supply_apr">Effektiver Jahreszins für Versorgung</string>
   <string name="yield_module_token_details_earn_notification_description">Lass Dein Geld arbeiten – verdiene Zinsen auf Dein Guthaben.</string>
   <string name="yield_module_token_details_earn_notification_earning_on_your_balance_title">Verdienst auf Dein Guthaben</string>
-  <string name="yield_module_token_details_earn_notification_title">Verdienen %1$s%% pro Jahr</string>
+  <string name="yield_module_token_details_earn_notification_title">Lass dein Guthaben arbeiten</string>
   <string name="yield_module_unavailable_subtitle">Der Stakingservice ist derzeit nicht verfügbar. Bitte versuche es später erneut.</string>
   <string name="yield_module_unavailable_title">Einnahmen nicht verfügbar</string>
   <string name="yield_supply_chart_loading_error">Chart konnte nicht geladen werden...</string>
