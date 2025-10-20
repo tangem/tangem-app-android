@@ -174,7 +174,8 @@ internal class DefaultCurrencyChecksRepository(
         cryptoCurrencyStatus: CryptoCurrencyStatus,
     ): BigDecimal? {
         val token = cryptoCurrencyStatus.currency as? CryptoCurrency.Token ?: return null
-        if (cryptoCurrencyStatus.value.yieldSupplyStatus?.isActive == false) return null
+        val isActive = cryptoCurrencyStatus.value.yieldSupplyStatus?.isActive ?: false
+        if (!isActive) return null
         return runCatching {
             val walletManager = walletManagersFacade.getOrCreateWalletManager(
                 userWalletId = userWalletId,
