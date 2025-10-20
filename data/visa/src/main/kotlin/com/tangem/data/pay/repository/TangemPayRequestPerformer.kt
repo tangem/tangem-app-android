@@ -12,9 +12,12 @@ import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.local.visa.TangemPayStorage
+import com.tangem.domain.card.common.visa.VisaUtilities
+import com.tangem.domain.managetokens.repository.CustomTokensRepository
 import com.tangem.domain.pay.datasource.TangemPayAuthDataSource
 import com.tangem.domain.visa.model.VisaAuthTokens
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.domain.wallets.derivations.DerivationsRepository
 import com.tangem.domain.wallets.derivations.derivationStyleProvider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.*
@@ -32,6 +35,8 @@ internal class TangemPayRequestPerformer @Inject constructor(
     private val tangemPayWalletsManager: TangemPayWalletsManager,
     private val walletManagersFacade: WalletManagersFacade,
     private val networkFactory: NetworkFactory,
+    private val customTokensRepository: CustomTokensRepository,
+    private val derivationsRepository: DerivationsRepository,
 ) {
 
     private var customerWalletAddress: String? = null
@@ -129,12 +134,19 @@ internal class TangemPayRequestPerformer @Inject constructor(
     private suspend fun fetchAuthInputData(): AuthInputData {
         val wallet = tangemPayWalletsManager.getDefaultWalletForTangemPay()
 
+        val blockchain = Blockchain.Polygon
         val network = networkFactory.create(
-            blockchain = Blockchain.Polygon,
-            extraDerivationPath = null,
+            blockchain = blockchain,
+            extraDerivationPath = VisaUtilities.customDerivationPath.rawPath,
             derivationStyleProvider = wallet.derivationStyleProvider,
             canHandleTokens = true,
         ) ?: error("Cannot create network")
+        val customPolygon = customTokensRepository.createCoin(
+            userWalletId = wallet.walletId,
+            networkId = network.id,
+            derivationPath = network.derivationPath,
+        )
+        derivationsRepository.derivePublicKeys(userWalletId = wallet.walletId, currencies = listOf(customPolygon))
 
         val address = walletManagersFacade.getDefaultAddress(wallet.walletId, network)
             ?: error("Cannot get polygon address")
