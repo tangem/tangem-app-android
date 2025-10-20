@@ -12,6 +12,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -19,9 +20,11 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetProtocolBalanceUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetTokenStatusUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyMinAmountUseCase
-import com.tangem.features.yield.supply.impl.R
+import com.tangem.domain.yield.supply.usecase.YieldSupplyGetCurrentFeeUseCase
+import com.tangem.domain.yield.supply.usecase.YieldSupplyGetMaxFeeUseCase
 import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
-import com.tangem.features.yield.supply.impl.common.formatter.YieldSupplyMinAmountFormatter
+import com.tangem.features.yield.supply.impl.R
+import com.tangem.features.yield.supply.impl.common.formatter.YieldSupplyAmountFormatter
 import com.tangem.features.yield.supply.impl.subcomponents.active.YieldSupplyActiveComponent
 import com.tangem.features.yield.supply.impl.subcomponents.active.entity.YieldSupplyActiveContentUM
 import com.tangem.utils.StringsSigns.DASH_SIGN
@@ -40,6 +43,8 @@ internal class YieldSupplyActiveModel @Inject constructor(
     private val yieldSupplyGetProtocolBalanceUseCase: YieldSupplyGetProtocolBalanceUseCase,
     private val yieldSupplyGetTokenStatusUseCase: YieldSupplyGetTokenStatusUseCase,
     private val yieldSupplyMinAmountUseCase: YieldSupplyMinAmountUseCase,
+    private val yieldSupplyGetCurrentFeeUseCase: YieldSupplyGetCurrentFeeUseCase,
+    private val yieldSupplyGetMaxFeeUseCase: YieldSupplyGetMaxFeeUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
 ) : Model() {
 
@@ -62,6 +67,9 @@ internal class YieldSupplyActiveModel @Inject constructor(
                 subtitleLink = resourceReference(R.string.common_read_more),
                 notificationUM = null,
                 minAmount = null,
+                currentFee = null,
+                feeDescription = null,
+                isHighFee = false,
             ),
         )
 
@@ -94,10 +102,11 @@ internal class YieldSupplyActiveModel @Inject constructor(
 
     private fun subscribeOnCurrencyUpdates() {
         cryptoCurrencyStatusFlow.onEach { cryptoCurrencyStatus ->
-            val protocolBalance = yieldSupplyGetProtocolBalanceUseCase(
-                userWalletId = params.userWallet.walletId,
-                cryptoCurrency = cryptoCurrency,
-            ).getOrNull()
+            val protocolBalance = cryptoCurrencyStatus.value.yieldSupplyStatus?.effectiveProtocolBalance
+                ?: yieldSupplyGetProtocolBalanceUseCase(
+                    userWalletId = params.userWallet.walletId,
+                    cryptoCurrency = cryptoCurrency,
+                ).getOrNull()
 
             val approvalNotification = if (cryptoCurrencyStatus.value.yieldSupplyStatus?.isAllowedToSpend != true) {
                 NotificationUM.Error(
@@ -115,6 +124,7 @@ internal class YieldSupplyActiveModel @Inject constructor(
 
             loadApy()
             loadMinAmount()
+            loadFees()
 
             uiState.update {
                 it.copy(
@@ -154,10 +164,14 @@ internal class YieldSupplyActiveModel @Inject constructor(
                 params.userWallet,
                 cryptoCurrencyStatusFlow.value,
             ).onRight { minAmount ->
-                val minAmountTextReference = YieldSupplyMinAmountFormatter(
+                val minAmountTextReference = YieldSupplyAmountFormatter(
                     cryptoCurrencyStatusFlow.value.currency,
                     appCurrency,
-                ).invoke(minAmount, cryptoCurrencyStatusFlow.value.value.fiatRate)
+                ).invoke(
+                    feeValue = minAmount,
+                    fiatRate = cryptoCurrencyStatusFlow.value.value.fiatRate,
+                    showCrypto = false,
+                )
                 uiState.update {
                     it.copy(minAmount = minAmountTextReference)
                 }
@@ -165,6 +179,51 @@ internal class YieldSupplyActiveModel @Inject constructor(
                 uiState.update {
                     it.copy(minAmount = TextReference.Str(DASH_SIGN))
                 }
+            }
+        }
+    }
+
+    private fun loadFees() {
+        modelScope.launch(dispatchers.default) {
+            val cryptoStatus = cryptoCurrencyStatusFlow.value
+
+            val currentFee = yieldSupplyGetCurrentFeeUseCase(
+                userWallet = params.userWallet,
+                cryptoCurrencyStatus = cryptoStatus,
+            ).getOrNull()
+
+            val maxFee = yieldSupplyGetMaxFeeUseCase(
+                userWallet = params.userWallet,
+                cryptoCurrencyStatus = cryptoStatus,
+            ).getOrNull()
+
+            val currentFeeText = currentFee?.let {
+                YieldSupplyAmountFormatter(
+                    cryptoStatus.currency,
+                    appCurrency,
+                ).invoke(
+                    feeValue = it,
+                    fiatRate = cryptoStatus.value.fiatRate,
+                    showCrypto = false,
+                )
+            }
+
+            val isHighFee = if (currentFee != null && maxFee != null) currentFee > maxFee else false
+
+            val maxFiatFee = maxFee?.multiply(cryptoStatus.value.fiatRate)
+                .format { fiat(appCurrency.code, appCurrency.symbol) }
+            val feeDescription = if (isHighFee) {
+                resourceReference(R.string.yield_module_earn_sheet_high_fee_description, wrappedList(maxFiatFee))
+            } else {
+                resourceReference(R.string.yield_module_earn_sheet_fee_description, wrappedList(maxFiatFee))
+            }
+
+            uiState.update {
+                it.copy(
+                    currentFee = currentFeeText ?: stringReference(DASH_SIGN),
+                    isHighFee = isHighFee,
+                    feeDescription = feeDescription,
+                )
             }
         }
     }

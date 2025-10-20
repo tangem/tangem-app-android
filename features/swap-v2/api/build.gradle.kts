@@ -13,6 +13,8 @@ dependencies {
     implementation(projects.core.decompose)
     implementation(projects.core.ui)
 
+    api(projects.features.sendV2.api)
+
     /** Common */
     implementation(projects.common.ui)
 
