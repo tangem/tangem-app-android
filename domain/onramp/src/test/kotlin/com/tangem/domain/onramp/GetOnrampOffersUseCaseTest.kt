@@ -285,7 +285,7 @@ class GetOnrampOffersUseCaseTest {
             every { this@mockk.providerName } returns providerName
             every { this@mockk.paymentMethod } returns paymentMethod
             every { this@mockk.timestamp } returns timestamp
-            every { this@mockk.status.isTerminal } returns true
+            every { this@mockk.status } returns OnrampStatus.Status.Finished
         }
     }
 }
