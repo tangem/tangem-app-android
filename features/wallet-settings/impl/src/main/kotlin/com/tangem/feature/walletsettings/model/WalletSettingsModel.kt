@@ -399,7 +399,7 @@ internal class WalletSettingsModel @Inject constructor(
                     ),
                     firstActionBuilder = {
                         EventMessageAction(
-                            title = resourceReference(R.string.common_delete),
+                            title = resourceReference(R.string.common_forget),
                             isWarning = true,
                             onClick = ::forgetWallet,
                         )

@@ -68,6 +68,9 @@ fun ScenarioUnavailabilityReason.getUnavailabilityReasonText(): TextReference {
         -> {
             resourceReference(id = R.string.token_button_unavailability_reason_loading)
         }
+        ScenarioUnavailabilityReason.YieldSupplyApprovalRequired -> resourceReference(
+            R.string.token_button_unavailability_reason_yield_supply_approval,
+        )
         ScenarioUnavailabilityReason.None -> {
             throw IllegalArgumentException("The unavailability reason must be other than None")
         }

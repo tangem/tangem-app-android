@@ -8,6 +8,7 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.combinedReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
@@ -17,7 +18,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.yield.supply.YieldSupplyStatus
-import com.tangem.domain.tokens.FetchCurrencyStatusUseCase
+import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyActivateUseCase
@@ -27,6 +28,7 @@ import com.tangem.domain.yield.supply.usecase.YieldSupplyIsAvailableUseCase
 import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.api.YieldSupplyComponent
 import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
+import com.tangem.features.yield.supply.impl.common.YieldSupplyProtocolListener
 import com.tangem.features.yield.supply.impl.main.entity.YieldSupplyUM
 import com.tangem.features.yield.supply.impl.main.model.transformers.YieldSupplyTokenStatusSuccessTransformer
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -49,13 +51,14 @@ internal class YieldSupplyModel @Inject constructor(
     private val appRouter: AppRouter,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val getSingleCryptoCurrencyStatusUseCase: GetSingleCryptoCurrencyStatusUseCase,
-    private val fetchCurrencyStatusUseCase: FetchCurrencyStatusUseCase,
+    private val singleNetworkStatusFetcher: SingleNetworkStatusFetcher,
     @DelayedWork private val coroutineScope: CoroutineScope,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val yieldSupplyGetTokenStatusUseCase: YieldSupplyGetTokenStatusUseCase,
     private val yieldSupplyIsAvailableUseCase: YieldSupplyIsAvailableUseCase,
     private val yieldSupplyActivateUseCase: YieldSupplyActivateUseCase,
     private val yieldSupplyDeactivateUseCase: YieldSupplyDeactivateUseCase,
+    private val yieldSupplyProtocolListener: YieldSupplyProtocolListener,
 ) : Model(), YieldSupplyClickIntents {
 
     private val params = paramsContainer.require<YieldSupplyComponent.Params>()
@@ -83,6 +86,38 @@ internal class YieldSupplyModel @Inject constructor(
 
     init {
         checkIfYieldSupplyIsAvailable()
+        observeProtocolEvents()
+    }
+
+    private fun observeProtocolEvents() {
+        yieldSupplyProtocolListener.exitProtocolTriggerFlow.onEach {
+            uiState.update {
+                YieldSupplyUM.Processing.Exit
+            }
+            coroutineScope.launch(dispatchers.io) {
+                delay(PROCESSING_UPDATE_DELAY)
+                singleNetworkStatusFetcher(
+                    params = SingleNetworkStatusFetcher.Params(
+                        userWalletId = userWallet.walletId,
+                        network = cryptoCurrency.network,
+                    ),
+                )
+            }
+        }.launchIn(modelScope)
+        yieldSupplyProtocolListener.enterProtocolTriggerFlow.onEach {
+            uiState.update {
+                YieldSupplyUM.Processing.Enter
+            }
+            coroutineScope.launch(dispatchers.io) {
+                delay(PROCESSING_UPDATE_DELAY)
+                singleNetworkStatusFetcher(
+                    params = SingleNetworkStatusFetcher.Params(
+                        userWalletId = userWallet.walletId,
+                        network = cryptoCurrency.network,
+                    ),
+                )
+            }
+        }.launchIn(modelScope)
     }
 
     private fun checkIfYieldSupplyIsAvailable() {
@@ -106,6 +141,7 @@ internal class YieldSupplyModel @Inject constructor(
                         currencyId = cryptoCurrency.id,
                         isSingleWalletWithTokens = false,
                     ).onEach { maybeCryptoCurrency ->
+                        Timber.tag("getSingleCryptoCurrencyStatusUseCase").d("update $maybeCryptoCurrency")
                         maybeCryptoCurrency.fold(
                             ifRight = { cryptoCurrencyStatus ->
                                 cryptoCurrencyStatusFlow.update { cryptoCurrencyStatus }
@@ -144,10 +180,17 @@ internal class YieldSupplyModel @Inject constructor(
     }
 
     override fun onStartEarningClick() {
+        val yieldSupplyUM = uiState.value
+        val apy = when (yieldSupplyUM) {
+            is YieldSupplyUM.Available -> yieldSupplyUM.apy
+            is YieldSupplyUM.Content -> yieldSupplyUM.apy
+            else -> ""
+        }
         appRouter.push(
             YieldSupplyPromo(
                 userWalletId = params.userWalletId,
                 cryptoCurrency = params.cryptoCurrency,
+                apy = apy,
             ),
         )
     }
@@ -180,7 +223,12 @@ internal class YieldSupplyModel @Inject constructor(
             hasActiveTransaction && yieldTransaction != null -> {
                 coroutineScope.launch(dispatchers.io) {
                     delay(PROCESSING_UPDATE_DELAY)
-                    fetchCurrencyStatusUseCase(userWalletId = userWallet.walletId, cryptoCurrency.id)
+                    singleNetworkStatusFetcher(
+                        params = SingleNetworkStatusFetcher.Params(
+                            userWalletId = userWallet.walletId,
+                            network = cryptoCurrency.network,
+                        ),
+                    )
                 }
                 uiState.update {
                     when (yieldTransaction) {
@@ -199,37 +247,58 @@ internal class YieldSupplyModel @Inject constructor(
                         ),
                     )
                 }
-                modelScope.launch(dispatchers.default) {
-                    yieldSupplyGetTokenStatusUseCase(cryptoCurrencyToken)
-                        .onRight { tokenStatus ->
-                            uiState.update {
-                                YieldSupplyUM.Content(
-                                    title = resourceReference(
-                                        R.string.yield_module_token_details_earn_notification_earning_on_your_balance_title,
-                                    ),
-                                    subtitle = resourceReference(
-                                        R.string.yield_module_token_details_earn_notification_earning_on_your_balance_subtitle,
-                                    ),
-                                    rewardsApy = combinedReference(
-                                        resourceReference(
-                                            R.string.yield_module_token_details_earn_notification_apy,
-                                        ),
-                                        stringReference(" ${tokenStatus.apy}%"),
-                                    ),
-                                    onClick = ::onActiveClick,
-                                    isAllowedToSpend = yieldSupplyStatus.isAllowedToSpend,
-                                )
-                            }
-                        }.onLeft {
-                            Timber.e(it)
-                            uiState.update { YieldSupplyUM.Loading }
-                        }
-                }
+                loadActiveState(
+                    cryptoCurrencyToken = cryptoCurrencyToken,
+                    yieldSupplyStatus = yieldSupplyStatus,
+                )
             }
 
             else -> {
                 loadTokenStatus()
             }
+        }
+    }
+
+    private fun loadActiveState(cryptoCurrencyToken: CryptoCurrency.Token, yieldSupplyStatus: YieldSupplyStatus) {
+        modelScope.launch(dispatchers.default) {
+            yieldSupplyGetTokenStatusUseCase(cryptoCurrencyToken)
+                .onRight { tokenStatus ->
+                    uiState.update {
+                        YieldSupplyUM.Content(
+                            title = resourceReference(
+                                R.string.yield_module_token_details_earn_notification_earning_on_your_balance_title,
+                            ),
+                            subtitle = resourceReference(
+                                R.string.yield_module_token_details_earn_notification_earning_on_your_balance_subtitle,
+                            ),
+                            rewardsApy = combinedReference(
+                                resourceReference(
+                                    R.string.yield_module_token_details_earn_notification_apy,
+                                ),
+                                stringReference(" ${tokenStatus.apy}%"),
+                            ),
+                            onClick = ::onActiveClick,
+                            isAllowedToSpend = yieldSupplyStatus.isAllowedToSpend,
+                            apy = tokenStatus.apy.toString(),
+                        )
+                    }
+                }.onLeft {
+                    Timber.e(it)
+                    uiState.update {
+                        YieldSupplyUM.Content(
+                            title = resourceReference(
+                                R.string.yield_module_token_details_earn_notification_earning_on_your_balance_title,
+                            ),
+                            subtitle = resourceReference(
+                                R.string.yield_module_token_details_earn_notification_earning_on_your_balance_subtitle,
+                            ),
+                            rewardsApy = TextReference.EMPTY,
+                            onClick = ::onActiveClick,
+                            isAllowedToSpend = yieldSupplyStatus.isAllowedToSpend,
+                            apy = "",
+                        )
+                    }
+                }
         }
     }
 
