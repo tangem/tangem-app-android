@@ -126,9 +126,12 @@ sealed class AppRoute(val path: String) : Route {
         val portfolioId: PortfolioId? = null,
     ) : AppRoute(path = "${source.name.lowercase()}/manage_tokens/${portfolioId?.stringValue}") {
 
+        /**
+         * Source of launching the screen.
+         * ManageTokens screen launched from Onboarding by another route. See `OnboardingRoute.ManageTokens`.
+         */
         enum class Source {
             STORIES,
-            ONBOARDING,
             SETTINGS,
         }
     }
@@ -192,9 +195,9 @@ sealed class AppRoute(val path: String) : Route {
     @Serializable
     data class Staking(
         val userWalletId: UserWalletId,
-        val cryptoCurrencyId: CryptoCurrency.ID,
+        val cryptoCurrency: CryptoCurrency,
         val yieldId: String,
-    ) : AppRoute(path = "/staking/${userWalletId.stringValue}/${cryptoCurrencyId.value}/$yieldId")
+    ) : AppRoute(path = "/staking/${userWalletId.stringValue}/${cryptoCurrency.id.value}/$yieldId")
 
     @Serializable
     data class PushNotification(
@@ -323,6 +326,9 @@ sealed class AppRoute(val path: String) : Route {
     }
 
     @Serializable
+    object CreateHardwareWallet : AppRoute(path = "/create_hardware_wallet")
+
+    @Serializable
     object CreateMobileWallet : AppRoute(path = "/create_mobile_wallet")
 
     @Serializable
@@ -354,6 +360,11 @@ sealed class AppRoute(val path: String) : Route {
     ) : AppRoute(path = "/view_seed_phrase/${userWalletId.stringValue}")
 
     @Serializable
+    data class ForgetWallet(
+        val userWalletId: UserWalletId,
+    ) : AppRoute(path = "/forget_wallet/${userWalletId.stringValue}")
+
+    @Serializable
     data class SendEntryPoint(
         val userWalletId: UserWalletId,
         val currency: CryptoCurrency,
@@ -383,8 +394,9 @@ sealed class AppRoute(val path: String) : Route {
 
     @Serializable
     data class TangemPayDetails(
+        val userWalletId: UserWalletId,
         val config: TangemPayDetailsConfig,
-    ) : AppRoute(path = "/tangem_pay_details")
+    ) : AppRoute(path = "/tangem_pay_details/${userWalletId.stringValue}")
 
     @Serializable
     data class TangemPayOnboarding(
