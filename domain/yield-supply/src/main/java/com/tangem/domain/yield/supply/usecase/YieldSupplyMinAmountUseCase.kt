@@ -2,16 +2,15 @@ package com.tangem.domain.yield.supply.usecase
 
 import arrow.core.Either
 import arrow.core.Either.Companion.catch
-import com.tangem.blockchain.common.transaction.Fee
-import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.yield.supply.fixFee
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.quotes.QuotesRepository
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.transaction.FeeRepository
+import com.tangem.domain.yield.supply.YieldSupplyConst.YIELD_SUPPLY_EVM_CONSTANT_GAS_LIMIT
 import java.math.BigDecimal
-import java.math.BigInteger
 import java.math.RoundingMode
 
 class YieldSupplyMinAmountUseCase(
@@ -45,7 +44,10 @@ class YieldSupplyMinAmountUseCase(
             ?: error("Native fiat rate is missing")
         require(nativeFiatRate > BigDecimal.ZERO) { "Native fiat rate must be > 0" }
 
-        val nativeGas = feeWithoutGas.fixFee(nativeCryptoCurrency, ETHEREUM_CONSTANT_GAS_LIMIT)
+        val nativeGas = feeWithoutGas.fixFee(
+            nativeCryptoCurrency,
+            YIELD_SUPPLY_EVM_CONSTANT_GAS_LIMIT,
+        )
 
         val rateRatio = nativeFiatRate.divide(
             fiatRate,
@@ -62,27 +64,8 @@ class YieldSupplyMinAmountUseCase(
             .stripTrailingZeros()
     }
 
-    private fun Fee.fixFee(cryptoCurrency: CryptoCurrency, gasLimit: BigInteger) = when (this) {
-        is Fee.Ethereum.Legacy -> copy(
-            gasLimit = gasLimit,
-            amount = amount.copy(
-                value = gasPrice.multiply(gasLimit)
-                    .toBigDecimal().movePointLeft(cryptoCurrency.decimals),
-            ),
-        )
-        is Fee.Ethereum.EIP1559 -> copy(
-            gasLimit = gasLimit,
-            amount = amount.copy(
-                value = maxFeePerGas.multiply(gasLimit)
-                    .toBigDecimal().movePointLeft(cryptoCurrency.decimals),
-            ),
-        )
-        else -> this
-    }
-
     private companion object {
         val FEE_BUFFER_MULTIPLIER: BigDecimal = BigDecimal("1.25")
         val MAX_FEE_PERCENT: BigDecimal = BigDecimal("0.04")
-        val ETHEREUM_CONSTANT_GAS_LIMIT = 350_000.toBigInteger()
     }
 }
