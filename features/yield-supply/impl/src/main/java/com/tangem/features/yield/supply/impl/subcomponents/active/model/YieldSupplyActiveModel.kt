@@ -209,7 +209,7 @@ internal class YieldSupplyActiveModel @Inject constructor(
 
             val isHighFee = if (currentFee != null && maxFee != null) currentFee > maxFee else false
 
-            val maxFiatFee = cryptoStatus.value.fiatRate?.multiply(maxFee)
+            val maxFiatFee = maxFee?.multiply(cryptoStatus.value.fiatRate)
                 .format { fiat(appCurrency.code, appCurrency.symbol) }
             val feeDescription = if (isHighFee) {
                 resourceReference(R.string.yield_module_earn_sheet_high_fee_description, wrappedList(maxFiatFee))
