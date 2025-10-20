@@ -3,6 +3,7 @@ package com.tangem.features.send.v2.send.confirm.model
 import android.os.SystemClock
 import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
+import arrow.core.left
 import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.common.routing.AppRouter
@@ -20,6 +21,7 @@ import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
@@ -105,6 +107,7 @@ internal class SendConfirmModel @Inject constructor(
     private val feeSelectorReloadTrigger: FeeSelectorReloadTrigger,
     private val sendAmountReduceTrigger: SendAmountReduceTrigger,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
+    private val accountsFeatureToggles: AccountsFeatureToggles,
     sendBalanceUpdaterFactory: SendBalanceUpdater.Factory,
 ) : Model(), SendConfirmClickIntents, FeeSelectorModelCallback, SendNotificationsComponent.ModelCallback {
 
@@ -429,13 +432,21 @@ internal class SendConfirmModel @Inject constructor(
         val network = receivingUserWallet.network ?: return
 
         modelScope.launch(dispatchers.default) {
-            withContext(NonCancellable) {
-                addCryptoCurrenciesUseCase(
-                    userWalletId = userWalletId,
-                    cryptoCurrency = cryptoCurrency,
-                    network = network,
-                )
+            if (accountsFeatureToggles.isFeatureEnabled) {
+                // val tokenToAdd = currenciesRepository.createTokenCurrency(cryptoCurrency, network)
+                // saveCryptoCurrenciesUseCase(accountId = accountId, add = tokenToAdd)
+                // TODO account
+                IllegalStateException("Not implemented yet").left()
+            } else {
+                withContext(NonCancellable) {
+                    addCryptoCurrenciesUseCase(
+                        userWalletId = userWalletId,
+                        cryptoCurrency = cryptoCurrency,
+                        network = network,
+                    )
+                }
             }
+                .onLeft(Timber::e)
         }
     }
 
