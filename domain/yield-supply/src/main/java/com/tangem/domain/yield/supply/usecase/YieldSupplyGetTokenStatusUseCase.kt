@@ -13,6 +13,6 @@ class YieldSupplyGetTokenStatusUseCase(
     suspend operator fun invoke(token: CryptoCurrency.Token): Either<Throwable, YieldMarketToken> = Either.catch {
         val tokens = yieldSupplyRepository.getCachedMarkets().orEmpty()
         val cachedStatus = tokens.firstOrNull { it.yieldSupplyKey == token.yieldSupplyKey() }
-        cachedStatus ?: error("YieldMarketToken not found")
+        cachedStatus ?: yieldSupplyRepository.getTokenStatus(token)
     }
 }

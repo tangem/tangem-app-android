@@ -41,6 +41,7 @@ internal class MarketsTokenItemConverter(
             stakingRate = value.stakingRate?.format { percent() }?.let {
                 resourceReference(R.string.markets_apy_placeholder, wrappedList(it))
             },
+            updateTimestamp = value.updateTimestamp,
         )
     }
 
