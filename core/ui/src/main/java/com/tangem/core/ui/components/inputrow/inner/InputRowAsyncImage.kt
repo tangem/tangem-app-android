@@ -21,7 +21,7 @@ import com.tangem.core.ui.utils.getGreyScaleColorFilter
  * @param onImageError composable to show if image loading failed
  */
 @Composable
-internal fun InputRowAsyncImage(
+fun InputRowAsyncImage(
     imageUrl: String,
     modifier: Modifier = Modifier,
     isGrayscale: Boolean = false,

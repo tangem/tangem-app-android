@@ -7,6 +7,8 @@ import com.tangem.domain.account.producer.SingleAccountListProducer
 import com.tangem.domain.account.repository.AccountsCRUDRepository
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.core.utils.eitherOn
+import com.tangem.domain.express.ExpressServiceFetcher
+import com.tangem.domain.express.models.ExpressAsset
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -41,7 +43,7 @@ import timber.log.Timber
 [REDACTED_AUTHOR]
  */
 @Suppress("LongParameterList")
-class SaveCryptoCurrenciesUseCase(
+class ManageCryptoCurrenciesUseCase(
     private val singleAccountListSupplier: SingleAccountListSupplier,
     private val accountsCRUDRepository: AccountsCRUDRepository,
     private val currenciesRepository: CurrenciesRepository,
@@ -52,6 +54,8 @@ class SaveCryptoCurrenciesUseCase(
     private val stakingIdFactory: StakingIdFactory,
     private val networksCleaner: NetworksCleaner,
     private val stakingCleaner: StakingCleaner,
+    private val expressServiceFetcher: ExpressServiceFetcher,
+    private val parallelUpdatingScope: CoroutineScope,
     private val dispatchers: CoroutineDispatcherProvider,
 ) {
 
@@ -85,10 +89,11 @@ class SaveCryptoCurrenciesUseCase(
 
             derivePublicKeys(userWalletId = userWalletId, currencies = modifiedCurrencyList.added)
 
-            val jobs = refreshBalances(userWalletId = userWalletId, currencies = modifiedCurrencyList.added) +
+            parallelUpdatingScope.launch {
+                refreshBalances(userWalletId = userWalletId, currencies = modifiedCurrencyList.added)
+                refreshExpress(userWalletId = userWalletId, currencies = modifiedCurrencyList.total)
                 clearMetadata(userWalletId = userWalletId, currencies = modifiedCurrencyList.removed)
-
-            jobs.joinAll()
+            }
         }
     }
 
@@ -114,7 +119,14 @@ class SaveCryptoCurrenciesUseCase(
 
             val tokenToAdd = findToken(userWalletId, contractAddress, networkId)
 
-            refreshBalances(userWalletId = userWalletId, currencies = listOf(tokenToAdd)).joinAll()
+            val modifiedCurrencyList = account.cryptoCurrencies.modify(add = listOf(tokenToAdd), remove = emptyList())
+
+            saveAccount(account = account.copy(cryptoCurrencies = modifiedCurrencyList.total.toSet()))
+
+            parallelUpdatingScope.launch {
+                refreshBalances(userWalletId = userWalletId, currencies = listOf(tokenToAdd))
+                refreshExpress(userWalletId = userWalletId, currencies = modifiedCurrencyList.total)
+            }
 
             tokenToAdd
         }
@@ -234,15 +246,13 @@ class SaveCryptoCurrenciesUseCase(
         )
     }
 
-    private suspend fun refreshBalances(userWalletId: UserWalletId, currencies: List<CryptoCurrency>): List<Job> {
-        if (currencies.isEmpty()) return emptyList()
+    private suspend fun refreshBalances(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) {
+        if (currencies.isEmpty()) return
 
-        return coroutineScope {
-            listOf(
-                launch { refreshNetworks(userWalletId = userWalletId, currencies = currencies) },
-                launch { refreshYieldBalances(userWalletId = userWalletId, currencies = currencies) },
-                launch { refreshQuotes(currencies = currencies) },
-            )
+        coroutineScope {
+            launch { refreshNetworks(userWalletId = userWalletId, currencies = currencies) }
+            launch { refreshYieldBalances(userWalletId = userWalletId, currencies = currencies) }
+            launch { refreshQuotes(currencies = currencies) }
         }
     }
 
@@ -276,8 +286,25 @@ class SaveCryptoCurrenciesUseCase(
         )
     }
 
-    private suspend fun clearMetadata(userWalletId: UserWalletId, currencies: List<CryptoCurrency>): List<Job> {
-        if (currencies.isEmpty()) return emptyList()
+    private suspend fun refreshExpress(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) {
+        if (currencies.isEmpty()) return
+
+        coroutineScope {
+            launch {
+                val assetIds = currencies.mapTo(hashSetOf()) {
+                    ExpressAsset.ID(
+                        networkId = it.network.backendId,
+                        contractAddress = (it as? CryptoCurrency.Token)?.contractAddress,
+                    )
+                }
+
+                expressServiceFetcher.fetch(userWalletId = userWalletId, assetIds = assetIds)
+            }
+        }
+    }
+
+    private suspend fun clearMetadata(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) {
+        if (currencies.isEmpty()) return
 
         return coroutineScope {
             listOf(
