@@ -7,6 +7,8 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.networkIconResId
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
@@ -136,7 +138,12 @@ internal sealed class TokenDetailsNotification(val config: NotificationConfig) {
         title = TextReference.Res(R.string.warning_rent_fee_title),
         subtitle = TextReference.Res(
             id = R.string.warning_solana_rent_fee_message,
-            formatArgs = wrappedList(rentInfo.rent, rentInfo.exemptionAmount),
+            formatArgs = wrappedList(
+                rentInfo.rent,
+                rentInfo.exemptionAmount.format {
+                    crypto(rentInfo.cryptoCurrency)
+                },
+            ),
         ),
         onCloseClick = onCloseClick,
     )
