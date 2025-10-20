@@ -23,6 +23,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.swap.models.R
 import com.tangem.domain.swap.models.SwapDirection
 import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents
+import com.tangem.features.send.v2.api.entry.SendEntryRoute
 import com.tangem.features.send.v2.api.subcomponents.destination.DestinationRoute
 import com.tangem.features.send.v2.api.subcomponents.destination.SendDestinationComponent
 import com.tangem.features.send.v2.api.subcomponents.destination.SendDestinationComponentParams
@@ -85,12 +86,17 @@ internal class DefaultSendWithSwapComponent @AssistedInject constructor(
             componentScope.launch {
                 when (val activeComponent = stack.active.instance) {
                     is SwapAmountComponent -> {
-                        analyticsEventHandler.send(
-                            CommonSendAnalyticEvents.AmountScreenOpened(
-                                categoryName = model.analyticCategoryName,
-                                source = model.analyticsSendSource,
-                            ),
-                        )
+                        if (
+                            params.currentRoute.value is SendEntryRoute.SendWithSwap &&
+                            model.currentRoute.value != stack.active.configuration
+                        ) {
+                            analyticsEventHandler.send(
+                                CommonSendAnalyticEvents.AmountScreenOpened(
+                                    categoryName = model.analyticCategoryName,
+                                    source = model.analyticsSendSource,
+                                ),
+                            )
+                        }
                         activeComponent.updateState(model.uiState.value.amountUM)
                     }
                     is SendDestinationComponent -> {
