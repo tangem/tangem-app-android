@@ -46,8 +46,6 @@ internal class MockCurrenciesRepository(
         isTokensSortedByBalanceAfterSortingApply = isSortedByBalance
     }
 
-    override suspend fun saveCurrenciesLocal(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) = Unit
-
     override suspend fun addCurrenciesCache(
         userWalletId: UserWalletId,
         currencies: List<CryptoCurrency>,

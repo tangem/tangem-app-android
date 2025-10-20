@@ -18,6 +18,7 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.settings.SettingsManager
 import com.tangem.core.ui.components.bottomsheets.message.*
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.SnackbarMessage
@@ -121,6 +122,10 @@ internal class WalletSettingsModel @Inject constructor(
         }
 
     init {
+        getUserWalletUseCase.invoke(params.userWalletId).onRight {
+            analyticsContextProxy.addContext(it)
+        }
+
         fun combineUI(wallet: UserWallet) = combine(
             getWalletNFTEnabledUseCase.invoke(params.userWalletId),
             getWalletNotificationsEnabledUseCase(params.userWalletId),
@@ -153,6 +158,11 @@ internal class WalletSettingsModel @Inject constructor(
             .filterIsInstance<Either.Right<UserWallet>>()
             .flatMapLatest { combineUI(it.value) }
             .launchIn(modelScope)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        analyticsContextProxy.removeContext()
     }
 
     private fun isNotificationsPermissionGranted(): Boolean {
@@ -196,24 +206,7 @@ internal class WalletSettingsModel @Inject constructor(
             isNFTEnabled = isNFTEnabled,
             onCheckedNFTChange = ::onCheckedNFTChange,
             forgetWallet = {
-                val message = DialogMessage(
-                    message = resourceReference(
-                        id = when (userWallet) {
-                            is UserWallet.Cold -> R.string.user_wallet_list_delete_prompt
-                            is UserWallet.Hot -> R.string.user_wallet_list_delete_hw_prompt
-                        },
-                    ),
-                    firstActionBuilder = {
-                        EventMessageAction(
-                            title = resourceReference(R.string.common_forget),
-                            isWarning = true,
-                            onClick = ::forgetWallet,
-                        )
-                    },
-                    secondActionBuilder = { cancelAction() },
-                )
-
-                messageSender.send(message)
+                onForgetWalletClick(userWallet)
             },
             onLinkMoreCardsClick = {
                 when (userWallet) {
@@ -393,5 +386,81 @@ internal class WalletSettingsModel @Inject constructor(
                 }
             }
         }
+    }
+
+    // TODO actualize strings [REDACTED_TASK_KEY] and remove MaximumLineLength
+    @Suppress("LongMethod", "MaximumLineLength")
+    private fun onForgetWalletClick(userWallet: UserWallet) {
+        val message = when (userWallet) {
+            is UserWallet.Cold -> {
+                DialogMessage(
+                    message = resourceReference(
+                        id = R.string.user_wallet_list_delete_prompt,
+                    ),
+                    firstActionBuilder = {
+                        EventMessageAction(
+                            title = resourceReference(R.string.common_forget),
+                            isWarning = true,
+                            onClick = ::forgetWallet,
+                        )
+                    },
+                    secondActionBuilder = { cancelAction() },
+                )
+            }
+            is UserWallet.Hot -> {
+                bottomSheetMessage {
+                    infoBlock {
+                        icon(R.drawable.ic_alert_circle_24) {
+                            type = MessageBottomSheetUMV2.Icon.Type.Warning
+                            backgroundType = MessageBottomSheetUMV2.Icon.BackgroundType.SameAsTint
+                        }
+                        title = stringReference("Forget this wallet?")
+                        body = if (userWallet.backedUp) {
+                            stringReference("A backup for this wallet exists. Review it before forgetting to make sure you can recover later.")
+                        } else {
+                            stringReference("If you forget this wallet without a backup, you’ll permanently lose access to your funds.")
+                        }
+                    }
+                    if (userWallet.backedUp) {
+                        secondaryButton {
+                            text = stringReference("Forget wallet")
+                            onClick {
+                                router.push(AppRoute.ForgetWallet(userWallet.walletId))
+                                closeBs()
+                            }
+                        }
+                    } else {
+                        secondaryButton {
+                            text = stringReference("Forget Anyway")
+                            onClick {
+                                router.push(AppRoute.ForgetWallet(userWallet.walletId))
+                                closeBs()
+                            }
+                        }
+                    }
+                    if (userWallet.backedUp) {
+                        primaryButton {
+                            text = stringReference("View backup")
+                            onClick {
+                                unlockWalletIfNeedAndProceed {
+                                    router.push(AppRoute.ViewPhrase(userWallet.walletId))
+                                }
+                                closeBs()
+                            }
+                        }
+                    } else {
+                        primaryButton {
+                            text = stringReference("Go to backup")
+                            onClick {
+                                router.push(AppRoute.CreateWalletBackup(userWallet.walletId))
+                                closeBs()
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        messageSender.send(message)
     }
 }
