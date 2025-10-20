@@ -2,19 +2,25 @@ package com.tangem.domain.yield.supply.usecase
 
 import arrow.core.Either
 import arrow.core.Either.Companion.catch
-import com.tangem.domain.yield.supply.fixFee
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.quotes.QuotesRepository
 import com.tangem.domain.tokens.repository.CurrenciesRepository
-import com.tangem.domain.transaction.FeeRepository
-import com.tangem.domain.yield.supply.YieldSupplyConst.YIELD_SUPPLY_EVM_CONSTANT_GAS_LIMIT
+import com.tangem.domain.yield.supply.YieldSupplyRepository
 import java.math.BigDecimal
 import java.math.RoundingMode
 
-class YieldSupplyMinAmountUseCase(
-    private val feeRepository: FeeRepository,
+/**
+ * Calculates max allowed network fee for Yield Supply enter transaction expressed in token units.
+ *
+ * Uses YieldMarketToken.maxFeeNative (native coin units) and converts it to token units with the
+ * same conversion logic as [YieldSupplyGetCurrentFeeUseCase]: based on fiat rate ratio
+ * (nativeFiatRate / tokenFiatRate).
+ */
+class YieldSupplyGetMaxFeeUseCase(
+    private val yieldSupplyRepository: YieldSupplyRepository,
     private val quotesRepository: QuotesRepository,
     private val currenciesRepository: CurrenciesRepository,
 ) {
@@ -23,7 +29,8 @@ class YieldSupplyMinAmountUseCase(
         userWallet: UserWallet,
         cryptoCurrencyStatus: CryptoCurrencyStatus,
     ): Either<Throwable, BigDecimal> = catch {
-        val feeWithoutGas = feeRepository.getEthereumFeeWithoutGas(userWallet, cryptoCurrencyStatus.currency)
+        val token = cryptoCurrencyStatus.currency as? CryptoCurrency.Token
+            ?: error("CryptoCurrency must be token for max fee calculation")
 
         val fiatRate = cryptoCurrencyStatus.value.fiatRate ?: error("Fiat rate is missing")
         require(fiatRate > BigDecimal.ZERO) { "Fiat rate for token must be > 0" }
@@ -44,10 +51,8 @@ class YieldSupplyMinAmountUseCase(
             ?: error("Native fiat rate is missing")
         require(nativeFiatRate > BigDecimal.ZERO) { "Native fiat rate must be > 0" }
 
-        val nativeGas = feeWithoutGas.fixFee(
-            nativeCryptoCurrency,
-            YIELD_SUPPLY_EVM_CONSTANT_GAS_LIMIT,
-        )
+        val marketToken = yieldSupplyRepository.getTokenStatus(token)
+        val maxFeeNative = marketToken.maxFeeNative.toBigDecimal()
 
         val rateRatio = nativeFiatRate.divide(
             fiatRate,
@@ -55,17 +60,8 @@ class YieldSupplyMinAmountUseCase(
             RoundingMode.HALF_UP,
         )
 
-        val tokenValue = rateRatio.multiply(nativeGas.amount.value)
+        val tokenValue = rateRatio.multiply(maxFeeNative)
 
-        val feeBuffered = tokenValue.multiply(FEE_BUFFER_MULTIPLIER)
-
-        feeBuffered
-            .divide(MAX_FEE_PERCENT, cryptoCurrencyStatus.currency.decimals, RoundingMode.HALF_UP)
-            .stripTrailingZeros()
-    }
-
-    private companion object {
-        val FEE_BUFFER_MULTIPLIER: BigDecimal = BigDecimal("1.25")
-        val MAX_FEE_PERCENT: BigDecimal = BigDecimal("0.04")
+        tokenValue.stripTrailingZeros()
     }
 }
