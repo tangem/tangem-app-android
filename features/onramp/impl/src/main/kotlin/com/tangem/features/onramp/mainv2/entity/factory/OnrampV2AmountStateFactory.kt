@@ -67,7 +67,7 @@ internal class OnrampV2AmountStateFactory(
         )
     }
 
-    fun getAmountSecondaryFieldUpdatedState(quotes: List<OnrampQuote>): OnrampV2MainComponentUM {
+    fun getSecondaryFieldAmountErrorState(quotes: List<OnrampQuote>): OnrampV2MainComponentUM {
         val currentState = currentStateProvider()
         if (currentState !is OnrampV2MainComponentUM.Content) return currentState
 
@@ -82,6 +82,7 @@ internal class OnrampV2AmountStateFactory(
                     ?: OnrampSecondaryFieldErrorUM.Empty,
             ),
             errorNotification = null,
+            offersBlockState = OnrampOffersBlockUM.Empty,
         )
     }
 

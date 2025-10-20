@@ -229,9 +229,7 @@ internal class OnrampV2MainComponentModel @Inject constructor(
             maybeOffers.fold(
                 ifLeft = ::handleOnrampError,
                 ifRight = { offers ->
-                    if (offers.isEmpty()) {
-                        _state.update { stateFactory.getErrorState(onRefresh = ::onRetryQuotes) }
-                    } else {
+                    if (offers.isNotEmpty()) {
                         _state.update { onrampOffersStateFactory.getOffersState(offers) }
                     }
                 },
@@ -285,10 +283,16 @@ internal class OnrampV2MainComponentModel @Inject constructor(
 
     private fun handleQuoteResult(quotes: List<OnrampQuote>) {
         sendOnrampQuotesErrorAnalytic(quotes)
-        if (quotes.all { it is OnrampQuote.AmountError }) {
-            _state.update { amountStateFactory.getAmountSecondaryFieldUpdatedState(quotes) }
-        } else {
-            _state.update { amountStateFactory.getAmountSecondaryFieldResetState() }
+        when {
+            quotes.isEmpty() -> {
+                _state.update { stateFactory.getErrorState(onRefresh = ::onRetryQuotes) }
+            }
+            quotes.all { it is OnrampQuote.AmountError } -> {
+                _state.update { amountStateFactory.getSecondaryFieldAmountErrorState(quotes) }
+            }
+            else -> {
+                _state.update { amountStateFactory.getAmountSecondaryFieldResetState() }
+            }
         }
     }
 
