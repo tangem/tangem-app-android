@@ -8,6 +8,7 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.yield.supply.YieldSupplyStatus
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import java.math.BigDecimal
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class NetworkYieldSupplyStatusConverterTest {
@@ -21,6 +22,7 @@ internal class NetworkYieldSupplyStatusConverterTest {
         isActive = true,
         isInitialized = true,
         isAllowedToSpend = true,
+        effectiveProtocolBalance = BigDecimal.ONE,
     )
 
     @Test
@@ -70,6 +72,7 @@ internal class NetworkYieldSupplyStatusConverterTest {
             isActive = true,
             isInitialized = true,
             isAllowedToSpend = true,
+            effectiveProtocolBalance = BigDecimal.ONE,
         )
     }
 }
