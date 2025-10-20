@@ -102,10 +102,11 @@ internal class YieldSupplyActiveModel @Inject constructor(
 
     private fun subscribeOnCurrencyUpdates() {
         cryptoCurrencyStatusFlow.onEach { cryptoCurrencyStatus ->
-            val protocolBalance = yieldSupplyGetProtocolBalanceUseCase(
-                userWalletId = params.userWallet.walletId,
-                cryptoCurrency = cryptoCurrency,
-            ).getOrNull()
+            val protocolBalance = cryptoCurrencyStatus.value.yieldSupplyStatus?.effectiveProtocolBalance
+                ?: yieldSupplyGetProtocolBalanceUseCase(
+                    userWalletId = params.userWallet.walletId,
+                    cryptoCurrency = cryptoCurrency,
+                ).getOrNull()
 
             val approvalNotification = if (cryptoCurrencyStatus.value.yieldSupplyStatus?.isAllowedToSpend != true) {
                 NotificationUM.Error(
