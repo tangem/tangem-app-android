@@ -7,10 +7,10 @@ import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.domain.card.common.extensions.canHandleToken
-import com.tangem.domain.wallets.derivations.derivationStyleProvider
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.derivations.DerivationStyleProvider
+import com.tangem.domain.wallets.derivations.derivationStyleProvider
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -130,7 +130,7 @@ class NetworkFactory @Inject constructor(
         return true
     }
 
-    private fun createDerivationPath(
+    fun createDerivationPath(
         blockchain: Blockchain,
         extraDerivationPath: String?,
         cardDerivationStyleProvider: DerivationStyleProvider?,
@@ -326,8 +326,8 @@ class NetworkFactory @Inject constructor(
             Blockchain.Pepecoin, Blockchain.PepecoinTestnet,
             Blockchain.Hyperliquid, Blockchain.HyperliquidTestnet,
             Blockchain.Quai, Blockchain.QuaiTestnet,
-            // Blockchain.Linea, Blockchain.LineaTestnet,
-            // Blockchain.ArbitrumNova,
+            Blockchain.Linea, Blockchain.LineaTestnet,
+            Blockchain.ArbitrumNova,
             -> Network.TransactionExtrasType.NONE
             // endregion
         }
