@@ -6,12 +6,11 @@ import arrow.core.raise.either
 import arrow.core.raise.ensure
 import arrow.core.right
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
-import com.tangem.datasource.api.express.models.TangemExpressValues.EMPTY_CONTRACT_ADDRESS_VALUE
-import com.tangem.datasource.api.express.models.response.Asset
-import com.tangem.datasource.exchangeservice.swap.ExpressServiceLoader
 import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.exchange.ExpressAvailabilityState
 import com.tangem.domain.exchange.RampStateManager
+import com.tangem.domain.express.ExpressServiceFetcher
+import com.tangem.domain.express.models.ExpressAsset
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
@@ -26,10 +25,9 @@ import com.tangem.utils.isNullOrZero
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 
-@Suppress("LongParameterList")
 internal class DefaultRampManager(
     private val sellService: Provider<ExchangeService>,
-    private val expressServiceLoader: ExpressServiceLoader,
+    private val expressServiceFetcher: ExpressServiceFetcher,
     private val currenciesRepository: CurrenciesRepository,
     private val dispatchers: CoroutineDispatcherProvider,
     excludedBlockchains: ExcludedBlockchains,
@@ -107,7 +105,7 @@ internal class DefaultRampManager(
     }
 
     override fun getExpressInitializationStatus(userWalletId: UserWalletId): Flow<ExchangeServiceInitializationStatus> {
-        return expressServiceLoader.getInitializationStatus(userWalletId)
+        return expressServiceFetcher.getInitializationStatus(userWalletId)
     }
 
     override suspend fun getSendUnavailabilityReason(
@@ -151,14 +149,14 @@ internal class DefaultRampManager(
         userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency,
     ): ExpressAvailabilityState {
-        val asset = expressServiceLoader.getInitializationStatus(userWalletId).firstOrNull()
+        val asset = expressServiceFetcher.getInitializationStatus(userWalletId).firstOrNull()
             ?: return ExpressAvailabilityState.Loading
         return when (asset) {
             is Lce.Error -> ExpressAvailabilityState.Error
             is Lce.Loading -> ExpressAvailabilityState.Loading
             is Lce.Content -> {
-                val foundAsset = asset.getOrNull()?.find { cryptoCurrency.findAssetPredicate(it) }
-                foundAsset?.exchangeAvailable?.toSwapAvailabilityState()
+                val foundAsset = asset.getOrNull()?.find { cryptoCurrency.findAssetPredicate(assetId = it.id) }
+                foundAsset?.isExchangeAvailable?.toSwapAvailabilityState()
                     ?: ExpressAvailabilityState.AssetNotFound
             }
         }
@@ -168,15 +166,15 @@ internal class DefaultRampManager(
         userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency,
     ): ExpressAvailabilityState {
-        val asset = expressServiceLoader.getInitializationStatus(userWalletId).firstOrNull()
+        val asset = expressServiceFetcher.getInitializationStatus(userWalletId).firstOrNull()
             ?: return ExpressAvailabilityState.Loading
 
         return when (asset) {
             is Lce.Error -> ExpressAvailabilityState.Error
             is Lce.Loading -> ExpressAvailabilityState.Loading
             is Lce.Content -> {
-                val foundAsset = asset.getOrNull()?.find { cryptoCurrency.findAssetPredicate(it) }
-                foundAsset?.onrampAvailable?.toOnrampAvailabilityState()
+                val foundAsset = asset.getOrNull()?.find { cryptoCurrency.findAssetPredicate(assetId = it.id) }
+                foundAsset?.isOnrampAvailable?.toOnrampAvailabilityState()
                     ?: ExpressAvailabilityState.AssetNotFound
             }
         }
@@ -211,8 +209,13 @@ internal class DefaultRampManager(
         }
     }
 
-    private fun CryptoCurrency.findAssetPredicate(asset: Asset): Boolean {
-        val contractAddress = (this as? CryptoCurrency.Token)?.contractAddress ?: EMPTY_CONTRACT_ADDRESS_VALUE
-        return asset.network == network.backendId && asset.contractAddress.equals(contractAddress, ignoreCase = true)
+    private fun CryptoCurrency.findAssetPredicate(assetId: ExpressAsset.ID): Boolean {
+        val currencyAssedId = ExpressAsset.ID(
+            networkId = this.network.backendId,
+            contractAddress = (this as? CryptoCurrency.Token)?.contractAddress,
+        )
+
+        return assetId.networkId == currencyAssedId.networkId &&
+            assetId.contractAddress.equals(currencyAssedId.contractAddress, ignoreCase = true)
     }
 }
