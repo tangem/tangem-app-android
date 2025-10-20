@@ -119,6 +119,7 @@ sealed interface NetworkStatusDM {
         @Json(name = "is_active") val isActive: Boolean,
         @Json(name = "is_initialized") val isInitialized: Boolean,
         @Json(name = "is_allowed_to_spend") val isAllowedToSpend: Boolean,
+        @Json(name = "effective_protocol_balance") val effectiveProtocolBalance: BigDecimal? = null,
     )
 
     @JsonClass(generateAdapter = true)
