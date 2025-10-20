@@ -3,8 +3,8 @@ package com.tangem.data.account.producer
 import arrow.core.Option
 import arrow.core.some
 import com.tangem.data.account.store.AccountsResponseStoreFactory
-import com.tangem.data.account.utils.toUserTokensResponse
 import com.tangem.data.common.currency.ResponseCryptoCurrenciesFactory
+import com.tangem.datasource.api.tangemTech.models.account.toUserTokensResponse
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.isMultiCurrency
@@ -54,6 +54,7 @@ internal class AccountListCryptoCurrenciesProducer @AssistedInject constructor(
                 ).toSet()
             }
             .onEmpty { emit(emptySet()) }
+            .distinctUntilChanged()
             .flowOn(dispatchers.default)
     }
 
