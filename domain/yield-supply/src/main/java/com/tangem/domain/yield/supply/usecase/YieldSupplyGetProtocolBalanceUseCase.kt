@@ -19,7 +19,7 @@ class YieldSupplyGetProtocolBalanceUseCase(
     ): Either<YieldSupplyError, BigDecimal?> = Either.catch {
         requireNotNull(cryptoCurrency as CryptoCurrency.Token)
 
-        yieldSupplyTransactionRepository.getProtocolBalance(
+        yieldSupplyTransactionRepository.getEffectiveProtocolBalance(
             userWalletId = userWalletId,
             cryptoCurrency = cryptoCurrency,
         )
