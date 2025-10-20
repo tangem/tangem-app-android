@@ -34,7 +34,7 @@ import com.tangem.core.ui.haptic.VibratorHapticManager
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
-import com.tangem.domain.account.status.usecase.SaveCryptoCurrenciesUseCase
+import com.tangem.domain.account.status.usecase.ManageCryptoCurrenciesUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
@@ -149,7 +149,7 @@ internal class TokenDetailsModel @Inject constructor(
     private val needShowYieldSupplyDepositedWarningUseCase: NeedShowYieldSupplyDepositedWarningUseCase,
     private val accountsFeatureToggles: AccountsFeatureToggles,
     private val getAccountCryptoCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase,
-    private val saveCryptoCurrenciesUseCase: SaveCryptoCurrenciesUseCase,
+    private val manageCryptoCurrenciesUseCase: ManageCryptoCurrenciesUseCase,
 ) : Model(), TokenDetailsClickIntents, YieldSupplyDepositedWarningComponent.ModelCallback {
 
     private val params = paramsContainer.require<TokenDetailsComponent.Params>()
@@ -724,7 +724,7 @@ internal class TokenDetailsModel @Inject constructor(
                     return@launch
                 }
 
-                saveCryptoCurrenciesUseCase(accountId = accountId, remove = cryptoCurrency)
+                manageCryptoCurrenciesUseCase(accountId = accountId, remove = cryptoCurrency)
             } else {
                 removeCurrencyUseCase(userWalletId, cryptoCurrency)
             }
