@@ -53,7 +53,7 @@ fun SelectorRowItem(
     val textStyle = if (isSelected && showSelectedAppearance) {
         TangemTheme.typography.subtitle2
     } else {
-        TangemTheme.typography.body2
+        TangemTheme.typography.body1
     }
     Box(
         modifier = modifier
