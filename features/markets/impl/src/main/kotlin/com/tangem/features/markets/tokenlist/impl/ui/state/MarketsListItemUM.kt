@@ -21,6 +21,7 @@ data class MarketsListItemUM(
     val chartData: MarketChartRawData?,
     val isUnder100kMarketCap: Boolean,
     val stakingRate: TextReference?,
+    val updateTimestamp: Long?,
 ) {
     val chartType: MarketChartLook.Type = when (trendType) {
         PriceChangeType.UP -> MarketChartLook.Type.Growing
@@ -33,4 +34,12 @@ data class MarketsListItemUM(
         val text: String,
         val changeType: PriceChangeType? = null,
     )
+
+    fun getComposeKey(): String {
+        return id.value + TOKEN_LAZY_LIST_ID_SEPARATOR + marketCap.toString() + updateTimestamp
+    }
+
+    companion object {
+        const val TOKEN_LAZY_LIST_ID_SEPARATOR = "@"
+    }
 }
