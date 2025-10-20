@@ -1,11 +1,7 @@
 package com.tangem.data.tokens.repository
 
 import com.tangem.blockchain.blockchains.polkadot.ExistentialDepositProvider
-import com.tangem.blockchain.common.FeeResourceAmountProvider
-import com.tangem.blockchain.common.MinimumSendAmountProvider
-import com.tangem.blockchain.common.ReserveAmountProvider
-import com.tangem.blockchain.common.Token
-import com.tangem.blockchain.common.UtxoAmountLimitProvider
+import com.tangem.blockchain.common.*
 import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.data.tokens.converters.UtxoConverter
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -144,7 +140,11 @@ internal class DefaultCurrencyChecksRepository(
         return when {
             balanceValue.amount.isZero() && stakingTotalBalance.isZero() -> null
             balanceValue.amount < rentData.exemptionAmount && stakingTotalBalance.isZero() -> {
-                CryptoCurrencyWarning.Rent(rentData.rent, rentData.exemptionAmount)
+                CryptoCurrencyWarning.Rent(
+                    rent = rentData.rent,
+                    exemptionAmount = rentData.exemptionAmount,
+                    cryptoCurrency = currencyStatus.currency,
+                )
             }
             else -> null
         }
@@ -159,7 +159,11 @@ internal class DefaultCurrencyChecksRepository(
         return when {
             balanceAfterTransaction.isZero() -> null
             balanceAfterTransaction < rentData.exemptionAmount -> {
-                CryptoCurrencyWarning.Rent(rentData.rent, rentData.exemptionAmount)
+                CryptoCurrencyWarning.Rent(
+                    rent = rentData.rent,
+                    exemptionAmount = rentData.exemptionAmount,
+                    cryptoCurrency = currencyStatus.currency,
+                )
             }
             else -> null
         }
