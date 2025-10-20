@@ -1772,7 +1772,7 @@
   <string name="yield_module_promo_screen_self_custodial_subtitle">Aaveは、総額819億ドル以上の資産を管理する分散型プロトコルです。</string>
   <string name="yield_module_promo_screen_self_custodial_title">分散型・自己管理型</string>
   <string name="yield_module_promo_screen_terms_disclaimer">サービスを利用することにより、プロバイダー\n %1$sおよび%2$sに同意したことになります</string>
-  <string name="yield_module_promo_screen_title">年間%s%%の収益</string>
+  <string name="yield_module_promo_screen_title">Aave を接続</string>
   <string name="yield_module_promo_screen_variable_rate_info">Aave %1$s%% • 変動金利</string>
   <string name="yield_module_provider">Aave</string>
   <string name="yield_module_rate_info_sheet_chart_average">平均%s</string>
@@ -1796,7 +1796,7 @@
   <string name="yield_module_token_details_earn_notification_earning_on_your_balance_subtitle">利息は自動的に発生します</string>
   <string name="yield_module_token_details_earn_notification_earning_on_your_balance_title">Aaveの利回り</string>
   <string name="yield_module_token_details_earn_notification_processing">入金の処理中</string>
-  <string name="yield_module_token_details_earn_notification_title">年間%1$s%%の収益</string>
+  <string name="yield_module_token_details_earn_notification_title">残高を活用</string>
   <string name="yield_module_transfer_mode_automatic">自動</string>
   <string name="yield_module_unable_to_cover_fee_description">取引のネットワーク手数料をカバーするために、 %1$s %2$sを入金してください</string>
   <string name="yield_module_unable_to_cover_fee_title">%s手数料を支払えません</string>
