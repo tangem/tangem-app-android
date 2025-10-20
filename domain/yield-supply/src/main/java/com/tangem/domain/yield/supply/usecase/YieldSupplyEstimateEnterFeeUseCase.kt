@@ -3,17 +3,16 @@ package com.tangem.domain.yield.supply.usecase
 import arrow.core.Either
 import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
 import com.tangem.blockchain.common.TransactionData
-import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyEnterCallData
 import com.tangem.domain.blockaid.BlockAidGasEstimate
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.yield.supply.fixFee
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.transaction.FeeRepository
 import com.tangem.domain.transaction.error.FeeErrorResolver
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.utils.extensions.isSingleItem
 import timber.log.Timber
-import java.math.BigInteger
 
 class YieldSupplyEstimateEnterFeeUseCase(
     private val feeRepository: FeeRepository,
@@ -105,24 +104,6 @@ class YieldSupplyEstimateEnterFeeUseCase(
 
         // First return calculated fees then estimated
         return withCalculatedFees + withEstimatedFees
-    }
-
-    private fun Fee.fixFee(cryptoCurrency: CryptoCurrency, gasLimit: BigInteger) = when (this) {
-        is Fee.Ethereum.Legacy -> copy(
-            gasLimit = gasLimit,
-            amount = amount.copy(
-                value = gasPrice.multiply(gasLimit)
-                    .toBigDecimal().movePointLeft(cryptoCurrency.decimals),
-            ),
-        )
-        is Fee.Ethereum.EIP1559 -> copy(
-            gasLimit = gasLimit,
-            amount = amount.copy(
-                value = maxFeePerGas.multiply(gasLimit)
-                    .toBigDecimal().movePointLeft(cryptoCurrency.decimals),
-            ),
-        )
-        else -> this
     }
 
     private companion object {
