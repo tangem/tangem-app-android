@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SpacerWMax
 import com.tangem.core.ui.components.TextShimmer
@@ -46,6 +47,7 @@ internal fun YieldSupplyFeeRow(title: TextReference, value: TextReference?) {
                     text = targetValue.resolveReference(),
                     style = TangemTheme.typography.body1,
                     color = TangemTheme.colors.text.tertiary,
+                    textAlign = TextAlign.End,
                 )
             } else {
                 TextShimmer(
