@@ -334,6 +334,14 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         isBalanceWithoutFeeEnough: Boolean,
         expressOperationType: ExpressOperationType,
     ): Pair<SwapProvider, SwapState> {
+        if (fromToken.value.yieldSupplyStatus?.isActive == true) {
+            return provider to produceDexSwapDataError(
+                error = ExpressDataError.DexActiveSupplyError,
+                fromToken = fromToken,
+                amount = amount,
+            )
+        }
+
         val maybeQuotes = repository.findBestQuote(
             userWallet = userWallet,
             fromContractAddress = fromToken.currency.getContractAddress(),
