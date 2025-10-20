@@ -128,6 +128,7 @@ internal class UpdateWalletManagerResultFactory {
                         isActive = type.isActive,
                         isInitialized = type.isInitialized,
                         isAllowedToSpend = type.isAllowedToSpend,
+                        effectiveProtocolBalance = type.effectiveProtocolBalance,
                     ),
                 )
             }
