@@ -15,6 +15,7 @@ import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
 import com.tangem.features.yield.supply.impl.promo.YieldSupplyPromoConfig
 import com.tangem.features.yield.supply.impl.promo.entity.YieldSupplyPromoUM
+import com.tangem.utils.TangemBlogUrlBuilder
 import com.tangem.utils.TangemBlogUrlBuilder.YIELD_SUPPLY_HOW_IT_WORKS_URL
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import javax.inject.Inject
@@ -31,9 +32,13 @@ internal class YieldSupplyPromoModel @Inject constructor(
     val params: YieldSupplyPromoComponent.Params = paramsContainer.require()
 
     val uiState: YieldSupplyPromoUM = YieldSupplyPromoUM(
-        tosLink = "https://tangem.com/terms-of-service/", // TODO replace with real link
-        policyLink = "https://tangem.com/privacy-policy/", // TODO replace with real link
-        title = resourceReference(R.string.yield_module_promo_screen_title, wrappedList("5.3")),
+        tosLink = TangemBlogUrlBuilder.YIELD_SUPPLY_TOS_URL,
+        policyLink = TangemBlogUrlBuilder.YIELD_SUPPLY_PRIVACY_URL,
+        title = resourceReference(R.string.yield_module_promo_screen_title),
+        subtitle = resourceReference(
+            R.string.yield_module_promo_screen_variable_rate_info,
+            wrappedList(params.apy),
+        ),
     )
 
     init {

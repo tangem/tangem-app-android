@@ -31,7 +31,9 @@ internal class BoundCounter(
     }
 
     fun addNextChar() {
-        string += text[charPosition(string.count())]
+        val nextIndex = charPosition(string.count())
+        if (nextIndex < 0 || nextIndex >= text.length) return
+        string += text[nextIndex]
         width += nextCharWidth()
         _nextCharWidth = null
     }
