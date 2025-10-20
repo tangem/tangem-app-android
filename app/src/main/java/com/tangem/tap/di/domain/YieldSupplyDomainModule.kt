@@ -148,4 +148,32 @@ internal object YieldSupplyDomainModule {
             currenciesRepository = currenciesRepository,
         )
     }
+
+    @Provides
+    @Singleton
+    fun provideYieldSupplyGetCurrentFeeUseCase(
+        feeRepository: FeeRepository,
+        quotesRepository: QuotesRepository,
+        currenciesRepository: CurrenciesRepository,
+    ): YieldSupplyGetCurrentFeeUseCase {
+        return YieldSupplyGetCurrentFeeUseCase(
+            feeRepository = feeRepository,
+            quotesRepository = quotesRepository,
+            currenciesRepository = currenciesRepository,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideYieldSupplyGetMaxFeeUseCase(
+        yieldSupplyRepository: YieldSupplyRepository,
+        quotesRepository: QuotesRepository,
+        currenciesRepository: CurrenciesRepository,
+    ): YieldSupplyGetMaxFeeUseCase {
+        return YieldSupplyGetMaxFeeUseCase(
+            yieldSupplyRepository = yieldSupplyRepository,
+            quotesRepository = quotesRepository,
+            currenciesRepository = currenciesRepository,
+        )
+    }
 }
