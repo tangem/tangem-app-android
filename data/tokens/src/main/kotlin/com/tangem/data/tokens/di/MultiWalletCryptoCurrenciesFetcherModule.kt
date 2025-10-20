@@ -41,6 +41,7 @@ internal class MultiWalletCryptoCurrenciesFetcherModule {
             AccountListCryptoCurrenciesFetcher(
                 userWalletsStore = userWalletsStore,
                 walletAccountsFetcher = walletAccountsFetcher,
+                expressServiceFetcher = expressServiceFetcher,
                 dispatchers = dispatchers,
             )
         } else {
