@@ -13,7 +13,10 @@ import com.tangem.domain.yield.supply.YieldSupplyConst.YIELD_SUPPLY_EVM_CONSTANT
 import java.math.BigDecimal
 import java.math.RoundingMode
 
-class YieldSupplyMinAmountUseCase(
+/**
+ * Calculates current fee for Yield Supply enter transaction expressed in token units.
+ */
+class YieldSupplyGetCurrentFeeUseCase(
     private val feeRepository: FeeRepository,
     private val quotesRepository: QuotesRepository,
     private val currenciesRepository: CurrenciesRepository,
@@ -57,15 +60,6 @@ class YieldSupplyMinAmountUseCase(
 
         val tokenValue = rateRatio.multiply(nativeGas.amount.value)
 
-        val feeBuffered = tokenValue.multiply(FEE_BUFFER_MULTIPLIER)
-
-        feeBuffered
-            .divide(MAX_FEE_PERCENT, cryptoCurrencyStatus.currency.decimals, RoundingMode.HALF_UP)
-            .stripTrailingZeros()
-    }
-
-    private companion object {
-        val FEE_BUFFER_MULTIPLIER: BigDecimal = BigDecimal("1.25")
-        val MAX_FEE_PERCENT: BigDecimal = BigDecimal("0.04")
+        tokenValue.stripTrailingZeros()
     }
 }
