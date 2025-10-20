@@ -245,12 +245,12 @@ internal class WalletModel @Inject constructor(
                     "isBiometricsEnabled $isBiometricsEnabled," +
                     "isHuaweiDevice $isHuaweiDevice",
             )
-            if (!isBiometricsEnabled) return@launch
-            if (!shouldShow) {
-                return@launch
-            }
             if (!shouldAskNotificationPermissionsViaBs) {
                 notificationsRepository.setShouldAskNotificationPermissionsViaBs(true)
+                return@launch
+            }
+            if (!isBiometricsEnabled) return@launch
+            if (!shouldShow) {
                 return@launch
             }
 
