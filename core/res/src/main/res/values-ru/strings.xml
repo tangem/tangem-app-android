@@ -192,8 +192,10 @@
   <string name="common_fee_selector_option_slow">Медленно</string>
   <string name="common_fee_selector_title">Скорость и комиссия</string>
   <string name="common_finish">Завершить</string>
+  <string name="common_forget">Забыть</string>
   <string name="common_from">Из</string>
   <string name="common_generate_addresses">Синхронизировать адреса</string>
+  <string name="common_get_started">Начать зарабатывать</string>
   <string name="common_go_to_provider">К провайдеру</string>
   <string name="common_go_to_token">Перейти в токен</string>
   <string name="common_got_it">Понятно</string>
@@ -527,6 +529,7 @@
   <string name="manage_tokens_unavailable_description">Выбранный токен не доступен в кошельке на данный момент. Но не переживайте, вы можете выразить свой интерес проголосовав за его добавление.</string>
   <string name="manage_tokens_unavailable_vote">Голосовать</string>
   <string name="manage_tokens_wallet_support_only_one_network_title">Кошелёк не поддерживает более одной сети</string>
+  <string name="markets_about_coin_header">О монете</string>
   <string name="markets_add_to_my_portfolio_description">Чтобы купить, обменять или получить данный токен, вам нужно добавить его к себе в портфель</string>
   <string name="markets_add_to_my_portfolio_unavailable_description">Этот актив в настоящее время не поддерживается в кошельке</string>
   <string name="markets_add_to_my_portfolio_unavailable_for_wallet_description">Этот токен не доступен для данного кошелька</string>
@@ -561,6 +564,7 @@
   <string name="markets_sort_by_trending_title">В тренде</string>
   <string name="markets_staking_banner_description_placeholder">Стейкинг — простой способ получать доход с вашей криптовалюты. %s</string>
   <string name="markets_staking_banner_title">Получайте до %s APY</string>
+  <string name="markets_token_added">Токен добавлен</string>
   <string name="markets_token_details_about_token_title">О %s</string>
   <plurals name="markets_token_details_amount_exchanges">
     <item quantity="one">%d биржа</item>
@@ -838,6 +842,7 @@
     <item quantity="other">до %d дней</item>
   </plurals>
   <string name="onramp_timing_minutes">%s мин</string>
+  <string name="onramp_title_available_from">Доступно от</string>
   <string name="onramp_title_you_get">Вы получите</string>
   <string name="onramp_transaction_status_footer_text">Вы можете закрыть этот экран и проверить статус транзакции на экране информации о токене.</string>
   <string name="onramp_up_to_rate">До</string>
@@ -1214,6 +1219,7 @@
   <string name="swapping_to_title">Вы получите</string>
   <string name="swapping_token_list_title">Выберите токен</string>
   <string name="swapping_token_not_available">не доступен</string>
+  <string name="tangem_pay_fee_title">Комиссия</string>
   <string name="this_is_my_wallet_title">Это мой кошелек</string>
   <string name="toast_balances_hidden">Балансы скрыты</string>
   <string name="toast_balances_shown">Балансы показаны</string>
@@ -1590,7 +1596,7 @@
   <string name="yield_module_fee_policy_sheet_min_amount_title">Минимальный депозит</string>
   <string name="yield_module_fee_policy_sheet_title">Политика комиссий</string>
   <string name="yield_module_fee_policy_tangem_service_fee_title">Tangem взимает комиссию за обслуживание в размере 3% от полученного дохода.</string>
-  <string name="yield_module_high_fee_error">Комиссия в сети сейчас слишком высокая. Ждём, пока она упадёт ниже вашего лимита.</string>
+  <string name="yield_module_high_fee_error">Ваши средства будут автоматически переведены в Aave, как только комиссия сети снизится или баланс достигнет минимально необходимой суммы.</string>
   <string name="yield_module_historical_returns">Историческая доходность</string>
   <string name="yield_module_main_view_approve_notification_title">Необходимо разрешение для токена</string>
   <string name="yield_module_network_fee_unreachable_notification_description">Проверьте ваше интернет соединение</string>
@@ -1603,10 +1609,10 @@
   <string name="yield_module_promo_screen_self_custodial_subtitle">Aave — это децентрализованный протокол, управляющий активами на сумму более 81,9 миллиарда долларов США.</string>
   <string name="yield_module_promo_screen_self_custodial_title">Децентрализованный и некастодиальный</string>
   <string name="yield_module_promo_screen_terms_disclaimer">Используя сервис, вы соглашаетесь с условиями провайдера %1$s и %2$s</string>
-  <string name="yield_module_promo_screen_title">Зарабатывайте %s%% в год</string>
-  <string name="yield_module_promo_screen_variable_rate_info">Aave • Ставка с плавающим процентом</string>
+  <string name="yield_module_promo_screen_title">Подключить Aave</string>
+  <string name="yield_module_promo_screen_variable_rate_info">Aave %1$s%%• Ставка с плавающим процентом</string>
   <string name="yield_module_provider">Aave</string>
-  <string name="yield_module_rate_info_sheet_chart_average">Среднее %s</string>
+  <string name="yield_module_rate_info_sheet_chart_average">Сред. %s</string>
   <string name="yield_module_rate_info_sheet_chart_title">Доходность за прошлый год</string>
   <string name="yield_module_rate_info_sheet_description">Текущая процентная ставка всегда переменная и автоматически рассчитывается смарт-контрактом AAVE в блокчейне на основе текущего спроса и предложения.</string>
   <string name="yield_module_rate_info_sheet_powered_by">При поддержке</string>
@@ -1618,16 +1624,16 @@
   <string name="yield_module_start_earning_sheet_next_deposits">Следующие пополнения вашего счёта автоматически поступят в Aave.</string>
   <string name="yield_module_status_active">Активен</string>
   <string name="yield_module_status_paused">На паузе</string>
-  <string name="yield_module_stop_earning">Закончить зарабатывать</string>
+  <string name="yield_module_stop_earning">Завершить заработок</string>
   <string name="yield_module_stop_earning_sheet_description">Выключив эту функцию, вы выведёте средства из Aave, получите их обратно в %s в кошельке и перестанете зарабатывать награды.</string>
   <string name="yield_module_stop_earning_sheet_fee_note">Комиссия сети будет вычтена из суммы вашего вывода.</string>
   <string name="yield_module_supply_apr">Годовая доходность (APY)</string>
   <string name="yield_module_token_details_earn_notification_apy">APY</string>
   <string name="yield_module_token_details_earn_notification_description">Пусть ваши деньги работают — зарабатывайте проценты на свой баланс.</string>
   <string name="yield_module_token_details_earn_notification_earning_on_your_balance_subtitle">Проценты начисляются автоматически.</string>
-  <string name="yield_module_token_details_earn_notification_earning_on_your_balance_title">Доходность Aave</string>
+  <string name="yield_module_token_details_earn_notification_earning_on_your_balance_title">Доходность</string>
   <string name="yield_module_token_details_earn_notification_processing">Отправка ваших средств</string>
-  <string name="yield_module_token_details_earn_notification_title">Зарабатывайте %1$s%% в год</string>
+  <string name="yield_module_token_details_earn_notification_title">Пусть ваш баланс работает на вас!</string>
   <string name="yield_module_transfer_mode_automatic">Автоматически</string>
   <string name="yield_module_unable_to_cover_fee_description">Внесите немного %1$s %2$s, чтобы покрыть комиссию сети за транзакции.</string>
   <string name="yield_module_unable_to_cover_fee_title">Невозможно покрыть комиссию в %s</string>
