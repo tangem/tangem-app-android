@@ -91,24 +91,26 @@ internal class DefaultYieldSupplyTransactionRepository(
         )
     }
 
-    override suspend fun getProtocolBalance(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): BigDecimal? =
-        withContext(dispatchers.io) {
-            require(cryptoCurrency is CryptoCurrency.Token)
-            runCatching {
-                val walletManager = walletManagersFacade.getOrCreateWalletManager(
-                    userWalletId = userWalletId,
-                    blockchain = cryptoCurrency.network.toBlockchain(),
-                    derivationPath = cryptoCurrency.network.derivationPath.value,
-                ) ?: error("Wallet manager not found")
-                walletManager.getProtocolBalance(
-                    token = Token(
-                        symbol = cryptoCurrency.symbol,
-                        contractAddress = cryptoCurrency.contractAddress,
-                        decimals = cryptoCurrency.decimals,
-                    ),
-                )
-            }.onFailure(Timber::e).getOrThrow()
-        }
+    override suspend fun getEffectiveProtocolBalance(
+        userWalletId: UserWalletId,
+        cryptoCurrency: CryptoCurrency,
+    ): BigDecimal? = withContext(dispatchers.io) {
+        require(cryptoCurrency is CryptoCurrency.Token)
+        runCatching {
+            val walletManager = walletManagersFacade.getOrCreateWalletManager(
+                userWalletId = userWalletId,
+                blockchain = cryptoCurrency.network.toBlockchain(),
+                derivationPath = cryptoCurrency.network.derivationPath.value,
+            ) ?: error("Wallet manager not found")
+            walletManager.getEffectiveProtocolBalance(
+                token = Token(
+                    symbol = cryptoCurrency.symbol,
+                    contractAddress = cryptoCurrency.contractAddress,
+                    decimals = cryptoCurrency.decimals,
+                ),
+            )
+        }.onFailure(Timber::e).getOrThrow()
+    }
 
     @Suppress("LongParameterList")
     private suspend fun buildEnterTransactions(
@@ -222,6 +224,17 @@ internal class DefaultYieldSupplyTransactionRepository(
     ): YieldSupplyStatus? = withContext(dispatchers.io) {
         runCatching {
             val sdkSupplyStatus = walletManager.getYieldSupplyStatus(cryptoCurrency.contractAddress)
+            val protocolBalance = if (sdkSupplyStatus?.isActive == true) {
+                walletManager.getEffectiveProtocolBalance(
+                    token = Token(
+                        symbol = cryptoCurrency.symbol,
+                        contractAddress = cryptoCurrency.contractAddress,
+                        decimals = cryptoCurrency.decimals,
+                    ),
+                )
+            } else {
+                null
+            }
             val isAllowedToSpend = walletManager.isAllowedToSpend(
                 Token(
                     symbol = cryptoCurrency.symbol,
@@ -234,6 +247,7 @@ internal class DefaultYieldSupplyTransactionRepository(
                 isActive = sdkSupplyStatus?.isActive == true,
                 isInitialized = sdkSupplyStatus?.isInitialized == true,
                 isAllowedToSpend = isAllowedToSpend,
+                effectiveProtocolBalance = protocolBalance,
             )
         }.onFailure(Timber::e).getOrNull()
     }
