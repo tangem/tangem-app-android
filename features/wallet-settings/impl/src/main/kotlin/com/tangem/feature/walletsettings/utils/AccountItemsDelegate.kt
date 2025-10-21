@@ -85,6 +85,8 @@ internal class AccountItemsDelegate @Inject constructor(
 
         val addAccountEnabled = accounts.size < AccountList.MAX_ACCOUNTS_COUNT
         val showDescription = accounts.size > 1
+        val isArchivedAccountsEnabled = accountStatusList.accountStatuses.size != accountStatusList.totalAccounts
+
         WalletSettingsAccountsUM.Footer(
             id = "accounts_footer",
             addAccount = AddAccountUM(
@@ -94,11 +96,15 @@ internal class AccountItemsDelegate @Inject constructor(
                     if (addAccountEnabled) openAddAccount(userWalletId) else canNotAddAccountDialog()
                 },
             ),
-            archivedAccounts = BlockUM(
-                text = resourceReference(R.string.account_archived_accounts),
-                iconRes = R.drawable.ic_archive_24,
-                onClick = { openArchivedAccounts(userWalletId) },
-            ),
+            archivedAccounts = if (isArchivedAccountsEnabled) {
+                BlockUM(
+                    text = resourceReference(R.string.account_archived_accounts),
+                    iconRes = R.drawable.ic_archive_24,
+                    onClick = { openArchivedAccounts(userWalletId) },
+                )
+            } else {
+                null
+            },
             showDescription = showDescription,
             description = resourceReference(R.string.account_reorder_description),
         ).let(::add)
