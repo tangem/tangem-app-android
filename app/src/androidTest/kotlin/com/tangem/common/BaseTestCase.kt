@@ -115,8 +115,6 @@ abstract class BaseTestCase : TestCase(
         Intents.init()
         setFeatureToggles()
         additionalBeforeSection()
-        enableWiFi()
-        enableMobileData()
     }.after {
         additionalAfterSection()
         Intents.release()
