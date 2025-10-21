@@ -27,6 +27,7 @@ internal fun LazyListScope.portfolioContentItems(
     items: ImmutableList<TokensListItemUM.Portfolio>,
     modifier: Modifier = Modifier,
     isBalanceHidden: Boolean,
+    selectedWalletChanged: Boolean,
 ) {
     items.forEachIndexed { index, item ->
         portfolioTokensList(
@@ -34,6 +35,7 @@ internal fun LazyListScope.portfolioContentItems(
             modifier = modifier,
             portfolioIndex = index,
             isBalanceHidden = isBalanceHidden,
+            selectedWalletChanged = selectedWalletChanged,
         )
     }
 }
@@ -43,6 +45,7 @@ internal fun LazyListScope.portfolioTokensList(
     modifier: Modifier,
     portfolioIndex: Int,
     isBalanceHidden: Boolean,
+    selectedWalletChanged: Boolean,
 ) {
     val tokens = portfolio.tokens
     val isExpanded = portfolio.isExpanded
@@ -52,6 +55,7 @@ internal fun LazyListScope.portfolioTokensList(
         modifier = modifier,
         portfolioIndex = portfolioIndex,
         isBalanceHidden = isBalanceHidden,
+        selectedWalletChanged = selectedWalletChanged,
     )
     if (!isExpanded) return
     itemsIndexed(
@@ -63,7 +67,7 @@ internal fun LazyListScope.portfolioTokensList(
             val lastIndex = tokens.lastIndex.inc()
             val isPreview = LocalInspectionMode.current
             val appear = remember {
-                MutableTransitionState(isPreview).apply { targetState = true }
+                MutableTransitionState(selectedWalletChanged || isPreview).apply { targetState = true }
             }
             SlideInItemVisibility(
                 modifier = modifier
@@ -92,6 +96,7 @@ private fun LazyListScope.portfolioItem(
     modifier: Modifier,
     portfolioIndex: Int,
     isBalanceHidden: Boolean,
+    selectedWalletChanged: Boolean,
 ) {
     val tokens = portfolio.tokens
     val isExpanded = portfolio.isExpanded
@@ -110,7 +115,7 @@ private fun LazyListScope.portfolioItem(
             )
         val isPreview = LocalInspectionMode.current
         val appear = remember {
-            MutableTransitionState(isPreview).apply { targetState = true }
+            MutableTransitionState(selectedWalletChanged || isPreview).apply { targetState = true }
         }
         if (isExpanded) {
             SlideInItemVisibility(
