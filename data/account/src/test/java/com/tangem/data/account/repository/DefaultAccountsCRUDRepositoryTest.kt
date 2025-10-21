@@ -10,7 +10,6 @@ import com.tangem.data.account.store.AccountsResponseStoreFactory
 import com.tangem.data.account.store.ArchivedAccountsStore
 import com.tangem.data.account.store.ArchivedAccountsStoreFactory
 import com.tangem.data.common.account.WalletAccountsSaver
-import com.tangem.data.common.cache.etag.ETagsStore
 import com.tangem.data.common.currency.UserTokensSaver
 import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.tangemTech.TangemTechApi
@@ -54,7 +53,7 @@ class DefaultAccountsCRUDRepositoryTest {
 
     private val userWalletsStore: UserWalletsStore = mockk()
     private val userTokensSaver: UserTokensSaver = mockk()
-    private val eTagsStore: ETagsStore = mockk()
+    private val archivedAccountsETagStore: RuntimeStateStore<Map<String, String?>> = mockk(relaxUnitFun = true)
 
     private val convertersContainer: AccountConverterFactoryContainer = mockk()
     private val accountListConverter: AccountListConverter = mockk()
@@ -67,7 +66,7 @@ class DefaultAccountsCRUDRepositoryTest {
         archivedAccountsStoreFactory = archivedAccountsStoreFactory,
         userWalletsStore = userWalletsStore,
         userTokensSaver = userTokensSaver,
-        eTagsStore = eTagsStore,
+        archivedAccountsETagStore = archivedAccountsETagStore,
         convertersContainer = convertersContainer,
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
@@ -532,7 +531,7 @@ class DefaultAccountsCRUDRepositoryTest {
 
             val archivedAccount = ArchivedAccountConverter(userWalletId).convert(accountDTO)
 
-            coEvery { eTagsStore.getSyncOrNull(userWalletId, ETagsStore.Key.WalletAccounts) } returns eTag
+            coEvery { archivedAccountsETagStore.getSyncOrNull() } returns mapOf(userWalletId.stringValue to eTag)
 
             coEvery {
                 tangemTechApi.getWalletArchivedAccounts(userWalletId.stringValue, eTag)
@@ -546,9 +545,10 @@ class DefaultAccountsCRUDRepositoryTest {
             Truth.assertThat(actual).containsExactly(archivedAccount)
 
             coVerifyOrder {
-                eTagsStore.getSyncOrNull(userWalletId, ETagsStore.Key.WalletAccounts)
-                tangemTechApi.getWalletArchivedAccounts(userWalletId.stringValue, eTag)
+                archivedAccountsETagStore.getSyncOrNull()
                 archivedAccountsStoreFactory.create(userWalletId)
+                tangemTechApi.getWalletArchivedAccounts(userWalletId.stringValue, eTag)
+                archivedAccountsETagStore.update(any())
             }
         }
 
@@ -558,7 +558,7 @@ class DefaultAccountsCRUDRepositoryTest {
             val eTag = "etag123"
             val exception = Exception("API error")
 
-            coEvery { eTagsStore.getSyncOrNull(userWalletId, ETagsStore.Key.WalletAccounts) } returns eTag
+            coEvery { archivedAccountsETagStore.getSyncOrNull() } returns mapOf(userWalletId.stringValue to eTag)
             coEvery { tangemTechApi.getWalletArchivedAccounts(userWalletId.stringValue, eTag) } throws exception
 
             // Act
@@ -570,7 +570,7 @@ class DefaultAccountsCRUDRepositoryTest {
             Truth.assertThat(archivedAccountsStore.getSyncOrNull()).isNull()
 
             coVerifyOrder {
-                eTagsStore.getSyncOrNull(userWalletId, ETagsStore.Key.WalletAccounts)
+                archivedAccountsETagStore.getSyncOrNull()
                 tangemTechApi.getWalletArchivedAccounts(userWalletId.stringValue, eTag)
             }
         }
