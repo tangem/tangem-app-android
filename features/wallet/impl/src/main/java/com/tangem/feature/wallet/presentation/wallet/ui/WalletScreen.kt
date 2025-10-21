@@ -142,6 +142,7 @@ private fun WalletContent(
      */
     val selectedWalletIndex by remember(state.selectedWalletIndex) { mutableIntStateOf(state.selectedWalletIndex) }
     val selectedWallet = state.wallets.getOrElse(selectedWalletIndex) { state.wallets[state.selectedWalletIndex] }
+    val selectedWalletChanged = rememberChangedOnce(selectedWalletIndex)
 
     val listState = rememberLazyListState()
 
@@ -239,6 +240,7 @@ private fun WalletContent(
 
             contentItems(
                 state = selectedWallet,
+                selectedWalletChanged = selectedWalletChanged,
                 txHistoryItems = txHistoryItems,
                 isBalanceHidden = state.isHidingMode,
                 modifier = movableItemModifier,
@@ -287,6 +289,14 @@ private fun WalletContent(
         },
         content = scaffoldContent,
     )
+}
+
+@Composable
+private fun rememberChangedOnce(selectedWalletIndex: Int): Boolean {
+    var prev by remember { mutableIntStateOf(selectedWalletIndex) }
+    val changed = prev != selectedWalletIndex
+    SideEffect { prev = selectedWalletIndex }
+    return changed
 }
 
 @Suppress("LongParameterList", "LongMethod", "CyclomaticComplexMethod")
