@@ -10,12 +10,15 @@ import com.tangem.data.account.store.AccountsResponseStoreFactory
 import com.tangem.data.account.store.ArchivedAccountsStore
 import com.tangem.data.account.store.ArchivedAccountsStoreFactory
 import com.tangem.data.common.account.WalletAccountsSaver
-import com.tangem.data.common.cache.etag.ETagsStore
+import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.common.currency.UserTokensSaver
-import com.tangem.datasource.api.common.response.getOrThrow
+import com.tangem.datasource.api.common.response.ApiResponse
+import com.tangem.datasource.api.common.response.ApiResponseError.HttpException
+import com.tangem.datasource.api.common.response.ETAG_HEADER
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.toUserTokensResponse
+import com.tangem.datasource.local.datastore.RuntimeStateStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.datasource.utils.getSyncOrNull
 import com.tangem.domain.account.models.AccountList
@@ -43,7 +46,7 @@ internal class DefaultAccountsCRUDRepository(
     private val archivedAccountsStoreFactory: ArchivedAccountsStoreFactory,
     private val userWalletsStore: UserWalletsStore,
     private val userTokensSaver: UserTokensSaver,
-    private val eTagsStore: ETagsStore,
+    private val archivedAccountsETagStore: RuntimeStateStore<Map<String, String?>>,
     private val convertersContainer: AccountConverterFactoryContainer,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : AccountsCRUDRepository {
@@ -90,19 +93,38 @@ internal class DefaultAccountsCRUDRepository(
     }
 
     override suspend fun fetchArchivedAccounts(userWalletId: UserWalletId) {
-        val response = withContext(dispatchers.io) {
-            tangemTechApi.getWalletArchivedAccounts(
-                walletId = userWalletId.stringValue,
-                eTag = getETag(userWalletId),
-            ).getOrThrow()
-        }
-
+        val eTag = archivedAccountsETagStore.getSyncOrNull()?.get(key = userWalletId.stringValue)
         val store = getArchivedAccountsStore(userWalletId = userWalletId)
-        val converter = ArchivedAccountConverter(userWalletId = userWalletId)
 
-        val archivedAccounts = converter.convertList(input = response.accounts)
+        val response = safeApiCall(
+            call = {
+                val apiResponse = withContext(dispatchers.io) {
+                    tangemTechApi.getWalletArchivedAccounts(
+                        walletId = userWalletId.stringValue,
+                        eTag = eTag,
+                    )
+                }
 
-        store.store(value = archivedAccounts)
+                saveETag(userWalletId, apiResponse)
+
+                apiResponse.bind()
+            },
+            onError = {
+                if (it is HttpException && it.code == HttpException.Code.NOT_MODIFIED) {
+                    null
+                } else {
+                    throw it
+                }
+            },
+        )
+
+        if (response != null) {
+            val converter = ArchivedAccountConverter(userWalletId = userWalletId)
+
+            val archivedAccounts = converter.convertList(input = response.accounts)
+
+            store.store(value = archivedAccounts)
+        }
     }
 
     override suspend fun saveAccounts(accountList: AccountList) {
@@ -167,8 +189,12 @@ internal class DefaultAccountsCRUDRepository(
 
     override fun getUserWalletsSync(): List<UserWallet> = userWalletsStore.userWalletsSync
 
-    private suspend fun getETag(userWalletId: UserWalletId): String? {
-        return eTagsStore.getSyncOrNull(userWalletId = userWalletId, key = ETagsStore.Key.WalletAccounts)
+    private suspend fun saveETag(userWalletId: UserWalletId, apiResponse: ApiResponse<*>) {
+        val eTag = apiResponse.headers[ETAG_HEADER]?.firstOrNull()
+
+        archivedAccountsETagStore.update {
+            it + (userWalletId.stringValue to eTag)
+        }
     }
 
     private suspend fun getAccountsResponseSync(userWalletId: UserWalletId): GetWalletAccountsResponse? {
