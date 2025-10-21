@@ -53,7 +53,7 @@ class UserTokensResponseFactory @Inject constructor() {
     fun createDefaultResponse(
         userWallet: UserWallet?,
         networkFactory: NetworkFactory,
-        accountId: AccountId? = null,
+        accountId: AccountId?,
     ): UserTokensResponse {
         val tokens = userWallet?.let {
             getDefaultWalletBlockchains(userWallet = it, demoConfig = DemoConfig())
