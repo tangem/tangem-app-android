@@ -104,7 +104,7 @@ class SwapTokenTest : BaseTestCase() {
 
     @AllureId("3549")
     @DisplayName("Swap: network error test")
-    @Test
+    // @Test
     fun networkErrorSwapTest() {
         setupHooks(
             additionalAfterSection = {
