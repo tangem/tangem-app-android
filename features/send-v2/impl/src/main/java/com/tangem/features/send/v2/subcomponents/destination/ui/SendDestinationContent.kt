@@ -21,7 +21,6 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
-import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.containers.FooterContainer
@@ -69,18 +68,18 @@ internal fun SendDestinationContent(
             onMemoChange = clickIntents::onRecipientMemoValueChange,
         )
         listHeaderItem(
-            titleRes = when (state.accountTitleUM) {
-                is AccountTitleUM.Account -> R.string.common_accounts
-                else -> R.string.send_recipient_wallets_title
+            titleRes = if (state.isAccountsMode == true) {
+                R.string.common_accounts
+            } else {
+                R.string.send_recipient_wallets_title
             },
-            isLoading = state.accountTitleUM == null,
+            isLoading = state.isAccountsMode == null,
             isVisible = wallets.isNotEmpty() && wallets.first().isVisible && !state.isRecentHidden,
             isFirst = true,
         )
         listItem(
             list = wallets,
             isLast = recipients.any { !it.isVisible },
-            accountTitleUM = state.accountTitleUM,
             isBalanceHidden = false,
             isRecentHidden = state.isRecentHidden,
             onClick = { title ->
@@ -92,7 +91,7 @@ internal fun SendDestinationContent(
         )
         listHeaderItem(
             titleRes = R.string.send_recent_transactions,
-            isLoading = state.accountTitleUM == null,
+            isLoading = state.isAccountsMode == null,
             isVisible = recipients.isNotEmpty() && recipients.first().isVisible && !state.isRecentHidden,
             isFirst = wallets.any { !it.isVisible },
         )
@@ -245,7 +244,6 @@ private fun LazyListScope.listItem(
     isBalanceHidden: Boolean,
     isRecentHidden: Boolean,
     onClick: (String) -> Unit,
-    accountTitleUM: AccountTitleUM? = null,
 ) {
     items(
         count = list.size,
@@ -259,7 +257,7 @@ private fun LazyListScope.listItem(
             ListItemWithIcon(
                 title = title,
                 subtitle = item.subtitle.orMaskWithStars(isBalanceHidden).resolveReference(),
-                accountTitleUM = accountTitleUM,
+                accountTitleUM = item.accountTitleUM,
                 info = item.timestamp?.resolveReference(),
                 subtitleEndOffset = item.subtitleEndOffset,
                 subtitleIconRes = item.subtitleIconRes,
