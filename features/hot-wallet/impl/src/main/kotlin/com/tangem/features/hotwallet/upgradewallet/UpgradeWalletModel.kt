@@ -53,14 +53,14 @@ internal class UpgradeWalletModel @Inject constructor(
 ) : Model() {
     private val params = paramsContainer.require<UpgradeWalletComponent.Params>()
 
-    private val _uiState = MutableStateFlow(
-        UpgradeWalletUM(
-            onBackClick = { router.pop() },
-            onBuyTangemWalletClick = ::onBuyTangemWalletClick,
-            onScanDeviceClick = ::onScanDeviceClick,
-        ),
-    )
-    internal val uiState: StateFlow<UpgradeWalletUM> = _uiState
+    internal val uiState: StateFlow<UpgradeWalletUM>
+        field = MutableStateFlow(
+            UpgradeWalletUM(
+                onBackClick = { router.pop() },
+                onBuyTangemWalletClick = ::onBuyTangemWalletClick,
+                onContinueClick = ::onContinueClick,
+            ),
+        )
 
     override fun onDestroy() {
         clearHotWalletContextualUnlockUseCase.invoke(params.userWalletId)
@@ -73,7 +73,7 @@ internal class UpgradeWalletModel @Inject constructor(
         }
     }
 
-    private fun onScanDeviceClick() {
+    private fun onContinueClick() {
         scanCard()
     }
 
@@ -100,7 +100,7 @@ internal class UpgradeWalletModel @Inject constructor(
     }
 
     private fun setLoading(isLoading: Boolean) {
-        _uiState.update { it.copy(isLoading = isLoading) }
+        uiState.update { it.copy(isLoading = isLoading) }
     }
 
     private fun showCardVerificationFailedDialog(error: TangemError) {
