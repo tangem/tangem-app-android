@@ -3,6 +3,7 @@ package com.tangem.feature.referral.domain.di
 import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.domain.account.status.usecase.ManageCryptoCurrenciesUseCase
+import com.tangem.domain.account.supplier.SingleAccountSupplier
 import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
 import com.tangem.domain.wallets.usecase.DerivePublicKeysUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
@@ -27,6 +28,7 @@ class ReferralDomainModule {
         getUserWalletUseCase: GetUserWalletUseCase,
         addCryptoCurrenciesUseCase: AddCryptoCurrenciesUseCase,
         manageCryptoCurrenciesUseCase: ManageCryptoCurrenciesUseCase,
+        singleAccountSupplier: SingleAccountSupplier,
     ): ReferralInteractor {
         return ReferralInteractorImpl(
             repository = referralRepository,
@@ -35,6 +37,7 @@ class ReferralDomainModule {
             getUserWalletUseCase = getUserWalletUseCase,
             addCryptoCurrenciesUseCase = addCryptoCurrenciesUseCase,
             manageCryptoCurrenciesUseCase = manageCryptoCurrenciesUseCase,
+            singleAccountSupplier = singleAccountSupplier,
         )
     }
 }
