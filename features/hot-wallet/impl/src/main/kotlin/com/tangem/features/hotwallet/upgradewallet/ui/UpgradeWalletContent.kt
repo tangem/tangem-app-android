@@ -3,7 +3,9 @@ package com.tangem.features.hotwallet.upgradewallet.ui
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -103,11 +105,11 @@ internal fun UpgradeWalletContent(state: UpgradeWalletUM, modifier: Modifier = M
                 onClick = state.onBuyTangemWalletClick,
             )
             PrimaryButtonIconEnd(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                text = stringResourceSafe(R.string.hw_upgrade_scan_device),
-                onClick = state.onScanDeviceClick,
+                modifier = Modifier.fillMaxWidth(),
                 iconResId = R.drawable.ic_tangem_24,
+                text = stringResourceSafe(R.string.hw_upgrade_start_action),
+                onClick = state.onContinueClick,
+                showProgress = state.isLoading,
             )
         }
     }
@@ -116,13 +118,28 @@ internal fun UpgradeWalletContent(state: UpgradeWalletUM, modifier: Modifier = M
 @Preview(showBackground = true, widthDp = 360)
 @Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun PreviewUpgradeWalletContent() {
+private fun PreviewUpgradeWalletContentBackup() {
     TangemThemePreview {
         UpgradeWalletContent(
             state = UpgradeWalletUM(
                 onBackClick = {},
                 onBuyTangemWalletClick = {},
-                onScanDeviceClick = {},
+                onContinueClick = {},
+            ),
+        )
+    }
+}
+
+@Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun PreviewUpgradeWalletContentScan() {
+    TangemThemePreview {
+        UpgradeWalletContent(
+            state = UpgradeWalletUM(
+                onBackClick = {},
+                onBuyTangemWalletClick = {},
+                onContinueClick = {},
             ),
         )
     }
