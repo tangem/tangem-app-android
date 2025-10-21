@@ -38,11 +38,7 @@ import com.tangem.domain.wallets.usecase.*
 import com.tangem.feature.walletsettings.analytics.Settings
 import com.tangem.feature.walletsettings.analytics.WalletSettingsAnalyticEvents
 import com.tangem.feature.walletsettings.component.WalletSettingsComponent
-import com.tangem.feature.walletsettings.entity.DialogConfig
-import com.tangem.feature.walletsettings.entity.NetworksAvailableForNotificationBSConfig
-import com.tangem.feature.walletsettings.entity.WalletSettingsAccountsUM
-import com.tangem.feature.walletsettings.entity.WalletSettingsItemUM
-import com.tangem.feature.walletsettings.entity.WalletSettingsUM
+import com.tangem.feature.walletsettings.entity.*
 import com.tangem.feature.walletsettings.impl.R
 import com.tangem.feature.walletsettings.utils.AccountItemsDelegate
 import com.tangem.feature.walletsettings.utils.ItemsBuilder
@@ -112,10 +108,15 @@ internal class WalletSettingsModel @Inject constructor(
                 title = resourceReference(R.string.hw_backup_need_title)
                 body = resourceReference(R.string.hw_backup_need_description)
             }
-            secondaryButton {
+            primaryButton {
                 text = resourceReference(R.string.hw_backup_need_action)
                 onClick {
-                    router.push(AppRoute.CreateWalletBackup(params.userWalletId))
+                    router.push(
+                        AppRoute.CreateWalletBackup(
+                            userWalletId = params.userWalletId,
+                            isUpgradeFlow = false,
+                        ),
+                    )
                     closeBs()
                 }
             }
@@ -354,7 +355,11 @@ internal class WalletSettingsModel @Inject constructor(
 
     private fun onUpgradeWalletClick() {
         unlockWalletIfNeedAndProceed {
-            router.push(AppRoute.UpgradeWallet(params.userWalletId))
+            router.push(
+                AppRoute.UpgradeWallet(
+                    userWalletId = params.userWalletId,
+                ),
+            )
         }
     }
 
@@ -452,7 +457,12 @@ internal class WalletSettingsModel @Inject constructor(
                         primaryButton {
                             text = stringReference("Go to backup")
                             onClick {
-                                router.push(AppRoute.CreateWalletBackup(userWallet.walletId))
+                                router.push(
+                                    AppRoute.CreateWalletBackup(
+                                        userWalletId = userWallet.walletId,
+                                        isUpgradeFlow = false,
+                                    ),
+                                )
                                 closeBs()
                             }
                         }
