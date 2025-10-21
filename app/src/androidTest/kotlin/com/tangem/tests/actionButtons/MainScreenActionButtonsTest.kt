@@ -4,7 +4,6 @@ import androidx.compose.ui.test.longClick
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.BITCOIN_ADDRESS
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
-import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.extensions.*
 import com.tangem.common.utils.assertClipboardTextEquals
 import com.tangem.common.utils.clearClipboard
@@ -447,12 +446,6 @@ class MainScreenActionButtonsTest : BaseTestCase() {
         val tokenTitle = "Ethereum"
 
         setupHooks().run {
-            step("Check internet connection") {
-                val pingResult = device.uiDevice.executeShellCommand("ping -c 1 8.8.8.8")
-                if (!pingResult.contains("1 received")) {
-                    throw AssertionError("❌ Internet connection is required for this test")
-                }
-            }
             step("Open 'Main Screen'") {
                 openMainScreen()
             }
