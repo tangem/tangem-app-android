@@ -21,6 +21,7 @@ sealed interface PortfolioSelectorItemUM {
 
     data class Portfolio(
         val item: UserWalletItemUM,
+        val isSelected: Boolean,
     ) : PortfolioSelectorItemUM {
         override val id: String = item.id.stringValue
     }
