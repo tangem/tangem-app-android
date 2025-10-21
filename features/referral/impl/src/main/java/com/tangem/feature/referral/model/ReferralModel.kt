@@ -121,15 +121,20 @@ internal class ReferralModel @Inject constructor(
         flow4 = portfolioFetcher.data,
     ) { pair, isBalanceHidden, appCurrency, portfolios ->
         val selectedAccount = pair?.second ?: return@combine null
-        val awardCryptoCurrency = referralInteractor.getCryptoCurrency(
-            userWalletId = params.userWalletId,
-            tokenData = referralData.getToken(),
-        ) ?: return@combine null
+
         val cryptoPortfolio = when (selectedAccount) {
             is AccountStatus.CryptoPortfolio -> selectedAccount
         }
+
+        val awardCryptoCurrency = referralInteractor.getCryptoCurrency(
+            userWalletId = params.userWalletId,
+            tokenData = referralData.getToken(),
+            accountIndex = cryptoPortfolio.account.derivationIndex,
+        ) ?: return@combine null
+
         val accountAwardToken = cryptoPortfolio.tokenList.flattenCurrencies()
             .find { it.currency.id == awardCryptoCurrency.id }
+
         return@combine AccountAwardConverter(
             isBalanceHidden = isBalanceHidden,
             awardCryptoCurrency = awardCryptoCurrency,
@@ -142,12 +147,12 @@ internal class ReferralModel @Inject constructor(
     }
 
     private fun createInitiallyUiState() = ReferralStateHolder(
-        headerState = ReferralStateHolder.HeaderState(
+        headerState = HeaderState(
             onBackClicked = appRouter::pop,
         ),
         referralInfoState = ReferralInfoState.Loading,
         errorSnackbar = null,
-        analytics = ReferralStateHolder.Analytics(
+        analytics = Analytics(
             onAgreementClicked = ::onAgreementClicked,
             onCopyClicked = ::onCopyClicked,
             onShareClicked = ::onShareClicked,
