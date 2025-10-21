@@ -15,6 +15,8 @@ import com.kaspersky.kaspresso.testcases.api.testcase.TestCase
 import com.tangem.common.allure.FailedStepScreenshotInterceptor
 import com.tangem.common.constants.TestConstants.ALLURE_LABEL_NAME
 import com.tangem.common.constants.TestConstants.ALLURE_LABEL_VALUE
+import com.tangem.common.extensions.enableMobileData
+import com.tangem.common.extensions.enableWiFi
 import com.tangem.common.rules.ApiEnvironmentRule
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.core.configtoggle.feature.MutableFeatureTogglesManager
@@ -113,6 +115,8 @@ abstract class BaseTestCase : TestCase(
         Intents.init()
         setFeatureToggles()
         additionalBeforeSection()
+        enableWiFi()
+        enableMobileData()
     }.after {
         additionalAfterSection()
         Intents.release()
