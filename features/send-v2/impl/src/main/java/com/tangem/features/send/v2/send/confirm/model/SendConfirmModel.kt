@@ -3,7 +3,6 @@ package com.tangem.features.send.v2.send.confirm.model
 import android.os.SystemClock
 import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
-import arrow.core.left
 import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.common.routing.AppRouter
@@ -22,6 +21,7 @@ import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
+import com.tangem.domain.account.status.usecase.ManageCryptoCurrenciesUseCase
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
@@ -33,6 +33,7 @@ import com.tangem.domain.settings.IsSendTapHelpEnabledUseCase
 import com.tangem.domain.settings.NeverShowTapHelpUseCase
 import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
 import com.tangem.domain.tokens.IsAmountSubtractAvailableUseCase
+import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.transaction.usecase.CreateTransferTransactionUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
@@ -108,6 +109,8 @@ internal class SendConfirmModel @Inject constructor(
     private val sendAmountReduceTrigger: SendAmountReduceTrigger,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val accountsFeatureToggles: AccountsFeatureToggles,
+    private val manageCryptoCurrenciesUseCase: ManageCryptoCurrenciesUseCase,
+    private val currenciesRepository: CurrenciesRepository,
     sendBalanceUpdaterFactory: SendBalanceUpdater.Factory,
 ) : Model(), SendConfirmClickIntents, FeeSelectorModelCallback, SendNotificationsComponent.ModelCallback {
 
@@ -433,10 +436,10 @@ internal class SendConfirmModel @Inject constructor(
 
         modelScope.launch(dispatchers.default) {
             if (accountsFeatureToggles.isFeatureEnabled) {
-                // val tokenToAdd = currenciesRepository.createTokenCurrency(cryptoCurrency, network)
-                // saveCryptoCurrenciesUseCase(accountId = accountId, add = tokenToAdd)
-                // TODO account
-                IllegalStateException("Not implemented yet").left()
+                val accountId = receivingUserWallet.accountId ?: return@launch
+
+                val tokenToAdd = currenciesRepository.createTokenCurrency(cryptoCurrency, network)
+                manageCryptoCurrenciesUseCase(accountId = accountId, add = tokenToAdd)
             } else {
                 withContext(NonCancellable) {
                     addCryptoCurrenciesUseCase(
@@ -445,8 +448,7 @@ internal class SendConfirmModel @Inject constructor(
                         network = network,
                     )
                 }
-            }
-                .onLeft(Timber::e)
+            }.onLeft(Timber::e)
         }
     }
 
