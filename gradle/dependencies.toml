@@ -1,5 +1,4 @@
 # docs https://docs.gradle.org/current/userguide/platforms.html
-# TODO: update versions refs https://tangem.atlassian.net/browse/AND-3195
 
 [versions]
 # region Classpath
