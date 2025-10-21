@@ -120,6 +120,8 @@ internal class AddExistingWalletModel @Inject constructor(
         override fun onContinueClick(userWalletId: UserWalletId) {
             stackNavigation.replaceAll(AddExistingWalletRoute.SetAccessCode(userWalletId))
         }
+
+        override fun onUpgradeClick(userWalletId: UserWalletId) = Unit
     }
 
     inner class AccessCodeModelCallbacks : AccessCodeComponent.ModelCallbacks {
