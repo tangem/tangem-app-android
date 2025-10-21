@@ -63,6 +63,7 @@ internal class ChildFactory @Inject constructor(
     private val detailsComponentFactory: DetailsComponent.Factory,
     private val walletSettingsComponentFactory: WalletSettingsComponent.Factory,
     private val walletBackupComponentFactory: WalletBackupComponent.Factory,
+    private val walletHardwareBackupComponentFactory: WalletHardwareBackupComponent.Factory,
     private val disclaimerComponentFactory: DisclaimerComponent.Factory,
     private val manageTokensComponentFactory: ManageTokensComponent.Factory,
     private val marketsTokenDetailsComponentFactory: MarketsTokenDetailsComponent.Factory,
@@ -187,6 +188,15 @@ internal class ChildFactory @Inject constructor(
                         userWalletId = route.userWalletId,
                     ),
                     componentFactory = walletBackupComponentFactory,
+                )
+            }
+            is AppRoute.WalletHardwareBackup -> {
+                createComponentChild(
+                    context = context,
+                    params = WalletHardwareBackupComponent.Params(
+                        userWalletId = route.userWalletId,
+                    ),
+                    componentFactory = walletHardwareBackupComponentFactory,
                 )
             }
             is AppRoute.MarketsTokenDetails -> {
@@ -542,6 +552,7 @@ internal class ChildFactory @Inject constructor(
                     context = context,
                     params = CreateWalletBackupComponent.Params(
                         userWalletId = route.userWalletId,
+                        isUpgradeFlow = route.isUpgradeFlow,
                     ),
                     componentFactory = createWalletBackupComponentFactory,
                 )
