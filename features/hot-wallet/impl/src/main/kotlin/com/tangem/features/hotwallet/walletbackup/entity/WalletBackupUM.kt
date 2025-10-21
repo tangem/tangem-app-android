@@ -7,6 +7,7 @@ internal data class WalletBackupUM(
     val recoveryPhraseOption: LabelUM?,
     val googleDriveOption: LabelUM?,
     val googleDriveStatus: BackupStatus,
+    val onBuyClick: () -> Unit,
     val onRecoveryPhraseClick: () -> Unit,
     val onGoogleDriveClick: () -> Unit,
     val onHardwareWalletClick: () -> Unit,
