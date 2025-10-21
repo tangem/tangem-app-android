@@ -39,12 +39,14 @@ internal fun LazyListScope.tokensListItems(
     state: WalletTokensListState,
     modifier: Modifier = Modifier,
     isBalanceHidden: Boolean,
+    selectedWalletChanged: Boolean,
 ) {
     when (state) {
         is WalletTokensListState.ContentState.PortfolioContent -> portfolioContentItems(
             items = state.items,
             isBalanceHidden = isBalanceHidden,
             modifier = modifier,
+            selectedWalletChanged = selectedWalletChanged,
         )
         is WalletTokensListState.ContentState.Content,
         is WalletTokensListState.ContentState.Loading,
