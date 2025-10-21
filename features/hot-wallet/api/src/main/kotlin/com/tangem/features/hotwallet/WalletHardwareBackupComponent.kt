@@ -4,12 +4,11 @@ import com.tangem.core.decompose.factory.ComponentFactory
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.models.wallet.UserWalletId
 
-interface CreateWalletBackupComponent : ComposableContentComponent {
+interface WalletHardwareBackupComponent : ComposableContentComponent {
 
     data class Params(
         val userWalletId: UserWalletId,
-        val isUpgradeFlow: Boolean,
     )
 
-    interface Factory : ComponentFactory<Params, CreateWalletBackupComponent>
+    interface Factory : ComponentFactory<Params, WalletHardwareBackupComponent>
 }
