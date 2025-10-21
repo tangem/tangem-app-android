@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 @ModelScoped
 internal class ManualBackupCompletedModel @Inject constructor(
     paramsContainer: ParamsContainer,
@@ -20,7 +21,14 @@ internal class ManualBackupCompletedModel @Inject constructor(
     internal val uiState: StateFlow<ManualBackupCompletedUM>
         field = MutableStateFlow(
             ManualBackupCompletedUM(
-                onContinueClick = { params.callbacks.onContinueClick(params.userWalletId) },
+                onContinueClick = {
+                    if (params.isUpgradeFlow) {
+                        params.callbacks.onUpgradeClick(params.userWalletId)
+                    } else {
+                        params.callbacks.onContinueClick(params.userWalletId)
+                    }
+                },
+                isLoading = false,
             ),
         )
 }

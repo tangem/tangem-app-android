@@ -3,11 +3,13 @@ package com.tangem.features.hotwallet.createwalletbackup
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.push
+import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.utils.AnalyticsContextProxy
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.navigation.popTo
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.hotwallet.CreateWalletBackupComponent
 import com.tangem.features.hotwallet.createwalletbackup.routing.CreateWalletBackupRoute
@@ -65,7 +67,7 @@ internal class CreateWalletBackupModel @Inject constructor(
     }
 
     fun onManualBackupChecked() {
-        stackNavigation.push(CreateWalletBackupRoute.BackupCompleted)
+        stackNavigation.push(CreateWalletBackupRoute.BackupCompleted(isUpgradeFlow = params.isUpgradeFlow))
     }
 
     fun onManualBackupCompleted() {
@@ -93,6 +95,15 @@ internal class CreateWalletBackupModel @Inject constructor(
     inner class ManualBackupCompletedModelCallbacks : ManualBackupCompletedComponent.ModelCallbacks {
         override fun onContinueClick(userWalletId: UserWalletId) {
             onManualBackupCompleted()
+        }
+
+        override fun onUpgradeClick(userWalletId: UserWalletId) {
+            router.popTo<AppRoute.WalletSettings>()
+            router.push(
+                AppRoute.UpgradeWallet(
+                    userWalletId = userWalletId,
+                ),
+            )
         }
     }
 }
