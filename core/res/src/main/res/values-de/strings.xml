@@ -1679,6 +1679,7 @@
   <string name="yield_module_deposit_error_notification_title">Der erhaltene Betrag %1$s %2$s wurde nicht auf Aave eingezahlt.</string>
   <string name="yield_module_fee_policy_sheet_current_fee_title">Aktuelle Gebühr</string>
   <string name="yield_module_fee_policy_sheet_max_fee_title">Maximale Gebühr</string>
+  <string name="yield_module_fee_policy_sheet_min_amount_note">Dies ist die niedrigste Einzahlung, die an Aave gesendet werden kann. Um Einzahlungen rentabel zu halten, verarbeiten wir sie nicht, wenn die Netzwerkgebühren 4 % des Betrags übersteigen.</string>
   <string name="yield_module_fee_policy_sheet_title">Gebührenpolitik</string>
   <string name="yield_module_high_fee_error">Die Netzwerkgebühr ist derzeit zu hoch. Warte, bis sie unter Dein Limit fällt.</string>
   <string name="yield_module_historical_returns">Historische Renditen</string>
