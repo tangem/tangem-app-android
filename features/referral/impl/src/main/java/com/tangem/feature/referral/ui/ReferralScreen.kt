@@ -185,6 +185,7 @@ private fun ReferralInfo(
                 code = state.code,
                 shareLink = state.shareLink,
                 expectedAwards = state.expectedAwards,
+                accountAward = state.accountAward,
                 snackbarHostState = snackbarHostState,
                 onAgreementClick = onAgreementClick,
                 onCopyClick = stateHolder.analytics.onCopyClicked,
@@ -479,6 +480,7 @@ private fun Preview_ReferralScreen_Participant_With_Referrals() {
                     code = "x4JdK",
                     shareLink = "",
                     url = "",
+                    accountAward = accountReward,
                     expectedAwards = ExpectedAwards(
                         numberOfWallets = 5,
                         expectedAwards = listOf(
@@ -535,17 +537,45 @@ private fun Preview_ReferralScreen_NonParticipant() {
     }
 }
 
+internal val account = PortfolioSelectUM(
+    icon = AccountIconPreviewData.randomAccountIcon(),
+    name = AccountName.DefaultMain.toUM().value,
+    isAccountMode = true,
+    isMultiChoice = true,
+    onClick = {},
+)
+
+internal val accountReward
+    get() = AccountAward(
+        accountSelectUM = account,
+        isBalanceHidden = false,
+        tokenState = TokenItemState.Content(
+            id = UUID.randomUUID().toString(),
+            iconState = CurrencyIconState.TokenIcon(
+                url = null,
+                topBadgeIconResId = R.drawable.img_tron_22,
+                fallbackTint = TangemColorPalette.Black,
+                fallbackBackground = TangemColorPalette.Meadow,
+                isGrayscale = false,
+                shouldShowCustomBadge = false,
+            ),
+            titleState = TokenItemState.TitleState.Content(
+                text = stringReference(value = "Tether"),
+            ),
+            fiatAmountState = FiatAmountState.Content(
+                text = "129,65 $",
+            ),
+            subtitle2State = TokenItemState.Subtitle2State.TextContent(text = "129,65 USDT"),
+            subtitleState = TokenItemState.SubtitleState.TextContent(value = stringReference("USDT")),
+            onItemClick = null,
+            onItemLongClick = null,
+        ),
+    )
+
 @Preview(widthDp = 360, showBackground = true)
 @Preview(widthDp = 360, showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun Preview_ReferralScreen_NonParticipantAccount() {
-    val account = PortfolioSelectUM(
-        icon = AccountIconPreviewData.randomAccountIcon(),
-        name = AccountName.DefaultMain.toUM().value,
-        isAccountMode = true,
-        isMultiChoice = true,
-        onClick = {},
-    )
     TangemThemePreview {
         ReferralScreen(
             stateHolder = ReferralStateHolder(
@@ -557,31 +587,7 @@ private fun Preview_ReferralScreen_NonParticipantAccount() {
                     url = "",
                     onParticipateClicked = {},
                     participateButtonIcon = R.drawable.ic_tangem_24,
-                    accountAward = AccountAward(
-                        accountSelectUM = account,
-                        isBalanceHidden = false,
-                        tokenState = TokenItemState.Content(
-                            id = UUID.randomUUID().toString(),
-                            iconState = CurrencyIconState.TokenIcon(
-                                url = null,
-                                topBadgeIconResId = R.drawable.img_tron_22,
-                                fallbackTint = TangemColorPalette.Black,
-                                fallbackBackground = TangemColorPalette.Meadow,
-                                isGrayscale = false,
-                                shouldShowCustomBadge = false,
-                            ),
-                            titleState = TokenItemState.TitleState.Content(
-                                text = stringReference(value = "Tether"),
-                            ),
-                            fiatAmountState = FiatAmountState.Content(
-                                text = "129,65 $",
-                            ),
-                            subtitle2State = TokenItemState.Subtitle2State.TextContent(text = "129,65 USDT"),
-                            subtitleState = TokenItemState.SubtitleState.TextContent(value = stringReference("USDT")),
-                            onItemClick = null,
-                            onItemLongClick = null,
-                        ),
-                    ),
+                    accountAward = accountReward,
                 ),
                 errorSnackbar = null,
                 analytics = Analytics(
