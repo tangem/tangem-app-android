@@ -18,13 +18,6 @@ class ResponseCryptoCurrenciesFactory @Inject constructor(
     private val networkFactory: NetworkFactory,
 ) {
 
-    fun createCurrency(currencyId: String, response: UserTokensResponse, userWallet: UserWallet): CryptoCurrency {
-        return response.tokens
-            .asSequence()
-            .mapNotNull { createCurrency(it, userWallet) }
-            .first { it.id.value == currencyId }
-    }
-
     fun createCurrencies(
         response: UserTokensResponse,
         userWallet: UserWallet,
