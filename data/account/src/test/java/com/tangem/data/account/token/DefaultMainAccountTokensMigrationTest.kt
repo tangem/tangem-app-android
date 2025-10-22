@@ -183,6 +183,8 @@ class DefaultMainAccountTokensMigrationTest {
 
         accountsResponseStoreFlow.value = response
 
+        coEvery { accountsResponseStore.updateData(any()) } returns mockk()
+
         // Act
         val actual = migration.migrate(userWalletId, derivationIndex)
 
@@ -199,6 +201,7 @@ class DefaultMainAccountTokensMigrationTest {
         coVerifySequence {
             accountsResponseStoreFactory.create(userWalletId)
             accountsResponseStore.data
+            accountsResponseStore.updateData(any())
             userTokensSaver.push(
                 userWalletId = userWalletId,
                 response = migratedResponse.toUserTokensResponse(),
