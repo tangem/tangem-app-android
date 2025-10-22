@@ -2,6 +2,7 @@ package com.tangem.data.pay.repository
 
 import arrow.core.Either
 import com.tangem.core.error.UniversalError
+import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.pay.TangemPayApi
 import com.tangem.datasource.api.pay.models.request.DeeplinkValidityRequest
 import com.tangem.datasource.api.pay.models.request.OrderRequest
@@ -30,9 +31,9 @@ internal class DefaultOnboardingRepository @Inject constructor(
 
     override suspend fun validateDeeplink(link: String): Either<UniversalError, Boolean> {
         return requestHelper.runWithErrorLogs(TAG) {
-            val result = requestHelper.request {
-                tangemPayApi.validateDeeplink(DeeplinkValidityRequest(link))
-            }.result
+            val result = tangemPayApi.validateDeeplink(DeeplinkValidityRequest(link))
+                .getOrThrow()
+                .result
             result?.status == VALID_STATUS
         }
     }
