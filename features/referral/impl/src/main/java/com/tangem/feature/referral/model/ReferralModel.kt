@@ -85,8 +85,8 @@ internal class ReferralModel @Inject constructor(
         private set
 
     val portfolioSelectorCallback = object : PortfolioSelectorComponent.BottomSheetCallback {
-        override val onDismiss: () -> Unit = { bottomSheetNavigation::dismiss }
-        override val onBack: () -> Unit = { bottomSheetNavigation::dismiss }
+        override val onDismiss: () -> Unit = { bottomSheetNavigation.dismiss() }
+        override val onBack: () -> Unit = { bottomSheetNavigation.dismiss() }
     }
 
     init {
@@ -115,7 +115,8 @@ internal class ReferralModel @Inject constructor(
     }
 
     private fun combineAccountUI(referralData: ReferralData): Flow<AccountAward?> = combine(
-        flow = portfolioSelectorController.selectedAccountWithData(portfolioFetcher),
+        flow = portfolioSelectorController.selectedAccountWithData(portfolioFetcher)
+            .onEach { bottomSheetNavigation.dismiss() },
         flow2 = getBalanceHidingSettingsUseCase.isBalanceHidden(),
         flow3 = getSelectedAppCurrencyUseCase.invokeOrDefault(),
         flow4 = portfolioFetcher.data,
