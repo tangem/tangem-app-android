@@ -68,10 +68,6 @@ internal class MockCurrenciesRepository(
         return tokens.first().getOrElse { e -> throw e }
     }
 
-    override suspend fun getMultiCurrencyWalletCachedCurrenciesSync(userWalletId: UserWalletId): List<CryptoCurrency> {
-        return tokens.first().getOrElse { e -> throw e }
-    }
-
     override suspend fun getSingleCurrencyWalletPrimaryCurrency(
         userWalletId: UserWalletId,
         refresh: Boolean,
@@ -95,25 +91,6 @@ internal class MockCurrenciesRepository(
 
     override fun getMultiCurrencyWalletCurrenciesUpdates(userWalletId: UserWalletId): Flow<List<CryptoCurrency>> {
         return tokens.map { it.getOrElse { e -> throw e } }
-    }
-
-    override suspend fun getMultiCurrencyWalletCurrency(
-        userWalletId: UserWalletId,
-        id: CryptoCurrency.ID,
-    ): CryptoCurrency {
-        val token = token.getOrElse { e -> throw e }
-
-        require(token.id == id)
-
-        return token
-    }
-
-    override suspend fun getMultiCurrencyWalletCurrency(userWalletId: UserWalletId, id: String): CryptoCurrency {
-        val token = token.getOrElse { e -> throw e }
-
-        require(token.id.value == id)
-
-        return token
     }
 
     override suspend fun getNetworkCoin(
