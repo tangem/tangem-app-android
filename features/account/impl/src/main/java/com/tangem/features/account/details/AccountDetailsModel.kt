@@ -12,7 +12,8 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.ToastMessage
-import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
+import com.tangem.domain.account.producer.SingleAccountProducer
+import com.tangem.domain.account.supplier.SingleAccountSupplier
 import com.tangem.domain.account.usecase.ArchiveCryptoPortfolioUseCase
 import com.tangem.domain.models.PortfolioId
 import com.tangem.domain.models.account.Account
@@ -35,7 +36,7 @@ internal class AccountDetailsModel @Inject constructor(
     private val router: Router,
     override val dispatchers: CoroutineDispatcherProvider,
     private val archiveCryptoPortfolioUseCase: ArchiveCryptoPortfolioUseCase,
-    singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
+    singleAccountSupplier: SingleAccountSupplier,
     private val getUserWalletUseCase: GetUserWalletUseCase,
 ) : Model() {
 
@@ -46,22 +47,19 @@ internal class AccountDetailsModel @Inject constructor(
     private val accountId = params.account.accountId
 
     init {
-        singleAccountStatusListSupplier(accountId.userWalletId)
-            .map { it.accountStatuses.find { status -> status.account.accountId == accountId }?.account }
-            .filterNotNull()
-            .distinctUntilChanged()
-            .map { account -> buildUI(account) }
+        singleAccountSupplier(SingleAccountProducer.Params(accountId))
+            .onEach { account -> _uiState.update { buildUI(account) } }
             .launchIn(modelScope)
     }
 
-    private fun onEditAccountClick() {
-        router.push(AppRoute.EditAccount(params.account))
+    private fun onEditAccountClick(account: Account) {
+        router.push(AppRoute.EditAccount(account))
     }
 
-    private fun onManageTokensClick() {
+    private fun onManageTokensClick(account: Account) {
         val route = AppRoute.ManageTokens(
             source = AppRoute.ManageTokens.Source.SETTINGS,
-            portfolioId = PortfolioId(params.account.accountId),
+            portfolioId = PortfolioId(account.accountId),
         )
         router.push(route)
     }
@@ -92,7 +90,7 @@ internal class AccountDetailsModel @Inject constructor(
 
     private fun archiveCryptoPortfolio() = modelScope.launch {
         _uiState.update { it.toggleProgress(true) }
-        archiveCryptoPortfolioUseCase(params.account.accountId)
+        archiveCryptoPortfolioUseCase(accountId)
             .onLeft { error ->
                 failedArchiveDialog(error)
                 _uiState.update { it.toggleProgress(false) }
@@ -138,14 +136,14 @@ internal class AccountDetailsModel @Inject constructor(
                 )
             }
         }
-        val isMultiCurrency = getUserWalletUseCase(params.account.accountId.userWalletId)
+        val isMultiCurrency = getUserWalletUseCase(account.accountId.userWalletId)
             .getOrNull()?.isMultiCurrency ?: false
         return AccountDetailsUM(
-            accountName = params.account.accountName.toUM().value,
-            accountIcon = params.account.portfolioIcon.toUM(),
+            accountName = account.accountName.toUM().value,
+            accountIcon = account.portfolioIcon.toUM(),
             onCloseClick = { router.pop() },
-            onAccountEditClick = ::onEditAccountClick,
-            onManageTokensClick = ::onManageTokensClick,
+            onAccountEditClick = { onEditAccountClick(account) },
+            onManageTokensClick = { onManageTokensClick(account) },
             archiveMode = archiveMode,
             isManageTokensAvailable = isMultiCurrency,
         )
