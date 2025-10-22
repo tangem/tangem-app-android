@@ -168,6 +168,14 @@ internal class DefaultAccountsCRUDRepository(
         userTokensSaver.push(userWalletId = userWalletId, response = response.toUserTokensResponse())
     }
 
+    override suspend fun getTotalAccountsCountSync(userWalletId: UserWalletId): Option<Int> = option {
+        val accountListResponse = getAccountsResponseSync(userWalletId = userWalletId)
+
+        ensureNotNull(accountListResponse)
+
+        return accountListResponse.wallet.totalAccounts.toOption()
+    }
+
     override suspend fun getTotalActiveAccountsCountSync(userWalletId: UserWalletId): Option<Int> = option {
         val accountListResponse = getAccountsResponseSync(userWalletId = userWalletId)
 
