@@ -50,6 +50,7 @@ internal class YieldSupplyActiveComponent(
             state = state,
             isBalanceHidden = isBalanceHidden,
             chartComponent = chartComponent,
+            onReadMoreClick = params.callback::onReadMoreClick,
             modifier = Modifier,
         )
     }
@@ -76,5 +77,6 @@ internal class YieldSupplyActiveComponent(
         fun onBackClick()
         fun onStopEarning()
         fun onApprove()
+        fun onReadMoreClick()
     }
 }
