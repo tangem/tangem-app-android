@@ -132,7 +132,7 @@ private fun SupplyContent(supplyUM: YieldSupplyUM.Content) {
             )
         }
         SpacerW8()
-        AnimatedVisibility(supplyUM.isAllowedToSpend.not()) {
+        AnimatedVisibility(supplyUM.showWarningIcon) {
             Icon(
                 imageVector = ImageVector.vectorResource(R.drawable.ic_alert_triangle_20),
                 contentDescription = null,
@@ -317,7 +317,7 @@ private class PreviewProvider : PreviewParameterProvider<YieldSupplyUM> {
                 rewardsApy = stringReference("5.1 % APY"),
                 onClick = {},
                 apy = "5.1",
-                isAllowedToSpend = false,
+                showWarningIcon = false,
             ),
             YieldSupplyUM.Content(
                 title = stringReference("Aave lending is active"),
@@ -325,7 +325,7 @@ private class PreviewProvider : PreviewParameterProvider<YieldSupplyUM> {
                 rewardsApy = stringReference("5.1 % APY"),
                 onClick = {},
                 apy = "5.1",
-                isAllowedToSpend = true,
+                showWarningIcon = true,
             ),
             YieldSupplyUM.Loading,
             YieldSupplyUM.Processing.Enter,
