@@ -15,15 +15,15 @@ internal class AccountArchivedUMBuilder @Inject constructor() {
     fun mapContent(
         accounts: ArchivedAccountList,
         onCloseClick: () -> Unit,
-        confirmRecoverDialog: (account: ArchivedAccount) -> Unit,
+        onRecoverClick: (account: ArchivedAccount) -> Unit,
     ) = AccountArchivedUM.Content(
         onCloseClick = onCloseClick,
         accounts = accounts
-            .map { account -> account.mapArchivedAccountUM(confirmRecoverDialog) }
+            .map { account -> account.mapArchivedAccountUM(onRecoverClick) }
             .toImmutableList(),
     )
 
-    fun ArchivedAccount.mapArchivedAccountUM(confirmRecoverDialog: (account: ArchivedAccount) -> Unit) =
+    private fun ArchivedAccount.mapArchivedAccountUM(onRecoverClick: (account: ArchivedAccount) -> Unit) =
         ArchivedAccountUM(
             accountId = accountId.value,
             accountName = name.toUM().value,
@@ -38,7 +38,7 @@ internal class AccountArchivedUMBuilder @Inject constructor() {
                 count = networksCount,
                 formatArgs = wrappedList(networksCount),
             ),
-            onClick = { confirmRecoverDialog(this) },
+            onClick = { onRecoverClick(this) },
         )
 
     fun mapError(

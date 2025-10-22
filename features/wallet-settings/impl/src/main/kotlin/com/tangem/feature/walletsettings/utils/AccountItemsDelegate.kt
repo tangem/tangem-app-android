@@ -16,6 +16,7 @@ import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.status.producer.SingleAccountStatusListProducer
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
+import com.tangem.domain.account.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
@@ -40,6 +41,7 @@ internal class AccountItemsDelegate @Inject constructor(
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
+    private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     private val accountsFeatureToggles: AccountsFeatureToggles,
 ) {
     val userWalletId = paramsContainer.require<WalletSettingsComponent.Params>().userWalletId
@@ -51,8 +53,9 @@ internal class AccountItemsDelegate @Inject constructor(
             flow = singleAccountStatusListSupplier(params),
             flow2 = getSelectedAppCurrencyUseCase.invokeOrDefault(),
             flow3 = getBalanceHidingSettingsUseCase.isBalanceHidden(),
-        ) { accountStatusList, appCurrency, isBalanceHidden ->
-            buildUiList(accountStatusList, appCurrency, isBalanceHidden)
+            flow4 = isAccountsModeEnabledUseCase(),
+        ) { accountStatusList, appCurrency, isBalanceHidden, isAccountsMode ->
+            buildUiList(accountStatusList, appCurrency, isBalanceHidden, isAccountsMode)
         }
     }
 
@@ -60,6 +63,7 @@ internal class AccountItemsDelegate @Inject constructor(
         accountStatusList: AccountStatusList,
         appCurrency: AppCurrency,
         isBalanceHidden: Boolean,
+        isAccountsMode: Boolean,
     ): List<WalletSettingsAccountsUM> = buildList {
         fun AccountStatus.CryptoPortfolio.mapCryptoPortfolio(): WalletSettingsAccountsUM {
             val accountItemUM = AccountPortfolioItemUMConverter(
@@ -81,7 +85,9 @@ internal class AccountItemsDelegate @Inject constructor(
             text = resourceReference(R.string.common_accounts),
         ).let(::add)
 
-        addAll(accounts.map(::mapAccount))
+        if (isAccountsMode) {
+            addAll(accounts.map(::mapAccount))
+        }
 
         val addAccountEnabled = accounts.size < AccountList.MAX_ACCOUNTS_COUNT
         val showDescription = accounts.size > 1
