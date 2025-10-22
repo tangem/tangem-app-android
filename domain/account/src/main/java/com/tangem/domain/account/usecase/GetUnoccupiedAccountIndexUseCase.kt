@@ -40,7 +40,7 @@ class GetUnoccupiedAccountIndexUseCase(
 
     private suspend fun Raise<Error>.getTotalAccountsCount(userWalletId: UserWalletId): Int {
         return catch(
-            block = { crudRepository.getTotalAccountsCountSync(userWalletId = userWalletId) },
+            block = { crudRepository.getTotalActiveAccountsCountSync(userWalletId = userWalletId) },
             catch = { raise(Error.DataOperationFailed(cause = it)) },
         )
             .getOrElse { raise(Error.DataNotFound) }
