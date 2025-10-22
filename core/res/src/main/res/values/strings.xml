@@ -44,6 +44,8 @@
   <string name="account_form_title_edit">Edit account</string>
   <string name="account_label_tokens_info">%1$s in %2$s</string>
   <string name="account_main_account_title">Main account</string>
+  <string name="account_recover_limit_dialog_description">You have already exceeded the limit of %1$s active accounts. Archive one to recover</string>
+  <string name="account_recover_limit_dialog_title">Can’t recover account</string>
   <string name="account_recover_success_message">Account recovered</string>
   <string name="account_reorder_description">Long tap on an account to reorder accounts</string>
   <string name="account_unsaved_dialog_action_first">Keep Editing</string>
@@ -1837,10 +1839,11 @@
   <string name="yield_module_fee_policy_sheet_current_fee_note">This is the current supply fee on %s. The actual cost will be shown on the activation tab.</string>
   <string name="yield_module_fee_policy_sheet_current_fee_title">Current fee</string>
   <string name="yield_module_fee_policy_sheet_description">All future %s deposits will be supplied to Aave automatically, with the transaction fee deducted.</string>
+  <string name="yield_module_fee_policy_sheet_fee_note">An approximate network fee of %1$s (%2$s) will be deducted from each future top-up, and it won’t exceed your %3$s  (%4$s) limit.</string>
   <string name="yield_module_fee_policy_sheet_max_fee_note">If network fees rise above maximum fee, the transaction won’t go through until they decrease. You can change this limit later.</string>
   <string name="yield_module_fee_policy_sheet_max_fee_title">Maximum fee</string>
-  <string name="yield_module_fee_policy_sheet_min_amount_note">This is the lowest amount that can be supplied to Aave. To keep the yield mode profitable, we won’t supply assets when network fees exceed 4% of the amount.</string>
-  <string name="yield_module_fee_policy_sheet_min_amount_title">Minimal deposit</string>
+  <string name="yield_module_fee_policy_sheet_min_amount_note">The minimum amount is calculated from the current network fee to ensure it does not exceed 4%%, which makes the minimum %1$s (%2$s).</string>
+  <string name="yield_module_fee_policy_sheet_min_amount_title">Minimum top-up</string>
   <string name="yield_module_fee_policy_sheet_title">Fee policy</string>
   <string name="yield_module_fee_policy_tangem_service_fee_title">Tangem also takes a 3% service fee on yield earned.</string>
   <string name="yield_module_high_fee_error">Your funds will be automatically supplied to Aave once network fees are lower or your balance meets the minimum required amount.</string>
@@ -1849,7 +1852,7 @@
   <string name="yield_module_main_view_approve_notification_title">Token approvals needed</string>
   <string name="yield_module_network_fee_unreachable_notification_description">Check your network connection</string>
   <string name="yield_module_network_fee_unreachable_notification_title">Network fee info unreachable</string>
-  <string name="yield_module_promo_screen_auto_balance_subtitle">Every deposit you make will be suplied to Aave automatically.</string>
+  <string name="yield_module_promo_screen_auto_balance_subtitle">Every deposit you make will be supplied to Aave automatically.</string>
   <string name="yield_module_promo_screen_auto_balance_title">Auto-Transfer to Aave</string>
   <string name="yield_module_promo_screen_cash_out_subtitle">Send, swap, or sell your funds instantly, anytime you want.</string>
   <string name="yield_module_promo_screen_cash_out_title">Access your funds anytime</string>
