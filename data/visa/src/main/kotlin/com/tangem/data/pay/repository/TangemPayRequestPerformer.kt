@@ -63,15 +63,6 @@ internal class TangemPayRequestPerformer @Inject constructor(
             )
         }
 
-    suspend fun <T : Any> requestWithPersistedToken(requestBlock: suspend (header: String) -> ApiResponse<T>): T =
-        withContext(dispatchers.io) {
-            performRequest(
-                requestBlock = requestBlock,
-                getTokens = { getAccessTokensIfSaved() ?: error("Cannot get saved access tokens") },
-                refreshTokens = ::refreshAuthTokens,
-            )
-        }
-
     private suspend fun <T : Any> performRequest(
         requestBlock: suspend (header: String) -> ApiResponse<T>,
         getTokens: (suspend () -> VisaAuthTokens),
@@ -128,40 +119,20 @@ internal class TangemPayRequestPerformer @Inject constructor(
     }
 
     private suspend fun getAccessTokens(): VisaAuthTokens {
-        return getAccessTokensIfSaved() ?: fetchTokens()
-    }
-
-    private suspend fun getAccessTokensIfSaved(): VisaAuthTokens? {
-        return tangemPayStorage.getAuthTokens(getCustomerWalletAddress())
-    }
-
-    private suspend fun fetchTokens(): VisaAuthTokens {
-        val wallet = tangemPayWalletsManager.getDefaultWalletForTangemPay()
-        val initialCredentials = authDataSource.produceInitialCredentials(cardId = wallet.cardId)
-            .getOrThrowWithMessage("Can not produce initial data:")
-        tangemPayStorage.storeCustomerWalletAddress(
-            userWalletId = wallet.walletId,
-            customerWalletAddress = initialCredentials.customerWalletAddress,
-        )
-        tangemPayStorage.storeAuthTokens(
-            customerWalletAddress = initialCredentials.customerWalletAddress,
-            tokens = initialCredentials.authTokens,
-        )
-        return initialCredentials.authTokens
+        val walletAddress = getCustomerWalletAddress()
+        val tokens = tangemPayStorage.getAuthTokens(walletAddress) ?: error("Auth tokens are not stored")
+        return tokens
     }
 
     private suspend fun refreshAuthTokens(): VisaAuthTokens {
         val customerWalletAddress = getCustomerWalletAddress()
         val refreshToken = getAccessTokens().refreshToken.value
-        val tokens = authDataSource.refreshAuthTokens(refreshToken).getOrThrowWithMessage("Cannot refresh tokens:")
+        val tokens = authDataSource.refreshAuthTokens(refreshToken)
+            .fold(
+                ifLeft = { error -> error("Cannot refresh tokens: ${error.message}") },
+                ifRight = { it },
+            )
         tangemPayStorage.storeAuthTokens(customerWalletAddress, tokens)
         return tokens
-    }
-
-    private fun <A : Throwable, B> Either<A, B>.getOrThrowWithMessage(message: String): B {
-        return this.fold(
-            ifLeft = { error -> throw IllegalStateException("$message ${error.message}") },
-            ifRight = { it },
-        )
     }
 }
