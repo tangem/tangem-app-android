@@ -20,6 +20,7 @@ import com.tangem.domain.models.account.AccountId
 import com.tangem.features.account.ArchivedAccountListComponent
 import com.tangem.features.account.archived.entity.AccountArchivedUM
 import com.tangem.features.account.archived.entity.AccountArchivedUMBuilder
+import com.tangem.features.account.archived.entity.AccountArchivedUMBuilder.Companion.toggleProgress
 import com.tangem.features.account.createedit.error.AccountFeatureError
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
@@ -92,9 +93,12 @@ internal class ArchivedAccountListModel @Inject constructor(
     }
 
     private fun recoverCryptoPortfolio(accountId: AccountId) = modelScope.launch {
-        withContext(dispatchers.default) {
+        _uiState.update { it.toggleProgress(accountId, isLoading = true) }
+        val result = withContext(dispatchers.default) {
             recoverCryptoPortfolioUseCase(accountId)
         }
+        _uiState.update { it.toggleProgress(accountId, isLoading = false) }
+        result
             .onLeft(::handleRecoverError)
             .onRight {
                 showSuccessRecoverMessage()
