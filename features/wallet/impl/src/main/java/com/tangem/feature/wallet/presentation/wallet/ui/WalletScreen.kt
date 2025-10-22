@@ -69,6 +69,7 @@ import com.tangem.core.ui.utils.moveTo
 import com.tangem.core.ui.utils.toPx
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.preview.WalletScreenPreviewData.accountScreenState
+import com.tangem.feature.wallet.presentation.common.preview.WalletScreenPreviewData.accountScreenWithEmptyTokensState
 import com.tangem.feature.wallet.presentation.common.preview.WalletScreenPreviewData.walletScreenState
 import com.tangem.feature.wallet.presentation.wallet.state.model.*
 import com.tangem.feature.wallet.presentation.wallet.state.model.holder.TxHistoryStateHolder
@@ -753,6 +754,7 @@ private class WalletScreenPreviewProvider : PreviewParameterProvider<WalletScree
             walletScreenState,
             walletScreenState.copy(selectedWalletIndex = 1),
             accountScreenState.copy(selectedWalletIndex = 1),
+            accountScreenWithEmptyTokensState.copy(selectedWalletIndex = 1),
         )
 }
 // endregion
