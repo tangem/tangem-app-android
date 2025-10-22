@@ -48,11 +48,13 @@ import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @Suppress("LongParameterList", "LargeClass")
 @ModelScoped
 internal class WalletSettingsModel @Inject constructor(
@@ -128,11 +130,11 @@ internal class WalletSettingsModel @Inject constructor(
         }
 
         fun combineUI(wallet: UserWallet) = combine(
-            getWalletNFTEnabledUseCase.invoke(params.userWalletId),
-            getWalletNotificationsEnabledUseCase(params.userWalletId),
-            isUpgradeWalletNotificationEnabledUseCase(params.userWalletId),
-            walletCardItemDelegate.cardItemFlow(wallet),
-            accountItemsDelegate.loadAccount(),
+            flow = getWalletNFTEnabledUseCase.invoke(params.userWalletId),
+            flow2 = getWalletNotificationsEnabledUseCase(params.userWalletId),
+            flow3 = isUpgradeWalletNotificationEnabledUseCase(params.userWalletId),
+            flow4 = walletCardItemDelegate.cardItemFlow(wallet),
+            flow5 = accountItemsDelegate.loadAccount(),
         ) { nftEnabled, notificationsEnabled, isUpgradeNotificationEnabled, cardItem, accountList ->
             val isWalletBackedUp = when (wallet) {
                 is UserWallet.Hot -> wallet.backedUp
@@ -145,7 +147,6 @@ internal class WalletSettingsModel @Inject constructor(
                         cardItem = cardItem,
                         isNFTEnabled = nftEnabled,
                         isNotificationsEnabled = notificationsEnabled,
-                        isNotificationsFeatureEnabled = true,
                         isNotificationsPermissionGranted = isNotificationsPermissionGranted(),
                         isUpgradeNotificationEnabled = isUpgradeNotificationEnabled,
                         accountList = accountList,
@@ -180,7 +181,6 @@ internal class WalletSettingsModel @Inject constructor(
         userWallet: UserWallet,
         cardItem: WalletSettingsItemUM.CardBlock,
         isNFTEnabled: Boolean,
-        isNotificationsFeatureEnabled: Boolean,
         isNotificationsEnabled: Boolean,
         isNotificationsPermissionGranted: Boolean,
         isUpgradeNotificationEnabled: Boolean,
@@ -202,7 +202,11 @@ internal class WalletSettingsModel @Inject constructor(
                 is UserWallet.Cold -> userWallet.scanResponse.card.backupStatus == CardDTO.BackupStatus.NoBackup
                 is UserWallet.Hot -> false
             },
-            isManageTokensAvailable = !accountsFeatureEnabled && isMultiCurrency,
+            isManageTokensAvailable = if (accountsFeatureEnabled) {
+                isMultiCurrency && accountList.count { it is WalletSettingsAccountsUM.Account } == 0
+            } else {
+                isMultiCurrency
+            },
             isNFTFeatureEnabled = isMultiCurrency,
             isNFTEnabled = isNFTEnabled,
             onCheckedNFTChange = ::onCheckedNFTChange,
@@ -217,7 +221,6 @@ internal class WalletSettingsModel @Inject constructor(
             },
             onReferralClick = { onReferralClick(userWallet) },
             isNotificationsEnabled = isNotificationsEnabled,
-            isNotificationsFeatureEnabled = isNotificationsFeatureEnabled,
             isNotificationsPermissionGranted = isNotificationsPermissionGranted,
             onCheckedNotificationsChanged = ::onCheckedNotificationsChange,
             onNotificationsDescriptionClick = ::onNotificationsDescriptionClick,
