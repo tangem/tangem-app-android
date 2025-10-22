@@ -644,15 +644,15 @@ class DefaultAccountsCRUDRepositoryTest {
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    inner class GetTotalAccountsCountSync {
+    inner class GetTotalActiveAccountsCountSync {
 
         @Test
-        fun `getTotalAccountsCountSync returns None if account list response is null`() = runTest {
+        fun `getTotalActiveAccountsCountSync returns None if account list response is null`() = runTest {
             // Arrange
             accountsResponseStoreFlow.value = null
 
             // Act
-            val actual = repository.getTotalAccountsCountSync(userWalletId)
+            val actual = repository.getTotalActiveAccountsCountSync(userWalletId)
 
             // Assert
             Truth.assertThat(actual).isEqualTo(None)
@@ -664,20 +664,22 @@ class DefaultAccountsCRUDRepositoryTest {
         }
 
         @Test
-        fun `getTotalAccountsCountSync returns Some with totalAccounts when response is valid`() = runTest {
+        fun `getTotalActiveAccountsCountSync returns Some with totalAccounts when response is valid`() = runTest {
             // Arrange
             val totalAccounts = 5
-            val response = mockk<GetWalletAccountsResponse> {
-                every { this@mockk.wallet.totalAccounts } returns totalAccounts
+            val response = createGetWalletAccountsResponse(userWalletId).let {
+                it.copy(
+                    wallet = it.wallet.copy(totalAccounts = totalAccounts),
+                )
             }
 
             accountsResponseStoreFlow.value = response
 
             // Act
-            val actual = repository.getTotalAccountsCountSync(userWalletId)
+            val actual = repository.getTotalActiveAccountsCountSync(userWalletId)
 
             // Assert
-            val expected = totalAccounts.toOption()
+            val expected = 1.toOption()
             Truth.assertThat(actual).isEqualTo(expected)
 
             verifyOrder {
@@ -689,15 +691,15 @@ class DefaultAccountsCRUDRepositoryTest {
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    inner class GetTotalAccountsCount {
+    inner class GetTotalActiveAccountsCount {
 
         @Test
-        fun `getTotalAccountsCount emits 0 when account list response is null`() = runTest {
+        fun `getTotalActiveAccountsCount emits 0 when account list response is null`() = runTest {
             // Arrange
             accountsResponseStoreFlow.value = null
 
             // Act
-            val flow = repository.getTotalAccountsCount(userWalletId)
+            val flow = repository.getTotalActiveAccountsCount(userWalletId)
             val actual = getEmittedValues(flow)
 
             // Assert
@@ -710,21 +712,23 @@ class DefaultAccountsCRUDRepositoryTest {
         }
 
         @Test
-        fun `getTotalAccountsCount emits correct value when response is valid`() = runTest {
+        fun `getTotalActiveAccountsCount emits correct value when response is valid`() = runTest {
             // Arrange
             val totalAccounts = 7
-            val response = mockk<GetWalletAccountsResponse> {
-                every { this@mockk.wallet.totalAccounts } returns totalAccounts
+            val response = createGetWalletAccountsResponse(userWalletId).let {
+                it.copy(
+                    wallet = it.wallet.copy(totalAccounts = totalAccounts),
+                )
             }
 
             accountsResponseStoreFlow.value = response
 
             // Act
-            val flow = repository.getTotalAccountsCount(userWalletId)
+            val flow = repository.getTotalActiveAccountsCount(userWalletId)
             val actual = getEmittedValues(flow)
 
             // Assert
-            Truth.assertThat(actual).containsExactly(totalAccounts.toOption())
+            Truth.assertThat(actual).containsExactly(1.toOption())
             verifyOrder {
                 accountsResponseStoreFactory.create(userWalletId)
                 accountsResponseStore.data
