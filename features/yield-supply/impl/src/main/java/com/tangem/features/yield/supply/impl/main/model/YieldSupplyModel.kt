@@ -15,6 +15,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.currency.yieldSupplyNotAllAmountSupplied
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.yield.supply.YieldSupplyStatus
@@ -238,28 +239,29 @@ internal class YieldSupplyModel @Inject constructor(
                 }
             }
             yieldSupplyStatus?.isActive == true -> {
-                val cryptoCurrencyToken = cryptoCurrency as? CryptoCurrency.Token ?: return
-                if (!yieldSupplyStatus.isAllowedToSpend) {
-                    analyticsEventsHandler.send(
-                        YieldSupplyAnalytics.NoticeApproveNeeded(
-                            token = cryptoCurrency.symbol,
-                            blockchain = cryptoCurrency.network.name,
-                        ),
-                    )
-                }
                 loadActiveState(
-                    cryptoCurrencyToken = cryptoCurrencyToken,
+                    cryptoCurrencyStatus = cryptoCurrencyStatus,
                     yieldSupplyStatus = yieldSupplyStatus,
                 )
             }
-
             else -> {
                 loadTokenStatus()
             }
         }
     }
 
-    private fun loadActiveState(cryptoCurrencyToken: CryptoCurrency.Token, yieldSupplyStatus: YieldSupplyStatus) {
+    private fun loadActiveState(cryptoCurrencyStatus: CryptoCurrencyStatus, yieldSupplyStatus: YieldSupplyStatus) {
+        val cryptoCurrencyToken = cryptoCurrency as? CryptoCurrency.Token ?: return
+        val showWarningIcon = !yieldSupplyStatus.isAllowedToSpend ||
+            cryptoCurrencyStatus.yieldSupplyNotAllAmountSupplied()
+        if (!yieldSupplyStatus.isAllowedToSpend) {
+            analyticsEventsHandler.send(
+                YieldSupplyAnalytics.NoticeApproveNeeded(
+                    token = cryptoCurrency.symbol,
+                    blockchain = cryptoCurrency.network.name,
+                ),
+            )
+        }
         modelScope.launch(dispatchers.default) {
             yieldSupplyGetTokenStatusUseCase(cryptoCurrencyToken)
                 .onRight { tokenStatus ->
@@ -278,7 +280,7 @@ internal class YieldSupplyModel @Inject constructor(
                                 stringReference(" ${tokenStatus.apy}%"),
                             ),
                             onClick = ::onActiveClick,
-                            isAllowedToSpend = yieldSupplyStatus.isAllowedToSpend,
+                            showWarningIcon = showWarningIcon,
                             apy = tokenStatus.apy.toString(),
                         )
                     }
@@ -294,7 +296,7 @@ internal class YieldSupplyModel @Inject constructor(
                             ),
                             rewardsApy = TextReference.EMPTY,
                             onClick = ::onActiveClick,
-                            isAllowedToSpend = yieldSupplyStatus.isAllowedToSpend,
+                            showWarningIcon = showWarningIcon,
                             apy = "",
                         )
                     }
