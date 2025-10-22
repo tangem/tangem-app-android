@@ -41,6 +41,8 @@ fun PortfolioSelectRow(state: PortfolioSelectUM, modifier: Modifier = Modifier) 
         Text(
             modifier = Modifier.weight(1f),
             text = stringResourceSafe(leftText),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
             style = TangemTheme.typography.body1,
             color = TangemTheme.colors.text.primary1,
         )
