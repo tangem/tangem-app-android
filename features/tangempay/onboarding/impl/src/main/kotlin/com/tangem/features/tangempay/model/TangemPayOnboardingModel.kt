@@ -12,6 +12,7 @@ import com.tangem.features.tangempay.ui.TangemPayOnboardingScreenState
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -27,7 +28,7 @@ internal class TangemPayOnboardingModel @Inject constructor(
     private val params = paramsContainer.require<TangemPayOnboardingComponent.Params>()
 
     val screenState: StateFlow<TangemPayOnboardingScreenState>
-        field = MutableStateFlow(TangemPayOnboardingScreenState())
+        field = MutableStateFlow(getInitialState())
 
     init {
         modelScope.launch {
@@ -37,19 +38,25 @@ internal class TangemPayOnboardingModel @Inject constructor(
                 }
                 is TangemPayOnboardingComponent.Params.Deeplink -> {
                     repository.validateDeeplink(params.deeplink)
-                        .onRight { isValid -> if (isValid) checkCustomerInfo() }
+                        .onRight { isValid -> if (isValid) showOnboarding() }
                         .onLeft { back() }
                 }
             }
         }
     }
 
-    fun openKyc() {
+    private fun openKyc() {
         router.replaceAll(AppRoute.Wallet, AppRoute.Kyc)
     }
 
-    fun back() {
+    private fun back() {
         router.pop()
+    }
+
+    private fun showOnboarding() {
+        screenState.update {
+            it.copy(fullScreenLoading = false)
+        }
     }
 
     private suspend fun checkCustomerInfo() {
@@ -67,5 +74,14 @@ internal class TangemPayOnboardingModel @Inject constructor(
                 }
             }
             .onLeft { back() }
+    }
+
+    private fun getInitialState(): TangemPayOnboardingScreenState {
+        return TangemPayOnboardingScreenState(
+            fullScreenLoading = true,
+            buttonLoading = false,
+            onGetCardClick = ::openKyc,
+            onBackClick = ::back,
+        )
     }
 }
