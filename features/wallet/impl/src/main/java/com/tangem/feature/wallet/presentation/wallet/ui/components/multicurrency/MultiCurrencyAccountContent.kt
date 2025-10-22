@@ -58,6 +58,25 @@ internal fun LazyListScope.portfolioTokensList(
         selectedWalletChanged = selectedWalletChanged,
     )
     if (!isExpanded) return
+    if (tokens.isEmpty()) {
+        item(
+            key = "$NON_CONTENT_TOKENS_LIST_KEY account-${portfolio.id}",
+            contentType = "$NON_CONTENT_TOKENS_LIST_KEY account-${portfolio.id}",
+        ) {
+            NonContentItemContent(
+                modifier = Modifier
+                    .animateItem()
+                    .roundedShapeItemDecoration(
+                        radius = TangemTheme.dimens.radius14,
+                        currentIndex = 1,
+                        lastIndex = 1,
+                        backgroundColor = TangemTheme.colors.background.primary,
+                    )
+                    .padding(vertical = TangemTheme.dimens.spacing28),
+            )
+        }
+        return
+    }
     itemsIndexed(
         items = tokens,
         key = { _, item -> item.id },
@@ -74,6 +93,7 @@ internal fun LazyListScope.portfolioTokensList(
                     .testModifier(indexWithHeader)
                     .animateItem()
                     .roundedShapeItemDecoration(
+                        radius = TangemTheme.dimens.radius14,
                         currentIndex = indexWithHeader,
                         lastIndex = lastIndex,
                         backgroundColor = TangemTheme.colors.background.primary,
@@ -101,6 +121,12 @@ private fun LazyListScope.portfolioItem(
     val tokens = portfolio.tokens
     val isExpanded = portfolio.isExpanded
 
+    val lastIndex = when {
+        isExpanded && tokens.isEmpty() -> 1
+        isExpanded -> tokens.lastIndex.inc()
+        else -> 0
+    }
+
     item(
         key = "account-${portfolio.id}-isExpanded$isExpanded",
         contentType = "account-isExpanded$isExpanded",
@@ -110,27 +136,24 @@ private fun LazyListScope.portfolioItem(
             .animateItem()
             .roundedShapeItemDecoration(
                 currentIndex = 0,
-                lastIndex = if (isExpanded) tokens.lastIndex.inc() else 0,
+                radius = TangemTheme.dimens.radius14,
+                lastIndex = lastIndex,
                 backgroundColor = TangemTheme.colors.background.primary,
             )
         val isPreview = LocalInspectionMode.current
         val appear = remember {
-            MutableTransitionState(selectedWalletChanged || isPreview).apply { targetState = true }
+            MutableTransitionState(selectedWalletChanged || isPreview || tokens.isEmpty())
+                .apply { targetState = true }
         }
         if (isExpanded) {
             SlideInItemVisibility(
                 modifier = anchorModifier,
                 visibleState = appear,
             ) {
-                val modifier = if (portfolio.tokens.isEmpty()) {
-                    Modifier.padding(vertical = 8.dp)
-                } else {
-                    Modifier.padding(top = 8.dp)
-                }
                 PortfolioListItem(
                     state = portfolio,
                     isBalanceHidden = isBalanceHidden,
-                    modifier = modifier,
+                    modifier = Modifier.padding(vertical = 8.dp),
                 )
             }
         } else {
