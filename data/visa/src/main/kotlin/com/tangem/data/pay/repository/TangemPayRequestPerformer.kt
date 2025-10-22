@@ -2,9 +2,7 @@ package com.tangem.data.pay.repository
 
 import arrow.core.Either
 import com.squareup.moshi.Moshi
-import com.tangem.blockchain.common.Blockchain
 import com.tangem.core.error.UniversalError
-import com.tangem.data.common.network.NetworkFactory
 import com.tangem.data.pay.util.TangemPayErrorConverter
 import com.tangem.data.pay.util.TangemPayWalletsManager
 import com.tangem.datasource.api.common.response.ApiResponse
@@ -14,10 +12,10 @@ import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.local.visa.TangemPayStorage
 import com.tangem.domain.pay.datasource.TangemPayAuthDataSource
 import com.tangem.domain.visa.model.VisaAuthTokens
-import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.domain.wallets.derivations.derivationStyleProvider
+import com.tangem.domain.visa.model.getAuthHeader
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import timber.log.Timber
@@ -30,11 +28,9 @@ internal class TangemPayRequestPerformer @Inject constructor(
     private val tangemPayStorage: TangemPayStorage,
     private val authDataSource: TangemPayAuthDataSource,
     private val tangemPayWalletsManager: TangemPayWalletsManager,
-    private val walletManagersFacade: WalletManagersFacade,
-    private val networkFactory: NetworkFactory,
 ) {
 
-    private var customerWalletAddress: String? = null
+    private val customerWalletAddress = MutableStateFlow<String?>(null)
 
     private val refreshTokensMutex = Mutex()
     private var refreshTokensJob: Deferred<VisaAuthTokens>? = null
@@ -81,7 +77,9 @@ internal class TangemPayRequestPerformer @Inject constructor(
         getTokens: (suspend () -> VisaAuthTokens),
         refreshTokens: (suspend () -> VisaAuthTokens)? = null,
     ): T = runCatching {
-        requestBlock("Bearer ${getTokens().accessToken}").getOrThrow()
+        val tokens = getTokens()
+        val header = tokens.getAuthHeader()
+        requestBlock(header).getOrThrow()
     }.getOrElse { error ->
         val unauthorizedCode = ApiResponseError.HttpException.Code.UNAUTHORIZED
         if (error is ApiResponseError.HttpException && refreshTokens != null && error.code == unauthorizedCode) {
@@ -116,7 +114,18 @@ internal class TangemPayRequestPerformer @Inject constructor(
         return result
     }
 
-    suspend fun getCustomerWalletAddress(): String = customerWalletAddress ?: fetchAuthInputData().address
+    suspend fun getCustomerWalletAddress(): String {
+        val existingAddress = customerWalletAddress.value
+        if (existingAddress != null) {
+            return existingAddress
+        }
+        val storedAddress = tangemPayStorage.getCustomerWalletAddress(
+            userWalletId = tangemPayWalletsManager.getDefaultWalletForTangemPay().walletId,
+        ) ?: error("Can not find customer address")
+
+        customerWalletAddress.value = storedAddress
+        return storedAddress
+    }
 
     private suspend fun getAccessTokens(): VisaAuthTokens {
         return getAccessTokensIfSaved() ?: fetchTokens()
@@ -126,42 +135,33 @@ internal class TangemPayRequestPerformer @Inject constructor(
         return tangemPayStorage.getAuthTokens(getCustomerWalletAddress())
     }
 
-    private suspend fun fetchAuthInputData(): AuthInputData {
-        val wallet = tangemPayWalletsManager.getDefaultWalletForTangemPay()
-
-        val network = networkFactory.create(
-            blockchain = Blockchain.Polygon,
-            extraDerivationPath = null,
-            derivationStyleProvider = wallet.derivationStyleProvider,
-            canHandleTokens = true,
-        ) ?: error("Cannot create network")
-
-        val address = walletManagersFacade.getDefaultAddress(wallet.walletId, network)
-            ?: error("Cannot get polygon address")
-
-        customerWalletAddress = address
-
-        return AuthInputData(address, wallet.cardId)
-    }
-
     private suspend fun fetchTokens(): VisaAuthTokens {
-        val inputData = fetchAuthInputData()
-        val tokens = authDataSource.generateNewAuthTokens(inputData.address, inputData.cardId)
-            .getOrNull() ?: error("Cannot fetch tokens")
-        tangemPayStorage.storeAuthTokens(inputData.address, tokens)
-        return tokens
+        val wallet = tangemPayWalletsManager.getDefaultWalletForTangemPay()
+        val initialCredentials = authDataSource.produceInitialCredentials(cardId = wallet.cardId)
+            .getOrThrowWithMessage("Can not produce initial data:")
+        tangemPayStorage.storeCustomerWalletAddress(
+            userWalletId = wallet.walletId,
+            customerWalletAddress = initialCredentials.customerWalletAddress,
+        )
+        tangemPayStorage.storeAuthTokens(
+            customerWalletAddress = initialCredentials.customerWalletAddress,
+            tokens = initialCredentials.authTokens,
+        )
+        return initialCredentials.authTokens
     }
 
     private suspend fun refreshAuthTokens(): VisaAuthTokens {
         val customerWalletAddress = getCustomerWalletAddress()
         val refreshToken = getAccessTokens().refreshToken.value
-        val tokens = authDataSource.refreshAuthTokens(refreshToken).getOrNull() ?: error("Cannot refresh tokens")
+        val tokens = authDataSource.refreshAuthTokens(refreshToken).getOrThrowWithMessage("Cannot refresh tokens:")
         tangemPayStorage.storeAuthTokens(customerWalletAddress, tokens)
         return tokens
     }
-}
 
-internal data class AuthInputData(
-    val address: String,
-    val cardId: String,
-)
+    private fun <A : Throwable, B> Either<A, B>.getOrThrowWithMessage(message: String): B {
+        return this.fold(
+            ifLeft = { error -> throw IllegalStateException("$message ${error.message}") },
+            ifRight = { it },
+        )
+    }
+}
