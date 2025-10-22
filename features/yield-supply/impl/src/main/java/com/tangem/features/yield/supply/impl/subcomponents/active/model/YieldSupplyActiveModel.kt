@@ -12,7 +12,6 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.crypto
-import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -25,11 +24,13 @@ import com.tangem.domain.yield.supply.usecase.YieldSupplyGetCurrentFeeUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetMaxFeeUseCase
 import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
 import com.tangem.features.yield.supply.impl.R
-import com.tangem.features.yield.supply.impl.common.formatter.YieldSupplyAmountFormatter
 import com.tangem.features.yield.supply.impl.subcomponents.active.YieldSupplyActiveComponent
 import com.tangem.features.yield.supply.impl.subcomponents.active.entity.YieldSupplyActiveContentUM
+import com.tangem.features.yield.supply.impl.subcomponents.active.model.transformers.YieldSupplyActiveMinAmountTransformer
+import com.tangem.features.yield.supply.impl.subcomponents.active.model.transformers.YieldSupplyActiveFeeContentTransformer
 import com.tangem.utils.StringsSigns.DASH_SIGN
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.transformer.update
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
@@ -75,6 +76,7 @@ internal class YieldSupplyActiveModel @Inject constructor(
                 currentFee = null,
                 feeDescription = null,
                 isHighFee = false,
+                minFeeDescription = null,
             ),
         )
 
@@ -202,20 +204,19 @@ internal class YieldSupplyActiveModel @Inject constructor(
                 params.userWallet,
                 cryptoCurrencyStatusFlow.value,
             ).onRight { minAmount ->
-                val minAmountTextReference = YieldSupplyAmountFormatter(
-                    cryptoCurrencyStatusFlow.value.currency,
-                    appCurrency,
-                ).invoke(
-                    feeValue = minAmount,
-                    fiatRate = cryptoCurrencyStatusFlow.value.value.fiatRate,
-                    showCrypto = false,
+                uiState.update(
+                    YieldSupplyActiveMinAmountTransformer(
+                        cryptoCurrencyStatus = cryptoCurrencyStatusFlow.value,
+                        appCurrency = appCurrency,
+                        minAmount = minAmount,
+                    ),
                 )
-                uiState.update {
-                    it.copy(minAmount = minAmountTextReference)
-                }
             }.onLeft {
                 uiState.update {
-                    it.copy(minAmount = TextReference.Str(DASH_SIGN))
+                    it.copy(
+                        minAmount = TextReference.Str(DASH_SIGN),
+                        feeDescription = null,
+                    )
                 }
             }
         }
@@ -235,33 +236,23 @@ internal class YieldSupplyActiveModel @Inject constructor(
                 cryptoCurrencyStatus = cryptoStatus,
             ).getOrNull()
 
-            val currentFeeText = currentFee?.let {
-                YieldSupplyAmountFormatter(
-                    cryptoStatus.currency,
-                    appCurrency,
-                ).invoke(
-                    feeValue = it,
-                    fiatRate = cryptoStatus.value.fiatRate,
-                    showCrypto = false,
+            if (currentFee != null && maxFee != null) {
+                uiState.update(
+                    YieldSupplyActiveFeeContentTransformer(
+                        cryptoCurrencyStatus = cryptoStatus,
+                        appCurrency = appCurrency,
+                        feeValue = currentFee,
+                        maxNetworkFee = maxFee,
+                    ),
                 )
-            }
-
-            val isHighFee = if (currentFee != null && maxFee != null) currentFee > maxFee else false
-
-            val maxFiatFee = maxFee?.multiply(cryptoStatus.value.fiatRate)
-                .format { fiat(appCurrency.code, appCurrency.symbol) }
-            val feeDescription = if (isHighFee) {
-                resourceReference(R.string.yield_module_earn_sheet_high_fee_description, wrappedList(maxFiatFee))
             } else {
-                resourceReference(R.string.yield_module_earn_sheet_fee_description, wrappedList(maxFiatFee))
-            }
-
-            uiState.update {
-                it.copy(
-                    currentFee = currentFeeText ?: stringReference(DASH_SIGN),
-                    isHighFee = isHighFee,
-                    feeDescription = feeDescription,
-                )
+                uiState.update {
+                    it.copy(
+                        currentFee = stringReference(DASH_SIGN),
+                        feeDescription = null,
+                        isHighFee = false,
+                    )
+                }
             }
         }
     }
