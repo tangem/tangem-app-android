@@ -1,7 +1,6 @@
 package com.tangem.features.tangempay.model
 
 import androidx.compose.runtime.Stable
-import androidx.compose.ui.graphics.toArgb
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.tangem.core.decompose.di.ModelScoped
@@ -13,9 +12,7 @@ import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig.ShowRefreshState
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.message.SnackbarMessage
-import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.domain.models.TokenReceiveConfig
-import com.tangem.domain.models.TokenReceiveType
 import com.tangem.domain.pay.DataForReceiveFactory
 import com.tangem.domain.pay.repository.CardDetailsRepository
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
@@ -37,12 +34,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-
-/**
- * Custom token name and icon url. Will be used only for F&F.
- */
-private const val TOKEN_NAME = "USDC"
-private const val TOKEN_ICON_URL = "https://s3.eu-central-1.amazonaws.com/tangem.api/coins/large/usd-coin.png"
 
 @Suppress("LongParameterList")
 @Stable
@@ -104,12 +95,6 @@ internal class TangemPayDetailsModel @Inject constructor(
                         userWalletId = it.walletId,
                         showMemoDisclaimer = false,
                         receiveAddress = it.receiveAddress,
-                        type = TokenReceiveType.Custom(
-                            tokenName = TOKEN_NAME,
-                            tokenIconUrl = TOKEN_ICON_URL,
-                            fallbackTint = TangemColorPalette.Black.toArgb(),
-                            fallbackBackground = TangemColorPalette.Meadow.toArgb(),
-                        ),
                     )
                     bottomSheetNavigation.activate(TangemPayDetailsNavigation.Receive(config))
                 }
