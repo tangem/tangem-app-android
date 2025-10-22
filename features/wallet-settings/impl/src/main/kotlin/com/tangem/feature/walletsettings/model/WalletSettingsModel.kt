@@ -6,6 +6,7 @@ import arrow.core.getOrElse
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.AppRoute.ManageTokens.Source
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam.OnOffState.Off
 import com.tangem.core.analytics.models.AnalyticsParam.OnOffState.On
@@ -26,6 +27,8 @@ import com.tangem.core.ui.message.bottomSheetMessage
 import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.demo.IsDemoCardUseCase
+import com.tangem.domain.models.PortfolioId
+import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
@@ -220,6 +223,21 @@ internal class WalletSettingsModel @Inject constructor(
                 }
             },
             onReferralClick = { onReferralClick(userWallet) },
+            onManageTokensClick = {
+                analyticsEventHandler.send(Settings.ButtonManageTokens)
+                router.push(
+                    AppRoute.ManageTokens(
+                        source = Source.SETTINGS,
+                        portfolioId = if (accountsFeatureEnabled) {
+                            PortfolioId(
+                                accountId = AccountId.forMainCryptoPortfolio(userWalletId = userWallet.walletId),
+                            )
+                        } else {
+                            PortfolioId(userWalletId = userWallet.walletId)
+                        },
+                    ),
+                )
+            },
             isNotificationsEnabled = isNotificationsEnabled,
             isNotificationsPermissionGranted = isNotificationsPermissionGranted,
             onCheckedNotificationsChanged = ::onCheckedNotificationsChange,
