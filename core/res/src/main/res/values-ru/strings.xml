@@ -1569,6 +1569,7 @@
   <string name="xtz_withdrawal_message_ignore">Нет, отправить все</string>
   <string name="xtz_withdrawal_message_reduce">Уменьшить на %s XTZ</string>
   <string name="xtz_withdrawal_message_warning">Чтобы не платить повышенную комиссию при следующем пополнении кошелька, уменьшите сумму на %s XTZ</string>
+  <string name="yield_module_alert_description">Ваши средства сейчас размещены в протоколе AAVE, но вы можете управлять ими в любое время.</string>
   <string name="yield_module_alert_title">Ваш %s внесён в Aave</string>
   <string name="yield_module_approve_needed_notification_cta">Выдать разрешение</string>
   <string name="yield_module_approve_needed_notification_description">Что-то пошло не так с вашим предыдущим разрешением, поэтому требуется новое. Выберите, как хотите продолжить.</string>
@@ -1592,7 +1593,7 @@
   <string name="yield_module_fee_policy_sheet_description">Все следующие пополнения %s автоматически поступят в Aave с удержанием комиссии за транзакцию.</string>
   <string name="yield_module_fee_policy_sheet_max_fee_note">Если комиссия сети превысит максимальный лимит, транзакция не будет выполнена до тех пор, пока комиссия не снизится. Вы сможете изменить этот лимит позже.</string>
   <string name="yield_module_fee_policy_sheet_max_fee_title">Максимальная комиссия</string>
-  <string name="yield_module_fee_policy_sheet_min_amount_note">Комиссия за транзакцию должна быть ниже 4% от суммы депозита. Tangem переведёт средства в Aave, как только это условие будет выполнено.</string>
+  <string name="yield_module_fee_policy_sheet_min_amount_note">Это минимальный депозит, который можно отправить в Aave. Чтобы депозиты оставались прибыльными, мы не обрабатываем их, когда комиссия сети превышает 4% от суммы.</string>
   <string name="yield_module_fee_policy_sheet_min_amount_title">Минимальный депозит</string>
   <string name="yield_module_fee_policy_sheet_title">Политика комиссий</string>
   <string name="yield_module_fee_policy_tangem_service_fee_title">Tangem взимает комиссию за обслуживание в размере 3% от полученного дохода.</string>
@@ -1602,7 +1603,7 @@
   <string name="yield_module_network_fee_unreachable_notification_description">Проверьте ваше интернет соединение</string>
   <string name="yield_module_network_fee_unreachable_notification_title">Информация о комиссии недоступна</string>
   <string name="yield_module_promo_screen_auto_balance_subtitle">Каждое пополнение вашего адреса автоматически будет отправляться в Aave.</string>
-  <string name="yield_module_promo_screen_auto_balance_title">Ваш баланс работает автоматически</string>
+  <string name="yield_module_promo_screen_auto_balance_title">Автоперевод в AAVE</string>
   <string name="yield_module_promo_screen_cash_out_subtitle">Отправляйте, обменивайте или продавайте свои средства мгновенно, когда захотите.</string>
   <string name="yield_module_promo_screen_cash_out_title">Мгновенный вывод средств</string>
   <string name="yield_module_promo_screen_how_it_works_button_title">Как это работает?</string>
