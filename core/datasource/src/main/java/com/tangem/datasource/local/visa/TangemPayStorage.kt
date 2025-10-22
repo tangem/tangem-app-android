@@ -1,8 +1,12 @@
 package com.tangem.datasource.local.visa
 
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.visa.model.VisaAuthTokens
 
 interface TangemPayStorage {
+
+    suspend fun storeCustomerWalletAddress(userWalletId: UserWalletId, customerWalletAddress: String)
+    suspend fun getCustomerWalletAddress(userWalletId: UserWalletId): String?
 
     suspend fun storeAuthTokens(customerWalletAddress: String, tokens: VisaAuthTokens)
 
@@ -14,5 +18,5 @@ interface TangemPayStorage {
 
     suspend fun clearOrderId(customerWalletAddress: String)
 
-    suspend fun clearAll(customerWalletAddress: String)
+    suspend fun clearAll(userWalletId: UserWalletId, customerWalletAddress: String)
 }
