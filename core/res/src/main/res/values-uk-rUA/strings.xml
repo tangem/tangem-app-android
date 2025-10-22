@@ -1430,4 +1430,5 @@
   <string name="xtz_withdrawal_message_ignore">Ні, відправити все</string>
   <string name="xtz_withdrawal_message_reduce">Зменшити на %s XTZ</string>
   <string name="xtz_withdrawal_message_warning">Щоб не платити підвищену комісію при наступному поповненні гаманця, зменште суму на %s XTZ</string>
+  <string name="yield_module_fee_policy_sheet_min_amount_note">Це найменший депозит, який можна надіслати в Aave. Щоб депозити залишалися прибутковими, ми не обробляємо їх, коли комісія мережі перевищує 4% від суми.</string>
 </resources>
