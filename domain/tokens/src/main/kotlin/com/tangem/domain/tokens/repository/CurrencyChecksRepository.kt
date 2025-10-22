@@ -61,11 +61,4 @@ interface CurrencyChecksRepository {
         currencyStatus: CryptoCurrencyStatus,
         balanceAfterTransaction: BigDecimal,
     ): CryptoCurrencyWarning.Rent?
-
-    /**
-     * Returns the YieldSupplied protocol balance in Aave for the given `cryptoCurrency`.
-     * This represents the amount supplied to the protocol for the specified `userWalletId`
-     * (e.g., aTokens balance). Returns null if not applicable or unknown.
-     */
-    suspend fun getProtocolBalance(userWalletId: UserWalletId, cryptoCurrencyStatus: CryptoCurrencyStatus): BigDecimal?
 }
