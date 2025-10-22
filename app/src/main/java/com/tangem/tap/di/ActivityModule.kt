@@ -1,6 +1,5 @@
 package com.tangem.tap.di
 
-import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.domain.card.ScanCardUseCase
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.exchange.RampStateManager
@@ -48,7 +47,6 @@ internal object ActivityModule {
         appStateHolder: AppStateHolder,
         expressServiceFetcher: ExpressServiceFetcher,
         currenciesRepository: CurrenciesRepository,
-        excludedBlockchains: ExcludedBlockchains,
         dispatchers: CoroutineDispatcherProvider,
     ): RampStateManager {
         return DefaultRampManager(
@@ -56,7 +54,6 @@ internal object ActivityModule {
             expressServiceFetcher = expressServiceFetcher,
             currenciesRepository = currenciesRepository,
             dispatchers = dispatchers,
-            excludedBlockchains = excludedBlockchains,
         )
     }
 
