@@ -91,12 +91,14 @@ internal fun YieldSupplyActiveContent(
             )
         }
 
-        Text(
-            modifier = Modifier.padding(horizontal = 12.dp),
-            text = stringResourceSafe(R.string.yield_module_fee_policy_sheet_min_amount_note),
-            style = TangemTheme.typography.caption2,
-            color = TangemTheme.colors.text.tertiary,
-        )
+        AnimatedVisibility(state.minFeeDescription != null) {
+            Text(
+                modifier = Modifier.padding(horizontal = 12.dp),
+                text = state.minFeeDescription?.resolveReference().orEmpty(),
+                style = TangemTheme.typography.caption2,
+                color = TangemTheme.colors.text.tertiary,
+            )
+        }
     }
 }
 
@@ -376,6 +378,10 @@ private class YieldSupplyActiveBottomSheetPreviewProvider : PreviewParameterProv
                 ),
                 apy = stringReference("5,14%"),
                 isHighFee = true,
+                minFeeDescription = stringReference(
+                    "The network fee is currently too high to execute lending." +
+                        "Funds will be supplied once it drops to \$12 or below. ",
+                ),
             ),
         )
 }
