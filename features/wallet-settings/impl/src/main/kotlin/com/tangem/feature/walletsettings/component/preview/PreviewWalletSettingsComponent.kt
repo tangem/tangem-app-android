@@ -64,7 +64,6 @@ internal class PreviewWalletSettingsComponent : WalletSettingsComponent {
             onReferralClick = {},
             isManageTokensAvailable = true,
             isNotificationsEnabled = true,
-            isNotificationsFeatureEnabled = true,
             onCheckedNotificationsChanged = {},
             onNotificationsDescriptionClick = {},
             isNotificationsPermissionGranted = false,
