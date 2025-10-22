@@ -1,17 +1,17 @@
 package com.tangem.features.yield.supply.impl.subcomponents.startearning.model.transformers
 
 import com.tangem.blockchain.common.TransactionData
-import com.tangem.core.ui.extensions.combinedReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyActionUM
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyFeeUM
-import com.tangem.features.yield.supply.impl.common.formatter.YieldSupplyAmountFormatter
-import com.tangem.utils.StringsSigns.DOT
 import com.tangem.utils.transformer.Transformer
 import kotlinx.collections.immutable.toPersistentList
 import java.math.BigDecimal
@@ -29,30 +29,46 @@ internal class YieldSupplyStartEarningFeeContentTransformer(
 ) : Transformer<YieldSupplyActionUM> {
     override fun transform(prevState: YieldSupplyActionUM): YieldSupplyActionUM {
         val cryptoCurrency = cryptoCurrencyStatus.currency
-        val fiatRate = cryptoCurrencyStatus.value.fiatRate
+        val tokenFiatRate = cryptoCurrencyStatus.value.fiatRate
         val feeFiatRate = feeCryptoCurrencyStatus.value.fiatRate
 
-        val crypto = feeValue.format { crypto(feeCryptoCurrencyStatus.currency) }
-        val fiatFeeValue = feeFiatRate?.let(feeValue::multiply)
+        val feeFiat = feeFiatRate?.let(feeValue::multiply)
+        val feeFiatValueText = feeFiat.format { fiat(appCurrency.code, appCurrency.symbol) }
 
-        val fiat = fiatFeeValue.format { fiat(appCurrency.code, appCurrency.symbol) }
-
-        val tokenCryptoFeeValue = fiatRate?.let { rate ->
-            fiatFeeValue?.divide(rate, cryptoCurrency.decimals, RoundingMode.HALF_UP)
+        val tokenCryptoFee = tokenFiatRate?.let { rate ->
+            feeFiat?.divide(rate, cryptoCurrency.decimals, RoundingMode.HALF_UP)
         }
+        val tokenCryptoFeeValueText = tokenCryptoFee.format { crypto(cryptoCurrency) }
+        val tokenFiatFee = feeFiat // same fiat amount
+        val tokenFiatFeeValueText = tokenFiatFee.format { fiat(appCurrency.code, appCurrency.symbol) }
 
-        val tokenCryptoFee = tokenCryptoFeeValue.format { crypto(cryptoCurrency) }
-
-        val maxCryptoFee = maxNetworkFee.format { crypto(cryptoCurrency) }
-        val maxFiatFeeValue = fiatRate?.let { rate ->
-            maxNetworkFee.divide(rate, cryptoCurrency.decimals, RoundingMode.HALF_UP)
+        val maxFeeCryptoValueText = maxNetworkFee.format { crypto(cryptoCurrency) }
+        val maxFiatFee = tokenFiatRate?.let { rate ->
+            maxNetworkFee.multiply(rate)
         }
-        val maxFiatFee = maxFiatFeeValue.format { fiat(appCurrency.code, appCurrency.symbol) }
+        val maxFiatFeeValueText = maxFiatFee.format { fiat(appCurrency.code, appCurrency.symbol) }
 
-        val minAmountTextReference = YieldSupplyAmountFormatter(
-            cryptoCurrency,
-            appCurrency,
-        ).invoke(minAmount, cryptoCurrencyStatus.value.fiatRate)
+        val minAmountCryptoText = minAmount.format { crypto(cryptoCurrency) }
+        val minAmountFiat = tokenFiatRate?.let(minAmount::multiply)
+        val minAmountFiatText = minAmountFiat.format { fiat(appCurrency.code, appCurrency.symbol) }
+
+        val feeNoteValue = resourceReference(
+            id = R.string.yield_module_fee_policy_sheet_fee_note,
+            formatArgs = wrappedList(
+                tokenFiatFeeValueText,
+                tokenCryptoFeeValueText,
+                maxFiatFeeValueText,
+                maxFeeCryptoValueText,
+            ),
+        )
+
+        val minFeeNoteValue = resourceReference(
+            id = R.string.yield_module_fee_policy_sheet_min_amount_note,
+            formatArgs = wrappedList(
+                minAmountFiatText,
+                minAmountCryptoText,
+            ),
+        )
 
         return if (cryptoCurrencyStatus.value is CryptoCurrencyStatus.Loading) {
             prevState.copy(yieldSupplyFeeUM = YieldSupplyFeeUM.Loading)
@@ -60,22 +76,12 @@ internal class YieldSupplyStartEarningFeeContentTransformer(
             prevState.copy(
                 yieldSupplyFeeUM = YieldSupplyFeeUM.Content(
                     transactionDataList = updatedTransactionList.toPersistentList(),
-                    feeValue = combinedReference(
-                        stringReference(crypto),
-                        stringReference(" $DOT "),
-                        stringReference(fiat),
-                    ),
-                    currentNetworkFeeValue = combinedReference(
-                        stringReference(tokenCryptoFee),
-                        stringReference(" $DOT "),
-                        stringReference(fiat),
-                    ),
-                    maxNetworkFeeValue = combinedReference(
-                        stringReference(maxCryptoFee),
-                        stringReference(" $DOT "),
-                        stringReference(maxFiatFee),
-                    ),
-                    minAmountFeeValue = minAmountTextReference,
+                    feeFiatValue = stringReference(feeFiatValueText),
+                    tokenFeeFiatValue = stringReference(tokenFiatFeeValueText),
+                    maxNetworkFeeFiatValue = stringReference(maxFiatFeeValueText),
+                    minTopUpFiatValue = stringReference(minAmountFiatText),
+                    feeNoteValue = feeNoteValue,
+                    minFeeNoteValue = minFeeNoteValue,
                 ),
             )
         }
