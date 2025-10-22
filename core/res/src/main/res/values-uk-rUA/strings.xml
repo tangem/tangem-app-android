@@ -1086,6 +1086,7 @@
   <string name="story_web3_title">Web 3.0 сумісність</string>
   <string name="sui_not_enough_coin_for_fee_description">Для відправки потрібна вхідна транзакція на суму не менше %1$s</string>
   <string name="sui_not_enough_coin_for_fee_title">Недостатньо коштів</string>
+  <string name="swap_approve_description">Підтверджуючи, ви дозволяєте смартконтракту використовувати ваші токени в майбутніх транзакціях.</string>
   <string name="swap_give_permission_fee_footer">Мережа стягує комісію за схвалення токену за підтвердження, що саме ви дозволяєте використовувати ваш токен для обміну.</string>
   <string name="swap_promo_text">Обмінюйте більше токенів за вигіднішим курсом прямо у своєму гаманці.</string>
   <string name="swap_promo_title">З\'явився новий провайдер обмінів!</string>
@@ -1366,6 +1367,7 @@
   <string name="wc_alert_wrong_card_description">Обрана не вірна картка або кільце</string>
   <string name="wc_alert_wrong_card_title">Схоже, виникла проблема</string>
   <string name="wc_all_dapps_disconnected">Усі dApps відключені</string>
+  <string name="wc_approve_description">Підтверджуючи, ви дозволяєте dApp або смартконтракту використовувати токени в майбутніх транзакціях.</string>
   <string name="wc_common_address">Адреса</string>
   <string name="wc_common_connect">Підключення</string>
   <string name="wc_common_network">Мережа</string>
