@@ -6,6 +6,7 @@ import com.tangem.core.ui.extensions.pluralReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.account.models.ArchivedAccount
 import com.tangem.domain.account.usecase.ArchivedAccountList
+import com.tangem.domain.models.account.AccountId
 import kotlinx.collections.immutable.toImmutableList
 import timber.log.Timber
 import javax.inject.Inject
@@ -28,6 +29,7 @@ internal class AccountArchivedUMBuilder @Inject constructor() {
             accountId = accountId.value,
             accountName = name.toUM().value,
             accountIconUM = icon.toUM(),
+            isLoading = false,
             tokensInfo = pluralReference(
                 R.plurals.common_tokens_count,
                 count = tokensCount,
@@ -51,5 +53,26 @@ internal class AccountArchivedUMBuilder @Inject constructor() {
             onCloseClick = onCloseClick,
             onRetryClick = { getArchivedAccounts() },
         )
+    }
+
+    companion object {
+
+        fun AccountArchivedUM.toggleProgress(accountId: AccountId, isLoading: Boolean): AccountArchivedUM {
+            return when (this) {
+                is AccountArchivedUM.Error,
+                is AccountArchivedUM.Loading,
+                -> this
+
+                is AccountArchivedUM.Content -> copy(
+                    accounts = accounts.map { accountUM ->
+                        if (accountUM.accountId == accountId.value) {
+                            accountUM.copy(isLoading = isLoading)
+                        } else {
+                            accountUM
+                        }
+                    }.toImmutableList(),
+                )
+            }
+        }
     }
 }
