@@ -78,6 +78,8 @@ internal class DefaultMainAccountTokensMigration(
             },
         )
 
+        store.updateData { updatedResponse }
+
         userTokensSaver.push(
             userWalletId = userWalletId,
             response = updatedResponse.toUserTokensResponse(),

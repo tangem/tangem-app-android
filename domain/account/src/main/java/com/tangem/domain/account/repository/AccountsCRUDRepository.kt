@@ -83,6 +83,13 @@ interface AccountsCRUDRepository {
      *
      * @param userWalletId the unique identifier of the user wallet
      */
+    suspend fun getTotalAccountsCountSync(userWalletId: UserWalletId): Option<Int>
+
+    /**
+     * Retrieves the total count of active accounts associated with a specific user wallet excluding archived accounts
+     *
+     * @param userWalletId the unique identifier of the user wallet
+     */
     suspend fun getTotalActiveAccountsCountSync(userWalletId: UserWalletId): Option<Int>
 
     /**
