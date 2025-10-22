@@ -5,7 +5,6 @@ import arrow.core.raise.catch
 import arrow.core.raise.either
 import arrow.core.raise.ensure
 import arrow.core.right
-import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.exchange.ExpressAvailabilityState
 import com.tangem.domain.exchange.RampStateManager
@@ -30,10 +29,7 @@ internal class DefaultRampManager(
     private val expressServiceFetcher: ExpressServiceFetcher,
     private val currenciesRepository: CurrenciesRepository,
     private val dispatchers: CoroutineDispatcherProvider,
-    excludedBlockchains: ExcludedBlockchains,
 ) : RampStateManager {
-
-    private val cryptoCurrencyConverter = CryptoCurrencyConverter(excludedBlockchains)
 
     override suspend fun availableForBuy(
         userWallet: UserWallet,
@@ -54,7 +50,7 @@ internal class DefaultRampManager(
         return either {
             val isSellSupportedByService = catch(
                 block = {
-                    val serviceCurrency = cryptoCurrencyConverter.convertBack(status.currency)
+                    val serviceCurrency = CryptoCurrencyConverter.convert(status.currency)
 
                     sellService().availableForSell(currency = serviceCurrency)
                 },
