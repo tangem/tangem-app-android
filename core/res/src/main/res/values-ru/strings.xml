@@ -1494,6 +1494,7 @@
   <string name="wc_alert_wrong_card_title">Похоже, возникла проблема</string>
   <string name="wc_all_dapps_disconnected">Все dapps отключены</string>
   <string name="wc_allow_to_spend">Разрешение на использование</string>
+  <string name="wc_approve_description">Подтверждая, вы разрешаете смарт-контракту использовать ваши токены в будущих транзакциях.</string>
   <string name="wc_common_address">Адрес</string>
   <string name="wc_common_connect">Подключение</string>
   <string name="wc_common_loading">Загрузка</string>
