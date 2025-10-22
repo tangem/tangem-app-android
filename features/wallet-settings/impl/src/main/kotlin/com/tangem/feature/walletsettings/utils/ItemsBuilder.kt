@@ -38,7 +38,6 @@ internal class ItemsBuilder @Inject constructor(
         isNFTFeatureEnabled: Boolean,
         isNFTEnabled: Boolean,
         onCheckedNFTChange: (Boolean) -> Unit,
-        isNotificationsFeatureEnabled: Boolean,
         isNotificationsEnabled: Boolean,
         isNotificationsPermissionGranted: Boolean,
         onCheckedNotificationsChanged: (Boolean) -> Unit,
@@ -74,7 +73,6 @@ internal class ItemsBuilder @Inject constructor(
         )
         .addAll(
             buildNotificationItems(
-                isNotificationsFeatureEnabled = isNotificationsFeatureEnabled,
                 isNotificationsPermissionGranted = isNotificationsPermissionGranted,
                 isNotificationsEnabled = isNotificationsEnabled,
                 onCheckedNotificationsChanged = onCheckedNotificationsChanged,
@@ -103,13 +101,11 @@ internal class ItemsBuilder @Inject constructor(
     }
 
     private fun buildNotificationItems(
-        isNotificationsFeatureEnabled: Boolean,
         isNotificationsPermissionGranted: Boolean,
         isNotificationsEnabled: Boolean,
         onCheckedNotificationsChanged: (Boolean) -> Unit,
         onNotificationsDescriptionClick: () -> Unit,
     ): List<WalletSettingsItemUM> {
-        if (!isNotificationsFeatureEnabled) return emptyList()
         return buildList {
             if (!isNotificationsPermissionGranted) {
                 add(buildNotificationsPermissionItem())
