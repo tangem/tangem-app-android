@@ -51,8 +51,7 @@ class GetCurrencyWarningsUseCase(
             flowOf(currencyChecksRepository.getRentInfoWarning(userWalletId, currencyStatus)),
             flowOf(currencyChecksRepository.getExistentialDeposit(userWalletId, currency.network)),
             flowOf(currencyChecksRepository.getFeeResourceAmount(userWalletId, currency.network)),
-            flowOf(currencyChecksRepository.getProtocolBalance(userWalletId, currencyStatus)),
-        ) { coinRelatedWarnings, maybeRentWarning, maybeEdWarning, maybeFeeResource, yieldSupplyProtocolBalance ->
+        ) { coinRelatedWarnings, maybeRentWarning, maybeEdWarning, maybeFeeResource ->
             setOfNotNull(
                 maybeRentWarning,
                 maybeEdWarning?.let { getExistentialDepositWarning(currency, it) },
@@ -63,7 +62,6 @@ class GetCurrencyWarningsUseCase(
                 getBeaconChainShutdownWarning(rawId = currency.network.id.rawId),
                 getAssetRequirementsWarning(userWalletId = userWalletId, currency = currency),
                 getMigrationFromMaticToPolWarning(currency),
-                getYieldSupplyWarning(cryptoCurrencyStatus = currencyStatus, yieldSupplyProtocolBalance),
             )
         }.flowOn(dispatchers.io)
     }
@@ -258,28 +256,6 @@ class GetCurrencyWarningsUseCase(
     private fun getMigrationFromMaticToPolWarning(currency: CryptoCurrency): CryptoCurrencyWarning? {
         return if (currency.symbol == MATIC_SYMBOL && !BlockchainUtils.isPolygonChain(currency.network.rawId)) {
             CryptoCurrencyWarning.MigrationMaticToPol
-        } else {
-            null
-        }
-    }
-
-    private fun getYieldSupplyWarning(
-        cryptoCurrencyStatus: CryptoCurrencyStatus,
-        protocolBalance: BigDecimal?,
-    ): CryptoCurrencyWarning? {
-        val value = cryptoCurrencyStatus.value
-        val isActive = value.yieldSupplyStatus?.isActive == true
-        val amount = value.amount
-
-        if (!isActive || protocolBalance == null || amount == null) return null
-
-        val notDepositedAmount = amount.minus(protocolBalance)
-        return if (notDepositedAmount > BigDecimal.ZERO) {
-            CryptoCurrencyWarning.YieldSupplyNotDepositedAmount(
-                currency = cryptoCurrencyStatus.currency,
-                amount = notDepositedAmount,
-                currencySymbol = cryptoCurrencyStatus.currency.symbol,
-            )
         } else {
             null
         }
