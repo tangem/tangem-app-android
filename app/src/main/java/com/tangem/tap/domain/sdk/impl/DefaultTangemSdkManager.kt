@@ -18,13 +18,17 @@ import com.tangem.core.res.getStringSafe
 import com.tangem.crypto.bip39.DefaultMnemonic
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
-import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.card.common.util.cardTypesResolver
-import com.tangem.domain.wallets.derivations.derivationStyleProvider
+import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.visa.model.*
+import com.tangem.domain.visa.model.TangemPayInitialCredentials
+import com.tangem.domain.visa.model.VisaActivationInput
+import com.tangem.domain.visa.model.VisaDataForApprove
+import com.tangem.domain.visa.model.VisaSignedDataByCustomerWallet
+import com.tangem.domain.visa.model.sign
+import com.tangem.domain.wallets.derivations.derivationStyleProvider
 import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.operations.ScanTask
 import com.tangem.operations.derivation.DerivationTaskResponse
@@ -44,6 +48,7 @@ import com.tangem.tap.domain.tasks.product.CreateProductWalletTask
 import com.tangem.tap.domain.tasks.product.ResetBackupCardTask
 import com.tangem.tap.domain.tasks.product.ResetToFactorySettingsTask
 import com.tangem.tap.domain.tasks.product.ScanProductTask
+import com.tangem.tap.domain.tasks.visa.TangemPayGenerateAddressAndSignChallengeTask
 import com.tangem.tap.domain.tasks.visa.VisaCardActivationTask
 import com.tangem.tap.domain.tasks.visa.VisaCustomerWalletApproveTask
 import com.tangem.tap.domain.twins.CreateFirstTwinWalletTask
@@ -62,6 +67,7 @@ internal class DefaultTangemSdkManager(
     private val resources: Resources,
     private val visaCardScanHandler: VisaCardScanHandler,
     private val visaCardActivationTaskFactory: VisaCardActivationTask.Factory,
+    private val tangemPayChallengeTaskFactory: TangemPayGenerateAddressAndSignChallengeTask.Factory,
     private val onboardingV2FeatureToggles: OnboardingV2FeatureToggles,
 ) : TangemSdkManager {
 
@@ -509,6 +515,18 @@ internal class DefaultTangemSdkManager(
             cardId = visaDataForApprove.customerWalletCardId,
             initialMessage = Message(resources.getStringSafe(R.string.initial_message_tap_header)),
         )
+    }
+
+    override suspend fun tangemPayProduceInitialCredentials(
+        cardId: String,
+    ): CompletionResult<TangemPayInitialCredentials> {
+        return coroutineScope {
+            runTaskAsyncReturnOnMain(
+                runnable = tangemPayChallengeTaskFactory.create(coroutineScope = this),
+                cardId = cardId,
+                initialMessage = Message(resources.getStringSafe(R.string.initial_message_tap_header)),
+            )
+        }
     }
 
     // endregion
