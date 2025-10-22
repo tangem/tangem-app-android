@@ -3,11 +3,13 @@ package com.tangem.features.yield.supply.impl.common.ui
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withLink
@@ -85,13 +87,17 @@ internal fun YieldSupplyActionContent(
                 ),
             ) {
                 val fee = when (val yieldSupplyFeeUM = yieldSupplyActionUM.yieldSupplyFeeUM) {
-                    is YieldSupplyFeeUM.Content -> yieldSupplyFeeUM.feeValue
+                    is YieldSupplyFeeUM.Content -> yieldSupplyFeeUM.feeFiatValue
                     YieldSupplyFeeUM.Error -> stringReference(StringsSigns.DASH_SIGN)
                     YieldSupplyFeeUM.Loading -> null
                 }
                 YieldSupplyFeeRow(
                     title = resourceReference(R.string.common_network_fee_title),
                     value = fee,
+                    modifier = Modifier.fillMaxWidth()
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(TangemTheme.colors.background.action)
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
                 )
             }
         }
@@ -138,10 +144,11 @@ private class YieldSupplyActionContentPreviewProvider : PreviewParameterProvider
                 currencyIconState = CurrencyIconState.Loading,
                 yieldSupplyFeeUM = YieldSupplyFeeUM.Content(
                     transactionDataList = persistentListOf(),
-                    feeValue = stringReference("0.00020 ETH • \$0.99"),
-                    currentNetworkFeeValue = stringReference("1.45 USDT • \$1.45"),
-                    maxNetworkFeeValue = stringReference("8.50 USDT • \$8.50"),
-                    minAmountFeeValue = stringReference("50 USDT • \$50"),
+                    feeFiatValue = stringReference("$0.99"),
+                    tokenFeeFiatValue = stringReference("$1.45"),
+                    maxNetworkFeeFiatValue = stringReference("$8.50"),
+                    minTopUpFiatValue = stringReference("$50"),
+                    feeNoteValue = TextReference.EMPTY,
                 ),
                 isPrimaryButtonEnabled = false,
                 isTransactionSending = false,
