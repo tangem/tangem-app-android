@@ -1080,6 +1080,7 @@
   <string name="story_web3_title">Compatible avec Web 3.0</string>
   <string name="sui_not_enough_coin_for_fee_description">Une transaction entrante d\'au moins de %1$s est requise pour continuer</string>
   <string name="sui_not_enough_coin_for_fee_title">Fonds insuffisants</string>
+  <string name="swap_approve_description">En approuvant, vous autorisez le contrat intelligent à utiliser vos jetons dans de futures transactions.</string>
   <string name="swap_fixed_rate">Taux fixe</string>
   <string name="swap_give_permission_fee_footer">Le réseau facturera des frais d\'approbation de jeton pour vérifier que vous autorisez l\'utilisation de votre jeton pour l\'échange.</string>
   <string name="swap_promo_text">Échangez plus de jetons à de meilleurs taux directement dans votre portefeuille.</string>
@@ -1386,6 +1387,7 @@
   <string name="wc_alert_wrong_card_title">Nous avons un problème.</string>
   <string name="wc_all_dapps_disconnected">Toutes les dApps sont déconnectées</string>
   <string name="wc_allow_to_spend">Autoriser à dépenser</string>
+  <string name="wc_approve_description">En approuvant, vous autorisez la dApp ou le contrat intelligent à utiliser les jetons dans de futures transactions.</string>
   <string name="wc_common_address">Adresse</string>
   <string name="wc_common_connect">Connecter</string>
   <string name="wc_common_loading">Chargement</string>
@@ -1453,4 +1455,5 @@
   <string name="xtz_withdrawal_message_ignore">Non, envoyer toute la somme</string>
   <string name="xtz_withdrawal_message_reduce">Réduire de %s XTZ</string>
   <string name="xtz_withdrawal_message_warning">Pour ne pas payer un fraid de commissions élevé la prochaine fois que vous rechargez votre portefeuille, veuillez réduire le montant de %s XTZ</string>
+  <string name="yield_module_fee_policy_sheet_fee_note">Des frais de réseau d\'environ %1$s (%2$s) seront déduits de chaque recharge future, sans dépasser votre limite de %3$s (%4$s).</string>
 </resources>

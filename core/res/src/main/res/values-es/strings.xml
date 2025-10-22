@@ -1106,6 +1106,7 @@
   <string name="story_web3_title">Compatible con Web 3.0</string>
   <string name="sui_not_enough_coin_for_fee_description">Se requiere una transacción entrante de al menos %1$s para proceder</string>
   <string name="sui_not_enough_coin_for_fee_title">Fondos insuficientes</string>
+  <string name="swap_approve_description">Al aprobar, permites que el contrato inteligente use tus tokens en futuras transacciones.</string>
   <string name="swap_fixed_rate">Tasa Fija</string>
   <string name="swap_give_permission_fee_footer">La red cobrará una tasa de aprobación del token para verificar que usted autoriza el uso de su token para el intercambio.</string>
   <string name="swap_promo_text">Intercambie más tokens a mejores tasas directamente en su billetera.</string>
@@ -1400,6 +1401,7 @@
   <string name="wc_alert_wrong_card_title">Tenemos algún tipo de problema</string>
   <string name="wc_all_dapps_disconnected">Todas las dApps desconectadas</string>
   <string name="wc_allow_to_spend">Permitir gastar</string>
+  <string name="wc_approve_description">Al aprobar, permites que la dApp o el contrato inteligente utilicen los tokens en futuras transacciones.</string>
   <string name="wc_common_address">Dirección</string>
   <string name="wc_common_connect">Conectar</string>
   <string name="wc_common_loading">Cargando</string>
