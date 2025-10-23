@@ -20,6 +20,8 @@ import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.domain.yield.supply.YieldSupplyRepository
+import com.tangem.domain.yield.supply.models.YieldSupplyEnterStatus
 import com.tangem.domain.yield.supply.usecase.YieldSupplyActivateUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyEstimateEnterFeeUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetTokenStatusUseCase
@@ -28,7 +30,6 @@ import com.tangem.domain.yield.supply.usecase.YieldSupplyStartEarningUseCase
 import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
 import com.tangem.features.yield.supply.impl.common.YieldSupplyAlertFactory
-import com.tangem.features.yield.supply.impl.common.YieldSupplyProtocolTrigger
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyActionUM
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyFeeUM
 import com.tangem.features.yield.supply.impl.common.entity.transformer.YieldSupplyTransactionInProgressTransformer
@@ -66,7 +67,7 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
     private val yieldSupplyActivateUseCase: YieldSupplyActivateUseCase,
     private val yieldSupplyGetTokenStatusUseCase: YieldSupplyGetTokenStatusUseCase,
     private val yieldSupplyMinAmountUseCase: YieldSupplyMinAmountUseCase,
-    private val yieldSupplyProtocolTrigger: YieldSupplyProtocolTrigger,
+    private val yieldSupplyRepository: YieldSupplyRepository,
 ) : Model(), YieldSupplyNotificationsComponent.ModelCallback {
 
     private val params: YieldSupplyStartEarningComponent.Params = paramsContainer.require()
@@ -252,7 +253,7 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
                     )
                 },
                 ifRight = {
-                    yieldSupplyProtocolTrigger.onEnterProtocol()
+                    yieldSupplyRepository.saveTokenProtocolStatus(cryptoCurrency, YieldSupplyEnterStatus.Enter)
                     analytics.send(YieldSupplyAnalytics.FundsEarned)
                     yieldSupplyActivateUseCase(cryptoCurrency)
                     modelScope.launch {
