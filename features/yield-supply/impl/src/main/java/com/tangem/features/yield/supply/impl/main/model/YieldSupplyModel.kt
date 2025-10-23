@@ -15,12 +15,14 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.models.network.TxInfo
+import com.tangem.domain.models.currency.yieldSupplyNotAllAmountSupplied
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.yield.supply.YieldSupplyStatus
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.domain.yield.supply.YieldSupplyRepository
+import com.tangem.domain.yield.supply.models.YieldSupplyEnterStatus
 import com.tangem.domain.yield.supply.usecase.YieldSupplyActivateUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyDeactivateUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetTokenStatusUseCase
@@ -28,7 +30,6 @@ import com.tangem.domain.yield.supply.usecase.YieldSupplyIsAvailableUseCase
 import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.api.YieldSupplyComponent
 import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
-import com.tangem.features.yield.supply.impl.common.YieldSupplyProtocolListener
 import com.tangem.features.yield.supply.impl.main.entity.YieldSupplyUM
 import com.tangem.features.yield.supply.impl.main.model.transformers.YieldSupplyTokenStatusSuccessTransformer
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -58,7 +59,7 @@ internal class YieldSupplyModel @Inject constructor(
     private val yieldSupplyIsAvailableUseCase: YieldSupplyIsAvailableUseCase,
     private val yieldSupplyActivateUseCase: YieldSupplyActivateUseCase,
     private val yieldSupplyDeactivateUseCase: YieldSupplyDeactivateUseCase,
-    private val yieldSupplyProtocolListener: YieldSupplyProtocolListener,
+    private val yieldSupplyRepository: YieldSupplyRepository,
 ) : Model(), YieldSupplyClickIntents {
 
     private val params = paramsContainer.require<YieldSupplyComponent.Params>()
@@ -86,38 +87,6 @@ internal class YieldSupplyModel @Inject constructor(
 
     init {
         checkIfYieldSupplyIsAvailable()
-        observeProtocolEvents()
-    }
-
-    private fun observeProtocolEvents() {
-        yieldSupplyProtocolListener.exitProtocolTriggerFlow.onEach {
-            uiState.update {
-                YieldSupplyUM.Processing.Exit
-            }
-            coroutineScope.launch(dispatchers.io) {
-                delay(PROCESSING_UPDATE_DELAY)
-                singleNetworkStatusFetcher(
-                    params = SingleNetworkStatusFetcher.Params(
-                        userWalletId = userWallet.walletId,
-                        network = cryptoCurrency.network,
-                    ),
-                )
-            }
-        }.launchIn(modelScope)
-        yieldSupplyProtocolListener.enterProtocolTriggerFlow.onEach {
-            uiState.update {
-                YieldSupplyUM.Processing.Enter
-            }
-            coroutineScope.launch(dispatchers.io) {
-                delay(PROCESSING_UPDATE_DELAY)
-                singleNetworkStatusFetcher(
-                    params = SingleNetworkStatusFetcher.Params(
-                        userWalletId = userWallet.walletId,
-                        network = cryptoCurrency.network,
-                    ),
-                )
-            }
-        }.launchIn(modelScope)
     }
 
     private fun checkIfYieldSupplyIsAvailable() {
@@ -141,7 +110,6 @@ internal class YieldSupplyModel @Inject constructor(
                         currencyId = cryptoCurrency.id,
                         isSingleWalletWithTokens = false,
                     ).onEach { maybeCryptoCurrency ->
-                        Timber.tag("getSingleCryptoCurrencyStatusUseCase").d("update $maybeCryptoCurrency")
                         maybeCryptoCurrency.fold(
                             ifRight = { cryptoCurrencyStatus ->
                                 cryptoCurrencyStatusFlow.update { cryptoCurrencyStatus }
@@ -174,7 +142,7 @@ internal class YieldSupplyModel @Inject constructor(
                     )
                 }.onLeft {
                     Timber.e(it)
-                    uiState.update { YieldSupplyUM.Unavailable }
+                    uiState.update { YieldSupplyUM.Initial }
                 }
         }
     }
@@ -213,53 +181,56 @@ internal class YieldSupplyModel @Inject constructor(
     @Suppress("MaximumLineLength")
     private fun onCryptoCurrencyStatusUpdated(cryptoCurrencyStatus: CryptoCurrencyStatus) {
         val yieldSupplyStatus = cryptoCurrencyStatus.value.yieldSupplyStatus
-        val hasActiveTransaction = cryptoCurrencyStatus.value.hasCurrentNetworkTransactions
-        val yieldTransaction = cryptoCurrencyStatus.value.pendingTransactions.firstOrNull {
-            it.type is TxInfo.TransactionType.YieldSupply
-        }?.type as? TxInfo.TransactionType.YieldSupply
-        sendInfoAboutProtocolStatus(cryptoCurrencyStatus)
+        val tokenProtocolStatus = yieldSupplyRepository.getTokenProtocolStatus(cryptoCurrency)
+        val isActive = yieldSupplyStatus?.isActive == true
 
         when {
-            hasActiveTransaction && yieldTransaction != null -> {
-                coroutineScope.launch(dispatchers.io) {
-                    delay(PROCESSING_UPDATE_DELAY)
-                    singleNetworkStatusFetcher(
-                        params = SingleNetworkStatusFetcher.Params(
-                            userWalletId = userWallet.walletId,
-                            network = cryptoCurrency.network,
-                        ),
-                    )
-                }
-                uiState.update {
-                    when (yieldTransaction) {
-                        TxInfo.TransactionType.YieldSupply.Enter -> YieldSupplyUM.Processing.Enter
-                        TxInfo.TransactionType.YieldSupply.Exit -> YieldSupplyUM.Processing.Exit
-                    }
-                }
+            !isActive && tokenProtocolStatus == YieldSupplyEnterStatus.Enter -> {
+                uiState.update { YieldSupplyUM.Processing.Enter }
+                fetchCurrencyWithDelay()
             }
-            yieldSupplyStatus?.isActive == true -> {
-                val cryptoCurrencyToken = cryptoCurrency as? CryptoCurrency.Token ?: return
-                if (!yieldSupplyStatus.isAllowedToSpend) {
-                    analyticsEventsHandler.send(
-                        YieldSupplyAnalytics.NoticeApproveNeeded(
-                            token = cryptoCurrency.symbol,
-                            blockchain = cryptoCurrency.network.name,
-                        ),
-                    )
-                }
-                loadActiveState(
-                    cryptoCurrencyToken = cryptoCurrencyToken,
-                    yieldSupplyStatus = yieldSupplyStatus,
-                )
+            isActive && tokenProtocolStatus == YieldSupplyEnterStatus.Exit -> {
+                uiState.update { YieldSupplyUM.Processing.Exit }
+                fetchCurrencyWithDelay()
             }
-
             else -> {
-                loadTokenStatus()
+                sendInfoAboutProtocolStatus(cryptoCurrencyStatus)
+                if (isActive) {
+                    loadActiveState(
+                        cryptoCurrencyStatus = cryptoCurrencyStatus,
+                        yieldSupplyStatus = requireNotNull(yieldSupplyStatus),
+                    )
+                } else {
+                    loadTokenStatus()
+                }
             }
         }
     }
 
-    private fun loadActiveState(cryptoCurrencyToken: CryptoCurrency.Token, yieldSupplyStatus: YieldSupplyStatus) {
+    private fun fetchCurrencyWithDelay() {
+        coroutineScope.launch(dispatchers.io) {
+            delay(PROCESSING_UPDATE_DELAY)
+            singleNetworkStatusFetcher(
+                params = SingleNetworkStatusFetcher.Params(
+                    userWalletId = userWallet.walletId,
+                    network = cryptoCurrency.network,
+                ),
+            )
+        }
+    }
+
+    private fun loadActiveState(cryptoCurrencyStatus: CryptoCurrencyStatus, yieldSupplyStatus: YieldSupplyStatus) {
+        val cryptoCurrencyToken = cryptoCurrency as? CryptoCurrency.Token ?: return
+        val showWarningIcon = !yieldSupplyStatus.isAllowedToSpend ||
+            cryptoCurrencyStatus.yieldSupplyNotAllAmountSupplied()
+        if (!yieldSupplyStatus.isAllowedToSpend) {
+            analyticsEventsHandler.send(
+                YieldSupplyAnalytics.NoticeApproveNeeded(
+                    token = cryptoCurrency.symbol,
+                    blockchain = cryptoCurrency.network.name,
+                ),
+            )
+        }
         modelScope.launch(dispatchers.default) {
             yieldSupplyGetTokenStatusUseCase(cryptoCurrencyToken)
                 .onRight { tokenStatus ->
@@ -278,7 +249,7 @@ internal class YieldSupplyModel @Inject constructor(
                                 stringReference(" ${tokenStatus.apy}%"),
                             ),
                             onClick = ::onActiveClick,
-                            isAllowedToSpend = yieldSupplyStatus.isAllowedToSpend,
+                            showWarningIcon = showWarningIcon,
                             apy = tokenStatus.apy.toString(),
                         )
                     }
@@ -294,7 +265,7 @@ internal class YieldSupplyModel @Inject constructor(
                             ),
                             rewardsApy = TextReference.EMPTY,
                             onClick = ::onActiveClick,
-                            isAllowedToSpend = yieldSupplyStatus.isAllowedToSpend,
+                            showWarningIcon = showWarningIcon,
                             apy = "",
                         )
                     }
