@@ -73,7 +73,7 @@ internal sealed class WalletSettingsAccountsUM : WalletSettingsItemUM() {
     data class Footer(
         override val id: String,
         val addAccount: AddAccountUM,
-        val archivedAccounts: BlockUM,
+        val archivedAccounts: BlockUM?,
         val showDescription: Boolean,
         val description: TextReference,
     ) : WalletSettingsAccountsUM() {
