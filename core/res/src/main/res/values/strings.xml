@@ -249,6 +249,7 @@
   <string name="common_enable">Enable</string>
   <string name="common_enabled">Enabled</string>
   <string name="common_error">Error</string>
+  <string name="common_estimated_fee">Estimated fee</string>
   <string name="common_exchange">Swap</string>
   <string name="common_explore">Explore</string>
   <string name="common_explore_transaction_history">Explore transaction history</string>
@@ -484,7 +485,7 @@
   <string name="express_provider">Provider</string>
   <string name="express_provider_best_rate">Best rate</string>
   <string name="express_provider_fca_warning_list">FCA Warning List</string>
-  <string name="express_provider_great_rate">Great rate</string>
+  <string name="express_provider_great_rate">Best choice</string>
   <string name="express_provider_in_fca_warning_list">Provider in FCA warning list</string>
   <string name="express_provider_max_amount">Available up to %s</string>
   <string name="express_provider_min_amount">Available from %s</string>
@@ -1369,7 +1370,7 @@
   <string name="token_button_unavailability_reason_pending_transaction_send">Sending funds will be available once the pending transaction(s) in network %s is complete</string>
   <string name="token_button_unavailability_reason_sell_unavailable">Selling %s is not supported by current providers, but we are working to add more options.</string>
   <string name="token_button_unavailability_reason_staking_unavailable">Staking %s is not supported by current providers, but we are working to add more options.</string>
-  <string name="token_button_unavailability_reason_yield_supply_approval">Text here</string>
+  <string name="token_button_unavailability_reason_yield_supply_approval">Approval has been revoked. Your funds remain in Yield mode. To perform actions, please go to Yield mode and grant permission again.</string>
   <string name="token_details_generate_xpub">Generate XPUB</string>
   <string name="token_details_hide_alert_hide">Hide</string>
   <string name="token_details_hide_alert_message">You are about to hide this token from the main screen. You can add it back anytime through the manage tokens page.</string>
@@ -1812,16 +1813,16 @@
   <string name="xtz_withdrawal_message_ignore">No, send all</string>
   <string name="xtz_withdrawal_message_reduce">Reduce by %s XTZ</string>
   <string name="xtz_withdrawal_message_warning">To avoid paying an increased commission the next time you top up your wallet, reduce the amount by %s XTZ</string>
-  <string name="yield_module_alert_description">Your funds are currently supplied to the Aave protocol, but you can manage them at any time.</string>
+  <string name="yield_module_alert_description">With Yield mode active, all future deposits to this address will go to Aave. You can still manage your funds freely.</string>
   <string name="yield_module_alert_title">Your %s is supplied to Aave</string>
   <string name="yield_module_amount_not_transfered_to_aave_title">Supplying  %1$s %2$s to Aave is pending</string>
   <string name="yield_module_approve_needed_notification_cta">Give Approve</string>
-  <string name="yield_module_approve_needed_notification_description">Something went wrong with your previous approval, so we need a new one. Choose how you’d like to proceed.</string>
+  <string name="yield_module_approve_needed_notification_description">Your token’s approval has been revoked. Grant it again to resume service functionality.</string>
   <string name="yield_module_approve_needed_notification_title">Approve needed</string>
   <string name="yield_module_approve_sheet_fee_note">The fee will be taken out, and your assets will be lent again.</string>
   <string name="yield_module_approve_sheet_subtitle">To continue earning, approval is required.</string>
   <string name="yield_module_approve_sheet_title">Confirm approval</string>
-  <string name="yield_module_balance_info_sheet_subtitle">Text about your money in balance [PLACEHOLDER]</string>
+  <string name="yield_module_balance_info_sheet_subtitle">Your funds are currently supplied to the Aave protocol, but you can manage them at any time.</string>
   <string name="yield_module_balance_info_sheet_title">Your %s is deposited in Aave</string>
   <string name="yield_module_chart_loading_error">Unable to load chart...</string>
   <string name="yield_module_deposit_error_notification_title">The amount received, %1$s %2$s was not supplied to Aave.</string>
@@ -1832,7 +1833,7 @@
   <string name="yield_module_earn_sheet_high_fee_description">The network fee is currently too high to execute lending. Funds will be supplied once it drops to %1$s or below. </string>
   <string name="yield_module_earn_sheet_my_funds_title">My funds</string>
   <string name="yield_module_earn_sheet_provider_description">Your %1$s is now deposited in Aave and earning interest. You hold a%2$s token, which represents your balance and grows over time. When you deposit more funds, they\'ll be supplied to Aave to earn interest, minus a transaction fee.</string>
-  <string name="yield_module_earn_sheet_title">Earn</string>
+  <string name="yield_module_earn_sheet_title">Yield mode</string>
   <string name="yield_module_earn_sheet_total_earnings_title">Total earnings</string>
   <string name="yield_module_earn_sheet_transfers_title">Transfers to Aave</string>
   <string name="yield_module_explore_sheet_explore_aave_button_title">Explore Aave</string>
@@ -1842,14 +1843,14 @@
   <string name="yield_module_fee_policy_sheet_fee_note">An approximate network fee of %1$s (%2$s) will be deducted from each future top-up, and it won’t exceed your %3$s  (%4$s) limit.</string>
   <string name="yield_module_fee_policy_sheet_max_fee_note">If network fees rise above maximum fee, the transaction won’t go through until they decrease. You can change this limit later.</string>
   <string name="yield_module_fee_policy_sheet_max_fee_title">Maximum fee</string>
-  <string name="yield_module_fee_policy_sheet_min_amount_note">The minimum amount is calculated from the current network fee to ensure it does not exceed 4%, which makes the minimum %1$s (%2$s).</string>
+  <string name="yield_module_fee_policy_sheet_min_amount_note">The minimum amount is calculated from the current network fee to ensure it does not exceed 4%%, which makes the minimum %1$s (%2$s).</string>
   <string name="yield_module_fee_policy_sheet_min_amount_title">Minimum top-up</string>
   <string name="yield_module_fee_policy_sheet_title">Fee policy</string>
   <string name="yield_module_fee_policy_tangem_service_fee_title">Tangem also takes a 3% service fee on yield earned.</string>
   <string name="yield_module_high_fee_error">Your funds will be automatically supplied to Aave once network fees are lower or your balance meets the minimum required amount.</string>
   <string name="yield_module_historical_returns">Historical returns</string>
-  <string name="yield_module_main_view_approve_notification_description">Write description here. In one, two or three lines will be awesome. [PLACEHOLDER]</string>
-  <string name="yield_module_main_view_approve_notification_title">Token approvals needed</string>
+  <string name="yield_module_main_view_approve_notification_description">Approval for your token in the Yield mode has been revoked. Open the token to grant permission again.</string>
+  <string name="yield_module_main_view_approve_notification_title">Token approval needed</string>
   <string name="yield_module_network_fee_unreachable_notification_description">Check your network connection</string>
   <string name="yield_module_network_fee_unreachable_notification_title">Network fee info unreachable</string>
   <string name="yield_module_promo_screen_auto_balance_subtitle">Every deposit you make will be supplied to Aave automatically.</string>
@@ -1872,7 +1873,7 @@
   <string name="yield_module_start_earning">Supply assets</string>
   <string name="yield_module_start_earning_sheet_description">Your %s will be supplied to Aave, but will remain manageable.</string>
   <string name="yield_module_start_earning_sheet_fee_policy">See fee policy</string>
-  <string name="yield_module_start_earning_sheet_next_deposits">Your next deposits will be automatically supplied to Aave.</string>
+  <string name="yield_module_start_earning_sheet_next_deposits">Your next top-ups will be automatically supplied to Aave.</string>
   <string name="yield_module_status_active">Active</string>
   <string name="yield_module_status_paused">Paused</string>
   <string name="yield_module_stop_earning">Disable yield mode</string>
@@ -1888,7 +1889,7 @@
   <string name="yield_module_transfer_mode_automatic">Automatic</string>
   <string name="yield_module_unable_to_cover_fee_description">Deposit some %1$s %2$s to cover the network fee for transactions</string>
   <string name="yield_module_unable_to_cover_fee_title">Unable to cover %s fee</string>
-  <string name="yield_module_unavailable_subtitle">The interest service isn’t available at the moment. Please try again later.</string>
-  <string name="yield_module_unavailable_title">Earnings unavailable</string>
+  <string name="yield_module_unavailable_subtitle">The Yield mode service isn’t available at the moment. Please try again later.</string>
+  <string name="yield_module_unavailable_title">Yield mode unavailable</string>
   <string name="yield_supply_chart_loading_error">Unable to load chart...</string>
 </resources>
