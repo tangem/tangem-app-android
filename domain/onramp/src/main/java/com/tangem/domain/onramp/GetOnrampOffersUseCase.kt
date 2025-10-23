@@ -47,7 +47,12 @@ class GetOnrampOffersUseCase(
         if (validQuotes.isEmpty()) return emptyList()
 
         val isGooglePayAvailable = settingsRepository.isGooglePayAvailability()
-        val bestRateQuote = validQuotes.maxWithOrNull(compareOffersByRateSpeedAndPriority(isGooglePayAvailable))
+        val bestRateQuote = validQuotes.maxWithOrNull(
+            compareOffersByRateSpeedAndPriority(
+                isGooglePayAvailable = isGooglePayAvailable,
+                isSepaPrioritized = true,
+            ),
+        )
         val bestRate = bestRateQuote?.toAmount?.value
 
         val offers = validQuotes.map { quote ->
@@ -71,8 +76,8 @@ class GetOnrampOffersUseCase(
         val lastTransaction = transactions.maxByOrNull { it.timestamp } ?: return null
 
         return offers.find { offer ->
-            offer.quote.provider.id == lastTransaction.providerType &&
-                offer.quote.paymentMethod.id == lastTransaction.paymentMethod
+            offer.quote.provider.info.name == lastTransaction.providerName &&
+                offer.quote.paymentMethod.name == lastTransaction.paymentMethod && isRecentUsed(lastTransaction.status)
         }
     }
 
@@ -83,14 +88,14 @@ class GetOnrampOffersUseCase(
     private fun findFastestOffer(offers: List<OnrampOffer>, isGooglePayAvailable: Boolean): OnrampOffer? {
         val instantOffers = offers.filter { it.quote.paymentMethod.type.isInstant() }
         return if (instantOffers.isNotEmpty()) {
-            instantOffers.maxWithOrNull(offerComparator(isGooglePayAvailable))
+            instantOffers.maxWithOrNull(fastestOfferComparator(isGooglePayAvailable))
         } else {
             val offersBySpeed = offers.groupBy { offer ->
                 offer.quote.paymentMethod.type.getProcessingSpeed().speed
             }
             val fastestSpeed = offersBySpeed.keys.minOrNull() ?: return null
             val fastestOffers = offersBySpeed[fastestSpeed] ?: return null
-            fastestOffers.maxWithOrNull(offerComparator(isGooglePayAvailable))
+            fastestOffers.maxWithOrNull(fastestOfferComparator(isGooglePayAvailable))
         }
     }
 
@@ -99,7 +104,10 @@ class GetOnrampOffersUseCase(
             is OnrampQuote.Data -> {
                 when (val quote2 = offer2.quote) {
                     is OnrampQuote.Data -> {
-                        compareOffersByRateSpeedAndPriority(isGooglePayAvailable).compare(quote1, quote2)
+                        compareOffersByRateSpeedAndPriority(
+                            isGooglePayAvailable = isGooglePayAvailable,
+                            isSepaPrioritized = true,
+                        ).compare(quote1, quote2)
                     }
                     else -> 1
                 }
@@ -107,6 +115,30 @@ class GetOnrampOffersUseCase(
             else -> -1
         }
     }
+
+    private fun fastestOfferComparator(isGooglePayAvailable: Boolean): Comparator<OnrampOffer> =
+        Comparator { offer1, offer2 ->
+            when (val quote1 = offer1.quote) {
+                is OnrampQuote.Data -> {
+                    when (val quote2 = offer2.quote) {
+                        is OnrampQuote.Data -> {
+                            // For fastest offer, first compare by priority of speed
+                            val priorityComparison = quote2.paymentMethod.type.getPriorityBySpeed(isGooglePayAvailable)
+                                .compareTo(quote1.paymentMethod.type.getPriorityBySpeed(isGooglePayAvailable))
+
+                            // If priorities are equal, compare by rate
+                            if (priorityComparison != 0) {
+                                priorityComparison
+                            } else {
+                                quote1.toAmount.value.compareTo(quote2.toAmount.value)
+                            }
+                        }
+                        else -> 1
+                    }
+                }
+                else -> -1
+            }
+        }
 
     private fun buildOffersBlocks(
         recentOffer: OnrampOffer?,
@@ -143,7 +175,7 @@ class GetOnrampOffersUseCase(
                 )
             }
 
-            if (recommendedOffers.isNotEmpty() && hasOnlyOneMethodAndProvider(allOffers).not()) {
+            if (recommendedOffers.isNotEmpty()) {
                 add(
                     OnrampOffersBlock(
                         category = OnrampOfferCategory.Recommended,
@@ -161,10 +193,10 @@ class GetOnrampOffersUseCase(
         fastestOffer: OnrampOffer?,
     ): OnrampOfferAdvantages {
         if (isSameOffer(recentOffer, bestRateOffer) && isSameOffer(recentOffer, fastestOffer)) {
-            return OnrampOfferAdvantages.BestRate
+            return OnrampOfferAdvantages.GreatRate
         }
         if (isSameOffer(recentOffer, bestRateOffer)) {
-            return OnrampOfferAdvantages.BestRate
+            return OnrampOfferAdvantages.GreatRate
         }
         if (isSameOffer(recentOffer, fastestOffer)) {
             return OnrampOfferAdvantages.Fastest
@@ -182,7 +214,7 @@ class GetOnrampOffersUseCase(
                 bestRateOffer?.let { offer ->
                     add(
                         offer.copy(
-                            advantages = OnrampOfferAdvantages.BestRate,
+                            advantages = OnrampOfferAdvantages.GreatRate,
                             rateDif = null,
                         ),
                     )
@@ -191,7 +223,7 @@ class GetOnrampOffersUseCase(
                 if (bestRateOffer != null && !isSameOffer(bestRateOffer, recentOffer)) {
                     add(
                         bestRateOffer.copy(
-                            advantages = OnrampOfferAdvantages.BestRate,
+                            advantages = OnrampOfferAdvantages.GreatRate,
                             rateDif = null,
                         ),
                     )
@@ -211,15 +243,28 @@ class GetOnrampOffersUseCase(
         }
     }
 
-    private fun hasOnlyOneMethodAndProvider(offers: List<OnrampOffer>): Boolean {
-        val uniquePaymentMethods = offers.map { it.quote.paymentMethod.id }.distinct()
-        val uniqueProviders = offers.map { it.quote.provider.id }.distinct()
-        return uniquePaymentMethods.size == 1 && uniqueProviders.size == 1
-    }
-
     private fun isSameOffer(offer1: OnrampOffer?, offer2: OnrampOffer?): Boolean {
         if (offer1 == null || offer2 == null) return false
         return offer1.quote.provider.id == offer2.quote.provider.id &&
             offer1.quote.paymentMethod.id == offer2.quote.paymentMethod.id
+    }
+
+    private fun isRecentUsed(onrampStatus: OnrampStatus.Status): Boolean {
+        return when (onrampStatus) {
+            OnrampStatus.Status.Created,
+            OnrampStatus.Status.Expired,
+            OnrampStatus.Status.Paused,
+            OnrampStatus.Status.WaitingForPayment,
+            OnrampStatus.Status.PaymentProcessing,
+            OnrampStatus.Status.Verifying,
+            OnrampStatus.Status.Paid,
+            OnrampStatus.Status.Sending,
+            OnrampStatus.Status.RefundInProgress,
+            -> false
+            OnrampStatus.Status.Failed,
+            OnrampStatus.Status.Finished,
+            OnrampStatus.Status.Refunded,
+            -> true
+        }
     }
 }
