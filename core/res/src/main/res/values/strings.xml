@@ -249,6 +249,7 @@
   <string name="common_enable">Enable</string>
   <string name="common_enabled">Enabled</string>
   <string name="common_error">Error</string>
+  <string name="common_estimated_fee">Estimated fee</string>
   <string name="common_exchange">Swap</string>
   <string name="common_explore">Explore</string>
   <string name="common_explore_transaction_history">Explore transaction history</string>
@@ -484,7 +485,7 @@
   <string name="express_provider">Provider</string>
   <string name="express_provider_best_rate">Best rate</string>
   <string name="express_provider_fca_warning_list">FCA Warning List</string>
-  <string name="express_provider_great_rate">Great rate</string>
+  <string name="express_provider_great_rate">Best choice</string>
   <string name="express_provider_in_fca_warning_list">Provider in FCA warning list</string>
   <string name="express_provider_max_amount">Available up to %s</string>
   <string name="express_provider_min_amount">Available from %s</string>
@@ -1888,7 +1889,7 @@
   <string name="yield_module_transfer_mode_automatic">Automatic</string>
   <string name="yield_module_unable_to_cover_fee_description">Deposit some %1$s %2$s to cover the network fee for transactions</string>
   <string name="yield_module_unable_to_cover_fee_title">Unable to cover %s fee</string>
-  <string name="yield_module_unavailable_subtitle">The interest service isn’t available at the moment. Please try again later.</string>
-  <string name="yield_module_unavailable_title">Earnings unavailable</string>
+  <string name="yield_module_unavailable_subtitle">The Yield mode service isn’t available at the moment. Please try again later.</string>
+  <string name="yield_module_unavailable_title">Yield mode unavailable</string>
   <string name="yield_supply_chart_loading_error">Unable to load chart...</string>
 </resources>
