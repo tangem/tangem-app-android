@@ -1,8 +1,10 @@
 package com.tangem.data.pay.repository
 
+import com.squareup.moshi.Moshi
 import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.visa.utils.TangemPayTxHistoryItemConverter
 import com.tangem.datasource.api.pay.TangemPayApi
+import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.local.visa.TangemPayTxHistoryItemsStore
 import com.tangem.domain.tangempay.model.TangemPayTxHistoryListBatchFlow
 import com.tangem.domain.tangempay.model.TangemPayTxHistoryListBatchingContext
@@ -26,7 +28,10 @@ internal class DefaultTangemPayTxHistoryRepository @Inject constructor(
     private val cacheRegistry: CacheRegistry,
     private val txHistoryItemsStore: TangemPayTxHistoryItemsStore,
     private val dispatchers: CoroutineDispatcherProvider,
+    @NetworkMoshi private val moshi: Moshi,
 ) : TangemPayTxHistoryRepository {
+
+    private val txHistoryItemConverter by lazy { TangemPayTxHistoryItemConverter(moshi) }
 
     override fun getTxHistoryBatchFlow(
         batchSize: Int,
@@ -84,7 +89,7 @@ internal class DefaultTangemPayTxHistoryRepository @Inject constructor(
             val result = requestPerformer.request { authHeader ->
                 visaApi.getTangemPayTxHistory(authHeader = authHeader, limit = pageSize, cursor = cursor)
             }.result
-            val items = TangemPayTxHistoryItemConverter.convertList(result.transactions).filterNotNull()
+            val items = txHistoryItemConverter.convertList(result.transactions).filterNotNull()
             txHistoryItemsStore.store(key = customerWalletAddress, cursor = cursor ?: INITIAL_CURSOR, value = items)
         }.onLeft { error(it.toString()) }
     }

@@ -95,6 +95,14 @@ data class Network(
         data object None : DerivationPath() {
             override val value: String? get() = null
         }
+
+        fun copySealed(value: String): DerivationPath {
+            return when (this) {
+                is Card -> Card(value)
+                is Custom -> Custom(value)
+                None -> None
+            }
+        }
     }
 
     /**
