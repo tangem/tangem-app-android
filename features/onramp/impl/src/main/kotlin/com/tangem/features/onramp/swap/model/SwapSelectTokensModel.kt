@@ -8,6 +8,7 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.components.token.state.TokenItemState
+import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.account.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
@@ -37,6 +38,7 @@ internal class SwapSelectTokensModel @Inject constructor(
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     private val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase,
+    private val accountsFeatureToggles: AccountsFeatureToggles,
 ) : Model() {
 
     val state: StateFlow<SwapSelectTokensUM> = controller.state
@@ -77,10 +79,14 @@ internal class SwapSelectTokensModel @Inject constructor(
                     selectedTokenItemState = selectedTokenItemState,
                     onRemoveClick = ::onRemoveFromTokenClick,
                     isAccountsMode = isAccountsMode,
-                    account = getAccountCurrencyStatusUseCase.invokeSync(
-                        userWalletId = params.userWalletId,
-                        currency = status.currency,
-                    ).getOrNull()?.account,
+                    account = if (accountsFeatureToggles.isFeatureEnabled) {
+                        getAccountCurrencyStatusUseCase.invokeSync(
+                            userWalletId = params.userWalletId,
+                            currency = status.currency,
+                        ).getOrNull()?.account
+                    } else {
+                        null
+                    },
                 ),
             )
         }
@@ -104,10 +110,14 @@ internal class SwapSelectTokensModel @Inject constructor(
                 transformer = SelectToTokenTransformer(
                     selectedTokenItemState = selectedTokenItemState,
                     isAccountsMode = isAccountsMode,
-                    account = getAccountCurrencyStatusUseCase.invokeSync(
-                        userWalletId = params.userWalletId,
-                        currency = status.currency,
-                    ).getOrNull()?.account,
+                    account = if (accountsFeatureToggles.isFeatureEnabled) {
+                        getAccountCurrencyStatusUseCase.invokeSync(
+                            userWalletId = params.userWalletId,
+                            currency = status.currency,
+                        ).getOrNull()?.account
+                    } else {
+                        null
+                    },
                 ),
             )
 
