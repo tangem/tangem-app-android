@@ -4,14 +4,17 @@ import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.swap.entity.AccountAvailabilityUM
 import com.tangem.features.onramp.tokenlist.entity.TokenListUM
 import com.tangem.features.onramp.tokenlist.entity.TokenListUMData
 import com.tangem.features.onramp.tokenlist.entity.TokenListUMTransformer
 import com.tangem.features.onramp.tokenlist.entity.utils.OnrampTokenItemStateConverterFactory
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.plus
 import kotlinx.collections.immutable.toPersistentList
 
 internal class UpdateAccountTokenListTransformer(
@@ -46,7 +49,12 @@ internal class UpdateAccountTokenListTransformer(
                 )
             } else {
                 TokenListUMData.TokenList(
-                    tokensList = accountList.flatMap { (_, currencyList) ->
+                    tokensList = persistentListOf(
+                        TokensListItemUM.GroupTitle(
+                            id = "available_tokens_title",
+                            text = resourceReference(R.string.exchange_tokens_available_tokens_header),
+                        ),
+                    ) + accountList.flatMap { (_, currencyList) ->
                         currencyList.asSequence().map { (isAvailable, status) ->
                             if (isAvailable) {
                                 availableConverter.convert(status)
