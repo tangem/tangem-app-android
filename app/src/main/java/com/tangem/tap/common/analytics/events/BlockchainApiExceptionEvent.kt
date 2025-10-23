@@ -6,6 +6,7 @@ class BlockchainApiExceptionEvent(
     selectedHost: String,
     exceptionHost: String,
     error: String,
+    blockchain: String,
 ) : AnalyticsEvent(
     category = "BlockchainSdk",
     event = "Exception",
@@ -13,5 +14,6 @@ class BlockchainApiExceptionEvent(
         AnalyticsParam.BLOCKCHAIN_SELECTED_HOST to selectedHost,
         AnalyticsParam.BLOCKCHAIN_EXCEPTION_HOST to exceptionHost,
         AnalyticsParam.ERROR_DESCRIPTION to error,
+        AnalyticsParam.BLOCKCHAIN to blockchain,
     ),
 )

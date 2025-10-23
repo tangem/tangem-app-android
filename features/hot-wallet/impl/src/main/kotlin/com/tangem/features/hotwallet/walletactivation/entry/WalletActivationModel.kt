@@ -4,6 +4,7 @@ import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.push
 import com.arkivanov.decompose.router.stack.replaceAll
+import com.tangem.core.analytics.utils.AnalyticsContextProxy
 import com.tangem.core.decompose.di.GlobalUiMessageSender
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -39,6 +40,7 @@ internal class WalletActivationModel @Inject constructor(
     private val router: Router,
     private val shouldAskPermissionUseCase: ShouldAskPermissionUseCase,
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
+    private val analyticsContextProxy: AnalyticsContextProxy,
 ) : Model() {
 
     val params = paramsContainer.require<WalletActivationComponent.Params>()
@@ -55,6 +57,15 @@ internal class WalletActivationModel @Inject constructor(
     val stackNavigation = StackNavigation<WalletActivationRoute>()
     val startRoute = WalletActivationRoute.ManualBackupStart
     val currentRoute: MutableStateFlow<WalletActivationRoute> = MutableStateFlow(startRoute)
+
+    init {
+        analyticsContextProxy.addHotWalletContext()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        analyticsContextProxy.removeContext()
+    }
 
     fun onChildBack() {
         when (currentRoute.value) {
@@ -136,6 +147,8 @@ internal class WalletActivationModel @Inject constructor(
         override fun onContinueClick(userWalletId: UserWalletId) {
             stackNavigation.push(WalletActivationRoute.SetAccessCode)
         }
+
+        override fun onUpgradeClick(userWalletId: UserWalletId) = Unit
     }
 
     inner class AccessCodeModelCallbacks : AccessCodeComponent.ModelCallbacks {

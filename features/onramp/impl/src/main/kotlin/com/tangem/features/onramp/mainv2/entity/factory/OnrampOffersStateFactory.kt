@@ -17,15 +17,12 @@ internal class OnrampOffersStateFactory(
     private val onrampIntents: OnrampV2Intents,
 ) {
 
-    fun getOnShowOffersState(offers: List<OnrampOffersBlock>): OnrampV2MainComponentUM {
+    fun getOffersState(offers: List<OnrampOffersBlock>): OnrampV2MainComponentUM {
         val currentState = currentStateProvider.invoke()
         return when (currentState) {
             is OnrampV2MainComponentUM.Content -> {
                 currentState.copy(
-                    offersBlockState = mapOnrampOffersBlockToUM(
-                        offersBlocks = offers,
-                        currentState = currentState,
-                    ),
+                    offersBlockState = mapOnrampOffersBlockToUM(offersBlocks = offers),
                 )
             }
             is OnrampV2MainComponentUM.InitialLoading -> {
@@ -34,10 +31,7 @@ internal class OnrampOffersStateFactory(
         }
     }
 
-    private fun mapOnrampOffersBlockToUM(
-        offersBlocks: List<OnrampOffersBlock>,
-        currentState: OnrampV2MainComponentUM.Content,
-    ): OnrampOffersBlockUM.Content {
+    private fun mapOnrampOffersBlockToUM(offersBlocks: List<OnrampOffersBlock>): OnrampOffersBlockUM {
         val allOffersUM = mutableListOf<OnrampOfferUM>()
         offersBlocks.map { block ->
             block.offers.forEach { offer ->
@@ -51,7 +45,6 @@ internal class OnrampOffersStateFactory(
                                 category = mapOfferCategoryDTOtoUM(block.category),
                                 advantages = mapOfferAdvantagesDTOtoUM(offer.advantages),
                                 paymentMethod = currentQuote.paymentMethod,
-                                providerId = currentQuote.provider.id,
                                 providerName = currentQuote.provider.info.name,
                                 rate = currentQuote.toAmount.value.format {
                                     crypto(
@@ -80,8 +73,9 @@ internal class OnrampOffersStateFactory(
             }
         }
 
+        if (allOffersUM.isEmpty()) return OnrampOffersBlockUM.Empty
+
         return OnrampOffersBlockUM.Content(
-            isBlockVisible = currentState.offersBlockState.isBlockVisible,
             recentOffer = allOffersUM.firstOrNull { it.category == OnrampOfferCategoryUM.RecentlyUsed },
             recommended = allOffersUM.filter { it.category == OnrampOfferCategoryUM.Recommended }.toPersistentList(),
             onrampAllOffersButtonConfig = if (offersBlocks.any { it.hasMoreOffers }) {
@@ -107,6 +101,7 @@ internal class OnrampOffersStateFactory(
             OnrampOfferAdvantages.Default -> OnrampOfferAdvantagesUM.Default
             OnrampOfferAdvantages.BestRate -> OnrampOfferAdvantagesUM.BestRate
             OnrampOfferAdvantages.Fastest -> OnrampOfferAdvantagesUM.Fastest
+            OnrampOfferAdvantages.GreatRate -> OnrampOfferAdvantagesUM.GreatRate
         }
     }
 }
