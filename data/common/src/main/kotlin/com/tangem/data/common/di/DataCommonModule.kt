@@ -1,6 +1,7 @@
 package com.tangem.data.common.di
 
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
+import com.tangem.data.common.account.WalletAccountsFetcher
 import com.tangem.data.common.cache.etag.DefaultETagsStore
 import com.tangem.data.common.cache.etag.ETagsStore
 import com.tangem.data.common.currency.*
@@ -30,6 +31,8 @@ internal object DataCommonModule {
     fun provideCardCryptoCurrencyFactory(
         excludedBlockchains: ExcludedBlockchains,
         userWalletsStore: UserWalletsStore,
+        accountsFeatureToggles: AccountsFeatureToggles,
+        walletAccountsFetcher: WalletAccountsFetcher,
         userTokensResponseStore: UserTokensResponseStore,
         responseCryptoCurrenciesFactory: ResponseCryptoCurrenciesFactory,
     ): CardCryptoCurrencyFactory {
@@ -37,6 +40,8 @@ internal object DataCommonModule {
             demoConfig = DemoConfig(),
             excludedBlockchains = excludedBlockchains,
             userWalletsStore = userWalletsStore,
+            accountsFeatureToggles = accountsFeatureToggles,
+            walletAccountsFetcher = walletAccountsFetcher,
             userTokensResponseStore = userTokensResponseStore,
             responseCryptoCurrenciesFactory = responseCryptoCurrenciesFactory,
         )
