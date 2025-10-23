@@ -160,7 +160,7 @@ public val Blockchain.mercuryoNetwork: String?
             Blockchain.Pepecoin, Blockchain.PepecoinTestnet -> null
             Blockchain.Hyperliquid, Blockchain.HyperliquidTestnet -> null
             Blockchain.Quai, Blockchain.QuaiTestnet -> null
-            // Blockchain.Linea, Blockchain.LineaTestnet -> null
-            // Blockchain.ArbitrumNova -> null
+            Blockchain.Linea, Blockchain.LineaTestnet -> null
+            Blockchain.ArbitrumNova -> null
         }
     }
