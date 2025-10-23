@@ -73,10 +73,4 @@ sealed class CryptoCurrencyWarning {
         val requiredAmount: BigDecimal,
         val currencyDecimals: Int,
     ) : CryptoCurrencyWarning()
-
-    data class YieldSupplyNotDepositedAmount(
-        val currency: CryptoCurrency,
-        val currencySymbol: String,
-        val amount: BigDecimal,
-    ) : CryptoCurrencyWarning()
 }
