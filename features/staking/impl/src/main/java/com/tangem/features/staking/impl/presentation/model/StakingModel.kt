@@ -168,7 +168,7 @@ internal class StakingModel @Inject constructor(
     }
 
     private var isAccountInitialized: Boolean = true
-    private var cryptoCurrencyStatus: CryptoCurrencyStatus by Delegates.notNull()
+    private lateinit var cryptoCurrencyStatus: CryptoCurrencyStatus
     private var stakingActions: List<StakingAction> = emptyList()
     private var feeCryptoCurrencyStatus: CryptoCurrencyStatus? = null
     private var minimumTransactionAmount: EnterAmountBoundary? = null
@@ -1257,6 +1257,7 @@ internal class StakingModel @Inject constructor(
     }
 
     private fun isCaseWithUnitializedTonAccount(): Boolean {
+        if (!::cryptoCurrencyStatus.isInitialized) return false
         return value.currentStep == StakingStep.Confirmation &&
             isTon(cryptoCurrencyStatus.currency.network.rawId) &&
             !isAccountInitialized
