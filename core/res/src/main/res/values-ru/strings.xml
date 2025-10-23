@@ -1236,6 +1236,7 @@
   <string name="token_button_unavailability_reason_pending_transaction_send">Отправка средств станет доступной после завершения транзакции(-ий) в сети %s</string>
   <string name="token_button_unavailability_reason_sell_unavailable">Продажа %s в данный момент не поддерживается ни одним провайдером. Мы работаем над добавлением новых возможностей. Следите за нашими новостями.</string>
   <string name="token_button_unavailability_reason_staking_unavailable">Стейкинг %s в данный момент не поддерживается ни одним провайдером. Мы работаем над добавлением новых возможностей. Следите за нашими новостями.</string>
+  <string name="token_button_unavailability_reason_yield_supply_approval">Разрешение было отозвано. Ваши средства остаются в Yield сервисе. Чтобы совершать операции, перейдите в Yield сервис и снова выдайте разрешение.</string>
   <string name="token_details_generate_xpub">Сгенерировать XPUB</string>
   <string name="token_details_hide_alert_hide">Скрыть</string>
   <string name="token_details_hide_alert_message">Вы скрываете токен с главного экрана, но в любой момент сможете добавить его обратно через страницу управления токенами.</string>
@@ -1570,14 +1571,15 @@
   <string name="xtz_withdrawal_message_ignore">Нет, отправить все</string>
   <string name="xtz_withdrawal_message_reduce">Уменьшить на %s XTZ</string>
   <string name="xtz_withdrawal_message_warning">Чтобы не платить повышенную комиссию при следующем пополнении кошелька, уменьшите сумму на %s XTZ</string>
-  <string name="yield_module_alert_description">Ваши средства сейчас размещены в протоколе AAVE, но вы можете управлять ими в любое время.</string>
+  <string name="yield_module_alert_description">При активном режиме доходности все будущие депозиты на этот адрес будут направляться в Aave. Вы по-прежнему можете свободно управлять своими средствами.</string>
   <string name="yield_module_alert_title">Ваш %s внесён в Aave</string>
   <string name="yield_module_approve_needed_notification_cta">Выдать разрешение</string>
-  <string name="yield_module_approve_needed_notification_description">Что-то пошло не так с вашим предыдущим разрешением, поэтому требуется новое. Выберите, как хотите продолжить.</string>
+  <string name="yield_module_approve_needed_notification_description">Разрешение для вашего токена было отозвано. Выдайте его снова, чтобы продолжить работу сервиса.</string>
   <string name="yield_module_approve_needed_notification_title">Необходимо разрешение</string>
   <string name="yield_module_approve_sheet_fee_note">Комиссия будет списана, и ваши активы снова начнут приносить доход.</string>
   <string name="yield_module_approve_sheet_subtitle">Чтобы продолжить зарабатывать, нужно выдать разрешение.</string>
   <string name="yield_module_approve_sheet_title">Подтвердить разрешение</string>
+  <string name="yield_module_balance_info_sheet_subtitle">Ваши средства в данный момент размещены в протоколе Aave, но вы можете воспользоваться ими в любое время.</string>
   <string name="yield_module_balance_info_sheet_title">Ваш %s внесён в Aave</string>
   <string name="yield_module_chart_loading_error">Невозможно загрузить график</string>
   <string name="yield_module_deposit_error_notification_title">Полученная сумма, %1$s %2$s, не была зачислена на Aave.</string>
@@ -1600,6 +1602,7 @@
   <string name="yield_module_fee_policy_tangem_service_fee_title">Tangem взимает комиссию за обслуживание в размере 3% от полученного дохода.</string>
   <string name="yield_module_high_fee_error">Ваши средства будут автоматически переведены в Aave, как только комиссия сети снизится или баланс достигнет минимально необходимой суммы.</string>
   <string name="yield_module_historical_returns">Историческая доходность</string>
+  <string name="yield_module_main_view_approve_notification_description">Разрешение для вашего токена в Yield сервисе было отозвано. Откройте токен, чтобы выдать разрешение снова.</string>
   <string name="yield_module_main_view_approve_notification_title">Необходимо разрешение для токена</string>
   <string name="yield_module_network_fee_unreachable_notification_description">Проверьте ваше интернет соединение</string>
   <string name="yield_module_network_fee_unreachable_notification_title">Информация о комиссии недоступна</string>
@@ -1633,7 +1636,7 @@
   <string name="yield_module_token_details_earn_notification_apy">APY</string>
   <string name="yield_module_token_details_earn_notification_description">Пусть ваши деньги работают — зарабатывайте проценты на свой баланс.</string>
   <string name="yield_module_token_details_earn_notification_earning_on_your_balance_subtitle">Проценты начисляются автоматически.</string>
-  <string name="yield_module_token_details_earn_notification_earning_on_your_balance_title">Доходность</string>
+  <string name="yield_module_token_details_earn_notification_earning_on_your_balance_title">Режим доходности</string>
   <string name="yield_module_token_details_earn_notification_processing">Отправка ваших средств</string>
   <string name="yield_module_token_details_earn_notification_title">Пусть ваш баланс работает на вас!</string>
   <string name="yield_module_transfer_mode_automatic">Автоматически</string>
