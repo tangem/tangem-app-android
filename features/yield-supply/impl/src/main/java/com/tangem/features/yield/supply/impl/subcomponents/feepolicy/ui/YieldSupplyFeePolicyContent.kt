@@ -6,10 +6,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -34,7 +36,6 @@ import kotlinx.collections.immutable.persistentListOf
 internal fun YieldSupplyFeePolicyContent(
     yieldSupplyFeeUM: YieldSupplyFeeUM,
     tokenSymbol: String,
-    networkName: String,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -62,68 +63,51 @@ internal fun YieldSupplyFeePolicyContent(
             modifier = Modifier.padding(horizontal = 16.dp),
         )
         SpacerH24()
-        FooterContainer(
-            footer = resourceReference(
-                id = R.string.yield_module_fee_policy_sheet_min_amount_note,
-                formatArgs = wrappedList(networkName),
-            ),
-            paddingValues = PaddingValues(
-                top = 8.dp,
-                start = 12.dp,
-                end = 12.dp,
-            ),
-        ) {
-            val minAmount = when (yieldSupplyFeeUM) {
-                is YieldSupplyFeeUM.Content -> yieldSupplyFeeUM.minAmountFeeValue
-                YieldSupplyFeeUM.Error -> stringReference(StringsSigns.DASH_SIGN)
-                YieldSupplyFeeUM.Loading -> null
-            }
-            YieldSupplyFeeRow(
-                title = resourceReference(R.string.yield_module_fee_policy_sheet_min_amount_title),
-                value = minAmount,
-            )
-        }
+        MinFeeNote(yieldSupplyFeeUM)
         SpacerH16()
+        val feeNote = when (yieldSupplyFeeUM) {
+            is YieldSupplyFeeUM.Content -> yieldSupplyFeeUM.feeNoteValue
+            YieldSupplyFeeUM.Error -> null
+            YieldSupplyFeeUM.Loading -> null
+        }
         FooterContainer(
-            footer = resourceReference(
-                id = R.string.yield_module_fee_policy_sheet_current_fee_note,
-                formatArgs = wrappedList(networkName),
-            ),
+            footer = feeNote,
             paddingValues = PaddingValues(
                 top = 8.dp,
                 start = 12.dp,
                 end = 12.dp,
             ),
         ) {
-            val currentFee = when (yieldSupplyFeeUM) {
-                is YieldSupplyFeeUM.Content -> yieldSupplyFeeUM.currentNetworkFeeValue
-                YieldSupplyFeeUM.Error -> stringReference(StringsSigns.DASH_SIGN)
-                YieldSupplyFeeUM.Loading -> null
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(TangemTheme.colors.background.action)
+                    .padding(horizontal = 16.dp),
+            ) {
+                val currentFee = when (yieldSupplyFeeUM) {
+                    is YieldSupplyFeeUM.Content -> yieldSupplyFeeUM.tokenFeeFiatValue
+                    YieldSupplyFeeUM.Error -> stringReference(StringsSigns.DASH_SIGN)
+                    YieldSupplyFeeUM.Loading -> null
+                }
+                YieldSupplyFeeRow(
+                    title = resourceReference(R.string.yield_module_fee_policy_sheet_current_fee_title),
+                    value = currentFee,
+                    modifier = Modifier.padding(vertical = 12.dp),
+                )
+                val maxFee = when (yieldSupplyFeeUM) {
+                    is YieldSupplyFeeUM.Content -> yieldSupplyFeeUM.maxNetworkFeeFiatValue
+                    YieldSupplyFeeUM.Error -> stringReference(StringsSigns.DASH_SIGN)
+                    YieldSupplyFeeUM.Loading -> null
+                }
+                YieldSupplyFeeRow(
+                    title = resourceReference(R.string.yield_module_fee_policy_sheet_max_fee_title),
+                    value = maxFee,
+                    modifier = Modifier.padding(vertical = 12.dp),
+                )
             }
-            YieldSupplyFeeRow(
-                title = resourceReference(R.string.yield_module_fee_policy_sheet_current_fee_title),
-                value = currentFee,
-            )
         }
-        SpacerH16()
-        FooterContainer(
-            footer = resourceReference(R.string.yield_module_fee_policy_sheet_max_fee_note),
-            paddingValues = PaddingValues(
-                top = 8.dp,
-                start = 12.dp,
-                end = 12.dp,
-            ),
-        ) {
-            val maxFee = when (yieldSupplyFeeUM) {
-                is YieldSupplyFeeUM.Content -> yieldSupplyFeeUM.maxNetworkFeeValue
-                YieldSupplyFeeUM.Error -> stringReference(StringsSigns.DASH_SIGN)
-                YieldSupplyFeeUM.Loading -> null
-            }
-            YieldSupplyFeeRow(
-                title = resourceReference(R.string.yield_module_fee_policy_sheet_max_fee_title),
-                value = maxFee,
-            )
-        }
+        SpacerH8()
         Text(
             text = stringResourceSafe(R.string.yield_module_fee_policy_tangem_service_fee_title),
             style = TangemTheme.typography.caption2,
@@ -139,6 +123,38 @@ internal fun YieldSupplyFeePolicyContent(
     }
 }
 
+@Composable
+private fun MinFeeNote(yieldSupplyFeeUM: YieldSupplyFeeUM) {
+    val minFeeNote = when (yieldSupplyFeeUM) {
+        is YieldSupplyFeeUM.Content -> yieldSupplyFeeUM.minFeeNoteValue
+        YieldSupplyFeeUM.Error -> null
+        YieldSupplyFeeUM.Loading -> null
+    }
+    FooterContainer(
+        footer = minFeeNote,
+        paddingValues = PaddingValues(
+            top = 8.dp,
+            start = 12.dp,
+            end = 12.dp,
+        ),
+    ) {
+        val minAmount = when (yieldSupplyFeeUM) {
+            is YieldSupplyFeeUM.Content -> yieldSupplyFeeUM.minTopUpFiatValue
+            YieldSupplyFeeUM.Error -> stringReference(StringsSigns.DASH_SIGN)
+            YieldSupplyFeeUM.Loading -> null
+        }
+        YieldSupplyFeeRow(
+            title = resourceReference(R.string.yield_module_fee_policy_sheet_min_amount_title),
+            value = minAmount,
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(14.dp))
+                .background(TangemTheme.colors.background.action)
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+        )
+    }
+}
+
 // region Preview
 @Composable
 @Preview(showBackground = true, widthDp = 360)
@@ -148,13 +164,28 @@ private fun YieldSupplyFeePolicyContent_Preview() {
         YieldSupplyFeePolicyContent(
             yieldSupplyFeeUM = YieldSupplyFeeUM.Content(
                 transactionDataList = persistentListOf(),
-                feeValue = stringReference("0.0001 ETH • \$1.45"),
-                maxNetworkFeeValue = stringReference("8.50 USDT • \$8.50"),
-                currentNetworkFeeValue = stringReference("1.45 USDT • \$1.45"),
-                minAmountFeeValue = stringReference("50 USDT • \$50"),
+                feeFiatValue = stringReference("$1.45"),
+                maxNetworkFeeFiatValue = stringReference("$8.50"),
+                tokenFeeFiatValue = stringReference("$1.45"),
+                minTopUpFiatValue = stringReference("$50"),
+                feeNoteValue = resourceReference(
+                    id = R.string.yield_module_fee_policy_sheet_fee_note,
+                    formatArgs = wrappedList(
+                        stringReference("$1.45"),
+                        stringReference("1.46 USDT"),
+                        stringReference("$8.50"),
+                        stringReference("8.50 USDT"),
+                    ),
+                ),
+                minFeeNoteValue = resourceReference(
+                    id = R.string.yield_module_fee_policy_sheet_min_amount_note,
+                    formatArgs = wrappedList(
+                        stringReference("$2.45"),
+                        stringReference("2.46 USDT"),
+                    ),
+                ),
             ),
             tokenSymbol = "USDT",
-            networkName = "Ethereum",
             modifier = Modifier.background(TangemTheme.colors.background.primary),
         )
     }
