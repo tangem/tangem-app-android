@@ -142,8 +142,8 @@ internal class SendAmountModel @Inject constructor(
         ) { newCryptoCurrencyStatus, account, isAccountsMode ->
             maxAmountBoundary = MaxEnterAmountConverter().convert(newCryptoCurrencyStatus)
             cryptoCurrencyStatus = newCryptoCurrencyStatus
-            initMinBoundary(cryptoCurrencyStatus, account, isAccountsMode)
-        }.flowOn(dispatchers.default)
+            initMinBoundary(newCryptoCurrencyStatus, account, isAccountsMode)
+        }.flowOn(dispatchers.main)
             .launchIn(modelScope)
     }
 
