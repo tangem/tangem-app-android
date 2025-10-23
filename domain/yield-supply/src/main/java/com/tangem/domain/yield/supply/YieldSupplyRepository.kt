@@ -3,6 +3,7 @@ package com.tangem.domain.yield.supply
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.yield.supply.models.YieldMarketToken
+import com.tangem.domain.yield.supply.models.YieldSupplyEnterStatus
 import com.tangem.domain.yield.supply.models.YieldSupplyMarketChartData
 import kotlinx.coroutines.flow.Flow
 
@@ -56,4 +57,30 @@ interface YieldSupplyRepository {
      */
     @Throws
     suspend fun deactivateProtocol(cryptoCurrencyToken: CryptoCurrency.Token): Boolean
+
+    /**
+     * Save the last user-initiated yield protocol action for the given currency.
+     *
+     * The saved value helps the UI render an intermediate "processing" state while waiting
+     * for the definitive protocol status to be fetched from the network. This information
+     * is transient and not intended to be persisted across app restarts.
+     *
+     * @param cryptoCurrencyToken the currency or token the action relates to
+     * @param yieldSupplyEnterStatus the last action intent: [YieldSupplyEnterStatus.Enter] or [YieldSupplyEnterStatus.Exit]
+     */
+    suspend fun saveTokenProtocolStatus(
+        cryptoCurrencyToken: CryptoCurrency,
+        yieldSupplyEnterStatus: YieldSupplyEnterStatus,
+    )
+
+    /**
+     * Get the last saved user-initiated yield protocol action for the given currency, if any.
+     *
+     * Used to determine whether the UI should display an intermediate "processing" state
+     * until the protocol status retrieved from backend reflects the change.
+     *
+     * @param cryptoCurrencyToken the currency or token to query
+     * @return the last action intent or null if nothing has been recorded
+     */
+    fun getTokenProtocolStatus(cryptoCurrencyToken: CryptoCurrency): YieldSupplyEnterStatus?
 }
