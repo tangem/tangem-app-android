@@ -1,6 +1,9 @@
 package com.tangem.common.ui.amountScreen.ui
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -127,6 +130,8 @@ private fun AmountInfoMain(amountUM: AmountState, modifier: Modifier = Modifier)
     AnimatedContent(
         targetState = amountUM,
         modifier = modifier,
+        contentKey = { amountUM.javaClass }, // Show animation only when the state type changes [Empty -> Data]
+        transitionSpec = { fadeIn().togetherWith(fadeOut()) },
     ) { currentAmount ->
         Column(
             verticalArrangement = Arrangement.spacedBy(2.dp),
