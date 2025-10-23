@@ -113,6 +113,7 @@ dependencies {
     implementation(projects.domain.legacy)
     implementation(projects.libs.blockchainSdk)
     implementation(projects.domain.account)
+    implementation(projects.domain.account.status)
     implementation(projects.domain.models)
     implementation(projects.domain.core)
     api(projects.domain.common)
