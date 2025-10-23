@@ -64,6 +64,12 @@ class SendPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
         useUnmergedTree = true
     }
 
+    val continueButton: KNode = child {
+        hasTestTag(BaseButtonTestTags.TEXT)
+        hasText(getResourceString(SendR.string.common_continue))
+        useUnmergedTree = true
+    }
+
 }
 
 internal fun BaseTestCase.onSendScreen(function: SendPageObject.() -> Unit) =
