@@ -181,34 +181,29 @@ internal class YieldSupplyModel @Inject constructor(
     @Suppress("MaximumLineLength")
     private fun onCryptoCurrencyStatusUpdated(cryptoCurrencyStatus: CryptoCurrencyStatus) {
         val yieldSupplyStatus = cryptoCurrencyStatus.value.yieldSupplyStatus
+        val tokenProtocolStatus = yieldSupplyRepository.getTokenProtocolStatus(cryptoCurrency)
+        val isActive = yieldSupplyStatus?.isActive == true
 
-        if ((yieldSupplyStatus == null || yieldSupplyStatus.isActive == false) &&
-            yieldSupplyRepository.getTokenProtocolStatus(cryptoCurrency) == YieldSupplyEnterStatus.Enter) {
-            uiState.update {
-                YieldSupplyUM.Processing.Enter
+        when {
+            !isActive && tokenProtocolStatus == YieldSupplyEnterStatus.Enter -> {
+                uiState.update { YieldSupplyUM.Processing.Enter }
+                fetchCurrencyWithDelay()
             }
-            fetchCurrencyWithDelay()
-            return
-        }
-
-        if (yieldSupplyStatus?.isActive == true &&
-            yieldSupplyRepository.getTokenProtocolStatus(cryptoCurrency) == YieldSupplyEnterStatus.Exit) {
-            uiState.update {
-                YieldSupplyUM.Processing.Exit
+            isActive && tokenProtocolStatus == YieldSupplyEnterStatus.Exit -> {
+                uiState.update { YieldSupplyUM.Processing.Exit }
+                fetchCurrencyWithDelay()
             }
-            fetchCurrencyWithDelay()
-            return
-        }
-
-        sendInfoAboutProtocolStatus(cryptoCurrencyStatus)
-
-        if (yieldSupplyStatus?.isActive == true) {
-            loadActiveState(
-                cryptoCurrencyStatus = cryptoCurrencyStatus,
-                yieldSupplyStatus = yieldSupplyStatus,
-            )
-        } else {
-            loadTokenStatus()
+            else -> {
+                sendInfoAboutProtocolStatus(cryptoCurrencyStatus)
+                if (isActive) {
+                    loadActiveState(
+                        cryptoCurrencyStatus = cryptoCurrencyStatus,
+                        yieldSupplyStatus = requireNotNull(yieldSupplyStatus),
+                    )
+                } else {
+                    loadTokenStatus()
+                }
+            }
         }
     }
 
