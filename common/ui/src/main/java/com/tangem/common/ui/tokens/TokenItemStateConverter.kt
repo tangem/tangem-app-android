@@ -20,7 +20,6 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.currency.yieldSupplyKey
-import com.tangem.domain.models.currency.yieldSupplyNotAllAmountSupplied
 import com.tangem.domain.models.staking.YieldBalance
 import com.tangem.domain.staking.utils.getTotalWithRewardsStakingBalance
 import com.tangem.utils.StringsSigns.DASH_SIGN
@@ -271,8 +270,7 @@ class TokenItemStateConverter(
                         isFlickering = status.value.isFlickering(),
                         icons = buildList {
                             if (status.value.yieldSupplyStatus?.isActive == true &&
-                                status.value.yieldSupplyStatus?.isAllowedToSpend == false ||
-                                status.yieldSupplyNotAllAmountSupplied()
+                                status.value.yieldSupplyStatus?.isAllowedToSpend == false
                             ) {
                                 TokenItemState.FiatAmountState.Content.IconUM(
                                     iconRes = R.drawable.ic_alert_triangle_20,
