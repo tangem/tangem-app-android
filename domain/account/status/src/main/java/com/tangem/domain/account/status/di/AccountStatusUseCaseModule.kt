@@ -6,6 +6,7 @@ import com.tangem.domain.account.status.usecase.GetAccountCurrencyByAddressUseCa
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.account.status.usecase.GetCryptoCurrencyActionsUseCaseV2
 import com.tangem.domain.account.status.usecase.ManageCryptoCurrenciesUseCase
+import com.tangem.domain.account.status.utils.CryptoCurrencyBalanceFetcher
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.express.ExpressServiceFetcher
@@ -70,14 +71,12 @@ internal object AccountStatusUseCaseModule {
 
     @Provides
     @Singleton
-    fun provideSaveCryptoCurrenciesUseCase(
+    fun provideManageCryptoCurrenciesUseCase(
         singleAccountListSupplier: SingleAccountListSupplier,
         accountsCRUDRepository: AccountsCRUDRepository,
         currenciesRepository: CurrenciesRepository,
         derivationsRepository: DerivationsRepository,
-        multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
-        multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
-        multiYieldBalanceFetcher: MultiYieldBalanceFetcher,
+        cryptoCurrencyBalanceFetcher: CryptoCurrencyBalanceFetcher,
         stakingIdFactory: StakingIdFactory,
         networksCleaner: NetworksCleaner,
         stakingCleaner: StakingCleaner,
@@ -89,15 +88,33 @@ internal object AccountStatusUseCaseModule {
             accountsCRUDRepository = accountsCRUDRepository,
             currenciesRepository = currenciesRepository,
             derivationsRepository = derivationsRepository,
-            multiNetworkStatusFetcher = multiNetworkStatusFetcher,
-            multiQuoteStatusFetcher = multiQuoteStatusFetcher,
-            multiYieldBalanceFetcher = multiYieldBalanceFetcher,
+            cryptoCurrencyBalanceFetcher = cryptoCurrencyBalanceFetcher,
             stakingIdFactory = stakingIdFactory,
             networksCleaner = networksCleaner,
             stakingCleaner = stakingCleaner,
             expressServiceFetcher = expressServiceFetcher,
             parallelUpdatingScope = CoroutineScope(SupervisorJob() + dispatchers.default),
             dispatchers = dispatchers,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideCryptoCurrencyBalanceFetcher(
+        accountsCRUDRepository: AccountsCRUDRepository,
+        multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
+        multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
+        multiYieldBalanceFetcher: MultiYieldBalanceFetcher,
+        stakingIdFactory: StakingIdFactory,
+        dispatchers: CoroutineDispatcherProvider,
+    ): CryptoCurrencyBalanceFetcher {
+        return CryptoCurrencyBalanceFetcher(
+            accountsCRUDRepository = accountsCRUDRepository,
+            multiNetworkStatusFetcher = multiNetworkStatusFetcher,
+            multiQuoteStatusFetcher = multiQuoteStatusFetcher,
+            multiYieldBalanceFetcher = multiYieldBalanceFetcher,
+            stakingIdFactory = stakingIdFactory,
+            parallelUpdatingScope = CoroutineScope(SupervisorJob() + dispatchers.default),
         )
     }
 }
