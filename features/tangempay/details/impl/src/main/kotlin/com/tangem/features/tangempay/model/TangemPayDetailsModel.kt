@@ -4,7 +4,6 @@ import androidx.compose.runtime.Stable
 import androidx.compose.ui.graphics.toArgb
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
-import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -19,13 +18,16 @@ import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.TokenReceiveType
 import com.tangem.domain.pay.DataForReceiveFactory
 import com.tangem.domain.pay.repository.CardDetailsRepository
-import com.tangem.features.tangempay.components.TangemPayDetailsComponent
+import com.tangem.domain.visa.model.TangemPayTxHistoryItem
+import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.entity.TangemPayDetailsErrorType
+import com.tangem.features.tangempay.entity.TangemPayDetailsNavigation
 import com.tangem.features.tangempay.entity.TangemPayDetailsStateFactory
 import com.tangem.features.tangempay.entity.TangemPayDetailsUM
 import com.tangem.features.tangempay.model.transformers.*
 import com.tangem.features.tangempay.utils.TangemPayErrorMessageFactory
+import com.tangem.features.tangempay.utils.TangemPayTxHistoryUiActions
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
@@ -53,9 +55,9 @@ internal class TangemPayDetailsModel @Inject constructor(
     private val dataForReceiveFactory: DataForReceiveFactory,
     private val clipboardManager: ClipboardManager,
     private val uiMessageSender: UiMessageSender,
-) : Model() {
+) : Model(), TangemPayTxHistoryUiActions {
 
-    private val params: TangemPayDetailsComponent.Params = paramsContainer.require()
+    private val params: TangemPayDetailsContainerComponent.Params = paramsContainer.require()
 
     private val stateFactory = TangemPayDetailsStateFactory(
         cardNumberEnd = params.config.cardNumberEnd,
@@ -64,6 +66,8 @@ internal class TangemPayDetailsModel @Inject constructor(
         onReceive = ::onClickReceive,
         onReveal = ::revealCardDetails,
         onCopy = ::copyData,
+        onClickChangePin = ::onClickChangePin,
+        onClickFreezeCard = ::onClickFreezeCard,
     )
 
     val uiState: StateFlow<TangemPayDetailsUM>
@@ -79,10 +83,18 @@ internal class TangemPayDetailsModel @Inject constructor(
         fetchBalance()
     }
 
+    private fun onClickChangePin() {
+        // TODO [REDACTED_JIRA]
+    }
+
+    private fun onClickFreezeCard() {
+        // TODO [REDACTED_JIRA]
+    }
+
     private fun onClickReceive() {
         val depositAddress = params.config.depositAddress
         if (depositAddress == null) {
-            showError()
+            showBottomSheetError(TangemPayDetailsErrorType.Receive)
         } else {
             dataForReceiveFactory.getDataForReceive(depositAddress = depositAddress, chainId = params.config.chainId)
                 .onRight {
@@ -101,13 +113,7 @@ internal class TangemPayDetailsModel @Inject constructor(
                     )
                     bottomSheetNavigation.activate(TangemPayDetailsNavigation.Receive(config))
                 }
-                .onLeft {
-                    val messageUM = TangemPayErrorMessageFactory.createError(
-                        type = TangemPayDetailsErrorType.Receive,
-                        onDismiss = bottomSheetNavigation::dismiss,
-                    )
-                    bottomSheetNavigation.activate(TangemPayDetailsNavigation.Error(messageUM))
-                }
+                .onLeft { showBottomSheetError(TangemPayDetailsErrorType.Receive) }
         }
     }
 
@@ -162,5 +168,13 @@ internal class TangemPayDetailsModel @Inject constructor(
         uiMessageSender.send(
             SnackbarMessage(TextReference.Res(R.string.tangempay_card_details_error_text)),
         )
+    }
+
+    override fun onTransactionClick(item: TangemPayTxHistoryItem) {
+        bottomSheetNavigation.activate(TangemPayDetailsNavigation.TransactionDetails(item))
+    }
+
+    private fun showBottomSheetError(type: TangemPayDetailsErrorType) {
+        uiMessageSender.send(message = TangemPayErrorMessageFactory.createErrorMessage(type = type))
     }
 }
