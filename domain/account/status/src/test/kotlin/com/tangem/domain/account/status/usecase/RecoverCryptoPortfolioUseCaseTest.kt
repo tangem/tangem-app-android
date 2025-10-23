@@ -1,4 +1,4 @@
-package com.tangem.domain.account.usecase
+package com.tangem.domain.account.status.usecase
 
 import arrow.core.None
 import arrow.core.left
@@ -8,17 +8,17 @@ import com.google.common.truth.Truth
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.models.ArchivedAccount
 import com.tangem.domain.account.repository.AccountsCRUDRepository
+import com.tangem.domain.account.status.usecase.RecoverCryptoPortfolioUseCase.Error.DataOperationFailed
+import com.tangem.domain.account.status.utils.CryptoCurrencyBalanceFetcher
 import com.tangem.domain.account.tokens.MainAccountTokensMigration
-import com.tangem.domain.account.usecase.RecoverCryptoPortfolioUseCase.Error
-import com.tangem.domain.account.utils.createAccount
-import com.tangem.domain.models.account.AccountId
-import com.tangem.domain.models.account.DerivationIndex
+import com.tangem.domain.models.account.*
 import com.tangem.domain.models.wallet.UserWalletId
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import kotlin.random.Random
 
 /**
 [REDACTED_AUTHOR]
@@ -28,14 +28,16 @@ class RecoverCryptoPortfolioUseCaseTest {
 
     private val crudRepository: AccountsCRUDRepository = mockk(relaxUnitFun = true)
     private val mainAccountTokensMigration: MainAccountTokensMigration = mockk()
+    private val cryptoCurrencyBalanceFetcher: CryptoCurrencyBalanceFetcher = mockk(relaxUnitFun = true)
     private val useCase = RecoverCryptoPortfolioUseCase(
         crudRepository = crudRepository,
         mainAccountTokensMigration = mainAccountTokensMigration,
+        cryptoCurrencyBalanceFetcher = cryptoCurrencyBalanceFetcher,
     )
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(crudRepository)
+        clearMocks(crudRepository, mainAccountTokensMigration, cryptoCurrencyBalanceFetcher)
     }
 
     @Test
@@ -57,6 +59,7 @@ class RecoverCryptoPortfolioUseCaseTest {
         coEvery { crudRepository.getAccountListSync(userWalletId) } returns accountList.toOption()
         coEvery { crudRepository.getArchivedAccountSync(account.accountId) } returns archivedAccount.toOption()
         coEvery { mainAccountTokensMigration.migrate(userWalletId, account.derivationIndex) } returns Unit.right()
+        coEvery { crudRepository.getAccountSync(account.accountId) } returns account.toOption()
 
         // Act
         val actual = useCase(account.accountId)
@@ -69,21 +72,23 @@ class RecoverCryptoPortfolioUseCaseTest {
             crudRepository.getAccountListSync(userWalletId)
             crudRepository.getArchivedAccountSync(account.accountId)
             crudRepository.saveAccounts(updatedAccountList)
+            crudRepository.getAccountSync(account.accountId)
+            cryptoCurrencyBalanceFetcher(userWalletId, account.cryptoCurrencies.toList())
         }
     }
 
     @Test
     fun `invoke should return error if getAccounts returns None`() = runTest {
         // Arrange
-        val accountId = AccountId.forCryptoPortfolio(
+        val accountId = AccountId.Companion.forCryptoPortfolio(
             userWalletId = userWalletId,
-            derivationIndex = DerivationIndex.Main,
+            derivationIndex = DerivationIndex.Companion.Main,
         )
 
         coEvery { crudRepository.getAccountListSync(userWalletId) } returns None
 
         // Act
-        val actual = useCase(accountId).leftOrNull() as Error.DataOperationFailed
+        val actual = useCase(accountId).leftOrNull() as DataOperationFailed
 
         // Assert
         val expected = IllegalStateException("Account list not found for wallet $userWalletId")
@@ -100,9 +105,9 @@ class RecoverCryptoPortfolioUseCaseTest {
     @Test
     fun `invoke should return error if getAccounts throws exception`() = runTest {
         // Arrange
-        val accountId = AccountId.forCryptoPortfolio(
+        val accountId = AccountId.Companion.forCryptoPortfolio(
             userWalletId = userWalletId,
-            derivationIndex = DerivationIndex.Main,
+            derivationIndex = DerivationIndex.Companion.Main,
         )
         val exception = IllegalStateException("Test error")
 
@@ -112,7 +117,7 @@ class RecoverCryptoPortfolioUseCaseTest {
         val actual = useCase(accountId)
 
         // Assert
-        val expected = Error.DataOperationFailed(exception).left()
+        val expected = DataOperationFailed(exception).left()
         Truth.assertThat(actual).isEqualTo(expected)
 
         coVerifySequence { crudRepository.getAccountListSync(userWalletId) }
@@ -126,7 +131,7 @@ class RecoverCryptoPortfolioUseCaseTest {
     fun `invoke should return error if getArchivedAccount throws exception`() = runTest {
         // Arrange
         val account = createAccount(userWalletId)
-        val accountList = AccountList.empty(userWalletId)
+        val accountList = AccountList.Companion.empty(userWalletId)
         val exception = IllegalStateException("Test error")
 
         coEvery { crudRepository.getAccountListSync(userWalletId) } returns accountList.toOption()
@@ -136,7 +141,7 @@ class RecoverCryptoPortfolioUseCaseTest {
         val actual = useCase(account.accountId)
 
         // Assert
-        val expected = Error.DataOperationFailed(exception).left()
+        val expected = DataOperationFailed(exception).left()
         Truth.assertThat(actual).isEqualTo(expected)
 
         coVerifySequence {
@@ -150,13 +155,13 @@ class RecoverCryptoPortfolioUseCaseTest {
     fun `invoke should return error if getArchivedAccount returns null`() = runTest {
         // Arrange
         val account = createAccount(userWalletId)
-        val accountList = AccountList.empty(userWalletId)
+        val accountList = AccountList.Companion.empty(userWalletId)
 
         coEvery { crudRepository.getAccountListSync(userWalletId) } returns accountList.toOption()
         coEvery { crudRepository.getArchivedAccountSync(account.accountId) } returns None
 
         // Act
-        val actual = useCase(account.accountId).leftOrNull() as Error.DataOperationFailed
+        val actual = useCase(account.accountId).leftOrNull() as DataOperationFailed
 
         // Assert
         val expected = IllegalStateException("Account not found: ${account.accountId}")
@@ -174,7 +179,7 @@ class RecoverCryptoPortfolioUseCaseTest {
     fun `invoke should return error if saveAccounts throws exception`() = runTest {
         // Arrange
         val account = createAccount(userWalletId)
-        val accountList = AccountList.empty(userWalletId)
+        val accountList = AccountList.Companion.empty(userWalletId)
         val archivedAccount = ArchivedAccount(
             accountId = account.accountId,
             name = account.accountName,
@@ -195,7 +200,7 @@ class RecoverCryptoPortfolioUseCaseTest {
         val actual = useCase(account.accountId)
 
         // Assert
-        val expected = Error.DataOperationFailed(exception).left()
+        val expected = DataOperationFailed(exception).left()
         Truth.assertThat(actual).isEqualTo(expected)
 
         coVerifySequence {
@@ -203,6 +208,23 @@ class RecoverCryptoPortfolioUseCaseTest {
             crudRepository.getArchivedAccountSync(account.accountId)
             crudRepository.saveAccounts(updatedAccountList)
         }
+    }
+
+    private fun createAccount(
+        userWalletId: UserWalletId,
+        name: String = "Test Account",
+        icon: CryptoPortfolioIcon = CryptoPortfolioIcon.ofDefaultCustomAccount(),
+        derivationIndex: Int = Random.nextInt(1, 21),
+    ): Account.CryptoPortfolio {
+        val derivationIndex = DerivationIndex(derivationIndex).getOrNull()!!
+
+        return Account.CryptoPortfolio(
+            accountId = AccountId.forCryptoPortfolio(userWalletId = userWalletId, derivationIndex = derivationIndex),
+            accountName = AccountName(name).getOrNull()!!,
+            icon = icon,
+            derivationIndex = derivationIndex,
+            cryptoCurrencies = emptySet(),
+        )
     }
 
     private companion object {
