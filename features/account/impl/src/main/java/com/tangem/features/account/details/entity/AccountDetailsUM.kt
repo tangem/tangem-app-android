@@ -17,6 +17,7 @@ internal data class AccountDetailsUM(
         data object None : ArchiveMode
         data class Available(
             val onArchiveAccountClick: () -> Unit,
+            val isLoading: Boolean,
         ) : ArchiveMode
     }
 }
