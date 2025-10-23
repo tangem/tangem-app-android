@@ -310,7 +310,7 @@ private fun SendWithSwapSuccessContent_Preview() {
                     isValidating = false,
                     isInitialized = false,
                     isRecentHidden = false,
-                    accountTitleUM = AccountTitleUM.Text(resourceReference(R.string.send_recipient_wallets_title)),
+                    isAccountsMode = false,
                 ),
                 feeSelectorUM = FeeSelectorUM.Content(
                     fees = TransactionFee.Single(
