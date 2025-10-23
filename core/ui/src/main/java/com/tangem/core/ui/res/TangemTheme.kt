@@ -138,6 +138,11 @@ object TangemTheme {
         @ReadOnlyComposable
         get() = LocalTangemColors.current
 
+    val colors2: TangemColors2
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalTangemColors2.current
+
     val typography: TangemTypography
         @Composable
         @ReadOnlyComposable
@@ -156,7 +161,7 @@ object TangemTheme {
 
 @Stable
 @Composable
-private fun tangemColorScheme(colors: TangemColors): ColorScheme {
+internal fun tangemColorScheme(colors: TangemColors): ColorScheme {
     return ColorScheme(
         primary = colors.background.primary,
         onPrimary = colors.text.primary1,
@@ -206,7 +211,7 @@ private fun tangemColorScheme(colors: TangemColors): ColorScheme {
 
 @Composable
 @ReadOnlyComposable
-private fun lightThemeColors(): TangemColors {
+internal fun lightThemeColors(redesign: Boolean = false): TangemColors {
     return TangemColors(
         text = TangemColors.Text(
             primary1 = TangemColorPalette.Dark6,
@@ -233,8 +238,8 @@ private fun lightThemeColors(): TangemColors {
         ),
         background = TangemColors.Background(
             primary = TangemColorPalette.White,
-            secondary = TangemColorPalette.Light1,
-            tertiary = TangemColorPalette.Light1,
+            secondary = if (redesign) TangemColorPalette.Light1V2 else TangemColorPalette.Light1,
+            tertiary = if (redesign) TangemColorPalette.Light1V2 else TangemColorPalette.Light1,
             action = TangemColorPalette.White,
         ),
         control = TangemColors.Control(
@@ -248,7 +253,7 @@ private fun lightThemeColors(): TangemColors {
             transparency = TangemColorPalette.White,
         ),
         field = TangemColors.Field(
-            primary = TangemColorPalette.Light1,
+            primary = if (redesign) TangemColorPalette.Light1V2 else TangemColorPalette.Light1,
             focused = TangemColorPalette.Light2,
         ),
         overlay = TangemColors.Overlay(
@@ -260,7 +265,7 @@ private fun lightThemeColors(): TangemColors {
 
 @Composable
 @ReadOnlyComposable
-private fun darkThemeColors(): TangemColors {
+internal fun darkThemeColors(): TangemColors {
     return TangemColors(
         text = TangemColors.Text(
             primary1 = TangemColorPalette.White,
@@ -320,12 +325,16 @@ private val TangemTextSelectionColors: TextSelectionColors
         backgroundColor = TangemTheme.colors.text.accent.copy(alpha = 0.3f),
     )
 
-private val LocalTangemColors = staticCompositionLocalOf<TangemColors> {
+internal val LocalTangemColors = staticCompositionLocalOf<TangemColors> {
     error("No TangemColors provided")
 }
 
-private val LocalTangemTypography = staticCompositionLocalOf {
-    TangemTypography()
+internal val LocalTangemColors2 = staticCompositionLocalOf<TangemColors2> {
+    error("No TangemColors2 provided")
+}
+
+internal val LocalTangemTypography = staticCompositionLocalOf {
+    TangemTypography(RobotoFamily)
 }
 
 private val LocalTangemDimens = staticCompositionLocalOf {
