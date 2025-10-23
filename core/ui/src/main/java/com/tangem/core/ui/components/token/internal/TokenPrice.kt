@@ -64,8 +64,8 @@ internal fun TokenPrice(state: TokenPriceState?, modifier: Modifier = Modifier) 
 }
 
 @Composable
-private fun PriceBlock(
-    price: String,
+internal fun PriceBlock(
+    price: String?,
     isFlickering: Boolean,
     modifier: Modifier = Modifier,
     type: PriceChangeType? = null,
@@ -75,13 +75,15 @@ private fun PriceBlock(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        PriceText(
-            modifier = Modifier.weight(weight = 1f, fill = false),
-            text = price,
-            isFlickering = isFlickering,
-        )
+        if (price != null) {
+            PriceText(
+                modifier = Modifier.weight(weight = 1f, fill = false),
+                text = price,
+                isFlickering = isFlickering,
+            )
 
-        SpacerW6()
+            SpacerW6()
+        }
 
         if (type != null) {
             PriceChangeIcon(

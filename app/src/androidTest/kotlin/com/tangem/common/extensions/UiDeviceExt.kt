@@ -20,12 +20,12 @@ fun BaseTestCase.swipeVertical(
     )
 }
 
-fun BaseTestCase.pullToRefresh() {
+fun BaseTestCase.pullToRefresh(steps: Int = 1000) {
     swipeVertical(
         direction = SwipeDirection.DOWN,
         startHeightRatio = 0.2f,
         endHeightRatio = 0.8f,
-        steps = 1000
+        steps = steps
     )
 }
 

@@ -73,7 +73,8 @@ private fun InitialLoading(state: OnrampV2MainComponentUM.InitialLoading, modifi
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .wrapContentHeight(),
+            .wrapContentHeight()
+            .padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
     ) {
         OnrampAmountContentLoading()
