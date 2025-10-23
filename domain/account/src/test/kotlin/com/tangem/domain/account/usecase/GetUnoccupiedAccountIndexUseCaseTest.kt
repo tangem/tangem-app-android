@@ -31,7 +31,7 @@ class GetUnoccupiedAccountIndexUseCaseTest {
     @Test
     fun `invoke should return error if repository returns 0`() = runTest {
         // Arrange
-        coEvery { crudRepository.getTotalAccountsCountSync(userWalletId) } returns 0.toOption()
+        coEvery { crudRepository.getTotalActiveAccountsCountSync(userWalletId) } returns 0.toOption()
 
         // Act
         val actual = useCase(userWalletId = userWalletId).leftOrNull() as Error.DataOperationFailed
@@ -42,13 +42,13 @@ class GetUnoccupiedAccountIndexUseCaseTest {
         Truth.assertThat(actual.cause).isInstanceOf(expected::class.java)
         Truth.assertThat(actual.cause).hasMessageThat().isEqualTo(expected.message)
 
-        coVerify { crudRepository.getTotalAccountsCountSync(userWalletId) }
+        coVerify { crudRepository.getTotalActiveAccountsCountSync(userWalletId) }
     }
 
     @Test
     fun `invoke should return next unoccupied index when repository returns count`() = runTest {
         // Arrange
-        coEvery { crudRepository.getTotalAccountsCountSync(userWalletId) } returns 3.toOption()
+        coEvery { crudRepository.getTotalActiveAccountsCountSync(userWalletId) } returns 3.toOption()
 
         // Act
         val actual = useCase(userWalletId = userWalletId)
@@ -57,14 +57,14 @@ class GetUnoccupiedAccountIndexUseCaseTest {
         val expected = DerivationIndex(3)
         Truth.assertThat(actual).isEqualTo(expected)
 
-        coVerify { crudRepository.getTotalAccountsCountSync(userWalletId) }
+        coVerify { crudRepository.getTotalActiveAccountsCountSync(userWalletId) }
     }
 
     @Test
     fun `invoke should return error if repository throws exception`() = runTest {
         // Arrange
         val exception = IllegalStateException("Test error")
-        coEvery { crudRepository.getTotalAccountsCountSync(userWalletId) } throws exception
+        coEvery { crudRepository.getTotalActiveAccountsCountSync(userWalletId) } throws exception
 
         // Act
         val actual = useCase(userWalletId = userWalletId)
@@ -73,6 +73,6 @@ class GetUnoccupiedAccountIndexUseCaseTest {
         val expected = Error.DataOperationFailed(exception).left()
         Truth.assertThat(actual).isEqualTo(expected)
 
-        coVerify { crudRepository.getTotalAccountsCountSync(userWalletId) }
+        coVerify { crudRepository.getTotalActiveAccountsCountSync(userWalletId) }
     }
 }

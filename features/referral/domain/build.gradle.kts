@@ -19,6 +19,7 @@ dependencies {
     implementation(projects.libs.crypto)
 
     /** Domain modules */
+    implementation(projects.domain.account.status)
     implementation(projects.domain.card)
     implementation(projects.domain.models)
     implementation(projects.domain.tokens)

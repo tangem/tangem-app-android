@@ -9,7 +9,7 @@ interface StakingComponent : ComposableContentComponent {
 
     data class Params(
         val userWalletId: UserWalletId,
-        val cryptoCurrencyId: CryptoCurrency.ID,
+        val cryptoCurrency: CryptoCurrency,
         val yieldId: String,
     )
 
