@@ -5,6 +5,7 @@ import arrow.core.raise.Raise
 import arrow.core.raise.catch
 import com.tangem.domain.account.producer.SingleAccountListProducer
 import com.tangem.domain.account.repository.AccountsCRUDRepository
+import com.tangem.domain.account.status.utils.CryptoCurrencyBalanceFetcher
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.core.utils.eitherOn
 import com.tangem.domain.express.ExpressServiceFetcher
@@ -14,11 +15,8 @@ import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.networks.utils.NetworksCleaner
-import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.staking.StakingIdFactory
-import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
 import com.tangem.domain.staking.utils.StakingCleaner
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.wallets.derivations.DerivationsRepository
@@ -30,14 +28,15 @@ import timber.log.Timber
  * Use case for saving crypto currencies to a specific account.
  *
  * @property singleAccountListSupplier Supplier to get account details.
+ * @property accountsCRUDRepository Repository for performing CRUD operations on accounts.
  * @property currenciesRepository Repository for managing currencies.
  * @property derivationsRepository Repository for deriving public keys.
- * @property multiNetworkStatusFetcher Fetcher for updating network statuses.
- * @property multiQuoteStatusFetcher Fetcher for updating quote statuses.
- * @property multiYieldBalanceFetcher Fetcher for updating yield balances.
+ * @property cryptoCurrencyBalanceFetcher Fetcher for updating crypto currency balances.
  * @property stakingIdFactory Factory for creating staking IDs.
  * @property networksCleaner Cleaner for removing obsolete network data.
  * @property stakingCleaner Cleaner for removing obsolete staking data.
+ * @property expressServiceFetcher Fetcher for updating express service data.
+ * @property parallelUpdatingScope Coroutine scope for parallel updates.
  * @property dispatchers Coroutine dispatchers for managing threading.
  *
 [REDACTED_AUTHOR]
@@ -48,9 +47,7 @@ class ManageCryptoCurrenciesUseCase(
     private val accountsCRUDRepository: AccountsCRUDRepository,
     private val currenciesRepository: CurrenciesRepository,
     private val derivationsRepository: DerivationsRepository,
-    private val multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
-    private val multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
-    private val multiYieldBalanceFetcher: MultiYieldBalanceFetcher,
+    private val cryptoCurrencyBalanceFetcher: CryptoCurrencyBalanceFetcher,
     private val stakingIdFactory: StakingIdFactory,
     private val networksCleaner: NetworksCleaner,
     private val stakingCleaner: StakingCleaner,
@@ -98,7 +95,7 @@ class ManageCryptoCurrenciesUseCase(
                     launch { accountsCRUDRepository.syncTokens(userWalletId) }
                 }
 
-                refreshBalances(userWalletId = userWalletId, currencies = modifiedCurrencyList.added)
+                cryptoCurrencyBalanceFetcher(userWalletId = userWalletId, currencies = modifiedCurrencyList.added)
                 refreshExpress(userWalletId = userWalletId, currencies = modifiedCurrencyList.total)
                 clearMetadata(userWalletId = userWalletId, currencies = modifiedCurrencyList.removed)
             }
@@ -132,7 +129,7 @@ class ManageCryptoCurrenciesUseCase(
             saveAccount(account = account.copy(cryptoCurrencies = modifiedCurrencyList.total.toSet()))
 
             parallelUpdatingScope.launch {
-                refreshBalances(userWalletId = userWalletId, currencies = listOf(tokenToAdd))
+                cryptoCurrencyBalanceFetcher(userWalletId = userWalletId, currencies = listOf(tokenToAdd))
                 refreshExpress(userWalletId = userWalletId, currencies = modifiedCurrencyList.total)
             }
 
@@ -250,46 +247,6 @@ class ManageCryptoCurrenciesUseCase(
                 )
             },
             catch = ::raise,
-        )
-    }
-
-    private suspend fun refreshBalances(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) {
-        if (currencies.isEmpty()) return
-
-        coroutineScope {
-            launch { refreshNetworks(userWalletId = userWalletId, currencies = currencies) }
-            launch { refreshYieldBalances(userWalletId = userWalletId, currencies = currencies) }
-            launch { refreshQuotes(currencies = currencies) }
-        }
-    }
-
-    private suspend fun refreshNetworks(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) {
-        multiNetworkStatusFetcher(
-            params = MultiNetworkStatusFetcher.Params(
-                userWalletId = userWalletId,
-                networks = currencies.mapTo(hashSetOf(), CryptoCurrency::network),
-            ),
-        )
-
-        accountsCRUDRepository.syncTokens(userWalletId)
-    }
-
-    private suspend fun refreshYieldBalances(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) {
-        val stakingIds = currencies.mapNotNullTo(hashSetOf()) {
-            stakingIdFactory.create(userWalletId = userWalletId, cryptoCurrency = it).getOrNull()
-        }
-
-        multiYieldBalanceFetcher(
-            params = MultiYieldBalanceFetcher.Params(userWalletId = userWalletId, stakingIds = stakingIds),
-        )
-    }
-
-    private suspend fun refreshQuotes(currencies: List<CryptoCurrency>) {
-        multiQuoteStatusFetcher(
-            params = MultiQuoteStatusFetcher.Params(
-                currenciesIds = currencies.mapNotNullTo(hashSetOf()) { it.id.rawCurrencyId },
-                appCurrencyId = null,
-            ),
         )
     }
 
