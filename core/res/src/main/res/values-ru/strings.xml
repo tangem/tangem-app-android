@@ -395,6 +395,7 @@
   <string name="express_more_providers_soon">Больше провайдеров на подходе.\nСледите за обновлениями!</string>
   <string name="express_provider">Провайдер</string>
   <string name="express_provider_best_rate">Лучший курс</string>
+  <string name="express_provider_great_rate">Лучший выбор</string>
   <string name="express_provider_max_amount">Доступно до %s</string>
   <string name="express_provider_min_amount">Доступно с %s</string>
   <string name="express_provider_not_available">Недоступно для этой пары</string>
@@ -1642,7 +1643,7 @@
   <string name="yield_module_transfer_mode_automatic">Автоматически</string>
   <string name="yield_module_unable_to_cover_fee_description">Внесите немного %1$s %2$s, чтобы покрыть комиссию сети за транзакции.</string>
   <string name="yield_module_unable_to_cover_fee_title">Невозможно покрыть комиссию в %s</string>
-  <string name="yield_module_unavailable_subtitle">Сервис начисления процентов в данный момент недоступен. Пожалуйста, попробуйте позже.</string>
-  <string name="yield_module_unavailable_title">Данные о доходе недоступны</string>
+  <string name="yield_module_unavailable_subtitle">Сервис доходности в данный момент недоступен. Пожалуйста, попробуйте позже.</string>
+  <string name="yield_module_unavailable_title">Режим доходности недоступен</string>
   <string name="yield_supply_chart_loading_error">Невозможно загрузить график</string>
 </resources>
