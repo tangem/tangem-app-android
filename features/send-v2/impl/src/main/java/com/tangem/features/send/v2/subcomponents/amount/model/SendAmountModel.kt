@@ -180,8 +180,8 @@ internal class SendAmountModel @Inject constructor(
 
     private fun initialState(
         cryptoCurrencyStatus: CryptoCurrencyStatus,
-        @Suppress("UnusedParameter") account: Account.CryptoPortfolio?,
-        @Suppress("UnusedParameter") isAccountsMode: Boolean,
+        account: Account.CryptoPortfolio?,
+        isAccountsMode: Boolean,
     ) {
         if (uiState.value is AmountState.Empty && userWallet != null) {
             val isOnlyOneWallet = getWalletsUseCase.invokeSync().size == 1
