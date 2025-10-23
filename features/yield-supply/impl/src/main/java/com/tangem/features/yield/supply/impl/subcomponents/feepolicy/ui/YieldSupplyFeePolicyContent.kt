@@ -126,7 +126,7 @@ internal fun YieldSupplyFeePolicyContent(
 @Composable
 private fun MinFeeNote(yieldSupplyFeeUM: YieldSupplyFeeUM) {
     val minFeeNote = when (yieldSupplyFeeUM) {
-        is YieldSupplyFeeUM.Content -> yieldSupplyFeeUM.feeNoteValue
+        is YieldSupplyFeeUM.Content -> yieldSupplyFeeUM.minFeeNoteValue
         YieldSupplyFeeUM.Error -> null
         YieldSupplyFeeUM.Loading -> null
     }
@@ -175,6 +175,13 @@ private fun YieldSupplyFeePolicyContent_Preview() {
                         stringReference("1.46 USDT"),
                         stringReference("$8.50"),
                         stringReference("8.50 USDT"),
+                    ),
+                ),
+                minFeeNoteValue = resourceReference(
+                    id = R.string.yield_module_fee_policy_sheet_min_amount_note,
+                    formatArgs = wrappedList(
+                        stringReference("$2.45"),
+                        stringReference("2.46 USDT"),
                     ),
                 ),
             ),
