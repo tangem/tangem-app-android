@@ -13,10 +13,12 @@ internal sealed class YieldSupplyFeeUM {
     data object Error : YieldSupplyFeeUM()
     data class Content(
         val transactionDataList: ImmutableList<TransactionData.Uncompiled>,
-        val feeValue: TextReference,
-        val currentNetworkFeeValue: TextReference,
-        val maxNetworkFeeValue: TextReference,
-        val minAmountFeeValue: TextReference,
+        val feeFiatValue: TextReference,
+        val tokenFeeFiatValue: TextReference,
+        val maxNetworkFeeFiatValue: TextReference,
+        val minTopUpFiatValue: TextReference,
+        val feeNoteValue: TextReference = TextReference.EMPTY,
+        val minFeeNoteValue: TextReference = TextReference.EMPTY,
     ) : YieldSupplyFeeUM()
 }
 
