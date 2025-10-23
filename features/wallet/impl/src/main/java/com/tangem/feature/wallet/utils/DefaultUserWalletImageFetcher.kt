@@ -45,16 +45,16 @@ class DefaultUserWalletImageFetcher @Inject constructor(
         .map { allWallets -> allWallets.filter { (walletId, _) -> wallets.any { it.walletId == walletId } } }
         .distinctUntilChanged()
 
-    override fun walletImage(walletId: UserWalletId, size: ArtworkSize): Flow<UserWalletItemUM.ImageState> = flow {
-        val imagesFlow = getUserWalletUseCase.invokeFlow(walletId)
-            // emit Loading and wait wallet
-            .onEach { if (it.isLeft()) emit(UserWalletItemUM.ImageState.Loading) }
-            .filterIsInstance<Either.Right<UserWallet>>()
-            .map { it.value }
+    override fun walletImage(walletId: UserWalletId, size: ArtworkSize): Flow<UserWalletItemUM.ImageState> =
+        getUserWalletUseCase.invokeFlow(walletId)
+            .transform { either ->
+                if (either.isLeft()) {
+                    emit(UserWalletItemUM.ImageState.Loading)
+                } else if (either is Either.Right) {
+                    emitAll(walletImage(either.value, size))
+                }
+            }
             .distinctUntilChanged()
-            .flatMapLatest { wallet -> walletImage(wallet, size) }
-        emitAll(imagesFlow)
-    }.distinctUntilChanged()
 
     override fun walletImage(cardDTO: CardDTO, size: ArtworkSize): Flow<UserWalletItemUM.ImageState> =
         internalGetCardImage(
