@@ -48,11 +48,11 @@ data class AccountList private constructor(
      */
     operator fun plus(other: Account): Either<Error, AccountList> {
         val isNewAccount = this.accounts.none { it.accountId == other.accountId }
-        val accounts = this.accounts.addOrReplace(other) { it.accountId == other.accountId }
+        val accounts = this.accounts.toList().addOrReplace(other) { it.accountId == other.accountId }
 
         return invoke(
             userWalletId = this.userWalletId,
-            accounts = accounts,
+            accounts = accounts.toSet(),
             totalAccounts = this.totalAccounts + if (isNewAccount) 1 else 0,
             sortType = this.sortType,
             groupType = this.groupType,
