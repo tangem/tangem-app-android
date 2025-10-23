@@ -16,12 +16,13 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.tokens.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
+import com.tangem.domain.yield.supply.YieldSupplyRepository
+import com.tangem.domain.yield.supply.models.YieldSupplyEnterStatus
 import com.tangem.domain.yield.supply.usecase.YieldSupplyDeactivateUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyStopEarningUseCase
 import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
 import com.tangem.features.yield.supply.impl.common.YieldSupplyAlertFactory
-import com.tangem.features.yield.supply.impl.common.YieldSupplyProtocolTrigger
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyActionUM
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyFeeUM
 import com.tangem.features.yield.supply.impl.common.entity.transformer.YieldSupplyTransactionInProgressTransformer
@@ -55,7 +56,7 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
     private val yieldSupplyNotificationsUpdateTrigger: YieldSupplyNotificationsUpdateTrigger,
     private val yieldSupplyAlertFactory: YieldSupplyAlertFactory,
     private val yieldSupplyDeactivateUseCase: YieldSupplyDeactivateUseCase,
-    private val yieldSupplyProtocolTrigger: YieldSupplyProtocolTrigger,
+    private val yieldSupplyRepository: YieldSupplyRepository,
 ) : Model(), YieldSupplyNotificationsComponent.ModelCallback {
 
     private val params: YieldSupplyStopEarningComponent.Params = paramsContainer.require()
@@ -158,7 +159,7 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
                     )
                 },
                 ifRight = {
-                    yieldSupplyProtocolTrigger.onExitProtocol()
+                    yieldSupplyRepository.saveTokenProtocolStatus(cryptoCurrency, YieldSupplyEnterStatus.Exit)
                     analytics.send(
                         YieldSupplyAnalytics.FundsWithdrawn(
                             token = cryptoCurrency.symbol,
