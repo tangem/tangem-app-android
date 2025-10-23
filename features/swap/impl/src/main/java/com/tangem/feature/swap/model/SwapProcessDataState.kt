@@ -1,5 +1,6 @@
 package com.tangem.feature.swap.model
 
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.feature.swap.domain.models.domain.SwapDataModel
 import com.tangem.feature.swap.domain.models.domain.SwapProvider
@@ -14,6 +15,8 @@ data class SwapProcessDataState(
     val fromCryptoCurrency: CryptoCurrencyStatus? = null,
     val toCryptoCurrency: CryptoCurrencyStatus? = null,
     val feePaidCryptoCurrency: CryptoCurrencyStatus? = null,
+    val fromAccount: Account.CryptoPortfolio? = null,
+    val toAccount: Account.CryptoPortfolio? = null,
     // Amount from input
     val amount: String? = null,
     val reduceBalanceBy: BigDecimal = BigDecimal.ZERO,
