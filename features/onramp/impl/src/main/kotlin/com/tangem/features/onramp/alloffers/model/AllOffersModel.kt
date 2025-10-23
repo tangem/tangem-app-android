@@ -74,6 +74,7 @@ internal class AllOffersModel @Inject constructor(
             providerName = quote.provider.info.name,
             paymentMethodName = quote.paymentMethod.name,
         )?.let { analyticsEventHandler::send }
+        dismiss()
         params.openRedirectPage(quote)
     }
 
@@ -95,7 +96,12 @@ internal class AllOffersModel @Inject constructor(
                 maybeOffers.fold(
                     ifLeft = ::handleOnrampError,
                     ifRight = { offersGroup ->
-                        _state.update { stateFactory.getLoadedPaymentsState(offersGroup) }
+                        _state.update {
+                            stateFactory.getLoadedPaymentsState(
+                                methodGroups = offersGroup,
+                                currencyCode = params.amountCurrencyCode,
+                            )
+                        }
                     },
                 )
             }

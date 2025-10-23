@@ -1,6 +1,5 @@
 package com.tangem.feature.wallet.utils
 
-import arrow.core.Either
 import com.tangem.common.ui.userwallet.converter.ArtworkUMConverter
 import com.tangem.common.ui.userwallet.state.UserWalletItemUM
 import com.tangem.core.ui.components.artwork.ArtworkUM
@@ -47,12 +46,11 @@ class DefaultUserWalletImageFetcher @Inject constructor(
 
     override fun walletImage(walletId: UserWalletId, size: ArtworkSize): Flow<UserWalletItemUM.ImageState> =
         getUserWalletUseCase.invokeFlow(walletId)
-            .transform { either ->
-                if (either.isLeft()) {
-                    emit(UserWalletItemUM.ImageState.Loading)
-                } else if (either is Either.Right) {
-                    emitAll(walletImage(either.value, size))
-                }
+            .transform {
+                it.fold(
+                    ifLeft = { emit(UserWalletItemUM.ImageState.Loading) },
+                    ifRight = { wallet -> emitAll(walletImage(wallet, size)) },
+                )
             }
             .distinctUntilChanged()
 
