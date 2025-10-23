@@ -156,10 +156,6 @@ internal class TokenDetailsNotificationConverter(
             )
             is CryptoCurrencyWarning.MigrationMaticToPol -> MigrationMaticToPol
             is CryptoCurrencyWarning.UsedOutdatedDataWarning -> UsedOutdatedData
-            is CryptoCurrencyWarning.YieldSupplyNotDepositedAmount -> YieldSupplyNotTransferedToAave(
-                tokenName = warning.currencySymbol,
-                amount = warning.amount.format { crypto(symbol = "", decimals = warning.currency.decimals) },
-            )
         }
     }
 
