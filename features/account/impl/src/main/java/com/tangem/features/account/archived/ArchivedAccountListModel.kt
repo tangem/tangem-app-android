@@ -14,8 +14,8 @@ import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.ToastMessage
 import com.tangem.core.ui.utils.showErrorDialog
 import com.tangem.domain.account.models.AccountList
+import com.tangem.domain.account.status.usecase.RecoverCryptoPortfolioUseCase
 import com.tangem.domain.account.usecase.GetArchivedAccountsUseCase
-import com.tangem.domain.account.usecase.RecoverCryptoPortfolioUseCase
 import com.tangem.domain.models.account.AccountId
 import com.tangem.features.account.ArchivedAccountListComponent
 import com.tangem.features.account.archived.entity.AccountArchivedUM
