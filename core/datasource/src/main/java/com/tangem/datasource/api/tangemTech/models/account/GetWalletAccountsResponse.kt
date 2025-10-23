@@ -21,3 +21,17 @@ data class GetWalletAccountsResponse(
         @Json(name = "totalAccounts") val totalAccounts: Int,
     )
 }
+
+/** Flattens the tokens from all wallet accounts into a single list */
+fun GetWalletAccountsResponse.flattenTokens(): List<UserTokensResponse.Token> {
+    return accounts.flatMap { it.tokens.orEmpty() }
+}
+
+/** Converts the [GetWalletAccountsResponse] into a [UserTokensResponse] */
+fun GetWalletAccountsResponse.toUserTokensResponse(): UserTokensResponse {
+    return UserTokensResponse(
+        group = wallet.group,
+        sort = wallet.sort,
+        tokens = flattenTokens(),
+    )
+}
