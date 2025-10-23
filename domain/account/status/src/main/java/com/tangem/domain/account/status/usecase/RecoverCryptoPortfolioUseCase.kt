@@ -1,4 +1,4 @@
-package com.tangem.domain.account.usecase
+package com.tangem.domain.account.status.usecase
 
 import arrow.core.Either
 import arrow.core.getOrElse
@@ -9,6 +9,7 @@ import arrow.core.raise.ensure
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.models.ArchivedAccount
 import com.tangem.domain.account.repository.AccountsCRUDRepository
+import com.tangem.domain.account.status.utils.CryptoCurrencyBalanceFetcher
 import com.tangem.domain.account.tokens.MainAccountTokensMigration
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
@@ -25,6 +26,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 class RecoverCryptoPortfolioUseCase(
     private val crudRepository: AccountsCRUDRepository,
     private val mainAccountTokensMigration: MainAccountTokensMigration,
+    private val cryptoCurrencyBalanceFetcher: CryptoCurrencyBalanceFetcher,
 ) {
 
     /**
@@ -52,6 +54,8 @@ class RecoverCryptoPortfolioUseCase(
             userWalletId = accountId.userWalletId,
             derivationIndex = recoveredAccount.derivationIndex,
         )
+
+        refreshBalances(accountId = accountId)
 
         recoveredAccount
     }
@@ -89,6 +93,23 @@ class RecoverCryptoPortfolioUseCase(
     private suspend fun Raise<Error>.saveAccounts(accountList: AccountList) {
         catch(
             block = { crudRepository.saveAccounts(accountList) },
+            catch = { raise(Error.DataOperationFailed(cause = it)) },
+        )
+    }
+
+    private suspend fun refreshBalances(accountId: AccountId): Either<Error, Unit> = either {
+        val currencies = catch(
+            block = { crudRepository.getAccountSync(accountId = accountId) },
+            catch = { raise(Error.DataOperationFailed(cause = it)) },
+        )
+            .getOrElse { raise(Error.DataOperationFailed(message = "Account not found: $accountId")) }
+            .cryptoCurrencies
+            .toList()
+
+        catch(
+            block = {
+                cryptoCurrencyBalanceFetcher(userWalletId = accountId.userWalletId, currencies = currencies)
+            },
             catch = { raise(Error.DataOperationFailed(cause = it)) },
         )
     }
