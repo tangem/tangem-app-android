@@ -1749,7 +1749,6 @@
   <string name="yield_module_approve_sheet_fee_note">手数料が差し引かれ、あなたの資産は再び貸し出されます。</string>
   <string name="yield_module_approve_sheet_subtitle">引き続き収益を得るには承認が必要です。</string>
   <string name="yield_module_approve_sheet_title">承認を確定する</string>
-  <string name="yield_module_balance_info_sheet_subtitle">資産残高に関するテキスト [プレースホルダー]</string>
   <string name="yield_module_balance_info_sheet_title">あなたの%sはAaveに預けられています</string>
   <string name="yield_module_chart_loading_error">チャートを読み込めません・・</string>
   <string name="yield_module_deposit_error_notification_title">受け取った金額%1$s %2$sはAaveに入金されませんでした。</string>
@@ -1776,7 +1775,6 @@
   <string name="yield_module_fee_policy_tangem_service_fee_title">Tangemはまた、得られた利回りに対して3%のサービス手数料を差し引きます。</string>
   <string name="yield_module_high_fee_error">ネットワーク手数料が下がるか、残高が最低必要額に達すると、資金は自動的にAaveに供給されます。</string>
   <string name="yield_module_historical_returns">過去のリターン</string>
-  <string name="yield_module_main_view_approve_notification_description">ここに説明を入力してください。1〜3行が理想的です。[プレースホルダー]</string>
   <string name="yield_module_main_view_approve_notification_title">トークンの承認が必要</string>
   <string name="yield_module_network_fee_unreachable_notification_description">ネットワーク接続を確認してください</string>
   <string name="yield_module_network_fee_unreachable_notification_title">ネットワーク手数料についての情報にアクセスできません</string>
