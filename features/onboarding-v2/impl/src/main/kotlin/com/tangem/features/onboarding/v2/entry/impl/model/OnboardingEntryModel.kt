@@ -95,6 +95,7 @@ internal class OnboardingEntryModel @Inject constructor(
                     withSeedPhraseFlow = scanResponse.productType != ProductType.Wallet,
                     titleProvider = titleProvider,
                     onDone = ::onMultiWalletOnboardingDone,
+                    onForceExit = ::popOrExitComponentScreen,
                     mode = multiWalletNavigationMode,
                 )
             }
@@ -202,6 +203,14 @@ internal class OnboardingEntryModel @Inject constructor(
                 ),
             )
         }
+    }
+
+    private fun popOrExitComponentScreen() {
+        router.pop(onComplete = { success ->
+            if (!success) {
+                exitComponentScreen()
+            }
+        })
     }
 
     private fun exitComponentScreen() {
