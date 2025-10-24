@@ -106,7 +106,7 @@ internal class TesterAccountsViewModel @Inject constructor(
                 AccountsUM.Button(title = "Fetch accounts", onClick = ::fetchAccounts),
                 AccountsUM.Button(title = "Fill out the list (up to 20)", onClick = ::fillOutAccountList),
                 AccountsUM.Button(title = "Archive all", onClick = ::archiveAllAccounts),
-                // AccountsUM.Button(title = "Sort by derivation index", onClick = ::sortAccountsByIndex),
+                AccountsUM.Button(title = "Sort by derivation index", onClick = ::sortAccountsByIndex),
                 AccountsUM.Button(title = "Clear ETag") { clearETag() },
             ),
         )
@@ -217,7 +217,7 @@ internal class TesterAccountsViewModel @Inject constructor(
             withContext(dispatchers.default) {
                 val updatedAccountList = AccountList.invoke(
                     userWalletId = accountList.userWalletId,
-                    accounts = setOf(accountList.mainAccount),
+                    accounts = listOf(accountList.mainAccount),
                     totalAccounts = accountList.totalAccounts,
                     sortType = accountList.sortType,
                     groupType = accountList.groupType,
@@ -231,7 +231,6 @@ internal class TesterAccountsViewModel @Inject constructor(
         }
     }
 
-    @Suppress("UnusedPrivateMember")
     private fun sortAccountsByIndex(title: String) {
         val userWalletId = getUserWallet()?.walletId ?: return
         val accountList = walletAccounts.value[userWalletId] ?: return
@@ -244,8 +243,7 @@ internal class TesterAccountsViewModel @Inject constructor(
                     userWalletId = accountList.userWalletId,
                     accounts = accountList.accounts
                         .filterIsInstance<Account.CryptoPortfolio>()
-                        .sortedBy { it.derivationIndex.value }
-                        .toSet(),
+                        .sortedBy { it.derivationIndex.value },
                     totalAccounts = accountList.totalAccounts,
                     sortType = accountList.sortType,
                     groupType = accountList.groupType,
