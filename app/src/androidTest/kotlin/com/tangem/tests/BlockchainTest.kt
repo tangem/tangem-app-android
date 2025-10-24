@@ -55,7 +55,7 @@ class BlockchainTest : BaseTestCase() {
                 onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
             }
             step("Click on 'Send' button") {
-                onTokenDetailsScreen { sendButton.performClick() }
+                onTokenDetailsScreen { sendButton().performClick() }
             }
             step("Type '$errorSendAmount' in input text field") {
                 onSendScreen {
