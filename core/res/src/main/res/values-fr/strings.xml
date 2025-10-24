@@ -1484,7 +1484,7 @@
   <string name="yield_module_fee_policy_sheet_fee_note">Des frais de réseau d\'environ %1$s (%2$s) seront déduits de chaque recharge future, sans dépasser votre limite de %3$s (%4$s).</string>
   <string name="yield_module_fee_policy_sheet_max_fee_note">Si les frais de réseau dépassent le montant maximal, la transaction ne sera pas effectuée tant qu\'ils n\'auront pas diminué. Vous pouvez modifier cette limite ultérieurement.</string>
   <string name="yield_module_fee_policy_sheet_max_fee_title">Frais maximaux</string>
-  <string name="yield_module_fee_policy_sheet_min_amount_note">Le montant minimum est calculé à partir des frais de réseau actuels afin de garantir qu\'il ne dépasse pas 4 %, ce qui donne un minimum de %1$s (%2$s).</string>
+  <string name="yield_module_fee_policy_sheet_min_amount_note">Le montant minimum est calculé à partir des frais de réseau actuels afin de garantir qu\'il ne dépasse pas 4 %%, ce qui donne un minimum de %1$s (%2$s).</string>
   <string name="yield_module_fee_policy_sheet_min_amount_title">Recharge minimale</string>
   <string name="yield_module_fee_policy_sheet_title">Politique tarifaire</string>
   <string name="yield_module_fee_policy_tangem_service_fee_title">Tangem prélève également des frais de service de 3% sur les revenus générés.</string>
