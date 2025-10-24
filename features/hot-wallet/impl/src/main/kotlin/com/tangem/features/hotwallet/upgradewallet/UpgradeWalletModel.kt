@@ -16,20 +16,25 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.toWrappedList
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
+import com.tangem.domain.card.BackupValidator
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.settings.repositories.SettingsRepository
+import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.wallets.usecase.ClearHotWalletContextualUnlockUseCase
 import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
 import com.tangem.features.hotwallet.UpgradeWalletComponent
 import com.tangem.features.hotwallet.upgradewallet.entity.UpgradeWalletUM
+import com.tangem.features.onboarding.v2.util.ResetCardsComponent
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.sdk.extensions.localizedDescriptionRes
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.DELAY_SDK_DIALOG_CLOSE
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -50,8 +55,12 @@ internal class UpgradeWalletModel @Inject constructor(
     private val clearHotWalletContextualUnlockUseCase: ClearHotWalletContextualUnlockUseCase,
     private val tangemSdkManager: TangemSdkManager,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
+    private val coldUserWalletBuilderFactory: ColdUserWalletBuilder.Factory,
 ) : Model() {
     private val params = paramsContainer.require<UpgradeWalletComponent.Params>()
+
+    val resetCardsComponentCallbacks = ResetCardsModelCallbacks()
+    val startResetCardsFlow = MutableSharedFlow<UserWallet.Cold>()
 
     internal val uiState: StateFlow<UpgradeWalletUM>
         field = MutableStateFlow(
@@ -89,6 +98,13 @@ internal class UpgradeWalletModel @Inject constructor(
             tangemSdkManager
                 .scanProduct()
                 .doOnSuccess {
+                    // Check if user attempted to upgrade before but something went wrong and a full reset is required
+                    val userWallet = coldUserWalletBuilderFactory.create(it).build()
+                    if (userWallet?.walletId == params.userWalletId && BackupValidator.isValidFull(it.card).not()) {
+                        startResetCardsFlow.emit(userWallet)
+                        return@doOnSuccess
+                    }
+
                     delay(DELAY_SDK_DIALOG_CLOSE)
                     tangemSdkManager.changeDisplayedCardIdNumbersCount(it)
                     navigateToUpgradeFlow(it)
@@ -142,5 +158,15 @@ internal class UpgradeWalletModel @Inject constructor(
                 ),
             ),
         )
+    }
+
+    inner class ResetCardsModelCallbacks : ResetCardsComponent.ModelCallbacks {
+        override fun onCancel() {
+            setLoading(false)
+        }
+
+        override fun onComplete() {
+            setLoading(false)
+        }
     }
 }
