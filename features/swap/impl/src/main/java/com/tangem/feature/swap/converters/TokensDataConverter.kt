@@ -57,6 +57,7 @@ internal class TokensDataConverter(
             tokensListData = TokenListUMData.EmptyList,
             onSearchEntered = onSearchEntered,
             onTokenSelected = onTokenSelected,
+            isBalanceHidden = isBalanceHiddenProvider(),
             afterSearch = group.isAfterSearch,
         )
     }
