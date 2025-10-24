@@ -186,6 +186,7 @@ internal class WcPairModel @Inject constructor(
             WcSessionApprove(
                 wallet = selectedUserWalletFlow.value,
                 network = enabledAvailableNetworks + proposalNetwork.required,
+                account = null, // todo account
             ),
         )
     }
