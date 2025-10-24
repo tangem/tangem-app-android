@@ -12,6 +12,8 @@ android {
 dependencies {
 
     /* Project - Domain */
+    implementation(projects.domain.account)
+    implementation(projects.domain.account.status)
     implementation(projects.domain.walletConnect)
     implementation(projects.domain.walletConnect.models)
     implementation(projects.domain.transaction)
