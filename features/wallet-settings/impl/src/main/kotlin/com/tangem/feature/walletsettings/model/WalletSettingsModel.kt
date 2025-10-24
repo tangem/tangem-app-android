@@ -199,7 +199,7 @@ internal class WalletSettingsModel @Inject constructor(
             cardItem = cardItem,
             isReferralAvailable = when (userWallet) {
                 is UserWallet.Cold -> userWallet.cardTypesResolver.isTangemWallet()
-                is UserWallet.Hot -> false
+                is UserWallet.Hot -> true
             },
             isLinkMoreCardsAvailable = when (userWallet) {
                 is UserWallet.Cold -> userWallet.scanResponse.card.backupStatus == CardDTO.BackupStatus.NoBackup
