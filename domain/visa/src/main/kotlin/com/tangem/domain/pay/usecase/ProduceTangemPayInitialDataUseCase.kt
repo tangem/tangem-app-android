@@ -1,7 +1,7 @@
 package com.tangem.domain.pay.usecase
 
 import arrow.core.Either
-import arrow.core.raise.either
+import arrow.core.Either.Companion.catch
 import com.tangem.domain.pay.repository.OnboardingRepository
 
 class ProduceTangemPayInitialDataUseCase(
@@ -9,10 +9,10 @@ class ProduceTangemPayInitialDataUseCase(
 ) {
 
     suspend operator fun invoke(): Either<Throwable, Unit> {
-        return either {
+        return catch {
             val isDataProduced = repository.isTangemPayInitialDataProduced()
             if (isDataProduced) {
-                return@either Unit
+                return@catch Unit
             } else {
                 repository.produceInitialData()
             }
