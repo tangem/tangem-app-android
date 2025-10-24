@@ -6,14 +6,8 @@ import com.tangem.common.constants.TestConstants.BITCOIN_ADDRESS
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.extensions.*
-import com.tangem.common.utils.assertClipboardTextEquals
-import com.tangem.common.utils.clearClipboard
-import com.tangem.common.utils.resetWireMockScenarioState
-import com.tangem.common.utils.setWireMockScenarioState
-import com.tangem.scenarios.assertActionButtonsForMultiCurrencyWallet
-import com.tangem.scenarios.checkActionIsUnavailableDialog
-import com.tangem.scenarios.openMainScreen
-import com.tangem.scenarios.synchronizeAddresses
+import com.tangem.common.utils.*
+import com.tangem.scenarios.*
 import com.tangem.screens.*
 import com.tangem.tap.domain.sdk.mocks.MockContent
 import com.tangem.tap.domain.sdk.mocks.content.TwinsMockContent
@@ -288,37 +282,13 @@ class MainScreenActionButtonsTest : BaseTestCase() {
             step("Click on 'Receive' button") {
                 onTokenActionsBottomSheet { receiveButton.performClick() }
             }
-            step("Assert 'Token receive warning' bottom sheet is displayed") {
-                waitForIdle()
+            step("Go to QR code bottom sheet") {
                 flakySafely(WAIT_UNTIL_TIMEOUT) {
-                    onTokenReceiveWarningBottomSheet {
-                        bottomSheet.assertIsDisplayed()
-                    }
+                    goToQrCodeBottomSheet()
                 }
             }
-            step("Click on 'Got it' button") {
-                onTokenReceiveWarningBottomSheet { gotItButton.performClick() }
-            }
-            step("Click on 'Show QR code' button") {
-                onReceiveAssetsBottomSheet { showQrCodeButton.clickWithAssertion() }
-            }
-            step("Assert bottom sheet with QR code title is displayed") {
-                onTokenReceiveQrCodeBottomSheet { title.assertIsDisplayed() }
-            }
-            step("Assert QR code is displayed") {
-                onTokenReceiveQrCodeBottomSheet { qrCode.assertIsDisplayed() }
-            }
-            step("Assert address title is displayed") {
-                onTokenReceiveQrCodeBottomSheet { addressTitle.assertIsDisplayed() }
-            }
-            step("Assert address is displayed") {
-                onTokenReceiveQrCodeBottomSheet { address.assertIsDisplayed() }
-            }
-            step("Assert 'Copy' button is displayed") {
-                onTokenReceiveQrCodeBottomSheet { copyButton.assertIsDisplayed() }
-            }
-            step("Assert 'Share' button is displayed") {
-                onTokenReceiveQrCodeBottomSheet { shareButton.assertIsDisplayed() }
+            step("Check QR code bottom sheet") {
+                checkQrCodeBottomSheetScenario()
             }
         }
     }
@@ -349,10 +319,10 @@ class MainScreenActionButtonsTest : BaseTestCase() {
                     }
                 }
             }
-            step("Assert 'Receive' button is displayed") {
+            step("Assert 'Sell' button is displayed") {
                 onTokenActionsBottomSheet { sellButton.assertIsDisplayed() }
             }
-            step("Click on 'Receive' button") {
+            step("Click on 'Sell' button") {
                 onTokenActionsBottomSheet { sellButton.performClick() }
             }
             step("Assert Chrome Browser is opened") {
