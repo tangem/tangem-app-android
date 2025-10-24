@@ -141,6 +141,7 @@ internal class SwapModel @Inject constructor(
         actions = createUiActions(),
         isBalanceHiddenProvider = Provider { isBalanceHidden },
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
+        isAccountsModeProvider = Provider { isAccountsMode },
     )
 
     private val inputNumberFormatter =
@@ -415,12 +416,11 @@ internal class SwapModel @Inject constructor(
         val tokensDataState = if (isOrderReversed) tokenDataState.fromGroup else tokenDataState.toGroup
 
         uiState = if (accountsFeatureToggles.isFeatureEnabled) {
-            // stateBuilder.addTokensToStateV2(
-            //     uiState = uiState,
-            //     tokensDataState = tokensDataState,
-            //     isAccountsMode = isAccountsMode,
-            // )
-            TODO()
+            stateBuilder.addTokensToStateV2(
+                uiState = uiState,
+                tokensDataState = tokensDataState,
+                isAccountsMode = isAccountsMode,
+            )
         } else {
             stateBuilder.addTokensToState(
                 uiState = uiState,
@@ -446,6 +446,8 @@ internal class SwapModel @Inject constructor(
                 uiStateHolder = uiState,
                 fromToken = fromToken.currency,
                 toToken = toToken.currency,
+                fromAccount = fromAccount,
+                toAccount = toAccount,
                 mainTokenId = initialCurrencyFrom.id.value,
             )
         }
@@ -571,6 +573,7 @@ internal class SwapModel @Inject constructor(
                     fromTokenStatus = fromToken,
                     toTokenStatus = toTokenStatus,
                     isReverseSwapPossible = isReverseSwapPossible(),
+                    toAccount = dataState.toAccount,
                 )
             }
             is SwapState.SwapError -> {
@@ -584,6 +587,7 @@ internal class SwapModel @Inject constructor(
                     includeFeeInAmount = state.includeFeeInAmount,
                     isReverseSwapPossible = isReverseSwapPossible(),
                     needApplyFCARestrictions = userCountry.needApplyFCARestrictions(),
+                    toAccount = dataState.toAccount,
                 )
                 sendErrorAnalyticsEvent(state.error, provider)
             }
@@ -1120,6 +1124,7 @@ internal class SwapModel @Inject constructor(
                     amountRaw = lastAmount.value,
                     fromToken = newFromToken.currency,
                     minTxAmount = minTxAmount,
+                    fromAccount = dataState.fromAccount,
                 )
                 startLoadingQuotes(
                     fromToken = newFromToken,
@@ -1157,6 +1162,7 @@ internal class SwapModel @Inject constructor(
                     amountRaw = lastAmount.value,
                     fromToken = fromToken.currency,
                     minTxAmount = minTxAmount,
+                    fromAccount = dataState.fromAccount,
                 )
 
                 if (toToken != null) {

@@ -146,13 +146,13 @@ private fun ListOfTokens(state: SwapSelectTokenStateHolder, modifier: Modifier =
             is TokenListUMData.AccountList -> list.tokensList.forEach { item ->
                 portfolioTokensList(
                     portfolio = item,
-                    isBalanceHidden = false, // state.isBalanceHidden,
+                    isBalanceHidden = state.isBalanceHidden,
                 )
             }
             is TokenListUMData.TokenList -> {
                 tokensList(
                     items = list.tokensList,
-                    isBalanceHidden = false, // state.isBalanceHidden,
+                    isBalanceHidden = state.isBalanceHidden,
                 )
             }
             TokenListUMData.EmptyList -> Unit
@@ -418,6 +418,7 @@ private fun TokenScreenPreview() {
                 unavailableTokens = listOf(title, token, token, token).toImmutableList(),
                 tokensListData = TokenListUMData.EmptyList,
                 afterSearch = false,
+                isBalanceHidden = false,
                 onSearchEntered = {},
                 onTokenSelected = {},
             ),

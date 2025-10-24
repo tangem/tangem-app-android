@@ -5,21 +5,23 @@ import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import com.tangem.common.ui.account.AccountTitle
+import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.core.ui.components.*
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
+import com.tangem.core.ui.components.currency.icon.CurrencyIcon
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.inputrow.InputRowBestRate
 import com.tangem.core.ui.components.inputrow.InputRowDefault
-import com.tangem.core.ui.components.inputrow.InputRowImage
 import com.tangem.core.ui.components.transactions.TransactionDoneTitle
-import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringResourceSafe
-import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.DateTimeFormatters
@@ -75,26 +77,18 @@ private fun SwapSuccessScreenContent(state: SwapSuccessStateHolder, padding: Pad
             ),
         )
         SpacerH16()
-        InputRowImage(
-            title = TextReference.Res(R.string.swapping_from_title),
+        SwapAmountBlock(
+            title = state.fromTitle,
             subtitle = state.fromTokenAmount,
             caption = state.fromTokenFiatAmount,
-            tokenIconState = state.fromTokenIconState ?: CurrencyIconState.Loading,
-            modifier = Modifier
-                .clip(TangemTheme.shapes.roundedCornersXMedium)
-                .background(TangemTheme.colors.background.action),
-            showNetworkIcon = true,
+            tokenIconState = state.fromTokenIconState,
         )
         SpacerH16()
-        InputRowImage(
-            title = TextReference.Res(R.string.swapping_to_title),
+        SwapAmountBlock(
+            title = state.toTitle,
             subtitle = state.toTokenAmount,
             caption = state.toTokenFiatAmount,
-            tokenIconState = state.toTokenIconState ?: CurrencyIconState.Loading,
-            modifier = Modifier
-                .clip(TangemTheme.shapes.roundedCornersXMedium)
-                .background(TangemTheme.colors.background.action),
-            showNetworkIcon = true,
+            tokenIconState = state.toTokenIconState,
         )
         SpacerH16()
         InputRowBestRate(
@@ -114,6 +108,48 @@ private fun SwapSuccessScreenContent(state: SwapSuccessStateHolder, padding: Pad
                 .clip(TangemTheme.shapes.roundedCornersXMedium)
                 .background(TangemTheme.colors.background.action),
         )
+    }
+}
+
+@Composable
+private fun SwapAmountBlock(
+    title: AccountTitleUM,
+    subtitle: TextReference,
+    caption: TextReference,
+    tokenIconState: CurrencyIconState?,
+) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        modifier = Modifier
+            .clip(TangemTheme.shapes.roundedCornersXMedium)
+            .background(TangemTheme.colors.background.action)
+            .fillMaxWidth()
+            .padding(12.dp),
+    ) {
+        AccountTitle(title)
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            CurrencyIcon(
+                state = tokenIconState ?: CurrencyIconState.Loading,
+                shouldDisplayNetwork = true,
+            )
+            Column(
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+            ) {
+                Text(
+                    text = subtitle.resolveReference(),
+                    style = TangemTheme.typography.subtitle2,
+                    color = TangemTheme.colors.text.primary1,
+                )
+                Text(
+                    text = caption.resolveReference(),
+                    style = TangemTheme.typography.caption2,
+                    color = TangemTheme.colors.text.tertiary,
+                )
+            }
+        }
     }
 }
 
