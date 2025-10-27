@@ -4,6 +4,7 @@ import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
@@ -30,13 +31,18 @@ import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.domain.models.account.AccountName
 
 @Composable
-fun PortfolioSelectRow(state: PortfolioSelectUM, modifier: Modifier = Modifier) {
+fun PortfolioSelectRow(
+    state: PortfolioSelectUM,
+    modifier: Modifier = Modifier,
+    leftContent: @Composable RowScope.() -> Unit = {},
+) {
     Row(
         modifier = modifier
             .clickable(enabled = state.isMultiChoice, onClick = state.onClick)
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        leftContent()
         val leftText = if (state.isAccountMode) R.string.account_details_title else R.string.wc_common_wallet
         Text(
             modifier = Modifier.weight(1f),
@@ -97,6 +103,11 @@ private fun PortfolioSelectRowPreview(@PreviewParameter(PreviewProvider::class) 
 
 private class PreviewProvider : PreviewParameterProvider<PortfolioSelectUM> {
 
+    override val values: Sequence<PortfolioSelectUM>
+        get() = sequenceOf(PortfolioSelectRowPreviewData.account, PortfolioSelectRowPreviewData.wallet)
+}
+
+object PortfolioSelectRowPreviewData {
     val account
         get() = PortfolioSelectUM(
             icon = AccountIconPreviewData.randomAccountIcon(),
@@ -113,7 +124,4 @@ private class PreviewProvider : PreviewParameterProvider<PortfolioSelectUM> {
             isAccountMode = false,
             onClick = {},
         )
-
-    override val values: Sequence<PortfolioSelectUM>
-        get() = sequenceOf(account, wallet)
 }
