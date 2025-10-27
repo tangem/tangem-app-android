@@ -15,6 +15,7 @@ import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.derivations.DerivationsRepository
 
+@Deprecated("Use SaveCryptoCurrenciesUseCase")
 @Suppress("LongParameterList")
 class SaveManagedTokensUseCase(
     private val customTokensRepository: CustomTokensRepository,

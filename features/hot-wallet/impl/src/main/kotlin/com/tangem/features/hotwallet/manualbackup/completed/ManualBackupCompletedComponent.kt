@@ -29,10 +29,12 @@ internal class ManualBackupCompletedComponent @AssistedInject constructor(
 
     interface ModelCallbacks {
         fun onContinueClick(userWalletId: UserWalletId)
+        fun onUpgradeClick(userWalletId: UserWalletId)
     }
 
     data class Params(
         val userWalletId: UserWalletId,
         val callbacks: ModelCallbacks,
+        val isUpgradeFlow: Boolean,
     )
 }
