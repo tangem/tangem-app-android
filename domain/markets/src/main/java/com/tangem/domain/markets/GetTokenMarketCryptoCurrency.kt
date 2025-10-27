@@ -12,7 +12,7 @@ class GetTokenMarketCryptoCurrency(
         userWalletId: UserWalletId,
         tokenMarketParams: TokenMarketParams,
         network: TokenMarketInfo.Network,
-        accountIndex: DerivationIndex? = null,
+        accountIndex: DerivationIndex,
     ): CryptoCurrency? {
         return marketsTokenRepository.createCryptoCurrency(
             userWalletId = userWalletId,
