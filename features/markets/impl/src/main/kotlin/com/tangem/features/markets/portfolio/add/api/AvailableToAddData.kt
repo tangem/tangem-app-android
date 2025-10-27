@@ -20,7 +20,7 @@ internal data class AvailableToAddData(
 
 internal data class AvailableToAddWallet(
     val userWallet: UserWallet,
-    val accounts: Set<AccountStatus>,
+    val accounts: List<AccountStatus>,
     val availableNetworks: Set<TokenMarketInfo.Network>,
     val availableToAddAccounts: Map<AccountId, AvailableToAddAccount>,
 )
