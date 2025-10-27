@@ -10,4 +10,7 @@ internal sealed class TangemPayDetailsInnerRoute : Route {
 
     @Serializable
     data object ChangePIN : TangemPayDetailsInnerRoute()
+
+    @Serializable
+    data object ChangePINSuccess : TangemPayDetailsInnerRoute()
 }
