@@ -16,7 +16,10 @@ import com.tangem.features.yield.supply.impl.R
 @Composable
 internal fun YieldSupplyActiveTitle(onCloseClick: () -> Unit) {
     Box(modifier = Modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.align(Alignment.Center)) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.align(Alignment.Center),
+        ) {
             Text(
                 text = stringResourceSafe(R.string.yield_module_earn_sheet_title),
                 style = TangemTheme.typography.subtitle1,
