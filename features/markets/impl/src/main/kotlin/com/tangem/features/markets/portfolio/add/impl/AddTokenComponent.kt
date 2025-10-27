@@ -8,7 +8,6 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.factory.ComponentFactory
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
-import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.features.markets.portfolio.add.api.SelectedNetwork
 import com.tangem.features.markets.portfolio.add.api.SelectedPortfolio
@@ -38,7 +37,6 @@ internal class AddTokenComponent @AssistedInject constructor(
     }
 
     data class Params(
-        val marketParams: TokenMarketParams,
         val eventBuilder: PortfolioAnalyticsEvent.EventBuilder,
         val selectedPortfolio: Flow<SelectedPortfolio>,
         val selectedNetwork: Flow<SelectedNetwork>,
