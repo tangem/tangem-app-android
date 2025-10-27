@@ -28,17 +28,20 @@ import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.components.*
 import com.tangem.core.ui.components.notifications.Notification
+import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.impl.subcomponents.active.entity.YieldSupplyActiveContentUM
+import kotlinx.collections.immutable.persistentListOf
 
 @Composable
 internal fun YieldSupplyActiveContent(
     state: YieldSupplyActiveContentUM,
     isBalanceHidden: Boolean,
+    onReadMoreClick: () -> Unit,
     chartComponent: ComposableContentComponent,
     modifier: Modifier = Modifier,
 ) {
@@ -61,16 +64,23 @@ internal fun YieldSupplyActiveContent(
             chartComponent.Content(Modifier.padding(bottom = 12.dp))
         }
 
-        AnimatedVisibility(state.notificationUM != null) {
-            val wrappedNotification = remember(this) { requireNotNull(state.notificationUM) }
-            Notification(
-                config = wrappedNotification.config,
-                iconTint = null,
-                containerColor = TangemTheme.colors.background.action,
-            )
+        AnimatedVisibility(state.notifications.isNotEmpty()) {
+            val notifications = remember(state.notifications) { state.notifications }
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                notifications.forEach { notificationUM ->
+                    Notification(
+                        config = notificationUM.config,
+                        containerColor = TangemTheme.colors.background.action,
+                    )
+                }
+            }
         }
 
-        YieldSupplyActiveMyFunds(state = state, isBalanceHidden = isBalanceHidden)
+        YieldSupplyActiveMyFunds(
+            state = state,
+            isBalanceHidden = isBalanceHidden,
+            onReadMoreClick = onReadMoreClick,
+        )
 
         AnimatedVisibility(state.feeDescription != null) {
             Text(
@@ -81,12 +91,14 @@ internal fun YieldSupplyActiveContent(
             )
         }
 
-        Text(
-            modifier = Modifier.padding(horizontal = 12.dp),
-            text = stringResourceSafe(R.string.yield_module_fee_policy_sheet_min_amount_note),
-            style = TangemTheme.typography.caption2,
-            color = TangemTheme.colors.text.tertiary,
-        )
+        AnimatedVisibility(state.minFeeDescription != null) {
+            Text(
+                modifier = Modifier.padding(horizontal = 12.dp),
+                text = state.minFeeDescription?.resolveReference().orEmpty(),
+                style = TangemTheme.typography.caption2,
+                color = TangemTheme.colors.text.tertiary,
+            )
+        }
     }
 }
 
@@ -108,7 +120,7 @@ private fun CurrentApy(apy: TextReference?, modifier: Modifier = Modifier) {
                 TextShimmer(
                     modifier = modifier.width(94.dp),
                     text = "",
-                    style = TangemTheme.typography.head,
+                    style = TangemTheme.typography.h2,
                 )
             } else {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -123,7 +135,7 @@ private fun CurrentApy(apy: TextReference?, modifier: Modifier = Modifier) {
                     Text(
                         modifier = modifier,
                         text = apyText,
-                        style = TangemTheme.typography.body1,
+                        style = TangemTheme.typography.h2,
                         color = TangemTheme.colors.text.accent,
                     )
                 }
@@ -134,7 +146,11 @@ private fun CurrentApy(apy: TextReference?, modifier: Modifier = Modifier) {
 
 @Suppress("LongMethod")
 @Composable
-private fun YieldSupplyActiveMyFunds(state: YieldSupplyActiveContentUM, isBalanceHidden: Boolean) {
+private fun YieldSupplyActiveMyFunds(
+    state: YieldSupplyActiveContentUM,
+    onReadMoreClick: () -> Unit,
+    isBalanceHidden: Boolean,
+) {
     Column(
         modifier = Modifier
             .clip(RoundedCornerShape(16.dp))
@@ -164,7 +180,7 @@ private fun YieldSupplyActiveMyFunds(state: YieldSupplyActiveContentUM, isBalanc
             )
         }
         SpacerH8()
-        DescriptionText(state = state)
+        DescriptionText(state = state, onReadMoreClick = onReadMoreClick)
         SpacerH8()
         HorizontalDivider(
             thickness = 0.5.dp,
@@ -206,14 +222,14 @@ private fun YieldSupplyActiveMyFunds(state: YieldSupplyActiveContentUM, isBalanc
 }
 
 @Composable
-private fun DescriptionText(state: YieldSupplyActiveContentUM) {
+private fun DescriptionText(state: YieldSupplyActiveContentUM, onReadMoreClick: () -> Unit) {
     val subtitle = annotatedReference {
         append(state.subtitle.resolveReference())
         appendSpace()
         withLink(
             LinkAnnotation.Clickable(
                 tag = "LINK_TAG",
-                linkInteractionListener = {},
+                linkInteractionListener = { onReadMoreClick() },
             ),
             {
                 appendColored(
@@ -324,6 +340,7 @@ private fun YieldSupplyActiveBottomSheet_Preview(
             state = params,
             isBalanceHidden = true,
             chartComponent = ComposableContentComponent.EMPTY,
+            onReadMoreClick = {},
         )
     }
 }
@@ -340,15 +357,31 @@ private class YieldSupplyActiveBottomSheetPreviewProvider : PreviewParameterProv
                     wrappedList("USDT", "USDT"),
                 ),
                 subtitleLink = resourceReference(R.string.common_read_more),
-                notificationUM = NotificationUM.Error.InvalidAmount,
-                apy = stringReference("5,14%"),
+                notifications = persistentListOf(
+                    NotificationUM.Error.InvalidAmount,
+                    NotificationUM.Info(
+                        title = resourceReference(
+                            R.string.yield_module_amount_not_transfered_to_aave_title,
+                            wrappedList(
+                                "0,03",
+                            ),
+                        ),
+                        subtitle = TextReference.EMPTY,
+                        iconTint = NotificationConfig.IconTint.Accent,
+                    ),
+                ),
                 minAmount = stringReference("50 USDT"),
-                isHighFee = true,
+                currentFee = stringReference("30 USDT"),
                 feeDescription = stringReference(
                     "The network fee is currently too high to execute lending." +
                         "Funds will be supplied once it drops to \$12 or below. ",
                 ),
-                currentFee = stringReference("30 USDT"),
+                apy = stringReference("5,14%"),
+                isHighFee = true,
+                minFeeDescription = stringReference(
+                    "The network fee is currently too high to execute lending." +
+                        "Funds will be supplied once it drops to \$12 or below. ",
+                ),
             ),
         )
 }

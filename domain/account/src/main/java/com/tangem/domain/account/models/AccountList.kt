@@ -16,7 +16,7 @@ import kotlinx.serialization.Serializable
  * Represents a list of accounts associated with a user wallet
  *
  * @property userWalletId  the user wallet id associated with the account list
- * @property accounts      a set of accounts belonging to the user wallet
+ * @property accounts      a list of accounts belonging to the user wallet
  * @property totalAccounts the total number of accounts
  *
 [REDACTED_AUTHOR]
@@ -24,7 +24,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class AccountList private constructor(
     val userWalletId: UserWalletId,
-    val accounts: Set<Account>,
+    val accounts: List<Account>,
     val totalAccounts: Int,
     val sortType: TokensSortType,
     val groupType: TokensGroupType,
@@ -68,7 +68,7 @@ data class AccountList private constructor(
      */
     operator fun minus(other: Account): Either<Error, AccountList> {
         val isExistingAccount = this.accounts.any { it.accountId == other.accountId }
-        val accounts = this.accounts.toMutableSet().apply {
+        val accounts = this.accounts.toMutableList().apply {
             removeIf { it.accountId == other.accountId }
         }
 
@@ -140,7 +140,7 @@ data class AccountList private constructor(
          */
         operator fun invoke(
             userWalletId: UserWalletId,
-            accounts: Set<Account>,
+            accounts: List<Account>,
             totalAccounts: Int,
             sortType: TokensSortType = TokensSortType.NONE,
             groupType: TokensGroupType = TokensGroupType.NONE,
@@ -190,7 +190,7 @@ data class AccountList private constructor(
         ): AccountList {
             return AccountList(
                 userWalletId = userWalletId,
-                accounts = setOf(
+                accounts = listOf(
                     Account.CryptoPortfolio.createMainAccount(
                         userWalletId = userWalletId,
                         cryptoCurrencies = cryptoCurrencies,
@@ -202,7 +202,7 @@ data class AccountList private constructor(
             )
         }
 
-        private fun Set<Account>.mainAccountsCount(): Int {
+        private fun List<Account>.mainAccountsCount(): Int {
             return count { (it as? Account.CryptoPortfolio)?.isMainAccount == true }
         }
     }

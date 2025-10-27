@@ -27,6 +27,7 @@ dependencies {
     api(projects.domain.common)
     api(projects.domain.models)
     api(projects.domain.tokens)
+    api(projects.domain.wallets)
     // endregion
 
     // region Project - Data
