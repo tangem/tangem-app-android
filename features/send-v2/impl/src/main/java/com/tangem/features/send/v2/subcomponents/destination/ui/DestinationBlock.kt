@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
@@ -20,6 +21,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.SendConfirmScreenTestTags
 import com.tangem.features.send.v2.impl.R
 import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationRecipientListUM
 import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationTextFieldUM
@@ -70,6 +72,7 @@ private fun AddressWithMemoBlock(
                 text = address.value,
                 style = TangemTheme.typography.body1,
                 color = TangemTheme.colors.text.primary1,
+                modifier = Modifier.testTag(SendConfirmScreenTestTags.RECIPIENT_ADDRESS),
             )
             val blockchainAddress = address.briefBlockchainAddress
             if (!blockchainAddress.isNullOrBlank()) {
@@ -77,6 +80,7 @@ private fun AddressWithMemoBlock(
                     text = blockchainAddress,
                     style = TangemTheme.typography.caption2,
                     color = TangemTheme.colors.text.tertiary,
+                    modifier = Modifier.testTag(SendConfirmScreenTestTags.BLOCKCHAIN_ADDRESS),
                 )
             }
         }
@@ -85,7 +89,8 @@ private fun AddressWithMemoBlock(
             modifier = Modifier
                 .size(TangemTheme.dimens.size36)
                 .clip(RoundedCornerShape(TangemTheme.dimens.radius18))
-                .background(TangemTheme.colors.background.tertiary),
+                .background(TangemTheme.colors.background.tertiary)
+                .testTag(SendConfirmScreenTestTags.RECIPIENT_ADDRESS_ICON),
         )
     }
 
