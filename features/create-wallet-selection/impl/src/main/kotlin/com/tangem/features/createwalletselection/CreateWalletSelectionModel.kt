@@ -94,7 +94,7 @@ internal class CreateWalletSelectionModel @Inject constructor(
     }
 
     private fun onHardwareWalletClick() {
-        // TODO [REDACTED_TASK_KEY]
+        router.push(AppRoute.CreateHardwareWallet)
     }
 
     private fun onBuyClick() {
