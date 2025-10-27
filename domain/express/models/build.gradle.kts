@@ -1,12 +1,10 @@
 plugins {
     alias(deps.plugins.kotlin.jvm)
+    alias(deps.plugins.kotlin.serialization)
     id("configuration")
 }
 
 dependencies {
-    /** Domain */
-    implementation(projects.domain.tokens.models)
-
-    /* Other */
     implementation(deps.moshi.adapters)
+    implementation(deps.kotlin.serialization)
 }
