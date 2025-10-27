@@ -19,6 +19,9 @@ dependencies {
     implementation(projects.core.navigation)
     implementation(projects.core.ui)
 
+    /** Common */
+    implementation(projects.common.ui)
+
     /** Features api */
     implementation(projects.features.tangempay.details.api)
     implementation(projects.features.txhistory.api)
@@ -42,6 +45,9 @@ dependencies {
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
     implementation(deps.decompose.ext.compose)
+
+    /** AndroidX */
+    implementation(deps.androidx.activity.compose)
 
     /** DI */
     implementation(deps.hilt.android)

@@ -9,6 +9,7 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.shorted
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import java.math.BigDecimal
 
@@ -274,6 +275,14 @@ sealed class NotificationUM(val config: NotificationConfig) {
             title = resourceReference(id = R.string.yield_module_balance_info_sheet_title, wrappedList(tokenName)),
             subtitle = resourceReference(id = R.string.yield_module_balance_info_sheet_subtitle),
         )
+
+        data class YieldSupplyNotAllAmountSupplied(val formattedAmount: String, val symbol: String) : Warning(
+            title = resourceReference(
+                id = R.string.yield_module_amount_not_transfered_to_aave_title,
+                formatArgs = wrappedList(formattedAmount, symbol),
+            ),
+            subtitle = TextReference.EMPTY,
+        )
     }
 
     open class Info(
@@ -391,11 +400,16 @@ sealed class NotificationUM(val config: NotificationConfig) {
 
         data class RentExemptionDestination(
             private val rentExemptionAmount: BigDecimal,
+            private val cryptoCurrency: CryptoCurrency,
         ) : Error(
             title = TextReference.Res(R.string.send_notification_invalid_amount_title),
             subtitle = TextReference.Res(
                 id = R.string.send_notification_invalid_amount_rent_destination,
-                formatArgs = wrappedList(rentExemptionAmount),
+                formatArgs = wrappedList(
+                    rentExemptionAmount.format {
+                        crypto(cryptoCurrency)
+                    },
+                ),
             ),
         )
     }

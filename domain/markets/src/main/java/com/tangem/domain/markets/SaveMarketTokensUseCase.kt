@@ -1,7 +1,6 @@
 package com.tangem.domain.markets
 
 import arrow.core.Either
-import com.tangem.domain.wallets.derivations.DerivationsRepository
 import com.tangem.domain.markets.repositories.MarketsTokenRepository
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
@@ -11,6 +10,7 @@ import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
 import com.tangem.domain.tokens.repository.CurrenciesRepository
+import com.tangem.domain.wallets.derivations.DerivationsRepository
 
 /**
  * Use case for saving tokens from Markets
@@ -21,6 +21,7 @@ import com.tangem.domain.tokens.repository.CurrenciesRepository
  *
 [REDACTED_AUTHOR]
  */
+@Deprecated("Use SaveCryptoCurrenciesUseCase")
 @Suppress("LongParameterList")
 class SaveMarketTokensUseCase(
     private val derivationsRepository: DerivationsRepository,
