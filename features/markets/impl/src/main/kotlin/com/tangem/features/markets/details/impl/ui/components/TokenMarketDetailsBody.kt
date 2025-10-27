@@ -4,17 +4,21 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.tangem.core.ui.res.TangemTheme
-import com.tangem.features.markets.details.impl.ui.state.MarketsTokenDetailsUM
 import com.tangem.core.ui.components.UnableToLoadData
 import com.tangem.core.ui.components.items.DescriptionItem
 import com.tangem.core.ui.components.items.DescriptionPlaceholder
+import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.core.ui.res.TangemTheme
+import com.tangem.features.markets.details.impl.ui.state.MarketsTokenDetailsUM
+import com.tangem.features.markets.impl.R
 
 internal fun LazyListScope.tokenMarketDetailsBody(
     state: MarketsTokenDetailsUM.Body,
+    isAccountEnabled: Boolean,
     portfolioBlock: @Composable ((Modifier) -> Unit)?,
 ) {
     when (state) {
@@ -29,6 +33,10 @@ internal fun LazyListScope.tokenMarketDetailsBody(
                 }
             }
 
+            if (isAccountEnabled) {
+                aboutCoinHeader()
+            }
+
             loadingInfoBlocks()
         }
         is MarketsTokenDetailsUM.Body.Content -> {
@@ -40,6 +48,10 @@ internal fun LazyListScope.tokenMarketDetailsBody(
                 item(key = "portfolio") {
                     portfolioBlock(Modifier.blockPaddings())
                 }
+            }
+
+            if (isAccountEnabled) {
+                aboutCoinHeader()
             }
 
             infoBlocksList(state.infoBlocks)
@@ -66,6 +78,21 @@ private fun LazyListScope.error(state: MarketsTokenDetailsUM.Body.Error) {
                 onRetryClick = state.onLoadRetryClick,
             )
         }
+    }
+}
+
+private fun LazyListScope.aboutCoinHeader() {
+    item("aboutCoinHeader") {
+        Text(
+            modifier = Modifier.padding(
+                start = TangemTheme.dimens.spacing16,
+                end = TangemTheme.dimens.spacing16,
+                bottom = TangemTheme.dimens.spacing20,
+            ),
+            text = stringResourceSafe(R.string.markets_about_coin_header),
+            color = TangemTheme.colors.text.primary1,
+            style = TangemTheme.typography.h3,
+        )
     }
 }
 

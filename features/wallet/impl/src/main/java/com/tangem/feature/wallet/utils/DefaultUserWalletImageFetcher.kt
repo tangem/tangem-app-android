@@ -1,6 +1,5 @@
 package com.tangem.feature.wallet.utils
 
-import arrow.core.Either
 import com.tangem.common.ui.userwallet.converter.ArtworkUMConverter
 import com.tangem.common.ui.userwallet.state.UserWalletItemUM
 import com.tangem.core.ui.components.artwork.ArtworkUM
@@ -45,16 +44,15 @@ class DefaultUserWalletImageFetcher @Inject constructor(
         .map { allWallets -> allWallets.filter { (walletId, _) -> wallets.any { it.walletId == walletId } } }
         .distinctUntilChanged()
 
-    override fun walletImage(walletId: UserWalletId, size: ArtworkSize): Flow<UserWalletItemUM.ImageState> = flow {
-        val imagesFlow = getUserWalletUseCase.invokeFlow(walletId)
-            // emit Loading and wait wallet
-            .onEach { if (it.isLeft()) emit(UserWalletItemUM.ImageState.Loading) }
-            .filterIsInstance<Either.Right<UserWallet>>()
-            .map { it.value }
+    override fun walletImage(walletId: UserWalletId, size: ArtworkSize): Flow<UserWalletItemUM.ImageState> =
+        getUserWalletUseCase.invokeFlow(walletId)
+            .transform {
+                it.fold(
+                    ifLeft = { emit(UserWalletItemUM.ImageState.Loading) },
+                    ifRight = { wallet -> emitAll(walletImage(wallet, size)) },
+                )
+            }
             .distinctUntilChanged()
-            .flatMapLatest { wallet -> walletImage(wallet, size) }
-        emitAll(imagesFlow)
-    }.distinctUntilChanged()
 
     override fun walletImage(cardDTO: CardDTO, size: ArtworkSize): Flow<UserWalletItemUM.ImageState> =
         internalGetCardImage(

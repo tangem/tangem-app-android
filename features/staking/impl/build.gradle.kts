@@ -67,6 +67,8 @@ dependencies {
     implementation(projects.domain.feedback)
     implementation(projects.domain.feedback.models)
     implementation(projects.domain.notifications.models)
+    implementation(projects.domain.account)
+    implementation(projects.domain.account.status)
 
     /** Common */
     implementation(projects.common.ui)
