@@ -75,6 +75,17 @@ class SendConfirmPageObject(semanticsProvider: SemanticsNodeInteractionsProvider
         )
         useUnmergedTree = true
     }
+
+    fun recipientAddress(recipientAddress: String): KNode = child {
+        hasTestTag(SendConfirmScreenTestTags.RECIPIENT_ADDRESS)
+        hasText(recipientAddress)
+        useUnmergedTree = true
+    }
+
+    val blockchainAddress: KNode = child {
+        hasTestTag(SendConfirmScreenTestTags.BLOCKCHAIN_ADDRESS)
+        useUnmergedTree = true
+    }
 }
 
 internal fun BaseTestCase.onSendConfirmScreen(function: SendConfirmPageObject.() -> Unit) =
