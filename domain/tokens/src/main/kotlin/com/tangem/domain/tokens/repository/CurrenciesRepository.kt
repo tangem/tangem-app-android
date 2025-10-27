@@ -35,14 +35,6 @@ interface CurrenciesRepository {
     )
 
     /**
-     * Saves the given list of cryptocurrencies for a specific multi-currency user wallet.
-     *
-     * @param userWalletId The unique identifier of the user wallet.
-     * @param currencies The list of cryptocurrencies to be saved.
-     */
-    suspend fun saveCurrenciesLocal(userWalletId: UserWalletId, currencies: List<CryptoCurrency>)
-
-    /**
      * Add currencies to a specific user wallet.
      *
      * @param userWalletId The unique identifier of the user wallet.
@@ -50,7 +42,7 @@ interface CurrenciesRepository {
      * @throws DataError.UserWalletError.WrongUserWallet If single-currency user wallet
      * ID provided.
      */
-    @Deprecated("Tech debt")
+    @Deprecated("Use SaveCryptoCurrenciesUseCase")
     suspend fun addCurrenciesCache(userWalletId: UserWalletId, currencies: List<CryptoCurrency>): List<CryptoCurrency>
 
     /**
@@ -61,6 +53,7 @@ interface CurrenciesRepository {
      * @throws DataError.UserWalletError.WrongUserWallet If multi-currency user wallet
      * ID provided.
      */
+    @Deprecated("Use SaveCryptoCurrenciesUseCase")
     suspend fun removeCurrency(userWalletId: UserWalletId, currency: CryptoCurrency)
 
     /**
@@ -71,6 +64,7 @@ interface CurrenciesRepository {
      * @throws DataError.UserWalletError.WrongUserWallet If single-currency user wallet
      * ID provided.
      */
+    @Deprecated("Use SaveCryptoCurrenciesUseCase")
     suspend fun removeCurrencies(userWalletId: UserWalletId, currencies: List<CryptoCurrency>)
 
     /**
@@ -154,39 +148,6 @@ interface CurrenciesRepository {
         userWalletId: UserWalletId,
         refresh: Boolean = false,
     ): List<CryptoCurrency>
-
-    /**
-     * Retrieves the list of cryptocurrencies within a multi-currency wallet.
-     * Returns previously loaded currencies or empty list
-     *
-     * @param userWalletId The unique identifier of the user wallet.
-     * @return A list of [CryptoCurrency].
-     * @throws DataError.UserWalletError.WrongUserWallet If single-currency user wallet
-     * ID provided.
-     */
-    suspend fun getMultiCurrencyWalletCachedCurrenciesSync(userWalletId: UserWalletId): List<CryptoCurrency>
-
-    /**
-     * Retrieves the cryptocurrency for a specific multi-currency user wallet.
-     *
-     * @param userWalletId The unique identifier of the user wallet.
-     * @param id The unique identifier of the cryptocurrency to be retrieved.
-     * @return The cryptocurrency associated with the user wallet and ID.
-     * @throws DataError.UserWalletError.WrongUserWallet If single-currency user wallet
-     * ID provided.
-     */
-    suspend fun getMultiCurrencyWalletCurrency(userWalletId: UserWalletId, id: CryptoCurrency.ID): CryptoCurrency
-
-    /**
-     * Retrieves the cryptocurrency for a specific multi-currency user wallet.
-     *
-     * @param userWalletId The unique identifier of the user wallet.
-     * @param id The unique identifier of the cryptocurrency to be retrieved.
-     * @return The cryptocurrency associated with the user wallet and ID.
-     * @throws DataError.UserWalletError.WrongUserWallet If single-currency user wallet
-     * ID provided.
-     */
-    suspend fun getMultiCurrencyWalletCurrency(userWalletId: UserWalletId, id: String): CryptoCurrency
 
     /**
      * Get the coin for a specific network.

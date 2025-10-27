@@ -5,7 +5,10 @@ object TestConstants {
 
     const val RECIPIENT_ADDRESS = "0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0"
     const val BITCOIN_ADDRESS = "bc1qtg9aa6jcpqtvun0pe0uct7sxm8nq2nsxfmfxm3"
-    const val CARDANO_ADDRESS = "addr1q8f9499e58k4hhfd9vhawprxt3xd94x7rmlyp33ee4xkatakcl2zgkrg0p6ceqkndtkw4cumfe9enhdph8yhuswn785srksm9p"
+    const val CARDANO_ADDRESS =
+        "addr1q8f9499e58k4hhfd9vhawprxt3xd94x7rmlyp33ee4xkatakcl2zgkrg0p6ceqkndtkw4cumfe9enhdph8yhuswn785srksm9p"
+    const val SOLANA_RECIPIENT_ADDRESS = "5fcy9woa8Di1QHcce65CsV3XKrxdB2pD4HJx5xx82ipM"
+    const val POLKADOT_RECIPIENT_ADDRESS = "143TfgFYAFfM86LRzt4UcFNU3KosxCndBCVz2U5HCxpLidKZ"
 
     const val WAIT_UNTIL_TIMEOUT = 20_000L
     const val WAIT_UNTIL_TIMEOUT_LONG = 30_000L
