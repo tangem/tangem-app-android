@@ -4,9 +4,14 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.message.ToastMessage
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.account.status.usecase.ManageCryptoCurrenciesUseCase
 import com.tangem.domain.wallets.usecase.ColdWalletAndHasMissedDerivationsUseCase
+import com.tangem.features.markets.impl.R
 import com.tangem.features.markets.portfolio.add.api.SelectedNetwork
 import com.tangem.features.markets.portfolio.add.api.SelectedPortfolio
 import com.tangem.features.markets.portfolio.add.impl.AddTokenComponent
@@ -25,6 +30,7 @@ import javax.inject.Inject
 internal class AddTokenModel @Inject constructor(
     paramsContainer: ParamsContainer,
     private val uiBuilder: AddTokenUiBuilder,
+    private val messageSender: UiMessageSender,
     private val coldWalletAndHasMissedDerivationsUseCase: ColdWalletAndHasMissedDerivationsUseCase,
     override val dispatchers: CoroutineDispatcherProvider,
     private val analyticsEventHandler: AnalyticsEventHandler,
@@ -70,13 +76,22 @@ internal class AddTokenModel @Inject constructor(
             val cryptoCurrency = selectedNetwork.cryptoCurrency
             val accountId = selectedPortfolio.account.account.account.accountId
             manageCryptoCurrenciesUseCase(accountId = accountId, add = cryptoCurrency)
+                .onLeft {
+                    processError(error = it)
+                    uiState.value = um.toggleProgress(false)
+                    return@launch
+                }
 
             val status = getAccountCurrencyStatusUseCase.invokeSync(
                 userWalletId = accountId.userWalletId,
                 currencyId = cryptoCurrency.id,
                 network = cryptoCurrency.network,
-            ).getOrNull() ?: return@launch
-            params.callbacks.onTokenAdded(status.status)
+            ).getOrNull()
+            if (status == null) {
+                processError(error = null)
+            } else {
+                params.callbacks.onTokenAdded(status.status)
+            }
             uiState.value = um.toggleProgress(false)
         }
 
@@ -87,4 +102,10 @@ internal class AddTokenModel @Inject constructor(
         userWalletId = selectedPortfolio.userWallet.walletId,
         networksWithDerivationPath = mapOf(selectedNetwork.selectedNetwork.networkId to null),
     )
+
+    private fun processError(error: Throwable?) {
+        val message = error?.message?.let { stringReference(it) }
+            ?: resourceReference(R.string.common_something_went_wrong)
+        messageSender.send(ToastMessage(message = message))
+    }
 }
