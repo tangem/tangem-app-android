@@ -1,7 +1,6 @@
 package com.tangem.features.tangempay.model
 
 import androidx.compose.runtime.Stable
-import androidx.compose.ui.graphics.toArgb
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.tangem.core.decompose.di.ModelScoped
@@ -13,13 +12,11 @@ import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig.ShowRefreshState
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.message.SnackbarMessage
-import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.domain.models.TokenReceiveConfig
-import com.tangem.domain.models.TokenReceiveType
 import com.tangem.domain.pay.DataForReceiveFactory
 import com.tangem.domain.pay.repository.CardDetailsRepository
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
-import com.tangem.features.tangempay.components.TangemPayDetailsComponent
+import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.entity.TangemPayDetailsErrorType
 import com.tangem.features.tangempay.entity.TangemPayDetailsNavigation
@@ -38,12 +35,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-/**
- * Custom token name and icon url. Will be used only for F&F.
- */
-private const val TOKEN_NAME = "USDC"
-private const val TOKEN_ICON_URL = "https://s3.eu-central-1.amazonaws.com/tangem.api/coins/large/usd-coin.png"
-
 @Suppress("LongParameterList")
 @Stable
 @ModelScoped
@@ -57,7 +48,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     private val uiMessageSender: UiMessageSender,
 ) : Model(), TangemPayTxHistoryUiActions {
 
-    private val params: TangemPayDetailsComponent.Params = paramsContainer.require()
+    private val params: TangemPayDetailsContainerComponent.Params = paramsContainer.require()
 
     private val stateFactory = TangemPayDetailsStateFactory(
         cardNumberEnd = params.config.cardNumberEnd,
@@ -66,6 +57,8 @@ internal class TangemPayDetailsModel @Inject constructor(
         onReceive = ::onClickReceive,
         onReveal = ::revealCardDetails,
         onCopy = ::copyData,
+        onClickChangePin = ::onClickChangePin,
+        onClickFreezeCard = ::onClickFreezeCard,
     )
 
     val uiState: StateFlow<TangemPayDetailsUM>
@@ -81,10 +74,18 @@ internal class TangemPayDetailsModel @Inject constructor(
         fetchBalance()
     }
 
+    private fun onClickChangePin() {
+        // TODO [REDACTED_JIRA]
+    }
+
+    private fun onClickFreezeCard() {
+        // TODO [REDACTED_JIRA]
+    }
+
     private fun onClickReceive() {
         val depositAddress = params.config.depositAddress
         if (depositAddress == null) {
-            showError()
+            showBottomSheetError(TangemPayDetailsErrorType.Receive)
         } else {
             dataForReceiveFactory.getDataForReceive(depositAddress = depositAddress, chainId = params.config.chainId)
                 .onRight {
@@ -94,19 +95,10 @@ internal class TangemPayDetailsModel @Inject constructor(
                         userWalletId = it.walletId,
                         showMemoDisclaimer = false,
                         receiveAddress = it.receiveAddress,
-                        type = TokenReceiveType.Custom(
-                            tokenName = TOKEN_NAME,
-                            tokenIconUrl = TOKEN_ICON_URL,
-                            fallbackTint = TangemColorPalette.Black.toArgb(),
-                            fallbackBackground = TangemColorPalette.Meadow.toArgb(),
-                        ),
                     )
                     bottomSheetNavigation.activate(TangemPayDetailsNavigation.Receive(config))
                 }
-                .onLeft {
-                    val messageUM = TangemPayErrorMessageFactory.createErrorMessage(TangemPayDetailsErrorType.Receive)
-                    uiMessageSender.send(message = messageUM)
-                }
+                .onLeft { showBottomSheetError(TangemPayDetailsErrorType.Receive) }
         }
     }
 
@@ -165,5 +157,9 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     override fun onTransactionClick(item: TangemPayTxHistoryItem) {
         bottomSheetNavigation.activate(TangemPayDetailsNavigation.TransactionDetails(item))
+    }
+
+    private fun showBottomSheetError(type: TangemPayDetailsErrorType) {
+        uiMessageSender.send(message = TangemPayErrorMessageFactory.createErrorMessage(type = type))
     }
 }

@@ -5,7 +5,6 @@ import androidx.compose.ui.Modifier
 import com.tangem.common.ui.account.AccountIconPreviewData
 import com.tangem.common.ui.userwallet.state.UserWalletItemUM
 import com.tangem.common.ui.userwallet.state.UserWalletItemUM.ImageState
-import com.tangem.core.analytics.DummyAnalyticsEventHandler
 import com.tangem.core.decompose.navigation.DummyRouter
 import com.tangem.core.ui.components.block.model.BlockUM
 import com.tangem.core.ui.extensions.resourceReference
@@ -45,7 +44,6 @@ internal class PreviewWalletSettingsComponent : WalletSettingsComponent {
         popBack = {},
         items = ItemsBuilder(
             router = DummyRouter(),
-            analyticsEventHandler = DummyAnalyticsEventHandler(),
         ).buildItems(
             userWallet = UserWallet.Hot(
                 walletId = UserWalletId("011"),
@@ -62,9 +60,9 @@ internal class PreviewWalletSettingsComponent : WalletSettingsComponent {
             forgetWallet = {},
             onLinkMoreCardsClick = {},
             onReferralClick = {},
+            onManageTokensClick = {},
             isManageTokensAvailable = true,
             isNotificationsEnabled = true,
-            isNotificationsFeatureEnabled = true,
             onCheckedNotificationsChanged = {},
             onNotificationsDescriptionClick = {},
             isNotificationsPermissionGranted = false,

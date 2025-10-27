@@ -1,6 +1,7 @@
 package com.tangem.features.markets.portfolio.add.impl.model
 
 import com.tangem.common.ui.account.CryptoPortfolioIconUM
+import com.tangem.common.ui.account.PortfolioSelectUM
 import com.tangem.common.ui.account.toUM
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.ParamsContainer
@@ -33,7 +34,7 @@ internal class AddTokenUiBuilder @Inject constructor(
         )
     }
 
-    private fun createPortfolio(selectedPortfolio: SelectedPortfolio): AddTokenUM.Portfolio {
+    private fun createPortfolio(selectedPortfolio: SelectedPortfolio): PortfolioSelectUM {
         val accountIcon: CryptoPortfolioIconUM?
         val portfolioName: TextReference
         when (selectedPortfolio.isAccountMode) {
@@ -49,10 +50,11 @@ internal class AddTokenUiBuilder @Inject constructor(
                 }
             }
         }
-        return AddTokenUM.Portfolio(
-            accountIconUM = accountIcon,
+        return PortfolioSelectUM(
+            icon = accountIcon,
             name = portfolioName,
-            editable = selectedPortfolio.availableMorePortfolio,
+            isAccountMode = selectedPortfolio.isAccountMode,
+            isMultiChoice = selectedPortfolio.availableMorePortfolio,
             onClick = { params.callbacks.onChangePortfolioClick() },
         )
     }

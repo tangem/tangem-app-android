@@ -4,6 +4,7 @@ import arrow.core.Either
 import arrow.core.Either.Companion.catch
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.currency.yieldSupplyKey
 import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.quotes.QuotesRepository
@@ -51,7 +52,9 @@ class YieldSupplyGetMaxFeeUseCase(
             ?: error("Native fiat rate is missing")
         require(nativeFiatRate > BigDecimal.ZERO) { "Native fiat rate must be > 0" }
 
-        val marketToken = yieldSupplyRepository.getTokenStatus(token)
+        val cachedMarketToken = yieldSupplyRepository.getCachedMarkets().orEmpty()
+            .firstOrNull { it.yieldSupplyKey == token.yieldSupplyKey() }
+        val marketToken = cachedMarketToken ?: yieldSupplyRepository.getTokenStatus(token)
         val maxFeeNative = marketToken.maxFeeNative.toBigDecimal()
 
         val rateRatio = nativeFiatRate.divide(
