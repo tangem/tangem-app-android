@@ -24,6 +24,15 @@ internal sealed class MyPortfolioUM {
         }
     }
 
+    data class Content(
+        val items: ImmutableList<PortfolioListItem>,
+        val buttonState: Tokens.AddButtonState,
+        val onAddClick: () -> Unit,
+    ) : MyPortfolioUM() {
+
+        override val addToPortfolioBSConfig: TangemBottomSheetConfig = TangemBottomSheetConfig.Empty
+    }
+
     data class AddFirstToken(
         override val addToPortfolioBSConfig: TangemBottomSheetConfig,
         val onAddClick: () -> Unit,
