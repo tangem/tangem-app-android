@@ -58,14 +58,14 @@ internal object AccountCryptoCurrencyStatusFinder {
      * @param network the network to filter accounts by, can be null.
      * @return a set of [AccountStatus] that match the expected criteria.
      */
-    private fun AccountStatusList.getExpectedAccountStatuses(network: Network?): Set<AccountStatus> {
+    private fun AccountStatusList.getExpectedAccountStatuses(network: Network?): List<AccountStatus> {
         val possibleAccountIndex = network?.getAccountIndexOrNull()
 
         return when (possibleAccountIndex) {
             // currency can be in any account
             null -> accountStatuses
             // currency only in the main account
-            DerivationIndex.Main.value -> setOf(mainAccount)
+            DerivationIndex.Main.value -> listOf(mainAccount)
             // currency only in the account with specific derivation index or in the main account
             else -> {
                 val accountStatus = accountStatuses.firstOrNull {
@@ -74,7 +74,7 @@ internal object AccountCryptoCurrencyStatusFinder {
                     cryptoPortfolio.derivationIndex.value == possibleAccountIndex
                 }
 
-                setOfNotNull(accountStatus, mainAccount)
+                listOfNotNull(accountStatus, mainAccount)
             }
         }
     }
