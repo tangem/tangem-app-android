@@ -59,7 +59,7 @@ class SolanaWarningsTest : BaseTestCase() {
                 onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
             }
             step("Click on 'Send' button") {
-                onTokenDetailsScreen { sendButton.performClick() }
+                onTokenDetailsScreen { sendButton().performClick() }
             }
             step("Type '$amountToLeaveLessThanRent' in input text field") {
                 onSendScreen {
@@ -112,7 +112,7 @@ class SolanaWarningsTest : BaseTestCase() {
                 onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
             }
             step("Click on 'Send' button") {
-                onTokenDetailsScreen { sendButton.performClick() }
+                onTokenDetailsScreen { sendButton().performClick() }
             }
             step("Type '$amountToLeaveGreaterThanRent' in input text field") {
                 onSendScreen {
@@ -166,7 +166,7 @@ class SolanaWarningsTest : BaseTestCase() {
                 onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
             }
             step("Click on 'Send' button") {
-                onTokenDetailsScreen { sendButton.performClick() }
+                onTokenDetailsScreen { sendButton().performClick() }
             }
             step("Type '$amountToLeaveRentOnly' in input text field") {
                 onSendScreen {
@@ -220,7 +220,7 @@ class SolanaWarningsTest : BaseTestCase() {
                 onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
             }
             step("Click on 'Send' button") {
-                onTokenDetailsScreen { sendButton.performClick() }
+                onTokenDetailsScreen { sendButton().performClick() }
             }
             step("Type max amount in input text field") {
                 onSendScreen {
