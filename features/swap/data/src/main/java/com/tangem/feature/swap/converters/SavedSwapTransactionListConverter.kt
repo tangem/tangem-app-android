@@ -1,8 +1,13 @@
 package com.tangem.feature.swap.converters
 
+import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.data.common.currency.ResponseCryptoCurrenciesFactory
 import com.tangem.data.common.currency.UserTokensResponseFactory
+import com.tangem.data.common.network.NetworkFactory
+import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.feature.swap.domain.models.domain.ExchangeStatusModel
@@ -13,6 +18,7 @@ import com.tangem.utils.converter.Converter
 
 internal class SavedSwapTransactionListConverter(
     private val responseCryptoCurrenciesFactory: ResponseCryptoCurrenciesFactory,
+    private val networkFactory: NetworkFactory,
 ) : Converter<SavedSwapTransactionListModel, SavedSwapTransactionListModelInner> {
 
     private val userTokensResponseFactory = UserTokensResponseFactory()
@@ -43,13 +49,17 @@ internal class SavedSwapTransactionListConverter(
         return if (fromToken == null || toToken == null) {
             null
         } else {
+            val fromNetwork = createSwapTransactionNetwork(fromToken, userWallet) ?: return null
             val fromCryptoCurrency = responseCryptoCurrenciesFactory.createCurrency(
                 responseToken = fromToken,
                 userWallet = userWallet,
+                network = fromNetwork,
             ) ?: return null
+            val toNetwork = createSwapTransactionNetwork(fromToken, userWallet) ?: return null
             val toCryptoCurrency = responseCryptoCurrenciesFactory.createCurrency(
                 responseToken = toToken,
                 userWallet = userWallet,
+                network = toNetwork,
             ) ?: return null
 
             return SavedSwapTransactionListModel(
@@ -91,4 +101,22 @@ internal class SavedSwapTransactionListConverter(
         toTokensResponse = userTokensResponseFactory.createResponseToken(currency = toCryptoCurrency, accountId = null),
         transactions = tokenTransactions,
     )
+
+    private fun createSwapTransactionNetwork(token: UserTokensResponse.Token, userWallet: UserWallet): Network? {
+        val blockchain = Blockchain.fromNetworkId(token.networkId) ?: return null
+
+        return if (token.derivationPath == null) {
+            networkFactory.create(
+                blockchain = blockchain,
+                derivationPath = Network.DerivationPath.None,
+                userWallet = userWallet,
+            )
+        } else {
+            networkFactory.create(
+                blockchain = blockchain,
+                extraDerivationPath = token.derivationPath,
+                userWallet = userWallet,
+            )
+        }
+    }
 }

@@ -88,8 +88,6 @@ internal class ExchangeStatusFactory @AssistedInject constructor(
         if (shouldDispose) {
             swapTransactionRepository.removeTransaction(
                 userWalletId = userWallet.walletId,
-                fromCryptoCurrency = selectedTx.fromCryptoCurrency,
-                toCryptoCurrency = selectedTx.toCryptoCurrency,
                 txId = selectedTx.info.txId,
             )
         }
