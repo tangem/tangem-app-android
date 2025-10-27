@@ -12,25 +12,23 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
-import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.components.NavigationBar3ButtonsScrim
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.tangempay.components.txHistory.DefaultTangemPayTxHistoryComponent
 import com.tangem.features.tangempay.components.txHistory.TangemPayTxHistoryDetailsComponent
-import com.tangem.features.tangempay.model.TangemPayDetailsModel
 import com.tangem.features.tangempay.entity.TangemPayDetailsNavigation
+import com.tangem.features.tangempay.model.TangemPayDetailsModel
 import com.tangem.features.tangempay.ui.TangemPayDetailsScreen
 import com.tangem.features.tokenreceive.TokenReceiveComponent
 
 internal class TangemPayDetailsComponent(
     private val appComponentContext: AppComponentContext,
-    innerRouter: Router,
     private val params: TangemPayDetailsContainerComponent.Params,
     private val tokenReceiveComponentFactory: TokenReceiveComponent.Factory,
 ) : AppComponentContext by appComponentContext, ComposableContentComponent {
 
-    private val model: TangemPayDetailsModel = getOrCreateModel(params = params, router = innerRouter)
+    private val model: TangemPayDetailsModel = getOrCreateModel(params = params)
 
     private val bottomSheetSlot = childSlot(
         source = model.bottomSheetNavigation,
