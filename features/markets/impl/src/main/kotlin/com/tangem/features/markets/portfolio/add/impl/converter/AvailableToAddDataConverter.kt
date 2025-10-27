@@ -29,12 +29,19 @@ internal class AvailableToAddDataConverter @Inject constructor(
         marketParams: TokenMarketParams,
     ): AvailableToAddData {
         suspend fun AccountStatus.getAvailableToAddAccount(wallet: UserWallet): AvailableToAddAccount {
-            val addedNetworks = availableNetworks
+            val currencies = availableNetworks
                 .mapNotNull { createCryptoCurrency(wallet, it, marketParams, this.account) }
-                // todo account poor performance, investigate, e.g 20 accounts and USDC token for adding
-                .mapNotNull { getAccountCurrencyStatusUseCase.invokeSync(wallet.walletId, it) }
-                .mapNotNull { it.getOrNull()?.status?.currency?.network }
-                .toSet()
+
+            val addedNetworks = getAccountCurrencyStatusUseCase.invokeSync(wallet.walletId, currencies)
+                .fold(
+                    ifEmpty = { emptySet() },
+                    ifSome = { map ->
+                        map.values.flatMapTo(hashSetOf()) { statuses ->
+                            statuses.map { it.currency.network }
+                        }
+                    },
+                )
+
             return AvailableToAddAccount(
                 account = this,
                 availableNetworks = availableNetworks,
@@ -62,7 +69,7 @@ internal class AvailableToAddDataConverter @Inject constructor(
 
         val availableToAddWallets: Map<UserWalletId, AvailableToAddWallet> = balances
             .map {
-                val (wallet, balance) = it
+                val (wallet, _) = it
                 val availableToAddWallet = getAvailableToAddWallet(it)
                 wallet.walletId to availableToAddWallet
             }
