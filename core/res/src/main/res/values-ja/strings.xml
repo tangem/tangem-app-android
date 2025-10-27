@@ -244,6 +244,7 @@
   <string name="common_enable">有効にする</string>
   <string name="common_enabled">有効</string>
   <string name="common_error">エラー</string>
+  <string name="common_estimated_fee">推定手数料</string>
   <string name="common_exchange">スワップ</string>
   <string name="common_explore">移動する</string>
   <string name="common_explore_transaction_history">取引履歴を調べる</string>
@@ -476,7 +477,7 @@
   <string name="express_provider">プロバイダー</string>
   <string name="express_provider_best_rate">ベストレート</string>
   <string name="express_provider_fca_warning_list">FCA警告リスト</string>
-  <string name="express_provider_great_rate">お得なレート</string>
+  <string name="express_provider_great_rate">ベストチョイス</string>
   <string name="express_provider_in_fca_warning_list">FCA警告リストに掲載されたプロバイダー</string>
   <string name="express_provider_max_amount">最大 %s まで使用可能</string>
   <string name="express_provider_min_amount">%s 以上で利用可能</string>
@@ -1346,7 +1347,7 @@
   <string name="token_button_unavailability_reason_pending_transaction_send">ネットワーク%s内の保留中の取引が完了すると、送金が可能になります。</string>
   <string name="token_button_unavailability_reason_sell_unavailable">%sの売却は、現在のプロバイダーではサポートされていませんが、より多くのオプションを追加できるよう取り組んでいます。</string>
   <string name="token_button_unavailability_reason_staking_unavailable">%sのステーキングは、現在のプロバイダーではサポートされていませんが、より多くのオプションを追加できるよう取り組んでいます。</string>
-  <string name="token_button_unavailability_reason_yield_supply_approval">ここにテキストを入力</string>
+  <string name="token_button_unavailability_reason_yield_supply_approval">承認が取り消されましたが、あなたの資金は引き続き利息モードです。操作を行うには、利息モードに移動し、再度承認を付与してください。</string>
   <string name="token_details_generate_xpub">XPUBを生成する</string>
   <string name="token_details_hide_alert_hide">非表示</string>
   <string name="token_details_hide_alert_message">このトークンをメイン画面から非表示にします。トークンの管理ページからいつでも再度追加できます。</string>
@@ -1740,15 +1741,16 @@
   <string name="xtz_withdrawal_message_ignore">いいえ、すべて送信します</string>
   <string name="xtz_withdrawal_message_reduce">%s XTZを減らす</string>
   <string name="xtz_withdrawal_message_warning">次回ウォレットにチャージするときに手数料の増加を避けるには、金額を%s XTZ減らしてください。</string>
-  <string name="yield_module_alert_description">あなたの資金は現在Aaveプロトコルに供給されていますが、いつでも管理できます。</string>
+  <string name="yield_module_alert_description">利息モードを有効にすると、このアドレスへの今後のすべての入金はAaveに送られます。ただし、資金の管理は引き続き自由に行えます。</string>
   <string name="yield_module_alert_title">%sはAaveに供給されています</string>
   <string name="yield_module_amount_not_transfered_to_aave_title">Aaveへの%1$s %2$sの供給は保留中です</string>
   <string name="yield_module_approve_needed_notification_cta">承認する</string>
-  <string name="yield_module_approve_needed_notification_description">前回の承認に問題があったため、新しい承認が必要です。手続き方法を選択してください。</string>
+  <string name="yield_module_approve_needed_notification_description">トークンの承認は取り消されました。サービス機能を再開するには、再度承認を行ってください。</string>
   <string name="yield_module_approve_needed_notification_title">承認が必要</string>
   <string name="yield_module_approve_sheet_fee_note">手数料が差し引かれ、あなたの資産は再び貸し出されます。</string>
   <string name="yield_module_approve_sheet_subtitle">引き続き収益を得るには承認が必要です。</string>
   <string name="yield_module_approve_sheet_title">承認を確定する</string>
+  <string name="yield_module_balance_info_sheet_subtitle">あなたの資金は現在Aaveプロトコルに預けられていますが、いつでも自由に管理できます。</string>
   <string name="yield_module_balance_info_sheet_title">あなたの%sはAaveに預けられています</string>
   <string name="yield_module_chart_loading_error">チャートを読み込めません・・</string>
   <string name="yield_module_deposit_error_notification_title">受け取った金額%1$s %2$sはAaveに入金されませんでした。</string>
@@ -1759,7 +1761,7 @@
   <string name="yield_module_earn_sheet_high_fee_description">現在、ネットワーク手数料が高すぎるため貸付を実行できません。手数料が%1$s以下に下がり次第、資金が供給されます。</string>
   <string name="yield_module_earn_sheet_my_funds_title">私の資金</string>
   <string name="yield_module_earn_sheet_provider_description">あなたの%1$sはAaveに預けられ、利息が付きます。あなたは%2$sトークンを保有しており、これは残高を表し、時間の経過とともに増加します。入金すると資金はAaveに供給され、取引手数料を差し引いた利息が付きます。</string>
-  <string name="yield_module_earn_sheet_title">利回りを得る</string>
+  <string name="yield_module_earn_sheet_title">利息モード</string>
   <string name="yield_module_earn_sheet_total_earnings_title">総収益</string>
   <string name="yield_module_earn_sheet_transfers_title">Aaveへの送金</string>
   <string name="yield_module_explore_sheet_explore_aave_button_title">Aaveの詳細を見る</string>
@@ -1769,13 +1771,14 @@
   <string name="yield_module_fee_policy_sheet_fee_note">今後のチャージごとに、おおよそ%1$s（%2$s）のネットワーク手数料が差し引かれますが、上限の%3$s（%4$s）を超えることはありません。</string>
   <string name="yield_module_fee_policy_sheet_max_fee_note">ネットワーク手数料が上限手数料を超えた場合、手数料が下がるまで取引は成立しません。この制限は後で変更できます。</string>
   <string name="yield_module_fee_policy_sheet_max_fee_title">最大手数料</string>
-  <string name="yield_module_fee_policy_sheet_min_amount_note">最小金額は現在のネットワーク手数料に基づいて計算されており、手数料が4％を超えないように設定されています。その結果、最小金額は%1$s（%2$s）となります。</string>
+  <string name="yield_module_fee_policy_sheet_min_amount_note">最小金額は現在のネットワーク手数料に基づいて計算されており、手数料が4％を超えないように設定されています。そのため、最小金額は%1$s（%2$s）となります。</string>
   <string name="yield_module_fee_policy_sheet_min_amount_title">最低入金額</string>
   <string name="yield_module_fee_policy_sheet_title">手数料ポリシー</string>
-  <string name="yield_module_fee_policy_tangem_service_fee_title">Tangemはまた、得られた利回りに対して3%のサービス手数料を差し引きます。</string>
+  <string name="yield_module_fee_policy_tangem_service_fee_title">Tangemはまた、得られた利回りに対して15%のサービス手数料を差し引きます。</string>
   <string name="yield_module_high_fee_error">ネットワーク手数料が下がるか、残高が最低必要額に達すると、資金は自動的にAaveに供給されます。</string>
   <string name="yield_module_historical_returns">過去のリターン</string>
-  <string name="yield_module_main_view_approve_notification_title">トークンの承認が必要</string>
+  <string name="yield_module_main_view_approve_notification_description">利息モードでのトークンの承認が取り消されました。トークンを開いて再度許可してください。</string>
+  <string name="yield_module_main_view_approve_notification_title">トークンの承認が必要です</string>
   <string name="yield_module_network_fee_unreachable_notification_description">ネットワーク接続を確認してください</string>
   <string name="yield_module_network_fee_unreachable_notification_title">ネットワーク手数料についての情報にアクセスできません</string>
   <string name="yield_module_promo_screen_auto_balance_subtitle">あなたが行うすべての入金は、自動的にAaveへ供給されます。</string>
@@ -1814,7 +1817,7 @@
   <string name="yield_module_transfer_mode_automatic">自動</string>
   <string name="yield_module_unable_to_cover_fee_description">取引のネットワーク手数料をカバーするために、 %1$s %2$sを入金してください</string>
   <string name="yield_module_unable_to_cover_fee_title">%s手数料を支払えません</string>
-  <string name="yield_module_unavailable_subtitle">利息サービスは現在利用できません。しばらくしてから再度お試しください。</string>
-  <string name="yield_module_unavailable_title">収益は利用できません</string>
+  <string name="yield_module_unavailable_subtitle">現在、利息モードのサービスは利用できません。しばらくしてから再度お試しください。</string>
+  <string name="yield_module_unavailable_title">利息モードは利用できません</string>
   <string name="yield_supply_chart_loading_error">チャートを読み込めません・・</string>
 </resources>
