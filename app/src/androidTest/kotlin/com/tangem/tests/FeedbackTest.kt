@@ -15,7 +15,6 @@ import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.sdk.mocks.MockProvider
 import com.tangem.tap.store
 import dagger.hilt.android.testing.HiltAndroidTest
-import io.qameta.allure.kotlin.Allure
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
 import org.junit.Test
@@ -130,7 +129,7 @@ class FeedbackTest : BaseTestCase() {
                 MockProvider.resetEmulateError()
             }
         ).run {
-            Allure.step("Click on 'Accept' button") {
+            step("Click on 'Accept' button") {
                 onDisclaimerScreen { acceptButton.clickWithAssertion() }
             }
             step("Set scanning error") {
