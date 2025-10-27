@@ -5,6 +5,7 @@ import com.tangem.domain.markets.FilterAvailableNetworksForWalletUseCase
 import com.tangem.domain.markets.GetTokenMarketCryptoCurrency
 import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.domain.markets.TokenMarketParams
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -29,7 +30,8 @@ internal class AvailableToAddDataConverter @Inject constructor(
     ): AvailableToAddData {
         suspend fun AccountStatus.getAvailableToAddAccount(wallet: UserWallet): AvailableToAddAccount {
             val addedNetworks = availableNetworks
-                .mapNotNull { createCryptoCurrency(wallet, it, marketParams) }
+                .mapNotNull { createCryptoCurrency(wallet, it, marketParams, this.account) }
+                // todo account poor performance, investigate, e.g 20 accounts and USDC token for adding
                 .mapNotNull { getAccountCurrencyStatusUseCase.invokeSync(wallet.walletId, it) }
                 .mapNotNull { it.getOrNull()?.status?.currency?.network }
                 .toSet()
@@ -82,9 +84,16 @@ internal class AvailableToAddDataConverter @Inject constructor(
         userWallet: UserWallet,
         network: TokenMarketInfo.Network,
         marketParams: TokenMarketParams,
-    ): CryptoCurrency? = getTokenMarketCryptoCurrency(
-        userWalletId = userWallet.walletId,
-        tokenMarketParams = marketParams,
-        network = network,
-    )
+        account: Account,
+    ): CryptoCurrency? {
+        val derivationIndex = when (account) {
+            is Account.CryptoPortfolio -> account.derivationIndex
+        }
+        return getTokenMarketCryptoCurrency(
+            userWalletId = userWallet.walletId,
+            tokenMarketParams = marketParams,
+            network = network,
+            accountIndex = derivationIndex,
+        )
+    }
 }
