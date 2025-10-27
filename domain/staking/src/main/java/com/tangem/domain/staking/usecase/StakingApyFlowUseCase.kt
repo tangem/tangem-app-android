@@ -19,7 +19,7 @@ class StakingApyFlowUseCase(private val stakingRepository: StakingRepository) {
         return stakingRepository.getEnabledYields()
             .map { yields ->
                 yields.associate { yield ->
-                    val key = "${yield.token.network.name.lowercase()}_${yield.token.symbol}"
+                    val key = "${yield.token.coinGeckoId}_${yield.token.symbol}"
                     val apy = calculateApy(yield)
                     key to apy
                 }
