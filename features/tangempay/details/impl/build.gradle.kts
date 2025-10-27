@@ -45,6 +45,7 @@ dependencies {
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
     implementation(deps.decompose.ext.compose)
+    implementation(deps.lottie.compose)
 
     /** AndroidX */
     implementation(deps.androidx.activity.compose)
