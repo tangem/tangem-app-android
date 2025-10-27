@@ -18,6 +18,7 @@ import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.nft.ObserveAndClearNFTCacheIfNeedUseCase
 import com.tangem.domain.notifications.GetIsHuaweiDeviceWithoutGoogleServicesUseCase
 import com.tangem.domain.notifications.repository.NotificationsRepository
+import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.usecase.TangemPayIssueOrderUseCase
 import com.tangem.domain.pay.usecase.TangemPayMainScreenCustomerInfoUseCase
 import com.tangem.domain.settings.*
@@ -93,6 +94,7 @@ internal class WalletModel @Inject constructor(
     private val tangemPayIssueOrderUseCase: TangemPayIssueOrderUseCase,
     private val tangemPayFeatureToggles: TangemPayFeatureToggles,
     private val yieldSupplyApyUpdateUseCase: YieldSupplyApyUpdateUseCase,
+    private val tangemPayOnboardingRepository: OnboardingRepository,
     private val yieldSupplyFeatureToggles: YieldSupplyFeatureToggles,
     val screenLifecycleProvider: ScreenLifecycleProvider,
     val innerWalletRouter: InnerWalletRouter,
@@ -344,16 +346,24 @@ internal class WalletModel @Inject constructor(
          * and every minute while user stays on the main screen
          */
         screenLifecycleProvider.isBackgroundState.onEach { inBackground ->
+            // fast exit
+            if (!tangemPayFeatureToggles.isTangemPayEnabled) return@onEach
+
             updateTangemPayJobHolder.cancel()
-            if (!inBackground && tangemPayFeatureToggles.isTangemPayEnabled) {
-                modelScope.launch {
+
+            modelScope.launch {
+                // fast exit
+                val initialDataProduced = tangemPayOnboardingRepository.isTangemPayInitialDataProduced()
+                if (!initialDataProduced) return@launch
+
+                if (!inBackground) {
                     refreshTangemPayInfo()
                     while (isActive) {
                         delay(TANGEM_PAY_UPDATE_INTERVAL)
                         refreshTangemPayInfo()
                     }
-                }.saveIn(updateTangemPayJobHolder)
-            }
+                }
+            }.saveIn(updateTangemPayJobHolder)
         }.launchIn(modelScope)
     }
 
