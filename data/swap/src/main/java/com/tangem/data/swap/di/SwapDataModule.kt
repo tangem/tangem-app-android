@@ -2,6 +2,7 @@ package com.tangem.data.swap.di
 
 import com.squareup.moshi.Moshi
 import com.tangem.data.common.currency.ResponseCryptoCurrenciesFactory
+import com.tangem.data.common.network.NetworkFactory
 import com.tangem.data.express.converter.ExpressErrorConverter
 import com.tangem.data.swap.DefaultSwapErrorResolver
 import com.tangem.data.swap.DefaultSwapRepositoryV2
@@ -66,11 +67,13 @@ internal object SwapDataModule {
     fun provideSwapTransactionRepository(
         appPreferencesStore: AppPreferencesStore,
         responseCryptoCurrenciesFactory: ResponseCryptoCurrenciesFactory,
+        networkFactory: NetworkFactory,
         dispatchers: CoroutineDispatcherProvider,
     ): SwapTransactionRepository {
         return DefaultSwapTransactionRepository(
             appPreferencesStore = appPreferencesStore,
             responseCryptoCurrenciesFactory = responseCryptoCurrenciesFactory,
+            networkFactory = networkFactory,
             dispatchers = dispatchers,
         )
     }
