@@ -84,16 +84,23 @@ class ManageCryptoCurrenciesUseCase(
                 account = account.copy(cryptoCurrencies = modifiedCurrencyList.total.toSet()),
             )
 
-            derivePublicKeys(userWalletId = userWalletId, currencies = modifiedCurrencyList.added)
+            val isDerivingFailed = derivePublicKeys(
+                userWalletId = userWalletId,
+                currencies = modifiedCurrencyList.added,
+            ).isLeft()
 
             parallelUpdatingScope.launch {
                 /*
                  * If only removal of currencies happened, we need to sync tokens. Otherwise, tokens will be synced
                  * when balances are refreshed for added currencies.
                  */
-                if (modifiedCurrencyList.added.isEmpty() && modifiedCurrencyList.removed.isNotEmpty()) {
+                val isOnlyRemoval = modifiedCurrencyList.added.isEmpty() && modifiedCurrencyList.removed.isNotEmpty()
+
+                if (isDerivingFailed || isOnlyRemoval) {
                     launch { accountsCRUDRepository.syncTokens(userWalletId) }
                 }
+
+                if (isDerivingFailed) return@launch
 
                 cryptoCurrencyBalanceFetcher(userWalletId = userWalletId, currencies = modifiedCurrencyList.added)
                 refreshExpress(userWalletId = userWalletId, currencies = modifiedCurrencyList.total)
@@ -204,14 +211,11 @@ class ManageCryptoCurrenciesUseCase(
         )
     }
 
-    private suspend fun Raise<Throwable>.derivePublicKeys(
+    private suspend fun derivePublicKeys(
         userWalletId: UserWalletId,
         currencies: List<CryptoCurrency>,
-    ) {
-        catch(
-            block = { derivationsRepository.derivePublicKeys(userWalletId = userWalletId, currencies = currencies) },
-            catch = ::raise,
-        )
+    ): Either<Throwable, Unit> = Either.catch {
+        derivationsRepository.derivePublicKeys(userWalletId = userWalletId, currencies = currencies)
     }
 
     private fun List<CryptoCurrency>.groupByNetwork(
