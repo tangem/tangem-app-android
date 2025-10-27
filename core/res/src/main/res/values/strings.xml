@@ -184,6 +184,7 @@
   <string name="cardano_max_amount_has_token_title">Not enough ADA</string>
   <string name="common_accept">Accept</string>
   <string name="common_access_denied">Access denied</string>
+  <string name="common_account">Account</string>
   <string name="common_accounts">Accounts</string>
   <string name="common_activate">Activate</string>
   <string name="common_add">Add</string>
@@ -249,7 +250,7 @@
   <string name="common_enable">Enable</string>
   <string name="common_enabled">Enabled</string>
   <string name="common_error">Error</string>
-  <string name="common_estimated_fee">Estimated fee</string>
+  <string name="common_estimated_fee">Network service fee</string>
   <string name="common_exchange">Swap</string>
   <string name="common_explore">Explore</string>
   <string name="common_explore_transaction_history">Explore transaction history</string>
@@ -1815,7 +1816,7 @@
   <string name="xtz_withdrawal_message_warning">To avoid paying an increased commission the next time you top up your wallet, reduce the amount by %s XTZ</string>
   <string name="yield_module_alert_description">With Yield mode active, all future deposits to this address will go to Aave. You can still manage your funds freely.</string>
   <string name="yield_module_alert_title">Your %s is supplied to Aave</string>
-  <string name="yield_module_amount_not_transfered_to_aave_title">Supplying  %1$s %2$s to Aave is pending</string>
+  <string name="yield_module_amount_not_transfered_to_aave_title">Supplying %1$s %2$s to Aave is pending</string>
   <string name="yield_module_approve_needed_notification_cta">Give Approve</string>
   <string name="yield_module_approve_needed_notification_description">Your token’s approval has been revoked. Grant it again to resume service functionality.</string>
   <string name="yield_module_approve_needed_notification_title">Approve needed</string>
@@ -1832,7 +1833,7 @@
   <string name="yield_module_earn_sheet_fee_description">When topping up for lending, a network fee not exceeding %1$s will be deducted from the balance.</string>
   <string name="yield_module_earn_sheet_high_fee_description">The network fee is currently too high to execute lending. Funds will be supplied once it drops to %1$s or below. </string>
   <string name="yield_module_earn_sheet_my_funds_title">My funds</string>
-  <string name="yield_module_earn_sheet_provider_description">Your %1$s is now deposited in Aave and earning interest. You hold a%2$s token, which represents your balance and grows over time. When you deposit more funds, they\'ll be supplied to Aave to earn interest, minus a transaction fee.</string>
+  <string name="yield_module_earn_sheet_provider_description">Your %1$s is now deployed to Aave and earning yield. You hold %2$s tokens, which represent your balance and accrue yield automatically. When you top up, funds are added to Aave to earn more yield, minus fees.</string>
   <string name="yield_module_earn_sheet_title">Yield mode</string>
   <string name="yield_module_earn_sheet_total_earnings_title">Total earnings</string>
   <string name="yield_module_earn_sheet_transfers_title">Transfers to Aave</string>
@@ -1840,13 +1841,13 @@
   <string name="yield_module_fee_policy_sheet_current_fee_note">This is the current supply fee on %s. The actual cost will be shown on the activation tab.</string>
   <string name="yield_module_fee_policy_sheet_current_fee_title">Current fee</string>
   <string name="yield_module_fee_policy_sheet_description">All future %s deposits will be supplied to Aave automatically, with the transaction fee deducted.</string>
-  <string name="yield_module_fee_policy_sheet_fee_note">An approximate network fee of %1$s (%2$s) will be deducted from each future top-up, and it won’t exceed your %3$s  (%4$s) limit.</string>
+  <string name="yield_module_fee_policy_sheet_fee_note">An approximate network fee of %1$s (%2$s) will be deducted from each future top-up, and it won’t exceed your %3$s (%4$s) limit.</string>
   <string name="yield_module_fee_policy_sheet_max_fee_note">If network fees rise above maximum fee, the transaction won’t go through until they decrease. You can change this limit later.</string>
   <string name="yield_module_fee_policy_sheet_max_fee_title">Maximum fee</string>
   <string name="yield_module_fee_policy_sheet_min_amount_note">The minimum amount is calculated from the current network fee to ensure it does not exceed 4%%, which makes the minimum %1$s (%2$s).</string>
   <string name="yield_module_fee_policy_sheet_min_amount_title">Minimum top-up</string>
   <string name="yield_module_fee_policy_sheet_title">Fee policy</string>
-  <string name="yield_module_fee_policy_tangem_service_fee_title">Tangem also takes a 3% service fee on yield earned.</string>
+  <string name="yield_module_fee_policy_tangem_service_fee_title">Tangem also takes a 15% service fee on yield earned.</string>
   <string name="yield_module_high_fee_error">Your funds will be automatically supplied to Aave once network fees are lower or your balance meets the minimum required amount.</string>
   <string name="yield_module_historical_returns">Historical returns</string>
   <string name="yield_module_main_view_approve_notification_description">Approval for your token in the Yield mode has been revoked. Open the token to grant permission again.</string>
@@ -1858,7 +1859,7 @@
   <string name="yield_module_promo_screen_cash_out_subtitle">Send, swap, or sell your funds instantly, anytime you want.</string>
   <string name="yield_module_promo_screen_cash_out_title">Access your funds anytime</string>
   <string name="yield_module_promo_screen_how_it_works_button_title">How it works?</string>
-  <string name="yield_module_promo_screen_self_custodial_subtitle">Aave is a decentralized protocol managing over $81.9 billion in total value.</string>
+  <string name="yield_module_promo_screen_self_custodial_subtitle">Aave is a decentralized protocol managing over $61  billion in total value.</string>
   <string name="yield_module_promo_screen_self_custodial_title">Decentralized and self-custodial</string>
   <string name="yield_module_promo_screen_terms_disclaimer">By using this service, you agree with provider\n%1$s and %2$s</string>
   <string name="yield_module_promo_screen_title">Connect Aave</string>
@@ -1877,7 +1878,7 @@
   <string name="yield_module_status_active">Active</string>
   <string name="yield_module_status_paused">Paused</string>
   <string name="yield_module_stop_earning">Disable yield mode</string>
-  <string name="yield_module_stop_earning_sheet_description">Turning this off will withdraw your funds from Aave to %s in your wallet and it will stop earning rewards.</string>
+  <string name="yield_module_stop_earning_sheet_description">Turning this off will withdraw your assets from Aave, convert them back to %s in your wallet, and stop yield accrual.</string>
   <string name="yield_module_stop_earning_sheet_fee_note">The network fee will be deducted from the amount you withdraw.</string>
   <string name="yield_module_supply_apr">Supply APY</string>
   <string name="yield_module_token_details_earn_notification_apy">APY</string>
@@ -1885,7 +1886,7 @@
   <string name="yield_module_token_details_earn_notification_earning_on_your_balance_subtitle">Interest accrues automatically</string>
   <string name="yield_module_token_details_earn_notification_earning_on_your_balance_title">Yield mode</string>
   <string name="yield_module_token_details_earn_notification_processing">Processing your deposit</string>
-  <string name="yield_module_token_details_earn_notification_title">Make your assets work for you</string>
+  <string name="yield_module_token_details_earn_notification_title">Interest accrues automatically</string>
   <string name="yield_module_transfer_mode_automatic">Automatic</string>
   <string name="yield_module_unable_to_cover_fee_description">Deposit some %1$s %2$s to cover the network fee for transactions</string>
   <string name="yield_module_unable_to_cover_fee_title">Unable to cover %s fee</string>
