@@ -79,18 +79,26 @@ interface AccountsCRUDRepository {
     suspend fun syncTokens(userWalletId: UserWalletId)
 
     /**
-     * Retrieves the total count of accounts associated with a specific user wallet including archived accounts
+     * Retrieves the total count of active accounts associated with a specific user wallet excluding archived accounts
      *
      * @param userWalletId the unique identifier of the user wallet
      */
     suspend fun getTotalAccountsCountSync(userWalletId: UserWalletId): Option<Int>
 
     /**
-     * Provides a flow of the total count of accounts associated with a specific user wallet including archived accounts
+     * Retrieves the total count of active accounts associated with a specific user wallet excluding archived accounts
      *
      * @param userWalletId the unique identifier of the user wallet
      */
-    fun getTotalAccountsCount(userWalletId: UserWalletId): Flow<Option<Int>>
+    suspend fun getTotalActiveAccountsCountSync(userWalletId: UserWalletId): Option<Int>
+
+    /**
+     * Provides a flow of the total count of active accounts associated with a specific user wallet excluding
+     * archived accounts
+     *
+     * @param userWalletId the unique identifier of the user wallet
+     */
+    fun getTotalActiveAccountsCount(userWalletId: UserWalletId): Flow<Option<Int>>
 
     /**
      * Retrieves a user wallet by its unique identifier
