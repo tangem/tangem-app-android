@@ -22,6 +22,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.currency.yieldSupplyKey
 import com.tangem.domain.models.staking.YieldBalance
 import com.tangem.domain.staking.utils.getTotalWithRewardsStakingBalance
+import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.StringsSigns.DASH_SIGN
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.extensions.orZero
@@ -185,6 +186,7 @@ class TokenItemStateConverter(
             }
         }
 
+        // polygon-pos_0xc2132d05d31c914a87c6611c10748aeb04b58e8f
         private fun resolveEarnApy(
             cryptoCurrencyStatus: CryptoCurrencyStatus,
             yieldModuleApyMap: Map<String, String>,
@@ -192,7 +194,12 @@ class TokenItemStateConverter(
         ): Pair<TextReference?, Boolean> {
             val token = cryptoCurrencyStatus.currency as? CryptoCurrency.Token
             if (token != null && yieldModuleApyMap.isNotEmpty()) {
-                val yieldSupplyApy = yieldModuleApyMap[token.yieldSupplyKey()]
+                val yieldSupplyApy = yieldModuleApyMap.entries.firstOrNull {
+                    it.key.equals(
+                        other = token.yieldSupplyKey(),
+                        ignoreCase = BlockchainUtils.isCaseInsensitiveContractAddress(token.network.rawId),
+                    )
+                }?.value
                 if (yieldSupplyApy != null) {
                     val isActive = cryptoCurrencyStatus.value.yieldSupplyStatus?.isActive ?: false
                     return resourceReference(
