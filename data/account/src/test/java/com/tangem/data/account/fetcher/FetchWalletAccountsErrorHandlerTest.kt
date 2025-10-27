@@ -3,13 +3,13 @@ package com.tangem.data.account.fetcher
 import com.tangem.data.account.converter.createGetWalletAccountsResponse
 import com.tangem.data.account.converter.createWalletAccountDTO
 import com.tangem.data.account.utils.DefaultWalletAccountsResponseFactory
-import com.tangem.data.account.utils.toUserTokensResponse
 import com.tangem.data.common.currency.UserTokensSaver
 import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.common.response.ApiResponseError.HttpException.Code
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
+import com.tangem.datasource.api.tangemTech.models.account.toUserTokensResponse
 import com.tangem.datasource.local.token.UserTokensResponseStore
 import com.tangem.domain.models.wallet.UserWalletId
 import io.mockk.clearMocks
@@ -53,6 +53,8 @@ class FetchWalletAccountsErrorHandlerTest {
     @Test
     fun `does not update accounts when response is up to date`() = runTest {
         // Arrange
+        val response = createGetWalletAccountsResponse(userWalletId)
+
         val error = ApiResponseError.HttpException(
             code = Code.NOT_MODIFIED,
             message = "Not Modified",
@@ -63,7 +65,7 @@ class FetchWalletAccountsErrorHandlerTest {
         handler.handle(
             error = error,
             userWalletId = userWalletId,
-            savedAccountsResponse = null,
+            savedAccountsResponse = response,
             pushWalletAccounts = pushWalletAccounts,
             storeWalletAccounts = storeWalletAccounts,
         )
