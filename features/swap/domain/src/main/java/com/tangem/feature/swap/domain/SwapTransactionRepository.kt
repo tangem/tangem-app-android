@@ -23,12 +23,7 @@ interface SwapTransactionRepository {
         cryptoCurrencyId: CryptoCurrency.ID,
     ): Flow<List<SavedSwapTransactionListModel>?>
 
-    suspend fun removeTransaction(
-        userWalletId: UserWalletId,
-        fromCryptoCurrency: CryptoCurrency,
-        toCryptoCurrency: CryptoCurrency,
-        txId: String,
-    )
+    suspend fun removeTransaction(userWalletId: UserWalletId, txId: String)
 
     suspend fun storeTransactionState(
         txId: String,
