@@ -257,12 +257,17 @@ internal class AddToPortfolioModel @Inject constructor(
         userWallet: UserWallet,
         network: TokenMarketInfo.Network,
         account: AvailableToAddAccount,
-    ): CryptoCurrency? = getTokenMarketCryptoCurrency(
-        userWalletId = userWallet.walletId,
-        tokenMarketParams = addToPortfolioManager.token,
-        network = network,
-        accountIndex = (account.account as? AccountStatus.CryptoPortfolio)?.account?.derivationIndex,
-    )
+    ): CryptoCurrency? {
+        val accountIndex = when (account.account) {
+            is AccountStatus.CryptoPortfolio -> account.account.account.derivationIndex
+        }
+        return getTokenMarketCryptoCurrency(
+            userWalletId = userWallet.walletId,
+            tokenMarketParams = addToPortfolioManager.token,
+            network = network,
+            accountIndex = accountIndex,
+        )
+    }
 
     private fun routeToNetworkSelector(portfolio: SelectedPortfolio): AddToPortfolioRoutes.NetworkSelector {
         return AddToPortfolioRoutes.NetworkSelector(selectedPortfolio = portfolio)
