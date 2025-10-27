@@ -5,7 +5,7 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
-import com.tangem.domain.account.status.usecase.SaveCryptoCurrenciesUseCase
+import com.tangem.domain.account.status.usecase.ManageCryptoCurrenciesUseCase
 import com.tangem.domain.wallets.usecase.ColdWalletAndHasMissedDerivationsUseCase
 import com.tangem.features.markets.portfolio.add.api.SelectedNetwork
 import com.tangem.features.markets.portfolio.add.api.SelectedPortfolio
@@ -28,7 +28,7 @@ internal class AddTokenModel @Inject constructor(
     private val coldWalletAndHasMissedDerivationsUseCase: ColdWalletAndHasMissedDerivationsUseCase,
     override val dispatchers: CoroutineDispatcherProvider,
     private val analyticsEventHandler: AnalyticsEventHandler,
-    private val saveCryptoCurrenciesUseCase: SaveCryptoCurrenciesUseCase,
+    private val manageCryptoCurrenciesUseCase: ManageCryptoCurrenciesUseCase,
     private val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase,
 ) : Model() {
 
@@ -66,13 +66,11 @@ internal class AddTokenModel @Inject constructor(
             val blockchainNames = listOf(selectedNetwork.selectedNetwork)
                 .mapNotNull { BlockchainUtils.getNetworkInfo(it.networkId)?.name }
             analyticsEventHandler.send(analyticsEventBuilder.addToPortfolioContinue(blockchainNames))
+
             val cryptoCurrency = selectedNetwork.cryptoCurrency
             val accountId = selectedPortfolio.account.account.account.accountId
-            saveCryptoCurrenciesUseCase(
-                accountId = accountId,
-                add = listOf(cryptoCurrency),
-                remove = listOf(),
-            )
+            manageCryptoCurrenciesUseCase(accountId = accountId, add = cryptoCurrency)
+
             val status = getAccountCurrencyStatusUseCase.invokeSync(
                 userWalletId = accountId.userWalletId,
                 currencyId = cryptoCurrency.id,

@@ -10,25 +10,33 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
+import androidx.compose.ui.unit.dp
+import com.tangem.common.ui.account.AccountIcon
 import com.tangem.core.res.getStringSafe
 import com.tangem.core.ui.components.PrimaryButtonIconStart
+import com.tangem.core.ui.components.SpacerH12
+import com.tangem.core.ui.components.SpacerW12
+import com.tangem.core.ui.components.account.AccountIconSize
 import com.tangem.core.ui.components.rows.RoundableCornersRow
 import com.tangem.core.ui.extensions.pluralStringResourceSafe
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.referral.domain.models.ExpectedAward
 import com.tangem.feature.referral.domain.models.ExpectedAwards
+import com.tangem.feature.referral.models.ReferralStateHolder
 import com.tangem.feature.referral.presentation.R
 import kotlinx.coroutines.launch
 
@@ -43,6 +51,7 @@ internal fun ParticipateBottomBlock(
     onAgreementClick: () -> Unit,
     onCopyClick: () -> Unit,
     onShareClick: (String) -> Unit,
+    accountAward: ReferralStateHolder.AccountAward?,
 ) {
     Column(
         modifier = Modifier
@@ -53,7 +62,7 @@ internal fun ParticipateBottomBlock(
             .padding(horizontal = TangemTheme.dimens.spacing16),
         verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
     ) {
-        PersonalCodeCard(code = code)
+        PersonalCodeCard(code = code, accountAward = accountAward)
         AdditionalButtons(
             code = code,
             shareLink = shareLink,
@@ -242,19 +251,13 @@ private fun ExtraItems(extraItems: List<ExpectedAward>, overallItemsLastIndex: I
 }
 
 @Composable
-private fun PersonalCodeCard(code: String) {
+private fun PersonalCodeCard(code: String, accountAward: ReferralStateHolder.AccountAward?) {
     Column(
         modifier = Modifier
-            .shadow(
-                elevation = TangemTheme.dimens.elevation2,
-                shape = RoundedCornerShape(TangemTheme.dimens.radius12),
-            )
-            .background(
-                color = TangemTheme.colors.background.secondary,
-                shape = RoundedCornerShape(TangemTheme.dimens.radius12),
-            )
+            .clip(RoundedCornerShape(TangemTheme.dimens.radius12))
+            .background(color = TangemTheme.colors.background.primary)
             .fillMaxWidth()
-            .padding(vertical = TangemTheme.dimens.spacing12),
+            .padding(top = TangemTheme.dimens.spacing12),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
     ) {
@@ -270,6 +273,53 @@ private fun PersonalCodeCard(code: String) {
             maxLines = 1,
             style = TangemTheme.typography.h2,
         )
+
+        if (accountAward != null) {
+            AwardAccount(accountAward)
+        } else {
+            SpacerH12()
+        }
+    }
+}
+
+@Composable
+private fun AwardAccount(accountAward: ReferralStateHolder.AccountAward) {
+    Column {
+        HorizontalDivider(
+            thickness = 0.5.dp,
+            color = TangemTheme.colors.stroke.primary,
+            modifier = Modifier.padding(horizontal = 12.dp),
+        )
+        Row(
+            modifier = Modifier.padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                modifier = Modifier.weight(1f),
+                text = stringResourceSafe(R.string.account_for_rewards),
+                style = TangemTheme.typography.body1,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                color = TangemTheme.colors.text.secondary,
+            )
+            SpacerW12()
+            val icon = accountAward.accountSelectUM.icon
+            if (icon != null) {
+                AccountIcon(
+                    name = accountAward.accountSelectUM.name,
+                    icon = icon,
+                    size = AccountIconSize.Small,
+                )
+            }
+            Text(
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(horizontal = 4.dp),
+                text = accountAward.accountSelectUM.name.resolveReference(),
+                style = TangemTheme.typography.body1,
+                color = TangemTheme.colors.text.primary1,
+            )
+        }
     }
 }
 
@@ -351,10 +401,11 @@ private fun ParticipateBottomBlockPreview(
                 code = data.code,
                 shareLink = data.shareLink,
                 expectedAwards = data.expectedAwards,
-                onAgreementClick = data.onAgreementClick,
                 snackbarHostState = SnackbarHostState(),
+                onAgreementClick = data.onAgreementClick,
                 onCopyClick = data.onCopyClick,
                 onShareClick = data.onShareClick,
+                accountAward = data.accountAward,
             )
         }
     }
@@ -410,12 +461,18 @@ private class ParticipateBottomBlockDataProvider : CollectionPreviewParameterPro
             purchasedWalletCount = 0,
             expectedAwards = null,
         ),
+        ParticipateBottomBlockData(
+            purchasedWalletCount = 0,
+            expectedAwards = null,
+            accountAward = accountReward,
+        ),
     ),
 )
 
 private data class ParticipateBottomBlockData(
     val purchasedWalletCount: Int,
     val expectedAwards: ExpectedAwards?,
+    val accountAward: ReferralStateHolder.AccountAward? = null,
     val code: String = "x4JDK",
     val shareLink: String = "",
     val onAgreementClick: () -> Unit = {},

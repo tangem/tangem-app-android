@@ -123,6 +123,14 @@ private fun TokenList(
             end = TangemTheme.dimens.spacing16,
         )
 
+        // workaround to force recomposition of list items when the list is updated
+        // because sometimes items disappear after reordering in 1.7.4+ compose-runtime version
+        // check removing after update to compose-runtime 1.8.0+
+        val forceRecompose = remember { mutableIntStateOf(0) }
+        LaunchedEffect(state.items) {
+            forceRecompose.intValue++
+        }
+
         LazyColumn(
             modifier = Modifier
                 .align(Alignment.TopCenter)
@@ -143,13 +151,15 @@ private fun TokenList(
                     }
                 }
 
-                DraggableItem(
-                    index = index,
-                    item = item,
-                    reorderableState = reorderableListState,
-                    onDragStart = onDragStart,
-                    isBalanceHidden = isBalanceHidden,
-                )
+                key(forceRecompose.intValue) {
+                    DraggableItem(
+                        index = index,
+                        item = item,
+                        reorderableState = reorderableListState,
+                        onDragStart = onDragStart,
+                        isBalanceHidden = isBalanceHidden,
+                    )
+                }
             }
         }
 
