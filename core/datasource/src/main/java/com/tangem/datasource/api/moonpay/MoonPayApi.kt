@@ -1,4 +1,4 @@
-package com.tangem.tap.network.exchangeServices.moonpay
+package com.tangem.datasource.api.moonpay
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
@@ -7,17 +7,11 @@ import retrofit2.http.Query
 
 interface MoonPayApi {
 
-    @GET(MOOONPAY_IP_ADDRESS_REQUEST_URL)
+    @GET("v4/ip_address/")
     suspend fun getUserStatus(@Query("apiKey") moonPayApiKey: String): MoonPayUserStatus
 
-    @GET(MOOONPAY_CURRENCIES_REQUEST_URL)
+    @GET("v3/currencies/")
     suspend fun getCurrencies(@Query("apiKey") moonPayApiKey: String): List<MoonPayCurrencies>
-
-    companion object {
-        const val MOOONPAY_BASE_URL = "https://api.moonpay.com/"
-        const val MOOONPAY_IP_ADDRESS_REQUEST_URL = "v4/ip_address/"
-        const val MOOONPAY_CURRENCIES_REQUEST_URL = "v3/currencies/"
-    }
 }
 
 @JsonClass(generateAdapter = true)

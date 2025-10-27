@@ -5,11 +5,11 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.tap.domain.model.Currency
 import kotlinx.coroutines.flow.StateFlow
 
-typealias ExchangeServiceInitializationStatus = Lce<Throwable, Any>
+typealias SellServiceInitializationStatus = Lce<Throwable, Any>
 
-interface ExchangeService {
+interface SellService {
 
-    val initializationStatus: StateFlow<ExchangeServiceInitializationStatus>
+    val initializationStatus: StateFlow<SellServiceInitializationStatus>
 
     suspend fun update()
 
