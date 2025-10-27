@@ -368,6 +368,7 @@ object NotificationsFactory {
             is BlockchainSdkError.DestinationTagRequired -> addRequireDestinationTagErrorNotification()
             is BlockchainSdkError.Solana.DestinationRentExemption -> addRentExemptionDestinationNotification(
                 rentExemptionAmount = validationError.rentAmount,
+                cryptoCurrency = cryptoCurrency,
             )
             is BlockchainSdkError.TransactionDustChangeError -> add(
                 NotificationUM.Error.MinimumAmountError(
@@ -462,10 +463,14 @@ object NotificationsFactory {
         add(NotificationUM.Solana.RentInfo(rentWarning))
     }
 
-    fun MutableList<NotificationUM>.addRentExemptionDestinationNotification(rentExemptionAmount: BigDecimal) {
+    private fun MutableList<NotificationUM>.addRentExemptionDestinationNotification(
+        rentExemptionAmount: BigDecimal,
+        cryptoCurrency: CryptoCurrency,
+    ) {
         add(
             NotificationUM.Solana.RentExemptionDestination(
                 rentExemptionAmount = rentExemptionAmount,
+                cryptoCurrency = cryptoCurrency,
             ),
         )
     }
