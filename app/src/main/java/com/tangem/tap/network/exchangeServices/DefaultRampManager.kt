@@ -25,7 +25,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 
 internal class DefaultRampManager(
-    private val sellService: Provider<ExchangeService>,
+    private val sellService: Provider<SellService>,
     private val expressServiceFetcher: ExpressServiceFetcher,
     private val currenciesRepository: CurrenciesRepository,
     private val dispatchers: CoroutineDispatcherProvider,
@@ -90,7 +90,7 @@ internal class DefaultRampManager(
         return availabilityState.toReason(cryptoCurrency.name)
     }
 
-    override fun getSellInitializationStatus(): Flow<ExchangeServiceInitializationStatus> {
+    override fun getSellInitializationStatus(): Flow<SellServiceInitializationStatus> {
         return sellService.invoke().initializationStatus
     }
 
@@ -100,7 +100,7 @@ internal class DefaultRampManager(
         }
     }
 
-    override fun getExpressInitializationStatus(userWalletId: UserWalletId): Flow<ExchangeServiceInitializationStatus> {
+    override fun getExpressInitializationStatus(userWalletId: UserWalletId): Flow<SellServiceInitializationStatus> {
         return expressServiceFetcher.getInitializationStatus(userWalletId)
     }
 
