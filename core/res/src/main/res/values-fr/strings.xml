@@ -244,7 +244,7 @@
   <string name="common_transaction_failed">La transaction a échoué</string>
   <string name="common_transaction_status">Statut de la transaction</string>
   <string name="common_transactions">Transactions</string>
-  <string name="common_transfer">Transfert</string>
+  <string name="common_transfer">Fourniture</string>
   <string name="common_understand">Je comprends</string>
   <string name="common_unknown_error">Il y avait une erreur. Veuillez réessayer.</string>
   <string name="common_unreachable">Inaccessible</string>
@@ -1457,7 +1457,7 @@
   <string name="xtz_withdrawal_message_warning">Pour ne pas payer un fraid de commissions élevé la prochaine fois que vous rechargez votre portefeuille, veuillez réduire le montant de %s XTZ</string>
   <string name="yield_module_alert_description">Vos fonds sont actuellement fournis au protocole Aave, mais vous pouvez les gérer à tout moment.</string>
   <string name="yield_module_alert_title">Vos %s sont fournis à Aave.</string>
-  <string name="yield_module_amount_not_transfered_to_aave_title">Le transfert de  %1$s %2$s vers Aave est en attente.</string>
+  <string name="yield_module_amount_not_transfered_to_aave_title">Le transfert de %1$s %2$s vers Aave est en attente.</string>
   <string name="yield_module_approve_needed_notification_cta">Donnez votre accord</string>
   <string name="yield_module_approve_needed_notification_description">Un problème est survenu lors de votre précédente approbation, nous avons donc besoin d\'une nouvelle approbation. Choisissez comment vous souhaitez procéder.</string>
   <string name="yield_module_approve_needed_notification_title">Autorisation nécessaire</string>
@@ -1487,7 +1487,7 @@
   <string name="yield_module_fee_policy_sheet_min_amount_note">Le montant minimum est calculé à partir des frais de réseau actuels afin de garantir qu\'il ne dépasse pas 4 %%, ce qui donne un minimum de %1$s (%2$s).</string>
   <string name="yield_module_fee_policy_sheet_min_amount_title">Recharge minimale</string>
   <string name="yield_module_fee_policy_sheet_title">Politique tarifaire</string>
-  <string name="yield_module_fee_policy_tangem_service_fee_title">Tangem prélève également des frais de service de 3% sur les revenus générés.</string>
+  <string name="yield_module_fee_policy_tangem_service_fee_title">Tangem prélève également des frais de service de 15% sur les revenus générés.</string>
   <string name="yield_module_high_fee_error">Vos fonds seront automatiquement transférés vers Aave dès que les frais de réseau seront moins élevés ou que votre solde atteindra le montant minimum requis.</string>
   <string name="yield_module_historical_returns">Rendements historiques</string>
   <string name="yield_module_main_view_approve_notification_title">Approbations de tokens nécessaires</string>
@@ -1498,7 +1498,7 @@
   <string name="yield_module_promo_screen_cash_out_subtitle">Envoyez, échangez ou vendez vos fonds instantanément, quand vous le souhaitez.</string>
   <string name="yield_module_promo_screen_cash_out_title">Accédez à vos fonds à tout moment</string>
   <string name="yield_module_promo_screen_how_it_works_button_title">Comment ça marche ?</string>
-  <string name="yield_module_promo_screen_self_custodial_subtitle">Aave est un protocole décentralisé qui gère plus de 81,9 milliards de dollars en valeur totale.</string>
+  <string name="yield_module_promo_screen_self_custodial_subtitle">Aave est un protocole décentralisé qui gère plus de 61 milliards de dollars en valeur totale.</string>
   <string name="yield_module_promo_screen_self_custodial_title">Décentralisé et auto-détenu</string>
   <string name="yield_module_promo_screen_terms_disclaimer">En utilisant ce service, vous acceptez les conditions générales du fournisseur %1$s et %2$s.</string>
   <string name="yield_module_promo_screen_title">Connecter Aave</string>
