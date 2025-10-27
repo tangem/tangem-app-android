@@ -23,6 +23,7 @@ import com.tangem.features.tangempay.entity.TangemPayDetailsNavigation
 import com.tangem.features.tangempay.entity.TangemPayDetailsStateFactory
 import com.tangem.features.tangempay.entity.TangemPayDetailsUM
 import com.tangem.features.tangempay.model.transformers.*
+import com.tangem.features.tangempay.navigation.TangemPayDetailsInnerRoute
 import com.tangem.features.tangempay.utils.TangemPayErrorMessageFactory
 import com.tangem.features.tangempay.utils.TangemPayTxHistoryUiActions
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -75,7 +76,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     }
 
     private fun onClickChangePin() {
-        // TODO [REDACTED_JIRA]
+        router.push(TangemPayDetailsInnerRoute.ChangePIN)
     }
 
     private fun onClickFreezeCard() {
