@@ -8,6 +8,7 @@ import com.tangem.screens.AlreadyUsedWalletDialogPageObject.requestSupportButton
 import com.tangem.screens.AlreadyUsedWalletDialogPageObject.thisIsMyWalletButton
 import com.tangem.screens.AlreadyUsedWalletDialogPageObject.title
 import com.tangem.screens.ScanWarningDialogPageObject
+import com.tangem.screens.onActionIsUnavailableDialog
 import com.tangem.screens.onFailedTransactionDialog
 import io.qameta.allure.kotlin.Allure.step
 
@@ -62,5 +63,17 @@ fun checkAlreadyUsedWalletDialog() {
     }
     step("Assert 'Request support' button is displayed") {
         AlreadyUsedWalletDialogPageObject { requestSupportButton.isDisplayed() }
+    }
+}
+
+fun BaseTestCase.checkActionIsUnavailableDialog() {
+    step("Assert 'Action is unavailable' dialog title is displayed") {
+        onActionIsUnavailableDialog { title.assertIsDisplayed() }
+    }
+    step("Assert 'Action is unavailable' dialog text is displayed") {
+        onActionIsUnavailableDialog { text.assertIsDisplayed() }
+    }
+    step("Assert 'Action is unavailable' dialog 'Ok' button is displayed") {
+        onActionIsUnavailableDialog { okButton.assertIsDisplayed() }
     }
 }

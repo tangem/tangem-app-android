@@ -13,6 +13,7 @@ import com.tangem.features.staking.impl.presentation.state.utils.getPendingActio
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.extensions.orZero
 import com.tangem.utils.transformer.Transformer
+import kotlin.text.isNullOrEmpty
 
 internal class SetButtonsStateTransformer(
     private val urlOpener: UrlOpener,
@@ -25,7 +26,7 @@ internal class SetButtonsStateTransformer(
         val buttonsState = if (prevState.isButtonsVisible()) {
             NavigationButtonsState.Data(
                 primaryButton = getPrimaryButton(prevState),
-                extraButtons = getExtraButtons(prevState).takeIf { txUrl != null },
+                extraButtons = getExtraButtons(prevState).takeUnless { txUrl.isNullOrEmpty() },
                 txUrl = txUrl,
                 onTextClick = urlOpener::openUrl,
             )

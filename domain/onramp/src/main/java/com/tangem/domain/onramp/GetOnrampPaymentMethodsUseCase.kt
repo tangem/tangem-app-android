@@ -19,7 +19,7 @@ class GetOnrampPaymentMethodsUseCase(
 
             repository.getAvailablePaymentMethods()
                 .toList()
-                .sortedBy { it.type.getPriority(isGooglePayAvailable) }
+                .sortedBy { it.type.getPriorityBySpeed(isGooglePayAvailable) }
                 .toSet()
         }.mapLeft(errorResolver::resolve)
     }

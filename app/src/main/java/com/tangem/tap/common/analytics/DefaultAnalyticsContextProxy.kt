@@ -3,10 +3,13 @@ package com.tangem.tap.common.analytics
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.utils.AnalyticsContextProxy
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.tap.common.extensions.addContext
+import com.tangem.tap.common.extensions.addHotWalletContext
 import com.tangem.tap.common.extensions.eraseContext
 import com.tangem.tap.common.extensions.removeContext
 import com.tangem.tap.common.extensions.setContext
+import com.tangem.tap.common.extensions.setHotWalletContext
 
 /**
 [REDACTED_AUTHOR]
@@ -17,12 +20,24 @@ internal class DefaultAnalyticsContextProxy : AnalyticsContextProxy {
         Analytics.setContext(scanResponse)
     }
 
+    override fun addContext(userWallet: UserWallet) {
+        Analytics.addContext(userWallet)
+    }
+
+    override fun setHotWalletContext() {
+        Analytics.setHotWalletContext()
+    }
+
     override fun eraseContext() {
         Analytics.eraseContext()
     }
 
     override fun addContext(scanResponse: ScanResponse) {
         Analytics.addContext(scanResponse)
+    }
+
+    override fun addHotWalletContext() {
+        Analytics.addHotWalletContext()
     }
 
     override fun removeContext() {
