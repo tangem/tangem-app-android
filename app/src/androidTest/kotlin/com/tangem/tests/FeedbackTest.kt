@@ -73,7 +73,7 @@ class FeedbackTest : BaseTestCase() {
                 onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
             }
             step("Click 'Send' button") {
-                onTokenDetailsScreen { sendButton.performClick() }
+                onTokenDetailsScreen { sendButton().performClick() }
             }
             step("Type '$sendAmount' in input text field") {
                 onSendScreen {

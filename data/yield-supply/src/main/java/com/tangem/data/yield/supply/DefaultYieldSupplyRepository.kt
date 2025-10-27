@@ -16,11 +16,13 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.yield.supply.YieldSupplyRepository
 import com.tangem.domain.yield.supply.models.YieldMarketToken
+import com.tangem.domain.yield.supply.models.YieldSupplyEnterStatus
 import com.tangem.domain.yield.supply.models.YieldSupplyMarketChartData
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.collections.map
 
 internal class DefaultYieldSupplyRepository(
@@ -29,6 +31,8 @@ internal class DefaultYieldSupplyRepository(
     private val walletManagersFacade: WalletManagersFacade,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : YieldSupplyRepository {
+
+    private val statusMap: MutableMap<String, YieldSupplyEnterStatus> = ConcurrentHashMap()
 
     override suspend fun getCachedMarkets(): List<YieldMarketToken>? = withContext(dispatchers.io) {
         val cache = store.getSyncOrNull().orEmpty()
@@ -96,6 +100,17 @@ internal class DefaultYieldSupplyRepository(
                 ),
             ).getOrThrow().isActive
         }
+
+    override suspend fun saveTokenProtocolStatus(
+        cryptoCurrency: CryptoCurrency,
+        yieldSupplyEnterStatus: YieldSupplyEnterStatus,
+    ) {
+        statusMap[cryptoCurrency.id.value] = yieldSupplyEnterStatus
+    }
+
+    override fun getTokenProtocolStatus(cryptoCurrencyToken: CryptoCurrency): YieldSupplyEnterStatus? {
+        return statusMap[cryptoCurrencyToken.id.value]
+    }
 
     private fun List<YieldMarketToken>.enrichNetworkIds(): List<YieldMarketToken> {
         val chainIdMap = Blockchain.entries.associate { it.getChainId() to it.toNetworkId() }
