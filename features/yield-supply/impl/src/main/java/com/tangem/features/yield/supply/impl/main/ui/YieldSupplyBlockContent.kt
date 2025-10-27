@@ -40,30 +40,32 @@ import com.tangem.utils.StringsSigns
 internal fun YieldSupplyBlockContent(yieldSupplyUM: YieldSupplyUM, modifier: Modifier = Modifier) {
     AnimatedContent(
         targetState = yieldSupplyUM,
-        modifier = modifier,
     ) { supplyUM ->
         when (supplyUM) {
-            is YieldSupplyUM.Available -> SupplyAvailable(supplyUM)
-            YieldSupplyUM.Loading -> SupplyLoading()
-            is YieldSupplyUM.Content -> SupplyContent(supplyUM)
+            is YieldSupplyUM.Available -> SupplyAvailable(supplyUM, modifier)
+            YieldSupplyUM.Loading -> SupplyLoading(modifier)
+            is YieldSupplyUM.Content -> SupplyContent(supplyUM, modifier)
             YieldSupplyUM.Processing.Enter -> SupplyProcessing(
                 resourceReference(R.string.yield_module_token_details_earn_notification_processing),
+                modifier,
             )
             YieldSupplyUM.Processing.Exit -> SupplyProcessing(
                 resourceReference(R.string.yield_module_stop_earning),
+                modifier,
             )
-            YieldSupplyUM.Unavailable -> SupplyUnavailable()
-            YieldSupplyUM.Initial -> {}
+            YieldSupplyUM.Unavailable -> SupplyUnavailable(modifier)
+            YieldSupplyUM.Initial -> Unit
         }
     }
 }
 
 @Composable
-private fun SupplyAvailable(supplyUM: YieldSupplyUM.Available) {
+private fun SupplyAvailable(supplyUM: YieldSupplyUM.Available, modifier: Modifier = Modifier) {
     SupplyInfo(
         title = supplyUM.title,
         subtitle = resourceReference(R.string.yield_module_token_details_earn_notification_description),
         iconTint = TangemTheme.colors.icon.accent,
+        modifier = modifier,
         button = {
             SecondaryButton(
                 text = stringResourceSafe(R.string.common_learn_more),
@@ -76,20 +78,21 @@ private fun SupplyAvailable(supplyUM: YieldSupplyUM.Available) {
 }
 
 @Composable
-private fun SupplyUnavailable() {
+private fun SupplyUnavailable(modifier: Modifier = Modifier) {
     SupplyInfo(
         title = resourceReference(R.string.yield_module_unavailable_title),
         subtitle = resourceReference(R.string.yield_module_unavailable_subtitle),
         iconTint = TangemTheme.colors.icon.inactive,
         button = null,
+        modifier = modifier,
     )
 }
 
 @Composable
-private fun SupplyContent(supplyUM: YieldSupplyUM.Content) {
+private fun SupplyContent(supplyUM: YieldSupplyUM.Content, modifier: Modifier = Modifier) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
+        modifier = modifier
             .clip(RoundedCornerShape(16.dp))
             .background(TangemTheme.colors.background.primary)
             .clickable(onClick = supplyUM.onClick)
@@ -149,10 +152,10 @@ private fun SupplyContent(supplyUM: YieldSupplyUM.Content) {
 }
 
 @Composable
-private fun SupplyProcessing(text: TextReference) {
+private fun SupplyProcessing(text: TextReference, modifier: Modifier = Modifier) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
+        modifier = modifier
             .clip(RoundedCornerShape(16.dp))
             .background(TangemTheme.colors.background.primary)
             .padding(12.dp),
@@ -190,11 +193,11 @@ private fun SupplyProcessing(text: TextReference) {
 }
 
 @Composable
-private fun SupplyLoading() {
+private fun SupplyLoading(modifier: Modifier = Modifier) {
     Column(
         verticalArrangement = Arrangement.spacedBy(12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
+        modifier = modifier
             .clip(RoundedCornerShape(16.dp))
             .background(TangemTheme.colors.background.primary)
             .padding(12.dp),
