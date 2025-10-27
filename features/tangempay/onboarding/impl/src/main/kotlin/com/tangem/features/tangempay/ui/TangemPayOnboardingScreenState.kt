@@ -4,6 +4,8 @@ import javax.annotation.concurrent.Immutable
 
 @Immutable
 internal data class TangemPayOnboardingScreenState(
-    val fullScreenLoading: Boolean = true,
-    val buttonLoading: Boolean = false,
+    val fullScreenLoading: Boolean,
+    val buttonLoading: Boolean,
+    val onGetCardClick: () -> Unit,
+    val onBackClick: () -> Unit,
 )
