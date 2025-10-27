@@ -272,6 +272,7 @@ internal class NotificationsModel @Inject constructor(
             reserveAmount = currencyCheck.reserveAmount,
             sendingAmount = sendingAmount,
             cryptoCurrency = currency,
+            feeCryptoCurrency = feeCryptoCurrencyStatus.currency,
             isAccountFunded = currencyCheck.isAccountFunded,
         )
         addMinimumAmountErrorNotification(
