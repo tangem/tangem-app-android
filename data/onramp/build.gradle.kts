@@ -29,6 +29,7 @@ dependencies {
     implementation(projects.domain.walletManager)
     implementation(projects.domain.appTheme.models)
     implementation(projects.domain.models)
+    implementation(projects.domain.express.models)
 
     // region DI
 

@@ -38,7 +38,6 @@ internal class YieldSupplyFeePolicyComponent(
         YieldSupplyFeePolicyContent(
             yieldSupplyFeeUM = uiState.yieldSupplyFeeUM,
             tokenSymbol = params.cryptoCurrency.symbol,
-            networkName = params.cryptoCurrency.network.name,
             modifier = modifier,
         )
     }

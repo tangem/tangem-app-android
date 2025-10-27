@@ -10,7 +10,6 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.extensions.*
-import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
@@ -33,7 +32,7 @@ import com.tangem.features.yield.supply.impl.subcomponents.approve.YieldSupplyAp
 import com.tangem.features.yield.supply.impl.subcomponents.notifications.YieldSupplyNotificationsComponent
 import com.tangem.features.yield.supply.impl.subcomponents.notifications.YieldSupplyNotificationsUpdateTrigger
 import com.tangem.features.yield.supply.impl.subcomponents.notifications.entity.YieldSupplyNotificationData
-import com.tangem.utils.StringsSigns.DOT
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.utils.TangemBlogUrlBuilder
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.transformer.update
@@ -220,7 +219,6 @@ internal class YieldSupplyApproveModel @Inject constructor(
         val feeFiatValue = feeCryptoCurrencyStatus.value.fiatRate?.let { rate ->
             feeCryptoValue?.multiply(rate)
         }
-        val cryptoFee = feeCryptoValue.format { crypto(feeCryptoCurrencyStatus.currency) }
         val fiatFee = feeFiatValue.format { fiat(appCurrency.code, appCurrency.symbol) }
 
         uiState.update {
@@ -233,14 +231,11 @@ internal class YieldSupplyApproveModel @Inject constructor(
                         transactionDataList = persistentListOf(
                             approvalTransitionData.copy(fee = transactionFee.normal),
                         ),
-                        feeValue = combinedReference(
-                            stringReference(cryptoFee),
-                            stringReference(" $DOT "),
-                            stringReference(fiatFee),
-                        ),
-                        currentNetworkFeeValue = TextReference.EMPTY,
-                        maxNetworkFeeValue = TextReference.EMPTY,
-                        minAmountFeeValue = TextReference.EMPTY,
+                        feeFiatValue = stringReference(fiatFee),
+                        tokenFeeFiatValue = TextReference.EMPTY,
+                        maxNetworkFeeFiatValue = TextReference.EMPTY,
+                        minTopUpFiatValue = TextReference.EMPTY,
+                        feeNoteValue = TextReference.EMPTY,
                     ),
                 )
             }
