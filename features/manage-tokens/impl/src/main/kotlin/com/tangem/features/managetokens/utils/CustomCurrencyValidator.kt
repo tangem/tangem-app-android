@@ -1,11 +1,15 @@
 package com.tangem.features.managetokens.utils
 
 import arrow.core.getOrElse
+import com.tangem.domain.managetokens.CreateCryptoCurrencyUseCase
+import com.tangem.domain.managetokens.FindTokenUseCase
+import com.tangem.domain.managetokens.ValidateTokenFormUseCase
 import com.tangem.domain.managetokens.model.AddCustomTokenForm
 import com.tangem.domain.managetokens.model.exceptoin.CustomTokenFormValidationException
 import com.tangem.domain.managetokens.model.exceptoin.FindTokenException
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.managetokens.utils.list.CustomTokenFormUseCasesFacade
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveInAndJoin
@@ -15,7 +19,11 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 
 internal class CustomCurrencyValidator(
+    private val userWalletId: UserWalletId,
     private val useCasesFacade: CustomTokenFormUseCasesFacade,
+    private val createCryptoCurrencyUseCase: CreateCryptoCurrencyUseCase,
+    private val findTokenUseCase: FindTokenUseCase,
+    private val validateTokenFormUseCase: ValidateTokenFormUseCase,
 ) {
 
     private val validateFormJobHolder = JobHolder()
@@ -41,10 +49,7 @@ internal class CustomCurrencyValidator(
     ) = coroutineScope {
         updateStatus(Status.Validating)
 
-        val result = useCasesFacade.validateTokenFormUseCase(
-            networkId = networkId,
-            formValues = formValues,
-        )
+        val result = validateTokenFormUseCase(networkId = networkId, formValues = formValues)
 
         val validatedForm = result.getOrElse { e ->
             updateStatus(Status.FormValidationException(e))
@@ -90,7 +95,8 @@ internal class CustomCurrencyValidator(
 
         updateStatus(Status.SearchingToken)
 
-        val foundToken = useCasesFacade.findTokenUseCase(
+        val foundToken = findTokenUseCase.invoke(
+            userWalletId = userWalletId,
             contractAddress = validatedForm.contractAddress,
             networkId = networkId,
             derivationPath = derivationPath,
@@ -121,7 +127,8 @@ internal class CustomCurrencyValidator(
     ) {
         updateStatus(Status.SearchingToken)
 
-        val token = useCasesFacade.findTokenUseCase(
+        val token = findTokenUseCase.invoke(
+            userWalletId = userWalletId,
             contractAddress = validatedForm.contractAddress,
             networkId = networkId,
             derivationPath = derivationPath,
@@ -148,7 +155,8 @@ internal class CustomCurrencyValidator(
         derivationPath: Network.DerivationPath,
         validatedForm: AddCustomTokenForm.Validated.All?,
     ) {
-        val currency = useCasesFacade.createCryptoCurrencyUseCase(
+        val currency = createCryptoCurrencyUseCase.invoke(
+            userWalletId = userWalletId,
             networkId = networkId,
             derivationPath = derivationPath,
             formValues = validatedForm,
