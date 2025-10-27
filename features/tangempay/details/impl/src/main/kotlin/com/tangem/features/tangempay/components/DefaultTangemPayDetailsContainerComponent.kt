@@ -1,8 +1,8 @@
 package com.tangem.features.tangempay.components
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.activity.compose.BackHandler
 import androidx.compose.ui.Modifier
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.extensions.compose.stack.Children
@@ -57,18 +57,23 @@ class DefaultTangemPayDetailsContainerComponent @AssistedInject constructor(
         componentContext: ComponentContext,
     ): ComposableContentComponent = when (config) {
         TangemPayDetailsInnerRoute.Details -> TangemPayDetailsComponent(
-            appComponentContext = childByContext(componentContext),
-            innerRouter = innerRouter,
+            appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
             params = params,
             tokenReceiveComponentFactory = tokenReceiveComponentFactory,
         )
-        TangemPayDetailsInnerRoute.ChangePIN -> TODO(" [REDACTED_JIRA]")
+        TangemPayDetailsInnerRoute.ChangePIN -> TangemPayChangePinComponent(
+            appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
+        )
+        TangemPayDetailsInnerRoute.ChangePINSuccess -> TangemPayChangePinSuccessComponent(
+            appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
+        )
     }
 
     private fun onChildBack() {
-        when (childStack.value.active.configuration) {
-            TangemPayDetailsInnerRoute.ChangePIN -> stackNavigation.pop()
-            TangemPayDetailsInnerRoute.Details -> router.pop()
+        if (childStack.value.backStack.isEmpty()) {
+            router.pop()
+        } else {
+            stackNavigation.pop()
         }
     }
 
