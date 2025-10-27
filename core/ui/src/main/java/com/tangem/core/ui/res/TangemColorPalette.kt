@@ -20,6 +20,7 @@ object TangemColorPalette {
 
     // region Light
     val Light1 = Color(0xFFF5F5F5)
+    val Light1V2 = Color(0xFFF4F4F4)
     val Light2 = Color(0xFFEBEBEB)
     val Light3 = Color(0xFFD3D3D3)
     val Light4 = Color(0xFFC9C9C9)
@@ -27,6 +28,7 @@ object TangemColorPalette {
     // endregion Light
 
     // region Green
+    val Green = Color(0xFF0C9F3D)
     val Meadow = Color(0xFF1ACE80)
     val MagicMint = Color(0xFFA3EBCC)
     val DarkGreen = Color(0xFF06311F)
@@ -45,4 +47,9 @@ object TangemColorPalette {
     val Tangerine = Color(0xFFFFB71B)
     val Mustard = Color(0xFFFDDE55)
     // endregion Yellow
+
+    // region Overlay
+    val Overlay1 = Color(0x66000000)
+    val Overlay2 = Color(0xB2000000)
+    // endregion Overlay
 }

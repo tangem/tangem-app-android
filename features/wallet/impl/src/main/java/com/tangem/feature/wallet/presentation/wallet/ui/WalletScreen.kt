@@ -69,6 +69,7 @@ import com.tangem.core.ui.utils.moveTo
 import com.tangem.core.ui.utils.toPx
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.preview.WalletScreenPreviewData.accountScreenState
+import com.tangem.feature.wallet.presentation.common.preview.WalletScreenPreviewData.accountScreenWithEmptyTokensState
 import com.tangem.feature.wallet.presentation.common.preview.WalletScreenPreviewData.walletScreenState
 import com.tangem.feature.wallet.presentation.wallet.state.model.*
 import com.tangem.feature.wallet.presentation.wallet.state.model.holder.TxHistoryStateHolder
@@ -142,6 +143,7 @@ private fun WalletContent(
      */
     val selectedWalletIndex by remember(state.selectedWalletIndex) { mutableIntStateOf(state.selectedWalletIndex) }
     val selectedWallet = state.wallets.getOrElse(selectedWalletIndex) { state.wallets[state.selectedWalletIndex] }
+    val selectedWalletChanged = rememberChangedOnce(selectedWalletIndex)
 
     val listState = rememberLazyListState()
 
@@ -239,6 +241,7 @@ private fun WalletContent(
 
             contentItems(
                 state = selectedWallet,
+                selectedWalletChanged = selectedWalletChanged,
                 txHistoryItems = txHistoryItems,
                 isBalanceHidden = state.isHidingMode,
                 modifier = movableItemModifier,
@@ -287,6 +290,14 @@ private fun WalletContent(
         },
         content = scaffoldContent,
     )
+}
+
+@Composable
+private fun rememberChangedOnce(selectedWalletIndex: Int): Boolean {
+    var prev by remember { mutableIntStateOf(selectedWalletIndex) }
+    val changed = prev != selectedWalletIndex
+    SideEffect { prev = selectedWalletIndex }
+    return changed
 }
 
 @Suppress("LongParameterList", "LongMethod", "CyclomaticComplexMethod")
@@ -743,6 +754,7 @@ private class WalletScreenPreviewProvider : PreviewParameterProvider<WalletScree
             walletScreenState,
             walletScreenState.copy(selectedWalletIndex = 1),
             accountScreenState.copy(selectedWalletIndex = 1),
+            accountScreenWithEmptyTokensState.copy(selectedWalletIndex = 1),
         )
 }
 // endregion
