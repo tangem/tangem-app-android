@@ -87,18 +87,25 @@ internal class NewMarketsPortfolioDelegate @AssistedInject constructor(
 
     private fun onAvailableNetworksFlow(): Flow<MyPortfolioUM> =
         portfolioWithThisCurrencyFLow().transformLatest { portfolioWithCurrency ->
-            fun addFirstTokenUM() = MyPortfolioUM.AddFirstToken(
-                onAddClick = onAddClick,
-                addToPortfolioBSConfig = TangemBottomSheetConfig.Empty,
-            )
             when (portfolioWithCurrency.flattenAddedCurrency.isEmpty()) {
                 false -> emitAll(contentFlow(portfolioWithCurrency).distinctUntilChanged())
                 true -> when (portfolioWithCurrency.hasMultiWallets) {
-                    true -> emit(addFirstTokenUM())
+                    true -> emitAll(addFirstTokenFlow())
                     false -> emit(MyPortfolioUM.UnavailableForWallet)
                 }
             }
         }
+
+    private fun addFirstTokenFlow(): Flow<MyPortfolioUM> = buttonState.map {
+        when (it) {
+            AddButtonState.Loading -> MyPortfolioUM.Loading
+            AddButtonState.Available -> MyPortfolioUM.AddFirstToken(
+                onAddClick = onAddClick,
+                addToPortfolioBSConfig = TangemBottomSheetConfig.Empty,
+            )
+            AddButtonState.Unavailable -> MyPortfolioUM.Unavailable
+        }
+    }
 
     private fun contentFlow(portfolio: PortfoliosWithThisCurrency): Flow<MyPortfolioUM.Content> {
         fun Portfolio.actionsFoAccountCurrencies(): List<Flow<Pair<CryptoCurrency, TokenActionsState>>> =
