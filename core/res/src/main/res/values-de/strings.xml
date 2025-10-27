@@ -337,7 +337,7 @@
   <string name="common_transaction_failed">Transaktion fehlgeschlagen</string>
   <string name="common_transaction_status">Transaktionsstatus</string>
   <string name="common_transactions">Transaktionen</string>
-  <string name="common_transfer">Überweisung</string>
+  <string name="common_transfer">Überweiseung</string>
   <string name="common_unable_to_load">Die Daten konnten nicht geladen werden…</string>
   <string name="common_understand">Ich verstehe</string>
   <string name="common_unknown_error">Es ist ein Fehler aufgetreten. Bitte versuche es erneut.</string>
@@ -1708,7 +1708,7 @@
   <string name="yield_module_fee_policy_sheet_min_amount_note">Der Mindestbetrag wird aus der aktuellen Netzwerkgebühr berechnet, um sicherzustellen, dass er 4%% nicht überschreitet, was den Mindestbetrag %1$s (%2$s) ergibt.</string>
   <string name="yield_module_fee_policy_sheet_min_amount_title">Mindestaufladung</string>
   <string name="yield_module_fee_policy_sheet_title">Gebührenpolitik</string>
-  <string name="yield_module_fee_policy_tangem_service_fee_title">Tangem erhebt außerdem eine Servicegebühr von 3% auf den erzielten Ertrag.</string>
+  <string name="yield_module_fee_policy_tangem_service_fee_title">Tangem erhebt außerdem eine Servicegebühr von 15% auf den erzielten Ertrag.</string>
   <string name="yield_module_high_fee_error">Deine Gelder werden automatisch an Aave überwiesen, sobald die Netzwerkgebühren niedriger sind oder Dein Guthaben den erforderlichen Mindestbetrag erreicht.</string>
   <string name="yield_module_historical_returns">Historische Renditen</string>
   <string name="yield_module_main_view_approve_notification_description">Die Freigabe für Deine Token im Yield-Modus wurde widerrufen. Öffne den Token, um die Berechtigung erneut zu erteilen.</string>
@@ -1720,7 +1720,7 @@
   <string name="yield_module_promo_screen_cash_out_subtitle">Senden, tauschen oder verkaufen Deine Gelder sofort, wann immer Du willst.</string>
   <string name="yield_module_promo_screen_cash_out_title">Jederzeit Zugriff auf Dein Geld</string>
   <string name="yield_module_promo_screen_how_it_works_button_title">Wie funktioniert das?</string>
-  <string name="yield_module_promo_screen_self_custodial_subtitle">Aave ist ein dezentrales Protokoll, das einen Gesamtwert von über 81,9 Milliarden US-Dollar verwaltet.</string>
+  <string name="yield_module_promo_screen_self_custodial_subtitle">Aave ist ein dezentrales Protokoll, das einen Gesamtwert von über 61 Milliarden US-Dollar verwaltet.</string>
   <string name="yield_module_promo_screen_self_custodial_title">Dezentral und selbstverwahrend</string>
   <string name="yield_module_promo_screen_terms_disclaimer">Durch die Nutzung dieses Dienstes erklärst Du Dich mit provider\n%1$s und %2$s einverstanden</string>
   <string name="yield_module_promo_screen_title">Mit Aave verbinden</string>
