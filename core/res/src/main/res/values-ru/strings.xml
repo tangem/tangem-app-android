@@ -181,6 +181,7 @@
   <string name="common_enable">Включить</string>
   <string name="common_enabled">Включено</string>
   <string name="common_error">Ошибка</string>
+  <string name="common_estimated_fee">Комиссия сети</string>
   <string name="common_exchange">Обменять</string>
   <string name="common_explore">Обозреватель</string>
   <string name="common_explore_transaction_history">Посмотреть историю транзакций</string>
@@ -1588,7 +1589,7 @@
   <string name="yield_module_earn_sheet_available_title">Доступно</string>
   <string name="yield_module_earn_sheet_current_apy_title">Текущий APY</string>
   <string name="yield_module_earn_sheet_my_funds_title">Мои средства</string>
-  <string name="yield_module_earn_sheet_provider_description">Ваш %1$s теперь внесён в Aave и приносит проценты. У вас есть токен %2$s, который отражает ваш баланс и со временем увеличивается. При пополнении средства автоматически направляются в Aave для получения процентов за вычетом комиссии за транзакцию.</string>
+  <string name="yield_module_earn_sheet_provider_description">Ваши %1$s теперь внесён в Aave и приносит проценты. У вас есть токен %2$s, который отражает ваш баланс и со временем увеличивается. При пополнении средства автоматически направляются в Aave для получения процентов за вычетом комиссии за транзакцию.</string>
   <string name="yield_module_earn_sheet_total_earnings_title">Итоговый доход</string>
   <string name="yield_module_earn_sheet_transfers_title">Переводы в Aave</string>
   <string name="yield_module_explore_sheet_explore_aave_button_title">Изучите Aave</string>
@@ -1600,7 +1601,7 @@
   <string name="yield_module_fee_policy_sheet_min_amount_note">Это минимальный депозит, который можно отправить в Aave. Чтобы депозиты оставались прибыльными, мы не обрабатываем их, когда комиссия сети превышает %1$s%2$sот суммы.</string>
   <string name="yield_module_fee_policy_sheet_min_amount_title">Минимальный депозит</string>
   <string name="yield_module_fee_policy_sheet_title">Политика комиссий</string>
-  <string name="yield_module_fee_policy_tangem_service_fee_title">Tangem взимает комиссию за обслуживание в размере 3% от полученного дохода.</string>
+  <string name="yield_module_fee_policy_tangem_service_fee_title">Tangem взимает комиссию за обслуживание в размере 15% от полученного дохода.</string>
   <string name="yield_module_high_fee_error">Ваши средства будут автоматически переведены в Aave, как только комиссия сети снизится или баланс достигнет минимально необходимой суммы.</string>
   <string name="yield_module_historical_returns">Историческая доходность</string>
   <string name="yield_module_main_view_approve_notification_description">Разрешение для вашего токена в Yield сервисе было отозвано. Откройте токен, чтобы выдать разрешение снова.</string>
@@ -1612,7 +1613,7 @@
   <string name="yield_module_promo_screen_cash_out_subtitle">Отправляйте, обменивайте или продавайте свои средства мгновенно, когда захотите.</string>
   <string name="yield_module_promo_screen_cash_out_title">Мгновенный вывод средств</string>
   <string name="yield_module_promo_screen_how_it_works_button_title">Как это работает?</string>
-  <string name="yield_module_promo_screen_self_custodial_subtitle">Aave — это децентрализованный протокол, управляющий активами на сумму более 81,9 миллиарда долларов США.</string>
+  <string name="yield_module_promo_screen_self_custodial_subtitle">Aave — это децентрализованный протокол, управляющий активами на сумму более 61 миллиарда долларов США.</string>
   <string name="yield_module_promo_screen_self_custodial_title">Децентрализованный и некастодиальный</string>
   <string name="yield_module_promo_screen_terms_disclaimer">Используя сервис, вы соглашаетесь с условиями провайдера %1$s и %2$s</string>
   <string name="yield_module_promo_screen_title">Подключить Aave</string>
@@ -1631,7 +1632,7 @@
   <string name="yield_module_status_active">Активен</string>
   <string name="yield_module_status_paused">На паузе</string>
   <string name="yield_module_stop_earning">Завершить заработок</string>
-  <string name="yield_module_stop_earning_sheet_description">Выключив эту функцию, вы выведёте средства из Aave, получите их обратно в %s в кошельке и перестанете зарабатывать награды.</string>
+  <string name="yield_module_stop_earning_sheet_description">Выключив эту функцию, вы выведёте средства из Aave, получите их обратно в %s в своем кошельке и перестанете зарабатывать награды.</string>
   <string name="yield_module_stop_earning_sheet_fee_note">Комиссия сети будет вычтена из суммы вашего вывода.</string>
   <string name="yield_module_supply_apr">Годовая доходность (APY)</string>
   <string name="yield_module_token_details_earn_notification_apy">APY</string>
