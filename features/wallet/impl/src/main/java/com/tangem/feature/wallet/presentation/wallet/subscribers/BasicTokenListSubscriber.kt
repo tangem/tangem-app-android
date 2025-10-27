@@ -13,6 +13,7 @@ import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.tokens.RunPolkadotAccountHealthCheckUseCase
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.yield.supply.usecase.YieldSupplyApyFlowUseCase
@@ -33,7 +34,6 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import java.math.BigDecimal
 
 @Suppress("LongParameterList")
 internal abstract class BasicTokenListSubscriber : WalletSubscriber() {
@@ -103,7 +103,7 @@ internal abstract class BasicTokenListSubscriber : WalletSubscriber() {
         appCurrency: AppCurrency,
         portfolioId: PortfolioId,
         yieldSupplyApyMap: Map<String, String>,
-        stakingApyMap: Map<String, BigDecimal>,
+        stakingApyMap: Map<String, List<Yield.Validator>>,
     ) {
         val tokenList = maybeTokenList.getOrElse(
             ifLoading = { maybeContent ->
@@ -242,7 +242,7 @@ internal abstract class BasicTokenListSubscriber : WalletSubscriber() {
         params: TokenConverterParams,
         appCurrency: AppCurrency,
         yieldSupplyApyMap: Map<String, String>,
-        stakingApyMap: Map<String, BigDecimal>,
+        stakingApyMap: Map<String, List<Yield.Validator>>,
     ) {
         stateHolder.update(
             SetTokenListTransformer(
@@ -268,6 +268,6 @@ internal abstract class BasicTokenListSubscriber : WalletSubscriber() {
     private fun yieldSupplyApyFlow(): Flow<Map<String, String>> = yieldSupplyApyFlowUseCase()
         .distinctUntilChanged()
 
-    private fun stakingApyFlow(): Flow<Map<String, BigDecimal>> = stakingApyFlowUseCase()
+    private fun stakingApyFlow(): Flow<Map<String, List<Yield.Validator>>> = stakingApyFlowUseCase()
         .distinctUntilChanged()
 }
