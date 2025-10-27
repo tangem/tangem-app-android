@@ -1597,7 +1597,7 @@
   <string name="yield_module_fee_policy_sheet_description">Все следующие пополнения %s автоматически поступят в Aave с удержанием комиссии за транзакцию.</string>
   <string name="yield_module_fee_policy_sheet_max_fee_note">Если комиссия сети превысит максимальный лимит, транзакция не будет выполнена до тех пор, пока комиссия не снизится. Вы сможете изменить этот лимит позже.</string>
   <string name="yield_module_fee_policy_sheet_max_fee_title">Максимальная комиссия</string>
-  <string name="yield_module_fee_policy_sheet_min_amount_note">Это минимальный депозит, который можно отправить в Aave. Чтобы депозиты оставались прибыльными, мы не обрабатываем их, когда комиссия сети превышает 4% от суммы.</string>
+  <string name="yield_module_fee_policy_sheet_min_amount_note">Это минимальный депозит, который можно отправить в Aave. Чтобы депозиты оставались прибыльными, мы не обрабатываем их, когда комиссия сети превышает %1$s%2$sот суммы.</string>
   <string name="yield_module_fee_policy_sheet_min_amount_title">Минимальный депозит</string>
   <string name="yield_module_fee_policy_sheet_title">Политика комиссий</string>
   <string name="yield_module_fee_policy_tangem_service_fee_title">Tangem взимает комиссию за обслуживание в размере 3% от полученного дохода.</string>
