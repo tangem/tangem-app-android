@@ -4,6 +4,7 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.status.model.AccountCryptoCurrencyStatus
+import com.tangem.domain.account.status.model.AccountCryptoCurrencyStatuses
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.account.DerivationIndex
@@ -50,6 +51,26 @@ internal object AccountCryptoCurrencyStatusFinder {
             .firstOrNull()
     }
 
+    operator fun invoke(
+        accountStatusList: AccountStatusList,
+        currencies: List<CryptoCurrency>,
+    ): AccountCryptoCurrencyStatuses {
+        if (currencies.isEmpty()) return emptyMap()
+
+        val currencyIds = currencies.map(CryptoCurrency::id).toSet()
+        val networks = currencies.map(CryptoCurrency::network).distinct()
+
+        return accountStatusList.getExpectedAccountStatuses(networks)
+            .asSequence()
+            .filterIsInstance<AccountStatus.CryptoPortfolio>()
+            .associate { accountStatus ->
+                val statuses = accountStatus.flattenCurrencies()
+                    .filter { it.currency.id in currencyIds }
+
+                accountStatus.account to statuses
+            }
+    }
+
     /**
      * Retrieves the expected account statuses based on the provided [network].
      * If the [network] is null, all account statuses are returned.
@@ -77,6 +98,20 @@ internal object AccountCryptoCurrencyStatusFinder {
                 listOfNotNull(accountStatus, mainAccount)
             }
         }
+    }
+
+    private fun AccountStatusList.getExpectedAccountStatuses(networks: List<Network>): List<AccountStatus> {
+        val possibleAccountIndexes = networks.mapNotNull { it.getAccountIndexOrNull() }
+
+        if (possibleAccountIndexes.isEmpty()) return this@getExpectedAccountStatuses.accountStatuses
+
+        val accountStatuses = this@getExpectedAccountStatuses.accountStatuses.filter {
+            val cryptoPortfolio = it.account as? Account.CryptoPortfolio ?: return@filter false
+
+            cryptoPortfolio.derivationIndex.value in possibleAccountIndexes
+        }
+
+        return accountStatuses + listOf(mainAccount)
     }
 
     private fun Network.getAccountIndexOrNull(): Int? {
