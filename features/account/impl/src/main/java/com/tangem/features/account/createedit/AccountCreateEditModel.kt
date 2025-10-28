@@ -205,8 +205,8 @@ internal class AccountCreateEditModel @Inject constructor(
             is AccountCreateEditComponent.Params.Edit -> {
                 val oldName = params.account.accountName.toUM()
 
-                val isNewName = this.account.name != oldName
-                val isNewIcon = this.account.portfolioIcon != params.account.portfolioIcon
+                val isNewName = this.account.name.trim() != oldName
+                val isNewIcon = this.account.portfolioIcon != params.account.portfolioIcon.toUM()
                 isValidName && (isNewName || isNewIcon)
             }
         }
@@ -275,4 +275,9 @@ internal class AccountCreateEditModel @Inject constructor(
         )
         messageSender.send(dialogMessage)
     }
+}
+
+private fun AccountNameUM.trim(): AccountNameUM = when (this) {
+    is AccountNameUM.Custom -> this.toDomain().getOrNull()?.toUM() ?: this
+    AccountNameUM.DefaultMain -> this
 }

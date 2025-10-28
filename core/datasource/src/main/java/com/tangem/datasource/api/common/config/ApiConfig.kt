@@ -27,6 +27,7 @@ sealed class ApiConfig {
         TangemPay,
         BlockAid,
         YieldSupply,
+        MoonPay,
     }
 
     private fun initializeId(): ID {
@@ -37,6 +38,7 @@ sealed class ApiConfig {
             is TangemPay -> ID.TangemPay
             is BlockAid -> ID.BlockAid
             is YieldSupply -> ID.YieldSupply
+            is MoonPay -> ID.MoonPay
         }
     }
 
