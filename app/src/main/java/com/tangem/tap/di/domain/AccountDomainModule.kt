@@ -3,6 +3,8 @@ package com.tangem.tap.di.domain
 import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.account.fetcher.SingleAccountListFetcher
 import com.tangem.domain.account.repository.AccountsCRUDRepository
+import com.tangem.domain.account.status.usecase.RecoverCryptoPortfolioUseCase
+import com.tangem.domain.account.status.utils.CryptoCurrencyBalanceFetcher
 import com.tangem.domain.account.tokens.MainAccountTokensMigration
 import com.tangem.domain.account.usecase.*
 import dagger.Module
@@ -50,10 +52,12 @@ internal object AccountDomainModule {
     fun provideRecoverCryptoPortfolioUseCase(
         accountsCRUDRepository: AccountsCRUDRepository,
         mainAccountTokensMigration: MainAccountTokensMigration,
+        cryptoCurrencyBalanceFetcher: CryptoCurrencyBalanceFetcher,
     ): RecoverCryptoPortfolioUseCase {
         return RecoverCryptoPortfolioUseCase(
             crudRepository = accountsCRUDRepository,
             mainAccountTokensMigration = mainAccountTokensMigration,
+            cryptoCurrencyBalanceFetcher = cryptoCurrencyBalanceFetcher,
         )
     }
 
