@@ -19,7 +19,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class AccountStatusList(
     val userWalletId: UserWalletId,
-    val accountStatuses: Set<AccountStatus>,
+    val accountStatuses: List<AccountStatus>,
     val totalAccounts: Int,
     val totalFiatBalance: TotalFiatBalance,
 ) {
