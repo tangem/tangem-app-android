@@ -8,12 +8,10 @@ data class OnrampPaymentMethodGroup(
     val bestRateOffer: OnrampOffer?,
     val providerCount: Int,
     val isBestPaymentMethod: Boolean,
-) {
+    val methodStatus: PaymentMethodStatus,
+)
 
-    val bestRateAmount: BigDecimal? = bestRateOffer?.let { offer ->
-        when (val quote = offer.quote) {
-            is OnrampQuote.Data -> quote.toAmount.value
-            else -> BigDecimal.ZERO
-        }
-    }
+sealed interface PaymentMethodStatus {
+    data object Available : PaymentMethodStatus
+    data class Unavailable(val availableFrom: BigDecimal) : PaymentMethodStatus
 }
