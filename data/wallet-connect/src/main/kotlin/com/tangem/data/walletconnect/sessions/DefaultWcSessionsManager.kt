@@ -8,6 +8,7 @@ import com.reown.walletkit.client.WalletKit
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.data.walletconnect.utils.*
 import com.tangem.datasource.local.walletconnect.WalletConnectStore
+import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.walletconnect.WcAnalyticEvents
 import com.tangem.domain.walletconnect.model.WcSession
@@ -31,6 +32,7 @@ internal class DefaultWcSessionsManager(
     private val dispatchers: CoroutineDispatcherProvider,
     private val wcNetworksConverter: WcNetworksConverter,
     private val analytics: AnalyticsEventHandler,
+    private val accountsFeatureToggles: AccountsFeatureToggles,
     private val scope: WcScope,
 ) : WcSessionsManager, WcSdkObserver {
 
@@ -90,7 +92,11 @@ internal class DefaultWcSessionsManager(
         val wcSessions = savedPending.plus(inStore).mapNotNull { storeSession ->
             val wallet = wallets.find { it.walletId == storeSession.walletId } ?: return@mapNotNull null
             val sdkSession = inSdk.find { it.topic == storeSession.topic } ?: return@mapNotNull null
-            val networks = wcNetworksConverter.findWalletNetworks(wallet, sdkSession)
+            val account = storeSession.accountId?.let { wcNetworksConverter.getAccount(it) }
+            if (accountsFeatureToggles.isFeatureEnabled && account == null) {
+                return@mapNotNull null
+            }
+            val networks = wcNetworksConverter.findWalletNetworks(wallet, account, sdkSession)
             val originUrl = storeSession.url ?: sdkSession.metaData?.url ?: ""
             WcSession(
                 wallet = wallet,
@@ -102,6 +108,7 @@ internal class DefaultWcSessionsManager(
                 ),
                 securityStatus = storeSession.securityStatus,
                 networks = networks,
+                account = account,
                 connectingTime = storeSession.connectingTime,
                 showWalletInfo = wallets.size > 1,
             )

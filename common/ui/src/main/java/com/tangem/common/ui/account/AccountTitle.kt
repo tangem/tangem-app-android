@@ -6,6 +6,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
@@ -29,6 +30,7 @@ fun AccountTitle(
     accountTitleUM: AccountTitleUM,
     modifier: Modifier = Modifier,
     textStyle: TextStyle = TangemTheme.typography.subtitle2,
+    textColor: Color = TangemTheme.colors.text.tertiary,
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -40,19 +42,20 @@ fun AccountTitle(
                 Text(
                     text = accountTitleUM.prefixText.resolveReference(),
                     style = textStyle,
-                    color = TangemTheme.colors.text.tertiary,
+                    color = textColor,
                 )
                 AccountLabel(
                     name = accountTitleUM.name,
                     icon = accountTitleUM.icon,
                     iconSize = AccountIconSize.ExtraSmall,
                     nameStyle = textStyle,
+                    nameColor = textColor,
                 )
             }
             is AccountTitleUM.Text -> Text(
                 text = accountTitleUM.title.resolveReference(),
                 style = textStyle,
-                color = TangemTheme.colors.text.tertiary,
+                color = textColor,
                 modifier = Modifier.testTag(SendScreenTestTags.AMOUNT_CONTAINER_TITLE),
             )
         }

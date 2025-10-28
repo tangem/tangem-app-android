@@ -33,7 +33,7 @@ sealed interface AccountNameUM {
      *
      * @property raw the raw string value of the custom account name
      */
-    class Custom(internal val raw: String) : AccountNameUM {
+    data class Custom(internal val raw: String) : AccountNameUM {
 
         override val value: TextReference = stringReference(value = raw)
     }

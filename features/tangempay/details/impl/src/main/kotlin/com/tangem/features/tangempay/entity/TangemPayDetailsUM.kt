@@ -9,11 +9,10 @@ internal data class TangemPayDetailsUM(
     val topBarConfig: TangemPayDetailsTopBarConfig,
     val pullToRefreshConfig: PullToRefreshConfig,
     val balanceBlockState: TangemPayDetailsBalanceBlockState,
-    val cardDetailsUM: TangemPayCardDetailsUM,
     val isBalanceHidden: Boolean,
 )
 
-data class TangemPayCardDetailsUM(
+internal data class TangemPayCardDetailsUM(
     val number: String = "",
     val expiry: String = "",
     val cvv: String = "",
