@@ -28,6 +28,7 @@ dependencies {
     implementation(projects.domain.card)
     implementation(projects.domain.core)
     implementation(projects.domain.demo)
+    implementation(projects.domain.express)
     implementation(projects.domain.legacy)
     implementation(projects.domain.models)
     implementation(projects.domain.staking)

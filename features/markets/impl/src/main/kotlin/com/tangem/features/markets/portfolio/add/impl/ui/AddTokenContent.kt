@@ -22,14 +22,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
-import com.tangem.common.ui.account.AccountIcon
 import com.tangem.common.ui.account.AccountIconPreviewData
+import com.tangem.common.ui.account.PortfolioSelectRow
+import com.tangem.common.ui.account.PortfolioSelectUM
 import com.tangem.common.ui.account.toUM
 import com.tangem.core.ui.components.PrimaryButtonIconEnd
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.SpacerH16
 import com.tangem.core.ui.components.SpacerW12
-import com.tangem.core.ui.components.account.AccountIconSize
 import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.token.TokenItem
@@ -63,12 +63,11 @@ internal fun AddTokenContent(state: AddTokenUM, modifier: Modifier = Modifier) {
 
         SpacerH(TangemTheme.dimens.spacing14)
         Column(
-            modifier = Modifier.background(
-                color = TangemTheme.colors.background.action,
-                shape = RoundedCornerShape(TangemTheme.dimens.radius14),
-            ),
+            modifier = Modifier
+                .clip(RoundedCornerShape(TangemTheme.dimens.radius14))
+                .background(color = TangemTheme.colors.background.action),
         ) {
-            PortfolioRow(state.portfolio)
+            PortfolioSelectRow(state.portfolio)
             HorizontalDivider(
                 modifier = Modifier.padding(horizontal = 12.dp),
                 thickness = TangemTheme.dimens.size0_5,
@@ -83,50 +82,6 @@ internal fun AddTokenContent(state: AddTokenUM, modifier: Modifier = Modifier) {
             modifier = modifier.fillMaxWidth(),
             state = state.button,
         )
-    }
-}
-
-@Composable
-private fun PortfolioRow(state: AddTokenUM.Portfolio, modifier: Modifier = Modifier) {
-    Row(
-        modifier = modifier
-            .clickable(enabled = state.editable, onClick = state.onClick)
-            .padding(12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        val leftText = if (state.isAccountMode) R.string.account_details_title else R.string.wc_common_wallet
-        Text(
-            modifier = Modifier.weight(1f),
-            text = stringResourceSafe(leftText),
-            style = TangemTheme.typography.body1,
-            color = TangemTheme.colors.text.primary1,
-        )
-        SpacerW12()
-        if (state.accountIconUM != null) {
-            AccountIcon(
-                name = state.name,
-                icon = state.accountIconUM,
-                size = AccountIconSize.Small,
-            )
-        }
-        Text(
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(horizontal = 4.dp),
-            text = state.name.resolveReference(),
-            style = TangemTheme.typography.body1,
-            color = TangemTheme.colors.text.primary1,
-        )
-        if (state.editable) {
-            Icon(
-                modifier = Modifier
-                    .size(width = 18.dp, height = 24.dp)
-                    .testTag(WalletConnectBottomSheetTestTags.NETWORKS_SELECTOR_ICON),
-                painter = painterResource(id = R.drawable.ic_select_18_24),
-                contentDescription = null,
-                tint = TangemTheme.colors.icon.informative,
-            )
-        }
     }
 }
 
@@ -240,17 +195,19 @@ private class PreviewProvider : PreviewParameterProvider<AddTokenUM> {
         )
 
     val account
-        get() = AddTokenUM.Portfolio(
-            accountIconUM = AccountIconPreviewData.randomAccountIcon(),
+        get() = PortfolioSelectUM(
+            icon = AccountIconPreviewData.randomAccountIcon(),
             name = AccountName.DefaultMain.toUM().value,
-            editable = true,
+            isAccountMode = true,
+            isMultiChoice = true,
             onClick = {},
         )
     val wallet
-        get() = AddTokenUM.Portfolio(
-            accountIconUM = null,
-            name = stringReference("Wallet"),
-            editable = true,
+        get() = PortfolioSelectUM(
+            icon = null,
+            name = stringReference("Wallet Name"),
+            isMultiChoice = false,
+            isAccountMode = false,
             onClick = {},
         )
 
@@ -271,7 +228,7 @@ private class PreviewProvider : PreviewParameterProvider<AddTokenUM> {
             AddTokenUM(
                 tokenToAdd = tokenState,
                 network = networkUM.copy(editable = false),
-                portfolio = wallet.copy(editable = false),
+                portfolio = wallet.copy(isMultiChoice = false),
                 button = button.copy(
                     isEnabled = true,
                     isTangemIconVisible = true,

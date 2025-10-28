@@ -5,12 +5,14 @@ import com.tangem.datasource.api.common.blockaid.BlockAidApi
 import com.tangem.datasource.api.common.config.ApiConfig
 import com.tangem.datasource.api.common.config.ApiConfig.Companion.MOCKED_BUILD_TYPE
 import com.tangem.datasource.api.common.config.ApiConfigs
+import com.tangem.datasource.api.common.config.MoonPay
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.datasource.api.common.config.managers.DevApiConfigsManager
 import com.tangem.datasource.api.common.config.managers.MockApiConfigsManager
 import com.tangem.datasource.api.common.config.managers.ProdApiConfigsManager
 import com.tangem.datasource.api.express.TangemExpressApi
 import com.tangem.datasource.api.markets.TangemTechMarketsApi
+import com.tangem.datasource.api.moonpay.MoonPayApi
 import com.tangem.datasource.api.onramp.OnrampApi
 import com.tangem.datasource.api.pay.TangemPayApi
 import com.tangem.datasource.api.stakekit.StakeKitApi
@@ -127,6 +129,15 @@ internal object NetworkModule {
     fun provideBlockAidApi(retrofitApiBuilder: RetrofitApiBuilder): BlockAidApi {
         return retrofitApiBuilder.build(
             apiConfigId = ApiConfig.ID.BlockAid,
+            applyTimeoutAnnotations = false,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideMoonPayApi(retrofitApiBuilder: RetrofitApiBuilder): MoonPayApi {
+        return retrofitApiBuilder.build(
+            apiConfigId = ApiConfig.ID.MoonPay,
             applyTimeoutAnnotations = false,
         )
     }
