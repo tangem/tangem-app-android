@@ -2,17 +2,13 @@ package com.tangem.screens
 
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import com.tangem.common.BaseTestCase
-import com.tangem.core.ui.R
-import com.tangem.core.ui.test.BaseButtonTestTags
-import com.tangem.core.ui.test.NotificationTestTags
-import com.tangem.core.ui.test.SendConfirmScreenTestTags
-import com.tangem.core.ui.test.TopAppBarTestTags
+import com.tangem.core.ui.test.*
+import com.tangem.wallet.R
 import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
 import io.github.kakaocup.compose.node.element.KNode
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 import androidx.compose.ui.test.hasText as withText
-import com.tangem.common.ui.R as CommonUiR
 
 class SendConfirmPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
     ComposeScreen<SendConfirmPageObject>(semanticsProvider = semanticsProvider) {
@@ -23,15 +19,31 @@ class SendConfirmPageObject(semanticsProvider: SemanticsNodeInteractionsProvider
     }
 
     val sendButton: KNode = child {
-        hasTestTag(BaseButtonTestTags.TEXT)
-        hasText(getResourceString(R.string.common_send))
+        hasTestTag(BaseButtonTestTags.BUTTON)
+        hasAnyDescendant(withText(getResourceString(R.string.common_send)))
         useUnmergedTree = true
     }
 
+    val primaryAmount: KNode = child {
+        hasTestTag(BaseAmountBlockTestTags.PRIMARY_AMOUNT)
+        useUnmergedTree = true
+    }
 
-    val minimumSendAmountErrorTitle: KNode = child {
+    fun leaveDepositButton(amount: String): KNode = child {
+        hasTestTag(BaseButtonTestTags.BUTTON)
+        hasAnyDescendant(withText(getResourceString(R.string.send_notification_leave_button, amount)))
+        useUnmergedTree = true
+    }
+
+    fun reduceAmountButton(amount: String): KNode = child {
+        hasTestTag(BaseButtonTestTags.BUTTON)
+        hasAnyDescendant(withText(getResourceString(R.string.send_notification_reduce_by, amount)))
+        useUnmergedTree = true
+    }
+
+    fun warningTitle(titleResId: Int): KNode = child {
         hasTestTag(NotificationTestTags.TITLE)
-        hasText(getResourceString(CommonUiR.string.send_notification_invalid_amount_title))
+        hasText(getResourceString(titleResId))
         useUnmergedTree = true
     }
 
@@ -40,27 +52,29 @@ class SendConfirmPageObject(semanticsProvider: SemanticsNodeInteractionsProvider
         useUnmergedTree = true
     }
 
-    fun minimumSendAmountErrorIcon(amount: String): KNode = child {
+    fun sendWarningIcon(messageResId: Int, amount: String): KNode = child {
+        hasTestTag(NotificationTestTags.ICON)
         hasAnySibling(
             withText(
                 getResourceString(
-                    CommonUiR.string.send_notification_invalid_minimum_amount_text,
+                    messageResId,
                     amount,
                     amount,
                 )
             )
+
         )
-        hasTestTag(NotificationTestTags.ICON)
         useUnmergedTree = true
     }
 
-    fun minimumSendAmountErrorMessage(
+    fun sendWarningMessage(
+        messageResId: Int,
         amount: String,
     ): KNode = child {
         hasTestTag(NotificationTestTags.MESSAGE)
         hasText(
             getResourceString(
-                CommonUiR.string.send_notification_invalid_minimum_amount_text,
+                messageResId,
                 amount,
                 amount,
             )
@@ -68,6 +82,16 @@ class SendConfirmPageObject(semanticsProvider: SemanticsNodeInteractionsProvider
         useUnmergedTree = true
     }
 
+    fun recipientAddress(recipientAddress: String): KNode = child {
+        hasTestTag(SendConfirmScreenTestTags.RECIPIENT_ADDRESS)
+        hasText(recipientAddress)
+        useUnmergedTree = true
+    }
+
+    val blockchainAddress: KNode = child {
+        hasTestTag(SendConfirmScreenTestTags.BLOCKCHAIN_ADDRESS)
+        useUnmergedTree = true
+    }
 }
 
 internal fun BaseTestCase.onSendConfirmScreen(function: SendConfirmPageObject.() -> Unit) =
