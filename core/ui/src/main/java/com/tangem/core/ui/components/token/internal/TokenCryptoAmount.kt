@@ -11,7 +11,6 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.audits.AuditLabel
 import com.tangem.core.ui.components.text.applyBladeBrush
-import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
@@ -31,7 +30,7 @@ internal fun TokenCryptoAmount(
                 isFlickering = state.isFlickering,
             )
         }
-        is TokenItemState.Subtitle2State.LabelContent -> {
+        is TokenCryptoAmountState.LabelContent -> {
             AuditLabel(state = state.auditLabelUM, modifier = modifier)
         }
         is TokenCryptoAmountState.Unreachable -> {
@@ -45,6 +44,15 @@ internal fun TokenCryptoAmount(
         }
         is TokenCryptoAmountState.Locked -> {
             LockedRectangle(modifier = modifier.placeholderSize())
+        }
+        is TokenCryptoAmountState.PriceChangeContent -> {
+            PriceBlock(
+                modifier = modifier,
+                price = null,
+                type = state.type,
+                priceChangePercent = state.priceChangePercent,
+                isFlickering = state.isFlickering,
+            )
         }
         null -> Unit
     }

@@ -103,6 +103,7 @@ internal class ProdApiConfigsManagerTest {
                 ApiConfig.ID.StakeKit -> StakeKit(stakeKitAuthProvider = stakeKitAuthProvider)
                 ApiConfig.ID.TangemPay -> TangemPay(appVersionProvider = appVersionProvider)
                 ApiConfig.ID.BlockAid -> BlockAid(configStorage = environmentConfigStorage)
+                ApiConfig.ID.MoonPay -> MoonPay()
             }
         }
     }
@@ -115,6 +116,7 @@ internal class ProdApiConfigsManagerTest {
             ApiConfig.ID.StakeKit -> createStakeKitModel()
             ApiConfig.ID.TangemPay -> createTangemPayModel()
             ApiConfig.ID.BlockAid -> createBlockAidSdkModel()
+            ApiConfig.ID.MoonPay -> createMoonPayModel()
         }
     }
 
@@ -253,6 +255,16 @@ internal class ProdApiConfigsManagerTest {
                     "accept" to ProviderSuspend { "application/json" },
                     "content-type" to ProviderSuspend { "application/json" },
                 ),
+            ),
+        )
+    }
+
+    private fun createMoonPayModel(): TestModel {
+        return TestModel(
+            id = ApiConfig.ID.MoonPay,
+            expected = ApiEnvironmentConfig(
+                environment = ApiEnvironment.PROD,
+                baseUrl = "https://api.moonpay.com/",
             ),
         )
     }
