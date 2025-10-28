@@ -1544,11 +1544,9 @@
   <string name="yield_module_stop_earning_sheet_fee_note">La comisión de red se deducirá del importe que retire.</string>
   <string name="yield_module_supply_apr">Suministro APY</string>
   <string name="yield_module_token_details_earn_notification_apy">APY</string>
-  <string name="yield_module_token_details_earn_notification_description">Deje que sus fondos hagan el trabajo mientras usted mantiene el control.</string>
   <string name="yield_module_token_details_earn_notification_earning_on_your_balance_subtitle">Los intereses se devengan automáticamente</string>
   <string name="yield_module_token_details_earn_notification_earning_on_your_balance_title">Modo de rendimiento</string>
   <string name="yield_module_token_details_earn_notification_processing">Procesando su depósito</string>
-  <string name="yield_module_token_details_earn_notification_title">Haga que sus activos trabajen para usted</string>
   <string name="yield_module_transfer_mode_automatic">Automático</string>
   <string name="yield_module_unable_to_cover_fee_description">Deposite algo de %1$s %2$s para cubrir la tarifa de red para las transacciones</string>
   <string name="yield_module_unable_to_cover_fee_title">No se puede cubrir la tarifa %s</string>
