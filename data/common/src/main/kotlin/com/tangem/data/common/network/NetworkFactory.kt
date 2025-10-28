@@ -79,6 +79,24 @@ class NetworkFactory @Inject constructor(
     /**
      * Create
      *
+     * @param blockchain     blockchain
+     * @param derivationPath derivation path
+     * @param userWallet     user wallet
+     */
+    fun create(blockchain: Blockchain, derivationPath: Network.DerivationPath, userWallet: UserWallet): Network? {
+        return create(
+            blockchain = blockchain,
+            derivationPath = derivationPath,
+            canHandleTokens = userWallet.canHandleToken(
+                blockchain = blockchain,
+                excludedBlockchains = excludedBlockchains,
+            ),
+        )
+    }
+
+    /**
+     * Create
+     *
      * @param blockchain              blockchain
      * @param extraDerivationPath     extra derivation path
      * @param derivationStyleProvider derivation style provider
