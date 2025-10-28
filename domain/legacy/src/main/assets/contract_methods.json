@@ -201,5 +201,35 @@
         "info": "stakeBSC",
         "source": "https://bscscan.com/tx/0xfcbeac6e0a4ba5768d97d14b5115d08dda92defa8a8deee8bba34e2f0655c52b",
         "name": "claim"
+    },
+    "0xcbeda14c": {
+        "info": "yieldModule",
+        "source": "https://github.com/tangem/tangem-yield-module-contracts/",
+        "name": "supply"
+    },
+    "0x79be55f7": {
+        "info": "yieldModule",
+        "source": "https://github.com/tangem/tangem-yield-module-contracts/",
+        "name": "supply"
+    },
+    "0xc65e6dcf": {
+        "info": "yieldModule",
+        "source": "https://github.com/tangem/tangem-yield-module-contracts/",
+        "name": "supply"
+    },
+    "0xebd4b81c": {
+        "info": "yieldModule",
+        "source": "https://github.com/tangem/tangem-yield-module-contracts/",
+        "name": "supply"
+    },
+    "0xc478e956": {
+        "info": "yieldModule",
+        "source": "https://github.com/tangem/tangem-yield-module-contracts/",
+        "name": "supply"
+    },
+    "0x0779afe6": {
+        "info": "yieldModule",
+        "source": "https://github.com/tangem/tangem-yield-module-contracts/",
+        "name": "transfer"
     }
 }
