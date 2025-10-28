@@ -7,7 +7,7 @@ import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchWithMain
 import com.tangem.tap.common.extensions.onUserWalletSelected
 import com.tangem.tap.common.redux.AppState
-import com.tangem.tap.network.exchangeServices.ExchangeService
+import com.tangem.tap.network.exchangeServices.SellService
 import org.rekotlin.Action
 import org.rekotlin.Store
 import javax.inject.Inject
@@ -19,7 +19,7 @@ import javax.inject.Inject
 class AppStateHolder @Inject constructor() : ReduxStateHolder {
 
     var mainStore: Store<AppState>? = null
-    var sellService: ExchangeService? = null
+    var sellService: SellService? = null
 
     override fun dispatch(action: Action) {
         mainStore?.dispatch(action)
