@@ -15,6 +15,8 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.components.NavigationBar3ButtonsScrim
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.features.tangempay.components.cardDetails.DefaultTangemPayCardDetailsBlockComponent
+import com.tangem.features.tangempay.components.cardDetails.TangemPayCardDetailsBlockComponent
 import com.tangem.features.tangempay.components.txHistory.DefaultTangemPayTxHistoryComponent
 import com.tangem.features.tangempay.components.txHistory.TangemPayTxHistoryDetailsComponent
 import com.tangem.features.tangempay.entity.TangemPayDetailsNavigation
@@ -44,6 +46,11 @@ internal class TangemPayDetailsComponent(
         ),
     )
 
+    private val cardDetailsBlockComponent = DefaultTangemPayCardDetailsBlockComponent(
+        appComponentContext = child("cardDetailsBlockComponent"),
+        params = TangemPayCardDetailsBlockComponent.Params(params = params),
+    )
+
     @Composable
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
@@ -53,6 +60,7 @@ internal class TangemPayDetailsComponent(
         TangemPayDetailsScreen(
             state = state,
             txHistoryComponent = txHistoryComponent,
+            cardDetailsBlockComponent = cardDetailsBlockComponent,
             modifier = modifier,
         )
         bottomSheet.child?.instance?.BottomSheet()
