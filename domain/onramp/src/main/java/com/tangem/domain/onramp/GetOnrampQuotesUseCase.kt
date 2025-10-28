@@ -26,7 +26,7 @@ class GetOnrampQuotesUseCase(
 
                 quotes.groupBy { it.paymentMethod.type }
                     .asSequence()
-                    .sortedBy { it.key.getPriority(isGooglePayAvailable) }
+                    .sortedBy { it.key.getPriorityBySpeed(isGooglePayAvailable) }
                     .sortByRate()
                     .toList()
                     .flatten()
@@ -53,7 +53,6 @@ class GetOnrampQuotesUseCase(
                     when (val error = it.error) {
                         is OnrampError.AmountError.TooSmallError -> it.fromAmount.value - error.requiredAmount
                         is OnrampError.AmountError.TooBigError -> error.requiredAmount - it.fromAmount.value
-                        else -> null
                     }
                 }
             }
