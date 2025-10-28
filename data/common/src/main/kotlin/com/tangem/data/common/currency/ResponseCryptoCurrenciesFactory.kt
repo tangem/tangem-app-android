@@ -68,7 +68,6 @@ class ResponseCryptoCurrenciesFactory @Inject constructor(
         responseToken: UserTokensResponse.Token,
         userWallet: UserWallet,
         network: Network,
-        accountIndex: DerivationIndex? = null,
     ): CryptoCurrency? {
         var blockchain = Blockchain.fromNetworkId(responseToken.networkId)
         if (blockchain == null || blockchain == Blockchain.Unknown) {
@@ -82,7 +81,7 @@ class ResponseCryptoCurrenciesFactory @Inject constructor(
 
         val sdkToken = createSdkToken(responseToken)
         return if (sdkToken == null) {
-            createCoin(blockchain, responseToken, network, accountIndex)
+            createCoin(blockchain, responseToken, network)
         } else {
             createToken(blockchain, sdkToken, network)
         }
