@@ -140,7 +140,9 @@ fun InputRowRecipient(
                         onClick = onPasteClick,
                         backgroundColorEnabled = TangemTheme.colors.button.secondary,
                         textColor = TangemTheme.colors.text.primary1,
-                        modifier = Modifier.padding(start = TangemTheme.dimens.spacing8),
+                        modifier = Modifier
+                            .padding(start = TangemTheme.dimens.spacing8)
+                            .testTag(SendAddressScreenTestTags.ADDRESS_PASTE_BUTTON),
                     )
                 }
             }
@@ -224,6 +226,7 @@ private fun ResolvedAddressRow(isLoading: Boolean, resolvedAddress: String?) {
                     text = state.address,
                     style = TangemTheme.typography.caption2,
                     color = TangemTheme.colors.text.tertiary,
+                    modifier = Modifier.testTag(SendAddressScreenTestTags.RESOLVED_ADDRESS),
                 )
             }
         }
