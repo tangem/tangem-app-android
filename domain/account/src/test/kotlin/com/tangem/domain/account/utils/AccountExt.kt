@@ -4,8 +4,8 @@ import com.tangem.domain.models.account.*
 import com.tangem.domain.models.wallet.UserWalletId
 import kotlin.random.Random
 
-fun createAccounts(userWalletId: UserWalletId, count: Int): Set<Account.CryptoPortfolio> {
-    return buildSet {
+fun createAccounts(userWalletId: UserWalletId, count: Int): List<Account.CryptoPortfolio> {
+    return buildList {
         add(Account.CryptoPortfolio.createMainAccount(userWalletId))
 
         repeat(count - 1) {

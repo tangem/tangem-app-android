@@ -29,7 +29,7 @@ internal class AccountListConverter @AssistedInject constructor(
     override fun convert(value: GetWalletAccountsResponse): AccountList {
         return AccountList(
             userWalletId = userWallet.walletId,
-            accounts = value.accounts.map(cryptoPortfolioConverter::convert).toSet(),
+            accounts = value.accounts.map(cryptoPortfolioConverter::convert),
             totalAccounts = value.wallet.totalAccounts,
             sortType = TokensSortTypeConverter.convert(value.wallet.sort),
             groupType = TokensGroupTypeConverter.convert(value.wallet.group),
