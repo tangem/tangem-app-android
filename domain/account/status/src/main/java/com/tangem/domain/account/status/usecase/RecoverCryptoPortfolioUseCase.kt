@@ -2,6 +2,7 @@ package com.tangem.domain.account.status.usecase
 
 import arrow.core.Either
 import arrow.core.getOrElse
+import arrow.core.merge
 import arrow.core.raise.Raise
 import arrow.core.raise.catch
 import arrow.core.raise.either
@@ -9,10 +10,12 @@ import arrow.core.raise.ensure
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.models.ArchivedAccount
 import com.tangem.domain.account.repository.AccountsCRUDRepository
+import com.tangem.domain.account.status.utils.AccountNameIndexer
 import com.tangem.domain.account.status.utils.CryptoCurrencyBalanceFetcher
 import com.tangem.domain.account.tokens.MainAccountTokensMigration
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
+import com.tangem.domain.models.account.AccountName
 import com.tangem.domain.models.wallet.UserWalletId
 
 /**
@@ -45,8 +48,7 @@ class RecoverCryptoPortfolioUseCase(
 
         val recoveredAccount = archivedAccount.recover()
 
-        val updatedAccountList = (accountList + recoveredAccount)
-            .getOrElse { raise(Error.AccountListRequirementsNotMet(cause = it)) }
+        val updatedAccountList = add(accountList, recoveredAccount)
 
         saveAccounts(updatedAccountList)
 
@@ -95,6 +97,25 @@ class RecoverCryptoPortfolioUseCase(
             block = { crudRepository.saveAccounts(accountList) },
             catch = { raise(Error.DataOperationFailed(cause = it)) },
         )
+    }
+
+    private fun Raise<Error>.add(accountList: AccountList, recoveredAccount: Account.CryptoPortfolio): AccountList {
+        val maybeAccountList = accountList + recoveredAccount
+
+        return maybeAccountList.mapLeft {
+            val recoveredAccountName = recoveredAccount.accountName as? AccountName.Custom
+                ?: raise(Error.DataOperationFailed(message = "Recovered account should have a custom name"))
+
+            val indexedName = AccountNameIndexer.transform(from = recoveredAccountName.value)
+                .let(AccountName::invoke).getOrNull()
+                ?: raise(Error.DataOperationFailed(message = "Failed to generate indexed account name"))
+
+            val renamedAccount = recoveredAccount.copy(accountName = indexedName)
+
+            // recursively try to add the account with the new name
+            add(accountList = accountList, recoveredAccount = renamedAccount)
+        }
+            .merge()
     }
 
     private suspend fun refreshBalances(accountId: AccountId): Either<Error, Unit> = either {
