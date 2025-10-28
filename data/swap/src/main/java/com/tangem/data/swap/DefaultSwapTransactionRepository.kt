@@ -2,6 +2,7 @@ package com.tangem.data.swap
 
 import com.tangem.data.common.currency.ResponseCryptoCurrenciesFactory
 import com.tangem.data.common.currency.UserTokensResponseFactory
+import com.tangem.data.common.network.NetworkFactory
 import com.tangem.data.swap.converter.transaction.SavedSwapStatusConverter
 import com.tangem.data.swap.converter.transaction.SavedSwapTransactionConverter
 import com.tangem.data.swap.converter.transaction.SavedSwapTransactionListConverter
@@ -31,11 +32,15 @@ import kotlinx.coroutines.flow.flowOn
 internal class DefaultSwapTransactionRepository(
     private val appPreferencesStore: AppPreferencesStore,
     private val responseCryptoCurrenciesFactory: ResponseCryptoCurrenciesFactory,
+    private val networkFactory: NetworkFactory,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : SwapTransactionRepository {
 
     private val listConverter by lazy(LazyThreadSafetyMode.NONE) {
-        SavedSwapTransactionListConverter(responseCryptoCurrenciesFactory = responseCryptoCurrenciesFactory)
+        SavedSwapTransactionListConverter(
+            responseCryptoCurrenciesFactory = responseCryptoCurrenciesFactory,
+            networkFactory = networkFactory,
+        )
     }
     private val converter by lazy(LazyThreadSafetyMode.NONE) {
         SavedSwapTransactionConverter(responseCryptoCurrenciesFactory = responseCryptoCurrenciesFactory)
@@ -124,52 +129,25 @@ internal class DefaultSwapTransactionRepository(
         }
     }.flowOn(dispatchers.default)
 
-    override suspend fun removeTransaction(
-        userWalletId: UserWalletId,
-        fromCryptoCurrency: CryptoCurrency,
-        toCryptoCurrency: CryptoCurrency,
-        txId: String,
-    ) {
+    override suspend fun removeTransaction(userWalletId: UserWalletId, txId: String) {
         clearTransactionsStatuses(txId = txId)
         appPreferencesStore.editData { mutablePreferences ->
             val savedList: List<SwapTransactionListDTO>? = mutablePreferences.getObjectList(
                 key = PreferencesKeys.SWAP_TRANSACTIONS_KEY,
             )
             val tokenTransactions = savedList
-                ?.firstOrNull {
-                    it.checkId(
-                        checkUserWalletId = userWalletId,
-                        fromCurrencyId = fromCryptoCurrency.id,
-                        toCurrencyId = toCryptoCurrency.id,
-                    )
-                }
-                ?.transactions
-                ?.filterNot { it.txId == txId }
+                ?.asSequence()
+                ?.map {
+                    it.copy(transactions = it.transactions.filterNot { it.txId == txId })
+                }?.filterNot { it.transactions.isEmpty() }
+                ?.toList()
 
-            val editedList =
-                if (tokenTransactions.isNullOrEmpty()) {
-                    savedList?.filterNot {
-                        it.checkId(
-                            checkUserWalletId = userWalletId,
-                            fromCurrencyId = fromCryptoCurrency.id,
-                            toCurrencyId = toCryptoCurrency.id,
-                        )
-                    }
-                } else {
-                    savedList.updateList(
-                        userWalletId = userWalletId,
-                        fromCryptoCurrency = fromCryptoCurrency,
-                        toCryptoCurrency = toCryptoCurrency,
-                        transactions = tokenTransactions,
-                    )
-                }
-
-            if (editedList.isNullOrEmpty()) {
+            if (tokenTransactions.isNullOrEmpty()) {
                 mutablePreferences.remove(key = PreferencesKeys.SWAP_TRANSACTIONS_KEY)
             } else {
                 mutablePreferences.setObject(
                     key = PreferencesKeys.SWAP_TRANSACTIONS_KEY,
-                    value = editedList,
+                    value = tokenTransactions,
                 )
             }
         }
