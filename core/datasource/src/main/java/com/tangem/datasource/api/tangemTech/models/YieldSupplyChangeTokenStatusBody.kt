@@ -7,4 +7,5 @@ import com.squareup.moshi.JsonClass
 data class YieldSupplyChangeTokenStatusBody(
     @Json(name = "tokenAddress") val tokenAddress: String,
     @Json(name = "chainId") val chainId: Int,
+    @Json(name = "userAddress") val userAddress: String,
 )
