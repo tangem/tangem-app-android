@@ -46,7 +46,7 @@ interface YieldSupplyRepository {
      * May throw on network/backend errors or if required chain id cannot be resolved.
      */
     @Throws
-    suspend fun activateProtocol(cryptoCurrencyToken: CryptoCurrency.Token): Boolean
+    suspend fun activateProtocol(cryptoCurrencyToken: CryptoCurrency.Token, address: String): Boolean
 
     /**
      * Deactivate yield protocol for the specified token.
@@ -56,7 +56,7 @@ interface YieldSupplyRepository {
      * network/backend errors or if required chain id cannot be resolved.
      */
     @Throws
-    suspend fun deactivateProtocol(cryptoCurrencyToken: CryptoCurrency.Token): Boolean
+    suspend fun deactivateProtocol(cryptoCurrencyToken: CryptoCurrency.Token, address: String): Boolean
 
     /**
      * Save the last user-initiated yield protocol action for the given currency.
