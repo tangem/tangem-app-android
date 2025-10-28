@@ -1,6 +1,7 @@
 package com.tangem.feature.walletsettings.ui
 
 import android.content.res.Configuration
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -325,17 +326,25 @@ private fun AccountsFooter(model: WalletSettingsAccountsUM.Footer, modifier: Mod
             ),
         ) {
             AddAccountRow(model.addAccount)
-            HorizontalDivider(
-                thickness = TangemTheme.dimens.size0_5,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = TangemTheme.dimens.spacing12),
-                color = TangemTheme.colors.stroke.primary,
-            )
-            BlockItem(
-                modifier = Modifier.fillMaxWidth(),
-                model = model.archivedAccounts,
-            )
+
+            AnimatedVisibility(visible = model.archivedAccounts != null) {
+                model.archivedAccounts ?: return@AnimatedVisibility
+
+                Column {
+                    HorizontalDivider(
+                        thickness = TangemTheme.dimens.size0_5,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = TangemTheme.dimens.spacing12),
+                        color = TangemTheme.colors.stroke.primary,
+                    )
+
+                    BlockItem(
+                        modifier = Modifier.fillMaxWidth(),
+                        model = model.archivedAccounts,
+                    )
+                }
+            }
         }
         if (!model.showDescription) return
         SpacerH8()
