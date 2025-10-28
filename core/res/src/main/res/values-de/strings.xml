@@ -1743,11 +1743,9 @@
   <string name="yield_module_stop_earning_sheet_fee_note">Die Netzwerkgebühr wird von dem Betrag, den Du abhebst, abgezogen.</string>
   <string name="yield_module_supply_apr">Effektiver Jahreszins für Versorgung</string>
   <string name="yield_module_token_details_earn_notification_apy">Effektiver Jahreszins</string>
-  <string name="yield_module_token_details_earn_notification_description">Lass Dein Geld arbeiten – verdiene Zinsen auf Dein Guthaben.</string>
   <string name="yield_module_token_details_earn_notification_earning_on_your_balance_subtitle">Zinsen fallen automatisch an</string>
   <string name="yield_module_token_details_earn_notification_earning_on_your_balance_title">Ertragsmodus</string>
   <string name="yield_module_token_details_earn_notification_processing">Bearbeitung Deiner Einzahlung</string>
-  <string name="yield_module_token_details_earn_notification_title">Lass dein Guthaben arbeiten</string>
   <string name="yield_module_transfer_mode_automatic">Automatisch</string>
   <string name="yield_module_unable_to_cover_fee_description">Einzahlung von %1$s %2$s zur Deckung der Netzwerkgebühr für Transaktionen</string>
   <string name="yield_module_unable_to_cover_fee_title">Die Gebühr %s kann nicht gedeckt werden</string>
