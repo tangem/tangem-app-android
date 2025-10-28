@@ -1880,6 +1880,7 @@
   <string name="yield_module_stop_earning">Disable yield mode</string>
   <string name="yield_module_stop_earning_sheet_description">Turning this off will withdraw your assets from Aave, convert them back to %s in your wallet, and stop yield accrual.</string>
   <string name="yield_module_stop_earning_sheet_fee_note">The network fee will be deducted from the amount you withdraw.</string>
+  <string name="yield_module_supply">Supply</string>
   <string name="yield_module_supply_apr">Supply APY</string>
   <string name="yield_module_token_details_earn_notification_apy">APY</string>
   <string name="yield_module_token_details_earn_notification_description">Let your funds do the work while you stay in control.</string>
