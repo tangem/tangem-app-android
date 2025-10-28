@@ -71,9 +71,8 @@ internal class TxHistoryItemStateConverter(
         is TransactionType.Approve -> resourceReference(R.string.common_approval)
         is TransactionType.Operation -> stringReference(type.name)
         is TransactionType.Swap -> resourceReference(R.string.common_swap)
-        is TransactionType.YieldSupply,
-        is TransactionType.Transfer,
-        -> resourceReference(R.string.common_transfer)
+        is TransactionType.Transfer -> resourceReference(R.string.common_transfer)
+        is TransactionType.YieldSupply -> resourceReference(R.string.yield_module_supply)
         is TransactionType.Staking.Stake -> resourceReference(R.string.common_stake)
         is TransactionType.Staking.Unstake -> resourceReference(R.string.common_unstake)
         is TransactionType.Staking.Vote -> resourceReference(R.string.staking_vote)
