@@ -1500,11 +1500,9 @@
   <string name="yield_module_stop_earning_sheet_fee_note">Комісія мережі буде вирахувана з суми, яку ви знімаєте.</string>
   <string name="yield_module_supply_apr">Річна прибутковість (APY)</string>
   <string name="yield_module_token_details_earn_notification_apy">APY</string>
-  <string name="yield_module_token_details_earn_notification_description">Нехай ваші гроші працюють — заробляйте відсотки на свій рахунок.</string>
   <string name="yield_module_token_details_earn_notification_earning_on_your_balance_subtitle">Відсотки нараховуються автоматично</string>
   <string name="yield_module_token_details_earn_notification_earning_on_your_balance_title">Режим дохідності</string>
   <string name="yield_module_token_details_earn_notification_processing">Відправка ваших коштів</string>
-  <string name="yield_module_token_details_earn_notification_title">Нехай ваш баланс працює на вас!</string>
   <string name="yield_module_transfer_mode_automatic">Автоматично</string>
   <string name="yield_module_unable_to_cover_fee_description">Внесіть трохи %1$s %2$s, щоб покрити комісію мережі за транзакції.</string>
   <string name="yield_module_unable_to_cover_fee_title">Неможливо покрити комісію в %s</string>
