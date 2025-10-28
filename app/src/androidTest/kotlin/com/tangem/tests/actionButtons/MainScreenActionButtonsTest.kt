@@ -2,11 +2,15 @@ package com.tangem.tests.actionButtons
 
 import androidx.compose.ui.test.longClick
 import com.tangem.common.BaseTestCase
+import com.tangem.common.annotations.ApiEnv
+import com.tangem.common.annotations.ApiEnvConfig
 import com.tangem.common.constants.TestConstants.BITCOIN_ADDRESS
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.extensions.*
 import com.tangem.common.utils.*
+import com.tangem.datasource.api.common.config.ApiConfig
+import com.tangem.datasource.api.common.config.ApiEnvironment
 import com.tangem.scenarios.*
 import com.tangem.screens.*
 import com.tangem.tap.domain.sdk.mocks.MockContent
@@ -293,6 +297,7 @@ class MainScreenActionButtonsTest : BaseTestCase() {
         }
     }
 
+    @ApiEnv(ApiEnvConfig(ApiConfig.ID.MoonPay, ApiEnvironment.PROD))
     @AllureId("85")
     @DisplayName("Action buttons (long tap): check 'Sell' button")
     @Test
@@ -410,6 +415,7 @@ class MainScreenActionButtonsTest : BaseTestCase() {
         }
     }
 
+    @ApiEnv(ApiEnvConfig(ApiConfig.ID.MoonPay, ApiEnvironment.PROD))
     @AllureId("4395")
     @DisplayName("Action buttons (main screen): click on buttons with success response")
     @Test
@@ -569,13 +575,12 @@ class MainScreenActionButtonsTest : BaseTestCase() {
             step("Click on 'Sell' button") {
                 onMainScreen { sellButton.performClick() }
             }
-            // ToDo("[REDACTED_JIRA] - add ability to use MoonPay mocks")
-            // step("Check 'Action is unavailable' dialog") {
-            //     checkActionIsUnavailableDialog()
-            // }
-            // step("Click on 'Ok' button") {
-            //     onDialog { okButton.performClick() }
-            // }
+            step("Check 'Action is unavailable' dialog") {
+                checkActionIsUnavailableDialog()
+            }
+            step("Click on 'Ok' button") {
+                onDialog { okButton.performClick() }
+            }
         }
     }
 
