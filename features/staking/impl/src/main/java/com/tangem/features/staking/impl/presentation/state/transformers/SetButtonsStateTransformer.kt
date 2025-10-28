@@ -139,7 +139,7 @@ internal class SetButtonsStateTransformer(
             StakingStep.Amount -> clickIntents.onAmountEnterClick()
             StakingStep.Confirmation -> onConfirmationClick()
             StakingStep.RewardsValidators -> Unit
-            StakingStep.Success -> clickIntents.onBackClick()
+            StakingStep.Success -> clickIntents.onNextClick()
         }
     }
 
