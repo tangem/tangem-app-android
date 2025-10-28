@@ -8,21 +8,20 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
-import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig.ShowRefreshState
-import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.pay.DataForReceiveFactory
 import com.tangem.domain.pay.repository.CardDetailsRepository
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
-import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.entity.TangemPayDetailsErrorType
 import com.tangem.features.tangempay.entity.TangemPayDetailsNavigation
 import com.tangem.features.tangempay.entity.TangemPayDetailsStateFactory
 import com.tangem.features.tangempay.entity.TangemPayDetailsUM
-import com.tangem.features.tangempay.model.transformers.*
+import com.tangem.features.tangempay.model.listener.CardDetailsEvent
+import com.tangem.features.tangempay.model.listener.CardDetailsEventListener
+import com.tangem.features.tangempay.model.transformers.DetailsBalanceTransformer
+import com.tangem.features.tangempay.model.transformers.TangemPayDetailsRefreshTransformer
 import com.tangem.features.tangempay.navigation.TangemPayDetailsInnerRoute
 import com.tangem.features.tangempay.utils.TangemPayErrorMessageFactory
 import com.tangem.features.tangempay.utils.TangemPayTxHistoryUiActions
@@ -45,19 +44,16 @@ internal class TangemPayDetailsModel @Inject constructor(
     private val router: Router,
     private val cardDetailsRepository: CardDetailsRepository,
     private val dataForReceiveFactory: DataForReceiveFactory,
-    private val clipboardManager: ClipboardManager,
     private val uiMessageSender: UiMessageSender,
+    private val cardDetailsEventListener: CardDetailsEventListener,
 ) : Model(), TangemPayTxHistoryUiActions {
 
     private val params: TangemPayDetailsContainerComponent.Params = paramsContainer.require()
 
     private val stateFactory = TangemPayDetailsStateFactory(
-        cardNumberEnd = params.config.cardNumberEnd,
         onBack = router::pop,
         onRefresh = ::onRefreshSwipe,
         onReceive = ::onClickReceive,
-        onReveal = ::revealCardDetails,
-        onCopy = ::copyData,
         onClickChangePin = ::onClickChangePin,
         onClickFreezeCard = ::onClickFreezeCard,
     )
@@ -67,7 +63,6 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     private val refreshStateJobHolder = JobHolder()
     private val fetchBalanceJobHolder = JobHolder()
-    private val revealCardDetailsJobHolder = JobHolder()
 
     val bottomSheetNavigation: SlotNavigation<TangemPayDetailsNavigation> = SlotNavigation()
 
@@ -112,48 +107,11 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     private fun onRefreshSwipe(refreshState: ShowRefreshState) {
         modelScope.launch {
-            hideCardDetails()
+            cardDetailsEventListener.send(CardDetailsEvent.Hide)
             uiState.update(TangemPayDetailsRefreshTransformer(isRefreshing = refreshState.value))
             fetchBalance().join()
             uiState.update(TangemPayDetailsRefreshTransformer(isRefreshing = false))
         }.saveIn(refreshStateJobHolder)
-    }
-
-    private fun revealCardDetails() {
-        modelScope.launch {
-            uiState.update(
-                transformer = DetailsRevealProgressStateTransformer(onClickHide = ::hideCardDetails),
-            )
-            cardDetailsRepository.revealCardDetails()
-                .onRight {
-                    uiState.update(
-                        transformer = DetailsRevealedStateTransformer(
-                            details = it,
-                            onClickHide = ::hideCardDetails,
-                        ),
-                    )
-                }
-                .onLeft {
-                    uiState.update(transformer = DetailsHiddenStateTransformer(stateFactory))
-                    showError()
-                }
-        }.saveIn(revealCardDetailsJobHolder)
-    }
-
-    private fun hideCardDetails() {
-        modelScope.launch {
-            revealCardDetailsJobHolder.cancel()
-            uiState.update(transformer = DetailsHiddenStateTransformer(stateFactory))
-        }
-    }
-
-    private fun copyData(text: String) {
-        clipboardManager.setText(text = text.filterNot { it.isWhitespace() }, isSensitive = true)
-    }
-    private fun showError() {
-        uiMessageSender.send(
-            SnackbarMessage(TextReference.Res(R.string.tangempay_card_details_error_text)),
-        )
     }
 
     override fun onTransactionClick(item: TangemPayTxHistoryItem) {
