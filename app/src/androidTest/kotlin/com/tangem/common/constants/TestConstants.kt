@@ -16,6 +16,9 @@ object TestConstants {
     const val ENS_NAME = "louded.eth"
     const val ENS_ETHEREUM_RECIPIENT_ADDRESS = "0x0211ff638298adcbdc99c177dc2e95ec69948865"
     const val ENS_ETHEREUM_RECIPIENT_SHORTENED_ADDRESS = "0x0211ff63829..."
+    const val KUSAMA_RECIPIENT_ADDRESS = "CqNrR92Hh76vW69vDBL5iATrZoYkk9nj67iVSUbb2YHtktn"
+    const val AZERO_RECIPIENT_ADDRESS = "5EA4p6DZdbt2vLZySML2dG3ZsnNrenEWZHnVCScQh4iq2KZo"
+    const val TEZOS_RECIPIENT_ADDRESS = "tz1eBdC2JkU2bxgZssweLo6D3wCkWN12ioHW"
 
     const val WAIT_UNTIL_TIMEOUT = 20_000L
     const val WAIT_UNTIL_TIMEOUT_LONG = 30_000L
@@ -24,4 +27,7 @@ object TestConstants {
 
     const val ALLURE_LABEL_NAME = "Owner"
     const val ALLURE_LABEL_VALUE = "Kaspresso"
+
+    const val USER_TOKENS_API_SCENARIO = "user_tokens_api"
+    const val QUOTES_API_SCENARIO = "quotes_api"
 }
