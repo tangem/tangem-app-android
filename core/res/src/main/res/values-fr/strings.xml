@@ -244,7 +244,7 @@
   <string name="common_transaction_failed">La transaction a échoué</string>
   <string name="common_transaction_status">Statut de la transaction</string>
   <string name="common_transactions">Transactions</string>
-  <string name="common_transfer">Transfert</string>
+  <string name="common_transfer">Fourniture</string>
   <string name="common_understand">Je comprends</string>
   <string name="common_unknown_error">Il y avait une erreur. Veuillez réessayer.</string>
   <string name="common_unreachable">Inaccessible</string>
@@ -1457,13 +1457,14 @@
   <string name="xtz_withdrawal_message_warning">Pour ne pas payer un fraid de commissions élevé la prochaine fois que vous rechargez votre portefeuille, veuillez réduire le montant de %s XTZ</string>
   <string name="yield_module_alert_description">Vos fonds sont actuellement fournis au protocole Aave, mais vous pouvez les gérer à tout moment.</string>
   <string name="yield_module_alert_title">Vos %s sont fournis à Aave.</string>
-  <string name="yield_module_amount_not_transfered_to_aave_title">Le transfert de  %1$s %2$s vers Aave est en attente.</string>
+  <string name="yield_module_amount_not_transfered_to_aave_title">Le transfert de %1$s %2$s vers Aave est en attente.</string>
   <string name="yield_module_approve_needed_notification_cta">Donnez votre accord</string>
   <string name="yield_module_approve_needed_notification_description">Un problème est survenu lors de votre précédente approbation, nous avons donc besoin d\'une nouvelle approbation. Choisissez comment vous souhaitez procéder.</string>
   <string name="yield_module_approve_needed_notification_title">Autorisation nécessaire</string>
   <string name="yield_module_approve_sheet_fee_note">Les frais seront prélevés et vos actifs seront à nouveau prêtés.</string>
   <string name="yield_module_approve_sheet_subtitle">Pour continuer à percevoir des revenus, une autorisation est nécessaire.</string>
   <string name="yield_module_approve_sheet_title">Confirmer l\'approbation</string>
+  <string name="yield_module_balance_info_sheet_subtitle">Vos fonds sont actuellement affectés au protocole Aave, mais vous pouvez les gérer à tout moment.</string>
   <string name="yield_module_balance_info_sheet_title">Vos %s sont déposés dans Aave.</string>
   <string name="yield_module_chart_loading_error">Impossible de charger le graphique...</string>
   <string name="yield_module_deposit_error_notification_title">Le montant reçu, %1$s %2$s, n\'a pas été fourni à Aave.</string>
@@ -1487,9 +1488,10 @@
   <string name="yield_module_fee_policy_sheet_min_amount_note">Le montant minimum est calculé à partir des frais de réseau actuels afin de garantir qu\'il ne dépasse pas 4 %%, ce qui donne un minimum de %1$s (%2$s).</string>
   <string name="yield_module_fee_policy_sheet_min_amount_title">Recharge minimale</string>
   <string name="yield_module_fee_policy_sheet_title">Politique tarifaire</string>
-  <string name="yield_module_fee_policy_tangem_service_fee_title">Tangem prélève également des frais de service de 3% sur les revenus générés.</string>
+  <string name="yield_module_fee_policy_tangem_service_fee_title">Tangem prélève également des frais de service de 15% sur les revenus générés.</string>
   <string name="yield_module_high_fee_error">Vos fonds seront automatiquement transférés vers Aave dès que les frais de réseau seront moins élevés ou que votre solde atteindra le montant minimum requis.</string>
   <string name="yield_module_historical_returns">Rendements historiques</string>
+  <string name="yield_module_main_view_approve_notification_description">L\'autorisation pour votre token en mode Yield a été révoquée. Ouvrez le token pour accorder à nouveau l\'autorisation.</string>
   <string name="yield_module_main_view_approve_notification_title">Approbations de tokens nécessaires</string>
   <string name="yield_module_network_fee_unreachable_notification_description">Vérifiez votre connexion réseau.</string>
   <string name="yield_module_network_fee_unreachable_notification_title">Informations sur les frais de réseau inaccessibles</string>
@@ -1498,7 +1500,7 @@
   <string name="yield_module_promo_screen_cash_out_subtitle">Envoyez, échangez ou vendez vos fonds instantanément, quand vous le souhaitez.</string>
   <string name="yield_module_promo_screen_cash_out_title">Accédez à vos fonds à tout moment</string>
   <string name="yield_module_promo_screen_how_it_works_button_title">Comment ça marche ?</string>
-  <string name="yield_module_promo_screen_self_custodial_subtitle">Aave est un protocole décentralisé qui gère plus de 81,9 milliards de dollars en valeur totale.</string>
+  <string name="yield_module_promo_screen_self_custodial_subtitle">Aave est un protocole décentralisé qui gère plus de 61 milliards de dollars en valeur totale.</string>
   <string name="yield_module_promo_screen_self_custodial_title">Décentralisé et auto-détenu</string>
   <string name="yield_module_promo_screen_terms_disclaimer">En utilisant ce service, vous acceptez les conditions générales du fournisseur %1$s et %2$s.</string>
   <string name="yield_module_promo_screen_title">Connecter Aave</string>
@@ -1521,11 +1523,9 @@
   <string name="yield_module_stop_earning_sheet_fee_note">Les frais de réseau seront déduits du montant que vous retirez.</string>
   <string name="yield_module_supply_apr">Rendement annuel brut (APY)</string>
   <string name="yield_module_token_details_earn_notification_apy">APY</string>
-  <string name="yield_module_token_details_earn_notification_description">Laissez vos fonds travailler pour vous tout en gardant le contrôle.</string>
   <string name="yield_module_token_details_earn_notification_earning_on_your_balance_subtitle">Les intérêts sont cumulés automatiquement.</string>
   <string name="yield_module_token_details_earn_notification_earning_on_your_balance_title">Mode de rendement</string>
   <string name="yield_module_token_details_earn_notification_processing">Traitement de votre dépôt</string>
-  <string name="yield_module_token_details_earn_notification_title">Faites fructifier vos actifs</string>
   <string name="yield_module_transfer_mode_automatic">Automatique</string>
   <string name="yield_module_unable_to_cover_fee_description">Déposez %1$s %2$s pour couvrir les frais de réseau liés aux transactions.</string>
   <string name="yield_module_unable_to_cover_fee_title">Impossible de couvrir les frais %s</string>
