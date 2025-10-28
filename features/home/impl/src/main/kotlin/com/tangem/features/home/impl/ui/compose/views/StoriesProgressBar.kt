@@ -85,7 +85,7 @@ fun StoriesProgressBar(
                         .let {
                             when (index) {
                                 currentStep -> it.fillMaxWidth(progress.value)
-                                in 0..currentStep -> it.fillMaxWidth(fraction = 1f)
+                                in 0 until currentStep -> it.fillMaxWidth(fraction = 1f)
                                 else -> it
                             }
                         },
