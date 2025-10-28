@@ -1095,8 +1095,6 @@ internal class StakingModel @Inject constructor(
     }
 
     private suspend fun onDataLoaded(status: CryptoCurrencyStatus) {
-        if (value.currentStep != StakingStep.InitialInfo) return
-
         if (!isInitialInfoAnalyticSent) {
             isInitialInfoAnalyticSent = true
             val balances = status.value.yieldBalance as? YieldBalance.Data
