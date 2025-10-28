@@ -9,6 +9,7 @@ import com.tangem.domain.pay.DataForReceiveFactory
 import com.tangem.domain.pay.repository.CardDetailsRepository
 import com.tangem.domain.pay.repository.KycRepository
 import com.tangem.domain.pay.repository.OnboardingRepository
+import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
 import com.tangem.domain.pay.usecase.TangemPayIssueOrderUseCase
 import com.tangem.domain.pay.usecase.TangemPayMainScreenCustomerInfoUseCase
 import com.tangem.domain.tangempay.repository.TangemPayTxHistoryRepository
@@ -50,6 +51,14 @@ internal interface TangemPayDataModule {
             repository: OnboardingRepository,
         ): TangemPayMainScreenCustomerInfoUseCase {
             return TangemPayMainScreenCustomerInfoUseCase(repository = repository)
+        }
+
+        @Provides
+        @Singleton
+        fun provideProduceTangemPayInitialDataUseCase(
+            repository: OnboardingRepository,
+        ): ProduceTangemPayInitialDataUseCase {
+            return ProduceTangemPayInitialDataUseCase(repository = repository)
         }
 
         @Provides

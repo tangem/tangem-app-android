@@ -93,7 +93,7 @@ internal class DefaultStakingDeepLinkHandler @AssistedInject constructor(
             appRouter.push(
                 AppRoute.Staking(
                     userWalletId = selectedUserWalletId,
-                    cryptoCurrencyId = cryptoCurrency.id,
+                    cryptoCurrency = cryptoCurrency,
                     yieldId = yield.id,
                 ),
             )
