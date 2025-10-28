@@ -37,7 +37,7 @@ internal class MoonPay : ApiConfig() {
     private fun createMockEnvironment(): ApiEnvironmentConfig {
         return ApiEnvironmentConfig(
             environment = ApiEnvironment.MOCK,
-            baseUrl = "[REDACTED_ENV_URL]", // TODO [REDACTED_TASK_KEY]
+            baseUrl = "[REDACTED_ENV_URL]",
         )
     }
 }
