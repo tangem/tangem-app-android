@@ -17,6 +17,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.models.tokenlist.TokenList.GroupedByNetwork.NetworkGroup
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListState
@@ -27,7 +28,6 @@ import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.mutate
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
-import java.math.BigDecimal
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListState.OrganizeTokensButtonConfig as WalletOrganizeTokensButtonConfig
 
 internal class TokenListStateConverter(
@@ -36,7 +36,7 @@ internal class TokenListStateConverter(
     private val selectedWallet: UserWallet,
     private val clickIntents: WalletClickIntents,
     private val yieldModuleApyMap: Map<String, String>,
-    private val stakingApyMap: Map<String, BigDecimal>,
+    private val stakingApyMap: Map<String, List<Yield.Validator>>,
 ) : Converter<WalletTokensListState, WalletTokensListState> {
 
     private val onTokenClick: (accountId: AccountId?, currencyStatus: CryptoCurrencyStatus) -> Unit =
