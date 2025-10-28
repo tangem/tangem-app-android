@@ -112,13 +112,22 @@ object NotificationsFactory {
         reserveAmount: BigDecimal?,
         sendingAmount: BigDecimal,
         cryptoCurrency: CryptoCurrency,
+        feeCryptoCurrency: CryptoCurrency?,
         isAccountFunded: Boolean,
     ) {
-        if (!isAccountFunded && reserveAmount != null && reserveAmount > sendingAmount) {
+        val sendingCoinAmount = when (cryptoCurrency) {
+            is CryptoCurrency.Coin -> sendingAmount
+            is CryptoCurrency.Token -> BigDecimal.ZERO
+        }
+
+        if (feeCryptoCurrency == null && cryptoCurrency is CryptoCurrency.Token) {
+            // No need to show reserve amount warning if fee currency is unknown for token transfer
+            return
+        } else if (!isAccountFunded && reserveAmount != null && reserveAmount > sendingCoinAmount) {
             add(
                 NotificationUM.Error.ReserveAmount(
                     reserveAmount.format {
-                        crypto(cryptoCurrency)
+                        crypto(feeCryptoCurrency ?: cryptoCurrency)
                     },
                 ),
             )
