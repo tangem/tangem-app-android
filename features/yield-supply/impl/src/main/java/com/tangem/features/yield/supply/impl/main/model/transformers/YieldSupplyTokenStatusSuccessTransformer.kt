@@ -17,7 +17,9 @@ internal class YieldSupplyTokenStatusSuccessTransformer(
         if (!tokenStatus.isActive) return YieldSupplyUM.Unavailable
 
         return YieldSupplyUM.Available(
-            title = resourceReference(R.string.yield_module_token_details_earn_notification_title),
+            title = resourceReference(
+                R.string.yield_module_token_details_earn_notification_earning_on_your_balance_title,
+            ),
             onClick = onStartEarningClick,
             apy = tokenStatus.apy.toString(),
             apyText = combinedReference(
