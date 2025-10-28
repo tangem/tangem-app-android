@@ -35,6 +35,12 @@ class SendConfirmPageObject(semanticsProvider: SemanticsNodeInteractionsProvider
         useUnmergedTree = true
     }
 
+    fun reduceAmountButton(amount: String): KNode = child {
+        hasTestTag(BaseButtonTestTags.BUTTON)
+        hasAnyDescendant(withText(getResourceString(R.string.send_notification_reduce_by, amount)))
+        useUnmergedTree = true
+    }
+
     fun warningTitle(titleResId: Int): KNode = child {
         hasTestTag(NotificationTestTags.TITLE)
         hasText(getResourceString(titleResId))
