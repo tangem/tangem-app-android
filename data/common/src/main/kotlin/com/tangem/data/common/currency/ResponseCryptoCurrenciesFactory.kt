@@ -9,6 +9,7 @@ import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import timber.log.Timber
 import javax.inject.Inject
@@ -53,11 +54,36 @@ class ResponseCryptoCurrenciesFactory @Inject constructor(
             blockchain = blockchain.getTestnetVersion() ?: blockchain
         }
 
+        val network = networkFactory.create(
+            blockchain = blockchain,
+            extraDerivationPath = responseToken.derivationPath,
+            userWallet = userWallet,
+            accountIndex = accountIndex,
+        ) ?: return null
+
+        return createCurrency(responseToken = responseToken, userWallet = userWallet, network = network)
+    }
+
+    fun createCurrency(
+        responseToken: UserTokensResponse.Token,
+        userWallet: UserWallet,
+        network: Network,
+    ): CryptoCurrency? {
+        var blockchain = Blockchain.fromNetworkId(responseToken.networkId)
+        if (blockchain == null || blockchain == Blockchain.Unknown) {
+            Timber.e("Unable to find a blockchain with the network ID: ${responseToken.networkId}")
+            return null
+        }
+
+        if (userWallet is UserWallet.Cold && userWallet.scanResponse.cardTypesResolver.isTestCard()) {
+            blockchain = blockchain.getTestnetVersion() ?: blockchain
+        }
+
         val sdkToken = createSdkToken(responseToken)
         return if (sdkToken == null) {
-            createCoin(blockchain, responseToken, userWallet, accountIndex)
+            createCoin(blockchain, responseToken, network)
         } else {
-            createToken(blockchain, sdkToken, responseToken.derivationPath, userWallet, accountIndex)
+            createToken(blockchain, sdkToken, network)
         }
     }
 
@@ -76,16 +102,8 @@ class ResponseCryptoCurrenciesFactory @Inject constructor(
     private fun createCoin(
         blockchain: Blockchain,
         responseToken: UserTokensResponse.Token,
-        userWallet: UserWallet,
-        accountIndex: DerivationIndex?,
+        network: Network,
     ): CryptoCurrency.Coin? {
-        val network = networkFactory.create(
-            blockchain = blockchain,
-            extraDerivationPath = responseToken.derivationPath,
-            userWallet = userWallet,
-            accountIndex = accountIndex,
-        ) ?: return null
-
         return CryptoCurrency.Coin(
             id = getCoinId(network, blockchain.toCoinId()),
             network = network,
@@ -109,20 +127,7 @@ class ResponseCryptoCurrenciesFactory @Inject constructor(
         }
     }
 
-    private fun createToken(
-        blockchain: Blockchain,
-        sdkToken: Token,
-        responseDerivationPath: String?,
-        userWallet: UserWallet,
-        accountIndex: DerivationIndex?,
-    ): CryptoCurrency.Token? {
-        val network = networkFactory.create(
-            blockchain = blockchain,
-            extraDerivationPath = responseDerivationPath,
-            userWallet = userWallet,
-            accountIndex = accountIndex,
-        ) ?: return null
-
+    private fun createToken(blockchain: Blockchain, sdkToken: Token, network: Network): CryptoCurrency.Token? {
         val id = getTokenId(network, sdkToken)
 
         return CryptoCurrency.Token(
