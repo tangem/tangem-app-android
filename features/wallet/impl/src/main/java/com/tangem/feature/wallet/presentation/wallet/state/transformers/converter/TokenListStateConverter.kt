@@ -100,6 +100,7 @@ internal class TokenListStateConverter(
                 appCurrency = appCurrency,
                 account = account,
                 onItemClick = onItemClick,
+                priceChangeLce = this.priceChangeLce,
             )
             val accountItem = converter.convert(tokenList.totalFiatBalance)
             val tokenConverter = tokenStatusConverter(account.accountId)
