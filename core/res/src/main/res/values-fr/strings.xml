@@ -1464,6 +1464,7 @@
   <string name="yield_module_approve_sheet_fee_note">Les frais seront prélevés et vos actifs seront à nouveau prêtés.</string>
   <string name="yield_module_approve_sheet_subtitle">Pour continuer à percevoir des revenus, une autorisation est nécessaire.</string>
   <string name="yield_module_approve_sheet_title">Confirmer l\'approbation</string>
+  <string name="yield_module_balance_info_sheet_subtitle">Vos fonds sont actuellement affectés au protocole Aave, mais vous pouvez les gérer à tout moment.</string>
   <string name="yield_module_balance_info_sheet_title">Vos %s sont déposés dans Aave.</string>
   <string name="yield_module_chart_loading_error">Impossible de charger le graphique...</string>
   <string name="yield_module_deposit_error_notification_title">Le montant reçu, %1$s %2$s, n\'a pas été fourni à Aave.</string>
@@ -1490,6 +1491,7 @@
   <string name="yield_module_fee_policy_tangem_service_fee_title">Tangem prélève également des frais de service de 15% sur les revenus générés.</string>
   <string name="yield_module_high_fee_error">Vos fonds seront automatiquement transférés vers Aave dès que les frais de réseau seront moins élevés ou que votre solde atteindra le montant minimum requis.</string>
   <string name="yield_module_historical_returns">Rendements historiques</string>
+  <string name="yield_module_main_view_approve_notification_description">L\'autorisation pour votre token en mode Yield a été révoquée. Ouvrez le token pour accorder à nouveau l\'autorisation.</string>
   <string name="yield_module_main_view_approve_notification_title">Approbations de tokens nécessaires</string>
   <string name="yield_module_network_fee_unreachable_notification_description">Vérifiez votre connexion réseau.</string>
   <string name="yield_module_network_fee_unreachable_notification_title">Informations sur les frais de réseau inaccessibles</string>
@@ -1521,11 +1523,9 @@
   <string name="yield_module_stop_earning_sheet_fee_note">Les frais de réseau seront déduits du montant que vous retirez.</string>
   <string name="yield_module_supply_apr">Rendement annuel brut (APY)</string>
   <string name="yield_module_token_details_earn_notification_apy">APY</string>
-  <string name="yield_module_token_details_earn_notification_description">Laissez vos fonds travailler pour vous tout en gardant le contrôle.</string>
   <string name="yield_module_token_details_earn_notification_earning_on_your_balance_subtitle">Les intérêts sont cumulés automatiquement.</string>
   <string name="yield_module_token_details_earn_notification_earning_on_your_balance_title">Mode de rendement</string>
   <string name="yield_module_token_details_earn_notification_processing">Traitement de votre dépôt</string>
-  <string name="yield_module_token_details_earn_notification_title">Faites fructifier vos actifs</string>
   <string name="yield_module_transfer_mode_automatic">Automatique</string>
   <string name="yield_module_unable_to_cover_fee_description">Déposez %1$s %2$s pour couvrir les frais de réseau liés aux transactions.</string>
   <string name="yield_module_unable_to_cover_fee_title">Impossible de couvrir les frais %s</string>
