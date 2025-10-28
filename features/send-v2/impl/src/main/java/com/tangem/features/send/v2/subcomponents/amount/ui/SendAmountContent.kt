@@ -39,9 +39,11 @@ fun SendAmountContent(
             amountState = amountState,
             clickIntents = clickIntents,
             extraContent = {
-                SendConvertTokenButton(
-                    onConvertToAnother = clickIntents::onConvertToAnotherToken,
-                ).takeIf { isSendWithSwapAvailable }
+                if (isSendWithSwapAvailable) {
+                    SendConvertTokenButton(
+                        onConvertToAnother = clickIntents::onConvertToAnotherToken,
+                    )
+                }
             },
         )
         SpacerH(16.dp)
