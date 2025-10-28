@@ -7,9 +7,9 @@ import com.tangem.common.test.utils.getEmittedValues
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.producer.SingleAccountListProducer
+import com.tangem.domain.account.repository.AccountsCRUDRepository
 import com.tangem.domain.account.status.utils.CryptoCurrencyStatusesFlowFactory
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
-import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.core.utils.lceContent
 import com.tangem.domain.core.utils.lceLoading
 import com.tangem.domain.models.StatusSource
@@ -38,7 +38,7 @@ import java.math.BigDecimal
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class DefaultSingleAccountStatusListProducerTest {
 
-    private val userWalletsListRepository: UserWalletsListRepository = mockk()
+    private val accountsCRUDRepository: AccountsCRUDRepository = mockk()
     private val singleAccountListSupplier: SingleAccountListSupplier = mockk()
     private val cryptoCurrencyStatusesFlowFactory: CryptoCurrencyStatusesFlowFactory = mockk()
 
@@ -49,7 +49,7 @@ class DefaultSingleAccountStatusListProducerTest {
 
     private val producer = DefaultSingleAccountStatusListProducer(
         params = SingleAccountStatusListProducer.Params(userWalletId),
-        userWalletsListRepository = userWalletsListRepository,
+        accountsCRUDRepository = accountsCRUDRepository,
         singleAccountListSupplier = singleAccountListSupplier,
         cryptoCurrencyStatusesFlowFactory = cryptoCurrencyStatusesFlowFactory,
         dispatchers = TestingCoroutineDispatcherProvider(),
@@ -57,7 +57,7 @@ class DefaultSingleAccountStatusListProducerTest {
 
     @AfterEach
     fun tearDown() {
-        clearMocks(singleAccountListSupplier, cryptoCurrencyStatusesFlowFactory)
+        clearMocks(accountsCRUDRepository, singleAccountListSupplier, cryptoCurrencyStatusesFlowFactory)
     }
 
     @Test
@@ -75,7 +75,7 @@ class DefaultSingleAccountStatusListProducerTest {
         // Assert
         val expected = AccountStatusList(
             userWalletId = userWalletId,
-            accountStatuses = setOf(
+            accountStatuses = listOf(
                 AccountStatus.CryptoPortfolio(
                     account = accountList.mainAccount,
                     tokenList = TokenList.Empty,
@@ -110,7 +110,7 @@ class DefaultSingleAccountStatusListProducerTest {
         // Assert (first emission)
         val expected = AccountStatusList(
             userWalletId = userWalletId,
-            accountStatuses = setOf(
+            accountStatuses = listOf(
                 AccountStatus.CryptoPortfolio(
                     account = accountList.mainAccount,
                     tokenList = TokenList.Empty,
@@ -129,7 +129,7 @@ class DefaultSingleAccountStatusListProducerTest {
         // Assert (second emission)
         val expected2 = AccountStatusList(
             userWalletId = userWalletId,
-            accountStatuses = setOf(
+            accountStatuses = listOf(
                 AccountStatus.CryptoPortfolio(
                     account = updatedAccountList.mainAccount,
                     tokenList = TokenList.Empty,
@@ -159,7 +159,7 @@ class DefaultSingleAccountStatusListProducerTest {
 
         val expected = AccountStatusList(
             userWalletId = userWalletId,
-            accountStatuses = setOf(
+            accountStatuses = listOf(
                 AccountStatus.CryptoPortfolio(
                     account = accountList.mainAccount,
                     tokenList = TokenList.Empty,
@@ -198,7 +198,7 @@ class DefaultSingleAccountStatusListProducerTest {
             cryptoCurrencies = cryptoCurrencyFactory.ethereumAndStellar.toSet(),
         )
 
-        coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(userWallet)
+        coEvery { accountsCRUDRepository.getUserWallets() } returns flowOf(listOf(userWallet))
 
         every {
             singleAccountListSupplier(params = SingleAccountListProducer.Params(userWalletId))
@@ -226,7 +226,7 @@ class DefaultSingleAccountStatusListProducerTest {
         // Assert
         val expected = AccountStatusList(
             userWalletId = userWalletId,
-            accountStatuses = setOf(
+            accountStatuses = listOf(
                 AccountStatus.CryptoPortfolio(
                     account = accountList.mainAccount,
                     tokenList = TokenList.Ungrouped(

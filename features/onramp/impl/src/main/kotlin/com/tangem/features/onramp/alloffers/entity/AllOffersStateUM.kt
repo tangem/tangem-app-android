@@ -3,6 +3,7 @@ package com.tangem.features.onramp.alloffers.entity
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.onramp.model.OnrampPaymentMethod
+import com.tangem.domain.onramp.model.PaymentMethodStatus
 import com.tangem.features.onramp.mainv2.entity.OnrampOfferUM
 import kotlinx.collections.immutable.ImmutableList
 
@@ -26,6 +27,7 @@ internal data class AllOffersPaymentMethodUM(
     val rate: String,
     val providersCount: Int,
     val isBestRate: Boolean,
+    val paymentMethodStatus: PaymentMethodStatus,
 )
 
 internal data class OnrampPaymentMethodConfig(
