@@ -18,6 +18,7 @@ dependencies {
     implementation(deps.moshi.kotlin)
     implementation(deps.moshi.adapters)
     implementation(deps.kotlin.datetime)
+    implementation(deps.jodatime)
     implementation(deps.kotlin.serialization)
     ksp(deps.moshi.kotlin.codegen)
     implementation(deps.arrow.core)
