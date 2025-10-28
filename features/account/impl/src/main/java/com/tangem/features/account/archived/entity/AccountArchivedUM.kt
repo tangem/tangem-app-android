@@ -24,5 +24,6 @@ internal data class ArchivedAccountUM(
     val accountIconUM: CryptoPortfolioIconUM,
     val tokensInfo: TextReference,
     val networksInfo: TextReference,
+    val isLoading: Boolean,
     val onClick: () -> Unit,
 )
