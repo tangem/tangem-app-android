@@ -175,9 +175,9 @@ internal class ReferralModel @Inject constructor(
             showErrorSnackbar(DemoModeException())
         } else {
             analyticsEventHandler.send(ReferralEvents.ClickParticipate)
+            val lastInfoState = uiState.referralInfoState
             uiState = uiState.copy(referralInfoState = ReferralInfoState.Loading)
             modelScope.launch {
-                val lastInfoState = uiState.referralInfoState
                 val portfolioId = when (accountsFeatureToggles.isFeatureEnabled) {
                     true -> PortfolioId(requireNotNull(portfolioSelectorController.selectedAccountSync))
                     false -> PortfolioId(params.userWalletId)
