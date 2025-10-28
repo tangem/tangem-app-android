@@ -1883,11 +1883,11 @@
   <string name="yield_module_supply">Supply</string>
   <string name="yield_module_supply_apr">Supply APY</string>
   <string name="yield_module_token_details_earn_notification_apy">APY</string>
-  <string name="yield_module_token_details_earn_notification_description">Let your funds do the work while you stay in control.</string>
+  <string name="yield_module_token_details_earn_notification_description">Interest accrues automatically</string>
   <string name="yield_module_token_details_earn_notification_earning_on_your_balance_subtitle">Interest accrues automatically</string>
   <string name="yield_module_token_details_earn_notification_earning_on_your_balance_title">Yield mode</string>
   <string name="yield_module_token_details_earn_notification_processing">Processing your deposit</string>
-  <string name="yield_module_token_details_earn_notification_title">Interest accrues automatically</string>
+  <string name="yield_module_token_details_earn_notification_title">Yield Mode</string>
   <string name="yield_module_transfer_mode_automatic">Automatic</string>
   <string name="yield_module_unable_to_cover_fee_description">Deposit some %1$s %2$s to cover the network fee for transactions</string>
   <string name="yield_module_unable_to_cover_fee_title">Unable to cover %s fee</string>
