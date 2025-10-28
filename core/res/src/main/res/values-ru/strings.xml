@@ -1636,11 +1636,9 @@
   <string name="yield_module_stop_earning_sheet_fee_note">Комиссия сети будет вычтена из суммы вашего вывода.</string>
   <string name="yield_module_supply_apr">Годовая доходность (APY)</string>
   <string name="yield_module_token_details_earn_notification_apy">APY</string>
-  <string name="yield_module_token_details_earn_notification_description">Пусть ваши деньги работают — зарабатывайте проценты на свой баланс.</string>
   <string name="yield_module_token_details_earn_notification_earning_on_your_balance_subtitle">Проценты начисляются автоматически.</string>
   <string name="yield_module_token_details_earn_notification_earning_on_your_balance_title">Режим доходности</string>
   <string name="yield_module_token_details_earn_notification_processing">Отправка ваших средств</string>
-  <string name="yield_module_token_details_earn_notification_title">Пусть ваш баланс работает на вас!</string>
   <string name="yield_module_transfer_mode_automatic">Автоматически</string>
   <string name="yield_module_unable_to_cover_fee_description">Внесите немного %1$s %2$s, чтобы покрыть комиссию сети за транзакции.</string>
   <string name="yield_module_unable_to_cover_fee_title">Невозможно покрыть комиссию в %s</string>

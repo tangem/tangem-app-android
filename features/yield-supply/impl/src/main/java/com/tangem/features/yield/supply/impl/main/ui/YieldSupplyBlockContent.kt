@@ -63,7 +63,7 @@ internal fun YieldSupplyBlockContent(yieldSupplyUM: YieldSupplyUM, modifier: Mod
 private fun SupplyAvailable(supplyUM: YieldSupplyUM.Available, modifier: Modifier = Modifier) {
     SupplyInfo(
         title = resourceReference(R.string.yield_module_token_details_earn_notification_earning_on_your_balance_title),
-        subtitle = supplyUM.title,
+        subtitle = resourceReference(R.string.yield_module_token_details_earn_notification_description),
         rewardsApy = supplyUM.apyText,
         iconTint = TangemTheme.colors.icon.accent,
         modifier = modifier,
@@ -292,12 +292,12 @@ private fun SupplyInfo(
                     if (rewardsApy != null) {
                         Text(
                             text = StringsSigns.DOT,
-                            style = TangemTheme.typography.subtitle1,
+                            style = TangemTheme.typography.subtitle2,
                             color = TangemTheme.colors.text.tertiary,
                         )
                         Text(
                             text = rewardsApy.resolveReference(),
-                            style = TangemTheme.typography.subtitle1,
+                            style = TangemTheme.typography.subtitle2,
                             maxLines = 1,
                             color = TangemTheme.colors.text.accent,
                         )
