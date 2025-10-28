@@ -62,8 +62,9 @@ internal fun YieldSupplyBlockContent(yieldSupplyUM: YieldSupplyUM, modifier: Mod
 @Composable
 private fun SupplyAvailable(supplyUM: YieldSupplyUM.Available, modifier: Modifier = Modifier) {
     SupplyInfo(
-        title = supplyUM.title,
+        title = resourceReference(R.string.yield_module_token_details_earn_notification_earning_on_your_balance_title),
         subtitle = resourceReference(R.string.yield_module_token_details_earn_notification_description),
+        rewardsApy = supplyUM.apyText,
         iconTint = TangemTheme.colors.icon.accent,
         modifier = modifier,
         button = {
@@ -82,6 +83,7 @@ private fun SupplyUnavailable(modifier: Modifier = Modifier) {
     SupplyInfo(
         title = resourceReference(R.string.yield_module_unavailable_title),
         subtitle = resourceReference(R.string.yield_module_unavailable_subtitle),
+        rewardsApy = null,
         iconTint = TangemTheme.colors.icon.inactive,
         button = null,
         modifier = modifier,
@@ -249,6 +251,7 @@ private fun SupplyLoading(modifier: Modifier = Modifier) {
 private fun SupplyInfo(
     title: TextReference,
     subtitle: TextReference,
+    rewardsApy: TextReference?,
     iconTint: Color,
     modifier: Modifier = Modifier,
     button: (@Composable () -> Unit)? = null,
@@ -264,6 +267,7 @@ private fun SupplyInfo(
         Row(
             horizontalArrangement = Arrangement.spacedBy(10.dp),
             verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth(),
         ) {
             Icon(
                 imageVector = ImageVector.vectorResource(R.drawable.ic_analytics_up_24),
@@ -277,11 +281,28 @@ private fun SupplyInfo(
             Column(
                 verticalArrangement = Arrangement.spacedBy(2.dp),
             ) {
-                Text(
-                    text = title.resolveReference(),
-                    style = TangemTheme.typography.button,
-                    color = TangemTheme.colors.text.primary1,
-                )
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    Text(
+                        text = title.resolveReference(),
+                        style = TangemTheme.typography.subtitle2,
+                        color = TangemTheme.colors.text.primary1,
+                    )
+                    if (rewardsApy != null) {
+                        Text(
+                            text = StringsSigns.DOT,
+                            style = TangemTheme.typography.subtitle2,
+                            color = TangemTheme.colors.text.tertiary,
+                        )
+                        Text(
+                            text = rewardsApy.resolveReference(),
+                            style = TangemTheme.typography.subtitle2,
+                            maxLines = 1,
+                            color = TangemTheme.colors.text.accent,
+                        )
+                    }
+                }
                 Text(
                     text = subtitle.resolveReference(),
                     style = TangemTheme.typography.caption2,
@@ -312,6 +333,7 @@ private class PreviewProvider : PreviewParameterProvider<YieldSupplyUM> {
                     wrappedList("5.1"),
                 ),
                 apy = "5.1",
+                apyText = stringReference("5.1 % APY"),
                 onClick = {},
             ),
             YieldSupplyUM.Content(

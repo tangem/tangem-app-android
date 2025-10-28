@@ -13,6 +13,7 @@ import com.tangem.core.ui.extensions.combinedReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
+import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.currency.yieldSupplyNotAllAmountSupplied
@@ -27,19 +28,21 @@ import com.tangem.domain.yield.supply.usecase.YieldSupplyActivateUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyDeactivateUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetTokenStatusUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyIsAvailableUseCase
-import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.api.YieldSupplyComponent
 import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
+import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.impl.main.entity.YieldSupplyUM
 import com.tangem.features.yield.supply.impl.main.model.transformers.YieldSupplyTokenStatusSuccessTransformer
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.DelayedWork
+import com.tangem.utils.transformer.update
+import com.tangem.utils.coroutines.JobHolder
+import com.tangem.utils.coroutines.saveIn
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import com.tangem.utils.transformer.update
 import javax.inject.Inject
 import kotlin.properties.Delegates
 
@@ -84,6 +87,7 @@ internal class YieldSupplyModel @Inject constructor(
         field = MutableStateFlow(false)
 
     private var lastYieldSupplyStatus: YieldSupplyStatus? = null
+    private val fetchCurrencyJobHolder = JobHolder()
 
     init {
         checkIfYieldSupplyIsAvailable()
@@ -183,6 +187,19 @@ internal class YieldSupplyModel @Inject constructor(
         val yieldSupplyStatus = cryptoCurrencyStatus.value.yieldSupplyStatus
         val tokenProtocolStatus = yieldSupplyRepository.getTokenProtocolStatus(cryptoCurrency)
         val isActive = yieldSupplyStatus?.isActive == true
+        val isCryptoCurrencyStatusFromCache = cryptoCurrencyStatus.value.sources.networkSource != StatusSource.ACTUAL
+        val processing = uiState.value is YieldSupplyUM.Processing
+        Timber.d(
+            "currentUiState ${uiState.value.javaClass} \n" +
+                "yieldSupplyStatus $yieldSupplyStatus" +
+                "tokenProtocolStatus $tokenProtocolStatus " +
+                "isActive $isActive " +
+                "processing $processing " +
+                "isCryptoCurrencyStatusFromCache $isCryptoCurrencyStatusFromCache",
+        )
+        if (isCryptoCurrencyStatusFromCache && processing) {
+            return
+        }
 
         when {
             !isActive && tokenProtocolStatus == YieldSupplyEnterStatus.Enter -> {
@@ -215,8 +232,10 @@ internal class YieldSupplyModel @Inject constructor(
                     userWalletId = userWallet.walletId,
                     network = cryptoCurrency.network,
                 ),
-            )
-        }
+            ).onLeft {
+                fetchCurrencyWithDelay()
+            }
+        }.saveIn(fetchCurrencyJobHolder)
     }
 
     private fun loadActiveState(cryptoCurrencyStatus: CryptoCurrencyStatus, yieldSupplyStatus: YieldSupplyStatus) {
@@ -276,13 +295,14 @@ internal class YieldSupplyModel @Inject constructor(
     private fun sendInfoAboutProtocolStatus(cryptoCurrencyStatus: CryptoCurrencyStatus) {
         if (lastYieldSupplyStatus == cryptoCurrencyStatus.value.yieldSupplyStatus) return
         val token = cryptoCurrency as? CryptoCurrency.Token ?: return
+        val address = cryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value ?: return
         modelScope.launch(dispatchers.default) {
             if (cryptoCurrencyStatus.value.yieldSupplyStatus?.isActive == true) {
-                yieldSupplyActivateUseCase(token).onRight {
+                yieldSupplyActivateUseCase(token, address).onRight {
                     lastYieldSupplyStatus = cryptoCurrencyStatus.value.yieldSupplyStatus
                 }
             } else {
-                yieldSupplyDeactivateUseCase(token).onRight {
+                yieldSupplyDeactivateUseCase(token, address).onRight {
                     lastYieldSupplyStatus = cryptoCurrencyStatus.value.yieldSupplyStatus
                 }
             }

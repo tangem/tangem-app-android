@@ -44,16 +44,9 @@ interface SwapTransactionRepository {
      * Remove stores swap transaction
      *
      * @param userWalletId selected user wallet id
-     * @param fromCryptoCurrency currency swap from
-     * @param toCryptoCurrency currency swap to
      * @param txId transaction id to remove
      */
-    suspend fun removeTransaction(
-        userWalletId: UserWalletId,
-        fromCryptoCurrency: CryptoCurrency,
-        toCryptoCurrency: CryptoCurrency,
-        txId: String,
-    )
+    suspend fun removeTransaction(userWalletId: UserWalletId, txId: String)
 
     /**
      * Update swap transaction

@@ -5,12 +5,12 @@ import com.tangem.blockchain.yieldsupply.YieldSupplyProvider
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.blockchainsdk.utils.toNetworkId
-import com.tangem.datasource.api.common.response.getOrThrow
-import com.tangem.datasource.local.yieldsupply.YieldMarketsStore
 import com.tangem.data.yield.supply.converters.YieldMarketTokenConverter
-import com.tangem.datasource.api.tangemTech.YieldSupplyApi
 import com.tangem.data.yield.supply.converters.YieldTokenChartConverter
+import com.tangem.datasource.api.common.response.getOrThrow
+import com.tangem.datasource.api.tangemTech.YieldSupplyApi
 import com.tangem.datasource.api.tangemTech.models.YieldSupplyChangeTokenStatusBody
+import com.tangem.datasource.local.yieldsupply.YieldMarketsStore
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.walletmanager.WalletManagersFacade
@@ -23,7 +23,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import java.util.concurrent.ConcurrentHashMap
-import kotlin.collections.map
 
 internal class DefaultYieldSupplyRepository(
     private val yieldSupplyApi: YieldSupplyApi,
@@ -77,7 +76,7 @@ internal class DefaultYieldSupplyRepository(
             (walletManager as? YieldSupplyProvider)?.isSupported() ?: false
         }
 
-    override suspend fun activateProtocol(cryptoCurrencyToken: CryptoCurrency.Token): Boolean =
+    override suspend fun activateProtocol(cryptoCurrencyToken: CryptoCurrency.Token, address: String): Boolean =
         withContext(dispatchers.io) {
             val chainId = Blockchain.fromNetworkId(cryptoCurrencyToken.network.backendId)?.getChainId()
                 ?: error("Chain id is required for evm's")
@@ -85,11 +84,12 @@ internal class DefaultYieldSupplyRepository(
                 YieldSupplyChangeTokenStatusBody(
                     tokenAddress = cryptoCurrencyToken.contractAddress,
                     chainId = chainId,
+                    userAddress = address,
                 ),
             ).getOrThrow().isActive
         }
 
-    override suspend fun deactivateProtocol(cryptoCurrencyToken: CryptoCurrency.Token): Boolean =
+    override suspend fun deactivateProtocol(cryptoCurrencyToken: CryptoCurrency.Token, address: String): Boolean =
         withContext(dispatchers.io) {
             val chainId = Blockchain.fromNetworkId(cryptoCurrencyToken.network.backendId)?.getChainId()
                 ?: error("Chain id is required for evm's")
@@ -97,6 +97,7 @@ internal class DefaultYieldSupplyRepository(
                 YieldSupplyChangeTokenStatusBody(
                     tokenAddress = cryptoCurrencyToken.contractAddress,
                     chainId = chainId,
+                    userAddress = address,
                 ),
             ).getOrThrow().isActive
         }
@@ -108,8 +109,8 @@ internal class DefaultYieldSupplyRepository(
         statusMap[cryptoCurrency.id.value] = yieldSupplyEnterStatus
     }
 
-    override fun getTokenProtocolStatus(cryptoCurrencyToken: CryptoCurrency): YieldSupplyEnterStatus? {
-        return statusMap[cryptoCurrencyToken.id.value]
+    override fun getTokenProtocolStatus(cryptoCurrency: CryptoCurrency): YieldSupplyEnterStatus? {
+        return statusMap[cryptoCurrency.id.value]
     }
 
     private fun List<YieldMarketToken>.enrichNetworkIds(): List<YieldMarketToken> {

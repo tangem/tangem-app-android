@@ -10,6 +10,7 @@ internal sealed class YieldSupplyUM {
 
     data class Available(
         val apy: String,
+        val apyText: TextReference,
         val title: TextReference,
         val onClick: () -> Unit,
     ) : YieldSupplyUM()
