@@ -22,13 +22,9 @@ import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.yield.supply.YieldSupplyRepository
 import com.tangem.domain.yield.supply.models.YieldSupplyEnterStatus
-import com.tangem.domain.yield.supply.usecase.YieldSupplyActivateUseCase
-import com.tangem.domain.yield.supply.usecase.YieldSupplyEstimateEnterFeeUseCase
-import com.tangem.domain.yield.supply.usecase.YieldSupplyGetTokenStatusUseCase
-import com.tangem.domain.yield.supply.usecase.YieldSupplyMinAmountUseCase
-import com.tangem.domain.yield.supply.usecase.YieldSupplyStartEarningUseCase
-import com.tangem.features.yield.supply.impl.R
+import com.tangem.domain.yield.supply.usecase.*
 import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
+import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.impl.common.YieldSupplyAlertFactory
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyActionUM
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyFeeUM
@@ -234,10 +230,12 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
                 ifLeft = { error ->
                     Timber.e(error.toString())
                     uiState.update(YieldSupplyTransactionReadyTransformer)
-                    analytics.send(YieldSupplyAnalytics.EarnErrors(
-                        action = YieldSupplyAnalytics.Action.Approve,
-                        errorDescription = error.getAnalyticsDescription(),
-                    ))
+                    analytics.send(
+                        YieldSupplyAnalytics.EarnErrors(
+                            action = YieldSupplyAnalytics.Action.Approve,
+                            errorDescription = error.getAnalyticsDescription(),
+                        ),
+                    )
                     yieldSupplyAlertFactory.getSendTransactionErrorState(
                         error = error,
                         popBack = params.callback::onBackClick,
@@ -255,7 +253,12 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
                 ifRight = {
                     yieldSupplyRepository.saveTokenProtocolStatus(cryptoCurrency, YieldSupplyEnterStatus.Enter)
                     analytics.send(YieldSupplyAnalytics.FundsEarned)
-                    yieldSupplyActivateUseCase(cryptoCurrency)
+
+                    val address = cryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value
+                    if (address != null) {
+                        yieldSupplyActivateUseCase(cryptoCurrency, address)
+                    }
+
                     modelScope.launch {
                         params.callback.onTransactionSent()
                     }
