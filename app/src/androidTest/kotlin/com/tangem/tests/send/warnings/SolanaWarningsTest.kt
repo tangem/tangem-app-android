@@ -1,17 +1,15 @@
 package com.tangem.tests.send.warnings
 
 import com.tangem.common.BaseTestCase
+import com.tangem.common.constants.TestConstants.QUOTES_API_SCENARIO
 import com.tangem.common.constants.TestConstants.SOLANA_RECIPIENT_ADDRESS
+import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.utils.resetWireMockScenarioState
-import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.scenarios.checkSendWarning
-import com.tangem.scenarios.openMainScreen
-import com.tangem.scenarios.synchronizeAddresses
-import com.tangem.screens.onMainScreen
+import com.tangem.scenarios.openSendScreen
 import com.tangem.screens.onSendAddressScreen
 import com.tangem.screens.onSendScreen
-import com.tangem.screens.onTokenDetailsScreen
 import com.tangem.wallet.R
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.qameta.allure.kotlin.AllureId
@@ -24,10 +22,6 @@ class SolanaWarningsTest : BaseTestCase() {
     private val amountToLeaveLessThanRent = "0.0016941"
     private val amountToLeaveGreaterThanRent = "0.0000941"
     private val amountToLeaveRentOnly = "0.00168934"
-    private val userTokensScenarioName = "user_tokens_api"
-    private val userTokensScenarioState = "Solana"
-    private val quotesScenarioName = "quotes_api"
-    private val quotesScenarioState = "Solana"
     private val rentAmount = "0.000890880"
 
     private val invalidAmountTitleResId = R.string.send_notification_invalid_amount_title
@@ -39,27 +33,12 @@ class SolanaWarningsTest : BaseTestCase() {
     fun warningIsDisplayedWhenLeaveLessThanRent() {
         setupHooks(
             additionalAfterSection = {
-                resetWireMockScenarioState(userTokensScenarioName)
-                resetWireMockScenarioState(quotesScenarioName)
+                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
+                resetWireMockScenarioState(QUOTES_API_SCENARIO)
             }
         ).run {
-            step("Set WireMock scenario: '$userTokensScenarioName' to state: '$userTokensScenarioState'") {
-                setWireMockScenarioState(scenarioName = userTokensScenarioName, state = userTokensScenarioState)
-            }
-            step("Set WireMock scenario: '$quotesScenarioName' to state: '$quotesScenarioState'") {
-                setWireMockScenarioState(scenarioName = quotesScenarioName, state = quotesScenarioState)
-            }
-            step("Open 'Main Screen'") {
-                openMainScreen()
-            }
-            step("Synchronize addresses") {
-                synchronizeAddresses()
-            }
-            step("Click on token with name: '$tokenName'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
-            }
-            step("Click on 'Send' button") {
-                onTokenDetailsScreen { sendButton().performClick() }
+            step("Open 'Send Screen' with token: $tokenName") {
+                openSendScreen(tokenName)
             }
             step("Type '$amountToLeaveLessThanRent' in input text field") {
                 onSendScreen {
@@ -92,27 +71,12 @@ class SolanaWarningsTest : BaseTestCase() {
     fun warningIsNotDisplayedWhenLeaveGreaterThanRent() {
         setupHooks(
             additionalAfterSection = {
-                resetWireMockScenarioState(userTokensScenarioName)
-                resetWireMockScenarioState(quotesScenarioName)
+                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
+                resetWireMockScenarioState(QUOTES_API_SCENARIO)
             }
         ).run {
-            step("Set WireMock scenario: '$userTokensScenarioName' to state: '$userTokensScenarioState'") {
-                setWireMockScenarioState(scenarioName = userTokensScenarioName, state = userTokensScenarioState)
-            }
-            step("Set WireMock scenario: '$quotesScenarioName' to state: '$quotesScenarioState'") {
-                setWireMockScenarioState(scenarioName = quotesScenarioName, state = quotesScenarioState)
-            }
-            step("Open 'Main Screen'") {
-                openMainScreen()
-            }
-            step("Synchronize addresses") {
-                synchronizeAddresses()
-            }
-            step("Click on token with name: '$tokenName'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
-            }
-            step("Click on 'Send' button") {
-                onTokenDetailsScreen { sendButton().performClick() }
+            step("Open 'Send Screen' with token: $tokenName") {
+                openSendScreen(tokenName)
             }
             step("Type '$amountToLeaveGreaterThanRent' in input text field") {
                 onSendScreen {
@@ -146,27 +110,12 @@ class SolanaWarningsTest : BaseTestCase() {
     fun warningIsNotDisplayedWhenLeaveOnlyRent() {
         setupHooks(
             additionalAfterSection = {
-                resetWireMockScenarioState(userTokensScenarioName)
-                resetWireMockScenarioState(quotesScenarioName)
+                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
+                resetWireMockScenarioState(QUOTES_API_SCENARIO)
             }
         ).run {
-            step("Set WireMock scenario: '$userTokensScenarioName' to state: '$userTokensScenarioState'") {
-                setWireMockScenarioState(scenarioName = userTokensScenarioName, state = userTokensScenarioState)
-            }
-            step("Set WireMock scenario: '$quotesScenarioName' to state: '$quotesScenarioState'") {
-                setWireMockScenarioState(scenarioName = quotesScenarioName, state = quotesScenarioState)
-            }
-            step("Open 'Main Screen'") {
-                openMainScreen()
-            }
-            step("Synchronize addresses") {
-                synchronizeAddresses()
-            }
-            step("Click on token with name: '$tokenName'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
-            }
-            step("Click on 'Send' button") {
-                onTokenDetailsScreen { sendButton().performClick() }
+            step("Open 'Send Screen' with token: $tokenName") {
+                openSendScreen(tokenName)
             }
             step("Type '$amountToLeaveRentOnly' in input text field") {
                 onSendScreen {
@@ -200,27 +149,12 @@ class SolanaWarningsTest : BaseTestCase() {
     fun warningIsNotDisplayedWhenLeaveZeroSol() {
         setupHooks(
             additionalAfterSection = {
-                resetWireMockScenarioState(userTokensScenarioName)
-                resetWireMockScenarioState(quotesScenarioName)
+                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
+                resetWireMockScenarioState(QUOTES_API_SCENARIO)
             }
         ).run {
-            step("Set WireMock scenario: '$userTokensScenarioName' to state: '$userTokensScenarioState'") {
-                setWireMockScenarioState(scenarioName = userTokensScenarioName, state = userTokensScenarioState)
-            }
-            step("Set WireMock scenario: '$quotesScenarioName' to state: '$quotesScenarioState'") {
-                setWireMockScenarioState(scenarioName = quotesScenarioName, state = quotesScenarioState)
-            }
-            step("Open 'Main Screen'") {
-                openMainScreen()
-            }
-            step("Synchronize addresses") {
-                synchronizeAddresses()
-            }
-            step("Click on token with name: '$tokenName'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
-            }
-            step("Click on 'Send' button") {
-                onTokenDetailsScreen { sendButton().performClick() }
+            step("Open 'Send Screen' with token: $tokenName") {
+                openSendScreen(tokenName)
             }
             step("Type max amount in input text field") {
                 onSendScreen {
