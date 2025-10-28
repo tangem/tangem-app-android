@@ -20,8 +20,8 @@ import com.tangem.domain.yield.supply.YieldSupplyRepository
 import com.tangem.domain.yield.supply.models.YieldSupplyEnterStatus
 import com.tangem.domain.yield.supply.usecase.YieldSupplyDeactivateUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyStopEarningUseCase
-import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
+import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.impl.common.YieldSupplyAlertFactory
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyActionUM
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyFeeUM
@@ -140,10 +140,12 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
                 ifLeft = { error ->
                     Timber.e(error.toString())
                     uiState.update(YieldSupplyTransactionReadyTransformer)
-                    analytics.send(YieldSupplyAnalytics.EarnErrors(
-                        action = YieldSupplyAnalytics.Action.Stop,
-                        errorDescription = error.getAnalyticsDescription(),
-                    ))
+                    analytics.send(
+                        YieldSupplyAnalytics.EarnErrors(
+                            action = YieldSupplyAnalytics.Action.Stop,
+                            errorDescription = error.getAnalyticsDescription(),
+                        ),
+                    )
                     yieldSupplyAlertFactory.getSendTransactionErrorState(
                         error = error,
                         popBack = params.callback::onBackClick,
@@ -166,7 +168,11 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
                             blockchain = cryptoCurrency.network.name,
                         ),
                     )
-                    yieldSupplyDeactivateUseCase(cryptoCurrency)
+                    val address = cryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value
+                    if (address != null) {
+                        yieldSupplyDeactivateUseCase(cryptoCurrency, address)
+                    }
+
                     modelScope.launch {
                         params.callback.onTransactionSent()
                     }
