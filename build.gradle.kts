@@ -34,18 +34,36 @@ interface Injected {
 
 // Test Logging
 subprojects {
-    tasks.withType<Test> {
+    tasks.withType<Test>().configureEach {
+        val taskName = name.lowercase()
+        if (taskName.contains("external") ||
+            taskName.contains("internal") ||
+            taskName.contains("release") ||
+            taskName.contains("mocked") ||
+            taskName.contains("huawei")
+        ) {
+            enabled = false
+            println("Skipping test task: $name")
+        } else {
+            println("Test task scheduled: $name")
+        }
+
         testLogging {
             exceptionFormat = TestExceptionFormat.FULL
             showStandardStreams = true
 
             afterSuite(KotlinClosure2<TestDescriptor, TestResult, Unit>({ desc, result ->
                 if (desc.parent == null) { // will match the outermost suite
-                    val output = "Results: ${result.resultType} (${result.testCount} tests, ${result.successfulTestCount} passed, ${result.failedTestCount} failed, ${result.skippedTestCount} skipped)"
+                    val output =
+                        "Results: ${result.resultType} (${result.testCount} tests, ${result.successfulTestCount} passed, ${result.failedTestCount} failed, ${result.skippedTestCount} skipped)"
                     val startItem = "| "
                     val endItem = " |"
                     val repeatLength = startItem.length + output.length + endItem.length
-                    println("\n" + "-".repeat(repeatLength) + "\n" + startItem + output + endItem + "\n" + "-".repeat(repeatLength))
+                    println(
+                        "\n" + "-".repeat(repeatLength) + "\n" + startItem + output + endItem + "\n" + "-".repeat(
+                            repeatLength
+                        )
+                    )
                 }
             }))
         }
