@@ -30,12 +30,12 @@ data class AccountStatusList(
     val groupType: TokensGroupType,
 ) {
 
-    val mainAccount: AccountStatus
+    val mainAccount: AccountStatus.CryptoPortfolio
         get() = accountStatuses.first { accountStatus ->
             when (accountStatus) {
                 is AccountStatus.CryptoPortfolio -> accountStatus.account.isMainAccount
             }
-        }
+        } as AccountStatus.CryptoPortfolio
 
     fun flattenCurrencies(): List<CryptoCurrencyStatus> = accountStatuses
         .map { accountStatus -> accountStatus.flattenCurrencies() }
