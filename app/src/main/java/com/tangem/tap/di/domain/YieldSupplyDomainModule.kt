@@ -9,6 +9,7 @@ import com.tangem.domain.yield.supply.YieldSupplyErrorResolver
 import com.tangem.domain.yield.supply.YieldSupplyRepository
 import com.tangem.domain.yield.supply.YieldSupplyTransactionRepository
 import com.tangem.domain.yield.supply.usecase.*
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -174,6 +175,18 @@ internal object YieldSupplyDomainModule {
             yieldSupplyRepository = yieldSupplyRepository,
             quotesRepository = quotesRepository,
             currenciesRepository = currenciesRepository,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideYieldSupplyGetRewardsBalanceUseCase(
+        yieldSupplyRepository: YieldSupplyRepository,
+        dispatcherProvider: CoroutineDispatcherProvider,
+    ): YieldSupplyGetRewardsBalanceUseCase {
+        return YieldSupplyGetRewardsBalanceUseCase(
+            yieldSupplyRepository = yieldSupplyRepository,
+            dispatcherProvider = dispatcherProvider,
         )
     }
 }
