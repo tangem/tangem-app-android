@@ -18,6 +18,8 @@ import kotlinx.serialization.Serializable
  * @property userWalletId  the user wallet id associated with the account list
  * @property accounts      a list of accounts belonging to the user wallet
  * @property totalAccounts the total number of accounts
+ * @property sortType      the sorting type applied to the accounts
+ * @property groupType     the grouping type applied to the accounts
  *
 [REDACTED_AUTHOR]
  */
