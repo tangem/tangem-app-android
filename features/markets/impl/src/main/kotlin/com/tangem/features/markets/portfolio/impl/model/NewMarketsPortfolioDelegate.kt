@@ -35,17 +35,19 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.*
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @Suppress("LongParameterList")
 internal class NewMarketsPortfolioDelegate @AssistedInject constructor(
-    private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
-    private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
+    getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
+    getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val allAccountSupplier: MultiAccountStatusListSupplier,
     private val getCryptoCurrencyActionsUseCase: GetCryptoCurrencyActionsUseCaseV2,
     private val getUserWalletUseCase: GetUserWalletUseCase,
-    private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
+    isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     @Assisted private val scope: CoroutineScope,
     @Assisted private val token: TokenMarketParams,
     @Assisted private val tokenActionsHandler: TokenActionsHandler,
@@ -163,7 +165,7 @@ internal class NewMarketsPortfolioDelegate @AssistedInject constructor(
     }
 
     private fun portfolioWithThisCurrencyFLow(): Flow<PortfoliosWithThisCurrency> =
-        allAccountSupplier(Unit).map { list -> list.map { it.addedAccountsFlow() } }.flatMapLatest { flows ->
+        allAccountSupplier().map { list -> list.map { it.addedAccountsFlow() } }.flatMapLatest { flows ->
             combine(flows) {
                 PortfoliosWithThisCurrency(
                     currencyRawId = currencyRawId,
@@ -204,7 +206,7 @@ internal class NewMarketsPortfolioDelegate @AssistedInject constructor(
         val appCurrency = settings.appCurrency
         val isBalanceHidden = settings.isBalanceHidden
         val isAccountMode = settings.isAccountMode
-        val uiItems: MutableList<PortfolioListItem> = mutableListOf<PortfolioListItem>()
+        val uiItems: MutableList<PortfolioListItem> = mutableListOf()
 
         fun toggleQuickActions(key: Pair<UserWalletId, CryptoCurrency.ID>) = expandedHolder?.update { expanded ->
             val isExpand = expanded.contains(key)
