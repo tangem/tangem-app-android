@@ -86,6 +86,8 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
                     accountStatuses = accountStatuses.toList(),
                     totalAccounts = accountList.totalAccounts,
                     totalFiatBalance = TotalFiatBalanceCalculator.calculate(balances),
+                    sortType = accountList.sortType,
+                    groupType = accountList.groupType,
                 )
             }
         }
