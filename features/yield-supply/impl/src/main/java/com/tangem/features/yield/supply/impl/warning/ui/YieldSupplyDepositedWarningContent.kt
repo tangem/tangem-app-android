@@ -109,7 +109,7 @@ private fun Content(warningUM: YieldSupplyDepositedWarningUM) {
 
         Text(
             textAlign = TextAlign.Center,
-            text = stringResourceSafe(R.string.yield_module_explore_sheet_title, warningUM.network),
+            text = stringResourceSafe(R.string.yield_module_balance_info_sheet_title, warningUM.network),
             style = TangemTheme.typography.h3,
             color = TangemTheme.colors.text.primary1,
         )
