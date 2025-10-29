@@ -1,11 +1,9 @@
 package com.tangem.domain.account.status.di
 
 import com.tangem.domain.account.repository.AccountsCRUDRepository
+import com.tangem.domain.account.status.supplier.MultiAccountStatusListSupplier
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
-import com.tangem.domain.account.status.usecase.GetAccountCurrencyByAddressUseCase
-import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
-import com.tangem.domain.account.status.usecase.GetCryptoCurrencyActionsUseCaseV2
-import com.tangem.domain.account.status.usecase.ManageCryptoCurrenciesUseCase
+import com.tangem.domain.account.status.usecase.*
 import com.tangem.domain.account.status.utils.CryptoCurrencyBalanceFetcher
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.common.wallets.UserWalletsListRepository
@@ -58,6 +56,16 @@ internal object AccountStatusUseCaseModule {
             accountsCRUDRepository = accountsCRUDRepository,
             singleAccountStatusListSupplier = singleAccountStatusListSupplier,
             getCryptoCurrencyActionsUseCase = getCryptoCurrencyActionsUseCase,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetWalletTotalBalanceUseCaseV2(
+        multiAccountStatusListSupplier: MultiAccountStatusListSupplier,
+    ): GetWalletTotalBalanceUseCaseV2 {
+        return GetWalletTotalBalanceUseCaseV2(
+            multiAccountStatusListSupplier = multiAccountStatusListSupplier,
         )
     }
 
