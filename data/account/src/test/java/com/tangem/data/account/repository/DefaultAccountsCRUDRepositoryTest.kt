@@ -1,5 +1,6 @@
 package com.tangem.data.account.repository
 
+import android.content.res.Resources
 import arrow.core.None
 import arrow.core.toOption
 import com.google.common.truth.Truth
@@ -59,6 +60,8 @@ class DefaultAccountsCRUDRepositoryTest {
     private val accountListConverter: AccountListConverter = mockk()
     private val cryptoPortfolioConverter: CryptoPortfolioConverter = mockk()
 
+    private val resources: Resources = mockk()
+
     private val repository = DefaultAccountsCRUDRepository(
         tangemTechApi = tangemTechApi,
         walletAccountsSaver = walletAccountsSaver,
@@ -68,6 +71,7 @@ class DefaultAccountsCRUDRepositoryTest {
         userTokensSaver = userTokensSaver,
         archivedAccountsETagStore = archivedAccountsETagStore,
         convertersContainer = convertersContainer,
+        resources = resources,
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
 
