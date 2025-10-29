@@ -293,6 +293,23 @@ sealed class WalletNotification(val config: NotificationConfig) {
         ),
     )
 
+    data class VisaPresalePromo(
+        val onCloseClick: () -> Unit,
+        val onClick: () -> Unit,
+    ) : WalletNotification(
+        config = NotificationConfig(
+            title = resourceReference(R.string.notification_visa_waitlist_promo_title),
+            subtitle = resourceReference(R.string.notification_visa_waitlist_promo_text),
+            iconResId = R.drawable.img_visa_waitlist_promo,
+            onCloseClick = onCloseClick,
+            buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
+                text = resourceReference(R.string.notification_referral_promo_button),
+                onClick = onClick,
+            ),
+            iconSize = 54.dp,
+        ),
+    )
+
     data class Sepa(
         val onCloseClick: () -> Unit,
         val onClick: () -> Unit,
