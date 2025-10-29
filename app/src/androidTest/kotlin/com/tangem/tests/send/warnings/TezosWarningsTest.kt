@@ -15,6 +15,7 @@ import com.tangem.screens.onSendConfirmScreen
 import com.tangem.screens.onSendScreen
 import com.tangem.wallet.R
 import dagger.hilt.android.testing.HiltAndroidTest
+import io.github.kakaocup.kakao.common.utilities.getResourceString
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
 import org.junit.Test
@@ -25,8 +26,9 @@ class TezosWarningsTest : BaseTestCase() {
     private val reduceAmount = "0.000001"
     private val sendAmount = "0.01"
 
-    private val feeIsHighTitleResId = R.string.send_notification_high_fee_title
-    private val feeIsHighMessageResId = R.string.send_notification_high_fee_text
+    private val feeIsHighTitle = getResourceString(R.string.send_notification_high_fee_title)
+    private val feeIsHighMessage =
+        getResourceString(R.string.send_notification_high_fee_text, tokenName, reduceAmount)
 
     @AllureId("4229")
     @DisplayName("Warnings: warning is displayed when sending max amount")
@@ -55,14 +57,13 @@ class TezosWarningsTest : BaseTestCase() {
             step("Click on 'Next' button") {
                 onSendAddressScreen { nextButton.clickWithAssertion() }
             }
-            step("Swipe up to see the warning"){
+            step("Swipe up to see the warning") {
                 swipeVertical(SwipeDirection.UP)
             }
             step("Assert 'Fee is high warning' is displayed") {
                 checkSendWarning(
-                    titleResId = feeIsHighTitleResId,
-                    messageResId = feeIsHighMessageResId,
-                    amount = reduceAmount,
+                    title = feeIsHighTitle,
+                    message = feeIsHighMessage,
                     sendButtonIsDisabled = false
                 )
             }
@@ -71,9 +72,8 @@ class TezosWarningsTest : BaseTestCase() {
             }
             step("Assert 'Fee is high warning' is not displayed") {
                 checkSendWarning(
-                    titleResId = feeIsHighTitleResId,
-                    messageResId = feeIsHighMessageResId,
-                    amount = reduceAmount,
+                    title = feeIsHighTitle,
+                    message = feeIsHighMessage,
                     isDisplayed = false
                 )
             }
@@ -110,9 +110,8 @@ class TezosWarningsTest : BaseTestCase() {
             }
             step("Assert 'Fee is high warning' is not displayed") {
                 checkSendWarning(
-                    titleResId = feeIsHighTitleResId,
-                    messageResId = feeIsHighMessageResId,
-                    amount = reduceAmount,
+                    title = feeIsHighTitle,
+                    message = feeIsHighMessage,
                     isDisplayed = false
                 )
             }
