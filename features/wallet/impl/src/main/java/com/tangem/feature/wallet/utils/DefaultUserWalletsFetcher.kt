@@ -6,6 +6,8 @@ import com.tangem.common.ui.userwallet.state.UserWalletItemUM
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
+import com.tangem.domain.account.status.usecase.GetWalletTotalBalanceUseCaseV2
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.error.SelectedAppCurrencyError
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -37,7 +39,9 @@ import kotlinx.coroutines.flow.*
 @Suppress("LongParameterList")
 internal class DefaultUserWalletsFetcher @AssistedInject constructor(
     getWalletsUseCase: GetWalletsUseCase,
+    private val accountsFeatureToggles: AccountsFeatureToggles,
     private val getWalletTotalBalanceUseCase: GetWalletTotalBalanceUseCase,
+    private val getWalletTotalBalanceUseCaseV2: GetWalletTotalBalanceUseCaseV2,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     @Assisted private val onWalletClick: (UserWalletId) -> Unit,
@@ -97,7 +101,11 @@ internal class DefaultUserWalletsFetcher @AssistedInject constructor(
             // We should not load balances in auth mode
             flowOf(Lce.Loading(walletIds.associateWith { TotalFiatBalance.Loading }))
         } else {
-            getWalletTotalBalanceUseCase(walletIds).distinctUntilChanged()
+            if (accountsFeatureToggles.isFeatureEnabled) {
+                getWalletTotalBalanceUseCaseV2(userWalletIds = walletIds)
+            } else {
+                getWalletTotalBalanceUseCase(walletIds).distinctUntilChanged()
+            }
         }
     }
 
