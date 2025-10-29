@@ -29,7 +29,6 @@ import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.impl.promo.entity.YieldSupplyPromoUM
 import com.tangem.features.yield.supply.impl.promo.model.YieldSupplyPromoClickIntents
-import com.tangem.utils.StringsSigns
 
 @Suppress("MagicNumber")
 @Composable
@@ -175,8 +174,6 @@ private fun YieldSupplyTosText(tosLink: String, policyLink: String, onClick: (St
 
     Text(
         text = buildAnnotatedString {
-            append(StringsSigns.POINT_SIGN)
-            appendSpace()
             append(fullString.substring(0, tosIndex))
             withLink(
                 link = LinkAnnotation.Clickable(
