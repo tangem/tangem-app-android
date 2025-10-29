@@ -13,7 +13,9 @@ import com.tangem.screens.onSendConfirmScreen
 import com.tangem.screens.onSendScreen
 import com.tangem.wallet.R
 import dagger.hilt.android.testing.HiltAndroidTest
+import io.github.kakaocup.kakao.common.utilities.getResourceString
 import io.qameta.allure.kotlin.AllureId
+import io.qameta.allure.kotlin.junit4.DisplayName
 import org.junit.Test
 
 @HiltAndroidTest
@@ -23,10 +25,13 @@ class AzeroWarningsTest : BaseTestCase() {
     private val amountToLeaveGreaterThanDeposit = "0.09"
     private val depositAmount = "AZERO 0.0000000005"
 
-    private val warningTitleResId = R.string.send_notification_existential_deposit_title
-    private val warningMessageResId = R.string.send_notification_existential_deposit_text
+    private val warningTitle = getResourceString(R.string.send_notification_existential_deposit_title)
+    private val warningMessage = getResourceString(
+        R.string.send_notification_existential_deposit_text, depositAmount
+    )
 
     @AllureId("4290")
+    @DisplayName("Warnings: check deposit warnings in Azero")
     @Test
     fun checkWarning() {
         setupHooks(
@@ -55,9 +60,8 @@ class AzeroWarningsTest : BaseTestCase() {
             }
             step("Assert 'Existential deposit warning' is displayed") {
                 checkSendWarning(
-                    titleResId = warningTitleResId,
-                    messageResId = warningMessageResId,
-                    amount = depositAmount
+                    title = warningTitle,
+                    message = warningMessage,
                 )
             }
             step("Click on 'Leave $depositAmount' button") {
@@ -65,9 +69,8 @@ class AzeroWarningsTest : BaseTestCase() {
             }
             step("Assert 'Existential deposit warning' is not displayed") {
                 checkSendWarning(
-                    titleResId = warningTitleResId,
-                    messageResId = warningMessageResId,
-                    amount = depositAmount,
+                    title = warningTitle,
+                    message = warningMessage,
                     isDisplayed = false
                 )
             }
@@ -85,9 +88,8 @@ class AzeroWarningsTest : BaseTestCase() {
             }
             step("Assert 'Existential deposit warning' is not displayed") {
                 checkSendWarning(
-                    titleResId = warningTitleResId,
-                    messageResId = warningMessageResId,
-                    amount = depositAmount,
+                    title = warningTitle,
+                    message = warningMessage,
                     isDisplayed = false
                 )
             }
