@@ -3,12 +3,9 @@ package com.tangem.features.walletconnect.connections.ui.preview
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.components.dropdownmenu.TangemDropdownMenuItem
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.themedColor
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.features.walletconnect.connections.entity.VerifiedDAppState
-import com.tangem.features.walletconnect.connections.entity.WcConnectedAppInfo
-import com.tangem.features.walletconnect.connections.entity.WcConnectionsState
-import com.tangem.features.walletconnect.connections.entity.WcConnectionsTopAppBarConfig
-import com.tangem.features.walletconnect.connections.entity.WcConnectionsUM
+import com.tangem.features.walletconnect.connections.entity.*
 import com.tangem.features.walletconnect.impl.R
 import kotlinx.collections.immutable.persistentListOf
 import timber.log.Timber
@@ -124,7 +121,7 @@ internal object WcConnectionsPreviewData {
             ),
             disconnectAllItem = TangemDropdownMenuItem(
                 title = resourceReference(R.string.wc_disconnect_all),
-                textColorProvider = { TangemTheme.colors.text.warning },
+                textColor = themedColor { TangemTheme.colors.text.warning },
                 onClick = { },
             ),
         ),
