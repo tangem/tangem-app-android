@@ -13,6 +13,7 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.components.dropdownmenu.TangemDropdownMenuItem
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.themedColor
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.SnackbarMessage
@@ -139,7 +140,7 @@ internal class WcConnectionsModel @Inject constructor(
                 ),
                 disconnectAllItem = TangemDropdownMenuItem(
                     title = resourceReference(R.string.wc_disconnect_all),
-                    textColorProvider = { TangemTheme.colors.text.warning },
+                    textColor = themedColor { TangemTheme.colors.text.warning },
                     onClick = ::showDisconnectAllDialog,
                 ),
             ),
