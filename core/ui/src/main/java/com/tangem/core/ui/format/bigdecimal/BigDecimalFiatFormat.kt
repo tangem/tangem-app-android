@@ -117,6 +117,24 @@ fun BigDecimalFiatFormat.price(): BigDecimalFormat = BigDecimalFormat { value ->
         .replace(formatterCurrency.getSymbol(locale), fiatCurrencySymbol)
 }
 
+/**
+ * Formats fiat amount with an exact number of fractional digits.
+ */
+fun BigDecimalFiatFormat.anyDecimals(decimals: Int): BigDecimalFormat = BigDecimalFormat { value ->
+    val formatterCurrency = getJavaCurrencyByCode(fiatCurrencyCode)
+
+    val formatter = NumberFormat.getCurrencyInstance(locale).apply {
+        currency = formatterCurrency
+        maximumFractionDigits = decimals
+        minimumFractionDigits = decimals
+        isGroupingUsed = true
+        roundingMode = RoundingMode.HALF_UP
+    }
+
+    formatter.format(value)
+        .replace(formatterCurrency.getSymbol(locale), fiatCurrencySymbol)
+}
+
 // == Helpers ==
 
 private fun BigDecimal.isLessThanThreshold() = this > BigDecimal.ZERO && this < FIAT_FORMAT_THRESHOLD
