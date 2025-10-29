@@ -31,6 +31,7 @@ fun AccountTitle(
     modifier: Modifier = Modifier,
     textStyle: TextStyle = TangemTheme.typography.subtitle2,
     textColor: Color = TangemTheme.colors.text.tertiary,
+    iconSize: AccountIconSize = AccountIconSize.ExtraSmall,
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -47,7 +48,7 @@ fun AccountTitle(
                 AccountLabel(
                     name = accountTitleUM.name,
                     icon = accountTitleUM.icon,
-                    iconSize = AccountIconSize.ExtraSmall,
+                    iconSize = iconSize,
                     nameStyle = textStyle,
                     nameColor = textColor,
                 )
