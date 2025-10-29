@@ -51,6 +51,8 @@ import com.tangem.features.walletconnect.transaction.ui.common.WcSendTransaction
 import com.tangem.features.walletconnect.transaction.ui.common.WcSmallTitleItem
 import com.tangem.features.walletconnect.transaction.ui.common.WcTransactionRequestButtons
 import com.tangem.features.walletconnect.transaction.ui.common.WcTransactionRequestItem
+import com.tangem.features.walletconnect.transaction.ui.sign.accountPortfolioName
+import com.tangem.features.walletconnect.transaction.ui.sign.walletPortfolioName
 import kotlinx.collections.immutable.persistentListOf
 import java.math.BigDecimal
 
@@ -114,7 +116,7 @@ internal fun WcSendTransactionModalBottomSheet(
                     }
                     WcSendTransactionItems(
                         modifier = Modifier.padding(top = 16.dp),
-                        walletName = state.walletName,
+                        portfolioName = state.portfolioName,
                         networkInfo = state.networkInfo,
                         feeState = state.feeState,
                         feeSelectorBlockComponent = feeSelectorBlockComponent,
@@ -220,7 +222,7 @@ private class WcSendTransactionStateProvider : CollectionPreviewParameterProvide
                 ),
                 isLoading = false,
             ),
-            walletName = "Tangem 2.0 Tangem 2.0 Tangem 2",
+            portfolioName = accountPortfolioName,
             networkInfo = WcNetworkInfoUM(name = "Optimistic Ethereum Network", iconRes = R.drawable.img_eth_22),
             feeState = WcTransactionFeeState.Success(dAppFee = null, onClick = {}),
             address = null,
@@ -260,7 +262,7 @@ private class WcSendTransactionStateProvider : CollectionPreviewParameterProvide
                     ),
                 ),
             ),
-            walletName = "Tangem 2.0",
+            portfolioName = walletPortfolioName,
             networkInfo = WcNetworkInfoUM(name = "Ethereum", iconRes = R.drawable.img_eth_22),
             feeState = WcTransactionFeeState.Success(dAppFee = null, onClick = {}),
             address = "0xdac17f958d2ee523a2206206994597c13d831ec7",
@@ -303,7 +305,7 @@ private class WcSendTransactionStateProvider : CollectionPreviewParameterProvide
                     ),
                 ),
             ),
-            walletName = null,
+            portfolioName = null,
             networkInfo = WcNetworkInfoUM(name = "Ethereum", iconRes = R.drawable.img_eth_22),
             feeState = WcTransactionFeeState.None,
             address = null,
@@ -339,7 +341,7 @@ private class WcSendTransactionStateProvider : CollectionPreviewParameterProvide
                     onLearnMoreClicked = {},
                 ),
             ),
-            walletName = "Tangem 2.0",
+            portfolioName = accountPortfolioName,
             networkInfo = WcNetworkInfoUM(name = "Ethereum", iconRes = R.drawable.img_eth_22),
             feeState = WcTransactionFeeState.None,
             address = "0xdac17f958d2ee523a2206206994597c13d831ec7",
