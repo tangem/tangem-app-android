@@ -12,6 +12,7 @@ import com.tangem.screens.onSendAddressScreen
 import com.tangem.screens.onSendScreen
 import com.tangem.wallet.R
 import dagger.hilt.android.testing.HiltAndroidTest
+import io.github.kakaocup.kakao.common.utilities.getResourceString
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
 import org.junit.Test
@@ -22,10 +23,10 @@ class SolanaWarningsTest : BaseTestCase() {
     private val amountToLeaveLessThanRent = "0.0016941"
     private val amountToLeaveGreaterThanRent = "0.0000941"
     private val amountToLeaveRentOnly = "0.00168934"
-    private val rentAmount = "0.000890880"
+    private val rentAmount = "SOL 0.00089088"
 
-    private val invalidAmountTitleResId = R.string.send_notification_invalid_amount_title
-    private val invalidAmountMessageResId = R.string.send_notification_invalid_amount_rent_fee
+    private val invalidAmountTitle = getResourceString(R.string.send_notification_invalid_amount_title)
+    private val invalidAmountMessage = getResourceString(R.string.send_notification_invalid_amount_rent_fee, rentAmount)
 
     @AllureId("564")
     @DisplayName("Warnings: warning is displayed, if after send balance is less than rent amount (SOLANA)")
@@ -57,9 +58,8 @@ class SolanaWarningsTest : BaseTestCase() {
             }
             step("Assert 'Invalid amount warning' is displayed") {
                 checkSendWarning(
-                    titleResId = invalidAmountTitleResId,
-                    messageResId = invalidAmountMessageResId,
-                    amount = rentAmount
+                    title = invalidAmountTitle,
+                    message = invalidAmountMessage
                 )
             }
         }
@@ -95,9 +95,8 @@ class SolanaWarningsTest : BaseTestCase() {
             }
             step("Assert 'Invalid amount warning' is not displayed") {
                 checkSendWarning(
-                    titleResId = invalidAmountTitleResId,
-                    messageResId = invalidAmountMessageResId,
-                    amount = rentAmount,
+                    title = invalidAmountTitle,
+                    message = invalidAmountMessage,
                     isDisplayed = false
                 )
             }
@@ -134,9 +133,8 @@ class SolanaWarningsTest : BaseTestCase() {
             }
             step("Assert 'Invalid amount warning' is not displayed") {
                 checkSendWarning(
-                    titleResId = invalidAmountTitleResId,
-                    messageResId = invalidAmountMessageResId,
-                    amount = rentAmount,
+                    title = invalidAmountTitle,
+                    message = invalidAmountMessage,
                     isDisplayed = false
                 )
             }
@@ -172,9 +170,8 @@ class SolanaWarningsTest : BaseTestCase() {
             }
             step("Assert 'Invalid amount warning' is not displayed") {
                 checkSendWarning(
-                    titleResId = invalidAmountTitleResId,
-                    messageResId = invalidAmountMessageResId,
-                    amount = rentAmount,
+                    title = invalidAmountTitle,
+                    message = invalidAmountMessage,
                     isDisplayed = false
                 )
             }
