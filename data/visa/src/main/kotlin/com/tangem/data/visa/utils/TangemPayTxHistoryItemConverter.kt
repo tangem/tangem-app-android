@@ -28,8 +28,7 @@ internal class TangemPayTxHistoryItemConverter(moshi: Moshi) :
         return TangemPayTxHistoryItem.Spend(
             id = id,
             jsonRepresentation = spendAdapter.toJson(spend),
-            // If postedAt is null, it means transaction wasn't posted and was likely declined. Use authorizedAt
-            date = spend.postedAt ?: spend.authorizedAt,
+            date = spend.authorizedAt,
             amount = spend.amount,
             currency = Currency.getInstance(spend.currency),
             enrichedMerchantName = spend.enrichedMerchantName,
