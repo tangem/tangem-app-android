@@ -84,6 +84,8 @@ class DefaultSingleAccountStatusListProducerTest {
             ),
             totalAccounts = 1,
             totalFiatBalance = TotalFiatBalance.Loaded(amount = BigDecimal.ZERO, source = StatusSource.ACTUAL),
+            sortType = accountList.sortType,
+            groupType = accountList.groupType,
         )
         Truth.assertThat(actual).containsExactly(expected)
 
@@ -119,6 +121,8 @@ class DefaultSingleAccountStatusListProducerTest {
             ),
             totalAccounts = 1,
             totalFiatBalance = TotalFiatBalance.Loaded(amount = BigDecimal.ZERO, source = StatusSource.ACTUAL),
+            sortType = accountList.sortType,
+            groupType = accountList.groupType,
         )
         Truth.assertThat(actual1).containsExactly(expected)
 
@@ -138,6 +142,8 @@ class DefaultSingleAccountStatusListProducerTest {
             ),
             totalAccounts = 1,
             totalFiatBalance = TotalFiatBalance.Loaded(amount = BigDecimal.ZERO, source = StatusSource.ACTUAL),
+            sortType = updatedAccountList.sortType,
+            groupType = updatedAccountList.groupType,
         )
         Truth.assertThat(actual2).containsExactly(expected2)
 
@@ -168,6 +174,8 @@ class DefaultSingleAccountStatusListProducerTest {
             ),
             totalAccounts = 1,
             totalFiatBalance = TotalFiatBalance.Loaded(amount = BigDecimal.ZERO, source = StatusSource.ACTUAL),
+            sortType = accountList.sortType,
+            groupType = accountList.groupType,
         )
 
         // Act (first emission)
@@ -239,6 +247,8 @@ class DefaultSingleAccountStatusListProducerTest {
             ),
             totalAccounts = 1,
             totalFiatBalance = TotalFiatBalance.Loading,
+            sortType = accountList.sortType,
+            groupType = accountList.groupType,
         )
         Truth.assertThat(actual).containsExactly(expected)
 
