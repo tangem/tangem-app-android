@@ -1,5 +1,6 @@
 package com.tangem.data.account.di
 
+import android.content.Context
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.data.account.converter.AccountConverterFactoryContainer
 import com.tangem.data.account.featuretoggle.DefaultAccountsFeatureToggles
@@ -21,6 +22,7 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
@@ -43,6 +45,7 @@ internal object AccountDataModule {
         userWalletsStore: UserWalletsStore,
         userTokensSaver: UserTokensSaver,
         accountConverterFactoryContainer: AccountConverterFactoryContainer,
+        @ApplicationContext context: Context,
         dispatchers: CoroutineDispatcherProvider,
     ): AccountsCRUDRepository {
         return DefaultAccountsCRUDRepository(
@@ -54,6 +57,7 @@ internal object AccountDataModule {
             userTokensSaver = userTokensSaver,
             archivedAccountsETagStore = RuntimeStateStore(emptyMap()),
             convertersContainer = accountConverterFactoryContainer,
+            resources = context.resources,
             dispatchers = dispatchers,
         )
     }
