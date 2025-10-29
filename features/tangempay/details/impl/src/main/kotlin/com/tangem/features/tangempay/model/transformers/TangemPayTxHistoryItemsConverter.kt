@@ -11,6 +11,7 @@ import com.tangem.features.tangempay.utils.TangemPayTxHistoryUiActions
 import com.tangem.utils.StringsSigns
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.extensions.isPositive
+import com.tangem.utils.extensions.isZero
 import org.joda.time.DateTimeZone
 
 internal class TangemPayTxHistoryItemsConverter(
@@ -51,7 +52,11 @@ internal class TangemPayTxHistoryItemsConverter(
     }
 
     private fun convertPayment(payment: TangemPayTxHistoryItem.Payment): TangemPayTransactionState.Content.Payment {
-        val amountPrefix = if (payment.amount.isPositive()) StringsSigns.PLUS else StringsSigns.MINUS
+        val amountPrefix = when {
+            payment.amount.isZero() -> ""
+            payment.amount.isPositive() -> StringsSigns.PLUS
+            else -> StringsSigns.MINUS
+        }
         val amount = amountPrefix + payment.amount.format {
             fiat(fiatCurrencyCode = payment.currency.currencyCode, fiatCurrencySymbol = payment.currency.symbol)
         }

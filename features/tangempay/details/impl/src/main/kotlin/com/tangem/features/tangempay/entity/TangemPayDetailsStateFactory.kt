@@ -6,6 +6,7 @@ import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfi
 import com.tangem.core.ui.components.dropdownmenu.TangemDropdownMenuItem
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.themedColor
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.tangempay.details.impl.R
 import kotlinx.collections.immutable.persistentListOf
@@ -24,12 +25,12 @@ internal class TangemPayDetailsStateFactory(
             items = persistentListOf(
                 TangemDropdownMenuItem(
                     title = TextReference.Res(R.string.tangempay_card_details_change_pin),
-                    textColorProvider = { TangemTheme.colors.text.primary1 },
+                    textColor = themedColor { TangemTheme.colors.text.primary1 },
                     onClick = onClickChangePin,
                 ),
                 TangemDropdownMenuItem(
                     title = TextReference.Res(R.string.tangempay_card_details_freeze_card),
-                    textColorProvider = { TangemTheme.colors.text.primary1 },
+                    textColor = themedColor { TangemTheme.colors.text.primary1 },
                     onClick = onClickFreezeCard,
                 ),
             ),
