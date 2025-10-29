@@ -11,12 +11,13 @@ import com.tangem.screens.onTokenDetailsScreen
 import io.github.kakaocup.compose.node.element.KNode
 import io.qameta.allure.kotlin.Allure.step
 
-fun BaseTestCase.openSendScreen(tokenName: String) {
-    step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$tokenName'") {
-        setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = tokenName)
+fun BaseTestCase.openSendScreen(tokenName: String, mockState: String = "") {
+    val scenarioState = mockState.ifEmpty { tokenName }
+    step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$scenarioState'") {
+        setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = scenarioState)
     }
-    step("Set WireMock scenario: '$QUOTES_API_SCENARIO' to state: '$tokenName'") {
-        setWireMockScenarioState(scenarioName = QUOTES_API_SCENARIO, state = tokenName)
+    step("Set WireMock scenario: '$QUOTES_API_SCENARIO' to state: '$scenarioState'") {
+        setWireMockScenarioState(scenarioName = QUOTES_API_SCENARIO, state = scenarioState)
     }
     step("Open 'Main Screen'") {
         openMainScreen()
@@ -33,9 +34,8 @@ fun BaseTestCase.openSendScreen(tokenName: String) {
 }
 
 fun BaseTestCase.checkSendWarning(
-    titleResId: Int,
-    messageResId: Int,
-    amount: String,
+    title: String,
+    message: String,
     isDisplayed: Boolean = true,
     sendButtonIsDisabled: Boolean = isDisplayed,
 ) {
@@ -43,22 +43,22 @@ fun BaseTestCase.checkSendWarning(
 
     step("Assert 'Send confirm screen' is displayed") {
         onSendConfirmScreen {
-            title.assertIsDisplayed()
+            appBarTitle.assertIsDisplayed()
         }
     }
     step("Assert warning title is $assertDisplay") {
         onSendConfirmScreen {
-            warningTitle(titleResId).assertVisibility(isDisplayed)
+            warningTitle(title).assertVisibility(isDisplayed)
         }
     }
     step("Assert warning icon is $assertDisplay") {
         onSendConfirmScreen {
-            sendWarningIcon(messageResId, amount).assertVisibility(isDisplayed)
+            sendWarningIcon(message).assertVisibility(isDisplayed)
         }
     }
     step("Assert warning message is $assertDisplay") {
         onSendConfirmScreen {
-            sendWarningMessage(messageResId, amount).assertVisibility(isDisplayed)
+            sendWarningMessage(message).assertVisibility(isDisplayed)
         }
     }
     if (sendButtonIsDisabled)
