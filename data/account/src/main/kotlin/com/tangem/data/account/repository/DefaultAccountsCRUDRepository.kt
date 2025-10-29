@@ -1,8 +1,11 @@
 package com.tangem.data.account.repository
 
+import android.content.res.Resources
 import arrow.core.Option
 import arrow.core.raise.option
 import arrow.core.toOption
+import com.tangem.common.ui.account.AccountNameUM
+import com.tangem.core.res.getStringSafe
 import com.tangem.data.account.converter.AccountConverterFactoryContainer
 import com.tangem.data.account.converter.ArchivedAccountConverter
 import com.tangem.data.account.store.AccountsResponseStore
@@ -26,6 +29,7 @@ import com.tangem.domain.account.models.ArchivedAccount
 import com.tangem.domain.account.repository.AccountsCRUDRepository
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
+import com.tangem.domain.models.account.AccountName
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -48,6 +52,7 @@ internal class DefaultAccountsCRUDRepository(
     private val userTokensSaver: UserTokensSaver,
     private val archivedAccountsETagStore: RuntimeStateStore<Map<String, String?>>,
     private val convertersContainer: AccountConverterFactoryContainer,
+    private val resources: Resources,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : AccountsCRUDRepository {
 
@@ -196,6 +201,19 @@ internal class DefaultAccountsCRUDRepository(
     override fun getUserWallets(): Flow<List<UserWallet>> = userWalletsStore.userWallets
 
     override fun getUserWalletsSync(): List<UserWallet> = userWalletsStore.userWalletsSync
+
+    override fun checkDefaultAccountName(accountList: AccountList, accountName: AccountName) {
+        val hasDefaultName = accountList.accounts.any { it.accountName is AccountName.DefaultMain }
+
+        if (!hasDefaultName) return
+
+        val defaultName = resources.getStringSafe(AccountNameUM.DefaultMain.stringResId)
+            .let(AccountName::invoke).getOrNull()
+
+        require(defaultName != accountName) {
+            "Cannot use default account name \"$accountName\" for custom accounts"
+        }
+    }
 
     private suspend fun saveETag(userWalletId: UserWalletId, apiResponse: ApiResponse<*>) {
         val eTag = apiResponse.headers[ETAG_HEADER]?.firstOrNull()
