@@ -13,7 +13,7 @@ import androidx.compose.ui.test.hasText as withText
 class SendConfirmPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
     ComposeScreen<SendConfirmPageObject>(semanticsProvider = semanticsProvider) {
 
-    val title: KNode = child {
+    val appBarTitle: KNode = child {
         hasTestTag(TopAppBarTestTags.TITLE)
         useUnmergedTree = true
     }
@@ -41,9 +41,9 @@ class SendConfirmPageObject(semanticsProvider: SemanticsNodeInteractionsProvider
         useUnmergedTree = true
     }
 
-    fun warningTitle(titleResId: Int): KNode = child {
+    fun warningTitle(title: String): KNode = child {
         hasTestTag(NotificationTestTags.TITLE)
-        hasText(getResourceString(titleResId))
+        hasText(title)
         useUnmergedTree = true
     }
 
@@ -52,33 +52,17 @@ class SendConfirmPageObject(semanticsProvider: SemanticsNodeInteractionsProvider
         useUnmergedTree = true
     }
 
-    fun sendWarningIcon(messageResId: Int, amount: String): KNode = child {
+    fun sendWarningIcon(message: String): KNode = child {
         hasTestTag(NotificationTestTags.ICON)
-        hasAnySibling(
-            withText(
-                getResourceString(
-                    messageResId,
-                    amount,
-                    amount,
-                )
-            )
-
-        )
+        hasAnySibling(withText(message))
         useUnmergedTree = true
     }
 
     fun sendWarningMessage(
-        messageResId: Int,
-        amount: String,
+        message: String,
     ): KNode = child {
         hasTestTag(NotificationTestTags.MESSAGE)
-        hasText(
-            getResourceString(
-                messageResId,
-                amount,
-                amount,
-            )
-        )
+        hasText(message)
         useUnmergedTree = true
     }
 
