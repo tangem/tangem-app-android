@@ -270,7 +270,7 @@ internal class SendDestinationModel @Inject constructor(
     private fun getAddedAddresses(): Flow<List<DestinationWalletUM>> {
         return combine(
             flow = getWalletsUseCase().conflate(),
-            flow2 = multiAccountStatusListSupplier(Unit).conflate(),
+            flow2 = multiAccountStatusListSupplier().conflate(),
         ) { wallets, accountList ->
             val cryptoCurrencyNetwork = cryptoCurrency.network
 
