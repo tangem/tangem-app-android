@@ -16,13 +16,17 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.dp
+import com.tangem.common.ui.account.AccountIconPreviewData
+import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheet
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetTitle
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetWithFooter
 import com.tangem.core.ui.components.divider.DividerWithPadding
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.walletconnect.connections.entity.VerifiedDAppState
@@ -115,10 +119,10 @@ private fun WcSignTransactionItems(state: WcSignTransactionItemUM, modifier: Mod
             .fillMaxWidth()
             .padding(12.dp)
 
-        if (state.walletName != null) {
-            WcWalletItem(
+        if (state.portfolioName != null) {
+            WcPortfolioItem(
                 modifier = itemsModifier,
-                walletName = state.walletName,
+                portfolioName = state.portfolioName,
             )
             DividerWithPadding(start = 40.dp, end = 12.dp)
         }
@@ -182,7 +186,7 @@ private class WcSignTransactionStateProvider : CollectionPreviewParameterProvide
                 verifiedState = VerifiedDAppState.Verified {},
                 appSubtitle = "react-app.walletconnect.com",
             ),
-            walletName = "Tangem 2.0",
+            portfolioName = walletPortfolioName,
             networkInfo = WcNetworkInfoUM(name = "Ethereum", iconRes = R.drawable.img_eth_22),
             address = null,
             walletInteractionIcon = R.drawable.ic_tangem_24,
@@ -196,10 +200,20 @@ private class WcSignTransactionStateProvider : CollectionPreviewParameterProvide
                 verifiedState = VerifiedDAppState.Verified {},
                 appSubtitle = "react-app.walletconnect.com",
             ),
-            walletName = null,
+            portfolioName = null,
             networkInfo = WcNetworkInfoUM(name = "Ethereum", iconRes = R.drawable.img_eth_22),
             address = "0xdac17f958d2ee523a2206206994597c13d831ec7",
             walletInteractionIcon = R.drawable.ic_tangem_24,
         ),
     ),
 )
+
+internal val walletPortfolioName
+    get() = AccountTitleUM.Text(title = stringReference("Wallet 1"))
+
+internal val accountPortfolioName
+    get() = AccountTitleUM.Account(
+        icon = AccountIconPreviewData.randomAccountIcon(),
+        name = stringReference("Main Account"),
+        prefixText = TextReference.EMPTY,
+    )
