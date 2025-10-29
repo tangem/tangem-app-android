@@ -58,6 +58,7 @@ internal class WalletWarningsAnalyticsSender @Inject constructor(
                 program = Program.Sepa,
             )
             is WalletNotification.ReferralPromo -> MainScreen.ReferralPromo
+            is WalletNotification.VisaPresalePromo -> MainScreen.VisaWaitlistPromo
             is WalletNotification.UnlockWallets -> null // See [SelectedWalletAnalyticsSender]
             is WalletNotification.Informational.NoAccount,
             is WalletNotification.Warning.LowSignatures,
