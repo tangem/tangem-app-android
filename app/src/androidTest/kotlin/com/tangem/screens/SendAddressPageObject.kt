@@ -9,9 +9,9 @@ import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
 import io.github.kakaocup.compose.node.element.KNode
 import io.github.kakaocup.kakao.common.utilities.getResourceString
-import com.tangem.core.ui.R as CoreUiR
-import androidx.compose.ui.test.hasText as withText
 import androidx.compose.ui.test.hasTestTag as withTestTag
+import androidx.compose.ui.test.hasText as withText
+import com.tangem.core.ui.R as CoreUiR
 
 class SendAddressPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
     ComposeScreen<SendAddressPageObject>(semanticsProvider = semanticsProvider) {
@@ -85,6 +85,12 @@ class SendAddressPageObject(semanticsProvider: SemanticsNodeInteractionsProvider
     val nextButton: KNode = child {
         hasTestTag(BaseButtonTestTags.BUTTON)
         hasAnyDescendant(withText(getResourceString(R.string.common_next)))
+        useUnmergedTree = true
+    }
+
+    val continueButton: KNode = child {
+        hasTestTag(BaseButtonTestTags.TEXT)
+        hasText(getResourceString(R.string.common_continue))
         useUnmergedTree = true
     }
 
