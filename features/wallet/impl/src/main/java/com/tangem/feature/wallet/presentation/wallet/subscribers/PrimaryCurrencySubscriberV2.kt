@@ -8,7 +8,6 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.settings.SetWalletWithFundsFoundUseCase
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetPrimaryCurrencyTransformer
@@ -24,7 +23,6 @@ internal class PrimaryCurrencySubscriberV2(
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val stateController: WalletStateController,
     private val analyticsEventHandler: AnalyticsEventHandler,
-    private val setWalletWithFundsFoundUseCase: SetWalletWithFundsFoundUseCase,
 ) : BasicSingleWalletSubscriber() {
 
     override fun create(coroutineScope: CoroutineScope): Flow<*> {
@@ -36,7 +34,6 @@ internal class PrimaryCurrencySubscriberV2(
             .onEach { (status, appCurrency) ->
                 updateContent(status, appCurrency)
                 sendAnalyticsEvent(status)
-                checkWalletWithFunds(status)
             }
     }
 
@@ -83,9 +80,5 @@ internal class PrimaryCurrencySubscriberV2(
             fiatAmount.isZero() -> AnalyticsParam.CardBalanceState.Empty
             else -> AnalyticsParam.CardBalanceState.Full
         }
-    }
-
-    private suspend fun checkWalletWithFunds(status: CryptoCurrencyStatus) {
-        if (status.value.amount?.isZero() == false) setWalletWithFundsFoundUseCase()
     }
 }
