@@ -3,6 +3,10 @@ package com.tangem.tap.data
 import android.content.Context
 import com.squareup.moshi.Moshi
 import com.tangem.datasource.di.NetworkMoshi
+import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.datasource.local.preferences.utils.getSyncOrNull
+import com.tangem.datasource.local.preferences.utils.store
 import com.tangem.datasource.local.visa.TangemPayStorage
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.visa.model.VisaAuthTokens
@@ -21,6 +25,7 @@ internal class DefaultTangemPayStorage @Inject constructor(
     @ApplicationContext applicationContext: Context,
     @NetworkMoshi moshi: Moshi,
     private val dispatcherProvider: CoroutineDispatcherProvider,
+    private val appPreferencesStore: AppPreferencesStore,
 ) : TangemPayStorage {
 
     private val secureStorage by lazy {
@@ -75,6 +80,20 @@ internal class DefaultTangemPayStorage @Inject constructor(
         secureStorage.get(createOrderIdKey(customerWalletAddress))?.decodeToString(throwOnInvalidSequence = true)
     }
 
+    override suspend fun getAddToWalletDone(customerWalletAddress: String): Boolean {
+        return withContext(dispatcherProvider.io) {
+            appPreferencesStore.getSyncOrNull(
+                key = PreferencesKeys.getTangemPayAddToWalletKey(customerWalletAddress),
+            ) == true
+        }
+    }
+
+    override suspend fun storeAddToWalletDone(customerWalletAddress: String, isDone: Boolean) {
+        withContext(dispatcherProvider.io) {
+            appPreferencesStore.store(PreferencesKeys.getTangemPayAddToWalletKey(customerWalletAddress), isDone)
+        }
+    }
+
     override suspend fun clearOrderId(customerWalletAddress: String) = withContext(dispatcherProvider.io) {
         secureStorage.delete(createOrderIdKey(customerWalletAddress))
     }
@@ -84,6 +103,7 @@ internal class DefaultTangemPayStorage @Inject constructor(
             secureStorage.delete(createCustomerAddressKey(userWalletId))
             secureStorage.delete(createKey(customerWalletAddress))
             secureStorage.delete(createOrderIdKey(customerWalletAddress))
+            appPreferencesStore.store(PreferencesKeys.getTangemPayAddToWalletKey(customerWalletAddress), false)
         }
 
     private fun createCustomerAddressKey(userWalletId: UserWalletId): String = userWalletId.stringValue
