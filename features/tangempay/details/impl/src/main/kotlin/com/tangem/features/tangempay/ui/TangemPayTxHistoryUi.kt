@@ -28,6 +28,7 @@ import com.tangem.core.ui.components.buttons.actions.ActionButton
 import com.tangem.core.ui.components.list.InfiniteListHandler
 import com.tangem.core.ui.components.transactions.TxHistoryGroupTitle
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
+import com.tangem.core.ui.extensions.ImageReference
 import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
@@ -256,27 +257,14 @@ private fun TangemPayTransaction(
 @Composable
 private fun Icon(state: TangemPayTransactionState, modifier: Modifier = Modifier) {
     when (state) {
-        is TangemPayTransactionState.Content.Spend -> {
-            if (state.iconUrl != null) {
-                RemoteIcon(modifier = modifier, url = state.iconUrl)
-            } else {
-                LocalStaticIcon(
-                    modifier = modifier,
-                    id = R.drawable.ic_category_24,
-                    iconSize = TangemTheme.dimens.size20,
-                )
-            }
+        is TangemPayTransactionState.Content -> when (val iconReference = state.icon) {
+            is ImageReference.Url -> RemoteIcon(modifier = modifier, url = iconReference.url)
+            is ImageReference.Res -> LocalStaticIcon(
+                modifier = modifier,
+                id = iconReference.resId,
+                iconSize = TangemTheme.dimens.size20,
+            )
         }
-        is TangemPayTransactionState.Content.Fee -> LocalStaticIcon(
-            modifier = modifier,
-            id = R.drawable.ic_percent_24,
-            iconSize = TangemTheme.dimens.size20,
-        )
-        is TangemPayTransactionState.Content.Payment -> LocalStaticIcon(
-            modifier = modifier,
-            id = if (state.isIncome) R.drawable.ic_arrow_down_24 else R.drawable.ic_arrow_up_24,
-            iconSize = TangemTheme.dimens.size20,
-        )
         is TangemPayTransactionState.Loading -> CircleShimmer(modifier = modifier)
     }
 }
@@ -330,7 +318,7 @@ private fun Amount(state: TangemPayTransactionState, isBalanceHidden: Boolean, m
                 text = state.amount.orMaskWithStars(isBalanceHidden),
                 modifier = modifier,
                 textAlign = TextAlign.End,
-                color = state.amountColor(),
+                color = state.amountColor.resolveReference(),
                 style = TangemTheme.typography.body2,
             )
         }
