@@ -1,15 +1,12 @@
 package com.tangem.features.onramp.mainv2.entity.factory
 
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
-import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.domain.onramp.model.*
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.mainv2.entity.*
 import com.tangem.utils.Provider
-import com.tangem.utils.StringsSigns.MINUS
 import kotlinx.collections.immutable.toPersistentList
 
 internal class OnrampOffersStateFactory(
@@ -52,9 +49,7 @@ internal class OnrampOffersStateFactory(
                                         decimals = currentQuote.toAmount.decimals,
                                     )
                                 },
-                                diff = offer.rateDif?.let { diff ->
-                                    stringReference("$MINUS${diff.format { percent() }}")
-                                },
+                                diff = null, // on main screen diff should not be shown
                                 onBuyClicked = {
                                     onrampIntents.onBuyClick(
                                         quote = OnrampProviderWithQuote.Data(
