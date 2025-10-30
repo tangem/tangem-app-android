@@ -71,6 +71,8 @@ interface SwapInteractor {
         swapData: SwapDataModel?,
         currencyToSend: CryptoCurrencyStatus,
         currencyToGet: CryptoCurrencyStatus,
+        fromAccount: Account.CryptoPortfolio?,
+        toAccount: Account.CryptoPortfolio?,
         amountToSwap: String,
         includeFeeInAmount: IncludeFeeInAmount,
         fee: TxFee,
