@@ -29,7 +29,7 @@
     },
     {
         "name": "HOT_WALLET_ENABLED",
-        "version": "undefined"
+        "version": "5.30.0"
     },
     {
         "name": "TANGEM_PAY_ENABLED",
@@ -41,7 +41,7 @@
     },
     {
         "name": "YIELD_SUPPLY_FEATURE_ENABLED",
-        "version": "5.30.0"
+        "version": "undefined"
     },
     {
         "name": "NEW_ONRAMP_MAIN_ENABLED",
