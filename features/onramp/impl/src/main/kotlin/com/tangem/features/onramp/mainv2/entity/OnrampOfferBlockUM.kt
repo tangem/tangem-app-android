@@ -16,7 +16,7 @@ internal sealed interface OnrampOffersBlockUM {
     data class Content(
         val recentOffer: OnrampOfferUM?,
         val recommended: ImmutableList<OnrampOfferUM>,
-        val onrampAllOffersButtonConfig: OnrampAllOffersButtonConfig?,
+        val onrampAllOffersButtonConfig: OnrampAllOffersButtonConfig,
     ) : OnrampOffersBlockUM
 }
 
