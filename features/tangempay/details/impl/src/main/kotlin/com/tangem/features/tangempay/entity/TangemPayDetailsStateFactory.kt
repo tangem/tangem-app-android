@@ -45,6 +45,7 @@ internal class TangemPayDetailsStateFactory(
                 ),
             ),
         ),
+        addToWalletBlockState = null,
         isBalanceHidden = false,
     )
 }
