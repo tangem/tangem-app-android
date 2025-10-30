@@ -90,10 +90,21 @@ internal fun TangemPayDetailsScreen(
                         )
                     },
                 )
-                with(cardDetailsBlockComponent) {
-                    item(TangemPayCardDetailsUM::class.java) {
-                        CardDetailsBlockContent(state = cardDetailsState)
-                    }
+                if (state.addToWalletBlockState != null) {
+                    item(
+                        key = AddToWalletBlockState::class.java,
+                        content = {
+                            TangemPayAddToWalletBlock(
+                                state = state.addToWalletBlockState,
+                                modifier = Modifier
+                                    .padding(top = TangemTheme.dimens.spacing12)
+                                    .padding(horizontal = TangemTheme.dimens.spacing16),
+                            )
+                        },
+                    )
+                }
+                item(TangemPayCardDetailsUM::class.java) {
+                    TangemPayCardDetailsBlockItem(component = cardDetailsBlockComponent, state = cardDetailsState)
                 }
                 with(txHistoryComponent) { txHistoryContent(listState = listState, state = txHistoryState) }
             }
@@ -300,12 +311,14 @@ private class TangemPayDetailsUMProvider : CollectionPreviewParameterProvider<Ta
                 fiatBalance = "$1234.56",
                 isBalanceFlickering = false,
             ),
+            addToWalletBlockState = AddToWalletBlockState({}, {}),
             isBalanceHidden = false,
         ),
         TangemPayDetailsUM(
             topBarConfig = TangemPayDetailsTopBarConfig(onBackClick = {}, items = null),
             pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = {}),
             balanceBlockState = TangemPayDetailsBalanceBlockState.Loading(actionButtons = persistentListOf()),
+            addToWalletBlockState = AddToWalletBlockState({}, {}),
             isBalanceHidden = false,
         ),
     ),
