@@ -13,4 +13,8 @@ interface CardDetailsRepository {
     suspend fun revealCardDetails(): Either<UniversalError, TangemPayCardDetails>
 
     suspend fun setPin(pin: String): Either<UniversalError, SetPinResult>
+
+    suspend fun isAddToWalletDone(): Either<UniversalError, Boolean>
+
+    suspend fun setAddToWalletAsDone(): Either<UniversalError, Unit>
 }
