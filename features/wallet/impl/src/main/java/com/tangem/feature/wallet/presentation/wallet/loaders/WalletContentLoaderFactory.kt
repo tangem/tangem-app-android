@@ -1,6 +1,7 @@
 package com.tangem.feature.wallet.presentation.wallet.loaders
 
 import com.tangem.core.decompose.di.ModelScoped
+import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.isMultiCurrency
@@ -12,7 +13,9 @@ import javax.inject.Inject
 internal class WalletContentLoaderFactory @Inject constructor(
     private val multiWalletContentLoaderFactory: MultiWalletContentLoaderFactory,
     private val singleWalletWithTokenContentLoaderFactory: SingleWalletWithTokenContentLoaderFactory,
+    private val accountsFeatureToggles: AccountsFeatureToggles,
     private val singleWalletContentLoaderFactory: SingleWalletContentLoaderFactory,
+    private val singleWalletContentLoaderV2Factory: SingleWalletContentLoaderV2.Factory,
     private val visaWalletContentLoaderFactory: VisaWalletContentLoaderFactory,
 ) {
 
@@ -32,7 +35,11 @@ internal class WalletContentLoaderFactory @Inject constructor(
                 visaWalletContentLoaderFactory.create(userWallet, clickIntents, isRefresh)
             }
             userWallet is UserWallet.Cold && !userWallet.isMultiCurrency -> {
-                singleWalletContentLoaderFactory.create(userWallet, clickIntents, isRefresh)
+                if (accountsFeatureToggles.isFeatureEnabled) {
+                    singleWalletContentLoaderV2Factory.create(userWallet, isRefresh)
+                } else {
+                    singleWalletContentLoaderFactory.create(userWallet, clickIntents, isRefresh)
+                }
             }
             else -> null
         }
