@@ -9,6 +9,7 @@ internal data class TangemPayDetailsUM(
     val topBarConfig: TangemPayDetailsTopBarConfig,
     val pullToRefreshConfig: PullToRefreshConfig,
     val balanceBlockState: TangemPayDetailsBalanceBlockState,
+    val addToWalletBlockState: AddToWalletBlockState?,
     val isBalanceHidden: Boolean,
 )
 
@@ -42,3 +43,8 @@ internal sealed class TangemPayDetailsBalanceBlockState {
         override val actionButtons: ImmutableList<ActionButtonConfig>,
     ) : TangemPayDetailsBalanceBlockState()
 }
+
+internal data class AddToWalletBlockState(
+    val onClick: () -> Unit,
+    val onClickClose: () -> Unit,
+)
