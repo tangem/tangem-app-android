@@ -2,6 +2,7 @@ package com.tangem.features.tangempay.di
 
 import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.model.Model
+import com.tangem.features.tangempay.model.TangemPayAddToWalletModel
 import com.tangem.features.tangempay.model.TangemPayCardDetailsBlockModel
 import com.tangem.features.tangempay.model.TangemPayChangePinModel
 import com.tangem.features.tangempay.model.TangemPayDetailsModel
@@ -41,4 +42,9 @@ internal interface TangemPayModelModule {
     @IntoMap
     @ClassKey(TangemPayCardDetailsBlockModel::class)
     fun bindTangemPayCardDetailsBlockModel(model: TangemPayCardDetailsBlockModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(TangemPayAddToWalletModel::class)
+    fun bindTangemPayAddToWalletModel(model: TangemPayAddToWalletModel): Model
 }
