@@ -6,7 +6,6 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.onramp.GetOnrampTransactionsUseCase
 import com.tangem.domain.onramp.OnrampRemoveTransactionUseCase
-import com.tangem.domain.settings.SetWalletWithFundsFoundUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
 import com.tangem.domain.wallets.usecase.ShouldSaveUserWalletsUseCase
@@ -14,8 +13,10 @@ import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.account.AccountDependencies
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.WalletWarningsAnalyticsSender
 import com.tangem.feature.wallet.presentation.wallet.domain.GetSingleWalletWarningsFactory
+import com.tangem.feature.wallet.presentation.wallet.domain.WalletWithFundsChecker
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.subscribers.*
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -28,7 +29,6 @@ internal class SingleWalletContentLoaderV2 @AssistedInject constructor(
     private val stateHolder: WalletStateController,
     private val getCryptoCurrencyActionsUseCaseV2: GetCryptoCurrencyActionsUseCaseV2,
     private val getSingleWalletWarningsFactory: GetSingleWalletWarningsFactory,
-    private val setWalletWithFundsFoundUseCase: SetWalletWithFundsFoundUseCase,
     private val txHistoryItemsCountUseCase: GetTxHistoryItemsCountUseCase,
     private val txHistoryItemsUseCase: GetTxHistoryItemsUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
@@ -38,6 +38,8 @@ internal class SingleWalletContentLoaderV2 @AssistedInject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val walletWarningsAnalyticsSender: WalletWarningsAnalyticsSender,
     private val accountDependencies: AccountDependencies,
+    private val walletWithFundsChecker: WalletWithFundsChecker,
+    private val dispatchers: CoroutineDispatcherProvider,
 ) : WalletContentLoader(id = userWallet.walletId) {
 
     override fun create(): List<WalletSubscriber> = listOf(
@@ -47,7 +49,6 @@ internal class SingleWalletContentLoaderV2 @AssistedInject constructor(
             getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
             stateController = stateHolder,
             analyticsEventHandler = analyticsEventHandler,
-            setWalletWithFundsFoundUseCase = setWalletWithFundsFoundUseCase,
         ),
         SingleWalletButtonsSubscriberV2(
             userWallet = userWallet,
@@ -86,6 +87,12 @@ internal class SingleWalletContentLoaderV2 @AssistedInject constructor(
             isRefresh = isRefresh,
             stateController = stateHolder,
             clickIntents = clickIntents,
+        ),
+        CheckWalletWithFundsSubscriber(
+            userWallet = userWallet,
+            singleAccountStatusListSupplier = accountDependencies.singleAccountStatusListSupplier,
+            walletWithFundsChecker = walletWithFundsChecker,
+            dispatchers = dispatchers,
         ),
     )
 
