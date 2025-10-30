@@ -15,10 +15,13 @@ import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.wallets.derivations.DerivationsRepository
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
 import javax.inject.Singleton
 
 @Module
@@ -67,6 +70,7 @@ object MarketsDomainModule {
         multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
         multiYieldBalanceFetcher: MultiYieldBalanceFetcher,
         stakingIdFactory: StakingIdFactory,
+        dispatchers: CoroutineDispatcherProvider,
     ): SaveMarketTokensUseCase {
         return SaveMarketTokensUseCase(
             derivationsRepository = derivationsRepository,
@@ -76,6 +80,7 @@ object MarketsDomainModule {
             multiQuoteStatusFetcher = multiQuoteStatusFetcher,
             multiYieldBalanceFetcher = multiYieldBalanceFetcher,
             stakingIdFactory = stakingIdFactory,
+            parallelUpdatingScope = CoroutineScope(SupervisorJob() + dispatchers.default),
         )
     }
 
