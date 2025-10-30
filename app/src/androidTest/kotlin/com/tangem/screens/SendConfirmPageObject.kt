@@ -9,6 +9,8 @@ import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onCompose
 import io.github.kakaocup.compose.node.element.KNode
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 import androidx.compose.ui.test.hasText as withText
+import androidx.compose.ui.test.hasTestTag as withTestTag
+import com.tangem.core.ui.R as CoreUiR
 
 class SendConfirmPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
     ComposeScreen<SendConfirmPageObject>(semanticsProvider = semanticsProvider) {
@@ -26,6 +28,11 @@ class SendConfirmPageObject(semanticsProvider: SemanticsNodeInteractionsProvider
 
     val primaryAmount: KNode = child {
         hasTestTag(BaseAmountBlockTestTags.PRIMARY_AMOUNT)
+        useUnmergedTree = true
+    }
+
+    val secondaryAmount: KNode = child {
+        hasTestTag(BaseAmountBlockTestTags.SECONDARY_AMOUNT)
         useUnmergedTree = true
     }
 
@@ -66,6 +73,18 @@ class SendConfirmPageObject(semanticsProvider: SemanticsNodeInteractionsProvider
         useUnmergedTree = true
     }
 
+    fun warningMessage(messageResId: Int): KNode = child {
+        hasTestTag(NotificationTestTags.MESSAGE)
+        hasText(getResourceString(messageResId))
+        useUnmergedTree = true
+    }
+
+    fun warningIcon(messageResId: Int): KNode = child {
+        hasTestTag(NotificationTestTags.ICON)
+        hasAnySibling(withText(getResourceString(messageResId)))
+        useUnmergedTree = true
+    }
+
     fun recipientAddress(recipientAddress: String): KNode = child {
         hasTestTag(SendConfirmScreenTestTags.RECIPIENT_ADDRESS)
         hasText(recipientAddress)
@@ -75,6 +94,40 @@ class SendConfirmPageObject(semanticsProvider: SemanticsNodeInteractionsProvider
     val blockchainAddress: KNode = child {
         hasTestTag(SendConfirmScreenTestTags.BLOCKCHAIN_ADDRESS)
         useUnmergedTree = true
+    }
+
+    val feeSelectorBlock: KNode = child {
+        hasTestTag(FeeSelectorBlockTestTags.SELECTOR_BLOCK)
+    }
+
+    val feeSelectorIcon: KNode = child {
+        hasTestTag(FeeSelectorBlockTestTags.ICON)
+        useUnmergedTree = true
+    }
+
+    val feeSelectorTitle: KNode = child {
+        hasTestTag(FeeSelectorBlockTestTags.TITLE)
+        useUnmergedTree = true
+    }
+
+    val feeSelectorTooltipIcon: KNode = child {
+        hasTestTag(FeeSelectorBlockTestTags.TOOLTIP_ICON)
+        useUnmergedTree = true
+    }
+
+    val selectFeeIcon: KNode = child {
+        hasTestTag(FeeSelectorBlockTestTags.SELECT_FEE_ICON)
+        useUnmergedTree = true
+    }
+
+    val feeAmount: KNode = child {
+        hasParent(withTestTag(FeeSelectorBlockTestTags.FEE_AMOUNT))
+        useUnmergedTree = true
+    }
+
+    val refreshButton: KNode = child {
+        hasTestTag(BaseButtonTestTags.BUTTON)
+        hasText(getResourceString(CoreUiR.string.warning_button_refresh))
     }
 }
 
