@@ -801,10 +801,10 @@ internal class TokenDetailsModel @Inject constructor(
         modelScope.launch(dispatchers.main) {
             shouldShowPromoTokenUseCase.neverToShow(promoId)
             analyticsEventsHandler.send(
-                TokenSwapPromoAnalyticsEvent.PromotionBannerClicked(
+                PromoAnalyticsEvent.PromotionBannerClicked(
                     source = AnalyticsParam.ScreensSources.Token,
-                    program = TokenSwapPromoAnalyticsEvent.Program.Empty, // Use it on new promo action
-                    action = TokenSwapPromoAnalyticsEvent.PromotionBannerClicked.BannerAction.Closed,
+                    program = PromoAnalyticsEvent.Program.Empty, // Use it on new promo action
+                    action = PromoAnalyticsEvent.PromotionBannerClicked.BannerAction.Closed,
                 ),
             )
         }
@@ -814,10 +814,10 @@ internal class TokenDetailsModel @Inject constructor(
         modelScope.launch(dispatchers.main) {
             shouldShowPromoTokenUseCase.neverToShow(promoId)
             analyticsEventsHandler.send(
-                TokenSwapPromoAnalyticsEvent.PromotionBannerClicked(
+                PromoAnalyticsEvent.PromotionBannerClicked(
                     source = AnalyticsParam.ScreensSources.Token,
-                    program = TokenSwapPromoAnalyticsEvent.Program.Empty, // Use it on new promo action
-                    action = TokenSwapPromoAnalyticsEvent.PromotionBannerClicked.BannerAction.Clicked,
+                    program = PromoAnalyticsEvent.Program.Empty, // Use it on new promo action
+                    action = PromoAnalyticsEvent.PromotionBannerClicked.BannerAction.Clicked,
                 ),
             )
         }
