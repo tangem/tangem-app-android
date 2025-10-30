@@ -9,7 +9,7 @@ internal fun calculateRateDif(currentTokenRate: BigDecimal, bestRate: BigDecimal
     if (currentTokenRate > bestRate) return null
 
     val rateDif = BigDecimal.ONE - currentTokenRate / bestRate
-    return if (rateDif >= BigDecimal("0.01")) rateDif else null
+    return if (rateDif >= BigDecimal("0.0001")) rateDif else null
 }
 
 /**
