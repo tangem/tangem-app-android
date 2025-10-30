@@ -32,10 +32,7 @@ import com.tangem.core.ui.test.OnrampOffersBlockTestTags
 import com.tangem.domain.onramp.model.OnrampPaymentMethod
 import com.tangem.domain.onramp.model.PaymentMethodType
 import com.tangem.features.onramp.impl.R
-import com.tangem.features.onramp.mainv2.entity.OnrampOfferAdvantagesUM
-import com.tangem.features.onramp.mainv2.entity.OnrampOfferCategoryUM
-import com.tangem.features.onramp.mainv2.entity.OnrampOfferUM
-import com.tangem.features.onramp.mainv2.entity.OnrampOffersBlockUM
+import com.tangem.features.onramp.mainv2.entity.*
 import kotlinx.collections.immutable.persistentListOf
 
 @Composable
@@ -76,14 +73,12 @@ internal fun OnrampOffersContent(state: OnrampOffersBlockUM) {
                     }
                 }
 
-                state.onrampAllOffersButtonConfig?.let {
-                    SpacerH(12.dp)
-                    SecondaryButton(
-                        modifier = Modifier.fillMaxWidth(),
-                        text = it.title.resolveReference(),
-                        onClick = it.onClick,
-                    )
-                }
+                SpacerH(12.dp)
+                SecondaryButton(
+                    modifier = Modifier.fillMaxWidth(),
+                    text = state.onrampAllOffersButtonConfig.title.resolveReference(),
+                    onClick = state.onrampAllOffersButtonConfig.onClick,
+                )
             }
         }
         OnrampOffersBlockUM.Loading -> {
@@ -413,7 +408,10 @@ private fun OnrampOffersContentPreview() {
                 onBuyClicked = {},
             ),
         ),
-        onrampAllOffersButtonConfig = null,
+        onrampAllOffersButtonConfig = OnrampAllOffersButtonConfig(
+            title = TextReference.Res(R.string.onramp_all_offers_button_title),
+            onClick = { },
+        ),
     )
     TangemThemePreview {
         OnrampOffersContent(state)
