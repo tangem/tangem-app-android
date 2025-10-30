@@ -29,8 +29,9 @@ import com.tangem.domain.settings.NeverToSuggestRateAppUseCase
 import com.tangem.domain.settings.RemindToRateAppLaterUseCase
 import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
-import com.tangem.domain.tokens.model.analytics.TokenSwapPromoAnalyticsEvent.Program
-import com.tangem.domain.tokens.model.analytics.TokenSwapPromoAnalyticsEvent.PromotionBannerClicked
+import com.tangem.domain.tokens.model.analytics.PromoAnalyticsEvent
+import com.tangem.domain.tokens.model.analytics.PromoAnalyticsEvent.Program
+import com.tangem.domain.tokens.model.analytics.PromoAnalyticsEvent.PromotionBannerClicked
 import com.tangem.domain.wallets.legacy.UserWalletsListManager.Lockable.UnlockType
 import com.tangem.domain.wallets.models.UnlockWalletsError
 import com.tangem.domain.wallets.usecase.DerivePublicKeysUseCase
@@ -293,7 +294,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
                     program = Program.Sepa,
                     action = PromotionBannerClicked.BannerAction.Closed,
                 )
-                PromoId.VisaPresale -> MainScreen.VisaWaitlistPromoDismiss
+                PromoId.VisaPresale -> PromoAnalyticsEvent.VisaWaitlistPromoDismiss
             },
 
         )
@@ -328,7 +329,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
                 )
             }
             PromoId.VisaPresale -> {
-                analyticsEventHandler.send(MainScreen.VisaWaitlistPromoJoin)
+                analyticsEventHandler.send(PromoAnalyticsEvent.VisaWaitlistPromoJoin)
                 urlOpener.openUrl(VISA_PROMO_LINK)
             }
         }
