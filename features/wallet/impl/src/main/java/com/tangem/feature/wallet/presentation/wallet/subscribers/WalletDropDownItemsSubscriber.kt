@@ -5,7 +5,9 @@ import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetWalletCardDropDownItemsTransformer
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.onEach
 
 internal class WalletDropDownItemsSubscriber(
     private val stateHolder: WalletStateController,
@@ -13,18 +15,15 @@ internal class WalletDropDownItemsSubscriber(
     private val clickIntents: WalletClickIntents,
 ) : WalletSubscriber() {
     override fun create(coroutineScope: CoroutineScope): Flow<*> {
-        return flow<Any> {
-            shouldSaveUserWalletsUseCase.invoke()
-                .distinctUntilChanged()
-                .onEach {
-                    stateHolder.update(
-                        SetWalletCardDropDownItemsTransformer(
-                            dropdownEnabled = it,
-                            clickIntents = clickIntents,
-                        ),
-                    )
-                }
-                .launchIn(coroutineScope)
-        }
+        return shouldSaveUserWalletsUseCase.invoke()
+            .distinctUntilChanged()
+            .onEach {
+                stateHolder.update(
+                    SetWalletCardDropDownItemsTransformer(
+                        dropdownEnabled = it,
+                        clickIntents = clickIntents,
+                    ),
+                )
+            }
     }
 }
