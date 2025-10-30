@@ -1,11 +1,15 @@
 package com.tangem.features.tangempay.model.transformers
 
+import com.tangem.core.ui.extensions.ImageReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.themedColor
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
+import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.entity.TangemPayTransactionState
 import com.tangem.features.tangempay.utils.TangemPayTxHistoryUiActions
 import com.tangem.utils.StringsSigns
@@ -22,6 +26,7 @@ internal class TangemPayTxHistoryItemsConverter(
             is TangemPayTxHistoryItem.Spend -> convertSpend(spend = value)
             is TangemPayTxHistoryItem.Payment -> convertPayment(payment = value)
             is TangemPayTxHistoryItem.Fee -> convertFee(fee = value)
+            is TangemPayTxHistoryItem.Collateral -> convertCollateral(collateral = value)
         }
     }
 
@@ -38,7 +43,7 @@ internal class TangemPayTxHistoryItemsConverter(
             id = spend.id,
             onClick = { txHistoryUiActions.onTransactionClick(spend) },
             amount = amount,
-            amountColor = {
+            amountColor = themedColor {
                 when (spend.status) {
                     TangemPayTxHistoryItem.Status.DECLINED -> TangemTheme.colors.text.warning
                     else -> TangemTheme.colors.text.primary1
@@ -47,14 +52,16 @@ internal class TangemPayTxHistoryItemsConverter(
             title = stringReference(spend.enrichedMerchantName ?: spend.merchantName),
             subtitle = stringReference(spend.enrichedMerchantCategory ?: spend.merchantCategory),
             time = DateTimeFormatters.formatDate(localDate, DateTimeFormatters.timeFormatter),
-            iconUrl = spend.enrichedMerchantIconUrl,
+            icon = spend.enrichedMerchantIconUrl?.let(ImageReference::Url)
+                ?: ImageReference.Res(R.drawable.ic_category_24),
         )
     }
 
     private fun convertPayment(payment: TangemPayTxHistoryItem.Payment): TangemPayTransactionState.Content.Payment {
+        val isIncome = payment.amount.isPositive()
         val amountPrefix = when {
             payment.amount.isZero() -> ""
-            payment.amount.isPositive() -> StringsSigns.PLUS
+            isIncome -> StringsSigns.PLUS
             else -> StringsSigns.MINUS
         }
         val amount = amountPrefix + payment.amount.format {
@@ -65,17 +72,13 @@ internal class TangemPayTxHistoryItemsConverter(
             id = payment.id,
             onClick = { txHistoryUiActions.onTransactionClick(payment) },
             amount = amount,
-            amountColor = {
-                if (payment.amount.isPositive()) {
-                    TangemTheme.colors.text.accent
-                } else {
-                    TangemTheme.colors.text.primary1
-                }
+            amountColor = themedColor {
+                if (payment.amount.isPositive()) TangemTheme.colors.text.accent else TangemTheme.colors.text.primary1
             },
             title = stringReference(title),
             subtitle = stringReference("Transfers"),
             time = DateTimeFormatters.formatDate(payment.date, DateTimeFormatters.timeFormatter),
-            isIncome = payment.amount.isPositive(),
+            icon = ImageReference.Res(if (isIncome) R.drawable.ic_arrow_down_24 else R.drawable.ic_arrow_up_24),
         )
     }
 
@@ -87,10 +90,29 @@ internal class TangemPayTxHistoryItemsConverter(
             id = fee.id,
             onClick = { txHistoryUiActions.onTransactionClick(fee) },
             amount = amount,
-            amountColor = { TangemTheme.colors.text.primary1 },
+            amountColor = themedColor { TangemTheme.colors.text.primary1 },
             title = stringReference("Fee"),
             subtitle = stringReference("Service fees"),
+            icon = ImageReference.Res(R.drawable.ic_percent_24),
             time = DateTimeFormatters.formatDate(fee.date, DateTimeFormatters.timeFormatter),
+        )
+    }
+
+    private fun convertCollateral(
+        collateral: TangemPayTxHistoryItem.Collateral,
+    ): TangemPayTransactionState.Content.Collateral {
+        val amount = StringsSigns.MINUS + collateral.amount.format {
+            fiat(fiatCurrencyCode = collateral.currency.currencyCode, fiatCurrencySymbol = collateral.currency.symbol)
+        }
+        return TangemPayTransactionState.Content.Collateral(
+            id = collateral.id,
+            onClick = { txHistoryUiActions.onTransactionClick(collateral) },
+            amount = amount,
+            amountColor = themedColor { TangemTheme.colors.text.accent },
+            title = resourceReference(R.string.tangem_pay_deposit),
+            subtitle = resourceReference(R.string.common_transfer),
+            icon = ImageReference.Res(R.drawable.ic_arrow_down_24),
+            time = DateTimeFormatters.formatDate(collateral.date, DateTimeFormatters.timeFormatter),
         )
     }
 }
