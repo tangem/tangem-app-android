@@ -181,6 +181,9 @@ object PreferencesKeys {
     fun getHotWalletUnlockDeadlineKey(attemptId: String) =
         longPreferencesKey(name = "hotWalletUnlockDeadline_$attemptId")
 
+    fun getTangemPayAddToWalletKey(customerWalletAddress: String) =
+        booleanPreferencesKey("tangem_pay_add_to_wallet_done_key_$customerWalletAddress")
+
     // endregion
 }
 
