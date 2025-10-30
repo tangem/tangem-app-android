@@ -9,10 +9,7 @@ import com.tangem.common.constants.TestConstants.ETHEREUM_RECIPIENT_ADDRESS
 import com.tangem.common.constants.TestConstants.ETHEREUM_RECIPIENT_SHORTENED_ADDRESS
 import com.tangem.common.constants.TestConstants.XRP_RECIPIENT_ADDRESS
 import com.tangem.common.extensions.clickWithAssertion
-import com.tangem.common.utils.clearClipboard
-import com.tangem.common.utils.resetWireMockScenarioState
-import com.tangem.common.utils.setClipboardText
-import com.tangem.common.utils.setWireMockScenarioState
+import com.tangem.common.utils.*
 import com.tangem.core.ui.R
 import com.tangem.scenarios.openMainScreen
 import com.tangem.scenarios.synchronizeAddresses
