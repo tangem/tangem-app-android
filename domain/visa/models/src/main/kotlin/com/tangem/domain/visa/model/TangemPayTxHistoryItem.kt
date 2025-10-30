@@ -47,6 +47,16 @@ sealed class TangemPayTxHistoryItem {
         override val currency: SerializedCurrency,
     ) : TangemPayTxHistoryItem()
 
+    @Serializable
+    data class Collateral(
+        override val id: String,
+        override val jsonRepresentation: String,
+        override val date: SerializedDateTime,
+        override val amount: SerializedBigDecimal,
+        override val currency: SerializedCurrency,
+        val transactionHash: String,
+    ) : TangemPayTxHistoryItem()
+
     enum class Status {
         PENDING,
         RESERVED,
