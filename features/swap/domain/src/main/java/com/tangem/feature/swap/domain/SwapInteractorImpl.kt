@@ -714,6 +714,8 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         swapData: SwapDataModel?,
         currencyToSend: CryptoCurrencyStatus,
         currencyToGet: CryptoCurrencyStatus,
+        fromAccount: Account.CryptoPortfolio?,
+        toAccount: Account.CryptoPortfolio?,
         amountToSwap: String,
         includeFeeInAmount: IncludeFeeInAmount,
         fee: TxFee,
@@ -749,6 +751,8 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                 onSwapCex(
                     currencyToSend = currencyToSend,
                     currencyToGet = currencyToGet,
+                    fromAccount = fromAccount,
+                    toAccount = toAccount,
                     amount = amountToSwapWithFee,
                     txFee = fee,
                     swapProvider = swapProvider,
@@ -764,6 +768,8 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                         swapData = requireNotNull(swapData),
                         currencyToSendStatus = currencyToSend,
                         currencyToGetStatus = currencyToGet,
+                        fromAccount = fromAccount,
+                        toAccount = toAccount,
                         amountToSwap = amountToSwap,
                     )
                 } else {
@@ -773,6 +779,8 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                         swapData = requireNotNull(swapData),
                         currencyToSendStatus = currencyToSend,
                         currencyToGetStatus = currencyToGet,
+                        fromAccount = fromAccount,
+                        toAccount = toAccount,
                         txFee = fee,
                         amountToSwap = amountToSwap,
                     )
@@ -828,6 +836,8 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         swapData: SwapDataModel,
         currencyToSendStatus: CryptoCurrencyStatus,
         currencyToGetStatus: CryptoCurrencyStatus,
+        fromAccount: Account.CryptoPortfolio?,
+        toAccount: Account.CryptoPortfolio?,
         amountToSwap: String,
         txFee: TxFee,
     ): SwapTransactionState {
@@ -856,6 +866,8 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             swapData = swapData,
             currencyToSendStatus = currencyToSendStatus,
             currencyToGetStatus = currencyToGetStatus,
+            fromAccount = fromAccount,
+            toAccount = toAccount,
             amount = amount,
             derivationPath = derivationPath,
             txData = txData,
@@ -869,6 +881,8 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         swapData: SwapDataModel,
         currencyToSendStatus: CryptoCurrencyStatus,
         currencyToGetStatus: CryptoCurrencyStatus,
+        fromAccount: Account.CryptoPortfolio?,
+        toAccount: Account.CryptoPortfolio?,
         amountToSwap: String,
     ): SwapTransactionState {
         val dexTransaction = swapData.transaction as? ExpressTransactionModel.DEX
@@ -885,6 +899,8 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             swapData = swapData,
             currencyToSendStatus = currencyToSendStatus,
             currencyToGetStatus = currencyToGetStatus,
+            fromAccount = fromAccount,
+            toAccount = toAccount,
             amount = amount,
             derivationPath = derivationPath,
             txData = compiledTransaction,
@@ -898,6 +914,8 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         swapData: SwapDataModel,
         currencyToSendStatus: CryptoCurrencyStatus,
         currencyToGetStatus: CryptoCurrencyStatus,
+        fromAccount: Account.CryptoPortfolio?,
+        toAccount: Account.CryptoPortfolio?,
         amount: SwapAmount,
         derivationPath: String?,
         txData: TransactionData,
@@ -924,6 +942,8 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                     storeSwapTransaction(
                         currencyToSend = currencyToSendStatus,
                         currencyToGet = currencyToGetStatus,
+                        fromAccount = fromAccount,
+                        toAccount = toAccount,
                         amount = amount,
                         swapProvider = provider,
                         swapDataModel = swapData,
@@ -962,6 +982,8 @@ internal class SwapInteractorImpl @AssistedInject constructor(
     private suspend fun onSwapCex(
         currencyToSend: CryptoCurrencyStatus,
         currencyToGet: CryptoCurrencyStatus,
+        fromAccount: Account.CryptoPortfolio?,
+        toAccount: Account.CryptoPortfolio?,
         amount: SwapAmount,
         txFee: TxFee,
         swapProvider: SwapProvider,
@@ -1033,6 +1055,8 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                 storeSwapTransaction(
                     currencyToSend = currencyToSend,
                     currencyToGet = currencyToGet,
+                    fromAccount = fromAccount,
+                    toAccount = toAccount,
                     amount = amount,
                     swapProvider = swapProvider,
                     swapDataModel = exchangeData,
@@ -1066,6 +1090,8 @@ internal class SwapInteractorImpl @AssistedInject constructor(
     private suspend fun storeSwapTransaction(
         currencyToSend: CryptoCurrencyStatus,
         currencyToGet: CryptoCurrencyStatus,
+        fromAccount: Account.CryptoPortfolio?,
+        toAccount: Account.CryptoPortfolio?,
         amount: SwapAmount,
         swapProvider: SwapProvider,
         swapDataModel: SwapDataModel,
@@ -1078,6 +1104,8 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             userWalletId = userWalletId,
             fromCryptoCurrency = currencyToSend.currency,
             toCryptoCurrency = currencyToGet.currency,
+            fromAccount = fromAccount,
+            toAccount = toAccount,
             transaction = SavedSwapTransactionModel(
                 txId = swapDataModel.transaction.txId,
                 provider = swapProvider,
