@@ -3,18 +3,14 @@ package com.tangem.feature.wallet.presentation.wallet.subscribers
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import androidx.paging.map
-import arrow.core.Either
+import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
-import com.tangem.domain.txhistory.models.TxHistoryListError
-import com.tangem.domain.txhistory.models.TxHistoryStateError
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
-import com.tangem.feature.wallet.presentation.wallet.domain.collectLatest
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetTxHistoryCountErrorTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetTxHistoryCountTransformer
@@ -23,27 +19,24 @@ import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetTxHis
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.TxHistoryItemStateConverter
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 
-typealias MaybeTxHistoryCount = Either<TxHistoryStateError, Int>
-typealias MaybeTxHistoryItems = Either<TxHistoryListError, Flow<PagingData<TxInfo>>>
-
 @Suppress("LongParameterList")
-@Deprecated("Use TxHistorySubscriberV2 instead")
-internal class TxHistorySubscriber(
-    private val userWallet: UserWallet.Cold,
-    private val isRefresh: Boolean,
-    private val stateHolder: WalletStateController,
-    private val clickIntents: WalletClickIntents,
-    private val getSingleCryptoCurrencyStatusUseCase: GetSingleCryptoCurrencyStatusUseCase,
+internal class TxHistorySubscriberV2(
+    override val userWallet: UserWallet.Cold,
+    override val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     private val txHistoryItemsCountUseCase: GetTxHistoryItemsCountUseCase,
     private val txHistoryItemsUseCase: GetTxHistoryItemsUseCase,
-) : WalletSubscriber() {
+    private val isRefresh: Boolean,
+    private val stateController: WalletStateController,
+    private val clickIntents: WalletClickIntents,
+) : BasicSingleWalletSubscriber() {
 
     override fun create(coroutineScope: CoroutineScope): Flow<PagingData<TxInfo>> {
         return flow {
-            getSingleCryptoCurrencyStatusUseCase.collectLatest(userWalletId = userWallet.walletId) { status ->
+            getPrimaryCurrencyStatusFlow().collectLatest { status ->
                 val maybeTxHistoryItemCount = txHistoryItemsCountUseCase(
                     userWalletId = userWallet.walletId,
                     currency = status.currency,
@@ -65,7 +58,7 @@ internal class TxHistorySubscriber(
     }
 
     private fun setLoadingTxHistoryState(maybeTxHistoryItemCount: MaybeTxHistoryCount, status: CryptoCurrencyStatus) {
-        stateHolder.update(
+        stateController.update(
             maybeTxHistoryItemCount.fold(
                 ifLeft = {
                     SetTxHistoryCountErrorTransformer(
@@ -87,7 +80,7 @@ internal class TxHistorySubscriber(
     }
 
     private fun setLoadedTxHistoryState(maybeTxHistoryItems: MaybeTxHistoryItems) {
-        stateHolder.update(
+        stateController.update(
             maybeTxHistoryItems.fold(
                 ifLeft = {
                     SetTxHistoryItemsErrorTransformer(
