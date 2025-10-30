@@ -10,6 +10,7 @@ import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.datasource.api.pay.TangemPayApi
 import com.tangem.datasource.api.pay.models.request.CardDetailsRequest
 import com.tangem.datasource.api.pay.models.request.SetPinRequest
+import com.tangem.datasource.local.visa.TangemPayStorage
 import com.tangem.domain.pay.model.SetPinResult
 import com.tangem.domain.pay.model.TangemPayCardBalance
 import com.tangem.domain.pay.model.TangemPayCardDetails
@@ -24,6 +25,7 @@ internal class DefaultCardDetailsRepository @Inject constructor(
     private val visaLibLoader: VisaLibLoader,
     private val apiConfigsManager: ApiConfigsManager,
     private val rainCryptoUtil: RainCryptoUtil,
+    private val storage: TangemPayStorage,
 ) : CardDetailsRepository {
 
     override suspend fun getCardBalance(): Either<UniversalError, TangemPayCardBalance> {
@@ -95,6 +97,18 @@ internal class DefaultCardDetailsRepository @Inject constructor(
                 SetPinResult.DECRYPTION_ERROR.name -> SetPinResult.DECRYPTION_ERROR
                 else -> SetPinResult.UNKNOWN_ERROR
             }
+        }
+    }
+
+    override suspend fun isAddToWalletDone(): Either<UniversalError, Boolean> {
+        return requestHelper.runWithErrorLogs(TAG) {
+            storage.getAddToWalletDone(requestHelper.getCustomerWalletAddress())
+        }
+    }
+
+    override suspend fun setAddToWalletAsDone(): Either<UniversalError, Unit> {
+        return requestHelper.runWithErrorLogs(TAG) {
+            storage.storeAddToWalletDone(requestHelper.getCustomerWalletAddress(), isDone = true)
         }
     }
 

@@ -20,6 +20,7 @@ import com.tangem.features.tangempay.entity.TangemPayDetailsStateFactory
 import com.tangem.features.tangempay.entity.TangemPayDetailsUM
 import com.tangem.features.tangempay.model.listener.CardDetailsEvent
 import com.tangem.features.tangempay.model.listener.CardDetailsEventListener
+import com.tangem.features.tangempay.model.transformers.DetailsAddToWalletBannerTransformer
 import com.tangem.features.tangempay.model.transformers.DetailsBalanceTransformer
 import com.tangem.features.tangempay.model.transformers.TangemPayDetailsRefreshTransformer
 import com.tangem.features.tangempay.navigation.TangemPayDetailsInnerRoute
@@ -63,10 +64,12 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     private val refreshStateJobHolder = JobHolder()
     private val fetchBalanceJobHolder = JobHolder()
+    private val addToWalletBannerJobHolder = JobHolder()
 
     val bottomSheetNavigation: SlotNavigation<TangemPayDetailsNavigation> = SlotNavigation()
 
     init {
+        fetchAddToWalletBanner()
         fetchBalance()
     }
 
@@ -105,6 +108,19 @@ internal class TangemPayDetailsModel @Inject constructor(
         }.saveIn(fetchBalanceJobHolder)
     }
 
+    private fun fetchAddToWalletBanner() {
+        modelScope.launch {
+            val isDone = cardDetailsRepository.isAddToWalletDone().getOrNull() ?: false
+            uiState.update(
+                transformer = DetailsAddToWalletBannerTransformer(
+                    onClickBanner = ::onClickAddToWalletBlock,
+                    onClickCloseBanner = ::onClickCloseAddToWalletBlock,
+                    isDone = isDone,
+                ),
+            )
+        }.saveIn(addToWalletBannerJobHolder)
+    }
+
     private fun onRefreshSwipe(refreshState: ShowRefreshState) {
         modelScope.launch {
             cardDetailsEventListener.send(CardDetailsEvent.Hide)
@@ -112,6 +128,23 @@ internal class TangemPayDetailsModel @Inject constructor(
             fetchBalance().join()
             uiState.update(TangemPayDetailsRefreshTransformer(isRefreshing = false))
         }.saveIn(refreshStateJobHolder)
+    }
+
+    private fun onClickAddToWalletBlock() {
+        router.push(TangemPayDetailsInnerRoute.AddToWallet)
+    }
+
+    private fun onClickCloseAddToWalletBlock() {
+        modelScope.launch {
+            cardDetailsRepository.setAddToWalletAsDone()
+            uiState.update(
+                transformer = DetailsAddToWalletBannerTransformer(
+                    onClickBanner = ::onClickAddToWalletBlock,
+                    onClickCloseBanner = ::onClickCloseAddToWalletBlock,
+                    isDone = true,
+                ),
+            )
+        }.saveIn(addToWalletBannerJobHolder)
     }
 
     override fun onTransactionClick(item: TangemPayTxHistoryItem) {
