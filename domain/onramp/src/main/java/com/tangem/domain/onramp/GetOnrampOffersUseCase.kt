@@ -68,7 +68,6 @@ class GetOnrampOffersUseCase(
             recentOffer = recentOffer,
             bestRateOffer = bestRateOffer,
             fastestOffer = fastestOffer,
-            allOffers = offers,
         )
     }
 
@@ -144,16 +143,12 @@ class GetOnrampOffersUseCase(
         recentOffer: OnrampOffer?,
         bestRateOffer: OnrampOffer?,
         fastestOffer: OnrampOffer?,
-        allOffers: List<OnrampOffer>,
     ): List<OnrampOffersBlock> {
         val recommendedOffers = buildRecommendedOffers(
             recentOffer = recentOffer,
             bestRateOffer = bestRateOffer,
             fastestOffer = fastestOffer,
         )
-
-        val shownOffersCount = (if (recentOffer != null) 1 else 0) + recommendedOffers.size
-        val hasMoreOffers = allOffers.size > shownOffersCount
 
         return buildList {
             if (recentOffer != null) {
@@ -170,7 +165,6 @@ class GetOnrampOffersUseCase(
                                 rateDif = if (bestRateOffer != null) recentOffer.rateDif else null,
                             ),
                         ),
-                        hasMoreOffers = false,
                     ),
                 )
             }
@@ -180,7 +174,6 @@ class GetOnrampOffersUseCase(
                     OnrampOffersBlock(
                         category = OnrampOfferCategory.Recommended,
                         offers = recommendedOffers,
-                        hasMoreOffers = hasMoreOffers,
                     ),
                 )
             }
