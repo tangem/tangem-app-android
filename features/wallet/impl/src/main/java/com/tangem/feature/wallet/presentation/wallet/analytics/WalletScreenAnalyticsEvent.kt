@@ -143,11 +143,5 @@ sealed class WalletScreenAnalyticsEvent {
         data object ReferralPromoButtonParticipate : MainScreen(event = "Button - Referral Participate")
         data object ReferralPromoButtonDismiss : MainScreen(event = "Button - Referral Dismiss")
         //endregion
-
-        // region visa waitlist promo
-        data object VisaWaitlistPromo : MainScreen(event = "Visa Waitlist")
-        data object VisaWaitlistPromoJoin : MainScreen(event = "Button - Join Now")
-        data object VisaWaitlistPromoDismiss : MainScreen(event = "Button - Close")
-        //endregion
     }
 }
