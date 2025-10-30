@@ -714,6 +714,8 @@ internal class SwapModel @Inject constructor(
                     currencyToSend = fromCurrency,
                     currencyToGet = requireNotNull(dataState.toCryptoCurrency),
                     amountToSwap = requireNotNull(dataState.amount),
+                    fromAccount = dataState.fromAccount,
+                    toAccount = dataState.toAccount,
                     includeFeeInAmount = lastLoadedQuotesState.preparedSwapConfigState.includeFeeInAmount,
                     fee = fee,
                     expressOperationType = ExpressOperationType.SWAP,
