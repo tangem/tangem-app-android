@@ -10,14 +10,16 @@ import java.util.Currency
 internal class TangemPayTxHistoryItemConverter(moshi: Moshi) :
     Converter<TangemPayTxHistoryResponse.Transaction, TangemPayTxHistoryItem?> {
 
-    private val spendAdapter = moshi.adapter(TangemPayTxHistoryResponse.Spend::class.java)
-    private val paymentAdapter = moshi.adapter(TangemPayTxHistoryResponse.Payment::class.java)
-    private val feeAdapter = moshi.adapter(TangemPayTxHistoryResponse.Fee::class.java)
+    private val spendAdapter by lazy { moshi.adapter(TangemPayTxHistoryResponse.Spend::class.java) }
+    private val paymentAdapter by lazy { moshi.adapter(TangemPayTxHistoryResponse.Payment::class.java) }
+    private val feeAdapter by lazy { moshi.adapter(TangemPayTxHistoryResponse.Fee::class.java) }
+    private val collateralAdapter by lazy { moshi.adapter(TangemPayTxHistoryResponse.Collateral::class.java) }
 
     override fun convert(value: TangemPayTxHistoryResponse.Transaction): TangemPayTxHistoryItem? {
         return value.spend?.let { convertSpend(id = value.id, spend = it) }
             ?: value.payment?.let { convertPayment(id = value.id, payment = it) }
             ?: value.fee?.let { convertFee(id = value.id, fee = it) }
+            ?: value.collateral?.let { convertCollateral(id = value.id, collateral = it) }
             ?: run {
                 Timber.wtf("unknown type of transaction: $value")
                 null
@@ -61,6 +63,24 @@ internal class TangemPayTxHistoryItemConverter(moshi: Moshi) :
             date = fee.postedAt,
             currency = Currency.getInstance(fee.currency),
             amount = fee.amount,
+        )
+    }
+
+    private fun convertCollateral(
+        id: String,
+        collateral: TangemPayTxHistoryResponse.Collateral,
+    ): TangemPayTxHistoryItem.Collateral? {
+        val date = collateral.postedAt ?: return run {
+            Timber.e("Collateral transaction postedAt is null: $collateral")
+            return@run null
+        }
+        return TangemPayTxHistoryItem.Collateral(
+            id = id,
+            jsonRepresentation = collateralAdapter.toJson(collateral),
+            date = date,
+            currency = Currency.getInstance("usd"),
+            amount = collateral.amount,
+            transactionHash = collateral.transactionHash,
         )
     }
 }

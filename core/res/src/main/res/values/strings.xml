@@ -1326,6 +1326,7 @@
   <string name="tangem_pay_explore_transaction">Explore transaction</string>
   <string name="tangem_pay_fee_subtitle">Service fees</string>
   <string name="tangem_pay_fee_title">Fee</string>
+  <string name="tangem_pay_get_help">Get Help</string>
   <string name="tangem_pay_status_completed">Completed</string>
   <string name="tangem_pay_status_declined">Declined</string>
   <string name="tangem_pay_status_pending">Pending</string>

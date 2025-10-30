@@ -5,6 +5,7 @@ import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.ColorReference
 import com.tangem.core.ui.extensions.ImageReference
 import com.tangem.core.ui.extensions.TextReference
+import kotlinx.collections.immutable.ImmutableList
 
 internal data class TangemPayTxHistoryDetailsUM(
     val title: TextReference,
@@ -15,9 +16,9 @@ internal data class TangemPayTxHistoryDetailsUM(
     val transactionAmountColor: ColorReference,
     val labelState: LabelUM?,
     val notification: NotificationConfig?,
-    val buttonState: ButtonState,
+    val buttons: ImmutableList<ButtonState>,
     val dismiss: () -> Unit,
 ) {
 
-    data class ButtonState(val text: TextReference, val onClick: () -> Unit)
+    data class ButtonState(val text: TextReference, val onClick: () -> Unit, val startIcon: ImageReference.Res? = null)
 }

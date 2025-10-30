@@ -11,9 +11,12 @@ import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.entity.TangemPayTxHistoryDetailsUM
+import com.tangem.features.tangempay.entity.TangemPayTxHistoryDetailsUM.ButtonState
 import com.tangem.utils.StringsSigns
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.extensions.isPositive
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 internal object TangemPayTxHistoryDetailsConverter :
     Converter<TangemPayTxHistoryDetailsConverter.Input, TangemPayTxHistoryDetailsUM> {
@@ -30,7 +33,7 @@ internal object TangemPayTxHistoryDetailsConverter :
             transactionAmountColor = value.item.extractAmountColor(),
             labelState = value.item.extractLabel(),
             notification = value.item.extractNotification(),
-            buttonState = value.extractButtonState(),
+            buttons = value.extractButtonsState(),
             dismiss = value.onDismiss,
         )
     }
@@ -44,6 +47,7 @@ internal object TangemPayTxHistoryDetailsConverter :
 
     private fun TangemPayTxHistoryItem.extractIcon(): ImageReference {
         return when (this) {
+            is TangemPayTxHistoryItem.Collateral -> ImageReference.Res(R.drawable.ic_arrow_down_24)
             is TangemPayTxHistoryItem.Fee -> ImageReference.Res(R.drawable.ic_percent_24)
             is TangemPayTxHistoryItem.Payment -> {
                 if (this.amount.isPositive()) {
@@ -72,6 +76,7 @@ internal object TangemPayTxHistoryDetailsConverter :
             } else {
                 resourceReference(R.string.tangem_pay_withdrawal)
             }
+            is TangemPayTxHistoryItem.Collateral -> resourceReference(R.string.tangem_pay_deposit)
         }
     }
 
@@ -80,6 +85,7 @@ internal object TangemPayTxHistoryDetailsConverter :
             is TangemPayTxHistoryItem.Fee -> resourceReference(R.string.tangem_pay_fee_subtitle)
             is TangemPayTxHistoryItem.Payment -> resourceReference(R.string.common_transfer)
             is TangemPayTxHistoryItem.Spend -> stringReference(this.enrichedMerchantCategory ?: this.merchantCategory)
+            is TangemPayTxHistoryItem.Collateral -> resourceReference(R.string.common_transfer)
         }
     }
 
@@ -96,7 +102,9 @@ internal object TangemPayTxHistoryDetailsConverter :
                 }
                 StringsSigns.MINUS + amount
             }
-            is TangemPayTxHistoryItem.Payment -> {
+            is TangemPayTxHistoryItem.Payment,
+            is TangemPayTxHistoryItem.Collateral,
+            -> {
                 val amount = this.amount.format {
                     fiat(
                         fiatCurrencyCode = this@extractAmount.currency.currencyCode,
@@ -124,6 +132,7 @@ internal object TangemPayTxHistoryDetailsConverter :
                     TangemTheme.colors.text.primary1
                 }
             }
+            is TangemPayTxHistoryItem.Collateral -> themedColor { TangemTheme.colors.text.accent }
         }
     }
 
@@ -131,6 +140,7 @@ internal object TangemPayTxHistoryDetailsConverter :
         return when (this) {
             is TangemPayTxHistoryItem.Fee,
             is TangemPayTxHistoryItem.Payment,
+            is TangemPayTxHistoryItem.Collateral,
             -> null
             is TangemPayTxHistoryItem.Spend -> when (this.status) {
                 TangemPayTxHistoryItem.Status.COMPLETED -> LabelUM(
@@ -156,6 +166,7 @@ internal object TangemPayTxHistoryDetailsConverter :
     private fun TangemPayTxHistoryItem.extractNotification(): NotificationConfig? {
         return when (this) {
             is TangemPayTxHistoryItem.Payment -> null
+            is TangemPayTxHistoryItem.Collateral -> null
             is TangemPayTxHistoryItem.Fee -> NotificationConfig(
                 title = resourceReference(R.string.tangem_pay_transaction_fee_notification_text),
                 subtitle = TextReference.EMPTY,
@@ -176,19 +187,36 @@ internal object TangemPayTxHistoryDetailsConverter :
         }
     }
 
-    private fun Input.extractButtonState(): TangemPayTxHistoryDetailsUM.ButtonState {
+    private fun Input.extractButtonsState(): ImmutableList<ButtonState> {
         return when (this.item) {
-            is TangemPayTxHistoryItem.Fee -> TangemPayTxHistoryDetailsUM.ButtonState(
-                text = resourceReference(R.string.tangem_pay_dispute),
-                onClick = this.onDisputeClick,
+            is TangemPayTxHistoryItem.Fee -> persistentListOf(
+                ButtonState(
+                    text = resourceReference(R.string.tangem_pay_dispute),
+                    onClick = this.onDisputeClick,
+                ),
             )
-            is TangemPayTxHistoryItem.Spend -> TangemPayTxHistoryDetailsUM.ButtonState(
-                text = resourceReference(R.string.tangem_pay_dispute),
-                onClick = this.onDisputeClick,
+            is TangemPayTxHistoryItem.Spend -> persistentListOf(
+                ButtonState(
+                    text = resourceReference(R.string.tangem_pay_dispute),
+                    onClick = this.onDisputeClick,
+                ),
             )
-            is TangemPayTxHistoryItem.Payment -> TangemPayTxHistoryDetailsUM.ButtonState(
-                text = resourceReference(R.string.tangem_pay_explore_transaction),
-                onClick = { this.onExplorerClick(this.item.transactionHash) },
+            is TangemPayTxHistoryItem.Payment -> persistentListOf(
+                ButtonState(
+                    text = resourceReference(R.string.tangem_pay_explore_transaction),
+                    onClick = { this.onExplorerClick(this.item.transactionHash) },
+                ),
+            )
+            is TangemPayTxHistoryItem.Collateral -> persistentListOf(
+                ButtonState(
+                    text = resourceReference(R.string.tangem_pay_explore_transaction),
+                    startIcon = ImageReference.Res(R.drawable.ic_explore_20),
+                    onClick = { this.onExplorerClick(this.item.transactionHash) },
+                ),
+                ButtonState(
+                    text = resourceReference(R.string.tangem_pay_get_help),
+                    onClick = this.onDisputeClick,
+                ),
             )
         }
     }
