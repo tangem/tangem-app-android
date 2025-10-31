@@ -132,6 +132,12 @@ internal class YieldSupplyApproveModel @Inject constructor(
                 ifLeft = { error ->
                     Timber.e(error.toString())
                     uiState.update(YieldSupplyTransactionReadyTransformer)
+                    analyticsEventHandler.send(
+                        YieldSupplyAnalytics.EarnErrors(
+                            action = YieldSupplyAnalytics.Action.Approve,
+                            errorDescription = error.getAnalyticsDescription(),
+                        ),
+                    )
                     yieldSupplyAlertFactory.getSendTransactionErrorState(
                         error = error,
                         popBack = params.callback::onBackClick,
