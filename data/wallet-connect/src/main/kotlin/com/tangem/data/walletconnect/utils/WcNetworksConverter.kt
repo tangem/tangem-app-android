@@ -3,8 +3,10 @@ package com.tangem.data.walletconnect.utils
 import com.reown.walletkit.client.Wallet
 import com.tangem.data.common.currency.isCustomCoin
 import com.tangem.data.walletconnect.model.CAIP10
+import com.tangem.domain.account.producer.SingleAccountProducer
 import com.tangem.domain.account.status.producer.SingleAccountStatusListProducer
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
+import com.tangem.domain.account.supplier.SingleAccountSupplier
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountStatus
@@ -24,6 +26,7 @@ internal class WcNetworksConverter @Inject constructor(
     private val namespaceConverters: Set<WcNamespaceConverter>,
     private val walletManagersFacade: WalletManagersFacade,
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
+    private val singleAccountSupplier: SingleAccountSupplier,
     private val multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
 ) {
 
@@ -101,7 +104,7 @@ internal class WcNetworksConverter @Inject constructor(
     }
 
     suspend fun getAccount(accountId: AccountId): Account? {
-        return getAccountStatus(accountId)?.account
+        return singleAccountSupplier.getSyncOrNull(SingleAccountProducer.Params(accountId))
     }
 
     suspend fun convertNetworksForApprove(sessionForApprove: WcSessionApprove): List<Network> {
