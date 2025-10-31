@@ -12,8 +12,8 @@ internal object YieldMarketTokenConverter : Converter<YieldSupplyMarketTokenDto,
             apy = value.apy.orZero(),
             isActive = value.isActive ?: false,
             chainId = value.chainId ?: -1,
-            maxFeeUSD = value.maxFeeUSD.orEmpty(),
-            maxFeeNative = value.maxFeeNative.orEmpty(),
+            maxFeeUSD = value.maxFeeUSD.orZero(),
+            maxFeeNative = value.maxFeeNative.orZero(),
         )
     }
 }
