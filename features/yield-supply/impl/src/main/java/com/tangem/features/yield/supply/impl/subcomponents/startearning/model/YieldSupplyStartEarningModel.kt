@@ -3,6 +3,8 @@ package com.tangem.features.yield.supply.impl.subcomponents.startearning.model
 import arrow.core.getOrElse
 import com.tangem.blockchain.common.TransactionSender
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.Basic
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -252,7 +254,20 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
                 },
                 ifRight = {
                     yieldSupplyRepository.saveTokenProtocolStatus(cryptoCurrency, YieldSupplyEnterStatus.Enter)
+                    val event = AnalyticsParam.TxSentFrom.Earning(
+                        blockchain = cryptoCurrency.network.name,
+                        token = cryptoCurrency.symbol,
+                        feeType = AnalyticsParam.FeeType.Normal,
+                    )
                     analytics.send(YieldSupplyAnalytics.FundsEarned)
+                    yieldSupplyFeeUM.transactionDataList.forEach {
+                        analytics.send(
+                            Basic.TransactionSent(
+                                sentFrom = event,
+                                memoType = Basic.TransactionSent.MemoType.Null,
+                            ),
+                        )
+                    }
 
                     val address = cryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value
                     if (address != null) {
