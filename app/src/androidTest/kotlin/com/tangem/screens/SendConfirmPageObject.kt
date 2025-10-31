@@ -79,9 +79,9 @@ class SendConfirmPageObject(semanticsProvider: SemanticsNodeInteractionsProvider
         useUnmergedTree = true
     }
 
-    fun warningIcon(messageResId: Int): KNode = child {
+    fun warningIcon(message: String): KNode = child {
         hasTestTag(NotificationTestTags.ICON)
-        hasAnySibling(withText(getResourceString(messageResId)))
+        hasAnySibling(withText(message))
         useUnmergedTree = true
     }
 
