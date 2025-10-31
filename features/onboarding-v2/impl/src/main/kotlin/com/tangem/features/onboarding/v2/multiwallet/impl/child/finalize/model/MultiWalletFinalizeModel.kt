@@ -233,6 +233,7 @@ internal class MultiWalletFinalizeModel @Inject constructor(
         }
     }
 
+    @Suppress("LongMethod")
     private fun finishBackup() {
         modelScope.launch {
             setLoading(true)
@@ -304,6 +305,10 @@ internal class MultiWalletFinalizeModel @Inject constructor(
 
             if (userWallet.scanResponse.cardTypesResolver.isWallet2() && userWallet.isImported) {
                 launch(NonCancellable) { walletsRepository.markWallet2WasCreated(userWallet.walletId) }
+            }
+
+            if (userWallet.isMultiCurrency) {
+                launch(NonCancellable) { walletsRepository.createWallet(userWallet.walletId) }
             }
 
             // user wallet is fully created and saved, remove scan response from preferences
