@@ -168,6 +168,7 @@ internal class StakingModel @Inject constructor(
     }
 
     private var isAccountInitialized: Boolean = true
+    private var isTonHeatupCase: Boolean = false
     private lateinit var cryptoCurrencyStatus: CryptoCurrencyStatus
     private var stakingActions: List<StakingAction> = emptyList()
     private var feeCryptoCurrencyStatus: CryptoCurrencyStatus? = null
@@ -1012,10 +1013,12 @@ internal class StakingModel @Inject constructor(
                         )
                     },
                     ifRight = {
-                        stateController.update(CompleteInitializeBottomSheetTransformer(
-                            cryptoCurrencyStatus = cryptoCurrencyStatus,
-                            minimumTransactionAmount = minimumTransactionAmount,
-                        ))
+                        stateController.update(
+                            CompleteInitializeBottomSheetTransformer(
+                                cryptoCurrencyStatus = cryptoCurrencyStatus,
+                                minimumTransactionAmount = minimumTransactionAmount,
+                            ),
+                        )
 
                         balanceUpdater.partialUpdateWithDelay()
                         stateController.update(DismissBottomSheetStateTransformer)
@@ -1053,7 +1056,7 @@ internal class StakingModel @Inject constructor(
             .conflate()
             .distinctUntilChanged()
             .filter {
-                value.currentStep == StakingStep.InitialInfo || isCaseWithUnitializedTonAccount()
+                value.currentStep == StakingStep.InitialInfo || isTopHeatupCase()
             }
             .onEach { maybeStatus ->
                 maybeStatus.fold(
@@ -1082,19 +1085,7 @@ internal class StakingModel @Inject constructor(
                             }
                         cryptoCurrencyStatus = status
 
-                        val isAccountInitializedNew = checkAccountInitializedUseCase.invoke(
-                            userWalletId = userWalletId,
-                            network = cryptoCurrencyStatus.currency.network,
-                        ).getOrElse {
-                            Timber.e(it)
-                            false
-                        }
-                        if (isAccountInitializedNew && !isAccountInitialized) {
-                            isAccountInitialized = true
-                            updateNotifications()
-                        }
-                        isAccountInitialized = isAccountInitializedNew
-
+                        checkForTonHeatupCase()
                         setupApprovalNeeded()
                         setupIsAnyTokenStaked()
                         checkIfSubtractAvailable()
@@ -1237,6 +1228,26 @@ internal class StakingModel @Inject constructor(
         )
     }
 
+    private suspend fun checkForTonHeatupCase() {
+        val isAccountInitializedNewValue = checkAccountInitializedUseCase.invoke(
+            userWalletId = userWalletId,
+            network = cryptoCurrencyStatus.currency.network,
+        ).getOrElse {
+            Timber.e(it)
+            false
+        }
+
+        if (!isAccountInitializedNewValue && isAccountInitialized) {
+            isTonHeatupCase = true
+        }
+
+        isAccountInitialized = isAccountInitializedNewValue
+
+        if (isTopHeatupCase()) {
+            updateNotifications()
+        }
+    }
+
     private fun isExplicitExit(balanceType: BalanceType, pendingAction: PendingAction?): Boolean {
         return balanceType == BalanceType.STAKED && pendingAction?.type?.isRestake == false
     }
@@ -1256,11 +1267,11 @@ internal class StakingModel @Inject constructor(
             .getOrElse { false }
     }
 
-    private fun isCaseWithUnitializedTonAccount(): Boolean {
+    private fun isTopHeatupCase(): Boolean {
         if (!::cryptoCurrencyStatus.isInitialized) return false
         return value.currentStep == StakingStep.Confirmation &&
             isTon(cryptoCurrencyStatus.currency.network.rawId) &&
-            !isAccountInitialized
+            isTonHeatupCase
     }
 
     private companion object {
