@@ -45,7 +45,7 @@ import javax.inject.Inject
 internal class YieldSupplyActiveModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
-    analyticsHandler: AnalyticsEventHandler,
+    private val analyticsHandler: AnalyticsEventHandler,
     private val yieldSupplyGetProtocolBalanceUseCase: YieldSupplyGetProtocolBalanceUseCase,
     private val yieldSupplyGetTokenStatusUseCase: YieldSupplyGetTokenStatusUseCase,
     private val yieldSupplyMinAmountUseCase: YieldSupplyMinAmountUseCase,
@@ -82,7 +82,7 @@ internal class YieldSupplyActiveModel @Inject constructor(
 
     init {
         analyticsHandler.send(
-            YieldSupplyAnalytics.EarningScreenInfoOpened(
+            YieldSupplyAnalytics.EarnInProgressScreen(
                 token = cryptoCurrency.symbol,
                 blockchain = cryptoCurrency.network.name,
             ),
@@ -189,6 +189,12 @@ internal class YieldSupplyActiveModel @Inject constructor(
         return if (notDepositedAmount > BigDecimal.ZERO) {
             val formattedAmount =
                 notDepositedAmount.format { crypto(symbol = "", decimals = cryptoCurrencyStatus.currency.decimals) }
+            analyticsHandler.send(
+                YieldSupplyAnalytics.NoticeAmountNotDeposited(
+                    token = cryptoCurrency.symbol,
+                    blockchain = cryptoCurrency.network.name,
+                ),
+            )
             NotificationUM.Warning.YieldSupplyNotAllAmountSupplied(
                 formattedAmount = formattedAmount,
                 symbol = cryptoCurrency.symbol,
@@ -243,6 +249,7 @@ internal class YieldSupplyActiveModel @Inject constructor(
                         appCurrency = appCurrency,
                         feeValue = currentFee,
                         maxNetworkFee = maxFee,
+                        analyticsHandler = analyticsHandler,
                     ),
                 )
             } else {
