@@ -25,12 +25,18 @@ import com.tangem.features.markets.portfolio.add.impl.ChooseNetworkComponent
 import com.tangem.features.markets.portfolio.add.impl.TokenActionsComponent
 import com.tangem.features.markets.portfolio.impl.analytics.PortfolioAnalyticsEvent
 import com.tangem.features.markets.portfolio.impl.loader.PortfolioData
+import com.tangem.features.markets.portfolio.impl.model.PortfolioTokenUMConverter.Companion.toQuickActions
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
+
+private const val TOKEN_ACTIONS_DELAY = 500L
 
 @ModelScoped
 @Suppress("LongParameterList")
@@ -91,19 +97,17 @@ internal class AddToPortfolioModel @Inject constructor(
             // use snapshot data, looks like we don’t need to remap at runtime
             val data = featureDataFlow.value
 
-            // you must control it via [AddToPortfolioComponent.state]
+            // you must control it via [AddToPortfolioManager.state]
             if (!data.availableToAdd) {
                 finishFlow()
                 return@channelFlow
             }
 
-            // launch data flows, emits on user/code selection, updates state holder
-            setupPortfolioFlow(data)
+            // init data flows, emits on user/code selection, updates state holder
+            val firstSelectedPortfolio = setupPortfolioFlow(data)
                 .onEach { selectedPortfolio.emit(it) }
-                .launchIn(this)
-            setupNetworkFlow(selectedPortfolio)
+            val firstSelectedNetwork = setupNetworkFlow(firstSelectedPortfolio)
                 .onEach { selectedNetwork.emit(it) }
-                .launchIn(this)
 
             val isSinglePortfolio = data.isSinglePortfolio
             if (isSinglePortfolio) {
@@ -116,7 +120,7 @@ internal class AddToPortfolioModel @Inject constructor(
                 navigation.replaceAll(AddToPortfolioRoutes.PortfolioSelector)
             }
 
-            val firstPartOfNavigation = selectedPortfolio
+            val firstPartOfNavigation: Job = firstSelectedPortfolio
                 .onEach { portfolio ->
                     val isSingleAvailableNetwork = portfolio.account.isSingleNetwork
                     when {
@@ -134,13 +138,9 @@ internal class AddToPortfolioModel @Inject constructor(
 
             // main flow that combine all require data
             val allRequireForAdd = combine(
-                flow = selectedNetwork,
-                flow2 = selectedPortfolio,
+                flow = firstSelectedNetwork,
+                flow2 = firstSelectedPortfolio,
                 transform = { a, b -> a to b },
-            ).shareIn(
-                scope = this,
-                started = SharingStarted.Eagerly,
-                replay = 1,
             )
 
             // suspend until all required data is selected
@@ -149,44 +149,37 @@ internal class AddToPortfolioModel @Inject constructor(
             firstPartOfNavigation.cancel()
             navigation.replaceAll(AddToPortfolioRoutes.AddToken)
 
+            var middleNavigationJob: Job? = null
             // handle actions from AddToken screen
             callbackDelegate.onChangeNetworkClick.receiveAsFlow()
-                .map { routeToNetworkSelector(selectedPortfolio.first()) }
-                .onEach { route -> navigation.pushNew(route) }
+                .onEach {
+                    middleNavigationJob?.cancel()
+                    middleNavigationJob = changeNetworkNavigationFlow()
+                        .launchIn(this)
+                    val route = routeToNetworkSelector(selectedPortfolio.first())
+                    navigation.pushNew(route)
+                }
                 .launchIn(this)
             // handle actions from AddToken screen
             callbackDelegate.onChangePortfolioClick.receiveAsFlow()
-                .onEach { navigation.pushNew(AddToPortfolioRoutes.PortfolioSelector) }
-                .launchIn(this)
-
-            allRequireForAdd
-                .onEach { (network, portfolio) ->
-                    // after selecting a new Portfolio, must verify previous selected Network
-                    // if it’s unavailable, navigate to NetworkSelector
-                    val isAvailableSelectedNetwork = portfolio.account.availableToAddNetworks
-                        .any { it.networkId == network.selectedNetwork.networkId }
-                    if (isAvailableSelectedNetwork) {
-                        navigation.popToFirst()
-                    } else {
-                        navigation.pushNew(routeToNetworkSelector(portfolio))
-                    }
+                .onEach {
+                    middleNavigationJob?.cancel()
+                    middleNavigationJob = changePortfolioNavigationFlow(data).launchIn(this)
+                    navigation.pushNew(AddToPortfolioRoutes.PortfolioSelector)
                 }
                 .launchIn(this)
 
             // suspend until token is added
             val addedToken = callbackDelegate.onTokenAdded.receiveAsFlow().first()
+            middleNavigationJob?.cancel()
             val selectedPortfolio = selectedPortfolio.first()
 
             messageSender.send(ToastMessage(message = resourceReference(R.string.markets_token_added)))
 
             setupTokenActionsFlow(selectedPortfolio, addedToken)
-                .onEach { tokenActionsData.emit(it) }
                 .onEach {
-                    if (it.actions.isNotEmpty()) {
-                        navigation.replaceAll(AddToPortfolioRoutes.TokenActions)
-                    } else {
-                        finishFlow()
-                    }
+                    tokenActionsData.emit(it)
+                    navigation.replaceAll(AddToPortfolioRoutes.TokenActions)
                 }
                 .onEmpty { finishFlow() }
                 .launchIn(this)
@@ -201,20 +194,62 @@ internal class AddToPortfolioModel @Inject constructor(
             .launchIn(modelScope)
     }
 
+    private fun changeNetworkNavigationFlow(): Flow<SelectedNetwork> {
+        return setupNetworkFlow(selectedPortfolio)
+            .onEach { newNetwork ->
+                selectedNetwork.emit(newNetwork)
+                navigation.popToFirst()
+            }
+    }
+
+    private suspend fun changePortfolioNavigationFlow(data: AvailableToAddData): Flow<Unit> {
+        val selectedAccount = selectedPortfolio.first().account.account.account.accountId
+        portfolioSelectorController.selectAccount(selectedAccount)
+        val changedPortfolio = setupPortfolioFlow(data)
+            .drop(1)
+            .onEach { portfolio -> navigation.pushNew(routeToNetworkSelector(portfolio)) }
+        val changedNetwork = setupNetworkFlow(changedPortfolio)
+        return combine(
+            flow = changedPortfolio,
+            flow2 = changedNetwork,
+            transform = { newPortfolio, newNetwork ->
+                selectedPortfolio.tryEmit(newPortfolio)
+                selectedNetwork.tryEmit(newNetwork)
+                navigation.popToFirst()
+            },
+        )
+    }
+
     private fun setupTokenActionsFlow(
         selectedPortfolio: SelectedPortfolio,
         addedToken: CryptoCurrencyStatus,
-    ): Flow<PortfolioData.CryptoCurrencyData> = getCryptoCurrencyActionsUseCase(
-        currency = addedToken.currency,
-        accountId = selectedPortfolio.account.account.account.accountId,
-    )
-        .map {
+    ): Flow<PortfolioData.CryptoCurrencyData> {
+        val timeFlow = channelFlow {
+            val timerJob = launch { delay(TOKEN_ACTIONS_DELAY) }
+            getCryptoCurrencyActionsUseCase(
+                currency = addedToken.currency,
+                accountId = selectedPortfolio.account.account.account.accountId,
+            ).onEach { state ->
+                val requestedQuickActions = toQuickActions(state.states)
+                when {
+                    requestedQuickActions.isNotEmpty() -> {
+                        timerJob.cancel()
+                        send(state)
+                    }
+                    // wait any requestedQuickActions while timer active
+                    timerJob.isActive -> Unit
+                    else -> close()
+                }
+            }.collect()
+        }
+        return timeFlow.map {
             PortfolioData.CryptoCurrencyData(
                 userWallet = selectedPortfolio.userWallet,
                 status = addedToken,
                 actions = it.states,
             )
         }
+    }
 
     private fun setupPortfolioFlow(data: AvailableToAddData): Flow<SelectedPortfolio> = combine(
         flow = portfolioSelectorController.isAccountMode,
@@ -234,9 +269,8 @@ internal class AddToPortfolioModel @Inject constructor(
         },
     )
         .filterNotNull()
-        .onEach { selectedPortfolio.emit(it) }
 
-    private fun setupNetworkFlow(selectedPortfolioFlow: SharedFlow<SelectedPortfolio>): Flow<SelectedNetwork> = combine(
+    private fun setupNetworkFlow(selectedPortfolioFlow: Flow<SelectedPortfolio>): Flow<SelectedNetwork> = combine(
         flow = selectedPortfolioFlow,
         flow2 = callbackDelegate.onNetworkSelected.receiveAsFlow(),
         transform = transform@{ selectedPortfolio, selectedNetwork ->
