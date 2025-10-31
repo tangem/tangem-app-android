@@ -11,7 +11,6 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.core.ui.utils.parseToBigDecimal
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -136,7 +135,7 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
         if (uiState.value.maxFee != BigDecimal.ZERO) return uiState.value.maxFee
         val yieldTokenStatus = yieldSupplyGetTokenStatusUseCase(cryptoCurrency as CryptoCurrency.Token)
             .getOrNull()
-        return yieldTokenStatus?.maxFeeNative?.parseToBigDecimal(cryptoCurrency.decimals)
+        return yieldTokenStatus?.maxFeeNative
     }
 
     private suspend fun onLoadFee() {
