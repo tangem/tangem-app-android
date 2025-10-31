@@ -40,6 +40,7 @@ import com.tangem.utils.StringsSigns
 internal fun YieldSupplyBlockContent(yieldSupplyUM: YieldSupplyUM, modifier: Modifier = Modifier) {
     AnimatedContent(
         targetState = yieldSupplyUM,
+        contentKey = { it::class },
     ) { supplyUM ->
         when (supplyUM) {
             is YieldSupplyUM.Available -> SupplyAvailable(supplyUM, modifier)
@@ -118,17 +119,23 @@ private fun SupplyContent(supplyUM: YieldSupplyUM.Content, modifier: Modifier = 
                     style = TangemTheme.typography.subtitle1,
                     color = TangemTheme.colors.text.primary1,
                 )
-                Text(
-                    text = StringsSigns.DOT,
-                    style = TangemTheme.typography.subtitle1,
-                    color = TangemTheme.colors.text.tertiary,
-                )
-                Text(
-                    text = supplyUM.rewardsApy.resolveReference(),
-                    style = TangemTheme.typography.subtitle1,
-                    maxLines = 1,
-                    color = TangemTheme.colors.text.accent,
-                )
+                AnimatedVisibility(supplyUM.rewardsApy != TextReference.EMPTY) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    ) {
+                        Text(
+                            text = StringsSigns.DOT,
+                            style = TangemTheme.typography.subtitle1,
+                            color = TangemTheme.colors.text.tertiary,
+                        )
+                        Text(
+                            text = supplyUM.rewardsApy.resolveReference(),
+                            style = TangemTheme.typography.subtitle1,
+                            maxLines = 1,
+                            color = TangemTheme.colors.text.accent,
+                        )
+                    }
+                }
             }
             Text(
                 text = supplyUM.subtitle.resolveReference(),
