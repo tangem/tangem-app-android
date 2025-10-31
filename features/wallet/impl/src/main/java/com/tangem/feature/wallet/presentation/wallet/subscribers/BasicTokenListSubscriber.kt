@@ -14,10 +14,10 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.staking.model.stakekit.Yield
+import com.tangem.domain.staking.usecase.StakingApyFlowUseCase
 import com.tangem.domain.tokens.RunPolkadotAccountHealthCheckUseCase
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.yield.supply.usecase.YieldSupplyApyFlowUseCase
-import com.tangem.domain.staking.usecase.StakingApyFlowUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.account.AccountDependencies
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.TokenListAnalyticsSender
@@ -179,9 +179,8 @@ internal abstract class BasicTokenListSubscriber : WalletSubscriber() {
             val accountFlattenCurrencies = accountFlattenTokensList
                 .map { it.flattenCurrencies() }
                 .flatten()
-            val mainAccount: AccountStatus.CryptoPortfolio = when (val mainAccount = accountList.mainAccount) {
-                is AccountStatus.CryptoPortfolio -> mainAccount
-            }
+
+            val mainAccount = accountList.mainAccount
 
             suspend fun singleAccountTransform(maybeTokenList: Lce<TokenListError, TokenList>) =
                 this.singleAccountTransform(
