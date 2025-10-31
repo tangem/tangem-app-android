@@ -12,6 +12,7 @@ import com.tangem.core.ui.R
 import com.tangem.scenarios.*
 import com.tangem.screens.*
 import dagger.hilt.android.testing.HiltAndroidTest
+import io.github.kakaocup.kakao.common.utilities.getResourceString
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
 import org.junit.Test
@@ -240,7 +241,7 @@ class SendConfirmScreenTest : BaseTestCase() {
     fun checkFeeWarningTest() {
         val tokenName = "Polkadot"
         val tokenAmount = "0.1"
-        val warningTitleResId = R.string.send_fee_unreachable_error_title
+        val warningTitle = getResourceString(R.string.send_fee_unreachable_error_title)
         val warningMessageResId = R.string.send_fee_unreachable_error_text
         val currentFeeAmount = "$0.05"
 
@@ -279,13 +280,13 @@ class SendConfirmScreenTest : BaseTestCase() {
                 enableMobileData()
             }
             step("Assert 'Network fee info unreachable' warning title is displayed") {
-                onSendConfirmScreen { warningTitle(warningTitleResId).assertIsDisplayed() }
+                onSendConfirmScreen { warningTitle(warningTitle).assertIsDisplayed() }
             }
             step("Assert 'Check your internet connection' warning message is displayed") {
                 onSendConfirmScreen { warningMessage(warningMessageResId).assertIsDisplayed() }
             }
             step("Assert warning icon is displayed") {
-                onSendConfirmScreen { warningIcon(warningTitleResId).assertIsDisplayed() }
+                onSendConfirmScreen { warningIcon(warningTitle).assertIsDisplayed() }
             }
             step("Click on 'Refresh' button") {
                 waitForIdle()
