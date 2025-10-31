@@ -102,7 +102,7 @@ internal class PortfolioTokenUMConverter(
             )
         }
 
-        private fun toQuickActions(actions: List<TokenActionsState.ActionState>) = buildList {
+        fun toQuickActions(actions: List<TokenActionsState.ActionState>) = buildList {
             actions.forEach { action ->
                 if (action.unavailabilityReason == ScenarioUnavailabilityReason.None) {
                     when (action) {
