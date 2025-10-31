@@ -9,6 +9,7 @@ import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
+import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
@@ -96,6 +97,7 @@ internal class WalletModel @Inject constructor(
     private val yieldSupplyApyUpdateUseCase: YieldSupplyApyUpdateUseCase,
     private val tangemPayOnboardingRepository: OnboardingRepository,
     private val yieldSupplyFeatureToggles: YieldSupplyFeatureToggles,
+    private val accountsFeatureToggles: AccountsFeatureToggles,
     val screenLifecycleProvider: ScreenLifecycleProvider,
     val innerWalletRouter: InnerWalletRouter,
 ) : Model() {
@@ -531,21 +533,39 @@ internal class WalletModel @Inject constructor(
     }
 
     private suspend fun addWallet(action: WalletsUpdateActionResolver.Action.AddWallet) {
-        walletScreenContentLoader.load(
-            userWallet = action.selectedWallet,
-            clickIntents = clickIntents,
-            coroutineScope = modelScope,
-        )
+        if (accountsFeatureToggles.isFeatureEnabled) {
+            fetchWalletContent(userWallet = action.selectedWallet)
 
-        fetchWalletContent(userWallet = action.selectedWallet)
+            stateHolder.update(
+                AddWalletTransformer(
+                    userWallet = action.selectedWallet,
+                    clickIntents = clickIntents,
+                    walletImageResolver = walletImageResolver,
+                ),
+            )
 
-        stateHolder.update(
-            AddWalletTransformer(
+            walletScreenContentLoader.load(
                 userWallet = action.selectedWallet,
                 clickIntents = clickIntents,
-                walletImageResolver = walletImageResolver,
-            ),
-        )
+                coroutineScope = modelScope,
+            )
+        } else {
+            walletScreenContentLoader.load(
+                userWallet = action.selectedWallet,
+                clickIntents = clickIntents,
+                coroutineScope = modelScope,
+            )
+
+            fetchWalletContent(userWallet = action.selectedWallet)
+
+            stateHolder.update(
+                AddWalletTransformer(
+                    userWallet = action.selectedWallet,
+                    clickIntents = clickIntents,
+                    walletImageResolver = walletImageResolver,
+                ),
+            )
+        }
 
         scrollToWallet(prevIndex = action.prevWalletIndex, newIndex = action.selectedWalletIndex) {
             stateHolder.update {
