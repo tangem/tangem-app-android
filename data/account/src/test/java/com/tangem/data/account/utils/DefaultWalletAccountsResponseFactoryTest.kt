@@ -7,8 +7,8 @@ import com.tangem.data.common.currency.UserTokensResponseFactory
 import com.tangem.data.common.network.NetworkFactory
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
+import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.account.models.AccountList
-import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
@@ -23,14 +23,14 @@ import org.junit.jupiter.api.TestInstance
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class DefaultWalletAccountsResponseFactoryTest {
 
-    private val userWalletsListRepository = mockk<UserWalletsListRepository>()
+    private val userWalletsStore = mockk<UserWalletsStore>()
     private val cryptoPortfolioCF = mockk<CryptoPortfolioConverter.Factory>()
     private val cryptoPortfolioConverter = mockk<CryptoPortfolioConverter>()
     private val userTokensResponseFactory = mockk<UserTokensResponseFactory>()
     private val networkFactory = mockk<NetworkFactory>()
 
     private val factory = DefaultWalletAccountsResponseFactory(
-        userWalletsListRepository = userWalletsListRepository,
+        userWalletsStore = userWalletsStore,
         cryptoPortfolioCF = cryptoPortfolioCF,
         userTokensResponseFactory = userTokensResponseFactory,
         networkFactory = networkFactory,
@@ -46,7 +46,7 @@ class DefaultWalletAccountsResponseFactoryTest {
     @AfterEach
     fun tearDownEach() {
         clearMocks(
-            userWalletsListRepository,
+            userWalletsStore,
             cryptoPortfolioCF,
             cryptoPortfolioConverter,
             userTokensResponseFactory,
@@ -63,7 +63,7 @@ class DefaultWalletAccountsResponseFactoryTest {
             tokens = emptyList(),
         )
 
-        coEvery { userWalletsListRepository.userWalletsSync() } returns emptyList()
+        coEvery { userWalletsStore.getSyncOrNull(userWalletId) } returns null
         every {
             userTokensResponseFactory.createDefaultResponse(
                 userWallet = null,
@@ -88,7 +88,7 @@ class DefaultWalletAccountsResponseFactoryTest {
         Truth.assertThat(actual).isEqualTo(expected)
 
         coVerifyOrder {
-            userWalletsListRepository.userWalletsSync()
+            userWalletsStore.getSyncOrNull(userWalletId)
             userTokensResponseFactory.createDefaultResponse(
                 userWallet = null,
                 networkFactory = networkFactory,
@@ -107,7 +107,7 @@ class DefaultWalletAccountsResponseFactoryTest {
         val accounts = AccountList.empty(userWallet.walletId).accounts
             .filterIsInstance<Account.CryptoPortfolio>()
 
-        coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(userWallet)
+        coEvery { userWalletsStore.getSyncOrNull(userWalletId) } returns userWallet
 
         val defaultResponse = UserTokensResponse(
             group = UserTokensResponse.GroupType.NETWORK,
@@ -142,7 +142,7 @@ class DefaultWalletAccountsResponseFactoryTest {
         Truth.assertThat(actual).isEqualTo(expected)
 
         coVerifyOrder {
-            userWalletsListRepository.userWalletsSync()
+            userWalletsStore.getSyncOrNull(userWalletId)
             cryptoPortfolioConverter.convertListBack(accounts)
             userTokensResponseFactory.createDefaultResponse(
                 userWallet = userWallet,
@@ -162,7 +162,7 @@ class DefaultWalletAccountsResponseFactoryTest {
         val accounts = AccountList.empty(userWallet.walletId).accounts
             .filterIsInstance<Account.CryptoPortfolio>()
 
-        coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(userWallet)
+        coEvery { userWalletsStore.getSyncOrNull(userWalletId) } returns userWallet
 
         val defaultResponse = UserTokensResponse(
             group = UserTokensResponse.GroupType.NETWORK,
@@ -203,7 +203,7 @@ class DefaultWalletAccountsResponseFactoryTest {
             every { walletId } returns userWalletId
         }
         val assignedTokens = listOf(mockk<CryptoCurrency.Token>(), mockk<CryptoCurrency.Token>())
-        coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(userWallet)
+        coEvery { userWalletsStore.getSyncOrNull(userWalletId) } returns userWallet
         val userTokensResponse = UserTokensResponse(
             group = UserTokensResponse.GroupType.NETWORK,
             sort = UserTokensResponse.SortType.BALANCE,
