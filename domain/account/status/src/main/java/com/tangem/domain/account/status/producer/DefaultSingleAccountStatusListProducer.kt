@@ -54,7 +54,6 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
             params = SingleAccountListProducer.Params(params.userWalletId),
         )
 
-        @Suppress("UnusedFlow")
         return accountListFlow.flatMapLatest { accountList ->
             val accountStatusFlows = accountList.accounts.mapNotNull { account ->
                 if (account !is Account.CryptoPortfolio) return@mapNotNull null
@@ -62,11 +61,7 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
                 if (account.cryptoCurrencies.isEmpty()) {
                     createEmptyAccountStatusFlow(account)
                 } else {
-                    val userWallet = accountsCRUDRepository.getUserWallets()
-                        .mapNotNull { wallets ->
-                            wallets.find { it.walletId == params.userWalletId }
-                        }
-                        .first()
+                    val userWallet = accountsCRUDRepository.getUserWallet(userWalletId = params.userWalletId)
 
                     getAccountStatusFlow(
                         userWallet = userWallet,
