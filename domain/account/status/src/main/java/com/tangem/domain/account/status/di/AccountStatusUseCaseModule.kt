@@ -6,7 +6,6 @@ import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.usecase.*
 import com.tangem.domain.account.status.utils.CryptoCurrencyBalanceFetcher
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
-import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.express.ExpressServiceFetcher
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
@@ -34,12 +33,12 @@ internal object AccountStatusUseCaseModule {
     @Provides
     @Singleton
     fun provideGetAccountCurrencyByAddressUseCase(
-        userWalletsListRepository: UserWalletsListRepository,
+        accountsCRUDRepository: AccountsCRUDRepository,
         multiNetworkStatusSupplier: MultiNetworkStatusSupplier,
         singleAccountListSupplier: SingleAccountListSupplier,
     ): GetAccountCurrencyByAddressUseCase {
         return GetAccountCurrencyByAddressUseCase(
-            userWalletsListRepository = userWalletsListRepository,
+            accountsCRUDRepository = accountsCRUDRepository,
             multiNetworkStatusSupplier = multiNetworkStatusSupplier,
             singleAccountListSupplier = singleAccountListSupplier,
         )

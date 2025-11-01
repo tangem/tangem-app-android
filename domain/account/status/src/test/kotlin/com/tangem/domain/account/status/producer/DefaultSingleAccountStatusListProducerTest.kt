@@ -206,7 +206,7 @@ class DefaultSingleAccountStatusListProducerTest {
             cryptoCurrencies = cryptoCurrencyFactory.ethereumAndStellar.toSet(),
         )
 
-        coEvery { accountsCRUDRepository.getUserWallets() } returns flowOf(listOf(userWallet))
+        coEvery { accountsCRUDRepository.getUserWallet(userWalletId = userWalletId) } returns userWallet
 
         every {
             singleAccountListSupplier(params = SingleAccountListProducer.Params(userWalletId))

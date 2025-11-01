@@ -9,10 +9,12 @@ import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.loaders.implementors.*
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 @ModelScoped
 internal class WalletContentLoaderFactory @Inject constructor(
     private val multiWalletContentLoaderFactory: MultiWalletContentLoaderFactory,
     private val singleWalletWithTokenContentLoaderFactory: SingleWalletWithTokenContentLoaderFactory,
+    private val singleWalletWithTokenContentLoaderV2Factory: SingleWalletWithTokenContentLoaderV2.Factory,
     private val accountsFeatureToggles: AccountsFeatureToggles,
     private val singleWalletContentLoaderFactory: SingleWalletContentLoaderFactory,
     private val singleWalletContentLoaderV2Factory: SingleWalletContentLoaderV2.Factory,
@@ -29,7 +31,11 @@ internal class WalletContentLoaderFactory @Inject constructor(
                 multiWalletContentLoaderFactory.create(userWallet, clickIntents)
             }
             userWallet is UserWallet.Cold && userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken() -> {
-                singleWalletWithTokenContentLoaderFactory.create(userWallet, clickIntents)
+                if (accountsFeatureToggles.isFeatureEnabled) {
+                    singleWalletWithTokenContentLoaderV2Factory.create(userWallet)
+                } else {
+                    singleWalletWithTokenContentLoaderFactory.create(userWallet, clickIntents)
+                }
             }
             userWallet is UserWallet.Cold && userWallet.scanResponse.cardTypesResolver.isVisaWallet() -> {
                 visaWalletContentLoaderFactory.create(userWallet, clickIntents, isRefresh)
