@@ -4,6 +4,9 @@ import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletWithFundsChecker
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.*
 
@@ -13,11 +16,12 @@ import kotlinx.coroutines.flow.*
  * @property userWallet The user wallet.
  * @property singleAccountStatusListSupplier Supplier for account status list.
  * @property walletWithFundsChecker The checker to notify when funds are detected.
+ * @property dispatchers Coroutine dispatcher provider.
  *
 [REDACTED_AUTHOR]
  */
-internal class CheckWalletWithFundsSubscriber(
-    override val userWallet: UserWallet,
+internal class CheckWalletWithFundsSubscriber @AssistedInject constructor(
+    @Assisted override val userWallet: UserWallet,
     override val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     private val walletWithFundsChecker: WalletWithFundsChecker,
     private val dispatchers: CoroutineDispatcherProvider,
@@ -29,5 +33,10 @@ internal class CheckWalletWithFundsSubscriber(
             .distinctUntilChanged()
             .onEach { walletWithFundsChecker.check(userWalletId = userWallet.walletId, currencies = it) }
             .flowOn(dispatchers.default)
+    }
+
+    @AssistedFactory
+    interface Factory {
+        fun create(userWallet: UserWallet): CheckWalletWithFundsSubscriber
     }
 }
