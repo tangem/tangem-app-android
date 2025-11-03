@@ -2,7 +2,6 @@ package com.tangem.tests.balance
 
 import androidx.compose.ui.test.longClick
 import com.tangem.common.BaseTestCase
-import com.tangem.common.constants.TestConstants.TOTAL_BALANCE
 import com.tangem.scenarios.openMainScreen
 import com.tangem.scenarios.synchronizeAddresses
 import com.tangem.screens.onMainScreen
@@ -23,7 +22,7 @@ class TotalBalanceLongTapTest : BaseTestCase() {
                 openMainScreen()
             }
             step("Synchronize addresses") {
-                synchronizeAddresses(TOTAL_BALANCE)
+                synchronizeAddresses()
             }
             step("Long tap on total balance block") {
                 onMainScreen {

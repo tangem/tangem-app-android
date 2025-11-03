@@ -26,6 +26,7 @@ sealed class ApiConfig {
         StakeKit,
         TangemPay,
         BlockAid,
+        YieldSupply,
     }
 
     private fun initializeId(): ID {
@@ -35,6 +36,7 @@ sealed class ApiConfig {
             is StakeKit -> ID.StakeKit
             is TangemPay -> ID.TangemPay
             is BlockAid -> ID.BlockAid
+            is YieldSupply -> ID.YieldSupply
         }
     }
 

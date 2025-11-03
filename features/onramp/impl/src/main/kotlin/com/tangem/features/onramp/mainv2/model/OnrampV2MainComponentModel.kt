@@ -25,8 +25,9 @@ import com.tangem.features.onramp.mainv2.entity.factory.OnrampV2StateFactory
 import com.tangem.features.onramp.utils.sendOnrampErrorEvent
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.PeriodicTask
+import com.tangem.utils.coroutines.SingleTaskScheduler
 import com.tangem.utils.isNullOrZero
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -41,7 +42,7 @@ internal class OnrampV2MainComponentModel @Inject constructor(
     private val getOnrampCountryUseCase: GetOnrampCountryUseCase,
     private val clearOnrampCacheUseCase: ClearOnrampCacheUseCase,
     private val fetchQuotesUseCase: OnrampFetchQuotesUseCase,
-    private val getOnrampQuotesUseCase: GetOnrampQuotesUseCase,
+    private val getOnrampQuotesUseCase: GetOnrampV2QuotesUseCase,
     private val fetchPairsUseCase: OnrampFetchPairsUseCase,
     private val amountInputManager: InputManager,
     private val getOnrampOffersUseCase: GetOnrampOffersUseCase,
@@ -50,8 +51,6 @@ internal class OnrampV2MainComponentModel @Inject constructor(
 ) : Model(), OnrampV2Intents {
 
     val params = paramsContainer.require<OnrampV2MainComponent.Params>()
-
-    private var loadQuotesJob: Job? = null
 
     private val lastUpdateState = mutableStateOf<OnrampLastUpdate?>(null)
 
@@ -88,6 +87,8 @@ internal class OnrampV2MainComponentModel @Inject constructor(
             openSettings = ::openSettings,
         ),
     )
+    private val quotesTaskScheduler = SingleTaskScheduler<Unit>()
+
     val state: StateFlow<OnrampV2MainComponentUM> get() = _state.asStateFlow()
     val bottomSheetNavigation: SlotNavigation<OnrampV2MainBottomSheetConfig> = SlotNavigation()
     val userWallet = getWalletsUseCase.invokeSync().first { it.walletId == params.userWalletId }
@@ -107,7 +108,7 @@ internal class OnrampV2MainComponentModel @Inject constructor(
 
     override fun onDestroy() {
         modelScope.launch { clearOnrampCacheUseCase.invoke() }
-        loadQuotesJob?.cancel()
+        quotesTaskScheduler.cancelTask()
         super.onDestroy()
     }
 
@@ -156,7 +157,6 @@ internal class OnrampV2MainComponentModel @Inject constructor(
                 openSettings = ::openSettings,
             )
         }
-        loadQuotesJob?.cancel()
         modelScope.launch {
             clearOnrampCacheUseCase.invoke()
             checkResidenceCountry()
@@ -168,6 +168,41 @@ internal class OnrampV2MainComponentModel @Inject constructor(
         if (currentState is OnrampV2MainComponentUM.Content) {
             _state.update { amountStateFactory.getShowProvidersState() }
         }
+    }
+
+    fun onStart() {
+        quotesTaskScheduler.scheduleTask(
+            scope = modelScope,
+            task = loadQuotesTask(),
+        )
+    }
+
+    fun onStop() {
+        quotesTaskScheduler.cancelTask()
+    }
+
+    private fun startLoadingQuotes() {
+        quotesTaskScheduler.cancelTask()
+        quotesTaskScheduler.scheduleTask(scope = modelScope, task = loadQuotesTask())
+    }
+
+    private fun loadQuotesTask(): PeriodicTask<Unit> {
+        return PeriodicTask(
+            delay = UPDATE_DELAY,
+            task = {
+                runCatching {
+                    val content = state.value as? OnrampV2MainComponentUM.Content ?: return@runCatching
+                    if (content.amountBlockState.amountFieldModel.fiatAmount.value.isNullOrZero()) return@runCatching
+                    fetchQuotesUseCase.invoke(
+                        userWallet = userWallet,
+                        amount = content.amountBlockState.amountFieldModel.fiatAmount,
+                        cryptoCurrency = params.cryptoCurrency,
+                    ).onLeft(::handleOnrampError)
+                }
+            },
+            onSuccess = {},
+            onError = {},
+        )
     }
 
     private fun checkResidenceCountry() {
@@ -211,7 +246,7 @@ internal class OnrampV2MainComponentModel @Inject constructor(
             .filter(String::isNotEmpty)
             .collectLatest { _ ->
                 _state.update { amountStateFactory.getAmountSecondaryLoadingState() }
-                loadQuotes()
+                startLoadingQuotes()
             }
     }
 
@@ -302,7 +337,7 @@ internal class OnrampV2MainComponentModel @Inject constructor(
                 ),
             ) ?: it
         }
-        loadQuotes()
+        startLoadingQuotes()
     }
 
     private suspend fun updatePairsAndQuotes() {
@@ -323,22 +358,7 @@ internal class OnrampV2MainComponentModel @Inject constructor(
                 }
             },
         )
-        loadQuotes()
-    }
-
-    private fun loadQuotes() {
-        loadQuotesJob?.cancel()
-        loadQuotesJob = modelScope.launch {
-            runCatching {
-                val content = state.value as? OnrampV2MainComponentUM.Content ?: return@runCatching
-                if (content.amountBlockState.amountFieldModel.fiatAmount.value.isNullOrZero()) return@runCatching
-                fetchQuotesUseCase.invoke(
-                    userWallet = userWallet,
-                    amount = content.amountBlockState.amountFieldModel.fiatAmount,
-                    cryptoCurrency = params.cryptoCurrency,
-                ).onLeft(::handleOnrampError)
-            }
-        }
+        startLoadingQuotes()
     }
 
     private fun handleOnrampError(onrampError: OnrampError) {
@@ -390,5 +410,9 @@ internal class OnrampV2MainComponentModel @Inject constructor(
                 tokenSymbol = params.cryptoCurrency.symbol,
             ),
         )
+    }
+
+    private companion object {
+        const val UPDATE_DELAY = 10_000L
     }
 }

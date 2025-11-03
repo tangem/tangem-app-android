@@ -51,7 +51,7 @@ class TotalBalanceUnavailableTest : BaseTestCase() {
                 openMainScreen()
             }
             step("Synchronize addresses") {
-                synchronizeAddresses(DASH_SIGN)
+                synchronizeAddresses(isBalanceAvailable = false)
             }
             step("Assert 'Synchronize addresses' button does not exist") {
                 onMainScreen {
@@ -88,7 +88,7 @@ class TotalBalanceUnavailableTest : BaseTestCase() {
                 openMainScreen()
             }
             step("Synchronize addresses") {
-                synchronizeAddresses(DASH_SIGN)
+                synchronizeAddresses(isBalanceAvailable = false)
             }
             step("Assert 'Synchronize addresses' button does not exist") {
                 onMainScreen {
@@ -125,7 +125,7 @@ class TotalBalanceUnavailableTest : BaseTestCase() {
                 openMainScreen()
             }
             step("Synchronize addresses") {
-                synchronizeAddresses(DASH_SIGN)
+                synchronizeAddresses(isBalanceAvailable = false)
             }
             step("Assert 'Synchronize addresses' button does not exist") {
                 onMainScreen {

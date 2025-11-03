@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -18,6 +19,7 @@ import com.tangem.core.ui.components.buttons.actions.ActionButton
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.test.EmptyTransactionBlockTestTags
 
 /**
  * Placeholder for transaction's block without content
@@ -31,19 +33,24 @@ fun EmptyTransactionBlock(state: EmptyTransactionsBlockState, modifier: Modifier
         modifier = modifier
             .clip(TangemTheme.shapes.roundedCornersXMedium)
             .background(color = TangemTheme.colors.background.primary)
-            .padding(vertical = TangemTheme.dimens.spacing24),
+            .padding(vertical = TangemTheme.dimens.spacing24)
+            .testTag(EmptyTransactionBlockTestTags.BLOCK),
         verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing24),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Icon(
-            modifier = Modifier.size(TangemTheme.dimens.size64),
+            modifier = Modifier
+                .size(TangemTheme.dimens.size64)
+                .testTag(EmptyTransactionBlockTestTags.ICON),
             painter = painterResource(id = state.iconRes),
             tint = TangemTheme.colors.icon.inactive,
             contentDescription = null,
         )
 
         Text(
-            modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing32),
+            modifier = Modifier
+                .padding(horizontal = TangemTheme.dimens.spacing32)
+                .testTag(EmptyTransactionBlockTestTags.TEXT),
             textAlign = TextAlign.Center,
             text = state.text.resolveReference(),
             style = TangemTheme.typography.body2,
@@ -51,7 +58,9 @@ fun EmptyTransactionBlock(state: EmptyTransactionsBlockState, modifier: Modifier
         )
 
         Buttons(
-            modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing18),
+            modifier = Modifier
+                .padding(horizontal = TangemTheme.dimens.spacing18)
+                .testTag(EmptyTransactionBlockTestTags.EXPLORE_BUTTON),
             state = state.buttonsState,
         )
     }

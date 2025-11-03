@@ -62,7 +62,7 @@ internal class DefaultMarketsTokenDetailDeepLinkHandler @AssistedInject construc
                         imageUrl = getTokenIconUrlFromDefaultHost(rawTokenId),
                     ),
                     appCurrency = appCurrency,
-                    showPortfolio = true,
+                    shouldShowPortfolio = true,
                     analyticsParams = null,
                 ),
             )

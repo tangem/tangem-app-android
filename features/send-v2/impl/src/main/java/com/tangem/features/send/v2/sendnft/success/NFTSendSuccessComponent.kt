@@ -10,10 +10,12 @@ import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.nft.models.NFTAsset
 import com.tangem.features.nft.component.NFTDetailsBlockComponent
+import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.v2.api.entity.PredefinedValues
 import com.tangem.features.send.v2.api.subcomponents.destination.SendDestinationBlockComponent
 import com.tangem.features.send.v2.api.subcomponents.destination.SendDestinationComponentParams.DestinationBlockParams
@@ -45,7 +47,9 @@ internal class NFTSendSuccessComponent @AssistedInject constructor(
             nftAsset = params.nftAsset,
             nftCollectionName = params.nftCollectionName,
             isSuccessScreen = true,
-            title = resourceReference(R.string.nft_asset),
+            account = params.account,
+            isAccountsMode = params.isAccountsMode,
+            walletTitle = resourceReference(R.string.nft_asset),
         ),
     )
 
@@ -54,6 +58,7 @@ internal class NFTSendSuccessComponent @AssistedInject constructor(
         params = DestinationBlockParams(
             state = model.uiState.value.destinationUM,
             analyticsCategoryName = params.analyticsCategoryName,
+            analyticsSendSource = params.analyticsSendSource,
             userWalletId = params.userWallet.walletId,
             cryptoCurrency = params.cryptoCurrencyStatus.currency,
             blockClickEnableFlow = MutableStateFlow(false),
@@ -77,12 +82,15 @@ internal class NFTSendSuccessComponent @AssistedInject constructor(
     data class Params(
         val nftSendUMFlow: StateFlow<NFTSendUM>,
         val analyticsCategoryName: String,
+        val analyticsSendSource: CommonSendAnalyticEvents.CommonSendSource,
         val currentRoute: Flow<CommonSendRoute>,
         val cryptoCurrencyStatus: CryptoCurrencyStatus,
         val userWallet: UserWallet,
         val nftAsset: NFTAsset,
         val nftCollectionName: String,
         val txUrl: String,
+        val account: Account.CryptoPortfolio?,
+        val isAccountsMode: Boolean,
         val callback: ModelCallback,
     )
 

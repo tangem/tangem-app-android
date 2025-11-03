@@ -64,9 +64,15 @@ class NetworkStatusDMSerializationTest {
                 NetworkStatusDM.Address("0x123456", NetworkStatusDM.Address.Type.Primary),
                 NetworkStatusDM.Address("0xabcdef", NetworkStatusDM.Address.Type.Secondary),
             ),
-            amounts = mapOf("ETH" to BigDecimal("1.2345")),
-            yieldSupplyStatuses = mapOf(
-                "ETH" to NetworkStatusDM.YieldSupplyStatus(
+            amounts = listOf(
+                NetworkStatusDM.CurrencyAmount(
+                    id = NetworkStatusDM.CurrencyId.createCoinId("ethereum"),
+                    amount = BigDecimal("1.2345"),
+                ),
+            ),
+            yieldSupplyStatuses = listOf(
+                NetworkStatusDM.YieldSupplyStatus(
+                    id = NetworkStatusDM.CurrencyId.createCoinId("ethereum"),
                     isActive = false,
                     isInitialized = false,
                     isAllowedToSpend = false,
@@ -91,9 +97,15 @@ class NetworkStatusDMSerializationTest {
                 NetworkStatusDM.Address("0x123456", NetworkStatusDM.Address.Type.Primary),
                 NetworkStatusDM.Address("0xabcdef", NetworkStatusDM.Address.Type.Secondary),
             ),
-            amounts = mapOf("ETH" to BigDecimal("1.2345")),
-            yieldSupplyStatuses = mapOf(
-                "ETH" to NetworkStatusDM.YieldSupplyStatus(
+            amounts = listOf(
+                NetworkStatusDM.CurrencyAmount(
+                    id = NetworkStatusDM.CurrencyId.createCoinId("ethereum"),
+                    amount = BigDecimal("1.2345"),
+                ),
+            ),
+            yieldSupplyStatuses = listOf(
+                NetworkStatusDM.YieldSupplyStatus(
+                    id = NetworkStatusDM.CurrencyId.createCoinId("ethereum"),
                     isActive = false,
                     isInitialized = false,
                     isAllowedToSpend = false,

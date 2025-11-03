@@ -45,8 +45,8 @@ internal sealed class WalletManageButton(val config: ActionButtonConfig) {
                 text = TextReference.Res(id = R.string.common_buy),
                 iconResId = R.drawable.ic_plus_24,
                 onClick = onClick,
-                enabled = enabled,
-                dimContent = dimContent,
+                isEnabled = enabled,
+                shouldDimContent = dimContent,
                 isInProgress = isInProgress,
             ),
         )
@@ -67,8 +67,8 @@ internal sealed class WalletManageButton(val config: ActionButtonConfig) {
             text = TextReference.Res(id = R.string.common_send),
             iconResId = R.drawable.ic_arrow_up_24,
             onClick = onClick,
-            enabled = enabled,
-            dimContent = dimContent,
+            isEnabled = enabled,
+            shouldDimContent = dimContent,
         ),
     )
 
@@ -87,8 +87,8 @@ internal sealed class WalletManageButton(val config: ActionButtonConfig) {
         config = ActionButtonConfig(
             text = TextReference.Res(id = R.string.common_receive),
             iconResId = R.drawable.ic_arrow_down_24,
-            enabled = enabled,
-            dimContent = dimContent,
+            isEnabled = enabled,
+            shouldDimContent = dimContent,
             onClick = onClick,
             onLongClick = onLongClick,
         ),
@@ -103,8 +103,8 @@ internal sealed class WalletManageButton(val config: ActionButtonConfig) {
             text = TextReference.Res(id = R.string.common_stake),
             iconResId = R.drawable.ic_staking_24,
             onClick = onClick,
-            enabled = enabled,
-            dimContent = dimContent,
+            isEnabled = enabled,
+            shouldDimContent = dimContent,
         ),
     )
 
@@ -125,8 +125,8 @@ internal sealed class WalletManageButton(val config: ActionButtonConfig) {
             text = TextReference.Res(id = R.string.common_sell),
             iconResId = R.drawable.ic_currency_24,
             onClick = onClick,
-            enabled = enabled,
-            dimContent = dimContent,
+            isEnabled = enabled,
+            shouldDimContent = dimContent,
             isInProgress = isInProgress,
         ),
     )
@@ -149,10 +149,10 @@ internal sealed class WalletManageButton(val config: ActionButtonConfig) {
             text = TextReference.Res(id = R.string.swapping_swap_action),
             iconResId = R.drawable.ic_exchange_vertical_24,
             onClick = onClick,
-            enabled = enabled,
-            dimContent = dimContent,
+            isEnabled = enabled,
+            shouldDimContent = dimContent,
             isInProgress = isInProgress,
-            showBadge = showBadge,
+            shouldShowBadge = showBadge,
         ),
     )
 }

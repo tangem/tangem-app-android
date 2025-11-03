@@ -116,7 +116,7 @@ fun InputRowEnter(
                         .padding(top = TangemTheme.dimens.spacing8),
                 )
             }
-            iconRes?.let {
+            iconRes?.let { iconRes ->
                 Icon(
                     painter = painterResource(id = iconRes),
                     contentDescription = null,
@@ -148,7 +148,7 @@ private fun InputRowEnterPreview(
             title = TextReference.Str(data.title),
             text = data.text,
             iconRes = data.iconRes,
-            showDivider = data.showDivider,
+            showDivider = data.shouldShowDivider,
             description = stringReference(""),
             onValueChange = {},
             modifier = Modifier.background(TangemTheme.colors.background.action),
@@ -160,7 +160,7 @@ private data class InputRowEnterPreviewData(
     val title: String,
     val text: String,
     val iconRes: Int?,
-    val showDivider: Boolean,
+    val shouldShowDivider: Boolean,
 )
 
 private class InputRowEnterPreviewDataProvider :
@@ -171,13 +171,13 @@ private class InputRowEnterPreviewDataProvider :
                 title = "title",
                 text = "text",
                 iconRes = null,
-                showDivider = true,
+                shouldShowDivider = true,
             ),
             InputRowEnterPreviewData(
                 title = "title",
                 text = "text",
                 iconRes = R.drawable.ic_chevron_right_24,
-                showDivider = false,
+                shouldShowDivider = false,
             ),
         )
 }

@@ -23,7 +23,6 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.features.markets.impl.R
 import com.tangem.features.markets.portfolio.impl.loader.PortfolioData
 import com.tangem.features.markets.portfolio.impl.ui.state.TokenActionsBSContentUM
-import com.tangem.features.send.v2.api.SendFeatureToggles
 import com.tangem.utils.Provider
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -42,7 +41,6 @@ internal class TokenActionsHandler @AssistedInject constructor(
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val messageSender: UiMessageSender,
     private val shareManager: ShareManager,
-    private val sendFeatureToggles: SendFeatureToggles,
 ) {
 
     private val disabledActionsInDemoMode = buildSet {
@@ -159,17 +157,10 @@ internal class TokenActionsHandler @AssistedInject constructor(
     }
 
     private fun onSendClick(cryptoCurrencyData: PortfolioData.CryptoCurrencyData) {
-        val route = if (sendFeatureToggles.isSendWithSwapEnabled) {
-            AppRoute.SendEntryPoint(
-                userWalletId = cryptoCurrencyData.userWallet.walletId,
-                currency = cryptoCurrencyData.status.currency,
-            )
-        } else {
-            AppRoute.Send(
-                userWalletId = cryptoCurrencyData.userWallet.walletId,
-                currency = cryptoCurrencyData.status.currency,
-            )
-        }
+        val route = AppRoute.SendEntryPoint(
+            userWalletId = cryptoCurrencyData.userWallet.walletId,
+            currency = cryptoCurrencyData.status.currency,
+        )
         router.push(route)
     }
 

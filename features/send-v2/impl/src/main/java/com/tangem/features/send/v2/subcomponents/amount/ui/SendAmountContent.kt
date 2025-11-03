@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.amountScreen.AmountScreenContent
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.preview.AmountStatePreviewData
+import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -29,7 +30,6 @@ import com.tangem.features.send.v2.subcomponents.amount.ui.preview.SendAmountCli
 @Composable
 fun SendAmountContent(
     amountState: AmountState,
-    isBalanceHidden: Boolean,
     clickIntents: SendAmountClickIntents,
     isSendWithSwapAvailable: Boolean,
     modifier: Modifier = Modifier,
@@ -37,14 +37,16 @@ fun SendAmountContent(
     Column(modifier = modifier.background(TangemTheme.colors.background.tertiary)) {
         AmountScreenContent(
             amountState = amountState,
-            isBalanceHidden = isBalanceHidden,
             clickIntents = clickIntents,
+            extraContent = {
+                if (isSendWithSwapAvailable) {
+                    SendConvertTokenButton(
+                        onConvertToAnother = clickIntents::onConvertToAnotherToken,
+                    )
+                }
+            },
         )
-        if (isSendWithSwapAvailable) {
-            SendConvertTokenButton(
-                onConvertToAnother = clickIntents::onConvertToAnotherToken,
-            )
-        }
+        SpacerH(16.dp)
     }
 }
 
@@ -93,7 +95,6 @@ private fun SendAmountContent_Preview(@PreviewParameter(SendAmountContentPreview
     TangemThemePreview {
         SendAmountContent(
             amountState = params,
-            isBalanceHidden = true,
             clickIntents = SendAmountClickIntentsStub,
             isSendWithSwapAvailable = true,
         )
@@ -104,6 +105,7 @@ private class SendAmountContentPreviewProvider : PreviewParameterProvider<Amount
     override val values: Sequence<AmountState>
         get() = sequenceOf(
             AmountStatePreviewData.amountStateV2,
+            AmountStatePreviewData.amountStateV2Accounts,
         )
 }
 // endregion

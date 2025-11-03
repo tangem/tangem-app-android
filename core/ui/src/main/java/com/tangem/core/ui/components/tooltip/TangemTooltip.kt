@@ -24,9 +24,9 @@ import kotlinx.coroutines.launch
 @Composable
 fun TangemTooltip(
     text: String,
-    content: @Composable (Modifier) -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    content: @Composable (Modifier) -> Unit,
 ) {
     InternalTangemTooltip(
         modifier = modifier,
@@ -46,9 +46,9 @@ fun TangemTooltip(
 @Composable
 fun TangemTooltip(
     text: AnnotatedString,
-    content: @Composable (Modifier) -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    content: @Composable (Modifier) -> Unit,
 ) {
     InternalTangemTooltip(
         modifier = modifier,
@@ -68,10 +68,10 @@ fun TangemTooltip(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun InternalTangemTooltip(
-    tooltipContent: @Composable () -> Unit,
-    content: @Composable (Modifier) -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    tooltipContent: @Composable () -> Unit,
+    content: @Composable (Modifier) -> Unit,
 ) {
     val tooltipState = rememberTooltipState(isPersistent = true)
     val coroutineScope = rememberCoroutineScope()

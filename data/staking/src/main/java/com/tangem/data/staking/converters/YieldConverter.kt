@@ -10,7 +10,9 @@ import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.staking.model.stakekit.Yield.Metadata.RewardSchedule
 import com.tangem.domain.staking.model.stakekit.Yield.Validator.ValidatorStatus
 import com.tangem.utils.converter.Converter
+import com.tangem.utils.extensions.orZero
 import kotlinx.collections.immutable.toImmutableList
+import java.math.RoundingMode
 
 internal object YieldConverter : Converter<YieldDTO, Yield> {
 
@@ -21,7 +23,10 @@ internal object YieldConverter : Converter<YieldDTO, Yield> {
 
     private val PARTNERS_NAMES = listOf("Meria")
 
+    private const val DIVIDE_SCALE = 8
+
     override fun convert(value: YieldDTO): Yield {
+        val rewardType = convertRewardType(value.rewardType.asMandatory("rewardType"))
         return Yield(
             id = value.id.asMandatory("id"),
             token = YieldTokenConverter.convert(value.token.asMandatory("token")),
@@ -30,14 +35,14 @@ internal object YieldConverter : Converter<YieldDTO, Yield> {
             status = convertStatus(value.status.asMandatory("status")),
             apy = value.apy.asMandatory("apy"),
             rewardRate = value.rewardRate.asMandatory("rewardRate"),
-            rewardType = convertRewardType(value.rewardType.asMandatory("rewardType")),
+            rewardType = rewardType,
             metadata = convertMetadata(value.metadata.asMandatory("metadata")),
             validators = value.validators.asMandatory("validators")
                 .asSequence()
                 .distinctBy { it.address }
                 .filter { it.status == ValidatorStatusDTO.ACTIVE }
-                .map { convertValidator(it) }
-                .sortedByDescending { it.apr }
+                .map { convertValidator(validatorDTO = it, rewardType = rewardType) }
+                .sortedByDescending { it.rewardInfo?.rate?.orZero() }
                 .sortedByDescending { it.isStrategicPartner }
                 .toImmutableList(),
             isAvailable = value.isAvailable.asMandatory("isAvailable"),
@@ -119,21 +124,48 @@ internal object YieldConverter : Converter<YieldDTO, Yield> {
         )
     }
 
-    private fun convertValidator(validatorDTO: YieldDTO.ValidatorDTO): Yield.Validator {
+    private fun convertValidator(validatorDTO: YieldDTO.ValidatorDTO, rewardType: Yield.RewardType): Yield.Validator {
         val address = validatorDTO.address.asMandatory("address")
+
         return Yield.Validator(
             address = address,
             status = convertValidatorStatus(validatorDTO.status.asMandatory("status")),
             name = validatorDTO.name.asMandatory("name"),
             image = validatorDTO.image,
             website = validatorDTO.website,
-            apr = validatorDTO.apr,
+            rewardInfo = createRewardInfo(validatorDTO, rewardType),
             commission = validatorDTO.commission,
             stakedBalance = validatorDTO.stakedBalance,
             votingPower = validatorDTO.votingPower,
             preferred = validatorDTO.preferred.asMandatory("preferred"),
             isStrategicPartner = isStrategicPartner(validatorDTO.address, validatorDTO.name.asMandatory("name")),
         )
+    }
+
+    private fun createRewardInfo(validatorDTO: YieldDTO.ValidatorDTO, rewardType: Yield.RewardType): Yield.RewardInfo? {
+        val aprOrApy = validatorDTO.apr
+        val commission = validatorDTO.commission
+        // gross = net / (1 - commission)
+        return try {
+            val netApy = aprOrApy
+            val grossAprOrApy = if (netApy != null && commission != null) {
+                val commissionFraction = commission.toBigDecimal()
+                if (commissionFraction < 1.toBigDecimal()) {
+                    netApy.divide(
+                        1.toBigDecimal() - commissionFraction,
+                        DIVIDE_SCALE,
+                        RoundingMode.HALF_UP,
+                    )
+                } else {
+                    netApy
+                }
+            } else {
+                netApy
+            }
+            grossAprOrApy?.let { Yield.RewardInfo(rate = it, type = rewardType) }
+        } catch (_: Exception) {
+            aprOrApy?.let { Yield.RewardInfo(rate = it, type = rewardType) }
+        }
     }
 
     private fun convertRewardType(rewardTypeDTO: YieldDTO.RewardTypeDTO): Yield.RewardType {

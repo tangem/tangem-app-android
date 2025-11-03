@@ -8,4 +8,5 @@ package com.tangem.common.ui.notifications
  */
 enum class NotificationId(val key: String) {
     SendViaSwapTokenSelectorNotification("SendViaSwapTokenSelectorNotificationKey"),
+    EnablePushesReminderNotification("EnablePushesReminderNotification"),
 }

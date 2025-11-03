@@ -33,8 +33,8 @@ internal object UseCaseScanProcessor {
 
         return scanCardUseCase(cardId, allowsRequestAccessCodeFromRepository)
             .fold(
-                ifLeft = {
-                    val error = scanCardExceptionConverter.convertBack(it)
+                ifLeft = { scanCardException ->
+                    val error = scanCardExceptionConverter.convertBack(scanCardException)
 
                     Analytics.sendErrorEvent(TangemSdkErrorEvent(error))
                     CompletionResult.Failure(error)

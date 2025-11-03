@@ -9,5 +9,4 @@ internal enum class OnrampOperation {
     BUY,
     SELL,
     SWAP,
-    ;
 }

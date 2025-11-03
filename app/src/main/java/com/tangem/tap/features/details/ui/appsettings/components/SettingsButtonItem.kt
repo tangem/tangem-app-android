@@ -14,8 +14,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.tap.features.details.ui.appsettings.AppSettingsItemsFactory
 import com.tangem.tap.features.details.ui.appsettings.AppSettingsScreenState.Item
 
@@ -64,10 +64,12 @@ private class ButtonItemProvider : CollectionPreviewParameterProvider<Item.Butto
     collection = buildList {
         val itemsFactory = AppSettingsItemsFactory()
 
-        itemsFactory.createSelectAppCurrencyButton(
-            currentAppCurrencyName = "US Dollar",
-            onClick = { /* no-op */ },
-        ).let(::add)
+        add(
+            itemsFactory.createSelectAppCurrencyButton(
+                currentAppCurrencyName = "US Dollar",
+                onClick = { /* no-op */ },
+            ),
+        )
     },
 )
 // endregion Preview

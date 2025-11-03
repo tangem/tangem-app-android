@@ -51,10 +51,10 @@ fun SimpleDialogTextField(
                     val strokeWidth = 2f
                     val y = size.height - strokeWidth / 2
                     drawLine(
-                        strokeColor,
-                        Offset(0f, y),
-                        Offset(size.width, y),
-                        strokeWidth,
+                        color = strokeColor,
+                        start = Offset(0f, y),
+                        end = Offset(size.width, y),
+                        strokeWidth = strokeWidth,
                     )
                 },
             decorationBox = { textValue ->

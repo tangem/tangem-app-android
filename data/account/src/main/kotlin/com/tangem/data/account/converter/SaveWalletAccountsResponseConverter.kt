@@ -1,7 +1,6 @@
 package com.tangem.data.account.converter
 
 import com.tangem.datasource.api.tangemTech.models.account.SaveWalletAccountsResponse
-import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.models.account.Account
 import com.tangem.utils.converter.Converter
@@ -21,8 +20,8 @@ internal object SaveWalletAccountsResponseConverter : Converter<AccountList, Sav
         )
     }
 
-    private fun toDTO(account: Account.CryptoPortfolio): WalletAccountDTO {
-        return WalletAccountDTO(
+    private fun toDTO(account: Account.CryptoPortfolio): SaveWalletAccountsResponse.AccountDTO {
+        return SaveWalletAccountsResponse.AccountDTO(
             id = account.accountId.value,
             name = AccountNameConverter.convert(value = account.accountName),
             derivationIndex = account.derivationIndex.value,

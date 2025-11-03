@@ -10,6 +10,7 @@ interface YieldSupplyPromoComponent : ComposableContentComponent {
     data class Params(
         val userWalletId: UserWalletId,
         val currency: CryptoCurrency,
+        val apy: String,
     )
 
     interface Factory : ComponentFactory<Params, YieldSupplyPromoComponent>

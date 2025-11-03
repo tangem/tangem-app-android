@@ -6,6 +6,7 @@ import com.tangem.common.ui.tokens.TokenItemStateConverter.Companion.getFormatte
 import com.tangem.common.ui.tokens.TokenItemStateConverter.Companion.isFlickering
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.components.token.state.TokenItemState
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -21,7 +22,13 @@ internal object OnrampTokenItemStateConverterFactory {
     ): TokenItemStateConverter {
         return TokenItemStateConverter(
             appCurrency = appCurrency,
-            subtitleStateProvider = { createSubtitleState(status = it, isAvailable = true) },
+            subtitleStateProvider = {
+                createSubtitleState(
+                    status = it,
+                    isAvailable = true,
+                    text = stringReference(value = it.currency.symbol),
+                )
+            },
             subtitle2StateProvider = ::createSubtitle2State,
             fiatAmountStateProvider = {
                 createFiatAmountStateProvider(status = it, appCurrency = appCurrency, isAvailable = true)
@@ -40,7 +47,13 @@ internal object OnrampTokenItemStateConverterFactory {
                     isAvailable = false,
                 )
             },
-            subtitleStateProvider = { createSubtitleState(status = it, isAvailable = false) },
+            subtitleStateProvider = {
+                createSubtitleState(
+                    status = it,
+                    text = stringReference(value = it.currency.symbol),
+                    isAvailable = false,
+                )
+            },
             subtitle2StateProvider = ::createSubtitle2State,
             fiatAmountStateProvider = {
                 createFiatAmountStateProvider(status = it, appCurrency = appCurrency, isAvailable = false)
@@ -48,12 +61,43 @@ internal object OnrampTokenItemStateConverterFactory {
         )
     }
 
-    private fun createSubtitleState(status: CryptoCurrencyStatus, isAvailable: Boolean): TokenItemState.SubtitleState {
+    fun createUnavailableItemConverterV2(
+        appCurrency: AppCurrency,
+        unavailableErrorText: TextReference,
+    ): TokenItemStateConverter {
+        return TokenItemStateConverter(
+            appCurrency = appCurrency,
+            iconStateProvider = { CryptoCurrencyToIconStateConverter(isAvailable = false).convert(it) },
+            titleStateProvider = {
+                TokenItemState.TitleState.Content(
+                    text = stringReference(value = it.currency.name),
+                    isAvailable = false,
+                )
+            },
+            subtitleStateProvider = {
+                createSubtitleState(
+                    status = it,
+                    isAvailable = false,
+                    text = unavailableErrorText,
+                )
+            },
+            subtitle2StateProvider = ::createSubtitle2State,
+            fiatAmountStateProvider = {
+                createFiatAmountStateProvider(status = it, appCurrency = appCurrency, isAvailable = false)
+            },
+        )
+    }
+
+    private fun createSubtitleState(
+        status: CryptoCurrencyStatus,
+        isAvailable: Boolean,
+        text: TextReference,
+    ): TokenItemState.SubtitleState {
         return when (status.value) {
             CryptoCurrencyStatus.Loading -> TokenItemState.SubtitleState.Loading
             else -> {
                 TokenItemState.SubtitleState.TextContent(
-                    value = stringReference(value = status.currency.symbol),
+                    value = text,
                     isAvailable = isAvailable,
                 )
             }

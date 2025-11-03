@@ -14,6 +14,7 @@ import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import io.mockk.mockk
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
@@ -27,6 +28,7 @@ internal class UpdateStatusSourceTest {
     private val persistenceStore = MockStateDataStore<WalletIdWithStatusDM>(default = emptyMap())
 
     private val store = DefaultNetworksStatusesStore(
+        context = mockk(),
         runtimeStore = runtimeStore,
         persistenceDataStore = persistenceStore,
         dispatchers = TestingCoroutineDispatcherProvider(),

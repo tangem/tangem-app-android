@@ -32,9 +32,4 @@ internal sealed class CommonSendRoute : Route {
     data class Amount(
         override val isEditMode: Boolean,
     ) : CommonSendRoute()
-
-    @Serializable
-    data object Fee : CommonSendRoute() {
-        override val isEditMode: Boolean = true
-    }
 }

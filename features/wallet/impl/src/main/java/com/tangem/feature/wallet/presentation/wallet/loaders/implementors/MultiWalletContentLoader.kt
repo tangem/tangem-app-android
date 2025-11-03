@@ -8,8 +8,10 @@ import com.tangem.domain.tokens.ApplyTokenListSortingUseCase
 import com.tangem.domain.tokens.RunPolkadotAccountHealthCheckUseCase
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.staking.usecase.StakingApyFlowUseCase
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.ShouldSaveUserWalletsUseCase
+import com.tangem.domain.yield.supply.usecase.YieldSupplyApyFlowUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.TokenListAnalyticsSender
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.WalletWarningsAnalyticsSender
@@ -19,6 +21,7 @@ import com.tangem.feature.wallet.presentation.wallet.domain.MultiWalletTokenList
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletWithFundsChecker
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.subscribers.*
+import com.tangem.feature.wallet.presentation.account.AccountDependencies
 
 @Suppress("LongParameterList")
 @ModelScoped
@@ -40,6 +43,9 @@ internal class MultiWalletContentLoader(
     private val getStoryContentUseCase: GetStoryContentUseCase,
     private val walletsRepository: WalletsRepository,
     private val currenciesRepository: CurrenciesRepository,
+    private val accountDependencies: AccountDependencies,
+    private val yieldSupplyApyFlowUseCase: YieldSupplyApyFlowUseCase,
+    private val stakingApyFlowUseCase: StakingApyFlowUseCase,
 ) : WalletContentLoader(id = userWallet.walletId) {
 
     override fun create(): List<WalletSubscriber> {
@@ -54,6 +60,9 @@ internal class MultiWalletContentLoader(
                 getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
                 applyTokenListSortingUseCase = applyTokenListSortingUseCase,
                 runPolkadotAccountHealthCheckUseCase = runPolkadotAccountHealthCheckUseCase,
+                accountDependencies = accountDependencies,
+                yieldSupplyApyFlowUseCase = yieldSupplyApyFlowUseCase,
+                stakingApyFlowUseCase = stakingApyFlowUseCase,
             ).let(::add)
 
             WalletNFTListSubscriber(
