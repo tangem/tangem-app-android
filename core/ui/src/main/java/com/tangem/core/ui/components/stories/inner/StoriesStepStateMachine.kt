@@ -10,7 +10,7 @@ class StoriesStepStateMachine<T>(
     private val isRepeatable: Boolean,
 ) {
 
-    private var _currentIndex = mutableIntStateOf(FIRST_INDEX)
+    private val _currentIndex = mutableIntStateOf(FIRST_INDEX)
 
     val steps = stories.lastIndex
     val currentIndex: IntState

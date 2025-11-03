@@ -79,6 +79,6 @@ private fun MessageText(text: String) {
 @Composable
 private fun Preview_TangemSnackbar(@PreviewParameter(TangemSnackbarModelProvider::class) model: TangemSnackbarModel) {
     TangemThemePreview {
-        TangemSnackbar(data = model.snackbarData, actionOnNewLine = model.actionOnNewLine)
+        TangemSnackbar(data = model.snackbarData, actionOnNewLine = model.hasActionOnNewLine)
     }
 }
