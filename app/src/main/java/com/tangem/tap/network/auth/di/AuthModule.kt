@@ -28,11 +28,13 @@ internal class AuthModule {
         userWalletsListManager: UserWalletsListManager,
         userWalletsListRepository: UserWalletsListRepository,
         hotWalletFeatureToggles: HotWalletFeatureToggles,
+        environmentConfigStorage: EnvironmentConfigStorage,
     ): AuthProvider {
         return DefaultAuthProvider(
             userWalletsListManager = userWalletsListManager,
             userWalletsListRepository = userWalletsListRepository,
             shouldUseNewListRepository = hotWalletFeatureToggles.isHotWalletEnabled,
+            environmentConfigStorage = environmentConfigStorage,
         )
     }
 
