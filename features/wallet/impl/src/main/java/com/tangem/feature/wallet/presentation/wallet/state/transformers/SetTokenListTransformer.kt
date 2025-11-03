@@ -1,8 +1,8 @@
 package com.tangem.feature.wallet.presentation.wallet.state.transformers
 
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletCardState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
@@ -13,10 +13,12 @@ import com.tangem.feature.wallet.presentation.wallet.state.utils.enableButtons
 import timber.log.Timber
 
 internal class SetTokenListTransformer(
-    private val tokenList: TokenList,
+    private val params: TokenConverterParams,
     private val userWallet: UserWallet,
     private val appCurrency: AppCurrency,
     private val clickIntents: WalletClickIntents,
+    private val yieldSupplyApyMap: Map<String, String> = emptyMap(),
+    private val stakingApyMap: Map<String, List<Yield.Validator>> = emptyMap(),
 ) : WalletStateTransformer(userWallet.walletId) {
 
     override fun transform(prevState: WalletState): WalletState {
@@ -42,8 +44,12 @@ internal class SetTokenListTransformer(
     }
 
     private fun WalletCardState.toLoadedState(): WalletCardState {
+        val fiatBalance = when (params) {
+            is TokenConverterParams.Account -> params.accountList.totalFiatBalance
+            is TokenConverterParams.Wallet -> params.tokenList.totalFiatBalance
+        }
         return MultiWalletCardStateConverter(
-            fiatBalance = tokenList.totalFiatBalance,
+            fiatBalance = fiatBalance,
             selectedWallet = userWallet,
             appCurrency = appCurrency,
         ).convert(value = this)
@@ -51,10 +57,12 @@ internal class SetTokenListTransformer(
 
     private fun WalletTokensListState.toLoadedState(): WalletTokensListState {
         return TokenListStateConverter(
-            tokenList = tokenList,
+            params = params,
             selectedWallet = userWallet,
             appCurrency = appCurrency,
             clickIntents = clickIntents,
+            yieldModuleApyMap = yieldSupplyApyMap,
+            stakingApyMap = stakingApyMap,
         ).convert(value = this)
     }
 }
