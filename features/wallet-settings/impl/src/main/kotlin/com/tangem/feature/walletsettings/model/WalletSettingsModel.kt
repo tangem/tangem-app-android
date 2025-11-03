@@ -103,30 +103,6 @@ internal class WalletSettingsModel @Inject constructor(
         ),
     )
 
-    private val makeBackupAtFirstAlertBS
-        get() = bottomSheetMessage {
-            infoBlock {
-                icon(R.drawable.ic_passcode_lock_32) {
-                    type = MessageBottomSheetUMV2.Icon.Type.Accent
-                    backgroundType = MessageBottomSheetUMV2.Icon.BackgroundType.SameAsTint
-                }
-                title = resourceReference(R.string.hw_backup_need_title)
-                body = resourceReference(R.string.hw_backup_need_description)
-            }
-            primaryButton {
-                text = resourceReference(R.string.hw_backup_need_action)
-                onClick {
-                    router.push(
-                        AppRoute.CreateWalletBackup(
-                            userWalletId = params.userWalletId,
-                            isUpgradeFlow = false,
-                        ),
-                    )
-                    closeBs()
-                }
-            }
-        }
-
     init {
         getUserWalletUseCase.invoke(params.userWalletId).onRight {
             analyticsContextProxy.addContext(it)
@@ -366,7 +342,7 @@ internal class WalletSettingsModel @Inject constructor(
 
     private fun onAccessCodeClick() {
         if (!state.value.isWalletBackedUp) {
-            messageSender.send(makeBackupAtFirstAlertBS)
+            showMakeBackupAtFirstAlertBS(isUpgradeFlow = false)
         } else {
             unlockWalletIfNeedAndProceed {
                 router.push(AppRoute.UpdateAccessCode(params.userWalletId))
@@ -375,12 +351,12 @@ internal class WalletSettingsModel @Inject constructor(
     }
 
     private fun onUpgradeWalletClick() {
-        unlockWalletIfNeedAndProceed {
-            router.push(
-                AppRoute.UpgradeWallet(
-                    userWalletId = params.userWalletId,
-                ),
-            )
+        if (!state.value.isWalletBackedUp) {
+            showMakeBackupAtFirstAlertBS(isUpgradeFlow = true)
+        } else {
+            unlockWalletIfNeedAndProceed {
+                router.push(AppRoute.UpgradeWallet(userWalletId = params.userWalletId))
+            }
         }
     }
 
@@ -388,6 +364,32 @@ internal class WalletSettingsModel @Inject constructor(
         modelScope.launch {
             dismissUpgradeWalletNotificationUseCase.invoke(params.userWalletId)
         }
+    }
+
+    private fun showMakeBackupAtFirstAlertBS(isUpgradeFlow: Boolean) {
+        val message = bottomSheetMessage {
+            infoBlock {
+                icon(R.drawable.ic_passcode_lock_32) {
+                    type = MessageBottomSheetUMV2.Icon.Type.Accent
+                    backgroundType = MessageBottomSheetUMV2.Icon.BackgroundType.SameAsTint
+                }
+                title = resourceReference(R.string.hw_backup_need_title)
+                body = resourceReference(R.string.hw_backup_need_description)
+            }
+            primaryButton {
+                text = resourceReference(R.string.hw_backup_need_action)
+                onClick {
+                    router.push(
+                        AppRoute.CreateWalletBackup(
+                            userWalletId = params.userWalletId,
+                            isUpgradeFlow = isUpgradeFlow,
+                        ),
+                    )
+                    closeBs()
+                }
+            }
+        }
+        messageSender.send(message)
     }
 
     private fun unlockWalletIfNeedAndProceed(action: () -> Unit) {
