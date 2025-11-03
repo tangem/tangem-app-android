@@ -1,7 +1,9 @@
 package com.tangem.tests
 
 import com.tangem.common.BaseTestCase
+import com.tangem.common.extensions.SwipeDirection
 import com.tangem.common.extensions.clickWithAssertion
+import com.tangem.common.extensions.swipeVertical
 import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.scenarios.openMainScreen
@@ -23,7 +25,6 @@ class SendTest : BaseTestCase() {
         val currencyName = "POL (ex-MATIC)"
         val feeCurrencyName = "Ethereum"
         val feeCurrencySymbol = "ETH"
-        val balance = "$763.55"
         val scenarioName = "eth_network_balance"
         val scenarioState = "Empty"
 
@@ -40,7 +41,10 @@ class SendTest : BaseTestCase() {
                 openMainScreen()
             }
             step("Synchronize addresses") {
-                synchronizeAddresses(balance)
+                synchronizeAddresses()
+            }
+            step("Swipe up") {
+                swipeVertical(SwipeDirection.UP)
             }
             step("Click on token with name: $currencyName") {
                 onMainScreen { tokenWithTitleAndAddress(currencyName).clickWithAssertion() }
