@@ -22,6 +22,7 @@ import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.core.ui.message.bottomSheetMessage
+import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.models.scan.CardDTO
@@ -38,6 +39,7 @@ import com.tangem.feature.walletsettings.analytics.WalletSettingsAnalyticEvents
 import com.tangem.feature.walletsettings.component.WalletSettingsComponent
 import com.tangem.feature.walletsettings.entity.DialogConfig
 import com.tangem.feature.walletsettings.entity.NetworksAvailableForNotificationBSConfig
+import com.tangem.feature.walletsettings.entity.WalletSettingsAccountsUM
 import com.tangem.feature.walletsettings.entity.WalletSettingsItemUM
 import com.tangem.feature.walletsettings.entity.WalletSettingsUM
 import com.tangem.feature.walletsettings.impl.R
@@ -80,6 +82,7 @@ internal class WalletSettingsModel @Inject constructor(
     private val isUpgradeWalletNotificationEnabledUseCase: IsUpgradeWalletNotificationEnabledUseCase,
     private val dismissUpgradeWalletNotificationUseCase: DismissUpgradeWalletNotificationUseCase,
     private val unlockHotWalletContextualUseCase: UnlockHotWalletContextualUseCase,
+    private val accountsFeatureToggles: AccountsFeatureToggles,
 ) : Model() {
 
     val params: WalletSettingsComponent.Params = paramsContainer.require()
@@ -123,7 +126,8 @@ internal class WalletSettingsModel @Inject constructor(
             getWalletNotificationsEnabledUseCase(params.userWalletId),
             isUpgradeWalletNotificationEnabledUseCase(params.userWalletId),
             walletCardItemDelegate.cardItemFlow(wallet),
-        ) { nftEnabled, notificationsEnabled, isUpgradeNotificationEnabled, cardItem ->
+            accountItemsDelegate.loadAccount(),
+        ) { nftEnabled, notificationsEnabled, isUpgradeNotificationEnabled, cardItem, accountList ->
             val isWalletBackedUp = when (wallet) {
                 is UserWallet.Hot -> wallet.backedUp
                 is UserWallet.Cold -> true
@@ -138,6 +142,7 @@ internal class WalletSettingsModel @Inject constructor(
                         isNotificationsFeatureEnabled = true,
                         isNotificationsPermissionGranted = isNotificationsPermissionGranted(),
                         isUpgradeNotificationEnabled = isUpgradeNotificationEnabled,
+                        accountList = accountList,
                     ),
                     isWalletBackedUp = isWalletBackedUp,
                 )
@@ -168,7 +173,9 @@ internal class WalletSettingsModel @Inject constructor(
         isNotificationsEnabled: Boolean,
         isNotificationsPermissionGranted: Boolean,
         isUpgradeNotificationEnabled: Boolean,
+        accountList: List<WalletSettingsAccountsUM>,
     ): PersistentList<WalletSettingsItemUM> {
+        val accountsFeatureEnabled = accountsFeatureToggles.isFeatureEnabled
         val isMultiCurrency = when (userWallet) {
             is UserWallet.Cold -> userWallet.isMultiCurrency
             is UserWallet.Hot -> true
@@ -184,17 +191,22 @@ internal class WalletSettingsModel @Inject constructor(
                 is UserWallet.Cold -> userWallet.scanResponse.card.backupStatus == CardDTO.BackupStatus.NoBackup
                 is UserWallet.Hot -> false
             },
-            isManageTokensAvailable = isMultiCurrency,
+            isManageTokensAvailable = !accountsFeatureEnabled && isMultiCurrency,
             isNFTFeatureEnabled = isMultiCurrency,
             isNFTEnabled = isNFTEnabled,
             onCheckedNFTChange = ::onCheckedNFTChange,
             forgetWallet = {
                 val message = DialogMessage(
-                    message = resourceReference(R.string.user_wallet_list_delete_prompt),
+                    message = resourceReference(
+                        id = when (userWallet) {
+                            is UserWallet.Cold -> R.string.user_wallet_list_delete_prompt
+                            is UserWallet.Hot -> R.string.user_wallet_list_delete_hw_prompt
+                        },
+                    ),
                     firstActionBuilder = {
                         EventMessageAction(
-                            title = resourceReference(R.string.common_delete),
-                            warning = true,
+                            title = resourceReference(R.string.common_forget),
+                            isWarning = true,
                             onClick = ::forgetWallet,
                         )
                     },
@@ -219,7 +231,7 @@ internal class WalletSettingsModel @Inject constructor(
             walletUpgradeDismissed = isUpgradeNotificationEnabled,
             onUpgradeWalletClick = ::onUpgradeWalletClick,
             onDismissUpgradeWalletClick = ::onDismissUpgradeWalletClick,
-            accountsUM = with(accountItemsDelegate) { listOf() }, // todo account
+            accountsUM = accountList,
         )
     }
 
