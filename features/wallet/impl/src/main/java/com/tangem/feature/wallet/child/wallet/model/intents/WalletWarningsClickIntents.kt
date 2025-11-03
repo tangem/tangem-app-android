@@ -3,16 +3,17 @@ package com.tangem.feature.wallet.child.wallet.model.intents
 import arrow.core.getOrElse
 import com.tangem.common.TangemBlogUrlBuilder
 import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.AppRoute.Onramp
+import com.tangem.common.routing.AppRoute.ReferralProgram
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.domain.wallets.usecase.DerivePublicKeysUseCase
 import com.tangem.domain.card.SetCardWasScannedUseCase
-import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.core.wallets.UserWalletsListRepository
+import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -28,9 +29,12 @@ import com.tangem.domain.settings.NeverToSuggestRateAppUseCase
 import com.tangem.domain.settings.RemindToRateAppLaterUseCase
 import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
-import com.tangem.domain.tokens.model.analytics.TokenSwapPromoAnalyticsEvent
+import com.tangem.domain.tokens.model.analytics.PromoAnalyticsEvent
+import com.tangem.domain.tokens.model.analytics.PromoAnalyticsEvent.Program
+import com.tangem.domain.tokens.model.analytics.PromoAnalyticsEvent.PromotionBannerClicked
 import com.tangem.domain.wallets.legacy.UserWalletsListManager.Lockable.UnlockType
 import com.tangem.domain.wallets.models.UnlockWalletsError
+import com.tangem.domain.wallets.usecase.DerivePublicKeysUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.SeedPhraseNotificationUseCase
 import com.tangem.domain.wallets.usecase.UnlockWalletsUseCase
@@ -285,11 +289,12 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
         analyticsEventHandler.send(
             when (promoId) {
                 PromoId.Referral -> MainScreen.ReferralPromoButtonDismiss
-                PromoId.Sepa -> TokenSwapPromoAnalyticsEvent.PromotionBannerClicked(
+                PromoId.Sepa -> PromotionBannerClicked(
                     source = AnalyticsParam.ScreensSources.Main,
-                    program = TokenSwapPromoAnalyticsEvent.Program.Sepa,
-                    action = TokenSwapPromoAnalyticsEvent.PromotionBannerClicked.BannerAction.Closed,
+                    program = Program.Sepa,
+                    action = PromotionBannerClicked.BannerAction.Closed,
                 )
+                PromoId.VisaPresale -> PromoAnalyticsEvent.VisaWaitlistPromoDismiss
             },
 
         )
@@ -303,25 +308,29 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
         when (promoId) {
             PromoId.Referral -> {
                 analyticsEventHandler.send(MainScreen.ReferralPromoButtonParticipate)
-                appRouter.push(AppRoute.ReferralProgram(userWalletId = userWallet.walletId))
+                appRouter.push(ReferralProgram(userWalletId = userWallet.walletId))
             }
             PromoId.Sepa -> {
                 analyticsEventHandler.send(
-                    TokenSwapPromoAnalyticsEvent.PromotionBannerClicked(
+                    PromotionBannerClicked(
                         source = AnalyticsParam.ScreensSources.Main,
-                        program = TokenSwapPromoAnalyticsEvent.Program.Sepa,
-                        action = TokenSwapPromoAnalyticsEvent.PromotionBannerClicked.BannerAction.Clicked,
+                        program = Program.Sepa,
+                        action = PromotionBannerClicked.BannerAction.Clicked,
                     ),
                 )
                 cryptoCurrency ?: return
                 appRouter.push(
-                    AppRoute.Onramp(
+                    Onramp(
                         userWalletId = userWallet.walletId,
                         currency = cryptoCurrency,
                         source = OnrampSource.SEPA_BANNER,
                         launchSepa = true,
                     ),
                 )
+            }
+            PromoId.VisaPresale -> {
+                analyticsEventHandler.send(PromoAnalyticsEvent.VisaWaitlistPromoJoin)
+                urlOpener.openUrl(VISA_PROMO_LINK)
             }
         }
     }
@@ -471,5 +480,11 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
 
             null
         }
+    }
+
+    private companion object {
+        const val VISA_PROMO_LINK = "https://tangem.com/en/cardwaitlist/?utm_source=tangem-app-banner" +
+            "&utm_medium=banner" +
+            "&utm_campaign=tangempaywaitlist"
     }
 }
