@@ -4,6 +4,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.features.staking.impl.presentation.state.InnerConfirmationStakingState
 import com.tangem.features.staking.impl.presentation.state.StakingStates
+import com.tangem.features.staking.impl.presentation.state.StakingStep
 import com.tangem.features.staking.impl.presentation.state.StakingUiState
 import com.tangem.features.staking.impl.presentation.state.TransactionDoneState
 import com.tangem.utils.transformer.Transformer
@@ -17,6 +18,7 @@ internal class SetConfirmationStateCompletedTransformer(
     override fun transform(prevState: StakingUiState): StakingUiState {
         return prevState.copy(
             confirmationState = prevState.confirmationState.copyWrapped(),
+            currentStep = StakingStep.Success,
         )
     }
 

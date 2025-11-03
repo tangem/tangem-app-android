@@ -1,11 +1,53 @@
 package com.tangem.core.ui.components
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.staticCompositionLocalOf
+import com.google.accompanist.systemuicontroller.SystemUiController
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.tangem.core.ui.res.LocalIsInDarkTheme
+
+val LocalSystemBarsIconsController = staticCompositionLocalOf<SystemBarsIconsController> {
+    error("No SystemBarsIconsController provided")
+}
+
+class SystemBarsIconsController(private val systemUiController: SystemUiController) {
+    private var count by mutableIntStateOf(0)
+
+    fun setIcons(darkIcons: Boolean, isNavigationBarContrastEnforced: Boolean) {
+        if (count == 0) {
+            systemUiController.systemBarsDarkContentEnabled = darkIcons
+            systemUiController.isNavigationBarContrastEnforced = isNavigationBarContrastEnforced
+        }
+        count++
+    }
+
+    fun restoreIcons(isDarkTheme: Boolean) {
+        count--
+        if (count == 0) {
+            systemUiController.systemBarsDarkContentEnabled = !isDarkTheme
+            systemUiController.isNavigationBarContrastEnforced = false
+        }
+    }
+}
+
+@Composable
+fun ProvideSystemBarsIconsController(content: @Composable () -> Unit) {
+    val systemUiController = rememberSystemUiController()
+    val controller = remember(systemUiController) { SystemBarsIconsController(systemUiController) }
+
+    CompositionLocalProvider(
+        LocalSystemBarsIconsController provides controller,
+        content = content,
+    )
+}
 
 /**
  * Provides the ability to set a scrim for 3-button navigation
@@ -43,19 +85,16 @@ fun NavigationBar3ButtonsScrim() {
  */
 @Composable
 fun SystemBarsIconsDisposable(darkIcons: Boolean, isNavigationBarContrastEnforced: Boolean = false) {
-    val systemUiController = rememberSystemUiController()
+    val controller = LocalSystemBarsIconsController.current
+    val isDarkTheme = LocalIsInDarkTheme.current
 
     SideEffect {
-        systemUiController.systemBarsDarkContentEnabled = darkIcons
-        systemUiController.isNavigationBarContrastEnforced = isNavigationBarContrastEnforced
+        controller.setIcons(darkIcons, isNavigationBarContrastEnforced)
     }
-
-    val isDarkTheme = LocalIsInDarkTheme.current
 
     DisposableEffect(isDarkTheme) {
         onDispose {
-            systemUiController.systemBarsDarkContentEnabled = !isDarkTheme
-            systemUiController.isNavigationBarContrastEnforced = false
+            controller.restoreIcons(isDarkTheme)
         }
     }
 }

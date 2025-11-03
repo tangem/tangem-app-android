@@ -13,6 +13,8 @@ internal data class VisaConfig(
     val header: Header,
     @Json(name = "rsaPublicKey")
     val rsaPublicKey: RsaPublicKey,
+    @Json(name = "rainRSAPublicKey")
+    val rainRSAPublicKey: RsaPublicKey,
 ) {
 
     @JsonClass(generateAdapter = true)

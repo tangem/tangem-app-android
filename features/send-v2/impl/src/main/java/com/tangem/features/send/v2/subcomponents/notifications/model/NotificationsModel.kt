@@ -36,10 +36,10 @@ import com.tangem.domain.transaction.usecase.ValidateTransactionUseCase
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.features.send.v2.api.SendNotificationsComponent
 import com.tangem.features.send.v2.api.SendNotificationsComponent.Params.NotificationData
+import com.tangem.features.send.v2.api.subcomponents.feeSelector.utils.FeeCalculationUtils.checkAndCalculateSubtractedAmount
+import com.tangem.features.send.v2.api.subcomponents.feeSelector.utils.FeeCalculationUtils.checkFeeCoverage
 import com.tangem.features.send.v2.api.subcomponents.notifications.SendNotificationsUpdateListener
 import com.tangem.features.send.v2.api.subcomponents.notifications.SendNotificationsUpdateTrigger
-import com.tangem.features.send.v2.subcomponents.fee.model.checkAndCalculateSubtractedAmount
-import com.tangem.features.send.v2.subcomponents.fee.model.checkFeeCoverage
 import com.tangem.features.send.v2.subcomponents.notifications.analytics.NotificationsAnalyticEvents
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.lib.crypto.BlockchainUtils.isTron
@@ -120,46 +120,8 @@ internal class NotificationsModel @Inject constructor(
         buildNotifications()
     }
 
-    private suspend fun buildNotifications() {
-        val notifications = buildList {
-            addFeeUnreachableNotification(
-                tokenStatus = cryptoCurrencyStatus,
-                coinStatus = feeCryptoCurrencyStatus,
-                feeError = notificationData.feeError,
-                onReload = params.callback::onFeeReload,
-                onClick = ::showTokenDetails,
-            )
-            addDomainNotifications()
-        }
-
-        notificationsUpdateTrigger.callbackHasError(notifications.any { it is NotificationUM.Error })
-
-        _uiState.value = notifications.toImmutableList()
-    }
-
-    private fun showTokenDetails(currency: CryptoCurrency) {
-        appRouter.pop { isSuccess ->
-            if (isSuccess) {
-                appRouter.push(
-                    AppRoute.CurrencyDetails(
-                        userWalletId = userWalletId,
-                        currency = currency,
-                    ),
-                )
-            }
-        }
-    }
-
-    private suspend fun MutableList<NotificationUM>.addDomainNotifications() = with(notificationData) {
-        val balance = cryptoCurrencyStatus.value.amount ?: return
-        val feeValue = fee?.amount?.value ?: return
-        val isFeeCoverage = checkFeeCoverage(
-            isSubtractAvailable = isAmountSubtractAvailable,
-            balance = balance,
-            amountValue = amountValue,
-            feeValue = feeValue,
-            reduceAmountBy = reduceAmountBy,
-        )
+    private suspend fun buildNotifications() = with(notificationData) {
+        val feeValue = fee?.amount?.value
         val sendingAmount = checkAndCalculateSubtractedAmount(
             isAmountSubtractAvailable = isAmountSubtractAvailable,
             cryptoCurrencyStatus = cryptoCurrencyStatus,
@@ -180,6 +142,50 @@ internal class NotificationsModel @Inject constructor(
             feeCurrencyBalanceAfterTransaction = feeCurrencyBalanceAfterTransaction,
         )
 
+        val notifications = buildList {
+            addFeeUnreachableNotification(
+                tokenStatus = cryptoCurrencyStatus,
+                coinStatus = feeCryptoCurrencyStatus,
+                feeError = notificationData.feeError,
+                dustValue = currencyCheck.dustValue,
+                onReload = params.callback::onFeeReload,
+                onClick = ::showTokenDetails,
+            )
+            addDomainNotifications(currencyCheck = currencyCheck, sendingAmount = sendingAmount)
+        }
+
+        notificationsUpdateTrigger.callbackHasError(notifications.any { it is NotificationUM.Error })
+
+        _uiState.value = notifications.toImmutableList()
+    }
+
+    private fun showTokenDetails(currency: CryptoCurrency) {
+        appRouter.pop { isSuccess ->
+            if (isSuccess) {
+                appRouter.push(
+                    AppRoute.CurrencyDetails(
+                        userWalletId = userWalletId,
+                        currency = currency,
+                    ),
+                )
+            }
+        }
+    }
+
+    private suspend fun MutableList<NotificationUM>.addDomainNotifications(
+        currencyCheck: CryptoCurrencyCheck,
+        sendingAmount: BigDecimal,
+    ) = with(notificationData) {
+        val balance = cryptoCurrencyStatus.value.amount ?: return
+        val feeValue = fee?.amount?.value ?: return
+        val isFeeCoverage = checkFeeCoverage(
+            isSubtractAvailable = isAmountSubtractAvailable,
+            balance = balance,
+            amountValue = amountValue,
+            feeValue = feeValue,
+            reduceAmountBy = reduceAmountBy,
+        )
+
         addErrorNotifications(
             sendingAmount = sendingAmount,
             feeValue = feeValue,
@@ -198,10 +204,10 @@ internal class NotificationsModel @Inject constructor(
         addInfoNotifications()
     }
 
-    private fun getFeeCurrencyBalanceAfterTx(sendingAmount: BigDecimal, feeValue: BigDecimal): BigDecimal? {
+    private fun getFeeCurrencyBalanceAfterTx(sendingAmount: BigDecimal, feeValue: BigDecimal?): BigDecimal? {
         val sendingCurrencyBalance = cryptoCurrencyStatus.value as? CryptoCurrencyStatus.Loaded
         val feeCurrencyBalance = feeCryptoCurrencyStatus.value as? CryptoCurrencyStatus.Loaded
-        if (feeCryptoCurrencyStatus.value !is CryptoCurrencyStatus.Loaded) return null
+        if (feeCryptoCurrencyStatus.value !is CryptoCurrencyStatus.Loaded || feeValue == null) return null
         return when {
             feeCryptoCurrencyStatus == cryptoCurrencyStatus -> sendingCurrencyBalance?.let {
                 it.amount - sendingAmount - feeValue
@@ -266,6 +272,7 @@ internal class NotificationsModel @Inject constructor(
             reserveAmount = currencyCheck.reserveAmount,
             sendingAmount = sendingAmount,
             cryptoCurrency = currency,
+            feeCryptoCurrency = feeCryptoCurrencyStatus.currency,
             isAccountFunded = currencyCheck.isAccountFunded,
         )
         addMinimumAmountErrorNotification(
@@ -287,7 +294,7 @@ internal class NotificationsModel @Inject constructor(
     ) {
         val validationError = validateTransactionUseCase(
             userWalletId = userWalletId,
-            amount = enteredAmount.convertToSdkAmount(currency),
+            amount = enteredAmount.convertToSdkAmount(cryptoCurrencyStatus),
             fee = fee,
             memo = memo,
             destination = destinationAddress,
