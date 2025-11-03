@@ -19,7 +19,7 @@ interface MarketsTokenDetailsComponent : ComposableContentComponent {
     data class Params(
         val token: TokenMarketParams,
         val appCurrency: AppCurrency,
-        val showPortfolio: Boolean,
+        val shouldShowPortfolio: Boolean,
         val analyticsParams: AnalyticsParams?,
     )
 
