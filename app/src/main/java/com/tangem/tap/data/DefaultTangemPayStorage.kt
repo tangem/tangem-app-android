@@ -14,7 +14,7 @@ import javax.inject.Singleton
 import kotlin.text.encodeToByteArray
 
 private const val DEFAULT_KEY = "tangem_pay_default_key"
-private const val DEFAULT_CUSTOMER_WALLET_ADDRESS_KEY = "tangem_pay_default_customer_wallet_address_key"
+private const val ORDER_ID_KEY = "tangem_pay_order_id_key"
 
 @Singleton
 internal class DefaultTangemPayStorage @Inject constructor(
@@ -54,24 +54,29 @@ internal class DefaultTangemPayStorage @Inject constructor(
                 ?.let(tokensAdapter::fromJson)
         }
 
-    /**
-     * Store the only customer wallet address, since for the f&f user can issue only one card tied to one address
-     */
-    override suspend fun storeCustomerWalletAddress(customerWalletAddress: String) =
+    override suspend fun storeOrderId(customerWalletAddress: String, orderId: String) {
         withContext(dispatcherProvider.io) {
             secureStorage.store(
-                customerWalletAddress.encodeToByteArray(throwOnInvalidSequence = true),
-                DEFAULT_CUSTOMER_WALLET_ADDRESS_KEY,
+                orderId.encodeToByteArray(throwOnInvalidSequence = true),
+                createOrderIdKey(customerWalletAddress),
             )
         }
-
-    override suspend fun getCustomerWalletAddress(): String? = withContext(dispatcherProvider.io) {
-        secureStorage.get(DEFAULT_CUSTOMER_WALLET_ADDRESS_KEY)?.decodeToString(throwOnInvalidSequence = true)
     }
 
-    override suspend fun clear(customerWalletAddress: String) = withContext(dispatcherProvider.io) {
+    override suspend fun getOrderId(customerWalletAddress: String): String? = withContext(dispatcherProvider.io) {
+        secureStorage.get(createOrderIdKey(customerWalletAddress))?.decodeToString(throwOnInvalidSequence = true)
+    }
+
+    override suspend fun clearOrderId(customerWalletAddress: String) = withContext(dispatcherProvider.io) {
+        secureStorage.delete(createOrderIdKey(customerWalletAddress))
+    }
+
+    override suspend fun clearAll(customerWalletAddress: String) = withContext(dispatcherProvider.io) {
         secureStorage.delete(createKey(customerWalletAddress))
+        secureStorage.delete(createOrderIdKey(customerWalletAddress))
     }
 
-    private fun createKey(cardId: String): String = "${DEFAULT_KEY}_$cardId"
+    private fun createKey(address: String): String = "${DEFAULT_KEY}_$address"
+
+    private fun createOrderIdKey(address: String): String = "${ORDER_ID_KEY}_$address"
 }

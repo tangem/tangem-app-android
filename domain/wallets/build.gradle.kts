@@ -19,6 +19,7 @@ dependencies {
 
     // region Domain modules
     api(projects.domain.core)
+    api(projects.domain.common)
     implementation(projects.domain.legacy)
     implementation(projects.domain.walletManager)
     implementation(projects.libs.blockchainSdk)
