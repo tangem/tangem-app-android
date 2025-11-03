@@ -3,6 +3,7 @@ package com.tangem.core.ui.components.token.state
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.components.audits.AuditLabelUM
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
+import com.tangem.core.ui.components.icons.IconTint
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.extensions.TextReference
 import kotlinx.collections.immutable.ImmutableList
@@ -167,6 +168,8 @@ sealed class TokenItemState {
             val text: TextReference,
             val hasPending: Boolean = false,
             val isAvailable: Boolean = true,
+            val earnApy: TextReference? = null,
+            val earnApyIsActive: Boolean = false,
         ) : TitleState()
 
         data object Loading : TitleState()
@@ -204,7 +207,7 @@ sealed class TokenItemState {
 
             data class IconUM(
                 val iconRes: Int,
-                val useAccentColor: Boolean,
+                val tint: IconTint = IconTint.Inactive,
             )
         }
 

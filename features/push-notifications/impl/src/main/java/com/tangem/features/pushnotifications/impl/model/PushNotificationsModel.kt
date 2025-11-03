@@ -46,22 +46,20 @@ internal class PushNotificationsModel @Inject constructor(
         modelScope.launch {
             notificationsRepository.setUserAllowToSubscribeOnPushNotifications(true)
         }
-
         analyticHandler.send(PushNotificationAnalyticEvents.ButtonAllow(source))
     }
 
     override fun onLaterClick() {
-        modelScope.launch {
-            notificationsRepository.setUserAllowToSubscribeOnPushNotifications(false)
-        }
         analyticHandler.send(PushNotificationAnalyticEvents.ButtonLater(source))
         modelScope.launch {
             neverRequestPermissionUseCase(PUSH_PERMISSION)
             neverToInitiallyAskPermissionUseCase(PUSH_PERMISSION)
-            params.modelCallbacks.onDenySystemPermission()
-            if (!params.isBottomSheet) {
+            if (params.isBottomSheet) {
+                notificationsRepository.setUserAllowToSubscribeOnPushNotifications(false)
+            } else {
                 params.nextRoute?.let { appRouter.push(it) }
             }
+            params.modelCallbacks.onDenySystemPermission()
         }
     }
 

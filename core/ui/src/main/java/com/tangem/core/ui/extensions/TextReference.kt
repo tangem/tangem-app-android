@@ -27,15 +27,15 @@ sealed interface TextReference {
     /**
      * Text resource id
      *
-     * @property id            resource id
-     * @property formatArgs    arguments. Impossible to use [kotlinx.collections.immutable.ImmutableList] because
-     *                         [Any] is unstable.
-     * @property decapitalize  whether resolved reference should be decapitalized
+     * @property id                  resource id
+     * @property formatArgs          arguments. Impossible to use [kotlinx.collections.immutable.ImmutableList] because
+     *                               [Any] is unstable.
+     * @property shouldDecapitalize  whether resolved reference should be decapitalized
      */
     data class Res(
         @StringRes val id: Int,
         val formatArgs: WrappedList<Any> = WrappedList(emptyList()),
-        val decapitalize: Boolean = false,
+        val shouldDecapitalize: Boolean = false,
     ) : TextReference
 
     /**
@@ -171,7 +171,7 @@ fun TextReference.resolveReference(): String {
 
             val resolvedReference = stringResourceSafe(id = id, *args)
 
-            if (decapitalize) {
+            if (shouldDecapitalize) {
                 resolvedReference.replaceFirstChar { char -> char.lowercase() }
             } else {
                 resolvedReference

@@ -28,14 +28,14 @@ import androidx.compose.ui.unit.dp
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.tangem.common.ui.R
+import com.tangem.common.ui.account.AccountIcon
+import com.tangem.common.ui.account.AccountIconPreviewData
 import com.tangem.common.ui.userwallet.state.UserWalletItemUM
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.TextShimmer
+import com.tangem.core.ui.components.account.AccountIconSize
 import com.tangem.core.ui.components.block.BlockCard
 import com.tangem.core.ui.components.block.TangemBlockCardColors
-import com.tangem.core.ui.components.label.Label
-import com.tangem.core.ui.components.label.entity.LabelStyle
-import com.tangem.core.ui.components.label.entity.LabelUM
 import com.tangem.core.ui.components.text.applyBladeBrush
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
@@ -57,40 +57,53 @@ fun UserWalletItem(
         onClick = state.onClick,
         enabled = state.isEnabled,
     ) {
-        Row(
+        UserWalletItemRow(
+            state = state,
             modifier = Modifier
                 .fillMaxWidth()
                 .heightIn(min = TangemTheme.dimens.size68)
                 .padding(all = TangemTheme.dimens.spacing12),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
-        ) {
-            CardImage(state.imageState)
-            NameAndInfo(
-                modifier = Modifier.weight(1f),
-                name = state.name,
-                information = state.information,
-                balance = state.balance,
-            )
+        )
+    }
+}
 
-            state.label?.let { Label(it) }
+@Composable
+fun UserWalletItemRow(state: UserWalletItemUM, modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
+    ) {
+        CardImage(state.imageState)
+        NameAndInfo(
+            modifier = Modifier.weight(1f),
+            name = state.name,
+            information = state.information,
+            balance = state.balance,
+        )
 
-            when (state.endIcon) {
-                UserWalletItemUM.EndIcon.None -> Unit
-                UserWalletItemUM.EndIcon.Arrow -> {
-                    Icon(
-                        imageVector = ImageVector.vectorResource(R.drawable.ic_chevron_right_24),
-                        tint = TangemTheme.colors.icon.informative,
-                        contentDescription = null,
-                    )
-                }
-                UserWalletItemUM.EndIcon.Checkmark -> {
-                    Icon(
-                        imageVector = ImageVector.vectorResource(R.drawable.ic_check_24),
-                        tint = TangemTheme.colors.icon.accent,
-                        contentDescription = null,
-                    )
-                }
+        when (state.endIcon) {
+            UserWalletItemUM.EndIcon.None -> Unit
+            UserWalletItemUM.EndIcon.Arrow -> {
+                Icon(
+                    imageVector = ImageVector.vectorResource(R.drawable.ic_chevron_right_24),
+                    tint = TangemTheme.colors.icon.informative,
+                    contentDescription = null,
+                )
+            }
+            UserWalletItemUM.EndIcon.Checkmark -> {
+                Icon(
+                    imageVector = ImageVector.vectorResource(R.drawable.ic_check_24),
+                    tint = TangemTheme.colors.icon.accent,
+                    contentDescription = null,
+                )
+            }
+            UserWalletItemUM.EndIcon.Warning -> {
+                Icon(
+                    imageVector = ImageVector.vectorResource(R.drawable.ic_alert_circle_24),
+                    tint = TangemTheme.colors.icon.warning,
+                    contentDescription = null,
+                )
             }
         }
     }
@@ -198,7 +211,7 @@ private fun BalanceContent(balance: UserWalletItemUM.Balance, modifier: Modifier
     }
 }
 
-@Suppress("MagicNumber")
+@Suppress("MagicNumber", "LongMethod")
 @Composable
 fun CardImage(imageState: UserWalletItemUM.ImageState, modifier: Modifier = Modifier) {
     val imageModifier = modifier
@@ -264,6 +277,11 @@ fun CardImage(imageState: UserWalletItemUM.ImageState, modifier: Modifier = Modi
                 )
             }
         }
+        is UserWalletItemUM.ImageState.Account -> AccountIcon(
+            name = imageState.name,
+            icon = imageState.icon,
+            size = AccountIconSize.Default,
+        )
     }
 }
 
@@ -308,10 +326,7 @@ private class UserWalletItemUMPreviewProvider : PreviewParameterProvider<UserWal
                 name = stringReference("Mobile Wallet"),
                 information = getInformation(cardCount = 1),
                 balance = UserWalletItemUM.Balance.Locked,
-                label = LabelUM(
-                    text = resourceReference(R.string.hw_backup_no_backup),
-                    style = LabelStyle.WARNING,
-                ),
+                endIcon = UserWalletItemUM.EndIcon.Warning,
                 isEnabled = true,
                 onClick = {},
             ),
@@ -423,6 +438,18 @@ private class UserWalletItemUMPreviewProvider : PreviewParameterProvider<UserWal
                 information = getInformation(cardCount = 3),
                 balance = UserWalletItemUM.Balance.NotShowing,
                 imageState = UserWalletItemUM.ImageState.MobileWallet,
+                isEnabled = true,
+                onClick = {},
+            ),
+            UserWalletItemUM(
+                id = UserWalletId("user_wallet_4".encodeToByteArray()),
+                name = stringReference("Main account"),
+                information = getInformation(cardCount = 3),
+                balance = UserWalletItemUM.Balance.NotShowing,
+                imageState = UserWalletItemUM.ImageState.Account(
+                    name = stringReference("Main account"),
+                    icon = AccountIconPreviewData.randomAccountIcon(),
+                ),
                 isEnabled = true,
                 onClick = {},
             ),

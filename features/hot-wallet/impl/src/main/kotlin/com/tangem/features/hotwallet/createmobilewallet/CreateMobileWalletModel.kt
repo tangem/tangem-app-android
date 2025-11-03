@@ -28,13 +28,18 @@ internal class CreateMobileWalletModel @Inject constructor(
 ) : Model() {
 
     internal val uiState: StateFlow<CreateMobileWalletUM>
-    field = MutableStateFlow(
-        CreateMobileWalletUM(
-            onBackClick = { router.pop() },
-            onCreateClick = ::onCreateClick,
-            createButtonLoading = false,
-        ),
-    )
+        field = MutableStateFlow(
+            CreateMobileWalletUM(
+                onBackClick = { router.pop() },
+                onImportClick = ::onImportClick,
+                onCreateClick = ::onCreateClick,
+                createButtonLoading = false,
+            ),
+        )
+
+    private fun onImportClick() {
+        router.push(AppRoute.AddExistingWallet)
+    }
 
     private fun onCreateClick() {
         modelScope.launch {

@@ -3,7 +3,6 @@ package com.tangem.tests
 import androidx.test.internal.runner.junit4.statement.UiThreadStatement.runOnUiThread
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.RECIPIENT_ADDRESS
-import com.tangem.common.constants.TestConstants.TOTAL_BALANCE
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.clickWithAssertion
@@ -28,6 +27,8 @@ class FeedbackTest : BaseTestCase() {
     @DisplayName("Send feedback: from details")
     @Test
     fun sendFeedbackFromDetailsTest() {
+        val gmailText = "Welcome to Gmail"
+
         setupHooks(
             additionalAfterSection = {
                 device.uiDevice.pressBack()
@@ -42,8 +43,8 @@ class FeedbackTest : BaseTestCase() {
             step("Click 'Contact support' button") {
                 onDetailsScreen { contactSupportButton.clickWithAssertion() }
             }
-            step("Check 'Contact support' intent is called") {
-                checkSendEMailIntentCalled()
+            step("Assert 'Gmail' app is open") {
+                ThirdPartyAppPageObject { assertElementWithTextExists(gmailText) }
             }
         }
     }
@@ -52,10 +53,10 @@ class FeedbackTest : BaseTestCase() {
     @DisplayName("Send feedback: failed transaction")
     @Test
     fun sendFeedbackFromFailedTransactionTest() {
-        val balance = TOTAL_BALANCE
         val tokenName = "Polygon"
         val recipientAddress = RECIPIENT_ADDRESS
         val sendAmount = "1"
+        val gmailText = "Welcome to Gmail"
 
         setupHooks(
             additionalAfterSection = {
@@ -66,7 +67,7 @@ class FeedbackTest : BaseTestCase() {
                 openMainScreen()
             }
             step("Synchronize addresses") {
-                synchronizeAddresses(balance)
+                synchronizeAddresses()
             }
             step("Click on token with name: '$tokenName'") {
                 onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
@@ -87,18 +88,23 @@ class FeedbackTest : BaseTestCase() {
                 onSendScreen { nextButton.clickWithAssertion() }
             }
             step("Enter address") {
-                onSendAddressScreen { addressTextField.performTextReplacement(recipientAddress) }
+                onSendAddressScreen { addressTextField.performTextInput(recipientAddress) }
             }
             step("Click 'Next' button") {
                 onSendAddressScreen { nextButton.clickWithAssertion() }
             }
+            step("Assert sanding text is displayed") {
+                onSendConfirmScreen { sendingText.assertIsDisplayed() }
+            }
             step("Click 'Send' button") {
+                waitForIdle()
                 onSendConfirmScreen {
                     sendButton.assertIsEnabled()
                     sendButton.performClick()
                 }
             }
             step("Check 'Failed transaction' dialog") {
+                waitForIdle()
                 flakySafely(WAIT_UNTIL_TIMEOUT) {
                     checkFailedTransactionDialog()
                 }
@@ -106,8 +112,8 @@ class FeedbackTest : BaseTestCase() {
             step("Click on 'Support' button") {
                 onFailedTransactionDialog { supportButton.performClick() }
             }
-            step("Check 'Contact support' intent is called") {
-                checkSendEMailIntentCalled()
+            step("Assert 'Gmail' app is open") {
+                ThirdPartyAppPageObject { assertElementWithTextExists(gmailText) }
             }
         }
     }
@@ -116,6 +122,8 @@ class FeedbackTest : BaseTestCase() {
     @DisplayName("Send feedback: from 'Warning' dialog after card scan")
     @Test
     fun sendFeedbackFromScanScreenTest() {
+        val gmailText = "Welcome to Gmail"
+
         setupHooks(
             additionalAfterSection = {
                 device.uiDevice.pressBack()
@@ -138,13 +146,14 @@ class FeedbackTest : BaseTestCase() {
                 }
             }
             step("Check 'Scan warning' dialog") {
+                waitForIdle()
                 checkScanWarningDialog()
             }
             step("Click on 'Request support' button") {
                 ScanWarningDialogPageObject { requestSupportButton.click() }
             }
-            step("Check 'Contact support' intent is called") {
-                checkSendEMailIntentCalled()
+            step("Assert 'Gmail' app is open") {
+                ThirdPartyAppPageObject { assertElementWithTextExists(gmailText) }
             }
         }
     }
@@ -153,6 +162,8 @@ class FeedbackTest : BaseTestCase() {
     @DisplayName("Send feedback: from scan already used wallet alert dialog")
     @Test
     fun sendFeedbackAfterScanAlreadyUsedWalletTest() {
+        val gmailText = "Welcome to Gmail"
+
         setupHooks(
             additionalAfterSection = {
                 device.uiDevice.pressBack()
@@ -173,8 +184,8 @@ class FeedbackTest : BaseTestCase() {
             step("Click on 'Request support' button") {
                 AlreadyUsedWalletDialogPageObject { requestSupportButton.click() }
             }
-            step("Check 'Contact support' intent is called") {
-                checkSendEMailIntentCalled()
+            step("Assert 'Gmail' app is open") {
+                ThirdPartyAppPageObject { assertElementWithTextExists(gmailText) }
             }
         }
     }

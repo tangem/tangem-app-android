@@ -100,7 +100,7 @@ fun EventMessageEffect(
         )
     }
 
-    loadingMessage?.let {
+    if (loadingMessage != null) {
         LoadingDialog()
     }
 }
@@ -140,7 +140,7 @@ private fun MessageBottomSheet(message: BottomSheetMessage, onDismissRequest: ()
             primaryAction = message.firstAction?.let { action ->
                 MessageBottomSheetUM.ActionUM(
                     text = action.title,
-                    enabled = action.enabled,
+                    isEnabled = action.isEnabled,
                     onClick = {
                         action.onClick()
                         onDismissRequest()
@@ -150,7 +150,7 @@ private fun MessageBottomSheet(message: BottomSheetMessage, onDismissRequest: ()
             secondaryAction = message.secondAction?.let { action ->
                 MessageBottomSheetUM.ActionUM(
                     text = action.title,
-                    enabled = action.enabled,
+                    isEnabled = action.isEnabled,
                     onClick = {
                         action.onClick()
                         onDismissRequest()
@@ -172,12 +172,12 @@ private fun MessageDialog(message: DialogMessage, onDismissRequest: () -> Unit) 
         confirmButton = message.firstAction.let { action ->
             DialogButtonUM(
                 title = action.title.resolveReference(),
-                warning = action.warning,
-                enabled = action.enabled,
+                isWarning = action.isWarning,
+                isEnabled = action.isEnabled,
                 onClick = {
                     action.onClick()
 
-                    if (message.dismissOnFirstAction) {
+                    if (message.shouldDismissOnFirstAction) {
                         onDismissRequest()
                     }
                 },
@@ -186,8 +186,8 @@ private fun MessageDialog(message: DialogMessage, onDismissRequest: () -> Unit) 
         dismissButton = message.secondAction?.let { action ->
             DialogButtonUM(
                 title = action.title.resolveReference(),
-                warning = action.warning,
-                enabled = action.enabled,
+                isWarning = action.isWarning,
+                isEnabled = action.isEnabled,
                 onClick = {
                     action.onClick()
                     onDismissRequest()

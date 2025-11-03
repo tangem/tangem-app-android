@@ -14,11 +14,11 @@ import com.tangem.core.error.UniversalError
 import com.tangem.core.error.ext.universalError
 import com.tangem.core.ui.utils.showErrorDialog
 import com.tangem.domain.visa.error.VisaApiError
-import com.tangem.domain.visa.model.VisaCardActivationStatus
 import com.tangem.domain.visa.model.VisaCardId
 import com.tangem.domain.visa.model.VisaCustomerWalletDataToSignRequest
 import com.tangem.domain.visa.repository.VisaActivationRepository
 import com.tangem.domain.visa.datasource.VisaAuthRemoteDataSource
+import com.tangem.domain.visa.model.VisaActivationInput
 import com.tangem.features.onboarding.v2.visa.impl.child.accesscode.OnboardingVisaAccessCodeComponent
 import com.tangem.features.onboarding.v2.visa.impl.child.accesscode.ui.state.OnboardingVisaAccessCodeUM
 import com.tangem.features.onboarding.v2.visa.impl.child.welcome.model.analytics.OnboardingVisaAnalyticsEvent
@@ -57,11 +57,12 @@ internal class OnboardingVisaAccessCodeModel @Inject constructor(
         ),
     )
 
-    private val activationInput = when (val status = params.scanResponse.visaCardActivationStatus) {
-        is VisaCardActivationStatus.NotStartedActivation -> status.activationInput
-        is VisaCardActivationStatus.ActivationStarted -> status.activationInput
-        else -> error("Visa activation status is not set or incorrect for this step")
-    }
+    private val activationInput: VisaActivationInput = TODO("Fix visaCardActivationStatus retrieval")
+    //     when (val status = params.scanResponse.visaCardActivationStatus) {
+    //     is VisaCardActivationStatus.NotStartedActivation -> status.activationInput
+    //     is VisaCardActivationStatus.ActivationStarted -> status.activationInput
+    //     else -> error("Visa activation status is not set or incorrect for this step")
+    // }
 
     private val _uiState = MutableStateFlow(getInitialState())
 

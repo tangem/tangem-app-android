@@ -16,13 +16,16 @@ dependencies {
     implementation(projects.features.walletconnect.api)
     implementation(projects.features.sendV2.api)
 
-    /** Core */
-    implementation(projects.core.configToggles)
-    implementation(projects.core.decompose)
-    implementation(projects.core.ui)
+    /** Common */
     implementation(projects.common.routing)
     implementation(projects.common.ui)
+
+    /** Core */
     implementation(projects.core.analytics)
+    implementation(projects.core.configToggles)
+    implementation(projects.core.decompose)
+    implementation(projects.core.navigation)
+    implementation(projects.core.ui)
 
     /** Domain models */
     implementation(projects.domain.appCurrency.models)
