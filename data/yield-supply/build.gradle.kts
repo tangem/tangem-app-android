@@ -25,6 +25,7 @@ dependencies {
 
     /** Domain */
     implementation(projects.domain.yieldSupply)
+    implementation(projects.domain.yieldSupply.models)
     implementation(projects.domain.walletManager)
     implementation(projects.domain.legacy)
 

@@ -65,7 +65,7 @@ private fun AdditionalInfoNotification(onClick: () -> Unit, modifier: Modifier =
             subtitle = TextReference.Res(id = R.string.information_generated_with_ai),
             iconResId = R.drawable.ic_magic_28,
             onClick = onClick,
-            showArrowIcon = false,
+            shouldShowArrowIcon = false,
         ),
         modifier = modifier,
         subtitleColor = TangemTheme.colors.text.primary1,
