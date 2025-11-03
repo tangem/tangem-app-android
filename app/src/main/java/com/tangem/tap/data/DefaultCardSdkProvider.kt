@@ -15,6 +15,7 @@ import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
 import com.tangem.crypto.bip39.Wordlist
 import com.tangem.data.card.sdk.CardSdkOwner
 import com.tangem.data.card.sdk.CardSdkProvider
+import com.tangem.datasource.api.common.AuthProvider
 import com.tangem.datasource.api.common.config.ApiConfig
 import com.tangem.datasource.api.common.config.ApiEnvironmentConfig
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
@@ -28,6 +29,7 @@ import com.tangem.sdk.nfc.AndroidNfcAvailabilityProvider
 import com.tangem.sdk.nfc.NfcManager
 import com.tangem.sdk.storage.create
 import com.tangem.tap.foregroundActivityObserver
+import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.info.AppInfoProvider
 import com.tangem.utils.version.AppVersionProvider
@@ -48,6 +50,7 @@ internal class DefaultCardSdkProvider @Inject constructor(
     private val apiConfigsManager: ApiConfigsManager,
     appVersionProvider: AppVersionProvider,
     appInfoProvider: AppInfoProvider,
+    authProvider: AuthProvider,
 ) : CardSdkProvider, CardSdkOwner {
 
     private val observer = Observer()
@@ -68,13 +71,16 @@ internal class DefaultCardSdkProvider @Inject constructor(
             },
         )
 
+        val apiEnvironment = Provider {
+            apiConfigsManager.getEnvironmentConfig(ApiConfig.ID.TangemTech).environment
+        }
+        val platformHeaders = RequestHeader.AppVersionPlatformHeaders(
+            appVersionProvider = appVersionProvider,
+            appInfoProvider = appInfoProvider,
+        )
+        val apiKeyHeader = RequestHeader.TangemApiKeyHeader(authProvider, apiEnvironment)
         TangemApiServiceSettings.addInterceptors(
-            AddHeadersInterceptor(
-                requestHeader = RequestHeader.AppVersionPlatformHeaders(
-                    appVersionProvider = appVersionProvider,
-                    appInfoProvider = appInfoProvider,
-                ),
-            ),
+            AddHeadersInterceptor(platformHeaders.values + apiKeyHeader.values),
         )
     }
 
