@@ -1,7 +1,9 @@
 package com.tangem.feature.swap.domain
 
+import android.util.Base64
 import arrow.core.Either
 import arrow.core.getOrElse
+import com.tangem.blockchain.blockchains.solana.SolanaTransactionHelper
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.TransactionData
@@ -11,6 +13,7 @@ import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.blockchainsdk.utils.toBlockchain
+import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
@@ -42,6 +45,7 @@ import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.*
 import com.tangem.feature.swap.domain.models.toStringWithRightOffset
 import com.tangem.feature.swap.domain.models.ui.*
+import com.tangem.lib.crypto.BlockchainUtils.SOLANA_TRANSACTION_SIZE_THRESHOLD_BYTES
 import com.tangem.lib.crypto.UserWalletManager
 import com.tangem.lib.crypto.models.ProxyAmount
 import dagger.assisted.Assisted
@@ -52,8 +56,6 @@ import timber.log.Timber
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
-import android.util.Base64
-import com.tangem.blockchainsdk.utils.toNetworkId
 
 @Suppress("LargeClass", "LongParameterList")
 internal class SwapInteractorImpl @AssistedInject constructor(
@@ -172,7 +174,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         return CurrenciesGroup(
             available = availableCryptoCurrencies,
             unavailable = unavailableCryptoCurrencies.map { CryptoCurrencySwapInfo(it, emptyList()) },
-            afterSearch = false,
+            isAfterSearch = false,
         )
     }
 
@@ -227,7 +229,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         val approveTransaction = createApprovalTransactionUseCase(
             fee = permissionOptions.txFee.fee,
             userWalletId = userWalletId,
-            cryptoCurrency = permissionOptions.fromToken as CryptoCurrency.Token,
+            cryptoCurrencyStatus = permissionOptions.fromTokenStatus,
             amount = amount?.value,
             contractAddress = permissionOptions.forTokenContractAddress,
             spenderAddress = permissionOptions.spenderAddress,
@@ -239,7 +241,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         val result = sendTransactionUseCase(
             txData = approveTransaction,
             userWallet = userWallet,
-            network = permissionOptions.fromToken.network,
+            network = permissionOptions.fromTokenStatus.currency.network,
         )
         return result.fold(
             ifRight = { hash ->
@@ -332,6 +334,14 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         isBalanceWithoutFeeEnough: Boolean,
         expressOperationType: ExpressOperationType,
     ): Pair<SwapProvider, SwapState> {
+        if (fromToken.value.yieldSupplyStatus?.isActive == true) {
+            return provider to produceDexSwapDataError(
+                error = ExpressDataError.DexActiveSupplyError,
+                fromToken = fromToken,
+                amount = amount,
+            )
+        }
+
         val maybeQuotes = repository.findBestQuote(
             userWallet = userWallet,
             fromContractAddress = fromToken.currency.getContractAddress(),
@@ -546,7 +556,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         )
 
         val result = validateTransactionUseCase(
-            amount = amount.value.convertToSdkAmount(currency),
+            amount = amount.value.convertToSdkAmount(fromToken),
             fee = fee,
             memo = null,
             destination = getTokenAddress(fromToken.currency),
@@ -842,7 +852,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         }
 
         val txData = createTransferTransactionUseCase(
-            amount = amount.value.convertToSdkAmount(currencyToSend.currency),
+            amount = amount.value.convertToSdkAmount(currencyToSend),
             fee = txFee.fee,
             memo = exchangeDataCex.txExtraId,
             destination = exchangeDataCex.txTo,
@@ -1022,7 +1032,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             val txFeeResult = getUnhandledFee(
                 amount = amount.value,
                 userWallet = userWallet,
-                cryptoCurrency = fromToken,
+                cryptoCurrencyStatus = fromTokenStatus,
             )
 
             val txFee = if (provider.type == ExchangeProviderType.CEX) {
@@ -1325,10 +1335,23 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                 val otherNativeFee = transaction.otherNativeFeeWei
                     ?.movePointLeft(nativeCoinDecimals)
                     ?: BigDecimal.ZERO
+
                 val txFeeState = if (isSolana(networkId)) {
+                    val transactionBytes = Base64.decode(transaction.txData, Base64.NO_WRAP)
+
+                    val formattedHash = getFormattedHash(transactionBytes)
+
+                    if (formattedHash.size > SOLANA_TRANSACTION_SIZE_THRESHOLD_BYTES && userWallet is UserWallet.Cold) {
+                        return produceDexSwapDataError(
+                            error = ExpressDataError.TooLargeSolanaTransactionError,
+                            fromToken = fromToken,
+                            amount = amount,
+                        )
+                    }
+
                     getFeeDataForSolanaDexSwap(
                         network = fromToken.currency.network,
-                        transaction = transaction,
+                        transactionBytes = transactionBytes,
                     )
                         .toTxFeeState(fromToken.currency, otherNativeFee)
                 } else {
@@ -1387,19 +1410,31 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                 )
             },
             ifLeft = { error ->
-                val rates = getQuotes(fromToken.currency.id)
-                val fromTokenSwapInfo = TokenSwapInfo(
-                    tokenAmount = amount,
-                    amountFiat = rates[fromToken.currency.id]?.multiply(amount.value)
-                        ?: BigDecimal.ZERO,
-                    cryptoCurrencyStatus = fromToken,
-                )
-                SwapState.SwapError(
-                    fromTokenSwapInfo,
-                    error,
-                    IncludeFeeInAmount.Excluded,
+                produceDexSwapDataError(
+                    error = error,
+                    fromToken = fromToken,
+                    amount = amount,
                 )
             },
+        )
+    }
+
+    private suspend fun produceDexSwapDataError(
+        error: ExpressDataError,
+        fromToken: CryptoCurrencyStatus,
+        amount: SwapAmount,
+    ): SwapState.SwapError {
+        val rates = getQuotes(fromToken.currency.id)
+        val fromTokenSwapInfo = TokenSwapInfo(
+            tokenAmount = amount,
+            amountFiat = rates[fromToken.currency.id]?.multiply(amount.value)
+                ?: BigDecimal.ZERO,
+            cryptoCurrencyStatus = fromToken,
+        )
+        return SwapState.SwapError(
+            fromTokenSwapInfo,
+            error,
+            IncludeFeeInAmount.Excluded,
         )
     }
 
@@ -1446,13 +1481,9 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         }
     }
 
-    private suspend fun getFeeDataForSolanaDexSwap(
-        network: Network,
-        transaction: ExpressTransactionModel.DEX,
-    ): TransactionFee {
-        val txData = transaction.txData
+    private suspend fun getFeeDataForSolanaDexSwap(network: Network, transactionBytes: ByteArray): TransactionFee {
         val transactionData = TransactionData.Compiled(
-            value = TransactionData.Compiled.Data.Bytes(Base64.decode(txData, Base64.NO_WRAP)),
+            value = TransactionData.Compiled.Data.Bytes(transactionBytes),
         )
 
         return getFeeUseCase(
@@ -1520,12 +1551,12 @@ internal class SwapInteractorImpl @AssistedInject constructor(
     private suspend fun getUnhandledFee(
         amount: BigDecimal,
         userWallet: UserWallet,
-        cryptoCurrency: CryptoCurrency,
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
     ): Either<GetFeeError, TransactionFee> {
         return estimateFeeUseCase(
             amount = amount,
             userWallet = userWallet,
-            cryptoCurrency = cryptoCurrency,
+            cryptoCurrencyStatus = cryptoCurrencyStatus,
         )
     }
 
@@ -1560,7 +1591,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         // setting up amount for approve with given amount for swap [SwapApproveType.Limited]
         val callData = SmartContractCallDataProviderFactory.getApprovalCallData(
             spenderAddress = requireNotNull(spenderAddress) { "Spender address is null" },
-            amount = swapAmount.value.convertToSdkAmount(fromToken),
+            amount = swapAmount.value.convertToSdkAmount(fromTokenStatus),
             blockchain = fromToken.network.toBlockchain(),
         )
         val feeData = try {
@@ -2016,6 +2047,16 @@ internal class SwapInteractorImpl @AssistedInject constructor(
 
     private fun isSolana(networkId: String): Boolean {
         return networkId == Blockchain.Solana.toNetworkId()
+    }
+
+    // TODO create usecase [REDACTED_TASK_KEY]
+    private fun getFormattedHash(hash: ByteArray): ByteArray {
+        return try {
+            SolanaTransactionHelper.removeSignaturesPlaceholders(hash)
+        } catch (e: Exception) {
+            Timber.e("Failed to format the hash: ${e.message}")
+            hash
+        }
     }
 
     companion object {

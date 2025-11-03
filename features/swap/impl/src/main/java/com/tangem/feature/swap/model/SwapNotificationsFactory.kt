@@ -192,6 +192,7 @@ internal class SwapNotificationsFactory(
             reserveAmount = quoteModel.currencyCheck?.reserveAmount,
             sendingAmount = amountToRequest.value,
             cryptoCurrency = fromCurrencyStatus.currency,
+            feeCryptoCurrency = feeCryptoCurrencyStatus?.currency,
             isAccountFunded = false,
         )
         addReduceAmountNotification(
@@ -241,8 +242,9 @@ internal class SwapNotificationsFactory(
         ) {
             add(
                 SwapNotificationUM.Info.PermissionNeeded(
-                    providerName = fromToken.symbol,
-                    fromTokenSymbol = providerName,
+                    providerName = providerName,
+                    fromTokenSymbol = fromToken.symbol,
+                    onApproveClick = actions.openPermissionBottomSheet,
                 ),
             )
         }
