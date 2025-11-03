@@ -2,6 +2,7 @@ package com.tangem.features.tangempay.entity
 
 import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
+import com.tangem.core.ui.extensions.TextReference
 import kotlinx.collections.immutable.ImmutableList
 
 internal data class TangemPayDetailsUM(
@@ -12,7 +13,16 @@ internal data class TangemPayDetailsUM(
     val isBalanceHidden: Boolean,
 )
 
-data class TangemPayCardDetailsUM(val number: String, val expiry: String, val cvv: String, val onReveal: () -> Unit)
+data class TangemPayCardDetailsUM(
+    val number: String = "",
+    val expiry: String = "",
+    val cvv: String = "",
+    val buttonText: TextReference = TextReference.EMPTY,
+    val onClick: () -> Unit = {},
+    val onCopy: (String) -> Unit = {},
+    val isHidden: Boolean = true,
+    val isLoading: Boolean = false,
+)
 
 internal sealed class TangemPayDetailsBalanceBlockState {
 

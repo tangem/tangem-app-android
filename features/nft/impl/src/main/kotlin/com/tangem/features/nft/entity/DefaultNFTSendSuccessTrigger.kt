@@ -17,7 +17,7 @@ interface NFTSendSuccessListener {
 internal class DefaultNFTSendSuccessTrigger @Inject constructor() : NFTSendSuccessTrigger, NFTSendSuccessListener {
 
     override val nftSendSuccessFlow: SharedFlow<Unit>
-    field = MutableSharedFlow<Unit>()
+        field = MutableSharedFlow<Unit>()
 
     override suspend fun triggerSuccessNFTSend() {
         nftSendSuccessFlow.emit(Unit)

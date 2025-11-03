@@ -38,7 +38,6 @@ class AmountCurrencyTransformer(
                         keyboardType = KeyboardType.Number,
                     ),
                 ),
-                selectedButton = prevState.segmentedButtonConfig.indexOfFirst { it.isFiat == value },
             )
         }
     }

@@ -51,7 +51,19 @@ fun BlockItem(model: BlockUM, modifier: Modifier = Modifier) {
                 overflow = TextOverflow.Ellipsis,
             )
 
-            model.label?.let { Label(it) }
+            when (val endContent = model.endContent) {
+                is BlockUM.EndContent.None -> Unit
+                is BlockUM.EndContent.Icon -> Icon(
+                    painter = painterResource(id = endContent.resId),
+                    contentDescription = null,
+                    tint = when (endContent.accentType) {
+                        BlockUM.AccentType.NONE -> TangemTheme.colors.text.primary1
+                        BlockUM.AccentType.ACCENT -> TangemTheme.colors.text.accent
+                        BlockUM.AccentType.WARNING -> TangemTheme.colors.text.warning
+                    },
+                )
+                is BlockUM.EndContent.Label -> Label(endContent.label)
+            }
         }
     }
 }

@@ -1,7 +1,6 @@
 package com.tangem.domain.tokens.actions
 
 import com.tangem.domain.exchange.RampStateManager
-import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
@@ -69,7 +68,7 @@ internal class CommonActionsFactory(
             async {
                 getSwapUnavailabilityReason(
                     userWalletId = userWallet.walletId,
-                    currency = cryptoCurrencyStatus.currency,
+                    currencyStatus = cryptoCurrencyStatus,
                     requirementsDeferred = requirementsDeferred,
                 )
             }
@@ -175,17 +174,21 @@ internal class CommonActionsFactory(
 
     private suspend fun getSwapUnavailabilityReason(
         userWalletId: UserWalletId,
-        currency: CryptoCurrency,
+        currencyStatus: CryptoCurrencyStatus,
         requirementsDeferred: Deferred<AssetRequirementsCondition?>?,
     ): ScenarioUnavailabilityReason {
         val swapUnavailabilityReason = rampStateManager
-            .availableForSwap(userWalletId = userWalletId, cryptoCurrency = currency)
+            .availableForSwap(userWalletId = userWalletId, cryptoCurrency = currencyStatus.currency)
         val shouldCheckAssetRequirements =
             swapUnavailabilityReason == ScenarioUnavailabilityReason.None && requirementsDeferred != null
-        return if (shouldCheckAssetRequirements) {
-            getReceiveScenario(requirementsDeferred.await())
-        } else {
-            swapUnavailabilityReason
+
+        val yieldSupplyStatus = currencyStatus.value.yieldSupplyStatus
+        val isUnavailableByYieldSupply = yieldSupplyStatus?.isAllowedToSpend == false && yieldSupplyStatus.isActive
+
+        return when {
+            isUnavailableByYieldSupply -> ScenarioUnavailabilityReason.YieldSupplyApprovalRequired
+            shouldCheckAssetRequirements -> getReceiveScenario(requirementsDeferred.await())
+            else -> swapUnavailabilityReason
         }
     }
 }

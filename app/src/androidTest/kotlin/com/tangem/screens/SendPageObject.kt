@@ -10,13 +10,17 @@ import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onCompose
 import io.github.kakaocup.compose.node.element.KNode
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 import com.tangem.features.send.v2.impl.R as SendR
-import androidx.compose.ui.test.hasTestTag as withTestTag
 
 class SendPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
     ComposeScreen<SendPageObject>(semanticsProvider = semanticsProvider) {
 
     val screenContainer: KNode = child {
         hasTestTag(SendScreenTestTags.SCREEN_CONTAINER)
+    }
+
+    val closeButton: KNode = child {
+        hasTestTag(TopAppBarTestTags.CLOSE_BUTTON)
+        useUnmergedTree = true
     }
 
     val title: KNode = child {
@@ -29,13 +33,18 @@ class SendPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
         useUnmergedTree = true
     }
 
-    val amountContainerText: KNode = child {
-        hasTestTag(SendScreenTestTags.AMOUNT_CONTAINER_TEXT)
+    val amountInputTextField: KNode = child {
+        hasTestTag(SendScreenTestTags.INPUT_TEXT_FIELD)
         useUnmergedTree = true
     }
 
-    val amountInputTextField: KNode = child {
-        hasTestTag(SendScreenTestTags.INPUT_TEXT_FIELD)
+    val tokenName: KNode = child {
+        hasTestTag(SendScreenTestTags.TOKEN_NAME)
+        useUnmergedTree = true
+    }
+
+    val primaryAmount: KNode = child {
+        hasTestTag(SendScreenTestTags.PRIMARY_AMOUNT)
         useUnmergedTree = true
     }
 
@@ -44,25 +53,8 @@ class SendPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
         useUnmergedTree = true
     }
 
-    val currencyButton: KNode = child {
-        hasTestTag(SendScreenTestTags.CURRENCY_BUTTON)
-        hasAnyChild(withTestTag(SendScreenTestTags.CURRENCY_ICON))
-        useUnmergedTree = true
-    }
-
-    val fiatButton: KNode = child {
-        hasTestTag(SendScreenTestTags.CURRENCY_BUTTON)
-        hasAnyChild(withTestTag(SendScreenTestTags.FIAT_ICON))
-        useUnmergedTree = true
-    }
-
     val maxButton: KNode = child {
         hasTestTag(SendScreenTestTags.MAX_BUTTON)
-        useUnmergedTree = true
-    }
-
-    val previousButton: KNode = child {
-        hasTestTag(SendScreenTestTags.PREVIOUS_BUTTON)
         useUnmergedTree = true
     }
 

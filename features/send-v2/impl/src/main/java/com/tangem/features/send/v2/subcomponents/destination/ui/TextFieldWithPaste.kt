@@ -28,7 +28,6 @@ internal fun TextFieldWithPaste(
     label: TextReference,
     onValueChange: (String) -> Unit,
     onPasteClick: (String) -> Unit,
-    isRedesignEnabled: Boolean,
     modifier: Modifier = Modifier,
     footer: TextReference? = null,
     labelStyle: TextStyle = TangemTheme.typography.body2,
@@ -98,16 +97,8 @@ internal fun TextFieldWithPaste(
                 PasteButton(
                     isPasteButtonVisible = value.isBlank(),
                     onClick = onPasteClick,
-                    backgroundColorEnabled = if (isRedesignEnabled) {
-                        TangemTheme.colors.button.secondary
-                    } else {
-                        TangemTheme.colors.button.primary
-                    },
-                    textColor = if (isRedesignEnabled) {
-                        TangemTheme.colors.text.primary1
-                    } else {
-                        TangemTheme.colors.text.primary2
-                    },
+                    backgroundColorEnabled = TangemTheme.colors.button.secondary,
+                    textColor = TangemTheme.colors.text.primary1,
                     modifier = Modifier
                         .padding(start = TangemTheme.dimens.spacing8),
                 )

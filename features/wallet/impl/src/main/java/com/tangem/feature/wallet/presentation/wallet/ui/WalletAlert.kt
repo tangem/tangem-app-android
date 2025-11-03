@@ -41,7 +41,7 @@ private fun BasicAlert(state: WalletAlertState.Basic, onDismiss: () -> Unit) {
     if (onActionClick != null) {
         confirmButton = DialogButtonUM(
             title = state.confirmButtonText.resolveReference(),
-            warning = state.isWarningConfirmButton,
+            isWarning = state.isWarningConfirmButton,
             onClick = {
                 onActionClick()
                 onDismiss()
@@ -54,7 +54,7 @@ private fun BasicAlert(state: WalletAlertState.Basic, onDismiss: () -> Unit) {
     } else {
         confirmButton = DialogButtonUM(
             title = state.confirmButtonText.resolveReference(),
-            warning = state.isWarningConfirmButton,
+            isWarning = state.isWarningConfirmButton,
             onClick = onDismiss,
         )
         dismissButton = null
@@ -77,7 +77,7 @@ private fun TextInputAlert(state: WalletAlertState.TextInput, onDismiss: () -> U
         fieldValue = value,
         confirmButton = DialogButtonUM(
             title = state.confirmButtonText.resolveReference(),
-            enabled = value.text.isNotEmpty() &&
+            isEnabled = value.text.isNotEmpty() &&
                 value.text != state.text &&
                 state.errorTextProvider(value.text) == null,
             onClick = {

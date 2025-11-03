@@ -26,19 +26,19 @@ import com.tangem.wallet.R
 
 @Composable
 internal fun CardSettingsScreen(state: CardSettingsScreenState, modifier: Modifier = Modifier) {
-    val needReadCard = state.cardDetails == null
+    val isCardReadingNeeded = state.cardDetails == null
 
     SettingsScreensScaffold(
+        onBackClick = state.onBackClick,
         modifier = modifier,
+        titleRes = R.string.card_settings_title,
         content = {
-            if (needReadCard) {
+            if (isCardReadingNeeded) {
                 CardSettingsReadCard(state.onScanCardClick)
             } else {
                 CardSettings(state = state)
             }
         },
-        titleRes = R.string.card_settings_title,
-        onBackClick = state.onBackClick,
     )
 }
 
@@ -123,8 +123,8 @@ private fun CardSettings(state: CardSettingsScreenState) {
             .fillMaxWidth()
             .testTag(DeviceSettingsScreenTestTags.LAZY_LIST),
     ) {
-        items(state.cardDetails) {
-            val paddingBottom = when (it) {
+        items(state.cardDetails) { cardInfo ->
+            val paddingBottom = when (cardInfo) {
                 is CardInfo.CardId, is CardInfo.Issuer -> TangemTheme.dimens.spacing12
                 is CardInfo.SignedHashes -> TangemTheme.dimens.spacing14
                 is CardInfo.SecurityMode -> TangemTheme.dimens.spacing16
@@ -132,7 +132,7 @@ private fun CardSettings(state: CardSettingsScreenState) {
                 is CardInfo.AccessCodeRecovery -> TangemTheme.dimens.spacing16
                 is CardInfo.ResetToFactorySettings -> TangemTheme.dimens.spacing28
             }
-            val paddingTop = when (it) {
+            val paddingTop = when (cardInfo) {
                 is CardInfo.CardId -> TangemTheme.dimens.spacing0
                 is CardInfo.Issuer -> TangemTheme.dimens.spacing12
                 is CardInfo.SignedHashes -> TangemTheme.dimens.spacing12
@@ -145,8 +145,8 @@ private fun CardSettings(state: CardSettingsScreenState) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable(
-                        enabled = it.clickable,
-                        onClick = { state.onElementClick(it) },
+                        enabled = cardInfo.isClickable,
+                        onClick = { state.onElementClick(cardInfo) },
                     )
                     .padding(
                         start = TangemTheme.dimens.spacing20,
@@ -155,25 +155,25 @@ private fun CardSettings(state: CardSettingsScreenState) {
                         top = paddingTop,
                     ),
             ) {
-                val titleColor = if (it.clickable) {
+                val titleColor = if (cardInfo.isClickable) {
                     TangemTheme.colors.text.primary1
                 } else {
                     TangemTheme.colors.text.tertiary
                 }
-                val subtitleColor = if (it.clickable) {
+                val subtitleColor = if (cardInfo.isClickable) {
                     TangemTheme.colors.text.secondary
                 } else {
                     TangemTheme.colors.text.tertiary
                 }
                 Text(
-                    text = it.titleRes.resolveReference(),
+                    text = cardInfo.titleRes.resolveReference(),
                     color = titleColor,
                     style = TangemTheme.typography.subtitle1,
                     modifier = Modifier.testTag(DeviceSettingsScreenTestTags.ITEM_TITLE),
                 )
                 Spacer(modifier = Modifier.size(TangemTheme.dimens.size4))
                 Text(
-                    text = it.subtitle.resolveReference(),
+                    text = cardInfo.subtitle.resolveReference(),
                     color = subtitleColor,
                     style = TangemTheme.typography.body2,
                     modifier = Modifier.testTag(DeviceSettingsScreenTestTags.ITEM_SUBTITLE),

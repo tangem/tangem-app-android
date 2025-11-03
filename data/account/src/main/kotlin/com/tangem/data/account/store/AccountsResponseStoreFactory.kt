@@ -17,6 +17,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
+import javax.inject.Singleton
 
 typealias AccountsResponseStore = DataStore<GetWalletAccountsResponse?>
 
@@ -30,6 +31,7 @@ typealias AccountsResponseStore = DataStore<GetWalletAccountsResponse?>
  *
 [REDACTED_AUTHOR]
  */
+@Singleton
 internal class AccountsResponseStoreFactory @Inject constructor(
     @ApplicationContext private val context: Context,
     @NetworkMoshi private val moshi: Moshi,

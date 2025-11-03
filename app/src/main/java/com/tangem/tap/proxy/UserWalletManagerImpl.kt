@@ -48,13 +48,13 @@ class UserWalletManagerImpl(
     override suspend fun getNativeTokenBalance(networkId: String, derivationPath: String?): ProxyAmount? {
         val blockchain = requireNotNull(Blockchain.fromNetworkId(networkId)) { "blockchain not found" }
         val walletManager = getActualWalletManager(blockchain, derivationPath)
-        return walletManager.wallet.amounts.firstNotNullOfOrNull {
-            it.takeIf { it.key is AmountType.Coin }
-        }?.value?.let {
+        return walletManager.wallet.amounts.firstNotNullOfOrNull { amountEntry ->
+            amountEntry.takeIf { amountEntry.key is AmountType.Coin }
+        }?.value?.let { amount ->
             ProxyAmount(
-                it.currencySymbol,
-                it.value ?: BigDecimal.ZERO,
-                it.decimals,
+                amount.currencySymbol,
+                amount.value ?: BigDecimal.ZERO,
+                amount.decimals,
             )
         }
     }

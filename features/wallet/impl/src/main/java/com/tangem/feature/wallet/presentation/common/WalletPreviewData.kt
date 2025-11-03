@@ -79,7 +79,7 @@ internal object WalletPreviewData {
                 fallbackTint = TangemColorPalette.Black,
                 fallbackBackground = TangemColorPalette.Meadow,
                 isGrayscale = false,
-                showCustomBadge = false,
+                shouldShowCustomBadge = false,
             ),
             titleState = TokenItemState.TitleState.Content(text = stringReference(value = "Polygon")),
             subtitle2State = TokenItemState.Subtitle2State.TextContent(text = "3 172,14 $"),

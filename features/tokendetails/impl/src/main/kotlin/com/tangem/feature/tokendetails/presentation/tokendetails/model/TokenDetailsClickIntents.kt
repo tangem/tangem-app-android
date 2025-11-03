@@ -79,4 +79,6 @@ interface TokenDetailsClickIntents {
     fun onConfirmDisposeExpressStatus()
 
     fun onDisposeExpressStatus()
+
+    fun onYieldInfoClick()
 }

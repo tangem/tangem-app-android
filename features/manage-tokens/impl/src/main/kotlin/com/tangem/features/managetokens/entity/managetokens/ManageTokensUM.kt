@@ -54,6 +54,7 @@ internal sealed class ManageTokensUM {
         isSavingInProgress: Boolean = this is ManageContent && this.isSavingInProgress,
         scrollToTop: StateEvent<Unit> = this.scrollToTop,
         needToInteractWithColdWallet: Boolean = this is ManageContent && this.needToInteractWithColdWallet,
+        topBar: ManageTokensTopBarUM? = this.topBar,
     ): ManageTokensUM {
         return when (this) {
             is ManageContent -> copy(
@@ -65,6 +66,7 @@ internal sealed class ManageTokensUM {
                 isSavingInProgress = isSavingInProgress,
                 scrollToTop = scrollToTop,
                 needToInteractWithColdWallet = needToInteractWithColdWallet,
+                topBar = topBar,
             )
             is ReadContent -> copy(
                 search = search,
@@ -72,6 +74,7 @@ internal sealed class ManageTokensUM {
                 isInitialBatchLoading = isInitialBatchLoading,
                 isNextBatchLoading = isNextBatchLoading,
                 scrollToTop = scrollToTop,
+                topBar = topBar,
             )
         }
     }

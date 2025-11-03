@@ -38,7 +38,7 @@ internal class SwapNotificationsModel @Inject constructor(
     private var notificationData = params.swapNotificationData
 
     val uiState: StateFlow<ImmutableList<NotificationUM>>
-    field = MutableStateFlow<ImmutableList<NotificationUM>>(persistentListOf())
+        field = MutableStateFlow<ImmutableList<NotificationUM>>(persistentListOf())
 
     init {
         subscribeToNotificationUpdateTrigger()
