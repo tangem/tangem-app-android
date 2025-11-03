@@ -30,6 +30,7 @@
   <string name="account_details_archive">Archive account</string>
   <string name="account_details_archive_action">Archive</string>
   <string name="account_details_archive_description">You are archiving this account, but you can always get it back.</string>
+  <string name="account_details_archiving">Archiving...</string>
   <string name="account_details_title">Account</string>
   <string name="account_edit_success_message">Account saved</string>
   <string name="account_for_rewards">Account for rewards</string>
@@ -431,6 +432,7 @@
   <string name="email_subject_wc_error">WalletConnect error</string>
   <string name="error_wrong_wallet_tapped">You have used a card or ring from another wallet. Tap the card or ring associated with this wallet</string>
   <string name="eth_gas_required_exceeds_allowance">Not enough funds for the transaction. Please top up your account.</string>
+  <string name="exchange_token_description">Swap any asset in your portfolio for this token</string>
   <string name="exchange_tokens_available_tokens_header">My tokens</string>
   <string name="exchange_tokens_empty_tokens">You haven\'t added any tokens yet. Add tokens via Market to swap</string>
   <string name="exchange_tokens_unavailable_tokens_header">Cannot be swapped for %s</string>
@@ -795,6 +797,8 @@
   <string name="notification_sepa_button">Buy crypto</string>
   <string name="notification_sepa_text">Enjoy **0% fees** when purchasing crypto via SEPA transfers.</string>
   <string name="notification_sepa_title">Buy Crypto with SEPA</string>
+  <string name="notification_visa_waitlist_promo_text">Join the waitlist and get a payment card unlike any other</string>
+  <string name="notification_visa_waitlist_promo_title">Tangem Visa Card</string>
   <string name="onboarding_access_code_feature_1_description">Set up a single access code to protect all your devices.</string>
   <string name="onboarding_access_code_feature_1_title">Protect</string>
   <string name="onboarding_access_code_feature_2_description">Set an individual access code for each card or ring later.</string>
@@ -1338,6 +1342,15 @@
   <string name="tangempay_card_details_error_text">Failed to load data. Try again later.</string>
   <string name="tangempay_card_details_freeze_card">Freeze Card</string>
   <string name="tangempay_card_details_hide_text">Hide</string>
+  <string name="tangempay_card_details_open_wallet_button">Open Google Wallet</string>
+  <string name="tangempay_card_details_open_wallet_notification_subtitle">Set up Tangem Pay in a few taps and start paying with Google Pay.</string>
+  <string name="tangempay_card_details_open_wallet_notification_title">Add your card to Google Pay</string>
+  <string name="tangempay_card_details_open_wallet_step_1">Open Google Wallet</string>
+  <string name="tangempay_card_details_open_wallet_step_2">Tap “Add a card”</string>
+  <string name="tangempay_card_details_open_wallet_step_3">Enter the card details manually</string>
+  <string name="tangempay_card_details_open_wallet_step_4">Verify card using the OTP sent to your device.</string>
+  <string name="tangempay_card_details_open_wallet_step_5">All set! Your card is ready to use.</string>
+  <string name="tangempay_card_details_open_wallet_title">Add card to Google Pay</string>
   <string name="tangempay_card_details_receive_error_description">Technical issues detected. Please try again later or contact support.</string>
   <string name="tangempay_card_details_receive_error_title">Receive unavailable now</string>
   <string name="tangempay_card_details_reveal_text">Reveal</string>
@@ -1859,7 +1872,7 @@
   <string name="yield_module_promo_screen_cash_out_subtitle">Send, swap, or sell your funds instantly, anytime you want.</string>
   <string name="yield_module_promo_screen_cash_out_title">Access your funds anytime</string>
   <string name="yield_module_promo_screen_how_it_works_button_title">How it works?</string>
-  <string name="yield_module_promo_screen_self_custodial_subtitle">Aave is a decentralized protocol managing over $61  billion in total value.</string>
+  <string name="yield_module_promo_screen_self_custodial_subtitle">Aave is a decentralized protocol managing over $61 billion in total value.</string>
   <string name="yield_module_promo_screen_self_custodial_title">Decentralized and self-custodial</string>
   <string name="yield_module_promo_screen_terms_disclaimer">By using this service, you agree with provider\n%1$s and %2$s</string>
   <string name="yield_module_promo_screen_title">Connect Aave</string>
