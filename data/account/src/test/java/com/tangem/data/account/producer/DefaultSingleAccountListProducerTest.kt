@@ -2,7 +2,6 @@ package com.tangem.data.account.producer
 
 import com.google.common.truth.Truth
 import com.tangem.common.test.utils.getEmittedValues
-import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.producer.SingleAccountListProducer
 import com.tangem.domain.models.TokensSortType
@@ -11,7 +10,6 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
@@ -26,7 +24,6 @@ import org.junit.jupiter.api.TestInstance
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class DefaultSingleAccountListProducerTest {
 
-    private val userWalletsStore: UserWalletsStore = mockk()
     private val walletAccountListFlowFactory: WalletAccountListFlowFactory = mockk()
 
     private val userWalletId = UserWalletId("011")
@@ -36,24 +33,22 @@ class DefaultSingleAccountListProducerTest {
 
     private val producer = DefaultSingleAccountListProducer(
         params = SingleAccountListProducer.Params(userWalletId = userWalletId),
-        userWalletsStore = userWalletsStore,
         walletAccountListFlowFactory = walletAccountListFlowFactory,
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
 
     @AfterEach
     fun tearDownEach() {
-        clearMocks(userWalletsStore, walletAccountListFlowFactory)
+        clearMocks(walletAccountListFlowFactory)
     }
 
     @Test
     fun produce() = runTest {
         // Arrange
-        val userWalletsFlow = MutableStateFlow(listOf(userWallet))
-        every { userWalletsStore.userWallets } returns userWalletsFlow
+        MutableStateFlow(listOf(userWallet))
 
-        val accountList = AccountList.empty(userWallet)
-        every { walletAccountListFlowFactory.create(userWallet) } returns flowOf(accountList)
+        val accountList = AccountList.empty(userWalletId)
+        every { walletAccountListFlowFactory.create(userWalletId) } returns flowOf(accountList)
 
         // Act
         val actual = producer.produce().let(::getEmittedValues)
@@ -63,22 +58,18 @@ class DefaultSingleAccountListProducerTest {
         Truth.assertThat(actual).containsExactly(expected)
 
         coVerify(ordering = Ordering.SEQUENCE) {
-            userWalletsStore.userWallets
-            walletAccountListFlowFactory.create(userWallet)
+            walletAccountListFlowFactory.create(userWalletId)
         }
     }
 
     @Test
     fun `flow will updated if factoryFlow is updated`() = runTest {
         // Arrange
-        val userWalletsFlow = MutableStateFlow(listOf(userWallet))
-        every { userWalletsStore.userWallets } returns userWalletsFlow
-
-        val accountList = AccountList.empty(userWallet)
-        val updatedAccountList = AccountList.empty(userWallet = userWallet, sortType = TokensSortType.NONE)
+        val accountList = AccountList.empty(userWalletId)
+        val updatedAccountList = AccountList.empty(userWalletId = userWalletId, sortType = TokensSortType.NONE)
         val factoryFlow = MutableStateFlow<AccountList?>(null)
 
-        every { walletAccountListFlowFactory.create(userWallet) } returns factoryFlow.filterNotNull()
+        every { walletAccountListFlowFactory.create(userWalletId) } returns factoryFlow.filterNotNull()
 
         // Act (first emission)
         factoryFlow.value = accountList
@@ -95,23 +86,18 @@ class DefaultSingleAccountListProducerTest {
         Truth.assertThat(secondEmission).containsExactly(updatedAccountList)
 
         coVerifyOrder {
-            userWalletsStore.userWallets
-            walletAccountListFlowFactory.create(userWallet)
-            userWalletsStore.userWallets
-            walletAccountListFlowFactory.create(userWallet)
+            walletAccountListFlowFactory.create(userWalletId)
+            walletAccountListFlowFactory.create(userWalletId)
         }
     }
 
     @Test
     fun `flow is filtered the same response`() = runTest {
         // Arrange
-        val userWalletsFlow = MutableStateFlow(value = listOf(userWallet))
-        every { userWalletsStore.userWallets } returns userWalletsFlow
-
-        val accountList = AccountList.empty(userWallet)
+        val accountList = AccountList.empty(userWalletId)
         val factoryFlow = MutableStateFlow<AccountList?>(null)
 
-        every { walletAccountListFlowFactory.create(userWallet) } returns factoryFlow.filterNotNull()
+        every { walletAccountListFlowFactory.create(userWalletId) } returns factoryFlow.filterNotNull()
 
         // Act (first emission)
         factoryFlow.value = accountList
@@ -128,71 +114,8 @@ class DefaultSingleAccountListProducerTest {
         Truth.assertThat(secondEmission).containsExactly(accountList)
 
         coVerify(ordering = Ordering.SEQUENCE) {
-            userWalletsStore.userWallets
-            walletAccountListFlowFactory.create(userWallet)
-            userWalletsStore.userWallets
-            walletAccountListFlowFactory.create(userWallet)
+            walletAccountListFlowFactory.create(userWalletId)
+            walletAccountListFlowFactory.create(userWalletId)
         }
-    }
-
-    @Test
-    fun `flow is empty if factory throws exception`() = runTest {
-        // Arrange
-        val userWalletsFlow = MutableStateFlow(value = listOf(userWallet))
-        every { userWalletsStore.userWallets } returns userWalletsFlow
-
-        val exception = RuntimeException("Converter error")
-        every { walletAccountListFlowFactory.create(userWallet) } throws exception
-
-        // Act
-        val actual = producer.produceWithFallback().let(::getEmittedValues)
-
-        // Assert
-        Truth.assertThat(actual).isEmpty() // no emissions
-
-        coVerify(ordering = Ordering.SEQUENCE) {
-            userWalletsStore.userWallets
-            walletAccountListFlowFactory.create(userWallet)
-        }
-    }
-
-    @Test
-    fun `flow is empty if userWalletsFlow returns empty flow`() = runTest {
-        // Arrange
-        val userWalletsFlow = emptyFlow<List<UserWallet>>()
-        every { userWalletsStore.userWallets } returns userWalletsFlow
-
-        // Act
-        val actual = producer.produce().let(::getEmittedValues)
-
-        // Assert
-        Truth.assertThat(actual).isEmpty() // no emissions
-
-        coVerify(exactly = 1) { userWalletsStore.userWallets }
-        coVerify(inverse = true) { walletAccountListFlowFactory.create(any()) }
-    }
-
-    @Test
-    fun `flow is empty if userWalletsFlow doesn't contains userWalletId from params`() = runTest {
-        // Arrange
-        val unknownId = UserWalletId("012")
-        val unknownWallet = mockk<UserWallet> {
-            every { this@mockk.walletId } returns unknownId
-        }
-
-        val userWalletsFlow = MutableStateFlow(listOf(unknownWallet))
-        every { userWalletsStore.userWallets } returns userWalletsFlow
-
-        // Act
-        val actual = producer.produce().let(::getEmittedValues)
-
-        // Assert
-        Truth.assertThat(actual).isEmpty() // no emissions
-
-        coVerify(ordering = Ordering.SEQUENCE) {
-            userWalletsStore.userWallets
-        }
-
-        coVerify(inverse = true) { walletAccountListFlowFactory.create(any()) }
     }
 }

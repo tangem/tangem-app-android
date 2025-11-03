@@ -13,11 +13,11 @@ import com.tangem.core.ui.res.TangemTheme
 
 @Composable
 inline fun RowContentContainer(
+    modifier: Modifier = Modifier,
+    horizontalArrangement: Arrangement.Horizontal = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
     icon: @Composable BoxScope.() -> Unit,
     text: @Composable BoxScope.() -> Unit,
     action: @Composable BoxScope.() -> Unit,
-    modifier: Modifier = Modifier,
-    horizontalArrangement: Arrangement.Horizontal = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),

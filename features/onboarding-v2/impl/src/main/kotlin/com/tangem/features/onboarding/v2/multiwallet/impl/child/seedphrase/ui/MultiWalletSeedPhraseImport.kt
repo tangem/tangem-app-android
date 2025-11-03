@@ -46,7 +46,7 @@ internal fun MultiWalletSeedPhraseImport(state: MultiWalletSeedPhraseUM.Import, 
             ),
             dismissButton = DialogButtonUM(
                 title = state.dialog.dismissButtonText.resolveReference(),
-                warning = state.dialog.dismissWarningColor,
+                isWarning = state.dialog.dismissWarningColor,
                 onClick = state.dialog.onDismissButtonClick,
             ),
             onDismissDialog = state.dialog.onDismiss,
