@@ -8,8 +8,7 @@ data class HomeUM(
     val onScanClick: () -> Unit,
     val onShopClick: () -> Unit,
     val onSearchTokensClick: () -> Unit,
-    val onCreateNewWalletClick: () -> Unit,
-    val onAddExistingWalletClick: () -> Unit,
+    val onGetStartedClick: () -> Unit,
 ) {
     val firstStory: Stories get() = stories[0]
 

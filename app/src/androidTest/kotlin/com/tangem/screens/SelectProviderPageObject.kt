@@ -2,87 +2,78 @@ package com.tangem.screens
 
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import com.tangem.common.BaseTestCase
-import com.tangem.core.ui.test.SelectProviderBottomSheetTestTags
+import com.tangem.core.ui.test.BaseBottomSheetTestTags
+import com.tangem.core.ui.test.BaseButtonTestTags
+import com.tangem.core.ui.test.OnrampOffersBlockTestTags
 import com.tangem.features.onramp.impl.R
 import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
 import io.github.kakaocup.compose.node.element.KNode
 import io.github.kakaocup.kakao.common.utilities.getResourceString
-import androidx.compose.ui.test.hasText as withText
+import com.tangem.core.ui.R as CoreUiR
 
 class SelectProviderPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
     ComposeScreen<SelectProviderPageObject>(semanticsProvider = semanticsProvider) {
 
     val title: KNode = child {
-        hasText(getResourceString(R.string.onramp_choose_provider_title_hint))
+        hasTestTag(BaseBottomSheetTestTags.TITLE)
+        hasText(getResourceString(R.string.onramp_all_offers_button_title))
+    }
+
+    val subtitle: KNode = child {
+        hasTestTag(BaseBottomSheetTestTags.SUBTITLE)
+        hasText(getResourceString(R.string.express_provider))
         useUnmergedTree = true
+    }
+
+    val bestRateIcon: KNode = child {
+        hasTestTag(OnrampOffersBlockTestTags.BEST_RATE_ICON)
+        useUnmergedTree = true
+    }
+
+    val bestRateTitle: KNode = child {
+        hasTestTag(OnrampOffersBlockTestTags.BEST_RATE_TITLE)
+        useUnmergedTree = true
+    }
+
+    val offerTokenAmount: KNode = child {
+        hasTestTag(OnrampOffersBlockTestTags.OFFER_TOKEN_AMOUNT)
+        useUnmergedTree = true
+    }
+
+    val timingIcon: KNode = child {
+        hasTestTag(OnrampOffersBlockTestTags.TIMING_ICON)
+        useUnmergedTree = true
+    }
+
+    val payWith: KNode = child {
+        hasTestTag(OnrampOffersBlockTestTags.PAY_WITH)
+        useUnmergedTree = true
+    }
+
+    val youGetText: KNode = child {
+        hasText(getResourceString(R.string.onramp_title_you_get))
     }
 
     val paymentMethodIcon: KNode = child {
-        hasTestTag(SelectProviderBottomSheetTestTags.PAYMENT_METHOD_ICON)
+        hasTestTag(OnrampOffersBlockTestTags.PAYMENT_METHOD_ICON)
         useUnmergedTree = true
     }
 
-    val paymentMethodTitle: KNode = child {
-        hasTestTag(SelectProviderBottomSheetTestTags.PAYMENT_METHOD_NAME)
+    val providerName: KNode = child {
+        hasTestTag(OnrampOffersBlockTestTags.PROVIDER_NAME)
         useUnmergedTree = true
     }
 
-    val paymentMethodName: KNode = child {
-        hasTestTag(SelectProviderBottomSheetTestTags.PAYMENT_METHOD_NAME)
+
+    val instantProcessingSpeedText: KNode = child {
+        hasText(getResourceString(com.tangem.core.ui.R.string.onramp_instant_status))
         useUnmergedTree = true
     }
 
-    val paymentMethodExpandButton: KNode = child {
-        hasTestTag(SelectProviderBottomSheetTestTags.PAYMENT_METHOD_EXPAND_BUTTON)
-        useUnmergedTree = true
-    }
-
-    val availableProviderItem: KNode = child {
-        hasTestTag(SelectProviderBottomSheetTestTags.AVAILABLE_PROVIDER_ITEM)
-        useUnmergedTree = true
-    }
-
-    val availableProviderName: KNode = child {
-        hasTestTag(SelectProviderBottomSheetTestTags.AVAILABLE_PROVIDER_NAME)
-        useUnmergedTree = true
-    }
-
-    val tokenAmount: KNode = child {
-        hasTestTag(SelectProviderBottomSheetTestTags.TOKEN_AMOUNT)
-        useUnmergedTree = true
-    }
-
-    val unavailableProviderItem: KNode = child {
-        hasTestTag(SelectProviderBottomSheetTestTags.UNAVAILABLE_PROVIDER_ITEM)
-        useUnmergedTree = true
-    }
-
-    val unavailableProviderName: KNode = child {
-        hasTestTag(SelectProviderBottomSheetTestTags.UNAVAILABLE_PROVIDER_NAME)
-        useUnmergedTree = true
-    }
-
-    val moreProvidersIcon: KNode = child {
-        hasTestTag(SelectProviderBottomSheetTestTags.MORE_PROVIDERS_ICON)
-        useUnmergedTree = true
-    }
-
-    val moreProvidersText: KNode = child {
-        hasTestTag(SelectProviderBottomSheetTestTags.MORE_PROVIDERS_TEXT)
-        useUnmergedTree = true
-    }
-
-    val bestRateLabel: KNode = child {
-        hasTestTag(SelectProviderBottomSheetTestTags.BEST_RATE_LABEL)
-        useUnmergedTree = true
-    }
-
-    fun availableProviderWithName(name: String, tokenAmount: String, rate: String): KNode = child {
-        hasTestTag(SelectProviderBottomSheetTestTags.AVAILABLE_PROVIDER_ITEM)
-        hasAnyChild(withText(name))
-        hasAnyChild(withText(tokenAmount))
-        hasAnyChild(withText(rate))
+    val buyButton: KNode = child {
+        hasTestTag(BaseButtonTestTags.TEXT)
+        hasText(getResourceString(CoreUiR.string.common_buy))
         useUnmergedTree = true
     }
 }

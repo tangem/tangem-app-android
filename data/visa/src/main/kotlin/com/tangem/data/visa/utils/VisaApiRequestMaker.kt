@@ -54,7 +54,7 @@ internal class VisaApiRequestMaker @Inject constructor(
                     userWalletsStore.update(userWalletId) { userWallet ->
                         userWallet.requireColdWallet().copy(
                             scanResponse = userWallet.scanResponse.copy(
-                                visaCardActivationStatus = VisaCardActivationStatus.RefreshTokenExpired,
+                                // visaCardActivationStatus = VisaCardActivationStatus.RefreshTokenExpired,
                             ),
                         )
                     }
@@ -65,9 +65,9 @@ internal class VisaApiRequestMaker @Inject constructor(
             userWalletsStore.update(userWalletId) { userWallet ->
                 userWallet.requireColdWallet().copy(
                     scanResponse = userWallet.scanResponse.copy(
-                        visaCardActivationStatus = VisaCardActivationStatus.Activated(
-                            visaAuthTokens = newTokens,
-                        ),
+                        // visaCardActivationStatus = VisaCardActivationStatus.Activated(
+                        //     visaAuthTokens = newTokens,
+                        // ),
                     ),
                 )
             }
@@ -93,8 +93,9 @@ internal class VisaApiRequestMaker @Inject constructor(
     @Throws
     private fun getAuthTokens(userWalletId: UserWalletId): VisaAuthTokens {
         val userWallet = findVisaUserWallet(userWalletId)
-        val status = userWallet.requireColdWallet().scanResponse.visaCardActivationStatus
-            ?: error("Visa card activation status not found")
+        // val status = userWallet.requireColdWallet().scanResponse.visaCardActivationStatus
+        //     ?: error("Visa card activation status not found")
+        val status: VisaCardActivationStatus = TODO("Fix visaCardActivationStatus retrieval")
 
         if (status is VisaCardActivationStatus.RefreshTokenExpired) {
             throw RefreshTokenExpiredException()

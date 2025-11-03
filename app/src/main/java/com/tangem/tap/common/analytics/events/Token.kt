@@ -9,12 +9,12 @@ import com.tangem.core.analytics.models.AnalyticsParam.Key.TOKEN_PARAM
 sealed class Token(
     category: String,
     event: String,
-    params: Map<String, String> = mapOf(),
+    params: Map<String, String> = emptyMap(),
 ) : AnalyticsEvent(category, event, params) {
 
     sealed class Receive(
         event: String,
-        params: Map<String, String> = mapOf(),
+        params: Map<String, String> = emptyMap(),
     ) : Token("Token / Receive", event, params) {
 
         class ScreenOpened(
@@ -29,7 +29,7 @@ sealed class Token(
 
     sealed class Topup(
         event: String,
-        params: Map<String, String> = mapOf(),
+        params: Map<String, String> = emptyMap(),
     ) : Token("Token / Topup", event, params) {
 
         class ScreenOpened : Topup("Top Up Screen Opened")
@@ -38,7 +38,7 @@ sealed class Token(
 
     sealed class Withdraw(
         event: String,
-        params: Map<String, String> = mapOf(),
+        params: Map<String, String> = emptyMap(),
     ) : Token("Token / Withdraw", event, params) {
 
         class ScreenOpened : Withdraw("Withdraw Screen Opened")

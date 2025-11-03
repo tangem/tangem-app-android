@@ -64,8 +64,8 @@ fun MessageBottomSheetV2(state: MessageBottomSheetUMV2, onDismissRequest: () -> 
 @Composable
 fun MessageBottomSheetV2Content(state: MessageBottomSheetUMV2, modifier: Modifier = Modifier) {
     Column(modifier = modifier) {
-        state.elements.fastForEach {
-            when (it) {
+        state.elements.fastForEach { element ->
+            when (element) {
                 is MessageBottomSheetUMV2.InfoBlock -> {
                     ContentContainer(
                         modifier = Modifier
@@ -73,7 +73,7 @@ fun MessageBottomSheetV2Content(state: MessageBottomSheetUMV2, modifier: Modifie
                             .fillMaxWidth()
                             .padding(horizontal = TangemTheme.dimens.spacing16)
                             .padding(bottom = 32.dp),
-                        state = it,
+                        state = element,
                     )
                 }
                 else -> Unit
@@ -94,32 +94,32 @@ private fun ContentContainer(state: MessageBottomSheetUMV2.InfoBlock, modifier: 
         state.icon?.let {
             BottomSheetIcon(it)
         }
-        state.title?.let {
+        state.title?.let { title ->
             Text(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = TangemTheme.dimens.spacing24),
-                text = it.resolveReference(),
+                text = title.resolveReference(),
                 style = TangemTheme.typography.h3,
                 color = TangemTheme.colors.text.primary1,
                 textAlign = TextAlign.Center,
             )
         }
-        state.body?.let {
+        state.body?.let { body ->
             Text(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = TangemTheme.dimens.spacing8),
-                text = it.resolveReference(),
+                text = body.resolveReference(),
                 style = TangemTheme.typography.body2,
                 color = TangemTheme.colors.text.secondary,
                 textAlign = TextAlign.Center,
             )
         }
-        state.chip?.let {
+        state.chip?.let { chip ->
             BottomSheetChip(
                 modifier = Modifier.padding(top = TangemTheme.dimens.spacing16),
-                chip = it,
+                chip = chip,
             )
         }
     }
@@ -193,16 +193,16 @@ private fun ButtonsContainer(
         verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
     ) {
         buttons.fastForEach { button ->
-            val icon = button.icon?.let {
+            val icon = button.icon?.let { iconResId ->
                 when (button.iconOrder) {
-                    IconOrder.Start -> TangemButtonIconPosition.Start(it)
-                    IconOrder.End -> TangemButtonIconPosition.End(it)
+                    IconOrder.Start -> TangemButtonIconPosition.Start(iconResId)
+                    IconOrder.End -> TangemButtonIconPosition.End(iconResId)
                 }
             } ?: TangemButtonIconPosition.None
 
             TangemButton(
                 modifier = Modifier.fillMaxWidth(),
-                text = button.text?.resolveReference() ?: "",
+                text = button.text?.resolveReference().orEmpty(),
                 icon = icon,
                 onClick = { button.onClick?.invoke(closeScope) },
                 colors = if (button.isPrimary) {

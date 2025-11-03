@@ -153,9 +153,9 @@ class VisaCardActivationTask @AssistedInject constructor(
             val otpTaskDeferred = async { createOTP() }
 
             val dataToSign = dataToSignDeferred.await()
-                .getOrElse {
+                .getOrElse { error ->
                     otpTaskDeferred.cancel()
-                    return@coroutineScope CompletionResult.Failure(it)
+                    return@coroutineScope CompletionResult.Failure(error)
                 }
 
             otpTaskDeferred.await()

@@ -37,14 +37,14 @@ internal class DefaultAnalyticsRepository(
     }
 
     override suspend fun setWalletBalanceState(userWalletId: UserWalletId, balanceState: WalletBalanceState) {
-        appPreferencesStore.editData {
-            val walletsBalanceState = it.getObjectMap<WalletBalanceState>(
+        appPreferencesStore.editData { preferences ->
+            val walletsBalanceState = preferences.getObjectMap<WalletBalanceState>(
                 key = PreferencesKeys.WALLETS_BALANCES_STATES_KEY,
             )
             val updatedWalletsBalanceState = walletsBalanceState
                 .plus(pair = userWalletId.stringValue to balanceState)
 
-            it.setObjectMap(PreferencesKeys.WALLETS_BALANCES_STATES_KEY, updatedWalletsBalanceState)
+            preferences.setObjectMap(PreferencesKeys.WALLETS_BALANCES_STATES_KEY, updatedWalletsBalanceState)
         }
     }
 }

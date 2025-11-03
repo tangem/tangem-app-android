@@ -19,6 +19,7 @@ interface StakeKitApi {
         @Query("preferredValidatorsOnly") preferredValidatorsOnly: Boolean? = null,
         @Query("ledgerWalletAPICompatible") ledgerWalletAPICompatible: Boolean? = null,
         @Query("type") type: YieldType? = null,
+        @Query("yieldId") yieldId: String? = null,
         @Query("revenueOption") revenueOption: RevenueOption? = null,
         @Query("page") page: Int? = null,
         @Query("network") network: String? = null,

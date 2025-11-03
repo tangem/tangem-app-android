@@ -15,5 +15,4 @@ enum class TokensSortType {
 
     /** Sorted by their balance */
     BALANCE,
-    ;
 }

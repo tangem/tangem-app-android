@@ -8,10 +8,10 @@ sealed class ScanChainException : ScanCardException.ChainException() {
     /**
      * May be returned from [DisclaimerChain]
      * */
-    data object DisclaimerWasCanceled : ScanChainException() {
+    class DisclaimerWasCanceled : ScanChainException() {
 
         @Suppress("UnusedPrivateMember")
-        private fun readResolve(): Any = DisclaimerWasCanceled
+        private fun readResolve(): Any = DisclaimerWasCanceled()
     }
 
     /**

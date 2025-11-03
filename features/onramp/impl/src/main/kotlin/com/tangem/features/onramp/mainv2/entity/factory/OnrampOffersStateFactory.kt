@@ -22,7 +22,10 @@ internal class OnrampOffersStateFactory(
         return when (currentState) {
             is OnrampV2MainComponentUM.Content -> {
                 currentState.copy(
-                    offersBlockState = mapOnrampOffersBlockToUM(offers),
+                    offersBlockState = mapOnrampOffersBlockToUM(
+                        offersBlocks = offers,
+                        currentState = currentState,
+                    ),
                 )
             }
             is OnrampV2MainComponentUM.InitialLoading -> {
@@ -31,7 +34,10 @@ internal class OnrampOffersStateFactory(
         }
     }
 
-    private fun mapOnrampOffersBlockToUM(offersBlocks: List<OnrampOffersBlock>): OnrampOffersBlockUM.Content {
+    private fun mapOnrampOffersBlockToUM(
+        offersBlocks: List<OnrampOffersBlock>,
+        currentState: OnrampV2MainComponentUM.Content,
+    ): OnrampOffersBlockUM.Content {
         val allOffersUM = mutableListOf<OnrampOfferUM>()
         offersBlocks.map { block ->
             block.offers.forEach { offer ->
@@ -75,7 +81,7 @@ internal class OnrampOffersStateFactory(
         }
 
         return OnrampOffersBlockUM.Content(
-            isBlockVisible = false,
+            isBlockVisible = currentState.offersBlockState.isBlockVisible,
             recentOffer = allOffersUM.firstOrNull { it.category == OnrampOfferCategoryUM.RecentlyUsed },
             recommended = allOffersUM.filter { it.category == OnrampOfferCategoryUM.Recommended }.toPersistentList(),
             onrampAllOffersButtonConfig = if (offersBlocks.any { it.hasMoreOffers }) {

@@ -11,7 +11,6 @@ import com.tangem.domain.account.usecase.ArchiveCryptoPortfolioUseCase.Error
 import com.tangem.domain.account.utils.createAccount
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.DerivationIndex
-import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
@@ -24,19 +23,17 @@ class ArchiveCryptoPortfolioUseCaseTest {
 
     private val crudRepository: AccountsCRUDRepository = mockk(relaxUnitFun = true)
     private val useCase = ArchiveCryptoPortfolioUseCase(crudRepository)
-    private val userWallet = mockk<UserWallet>()
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(crudRepository, userWallet)
-        every { userWallet.walletId } returns userWalletId
+        clearMocks(crudRepository)
     }
 
     @Test
     fun `invoke should archive existing crypto portfolio account`() = runTest {
         // Arrange
         val account = createAccount(userWalletId)
-        val accountList = (AccountList.empty(userWallet) + account).getOrNull()!!
+        val accountList = (AccountList.empty(userWalletId) + account).getOrNull()!!
         val accountId = account.accountId
 
         val updatedAccountList = (accountList - account).getOrNull()!!
@@ -103,7 +100,7 @@ class ArchiveCryptoPortfolioUseCaseTest {
     @Test
     fun `invoke should return error if account not found`() = runTest {
         // Arrange
-        val accountList = AccountList.empty(userWallet)
+        val accountList = AccountList.empty(userWalletId)
         val accountId = AccountId.forCryptoPortfolio(
             userWalletId = userWalletId,
             derivationIndex = DerivationIndex(1).getOrNull()!!,
@@ -126,7 +123,7 @@ class ArchiveCryptoPortfolioUseCaseTest {
     fun `invoke should return error if saveAccounts throws exception`() = runTest {
         // Arrange
         val account = createAccount(userWalletId)
-        val accountList = (AccountList.empty(userWallet) + account).getOrNull()!!
+        val accountList = (AccountList.empty(userWalletId) + account).getOrNull()!!
         val accountId = account.accountId
 
         val updatedAccountList = (accountList - account).getOrNull()!!

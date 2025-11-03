@@ -3,6 +3,7 @@ package com.tangem.features.swap.v2.impl.amount.model.transformers
 import com.tangem.common.ui.amountScreen.AmountScreenClickIntents
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.express.models.ExpressRateType
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.swap.models.SwapCurrencies
@@ -26,6 +27,8 @@ internal class SwapAmountSecondaryReadyStateTransformer(
     private val isBalanceHidden: Boolean,
     private val showBestRateAnimation: Boolean,
     private val isSingleWallet: Boolean,
+    private val isAccountsMode: Boolean,
+    private val account: Account.CryptoPortfolio?,
 ) : Transformer<SwapAmountUM> {
 
     private val amountFieldConverter = SwapAmountFieldConverter(
@@ -35,6 +38,8 @@ internal class SwapAmountSecondaryReadyStateTransformer(
         appCurrency = appCurrency,
         clickIntents = clickIntents,
         isSingleWallet = isSingleWallet,
+        isAccountsMode = isAccountsMode,
+        account = account,
     )
 
     override fun transform(prevState: SwapAmountUM): SwapAmountUM {

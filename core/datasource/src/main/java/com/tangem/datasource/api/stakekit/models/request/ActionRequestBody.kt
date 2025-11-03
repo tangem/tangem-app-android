@@ -36,6 +36,7 @@ data class ActionRequestBody(
 )
 
 @JsonClass(generateAdapter = true)
+@Suppress("BooleanPropertyNaming")
 data class ActionRequestBodyArgs(
     @Json(name = "amount")
     val amount: String,

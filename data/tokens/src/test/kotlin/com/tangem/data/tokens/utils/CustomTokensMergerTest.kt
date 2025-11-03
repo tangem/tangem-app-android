@@ -114,7 +114,7 @@ internal class CustomTokensMergerTest {
         )
 
         @Suppress("UNCHECKED_CAST")
-        val apiResponse = ApiResponse.Error(ApiResponseError.TimeoutException) as ApiResponse<CoinsResponse>
+        val apiResponse = ApiResponse.Error(ApiResponseError.TimeoutException()) as ApiResponse<CoinsResponse>
 
         coEvery {
             tangemTechApi.getCoins(contractAddress = customToken.contractAddress, networkIds = customToken.networkId)

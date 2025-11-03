@@ -33,6 +33,7 @@ import com.tangem.features.staking.impl.presentation.model.StakingClickIntents
 import com.tangem.features.staking.impl.presentation.state.StakingStates
 import com.tangem.features.staking.impl.presentation.state.previewdata.ValidatorStatePreviewData
 import com.tangem.features.staking.impl.presentation.state.stub.StakingClickIntentsStub
+import com.tangem.features.staking.impl.presentation.state.utils.getRewardTypeLongText
 import com.tangem.utils.extensions.orZero
 
 /**
@@ -106,11 +107,11 @@ internal fun StakingValidatorListContent(
 @Suppress("UnusedPrivateMember")
 @Composable
 private fun Yield.Validator.getAprTextColored() = combinedReference(
-    resourceReference(R.string.staking_details_annual_percentage_rate),
+    getRewardTypeLongText(rewardInfo?.type ?: Yield.RewardType.UNKNOWN),
     annotatedReference {
         appendSpace()
         appendColored(
-            text = apr.orZero().format { percent() },
+            text = rewardInfo?.rate?.orZero().format { percent() },
             color = TangemTheme.colors.text.accent,
         )
     },
@@ -118,8 +119,8 @@ private fun Yield.Validator.getAprTextColored() = combinedReference(
 
 @Composable
 private fun Yield.Validator.getAprTextNeutral() = combinedReference(
-    resourceReference(R.string.staking_details_annual_percentage_rate),
-    stringReference(" " + apr.orZero().format { percent() }),
+    getRewardTypeLongText(rewardInfo?.type ?: Yield.RewardType.UNKNOWN),
+    stringReference(" " + rewardInfo?.rate?.orZero().format { percent() }),
 )
 
 @Composable

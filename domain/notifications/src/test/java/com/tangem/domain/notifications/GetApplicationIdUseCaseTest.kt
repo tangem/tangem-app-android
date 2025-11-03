@@ -114,39 +114,40 @@ class GetApplicationIdUseCaseTest {
         }
 
     @Test
-    fun `GIVEN no local application ID WHEN multiple concurrent invokes with delay THEN create only one application ID`() = runTest {
-        // GIVEN
-        val newApplicationId = ApplicationId("new-app-id")
-        var isIdCreated = false
+    fun `GIVEN no local application ID WHEN multiple concurrent invokes with delay THEN create only one application ID`() =
+        runTest {
+            // GIVEN
+            val newApplicationId = ApplicationId("new-app-id")
+            var isIdCreated = false
 
-        coEvery { pushNotificationsRepository.getApplicationId() } answers {
-            if (!isIdCreated) null else newApplicationId
-        }
-        coEvery { pushNotificationsRepository.createApplicationId() } answers {
-            isIdCreated = true
-            newApplicationId
-        }
-        coEvery { pushNotificationsRepository.saveApplicationId(newApplicationId) } returns Unit
+            coEvery { pushNotificationsRepository.getApplicationId() } answers {
+                if (!isIdCreated) null else newApplicationId
+            }
+            coEvery { pushNotificationsRepository.createApplicationId() } answers {
+                isIdCreated = true
+                newApplicationId
+            }
+            coEvery { pushNotificationsRepository.saveApplicationId(newApplicationId) } returns Unit
 
-        // WHEN
-        val results = coroutineScope {
-            List(PARALLEL_COUNT) {
-                async {
-                    delay(100)
-                    useCase()
-                }
-            }.awaitAll()
-        }
+            // WHEN
+            val results = coroutineScope {
+                List(PARALLEL_COUNT) {
+                    async {
+                        delay(100)
+                        useCase()
+                    }
+                }.awaitAll()
+            }
 
-        // THEN
-        results.forEach { result ->
-            assertThat(result).isInstanceOf(Either.Right::class.java)
-            assertThat((result as Either.Right).value).isEqualTo(newApplicationId)
+            // THEN
+            results.forEach { result ->
+                assertThat(result).isInstanceOf(Either.Right::class.java)
+                assertThat((result as Either.Right).value).isEqualTo(newApplicationId)
+            }
+            coVerify(exactly = PARALLEL_COUNT + 1) { pushNotificationsRepository.getApplicationId() }
+            coVerify(exactly = 1) { pushNotificationsRepository.createApplicationId() }
+            coVerify(exactly = 1) { pushNotificationsRepository.saveApplicationId(newApplicationId) }
         }
-        coVerify(exactly = PARALLEL_COUNT + 1) { pushNotificationsRepository.getApplicationId() }
-        coVerify(exactly = 1) { pushNotificationsRepository.createApplicationId() }
-        coVerify(exactly = 1) { pushNotificationsRepository.saveApplicationId(newApplicationId) }
-    }
 
     companion object {
         private const val PARALLEL_COUNT = 100

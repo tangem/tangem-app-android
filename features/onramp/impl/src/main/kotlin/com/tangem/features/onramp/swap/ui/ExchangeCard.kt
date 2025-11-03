@@ -14,11 +14,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
+import com.tangem.common.ui.account.AccountLabel
+import com.tangem.core.ui.components.account.AccountIconSize
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.components.rows.NetworkTitle
@@ -46,13 +49,14 @@ internal fun ExchangeCard(state: ExchangeCardUM, isBalanceHidden: Boolean, modif
         modifier = modifier
             .fillMaxWidth()
             .heightIn(min = 116.dp)
-            .background(
-                color = TangemTheme.colors.background.primary,
-                shape = TangemTheme.shapes.roundedCornersXMedium,
-            ),
+            .clip(TangemTheme.shapes.roundedCornersXMedium)
+            .background(TangemTheme.colors.background.primary),
         verticalArrangement = Arrangement.SpaceBetween,
     ) {
-        Title(titleReference = state.titleReference, removeButtonUM = state.removeButtonUM)
+        Title(
+            titleUM = state.titleUM,
+            removeButtonUM = state.removeButtonUM,
+        )
 
         AnimatedContent(
             targetState = state,
@@ -73,16 +77,39 @@ internal fun ExchangeCard(state: ExchangeCardUM, isBalanceHidden: Boolean, modif
 }
 
 @Composable
-private fun Title(titleReference: TextReference, removeButtonUM: ExchangeCardUM.RemoveButtonUM?) {
+private fun Title(titleUM: ExchangeCardUM.TitleUM, removeButtonUM: ExchangeCardUM.RemoveButtonUM?) {
     NetworkTitle(
         title = {
-            Text(
-                text = titleReference.resolveReference(),
-                color = TangemTheme.colors.text.tertiary,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                style = TangemTheme.typography.subtitle2,
-            )
+            AnimatedContent(
+                titleUM,
+            ) { currentState ->
+                when (currentState) {
+                    is ExchangeCardUM.TitleUM.Account -> Row(
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = currentState.prefixText.resolveReference(),
+                            style = TangemTheme.typography.subtitle2,
+                            color = TangemTheme.colors.text.tertiary,
+                        )
+                        AccountLabel(
+                            name = currentState.name,
+                            icon = currentState.icon,
+                            iconSize = AccountIconSize.ExtraSmall,
+                            nameStyle = TangemTheme.typography.subtitle2,
+                            nameColor = TangemTheme.colors.text.tertiary,
+                        )
+                    }
+                    is ExchangeCardUM.TitleUM.Text -> Text(
+                        text = currentState.title.resolveReference(),
+                        color = TangemTheme.colors.text.tertiary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        style = TangemTheme.typography.subtitle2,
+                    )
+                }
+            }
         },
         action = { RemoveButton(state = removeButtonUM) },
     )
@@ -153,7 +180,7 @@ private class ExchangeCardUMProvider : PreviewParameterProvider<ExchangeCardUM> 
 
     override val values: Sequence<ExchangeCardUM> = sequenceOf(
         ExchangeCardUM.Empty(
-            titleReference = resourceReference(id = R.string.swapping_from_title),
+            titleUM = ExchangeCardUM.TitleUM.Text(resourceReference(id = R.string.swapping_from_title)),
             subtitleReference = resourceReference(id = R.string.action_buttons_you_want_to_swap),
         ),
         createFilled(removeButtonUM = null),
@@ -162,7 +189,7 @@ private class ExchangeCardUMProvider : PreviewParameterProvider<ExchangeCardUM> 
 
     private fun createFilled(removeButtonUM: ExchangeCardUM.RemoveButtonUM?): ExchangeCardUM.Filled {
         return ExchangeCardUM.Filled(
-            titleReference = resourceReference(id = R.string.swapping_from_title),
+            titleUM = ExchangeCardUM.TitleUM.Text(resourceReference(id = R.string.swapping_from_title)),
             removeButtonUM = removeButtonUM,
             tokenItemState = TokenItemState.Content(
                 id = "1",

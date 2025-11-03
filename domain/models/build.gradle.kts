@@ -1,5 +1,3 @@
-import com.tangem.plugin.configuration.configurations.extension.kaptForObfuscatingVariants
-
 plugins {
     alias(deps.plugins.kotlin.jvm)
     alias(deps.plugins.kotlin.serialization)
@@ -12,7 +10,7 @@ tasks.withType<Test>().configureEach {
 }
 
 dependencies {
-    api(projects.domain.visa.models)
+    api(projects.domain.core)
     api(projects.core.utils)
 
     implementation(tangemDeps.card.core)

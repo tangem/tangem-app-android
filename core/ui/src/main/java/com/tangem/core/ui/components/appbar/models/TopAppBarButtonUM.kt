@@ -6,20 +6,20 @@ import com.tangem.core.ui.extensions.TextReference
 
 sealed class TopAppBarButtonUM(
     open val onClicked: () -> Unit,
-    open val enabled: Boolean = true,
+    open val isEnabled: Boolean = true,
 ) {
 
     data class Icon(
         @DrawableRes val iconRes: Int,
         override val onClicked: () -> Unit,
-        override val enabled: Boolean = true,
-    ) : TopAppBarButtonUM(onClicked, enabled)
+        override val isEnabled: Boolean = true,
+    ) : TopAppBarButtonUM(onClicked, isEnabled)
 
     data class Text(
         val text: TextReference,
         override val onClicked: () -> Unit,
-        override val enabled: Boolean = true,
-    ) : TopAppBarButtonUM(onClicked, enabled)
+        override val isEnabled: Boolean = true,
+    ) : TopAppBarButtonUM(onClicked, isEnabled)
 
     @Suppress("FunctionName")
     companion object {
@@ -29,19 +29,19 @@ sealed class TopAppBarButtonUM(
         fun Back(enabled: Boolean = true, onBackClicked: () -> Unit) = Icon(
             iconRes = R.drawable.ic_back_24,
             onClicked = onBackClicked,
-            enabled = enabled,
+            isEnabled = enabled,
         )
 
         fun Close(enabled: Boolean = true, onCloseClick: () -> Unit) = Icon(
             iconRes = R.drawable.ic_close_24,
             onClicked = onCloseClick,
-            enabled = enabled,
+            isEnabled = enabled,
         )
 
         fun Text(text: TextReference, onTextClicked: () -> Unit, enabled: Boolean = true) = Text(
             text = text,
             onClicked = onTextClicked,
-            enabled = enabled,
+            isEnabled = enabled,
         )
     }
 }

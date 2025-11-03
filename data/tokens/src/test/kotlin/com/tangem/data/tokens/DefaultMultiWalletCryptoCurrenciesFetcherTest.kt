@@ -246,7 +246,7 @@ internal class DefaultMultiWalletCryptoCurrenciesFetcherTest {
 
         @Suppress("UNCHECKED_CAST")
         val apiResponse = ApiResponse.Error(
-            cause = ApiResponseError.TimeoutException,
+            cause = ApiResponseError.TimeoutException(),
         ) as ApiResponse<UserTokensResponse>
 
         val defaultCoins = listOf(
@@ -307,7 +307,7 @@ internal class DefaultMultiWalletCryptoCurrenciesFetcherTest {
 
         @Suppress("UNCHECKED_CAST")
         val apiResponse = ApiResponse.Error(
-            cause = ApiResponseError.TimeoutException,
+            cause = ApiResponseError.TimeoutException(),
         ) as ApiResponse<UserTokensResponse>
 
         every { userWalletsStore.getSyncStrict(params.userWalletId) } returns mockUserWallet

@@ -53,7 +53,7 @@ class AmountReduceByTransformer(
 
         val checkValue = if (amountTextField.isFiatValue) fiatValue else cryptoValue
         val isExceedBalance = checkValue.checkExceedBalance(maxEnterAmount, amountTextField)
-        val isLessThanMinimumIfProvided = minimumTransactionAmount?.amount?.let { decimalCryptoValue < it } ?: false
+        val isLessThanMinimumIfProvided = minimumTransactionAmount?.amount?.let { decimalCryptoValue < it } == true
         val isZero = if (amountTextField.isFiatValue) {
             decimalFiatValue.isNullOrZero()
         } else {
@@ -70,10 +70,9 @@ class AmountReduceByTransformer(
                 error = when {
                     isExceedBalance -> resourceReference(R.string.send_validation_amount_exceeds_balance)
                     isLessThanMinimumIfProvided -> {
-                        val minimumAmount = minimumTransactionAmount
-                            ?.amount
-                            ?.format { crypto(cryptoCurrencyStatus.currency) }
-                            .orEmpty()
+                        val minimumAmount = minimumTransactionAmount.amount.format {
+                            crypto(cryptoCurrencyStatus.currency)
+                        }
                         resourceReference(
                             R.string.transfer_notification_invalid_minimum_transaction_amount_text,
                             wrappedList(minimumAmount, minimumAmount),

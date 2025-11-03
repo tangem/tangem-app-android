@@ -68,11 +68,11 @@ private fun BalancesAndLimitsBlock(state: BalancesAndLimitsBlockState, modifier:
 @Composable
 private inline fun ContentContainer(
     enabled: Boolean,
+    modifier: Modifier = Modifier,
     noinline onClick: () -> Unit,
     crossinline title: @Composable () -> Unit,
     crossinline content: @Composable () -> Unit,
     crossinline endIcon: @Composable () -> Unit,
-    modifier: Modifier = Modifier,
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),

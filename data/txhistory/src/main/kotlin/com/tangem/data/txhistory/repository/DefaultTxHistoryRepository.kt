@@ -101,12 +101,12 @@ class DefaultTxHistoryRepository(
         userWalletId: UserWalletId,
         currency: CryptoCurrency,
         pageSize: Int,
-        refresh: Boolean,
+        shouldRefresh: Boolean,
     ): List<TxInfo> = withContext(dispatchers.io) {
         try {
             cacheRegistry.invokeOnExpire(
                 key = getTxHistoryPageKey(currency, userWalletId, Page.Initial),
-                skipCache = refresh,
+                skipCache = shouldRefresh,
                 block = { fetchFixedSizeTxHistoryItems(userWalletId, currency, pageSize) },
             )
             val txs = txHistoryItemsStore.getSyncOrNull(
