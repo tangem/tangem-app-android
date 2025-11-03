@@ -626,6 +626,8 @@
   <string name="notification_sepa_button">Acheter crypto</string>
   <string name="notification_sepa_text">Profitez de **0% de frais** lors de l\'achat de cryptomonnaies via des virements SEPA.</string>
   <string name="notification_sepa_title">Acheter des cryptomonnaies avec SEPA</string>
+  <string name="notification_visa_waitlist_promo_text">Rejoignez la liste d’attente et obtenez une carte de paiement pas comme les autres.</string>
+  <string name="notification_visa_waitlist_promo_title">Tangem Visa Card</string>
   <string name="onboarding_access_code_feature_1_description">Vous devez définir un seul code d\'accès pour protéger tous vos appareils.</string>
   <string name="onboarding_access_code_feature_1_title">Protéger</string>
   <string name="onboarding_access_code_feature_2_description">Vous pourrez définir un code d\'accès individuel sur chaque carte plus tard</string>
@@ -1523,9 +1525,11 @@
   <string name="yield_module_stop_earning_sheet_fee_note">Les frais de réseau seront déduits du montant que vous retirez.</string>
   <string name="yield_module_supply_apr">Rendement annuel brut (APY)</string>
   <string name="yield_module_token_details_earn_notification_apy">APY</string>
+  <string name="yield_module_token_details_earn_notification_description">Les intérêts sont cumulés automatiquement.</string>
   <string name="yield_module_token_details_earn_notification_earning_on_your_balance_subtitle">Les intérêts sont cumulés automatiquement.</string>
   <string name="yield_module_token_details_earn_notification_earning_on_your_balance_title">Mode de rendement</string>
   <string name="yield_module_token_details_earn_notification_processing">Traitement de votre dépôt</string>
+  <string name="yield_module_token_details_earn_notification_title">Mode Rendement</string>
   <string name="yield_module_transfer_mode_automatic">Automatique</string>
   <string name="yield_module_unable_to_cover_fee_description">Déposez %1$s %2$s pour couvrir les frais de réseau liés aux transactions.</string>
   <string name="yield_module_unable_to_cover_fee_title">Impossible de couvrir les frais %s</string>
