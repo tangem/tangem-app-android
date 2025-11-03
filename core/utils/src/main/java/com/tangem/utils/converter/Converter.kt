@@ -1,6 +1,6 @@
 package com.tangem.utils.converter
 
-interface Converter<I : Any, O : Any?> {
+interface Converter<I : Any?, O : Any?> {
 
     fun convert(value: I): O
 
