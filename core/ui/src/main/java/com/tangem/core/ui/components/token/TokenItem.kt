@@ -22,6 +22,7 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.components.audits.AuditLabelUM
 import com.tangem.core.ui.components.currency.icon.CurrencyIcon
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
+import com.tangem.core.ui.components.icons.IconTint
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.components.token.internal.*
 import com.tangem.core.ui.components.token.state.TokenItemState
@@ -480,7 +481,7 @@ private fun Preview_TokenItem_InLight(@PreviewParameter(TokenItemStateProvider::
 private class TokenItemStateProvider : CollectionPreviewParameterProvider<TokenItemState>(
     collection = listOf(
         tokenItemVisibleState.copy(
-            iconState = coinIconState.copy(showCustomBadge = true),
+            iconState = coinIconState.copy(shouldShowCustomBadge = true),
             titleState = TokenItemState.TitleState.Content(
                 text = stringReference(value = "PolygonPolygonPolygonPolygonPolygonPolygon"),
                 hasPending = true,
@@ -488,7 +489,14 @@ private class TokenItemStateProvider : CollectionPreviewParameterProvider<TokenI
             fiatAmountState = FiatAmountState.Content(
                 text = "3213123123321312312312312312 $",
                 icons = persistentListOf(
-                    FiatAmountState.Content.IconUM(R.drawable.ic_error_sync_24, useAccentColor = false),
+                    FiatAmountState.Content.IconUM(
+                        iconRes = R.drawable.img_attention_20,
+                        tint = IconTint.Warning,
+                    ),
+                    FiatAmountState.Content.IconUM(
+                        iconRes = R.drawable.ic_error_sync_24,
+                        tint = IconTint.Inactive,
+                    ),
                     stakingIcon,
                 ),
                 isFlickering = true,
@@ -534,7 +542,10 @@ private class TokenItemStateProvider : CollectionPreviewParameterProvider<TokenI
         TokenItemState.Draggable(
             id = UUID.randomUUID().toString(),
             iconState = tokenIconState,
-            titleState = TokenItemState.TitleState.Content(text = stringReference(value = "Polygon")),
+            titleState = TokenItemState.TitleState.Content(
+                text = stringReference(value = "Polygon"),
+                earnApy = stringReference("Earn 5%"),
+            ),
             subtitle2State = TokenItemState.Subtitle2State.TextContent(text = "3 172,14 $"),
         ),
         TokenItemState.Content(
@@ -603,14 +614,14 @@ private class TokenItemStateProvider : CollectionPreviewParameterProvider<TokenI
 
     companion object {
 
-        val stakingIcon = FiatAmountState.Content.IconUM(R.drawable.ic_staking_24, useAccentColor = true)
+        val stakingIcon = FiatAmountState.Content.IconUM(R.drawable.ic_staking_24, tint = IconTint.Accent)
 
         val coinIconState
             get() = CurrencyIconState.CoinIcon(
                 url = null,
                 fallbackResId = R.drawable.img_polygon_22,
                 isGrayscale = false,
-                showCustomBadge = false,
+                shouldShowCustomBadge = false,
             )
 
         val tokenIconState
@@ -620,7 +631,7 @@ private class TokenItemStateProvider : CollectionPreviewParameterProvider<TokenI
                 fallbackTint = TangemColorPalette.Black,
                 fallbackBackground = TangemColorPalette.Meadow,
                 isGrayscale = false,
-                showCustomBadge = false,
+                shouldShowCustomBadge = false,
             )
 
         private val customTokenIconState
