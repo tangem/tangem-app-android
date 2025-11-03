@@ -39,8 +39,8 @@ internal class OnrampStateFactory(
         val state = currentStateProvider()
 
         val endButton = when (val button = state.topBarConfig.endButtonUM) {
-            is TopAppBarButtonUM.Icon -> button.copy(enabled = true)
-            is TopAppBarButtonUM.Text -> button.copy(enabled = true)
+            is TopAppBarButtonUM.Icon -> button.copy(isEnabled = true)
+            is TopAppBarButtonUM.Text -> button.copy(isEnabled = true)
         }
         return OnrampMainComponentUM.Content(
             topBarConfig = state.topBarConfig.copy(endButtonUM = endButton),
@@ -85,8 +85,8 @@ internal class OnrampStateFactory(
     fun getErrorState(errorCode: String? = null, onRefresh: () -> Unit): OnrampMainComponentUM {
         val state = currentStateProvider()
         val endButton = when (val button = state.topBarConfig.endButtonUM) {
-            is TopAppBarButtonUM.Icon -> button.copy(enabled = true)
-            is TopAppBarButtonUM.Text -> button.copy(enabled = true)
+            is TopAppBarButtonUM.Icon -> button.copy(isEnabled = true)
+            is TopAppBarButtonUM.Text -> button.copy(isEnabled = true)
         }
 
         return when (state) {

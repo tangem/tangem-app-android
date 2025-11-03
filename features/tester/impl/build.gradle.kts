@@ -29,6 +29,7 @@ dependencies {
     kapt(deps.hilt.kapt)
 
     /** Domain modules */
+    implementation(projects.domain.account)
     implementation(projects.domain.appTheme)
     implementation(projects.domain.appTheme.models)
     implementation(projects.domain.card)
@@ -39,6 +40,8 @@ dependencies {
     implementation(projects.domain.manageTokens)
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.wallets)
+
+    implementation(projects.data.common)
 
     /** Other libraries */
     implementation(deps.arrow.core)
@@ -62,6 +65,7 @@ dependencies {
 
     /** Other modules */
     implementation(projects.common.routing)
+    implementation(projects.common.ui)
     implementation(projects.libs.blockchainSdk)
     implementation(projects.libs.crypto)
 }

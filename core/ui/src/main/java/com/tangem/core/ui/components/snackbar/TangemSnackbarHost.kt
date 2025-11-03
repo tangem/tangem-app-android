@@ -46,7 +46,7 @@ private fun Preview_TangemSnackbar(@PreviewParameter(TangemSnackbarModelProvider
     TangemThemePreview {
         val snackbarHostState = remember(::SnackbarHostState)
 
-        TangemSnackbarHost(hostState = snackbarHostState, actionOnNewLine = model.actionOnNewLine)
+        TangemSnackbarHost(hostState = snackbarHostState, actionOnNewLine = model.hasActionOnNewLine)
 
         LaunchedEffect(key1 = null) {
             snackbarHostState.showSnackbar(visuals = model.snackbarData.visuals)

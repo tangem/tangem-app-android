@@ -8,6 +8,6 @@ data class ChainRowUM(
     val name: String,
     val type: String,
     val icon: CurrencyIconState,
-    val showCustom: Boolean,
-    val enabled: Boolean = true,
+    val shouldShowCustom: Boolean,
+    val isEnabled: Boolean = true,
 )

@@ -27,15 +27,20 @@ private const val DISABLED_ICON_ALPHA = 0.4f
  * [Figma Component](https://www.figma.com/design/14ISV23YB1yVW1uNVwqrKv/Android?node-id=2737-2800&t=ewlXfWwbDnRhjw4B-4)
  * */
 @Composable
-fun BlockchainRow(model: BlockchainRowUM, action: @Composable BoxScope.() -> Unit, modifier: Modifier = Modifier) {
+fun BlockchainRow(
+    model: BlockchainRowUM,
+    modifier: Modifier = Modifier,
+    itemPadding: PaddingValues = PaddingValues(
+        top = TangemTheme.dimens.spacing8,
+        bottom = TangemTheme.dimens.spacing8,
+        start = TangemTheme.dimens.spacing8,
+    ),
+    action: @Composable BoxScope.() -> Unit,
+) {
     RowContentContainer(
         modifier = modifier
             .heightIn(min = TangemTheme.dimens.size52)
-            .padding(
-                top = TangemTheme.dimens.spacing8,
-                bottom = TangemTheme.dimens.spacing8,
-                start = TangemTheme.dimens.spacing8,
-            ),
+            .padding(itemPadding),
         icon = {
             RowIcon(
                 resId = model.iconResId,
@@ -58,7 +63,7 @@ fun BlockchainRow(model: BlockchainRowUM, action: @Composable BoxScope.() -> Uni
 }
 
 @Composable
-private fun RowIcon(
+fun RowIcon(
     @DrawableRes resId: Int,
     isColored: Boolean,
     showAccentBadge: Boolean,

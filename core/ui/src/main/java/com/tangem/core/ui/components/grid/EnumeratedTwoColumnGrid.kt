@@ -93,10 +93,10 @@ private inline fun <T> VerticalGrid(
 private fun Preview() {
     TangemThemePreview {
         EnumeratedTwoColumnGrid(
-            items = List(24) {
+            items = List(24) { i ->
                 EnumeratedTwoColumnGridItem(
-                    index = it + 1,
-                    mnemonic = "word${it + 1}",
+                    index = i + 1,
+                    mnemonic = "word${i + 1}",
                 )
             }.toImmutableList(),
         )

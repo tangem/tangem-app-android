@@ -44,6 +44,7 @@ class TangemAppLoggerInitializer(
         }
     }
 
+    @Suppress("BooleanPropertyNaming")
     private companion object {
         val IS_LOG_ENABLED: Boolean = BuildConfig.LOG_ENABLED
         val PERMITTED_PRIORITY = listOf(Log.ERROR, Log.INFO)

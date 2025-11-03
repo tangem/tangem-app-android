@@ -58,8 +58,8 @@ internal data class Blockies(
     }
 
     private fun dataFromSeed(seed: MutableList<Long>) = MutableList(SIZE * SIZE) { DEFAULT_VALUE_F }.apply {
-        (0 until SIZE).forEach { row ->
-            (0 until HALF_SIZE).forEach { column ->
+        for (row in 0 until SIZE) {
+            for (column in 0 until HALF_SIZE) {
                 val value = floor(nextSeed(seed) * PROBABILITY_COLOR)
                 this[row * SIZE + column] = value
                 this[(row + 1) * SIZE - column - 1] = value

@@ -44,7 +44,7 @@ fun MultiWalletBackup(state: MultiWalletBackupUM, modifier: Modifier = Modifier)
             dismissButton = if (dialog.cancelText != null && dialog.onCancel != null) {
                 DialogButtonUM(
                     title = dialog.cancelText.resolveReference(),
-                    warning = dialog.warningCancelColor,
+                    isWarning = dialog.warningCancelColor,
                     onClick = dialog.onCancel,
                 )
             } else {

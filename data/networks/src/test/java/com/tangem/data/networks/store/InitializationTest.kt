@@ -30,6 +30,7 @@ internal class InitializationTest {
         every { persistenceStore.data } returns emptyFlow()
 
         DefaultNetworksStatusesStore(
+            context = mockk(),
             runtimeStore = runtimeStore,
             persistenceDataStore = persistenceStore,
             dispatchers = TestingCoroutineDispatcherProvider(),
@@ -44,6 +45,7 @@ internal class InitializationTest {
         val persistenceStore = MockStateDataStore<WalletIdWithStatusDM>(default = emptyMap())
 
         DefaultNetworksStatusesStore(
+            context = mockk(),
             runtimeStore = runtimeStore,
             persistenceDataStore = persistenceStore,
             dispatchers = TestingCoroutineDispatcherProvider(),
@@ -66,6 +68,7 @@ internal class InitializationTest {
         }
 
         DefaultNetworksStatusesStore(
+            context = mockk(),
             runtimeStore = runtimeStore,
             persistenceDataStore = persistenceStore,
             dispatchers = TestingCoroutineDispatcherProvider(),

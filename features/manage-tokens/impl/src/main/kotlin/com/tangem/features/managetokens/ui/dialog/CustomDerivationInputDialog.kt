@@ -27,7 +27,7 @@ internal fun CustomDerivationInputDialog(model: CustomDerivationInputUM, onDismi
         fieldValue = value,
         confirmButton = DialogButtonUM(
             title = stringResourceSafe(id = R.string.common_ok),
-            enabled = model.isConfirmEnabled,
+            isEnabled = model.isConfirmEnabled,
             onClick = model.onConfirm,
         ),
         dismissButton = DialogButtonUM(

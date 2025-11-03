@@ -171,16 +171,10 @@ class CachedCurrenciesStatusesOperations(
     ): Lce<TokenListError, List<CryptoCurrencyStatus>> = lce {
         isLoading.set(isUpdating)
 
-        var quotesRetrievingFailed = false
-
         val networksStatuses = maybeNetworkStatuses?.bindEither()?.toNonEmptySetOrNull()
         val yieldBalances = maybeYieldBalances?.bindEither()
         val quotes = recover({ maybeQuotes?.bind()?.toNonEmptySetOrNull() }) {
             null
-        }
-
-        if (quotes == null) {
-            quotesRetrievingFailed = true
         }
 
         currencies.map { currency ->
@@ -188,12 +182,11 @@ class CachedCurrenciesStatusesOperations(
             val networkStatus = networksStatuses?.firstOrNull { it.network == currency.network }
             val yieldBalance = findYieldBalanceOrNull(yieldBalances, currency, networkStatus)
 
-            val currencyStatus = currencyStatusProxyCreator.createCurrencyStatus(
+            val currencyStatus = CryptoCurrencyStatusFactory.create(
                 currency = currency,
-                quoteStatus = quote,
-                networkStatus = networkStatus,
-                yieldBalance = yieldBalance,
-                ignoreQuote = quotesRetrievingFailed,
+                maybeNetworkStatus = networkStatus.toOption(),
+                maybeQuoteStatus = quote.toOption(),
+                maybeYieldBalance = yieldBalance.toOption(),
             )
 
             currencyStatus

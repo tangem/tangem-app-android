@@ -130,6 +130,11 @@ internal class DefaultUserWalletsFetcher @AssistedInject constructor(
                     balance = balance,
                     isBalanceHidden = balanceHidingSettings.isBalanceHidden,
                     artwork = artworks[userWallet.walletId],
+                    endIcon = if (isAuthMode.not() && userWallet is UserWallet.Hot && !userWallet.backedUp) {
+                        UserWalletItemUM.EndIcon.Warning
+                    } else {
+                        UserWalletItemUM.EndIcon.None
+                    },
                     isAuthMode = isAuthMode,
                 )
                     .convert(userWallet)

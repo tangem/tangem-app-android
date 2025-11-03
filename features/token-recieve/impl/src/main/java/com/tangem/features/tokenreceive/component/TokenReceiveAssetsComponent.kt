@@ -7,6 +7,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
+import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.tokens.model.analytics.TokenReceiveCopyActionSource
 import com.tangem.features.tokenreceive.entity.ReceiveAddress
@@ -30,6 +31,7 @@ internal class TokenReceiveAssetsComponent(
     internal interface TokenReceiveAssetsModelCallback {
         fun onQrCodeClick(address: String)
         fun onCopyClick(address: ReceiveAddress, source: TokenReceiveCopyActionSource)
+        fun onShareClick(address: String)
     }
 
     data class TokenReceiveAssetsParams(
@@ -38,6 +40,7 @@ internal class TokenReceiveAssetsComponent(
         val callback: TokenReceiveAssetsModelCallback,
         val onDismiss: () -> Unit,
         val showMemoDisclaimer: Boolean,
+        val currencyIconState: CurrencyIconState,
         val fullName: String,
         val tokenName: String,
     )

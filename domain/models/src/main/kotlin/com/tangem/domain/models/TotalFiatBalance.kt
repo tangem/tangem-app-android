@@ -26,13 +26,12 @@ sealed interface TotalFiatBalance {
     /**
      * Represents the successfully loaded state of the fiat balance.
      *
-     * @property amount                 the loaded fiat balance amount
-     * @property isAllAmountsSummarized indicates whether the amount includes a summary of all underlying amounts
+     * @property amount the loaded fiat balance amount
+     * @property source status source
      */
     @Serializable
     data class Loaded(
         val amount: SerializedBigDecimal,
-        val isAllAmountsSummarized: Boolean,
         val source: StatusSource,
     ) : TotalFiatBalance
 }

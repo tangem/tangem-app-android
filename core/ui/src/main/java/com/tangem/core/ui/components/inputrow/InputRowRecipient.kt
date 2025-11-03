@@ -65,7 +65,6 @@ fun InputRowRecipient(
     onValueChange: (String) -> Unit,
     onPasteClick: (String) -> Unit,
     onQrCodeClick: () -> Unit,
-    isRedesignEnabled: Boolean,
     modifier: Modifier = Modifier,
     singleLine: Boolean = false,
     error: TextReference? = null,
@@ -89,9 +88,9 @@ fun InputRowRecipient(
                 .fillMaxWidth()
                 .padding(TangemTheme.dimens.spacing12),
         ) {
-            AnimatedContent(targetState = titleText, label = "Title Change") {
+            AnimatedContent(targetState = titleText, label = "Title Change") { title ->
                 Text(
-                    text = it.resolveReference(),
+                    text = title.resolveReference(),
                     style = TangemTheme.typography.subtitle2,
                     color = color,
                     modifier = Modifier.testTag(SendAddressScreenTestTags.ADDRESS_TEXT_FIELD_TITLE),
@@ -132,25 +131,15 @@ fun InputRowRecipient(
                     modifier = Modifier
                         .align(CenterEnd),
                 ) {
-                    if (isRedesignEnabled) {
-                        QrButton(
-                            visible = value.isBlank(),
-                            onQrCodeClick = onQrCodeClick,
-                        )
-                    }
+                    QrButton(
+                        visible = value.isBlank(),
+                        onQrCodeClick = onQrCodeClick,
+                    )
                     PasteButton(
                         isPasteButtonVisible = value.isBlank(),
                         onClick = onPasteClick,
-                        backgroundColorEnabled = if (isRedesignEnabled) {
-                            TangemTheme.colors.button.secondary
-                        } else {
-                            TangemTheme.colors.button.primary
-                        },
-                        textColor = if (isRedesignEnabled) {
-                            TangemTheme.colors.text.primary1
-                        } else {
-                            TangemTheme.colors.text.primary2
-                        },
+                        backgroundColorEnabled = TangemTheme.colors.button.secondary,
+                        textColor = TangemTheme.colors.text.primary1,
                         modifier = Modifier.padding(start = TangemTheme.dimens.spacing8),
                     )
                 }
@@ -266,7 +255,6 @@ private fun InputRowRecipientPreview(
             onPasteClick = {},
             onQrCodeClick = {},
             modifier = Modifier.background(TangemTheme.colors.background.primary),
-            isRedesignEnabled = false,
             resolvedAddress = value.resolvedAddress,
         )
     }

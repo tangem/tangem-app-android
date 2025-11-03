@@ -170,7 +170,7 @@ private class ExchangesBottomSheetContentProvider : CollectionPreviewParameterPr
                         url = null,
                         fallbackResId = R.drawable.ic_facebook_24,
                         isGrayscale = false,
-                        showCustomBadge = false,
+                        shouldShowCustomBadge = false,
                     ),
                     titleState = TokenItemState.TitleState.Content(text = stringReference(value = "OKX")),
                     fiatAmountState = TokenItemState.FiatAmountState.Content(text = "$67.52M"),

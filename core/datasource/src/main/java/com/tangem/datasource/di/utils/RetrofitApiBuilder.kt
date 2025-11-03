@@ -192,6 +192,7 @@ internal class RetrofitApiBuilder @Inject constructor(
         }
     }
 
+    @Suppress("UseEmptyCounterpart")
     private companion object {
 
         val excludedApiForLogging: Set<ApiConfig.ID> = setOf(

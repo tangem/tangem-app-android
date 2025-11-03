@@ -54,7 +54,7 @@ internal class DefaultRampManager(
         sendUnavailabilityReason: ScenarioUnavailabilityReason?,
     ): Either<ScenarioUnavailabilityReason, Unit> {
         return either {
-            val sellSupportedByService = catch(
+            val isSellSupportedByService = catch(
                 block = {
                     val serviceCurrency = cryptoCurrencyConverter.convertBack(status.currency)
 
@@ -78,7 +78,7 @@ internal class DefaultRampManager(
                 }
             }
 
-            ensure(condition = sellSupportedByService) {
+            ensure(condition = isSellSupportedByService) {
                 ScenarioUnavailabilityReason.NotSupportedBySellService(status.currency.name)
             }
 
@@ -114,6 +114,7 @@ internal class DefaultRampManager(
         userWalletId: UserWalletId,
         cryptoCurrencyStatus: CryptoCurrencyStatus,
     ): ScenarioUnavailabilityReason {
+        val yieldSupplyStatus = cryptoCurrencyStatus.value.yieldSupplyStatus
         return when {
             cryptoCurrencyStatus.value.amount.isNullOrZero() -> {
                 ScenarioUnavailabilityReason.EmptyBalance(ScenarioUnavailabilityReason.WithdrawalScenario.SEND)
@@ -126,6 +127,9 @@ internal class DefaultRampManager(
                     withdrawalScenario = ScenarioUnavailabilityReason.WithdrawalScenario.SEND,
                     networkName = cryptoCurrencyStatus.currency.network.name,
                 )
+            }
+            yieldSupplyStatus?.isAllowedToSpend == false && yieldSupplyStatus.isActive -> {
+                ScenarioUnavailabilityReason.YieldSupplyApprovalRequired
             }
             else -> ScenarioUnavailabilityReason.None
         }

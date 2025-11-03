@@ -45,7 +45,7 @@ internal class WcConnectedAppInfoModel @Inject constructor(
 
     private val params = paramsContainer.require<WcConnectedAppInfoContainerComponent.Params>()
     val uiState: StateFlow<WcConnectedAppInfoUM?>
-    field = MutableStateFlow<WcConnectedAppInfoUM?>(null)
+        field = MutableStateFlow<WcConnectedAppInfoUM?>(null)
 
     val stackNavigation = StackNavigation<ConnectedAppInfoRoutes>()
 

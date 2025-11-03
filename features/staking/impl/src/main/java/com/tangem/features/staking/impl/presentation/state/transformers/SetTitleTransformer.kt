@@ -1,5 +1,6 @@
 package com.tangem.features.staking.impl.presentation.state.transformers
 
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.isNullOrEmpty
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
@@ -28,7 +29,7 @@ internal object SetTitleTransformer : Transformer<StakingUiState> {
                 R.string.staking_title_stake,
                 wrappedList(prevState.cryptoCurrencyName),
             )
-
+            StakingStep.Success -> TextReference.EMPTY
             StakingStep.Confirmation -> {
                 when (actionType) {
                     is StakingActionCommonType.Enter -> resourceReference(
