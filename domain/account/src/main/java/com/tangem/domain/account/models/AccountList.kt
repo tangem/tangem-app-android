@@ -8,14 +8,14 @@ import com.tangem.domain.models.TokensSortType
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountName
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.extensions.addOrReplace
 import kotlinx.serialization.Serializable
 
 /**
  * Represents a list of accounts associated with a user wallet
  *
- * @property userWallet    the user wallet associated with the account list
+ * @property userWalletId  the user wallet id associated with the account list
  * @property accounts      a set of accounts belonging to the user wallet
  * @property totalAccounts the total number of accounts
  *
@@ -23,7 +23,7 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class AccountList private constructor(
-    val userWallet: UserWallet,
+    val userWalletId: UserWalletId,
     val accounts: Set<Account>,
     val totalAccounts: Int,
     val sortType: TokensSortType,
@@ -51,7 +51,7 @@ data class AccountList private constructor(
         val accounts = this.accounts.addOrReplace(other) { it.accountId == other.accountId }
 
         return invoke(
-            userWallet = this.userWallet,
+            userWalletId = this.userWalletId,
             accounts = accounts,
             totalAccounts = this.totalAccounts + if (isNewAccount) 1 else 0,
             sortType = this.sortType,
@@ -73,7 +73,7 @@ data class AccountList private constructor(
         }
 
         return invoke(
-            userWallet = this.userWallet,
+            userWalletId = this.userWalletId,
             accounts = accounts,
             totalAccounts = this.totalAccounts - if (isExistingAccount) 1 else 0,
             sortType = this.sortType,
@@ -120,26 +120,26 @@ data class AccountList private constructor(
         }
 
         @Serializable
-        data class DuplicateAccountNames(val message: String) : Error {
-            override fun toString(): String = "$tag: Account list contains duplicate account names. $message"
+        data object DuplicateAccountNames : Error {
+            override fun toString(): String = "$tag: Account list contains duplicate account names"
         }
     }
 
     companion object {
 
-        private const val MAX_ACCOUNTS_COUNT = 20
+        const val MAX_ACCOUNTS_COUNT = 20
         private const val MAX_MAIN_ACCOUNTS_COUNT = 1
 
         /**
          * Factory method to create an `AccountList` instance.
          * Validates the input to ensure the accounts list is not empty and contains exactly one main account.
          *
-         * @param userWallet    the user wallet associated with the account list
+         * @param userWalletId  the user wallet id associated with the account list
          * @param accounts      a set of accounts belonging to the user wallet
          * @param totalAccounts the total number of accounts
          */
         operator fun invoke(
-            userWallet: UserWallet,
+            userWalletId: UserWalletId,
             accounts: Set<Account>,
             totalAccounts: Int,
             sortType: TokensSortType = TokensSortType.NONE,
@@ -161,21 +161,15 @@ data class AccountList private constructor(
             val uniqueAccountIdsCount = accounts.map { it.accountId.value }.distinct().size
             ensure(accounts.size == uniqueAccountIdsCount) { Error.DuplicateAccountIds }
 
-            val defaultMainNameCount = accounts.count { it.accountName is AccountName.DefaultMain }
-
             val customNames = accounts.mapNotNull { (it.accountName as? AccountName.Custom)?.value }
             val uniqueCustomNameCount = customNames.distinct().size
 
-            ensure(defaultMainNameCount == 0 || defaultMainNameCount == 1) {
-                Error.DuplicateAccountNames("Only one account can have the default main name.")
-            }
-
             ensure(customNames.size == uniqueCustomNameCount) {
-                Error.DuplicateAccountNames("Custom account names must be unique.")
+                Error.DuplicateAccountNames
             }
 
             AccountList(
-                userWallet = userWallet,
+                userWalletId = userWalletId,
                 accounts = accounts,
                 totalAccounts = totalAccounts,
                 sortType = sortType,
@@ -186,19 +180,19 @@ data class AccountList private constructor(
         /**
          * Factory method to create an empty [AccountList] with a main crypto portfolio account
          *
-         * @param userWallet the user wallet associated with the account list
+         * @param userWalletId the user wallet id associated with the account list
          */
         fun empty(
-            userWallet: UserWallet,
+            userWalletId: UserWalletId,
             cryptoCurrencies: Set<CryptoCurrency> = emptySet(),
             sortType: TokensSortType = TokensSortType.NONE,
             groupType: TokensGroupType = TokensGroupType.NONE,
         ): AccountList {
             return AccountList(
-                userWallet = userWallet,
+                userWalletId = userWalletId,
                 accounts = setOf(
                     Account.CryptoPortfolio.createMainAccount(
-                        userWalletId = userWallet.walletId,
+                        userWalletId = userWalletId,
                         cryptoCurrencies = cryptoCurrencies,
                     ),
                 ),

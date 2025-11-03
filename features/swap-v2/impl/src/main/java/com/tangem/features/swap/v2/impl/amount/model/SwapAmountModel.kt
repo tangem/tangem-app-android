@@ -114,7 +114,7 @@ internal class SwapAmountModel @Inject constructor(
     private var showBestRateAnimation: Boolean = false
 
     val uiState: StateFlow<SwapAmountUM>
-    field = MutableStateFlow(params.amountUM)
+        field = MutableStateFlow(params.amountUM)
 
     private val amountDebouncer = Debouncer()
     private val quoteTaskScheduler = SingleTaskScheduler<Unit>()
@@ -224,6 +224,7 @@ internal class SwapAmountModel @Inject constructor(
                 categoryName = params.analyticsCategoryName,
                 token = primaryCryptoCurrency.symbol,
                 blockchain = primaryCryptoCurrency.network.name,
+                source = params.analyticsSendSource,
             ),
         )
         uiState.transformerUpdate(
@@ -280,7 +281,7 @@ internal class SwapAmountModel @Inject constructor(
                     initialCurrency = primaryCryptoCurrency,
                     selectedCurrency = selectedCurrency.takeIf { isEditMode },
                     source = AppRoute.ChooseManagedTokens.Source.SendViaSwap,
-                    showSendViaSwapNotification = showSendViaSwapNotification,
+                    shouldShowSendViaSwapNotification = showSendViaSwapNotification,
                     analyticsCategoryName = params.analyticsCategoryName,
                 ),
             )
@@ -341,6 +342,8 @@ internal class SwapAmountModel @Inject constructor(
                     appCurrency = appCurrency,
                     swapDirection = swapDirection,
                     clickIntents = this,
+                    isAccountsMode = params.isAccountModeFlow.value,
+                    account = params.accountFlow.value,
                 ),
             )
         }.launchIn(modelScope)
@@ -366,6 +369,8 @@ internal class SwapAmountModel @Inject constructor(
                     isBalanceHidden = params.isBalanceHidingFlow.value,
                     showBestRateAnimation = showBestRateAnimation,
                     isSingleWallet = isOnlyOneWallet,
+                    isAccountsMode = params.isAccountModeFlow.value,
+                    account = params.accountFlow.value,
                 ),
             )
         }
@@ -383,38 +388,45 @@ internal class SwapAmountModel @Inject constructor(
     }
 
     private fun subscribeOnCryptoCurrencyStatusFlow() {
-        params.primaryCryptoCurrencyStatusFlow
-            .distinctUntilChanged { old, new -> old.value.amount == new.value.amount } // Check only balance changes
-            .onEach { primaryCurrencyStatus ->
-                val secondaryStatus = (uiState.value as? SwapAmountUM.Content)?.secondaryCryptoCurrencyStatus
-                initCurrencies(
-                    primaryStatus = primaryCurrencyStatus,
-                    secondaryStatus = secondaryStatus,
+        combine(
+            flow = params.primaryCryptoCurrencyStatusFlow.distinctUntilChanged { old, new ->
+                old.value.amount == new.value.amount
+            }, // Check only balance changes,
+            flow2 = params.accountFlow,
+            flow3 = params.isAccountModeFlow,
+        ) { primaryCurrencyStatus, account, isAccountsMode ->
+            val secondaryStatus = (uiState.value as? SwapAmountUM.Content)?.secondaryCryptoCurrencyStatus
+            initCurrencies(
+                primaryStatus = primaryCurrencyStatus,
+                secondaryStatus = secondaryStatus,
+            )
+            if (secondaryStatus != null) {
+                uiState.transformerUpdate(
+                    SwapAmountUpdateBalanceTransformer(
+                        cryptoCurrencyStatus = primaryCurrencyStatus,
+                        primaryMaximumAmountBoundary = primaryMaximumAmountBoundary,
+                        primaryMinimumAmountBoundary = primaryMinimumAmountBoundary,
+                    ),
                 )
-                if (secondaryStatus != null) {
-                    uiState.transformerUpdate(
-                        SwapAmountUpdateBalanceTransformer(
-                            cryptoCurrencyStatus = primaryCurrencyStatus,
-                            primaryMaximumAmountBoundary = primaryMaximumAmountBoundary,
-                            primaryMinimumAmountBoundary = primaryMinimumAmountBoundary,
-                        ),
-                    )
-                } else {
-                    val isOnlyOneWallet = getWalletsUseCase.invokeSync().size == 1
-                    uiState.transformerUpdate(
-                        SwapAmountPrimaryReadyStateTransformer(
-                            userWallet = userWallet,
-                            primaryCryptoCurrencyStatus = primaryCurrencyStatus,
-                            appCurrency = appCurrency,
-                            swapDirection = swapDirection,
-                            clickIntents = this,
-                            isBalanceHidden = params.isBalanceHidingFlow.value,
-                            showBestRateAnimation = showBestRateAnimation,
-                            isSingleWallet = isOnlyOneWallet,
-                        ),
-                    )
-                }
-            }.launchIn(modelScope)
+            } else {
+                val isOnlyOneWallet = getWalletsUseCase.invokeSync().size == 1
+                uiState.transformerUpdate(
+                    SwapAmountPrimaryReadyStateTransformer(
+                        userWallet = userWallet,
+                        primaryCryptoCurrencyStatus = primaryCurrencyStatus,
+                        appCurrency = appCurrency,
+                        swapDirection = swapDirection,
+                        clickIntents = this,
+                        isBalanceHidden = params.isBalanceHidingFlow.value,
+                        showBestRateAnimation = showBestRateAnimation,
+                        isSingleWallet = isOnlyOneWallet,
+                        isAccountsMode = isAccountsMode,
+                        account = account,
+                    ),
+                )
+            }
+        }.flowOn(dispatchers.default)
+            .launchIn(modelScope)
     }
 
     private fun subscribeOnAmountUpdateTriggerUpdates() {
@@ -522,6 +534,8 @@ internal class SwapAmountModel @Inject constructor(
                         isBalanceHidden = params.isBalanceHidingFlow.value,
                         showBestRateAnimation = showBestRateAnimation,
                         isSingleWallet = isOnlyOneWallet,
+                        isAccountsMode = params.isAccountModeFlow.value,
+                        account = params.accountFlow.value,
                     ),
                 )
                 startLoadingQuotesTask(isSilentReload = false)

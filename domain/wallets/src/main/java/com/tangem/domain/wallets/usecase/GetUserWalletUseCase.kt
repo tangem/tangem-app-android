@@ -5,13 +5,13 @@ import arrow.core.left
 import arrow.core.raise.either
 import arrow.core.raise.ensureNotNull
 import arrow.core.right
+import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.common.wallets.requireUserWalletsSync
 import com.tangem.domain.core.utils.EitherFlow
-import com.tangem.domain.wallets.legacy.UserWalletsListManager
-import com.tangem.domain.wallets.models.GetUserWalletError
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.core.wallets.UserWalletsListRepository
-import com.tangem.domain.core.wallets.requireUserWalletsSync
+import com.tangem.domain.wallets.legacy.UserWalletsListManager
+import com.tangem.domain.wallets.models.GetUserWalletError
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.transformLatest

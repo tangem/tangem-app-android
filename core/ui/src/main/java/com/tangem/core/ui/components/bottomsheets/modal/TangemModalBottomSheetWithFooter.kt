@@ -143,11 +143,11 @@ inline fun <reified T : TangemBottomSheetConfigContent> BasicModalBottomSheetWit
     config: TangemBottomSheetConfig,
     sheetState: SheetState,
     containerColor: Color,
+    modifier: Modifier = Modifier,
     noinline onBack: (() -> Unit)? = null,
     crossinline title: @Composable BoxScope.(T) -> Unit,
     crossinline content: @Composable (T) -> Unit,
     noinline footer: @Composable (BoxScope.(T) -> Unit)?,
-    modifier: Modifier = Modifier,
 ) {
     val model = config.content as? T ?: return
 

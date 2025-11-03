@@ -13,9 +13,8 @@ import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.features.hotwallet.CreateWalletBackupComponent
 import com.tangem.features.hotwallet.createwalletbackup.routing.CreateWalletBackupChildFactory
+import com.tangem.features.hotwallet.createwalletbackup.routing.CreateWalletBackupRoute
 import com.tangem.features.hotwallet.createwalletbackup.ui.CreateWalletBackupContent
-import com.tangem.features.hotwallet.stepper.api.HotWalletStepperComponent
-import com.tangem.features.hotwallet.stepper.impl.DefaultHotWalletStepperComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -24,9 +23,7 @@ import kotlinx.coroutines.launch
 internal class DefaultCreateWalletBackupComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
     @Assisted private val params: CreateWalletBackupComponent.Params,
-    private val stepperStateManager: CreateWalletBackupStepperStateManager,
     createWalletBackupChildFactory: CreateWalletBackupChildFactory,
-    stepperComponentFactory: DefaultHotWalletStepperComponent.Factory,
 ) : CreateWalletBackupComponent, AppComponentContext by appComponentContext {
 
     private val model: CreateWalletBackupModel = getOrCreateModel(params)
@@ -44,14 +41,6 @@ internal class DefaultCreateWalletBackupComponent @AssistedInject constructor(
                 model = model,
             )
         },
-    )
-
-    private val stepperComponent = stepperComponentFactory.create(
-        context = this,
-        params = HotWalletStepperComponent.Params(
-            initState = HotWalletStepperComponent.StepperUM.initialState(),
-            callback = model.hotWalletStepperComponentModelCallback,
-        ),
     )
 
     init {
@@ -72,13 +61,11 @@ internal class DefaultCreateWalletBackupComponent @AssistedInject constructor(
 
         BackHandler(onBack = model::onBack)
 
-        val stepperState = stepperStateManager.getStepperState(currentRoute)
-        stepperState?.let { stepperComponent.updateState(it) }
-
         CreateWalletBackupContent(
             stackState = stackState,
-            stepperComponent = stepperComponent.takeIf { stepperState != null },
             modifier = modifier,
+            showTopBar = currentRoute !is CreateWalletBackupRoute.BackupCompleted,
+            onBackClick = model::onBack,
         )
     }
 

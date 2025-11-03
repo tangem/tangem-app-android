@@ -105,9 +105,9 @@ private fun Info(
             )
         }
 
-        notifications.fastForEach {
-            key(it.hashCode()) {
-                Notification(config = it)
+        notifications.fastForEach { notificationConfig ->
+            key(notificationConfig.hashCode()) {
+                Notification(config = notificationConfig)
             }
         }
     }

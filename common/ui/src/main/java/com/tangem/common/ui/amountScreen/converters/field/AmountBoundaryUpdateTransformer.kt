@@ -1,9 +1,11 @@
 package com.tangem.common.ui.amountScreen.converters.field
 
-import com.tangem.common.ui.R
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.models.EnterAmountBoundary
-import com.tangem.core.ui.extensions.*
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.combinedReference
+import com.tangem.core.ui.extensions.orMaskWithStars
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
@@ -18,13 +20,12 @@ import com.tangem.utils.transformer.Transformer
  * @property cryptoCurrencyStatus current cryptocurrency status
  * @property maxEnterAmount new maximum enter amount boundary
  * @property appCurrency current app currency
- * @property isRedesignEnabled whether redesign mode is enabled
+ * @property isBalanceHidden whether balance is hidden
  */
 class AmountBoundaryUpdateTransformer(
     private val cryptoCurrencyStatus: CryptoCurrencyStatus,
     private val maxEnterAmount: EnterAmountBoundary,
     private val appCurrency: AppCurrency,
-    private val isRedesignEnabled: Boolean,
     private val isBalanceHidden: Boolean,
 ) : Transformer<AmountState> {
 
@@ -34,18 +35,7 @@ class AmountBoundaryUpdateTransformer(
         val fiat = maxEnterAmount.fiatAmount.format { fiat(appCurrency.code, appCurrency.symbol) }
         val crypto = maxEnterAmount.amount.format { crypto(cryptoCurrencyStatus.currency) }
 
-        val availableBalance = if (isRedesignEnabled) {
-            combinedReference(
-                stringReference(crypto),
-                stringReference(" $DOT "),
-                stringReference(fiat),
-            )
-        } else {
-            resourceReference(R.string.common_crypto_fiat_format, wrappedList(crypto, fiat))
-        }
-
         return prevState.copy(
-            availableBalance = availableBalance.orMaskWithStars(isBalanceHidden),
             availableBalanceCrypto = stringReference(crypto).orMaskWithStars(isBalanceHidden),
             availableBalanceFiat = if (isBalanceHidden) {
                 TextReference.EMPTY

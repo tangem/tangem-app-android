@@ -18,11 +18,14 @@ dependencies {
     api(projects.features.sendV2.api)
     api(projects.features.tokenRecieve.api)
     api(projects.features.wallet.api)
+    api(projects.features.account.api)
 
     /* Data */
     implementation(projects.data.common)
 
     /* Domain */
+    implementation(projects.domain.account)
+    implementation(projects.domain.account.status)
     implementation(projects.domain.appCurrency)
     implementation(projects.domain.appCurrency.models)
     implementation(projects.domain.balanceHiding)

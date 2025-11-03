@@ -71,6 +71,10 @@ class SwapTokenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) 
         hasText(getResourceString(R.string.common_swap))
     }
 
+    fun tokenSymbol(symbol: String): KNode = child {
+        hasTestTag(SwapTokenScreenTestTags.TOKEN_SYMBOL)
+    }
+
 }
 
 internal fun BaseTestCase.onSwapTokenScreen(function: SwapTokenPageObject.() -> Unit) =

@@ -39,8 +39,13 @@ sealed class CryptoCurrencyWarning {
      * @param rent Amount that will be charged in overtime if the blockchain does not have an amount greater than
      * the [exemptionAmount]
      * @param exemptionAmount Amount that should be on the blockchain balance not to pay rent
+     * @param cryptoCurrency Currency in which the rent is charged
      */
-    data class Rent(val rent: BigDecimal, val exemptionAmount: BigDecimal) : CryptoCurrencyWarning()
+    data class Rent(
+        val rent: BigDecimal,
+        val exemptionAmount: BigDecimal,
+        val cryptoCurrency: CryptoCurrency,
+    ) : CryptoCurrencyWarning()
 
     data class SwapPromo(
         val promoId: PromoId,

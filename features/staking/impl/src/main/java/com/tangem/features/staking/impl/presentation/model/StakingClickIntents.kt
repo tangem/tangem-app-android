@@ -67,4 +67,10 @@ internal interface StakingClickIntents : AmountScreenClickIntents {
     fun openTokenDetails(cryptoCurrency: CryptoCurrency)
 
     fun showPrimaryClickAlert()
+
+    fun onOpenLearnMoreAboutApproveClick()
+
+    fun onActivateTonAccountNotificationClick()
+
+    fun onActivateTonAccountClick()
 }

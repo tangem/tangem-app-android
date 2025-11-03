@@ -15,6 +15,7 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.decompose.ComposableDialogComponent
+import com.tangem.domain.tokens.model.details.TokenAction
 import com.tangem.feature.wallet.child.wallet.model.WalletModel
 import com.tangem.feature.wallet.navigation.WalletRoute
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletDialogConfig
@@ -25,6 +26,7 @@ import com.tangem.features.markets.entry.MarketsEntryComponent
 import com.tangem.features.pushnotifications.api.PushNotificationsBottomSheetComponent
 import com.tangem.features.pushnotifications.api.PushNotificationsParams
 import com.tangem.features.tokenreceive.TokenReceiveComponent
+import com.tangem.features.yield.supply.api.YieldSupplyDepositedWarningComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -39,6 +41,7 @@ internal class WalletComponent @AssistedInject constructor(
     private val askBiometryComponentFactory: AskBiometryComponent.Factory,
     private val pushNotificationsBottomSheetComponent: PushNotificationsBottomSheetComponent.Factory,
     private val tokenReceiveComponentFactory: TokenReceiveComponent.Factory,
+    private val yieldSupplyDepositedWarningComponent: YieldSupplyDepositedWarningComponent.Factory,
 ) : ComposableContentComponent, AppComponentContext by appComponentContext {
 
     private val model: WalletModel = getOrCreateModel()
@@ -68,7 +71,7 @@ internal class WalletComponent @AssistedInject constructor(
                     askBiometryComponentFactory.create(
                         context = childByContext(componentContext),
                         params = AskBiometryComponent.Params(
-                            bottomSheetVariant = true,
+                            isBottomSheetVariant = true,
                             modelCallbacks = model.askBiometryModelCallbacks,
                         ),
                     )
@@ -87,6 +90,21 @@ internal class WalletComponent @AssistedInject constructor(
                         params = TokenReceiveComponent.Params(
                             config = dialogConfig.tokenReceiveConfig,
                             onDismiss = model.innerWalletRouter.dialogNavigation::dismiss,
+                        ),
+                    )
+                }
+                is WalletDialogConfig.YieldSupplyWarning -> {
+                    yieldSupplyDepositedWarningComponent.create(
+                        context = childByContext(componentContext),
+                        params = YieldSupplyDepositedWarningComponent.Params(
+                            cryptoCurrency = dialogConfig.cryptoCurrency,
+                            onDismiss = model.innerWalletRouter.dialogNavigation::dismiss,
+                            tokenAction = dialogConfig.tokenAction,
+                            modelCallback = object : YieldSupplyDepositedWarningComponent.ModelCallback {
+                                override fun onYieldSupplyWarningAcknowledged(tokenAction: TokenAction) {
+                                    dialogConfig.onWarningAcknowledged(tokenAction)
+                                }
+                            },
                         ),
                     )
                 }

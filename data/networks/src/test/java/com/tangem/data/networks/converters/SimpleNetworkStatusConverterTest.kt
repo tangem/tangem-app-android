@@ -2,12 +2,12 @@ package com.tangem.data.networks.converters
 
 import com.google.common.truth.Truth
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
+import com.tangem.common.test.utils.ProvideTestModels
 import com.tangem.data.networks.models.SimpleNetworkStatus
 import com.tangem.datasource.local.network.entity.NetworkStatusDM
+import com.tangem.datasource.local.network.entity.NetworkStatusDM.*
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency.ID
-import com.tangem.domain.models.currency.CryptoCurrency.ID.Body
-import com.tangem.domain.models.currency.CryptoCurrency.ID.Prefix
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.network.NetworkStatus
@@ -15,7 +15,6 @@ import com.tangem.domain.models.network.NetworkStatus.Amount
 import com.tangem.domain.models.yield.supply.YieldSupplyStatus
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 
 /**
@@ -27,7 +26,7 @@ internal class SimpleNetworkStatusConverterTest {
     private val network: Network = MockCryptoCurrencyFactory().ethereum.network
 
     @ParameterizedTest
-    @MethodSource("provideTestModels")
+    @ProvideTestModels
     fun convert(model: ConvertModel) {
         // Act
         val actual = runCatching { SimpleNetworkStatusConverter.convert(value = model.value) }
@@ -48,34 +47,29 @@ internal class SimpleNetworkStatusConverterTest {
     private fun provideTestModels() = listOf(
         // region Verified
         ConvertModel(
-            value = NetworkStatusDM.Verified(
-                networkId = NetworkStatusDM.ID(network.rawId),
-                derivationPath = NetworkStatusDM.DerivationPath(
+            value = Verified(
+                networkId = ID(network.rawId),
+                derivationPath = DerivationPath(
                     value = "card",
-                    type = NetworkStatusDM.DerivationPath.Type.CARD,
+                    type = DerivationPath.Type.CARD,
                 ),
                 selectedAddress = "0x1",
                 availableAddresses = setOf(
-                    NetworkStatusDM.Address(
-                        value = "0x1",
-                        type = NetworkStatusDM.Address.Type.Primary,
-                    ),
-                    NetworkStatusDM.Address(
-                        value = "0x2",
-                        type = NetworkStatusDM.Address.Type.Secondary,
-                    ),
+                    Address(value = "0x1", type = Address.Type.Primary),
+                    Address(value = "0x2", type = Address.Type.Secondary),
                 ),
-                amounts = mapOf(
-                    "coin⟨BCH⟩bitcoin-cash" to BigDecimal.ZERO,
-                    "coin⟨ETH→12367123⟩ethereum" to BigDecimal.ONE,
+                amounts = listOf(
+                    CurrencyAmount(CurrencyId.createCoinId("ethereum"), BigDecimal.ZERO),
+                    CurrencyAmount(CurrencyId.createTokenId("usdt", "0x1"), BigDecimal.ZERO),
                 ),
-                yieldSupplyStatuses = mapOf(
-                    "coin⟨ETH⟩ethereum" to NetworkStatusDM.YieldSupplyStatus(
+                yieldSupplyStatuses = listOf(
+                    YieldSupplyStatus(
+                        id = CurrencyId.createCoinId("ethereum"),
                         isActive = false,
                         isInitialized = false,
                         isAllowedToSpend = false,
+                        effectiveProtocolBalance = BigDecimal.ONE,
                     ),
-                    "coin⟨ETH⟩ethereum" to null,
                 ),
             ),
             expected = SimpleNetworkStatus(
@@ -101,33 +95,17 @@ internal class SimpleNetworkStatusConverterTest {
                         ),
                     ),
                     amounts = mapOf(
-                        ID(
-                            prefix = Prefix.COIN_PREFIX,
-                            body = Body.NetworkId(rawId = "BCH"),
-                            suffix = ID.Suffix.RawID(rawId = "bitcoin-cash"),
-                        ) to Amount.Loaded(value = BigDecimal.ZERO),
-                        ID(
-                            prefix = Prefix.COIN_PREFIX,
-                            body = Body.NetworkIdWithDerivationPath(rawId = "ETH", derivationPathHashCode = 12367123),
-                            suffix = ID.Suffix.RawID(rawId = "ethereum"),
-                        ) to Amount.Loaded(value = BigDecimal.ONE),
+                        ID.fromValue("coin⟨ETH→3046160⟩ethereum") to Amount.Loaded(value = BigDecimal.ZERO),
+                        ID.fromValue("token⟨ETH→3046160⟩usdt⚓0x1") to Amount.Loaded(value = BigDecimal.ZERO),
                     ),
                     pendingTransactions = emptyMap(),
                     yieldSupplyStatuses = mapOf(
-                        ID(
-                            prefix = Prefix.COIN_PREFIX,
-                            body = Body.NetworkId(rawId = "ETH"),
-                            suffix = ID.Suffix.RawID(rawId = "ethereum"),
-                        ) to YieldSupplyStatus(
+                        ID.fromValue("coin⟨ETH→3046160⟩ethereum") to YieldSupplyStatus(
                             isActive = false,
                             isInitialized = false,
                             isAllowedToSpend = false,
+                            effectiveProtocolBalance = BigDecimal.ONE,
                         ),
-                        ID(
-                            prefix = Prefix.COIN_PREFIX,
-                            body = Body.NetworkId(rawId = "ETH"),
-                            suffix = ID.Suffix.RawID(rawId = "ethereum"),
-                        ) to null,
                     ),
                     source = StatusSource.CACHE,
                 ),
@@ -137,21 +115,21 @@ internal class SimpleNetworkStatusConverterTest {
 
         // region NoAccount
         ConvertModel(
-            value = NetworkStatusDM.NoAccount(
-                networkId = NetworkStatusDM.ID(network.rawId),
-                derivationPath = NetworkStatusDM.DerivationPath(
+            value = NoAccount(
+                networkId = ID(network.rawId),
+                derivationPath = DerivationPath(
                     value = "card",
-                    type = NetworkStatusDM.DerivationPath.Type.CARD,
+                    type = DerivationPath.Type.CARD,
                 ),
                 selectedAddress = "0x1",
                 availableAddresses = setOf(
-                    NetworkStatusDM.Address(
+                    Address(
                         value = "0x1",
-                        type = NetworkStatusDM.Address.Type.Primary,
+                        type = Address.Type.Primary,
                     ),
-                    NetworkStatusDM.Address(
+                    Address(
                         value = "0x2",
-                        type = NetworkStatusDM.Address.Type.Secondary,
+                        type = Address.Type.Secondary,
                     ),
                 ),
                 amountToCreateAccount = BigDecimal.ONE,
@@ -189,83 +167,83 @@ internal class SimpleNetworkStatusConverterTest {
 
         // region Error
         ConvertModel(
-            value = NetworkStatusDM.Verified(
-                networkId = NetworkStatusDM.ID(network.rawId),
-                derivationPath = NetworkStatusDM.DerivationPath(
+            value = Verified(
+                networkId = ID(network.rawId),
+                derivationPath = DerivationPath(
                     value = "card",
-                    type = NetworkStatusDM.DerivationPath.Type.CARD,
+                    type = DerivationPath.Type.CARD,
                 ),
                 selectedAddress = "0x1",
                 availableAddresses = setOf(
-                    NetworkStatusDM.Address(
+                    Address(
                         value = "0x2",
-                        type = NetworkStatusDM.Address.Type.Primary,
+                        type = Address.Type.Primary,
                     ),
                 ),
-                amounts = emptyMap(),
-                yieldSupplyStatuses = emptyMap(),
+                amounts = emptyList(),
+                yieldSupplyStatuses = emptyList(),
             ),
             expected = Result.failure(
                 exception = IllegalArgumentException("Selected address must not be null"),
             ),
         ),
         ConvertModel(
-            value = NetworkStatusDM.Verified(
-                networkId = NetworkStatusDM.ID(network.rawId),
-                derivationPath = NetworkStatusDM.DerivationPath(
+            value = Verified(
+                networkId = ID(network.rawId),
+                derivationPath = DerivationPath(
                     value = "card",
-                    type = NetworkStatusDM.DerivationPath.Type.CARD,
+                    type = DerivationPath.Type.CARD,
                 ),
                 selectedAddress = "0x1",
                 availableAddresses = setOf(),
-                amounts = emptyMap(),
-                yieldSupplyStatuses = emptyMap(),
+                amounts = emptyList(),
+                yieldSupplyStatuses = emptyList(),
             ),
             expected = Result.failure(
                 exception = IllegalArgumentException("Selected address must not be null"),
             ),
         ),
         ConvertModel(
-            value = NetworkStatusDM.Verified(
-                networkId = NetworkStatusDM.ID(network.rawId),
-                derivationPath = NetworkStatusDM.DerivationPath(
+            value = Verified(
+                networkId = ID(network.rawId),
+                derivationPath = DerivationPath(
                     value = "card",
-                    type = NetworkStatusDM.DerivationPath.Type.CARD,
+                    type = DerivationPath.Type.CARD,
                 ),
                 selectedAddress = "",
                 availableAddresses = setOf(
-                    NetworkStatusDM.Address(
+                    Address(
                         value = "0x1",
-                        type = NetworkStatusDM.Address.Type.Primary,
+                        type = Address.Type.Primary,
                     ),
-                    NetworkStatusDM.Address(
+                    Address(
                         value = "0x2",
-                        type = NetworkStatusDM.Address.Type.Secondary,
+                        type = Address.Type.Secondary,
                     ),
                 ),
-                amounts = emptyMap(),
-                yieldSupplyStatuses = emptyMap(),
+                amounts = emptyList(),
+                yieldSupplyStatuses = emptyList(),
             ),
             expected = Result.failure(
                 exception = IllegalArgumentException("Selected address must not be null"),
             ),
         ),
         ConvertModel(
-            value = NetworkStatusDM.NoAccount(
-                networkId = NetworkStatusDM.ID(network.rawId),
-                derivationPath = NetworkStatusDM.DerivationPath(
+            value = NoAccount(
+                networkId = ID(network.rawId),
+                derivationPath = DerivationPath(
                     value = "card",
-                    type = NetworkStatusDM.DerivationPath.Type.CARD,
+                    type = DerivationPath.Type.CARD,
                 ),
                 selectedAddress = "",
                 availableAddresses = setOf(
-                    NetworkStatusDM.Address(
+                    Address(
                         value = "0x1",
-                        type = NetworkStatusDM.Address.Type.Primary,
+                        type = Address.Type.Primary,
                     ),
-                    NetworkStatusDM.Address(
+                    Address(
                         value = "0x2",
-                        type = NetworkStatusDM.Address.Type.Secondary,
+                        type = Address.Type.Secondary,
                     ),
                 ),
                 amountToCreateAccount = BigDecimal.ONE,
@@ -276,17 +254,17 @@ internal class SimpleNetworkStatusConverterTest {
             ),
         ),
         ConvertModel(
-            value = NetworkStatusDM.NoAccount(
-                networkId = NetworkStatusDM.ID(network.rawId),
-                derivationPath = NetworkStatusDM.DerivationPath(
+            value = NoAccount(
+                networkId = ID(network.rawId),
+                derivationPath = DerivationPath(
                     value = "card",
-                    type = NetworkStatusDM.DerivationPath.Type.CARD,
+                    type = DerivationPath.Type.CARD,
                 ),
                 selectedAddress = "0x1",
                 availableAddresses = setOf(
-                    NetworkStatusDM.Address(
+                    Address(
                         value = "0x2",
-                        type = NetworkStatusDM.Address.Type.Primary,
+                        type = Address.Type.Primary,
                     ),
                 ),
                 amountToCreateAccount = BigDecimal.ONE,
@@ -297,11 +275,11 @@ internal class SimpleNetworkStatusConverterTest {
             ),
         ),
         ConvertModel(
-            value = NetworkStatusDM.NoAccount(
-                networkId = NetworkStatusDM.ID(network.rawId),
-                derivationPath = NetworkStatusDM.DerivationPath(
+            value = NoAccount(
+                networkId = ID(network.rawId),
+                derivationPath = DerivationPath(
                     value = "card",
-                    type = NetworkStatusDM.DerivationPath.Type.CARD,
+                    type = DerivationPath.Type.CARD,
                 ),
                 selectedAddress = "0x1",
                 availableAddresses = setOf(),
