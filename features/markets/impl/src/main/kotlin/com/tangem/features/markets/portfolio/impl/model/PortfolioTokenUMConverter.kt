@@ -42,55 +42,60 @@ internal class PortfolioTokenUMConverter(
             walletId = value.userWallet.walletId,
             isBalanceHidden = isBalanceHidden,
             isQuickActionsShown = false,
-            quickActions = quickActions(cryptoData = value),
+            quickActions = quickActions(cryptoData = value, tokenActionsHandler = tokenActionsHandler),
         )
     }
 
-    private fun quickActions(cryptoData: PortfolioData.CryptoCurrencyData): PortfolioTokenUM.QuickActions {
-        return PortfolioTokenUM.QuickActions(
-            actions = toQuickActions(cryptoData.actions),
-            onQuickActionClick = {
-                when (it) {
-                    QuickActionUM.Buy -> tokenActionsHandler.handle(
-                        action = TokenActionsBSContentUM.Action.Buy,
-                        cryptoCurrencyData = cryptoData,
-                    )
-                    is QuickActionUM.Exchange -> tokenActionsHandler.handle(
-                        action = TokenActionsBSContentUM.Action.Exchange,
-                        cryptoCurrencyData = cryptoData,
-                    )
-                    QuickActionUM.Receive -> tokenActionsHandler.handle(
-                        action = TokenActionsBSContentUM.Action.Receive,
-                        cryptoCurrencyData = cryptoData,
-                    )
-                    QuickActionUM.Stake -> tokenActionsHandler.handle(
-                        action = TokenActionsBSContentUM.Action.Stake,
-                        cryptoCurrencyData = cryptoData,
-                    )
-                }
-            },
-            onQuickActionLongClick = {
-                if (it == QuickActionUM.Receive) {
-                    tokenActionsHandler.handle(
-                        action = TokenActionsBSContentUM.Action.CopyAddress,
-                        cryptoCurrencyData = cryptoData,
-                    )
-                }
-            },
-        )
-    }
-
-    private fun toQuickActions(actions: List<TokenActionsState.ActionState>) = buildList {
-        actions.forEach { action ->
-            if (action.unavailabilityReason == ScenarioUnavailabilityReason.None) {
-                when (action) {
-                    is TokenActionsState.ActionState.Buy -> QuickActionUM.Buy
-                    is TokenActionsState.ActionState.Swap -> QuickActionUM.Exchange(showBadge = action.showBadge)
-                    is TokenActionsState.ActionState.Receive -> QuickActionUM.Receive
-                    is TokenActionsState.ActionState.Stake -> QuickActionUM.Stake
-                    else -> null
-                }?.let(::add)
-            }
+    companion object {
+        fun quickActions(
+            cryptoData: PortfolioData.CryptoCurrencyData,
+            tokenActionsHandler: TokenActionsHandler,
+        ): PortfolioTokenUM.QuickActions {
+            return PortfolioTokenUM.QuickActions(
+                actions = toQuickActions(cryptoData.actions),
+                onQuickActionClick = {
+                    when (it) {
+                        QuickActionUM.Buy -> tokenActionsHandler.handle(
+                            action = TokenActionsBSContentUM.Action.Buy,
+                            cryptoCurrencyData = cryptoData,
+                        )
+                        is QuickActionUM.Exchange -> tokenActionsHandler.handle(
+                            action = TokenActionsBSContentUM.Action.Exchange,
+                            cryptoCurrencyData = cryptoData,
+                        )
+                        QuickActionUM.Receive -> tokenActionsHandler.handle(
+                            action = TokenActionsBSContentUM.Action.Receive,
+                            cryptoCurrencyData = cryptoData,
+                        )
+                        QuickActionUM.Stake -> tokenActionsHandler.handle(
+                            action = TokenActionsBSContentUM.Action.Stake,
+                            cryptoCurrencyData = cryptoData,
+                        )
+                    }
+                },
+                onQuickActionLongClick = {
+                    if (it == QuickActionUM.Receive) {
+                        tokenActionsHandler.handle(
+                            action = TokenActionsBSContentUM.Action.CopyAddress,
+                            cryptoCurrencyData = cryptoData,
+                        )
+                    }
+                },
+            )
         }
-    }.toImmutableList()
+
+        private fun toQuickActions(actions: List<TokenActionsState.ActionState>) = buildList {
+            actions.forEach { action ->
+                if (action.unavailabilityReason == ScenarioUnavailabilityReason.None) {
+                    when (action) {
+                        is TokenActionsState.ActionState.Buy -> QuickActionUM.Buy
+                        is TokenActionsState.ActionState.Swap -> QuickActionUM.Exchange(showBadge = action.showBadge)
+                        is TokenActionsState.ActionState.Receive -> QuickActionUM.Receive
+                        is TokenActionsState.ActionState.Stake -> QuickActionUM.Stake
+                        else -> null
+                    }?.let(::add)
+                }
+            }
+        }.toImmutableList()
+    }
 }

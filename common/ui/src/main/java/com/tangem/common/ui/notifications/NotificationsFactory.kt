@@ -44,10 +44,12 @@ object NotificationsFactory {
         }
     }
 
+    @Suppress("LongParameterList")
     fun MutableList<NotificationUM>.addFeeUnreachableNotification(
         tokenStatus: CryptoCurrencyStatus,
         coinStatus: CryptoCurrencyStatus,
         feeError: GetFeeError?,
+        dustValue: BigDecimal?,
         onReload: () -> Unit,
         onClick: (currency: CryptoCurrency) -> Unit,
     ) {
@@ -62,7 +64,7 @@ object NotificationsFactory {
                     currencyName = tokenStatus.currency.name,
                     feeName = coinStatus.currency.name,
                     feeSymbol = coinStatus.currency.symbol,
-                    mergeFeeNetworkName = false,
+                    shouldMergeFeeNetworkName = false,
                     onClick = {
                         onClick(coinStatus.currency)
                     },
@@ -70,7 +72,16 @@ object NotificationsFactory {
             )
             is GetFeeError.BlockchainErrors.SuiOneCoinRequired ->
                 add(NotificationUM.Sui.NotEnoughCoinForTokenTransaction)
-            is GetFeeError.DataError,
+            is GetFeeError.DataError -> when (feeError.cause) {
+                BlockchainSdkError.TransactionDustChangeError -> add(
+                    NotificationUM.Error.MinimumAmountError(
+                        amount = dustValue.format { crypto(tokenStatus.currency) },
+                    ),
+                )
+                else -> add(
+                    NotificationUM.Warning.NetworkFeeUnreachable(onReload),
+                )
+            }
             is GetFeeError.UnknownError,
             -> add(
                 NotificationUM.Warning.NetworkFeeUnreachable(onReload),
@@ -101,13 +112,22 @@ object NotificationsFactory {
         reserveAmount: BigDecimal?,
         sendingAmount: BigDecimal,
         cryptoCurrency: CryptoCurrency,
+        feeCryptoCurrency: CryptoCurrency?,
         isAccountFunded: Boolean,
     ) {
-        if (!isAccountFunded && reserveAmount != null && reserveAmount > sendingAmount) {
+        val sendingCoinAmount = when (cryptoCurrency) {
+            is CryptoCurrency.Coin -> sendingAmount
+            is CryptoCurrency.Token -> BigDecimal.ZERO
+        }
+
+        if (feeCryptoCurrency == null && cryptoCurrency is CryptoCurrency.Token) {
+            // No need to show reserve amount warning if fee currency is unknown for token transfer
+            return
+        } else if (!isAccountFunded && reserveAmount != null && reserveAmount > sendingCoinAmount) {
             add(
                 NotificationUM.Error.ReserveAmount(
                     reserveAmount.format {
-                        crypto(cryptoCurrency)
+                        crypto(feeCryptoCurrency ?: cryptoCurrency)
                     },
                 ),
             )
@@ -206,6 +226,7 @@ object NotificationsFactory {
                             NotificationUM.Error.ExistentialDeposit::class.java,
                         )
                     },
+                    isActionable = balance > existentialDeposit,
                 ),
             )
         }
@@ -302,7 +323,7 @@ object NotificationsFactory {
                         currencyName = cryptoCurrencyStatus.currency.name,
                         feeName = cryptoCurrencyWarning.coinCurrency.name,
                         feeSymbol = cryptoCurrencyWarning.coinCurrency.symbol,
-                        mergeFeeNetworkName = shouldMergeFeeNetworkName,
+                        shouldMergeFeeNetworkName = shouldMergeFeeNetworkName,
                         onClick = {
                             onClick(cryptoCurrencyWarning.coinCurrency)
                         },
@@ -319,9 +340,9 @@ object NotificationsFactory {
                         feeName = cryptoCurrencyWarning.feeCurrencyName,
                         feeSymbol = cryptoCurrencyWarning.feeCurrencySymbol,
                         networkName = cryptoCurrencyWarning.networkName,
-                        mergeFeeNetworkName = shouldMergeFeeNetworkName,
+                        shouldMergeFeeNetworkName = shouldMergeFeeNetworkName,
                         onClick = {
-                            currency?.let {
+                            if (currency != null) {
                                 onClick(currency)
                             }
                         },
@@ -356,6 +377,12 @@ object NotificationsFactory {
             is BlockchainSdkError.DestinationTagRequired -> addRequireDestinationTagErrorNotification()
             is BlockchainSdkError.Solana.DestinationRentExemption -> addRentExemptionDestinationNotification(
                 rentExemptionAmount = validationError.rentAmount,
+                cryptoCurrency = cryptoCurrency,
+            )
+            is BlockchainSdkError.TransactionDustChangeError -> add(
+                NotificationUM.Error.MinimumAmountError(
+                    amount = dustValue.format { crypto(cryptoCurrency) },
+                ),
             )
             null,
             -> minAdaValue?.let {
@@ -380,20 +407,22 @@ object NotificationsFactory {
                 add(NotificationUM.Cardano.InsufficientBalanceToTransferToken(sendingCurrency.name))
             }
             BlockchainSdkError.Cardano.InsufficientRemainingBalanceToWithdrawTokens -> {
-                when (sendingCurrency) {
-                    is CryptoCurrency.Coin -> NotificationUM.Cardano.InsufficientBalanceToTransferCoin
-                    is CryptoCurrency.Token -> {
-                        NotificationUM.Cardano.InsufficientBalanceToTransferToken(sendingCurrency.name)
-                    }
-                }.let(::add)
+                add(
+                    when (sendingCurrency) {
+                        is CryptoCurrency.Coin -> NotificationUM.Cardano.InsufficientBalanceToTransferCoin
+                        is CryptoCurrency.Token -> {
+                            NotificationUM.Cardano.InsufficientBalanceToTransferToken(sendingCurrency.name)
+                        }
+                    },
+                )
             }
             BlockchainSdkError.Cardano.InsufficientRemainingBalance,
             BlockchainSdkError.Cardano.InsufficientSendingAdaAmount,
             -> {
-                dustValue?.let {
+                dustValue?.let { value ->
                     add(
                         NotificationUM.Error.MinimumAmountError(
-                            amount = it.format { crypto(sendingCurrency) },
+                            amount = value.format { crypto(sendingCurrency) },
                         ),
                     )
                 }
@@ -443,10 +472,14 @@ object NotificationsFactory {
         add(NotificationUM.Solana.RentInfo(rentWarning))
     }
 
-    fun MutableList<NotificationUM>.addRentExemptionDestinationNotification(rentExemptionAmount: BigDecimal) {
+    private fun MutableList<NotificationUM>.addRentExemptionDestinationNotification(
+        rentExemptionAmount: BigDecimal,
+        cryptoCurrency: CryptoCurrency,
+    ) {
         add(
             NotificationUM.Solana.RentExemptionDestination(
                 rentExemptionAmount = rentExemptionAmount,
+                cryptoCurrency = cryptoCurrency,
             ),
         )
     }
