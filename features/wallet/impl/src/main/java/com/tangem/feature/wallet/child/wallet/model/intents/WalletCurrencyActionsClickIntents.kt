@@ -22,6 +22,9 @@ import com.tangem.core.ui.extensions.WrappedList
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.haptic.TangemHapticEffect
 import com.tangem.core.ui.haptic.VibratorHapticManager
+import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
+import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
+import com.tangem.domain.account.status.usecase.SaveCryptoCurrenciesUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.extenstions.unwrap
 import com.tangem.domain.core.lce.Lce
@@ -29,7 +32,6 @@ import com.tangem.domain.core.utils.lceError
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.markets.TokenMarketParams
-import com.tangem.domain.models.ReceiveAddressModel
 import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -42,10 +44,7 @@ import com.tangem.domain.promo.GetStoryContentUseCase
 import com.tangem.domain.promo.models.StoryContentIds
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.staking.model.stakekit.Yield
-import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
-import com.tangem.domain.tokens.GetViewedTokenReceiveWarningUseCase
-import com.tangem.domain.tokens.IsCryptoCurrencyCoinCouldHideUseCase
-import com.tangem.domain.tokens.RemoveCurrencyUseCase
+import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.analytics.TokenReceiveAnalyticsEvent
@@ -54,7 +53,8 @@ import com.tangem.domain.tokens.model.analytics.TokenReceiveNewAnalyticsEvent
 import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent
 import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent.Companion.AVAILABLE
 import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent.Companion.toReasonAnalyticsText
-import com.tangem.domain.transaction.usecase.GetEnsNameUseCase
+import com.tangem.domain.tokens.model.details.TokenAction
+import com.tangem.domain.transaction.usecase.ReceiveAddressesFactory
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.usecase.GetExploreUrlUseCase
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
@@ -68,21 +68,31 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensLis
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.CloseBottomSheetTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
 import com.tangem.features.tokenreceive.TokenReceiveFeatureToggle
+import com.tangem.features.yield.supply.api.YieldSupplyFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import java.math.BigDecimal
 import javax.inject.Inject
 
 interface WalletCurrencyActionsClickIntents {
 
-    fun onSendClick(cryptoCurrencyStatus: CryptoCurrencyStatus, unavailabilityReason: ScenarioUnavailabilityReason)
+    fun onSendClick(
+        userWalletId: UserWalletId,
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+        unavailabilityReason: ScenarioUnavailabilityReason,
+    )
 
     fun onSellClick(cryptoCurrencyStatus: CryptoCurrencyStatus, unavailabilityReason: ScenarioUnavailabilityReason)
 
-    fun onBuyClick(cryptoCurrencyStatus: CryptoCurrencyStatus, unavailabilityReason: ScenarioUnavailabilityReason)
+    fun onBuyClick(
+        userWalletId: UserWalletId,
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+        unavailabilityReason: ScenarioUnavailabilityReason,
+    )
 
     fun onSwapClick(
         cryptoCurrencyStatus: CryptoCurrencyStatus,
@@ -90,17 +100,21 @@ interface WalletCurrencyActionsClickIntents {
         unavailabilityReason: ScenarioUnavailabilityReason,
     )
 
-    fun onReceiveClick(cryptoCurrencyStatus: CryptoCurrencyStatus, event: AnalyticsEvent? = null)
+    fun onReceiveClick(
+        userWalletId: UserWalletId,
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+        event: AnalyticsEvent? = null,
+    )
 
-    fun onStakeClick(cryptoCurrencyStatus: CryptoCurrencyStatus, yield: Yield?)
+    fun onStakeClick(userWalletId: UserWalletId, cryptoCurrencyStatus: CryptoCurrencyStatus, yield: Yield?)
 
     fun onCopyAddressLongClick(cryptoCurrencyStatus: CryptoCurrencyStatus): TextReference?
 
-    fun onCopyAddressClick(cryptoCurrencyStatus: CryptoCurrencyStatus)
+    fun onCopyAddressClick(userWalletId: UserWalletId, cryptoCurrencyStatus: CryptoCurrencyStatus)
 
-    fun onHideTokensClick(cryptoCurrencyStatus: CryptoCurrencyStatus)
+    fun onHideTokensClick(userWalletId: UserWalletId, cryptoCurrencyStatus: CryptoCurrencyStatus)
 
-    fun onPerformHideToken(cryptoCurrencyStatus: CryptoCurrencyStatus)
+    fun onPerformHideToken(userWalletId: UserWalletId, cryptoCurrencyStatus: CryptoCurrencyStatus)
 
     fun onExploreClick()
 
@@ -122,8 +136,6 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
     private val walletManagersFacade: WalletManagersFacade,
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val getSingleCryptoCurrencyStatusUseCase: GetSingleCryptoCurrencyStatusUseCase,
-    private val isCryptoCurrencyCoinCouldHide: IsCryptoCurrencyCoinCouldHideUseCase,
-    private val removeCurrencyUseCase: RemoveCurrencyUseCase,
     private val getExploreUrlUseCase: GetExploreUrlUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getStoryContentUseCase: GetStoryContentUseCase,
@@ -136,16 +148,23 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
     private val appRouter: AppRouter,
     private val rampStateManager: RampStateManager,
     private val tokenReceiveFeatureToggle: TokenReceiveFeatureToggle,
-    private val getViewedTokenReceiveWarningUseCase: GetViewedTokenReceiveWarningUseCase,
-    private val getEnsNameUseCase: GetEnsNameUseCase,
+    private val saveViewedTokenReceiveWarningUseCase: SaveViewedTokenReceiveWarningUseCase,
+    private val receiveAddressesFactory: ReceiveAddressesFactory,
+    private val yieldSupplyFeatureToggles: YieldSupplyFeatureToggles,
+    private val needShowYieldSupplyDepositedWarningUseCase: NeedShowYieldSupplyDepositedWarningUseCase,
+    private val saveViewedYieldSupplyWarningUseCase: SaveViewedYieldSupplyWarningUseCase,
+    private val isCryptoCurrencyCoinCouldHide: IsCryptoCurrencyCoinCouldHideUseCase,
+    private val removeCurrencyUseCase: RemoveCurrencyUseCase,
+    private val accountsFeatureToggles: AccountsFeatureToggles,
+    private val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase,
+    private val saveCryptoCurrenciesUseCase: SaveCryptoCurrenciesUseCase,
 ) : BaseWalletClickIntents(), WalletCurrencyActionsClickIntents {
 
     override fun onSendClick(
+        userWalletId: UserWalletId,
         cryptoCurrencyStatus: CryptoCurrencyStatus,
         unavailabilityReason: ScenarioUnavailabilityReason,
     ) {
-        val userWallet = getSelectedWalletSyncUseCase.unwrap() ?: return
-
         analyticsEventHandler.send(
             event = TokenScreenAnalyticsEvent.ButtonWithParams.ButtonSend(
                 token = cryptoCurrencyStatus.currency.symbol,
@@ -156,18 +175,31 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
 
         if (handleUnavailabilityReason(unavailabilityReason)) return
 
-        stateHolder.update(CloseBottomSheetTransformer(userWalletId = userWallet.walletId))
-        val route = AppRoute.Send(
-            currency = cryptoCurrencyStatus.currency,
-            userWalletId = userWallet.walletId,
-        )
-
-        appRouter.push(route)
+        modelScope.launch(dispatchers.main) {
+            if (needShowYieldSupplyWarning(cryptoCurrencyStatus)) {
+                stateHolder.hideBottomSheet()
+                router.openYieldSupplyBottomSheet(
+                    cryptoCurrency = cryptoCurrencyStatus.currency,
+                    tokenAction = TokenAction.Send,
+                    onWarningAcknowledged = { tokenAction ->
+                        modelScope.launch {
+                            saveViewedYieldSupplyWarningUseCase(cryptoCurrencyStatus.currency.name)
+                            stateHolder.hideBottomSheet()
+                            navigateToSend(cryptoCurrencyStatus, userWalletId)
+                        }
+                    },
+                )
+            } else {
+                navigateToSend(cryptoCurrencyStatus, userWalletId)
+            }
+        }
     }
 
-    override fun onReceiveClick(cryptoCurrencyStatus: CryptoCurrencyStatus, event: AnalyticsEvent?) {
-        val userWalletId = stateHolder.getSelectedWalletId()
-
+    override fun onReceiveClick(
+        userWalletId: UserWalletId,
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+        event: AnalyticsEvent?,
+    ) {
         analyticsEventHandler.send(
             event = TokenScreenAnalyticsEvent.ButtonWithParams.ButtonReceive(
                 token = cryptoCurrencyStatus.currency.symbol,
@@ -178,24 +210,24 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
 
         event?.let { analyticsEventHandler.send(it) }
 
-        if (tokenReceiveFeatureToggle.isNewTokenReceiveEnabled) {
-            stateHolder.hideBottomSheet()
-            modelScope.launch {
-                configureReceiveAddresses(cryptoCurrencyStatus = cryptoCurrencyStatus)?.let {
-                    router.openTokenReceiveBottomSheet(it)
-                }
+        modelScope.launch(dispatchers.main) {
+            if (needShowYieldSupplyWarning(cryptoCurrencyStatus)) {
+                stateHolder.hideBottomSheet()
+                router.openYieldSupplyBottomSheet(
+                    cryptoCurrency = cryptoCurrencyStatus.currency,
+                    tokenAction = TokenAction.Receive,
+                    onWarningAcknowledged = { tokenAction ->
+                        modelScope.launch {
+                            saveViewedTokenReceiveWarningUseCase(cryptoCurrencyStatus.currency.name)
+                            saveViewedYieldSupplyWarningUseCase(cryptoCurrencyStatus.currency.name)
+                            stateHolder.hideBottomSheet()
+                            navigateToReceive(cryptoCurrencyStatus)
+                        }
+                    },
+                )
+            } else {
+                navigateToReceive(cryptoCurrencyStatus)
             }
-        } else {
-            analyticsEventHandler.send(
-                event = TokenReceiveAnalyticsEvent.ReceiveScreenOpened(cryptoCurrencyStatus.currency.symbol),
-            )
-            stateHolder.showBottomSheet(
-                createReceiveBottomSheetContent(
-                    currency = cryptoCurrencyStatus.currency,
-                    addresses = cryptoCurrencyStatus.value.networkAddress ?: return,
-                ),
-                userWalletId,
-            )
         }
     }
 
@@ -240,7 +272,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
         )
     }
 
-    override fun onCopyAddressClick(cryptoCurrencyStatus: CryptoCurrencyStatus) {
+    override fun onCopyAddressClick(userWalletId: UserWalletId, cryptoCurrencyStatus: CryptoCurrencyStatus) {
         analyticsEventHandler.send(
             event = TokenReceiveNewAnalyticsEvent.ButtonCopyAddress(
                 token = cryptoCurrencyStatus.currency.symbol,
@@ -251,10 +283,10 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
 
         modelScope.launch(dispatchers.main) {
             walletManagersFacade.getDefaultAddress(
-                userWalletId = stateHolder.getSelectedWalletId(),
+                userWalletId = userWalletId,
                 network = cryptoCurrencyStatus.currency.network,
             )?.let { address ->
-                stateHolder.update(CloseBottomSheetTransformer(userWalletId = stateHolder.getSelectedWalletId()))
+                stateHolder.update(CloseBottomSheetTransformer(userWalletId = userWalletId))
 
                 clipboardManager.setText(text = address, isSensitive = true)
                 walletEventSender.send(event = WalletEvent.CopyAddress)
@@ -262,7 +294,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
         }
     }
 
-    override fun onHideTokensClick(cryptoCurrencyStatus: CryptoCurrencyStatus) {
+    override fun onHideTokensClick(userWalletId: UserWalletId, cryptoCurrencyStatus: CryptoCurrencyStatus) {
         analyticsEventHandler.send(
             event = TokenScreenAnalyticsEvent.ButtonRemoveToken(cryptoCurrencyStatus.currency.symbol),
         )
@@ -270,7 +302,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
         modelScope.launch(dispatchers.main) {
             walletEventSender.send(
                 event = WalletEvent.ShowAlert(
-                    state = getHideTokeAlertConfig(stateHolder.getSelectedWalletId(), cryptoCurrencyStatus),
+                    state = getHideTokeAlertConfig(userWalletId, cryptoCurrencyStatus),
                 ),
             )
         }
@@ -281,7 +313,9 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
         cryptoCurrencyStatus: CryptoCurrencyStatus,
     ): WalletAlertState.DefaultAlert {
         val currency = cryptoCurrencyStatus.currency
-        return if (currency is CryptoCurrency.Coin && !isCryptoCurrencyCoinCouldHide(userWalletId, currency)) {
+        val isCryptoCurrencyCoinCouldHide = currency is CryptoCurrency.Coin &&
+            !isCryptoCurrencyCoinCouldHide(userWalletId = userWalletId, cryptoCurrencyCoin = currency)
+        return if (isCryptoCurrencyCoinCouldHide) {
             WalletAlertState.DefaultAlert(
                 title = resourceReference(
                     id = R.string.token_details_unable_hide_alert_title,
@@ -306,16 +340,30 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
                     formatArgs = WrappedList(listOf(cryptoCurrencyStatus.currency.name)),
                 ),
                 message = resourceReference(R.string.token_details_hide_alert_message),
-                onConfirmClick = { onPerformHideToken(cryptoCurrencyStatus) },
+                onConfirmClick = { onPerformHideToken(userWalletId, cryptoCurrencyStatus) },
             )
         }
     }
 
-    override fun onPerformHideToken(cryptoCurrencyStatus: CryptoCurrencyStatus) {
-        val userWalletId = stateHolder.getSelectedWalletId()
-
+    override fun onPerformHideToken(userWalletId: UserWalletId, cryptoCurrencyStatus: CryptoCurrencyStatus) {
         modelScope.launch(dispatchers.io) {
-            removeCurrencyUseCase(userWalletId, cryptoCurrencyStatus.currency)
+            if (accountsFeatureToggles.isFeatureEnabled) {
+                val accountId = getAccountCurrencyStatusUseCase.invokeSync(
+                    userWalletId = userWalletId,
+                    currency = cryptoCurrencyStatus.currency,
+                )
+                    .map { it.account.accountId }
+                    .getOrNull()
+
+                if (accountId == null) {
+                    Timber.e("Account ID is null, cannot hide currency ${cryptoCurrencyStatus.currency.id}")
+                    return@launch
+                }
+
+                saveCryptoCurrenciesUseCase(accountId = accountId, remove = cryptoCurrencyStatus.currency)
+            } else {
+                removeCurrencyUseCase(userWalletId, cryptoCurrencyStatus.currency)
+            }
                 .fold(
                     ifLeft = {
                         walletEventSender.send(
@@ -356,11 +404,10 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
     }
 
     override fun onBuyClick(
+        userWalletId: UserWalletId,
         cryptoCurrencyStatus: CryptoCurrencyStatus,
         unavailabilityReason: ScenarioUnavailabilityReason,
     ) {
-        val userWallet = getSelectedWalletSyncUseCase.unwrap() ?: return
-
         analyticsEventHandler.send(
             event = TokenScreenAnalyticsEvent.ButtonWithParams.ButtonBuy(
                 token = cryptoCurrencyStatus.currency.symbol,
@@ -373,7 +420,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
 
         appRouter.push(
             AppRoute.Onramp(
-                userWalletId = userWallet.walletId,
+                userWalletId = userWalletId,
                 currency = cryptoCurrencyStatus.currency,
                 source = OnrampSource.TOKEN_LONG_TAP,
             ),
@@ -395,13 +442,24 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
 
         if (handleUnavailabilityReason(unavailabilityReason)) return
 
-        appRouter.push(
-            AppRoute.Swap(
-                currencyFrom = cryptoCurrencyStatus.currency,
-                userWalletId = userWalletId,
-                screenSource = AnalyticsParam.ScreensSources.LongTap.value,
-            ),
-        )
+        modelScope.launch(dispatchers.main) {
+            if (needShowYieldSupplyWarning(cryptoCurrencyStatus)) {
+                stateHolder.hideBottomSheet()
+                router.openYieldSupplyBottomSheet(
+                    cryptoCurrency = cryptoCurrencyStatus.currency,
+                    tokenAction = TokenAction.Swap,
+                    onWarningAcknowledged = { tokenAction ->
+                        modelScope.launch {
+                            saveViewedYieldSupplyWarningUseCase(cryptoCurrencyStatus.currency.name)
+                            stateHolder.hideBottomSheet()
+                            navigateToSwap(cryptoCurrencyStatus, userWalletId)
+                        }
+                    },
+                )
+            } else {
+                navigateToSwap(cryptoCurrencyStatus, userWalletId)
+            }
+        }
     }
 
     override fun onExploreClick() {
@@ -428,7 +486,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
                 AppRoute.MarketsTokenDetails(
                     token = tokenMarketParams,
                     appCurrency = getSelectedAppCurrencyUseCase.unwrap(),
-                    showPortfolio = false,
+                    shouldShowPortfolio = false,
                     analyticsParams = AppRoute.MarketsTokenDetails.AnalyticsParams(
                         blockchain = cryptoCurrencyStatus.currency.network.name,
                         source = "Main",
@@ -440,12 +498,10 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
         }
     }
 
-    override fun onStakeClick(cryptoCurrencyStatus: CryptoCurrencyStatus, yield: Yield?) {
-        val userWallet = getSelectedWalletSyncUseCase.unwrap() ?: return
-        stateHolder.update(CloseBottomSheetTransformer(userWalletId = userWallet.walletId))
+    override fun onStakeClick(userWalletId: UserWalletId, cryptoCurrencyStatus: CryptoCurrencyStatus, yield: Yield?) {
+        stateHolder.update(CloseBottomSheetTransformer(userWalletId = userWalletId))
 
         modelScope.launch {
-            val userWalletId = stateHolder.getSelectedWalletId()
             val cryptoCurrency = cryptoCurrencyStatus.currency
 
             appRouter.push(
@@ -468,15 +524,19 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
 
     override fun onMultiWalletSwapClick(userWalletId: UserWalletId) {
         val selectedWallet = stateHolder.getSelectedWallet() as? WalletState.MultiCurrency.Content ?: return
-        val tokenListState = selectedWallet.tokensListState as? WalletTokensListState.ContentState.Content ?: return
+        val tokenListState = selectedWallet.tokensListState
 
-        if (tokenListState.items.count { it is TokensListItemUM.Token } < 2) {
-            handleError(
-                alertState = WalletAlertState.InsufficientTokensCountForSwapping,
-                eventCreator = MainScreenAnalyticsEvent::ButtonSwap,
+        when (tokenListState) {
+            is WalletTokensListState.ContentState.Content -> checkSwapCryptoAvailability(
+                tokenCount = tokenListState.items.count { it is TokensListItemUM.Token },
             )
-
-            return
+            is WalletTokensListState.ContentState.PortfolioContent -> checkSwapCryptoAvailability(
+                tokenCount = tokenListState.items.sumOf { it.tokens.count { it is TokensListItemUM.Token } },
+            )
+            WalletTokensListState.ContentState.Loading,
+            WalletTokensListState.ContentState.Locked,
+            WalletTokensListState.Empty,
+            -> return
         }
 
         modelScope.launch {
@@ -669,44 +729,69 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
     }
 
     private suspend fun configureReceiveAddresses(cryptoCurrencyStatus: CryptoCurrencyStatus): TokenReceiveConfig? {
-        val networkAddress = cryptoCurrencyStatus.value.networkAddress ?: return null
         val userWalletId = stateHolder.getSelectedWalletId()
-
-        val ensName = getEnsNameUseCase.invoke(
+        return receiveAddressesFactory.create(
+            status = cryptoCurrencyStatus,
             userWalletId = userWalletId,
-            network = cryptoCurrencyStatus.currency.network,
-            address = networkAddress.defaultAddress.value,
+        )
+    }
+
+    private suspend fun needShowYieldSupplyWarning(cryptoCurrencyStatus: CryptoCurrencyStatus): Boolean {
+        return yieldSupplyFeatureToggles.isYieldSupplyFeatureEnabled &&
+            needShowYieldSupplyDepositedWarningUseCase(cryptoCurrencyStatus)
+    }
+
+    private fun navigateToSend(cryptoCurrencyStatus: CryptoCurrencyStatus, userWalletId: UserWalletId) {
+        stateHolder.update(CloseBottomSheetTransformer(userWalletId = userWalletId))
+        val route = AppRoute.Send(
+            currency = cryptoCurrencyStatus.currency,
+            userWalletId = userWalletId,
         )
 
-        val receiveAddresses = buildList {
-            ensName?.let { ens ->
-                add(
-                    ReceiveAddressModel(
-                        nameService = ReceiveAddressModel.NameService.Ens,
-                        value = ens,
-                    ),
-                )
+        appRouter.push(route)
+    }
+
+    private fun navigateToSwap(cryptoCurrencyStatus: CryptoCurrencyStatus, userWalletId: UserWalletId) {
+        appRouter.push(
+            AppRoute.Swap(
+                currencyFrom = cryptoCurrencyStatus.currency,
+                userWalletId = userWalletId,
+                screenSource = AnalyticsParam.ScreensSources.LongTap.value,
+            ),
+        )
+    }
+
+    private fun navigateToReceive(cryptoCurrencyStatus: CryptoCurrencyStatus) {
+        val userWalletId = stateHolder.getSelectedWalletId()
+        if (tokenReceiveFeatureToggle.isNewTokenReceiveEnabled) {
+            stateHolder.hideBottomSheet()
+            modelScope.launch {
+                configureReceiveAddresses(cryptoCurrencyStatus = cryptoCurrencyStatus)?.let {
+                    router.openTokenReceiveBottomSheet(it)
+                }
             }
-            networkAddress.availableAddresses.map { address ->
-                add(
-                    ReceiveAddressModel(
-                        nameService = when (address.type) {
-                            NetworkAddress.Address.Type.Primary -> ReceiveAddressModel.NameService.Default
-                            NetworkAddress.Address.Type.Secondary -> ReceiveAddressModel.NameService.Legacy
-                        },
-                        value = address.value,
-                    ),
-                )
-            }
+        } else {
+            analyticsEventHandler.send(
+                event = TokenReceiveAnalyticsEvent.ReceiveScreenOpened(cryptoCurrencyStatus.currency.symbol),
+            )
+            stateHolder.showBottomSheet(
+                createReceiveBottomSheetContent(
+                    currency = cryptoCurrencyStatus.currency,
+                    addresses = cryptoCurrencyStatus.value.networkAddress ?: return,
+                ),
+                userWalletId,
+            )
         }
+    }
 
-        return TokenReceiveConfig(
-            shouldShowWarning = cryptoCurrencyStatus.currency.name !in getViewedTokenReceiveWarningUseCase(),
-            cryptoCurrency = cryptoCurrencyStatus.currency,
-            userWalletId = userWalletId,
-            showMemoDisclaimer = cryptoCurrencyStatus.currency.network.transactionExtrasType != Network
-                .TransactionExtrasType.NONE,
-            receiveAddress = receiveAddresses,
-        )
+    private fun checkSwapCryptoAvailability(tokenCount: Int) {
+        if (tokenCount < 2) {
+            handleError(
+                alertState = WalletAlertState.InsufficientTokensCountForSwapping,
+                eventCreator = MainScreenAnalyticsEvent::ButtonSwap,
+            )
+
+            return
+        }
     }
 }
