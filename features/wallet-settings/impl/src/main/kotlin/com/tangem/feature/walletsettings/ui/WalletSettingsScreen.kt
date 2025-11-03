@@ -262,6 +262,7 @@ private fun UpgradeWalletBlock(model: WalletSettingsItemUM.UpgradeWallet, modifi
             iconSize = 36.dp,
             onClick = model.onClick,
             onCloseClick = model.onDismissClick,
+            shouldShowArrowIcon = false,
         ),
         modifier = modifier,
     )
