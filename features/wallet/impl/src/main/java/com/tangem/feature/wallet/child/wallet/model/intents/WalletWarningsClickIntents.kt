@@ -33,7 +33,9 @@ import com.tangem.domain.settings.NeverToSuggestRateAppUseCase
 import com.tangem.domain.settings.RemindToRateAppLaterUseCase
 import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
-import com.tangem.domain.tokens.model.analytics.TokenSwapPromoAnalyticsEvent
+import com.tangem.domain.tokens.model.analytics.PromoAnalyticsEvent
+import com.tangem.domain.tokens.model.analytics.PromoAnalyticsEvent.Program
+import com.tangem.domain.tokens.model.analytics.PromoAnalyticsEvent.PromotionBannerClicked
 import com.tangem.domain.wallets.legacy.UserWalletsListManager.Lockable.UnlockType
 import com.tangem.domain.wallets.models.UnlockWalletsError
 import com.tangem.domain.wallets.usecase.*
@@ -327,11 +329,12 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
         analyticsEventHandler.send(
             when (promoId) {
                 PromoId.Referral -> MainScreen.ReferralPromoButtonDismiss
-                PromoId.Sepa -> TokenSwapPromoAnalyticsEvent.PromotionBannerClicked(
+                PromoId.Sepa -> PromotionBannerClicked(
                     source = AnalyticsParam.ScreensSources.Main,
-                    program = TokenSwapPromoAnalyticsEvent.Program.Sepa,
-                    action = TokenSwapPromoAnalyticsEvent.PromotionBannerClicked.BannerAction.Closed,
+                    program = Program.Sepa,
+                    action = PromotionBannerClicked.BannerAction.Closed,
                 )
+                PromoId.VisaPresale -> PromoAnalyticsEvent.VisaWaitlistPromoDismiss
             },
 
         )
@@ -349,10 +352,10 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
             }
             PromoId.Sepa -> {
                 analyticsEventHandler.send(
-                    TokenSwapPromoAnalyticsEvent.PromotionBannerClicked(
+                    PromotionBannerClicked(
                         source = AnalyticsParam.ScreensSources.Main,
-                        program = TokenSwapPromoAnalyticsEvent.Program.Sepa,
-                        action = TokenSwapPromoAnalyticsEvent.PromotionBannerClicked.BannerAction.Clicked,
+                        program = Program.Sepa,
+                        action = PromotionBannerClicked.BannerAction.Clicked,
                     ),
                 )
                 cryptoCurrency ?: return
@@ -364,6 +367,10 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
                         shouldLaunchSepa = true,
                     ),
                 )
+            }
+            PromoId.VisaPresale -> {
+                analyticsEventHandler.send(PromoAnalyticsEvent.VisaWaitlistPromoJoin)
+                urlOpener.openUrl(VISA_PROMO_LINK)
             }
         }
     }
@@ -574,5 +581,11 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
                 Timber.e(it)
             }
         }
+    }
+
+    private companion object {
+        const val VISA_PROMO_LINK = "https://tangem.com/en/cardwaitlist/?utm_source=tangem-app-banner" +
+            "&utm_medium=banner" +
+            "&utm_campaign=tangempaywaitlist"
     }
 }
