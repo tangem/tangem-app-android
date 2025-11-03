@@ -6,6 +6,11 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.ui.components.fields.InputManager
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
+import com.tangem.domain.account.models.AccountStatusList
+import com.tangem.domain.account.status.producer.SingleAccountStatusListProducer
+import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
+import com.tangem.domain.account.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
@@ -13,6 +18,8 @@ import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.core.utils.getOrElse
 import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.models.TotalFiatBalance
+import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
@@ -23,13 +30,11 @@ import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.onramp.impl.R
+import com.tangem.features.onramp.swap.entity.AccountAvailabilityUM
+import com.tangem.features.onramp.swap.entity.AccountCurrencyUM
 import com.tangem.features.onramp.tokenlist.OnrampTokenListComponent
-import com.tangem.features.onramp.tokenlist.entity.OnrampOperation
-import com.tangem.features.onramp.tokenlist.entity.TokenListUM
-import com.tangem.features.onramp.tokenlist.entity.TokenListUMController
-import com.tangem.features.onramp.tokenlist.entity.TokenListUMTransformer
-import com.tangem.features.onramp.tokenlist.entity.transformer.SetNothingToFoundStateTransformer
-import com.tangem.features.onramp.tokenlist.entity.transformer.UpdateTokenItemsTransformer
+import com.tangem.features.onramp.tokenlist.entity.*
+import com.tangem.features.onramp.tokenlist.entity.transformer.*
 import com.tangem.features.onramp.utils.UpdateSearchBarActiveStateTransformer
 import com.tangem.features.onramp.utils.UpdateSearchBarCallbacksTransformer
 import com.tangem.features.onramp.utils.UpdateSearchQueryTransformer
@@ -42,7 +47,9 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-@Suppress("LongParameterList")
+typealias AccountCryptoList = Map<Account.CryptoPortfolio, List<CryptoCurrencyStatus>>
+
+@Suppress("LargeClass", "LongParameterList")
 internal class OnrampTokenListModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
@@ -55,6 +62,9 @@ internal class OnrampTokenListModel @Inject constructor(
     private val rampStateManager: RampStateManager,
     private val getUserCountryUseCase: GetUserCountryUseCase,
     private val getAssetRequirementsUseCase: GetAssetRequirementsUseCase,
+    private val accountsFeatureToggles: AccountsFeatureToggles,
+    private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
+    private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
 ) : Model() {
 
     val state: StateFlow<TokenListUM> = tokenListUMController.state
@@ -71,8 +81,11 @@ internal class OnrampTokenListModel @Inject constructor(
                 onActiveChange = ::onSearchBarActiveChange,
             ),
         )
-
-        subscribeOnUpdateState()
+        if (accountsFeatureToggles.isFeatureEnabled) {
+            subscribeOnUpdateStateV2()
+        } else {
+            subscribeOnUpdateState()
+        }
     }
 
     private fun subscribeOnUpdateState() {
@@ -95,12 +108,7 @@ internal class OnrampTokenListModel @Inject constructor(
             if (query.isNotEmpty() && filterByQueryTokenList.isEmpty()) {
                 SetNothingToFoundStateTransformer(
                     isBalanceHidden = isBalanceHidden,
-                    emptySearchMessageReference = when (params.filterOperation) {
-                        OnrampOperation.BUY -> R.string.action_buttons_buy_empty_search_message
-                        OnrampOperation.SELL -> R.string.action_buttons_sell_empty_search_message
-                        OnrampOperation.SWAP -> R.string.action_buttons_swap_empty_search_message
-                    }
-                        .let(::resourceReference),
+                    emptySearchMessageReference = getEmptySearchMessageReference(),
                 )
             } else {
                 val isInsufficientBalanceForSell = if (params.filterOperation == OnrampOperation.SELL) {
@@ -134,6 +142,62 @@ internal class OnrampTokenListModel @Inject constructor(
             .launchIn(modelScope)
     }
 
+    private fun subscribeOnUpdateStateV2() {
+        combine(
+            flow = singleAccountStatusListSupplier(
+                SingleAccountStatusListProducer.Params(params.userWalletId),
+            ).distinctUntilChanged(),
+            flow2 = getAppCurrencyAndBalanceHidingFlow(),
+            flow3 = isAccountsModeEnabledUseCase(),
+            flow4 = searchManager.query,
+            flow5 = hasRestrictionForSellFlow(),
+        ) { accountList, appCurrencyAndBalanceHiding, isAccountsMode, query, hasRestrictionForSell ->
+            val (appCurrency, isBalanceHidden) = appCurrencyAndBalanceHiding
+            val filterByQueryAccountList = accountList.filterAccountsByQuery(query)
+
+            if (query.isNotEmpty() && filterByQueryAccountList.isEmpty()) {
+                updateTokenListUM(
+                    SetNothingToFoundStateTransformerV2(
+                        isBalanceHidden = isBalanceHidden,
+                        emptySearchMessageReference = getEmptySearchMessageReference(),
+                    ),
+                )
+            } else {
+                updateTokenListUM(
+                    SetLoadingAccountTokenListTransformer(
+                        appCurrency = appCurrency,
+                        accountList = accountList.accountStatuses.toList(),
+                        isAccountsMode = isAccountsMode,
+                    ),
+                )
+                updateTokenListUM(
+                    UpdateAccountTokenListTransformer(
+                        appCurrency = appCurrency,
+                        onItemClick = params.onTokenClick,
+                        accountList = filterByQueryAccountList.filterByAvailability(),
+                        isBalanceHidden = isBalanceHidden,
+                        unavailableErrorText = getUnavailableTokensHeaderReference(),
+                        warning = getSellWarning(
+                            hasRestrictionForSell = hasRestrictionForSell,
+                            isInsufficientBalanceForSell = accountList.isInsufficientBalanceForSell(),
+                        ),
+                        isAccountsMode = isAccountsMode,
+                    ),
+                )
+            }
+        }
+            .flowOn(dispatchers.default)
+            .launchIn(modelScope)
+    }
+
+    private fun getAppCurrencyAndBalanceHidingFlow(): Flow<Pair<AppCurrency, Boolean>> {
+        return combine(
+            flow = getSelectedAppCurrencyUseCase().map { it.getOrElse { AppCurrency.Default } }.distinctUntilChanged(),
+            flow2 = getBalanceHidingSettingsUseCase().map { it.isBalanceHidden }.distinctUntilChanged(),
+            transform = ::Pair,
+        )
+    }
+
     private fun hasRestrictionForSellFlow(): Flow<Boolean> {
         return if (params.filterOperation == OnrampOperation.SELL) {
             getUserCountryUseCase().map { maybe ->
@@ -154,25 +218,52 @@ internal class OnrampTokenListModel @Inject constructor(
         }
     }
 
+    private fun AccountStatusList.isInsufficientBalanceForSell(): Boolean {
+        return if (params.filterOperation == OnrampOperation.SELL) {
+            (totalFiatBalance as? TotalFiatBalance.Loaded)?.amount?.isZero() == true
+        } else {
+            false
+        }
+    }
+
     private fun getUnavailableTokensHeaderReference() = when (params.filterOperation) {
         OnrampOperation.BUY -> R.string.tokens_list_unavailable_to_purchase_header
         OnrampOperation.SELL -> R.string.tokens_list_unavailable_to_sell_header
         OnrampOperation.SWAP -> R.string.tokens_list_unavailable_to_swap_source_header
     }.let(::resourceReference)
 
+    private fun getEmptySearchMessageReference() = when (params.filterOperation) {
+        OnrampOperation.BUY -> R.string.action_buttons_buy_empty_search_message
+        OnrampOperation.SELL -> R.string.action_buttons_sell_empty_search_message
+        OnrampOperation.SWAP -> R.string.action_buttons_swap_empty_search_message
+    }.let(::resourceReference)
+
     private fun updateTokenListUM(transformer: TokenListUMTransformer) {
-        tokenListUMController.update { prevState ->
-            transformer.transform(prevState).apply {
-                if (isFirstInitialization(prevState = prevState, newState = this)) {
-                    params.onTokenListInitialized()
+        modelScope.launch {
+            tokenListUMController.update { prevState ->
+                transformer.transform(prevState).apply {
+                    if (isFirstInitialization(prevState = prevState, newState = this)) {
+                        params.onTokenListInitialized()
+                    }
                 }
             }
         }
     }
 
+    private fun getSellWarning(hasRestrictionForSell: Boolean, isInsufficientBalanceForSell: Boolean) = when {
+        hasRestrictionForSell -> NotificationUM.Warning.SellingRegionalRestriction
+        isInsufficientBalanceForSell -> NotificationUM.Warning.InsufficientBalanceForSelling
+        else -> null
+    }
+
     private fun isFirstInitialization(prevState: TokenListUM, newState: TokenListUM): Boolean {
-        return prevState.availableItems.isEmpty() && prevState.unavailableItems.isEmpty() &&
-            (newState.availableItems.isNotEmpty() || newState.unavailableItems.isNotEmpty())
+        return if (accountsFeatureToggles.isFeatureEnabled) {
+            prevState.tokensListData == TokenListUMData.EmptyList &&
+                newState.tokensListData != TokenListUMData.EmptyList
+        } else {
+            prevState.availableItems.isEmpty() && prevState.unavailableItems.isEmpty() &&
+                (newState.availableItems.isNotEmpty() || newState.unavailableItems.isNotEmpty())
+        }
     }
 
     private fun onSearchQueryChange(newQuery: String) {
@@ -194,6 +285,16 @@ internal class OnrampTokenListModel @Inject constructor(
             ),
         )
     }
+
+    private fun AccountStatusList.filterAccountsByQuery(query: String) = accountStatuses.asSequence()
+        .associate { accountStatus ->
+            when (accountStatus) {
+                is AccountStatus.CryptoPortfolio -> {
+                    val filteredList = accountStatus.tokenList.flattenCurrencies().filterByQuery(query = query)
+                    accountStatus.account to filteredList
+                }
+            }
+        }.filter { (_, value) -> value.isNotEmpty() }
 
     private fun List<CryptoCurrencyStatus>.filterByQuery(query: String): List<CryptoCurrencyStatus> {
         return filter {
@@ -237,6 +338,49 @@ internal class OnrampTokenListModel @Inject constructor(
         }
     }
 
+    private suspend fun AccountCryptoList.filterByAvailability(): List<AccountAvailabilityUM> {
+        return coroutineScope {
+            map { (account, currencies) ->
+                async {
+                    AccountAvailabilityUM(
+                        account = account,
+                        currencyList = currencies.map { status ->
+                            val isOperationAvailable = checkAvailabilityByOperation(status = status)
+                            val isNotMissedDerivation = status.value !is CryptoCurrencyStatus.MissedDerivation
+                            val isNotLoading = status.value !is CryptoCurrencyStatus.Loading
+
+                            val requirements = getAssetRequirementsUseCase(
+                                userWalletId = userWallet.walletId,
+                                currency = status.currency,
+                            ).getOrNull()
+
+                            val isAvailableForBuy = rampStateManager.checkAssetRequirements(requirements)
+                            val isNotUnreachable = status.value !is CryptoCurrencyStatus.Unreachable
+
+                            val isAvailable = when (params.filterOperation) {
+                                OnrampOperation.BUY -> {
+                                    isAvailableForBuy
+                                } // unreachable state is available for Buy operation
+                                OnrampOperation.SELL -> isNotUnreachable
+                                OnrampOperation.SWAP -> {
+                                    isNotUnreachable && isAvailableForBuy
+                                }
+                            }
+
+                            val isTotalAvailable =
+                                isOperationAvailable && isNotMissedDerivation && isNotLoading && isAvailable
+
+                            AccountCurrencyUM(
+                                cryptoCurrencyStatus = status,
+                                isAvailable = isTotalAvailable,
+                            )
+                        },
+                    )
+                }
+            }.awaitAll()
+        }
+    }
+
     private suspend fun checkAvailabilityByOperation(status: CryptoCurrencyStatus): Boolean {
         return when (params.filterOperation) {
             OnrampOperation.BUY -> {
@@ -258,7 +402,10 @@ internal class OnrampTokenListModel @Inject constructor(
                     cryptoCurrency = status.currency,
                 ).isAvailable() && !status.currency.isCustom
 
-                isAvailable && status.value !is CryptoCurrencyStatus.NoQuote
+                val supplyStatus = status.value.yieldSupplyStatus
+                val isUnavailableByYieldSupply = supplyStatus?.isAllowedToSpend == false && supplyStatus.isActive
+
+                isAvailable && status.value !is CryptoCurrencyStatus.NoQuote && !isUnavailableByYieldSupply
             }
         }
     }

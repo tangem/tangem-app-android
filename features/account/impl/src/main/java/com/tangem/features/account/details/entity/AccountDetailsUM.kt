@@ -7,6 +7,7 @@ internal data class AccountDetailsUM(
     val accountName: TextReference,
     val accountIcon: CryptoPortfolioIconUM,
     val archiveMode: ArchiveMode,
+    val isManageTokensAvailable: Boolean,
     val onCloseClick: () -> Unit,
     val onAccountEditClick: () -> Unit,
     val onManageTokensClick: () -> Unit,

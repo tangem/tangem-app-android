@@ -11,4 +11,5 @@ internal data class WcSpendAllowanceUM(
     val tokenSymbol: String,
     val tokenImageUrl: String?,
     val networkIconRes: Int?,
+    val onLearnMoreClicked: () -> Unit,
 ) : TangemBottomSheetConfigContent
