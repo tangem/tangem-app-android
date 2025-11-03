@@ -84,7 +84,8 @@ fun Notification(
             titleColor = titleColor,
             subtitle = config.subtitle,
             subtitleColor = subtitleColor,
-            showArrowIcon = isEnabled && config.showArrowIcon,
+            showArrowIcon = isEnabled && config.shouldShowArrowIcon,
+            hasCloseButton = config.onCloseClick != null,
         )
     }
 }
@@ -148,6 +149,7 @@ private fun MainContent(
     titleColor: Color,
     subtitleColor: Color,
     showArrowIcon: Boolean,
+    hasCloseButton: Boolean,
 ) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Icon(
@@ -161,10 +163,24 @@ private fun MainContent(
 
         SpacerW(width = TangemTheme.dimens.spacing10)
 
-        TextsBlock(title = title, titleColor = titleColor, subtitle = subtitle, subtitleColor = subtitleColor)
+        TextsBlock(
+            title = title,
+            titleColor = titleColor,
+            subtitle = subtitle,
+            subtitleColor = subtitleColor,
+            modifier = Modifier
+                .weight(1f, fill = false)
+                .then(
+                    if (hasCloseButton && !showArrowIcon) {
+                        Modifier.padding(end = TangemTheme.dimens.size32)
+                    } else {
+                        Modifier
+                    },
+                ),
+        )
 
         if (showArrowIcon) {
-            SpacerWMax()
+            SpacerW(width = TangemTheme.dimens.spacing8)
 
             Icon(
                 painter = painterResource(id = R.drawable.ic_chevron_right_24),
@@ -256,6 +272,7 @@ private fun SingleSecondaryButton(config: NotificationButtonsState.SecondaryButt
             modifier = Modifier.fillMaxWidth(),
             iconResId = config.iconResId,
             enabled = isEnabled,
+            showProgress = config.shouldShowProgress,
         )
     } else {
         SecondaryButton(
@@ -264,6 +281,7 @@ private fun SingleSecondaryButton(config: NotificationButtonsState.SecondaryButt
             modifier = Modifier.fillMaxWidth(),
             size = TangemButtonSize.WideAction,
             enabled = isEnabled,
+            showProgress = config.shouldShowProgress,
         )
     }
 }
