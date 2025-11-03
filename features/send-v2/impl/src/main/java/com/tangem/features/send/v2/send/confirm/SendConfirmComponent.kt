@@ -11,12 +11,14 @@ import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.features.send.v2.api.FeeSelectorBlockComponent
 import com.tangem.features.send.v2.api.SendNotificationsComponent
 import com.tangem.features.send.v2.api.SendNotificationsComponent.Params.NotificationData
+import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.v2.api.entity.PredefinedValues
 import com.tangem.features.send.v2.api.params.FeeSelectorParams
 import com.tangem.features.send.v2.api.subcomponents.destination.SendDestinationComponentParams.DestinationBlockParams
@@ -28,8 +30,6 @@ import com.tangem.features.send.v2.send.ui.state.SendUM
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountBlockComponent
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountComponentParams
 import com.tangem.features.send.v2.subcomponents.destination.DefaultSendDestinationBlockComponent
-import com.tangem.features.send.v2.subcomponents.fee.SendFeeBlockComponent
-import com.tangem.features.send.v2.subcomponents.fee.SendFeeComponentParams
 import com.tangem.features.send.v2.subcomponents.notifications.DefaultSendNotificationsComponent
 import com.tangem.utils.extensions.orZero
 import kotlinx.coroutines.flow.*
@@ -37,7 +37,7 @@ import kotlinx.coroutines.flow.*
 internal class SendConfirmComponent(
     appComponentContext: AppComponentContext,
     params: Params,
-    private val feeSelectorComponentFactory: FeeSelectorBlockComponent.Factory,
+    feeSelectorComponentFactory: FeeSelectorBlockComponent.Factory,
 ) : ComposableContentComponent, AppComponentContext by appComponentContext {
 
     private val model: SendConfirmModel = getOrCreateModel(params = params)
@@ -50,6 +50,7 @@ internal class SendConfirmComponent(
             params = DestinationBlockParams(
                 state = model.uiState.value.destinationUM,
                 analyticsCategoryName = params.analyticsCategoryName,
+                analyticsSendSource = params.analyticsSendSource,
                 userWalletId = params.userWallet.walletId,
                 cryptoCurrency = params.cryptoCurrencyStatus.currency,
                 blockClickEnableFlow = blockClickEnableFlow.asStateFlow(),
@@ -68,32 +69,16 @@ internal class SendConfirmComponent(
             appCurrency = params.appCurrency,
             blockClickEnableFlow = blockClickEnableFlow.asStateFlow(),
             predefinedValues = params.predefinedValues,
-            isRedesignEnabled = model.uiState.value.isRedesignEnabled,
             userWalletId = params.userWallet.walletId,
             cryptoCurrency = params.cryptoCurrencyStatus.currency,
             cryptoCurrencyStatusFlow = params.cryptoCurrencyStatusFlow,
             isBalanceHidingFlow = params.isBalanceHidingFlow,
+            analyticsSendSource = params.analyticsSendSource,
+            accountFlow = params.accountFlow,
+            isAccountModeFlow = params.isAccountModeFlow,
         ),
         onResult = model::onAmountResult,
         onClick = model::showEditAmount,
-    )
-
-    private val feeBlockComponent = SendFeeBlockComponent(
-        appComponentContext = child("sendConfirmFeeBlock"),
-        params = SendFeeComponentParams.FeeBlockParams(
-            state = model.uiState.value.feeUM,
-            analyticsCategoryName = params.analyticsCategoryName,
-            userWallet = params.userWallet,
-            cryptoCurrencyStatus = params.cryptoCurrencyStatus,
-            feeCryptoCurrencyStatus = params.feeCryptoCurrencyStatus,
-            appCurrency = params.appCurrency,
-            sendAmount = model.confirmData.enteredAmount.orZero(),
-            destinationAddress = model.confirmData.enteredDestination.orEmpty(),
-            blockClickEnableFlow = blockClickEnableFlow.asStateFlow(),
-            onLoadFee = params.onLoadFee,
-        ),
-        onResult = model::onFeeResult,
-        onClick = model::showEditFee,
     )
 
     private val feeSelectorBlockComponent = feeSelectorComponentFactory.create(
@@ -106,6 +91,7 @@ internal class SendConfirmComponent(
             feeStateConfiguration = model.feeStateConfiguration,
             feeDisplaySource = FeeSelectorParams.FeeDisplaySource.Screen,
             analyticsCategoryName = params.analyticsCategoryName,
+            analyticsSendSource = params.analyticsSendSource,
         ),
         onResult = model::onFeeResult,
     )
@@ -141,7 +127,6 @@ internal class SendConfirmComponent(
     fun updateState(state: SendUM) {
         destinationBlockComponent.updateState(state.destinationUM)
         amountBlockComponent.updateState(state.amountUM)
-        feeBlockComponent.updateState(state.feeUM)
         feeSelectorBlockComponent.updateState(state.feeSelectorUM)
         model.updateState(state)
     }
@@ -155,7 +140,6 @@ internal class SendConfirmComponent(
             sendUM = state,
             destinationBlockComponent = destinationBlockComponent,
             amountBlockComponent = amountBlockComponent,
-            feeBlockComponent = feeBlockComponent,
             feeSelectorBlockComponent = feeSelectorBlockComponent,
             notificationsComponent = notificationsComponent,
             notificationsUM = notificationState,
@@ -165,11 +149,14 @@ internal class SendConfirmComponent(
     data class Params(
         val state: SendUM,
         val analyticsCategoryName: String,
+        val analyticsSendSource: CommonSendAnalyticEvents.CommonSendSource,
         val userWallet: UserWallet,
         val cryptoCurrencyStatus: CryptoCurrencyStatus,
         val feeCryptoCurrencyStatus: CryptoCurrencyStatus,
         val cryptoCurrencyStatusFlow: StateFlow<CryptoCurrencyStatus>,
         val feeCryptoCurrencyStatusFlow: StateFlow<CryptoCurrencyStatus>,
+        val accountFlow: StateFlow<Account.CryptoPortfolio?>,
+        val isAccountModeFlow: StateFlow<Boolean>,
         val appCurrency: AppCurrency,
         val callback: ModelCallback,
         val currentRoute: Flow<CommonSendRoute>,

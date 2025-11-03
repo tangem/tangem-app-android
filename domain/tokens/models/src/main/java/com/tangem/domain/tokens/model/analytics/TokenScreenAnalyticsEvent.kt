@@ -184,6 +184,7 @@ sealed class TokenScreenAnalyticsEvent(
         private const val LOADING = "Loading"
         private const val ASSET_REQUIREMENT = "AssetRequirement"
         private const val TRUSTLINE_REQUIREMENT = "TrustlineRequirement"
+        private const val APPROVAL_REQUIRED = "Approval Required"
 
         @Suppress("CyclomaticComplexMethod")
         fun ScenarioUnavailabilityReason.toReasonAnalyticsText(): String {
@@ -193,6 +194,7 @@ sealed class TokenScreenAnalyticsEvent(
                 is ScenarioUnavailabilityReason.NotSupportedBySellService,
                 is ScenarioUnavailabilityReason.StakingUnavailable,
                 -> UNAVAILABLE
+                is ScenarioUnavailabilityReason.YieldSupplyApprovalRequired -> APPROVAL_REQUIRED
                 ScenarioUnavailabilityReason.UnassociatedAsset -> ASSET_REQUIREMENT
                 ScenarioUnavailabilityReason.TrustlineRequired -> TRUSTLINE_REQUIREMENT
                 is ScenarioUnavailabilityReason.EmptyBalance -> EMPTY

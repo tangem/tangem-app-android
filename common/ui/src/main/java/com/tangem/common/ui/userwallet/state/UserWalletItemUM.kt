@@ -1,7 +1,7 @@
 package com.tangem.common.ui.userwallet.state
 
+import com.tangem.common.ui.account.CryptoPortfolioIconUM
 import com.tangem.core.ui.components.artwork.ArtworkUM
-import com.tangem.core.ui.components.label.entity.LabelUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.models.wallet.UserWalletId
 import javax.annotation.concurrent.Immutable
@@ -16,12 +16,13 @@ data class UserWalletItemUM(
     val isEnabled: Boolean,
     val endIcon: EndIcon = EndIcon.None,
     val onClick: () -> Unit,
-    val label: LabelUM? = null,
 ) {
+
     enum class EndIcon {
         None,
         Arrow,
         Checkmark,
+        Warning,
     }
 
     sealed class Balance {
@@ -59,6 +60,11 @@ data class UserWalletItemUM(
         data object Loading : ImageState()
 
         data object MobileWallet : ImageState()
+
+        data class Account(
+            val name: TextReference,
+            val icon: CryptoPortfolioIconUM,
+        ) : ImageState()
 
         data class Image(
             val artwork: ArtworkUM,

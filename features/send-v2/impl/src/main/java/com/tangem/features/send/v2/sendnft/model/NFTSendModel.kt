@@ -11,6 +11,9 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.datasource.local.nft.converter.NFTSdkAssetConverter
+import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
+import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
+import com.tangem.domain.account.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.card.common.util.cardTypesResolver
@@ -19,6 +22,7 @@ import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.BlockchainErrorInfo
 import com.tangem.domain.feedback.models.FeedbackEmailType
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
@@ -32,7 +36,6 @@ import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.nft.entity.NFTSendSuccessTrigger
 import com.tangem.features.send.v2.api.NFTSendComponent
-import com.tangem.features.send.v2.api.SendFeatureToggles
 import com.tangem.features.send.v2.api.entity.FeeSelectorUM
 import com.tangem.features.send.v2.api.subcomponents.destination.SendDestinationComponent
 import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationUM
@@ -43,8 +46,6 @@ import com.tangem.features.send.v2.common.ui.state.ConfirmUM
 import com.tangem.features.send.v2.sendnft.confirm.NFTSendConfirmComponent
 import com.tangem.features.send.v2.sendnft.success.NFTSendSuccessComponent
 import com.tangem.features.send.v2.sendnft.ui.state.NFTSendUM
-import com.tangem.features.send.v2.subcomponents.fee.SendFeeComponent
-import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -52,7 +53,6 @@ import javax.inject.Inject
 import kotlin.properties.Delegates
 
 internal interface SendNFTComponentCallback :
-    SendFeeComponent.ModelCallback,
     SendDestinationComponent.ModelCallback,
     NFTSendConfirmComponent.ModelCallback
 
@@ -74,8 +74,10 @@ internal class NFTSendModel @Inject constructor(
     private val getWalletMetaInfoUseCase: GetWalletMetaInfoUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val alertFactory: SendConfirmAlertFactory,
-    private val sendFeatureToggles: SendFeatureToggles,
     private val nftSendSuccessTrigger: NFTSendSuccessTrigger,
+    private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
+    private val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase,
+    private val accountsFeatureToggles: AccountsFeatureToggles,
 ) : Model(), SendNFTComponentCallback, NFTSendSuccessComponent.ModelCallback {
 
     val params: NFTSendComponent.Params = paramsContainer.require()
@@ -88,16 +90,19 @@ internal class NFTSendModel @Inject constructor(
     private val nftAsset = params.nftAsset
 
     val uiState: StateFlow<NFTSendUM>
-    field = MutableStateFlow(initialState())
+        field = MutableStateFlow(initialState())
 
     val isBalanceHiddenFlow: StateFlow<Boolean>
-    field = MutableStateFlow(false)
+        field = MutableStateFlow(false)
 
     var cryptoCurrency: CryptoCurrency by Delegates.notNull()
     var userWallet: UserWallet by Delegates.notNull()
     var cryptoCurrencyStatus: CryptoCurrencyStatus by Delegates.notNull()
     var feeCryptoCurrencyStatus: CryptoCurrencyStatus by Delegates.notNull()
     var appCurrency: AppCurrency = AppCurrency.Default
+
+    var account: Account.CryptoPortfolio? = null
+    var isAccountsMode: Boolean = false
 
     init {
         subscribeOnCurrencyStatusUpdates()
@@ -114,10 +119,6 @@ internal class NFTSendModel @Inject constructor(
 
     override fun onDestinationResult(destinationUM: DestinationUM) {
         uiState.update { it.copy(destinationUM = destinationUM) }
-    }
-
-    override fun onFeeResult(feeUM: FeeUM) {
-        uiState.update { it.copy(feeUM = feeUM) }
     }
 
     override fun onBackClick() {
@@ -185,10 +186,31 @@ internal class NFTSendModel @Inject constructor(
                         ?.firstOrNull { it is CryptoCurrency.Coin && it.network == nftAsset.network }
                         ?: return@launch
 
-                    getCurrenciesStatusUpdates(
-                        isSingleWalletWithToken = wallet is UserWallet.Cold &&
-                            wallet.scanResponse.cardTypesResolver.isSingleWalletWithToken(),
-                    )
+                    if (accountsFeatureToggles.isFeatureEnabled) {
+                        getAccountCurrencyStatusUseCase(
+                            userWalletId,
+                            cryptoCurrency,
+                        ).onEach { (maybeAccount, cryptoStatus) ->
+                            account = maybeAccount
+                            isAccountsMode = isAccountsModeEnabledUseCase.invokeSync()
+
+                            cryptoCurrencyStatus = cryptoStatus
+                            feeCryptoCurrencyStatus = getFeePaidCryptoCurrencyStatusSyncUseCase(
+                                userWalletId = userWalletId,
+                                cryptoCurrencyStatus = cryptoStatus,
+                            ).getOrNull() ?: cryptoStatus
+
+                            if (uiState.value.destinationUM is DestinationUM.Empty) {
+                                router.replaceAll(Destination(isEditMode = false))
+                            }
+                        }.flowOn(dispatchers.default)
+                            .launchIn(modelScope)
+                    } else {
+                        getCurrenciesStatusUpdates(
+                            isSingleWalletWithToken = wallet is UserWallet.Cold &&
+                                wallet.scanResponse.cardTypesResolver.isSingleWalletWithToken(),
+                        )
+                    }
                 },
                 ifLeft = {
                     alertFactory.getGenericErrorState(::onFailedTxEmailClick)
@@ -254,10 +276,8 @@ internal class NFTSendModel @Inject constructor(
 
     private fun initialState(): NFTSendUM = NFTSendUM(
         destinationUM = DestinationUM.Empty(),
-        feeUM = FeeUM.Empty(),
         feeSelectorUM = FeeSelectorUM.Loading,
         confirmUM = ConfirmUM.Empty,
         navigationUM = NavigationUM.Empty,
-        isRedesignEnabled = sendFeatureToggles.isNFTSendRedesignEnabled,
     )
 }
