@@ -21,6 +21,7 @@ import java.math.BigDecimal
 object BlockchainUtils {
 
     private const val XRP_X_ADDRESS = 'X'
+    const val SOLANA_TRANSACTION_SIZE_THRESHOLD_BYTES = 930
 
     /** Decodes XRP Blockchain address */
     fun decodeRippleXAddress(xAddress: String, blockchainId: String): XrpTaggedAddress? {
@@ -156,6 +157,13 @@ object BlockchainUtils {
 
     fun isStakingRewardUnavailable(blockchainId: String): Boolean {
         return isSolana(blockchainId) || isBSC(blockchainId) || isTon(blockchainId)
+    }
+
+    /** Checks if the blockchain uses case-insensitive contract addresses */
+    fun isCaseInsensitiveContractAddress(blockchainId: String): Boolean {
+        val blockchain = Blockchain.fromId(blockchainId)
+
+        return blockchain.isEvm()
     }
 
     private fun getNetworkStandardName(blockchain: Blockchain): String {

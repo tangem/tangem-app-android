@@ -33,6 +33,7 @@ dependencies {
 
     // region Project - Libs
     implementation(projects.libs.blockchainSdk)
+    implementation(tangemDeps.blockchain) { exclude(module = "joda-time") }
     // endregion
 
     // region DI

@@ -17,7 +17,7 @@ open class BigDecimalCryptoFormat(
     val symbol: String,
     val decimals: Int,
     val locale: Locale = Locale.getDefault(),
-    val ignoreSymbolPosition: Boolean = false,
+    val shouldIgnoreSymbolPosition: Boolean = false,
 ) : BigDecimalFormat {
 
     override fun invoke(value: BigDecimal): String = defaultAmount()(value)
@@ -56,7 +56,7 @@ fun BigDecimalFormatScope.crypto(
     return BigDecimalCryptoFormat(
         symbol = cryptoCurrency.symbol,
         decimals = cryptoCurrency.decimals,
-        ignoreSymbolPosition = ignoreSymbolPosition,
+        shouldIgnoreSymbolPosition = ignoreSymbolPosition,
         locale = locale,
     )
 }
@@ -64,7 +64,7 @@ fun BigDecimalFormatScope.crypto(
 // == Formatters ==
 
 fun BigDecimalCryptoFormat.defaultAmount() = BigDecimalFormat { value ->
-    if (ignoreSymbolPosition) {
+    if (shouldIgnoreSymbolPosition) {
         val formatter = NumberFormat.getInstance(locale).apply {
             maximumFractionDigits = decimals.coerceAtMost(maximumValue = 8)
             minimumFractionDigits = 2
