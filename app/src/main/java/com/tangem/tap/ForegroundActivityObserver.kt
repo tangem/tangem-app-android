@@ -13,9 +13,9 @@ object ForegroundActivityObserver {
 
     val foregroundActivity: AppCompatActivity?
         get() = activities.entries
-            .firstOrNull {
-                Timber.i("foregroundActivity: ${it.key} | ${it.value.isDestroyed}")
-                it.value.isDestroyed == false
+            .firstOrNull { entry ->
+                Timber.i("foregroundActivity: ${entry.key} | ${entry.value.isDestroyed}")
+                entry.value.isDestroyed == false
             }
             ?.value
 
@@ -28,9 +28,9 @@ object ForegroundActivityObserver {
 
         override fun onActivityResumed(activity: Activity) {
             Timber.i("onActivityResumed ${activity::class}")
-            (activity as? AppCompatActivity)?.let {
+            if (activity is AppCompatActivity) {
                 Timber.i("onActivityResumed store activity")
-                activities[activity::class] = it
+                activities[activity::class] = activity
             }
         }
 

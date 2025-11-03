@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.Keyboard
@@ -17,6 +18,7 @@ import com.tangem.core.ui.components.keyboardAsState
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveAnnotatedReference
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.test.SendConfirmScreenTestTags
 
 /**
  * Sending info text with display animation.
@@ -52,7 +54,8 @@ fun SendingText(footerText: TextReference, modifier: Modifier = Modifier) {
             color = TangemTheme.colors.text.tertiary,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
+                .testTag(SendConfirmScreenTestTags.SENDING_TEXT),
         )
     }
 }

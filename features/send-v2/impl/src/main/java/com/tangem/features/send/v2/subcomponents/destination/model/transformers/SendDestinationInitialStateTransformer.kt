@@ -13,7 +13,6 @@ import com.tangem.utils.transformer.Transformer
 
 internal class SendDestinationInitialStateTransformer(
     val cryptoCurrency: CryptoCurrency,
-    val isRedesignEnabled: Boolean,
     val isInitialized: Boolean = false,
 ) : Transformer<DestinationUM> {
     override fun transform(prevState: DestinationUM): DestinationUM {
@@ -55,11 +54,11 @@ internal class SendDestinationInitialStateTransformer(
                     isValuePasted = false,
                 )
             },
+            accountTitleUM = null,
             wallets = loadingListState(WALLET_KEY_TAG, WALLET_DEFAULT_COUNT),
             recent = loadingListState(RECENT_KEY_TAG, RECENT_DEFAULT_COUNT),
             networkName = cryptoCurrency.network.name,
             isValidating = false,
-            isRedesignEnabled = isRedesignEnabled,
             isRecentHidden = false,
         )
     }
