@@ -2,11 +2,10 @@ package com.tangem.data.notifications
 
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
-import com.tangem.datasource.local.preferences.utils.getObjectMapSync
-import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
-import com.tangem.datasource.local.preferences.utils.getSyncOrNull
-import com.tangem.datasource.local.preferences.utils.store
+import com.tangem.datasource.local.preferences.PreferencesKeys.getShouldShowAskNotificationPermissionViaBs
+import com.tangem.datasource.local.preferences.utils.*
 import com.tangem.domain.notifications.repository.NotificationsRepository
+import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 class DefaultNotificationsRepository @Inject constructor(
@@ -15,6 +14,10 @@ class DefaultNotificationsRepository @Inject constructor(
 
     override suspend fun shouldShowNotification(key: String): Boolean {
         return appPreferencesStore.getSyncOrDefault(PreferencesKeys.getShouldShowNotificationKey(key), true)
+    }
+
+    override fun getShouldShowNotification(key: String): Flow<Boolean> {
+        return appPreferencesStore.get(PreferencesKeys.getShouldShowNotificationKey(key), true)
     }
 
     override suspend fun setShouldShowNotifications(key: String, value: Boolean) {
@@ -61,12 +64,22 @@ class DefaultNotificationsRepository @Inject constructor(
         }
 
     override suspend fun setNotificationsWasEnabledAutomatically(userWalletId: String) {
-        appPreferencesStore.editData {
-            it.setObjectMap(
+        appPreferencesStore.editData { preferences ->
+            preferences.setObjectMap(
                 key = PreferencesKeys.NOTIFICATIONS_AUTOMATICALLY_ENABLED_STATES_KEY,
-                value = it.getObjectMap<Boolean>(PreferencesKeys.NOTIFICATIONS_AUTOMATICALLY_ENABLED_STATES_KEY)
+                value = preferences.getObjectMap<Boolean>(
+                    PreferencesKeys.NOTIFICATIONS_AUTOMATICALLY_ENABLED_STATES_KEY,
+                )
                     .plus(userWalletId to true),
             )
         }
+    }
+
+    override suspend fun shouldAskNotificationPermissionsViaBs(): Boolean {
+        return appPreferencesStore.getSyncOrDefault(getShouldShowAskNotificationPermissionViaBs(), false)
+    }
+
+    override suspend fun setShouldAskNotificationPermissionsViaBs(shouldAsk: Boolean) {
+        appPreferencesStore.store(key = getShouldShowAskNotificationPermissionViaBs(), value = shouldAsk)
     }
 }

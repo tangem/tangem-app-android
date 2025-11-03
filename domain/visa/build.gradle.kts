@@ -10,17 +10,18 @@ android {
 }
 
 dependencies {
-    /** Domain models */
-    api(projects.domain.visa.models)
-
-    /** Project - Domain */
+    /** Project - Core */
+    api(projects.core.pagination)
     implementation(projects.core.utils)
     implementation(projects.core.error)
+
+    /** Project - Domain */
     api(projects.domain.models)
-    implementation(projects.domain.core)
-    implementation(projects.domain.wallets.models)
-    implementation(projects.domain.tokens.models)
+    api(projects.domain.visa.models)
     implementation(projects.domain.appCurrency.models)
+    implementation(projects.domain.core)
+    implementation(projects.domain.tokens.models)
+    implementation(projects.domain.wallets.models)
 
     /** Security */
     implementation(deps.spongecastle.core)

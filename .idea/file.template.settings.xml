@@ -1,0 +1,40 @@
+<application>
+  <component name="ExportableFileTemplateSettings">
+    <default_templates>
+      <template name="Decompose component.kt" file-name="${NAME}Component" reformat="true" live-template-enabled="false">
+        <template name="Decompose component.kt.child.5.kt" file-name="di/${NAME}ModelModule" reformat="true" live-template-enabled="false" />
+        <template name="Decompose component.kt.child.4.kt" file-name="di/${NAME}ComponentModule" reformat="true" live-template-enabled="false" />
+        <template name="Decompose component.kt.child.0.kt" file-name="entity/${NAME}UM" reformat="true" live-template-enabled="false" />
+        <template name="Decompose component.kt.child.1.kt" file-name="ui/${NAME}Content" reformat="true" live-template-enabled="false" />
+        <template name="Decompose component.kt.child.2.kt" file-name="model/${NAME}Model" reformat="true" live-template-enabled="false" />
+        <template name="Decompose component.kt.child.3.kt" file-name="Default${NAME}Component" reformat="true" live-template-enabled="false" />
+      </template>
+      <template name="Decompose component.kt.child.0.kt" file-name="entity/${NAME}UM" reformat="true" live-template-enabled="false" />
+      <template name="Decompose component.kt.child.1.kt" file-name="ui/${NAME}Content" reformat="true" live-template-enabled="false" />
+      <template name="Decompose component.kt.child.2.kt" file-name="model/${NAME}Model" reformat="true" live-template-enabled="false" />
+      <template name="Decompose component.kt.child.3.kt" file-name="Default${NAME}Component" reformat="true" live-template-enabled="false" />
+      <template name="Decompose component.kt.child.4.kt" file-name="di/${NAME}ComponentModule" reformat="true" live-template-enabled="false" />
+      <template name="Decompose component.kt.child.5.kt" file-name="di/${NAME}ModelModule" reformat="true" live-template-enabled="false" />
+      <template name="FeatureToggles.kt" file-name="${NAME}FeatureToggles" reformat="true" live-template-enabled="false">
+        <template name="FeatureToggles.kt.child.0.kt" file-name="Default${NAME}FeatureToggles" reformat="true" live-template-enabled="false" />
+      </template>
+      <template name="FeatureToggles.kt.child.0.kt" file-name="Default${NAME}FeatureToggles" reformat="true" live-template-enabled="false" />
+      <template name="FlowPackaging.kt" file-name="producer/${NAME}Producer" reformat="true" live-template-enabled="false">
+        <template name="FlowPackaging.kt.child.0.kt" file-name="di/${NAME}FetcherModule" reformat="true" live-template-enabled="false" />
+        <template name="FlowPackaging.kt.child.1.kt" file-name="di/${NAME}ProducerFactoryModule" reformat="true" live-template-enabled="false" />
+        <template name="FlowPackaging.kt.child.2.kt" file-name="di/${NAME}SupplierModule" reformat="true" live-template-enabled="false" />
+        <template name="FlowPackaging.kt.child.3.kt" file-name="fetcher/Default${NAME}Fetcher" reformat="true" live-template-enabled="false" />
+        <template name="FlowPackaging.kt.child.4.kt" file-name="producer/Default${NAME}Producer" reformat="true" live-template-enabled="false" />
+        <template name="FlowPackaging.kt.child.5.kt" file-name="fetcher/${NAME}Fetcher" reformat="true" live-template-enabled="false" />
+        <template name="FlowPackaging.kt.child.6.kt" file-name="supplier/${NAME}Supplier" reformat="true" live-template-enabled="false" />
+      </template>
+      <template name="FlowPackaging.kt.child.0.kt" file-name="di/${NAME}FetcherModule" reformat="true" live-template-enabled="false" />
+      <template name="FlowPackaging.kt.child.1.kt" file-name="di/${NAME}ProducerFactoryModule" reformat="true" live-template-enabled="false" />
+      <template name="FlowPackaging.kt.child.2.kt" file-name="di/${NAME}SupplierModule" reformat="true" live-template-enabled="false" />
+      <template name="FlowPackaging.kt.child.3.kt" file-name="fetcher/Default${NAME}Fetcher" reformat="true" live-template-enabled="false" />
+      <template name="FlowPackaging.kt.child.4.kt" file-name="producer/Default${NAME}Producer" reformat="true" live-template-enabled="false" />
+      <template name="FlowPackaging.kt.child.5.kt" file-name="fetcher/${NAME}Fetcher" reformat="true" live-template-enabled="false" />
+      <template name="FlowPackaging.kt.child.6.kt" file-name="supplier/${NAME}Supplier" reformat="true" live-template-enabled="false" />
+    </default_templates>
+  </component>
+</application>

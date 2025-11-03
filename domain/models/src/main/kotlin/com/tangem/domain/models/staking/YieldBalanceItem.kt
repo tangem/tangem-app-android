@@ -107,12 +107,14 @@ enum class BalanceType(val order: Int) {
 }
 
 @Serializable
-enum class RewardBlockType {
-    NoRewards,
-    Rewards,
-    RewardsRequirementsError,
-    RewardUnavailable,
-    ;
+sealed interface RewardBlockType {
+    data object NoRewards : RewardBlockType
+    data object Rewards : RewardBlockType
+    data object RewardsRequirementsError : RewardBlockType
+    sealed interface RewardUnavailable : RewardBlockType {
+        data object DefaultRewardUnavailable : RewardUnavailable
+        data object SolanaRewardUnavailable : RewardUnavailable
+    }
 
     /**
      * Indicated whether action can be performed on available reward
@@ -120,11 +122,11 @@ enum class RewardBlockType {
      */
     val isActionable: Boolean
         get() = when (this) {
-            NoRewards,
-            RewardUnavailable,
+            is NoRewards,
+            is RewardUnavailable,
             -> false
-            RewardsRequirementsError,
-            Rewards,
+            is RewardsRequirementsError,
+            is Rewards,
             -> true
         }
 }

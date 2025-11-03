@@ -98,9 +98,9 @@ fun ShowcaseButtons(
                     bottom = TangemTheme.dimens.spacing16,
                 ),
         )
-        hint?.let {
+        if (hint != null) {
             Text(
-                text = it.resolveReference(),
+                text = hint.resolveReference(),
                 style = TangemTheme.typography.body2,
                 color = TangemTheme.colors.text.secondary,
                 modifier = Modifier
@@ -122,16 +122,18 @@ fun ShowcaseButtons(
 private fun Showcase_Preview() {
     TangemThemePreview {
         Showcase(
-            headerIconRes = R.drawable.ic_notifications_unread_24,
+            headerIconRes = R.drawable.ic_notification_56,
             headerText = resourceReference(R.string.user_push_notification_agreement_header),
             showcaseItems = persistentListOf(
                 ShowcaseItemModel(
-                    R.drawable.ic_rocket_launch_24,
-                    resourceReference(R.string.user_push_notification_agreement_argument_one),
+                    iconRes = R.drawable.ic_rocket_launch_24,
+                    title = resourceReference(R.string.user_push_notification_agreement_argument_one_title),
+                    subTitle = resourceReference(R.string.user_push_notification_agreement_argument_one_subtitle),
                 ),
                 ShowcaseItemModel(
-                    R.drawable.ic_storefront_24,
-                    resourceReference(R.string.user_push_notification_agreement_argument_two),
+                    iconRes = R.drawable.ic_storefront_24,
+                    title = resourceReference(R.string.user_push_notification_agreement_argument_two_title),
+                    subTitle = resourceReference(R.string.user_push_notification_agreement_argument_two_subtitle),
                 ),
             ),
             primaryButton = ShowcaseButtonModel(resourceReference(R.string.common_allow), {}),

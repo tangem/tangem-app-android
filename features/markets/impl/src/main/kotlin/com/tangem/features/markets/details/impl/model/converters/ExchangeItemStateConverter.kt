@@ -27,7 +27,7 @@ internal object ExchangeItemStateConverter : Converter<TokenMarketExchange, Toke
                 url = value.imageUrl,
                 fallbackResId = R.drawable.ic_alert_24,
                 isGrayscale = false,
-                showCustomBadge = false,
+                shouldShowCustomBadge = false,
             ),
             titleState = TokenItemState.TitleState.Content(text = stringReference(value.name)),
             fiatAmountState = TokenItemState.FiatAmountState.Content(

@@ -7,10 +7,10 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.work.OneTimeWorkRequest
 import androidx.work.WorkManager
 import com.tangem.common.routing.AppRoute
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.legacy.asLockable
-import com.tangem.domain.core.wallets.UserWalletsListRepository
 import com.tangem.domain.wallets.usecase.ClearAllHotWalletContextualUnlockUseCase
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.tap.LockTimerWorker.Companion.TAG
@@ -22,6 +22,7 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.util.concurrent.TimeUnit
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
 
 @Suppress("LongParameterList")
 internal class LockUserWalletsTimer(
