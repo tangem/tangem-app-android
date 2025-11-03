@@ -51,8 +51,8 @@ class DefaultMultiAccountListProducerTest {
         val userWalletsFlow = MutableStateFlow(value = listOf(userWallet))
         every { userWalletsStore.userWallets } returns userWalletsFlow
 
-        val accountList = AccountList.empty(userWallet)
-        every { walletAccountListFlowFactory.create(userWallet) } returns flowOf(accountList)
+        val accountList = AccountList.empty(userWalletId)
+        every { walletAccountListFlowFactory.create(userWalletId) } returns flowOf(accountList)
 
         // Act
         val actual = producer.produce().let(::getEmittedValues)
@@ -63,7 +63,7 @@ class DefaultMultiAccountListProducerTest {
 
         coVerify(ordering = Ordering.SEQUENCE) {
             userWalletsStore.userWallets
-            walletAccountListFlowFactory.create(userWallet)
+            walletAccountListFlowFactory.create(userWalletId)
         }
     }
 
@@ -73,11 +73,11 @@ class DefaultMultiAccountListProducerTest {
         val userWalletsFlow = MutableStateFlow(value = listOf(userWallet))
         every { userWalletsStore.userWallets } returns userWalletsFlow
 
-        val accountList = AccountList.empty(userWallet)
-        val updatedAccountList = AccountList.empty(userWallet = userWallet, sortType = TokensSortType.NONE)
+        val accountList = AccountList.empty(userWalletId)
+        val updatedAccountList = AccountList.empty(userWalletId = userWalletId, sortType = TokensSortType.NONE)
         val factoryFlow = MutableStateFlow<AccountList?>(null)
 
-        every { walletAccountListFlowFactory.create(userWallet) } returns factoryFlow.filterNotNull()
+        every { walletAccountListFlowFactory.create(userWalletId) } returns factoryFlow.filterNotNull()
 
         // Act (first emission)
         factoryFlow.value = accountList
@@ -95,9 +95,9 @@ class DefaultMultiAccountListProducerTest {
 
         coVerify(ordering = Ordering.SEQUENCE) {
             userWalletsStore.userWallets
-            walletAccountListFlowFactory.create(userWallet)
+            walletAccountListFlowFactory.create(userWalletId)
             userWalletsStore.userWallets
-            walletAccountListFlowFactory.create(userWallet)
+            walletAccountListFlowFactory.create(userWalletId)
         }
     }
 
@@ -107,10 +107,10 @@ class DefaultMultiAccountListProducerTest {
         val userWalletsFlow = MutableStateFlow(value = listOf(userWallet))
         every { userWalletsStore.userWallets } returns userWalletsFlow
 
-        val accountList = AccountList.empty(userWallet)
+        val accountList = AccountList.empty(userWalletId)
         val factoryFlow = MutableStateFlow<AccountList?>(null)
 
-        every { walletAccountListFlowFactory.create(userWallet) } returns factoryFlow.filterNotNull()
+        every { walletAccountListFlowFactory.create(userWalletId) } returns factoryFlow.filterNotNull()
 
         // Act (first emission)
         factoryFlow.value = accountList
@@ -128,9 +128,9 @@ class DefaultMultiAccountListProducerTest {
 
         coVerify(ordering = Ordering.SEQUENCE) {
             userWalletsStore.userWallets
-            walletAccountListFlowFactory.create(userWallet)
+            walletAccountListFlowFactory.create(userWalletId)
             userWalletsStore.userWallets
-            walletAccountListFlowFactory.create(userWallet)
+            walletAccountListFlowFactory.create(userWalletId)
         }
     }
 
@@ -141,7 +141,7 @@ class DefaultMultiAccountListProducerTest {
         every { userWalletsStore.userWallets } returns userWalletsFlow
 
         val exception = RuntimeException("Converter error")
-        every { walletAccountListFlowFactory.create(userWallet) } throws exception
+        every { walletAccountListFlowFactory.create(userWalletId) } throws exception
 
         // Act
         val actual = producer.produceWithFallback().let(::getEmittedValues)
@@ -152,7 +152,7 @@ class DefaultMultiAccountListProducerTest {
 
         coVerify(ordering = Ordering.SEQUENCE) {
             userWalletsStore.userWallets
-            walletAccountListFlowFactory.create(userWallet)
+            walletAccountListFlowFactory.create(userWalletId)
         }
     }
 
@@ -178,7 +178,7 @@ class DefaultMultiAccountListProducerTest {
         val userWalletsFlow = MutableStateFlow(value = listOf(userWallet))
         every { userWalletsStore.userWallets } returns userWalletsFlow
 
-        every { walletAccountListFlowFactory.create(userWallet) } returns emptyFlow()
+        every { walletAccountListFlowFactory.create(userWalletId) } returns emptyFlow()
 
         // Act
         val actual = producer.produce().let(::getEmittedValues)
@@ -188,7 +188,7 @@ class DefaultMultiAccountListProducerTest {
 
         coVerify(ordering = Ordering.SEQUENCE) {
             userWalletsStore.userWallets
-            walletAccountListFlowFactory.create(userWallet)
+            walletAccountListFlowFactory.create(userWalletId)
         }
     }
 
@@ -203,9 +203,9 @@ class DefaultMultiAccountListProducerTest {
         val userWalletsFlow = MutableStateFlow(listOf(userWallet, userWallet2))
         every { userWalletsStore.userWallets } returns userWalletsFlow
 
-        val accountList = AccountList.empty(userWallet)
-        every { walletAccountListFlowFactory.create(userWallet) } returns flowOf(accountList)
-        every { walletAccountListFlowFactory.create(userWallet2) } returns emptyFlow()
+        val accountList = AccountList.empty(userWalletId)
+        every { walletAccountListFlowFactory.create(userWalletId) } returns flowOf(accountList)
+        every { walletAccountListFlowFactory.create(userWalletId2) } returns emptyFlow()
 
         // Act
         val actual = producer.produce().let(::getEmittedValues)
@@ -215,8 +215,8 @@ class DefaultMultiAccountListProducerTest {
 
         coVerify(ordering = Ordering.SEQUENCE) {
             userWalletsStore.userWallets
-            walletAccountListFlowFactory.create(userWallet)
-            walletAccountListFlowFactory.create(userWallet2)
+            walletAccountListFlowFactory.create(userWalletId)
+            walletAccountListFlowFactory.create(userWalletId2)
         }
     }
 }

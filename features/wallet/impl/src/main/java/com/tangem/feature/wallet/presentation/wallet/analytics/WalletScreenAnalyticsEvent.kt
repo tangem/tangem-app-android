@@ -73,6 +73,13 @@ sealed class WalletScreenAnalyticsEvent {
 
         data object ScreenOpened : MainScreen(event = "Screen opened")
 
+        class WalletSelected(val isImported: Boolean) : MainScreen(
+            event = "Wallet Selected",
+            params = mapOf(
+                "Wallet Type" to if (isImported) "Seed Phrase" else "Seedless",
+            ),
+        )
+
         class EnableBiometrics(state: AnalyticsParam.OnOffState) : MainScreen(
             event = "Enable Biometric",
             params = mapOf("State" to state.value),
@@ -143,5 +150,15 @@ sealed class WalletScreenAnalyticsEvent {
         data object ReferralPromoButtonParticipate : MainScreen(event = "Button - Referral Participate")
         data object ReferralPromoButtonDismiss : MainScreen(event = "Button - Referral Dismiss")
         //endregion
+    }
+
+    sealed class PushBannerPromo(
+        event: String,
+        params: Map<String, String> = mapOf(),
+    ) : AnalyticsEvent(category = "Promo", event = event, params = params) {
+
+        data object PushBanner : PushBannerPromo(event = "Push Banner")
+        data object ButtonAllowPush : PushBannerPromo(event = "Button - Allow Push")
+        data object ButtonLaterPush : PushBannerPromo(event = "Button - Later Push")
     }
 }
