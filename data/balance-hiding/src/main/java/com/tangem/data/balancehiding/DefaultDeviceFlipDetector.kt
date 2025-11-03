@@ -20,8 +20,8 @@ class DefaultDeviceFlipDetector @Inject constructor(
 ) : DeviceFlipDetector, DefaultLifecycleObserver {
 
     private val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
-    private var gravitySensor = sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
-    private var isResumedState = AtomicBoolean(false)
+    private val gravitySensor = sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+    private val isResumedState = AtomicBoolean(false)
 
     override fun onPause(owner: LifecycleOwner) {
         isResumedState.set(false)
