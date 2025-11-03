@@ -65,7 +65,7 @@ internal class TxHistoryListManager(
     suspend fun startLoading() {
         actionsFlow.emit(
             BatchAction.Reload(
-                requestParams = TxHistoryListConfig(userWalletId, currency, refresh = false),
+                requestParams = TxHistoryListConfig(userWalletId, currency, shouldRefresh = false),
             ),
         )
     }
@@ -73,7 +73,7 @@ internal class TxHistoryListManager(
     suspend fun reload() {
         actionsFlow.emit(
             BatchAction.Reload(
-                requestParams = TxHistoryListConfig(userWalletId, currency, refresh = true),
+                requestParams = TxHistoryListConfig(userWalletId, currency, shouldRefresh = true),
             ),
         )
     }
@@ -81,7 +81,7 @@ internal class TxHistoryListManager(
     suspend fun loadMore(userWalletId: UserWalletId, currency: CryptoCurrency) {
         actionsFlow.emit(
             BatchAction.LoadMore(
-                requestParams = TxHistoryListConfig(userWalletId, currency, refresh = false),
+                requestParams = TxHistoryListConfig(userWalletId, currency, shouldRefresh = false),
             ),
         )
     }

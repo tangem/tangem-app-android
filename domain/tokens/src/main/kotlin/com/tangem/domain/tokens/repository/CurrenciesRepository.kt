@@ -40,26 +40,7 @@ interface CurrenciesRepository {
      * @param userWalletId The unique identifier of the user wallet.
      * @param currencies The list of cryptocurrencies to be saved.
      */
-    suspend fun saveNewCurrenciesList(userWalletId: UserWalletId, currencies: List<CryptoCurrency>)
-
-    /**
-     * Add currencies to a specific user wallet.
-     *
-     * @param userWalletId The unique identifier of the user wallet.
-     * @param currencies The currencies which must be added.
-     * @throws DataError.UserWalletError.WrongUserWallet If single-currency user wallet
-     * ID provided.
-     */
-    suspend fun addCurrencies(userWalletId: UserWalletId, currencies: List<CryptoCurrency>): List<CryptoCurrency>
-
-    /**
-     * Saves the given list of cryptocurrencies for a specific multi-currency user wallet.
-     *
-     * @param userWalletId The unique identifier of the user wallet.
-     * @param currencies The list of cryptocurrencies to be saved.
-     */
-    @Deprecated("Tech debt")
-    suspend fun saveNewCurrenciesListCache(userWalletId: UserWalletId, currencies: List<CryptoCurrency>)
+    suspend fun saveCurrenciesLocal(userWalletId: UserWalletId, currencies: List<CryptoCurrency>)
 
     /**
      * Add currencies to a specific user wallet.
@@ -255,6 +236,8 @@ interface CurrenciesRepository {
      * Retrieves fee paid currency for specific [network].
      */
     suspend fun getFeePaidCurrency(userWalletId: UserWalletId, network: Network): FeePaidCurrency
+
+    fun createCoinCurrency(network: Network): CryptoCurrency.Coin
 
     /**
      * Creates token [cryptoCurrency] based on current token and [network] it`s will be added

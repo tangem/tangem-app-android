@@ -1,6 +1,7 @@
 package com.tangem.feature.wallet.presentation.wallet.state.transformers
 
 import com.tangem.domain.card.common.util.cardTypesResolver
+import com.tangem.domain.models.PortfolioId
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.domain.models.wallet.UserWallet
@@ -14,6 +15,7 @@ import timber.log.Timber
 internal class SetCryptoCurrencyActionsTransformer(
     private val tokenActionsState: TokenActionsState,
     private val userWallet: UserWallet,
+    private val portfolioId: PortfolioId,
     private val clickIntents: WalletClickIntents,
 ) : WalletStateTransformer(userWallet.walletId) {
 
@@ -48,6 +50,7 @@ internal class SetCryptoCurrencyActionsTransformer(
                             dimContent = action.unavailabilityReason != ScenarioUnavailabilityReason.None,
                             onClick = {
                                 clickIntents.onBuyClick(
+                                    userWalletId = portfolioId.userWalletId,
                                     cryptoCurrencyStatus = cryptoCurrencyStatus,
                                     unavailabilityReason = action.unavailabilityReason,
                                 )
@@ -59,7 +62,10 @@ internal class SetCryptoCurrencyActionsTransformer(
                             enabled = true,
                             dimContent = action.unavailabilityReason != ScenarioUnavailabilityReason.None,
                             onClick = {
-                                clickIntents.onReceiveClick(cryptoCurrencyStatus = cryptoCurrencyStatus)
+                                clickIntents.onReceiveClick(
+                                    portfolioId.userWalletId,
+                                    cryptoCurrencyStatus = cryptoCurrencyStatus,
+                                )
                             },
                             onLongClick = {
                                 clickIntents.onCopyAddressLongClick(cryptoCurrencyStatus = cryptoCurrencyStatus)
@@ -84,6 +90,7 @@ internal class SetCryptoCurrencyActionsTransformer(
                             dimContent = action.unavailabilityReason != ScenarioUnavailabilityReason.None,
                             onClick = {
                                 clickIntents.onSendClick(
+                                    userWalletId = portfolioId.userWalletId,
                                     cryptoCurrencyStatus = cryptoCurrencyStatus,
                                     unavailabilityReason = action.unavailabilityReason,
                                 )
