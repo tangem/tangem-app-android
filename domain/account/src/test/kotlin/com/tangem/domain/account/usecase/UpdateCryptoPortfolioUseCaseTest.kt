@@ -12,7 +12,6 @@ import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountName
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.domain.models.account.DerivationIndex
-import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
@@ -29,19 +28,15 @@ class UpdateCryptoPortfolioUseCaseTest {
     private val crudRepository: AccountsCRUDRepository = mockk(relaxUnitFun = true)
     private val useCase = UpdateCryptoPortfolioUseCase(crudRepository = crudRepository)
 
-    private val userWallet = mockk<UserWallet>()
-
     @BeforeEach
     fun resetMocks() {
-        clearMocks(crudRepository, userWallet)
-
-        every { userWallet.walletId } returns userWalletId
+        clearMocks(crudRepository)
     }
 
     @Test
     fun `invoke should update crypto portfolio account with new name`() = runTest {
         // Arrange
-        val accountList = AccountList.empty(userWallet = userWallet)
+        val accountList = AccountList.empty(userWalletId = userWalletId)
         val accountId = accountList.mainAccount.accountId
 
         val newAccountName = AccountName("New name").getOrNull()!!
@@ -66,7 +61,7 @@ class UpdateCryptoPortfolioUseCaseTest {
     @Test
     fun `invoke should update crypto portfolio account with new icon`() = runTest {
         // Arrange
-        val accountList = AccountList.empty(userWallet = userWallet)
+        val accountList = AccountList.empty(userWalletId = userWalletId)
         val accountId = accountList.mainAccount.accountId
 
         val newAccountIcon = CryptoPortfolioIcon.ofCustomAccount(
@@ -94,7 +89,7 @@ class UpdateCryptoPortfolioUseCaseTest {
     @Test
     fun `invoke should update crypto portfolio account with new name and icon`() = runTest {
         // Arrange
-        val accountList = AccountList.empty(userWallet = userWallet)
+        val accountList = AccountList.empty(userWalletId = userWalletId)
         val accountId = accountList.mainAccount.accountId
 
         val newAccountName = AccountName("New name").getOrNull()!!
@@ -123,7 +118,7 @@ class UpdateCryptoPortfolioUseCaseTest {
     @Test
     fun `invoke if name and icon are null`() = runTest {
         // Arrange
-        val accountList = AccountList.empty(userWallet = userWallet)
+        val accountList = AccountList.empty(userWalletId = userWalletId)
         val accountId = accountList.mainAccount.accountId
 
         coEvery { crudRepository.getAccountListSync(userWalletId = userWalletId) } returns accountList.toOption()
@@ -144,7 +139,7 @@ class UpdateCryptoPortfolioUseCaseTest {
     @Test
     fun `invoke if getAccounts throws exception`() = runTest {
         // Arrange
-        val accountList = AccountList.empty(userWallet = userWallet)
+        val accountList = AccountList.empty(userWalletId = userWalletId)
         val accountId = accountList.mainAccount.accountId
 
         val newAccountName = AccountName("New name").getOrNull()!!
@@ -178,11 +173,12 @@ class UpdateCryptoPortfolioUseCaseTest {
         coEvery { crudRepository.getAccountListSync(userWalletId = userWalletId) } returns accountList
 
         // Act
-        val actual = useCase(accountId = accountId, accountName = newAccountName)
+        val actual = useCase(accountId, newAccountName).leftOrNull() as Error.DataOperationFailed
 
         // Assert
-        val expected = Error.CriticalTechError.AccountsNotCreated(userWalletId = userWalletId).left()
-        Truth.assertThat(actual).isEqualTo(expected)
+        val expected = IllegalStateException("Account list not found for wallet $userWalletId")
+        Truth.assertThat(actual.cause).isInstanceOf(expected::class.java)
+        Truth.assertThat(actual.cause).hasMessageThat().isEqualTo(expected.message)
 
         coVerifyOrder { crudRepository.getAccountListSync(userWalletId = userWalletId) }
         coVerify(inverse = true) { crudRepository.saveAccounts(accountList = any()) }
@@ -191,7 +187,7 @@ class UpdateCryptoPortfolioUseCaseTest {
     @Test
     fun `invoke if getAccounts does not contain accountId`() = runTest {
         // Arrange
-        val accountList = AccountList.empty(userWallet = userWallet)
+        val accountList = AccountList.empty(userWalletId = userWalletId)
         val accountId = AccountId.forCryptoPortfolio(
             userWalletId = userWalletId,
             derivationIndex = DerivationIndex(1).getOrNull()!!,
@@ -202,11 +198,12 @@ class UpdateCryptoPortfolioUseCaseTest {
         coEvery { crudRepository.getAccountListSync(userWalletId = userWalletId) } returns accountList.toOption()
 
         // Act
-        val actual = useCase(accountId = accountId, accountName = newAccountName)
+        val actual = useCase(accountId, newAccountName).leftOrNull() as Error.DataOperationFailed
 
         // Assert
-        val expected = Error.CriticalTechError.AccountNotFound(accountId = accountId).left()
-        Truth.assertThat(actual).isEqualTo(expected)
+        val expected = IllegalStateException("Account not found: $accountId")
+        Truth.assertThat(actual.cause).isInstanceOf(expected::class.java)
+        Truth.assertThat(actual.cause).hasMessageThat().isEqualTo(expected.message)
 
         coVerifyOrder { crudRepository.getAccountListSync(userWalletId = userWalletId) }
         coVerify(inverse = true) { crudRepository.saveAccounts(accountList = any()) }
@@ -215,7 +212,7 @@ class UpdateCryptoPortfolioUseCaseTest {
     @Test
     fun `invoke if saveAccounts throws exception`() = runTest {
         // Arrange
-        val accountList = AccountList.empty(userWallet = userWallet)
+        val accountList = AccountList.empty(userWalletId = userWalletId)
         val accountId = accountList.mainAccount.accountId
 
         val newAccountName = AccountName("New name").getOrNull()!!
