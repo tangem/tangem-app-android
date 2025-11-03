@@ -4,7 +4,7 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.tokens.model.analytics.TokenSwapPromoAnalyticsEvent
+import com.tangem.domain.tokens.model.analytics.PromoAnalyticsEvent
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsNotification
 import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
@@ -38,8 +38,8 @@ internal class TokenDetailsNotificationsAnalyticsSender(
             -> TokenDetailsAnalyticsEvent.Notice.NotEnoughFee(
                 currency = cryptoCurrency,
             )
-            is TokenDetailsNotification.SwapPromo -> TokenSwapPromoAnalyticsEvent.NoticePromotionBanner(
-                program = TokenSwapPromoAnalyticsEvent.Program.Empty, // Use it on new promo action
+            is TokenDetailsNotification.SwapPromo -> PromoAnalyticsEvent.NoticePromotionBanner(
+                program = PromoAnalyticsEvent.Program.Empty, // Use it on new promo action
                 source = AnalyticsParam.ScreensSources.Token,
             )
             is TokenDetailsNotification.KaspaIncompleteTransactionWarning -> TokenDetailsAnalyticsEvent.Notice.Reveal(
