@@ -35,7 +35,7 @@ internal object CardDomainModule {
 
     @Provides
     @Singleton
-    fun provideIsDemoCardUseCase(): IsDemoCardUseCase = IsDemoCardUseCase(config = DemoConfig())
+    fun provideIsDemoCardUseCase(): IsDemoCardUseCase = IsDemoCardUseCase(config = DemoConfig)
 
     @Provides
     @Singleton
