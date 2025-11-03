@@ -33,7 +33,7 @@ internal class MultiWalletCryptoCurrenciesFetcherModule {
         dispatchers: CoroutineDispatcherProvider,
     ): MultiWalletCryptoCurrenciesFetcher {
         return DefaultMultiWalletCryptoCurrenciesFetcher(
-            demoConfig = DemoConfig(),
+            demoConfig = DemoConfig,
             userWalletsStore = userWalletsStore,
             tangemTechApi = tangemTechApi,
             customTokensMerger = CustomTokensMerger(

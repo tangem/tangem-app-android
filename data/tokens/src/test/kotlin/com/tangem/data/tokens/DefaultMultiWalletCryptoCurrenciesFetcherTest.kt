@@ -48,7 +48,7 @@ internal class DefaultMultiWalletCryptoCurrenciesFetcherTest {
     private val expressServiceLoader: ExpressServiceLoader = mockk(relaxUnitFun = true)
 
     private val fetcher = DefaultMultiWalletCryptoCurrenciesFetcher(
-        demoConfig = DemoConfig(),
+        demoConfig = DemoConfig,
         userWalletsStore = userWalletsStore,
         tangemTechApi = tangemTechApi,
         customTokensMerger = customTokensMerger,

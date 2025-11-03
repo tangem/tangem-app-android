@@ -39,7 +39,7 @@ internal class DefaultCardCryptoCurrencyFactoryTest {
     private val excludedBlockchains = ExcludedBlockchains()
 
     private val factory = DefaultCardCryptoCurrencyFactory(
-        demoConfig = DemoConfig(),
+        demoConfig = DemoConfig,
         excludedBlockchains = excludedBlockchains,
         userWalletsStore = userWalletsStore,
         userTokensResponseStore = userTokensResponseStore,

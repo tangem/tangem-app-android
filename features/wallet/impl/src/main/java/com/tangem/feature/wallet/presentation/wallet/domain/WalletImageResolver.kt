@@ -84,7 +84,7 @@ internal class WalletImageResolver @Inject constructor(
         @DrawableRes twoBackupResId: Int = R.drawable.ill_wallet2_cards3_120_106,
     ): Int? {
         return resolveWalletWithBackups { count ->
-            if (DemoConfig().isDemoCardId(cardId)) return@resolveWalletWithBackups oneBackupResId
+            if (DemoConfig.isDemoCardId(cardId)) return@resolveWalletWithBackups oneBackupResId
 
             when (count) {
                 WALLET_WITH_ONE_BACKUP_COUNT -> oneBackupResId

@@ -104,7 +104,7 @@ internal class DefaultCardCryptoCurrencyFactory(
                 val card = userWallet.scanResponse.card
 
                 var blockchainsInternal = if (demoConfig.isDemoCardId(card.cardId)) {
-                    demoConfig.demoBlockchains
+                    demoConfig.getDemoBlockchains(card.cardId)
                 } else {
                     listOf(Blockchain.Bitcoin, Blockchain.Ethereum)
                 }
