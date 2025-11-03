@@ -29,7 +29,6 @@ import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.impl.promo.entity.YieldSupplyPromoUM
 import com.tangem.features.yield.supply.impl.promo.model.YieldSupplyPromoClickIntents
-import com.tangem.utils.StringsSigns
 
 @Suppress("MagicNumber")
 @Composable
@@ -73,7 +72,7 @@ internal fun YieldSupplyPromoContent(
             SpacerH8()
             Label(
                 state = LabelUM(
-                    text = resourceReference(R.string.yield_module_promo_screen_variable_rate_info),
+                    text = yieldSupplyPromoUM.subtitle,
                     style = LabelStyle.REGULAR,
                     icon = R.drawable.ic_information_24,
                     onIconClick = clickIntents::onApyInfoClick,
@@ -175,8 +174,6 @@ private fun YieldSupplyTosText(tosLink: String, policyLink: String, onClick: (St
 
     Text(
         text = buildAnnotatedString {
-            append(StringsSigns.POINT_SIGN)
-            appendSpace()
             append(fullString.substring(0, tosIndex))
             withLink(
                 link = LinkAnnotation.Clickable(
@@ -223,7 +220,8 @@ private fun YieldSupplyPromoContent_Preview() {
             yieldSupplyPromoUM = YieldSupplyPromoUM(
                 tosLink = "https://tangem.com/terms-of-service/",
                 policyLink = "https://tangem.com/privacy-policy/",
-                title = resourceReference(R.string.yield_module_promo_screen_title, wrappedList("5.3")),
+                title = resourceReference(R.string.yield_module_promo_screen_title),
+                subtitle = resourceReference(R.string.yield_module_promo_screen_variable_rate_info, wrappedList("5.3")),
             ),
             clickIntents = object : YieldSupplyPromoClickIntents {
                 override fun onBackClick() {}

@@ -47,7 +47,6 @@ interface QuotesFetcher {
             value = setOf(PRICE, PRICE_CHANGE_24H, PRICE_CHANGE_1W, PRICE_CHANGE_30D).combine(),
         ),
         LAST_UPDATED_AT(value = "lastUpdatedAt"),
-        ;
     }
 
     sealed interface Error {
