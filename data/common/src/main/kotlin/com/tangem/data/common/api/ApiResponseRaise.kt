@@ -47,7 +47,7 @@ suspend inline fun <T> safeApiCallWithTimeout(
 ): T = safeApiCall(
     call = {
         withTimeoutOrNull(timeoutMillis) { call() }
-            ?: raise(ApiResponseError.TimeoutException)
+            ?: raise(ApiResponseError.TimeoutException())
     },
     onError = onError,
 )

@@ -1,7 +1,7 @@
 package com.tangem.tap.domain.twins
 
 import com.tangem.common.core.TangemError
-import com.tangem.domain.common.TwinCardNumber
+import com.tangem.domain.card.common.TwinCardNumber
 import com.tangem.tap.tangemSdkManager
 import com.tangem.wallet.R
 

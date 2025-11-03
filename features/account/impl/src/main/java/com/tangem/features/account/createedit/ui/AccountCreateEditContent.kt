@@ -19,6 +19,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -30,8 +32,8 @@ import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.SpacerH24
 import com.tangem.core.ui.components.SpacerH8
-import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.components.account.AccountIconSize
+import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.components.fields.AutoSizeTextField
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
@@ -43,9 +45,11 @@ import kotlinx.collections.immutable.toImmutableList
 
 @Composable
 internal fun AccountCreateEditContent(state: AccountCreateEditUM, modifier: Modifier = Modifier) {
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val focusManager = LocalFocusManager.current
     Column(
         modifier = modifier
-            .background(color = TangemTheme.colors.background.tertiary)
+            .background(color = TangemTheme.colors.background.secondary)
             .fillMaxSize()
             .imePadding()
             .systemBarsPadding(),
@@ -75,6 +79,10 @@ internal fun AccountCreateEditContent(state: AccountCreateEditUM, modifier: Modi
                 style = TangemTheme.typography.caption2,
                 color = TangemTheme.colors.text.tertiary,
             )
+        }
+        if (state.buttonState.showProgress) {
+            focusManager.clearFocus()
+            keyboardController?.hide()
         }
         PrimaryButton(
             modifier = Modifier
@@ -161,6 +169,7 @@ private fun AccountColor(colorsState: AccountCreateEditUM.Colors) {
                     contentAlignment = Alignment.Center,
                     modifier = Modifier
                         .wrapContentSize()
+                        .clip(CircleShape)
                         .clickable(onClick = { colorsState.onColorSelect(color) })
                         .size(48.dp),
                 ) {
@@ -208,6 +217,7 @@ private fun AccountIcons(iconsState: AccountCreateEditUM.Icons) {
                     contentAlignment = Alignment.Center,
                     modifier = Modifier
                         .wrapContentSize()
+                        .clip(CircleShape)
                         .clickable(onClick = { iconsState.onIconSelect(icon) })
                         .size(52.dp),
                 ) {
