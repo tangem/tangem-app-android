@@ -34,7 +34,7 @@ internal object DataCommonModule {
         responseCryptoCurrenciesFactory: ResponseCryptoCurrenciesFactory,
     ): CardCryptoCurrencyFactory {
         return DefaultCardCryptoCurrencyFactory(
-            demoConfig = DemoConfig(),
+            demoConfig = DemoConfig,
             excludedBlockchains = excludedBlockchains,
             userWalletsStore = userWalletsStore,
             userTokensResponseStore = userTokensResponseStore,

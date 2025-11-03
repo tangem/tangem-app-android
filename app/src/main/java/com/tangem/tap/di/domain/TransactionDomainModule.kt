@@ -27,7 +27,7 @@ internal object TransactionDomainModule {
     fun provideGetFeeUseCase(walletManagersFacade: WalletManagersFacade): GetFeeUseCase {
         return GetFeeUseCase(
             walletManagersFacade = walletManagersFacade,
-            demoConfig = DemoConfig(),
+            demoConfig = DemoConfig,
         )
     }
 
@@ -47,7 +47,7 @@ internal object TransactionDomainModule {
         tangemHotWalletSignerFactory: TangemHotWalletSigner.Factory,
     ): SendTransactionUseCase {
         return SendTransactionUseCase(
-            demoConfig = DemoConfig(),
+            demoConfig = DemoConfig,
             cardSdkConfigRepository = cardSdkConfigRepository,
             transactionRepository = transactionRepository,
             walletManagersFacade = walletManagersFacade,
@@ -125,7 +125,7 @@ internal object TransactionDomainModule {
     fun provideEstimateFeeUseCase(walletManagersFacade: WalletManagersFacade): EstimateFeeUseCase {
         return EstimateFeeUseCase(
             walletManagersFacade = walletManagersFacade,
-            demoConfig = DemoConfig(),
+            demoConfig = DemoConfig,
         )
     }
 
