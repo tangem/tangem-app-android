@@ -37,7 +37,7 @@ internal class WcSelectNetworksModel @Inject constructor(
     )
 
     val state: StateFlow<WcSelectNetworksUM>
-    field = MutableStateFlow(getInitialState())
+        field = MutableStateFlow(getInitialState())
 
     private fun onCheckedChange(isChecked: Boolean, network: Network) {
         additionallyEnabledNetworks.update {

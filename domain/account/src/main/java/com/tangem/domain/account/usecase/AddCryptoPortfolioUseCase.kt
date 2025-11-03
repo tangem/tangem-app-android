@@ -1,15 +1,14 @@
 package com.tangem.domain.account.usecase
 
 import arrow.core.Either
-import arrow.core.Option
 import arrow.core.getOrElse
 import arrow.core.raise.Raise
 import arrow.core.raise.catch
 import arrow.core.raise.either
+import com.tangem.domain.account.fetcher.SingleAccountListFetcher
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.repository.AccountsCRUDRepository
-import com.tangem.domain.models.TokensGroupType
-import com.tangem.domain.models.TokensSortType
+import com.tangem.domain.account.tokens.MainAccountTokensMigration
 import com.tangem.domain.models.account.*
 import com.tangem.domain.models.wallet.UserWalletId
 
@@ -17,11 +16,15 @@ import com.tangem.domain.models.wallet.UserWalletId
  * Use case for adding a new crypto portfolio account
  *
  * @property crudRepository the repository used for performing CRUD operations on accounts
+ * @property singleAccountListFetcher fetches the list of accounts for a single user wallet
+ * @property mainAccountTokensMigration handles the migration of tokens from the main account to the new
  *
 [REDACTED_AUTHOR]
  */
 class AddCryptoPortfolioUseCase(
     private val crudRepository: AccountsCRUDRepository,
+    private val singleAccountListFetcher: SingleAccountListFetcher,
+    private val mainAccountTokensMigration: MainAccountTokensMigration,
 ) {
 
     /**
@@ -40,19 +43,27 @@ class AddCryptoPortfolioUseCase(
         icon: CryptoPortfolioIcon,
         derivationIndex: DerivationIndex,
     ): Either<Error, Account.CryptoPortfolio> = either {
-        val newAccount = createAccount(userWalletId, accountName, icon, derivationIndex)
+        fetchAccountList(userWalletId)
 
-        val accountList = getAccountList(userWalletId = userWalletId).getOrElse {
-            createNewAccountList(userWalletId = userWalletId)
-        }
+        val accountList = getAccountList(userWalletId = userWalletId)
+
+        val newAccount = createAccount(userWalletId, accountName, icon, derivationIndex)
 
         val updatedAccounts = (accountList + newAccount).getOrElse {
             raise(Error.AccountListRequirementsNotMet(it))
         }
 
-        saveAccounts(updatedAccounts)
+        saveAccounts(accountList = updatedAccounts)
+
+        mainAccountTokensMigration.migrate(userWalletId, derivationIndex)
 
         newAccount
+    }
+
+    private suspend fun Raise<Error>.fetchAccountList(userWalletId: UserWalletId) {
+        singleAccountListFetcher(params = SingleAccountListFetcher.Params(userWalletId)).onLeft {
+            raise(Error.DataOperationFailed(cause = it))
+        }
     }
 
     private fun createAccount(
@@ -70,26 +81,14 @@ class AddCryptoPortfolioUseCase(
         )
     }
 
-    private suspend fun Raise<Error>.getAccountList(userWalletId: UserWalletId): Option<AccountList> {
+    private suspend fun Raise<Error>.getAccountList(userWalletId: UserWalletId): AccountList {
         return catch(
             block = { crudRepository.getAccountListSync(userWalletId = userWalletId) },
             catch = { raise(Error.DataOperationFailed(cause = it)) },
         )
-    }
-
-    private fun Raise<Error>.createNewAccountList(userWalletId: UserWalletId): AccountList {
-        val userWallet = catch(
-            block = { crudRepository.getUserWallet(userWalletId = userWalletId) },
-            catch = { raise(Error.DataOperationFailed(cause = it)) },
-        )
-
-        // TODO: [REDACTED_JIRA]
-        return AccountList.empty(
-            userWallet = userWallet,
-            cryptoCurrencies = emptySet(),
-            sortType = TokensSortType.NONE,
-            groupType = TokensGroupType.NONE,
-        )
+            .getOrElse {
+                raise(Error.DataOperationFailed(message = "Account list not found for wallet $userWalletId"))
+            }
     }
 
     private suspend fun Raise<Error>.saveAccounts(accountList: AccountList) {
@@ -115,7 +114,8 @@ class AddCryptoPortfolioUseCase(
 
         /** Error indicating that a data operation failed */
         data class DataOperationFailed(val cause: Throwable) : Error {
-            override fun toString(): String = "Data operation failed: ${cause.message ?: "Unknown error"}"
+
+            constructor(message: String) : this(cause = IllegalStateException(message))
         }
     }
 }

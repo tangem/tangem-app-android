@@ -178,6 +178,7 @@ internal object TokenDetailsPreviewData {
         bottomSheetConfig = null,
         isBalanceHidden = false,
         isMarketPriceAvailable = false,
+        isYieldSupplyFeatureEnabled = false,
     )
 
     val tokenDetailsState_2 = TokenDetailsState(
@@ -203,6 +204,7 @@ internal object TokenDetailsPreviewData {
         bottomSheetConfig = null,
         isBalanceHidden = false,
         isMarketPriceAvailable = true,
+        isYieldSupplyFeatureEnabled = true,
     )
 
     val tokenDetailsState_3 = tokenDetailsState_2.copy(stakingBlocksState = stakingBalanceBlock)

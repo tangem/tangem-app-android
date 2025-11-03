@@ -46,8 +46,8 @@ sealed class RequestHeader(vararg pairs: Pair<String, ProviderSuspend<String>>) 
     fun String.checkHeaderValueOrEmpty(): String {
         for (i in this.indices) {
             val c = this[i]
-            val charCondition = c == '\t' || c in '\u0020'..'\u007e'
-            if (!charCondition) {
+            val isChar = c == '\t' || c in '\u0020'..'\u007e'
+            if (!isChar) {
                 return ""
             }
         }

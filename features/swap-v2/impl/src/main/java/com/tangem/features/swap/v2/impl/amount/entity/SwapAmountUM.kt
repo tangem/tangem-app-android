@@ -64,19 +64,13 @@ sealed class SwapAmountFieldUM {
     data class Empty(
         override val amountType: SwapAmountType,
     ) : SwapAmountFieldUM() {
-        override val amountField: AmountState = AmountState.Empty(
-            isPrimaryButtonEnabled = false,
-            isRedesignEnabled = true,
-        )
+        override val amountField: AmountState = AmountState.Empty
     }
 
     data class Loading(
         override val amountType: SwapAmountType,
     ) : SwapAmountFieldUM() {
-        override val amountField: AmountState = AmountState.Empty(
-            isPrimaryButtonEnabled = false,
-            isRedesignEnabled = true,
-        )
+        override val amountField: AmountState = AmountState.Empty
     }
 
     data class Content(

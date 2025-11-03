@@ -22,10 +22,10 @@ internal fun SecurityModeScreen(
     modifier: Modifier = Modifier,
 ) {
     SettingsScreensScaffold(
+        onBackClick = onBackClick,
         modifier = modifier,
         content = { SecurityModeOptions(state = state) },
         // titleRes = R.string.card_settings_security_mode,
-        onBackClick = onBackClick,
     )
 }
 
@@ -57,7 +57,7 @@ private fun SecurityModeOptions(state: SecurityModeScreenState) {
 
 @Composable
 private fun SecurityOption(option: SecurityOption, state: SecurityModeScreenState) {
-    val selected = option == state.selectedSecurityMode
+    val isSelected = option == state.selectedSecurityMode
 
     val title = option.toTitleRes()
 
@@ -70,7 +70,7 @@ private fun SecurityOption(option: SecurityOption, state: SecurityModeScreenStat
     DetailsRadioButtonElement(
         title = stringResourceSafe(id = title),
         subtitle = stringResourceSafe(id = subtitle),
-        selected = selected,
+        isSelected = isSelected,
         onClick = { state.onNewModeSelected(option) },
     )
 }

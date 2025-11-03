@@ -30,8 +30,8 @@ internal class BlockchainProvidersResponseMerger @Inject internal constructor(
      */
     fun merge(local: BlockchainProvidersResponse, remote: BlockchainProvidersResponse): BlockchainProvidersResponse {
         val remoteWithoutInvalidProviders = remote
-            .mapValues {
-                it.value
+            .mapValues { entry ->
+                entry.value
                     .filterUnsupportedProviders()
                     .filterInvalidProviders()
             }

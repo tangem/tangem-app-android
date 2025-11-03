@@ -32,11 +32,11 @@ data class ExchangeStatusModel(
     val averageDuration: Int? = null,
 ) {
     val hasLongTime: Boolean
-        get() = if (createdAt != null && averageDuration != null) {
-            DateTime.now().minusSeconds(averageDuration * 5) > createdAt
-        } else {
-            false
-        }
+        get() = createdAt?.isBefore(DateTime.now().minusMinutes(FIFTEEN_MINUTES)) ?: false
+
+    private companion object {
+        const val FIFTEEN_MINUTES = 15
+    }
 }
 
 @JsonClass(generateAdapter = false)

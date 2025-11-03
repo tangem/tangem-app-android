@@ -19,10 +19,15 @@ class ResetToFactorySettingsTask(
     }
 
     private fun deleteWallets(session: CardSession, callback: (result: CompletionResult<Boolean>) -> Unit) {
-        val wallet = session.environment.card?.wallets?.lastOrNull().guard {
-            resetBackup(session, callback)
-            return
-        }
+        val wallet = session
+            .environment
+            .card
+            ?.wallets
+            ?.lastOrNull()
+            .guard {
+                resetBackup(session, callback)
+                return
+            }
 
         PurgeWalletCommand(wallet.publicKey).run(session) { result ->
             when (result) {

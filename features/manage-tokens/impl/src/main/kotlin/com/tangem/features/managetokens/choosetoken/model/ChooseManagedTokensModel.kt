@@ -81,7 +81,7 @@ internal class ChooseManagedTokensModel @Inject constructor(
 
     val bottomSheetNavigation: SlotNavigation<ChooseManageTokensBottomSheetConfig> = SlotNavigation()
     val uiState: StateFlow<ChooseManagedTokenUM>
-    field = MutableStateFlow<ChooseManagedTokenUM>(createReadContentModel())
+        field = MutableStateFlow<ChooseManagedTokenUM>(createReadContentModel())
 
     init {
         manageTokensListManager.uiItems
@@ -124,7 +124,7 @@ internal class ChooseManagedTokensModel @Inject constructor(
     }
 
     private fun getNotification(): NotificationUM? {
-        return if (params.source == Source.SendViaSwap && params.showSendViaSwapNotification) {
+        return if (params.source == Source.SendViaSwap && params.shouldShowSendViaSwapNotification) {
             ChooseManagedTokensNotificationUM.SendViaSwap(onCloseClick = ::removeNotification)
         } else {
             null

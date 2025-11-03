@@ -33,7 +33,7 @@ data class SmallButtonConfig(
     val text: TextReference,
     val onClick: () -> Unit,
     val icon: TangemButtonIconPosition = TangemButtonIconPosition.None,
-    val enabled: Boolean = true,
+    val isEnabled: Boolean = true,
 )
 
 /**
@@ -79,7 +79,7 @@ private fun SmallButton(config: SmallButtonConfig, isPrimary: Boolean, modifier:
                 color = backgroundColor,
                 shape = shape,
             )
-            .clickable(enabled = config.enabled, onClick = config.onClick)
+            .clickable(enabled = config.isEnabled, onClick = config.onClick)
             .padding(
                 paddingValues = when (config.icon) {
                     is TangemButtonIconPosition.None -> PaddingValues(
@@ -103,7 +103,7 @@ private fun SmallButton(config: SmallButtonConfig, isPrimary: Boolean, modifier:
             text = {
                 val textColor by animateColorAsState(
                     targetValue = when {
-                        !config.enabled -> TangemTheme.colors.text.disabled
+                        !config.isEnabled -> TangemTheme.colors.text.disabled
                         isPrimary -> TangemTheme.colors.text.primary2
                         else -> TangemTheme.colors.text.primary1
                     },
@@ -122,7 +122,7 @@ private fun SmallButton(config: SmallButtonConfig, isPrimary: Boolean, modifier:
                 Icon(
                     modifier = Modifier.size(TangemTheme.dimens.size16),
                     painter = painterResource(id = iconResId),
-                    tint = if (config.enabled) {
+                    tint = if (config.isEnabled) {
                         TangemTheme.colors.icon.secondary
                     } else {
                         TangemTheme.colors.icon.inactive
@@ -188,7 +188,7 @@ private fun ButtonsSample() {
             config = config.copy(
                 text = TextReference.Str(value = "Add token"),
                 icon = TangemButtonIconPosition.Start(iconResId = R.drawable.ic_plus_24),
-                enabled = false,
+                isEnabled = false,
             ),
         )
     }

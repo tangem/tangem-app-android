@@ -53,6 +53,7 @@ internal class TxHistoryItemToTransactionStateConverter(
             is TxInfo.TransactionType.Operation,
             is TxInfo.TransactionType.Swap,
             is TxInfo.TransactionType.Transfer,
+            is TxInfo.TransactionType.YieldSupply,
             is TxInfo.TransactionType.UnknownOperation,
             -> if (isOutgoing) R.drawable.ic_arrow_up_24 else R.drawable.ic_arrow_down_24
         }
@@ -63,6 +64,7 @@ internal class TxHistoryItemToTransactionStateConverter(
         is TxInfo.TransactionType.Operation -> stringReference(type.name)
         is TxInfo.TransactionType.Swap -> resourceReference(R.string.common_swap)
         is TxInfo.TransactionType.Transfer -> resourceReference(R.string.common_transfer)
+        is TxInfo.TransactionType.YieldSupply -> resourceReference(R.string.yield_module_supply)
         is TxInfo.TransactionType.Staking.Stake -> resourceReference(R.string.common_stake)
         is TxInfo.TransactionType.Staking.Unstake -> resourceReference(R.string.common_unstake)
         is TxInfo.TransactionType.Staking.Vote -> resourceReference(R.string.staking_vote)

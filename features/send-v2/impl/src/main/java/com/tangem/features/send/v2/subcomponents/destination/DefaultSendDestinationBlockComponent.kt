@@ -44,7 +44,6 @@ internal class DefaultSendDestinationBlockComponent @AssistedInject constructor(
             destinationUM = state,
             isClickDisabled = !isClickEnabled,
             isEditingDisabled = params.predefinedValues is PredefinedValues.Content.Deeplink,
-            isRedesignEnabled = (params.state as? DestinationUM.Content)?.isRedesignEnabled ?: false,
             onClick = onClick,
         )
     }

@@ -12,26 +12,26 @@ internal object PendingActionConverter : Converter<BalanceDTO.PendingAction, Pen
             passthrough = value.passthrough,
             args = with(value.args) {
                 PendingAction.PendingActionArgs(
-                    amount = this?.amount?.let {
+                    amount = this?.amount?.let { amount ->
                         PendingAction.PendingActionArgs.Amount(
-                            required = it.required,
-                            minimum = it.minimum,
-                            maximum = it.maximum,
+                            required = amount.required,
+                            minimum = amount.minimum,
+                            maximum = amount.maximum,
                         )
                     },
-                    duration = this?.duration?.let {
+                    duration = this?.duration?.let { duration ->
                         PendingAction.PendingActionArgs.Duration(
-                            required = it.required,
-                            minimum = it.minimum,
-                            maximum = it.maximum,
+                            required = duration.required,
+                            minimum = duration.minimum,
+                            maximum = duration.maximum,
                         )
                     },
                     validatorAddress = this?.validatorAddress?.required,
                     validatorAddresses = this?.validatorAddresses?.required,
-                    tronResource = this?.tronResource?.let {
+                    tronResource = this?.tronResource?.let { tronResource ->
                         PendingAction.PendingActionArgs.TronResource(
-                            required = it.required,
-                            options = it.options,
+                            required = tronResource.required,
+                            options = tronResource.options,
                         )
                     },
                     signatureVerification = this?.signatureVerification?.required,

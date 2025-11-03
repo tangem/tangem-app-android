@@ -4,13 +4,10 @@ import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.FiniteAnimationSpec
 import androidx.compose.animation.core.tween
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.layout
 import com.arkivanov.decompose.extensions.compose.stack.animation.*
 import com.tangem.common.routing.AppRoute
-import kotlin.compareTo
-import kotlin.times
 
 object RoutingTransitionAnimationFactory {
 
@@ -58,7 +55,7 @@ object RoutingTransitionAnimationFactory {
 
     @Suppress("MagicNumber")
     private fun slideAndFade(directions: Set<Direction>? = null): StackAnimator {
-        val easing = CubicBezierEasing(0.55f, 0.0f, 0.0f, 1f)
+        val easing = CubicBezierEasing(a = 0.55f, b = 0.0f, c = 0.0f, d = 1f)
 
         return stackAnimator(
             animationSpec = tween(durationMillis = 400, easing = easing),

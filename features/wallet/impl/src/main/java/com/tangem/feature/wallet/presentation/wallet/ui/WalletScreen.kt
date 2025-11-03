@@ -79,6 +79,7 @@ import com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrency
 import com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrency.organizeTokensButton
 import com.tangem.feature.wallet.presentation.wallet.ui.components.singlecurrency.marketPriceBlock
 import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.BalancesAndLimitsBottomSheet
+import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.TangemPayMainScreenBlock
 import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.VisaTxDetailsBottomSheet
 import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.balancesAndLimitsBlock
 import com.tangem.feature.wallet.presentation.wallet.ui.utils.changeWalletAnimator
@@ -212,6 +213,11 @@ private fun WalletContent(
 
             notifications(configs = selectedWallet.warnings, modifier = itemModifier)
 
+            item(
+                key = "TangemPayMainScreenBlock",
+                contentType = state.tangemPayState::class.java,
+            ) { TangemPayMainScreenBlock(state.tangemPayState, itemModifier) }
+
             (selectedWallet as? WalletState.SingleCurrency)?.let { walletState ->
                 walletState.marketPriceBlockState?.let { marketPriceBlockState ->
                     marketPriceBlock(state = marketPriceBlockState, modifier = itemModifier)
@@ -291,10 +297,10 @@ private inline fun BaseScaffoldWithMarkets(
     listState: LazyListState,
     selectedWallet: WalletState,
     snackbarHostState: SnackbarHostState,
-    bottomSheetHeaderHeightProvider: () -> Dp,
-    crossinline bottomSheetContent: @Composable () -> Unit,
     alertConfig: WalletAlertState?,
+    bottomSheetHeaderHeightProvider: () -> Dp,
     noinline onBottomSheetStateChange: (BottomSheetState) -> Unit,
+    crossinline bottomSheetContent: @Composable () -> Unit,
     crossinline content: @Composable (PaddingValues) -> Unit,
 ) {
     val bottomSheetState = rememberTangemStandardBottomSheetState()

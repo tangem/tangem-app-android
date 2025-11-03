@@ -24,7 +24,7 @@ import javax.inject.Inject
 @ModelScoped
 internal class WalletBackupModel @Inject constructor(
     paramsContainer: ParamsContainer,
-    private val getWalletUseCase: GetUserWalletUseCase,
+    private val getUserWalletUseCase: GetUserWalletUseCase,
     private val unlockHotWalletContextualUseCase: UnlockHotWalletContextualUseCase,
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
@@ -33,35 +33,37 @@ internal class WalletBackupModel @Inject constructor(
     private val params: WalletBackupComponent.Params = paramsContainer.require()
 
     val uiState: StateFlow<WalletBackupUM>
-    field = MutableStateFlow(
-        WalletBackupUM(
-            onBackClick = { router.pop() },
-            recoveryPhraseOption = LabelUM(
-                text = resourceReference(R.string.hw_backup_no_backup),
-                style = LabelStyle.WARNING,
+        field = MutableStateFlow(
+            WalletBackupUM(
+                onBackClick = { router.pop() },
+                recoveryPhraseOption = LabelUM(
+                    text = resourceReference(R.string.hw_backup_no_backup),
+                    style = LabelStyle.WARNING,
+                ),
+                googleDriveOption = LabelUM(
+                    text = resourceReference(R.string.common_coming_soon),
+                    style = LabelStyle.REGULAR,
+                ),
+                googleDriveStatus = BackupStatus.ComingSoon,
+                onRecoveryPhraseClick = ::onRecoveryPhraseClick,
+                onGoogleDriveClick = { },
+                onHardwareWalletClick = ::onHardwareWalletClick,
+                backedUp = false,
             ),
-            googleDriveOption = LabelUM(
-                text = resourceReference(R.string.common_coming_soon),
-                style = LabelStyle.REGULAR,
-            ),
-            googleDriveStatus = BackupStatus.ComingSoon,
-            onRecoveryPhraseClick = ::onRecoveryPhraseClick,
-            onGoogleDriveClick = { },
-            onHardwareWalletClick = ::onHardwareWalletClick,
-            backedUp = false,
-        ),
-    )
+        )
 
     init {
-        getWalletUseCase.invoke(params.userWalletId)
-            .fold(
-                ifLeft = {
-                    Timber.e("Error on getting user wallet: $it")
-                },
-                ifRight = {
-                    updateBackupStatuses(it)
-                },
-            )
+        getUserWalletUseCase.invokeFlow(params.userWalletId)
+            .onEach { either ->
+                either.fold(
+                    ifLeft = {
+                        Timber.e("Error on getting user wallet: $it")
+                    },
+                    ifRight = {
+                        updateBackupStatuses(it)
+                    },
+                )
+            }.launchIn(modelScope)
     }
 
     private fun updateBackupStatuses(userWallet: UserWallet) {
@@ -95,7 +97,7 @@ internal class WalletBackupModel @Inject constructor(
 
     private fun onRecoveryPhraseClick() {
         if (uiState.value.backedUp) {
-            getWalletUseCase.invoke(params.userWalletId)
+            getUserWalletUseCase.invoke(params.userWalletId)
                 .fold(
                     ifLeft = {
                         Timber.e("Error on getting user wallet: $it")

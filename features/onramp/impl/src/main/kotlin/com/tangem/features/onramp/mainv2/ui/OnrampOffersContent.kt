@@ -19,6 +19,7 @@ import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -30,6 +31,7 @@ import com.tangem.core.ui.components.buttons.common.TangemButtonSize
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.OnrampOffersBlockTestTags
 import com.tangem.domain.onramp.model.OnrampPaymentMethod
 import com.tangem.domain.onramp.model.PaymentMethodType
 import com.tangem.features.onramp.impl.R
@@ -156,11 +158,13 @@ private fun OfferHeader(advantage: OnrampOfferAdvantagesUM) {
                     imageVector = ImageVector.vectorResource(R.drawable.ic_best_rate_16),
                     tint = TangemTheme.colors.icon.accent,
                     contentDescription = null,
+                    modifier = Modifier.testTag(OnrampOffersBlockTestTags.BEST_RATE_ICON),
                 )
                 Text(
                     text = stringResourceSafe(R.string.express_provider_best_rate),
                     style = TangemTheme.typography.caption1,
                     color = TangemTheme.colors.icon.accent,
+                    modifier = Modifier.testTag(OnrampOffersBlockTestTags.BEST_RATE_TITLE),
                 )
             }
         }
@@ -194,6 +198,7 @@ private fun RateBlock(rate: String, diff: TextReference?) {
             text = rate,
             style = TangemTheme.typography.subtitle1,
             color = TangemTheme.colors.text.primary1,
+            modifier = Modifier.testTag(OnrampOffersBlockTestTags.OFFER_TOKEN_AMOUNT),
         )
         diff?.let {
             Text(
@@ -215,7 +220,9 @@ private fun RateBlock(rate: String, diff: TextReference?) {
 private fun PaymentBlockInOffer(paymentMethod: OnrampPaymentMethod, providerName: String) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Icon(
-            modifier = Modifier.size(16.dp),
+            modifier = Modifier
+                .size(16.dp)
+                .testTag(OnrampOffersBlockTestTags.TIMING_ICON),
             imageVector = ImageVector.vectorResource(R.drawable.ic_clock_24),
             tint = TangemTheme.colors.icon.informative,
             contentDescription = null,
@@ -235,6 +242,7 @@ private fun PaymentBlockInOffer(paymentMethod: OnrampPaymentMethod, providerName
             text = providerName,
             style = TangemTheme.typography.caption2,
             color = TangemTheme.colors.text.tertiary,
+            modifier = Modifier.testTag(OnrampOffersBlockTestTags.PROVIDER_NAME),
         )
 
         SpacerWMax()
@@ -243,12 +251,15 @@ private fun PaymentBlockInOffer(paymentMethod: OnrampPaymentMethod, providerName
             text = stringResourceSafe(R.string.onramp_pay_with),
             style = TangemTheme.typography.caption2,
             color = TangemTheme.colors.text.tertiary,
+            modifier = Modifier.testTag(OnrampOffersBlockTestTags.PAY_WITH),
         )
 
         SpacerW(4.dp)
 
         SubcomposeAsyncImage(
-            modifier = Modifier.sizeIn(maxWidth = 38.dp, maxHeight = 16.dp),
+            modifier = Modifier
+                .sizeIn(maxWidth = 38.dp, maxHeight = 16.dp)
+                .testTag(OnrampOffersBlockTestTags.PAYMENT_METHOD_ICON),
             model = ImageRequest.Builder(context = LocalContext.current)
                 .data(paymentMethod.imageUrl)
                 .crossfade(enable = true)
@@ -298,6 +309,7 @@ internal fun TimingBlock(speed: PaymentMethodType.PaymentSpeed) {
         text = timingText,
         style = TangemTheme.typography.caption2,
         color = TangemTheme.colors.text.tertiary,
+        modifier = Modifier.testTag(OnrampOffersBlockTestTags.TIMING_TEXT),
     )
 }
 

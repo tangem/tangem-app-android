@@ -177,6 +177,7 @@ private fun PreviewFeatureTogglesScreen() {
                         environments = persistentSetOf(
                             ApiEnvironment.DEV.name,
                             ApiEnvironment.DEV_2.name,
+                            ApiEnvironment.DEV_3.name,
                             ApiEnvironment.STAGE.name,
                             ApiEnvironment.MOCK.name,
                             ApiEnvironment.PROD.name,

@@ -20,9 +20,9 @@ internal fun OkHttpClient.Builder.addHeaders(
         Interceptor { chain ->
             val request = chain.request().newBuilder().apply {
                 runBlocking {
-                    requestHeaders.forEach {
-                        val value = it.value.invoke()
-                        if (value.isNotBlank()) addHeader(name = it.key, value = value)
+                    requestHeaders.forEach { header ->
+                        val value = header.value.invoke()
+                        if (value.isNotBlank()) addHeader(name = header.key, value = value)
                     }
                 }
             }.build()

@@ -77,9 +77,9 @@ internal class SecurityModeModel @Inject constructor(
                 SecurityOption.AccessCode -> tangemSdkManager.setAccessCode(cardId)
             }
 
-            cardSettingsInteractor.update {
-                it.copy(
-                    card = it.card.copy(
+            cardSettingsInteractor.update { scanResponse ->
+                scanResponse.copy(
+                    card = scanResponse.card.copy(
                         isAccessCodeSet = selectedOption == SecurityOption.AccessCode,
                         isPasscodeSet = selectedOption == SecurityOption.PassCode,
                     ),

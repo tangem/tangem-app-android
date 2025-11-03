@@ -9,7 +9,7 @@ import java.math.BigDecimal
 /**
  * Network status for storage in the local cache. Supports two types - the [Verified] and [NoAccount].
  *
- * @see [com.tangem.domain.tokens.model.NetworkStatus]
+ * @see [com.tangem.domain.models.network.NetworkStatus]
  */
 @JsonClass(generateAdapter = true, generator = PolymorphicAdapterType.NAME_POLYMORPHIC_ADAPTER)
 sealed interface NetworkStatusDM {
@@ -41,8 +41,8 @@ sealed interface NetworkStatusDM {
         @Json(name = "derivation_path") override val derivationPath: DerivationPath,
         @Json(name = "selected_address") override val selectedAddress: String,
         @Json(name = "available_addresses") override val availableAddresses: Set<Address>,
-        @Json(name = "amounts") val amounts: Map<String, BigDecimal>,
-        @Json(name = "yield_supply_statuses") val yieldSupplyStatuses: Map<String, YieldSupplyStatus?> = emptyMap(),
+        @Json(name = "amounts") val amounts: List<CurrencyAmount>,
+        @Json(name = "yield_supply_statuses") val yieldSupplyStatuses: List<YieldSupplyStatus>,
     ) : NetworkStatusDM
 
     /**
@@ -108,9 +108,44 @@ sealed interface NetworkStatusDM {
     }
 
     @JsonClass(generateAdapter = true)
+    data class CurrencyAmount(
+        @Json(name = "id") val id: CurrencyId,
+        @Json(name = "amount") val amount: BigDecimal,
+    )
+
+    @JsonClass(generateAdapter = true)
     data class YieldSupplyStatus(
+        @Json(name = "id") val id: CurrencyId,
         @Json(name = "is_active") val isActive: Boolean,
         @Json(name = "is_initialized") val isInitialized: Boolean,
         @Json(name = "is_allowed_to_spend") val isAllowedToSpend: Boolean,
+        @Json(name = "effective_protocol_balance") val effectiveProtocolBalance: BigDecimal? = null,
     )
+
+    @JsonClass(generateAdapter = true)
+    data class CurrencyId(
+        @Json(name = "value") val value: String,
+    ) {
+
+        companion object Companion {
+
+            const val CONTRACT_ADDRESS_DELIMITER = '\u2693' // ⚓
+
+            fun createCoinId(coinId: String): CurrencyId {
+                return CurrencyId(value = coinId)
+            }
+
+            fun createTokenId(rawTokenId: String?, contractAddress: String): CurrencyId {
+                return CurrencyId(
+                    value = buildString {
+                        if (rawTokenId != null) {
+                            append(rawTokenId)
+                        }
+                        append(CONTRACT_ADDRESS_DELIMITER)
+                        append(contractAddress)
+                    },
+                )
+            }
+        }
+    }
 }

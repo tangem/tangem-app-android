@@ -55,7 +55,12 @@ class AmountVisualTransformation(
         val groupingSymbol = decimalFormat.decimalFormatSymbols.groupingSeparator
         return TransformedText(
             text = formattedText,
-            offsetMapping = OffsetMappingImpl(text.text, formattedText, symbol, groupingSymbol),
+            offsetMapping = OffsetMappingImpl(
+                text = text.text,
+                formattedText = formattedText,
+                currencySymbol = symbol,
+                groupingSymbol = groupingSymbol,
+            ),
         )
     }
 
@@ -93,7 +98,7 @@ class AmountVisualTransformation(
         private val text: String,
         private val formattedText: AnnotatedString,
         private val currencySymbol: String?,
-        private val gropingSymbol: Char,
+        private val groupingSymbol: Char,
     ) : OffsetMapping {
         override fun originalToTransformed(offset: Int): Int {
             var noneDigitCount = 0
@@ -101,7 +106,7 @@ class AmountVisualTransformation(
             val symbolOffset = currencySymbol?.let { formattedText.indexOf(it) } ?: -1
             while (i < offset + noneDigitCount) {
                 val char = formattedText.getOrNull(i++)
-                if (char == gropingSymbol) noneDigitCount++
+                if (char == groupingSymbol) noneDigitCount++
                 if (symbolOffset == 0 && char?.isWhitespace() == true) noneDigitCount++
             }
             var transformedOffset = if (symbolOffset == 0 && currencySymbol != null) {
@@ -118,7 +123,7 @@ class AmountVisualTransformation(
         }
 
         override fun transformedToOriginal(offset: Int): Int {
-            val noneDigitCount = formattedText.take(offset).count { it == gropingSymbol }
+            val noneDigitCount = formattedText.take(offset).count { it == groupingSymbol }
             return (offset - noneDigitCount).coerceIn(0, text.length)
         }
     }

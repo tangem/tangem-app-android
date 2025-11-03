@@ -164,8 +164,7 @@ internal class BiometricUserWalletsKeysRepository(
 
     private suspend fun UserWalletEncryptionKey.encode(): ByteArray {
         return withContext(Dispatchers.Default) {
-            this@encode
-                .let(encryptionKeyAdapter::toJson)
+            encryptionKeyAdapter.toJson(this@encode)
                 .encodeToByteArray(throwOnInvalidSequence = true)
         }
     }
@@ -180,8 +179,7 @@ internal class BiometricUserWalletsKeysRepository(
 
     private suspend fun List<UserWalletId>.encode(): ByteArray {
         return withContext(Dispatchers.Default) {
-            this@encode
-                .let(userWalletsIdsListAdapter::toJson)
+            userWalletsIdsListAdapter.toJson(this@encode)
                 .encodeToByteArray(throwOnInvalidSequence = true)
         }
     }

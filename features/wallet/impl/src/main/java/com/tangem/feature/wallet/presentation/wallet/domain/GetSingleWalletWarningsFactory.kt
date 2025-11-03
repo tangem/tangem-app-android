@@ -15,6 +15,7 @@ import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.domain.wallets.usecase.IsNeedToBackupUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotification
+import com.tangem.utils.extensions.addIf
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.*
@@ -204,14 +205,15 @@ internal class GetSingleWalletWarningsFactory @Inject constructor(
     }
 
     private fun MutableList<WalletNotification>.addIf(element: WalletNotification, condition: Boolean) {
-        if (condition) {
-            add(element = element)
+        addIf(condition) {
             if (element is WalletNotification.Critical ||
                 element is WalletNotification.Warning ||
                 element is WalletNotification.NoteMigration
             ) {
                 readyForRateAppNotification = false
             }
+
+            element
         }
     }
 

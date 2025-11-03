@@ -17,8 +17,8 @@ import com.tangem.core.ui.components.SpacerH4
 import com.tangem.core.ui.components.SpacerW32
 import com.tangem.core.ui.components.TangemSwitch
 import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.tap.features.details.ui.appsettings.AppSettingsItemsFactory
 import com.tangem.tap.features.details.ui.appsettings.AppSettingsScreenState.Item
 
@@ -85,26 +85,37 @@ private class SwitchItemProvider : CollectionPreviewParameterProvider<Item.Switc
     collection = buildList {
         val itemsFactory = AppSettingsItemsFactory()
 
-        itemsFactory.createSaveAccessCodeSwitch(
-            isChecked = true,
-            isEnabled = true,
-            onCheckedChange = { /* no-op */ },
-        ).let(::add)
-        itemsFactory.createSaveAccessCodeSwitch(
-            isChecked = false,
-            isEnabled = true,
-            onCheckedChange = { /* no-op */ },
-        ).let(::add)
-        itemsFactory.createSaveAccessCodeSwitch(
-            isChecked = true,
-            isEnabled = false,
-            onCheckedChange = { /* no-op */ },
-        ).let(::add)
-        itemsFactory.createSaveAccessCodeSwitch(
-            isChecked = false,
-            isEnabled = false,
-            onCheckedChange = { /* no-op */ },
-        ).let(::add)
+        add(
+            itemsFactory.createSaveAccessCodeSwitch(
+                isChecked = true,
+                isEnabled = true,
+                onCheckedChange = { /* no-op */ },
+            ),
+        )
+
+        add(
+            itemsFactory.createSaveAccessCodeSwitch(
+                isChecked = false,
+                isEnabled = true,
+                onCheckedChange = { /* no-op */ },
+            ),
+        )
+
+        add(
+            itemsFactory.createSaveAccessCodeSwitch(
+                isChecked = true,
+                isEnabled = false,
+                onCheckedChange = { /* no-op */ },
+            ),
+        )
+
+        add(
+            itemsFactory.createSaveAccessCodeSwitch(
+                isChecked = false,
+                isEnabled = false,
+                onCheckedChange = { /* no-op */ },
+            ),
+        )
     },
 )
 // endregion Preview
