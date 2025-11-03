@@ -15,14 +15,22 @@ internal object NetworkStatusDataModelConverter : Converter<NetworkStatus, Netwo
         return when (val status = value.value) {
             is NetworkStatus.Verified -> {
                 val address = NetworkAddressConverter.convertBack(value = status.address)
+                val amountsConverter = NetworkAmountsConverter(
+                    rawNetworkId = value.network.rawId,
+                    derivationPath = value.network.derivationPath,
+                )
+                val yieldSupplyStatusConverter = NetworkYieldSupplyStatusConverter(
+                    rawNetworkId = value.network.rawId,
+                    derivationPath = value.network.derivationPath,
+                )
 
                 NetworkStatusDM.Verified(
                     networkId = NetworkStatusDM.ID(value = value.network.rawId),
                     derivationPath = NetworkDerivationPathConverter.convertBack(value = value.network.derivationPath),
                     selectedAddress = address.selectedAddress,
                     availableAddresses = address.addresses,
-                    amounts = NetworkAmountsConverter.convertBack(value = status.amounts),
-                    yieldSupplyStatuses = NetworkYieldSupplyStatusConverter.convertBack(status.yieldSupplyStatuses),
+                    amounts = amountsConverter.convertBack(value = status.amounts),
+                    yieldSupplyStatuses = yieldSupplyStatusConverter.convertBack(status.yieldSupplyStatuses),
                 )
             }
             is NetworkStatus.NoAccount -> {

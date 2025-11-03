@@ -9,6 +9,7 @@ import kotlinx.serialization.encoding.CompositeDecoder
 import kotlinx.serialization.modules.SerializersModule
 
 @ExperimentalSerializationApi
+@Suppress("NullableToStringCall")
 internal class BundleDecoder(
     private val bundle: Bundle,
     private val elementsCount: Int = -1,

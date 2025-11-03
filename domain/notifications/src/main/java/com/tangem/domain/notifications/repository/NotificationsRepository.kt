@@ -1,5 +1,7 @@
 package com.tangem.domain.notifications.repository
 
+import kotlinx.coroutines.flow.Flow
+
 /**
  * Repository interface for managing local notification logic and state.
  *
@@ -19,6 +21,13 @@ interface NotificationsRepository {
      * @return true if the notification should be shown, false otherwise.
      */
     suspend fun shouldShowNotification(key: String): Boolean
+
+    /**
+     * Subscribe on whether a notification with the given [key] should be shown to the user.
+     * @param key The unique identifier for the notification.
+     * @return true if the notification should be shown, false otherwise.
+     */
+    fun getShouldShowNotification(key: String): Flow<Boolean>
 
     /**
      * Sets whether a notification with the given [key] should be shown to the user.
@@ -47,4 +56,12 @@ interface NotificationsRepository {
     suspend fun getWalletAutomaticallyEnabledList(): List<String>
 
     suspend fun setNotificationsWasEnabledAutomatically(userWalletId: String)
+
+    /**
+     * By default it is false cause for the first try to show should be skipped. Only should be shown on second time
+     * app launch.
+     */
+    suspend fun shouldAskNotificationPermissionsViaBs(): Boolean
+
+    suspend fun setShouldAskNotificationPermissionsViaBs(shouldAsk: Boolean)
 }
