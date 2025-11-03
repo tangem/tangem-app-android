@@ -58,7 +58,7 @@ private class BlockchainSdkErrorConverter(
         if (value.customMessage.contains(DemoTransactionSender.ID)) return emptyMap()
 
         if (value is BlockchainSdkError.WrappedTangemError) {
-            return (value.tangemError as? TangemSdkError)?.let { cardSdkErrorConverter.convert(it) } ?: emptyMap()
+            return (value.tangemError as? TangemSdkError)?.let { cardSdkErrorConverter.convert(it) }.orEmpty()
         }
 
         return mapOf(

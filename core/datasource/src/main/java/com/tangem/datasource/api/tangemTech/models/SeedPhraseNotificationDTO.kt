@@ -24,7 +24,5 @@ data class SeedPhraseNotificationDTO(val status: Status) {
 
         @Json(name = "accepted")
         ACCEPTED,
-
-        ;
     }
 }

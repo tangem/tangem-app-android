@@ -10,6 +10,7 @@ import com.tangem.data.account.store.AccountsResponseStore
 import com.tangem.data.account.store.AccountsResponseStoreFactory
 import com.tangem.data.common.currency.CardCryptoCurrencyFactory
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
+import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
@@ -28,6 +29,7 @@ import org.junit.jupiter.api.TestInstance
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class WalletAccountListFlowFactoryTest {
 
+    private val userWalletsStore: UserWalletsStore = mockk()
     private val accountsResponseStoreFactory: AccountsResponseStoreFactory = mockk()
     private val accountsResponseStore: AccountsResponseStore = mockk()
     private val accountsResponseStoreFlow = MutableStateFlow<GetWalletAccountsResponse?>(value = null)
@@ -38,6 +40,7 @@ class WalletAccountListFlowFactoryTest {
     private val cardCryptoCurrencyFactory: CardCryptoCurrencyFactory = mockk()
 
     private val factory = WalletAccountListFlowFactory(
+        userWalletsStore = userWalletsStore,
         accountsResponseStoreFactory = accountsResponseStoreFactory,
         accountListConverterFactory = accountListConverterFactory,
         cardCryptoCurrencyFactory = cardCryptoCurrencyFactory,
@@ -48,8 +51,14 @@ class WalletAccountListFlowFactoryTest {
 
     @AfterEach
     fun tearDownEach() {
-        clearMocks(accountListConverter)
-
+        clearMocks(
+            userWalletsStore,
+            accountsResponseStoreFactory,
+            accountsResponseStore,
+            accountListConverterFactory,
+            accountListConverter,
+            cardCryptoCurrencyFactory,
+        )
         accountsResponseStoreFlow.value = null
     }
 
@@ -61,17 +70,19 @@ class WalletAccountListFlowFactoryTest {
             every { this@mockk.isMultiCurrency } returns true
         }
 
+        every { userWalletsStore.getSyncStrict(userWalletId) } returns userWallet
+
         val accountsResponse = createGetWalletAccountsResponse(userWalletId)
         every { accountsResponseStoreFactory.create(userWalletId) } returns accountsResponseStore
         every { accountsResponseStore.data } returns accountsResponseStoreFlow
         accountsResponseStoreFlow.value = accountsResponse
 
-        val accountList = AccountList.empty(userWallet)
+        val accountList = AccountList.empty(userWalletId)
         every { accountListConverterFactory.create(userWallet) } returns accountListConverter
         every { accountListConverter.convert(accountsResponse) } returns accountList
 
         // Act
-        val actual = factory.create(userWallet).let(::getEmittedValues)
+        val actual = factory.create(userWalletId).let(::getEmittedValues)
 
         // Assert
         val expected = accountList
@@ -94,14 +105,16 @@ class WalletAccountListFlowFactoryTest {
     fun `create for single wallet`() = runTest {
         val userWallet = MockUserWalletFactory.create().copy(isMultiCurrency = false)
 
+        every { userWalletsStore.getSyncStrict(userWallet.walletId) } returns userWallet
+
         val currency = cryptoCurrencyFactory.ethereum
         every { cardCryptoCurrencyFactory.createPrimaryCurrencyForSingleCurrencyCard(userWallet) } returns currency
 
         // Act
-        val actual = factory.create(userWallet).let(::getEmittedValues)
+        val actual = factory.create(userWallet.walletId).let(::getEmittedValues)
 
         // Assert
-        val expected = AccountList.empty(userWallet = userWallet, cryptoCurrencies = setOf(currency))
+        val expected = AccountList.empty(userWalletId = userWallet.walletId, cryptoCurrencies = setOf(currency))
         Truth.assertThat(actual).containsExactly(expected)
 
         coVerify(ordering = Ordering.SEQUENCE) {
@@ -121,16 +134,18 @@ class WalletAccountListFlowFactoryTest {
     fun `flow is created for single wallet with token`() = runTest {
         val nodl = MockUserWalletFactory.createSingleWalletWithToken()
 
+        every { userWalletsStore.getSyncStrict(nodl.walletId) } returns nodl
+
         val currencies = cryptoCurrencyFactory.ethereumAndStellar.toSet()
         every {
             cardCryptoCurrencyFactory.createCurrenciesForSingleCurrencyCardWithToken(userWallet = nodl)
         } returns currencies.toList()
 
         // Act
-        val actual = factory.create(nodl).let(::getEmittedValues)
+        val actual = factory.create(nodl.walletId).let(::getEmittedValues)
 
         // Assert
-        val expected = AccountList.empty(userWallet = nodl, cryptoCurrencies = currencies)
+        val expected = AccountList.empty(userWalletId = nodl.walletId, cryptoCurrencies = currencies)
         Truth.assertThat(actual).containsExactly(expected)
 
         coVerify(ordering = Ordering.SEQUENCE) {

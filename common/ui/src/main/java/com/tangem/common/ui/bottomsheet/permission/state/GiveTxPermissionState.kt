@@ -26,6 +26,7 @@ sealed class GiveTxPermissionState {
         val approveButton: ApprovePermissionButton,
         val cancelButton: CancelPermissionButton,
         val onChangeApproveType: ((ApproveType) -> Unit)? = null,
+        val onOpenLearnMoreAboutApproveClick: () -> Unit,
     ) : GiveTxPermissionState()
 
     fun GiveTxPermissionState.getApproveTypeOrNull(): ApproveType? {
@@ -39,8 +40,8 @@ enum class ApproveType(val text: TextReference) {
 }
 
 data class ApprovePermissionButton(
-    val enabled: Boolean,
-    val loading: Boolean = false,
+    val isEnabled: Boolean,
+    val isLoading: Boolean = false,
     val onClick: () -> Unit,
 )
 

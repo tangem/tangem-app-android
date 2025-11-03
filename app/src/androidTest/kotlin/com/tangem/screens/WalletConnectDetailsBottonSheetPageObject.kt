@@ -2,6 +2,7 @@ package com.tangem.screens
 
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import com.tangem.common.BaseTestCase
+import com.tangem.core.ui.test.BaseBottomSheetTestTags
 import com.tangem.core.ui.test.BaseButtonTestTags
 import com.tangem.core.ui.test.WalletConnectBottomSheetTestTags
 import com.tangem.core.ui.test.WalletConnectDetailsBottomSheetTestTags
@@ -15,18 +16,18 @@ class WalletConnectDetailsBottomSheetPageObject(semanticsProvider: SemanticsNode
     ComposeScreen<WalletConnectDetailsBottomSheetPageObject>(semanticsProvider = semanticsProvider) {
 
     val title: KNode = child {
-        hasTestTag(WalletConnectDetailsBottomSheetTestTags.TITLE)
+        hasTestTag(BaseBottomSheetTestTags.TITLE)
         hasText(getResourceString(WalletConnectImplR.string.wc_connected_app_title))
         useUnmergedTree = true
     }
 
     val date: KNode = child {
-        hasTestTag(WalletConnectDetailsBottomSheetTestTags.DATE)
+        hasTestTag(BaseBottomSheetTestTags.SUBTITLE)
         useUnmergedTree = true
     }
 
     val closeButton: KNode = child {
-        hasTestTag(WalletConnectDetailsBottomSheetTestTags.CLOSE_BUTTON)
+        hasTestTag(BaseBottomSheetTestTags.CLOSE_BUTTON)
         useUnmergedTree = true
     }
 

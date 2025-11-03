@@ -347,6 +347,7 @@ internal class StateBuilder(
                 providerName = swapProvider.name,
                 onGivePermissionClick = actions.onGivePermissionClick,
                 onChangeApproveType = actions.onChangeApproveType,
+                onOpenLearnMoreAboutApproveClick = actions.onOpenLearnMoreAboutApproveClick,
             ),
             fee = feeState,
             swapButton = SwapButton(
@@ -411,7 +412,8 @@ internal class StateBuilder(
             it is SwapNotificationUM.Error || it is NotificationUM.Error ||
                 it is SwapNotificationUM.Warning.ExpressError || it is SwapNotificationUM.Warning.ExpressGeneralError ||
                 it is SwapNotificationUM.Warning.NoAvailableTokensToSwap ||
-                it is SwapNotificationUM.Warning.NeedReserveToCreateAccount
+                it is SwapNotificationUM.Warning.NeedReserveToCreateAccount ||
+                it is SwapNotificationUM.Info.PermissionNeeded
         }
     }
 
@@ -934,12 +936,14 @@ internal class StateBuilder(
         )
     }
 
+    @Suppress("LongParameterList")
     private fun convertPermissionState(
         lastPermissionState: GiveTxPermissionState,
         permissionDataState: PermissionDataState,
         providerName: String,
         onGivePermissionClick: () -> Unit,
         onChangeApproveType: (ApproveType) -> Unit,
+        onOpenLearnMoreAboutApproveClick: () -> Unit,
     ): GiveTxPermissionState {
         val approveType = if (lastPermissionState is GiveTxPermissionState.ReadyForRequest) {
             lastPermissionState.approveType
@@ -964,7 +968,7 @@ internal class StateBuilder(
                     spenderAddress = getShortAddressValue(permissionDataState.spenderAddress),
                     fee = TextReference.Str("${permissionFee.feeCryptoFormatted} (${permissionFee.feeFiatFormatted})"),
                     approveButton = ApprovePermissionButton(
-                        enabled = true,
+                        isEnabled = true,
                         onClick = onGivePermissionClick,
                     ),
                     cancelButton = CancelPermissionButton(
@@ -977,6 +981,7 @@ internal class StateBuilder(
                     ),
                     dialogText = resourceReference(R.string.swapping_approve_information_text),
                     footerText = resourceReference(R.string.swap_give_permission_fee_footer),
+                    onOpenLearnMoreAboutApproveClick = onOpenLearnMoreAboutApproveClick,
                 )
             }
         }

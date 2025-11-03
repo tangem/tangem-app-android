@@ -37,12 +37,12 @@ fun ChainRow(model: ChainRowUM, modifier: Modifier = Modifier, action: @Composab
             RowText(
                 mainText = model.name,
                 secondText = model.type,
-                subtitle = if (model.showCustom) {
+                subtitle = if (model.shouldShowCustom) {
                     resourceReference(R.string.common_custom)
                 } else {
                     null
                 },
-                isEnabled = model.enabled,
+                isEnabled = model.isEnabled,
                 accentMainText = true,
                 accentSecondText = false,
             )
@@ -53,10 +53,10 @@ fun ChainRow(model: ChainRowUM, modifier: Modifier = Modifier, action: @Composab
 
 @Composable
 inline fun ChainRowContainer(
+    modifier: Modifier = Modifier,
     icon: @Composable BoxScope.() -> Unit,
     text: @Composable BoxScope.() -> Unit,
     action: @Composable BoxScope.() -> Unit,
-    modifier: Modifier = Modifier,
 ) {
     RowContentContainer(
         modifier = modifier
@@ -95,25 +95,25 @@ private class ChainRowParameterProvider : CollectionPreviewParameterProvider<Cha
             name = "Cardano",
             type = "ADA",
             icon = CurrencyIconState.Locked,
-            showCustom = true,
+            shouldShowCustom = true,
         ),
         ChainRowUM(
             name = "Binance",
             type = "BNB",
             icon = CurrencyIconState.Locked,
-            showCustom = false,
+            shouldShowCustom = false,
         ),
         ChainRowUM(
             name = "123456789010111213141516",
             type = "BNB",
             icon = CurrencyIconState.Locked,
-            showCustom = true,
+            shouldShowCustom = true,
         ),
         ChainRowUM(
             name = "123456789010111213141516",
             type = "123456789010111213141516",
             icon = CurrencyIconState.Locked,
-            showCustom = false,
+            shouldShowCustom = false,
         ),
     ),
 )

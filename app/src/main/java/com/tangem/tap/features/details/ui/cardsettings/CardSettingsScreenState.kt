@@ -18,7 +18,7 @@ internal data class CardSettingsScreenState(
 internal sealed class CardInfo(
     val titleRes: TextReference,
     val subtitle: TextReference,
-    val clickable: Boolean = false,
+    val isClickable: Boolean = false,
 ) {
     class CardId(subtitle: String) : CardInfo(
         titleRes = TextReference.Res(R.string.details_row_title_cid),
@@ -38,29 +38,29 @@ internal sealed class CardInfo(
     class SecurityMode(securityOption: SecurityOption, clickable: Boolean) : CardInfo(
         titleRes = TextReference.Res(R.string.card_settings_security_mode),
         subtitle = TextReference.Res(securityOption.toTitleRes()),
-        clickable = clickable,
+        isClickable = clickable,
     )
 
     data object ChangeAccessCode : CardInfo(
         titleRes = TextReference.Res(R.string.card_settings_change_access_code),
         subtitle = TextReference.Res(R.string.card_settings_change_access_code_footer),
-        clickable = true,
+        isClickable = true,
     )
 
-    class AccessCodeRecovery(val enabled: Boolean) : CardInfo(
+    class AccessCodeRecovery(val isEnabled: Boolean) : CardInfo(
         titleRes = TextReference.Res(R.string.card_settings_access_code_recovery_title),
-        subtitle = if (enabled) {
+        subtitle = if (isEnabled) {
             TextReference.Res(R.string.common_enabled)
         } else {
             TextReference.Res(R.string.common_disabled)
         },
-        clickable = true,
+        isClickable = true,
     )
 
     class ResetToFactorySettings(description: TextReference) : CardInfo(
         titleRes = TextReference.Res(R.string.card_settings_reset_card_to_factory),
         subtitle = description,
-        clickable = true,
+        isClickable = true,
     )
 }
 

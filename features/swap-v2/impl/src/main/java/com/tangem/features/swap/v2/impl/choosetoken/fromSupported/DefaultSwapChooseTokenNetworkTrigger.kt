@@ -16,7 +16,7 @@ internal class DefaultSwapChooseTokenNetworkTrigger @Inject constructor() :
     SwapChooseTokenNetworkListener {
 
     override val swapChooseTokenNetworkResultFlow: SharedFlow<SwapChooseTokenTriggerData>
-    field = MutableSharedFlow<SwapChooseTokenTriggerData>()
+        field = MutableSharedFlow<SwapChooseTokenTriggerData>()
 
     override suspend fun trigger(
         swapCurrencies: SwapCurrencies,

@@ -1,19 +1,28 @@
 package com.tangem.domain.pay.model
 
-private const val APPROVED_KYC_STATUS = "APPROVED"
-private const val ACTIVE_PI_STATUS = "active"
+import java.math.BigDecimal
+
+data class MainScreenCustomerInfo(
+    val info: CustomerInfo,
+    val orderStatus: OrderStatus,
+)
 
 data class CustomerInfo(
     val productInstance: ProductInstance?,
-    val kycStatus: String?,
+    val isKycApproved: Boolean,
+    val cardInfo: CardInfo?,
 ) {
 
-    fun isKycApproved() = kycStatus == APPROVED_KYC_STATUS
+    data class ProductInstance(
+        val id: String,
+        val status: String,
+    )
 
-    fun isProductInstanceActive() = productInstance?.status == ACTIVE_PI_STATUS
+    data class CardInfo(
+        val lastFourDigits: String,
+        val balance: BigDecimal,
+        val currencyCode: String,
+        val customerWalletAddress: String,
+        val depositAddress: String?,
+    )
 }
-
-data class ProductInstance(
-    val id: String,
-    val status: String,
-)

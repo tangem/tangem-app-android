@@ -18,6 +18,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import com.tangem.core.ui.components.RectangleShimmer
+import com.tangem.core.ui.components.icons.IconTint
 import com.tangem.core.ui.components.text.applyBladeBrush
 import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.res.TangemTheme
@@ -75,10 +76,10 @@ private fun ContentFiatAmount(
                     Icon(
                         modifier = Modifier.size(12.dp),
                         painter = rememberVectorPainter(image = ImageVector.vectorResource(icon.iconRes)),
-                        tint = if (icon.useAccentColor) {
-                            TangemTheme.colors.icon.accent
-                        } else {
-                            TangemTheme.colors.icon.inactive
+                        tint = when (icon.tint) {
+                            IconTint.Accent -> TangemTheme.colors.icon.accent
+                            IconTint.Warning -> TangemTheme.colors.icon.attention
+                            IconTint.Inactive -> TangemTheme.colors.icon.inactive
                         },
                         contentDescription = null,
                     )

@@ -10,7 +10,7 @@ fun InfiniteListHandler(
     buffer: Int = 2,
     triggerLoadMoreCheckOnItemsCountChange: Boolean = false,
 ) {
-    val loadMore by remember(buffer, listState) {
+    val shouldLoadMore by remember(buffer, listState) {
         derivedStateOf {
             val layoutInfo = listState.layoutInfo
             val totalItemsNumber = layoutInfo.totalItemsCount
@@ -21,17 +21,17 @@ fun InfiniteListHandler(
     }
 
     val totalItemsCount by remember(listState) { derivedStateOf { listState.layoutInfo.totalItemsCount } }
-    var emitted by remember(totalItemsCount, buffer, listState) { mutableStateOf(false) }
+    var isEmitted by remember(key1 = totalItemsCount, key2 = buffer, key3 = listState) { mutableStateOf(false) }
 
-    LaunchedEffect(loadMore) {
-        if (loadMore && !emitted) {
-            emitted = onLoadMore()
+    LaunchedEffect(shouldLoadMore) {
+        if (shouldLoadMore && !isEmitted) {
+            isEmitted = onLoadMore()
         }
     }
 
     LaunchedEffect(totalItemsCount) {
-        if (triggerLoadMoreCheckOnItemsCountChange && loadMore && !emitted) {
-            emitted = onLoadMore()
+        if (triggerLoadMoreCheckOnItemsCountChange && shouldLoadMore && !isEmitted) {
+            isEmitted = onLoadMore()
         }
     }
 }

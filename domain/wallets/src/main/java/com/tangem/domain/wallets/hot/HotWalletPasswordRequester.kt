@@ -36,7 +36,8 @@ interface HotWalletPasswordRequester {
      * @param hotWalletId The ID of the hot wallet to authenticate with.
      * @param authMode Indicates whether the request is for authentication mode.
      * In auth mode user can be deleted after failed attempts.
-     * @param hasBiometry Indicates whether to show biometric authentication option.
+     * @param hasBiometry Indicates whether to show biometric authentication option to the user.
+     * Will be ignored if the device does not support biometry at the moment of the request.
      */
     data class AttemptRequest(
         val hotWalletId: HotWalletId,

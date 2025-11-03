@@ -55,7 +55,7 @@ internal class RefactoredTxHistoryRepository(
     ): PaginationWrapper<TxInfo> {
         cacheRegistry.invokeOnExpire(
             key = getTxHistoryPageKey(request.page, request.params),
-            skipCache = request.params.refresh,
+            skipCache = request.params.shouldRefresh,
             block = { fetch(request, batchSize) },
         )
 

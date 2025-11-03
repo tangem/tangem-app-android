@@ -1,5 +1,6 @@
 package com.tangem.data.networks.store
 
+import android.content.Context
 import androidx.datastore.core.DataStore
 import com.tangem.data.networks.converters.NetworkStatusDataModelConverter
 import com.tangem.data.networks.converters.SimpleNetworkStatusConverter
@@ -20,6 +21,7 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import java.io.File
 
 internal typealias WalletIdWithSimpleStatus = Map<String, Set<SimpleNetworkStatus>>
 internal typealias WalletIdWithStatusDM = Map<String, Set<NetworkStatusDM>>
@@ -27,11 +29,13 @@ internal typealias WalletIdWithStatusDM = Map<String, Set<NetworkStatusDM>>
 /**
  * Default implementation of [NetworksStatusesStore]
  *
+ * @param context                 context
  * @property runtimeStore         runtime store
  * @property persistenceDataStore persistence store
  * @param dispatchers             dispatchers
  */
 internal class DefaultNetworksStatusesStore(
+    context: Context,
     private val runtimeStore: RuntimeSharedStore<WalletIdWithSimpleStatus>,
     private val persistenceDataStore: DataStore<WalletIdWithStatusDM>,
     dispatchers: CoroutineDispatcherProvider,
@@ -41,6 +45,16 @@ internal class DefaultNetworksStatusesStore(
 
     init {
         scope.launch {
+            try {
+                val oldFile = File(context.filesDir, "datastore/networks_statuses")
+
+                if (oldFile.exists()) {
+                    oldFile.delete()
+                }
+            } catch (e: Exception) {
+                Timber.e(e, "Error while deleting old networks statuses datastore file")
+            }
+
             val cachedStatuses = persistenceDataStore.data.firstOrNull() ?: return@launch
 
             runtimeStore.store(
@@ -93,6 +107,20 @@ internal class DefaultNetworksStatusesStore(
         coroutineScope {
             launch { storeInRuntime(userWalletId = userWalletId, status = status) }
             launch { storeInPersistence(userWalletId = userWalletId, status = status) }
+        }
+    }
+
+    override suspend fun clear(userWalletId: UserWalletId, networks: Set<Network>) {
+        persistenceDataStore.updateData { storedStatuses ->
+            storedStatuses.toMutableMap().apply {
+                val updatedValues = this[userWalletId.stringValue].orEmpty().filterNot {
+                    networks.any { network ->
+                        it.networkId.value == network.rawId && it.derivationPath.value == network.derivationPath.value
+                    }
+                }
+
+                this[userWalletId.stringValue] = updatedValues.toSet()
+            }
         }
     }
 

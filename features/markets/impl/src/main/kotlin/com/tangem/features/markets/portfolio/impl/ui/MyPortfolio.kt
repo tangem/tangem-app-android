@@ -106,7 +106,7 @@ private fun AddButton(state: AddButtonState, onClick: () -> Unit) {
                     text = resourceReference(R.string.markets_add_token),
                     icon = TangemButtonIconPosition.Start(R.drawable.ic_plus_24),
                     onClick = onClick,
-                    enabled = state == AddButtonState.Available,
+                    isEnabled = state == AddButtonState.Available,
                 ),
             )
         }

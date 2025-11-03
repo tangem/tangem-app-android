@@ -23,4 +23,5 @@ internal data class TokenDetailsState(
     val bottomSheetConfig: TangemBottomSheetConfig?,
     val isBalanceHidden: Boolean,
     val isMarketPriceAvailable: Boolean,
+    val isYieldSupplyFeatureEnabled: Boolean,
 )

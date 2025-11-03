@@ -1,9 +1,11 @@
 package com.tangem.datasource.api.common.blockaid
 
 import com.tangem.datasource.api.common.blockaid.models.request.DomainScanRequest
+import com.tangem.datasource.api.common.blockaid.models.request.EvmTransactionBulkScanRequest
 import com.tangem.datasource.api.common.blockaid.models.request.EvmTransactionScanRequest
 import com.tangem.datasource.api.common.blockaid.models.request.SolanaTransactionScanRequest
 import com.tangem.datasource.api.common.blockaid.models.response.DomainScanResponse
+import com.tangem.datasource.api.common.blockaid.models.response.GasEstimationResponse
 import com.tangem.datasource.api.common.blockaid.models.response.SolanaTransactionResponse
 import com.tangem.datasource.api.common.blockaid.models.response.TransactionScanResponse
 import retrofit2.http.Body
@@ -19,4 +21,7 @@ interface BlockAidApi {
 
     @POST("solana/message/scan")
     suspend fun scanSolanaMessage(@Body request: SolanaTransactionScanRequest): SolanaTransactionResponse
+
+    @POST("evm/transaction-bulk/scan")
+    suspend fun scanEvmTransactionBulk(@Body request: EvmTransactionBulkScanRequest): List<GasEstimationResponse>
 }

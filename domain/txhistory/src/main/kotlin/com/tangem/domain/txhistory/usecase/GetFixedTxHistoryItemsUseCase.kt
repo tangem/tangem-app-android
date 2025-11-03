@@ -29,7 +29,14 @@ class GetFixedTxHistoryItemsUseCase(
     ): Either<TxHistoryListError, Flow<List<TxInfo>>> {
         return Either.catch {
             flow {
-                emit(repository.getFixedSizeTxHistoryItems(userWalletId, currency, pageSize, refresh))
+                emit(
+                    repository.getFixedSizeTxHistoryItems(
+                        userWalletId = userWalletId,
+                        currency = currency,
+                        pageSize = pageSize,
+                        shouldRefresh = refresh,
+                    ),
+                )
             }
         }.mapLeft { TxHistoryListError.DataError(it) }
     }
@@ -38,10 +45,15 @@ class GetFixedTxHistoryItemsUseCase(
         userWalletId: UserWalletId,
         currency: CryptoCurrency,
         pageSize: Int = DEFAULT_PAGE_SIZE,
-        refresh: Boolean = false,
+        shouldRefresh: Boolean = false,
     ): Either<TxHistoryListError, List<TxInfo>> {
         return Either.catch {
-            repository.getFixedSizeTxHistoryItems(userWalletId, currency, pageSize, refresh)
+            repository.getFixedSizeTxHistoryItems(
+                userWalletId = userWalletId,
+                currency = currency,
+                pageSize = pageSize,
+                shouldRefresh = shouldRefresh,
+            )
         }.mapLeft { TxHistoryListError.DataError(it) }
     }
 }

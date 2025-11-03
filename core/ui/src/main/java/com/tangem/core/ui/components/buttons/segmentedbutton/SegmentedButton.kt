@@ -112,9 +112,9 @@ private fun SegmentedButtonsPreview(
         SegmentedButtons(
             config = config,
             onClick = {},
-        ) {
+        ) { configPreview ->
             Text(
-                text = it.text,
+                text = configPreview.text,
                 modifier = Modifier.padding(TangemTheme.dimens.spacing16),
             )
         }

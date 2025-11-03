@@ -99,7 +99,10 @@ internal object WalletAdditionalInfoFactory {
             TextReference.EMPTY
         }
 
-        return WalletAdditionalInfo(hideable = false, content = content)
+        return WalletAdditionalInfo(
+            hideable = false,
+            content = content,
+        )
     }
 
     private fun getBackupInfoTextReference(count: Int): TextReference {
@@ -112,12 +115,18 @@ internal object WalletAdditionalInfoFactory {
 
     private fun UserWallet.Cold.resolveSingleCurrencyInfo(currencyAmount: BigDecimal?): WalletAdditionalInfo {
         return if (isLocked) {
-            WalletAdditionalInfo(hideable = false, content = TextReference.Res(R.string.common_locked))
+            WalletAdditionalInfo(
+                hideable = false,
+                content = TextReference.Res(R.string.common_locked),
+            )
         } else {
             val blockchain = scanResponse.cardTypesResolver.getBlockchain()
             val amount = currencyAmount?.format { crypto(blockchain.currency, blockchain.decimals()) }
 
-            WalletAdditionalInfo(hideable = true, content = TextReference.Str(value = amount.orEmpty()))
+            WalletAdditionalInfo(
+                hideable = true,
+                content = TextReference.Str(value = amount.orEmpty()),
+            )
         }
     }
 }

@@ -102,21 +102,21 @@ interface UserWalletsListManager {
         /**
          * Indicates that all [UserWallet]s is locked
          *
-         * @see [isLockedSync]
+         * @see [isLocked]
          * @see [UserWallet.isLocked]
          */
-        val isLocked: Flow<Boolean>
+        val lockedState: Flow<Boolean>
 
         /**
          * Indicates that all [UserWallet]s is locked. Sync version.
          *
-         * @see [isLocked]
+         * @see [lockedState]
          * @see [UserWallet.isLocked]
          */
-        val isLockedSync: Boolean
+        val isLocked: Boolean
 
         /**
-         * Receive saved [UserWallet]s, populate [userWallets] flow with it and set [isLocked] as false.
+         * Receive saved [UserWallet]s, populate [userWallets] flow with it and set [lockedState] as false.
          *
          * @param type Defines the behavior of the operation.
          *
@@ -125,7 +125,7 @@ interface UserWalletsListManager {
          */
         suspend fun unlock(type: UnlockType): CompletionResult<UserWallet>
 
-        /** Remove [UserWallet]s from [userWallets] and set [isLocked] as true */
+        /** Remove [UserWallet]s from [userWallets] and set [lockedState] as true */
         fun lock()
 
         /**

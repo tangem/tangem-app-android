@@ -30,7 +30,7 @@ fun PreviewShimmerContainer(actualContent: @Composable () -> Unit, shimmerConten
         }
         SpacerH4()
 
-        var shimmerVisible by remember { mutableStateOf(true) }
+        var isShimmerVisible by remember { mutableStateOf(true) }
 
         TangemThemePreview {
             Box(
@@ -39,7 +39,7 @@ fun PreviewShimmerContainer(actualContent: @Composable () -> Unit, shimmerConten
                 },
             ) {
                 actualContent()
-                if (shimmerVisible) {
+                if (isShimmerVisible) {
                     shimmerContent()
                 }
             }
@@ -48,7 +48,7 @@ fun PreviewShimmerContainer(actualContent: @Composable () -> Unit, shimmerConten
         LaunchedEffect(Unit) {
             while (true) {
                 delay(timeMillis = 2000)
-                shimmerVisible = !shimmerVisible
+                isShimmerVisible = !isShimmerVisible
             }
         }
     }

@@ -31,6 +31,7 @@ dependencies {
     implementation(projects.core.navigation)
     implementation(projects.core.decompose)
     implementation(projects.common.routing)
+    implementation(projects.common.ui)
 
     /** Domain modules */
     implementation(projects.domain.models)

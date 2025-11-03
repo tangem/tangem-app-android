@@ -10,6 +10,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.tokenlist.entity.TokenListUM
+import com.tangem.features.onramp.tokenlist.entity.TokenListUMData
 import kotlinx.collections.immutable.persistentListOf
 
 internal class PreviewTokenListUMProvider : PreviewParameterProvider<TokenListUM> {
@@ -42,6 +43,7 @@ internal class PreviewTokenListUMProvider : PreviewParameterProvider<TokenListUM
                 createUnavailableTokenItem(),
                 createUnavailableTokenItem(),
             ),
+            tokensListData = TokenListUMData.EmptyList,
             isBalanceHidden = false,
         )
     }

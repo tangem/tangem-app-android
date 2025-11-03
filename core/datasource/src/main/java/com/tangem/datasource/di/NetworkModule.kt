@@ -15,6 +15,7 @@ import com.tangem.datasource.api.onramp.OnrampApi
 import com.tangem.datasource.api.pay.TangemPayApi
 import com.tangem.datasource.api.stakekit.StakeKitApi
 import com.tangem.datasource.api.tangemTech.TangemTechApi
+import com.tangem.datasource.api.tangemTech.YieldSupplyApi
 import com.tangem.datasource.di.utils.RetrofitApiBuilder
 import com.tangem.datasource.di.utils.RetrofitApiBuilder.Timeouts
 import com.tangem.datasource.local.preferences.AppPreferencesStore
@@ -84,6 +85,15 @@ internal object NetworkModule {
     fun provideTangemTechApi(retrofitApiBuilder: RetrofitApiBuilder): TangemTechApi {
         return retrofitApiBuilder.build(
             apiConfigId = ApiConfig.ID.TangemTech,
+            applyTimeoutAnnotations = true,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideYieldSupplyApi(retrofitApiBuilder: RetrofitApiBuilder): YieldSupplyApi {
+        return retrofitApiBuilder.build(
+            apiConfigId = ApiConfig.ID.YieldSupply,
             applyTimeoutAnnotations = true,
         )
     }

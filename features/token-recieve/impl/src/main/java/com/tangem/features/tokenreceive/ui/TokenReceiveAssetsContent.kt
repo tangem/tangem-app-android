@@ -1,15 +1,19 @@
 package com.tangem.features.tokenreceive.ui
 
 import android.content.res.Configuration
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.key
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -19,33 +23,35 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.util.fastFilter
 import androidx.compose.ui.util.fastForEach
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.res.getStringSafe
 import com.tangem.core.ui.R
-import com.tangem.core.ui.components.SpacerH12
-import com.tangem.core.ui.components.SpacerH8
-import com.tangem.core.ui.components.SpacerW
-import com.tangem.core.ui.components.SpacerW12
+import com.tangem.core.ui.components.*
 import com.tangem.core.ui.components.atoms.text.EllipsisText
 import com.tangem.core.ui.components.atoms.text.TextEllipsis
+import com.tangem.core.ui.components.buttons.actions.ActionBaseButton
+import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
+import com.tangem.core.ui.components.buttons.actions.ActionButtonContent
 import com.tangem.core.ui.components.buttons.small.TangemIconButton
-import com.tangem.core.ui.components.icons.identicon.IdentIcon
+import com.tangem.core.ui.components.currency.icon.CurrencyIcon
+import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.notifications.Notification
-import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.tokenreceive.entity.ReceiveAddress
 import com.tangem.features.tokenreceive.ui.state.ReceiveAssetsUM
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.launch
 
 @Composable
@@ -57,43 +63,39 @@ internal fun TokenReceiveAssetsContent(assetsUM: ReceiveAssetsUM) {
             modifier = Modifier
                 .fillMaxWidth()
                 .background(color = TangemTheme.colors.background.tertiary)
-                .padding(
-                    start = 16.dp,
-                    end = 16.dp,
-                    bottom = 8.dp,
-                ),
+                .padding(bottom = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            SpacerH8()
-
-            Info(
-                showMemoDisclaimer = assetsUM.showMemoDisclaimer,
-                notificationConfigs = assetsUM.notificationConfigs,
-            )
-
-            SpacerH12()
-
             AddressBlock(
-                onCopyClick = assetsUM.onCopyClick,
-                onOpenQrCodeClick = assetsUM.onOpenQrCodeClick,
-                addresses = assetsUM.addresses,
+                assetsUM = assetsUM,
                 snackbarHostState = snackbarHostState,
             )
 
             if (assetsUM.isEnsResultLoading) {
-                LoadingBlock()
+                SpacerH8()
+                LoadingBlock(modifier = Modifier.padding(horizontal = 16.dp))
             }
+
+            SpacerH12()
+
+            Info(
+                showMemoDisclaimer = assetsUM.showMemoDisclaimer,
+                notificationConfigs = assetsUM.notificationConfigs,
+                currencyIconState = assetsUM.currencyIconState,
+            )
         }
     }
 }
 
 @Composable
 private fun Info(
+    currencyIconState: CurrencyIconState,
     notificationConfigs: ImmutableList<NotificationUM>,
     showMemoDisclaimer: Boolean,
     modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = modifier,
+        modifier = modifier.padding(horizontal = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(space = 16.dp),
     ) {
@@ -109,81 +111,226 @@ private fun Info(
             )
         }
 
-        notificationConfigs.fastForEach {
-            key(it.hashCode()) {
-                Notification(config = it.config)
+        notificationConfigs.fastForEach { notificationConfig ->
+            key(notificationConfig.hashCode()) {
+                // TODO remove after new design system
+                if (notificationConfig is NotificationUM.Warning.YieldSupplyIsActive) {
+                    YieldSupplyDepositedWarning(
+                        currencyIconState = currencyIconState,
+                        title = stringResourceSafe(
+                            R.string.yield_module_balance_info_sheet_title,
+                            notificationConfig.tokenName,
+                        ),
+                        subtitle = stringResourceSafe(R.string.yield_module_balance_info_sheet_subtitle),
+                    )
+                } else {
+                    Notification(config = notificationConfig.config)
+                }
             }
         }
     }
 }
 
 @Composable
-private fun AddressBlock(
-    onOpenQrCodeClick: (address: String) -> Unit,
-    onCopyClick: (address: ReceiveAddress) -> Unit,
-    addresses: ImmutableList<ReceiveAddress>,
-    snackbarHostState: SnackbarHostState,
+private fun YieldSupplyDepositedWarning(
+    currencyIconState: CurrencyIconState,
+    title: String,
+    subtitle: String,
+    modifier: Modifier = Modifier,
 ) {
+    Surface(
+        modifier = modifier
+            .defaultMinSize(minHeight = TangemTheme.dimens.size44)
+            .fillMaxWidth(),
+        shape = TangemTheme.shapes.roundedCornersXMedium,
+        color = TangemTheme.colors.button.disabled,
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(all = TangemTheme.dimens.spacing12),
+        ) {
+            Box(
+                modifier = Modifier
+                    .height(22.dp)
+                    .width(22.dp),
+                contentAlignment = Alignment.TopStart,
+            ) {
+                CurrencyIcon(
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .size(13.dp),
+                    state = currencyIconState,
+                    shouldDisplayNetwork = false,
+                    iconSize = 13.dp,
+                )
+
+                Image(
+                    modifier = Modifier
+                        .background(TangemTheme.colors.background.tertiary, RoundedCornerShape(15.dp))
+                        .padding(1.dp)
+                        .size(15.dp)
+                        .align(Alignment.BottomEnd),
+                    imageVector = ImageVector.vectorResource(R.drawable.img_aave_22),
+                    contentDescription = null,
+                )
+            }
+
+            SpacerW(width = TangemTheme.dimens.spacing8)
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = title,
+                    color = TangemTheme.colors.text.primary1,
+                    style = TangemTheme.typography.button,
+                )
+
+                SpacerH(height = TangemTheme.dimens.spacing2)
+
+                Text(
+                    text = subtitle,
+                    color = TangemTheme.colors.text.tertiary,
+                    style = TangemTheme.typography.caption2,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun AddressBlock(assetsUM: ReceiveAssetsUM, snackbarHostState: SnackbarHostState) {
     val hapticFeedback = LocalHapticFeedback.current
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
     val resources = context.resources
 
-    addresses.fastForEach { address ->
-        when (val type = address.type) {
-            is ReceiveAddress.Type.Primary -> {
-                key(address.value) {
-                    AddressItem(
-                        onCopyClick = {
-                            onCopyClick(address)
-                            hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                            coroutineScope.launch {
-                                snackbarHostState.showSnackbar(
-                                    message = resources.getStringSafe(
-                                        R.string.wallet_notification_address_copied,
-                                    ),
-                                )
-                            }
-                        },
-                        onOpenQrCodeClick = {
-                            hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                            onOpenQrCodeClick(address.value)
-                        },
-                        address = address.value,
-                        primaryType = type,
-                    )
-                    SpacerH8()
-                }
+    assetsUM.addresses
+        .fastFilter { it.type is ReceiveAddress.Type.Ens }
+        .fastForEach { address ->
+            key(address.value) {
+                EnsItem(
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    onCopyClick = {
+                        assetsUM.onCopyClick(address)
+                        hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                        coroutineScope.launch {
+                            snackbarHostState.showSnackbar(
+                                message = resources.getStringSafe(
+                                    R.string.wallet_notification_address_copied,
+                                ),
+                            )
+                        }
+                    },
+                    address = address.value,
+                )
+                SpacerH8()
             }
-            ReceiveAddress.Type.Ens -> {
-                key(address.value) {
-                    EnsItem(
-                        onCopyClick = {
-                            onCopyClick(address)
-                            hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                            coroutineScope.launch {
-                                snackbarHostState.showSnackbar(
-                                    message = resources.getStringSafe(
-                                        R.string.wallet_notification_address_copied,
-                                    ),
-                                )
-                            }
-                        },
-                        address = address.value,
+        }
+
+    PrimaryAddressesItems(
+        addresses = assetsUM.addresses.fastFilter { it.type is ReceiveAddress.Type.Primary }.toImmutableList(),
+        currencyIconState = assetsUM.currencyIconState,
+        snackbarHostState = snackbarHostState,
+        onShareClick = {
+            hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+            assetsUM.onShareClick(it)
+        },
+        onCopyClick = {
+            hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+            coroutineScope.launch {
+                snackbarHostState.showSnackbar(
+                    message = resources.getStringSafe(
+                        R.string.wallet_notification_address_copied,
+                    ),
+                )
+            }
+            assetsUM.onCopyClick(it)
+        },
+        onOpenQrCodeClick = {
+            hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+            assetsUM.onOpenQrCodeClick(it)
+        },
+    )
+}
+
+@Suppress("LongParameterList")
+@Composable
+private fun PrimaryAddressesItems(
+    addresses: ImmutableList<ReceiveAddress>,
+    currencyIconState: CurrencyIconState,
+    snackbarHostState: SnackbarHostState,
+    onShareClick: (String) -> Unit,
+    onCopyClick: (ReceiveAddress) -> Unit,
+    onOpenQrCodeClick: (String) -> Unit,
+) {
+    if (addresses.isEmpty()) return
+    var selectedAddress by remember { mutableStateOf(addresses.first()) }
+    val pagerState = rememberPagerState(
+        initialPage = 0,
+        initialPageOffsetFraction = 0f,
+        pageCount = addresses::count,
+    )
+    LaunchedEffect(key1 = pagerState.currentPage) {
+        selectedAddress = addresses[pagerState.currentPage]
+    }
+
+    HorizontalPager(
+        state = pagerState,
+        contentPadding = PaddingValues(horizontal = 16.dp),
+        pageSpacing = 16.dp,
+    ) {
+        AddressItem(
+            currencyIconState = currencyIconState,
+            onOpenQrCodeClick = { onOpenQrCodeClick(selectedAddress.value) },
+            onCopyClick = { onCopyClick(selectedAddress) },
+            onShareClick = { onShareClick(selectedAddress.value) },
+            primaryType = selectedAddress.type as ReceiveAddress.Type.Primary,
+            address = selectedAddress.value,
+            snackbarHostState = snackbarHostState,
+        )
+    }
+
+    SpacerH(4.dp)
+
+    if (pagerState.pageCount > 1) {
+        val indicatorState = rememberLazyListState()
+        val selectedColor = TangemTheme.colors.icon.primary1
+        val unselectedColor = TangemTheme.colors.icon.informative
+
+        LazyRow(
+            modifier = Modifier.height(20.dp),
+            state = indicatorState,
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            repeat(pagerState.pageCount) { iteration ->
+                item(key = iteration) {
+                    val color by animateColorAsState(
+                        targetValue = if (pagerState.currentPage == iteration) selectedColor else unselectedColor,
+                        label = "",
                     )
-                    SpacerH8()
+
+                    Box(
+                        modifier = Modifier
+                            .padding(horizontal = 4.dp, vertical = 6.dp)
+                            .background(color = color, shape = CircleShape)
+                            .size(7.dp),
+                    )
                 }
             }
         }
     }
 }
 
+@Suppress("LongParameterList")
 @Composable
 private fun AddressItem(
+    currencyIconState: CurrencyIconState,
     onOpenQrCodeClick: () -> Unit,
     onCopyClick: () -> Unit,
-    address: String,
+    onShareClick: () -> Unit,
     primaryType: ReceiveAddress.Type.Primary,
+    address: String,
+    snackbarHostState: SnackbarHostState,
     modifier: Modifier = Modifier,
 ) {
     Card(
@@ -193,56 +340,109 @@ private fun AddressItem(
         onClick = onOpenQrCodeClick,
     ) {
         Column(
-            modifier = Modifier.padding(vertical = 14.dp, horizontal = 12.dp),
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
+            CurrencyIcon(
+                modifier = Modifier.size(56.dp),
+                state = currencyIconState,
+                shouldDisplayNetwork = true,
+                iconSize = 56.dp,
+            )
+
+            SpacerH(12.dp)
+
+            Text(
+                text = primaryType.displayName.resolveReference(),
+                color = TangemTheme.colors.text.primary1,
+                style = TangemTheme.typography.subtitle1,
+                textAlign = TextAlign.Center,
+            )
+
+            Text(
+                modifier = Modifier
+                    .heightIn(min = 40.dp)
+                    .padding(horizontal = 16.dp),
+                text = address,
+                color = TangemTheme.colors.text.tertiary,
+                style = TangemTheme.typography.body2,
+                textAlign = TextAlign.Center,
+            )
+
+            SpacerH8()
+
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(16.dp))
+                    .clickable(onClick = onOpenQrCodeClick)
+                    .padding(vertical = 6.dp, horizontal = 12.dp),
+                horizontalArrangement = Arrangement.Center,
             ) {
-                IdentIcon(
-                    address = address,
-                    modifier = Modifier
-                        .size(size = 36.dp)
-                        .clip(shape = RoundedCornerShape(18.dp)),
+                Icon(
+                    modifier = Modifier.size(16.dp),
+                    imageVector = ImageVector.vectorResource(R.drawable.ic_qrcode_new_24),
+                    contentDescription = null,
                 )
 
-                SpacerW12()
+                SpacerW(4.dp)
 
-                Column(modifier = Modifier.weight(1f)) {
-                    EllipsisText(
-                        text = primaryType.displayName.resolveReference(),
-                        ellipsis = TextEllipsis.End,
-                        color = TangemTheme.colors.text.primary1,
-                        style = TangemTheme.typography.subtitle2,
-                    )
-
-                    EllipsisText(
-                        text = address,
-                        ellipsis = TextEllipsis.Middle,
-                        color = TangemTheme.colors.text.tertiary,
-                        style = TangemTheme.typography.caption2,
-                    )
-                }
-
-                SpacerW12()
-
-                TangemIconButton(
-                    modifier = Modifier.size(TangemTheme.dimens.size32),
-                    innerPadding = 6.dp,
-                    iconRes = R.drawable.ic_qrcode_new_24,
-                    onClick = onOpenQrCodeClick,
-                )
-
-                SpacerW(12.dp)
-
-                TangemIconButton(
-                    modifier = Modifier.size(TangemTheme.dimens.size32),
-                    iconRes = R.drawable.ic_copy_new_24,
-                    innerPadding = 6.dp,
-                    onClick = onCopyClick,
+                Text(
+                    text = stringResourceSafe(R.string.token_receive_show_qr_code_title),
+                    style = TangemTheme.typography.caption1,
+                    color = TangemTheme.colors.text.secondary,
                 )
             }
+
+            SpacerH(20.dp)
+
+            ButtonsBlock(
+                snackbarHostState = snackbarHostState,
+                onCopyClick = onCopyClick,
+                onShareClick = onShareClick,
+            )
         }
+    }
+}
+
+@Composable
+private fun ButtonsBlock(snackbarHostState: SnackbarHostState, onCopyClick: () -> Unit, onShareClick: () -> Unit) {
+    val hapticFeedback = LocalHapticFeedback.current
+    val coroutineScope = rememberCoroutineScope()
+    val context = LocalContext.current
+    val resources = context.resources
+
+    Row(
+        modifier = Modifier.width(IntrinsicSize.Min),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        ActionButtonWithResizableText(
+            modifier = Modifier.weight(1f),
+            config = ActionButtonConfig(
+                text = TextReference.Res(id = R.string.common_copy),
+                iconResId = R.drawable.ic_copy_new_24,
+                onClick = {
+                    onCopyClick()
+                    hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                    coroutineScope.launch {
+                        snackbarHostState.showSnackbar(
+                            message = resources.getStringSafe(R.string.wallet_notification_address_copied),
+                        )
+                    }
+                },
+            ),
+        )
+
+        ActionButtonWithResizableText(
+            modifier = Modifier.weight(1f),
+            config = ActionButtonConfig(
+                text = TextReference.Res(id = R.string.common_share),
+                iconResId = R.drawable.ic_share_24,
+                onClick = {
+                    hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onShareClick()
+                },
+            ),
+        )
     }
 }
 
@@ -277,7 +477,7 @@ private fun EnsItem(onCopyClick: () -> Unit, address: String, modifier: Modifier
 
             TangemIconButton(
                 modifier = Modifier.size(TangemTheme.dimens.size28),
-                iconRes = R.drawable.ic_copy_new_24,
+                iconRes = R.drawable.ic_share_24,
                 innerPadding = 6.dp,
                 onClick = onCopyClick,
             )
@@ -304,6 +504,38 @@ private fun LoadingBlock(modifier: Modifier = Modifier) {
             )
         }
     }
+}
+
+@Composable
+private fun ActionButtonWithResizableText(config: ActionButtonConfig, modifier: Modifier = Modifier) {
+    val fontSizeRange = FontSizeRange(min = 10.sp, max = 14.sp)
+    var fontSizeValue by remember { mutableFloatStateOf(fontSizeRange.max.value) }
+
+    ActionBaseButton(
+        config = config,
+        shape = RoundedCornerShape(size = TangemTheme.dimens.radius24),
+        content = { contentModifier ->
+            ActionButtonContent(
+                config = config,
+                text = { color ->
+                    ResizableText(
+                        text = config.text.resolveReference(),
+                        fontSizeValue = fontSizeValue.sp,
+                        fontSizeRange = fontSizeRange,
+                        onFontSizeChange = { fontSizeValue = it },
+                        color = color,
+                        overflow = TextOverflow.Ellipsis,
+                        maxLines = 1,
+                        style = TangemTheme.typography.button,
+                    )
+                },
+                modifier = contentModifier.padding(horizontal = 16.dp),
+                paddingBetweenIconAndText = 4.dp,
+            )
+        },
+        modifier = modifier,
+        color = TangemTheme.colors.button.secondary,
+    )
 }
 
 @Composable
@@ -334,12 +566,16 @@ private class TokenReceiveAssetsContentProvider : PreviewParameterProvider<Recei
         ),
         addresses = persistentListOf(
             address,
+            address,
             address.copy(type = ReceiveAddress.Type.Ens, value = "papasha.eth"),
         ),
         showMemoDisclaimer = false,
         onCopyClick = {},
         onOpenQrCodeClick = {},
         isEnsResultLoading = true,
+        network = "USDT",
+        currencyIconState = CurrencyIconState.Locked,
+        onShareClick = {},
     )
 
     override val values: Sequence<ReceiveAssetsUM>

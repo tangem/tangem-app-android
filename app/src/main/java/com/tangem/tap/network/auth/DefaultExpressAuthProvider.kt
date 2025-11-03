@@ -6,7 +6,7 @@ import java.util.concurrent.atomic.AtomicReference
 
 internal class DefaultExpressAuthProvider : ExpressAuthProvider {
 
-    private var uuid = AtomicReference(UUID.randomUUID())
+    private val uuid = AtomicReference(UUID.randomUUID())
 
     override fun getSessionId(): String {
         return uuid.get().toString()
