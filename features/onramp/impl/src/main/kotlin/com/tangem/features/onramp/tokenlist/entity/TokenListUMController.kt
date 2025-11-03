@@ -31,6 +31,7 @@ internal class TokenListUMController @Inject constructor() {
             ),
             availableItems = persistentListOf(),
             unavailableItems = persistentListOf(),
+            tokensListData = TokenListUMData.EmptyList,
             isBalanceHidden = false,
         ),
     )

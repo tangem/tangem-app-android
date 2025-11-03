@@ -19,6 +19,7 @@ class ApplicationInjectionExecutionRule : TestRule {
                 OnComponentReadyRunner.addListener(
                     tangemApplication, ApplicationEntryPoint::class.java
                 ) { _: ApplicationEntryPoint ->
+                    tangemApplication.preInit()
                     tangemApplication.init()
                 }
                 base.evaluate()

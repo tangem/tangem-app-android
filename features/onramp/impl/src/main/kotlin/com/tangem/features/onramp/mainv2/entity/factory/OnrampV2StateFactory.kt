@@ -47,7 +47,7 @@ internal class OnrampV2StateFactory(
                 endButtonUM = TopAppBarButtonUM.Icon(
                     iconRes = R.drawable.ic_more_vertical_24,
                     onClicked = openSettings,
-                    enabled = false,
+                    isEnabled = false,
                 ),
             ),
             continueButtonConfig = ContinueButtonUM(
@@ -62,8 +62,8 @@ internal class OnrampV2StateFactory(
         val state = currentStateProvider()
 
         val endButton = when (val button = state.topBarConfig.endButtonUM) {
-            is TopAppBarButtonUM.Icon -> button.copy(enabled = true)
-            is TopAppBarButtonUM.Text -> button.copy(enabled = true)
+            is TopAppBarButtonUM.Icon -> button.copy(isEnabled = true)
+            is TopAppBarButtonUM.Text -> button.copy(isEnabled = true)
         }
 
         val initialAmountBlockState = getInitialAmountBlockState(currency)
@@ -123,8 +123,8 @@ internal class OnrampV2StateFactory(
     fun getErrorState(errorCode: String? = null, onRefresh: () -> Unit): OnrampV2MainComponentUM {
         val state = currentStateProvider()
         val endButton = when (val button = state.topBarConfig.endButtonUM) {
-            is TopAppBarButtonUM.Icon -> button.copy(enabled = true)
-            is TopAppBarButtonUM.Text -> button.copy(enabled = true)
+            is TopAppBarButtonUM.Icon -> button.copy(isEnabled = true)
+            is TopAppBarButtonUM.Text -> button.copy(isEnabled = true)
         }
 
         return when (state) {

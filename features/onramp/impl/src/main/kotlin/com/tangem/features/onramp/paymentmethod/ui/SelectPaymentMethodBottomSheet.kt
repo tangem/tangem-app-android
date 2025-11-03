@@ -11,13 +11,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.testTag
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.sheet.TangemBottomSheet
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.selectedBorder
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.test.SelectPaymentMethodBottomSheetTestTags
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.paymentmethod.entity.PaymentMethodUM
 import com.tangem.features.onramp.paymentmethod.entity.PaymentMethodsBottomSheetConfig
@@ -51,7 +49,7 @@ private fun SelectPaymentMethodBottomSheetContent(
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(
-        modifier = modifier.testTag(SelectPaymentMethodBottomSheetTestTags.LAZY_LIST),
+        modifier = modifier,
     ) {
         items(
             items = methods,
@@ -90,7 +88,6 @@ private fun PaymentMethodItem(paymentMethod: PaymentMethodUM, isSelected: Boolea
     ) {
         PaymentMethodIcon(
             imageUrl = paymentMethod.imageUrl,
-            modifier = Modifier.testTag(SelectPaymentMethodBottomSheetTestTags.PAYMENT_METHOD_ICON),
         )
         Text(
             text = paymentMethod.name,

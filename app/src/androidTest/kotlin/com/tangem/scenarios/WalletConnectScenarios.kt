@@ -7,6 +7,7 @@ import com.tangem.screens.onWalletConnectScreen
 import io.qameta.allure.kotlin.Allure.step
 
 fun BaseTestCase.checkWalletConnectBottomSheet() {
+    waitForIdle()
     step("Assert 'Wallet Connect' bottom sheet title is displayed") {
         onWalletConnectBottomSheet { title.assertIsDisplayed() }
     }
@@ -60,34 +61,64 @@ fun BaseTestCase.checkWalletConnectBottomSheet() {
     }
 }
 
-fun BaseTestCase.checkWalletConnectScreen() {
+fun BaseTestCase.checkWalletConnectScreen(withConnections: Boolean) {
+    waitForIdle()
     step("Assert 'Wallet Connect' title is displayed") {
         onWalletConnectScreen { title.assertIsDisplayed() }
-    }
-    step("Assert 'More' button is displayed") {
-        onWalletConnectScreen { moreButton.assertIsDisplayed() }
-    }
-    step("Assert wallet name is displayed") {
-        onWalletConnectScreen { walletName.assertIsDisplayed() }
-    }
-    step("Assert app icon is displayed") {
-        onWalletConnectScreen { appIcon.assertIsDisplayed() }
-    }
-    step("Assert app name is displayed") {
-        onWalletConnectScreen { appName.assertIsDisplayed() }
-    }
-    step("Assert approve icon is displayed") {
-        onWalletConnectScreen { approveIcon.assertIsDisplayed() }
-    }
-    step("Assert app URL is displayed") {
-        onWalletConnectScreen { appUrl.assertIsDisplayed() }
     }
     step("Assert 'New Connection' button is displayed") {
         onWalletConnectScreen { newConnectionButton.assertIsDisplayed() }
     }
+    if (withConnections) {
+        step("Assert 'More' button is displayed") {
+            onWalletConnectScreen { moreButton.assertIsDisplayed() }
+        }
+        step("Assert wallet name is displayed") {
+            onWalletConnectScreen { walletName.assertIsDisplayed() }
+        }
+        step("Assert app icon is displayed") {
+            onWalletConnectScreen { appIcon.assertIsDisplayed() }
+        }
+        step("Assert app name is displayed") {
+            onWalletConnectScreen { appName.assertIsDisplayed() }
+        }
+        step("Assert approve icon is displayed") {
+            onWalletConnectScreen { approveIcon.assertIsDisplayed() }
+        }
+        step("Assert app URL is displayed") {
+            onWalletConnectScreen { appUrl.assertIsDisplayed() }
+        }
+    } else {
+        step("Assert wallet name is not displayed") {
+            onWalletConnectScreen { walletName.assertIsNotDisplayed() }
+        }
+        step("Assert app icon is not displayed") {
+            onWalletConnectScreen { appIcon.assertIsNotDisplayed() }
+        }
+        step("Assert app name is not displayed") {
+            onWalletConnectScreen { appName.assertIsNotDisplayed() }
+        }
+        step("Assert approve icon is not displayed") {
+            onWalletConnectScreen { approveIcon.assertIsNotDisplayed() }
+        }
+        step("Assert app URL is not displayed") {
+            onWalletConnectScreen { appUrl.assertIsNotDisplayed() }
+        }
+        step("Assert 'Wallet Connect' image is displayed") {
+            onWalletConnectScreen { walletConnectImage.assertIsDisplayed() }
+        }
+        step("Assert 'No session' title is displayed") {
+            onWalletConnectScreen { noSessionTitle.assertIsDisplayed() }
+        }
+        step("Assert 'No session' text is displayed") {
+            onWalletConnectScreen { noSessionText.assertIsDisplayed() }
+        }
+    }
+
 }
 
 fun BaseTestCase.checkWalletConnectDetailsBottomSheet(dAppName: String) {
+    waitForIdle()
     step("Assert connection details title is displayed") {
         onWalletConnectDetailsBottomSheet { title.assertIsDisplayed() }
     }
@@ -128,7 +159,7 @@ fun BaseTestCase.checkWalletConnectDetailsBottomSheet(dAppName: String) {
         onWalletConnectDetailsBottomSheet { connectedNetworkIcon.assertIsDisplayed() }
     }
     step("Assert connected dApp name: '$dAppName'") {
-        onWalletConnectDetailsBottomSheet { connectedNetworkName.assertTextContains(dAppName) }
+        onWalletConnectDetailsBottomSheet { appName.assertTextContains(dAppName) }
     }
     step("Assert connected network symbol is displayed") {
         onWalletConnectDetailsBottomSheet { connectedNetworkSymbol.assertIsDisplayed() }

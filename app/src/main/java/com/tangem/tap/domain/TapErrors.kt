@@ -20,23 +20,23 @@ sealed class TapError(
     override val args: List<Any>? = null,
 ) : Throwable(), TapErrors, ArgError {
 
-    object UnknownError : TapError(R.string.send_error_unknown)
+    class UnknownError : TapError(R.string.send_error_unknown)
     open class CustomError(val customMessage: String) : TapError(R.string.common_custom_string, listOf(customMessage))
 
-    object NoInternetConnection : TapError(R.string.wallet_notification_no_internet)
+    class NoInternetConnection : TapError(R.string.wallet_notification_no_internet)
 
     sealed class WalletManager {
         class NoAccountError(amountToCreateAccount: String) : CustomError(amountToCreateAccount)
         class InternalError(message: String) : CustomError(message)
-        object BlockchainIsUnreachableTryLater : TapError(R.string.wallet_balance_blockchain_unreachable_try_later)
+        class BlockchainIsUnreachableTryLater : TapError(R.string.wallet_balance_blockchain_unreachable_try_later)
     }
 }
 
 sealed class TapSdkError(override val messageResId: Int?) : TangemError(code = 50100) {
     override var customMessage: String = code.toString()
 
-    object CardForDifferentApp : TapSdkError(R.string.alert_unsupported_card)
-    object CardNotSupportedByRelease : TapSdkError(R.string.error_wrong_card_type)
+    class CardForDifferentApp : TapSdkError(R.string.alert_unsupported_card)
+    class CardNotSupportedByRelease : TapSdkError(R.string.error_wrong_card_type)
 }
 
 fun TapErrors.assembleErrors(): MutableList<Pair<Int, List<Any>?>> {

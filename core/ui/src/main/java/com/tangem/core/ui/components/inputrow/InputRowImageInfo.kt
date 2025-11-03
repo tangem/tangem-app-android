@@ -115,7 +115,7 @@ fun InputRowImageInfo(
                         color = TangemTheme.colors.text.primary1,
                     )
                 }
-                infoSubtitle?.let {
+                if (infoSubtitle != null) {
                     if (infoSubtitle is TextReference.Annotated) {
                         Text(
                             text = infoSubtitle.resolveAnnotatedReference(),

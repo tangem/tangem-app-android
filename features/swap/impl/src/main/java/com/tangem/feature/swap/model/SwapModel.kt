@@ -63,6 +63,7 @@ import com.tangem.feature.swap.ui.StateBuilder
 import com.tangem.feature.swap.utils.formatToUIRepresentation
 import com.tangem.features.swap.SwapComponent
 import com.tangem.utils.Provider
+import com.tangem.utils.TangemBlogUrlBuilder.RESOURCE_TO_LEARN_ABOUT_APPROVING_IN_SWAP
 import com.tangem.utils.coroutines.*
 import com.tangem.utils.isNullOrZero
 import kotlinx.coroutines.NonCancellable
@@ -503,6 +504,7 @@ internal class SwapModel @Inject constructor(
                 receiveToken = receiveToken ?: "",
                 provider = provider,
                 errorCode = error.code,
+                errorMessage = error.message,
             ),
         )
     }
@@ -700,9 +702,11 @@ internal class SwapModel @Inject constructor(
     private fun givePermissionsToSwap() {
         modelScope.launch(dispatchers.main) {
             runCatching {
-                val fromToken = requireNotNull(dataState.fromCryptoCurrency?.currency) {
-                    "dataState.fromCurrency might not be null"
+                val fromCryptoCurrency = requireNotNull(dataState.fromCryptoCurrency) {
+                    "dataState.fromCryptoCurrency might not be null"
                 }
+                val fromToken = fromCryptoCurrency.currency
+
                 val approveDataModel = requireNotNull(dataState.approveDataModel) {
                     "dataState.approveDataModel.spenderAddress shouldn't be null"
                 }
@@ -725,7 +729,7 @@ internal class SwapModel @Inject constructor(
                         permissionOptions = PermissionOptions(
                             approveData = approveDataModel,
                             forTokenContractAddress = (fromToken as? CryptoCurrency.Token)?.contractAddress.orEmpty(),
-                            fromToken = fromToken,
+                            fromTokenStatus = fromCryptoCurrency,
                             approveType = approveType,
                             txFee = feeForPermission,
                             spenderAddress = approveDataModel.spenderAddress,
@@ -783,7 +787,7 @@ internal class SwapModel @Inject constructor(
                     fromGroup = tokenDataState.fromGroup.copy(
                         available = available,
                         unavailable = unavailable,
-                        afterSearch = true,
+                        isAfterSearch = true,
                     ),
                 )
             } else {
@@ -791,7 +795,7 @@ internal class SwapModel @Inject constructor(
                     toGroup = tokenDataState.toGroup.copy(
                         available = available,
                         unavailable = unavailable,
-                        afterSearch = true,
+                        isAfterSearch = true,
                     ),
                 )
             }
@@ -1162,6 +1166,9 @@ internal class SwapModel @Inject constructor(
                 modelScope.launch { shouldShowStoriesUseCase.neverToShow(StoryContentIds.STORY_FIRST_TIME_SWAP.id) }
                 swapRouter.openScreen(SwapNavScreen.Main)
             },
+            onOpenLearnMoreAboutApproveClick = {
+                urlOpener.openUrl(RESOURCE_TO_LEARN_ABOUT_APPROVING_IN_SWAP)
+            },
         )
     }
 
@@ -1260,8 +1267,7 @@ internal class SwapModel @Inject constructor(
             toToken.currency.id.value
         }
 
-        return groupToFind.available.find { idToFind == it.currencyStatus.currency.id.value }?.providers
-            ?: emptyList()
+        return groupToFind.available.find { idToFind == it.currencyStatus.currency.id.value }?.providers.orEmpty()
     }
 
     private fun Map<SwapProvider, SwapState>.getLastLoadedSuccessStates(): SuccessLoadedSwapData {

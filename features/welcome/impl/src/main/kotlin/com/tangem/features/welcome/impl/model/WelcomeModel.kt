@@ -13,8 +13,8 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.SnackbarMessage
-import com.tangem.domain.core.wallets.UserWalletsListRepository
-import com.tangem.domain.core.wallets.error.UnlockWalletError
+import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.common.wallets.error.UnlockWalletError
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
@@ -50,7 +50,7 @@ internal class WelcomeModel @Inject constructor(
 ) : Model() {
 
     val uiState: StateFlow<WelcomeUM>
-    field = MutableStateFlow<WelcomeUM>(WelcomeUM.Plain)
+        field = MutableStateFlow<WelcomeUM>(WelcomeUM.Plain)
 
     private val walletsFetcher = userWalletsFetcherFactory.create(
         messageSender = uiMessageSender,

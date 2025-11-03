@@ -23,11 +23,11 @@ import com.tangem.core.ui.test.MarketsTestTags
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.features.markets.impl.R
 import com.tangem.features.markets.tokenlist.impl.ui.state.ListUM
+import com.tangem.features.markets.tokenlist.impl.ui.state.MarketsListItemUM.Companion.TOKEN_LAZY_LIST_ID_SEPARATOR
 import kotlinx.coroutines.launch
 
 private const val LOAD_NEXT_PAGE_ON_END_INDEX = 50
 private const val LOAD_NEXT_PAGE_ON_END_INDEX_SEARCH = 25
-private const val TOKEN_LAZY_LIST_ID_SEPARATOR = "***"
 
 @Composable
 @Suppress("LongMethod")
@@ -92,7 +92,7 @@ internal fun MarketsListLazyColumn(
                 is ListUM.Content -> {
                     items(
                         items = state.items,
-                        key = { it.id.value + TOKEN_LAZY_LIST_ID_SEPARATOR + it.marketCap.toString() },
+                        key = { it.getComposeKey() },
                     ) { item ->
                         MarketsListItem(
                             model = item,

@@ -2,14 +2,14 @@ package com.tangem.tap.network.auth
 
 import com.tangem.common.extensions.toHexString
 import com.tangem.datasource.api.common.AuthProvider
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
-import com.tangem.domain.core.wallets.UserWalletsListRepository
 
 internal class DefaultAuthProvider(
     private val userWalletsListManager: UserWalletsListManager,
     private val userWalletsListRepository: UserWalletsListRepository,
-    private val useNewListRepository: Boolean = false,
+    private val shouldUseNewListRepository: Boolean = false,
 ) : AuthProvider {
 
     override suspend fun getCardPublicKey(): String {
@@ -39,7 +39,7 @@ internal class DefaultAuthProvider(
     }
 
     private suspend fun getWallets(): List<UserWallet> {
-        return if (useNewListRepository) {
+        return if (shouldUseNewListRepository) {
             userWalletsListRepository.userWalletsSync()
         } else {
             userWalletsListManager.userWalletsSync
@@ -47,7 +47,7 @@ internal class DefaultAuthProvider(
     }
 
     private suspend fun getSelectedWallet(): UserWallet? {
-        return if (useNewListRepository) {
+        return if (shouldUseNewListRepository) {
             userWalletsListRepository.selectedUserWalletSync()
         } else {
             userWalletsListManager.selectedUserWalletSync

@@ -3,14 +3,15 @@ package com.tangem.features.onramp.tokenlist
 import androidx.compose.runtime.Stable
 import com.tangem.core.decompose.factory.ComponentFactory
 import com.tangem.core.ui.components.token.state.TokenItemState
-import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.core.ui.decompose.ComposableListContentComponent
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.onramp.tokenlist.entity.OnrampOperation
+import com.tangem.features.onramp.tokenlist.entity.TokenListUM
 
 /** Token list component that present list of token for multi-currency wallet */
 @Stable
-internal interface OnrampTokenListComponent : ComposableContentComponent {
+internal interface OnrampTokenListComponent : ComposableListContentComponent<TokenListUM> {
 
     /** Component factory */
     interface Factory : ComponentFactory<Params, OnrampTokenListComponent>

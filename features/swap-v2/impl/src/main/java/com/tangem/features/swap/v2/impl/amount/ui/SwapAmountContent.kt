@@ -7,7 +7,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -22,8 +24,10 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
+import com.tangem.common.ui.account.AccountTitle
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.ui.AmountFieldV2
+import com.tangem.core.ui.components.SpacerH16
 import com.tangem.core.ui.components.SpacerH2
 import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.atoms.text.EllipsisText
@@ -44,6 +48,7 @@ import com.tangem.features.swap.v2.impl.amount.ui.preview.SwapAmountClickIntents
 import com.tangem.features.swap.v2.impl.amount.ui.preview.SwapAmountContentPreview
 import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM
 
+@Suppress("DestructuringDeclarationWithTooManyEntries")
 @Composable
 internal fun SwapAmountContent(
     amountUM: SwapAmountUM,
@@ -53,9 +58,9 @@ internal fun SwapAmountContent(
     val swapAmountContent = amountUM as? SwapAmountUM.Content
     val isFixedRate = swapAmountContent?.swapRateType == ExpressRateType.Fixed
     ConstraintLayout(
-        modifier = modifier,
+        modifier = modifier.verticalScroll(rememberScrollState()),
     ) {
-        val (amountFromRef, amountToRef, middleButtonRef) = createRefs()
+        val (amountFromRef, amountToRef, middleButtonRef, spacerRef) = createRefs()
         SwapAmountBlock(
             amountFieldUM = amountUM.primaryAmount,
             selectedAmountType = amountUM.selectedAmountType,
@@ -89,6 +94,14 @@ internal fun SwapAmountContent(
                     start.linkTo(parent.start)
                     end.linkTo(parent.end)
                 },
+        )
+        SpacerH16(
+            modifier = Modifier.constrainAs(spacerRef) {
+                top.linkTo(amountToRef.bottom)
+                bottom.linkTo(parent.bottom)
+                start.linkTo(parent.start)
+                end.linkTo(parent.end)
+            },
         )
     }
 }
@@ -182,17 +195,14 @@ private fun SwapAmountEditBlock(
         verticalArrangement = Arrangement.spacedBy(12.dp),
         modifier = modifier.padding(top = 48.dp, bottom = 28.dp),
     ) {
-        if (amountFieldUM.amountField !is AmountState.Data) {
-            TextShimmer(
-                style = TangemTheme.typography.caption2,
-                modifier = Modifier.width(60.dp),
-            )
-        } else {
-            Text(
-                text = (amountFieldUM.amountField as AmountState.Data).title.resolveReference(),
-                style = TangemTheme.typography.subtitle2,
-                color = TangemTheme.colors.text.tertiary,
-            )
+        when (val amountFieldUM = amountFieldUM.amountField) {
+            !is AmountState.Data -> {
+                TextShimmer(
+                    style = TangemTheme.typography.caption2,
+                    modifier = Modifier.width(60.dp),
+                )
+            }
+            else -> AccountTitle(amountFieldUM.accountTitleUM)
         }
         AmountFieldV2(
             amountUM = amountFieldUM.amountField,
@@ -423,6 +433,7 @@ private class SwapAmountContentPreviewProvider : PreviewParameterProvider<SwapAm
         get() = sequenceOf(
             SwapAmountContentPreview.emptyState,
             SwapAmountContentPreview.defaultState,
+            SwapAmountContentPreview.defaultStateAccount,
         )
 }
 // endregion

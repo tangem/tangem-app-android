@@ -30,13 +30,22 @@ internal class DefaultAppRatingRepository(
     override fun isReadyToShow(): Flow<Boolean> {
         // TODO: [REDACTED_JIRA]
         return combine(
-            appPreferencesStore.get(key = PreferencesKeys.USER_WAS_INTERACT_WITH_RATING_KEY, default = false),
-            appPreferencesStore.get(
+            flow = appPreferencesStore.get(
+                key = PreferencesKeys.USER_WAS_INTERACT_WITH_RATING_KEY,
+                default = false,
+            ),
+            flow2 = appPreferencesStore.get(
                 key = PreferencesKeys.SHOW_RATING_DIALOG_AT_LAUNCH_COUNT_KEY,
                 default = FIRST_SHOWING_COUNT,
             ),
-            appPreferencesStore.get(key = PreferencesKeys.APP_LAUNCH_COUNT_KEY, default = DEFAULT_APP_LAUNCH_COUNT),
-            appPreferencesStore.get(key = PreferencesKeys.FUNDS_FOUND_DATE_KEY, default = FUNDS_FOUND_DATE_UNDEFINED),
+            flow3 = appPreferencesStore.get(
+                key = PreferencesKeys.APP_LAUNCH_COUNT_KEY,
+                default = DEFAULT_APP_LAUNCH_COUNT,
+            ),
+            flow4 = appPreferencesStore.get(
+                key = PreferencesKeys.FUNDS_FOUND_DATE_KEY,
+                default = FUNDS_FOUND_DATE_UNDEFINED,
+            ),
         ) { isInteracting, ratingShowingCount, appLaunchCount, fundsFoundDate ->
             if (!isInteracting) {
                 val diff = Calendar.getInstance().timeInMillis - fundsFoundDate

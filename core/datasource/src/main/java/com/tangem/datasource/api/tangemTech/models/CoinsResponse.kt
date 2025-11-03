@@ -1,3 +1,5 @@
+@file:Suppress("BooleanPropertyNaming")
+
 package com.tangem.datasource.api.tangemTech.models
 
 import com.squareup.moshi.Json
@@ -12,12 +14,13 @@ data class CoinsResponse(
 ) {
 
     @JsonClass(generateAdapter = true)
+    @Suppress("BooleanPropertyNaming")
     data class Coin(
         @Json(name = "id") val id: String,
         @Json(name = "name") val name: String,
         @Json(name = "symbol") val symbol: String,
         @Json(name = "active") val active: Boolean,
-        @Json(name = "networks") val networks: List<Network> = listOf(),
+        @Json(name = "networks") val networks: List<Network> = emptyList(),
     ) {
 
         @JsonClass(generateAdapter = true)

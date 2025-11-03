@@ -23,11 +23,11 @@ fun TokenPriceText(price: String, modifier: Modifier = Modifier, priceChangeType
     val generalColor = TangemTheme.colors.text.primary1
 
     val color = remember(generalColor) { Animatable(generalColor) }
-    var animationSkipped by remember { mutableStateOf(false) }
+    var isAnimationSkipped by remember { mutableStateOf(false) }
 
     LaunchedEffect(price) {
-        if (animationSkipped.not()) {
-            animationSkipped = true
+        if (isAnimationSkipped.not()) {
+            isAnimationSkipped = true
             return@LaunchedEffect
         }
 

@@ -100,7 +100,7 @@ internal class DefaultVisaRepository @Inject constructor(
         )
     }
 
-    override suspend fun getTxHistory(
+    override fun getTxHistory(
         userWalletId: UserWalletId,
         pageSize: Int,
         isRefresh: Boolean,
@@ -218,7 +218,7 @@ internal class DefaultVisaRepository @Inject constructor(
         return cardWallet.publicKey.toHexString()
     }
 
-    private suspend fun findVisaUserWallet(userWalletId: UserWalletId): UserWallet {
+    private fun findVisaUserWallet(userWalletId: UserWalletId): UserWallet {
         val userWallet = requireNotNull(userWalletsStore.getSyncOrNull(userWalletId)) {
             "No user wallet found: $userWalletId"
         }

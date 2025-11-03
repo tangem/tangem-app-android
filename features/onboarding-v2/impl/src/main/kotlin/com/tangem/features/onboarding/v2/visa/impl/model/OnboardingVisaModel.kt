@@ -10,10 +10,6 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.domain.card.common.visa.VisaUtilities
 import com.tangem.domain.card.common.visa.VisaWalletPublicKeyUtility
-import com.tangem.domain.visa.model.VisaActivationRemoteState
-import com.tangem.domain.visa.model.VisaCardActivationStatus
-import com.tangem.domain.visa.model.VisaCardWalletDataToSignRequest
-import com.tangem.domain.visa.model.VisaCustomerWalletDataToSignRequest
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
@@ -143,74 +139,75 @@ internal class OnboardingVisaModel @Inject constructor(
     }
 
     private fun initializeRoute(): OnboardingVisaRoute {
-        return when (val activationStatus = params.scanResponse.visaCardActivationStatus) {
-            is VisaCardActivationStatus.ActivationStarted -> {
-                when (val remoteState = activationStatus.remoteState) {
-                    is VisaActivationRemoteState.CardWalletSignatureRequired -> {
-                        if (activationStatus.activationInput.isAccessCodeSet) {
-                            OnboardingVisaRoute.WelcomeBack(
-                                activationInput = activationStatus.activationInput,
-                                dataToSignByCardWalletRequest = VisaCardWalletDataToSignRequest(
-                                    activationOrderInfo = remoteState.activationOrderInfo,
-                                    cardWalletAddress = activationStatus.cardWalletAddress,
-                                ),
-                            )
-                        } else {
-                            OnboardingVisaRoute.AccessCode
-                        }
-                    }
-                    is VisaActivationRemoteState.CustomerWalletSignatureRequired -> {
-                        remoteState.getRoute(activationStatus)
-                    }
-                    VisaActivationRemoteState.PaymentAccountDeploying -> {
-                        OnboardingVisaRoute.InProgress(from = OnboardingVisaRoute.InProgress.From.Approve)
-                    }
-                    VisaActivationRemoteState.WaitingForActivationFinishing -> {
-                        OnboardingVisaRoute.InProgress(from = OnboardingVisaRoute.InProgress.From.PinCode)
-                    }
-                    is VisaActivationRemoteState.AwaitingPinCode -> {
-                        OnboardingVisaRoute.PinCode(
-                            activationOrderInfo = remoteState.activationOrderInfo,
-                            pinCodeValidationError = false,
-                        )
-                    }
-                    VisaActivationRemoteState.Activated,
-                    VisaActivationRemoteState.BlockedForActivation,
-                    VisaActivationRemoteState.Failed,
-                    -> error("Activation status is not correct for onboarding flow")
-                }
-            }
-            is VisaCardActivationStatus.NotStartedActivation -> OnboardingVisaRoute.Welcome
-            else -> error("Visa activation status is not correct for onboarding flow")
-        }
+        TODO("Fix visaCardActivationStatus retrieval")
+        // return when (val activationStatus = params.scanResponse.visaCardActivationStatus) {
+        //     is VisaCardActivationStatus.ActivationStarted -> {
+        //         when (val remoteState = activationStatus.remoteState) {
+        //             is VisaActivationRemoteState.CardWalletSignatureRequired -> {
+        //                 if (activationStatus.activationInput.isAccessCodeSet) {
+        //                     OnboardingVisaRoute.WelcomeBack(
+        //                         activationInput = activationStatus.activationInput,
+        //                         dataToSignByCardWalletRequest = VisaCardWalletDataToSignRequest(
+        //                             activationOrderInfo = remoteState.activationOrderInfo,
+        //                             cardWalletAddress = activationStatus.cardWalletAddress,
+        //                         ),
+        //                     )
+        //                 } else {
+        //                     OnboardingVisaRoute.AccessCode
+        //                 }
+        //             }
+        //             is VisaActivationRemoteState.CustomerWalletSignatureRequired -> {
+        //                 remoteState.getRoute(activationStatus)
+        //             }
+        //             VisaActivationRemoteState.PaymentAccountDeploying -> {
+        //                 OnboardingVisaRoute.InProgress(from = OnboardingVisaRoute.InProgress.From.Approve)
+        //             }
+        //             VisaActivationRemoteState.WaitingForActivationFinishing -> {
+        //                 OnboardingVisaRoute.InProgress(from = OnboardingVisaRoute.InProgress.From.PinCode)
+        //             }
+        //             is VisaActivationRemoteState.AwaitingPinCode -> {
+        //                 OnboardingVisaRoute.PinCode(
+        //                     activationOrderInfo = remoteState.activationOrderInfo,
+        //                     pinCodeValidationError = false,
+        //                 )
+        //             }
+        //             VisaActivationRemoteState.Activated,
+        //             VisaActivationRemoteState.BlockedForActivation,
+        //             VisaActivationRemoteState.Failed,
+        //             -> error("Activation status is not correct for onboarding flow")
+        //         }
+        //     }
+        //     is VisaCardActivationStatus.NotStartedActivation -> OnboardingVisaRoute.Welcome
+        //     else -> error("Visa activation status is not correct for onboarding flow")
+        // }
     }
 
-    private fun VisaActivationRemoteState.CustomerWalletSignatureRequired.getRoute(
-        activationStatus: VisaCardActivationStatus.ActivationStarted,
-    ): OnboardingVisaRoute {
-        val foundWalletCardId = tryToFindExistingWalletCardId(this.activationOrderInfo.customerWalletAddress)
-        val request = VisaCustomerWalletDataToSignRequest(
-            orderId = this.activationOrderInfo.orderId,
-            cardWalletAddress = activationStatus.cardWalletAddress,
-            customerWalletAddress = this.activationOrderInfo.customerWalletAddress,
-        )
-        val preparationDataForApprove = PreparationDataForApprove(
-            customerWalletAddress = this.activationOrderInfo.customerWalletAddress,
-            request = request,
-        )
-
-        return if (foundWalletCardId != null) {
-            OnboardingVisaRoute.TangemWalletApproveOption(
-                preparationDataForApprove = preparationDataForApprove,
-                foundWalletCardId = foundWalletCardId,
-                allowNavigateBack = false,
-            )
-        } else {
-            OnboardingVisaRoute.ChooseWallet(
-                preparationDataForApprove = preparationDataForApprove,
-            )
-        }
-    }
+    // private fun VisaActivationRemoteState.CustomerWalletSignatureRequired.getRoute(
+    //     activationStatus: VisaCardActivationStatus.ActivationStarted,
+    // ): OnboardingVisaRoute {
+    //     val foundWalletCardId = tryToFindExistingWalletCardId(this.activationOrderInfo.customerWalletAddress)
+    //     val request = VisaCustomerWalletDataToSignRequest(
+    //         orderId = this.activationOrderInfo.orderId,
+    //         cardWalletAddress = activationStatus.cardWalletAddress,
+    //         customerWalletAddress = this.activationOrderInfo.customerWalletAddress,
+    //     )
+    //     val preparationDataForApprove = PreparationDataForApprove(
+    //         customerWalletAddress = this.activationOrderInfo.customerWalletAddress,
+    //         request = request,
+    //     )
+    //
+    //     return if (foundWalletCardId != null) {
+    //         OnboardingVisaRoute.TangemWalletApproveOption(
+    //             preparationDataForApprove = preparationDataForApprove,
+    //             foundWalletCardId = foundWalletCardId,
+    //             allowNavigateBack = false,
+    //         )
+    //     } else {
+    //         OnboardingVisaRoute.ChooseWallet(
+    //             preparationDataForApprove = preparationDataForApprove,
+    //         )
+    //     }
+    // }
 
     private fun tryToFindExistingWalletCardId(targetAddress: String): String? {
         val wallets = getWalletsUseCase.invokeSync().filter { it.isLocked.not() }

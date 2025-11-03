@@ -17,6 +17,7 @@ import io.github.kakaocup.compose.node.element.lazylist.KLazyListNode
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 import androidx.compose.ui.test.hasTestTag as withTestTag
 import androidx.compose.ui.test.hasText as withText
+import com.tangem.core.ui.R as CoreUiR
 
 class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
     ComposeScreen<MainScreenPageObject>(semanticsProvider = semanticsProvider) {
@@ -44,8 +45,28 @@ class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider)
     }
 
     val buyButton: KNode = child {
-        hasTestTag(MainScreenTestTags.MULTI_CURRENCY_ACTION_BUTTON)
+        hasTestTag(BaseActionButtonsBlockTestTags.ACTION_BUTTON)
         hasText(getResourceString(R.string.common_buy))
+    }
+
+    val sendButton: KNode = child {
+        hasTestTag(BaseActionButtonsBlockTestTags.ACTION_BUTTON)
+        hasText(getResourceString(R.string.common_send))
+    }
+
+    val receiveButton: KNode = child {
+        hasTestTag(BaseActionButtonsBlockTestTags.ACTION_BUTTON)
+        hasText(getResourceString(R.string.common_receive))
+    }
+
+    val sellButton: KNode = child {
+        hasTestTag(BaseActionButtonsBlockTestTags.ACTION_BUTTON)
+        hasText(getResourceString(R.string.common_sell))
+    }
+
+    val swapButton: KNode = child {
+        hasTestTag(BaseActionButtonsBlockTestTags.ACTION_BUTTON)
+        hasText(getResourceString(R.string.common_swap))
     }
 
     val walletNameText: KNode = child {
@@ -58,9 +79,17 @@ class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider)
         useUnmergedTree = true
     }
 
-    val marketPriceBlock: KNode = child {
-        hasTestTag(MarketPriceBlockTestTags.BLOCK)
+    val walletDevicesCount: KNode = child {
+        hasTestTag(MainScreenTestTags.DEVICES_COUNT)
         useUnmergedTree = true
+    }
+
+    @OptIn(ExperimentalTestApi::class)
+    fun marketPriceBlock(): LazyListItemNode {
+        return lazyList.childWith<LazyListItemNode> {
+            hasTestTag(MarketPriceBlockTestTags.BLOCK)
+            useUnmergedTree = true
+        }
     }
 
     val marketPriceText: KNode = child {
@@ -79,12 +108,26 @@ class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider)
         useUnmergedTree = true
     }
 
-    fun transactionsExplorer(): KNode {
-        return child {
-            hasTestTag(TransactionHistoryBlockTestTags.EXPLORER_TEXT)
-            hasText(getResourceString(R.string.common_explorer))
-            useUnmergedTree = true
-        }
+    val transactionsExplorerText: KNode = child {
+        hasTestTag(TransactionHistoryBlockTestTags.EXPLORER_TEXT)
+        hasText(getResourceString(R.string.common_explorer))
+        useUnmergedTree = true
+    }
+
+    val emptyTransactionBlock: KNode = child {
+        hasTestTag(EmptyTransactionBlockTestTags.BLOCK)
+    }
+
+    val emptyTransactionBlockIcon: KNode = child {
+        hasTestTag(EmptyTransactionBlockTestTags.ICON)
+    }
+
+    val emptyTransactionBlockText: KNode = child {
+        hasTestTag(EmptyTransactionBlockTestTags.TEXT)
+    }
+
+    val emptyTransactionBlockExploreButton: KNode = child {
+        hasTestTag(EmptyTransactionBlockTestTags.EXPLORE_BUTTON)
     }
 
     val notificationContainer: KNode = child {
@@ -158,6 +201,10 @@ class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider)
         useUnmergedTree = true
     }
 
+    val snackbarCopiedAddressMessage: KNode = child {
+        hasText(getResourceString(CoreUiR.string.wallet_notification_address_copied))
+    }
+
     /**
      * Find token list item with title and address
      */
@@ -182,12 +229,10 @@ class MainScreenPageObject(semanticsProvider: SemanticsNodeInteractionsProvider)
         }
     }
 
-    fun organizeTokensButtonWithoutLazySearch(): KNode {
-        return child {
-            hasTestTag(MainScreenTestTags.ORGANIZE_TOKENS_BUTTON)
-            hasText(getResourceString(R.string.organize_tokens_title))
-            useUnmergedTree = true
-        }
+    val organizeTokensButtonWithoutLazySearch: KNode = child {
+        hasTestTag(MainScreenTestTags.ORGANIZE_TOKENS_BUTTON)
+        hasText(getResourceString(R.string.organize_tokens_title))
+        useUnmergedTree = true
     }
 
     fun tokenNetworkGroupTitle(tokenNetwork: String): KNode {

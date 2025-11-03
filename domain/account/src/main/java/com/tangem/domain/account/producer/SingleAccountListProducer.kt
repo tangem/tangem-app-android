@@ -5,7 +5,7 @@ import com.tangem.domain.core.flow.FlowProducer
 import com.tangem.domain.models.wallet.UserWalletId
 
 /**
- * Produces a list of [AccountList] for a specific user wallet.
+ * Produces a [AccountList] for a specific user wallet.
  *
 [REDACTED_AUTHOR]
  */

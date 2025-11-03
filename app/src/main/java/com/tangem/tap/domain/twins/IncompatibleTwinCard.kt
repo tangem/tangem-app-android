@@ -4,7 +4,7 @@ import com.tangem.common.core.TangemError
 import com.tangem.tap.tangemSdkManager
 import com.tangem.wallet.R
 
-object IncompatibleTwinCard : TangemError(code = 50005) {
+class IncompatibleTwinCard : TangemError(code = 50005) {
     override var customMessage: String = tangemSdkManager.getString(
         R.string.twin_error_wrong_twin,
     )

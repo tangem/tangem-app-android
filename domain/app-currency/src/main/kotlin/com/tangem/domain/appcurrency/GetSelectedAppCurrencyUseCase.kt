@@ -1,6 +1,7 @@
 package com.tangem.domain.appcurrency
 
 import arrow.core.Either
+import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.right
 import com.tangem.domain.appcurrency.error.SelectedAppCurrencyError
@@ -18,6 +19,10 @@ class GetSelectedAppCurrencyUseCase(
             .catch { emit(SelectedAppCurrencyError.DataError(it).left()) }
             .onEmpty { emit(SelectedAppCurrencyError.NoAppCurrencySelected.left()) }
     }
+
+    fun invokeOrDefault(): Flow<AppCurrency> = invoke()
+        .map { it.getOrElse { AppCurrency.Default } }
+        .distinctUntilChanged()
 
     suspend fun invokeSync(): Either<SelectedAppCurrencyError, AppCurrency> {
         return invoke().firstOrNull() ?: SelectedAppCurrencyError.NoAppCurrencySelected.left()

@@ -90,6 +90,6 @@ fun Store<AppState>.dispatchNavigationAction(action: AppRouter.() -> Unit) {
 
 inline fun <reified T> Store<AppState>.inject(getDependency: DaggerGraphState.() -> T?): T {
     return requireNotNull(state.daggerGraphState.getDependency()) {
-        "${T::class.simpleName} isn't initialized "
+        "${T::class.simpleName.orEmpty()} isn't initialized "
     }
 }

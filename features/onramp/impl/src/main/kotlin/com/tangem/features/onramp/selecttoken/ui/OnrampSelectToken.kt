@@ -21,12 +21,14 @@ import com.tangem.features.onramp.hottokens.HotCryptoComponent
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.selecttoken.entity.OnrampOperationUM
 import com.tangem.features.onramp.tokenlist.OnrampTokenListComponent
+import com.tangem.features.onramp.tokenlist.entity.TokenListUM
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun OnrampSelectToken(
     state: OnrampOperationUM,
     onrampTokenListComponent: OnrampTokenListComponent,
+    onrampTokenListState: TokenListUM,
     hotCryptoComponent: HotCryptoComponent?,
     modifier: Modifier = Modifier,
 ) {
@@ -50,8 +52,9 @@ internal fun OnrampSelectToken(
             )
         }
 
-        item(key = "token_list", contentType = "token_list") {
-            onrampTokenListComponent.Content(
+        with(onrampTokenListComponent) {
+            content(
+                uiState = onrampTokenListState,
                 modifier = Modifier
                     .padding(top = 8.dp)
                     .padding(horizontal = 16.dp)

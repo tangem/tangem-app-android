@@ -44,7 +44,7 @@ internal class TokenMarketBlockModel @Inject constructor(
 
     private val params = paramsContainer.require<TokenMarketBlockComponent.Params>()
 
-    private val priceAndTimePointValuesConverter = PriceAndTimePointValuesConverter(needToFormatAxis = false)
+    private val priceAndTimePointValuesConverter = PriceAndTimePointValuesConverter(shouldFormatAxis = false)
 
     private val currentAppCurrency = getSelectedAppCurrencyUseCase()
         .map { maybeAppCurrency ->
@@ -152,7 +152,7 @@ internal class TokenMarketBlockModel @Inject constructor(
             AppRoute.MarketsTokenDetails(
                 token = tokenParam,
                 appCurrency = currentAppCurrency.value,
-                showPortfolio = false,
+                shouldShowPortfolio = false,
                 analyticsParams = AppRoute.MarketsTokenDetails.AnalyticsParams(
                     blockchain = params.cryptoCurrency.network.name,
                     source = "Token",

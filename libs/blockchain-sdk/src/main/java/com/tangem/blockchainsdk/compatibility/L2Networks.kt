@@ -23,9 +23,9 @@ fun getL2CompatibilityTokenComparison(token: UserTokensResponse.Token, currencyI
 
 fun List<CoinsResponse.Coin.Network>.applyL2Compatibility(coinId: String): List<CoinsResponse.Coin.Network> {
     return if (coinId == ETHEREUM_COIN_ID) {
-        val l2Networks = l2BlockchainsList.map {
+        val l2Networks = l2BlockchainsList.map { blockchain ->
             CoinsResponse.Coin.Network(
-                networkId = it.toNetworkId(),
+                networkId = blockchain.toNetworkId(),
             )
         }
         this + l2Networks
@@ -37,9 +37,9 @@ fun List<CoinsResponse.Coin.Network>.applyL2Compatibility(coinId: String): List<
 fun TokenMarketInfoResponse.applyL2Compatibility(coinId: String): TokenMarketInfoResponse {
     val networks = this.networks ?: return this
     return if (coinId == ETHEREUM_COIN_ID) {
-        val l2Networks = l2BlockchainsList.map {
+        val l2Networks = l2BlockchainsList.map { blockchain ->
             TokenMarketInfoResponse.Network(
-                networkId = it.toNetworkId(),
+                networkId = blockchain.toNetworkId(),
                 contractAddress = null,
                 decimalCount = null,
             )

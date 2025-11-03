@@ -78,8 +78,8 @@ object GoogleServicesHelper {
         return suspendCoroutine<Result<Boolean>> { continuation ->
             task.addOnCompleteListener { completedTask ->
                 try {
-                    val result = completedTask.getResult(ApiException::class.java)
-                    continuation.resume(Result.success(result))
+                    val isGooglePayAvailable = completedTask.getResult(ApiException::class.java)
+                    continuation.resume(Result.success(isGooglePayAvailable))
                 } catch (exception: ApiException) {
                     continuation.resume(Result.failure(exception))
                 }

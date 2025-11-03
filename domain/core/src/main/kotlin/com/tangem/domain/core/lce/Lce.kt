@@ -5,6 +5,7 @@ import com.tangem.domain.core.utils.flatMap
 import com.tangem.domain.core.utils.lceContent
 import com.tangem.domain.core.utils.lceError
 import com.tangem.domain.core.utils.lceLoading
+import kotlinx.serialization.Serializable
 
 /**
  * A sealed class representing the three states of a data load operation: Loading, Content, and Error.
@@ -12,6 +13,7 @@ import com.tangem.domain.core.utils.lceLoading
  * @param E The type of the error object.
  * @param C The type of the content object.
  */
+@Serializable
 sealed class Lce<out E : Any, out C : Any> {
 
     /**
@@ -19,6 +21,7 @@ sealed class Lce<out E : Any, out C : Any> {
      *
      * @param partialContent The partial content that has been loaded so far, if any.
      */
+    @Serializable
     data class Loading<C : Any>(val partialContent: C?) : Lce<Nothing, C>()
 
     /**
@@ -26,6 +29,7 @@ sealed class Lce<out E : Any, out C : Any> {
      *
      * @param content The loaded content.
      */
+    @Serializable
     data class Content<C : Any>(val content: C) : Lce<Nothing, C>()
 
     /**
@@ -33,6 +37,7 @@ sealed class Lce<out E : Any, out C : Any> {
      *
      * @param error The error that occurred during loading.
      */
+    @Serializable
     data class Error<E : Any>(val error: E) : Lce<E, Nothing>()
 
     /**

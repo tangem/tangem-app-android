@@ -46,7 +46,7 @@ class GetWalletAccountsResponseConverterTest {
         @Test
         fun `cryptoPortfolioConverter throws exception`() {
             // Arrange
-            val domain = createAccountList(userWallet = userWallet)
+            val domain = createAccountList(userWalletId = userWallet.walletId)
             val exception = IllegalStateException("Test exception")
 
             every { cryptoPortfolioConverter.convertBack(any()) } throws exception
@@ -92,7 +92,7 @@ class GetWalletAccountsResponseConverterTest {
             return listOf(
                 ConvertModel(
                     value = createAccountList(
-                        userWallet = userWallet,
+                        userWalletId = userWallet.walletId,
                         sortType = TokensSortType.BALANCE,
                         groupType = TokensGroupType.NETWORK,
                     ),
@@ -106,7 +106,7 @@ class GetWalletAccountsResponseConverterTest {
                 ),
                 ConvertModel(
                     value = createAccountList(
-                        userWallet = userWallet,
+                        userWalletId = userWallet.walletId,
                         sortType = TokensSortType.NONE,
                         groupType = TokensGroupType.NONE,
                     ),

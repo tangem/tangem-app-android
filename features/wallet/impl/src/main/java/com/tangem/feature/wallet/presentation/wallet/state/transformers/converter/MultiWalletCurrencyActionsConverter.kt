@@ -5,6 +5,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletCurrencyActionsClickIntents
@@ -19,6 +20,8 @@ internal class MultiWalletCurrencyActionsConverter(
     private val userWallet: UserWallet,
     private val clickIntents: WalletCurrencyActionsClickIntents,
 ) : Converter<TokenActionsState, ImmutableList<TokenActionButtonConfig>> {
+
+    private val userWalletId: UserWalletId = userWallet.walletId
 
     override fun convert(value: TokenActionsState): ImmutableList<TokenActionButtonConfig> {
         return value.states
@@ -46,7 +49,7 @@ internal class MultiWalletCurrencyActionsConverter(
         if (actionsState is TokenActionsState.ActionState.Send && cryptoCurrencyStatus.value.amount.isNullOrZero()) {
             return null
         }
-
+        val noneReason = ScenarioUnavailabilityReason.None
         val title: TextReference
         val icon: Int
         val action: () -> Unit
@@ -54,27 +57,27 @@ internal class MultiWalletCurrencyActionsConverter(
             is TokenActionsState.ActionState.Buy -> {
                 title = resourceReference(R.string.common_buy)
                 icon = R.drawable.ic_plus_24
-                action = { clickIntents.onBuyClick(cryptoCurrencyStatus, ScenarioUnavailabilityReason.None) }
+                action = { clickIntents.onBuyClick(userWalletId, cryptoCurrencyStatus, noneReason) }
             }
             is TokenActionsState.ActionState.Receive -> {
                 title = resourceReference(R.string.common_receive)
                 icon = R.drawable.ic_arrow_down_24
-                action = { clickIntents.onReceiveClick(cryptoCurrencyStatus) }
+                action = { clickIntents.onReceiveClick(userWalletId, cryptoCurrencyStatus) }
             }
             is TokenActionsState.ActionState.Stake -> {
                 title = resourceReference(R.string.common_stake)
                 icon = R.drawable.ic_staking_24
-                action = { clickIntents.onStakeClick(cryptoCurrencyStatus, actionsState.yield) }
+                action = { clickIntents.onStakeClick(userWalletId, cryptoCurrencyStatus, actionsState.yield) }
             }
             is TokenActionsState.ActionState.Sell -> {
                 title = resourceReference(R.string.common_sell)
                 icon = R.drawable.ic_currency_24
-                action = { clickIntents.onSellClick(cryptoCurrencyStatus, ScenarioUnavailabilityReason.None) }
+                action = { clickIntents.onSellClick(cryptoCurrencyStatus, noneReason) }
             }
             is TokenActionsState.ActionState.Send -> {
                 title = resourceReference(R.string.common_send)
                 icon = R.drawable.ic_arrow_up_24
-                action = { clickIntents.onSendClick(cryptoCurrencyStatus, ScenarioUnavailabilityReason.None) }
+                action = { clickIntents.onSendClick(userWalletId, cryptoCurrencyStatus, noneReason) }
             }
             is TokenActionsState.ActionState.Swap -> {
                 title = resourceReference(R.string.swapping_swap_action)
@@ -82,20 +85,20 @@ internal class MultiWalletCurrencyActionsConverter(
                 action = {
                     clickIntents.onSwapClick(
                         cryptoCurrencyStatus = cryptoCurrencyStatus,
-                        userWalletId = userWallet.walletId,
-                        unavailabilityReason = ScenarioUnavailabilityReason.None,
+                        userWalletId = userWalletId,
+                        unavailabilityReason = noneReason,
                     )
                 }
             }
             is TokenActionsState.ActionState.CopyAddress -> {
                 title = resourceReference(R.string.common_copy_address)
                 icon = R.drawable.ic_copy_24
-                action = { clickIntents.onCopyAddressClick(cryptoCurrencyStatus) }
+                action = { clickIntents.onCopyAddressClick(userWalletId, cryptoCurrencyStatus) }
             }
             is TokenActionsState.ActionState.HideToken -> {
                 title = resourceReference(R.string.token_details_hide_token)
                 icon = R.drawable.ic_hide_24
-                action = { clickIntents.onHideTokensClick(cryptoCurrencyStatus) }
+                action = { clickIntents.onHideTokensClick(userWalletId, cryptoCurrencyStatus) }
             }
             is TokenActionsState.ActionState.Analytics -> {
                 title = resourceReference(R.string.common_analytics)
@@ -109,7 +112,7 @@ internal class MultiWalletCurrencyActionsConverter(
             iconResId = icon,
             onClick = action,
             isWarning = actionsState is TokenActionsState.ActionState.HideToken,
-            enabled = actionsState.unavailabilityReason == ScenarioUnavailabilityReason.None,
+            enabled = actionsState.unavailabilityReason == noneReason,
         )
     }
 }
