@@ -22,7 +22,6 @@ import com.tangem.common.ui.R
 import com.tangem.common.ui.account.AccountIconPreviewData
 import com.tangem.common.ui.account.AccountRow
 import com.tangem.core.ui.components.SpacerH
-import com.tangem.core.ui.components.SpacerH16
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.components.buttons.SecondarySmallButton
 import com.tangem.core.ui.components.buttons.SmallButtonConfig
@@ -49,6 +48,7 @@ internal fun AccountDetailsContent(state: AccountDetailsUM, modifier: Modifier =
         )
 
         Column(
+            verticalArrangement = Arrangement.spacedBy(16.dp),
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = TangemTheme.dimens.spacing16)
@@ -61,21 +61,22 @@ internal fun AccountDetailsContent(state: AccountDetailsUM, modifier: Modifier =
                 style = TangemTheme.typography.h1,
                 color = TangemTheme.colors.text.primary1,
             )
-            SpacerH16()
             AccountRow(state)
-            SpacerH16()
-            ManageTokensRow(state)
+            if (state.isManageTokensAvailable) {
+                ManageTokensRow(state)
+            }
             when (state.archiveMode) {
                 is AccountDetailsUM.ArchiveMode.Available -> {
-                    SpacerH16()
-                    ArchiveAccountRow(state.archiveMode)
-                    SpacerH(8.dp)
-                    Text(
-                        modifier = Modifier.padding(horizontal = 12.dp),
-                        text = stringResourceSafe(R.string.account_details_archive_description),
-                        style = TangemTheme.typography.caption2,
-                        color = TangemTheme.colors.text.tertiary,
-                    )
+                    Column {
+                        ArchiveAccountRow(state.archiveMode)
+                        SpacerH(8.dp)
+                        Text(
+                            modifier = Modifier.padding(horizontal = 12.dp),
+                            text = stringResourceSafe(R.string.account_details_archive_description),
+                            style = TangemTheme.typography.caption2,
+                            color = TangemTheme.colors.text.tertiary,
+                        )
+                    }
                 }
                 AccountDetailsUM.ArchiveMode.None -> Unit
             }
@@ -186,10 +187,12 @@ private class PreviewStateProvider : CollectionPreviewParameterProvider<AccountD
             ),
             accountName = stringReference(accountName),
             accountIcon = portfolioIcon,
+            isManageTokensAvailable = true,
         )
         add(first)
         portfolioIcon = AccountIconPreviewData.randomAccountIcon(letter = true)
         add(first.copy(accountIcon = portfolioIcon))
         add(first.copy(archiveMode = AccountDetailsUM.ArchiveMode.None))
+        add(first.copy(isManageTokensAvailable = false))
     },
 )
