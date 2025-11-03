@@ -28,11 +28,11 @@
         "version": "5.21.0"
     },
     {
-        "name": "scroll",
+        "name": "zklink",
         "version": "undefined"
     },
     {
-        "name": "zklink",
+        "name": "scroll",
         "version": "undefined"
     }
 ]
