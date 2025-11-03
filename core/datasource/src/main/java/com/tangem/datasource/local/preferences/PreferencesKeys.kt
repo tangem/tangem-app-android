@@ -129,6 +129,8 @@ object PreferencesKeys {
 
     val WALLETS_NFT_ENABLED_STATES_KEY by lazy { stringPreferencesKey(name = "walletsNftEnabledStates") }
 
+    val YIELD_SUPPLY_WARNINGS_STATES_KEY by lazy { stringPreferencesKey(name = "yieldSupplyWarningsStates") }
+
     // region Notifications
     val NOTIFICATIONS_APPLICATION_ID_KEY by lazy { stringPreferencesKey(name = "notificationsApplicationId") }
 
@@ -161,6 +163,9 @@ object PreferencesKeys {
 
     // region Permission
     fun getShouldShowPermission(permission: String) = booleanPreferencesKey("shouldShowPushPermission_$permission")
+
+    fun getShouldShowAskNotificationPermissionViaBs() =
+        booleanPreferencesKey("ShouldShowAskNotificationPermissionViaBs")
 
     fun getShouldShowInitialPermissionScreen(permission: String) =
         booleanPreferencesKey("shouldShowInitialPushPermissionScreen_$permission")

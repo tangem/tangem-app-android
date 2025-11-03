@@ -46,14 +46,7 @@ internal class MockCurrenciesRepository(
         isTokensSortedByBalanceAfterSortingApply = isSortedByBalance
     }
 
-    override suspend fun saveNewCurrenciesList(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) = Unit
-
-    override suspend fun addCurrencies(
-        userWalletId: UserWalletId,
-        currencies: List<CryptoCurrency>,
-    ): List<CryptoCurrency> = emptyList()
-
-    override suspend fun saveNewCurrenciesListCache(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) = Unit
+    override suspend fun saveCurrenciesLocal(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) = Unit
 
     override suspend fun addCurrenciesCache(
         userWalletId: UserWalletId,
@@ -150,6 +143,10 @@ internal class MockCurrenciesRepository(
 
     override suspend fun getFeePaidCurrency(userWalletId: UserWalletId, network: Network): FeePaidCurrency {
         return FeePaidCurrency.Coin
+    }
+
+    override fun createCoinCurrency(network: Network): CryptoCurrency.Coin {
+        error("not implemented")
     }
 
     override fun createTokenCurrency(cryptoCurrency: CryptoCurrency.Token, network: Network): CryptoCurrency.Token {

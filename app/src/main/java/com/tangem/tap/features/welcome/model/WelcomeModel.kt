@@ -72,8 +72,8 @@ internal class WelcomeModel @Inject constructor(
 
         this.state.update { prevState ->
             prevState.copy(
-                showUnlockWithBiometricsProgress = state.isUnlockWithBiometricsInProgress,
-                showUnlockWithCardProgress = state.isUnlockWithCardInProgress,
+                isUnlockWithBiometricsProgressVisible = state.isUnlockWithBiometricsInProgress,
+                isUnlockWithCardProgressVisible = state.isUnlockWithCardInProgress,
                 warning = warning,
                 error = state.error
                     ?.takeIf { !it.silent && warning == null }

@@ -45,19 +45,19 @@ internal class DefaultSwapAmountUpdateTrigger @Inject constructor() :
     SwapAmountReduceListener {
 
     override val updateAmountTriggerFlow: SharedFlow<Pair<String, Boolean>>
-    field = MutableSharedFlow<Pair<String, Boolean>>()
+        field = MutableSharedFlow<Pair<String, Boolean>>()
 
     override val reduceToTriggerFlow: SharedFlow<BigDecimal>
-    field = MutableSharedFlow<BigDecimal>()
+        field = MutableSharedFlow<BigDecimal>()
 
     override val reduceByTriggerFlow: SharedFlow<ReduceByData>
-    field = MutableSharedFlow<ReduceByData>()
+        field = MutableSharedFlow<ReduceByData>()
 
     override val ignoreReduceTriggerFlow: SharedFlow<Unit>
-    field = MutableSharedFlow<Unit>()
+        field = MutableSharedFlow<Unit>()
 
     override val reloadQuotesTriggerFlow: Flow<Unit>
-    field = MutableSharedFlow<Unit>()
+        field = MutableSharedFlow<Unit>()
 
     override suspend fun triggerUpdateAmount(amountValue: String, isEnterInFiatSelected: Boolean) {
         updateAmountTriggerFlow.emit(amountValue to isEnterInFiatSelected)

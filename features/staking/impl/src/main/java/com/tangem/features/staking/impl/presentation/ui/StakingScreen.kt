@@ -28,8 +28,10 @@ import com.tangem.features.staking.impl.presentation.state.StakingStep
 import com.tangem.features.staking.impl.presentation.state.StakingUiState
 import com.tangem.features.staking.impl.presentation.state.bottomsheet.StakingActionSelectionBottomSheetConfig
 import com.tangem.features.staking.impl.presentation.state.bottomsheet.StakingInfoBottomSheetConfig
+import com.tangem.features.staking.impl.presentation.state.bottomsheet.TonInitializeAccountBottomSheetConfig
 import com.tangem.features.staking.impl.presentation.ui.bottomsheet.StakingActionSelectorBottomSheet
 import com.tangem.features.staking.impl.presentation.ui.bottomsheet.StakingInfoBottomSheet
+import com.tangem.features.staking.impl.presentation.ui.bottomsheet.TonInitializeAccountBottomSheet
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -83,6 +85,7 @@ fun StakingBottomSheet(bottomSheetConfig: TangemBottomSheetConfig?) {
         is StakingInfoBottomSheetConfig -> StakingInfoBottomSheet(bottomSheetConfig)
         is GiveTxPermissionBottomSheetConfig -> GiveTxPermissionBottomSheet(bottomSheetConfig)
         is StakingActionSelectionBottomSheetConfig -> StakingActionSelectorBottomSheet(bottomSheetConfig)
+        is TonInitializeAccountBottomSheetConfig -> TonInitializeAccountBottomSheet(bottomSheetConfig)
     }
 }
 
@@ -91,6 +94,7 @@ private fun StakingAppBar(uiState: StakingUiState) {
     val (backIcon, click) = when (uiState.currentStep) {
         StakingStep.Amount,
         StakingStep.Confirmation,
+        StakingStep.Success,
         -> R.drawable.ic_close_24 to uiState.clickIntents::onBackClick
         StakingStep.Validators,
         StakingStep.RewardsValidators,
@@ -108,6 +112,7 @@ private fun StakingAppBar(uiState: StakingUiState) {
     )
 }
 
+@Suppress("LongMethod")
 @Composable
 private fun StakingScreenContent(uiState: StakingUiState, modifier: Modifier = Modifier) {
     val currentScreen = uiState.currentStep
@@ -136,10 +141,10 @@ private fun StakingScreenContent(uiState: StakingUiState, modifier: Modifier = M
             contentAlignment = Alignment.TopCenter,
             label = "Staking Screen Navigation",
             transitionSpec = {
-                val direction = if (initialState.ordinal < targetState.ordinal) {
-                    AnimatedContentTransitionScope.SlideDirection.Start
-                } else {
-                    AnimatedContentTransitionScope.SlideDirection.End
+                val direction = when {
+                    targetState == StakingStep.Success -> AnimatedContentTransitionScope.SlideDirection.Up
+                    initialState.ordinal < targetState.ordinal -> AnimatedContentTransitionScope.SlideDirection.Start
+                    else -> AnimatedContentTransitionScope.SlideDirection.End
                 }
 
                 slideIntoContainer(towards = direction, animationSpec = tween())
@@ -163,11 +168,16 @@ private fun StakingScreenContent(uiState: StakingUiState, modifier: Modifier = M
                 }
                 StakingStep.Amount -> AmountScreenContent(
                     amountState = uiState.amountState,
-                    isBalanceHidden = uiState.isBalanceHidden,
                     clickIntents = uiState.clickIntents,
                     modifier = Modifier.background(TangemTheme.colors.background.secondary),
                 )
                 StakingStep.Confirmation -> StakingConfirmationContent(
+                    amountState = uiState.amountState,
+                    state = uiState.confirmationState,
+                    validatorState = uiState.validatorState,
+                    clickIntents = uiState.clickIntents,
+                )
+                StakingStep.Success -> StakingSuccessContent(
                     amountState = uiState.amountState,
                     state = uiState.confirmationState,
                     validatorState = uiState.validatorState,

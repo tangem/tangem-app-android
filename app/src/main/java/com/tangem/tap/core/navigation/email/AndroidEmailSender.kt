@@ -61,9 +61,9 @@ internal class AndroidEmailSender : EmailSender {
             .setSubject(email.subject)
             .setText(email.message)
 
-        email.attachment?.let {
+        email.attachment?.let { file ->
             builder.setStream(
-                FileProvider.getUriForFile(activity, "${activity.packageName}.provider", it),
+                FileProvider.getUriForFile(activity, "${activity.packageName}.provider", file),
             )
         }
 
