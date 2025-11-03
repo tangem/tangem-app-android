@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface UserWalletImageFetcher {
 
+    fun allWallets(size: ArtworkSize): Flow<Map<UserWalletId, UserWalletItemUM.ImageState>>
     fun walletImage(walletId: UserWalletId, size: ArtworkSize): Flow<UserWalletItemUM.ImageState>
     fun walletImage(cardDTO: CardDTO, size: ArtworkSize): Flow<UserWalletItemUM.ImageState>
     fun walletImage(wallet: UserWallet, size: ArtworkSize): Flow<UserWalletItemUM.ImageState>

@@ -52,10 +52,10 @@ internal class DevBlockchainProvidersTypesManager(
     }
 
     override suspend fun update(blockchain: Blockchain, providers: List<ProviderType>) {
-        changedBlockchainProvidersStore.updateData {
+        changedBlockchainProvidersStore.updateData { blockchainProviders ->
             val providerModels = BlockchainProviderTypesConverter.convertBack(value = mapOf(blockchain to providers))
 
-            it + providerModels
+            blockchainProviders + providerModels
         }
     }
 
