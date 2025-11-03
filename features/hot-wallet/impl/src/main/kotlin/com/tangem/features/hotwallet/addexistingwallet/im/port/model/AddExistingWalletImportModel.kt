@@ -6,16 +6,12 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.R
-import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUMV2
-import com.tangem.core.ui.components.bottomsheets.message.icon
-import com.tangem.core.ui.components.bottomsheets.message.infoBlock
-import com.tangem.core.ui.components.bottomsheets.message.onClick
-import com.tangem.core.ui.components.bottomsheets.message.secondaryButton
+import com.tangem.core.ui.components.bottomsheets.message.*
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.core.ui.message.bottomSheetMessage
 import com.tangem.crypto.bip39.Mnemonic
-import com.tangem.domain.core.wallets.error.SaveWalletError
+import com.tangem.domain.common.wallets.error.SaveWalletError
 import com.tangem.domain.wallets.builder.HotUserWalletBuilder
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
 import com.tangem.features.hotwallet.MnemonicRepository
@@ -80,7 +76,7 @@ internal class AddExistingWalletImportModel @Inject constructor(
     }
 
     internal val uiState: StateFlow<AddExistingWalletImportUM>
-    field = MutableStateFlow(importSeedPhraseUiStateBuilder.getState())
+        field = MutableStateFlow(importSeedPhraseUiStateBuilder.getState())
 
     @Suppress("UnusedPrivateMember")
     private fun importWallet(mnemonic: Mnemonic, passphrase: String?) {

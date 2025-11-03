@@ -23,15 +23,22 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.dp
+import com.tangem.common.ui.account.AccountNameUM
+import com.tangem.common.ui.account.AccountTitle
+import com.tangem.common.ui.account.AccountTitleUM
+import com.tangem.common.ui.account.toUM
 import com.tangem.core.ui.components.CircleShimmer
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.atoms.text.EllipsisText
 import com.tangem.core.ui.components.atoms.text.TextEllipsis
 import com.tangem.core.ui.components.icons.identicon.IdentIcon
 import com.tangem.core.ui.extensions.rememberHapticFeedback
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.features.send.v2.impl.R
+import com.tangem.utils.StringsSigns
 
 /**
  * Row item with title and subtitle
@@ -50,6 +57,7 @@ fun ListItemWithIcon(
     subtitle: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    accountTitleUM: AccountTitleUM? = null,
     info: String? = null,
     subtitleEndOffset: Int = 0,
     @DrawableRes subtitleIconRes: Int? = null,
@@ -68,6 +76,7 @@ fun ListItemWithIcon(
                 subtitle = subtitle,
                 onClick = onClick,
                 info = info,
+                accountTitleUM = accountTitleUM,
                 subtitleEndOffset = subtitleEndOffset,
                 subtitleIconRes = subtitleIconRes,
                 modifier = modifier,
@@ -80,6 +89,7 @@ fun ListItemWithIcon(
 private fun ListItemWithIcon(
     title: String,
     subtitle: String,
+    accountTitleUM: AccountTitleUM?,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     info: String? = null,
@@ -115,7 +125,7 @@ private fun ListItemWithIcon(
                 ellipsis = TextEllipsis.Middle,
                 modifier = Modifier,
             )
-            Row {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 if (subtitleIconRes != null) {
                     Icon(
                         painter = painterResource(id = subtitleIconRes),
@@ -142,6 +152,13 @@ private fun ListItemWithIcon(
                     color = TangemTheme.colors.text.tertiary,
                     ellipsis = TextEllipsis.OffsetEnd(offsetEnd = offset),
                 )
+                if (accountTitleUM != null) {
+                    AccountTitle(
+                        accountTitleUM = accountTitleUM,
+                        textStyle = TangemTheme.typography.caption2,
+                        modifier = Modifier.padding(start = 4.dp),
+                    )
+                }
             }
         }
     }
@@ -195,6 +212,7 @@ private fun ListItemWithIconPreview(
         ListItemWithIcon(
             title = config.title,
             subtitle = config.subtitle,
+            accountTitleUM = config.accountTitleUM,
             subtitleEndOffset = config.subtitleEndOffset,
             subtitleIconRes = config.iconRes,
             onClick = {},
@@ -206,6 +224,7 @@ private fun ListItemWithIconPreview(
 private data class ListItemWithIconPreviewConfig(
     val title: String,
     val subtitle: String,
+    val accountTitleUM: AccountTitleUM.Account? = null,
     val info: String? = null,
     val subtitleEndOffset: Int = 0,
     val iconRes: Int? = null,
@@ -239,6 +258,15 @@ private class ListItemWithIconPreviewProvider : CollectionPreviewParameterProvid
             subtitleEndOffset = "BTC".length,
             iconRes = R.drawable.ic_arrow_down_24,
             isLoading = true,
+        ),
+        ListItemWithIconPreviewConfig(
+            title = "0x34B4492A412D84A6E606288f3Bd714b89135D4dE",
+            subtitle = "Wallet",
+            accountTitleUM = AccountTitleUM.Account(
+                name = AccountNameUM.DefaultMain.value,
+                icon = CryptoPortfolioIcon.ofDefaultCustomAccount().toUM(),
+                prefixText = stringReference(StringsSigns.DOT),
+            ),
         ),
     ),
 )

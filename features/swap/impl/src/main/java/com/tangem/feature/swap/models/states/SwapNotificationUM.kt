@@ -199,6 +199,7 @@ internal object SwapNotificationUM {
         data class PermissionNeeded(
             val providerName: String,
             val fromTokenSymbol: String,
+            val onApproveClick: () -> Unit,
         ) : Info(
             title = resourceReference(R.string.express_provider_permission_needed),
             subtitle = resourceReference(
@@ -206,6 +207,10 @@ internal object SwapNotificationUM {
                 formatArgs = wrappedList(providerName, fromTokenSymbol),
             ),
             iconResId = R.drawable.ic_locked_24,
+            buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
+                text = TextReference.Res(R.string.give_permission_title),
+                onClick = onApproveClick,
+            ),
         )
     }
 }
