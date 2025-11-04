@@ -1,8 +1,10 @@
 package com.tangem.domain.staking.model
 
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.blockchainsdk.utils.toMigratedCoinId
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.Network
 
 /**
  * Represents a staking integration identifier.
@@ -142,6 +144,9 @@ sealed interface StakingIntegrationID {
         }
     }
 }
+
+val Network.isStakingSupported: Boolean
+    get() = this.toBlockchain().isStakingSupported
 
 /**
  * Extension property to check if staking is supported for a blockchain.
