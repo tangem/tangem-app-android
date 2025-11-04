@@ -32,8 +32,9 @@ internal class TangemPayTxHistoryItemsConverter(
 
     private fun convertSpend(spend: TangemPayTxHistoryItem.Spend): TangemPayTransactionState.Content.Spend {
         val localDate = spend.date.withZone(DateTimeZone.getDefault())
-        val amountPrefix = when (spend.status) {
-            TangemPayTxHistoryItem.Status.DECLINED -> ""
+        val amountPrefix = when {
+            spend.amount.isZero() -> ""
+            spend.status == TangemPayTxHistoryItem.Status.DECLINED -> ""
             else -> StringsSigns.MINUS
         }
         val amount = amountPrefix + spend.amount.format {
@@ -83,7 +84,8 @@ internal class TangemPayTxHistoryItemsConverter(
     }
 
     private fun convertFee(fee: TangemPayTxHistoryItem.Fee): TangemPayTransactionState.Content.Fee {
-        val amount = StringsSigns.MINUS + fee.amount.format {
+        val amountPrefix = if (fee.amount.isZero()) "" else StringsSigns.MINUS
+        val amount = amountPrefix + fee.amount.format {
             fiat(fiatCurrencyCode = fee.currency.currencyCode, fiatCurrencySymbol = fee.currency.symbol)
         }
         return TangemPayTransactionState.Content.Fee(
@@ -101,7 +103,8 @@ internal class TangemPayTxHistoryItemsConverter(
     private fun convertCollateral(
         collateral: TangemPayTxHistoryItem.Collateral,
     ): TangemPayTransactionState.Content.Collateral {
-        val amount = StringsSigns.PLUS + collateral.amount.format {
+        val amountPrefix = if (collateral.amount.isZero()) "" else StringsSigns.PLUS
+        val amount = amountPrefix + collateral.amount.format {
             fiat(fiatCurrencyCode = collateral.currency.currencyCode, fiatCurrencySymbol = collateral.currency.symbol)
         }
         return TangemPayTransactionState.Content.Collateral(
