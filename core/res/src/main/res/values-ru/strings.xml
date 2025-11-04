@@ -701,6 +701,8 @@
   <string name="notification_sepa_button">Купить криптовалюту</string>
   <string name="notification_sepa_text">Наслаждайтесь **нулевой комиссией** при покупке криптовалюты через SEPA-переводы.</string>
   <string name="notification_sepa_title">Покупайте крипту через SEPA</string>
+  <string name="notification_visa_waitlist_promo_text">Присоединяйтесь к списку ожидания и получите уникальную платёжную карту, не похожую ни на одну другую.</string>
+  <string name="notification_visa_waitlist_promo_title">Tangem Visa Card</string>
   <string name="onboarding_access_code_feature_1_description">Установите единый код доступа для защиты всех ваших карт или колец</string>
   <string name="onboarding_access_code_feature_1_title">Защита</string>
   <string name="onboarding_access_code_feature_2_description">Установите индивидуальный код доступа для каждой карты или кольца позже.</string>
@@ -1631,7 +1633,7 @@
   <string name="yield_module_start_earning_sheet_next_deposits">Следующие пополнения вашего счёта автоматически поступят в Aave.</string>
   <string name="yield_module_status_active">Активен</string>
   <string name="yield_module_status_paused">На паузе</string>
-  <string name="yield_module_stop_earning">Завершить заработок</string>
+  <string name="yield_module_stop_earning">Завершение режима доходности</string>
   <string name="yield_module_stop_earning_sheet_description">Выключив эту функцию, вы выведёте средства из Aave, получите их обратно в %s в своем кошельке и перестанете зарабатывать награды.</string>
   <string name="yield_module_stop_earning_sheet_fee_note">Комиссия сети будет вычтена из суммы вашего вывода.</string>
   <string name="yield_module_supply_apr">Годовая доходность (APY)</string>
