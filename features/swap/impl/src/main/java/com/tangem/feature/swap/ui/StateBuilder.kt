@@ -277,6 +277,7 @@ internal class StateBuilder(
         selectedFeeType: FeeType,
         isReverseSwapPossible: Boolean,
         needApplyFCARestrictions: Boolean,
+        isForTangemPaySwap: Boolean,
     ): SwapStateHolder {
         if (uiStateHolder.sendCardData !is SwapCardState.SwapCardData) return uiStateHolder
         if (uiStateHolder.receiveCardData !is SwapCardState.SwapCardData) return uiStateHolder
@@ -369,7 +370,7 @@ internal class StateBuilder(
                 enabled = getSwapButtonEnabled(notifications),
                 onClick = actions.onSwapClick,
             ),
-            changeCardsButtonState = if (isReverseSwapPossible) {
+            changeCardsButtonState = if (isReverseSwapPossible && !isForTangemPaySwap) {
                 ChangeCardsButtonState.ENABLED
             } else {
                 ChangeCardsButtonState.DISABLED
@@ -442,6 +443,7 @@ internal class StateBuilder(
         expressDataError: ExpressDataError,
         isReverseSwapPossible: Boolean,
         needApplyFCARestrictions: Boolean,
+        isForTangemPaySwap: Boolean,
     ): SwapStateHolder {
         if (uiStateHolder.sendCardData !is SwapCardState.SwapCardData) return uiStateHolder
         if (uiStateHolder.receiveCardData !is SwapCardState.SwapCardData) return uiStateHolder
@@ -500,7 +502,7 @@ internal class StateBuilder(
                 enabled = false,
                 onClick = actions.onSwapClick,
             ),
-            changeCardsButtonState = if (isReverseSwapPossible) {
+            changeCardsButtonState = if (isReverseSwapPossible && !isForTangemPaySwap) {
                 ChangeCardsButtonState.ENABLED
             } else {
                 ChangeCardsButtonState.DISABLED
@@ -559,6 +561,7 @@ internal class StateBuilder(
         toTokenStatus: CryptoCurrencyStatus?,
         toAccount: Account.CryptoPortfolio?,
         isReverseSwapPossible: Boolean,
+        isForTangemPaySwap: Boolean,
     ): SwapStateHolder {
         if (uiStateHolder.sendCardData !is SwapCardState.SwapCardData) return uiStateHolder
         if (uiStateHolder.receiveCardData !is SwapCardState.SwapCardData) return uiStateHolder
@@ -601,7 +604,7 @@ internal class StateBuilder(
                 enabled = false,
                 onClick = { },
             ),
-            changeCardsButtonState = if (isReverseSwapPossible) {
+            changeCardsButtonState = if (isReverseSwapPossible && !isForTangemPaySwap) {
                 ChangeCardsButtonState.ENABLED
             } else {
                 ChangeCardsButtonState.DISABLED
