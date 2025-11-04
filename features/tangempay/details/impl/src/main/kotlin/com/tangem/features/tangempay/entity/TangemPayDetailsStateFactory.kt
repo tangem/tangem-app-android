@@ -14,7 +14,7 @@ import kotlinx.collections.immutable.persistentListOf
 internal class TangemPayDetailsStateFactory(
     private val onBack: () -> Unit,
     private val onRefresh: (ShowRefreshState) -> Unit,
-    private val onReceive: () -> Unit,
+    private val onAddFunds: () -> Unit,
     private val onClickChangePin: () -> Unit,
     private val onClickFreezeCard: () -> Unit,
 ) {
@@ -39,13 +39,14 @@ internal class TangemPayDetailsStateFactory(
         balanceBlockState = TangemPayDetailsBalanceBlockState.Loading(
             actionButtons = persistentListOf(
                 ActionButtonConfig(
-                    text = resourceReference(id = R.string.common_receive),
+                    text = resourceReference(id = R.string.tangempay_card_details_add_funds),
                     iconResId = R.drawable.ic_arrow_down_24,
-                    onClick = onReceive,
+                    onClick = onAddFunds,
                 ),
             ),
         ),
         addToWalletBlockState = null,
         isBalanceHidden = false,
+        addFundsEnabled = true,
     )
 }
