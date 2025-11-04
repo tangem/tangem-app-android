@@ -313,6 +313,7 @@ private class TangemPayDetailsUMProvider : CollectionPreviewParameterProvider<Ta
             ),
             addToWalletBlockState = AddToWalletBlockState({}, {}),
             isBalanceHidden = false,
+            addFundsEnabled = true,
         ),
         TangemPayDetailsUM(
             topBarConfig = TangemPayDetailsTopBarConfig(onBackClick = {}, items = null),
@@ -320,6 +321,7 @@ private class TangemPayDetailsUMProvider : CollectionPreviewParameterProvider<Ta
             balanceBlockState = TangemPayDetailsBalanceBlockState.Loading(actionButtons = persistentListOf()),
             addToWalletBlockState = AddToWalletBlockState({}, {}),
             isBalanceHidden = false,
+            addFundsEnabled = true,
         ),
     ),
 )
