@@ -22,7 +22,6 @@ import com.tangem.domain.tokens.operations.BaseCurrencyStatusOperations
 import com.tangem.domain.tokens.operations.CachedCurrenciesStatusesOperations
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
-import com.tangem.domain.tokens.repository.PolkadotAccountHealthCheckRepository
 import com.tangem.domain.tokens.repository.TokenReceiveWarningsViewedRepository
 import com.tangem.domain.tokens.repository.YieldSupplyWarningsViewedRepository
 import com.tangem.domain.tokens.wallet.WalletBalanceFetcher
@@ -332,14 +331,6 @@ internal object TokensDomainModule {
         dispatchers: CoroutineDispatcherProvider,
     ): IsAmountSubtractAvailableUseCase {
         return IsAmountSubtractAvailableUseCase(currenciesRepository, dispatchers)
-    }
-
-    @Provides
-    @Singleton
-    fun provideRunPolkadotAccountHealthCheckUseCase(
-        repository: PolkadotAccountHealthCheckRepository,
-    ): RunPolkadotAccountHealthCheckUseCase {
-        return RunPolkadotAccountHealthCheckUseCase(repository)
     }
 
     @Provides
