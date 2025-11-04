@@ -233,7 +233,7 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
                     uiState.update(YieldSupplyTransactionReadyTransformer)
                     analytics.send(
                         YieldSupplyAnalytics.EarnErrors(
-                            action = YieldSupplyAnalytics.Action.Approve,
+                            action = YieldSupplyAnalytics.Action.Start,
                             errorDescription = error.getAnalyticsDescription(),
                         ),
                     )
