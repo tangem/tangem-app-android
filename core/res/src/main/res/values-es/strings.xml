@@ -653,6 +653,8 @@
   <string name="notification_sepa_button">Comprar cripto</string>
   <string name="notification_sepa_text">Disfrute de unas comisiones del **0%** al comprar criptomonedas mediante transferencias SEPA.</string>
   <string name="notification_sepa_title">Comprar criptomonedas con SEPA</string>
+  <string name="notification_visa_waitlist_promo_text">Únete a la lista de espera y consigue una tarjeta de pago como ninguna otra.</string>
+  <string name="notification_visa_waitlist_promo_title">Tangem Visa Card</string>
   <string name="onboarding_access_code_feature_1_description">Configure un código de acceso único para proteger todos sus dispositivos.</string>
   <string name="onboarding_access_code_feature_1_title">Proteger</string>
   <string name="onboarding_access_code_feature_2_description">Puede configurar un código de acceso individual en cada tarjeta más adelante</string>
@@ -1544,9 +1546,11 @@
   <string name="yield_module_stop_earning_sheet_fee_note">La comisión de red se deducirá del importe que retire.</string>
   <string name="yield_module_supply_apr">Suministro APY</string>
   <string name="yield_module_token_details_earn_notification_apy">APY</string>
+  <string name="yield_module_token_details_earn_notification_description">Los intereses se devengan automáticamente</string>
   <string name="yield_module_token_details_earn_notification_earning_on_your_balance_subtitle">Los intereses se devengan automáticamente</string>
   <string name="yield_module_token_details_earn_notification_earning_on_your_balance_title">Modo de rendimiento</string>
   <string name="yield_module_token_details_earn_notification_processing">Procesando su depósito</string>
+  <string name="yield_module_token_details_earn_notification_title">Modo Rendimiento</string>
   <string name="yield_module_transfer_mode_automatic">Automático</string>
   <string name="yield_module_unable_to_cover_fee_description">Deposite algo de %1$s %2$s para cubrir la tarifa de red para las transacciones</string>
   <string name="yield_module_unable_to_cover_fee_title">No se puede cubrir la tarifa %s</string>
