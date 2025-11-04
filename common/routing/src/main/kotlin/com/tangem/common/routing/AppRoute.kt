@@ -15,6 +15,7 @@ import com.tangem.domain.models.PortfolioId
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.models.serialization.SerializedBigDecimal
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.nft.models.NFTAsset
 import com.tangem.domain.onramp.model.OnrampSource
@@ -181,13 +182,21 @@ sealed class AppRoute(val path: String) : Route {
         val userWalletId: UserWalletId,
         val isInitialReverseOrder: Boolean = false,
         val screenSource: String,
+        val tangemPayInput: TangemPayInput? = null,
     ) : AppRoute(
         path = "/swap" +
             "/${currencyFrom.id.value}" +
             "/${currencyTo?.id?.value}" +
             "/${userWalletId.stringValue}" +
             "/$isInitialReverseOrder",
-    )
+    ) {
+        @Serializable
+        data class TangemPayInput(
+            val cryptoAmount: SerializedBigDecimal,
+            val fiatAmount: SerializedBigDecimal,
+            val depositAddress: String,
+        )
+    }
 
     @Serializable
     data object AppCurrencySelector : AppRoute(path = "/app_currency_selector")
