@@ -2,6 +2,8 @@ package com.tangem.features.yield.supply.impl.subcomponents.stopearning.model
 
 import arrow.core.getOrElse
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.Basic
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -168,6 +170,17 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
                         YieldSupplyAnalytics.FundsWithdrawn(
                             token = cryptoCurrency.symbol,
                             blockchain = cryptoCurrency.network.name,
+                        ),
+                    )
+                    val event = AnalyticsParam.TxSentFrom.Earning(
+                        blockchain = cryptoCurrency.network.name,
+                        token = cryptoCurrency.symbol,
+                        feeType = AnalyticsParam.FeeType.Normal,
+                    )
+                    analytics.send(
+                        Basic.TransactionSent(
+                            sentFrom = event,
+                            memoType = Basic.TransactionSent.MemoType.Null,
                         ),
                     )
                     val address = cryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value
