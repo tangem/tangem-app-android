@@ -14,10 +14,9 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.staking.model.stakekit.Yield
-import com.tangem.domain.tokens.RunPolkadotAccountHealthCheckUseCase
+import com.tangem.domain.staking.usecase.StakingApyFlowUseCase
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.yield.supply.usecase.YieldSupplyApyFlowUseCase
-import com.tangem.domain.staking.usecase.StakingApyFlowUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.account.AccountDependencies
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.TokenListAnalyticsSender
@@ -43,7 +42,6 @@ internal abstract class BasicTokenListSubscriber : WalletSubscriber() {
     protected abstract val tokenListAnalyticsSender: TokenListAnalyticsSender
     protected abstract val walletWithFundsChecker: WalletWithFundsChecker
     protected abstract val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase
-    protected abstract val runPolkadotAccountHealthCheckUseCase: RunPolkadotAccountHealthCheckUseCase
     protected abstract val accountDependencies: AccountDependencies
     protected abstract val yieldSupplyApyFlowUseCase: YieldSupplyApyFlowUseCase
     protected abstract val stakingApyFlowUseCase: StakingApyFlowUseCase
@@ -80,8 +78,6 @@ internal abstract class BasicTokenListSubscriber : WalletSubscriber() {
                     coroutineScope.launch {
                         onTokenListReceived(maybeTokenList)
                     }.saveIn(onTokenListReceivedJobHolder)
-
-                    coroutineScope.launch { startCheck(maybeTokenList) }
                 },
             flow2 = appCurrencyFlow(),
             flow3 = yieldSupplyApyFlow(),
@@ -137,20 +133,6 @@ internal abstract class BasicTokenListSubscriber : WalletSubscriber() {
         walletWithFundsChecker.check(tokenList)
     }
 
-    private suspend fun startCheck(maybeTokenList: Lce<TokenListError, TokenList>) {
-        // Run Polkadot account health check
-        maybeTokenList.getOrNull()?.let { tokenList ->
-            tokenList
-                .flattenCurrencies()
-                .forEach {
-                    runPolkadotAccountHealthCheckUseCase(
-                        userWalletId = userWallet.walletId,
-                        network = it.currency.network,
-                    )
-                }
-        }
-    }
-
     private fun createAccountListFlow(coroutineScope: CoroutineScope): Flow<*> = combine6(
         flow1 = accountListFlow(coroutineScope)
             .onEach { accountStatusList ->
@@ -161,14 +143,7 @@ internal abstract class BasicTokenListSubscriber : WalletSubscriber() {
                     )
                 }.saveIn(sendAnalyticsJobHolder)
             }
-            .distinctUntilChanged()
-            .onEach { accountList ->
-                // todo account see[onAccountListReceived]
-                // coroutineScope.launch { onAccountListReceived() }.saveIn(onTokenListReceivedJobHolder)
-
-                accountList.flattenTokens()
-                    .forEach { tokenList -> startCheck(Lce.Content(tokenList)) }
-            },
+            .distinctUntilChanged(),
         flow2 = appCurrencyFlow(),
         flow3 = accountDependencies.expandedAccountsHolder.expandedAccounts(userWallet),
         flow4 = accountDependencies.isAccountsModeEnabledUseCase(),
