@@ -20,7 +20,7 @@ internal class ExpandedAccountsHolder @Inject constructor(
     fun expandedAccounts(userWallet: UserWallet): Flow<Set<AccountId>> = channelFlow {
         walletAccounts(userWallet)
             .onEach { accountList ->
-                val isSingleAccount = accountList.totalAccounts == 1
+                val isSingleAccount = accountList.accounts.size == 1
                 val defaultExpanded = when {
                     isSingleAccount -> setOf(accountList.mainAccount.accountId)
                     else -> setOf()
