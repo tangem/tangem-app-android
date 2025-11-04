@@ -760,6 +760,8 @@
   <string name="notification_sepa_button">Krypto kaufen</string>
   <string name="notification_sepa_text">Profitiere von **0 % Gebühren** beim Kauf von Kryptowährungen per SEPA-Überweisung.</string>
   <string name="notification_sepa_title">Krypto mit SEPA kaufen</string>
+  <string name="notification_visa_waitlist_promo_text">Trage dich in die Warteliste ein und erhalte eine Zahlungskarte, die es so noch nie gab.</string>
+  <string name="notification_visa_waitlist_promo_title">Tangem Visa Card</string>
   <string name="onboarding_access_code_feature_1_description">Du musst einen einzigen Zugangscode einrichten, um alle deine Geräte zu schützen</string>
   <string name="onboarding_access_code_feature_1_title">Schützen</string>
   <string name="onboarding_access_code_feature_2_description">Du kannst später auf jeder Karte oder Ring einen individuellen Zugangscode einrichten</string>
@@ -1711,7 +1713,7 @@
   <string name="yield_module_fee_policy_tangem_service_fee_title">Tangem erhebt außerdem eine Servicegebühr von 15% auf den erzielten Ertrag.</string>
   <string name="yield_module_high_fee_error">Deine Gelder werden automatisch an Aave überwiesen, sobald die Netzwerkgebühren niedriger sind oder Dein Guthaben den erforderlichen Mindestbetrag erreicht.</string>
   <string name="yield_module_historical_returns">Historische Renditen</string>
-  <string name="yield_module_main_view_approve_notification_description">Die Freigabe für Deine Token im Yield-Modus wurde widerrufen. Öffne den Token, um die Berechtigung erneut zu erteilen.</string>
+  <string name="yield_module_main_view_approve_notification_description">Die Genehmigung für Deine Token im Yield-Modus wurde widerrufen. Öffne den Token, um die Berechtigung erneut zu erteilen.</string>
   <string name="yield_module_main_view_approve_notification_title">Token-Genehmigung erforderlich</string>
   <string name="yield_module_network_fee_unreachable_notification_description">Prüfe Deine Netzwerkverbindung</string>
   <string name="yield_module_network_fee_unreachable_notification_title">Informationen zu den Netzwerkgebühren nicht erreichbar</string>
@@ -1743,6 +1745,7 @@
   <string name="yield_module_stop_earning_sheet_fee_note">Die Netzwerkgebühr wird von dem Betrag, den Du abhebst, abgezogen.</string>
   <string name="yield_module_supply_apr">Effektiver Jahreszins für Versorgung</string>
   <string name="yield_module_token_details_earn_notification_apy">Effektiver Jahreszins</string>
+  <string name="yield_module_token_details_earn_notification_description">Zinsen fallen automatisch an</string>
   <string name="yield_module_token_details_earn_notification_earning_on_your_balance_subtitle">Zinsen fallen automatisch an</string>
   <string name="yield_module_token_details_earn_notification_earning_on_your_balance_title">Ertragsmodus</string>
   <string name="yield_module_token_details_earn_notification_processing">Bearbeitung Deiner Einzahlung</string>
