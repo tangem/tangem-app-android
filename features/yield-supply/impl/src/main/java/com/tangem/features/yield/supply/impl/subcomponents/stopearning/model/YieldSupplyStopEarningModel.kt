@@ -86,7 +86,7 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
     val uiState: StateFlow<YieldSupplyActionUM>
         field: MutableStateFlow<YieldSupplyActionUM> = MutableStateFlow(
             YieldSupplyActionUM(
-                title = resourceReference(R.string.yield_module_stop_earning),
+                title = resourceReference(R.string.yield_module_stop_earning_sheet_title),
                 subtitle = resourceReference(
                     id = R.string.yield_module_stop_earning_sheet_description,
                     formatArgs = wrappedList(cryptoCurrency.symbol),
