@@ -44,6 +44,7 @@ import com.tangem.domain.promo.models.StoryContentIds
 import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
 import com.tangem.domain.settings.usercountry.models.UserCountry
 import com.tangem.domain.settings.usercountry.models.needApplyFCARestrictions
+import com.tangem.domain.tangempay.GetTangemPayCurrencyStatusUseCase
 import com.tangem.domain.tokens.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.tokens.GetMinimumTransactionAmountSyncUseCase
 import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
@@ -113,6 +114,7 @@ internal class SwapModel @Inject constructor(
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     private val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase,
     private val accountsFeatureToggles: AccountsFeatureToggles,
+    private val getTangemPayCurrencyStatusUseCase: GetTangemPayCurrencyStatusUseCase,
 ) : Model() {
 
     private val params = paramsContainer.require<SwapComponent.Params>()
@@ -121,6 +123,7 @@ internal class SwapModel @Inject constructor(
     private val initialCurrencyTo = params.currencyTo
     private val userWalletId = params.userWalletId
     private val isInitiallyReversed = params.isInitialReverseOrder
+    private val tangemPayInput = params.tangemPayInput
 
     private val userWallet by lazy {
         requireNotNull(
@@ -196,7 +199,7 @@ internal class SwapModel @Inject constructor(
         }
 
         modelScope.launch(dispatchers.io) {
-            if (accountsFeatureToggles.isFeatureEnabled) {
+            if (accountsFeatureToggles.isFeatureEnabled && tangemPayInput == null) {
                 isAccountsMode = isAccountsModeEnabledUseCase.invokeSync()
 
                 val fromAccountStatus = getAccountCurrencyStatusUseCase.invokeSync(
@@ -220,10 +223,19 @@ internal class SwapModel @Inject constructor(
                     initTokens(isInitiallyReversed)
                 }
             } else {
-                val fromStatus = getSingleCryptoCurrencyStatusUseCase.invokeMultiWalletSync(
-                    userWalletId = userWalletId,
-                    cryptoCurrencyId = initialCurrencyFrom.id,
-                ).getOrNull()
+                val fromStatus = if (tangemPayInput != null) {
+                    getTangemPayCurrencyStatusUseCase(
+                        currency = initialCurrencyFrom,
+                        cryptoAmount = tangemPayInput.cryptoAmount,
+                        fiatAmount = tangemPayInput.fiatAmount,
+                        depositAddress = tangemPayInput.depositAddress,
+                    )
+                } else {
+                    getSingleCryptoCurrencyStatusUseCase.invokeMultiWalletSync(
+                        userWalletId = userWalletId,
+                        cryptoCurrencyId = initialCurrencyFrom.id,
+                    ).getOrNull()
+                }
                 val toStatus = initialCurrencyTo?.let {
                     getSingleCryptoCurrencyStatusUseCase.invokeMultiWalletSync(
                         userWalletId = userWalletId,
@@ -555,6 +567,7 @@ internal class SwapModel @Inject constructor(
                     selectedFeeType = dataState.selectedFee?.feeType ?: FeeType.NORMAL,
                     isReverseSwapPossible = isReverseSwapPossible(),
                     needApplyFCARestrictions = userCountry.needApplyFCARestrictions(),
+                    isForTangemPaySwap = tangemPayInput != null,
                 )
                 if (uiState.notifications.any { it is SwapNotificationUM.Error.UnableToCoverFeeWarning }) {
                     analyticsEventHandler.send(
@@ -574,6 +587,7 @@ internal class SwapModel @Inject constructor(
                     toTokenStatus = toTokenStatus,
                     isReverseSwapPossible = isReverseSwapPossible(),
                     toAccount = dataState.toAccount,
+                    isForTangemPaySwap = tangemPayInput != null,
                 )
             }
             is SwapState.SwapError -> {
@@ -588,6 +602,7 @@ internal class SwapModel @Inject constructor(
                     isReverseSwapPossible = isReverseSwapPossible(),
                     needApplyFCARestrictions = userCountry.needApplyFCARestrictions(),
                     toAccount = dataState.toAccount,
+                    isForTangemPaySwap = tangemPayInput != null,
                 )
                 sendErrorAnalyticsEvent(state.error, provider)
             }
