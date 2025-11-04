@@ -11,6 +11,7 @@ internal data class TangemPayDetailsUM(
     val balanceBlockState: TangemPayDetailsBalanceBlockState,
     val addToWalletBlockState: AddToWalletBlockState?,
     val isBalanceHidden: Boolean,
+    val addFundsEnabled: Boolean,
 )
 
 internal data class TangemPayCardDetailsUM(
