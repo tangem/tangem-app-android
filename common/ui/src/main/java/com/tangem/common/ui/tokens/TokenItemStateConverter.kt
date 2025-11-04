@@ -1,5 +1,6 @@
 package com.tangem.common.ui.tokens
 
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.ui.R
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
@@ -21,6 +22,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.currency.yieldSupplyKey
 import com.tangem.domain.models.staking.YieldBalance
+import com.tangem.domain.staking.model.isStakingSupported
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.staking.utils.getTotalWithRewardsStakingBalance
 import com.tangem.lib.crypto.BlockchainUtils
@@ -211,15 +213,22 @@ class TokenItemStateConverter(
             }
 
             if (stakingApyMap.isNotEmpty()) {
-                val (stakingRate, hasStaked) = findStakingRate(
+                val stakingInfo = findStakingRate(
                     currencyStatus = cryptoCurrencyStatus,
                     stakingApyMap = stakingApyMap,
                 )
-                if (stakingRate != null) {
+                val rewardTypeRes = when (stakingInfo.rewardType) {
+                    Yield.RewardType.APR -> R.string.staking_apr_earn_badge
+                    Yield.RewardType.UNKNOWN,
+                    Yield.RewardType.APY,
+                    null,
+                    -> R.string.yield_module_earn_badge
+                }
+                if (stakingInfo.rate != null) {
                     return resourceReference(
-                        R.string.yield_module_earn_badge,
-                        wrappedList(stakingRate.format { percent(withPercentSign = false) }),
-                    ) to hasStaked
+                        rewardTypeRes,
+                        wrappedList(stakingInfo.rate.format { percent(withPercentSign = false) }),
+                    ) to stakingInfo.isActive
                 }
             }
 
@@ -229,21 +238,46 @@ class TokenItemStateConverter(
         private fun findStakingRate(
             currencyStatus: CryptoCurrencyStatus,
             stakingApyMap: Map<String, List<Yield.Validator>>,
-        ): Pair<BigDecimal?, Boolean> {
+        ): StakingLocalInfo {
             val stakingKey = currencyStatus.currency.stakingKey()
-            val validators = stakingApyMap[stakingKey] ?: return null to false
+            val validators = stakingApyMap[stakingKey]
+                ?: return StakingLocalInfo(rate = null, isActive = false, rewardType = null)
+
             val yieldBalance = currencyStatus.value.yieldBalance
             val hasStakedBalance = yieldBalance is YieldBalance.Data
-            val rate = if (hasStakedBalance) {
+
+            val rateInfo: Pair<BigDecimal, Yield.RewardType?>? = if (hasStakedBalance) {
                 val validatorsByAddress = validators.associateBy { it.address }
                 yieldBalance.balance.items
                     .mapNotNull { it.validatorAddress }
-                    .firstNotNullOfOrNull { address -> validatorsByAddress[address]?.rewardInfo?.rate }
-                    ?: validators.mapNotNull { it.rewardInfo?.rate }.maxOrNull()
+                    .firstNotNullOfOrNull { address ->
+                        val validator = validatorsByAddress[address]
+                        validator?.rewardInfo?.rate?.let { rate ->
+                            rate to validator.rewardInfo?.type
+                        }
+                    }
+                    ?: validators
+                        .filter { it.preferred }
+                        .mapNotNull { validator ->
+                            validator.rewardInfo?.rate?.let { rate -> rate to validator.rewardInfo?.type }
+                        }
+                        .maxByOrNull { it.first }
             } else {
-                validators.mapNotNull { it.rewardInfo?.rate }.maxOrNull()
+                validators
+                    .filter { it.preferred }
+                    .mapNotNull { validator ->
+                        validator.rewardInfo?.rate?.let { rate ->
+                            rate to validator.rewardInfo?.type
+                        }
+                    }
+                    .maxByOrNull { it.first }
             }
-            return rate to hasStakedBalance
+
+            return StakingLocalInfo(
+                rate = rateInfo?.first,
+                isActive = hasStakedBalance,
+                rewardType = rateInfo?.second,
+            )
         }
 
         private fun createSubtitleState(
@@ -353,7 +387,21 @@ class TokenItemStateConverter(
         fun CryptoCurrencyStatus.Value.isFlickering(): Boolean = sources.total == StatusSource.CACHE
 
         private fun CryptoCurrency.stakingKey(): String {
-            return "${network.backendId}_$symbol"
+            if (this is CryptoCurrency.Coin && !network.isStakingSupported) return ""
+
+            if (network.isStakingSupported && this !is CryptoCurrency.Coin) {
+                val isPolygonTokenOnEthereum = this is CryptoCurrency.Token &&
+                    this.network.id.rawId.value == Blockchain.Ethereum.id &&
+                    this.symbol == Blockchain.Polygon.currency
+                if (!isPolygonTokenOnEthereum) return ""
+            }
+            return "${id.rawCurrencyId}_$symbol"
         }
     }
+
+    private data class StakingLocalInfo(
+        val rate: BigDecimal?,
+        val isActive: Boolean,
+        val rewardType: Yield.RewardType?,
+    )
 }
