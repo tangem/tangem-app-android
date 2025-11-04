@@ -101,7 +101,7 @@ internal class TangemPayTxHistoryItemsConverter(
     private fun convertCollateral(
         collateral: TangemPayTxHistoryItem.Collateral,
     ): TangemPayTransactionState.Content.Collateral {
-        val amount = StringsSigns.MINUS + collateral.amount.format {
+        val amount = StringsSigns.PLUS + collateral.amount.format {
             fiat(fiatCurrencyCode = collateral.currency.currencyCode, fiatCurrencySymbol = collateral.currency.symbol)
         }
         return TangemPayTransactionState.Content.Collateral(
