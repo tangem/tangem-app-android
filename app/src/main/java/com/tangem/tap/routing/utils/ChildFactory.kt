@@ -320,6 +320,13 @@ internal class ChildFactory @Inject constructor(
                         userWalletId = route.userWalletId,
                         isInitialReverseOrder = route.isInitialReverseOrder,
                         screenSource = route.screenSource,
+                        tangemPayInput = route.tangemPayInput?.let { tangemPayInput ->
+                            SwapComponent.Params.TangemPayInput(
+                                cryptoAmount = tangemPayInput.cryptoAmount,
+                                fiatAmount = tangemPayInput.fiatAmount,
+                                depositAddress = tangemPayInput.depositAddress,
+                            )
+                        },
                     ),
                     componentFactory = swapComponentFactory,
                 )
