@@ -18,9 +18,11 @@ dependencies {
     implementation(projects.core.error)
     implementation(projects.core.navigation)
     implementation(projects.core.ui)
+    implementation(projects.core.analytics.models)
 
     /** Common */
     implementation(projects.common.ui)
+    implementation(projects.common.routing)
 
     /** Features api */
     implementation(projects.features.tangempay.details.api)
