@@ -30,6 +30,7 @@
   <string name="account_details_archive">アカウントをアーカイブする</string>
   <string name="account_details_archive_action">アーカイブ</string>
   <string name="account_details_archive_description">このアカウントをアーカイブしますが、いつでも復元できます。</string>
+  <string name="account_details_archiving">アーカイブ中・・・</string>
   <string name="account_details_title">アカウント</string>
   <string name="account_edit_success_message">アカウントが保存されました</string>
   <string name="account_for_rewards">報酬用のアカウント</string>
@@ -156,6 +157,13 @@
   <plurals name="card_label_token_count">
     <item quantity="other">%1$dトークン</item>
   </plurals>
+  <string name="card_reset_alert_continue_message">続行するには次のデバイスをリセットしてください。</string>
+  <string name="card_reset_alert_continue_title">ウォレットのリセット</string>
+  <string name="card_reset_alert_finish_message">すべてのTangemデバイスがリセットされました。ウォレットのアップグレードを続行できます。</string>
+  <string name="card_reset_alert_finish_ok_button">もう一度アップグレードしてください</string>
+  <string name="card_reset_alert_finish_title">リセット完了</string>
+  <string name="card_reset_alert_incomplete_message">すべてのTangemデバイスをリセットしていません</string>
+  <string name="card_reset_alert_incomplete_title">すべてのTangemデバイスをリセットしていません</string>
   <string name="card_settings_access_code_recovery_disabled_description">このカードを使用して、このウォレット内の他のカードまたはリングのアクセスコードをリセットしたくない場合は、このオプションを無効にしてください。これにより、このカードのアクセスコードもリセットできなくなりますのでご注意ください。</string>
   <string name="card_settings_access_code_recovery_enabled_description">このカードを使用して、このウォレット内の他のカードのアクセスコードをリセットできます。</string>
   <string name="card_settings_access_code_recovery_title">アクセスコードの復元</string>
@@ -307,6 +315,7 @@
   <string name="common_reload">リロード</string>
   <string name="common_rename">名前を変更</string>
   <string name="common_required">必須</string>
+  <string name="common_reset">リセット</string>
   <string name="common_save">保存</string>
   <string name="common_save_changes">変更内容を保存</string>
   <string name="common_search">検索</string>
@@ -423,6 +432,7 @@
   <string name="email_subject_wc_error">WalletConnectエラー</string>
   <string name="error_wrong_wallet_tapped">別のウォレットのカードまたはリングを使用しました。このウォレットにリンクしているカードまたはリングをタップしてください。</string>
   <string name="eth_gas_required_exceeds_allowance">取引に必要な資金が不足しています。アカウントに入金してください。</string>
+  <string name="exchange_token_description">ポートフォリオ内のアセットをこのトークンと交換します</string>
   <string name="exchange_tokens_available_tokens_header">マイトークン</string>
   <string name="exchange_tokens_empty_tokens">まだトークンを追加していません。マーケットからトークンを追加して交換してください。</string>
   <string name="exchange_tokens_unavailable_tokens_header">%sとの交換はできません</string>
@@ -779,6 +789,8 @@
   <string name="notification_sepa_button">暗号資産を買い付ける</string>
   <string name="notification_sepa_text">SEPA送金で暗号資産を買い付けると、**手数料 0% ** になります。</string>
   <string name="notification_sepa_title">SEPAで暗号資産を購入</string>
+  <string name="notification_visa_waitlist_promo_text">事前申し込み受付中。他にない特別なカードを、いち早く体験しよう。</string>
+  <string name="notification_visa_waitlist_promo_title">Tangem Visaカード</string>
   <string name="onboarding_access_code_feature_1_description">すべてのデバイスを保護するには、単一のアクセスコードを設定してください。</string>
   <string name="onboarding_access_code_feature_1_title">保護する</string>
   <string name="onboarding_access_code_feature_2_description">後で各カードおよびリングに個別のアクセスコードを設定できます。</string>
@@ -1303,6 +1315,7 @@
   <string name="tangem_pay_explore_transaction">取引を表示</string>
   <string name="tangem_pay_fee_subtitle">サービス手数料</string>
   <string name="tangem_pay_fee_title">手数料</string>
+  <string name="tangem_pay_get_help">サポートを受ける</string>
   <string name="tangem_pay_status_completed">完了</string>
   <string name="tangem_pay_status_declined">拒否</string>
   <string name="tangem_pay_status_pending">保留中</string>
@@ -1315,6 +1328,15 @@
   <string name="tangempay_card_details_error_text">データの読み込みに失敗しました。しばらくしてからもう一度お試しください。</string>
   <string name="tangempay_card_details_freeze_card">カードの一時停止</string>
   <string name="tangempay_card_details_hide_text">非表示</string>
+  <string name="tangempay_card_details_open_wallet_button">Googleウォレットを開く</string>
+  <string name="tangempay_card_details_open_wallet_notification_subtitle">数回タップするだけでTangem Payの設定完了。Google Payですぐに支払いを始めましょう。</string>
+  <string name="tangempay_card_details_open_wallet_notification_title">Google Payにカードを追加する</string>
+  <string name="tangempay_card_details_open_wallet_step_1">Googleウォレットを開く</string>
+  <string name="tangempay_card_details_open_wallet_step_2">「カードを追加」をタップします</string>
+  <string name="tangempay_card_details_open_wallet_step_3">カードの詳細を手動で入力してください</string>
+  <string name="tangempay_card_details_open_wallet_step_4">お使いの端末に送信されたワンタイムパスワード（OTP）でカードを認証してください。</string>
+  <string name="tangempay_card_details_open_wallet_step_5">準備完了！カードはすぐに使用できます。</string>
+  <string name="tangempay_card_details_open_wallet_title">Google Payにカードを追加する</string>
   <string name="tangempay_card_details_receive_error_description">技術的な問題が検出されました。しばらくしてからもう一度お試しいただくか、サポートにお問い合わせください。</string>
   <string name="tangempay_card_details_receive_error_title">現在、受け取りは利用できません</string>
   <string name="tangempay_card_details_reveal_text">表示</string>
