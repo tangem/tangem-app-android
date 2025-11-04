@@ -198,6 +198,7 @@ sealed class YieldSupplyAnalytics(
     )
 
     enum class Action(val value: String) {
+        Start("Start"),
         Approve("Approve"),
         Stop("Stop"),
     }
