@@ -52,6 +52,7 @@ internal class WalletImageResolver @Inject constructor(
             cardTypesResolver.isTangemTwins() -> R.drawable.ill_twins_120_106
             cardTypesResolver.isStart2Coin() -> R.drawable.ill_start2coin_120_106
             cardTypesResolver.isTangemNote() -> noteImage?.imageResId
+            DemoConfig.isDemoNoteAsMultiwallet(userWallet.cardId) -> R.drawable.ill_wallet2_cards2_120_106
             else -> null
         }
     }
