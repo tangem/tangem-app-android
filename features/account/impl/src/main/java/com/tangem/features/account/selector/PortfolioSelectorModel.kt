@@ -147,11 +147,17 @@ internal class PortfolioSelectorModel @Inject constructor(
                 return@forEach
             }
 
-            val walletTitle = PortfolioSelectorItemUM.GroupTitle(
-                id = "GroupTitle ${wallet.walletId.stringValue}",
-                name = stringReference(wallet.name),
-            )
-            add(walletTitle)
+            when (balanceFetcher.mode.value) {
+                // for Wallet mode expected single portfolioData.balances
+                is PortfolioFetcher.Mode.Wallet -> Unit
+                is PortfolioFetcher.Mode.All -> {
+                    val walletTitle = PortfolioSelectorItemUM.GroupTitle(
+                        id = "GroupTitle ${wallet.walletId.stringValue}",
+                        name = stringReference(wallet.name),
+                    )
+                    add(walletTitle)
+                }
+            }
 
             portfolio.accountsBalance.accountStatuses.forEach { accountStatus ->
                 val isEnabledByFeature = isEnabled(wallet, accountStatus)
