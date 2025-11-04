@@ -13,7 +13,6 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.tokens.GetFeePaidCryptoCurrencyStatusSyncUseCase
@@ -62,8 +61,8 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
     private val yieldSupplyNotificationsUpdateTrigger: YieldSupplyNotificationsUpdateTrigger,
     private val yieldSupplyAlertFactory: YieldSupplyAlertFactory,
     private val yieldSupplyActivateUseCase: YieldSupplyActivateUseCase,
-    private val yieldSupplyGetTokenStatusUseCase: YieldSupplyGetTokenStatusUseCase,
     private val yieldSupplyMinAmountUseCase: YieldSupplyMinAmountUseCase,
+    private val yieldSupplyGetMaxFeeUseCase: YieldSupplyGetMaxFeeUseCase,
     private val yieldSupplyRepository: YieldSupplyRepository,
 ) : Model(), YieldSupplyNotificationsComponent.ModelCallback {
 
@@ -131,11 +130,8 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
         }
     }
 
-    private suspend fun getMaxFee(): BigDecimal? {
-        if (uiState.value.maxFee != BigDecimal.ZERO) return uiState.value.maxFee
-        val yieldTokenStatus = yieldSupplyGetTokenStatusUseCase(cryptoCurrency as CryptoCurrency.Token)
-            .getOrNull()
-        return yieldTokenStatus?.maxFeeNative
+    private suspend fun getMaxFeePair(): Pair<BigDecimal, BigDecimal>? {
+        return yieldSupplyGetMaxFeeUseCase(userWallet, cryptoCurrencyStatus).getOrNull()
     }
 
     private suspend fun onLoadFee() {
@@ -145,11 +141,10 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
             it.copy(yieldSupplyFeeUM = YieldSupplyFeeUM.Loading)
         }
 
-        val maxFee = if (uiState.value.maxFee == BigDecimal.ZERO) {
-            getMaxFee()
-        } else {
-            uiState.value.maxFee
-        } ?: return
+        val maxFeePair = getMaxFeePair() ?: return
+
+        val maxFee = maxFeePair.first
+        val maxFeeFiat = maxFeePair.second
 
         val transactionListData = yieldSupplyStartEarningUseCase(
             userWalletId = userWallet.walletId,
@@ -190,6 +185,7 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
                 val feeSum = updatedTransactionList.sumOf {
                     it.fee?.amount?.value.orZero()
                 }
+
                 uiState.update(
                     YieldSupplyStartEarningFeeContentTransformer(
                         cryptoCurrencyStatus = cryptoCurrencyStatusFlow.value,
@@ -198,6 +194,7 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
                         updatedTransactionList = updatedTransactionList,
                         feeValue = feeSum,
                         maxNetworkFee = maxFee,
+                        maxNetworkFeeFiat = maxFeeFiat,
                         minAmount = minAmount,
                     ),
                 )
