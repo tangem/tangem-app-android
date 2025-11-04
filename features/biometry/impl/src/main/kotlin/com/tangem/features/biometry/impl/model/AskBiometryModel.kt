@@ -135,13 +135,15 @@ internal class AskBiometryModel @Inject constructor(
         params.modelCallbacks.onAllowed()
     }
 
-    private fun setBiometryLockForAllWallets() {
-        modelScope.launch {
-            userWalletsListRepository.userWalletsSync().forEach { userWallet ->
-                userWalletsListRepository.setLock(
-                    userWalletId = userWallet.walletId,
-                    lockMethod = UserWalletsListRepository.LockMethod.Biometric,
-                    changeUnsecured = false,
+    private suspend fun setBiometryLockForAllWallets() {
+        userWalletsListRepository.userWalletsSync().forEach { userWallet ->
+            userWalletsListRepository.setLock(
+                userWalletId = userWallet.walletId,
+                lockMethod = UserWalletsListRepository.LockMethod.Biometric,
+                changeUnsecured = false,
+            ).onLeft {
+                uiMessageSender.send(
+                    SnackbarMessage(stringReference("Something went wrong. Please contact support: $it")),
                 )
             }
         }
