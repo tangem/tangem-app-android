@@ -3,6 +3,9 @@ package com.tangem.features.tangempay.model
 import androidx.compose.runtime.Stable
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
+import com.arkivanov.decompose.router.slot.dismiss
+import com.tangem.common.routing.AppRoute
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -10,9 +13,11 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig.ShowRefreshState
 import com.tangem.domain.models.TokenReceiveConfig
-import com.tangem.domain.pay.DataForReceiveFactory
+import com.tangem.domain.pay.TangemPayTopUpData
+import com.tangem.domain.pay.model.TangemPayCardBalance
 import com.tangem.domain.pay.repository.CardDetailsRepository
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
+import com.tangem.features.tangempay.components.AddFundsListener
 import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
 import com.tangem.features.tangempay.entity.TangemPayDetailsErrorType
 import com.tangem.features.tangempay.entity.TangemPayDetailsNavigation
@@ -44,17 +49,16 @@ internal class TangemPayDetailsModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
     private val cardDetailsRepository: CardDetailsRepository,
-    private val dataForReceiveFactory: DataForReceiveFactory,
     private val uiMessageSender: UiMessageSender,
     private val cardDetailsEventListener: CardDetailsEventListener,
-) : Model(), TangemPayTxHistoryUiActions {
+) : Model(), TangemPayTxHistoryUiActions, AddFundsListener {
 
     private val params: TangemPayDetailsContainerComponent.Params = paramsContainer.require()
 
     private val stateFactory = TangemPayDetailsStateFactory(
         onBack = router::pop,
         onRefresh = ::onRefreshSwipe,
-        onReceive = ::onClickReceive,
+        onAddFunds = ::onClickAddFunds,
         onClickChangePin = ::onClickChangePin,
         onClickFreezeCard = ::onClickFreezeCard,
     )
@@ -65,6 +69,8 @@ internal class TangemPayDetailsModel @Inject constructor(
     private val refreshStateJobHolder = JobHolder()
     private val fetchBalanceJobHolder = JobHolder()
     private val addToWalletBannerJobHolder = JobHolder()
+
+    private var balance: TangemPayCardBalance? = null
 
     val bottomSheetNavigation: SlotNavigation<TangemPayDetailsNavigation> = SlotNavigation()
 
@@ -81,30 +87,27 @@ internal class TangemPayDetailsModel @Inject constructor(
         // TODO [REDACTED_JIRA]
     }
 
-    private fun onClickReceive() {
-        val depositAddress = params.config.depositAddress
-        if (depositAddress == null) {
+    private fun onClickAddFunds() {
+        if (params.config.depositAddress == null || balance == null) {
             showBottomSheetError(TangemPayDetailsErrorType.Receive)
         } else {
-            dataForReceiveFactory.getDataForReceive(depositAddress = depositAddress, chainId = params.config.chainId)
-                .onRight {
-                    val config = TokenReceiveConfig(
-                        shouldShowWarning = false,
-                        cryptoCurrency = it.currency,
-                        userWalletId = it.walletId,
-                        showMemoDisclaimer = false,
-                        receiveAddress = it.receiveAddress,
-                    )
-                    bottomSheetNavigation.activate(TangemPayDetailsNavigation.Receive(config))
-                }
-                .onLeft { showBottomSheetError(TangemPayDetailsErrorType.Receive) }
+            bottomSheetNavigation.activate(
+                TangemPayDetailsNavigation.AddFunds(
+                    walletId = params.userWalletId,
+                    fiatBalance = requireNotNull(balance).balance,
+                    // Using the fiat balance as crypto balance. This will be changed when back returns crypto balance
+                    cryptoBalance = requireNotNull(balance).balance,
+                    depositAddress = requireNotNull(params.config.depositAddress),
+                    chainId = params.config.chainId,
+                ),
+            )
         }
     }
 
     private fun fetchBalance(): Job {
         return modelScope.launch {
-            val result = cardDetailsRepository.getCardBalance()
-            uiState.update(DetailsBalanceTransformer(result))
+            val result = cardDetailsRepository.getCardBalance().onRight { balance = it }
+            uiState.update(DetailsBalanceTransformer(balance = result))
         }.saveIn(fetchBalanceJobHolder)
     }
 
@@ -145,6 +148,39 @@ internal class TangemPayDetailsModel @Inject constructor(
                 ),
             )
         }.saveIn(addToWalletBannerJobHolder)
+    }
+
+    override fun onClickSwap(data: TangemPayTopUpData) {
+        bottomSheetNavigation.dismiss()
+        router.push(
+            AppRoute.Swap(
+                currencyFrom = data.currency,
+                userWalletId = data.walletId,
+                isInitialReverseOrder = true,
+                screenSource = AnalyticsParam.ScreensSources.TangemPay.value,
+                tangemPayInput = AppRoute.Swap.TangemPayInput(
+                    cryptoAmount = data.cryptoBalance,
+                    fiatAmount = data.fiatBalance,
+                    depositAddress = data.depositAddress,
+                ),
+            ),
+        )
+    }
+
+    override fun onClickReceive(data: TangemPayTopUpData) {
+        bottomSheetNavigation.dismiss()
+        val config = TokenReceiveConfig(
+            shouldShowWarning = false,
+            cryptoCurrency = data.currency,
+            userWalletId = data.walletId,
+            showMemoDisclaimer = false,
+            receiveAddress = data.receiveAddress,
+        )
+        bottomSheetNavigation.activate(TangemPayDetailsNavigation.Receive(config))
+    }
+
+    override fun onDismissAddFunds() {
+        bottomSheetNavigation.dismiss()
     }
 
     override fun onTransactionClick(item: TangemPayTxHistoryItem) {
