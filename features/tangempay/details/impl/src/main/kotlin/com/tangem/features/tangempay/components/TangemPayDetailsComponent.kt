@@ -87,6 +87,17 @@ internal class TangemPayDetailsComponent(
                     onDismiss = model.bottomSheetNavigation::dismiss,
                 ),
             )
+            is TangemPayDetailsNavigation.AddFunds -> TangemPayAddFundsComponent(
+                appComponentContext = context,
+                params = TangemPayAddFundsComponent.Params(
+                    walletId = navigation.walletId,
+                    cryptoBalance = navigation.cryptoBalance,
+                    fiatBalance = navigation.fiatBalance,
+                    depositAddress = navigation.depositAddress,
+                    chainId = navigation.chainId,
+                    listener = model,
+                ),
+            )
         }
     }
 }
