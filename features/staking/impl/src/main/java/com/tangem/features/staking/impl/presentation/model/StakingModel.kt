@@ -24,11 +24,10 @@ import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.haptic.TangemHapticEffect
 import com.tangem.core.ui.haptic.VibratorHapticManager
+import com.tangem.core.ui.message.DialogMessage
 import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.account.usecase.IsAccountsModeEnabledUseCase
-import com.tangem.core.ui.message.DialogMessage
-import com.tangem.features.staking.impl.R
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
@@ -60,6 +59,7 @@ import com.tangem.domain.transaction.usecase.*
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.staking.api.StakingComponent
+import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.analytics.StakingParamsInterceptor
 import com.tangem.features.staking.impl.analytics.utils.StakingAnalyticSender
 import com.tangem.features.staking.impl.navigation.InnerStakingRouter
@@ -171,6 +171,7 @@ internal class StakingModel @Inject constructor(
     }
 
     private var isAccountInitialized: Boolean = true
+    private var isTonHeatupCase: Boolean = false
     private lateinit var cryptoCurrencyStatus: CryptoCurrencyStatus
     private var stakingActions: List<StakingAction> = emptyList()
     private var feeCryptoCurrencyStatus: CryptoCurrencyStatus? = null
@@ -1063,7 +1064,7 @@ internal class StakingModel @Inject constructor(
                 currency = params.cryptoCurrency,
             ).conflate().distinctUntilChanged()
                 .filter {
-                    value.currentStep == StakingStep.InitialInfo || isCaseWithUnitializedTonAccount()
+                    value.currentStep == StakingStep.InitialInfo || isTopHeatupCase()
                 }.onEach { (maybeAccount, maybeStatus) ->
                     isAccountsModeEnabled = isAccountsModeEnabledUseCase.invokeSync()
                     account = maybeAccount
@@ -1077,7 +1078,7 @@ internal class StakingModel @Inject constructor(
                 isSingleWalletWithTokens = false,
             ).conflate().distinctUntilChanged()
                 .filter {
-                    value.currentStep == StakingStep.InitialInfo || isCaseWithUnitializedTonAccount()
+                    value.currentStep == StakingStep.InitialInfo || isTopHeatupCase()
                 }
                 .onEach { maybeStatus ->
                     maybeStatus.fold(
@@ -1119,19 +1120,7 @@ internal class StakingModel @Inject constructor(
             }
         cryptoCurrencyStatus = status
 
-        val isAccountInitializedNew = checkAccountInitializedUseCase.invoke(
-            userWalletId = userWalletId,
-            network = cryptoCurrencyStatus.currency.network,
-        ).getOrElse {
-            Timber.e(it)
-            false
-        }
-        if (isAccountInitializedNew && !isAccountInitialized) {
-            isAccountInitialized = true
-            updateNotifications()
-        }
-        isAccountInitialized = isAccountInitializedNew
-
+        checkForTonHeatupCase()
         setupApprovalNeeded()
         setupIsAnyTokenStaked()
         checkIfSubtractAvailable()
@@ -1277,6 +1266,26 @@ internal class StakingModel @Inject constructor(
         )
     }
 
+    private suspend fun checkForTonHeatupCase() {
+        val isAccountInitializedNewValue = checkAccountInitializedUseCase.invoke(
+            userWalletId = userWalletId,
+            network = cryptoCurrencyStatus.currency.network,
+        ).getOrElse {
+            Timber.e(it)
+            false
+        }
+
+        if (!isAccountInitializedNewValue && isAccountInitialized) {
+            isTonHeatupCase = true
+        }
+
+        isAccountInitialized = isAccountInitializedNewValue
+
+        if (isTopHeatupCase()) {
+            updateNotifications()
+        }
+    }
+
     private fun isExplicitExit(balanceType: BalanceType, pendingAction: PendingAction?): Boolean {
         return balanceType == BalanceType.STAKED && pendingAction?.type?.isRestake == false
     }
@@ -1296,11 +1305,11 @@ internal class StakingModel @Inject constructor(
             .getOrElse { false }
     }
 
-    private fun isCaseWithUnitializedTonAccount(): Boolean {
+    private fun isTopHeatupCase(): Boolean {
         if (!::cryptoCurrencyStatus.isInitialized) return false
         return value.currentStep == StakingStep.Confirmation &&
             isTon(cryptoCurrencyStatus.currency.network.rawId) &&
-            !isAccountInitialized
+            isTonHeatupCase
     }
 
     private companion object {
