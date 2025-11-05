@@ -3,6 +3,7 @@ package com.tangem.feature.swap.domain.models.domain
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import java.math.BigDecimal
 
@@ -12,6 +13,8 @@ data class SavedSwapTransactionListModel(
     val toCryptoCurrencyId: String,
     val fromCryptoCurrency: CryptoCurrency,
     val toCryptoCurrency: CryptoCurrency,
+    val fromAccount: Account.CryptoPortfolio?,
+    val toAccount: Account.CryptoPortfolio?,
     val transactions: List<SavedSwapTransactionModel>,
 )
 

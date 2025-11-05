@@ -238,7 +238,7 @@ internal class DefaultCustomTokensRepository(
                 "User tokens not found for user wallet [$userWalletId] while removing currency"
             }
 
-            val token = userTokensResponseFactory.createResponseToken(cryptoCurrency)
+            val token = userTokensResponseFactory.createResponseToken(currency = cryptoCurrency, accountId = null)
             userTokensSaver.storeAndPush(
                 userWalletId = userWalletId,
                 response = storedCurrencies.copy(tokens = storedCurrencies.tokens.filterNot { it == token }),
@@ -248,6 +248,27 @@ internal class DefaultCustomTokensRepository(
                 is CryptoCurrency.Token -> walletManagersFacade.removeTokens(userWalletId, setOf(cryptoCurrency))
             }
         }
+
+    override suspend fun convertToCryptoCurrency(
+        userWalletId: UserWalletId,
+        currency: ManagedCryptoCurrency.Custom,
+    ): CryptoCurrency {
+        return when (currency) {
+            is ManagedCryptoCurrency.Custom.Coin -> createCoin(
+                userWalletId = userWalletId,
+                networkId = currency.network.id,
+                derivationPath = currency.network.derivationPath,
+            )
+            is ManagedCryptoCurrency.Custom.Token -> cryptoCurrencyFactory.createToken(
+                network = currency.network,
+                rawId = currency.currencyId.rawCurrencyId,
+                name = currency.name,
+                symbol = currency.symbol,
+                decimals = currency.decimals,
+                contractAddress = currency.contractAddress,
+            )
+        }
+    }
 
     override suspend fun getSupportedNetworks(userWalletId: UserWalletId): List<Network> = withContext(dispatchers.io) {
         val userWallet = requireNotNull(userWalletsStore.getSyncOrNull(userWalletId)) {

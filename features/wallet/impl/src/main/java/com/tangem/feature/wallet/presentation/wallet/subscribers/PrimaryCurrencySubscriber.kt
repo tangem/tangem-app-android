@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.*
 import timber.log.Timber
 import java.math.BigDecimal
 
+@Deprecated("Use PrimaryCurrencySubscriberV2 instead")
 internal class PrimaryCurrencySubscriber(
     private val userWallet: UserWallet,
     private val stateHolder: WalletStateController,

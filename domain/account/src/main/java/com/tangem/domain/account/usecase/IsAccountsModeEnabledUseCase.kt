@@ -45,18 +45,19 @@ class IsAccountsModeEnabledUseCase(
                 // If the wallet does not support multiple currencies, we consider its account count as 0
                 if (!userWallet.isMultiCurrency) return@map 0
 
-                crudRepository.getTotalAccountsCountSync(userWalletId = userWallet.walletId).getOrZero()
+                crudRepository.getTotalActiveAccountsCountSync(userWalletId = userWallet.walletId).getOrZero()
             }
             .isModeEnabled()
     }
 
+    @Suppress("UnusedFlow")
     private fun getTotalAccountsCountList(userWallets: List<UserWallet>): List<Flow<Int>> {
         return userWallets
             .map { userWallet ->
                 // If the wallet does not support multiple currencies, we consider its account count as 0
                 if (!userWallet.isMultiCurrency) return@map flowOf(0)
 
-                crudRepository.getTotalAccountsCount(userWalletId = userWallet.walletId)
+                crudRepository.getTotalActiveAccountsCount(userWalletId = userWallet.walletId)
                     .map { maybeCount -> maybeCount.getOrZero() }
             }
     }
