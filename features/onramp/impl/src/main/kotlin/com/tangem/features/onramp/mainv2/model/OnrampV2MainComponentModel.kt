@@ -124,7 +124,11 @@ internal class OnrampV2MainComponentModel @Inject constructor(
         bottomSheetNavigation.activate(OnrampV2MainBottomSheetConfig.CurrenciesList)
     }
 
-    override fun onBuyClick(quote: OnrampProviderWithQuote.Data, onrampOfferAdvantagesUM: OnrampOfferAdvantagesUM) {
+    override fun onBuyClick(
+        quote: OnrampProviderWithQuote.Data,
+        onrampOfferAdvantagesUM: OnrampOfferAdvantagesUM,
+        categoryUM: OnrampOfferCategoryUM,
+    ) {
         val currentContentState = state.value as? OnrampV2MainComponentUM.Content ?: return
         analyticsEventHandler.send(
             OnrampAnalyticsEvent.OnBuyClick(
@@ -133,11 +137,11 @@ internal class OnrampV2MainComponentModel @Inject constructor(
                 tokenSymbol = params.cryptoCurrency.symbol,
             ),
         )
-        onrampOfferAdvantagesUM.toAnalyticsEvent(
-            cryptoCurrencySymbol = params.cryptoCurrency.symbol,
-            providerName = quote.provider.info.name,
-            paymentMethodName = quote.paymentMethod.name,
-        )?.let(analyticsEventHandler::send)
+        sendOfferClickEvent(
+            quote = quote,
+            onrampOfferAdvantagesUM = onrampOfferAdvantagesUM,
+            categoryUM = categoryUM,
+        )
         params.openRedirectPage(quote)
     }
 
@@ -349,6 +353,29 @@ internal class OnrampV2MainComponentModel @Inject constructor(
                 tokenSymbol = params.cryptoCurrency.symbol,
             ),
         )
+    }
+
+    private fun sendOfferClickEvent(
+        quote: OnrampProviderWithQuote.Data,
+        onrampOfferAdvantagesUM: OnrampOfferAdvantagesUM,
+        categoryUM: OnrampOfferCategoryUM,
+    ) {
+        when (categoryUM) {
+            OnrampOfferCategoryUM.RecentlyUsed -> {
+                OnrampAnalyticsEvent.RecentlyBuyClicked(
+                    tokenSymbol = params.cryptoCurrency.symbol,
+                    providerName = quote.provider.info.name,
+                    paymentMethod = quote.paymentMethod.name,
+                ).let(analyticsEventHandler::send)
+            }
+            OnrampOfferCategoryUM.Recommended -> {
+                onrampOfferAdvantagesUM.toAnalyticsEvent(
+                    cryptoCurrencySymbol = params.cryptoCurrency.symbol,
+                    providerName = quote.provider.info.name,
+                    paymentMethodName = quote.paymentMethod.name,
+                )?.let(analyticsEventHandler::send)
+            }
+        }
     }
 
     private companion object {
