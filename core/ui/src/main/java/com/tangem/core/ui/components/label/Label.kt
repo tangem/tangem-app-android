@@ -75,6 +75,7 @@ fun Label(state: LabelUM, modifier: Modifier = Modifier) {
                 .padding(horizontal = 8.dp, vertical = 4.dp),
         ) {
             Text(
+                modifier = Modifier.weight(1.0f, fill = false),
                 text = text.resolveReference(),
                 style = TangemTheme.typography.caption1,
                 color = textColor,
@@ -125,7 +126,9 @@ private fun LabelPreview() {
             )
             Label(
                 state = LabelUM(
-                    text = TextReference.Str("Regular Label"),
+                    text = TextReference.Str(
+                        "Regular long long long long long long long long long long long long Label",
+                    ),
                     style = LabelStyle.REGULAR,
                     icon = R.drawable.ic_information_24,
                 ),
