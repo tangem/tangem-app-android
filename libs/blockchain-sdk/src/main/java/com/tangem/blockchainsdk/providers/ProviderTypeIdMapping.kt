@@ -11,7 +11,7 @@ internal enum class ProviderTypeIdMapping(val id: String, val providerType: Prov
     BitcoinBlockcypher(id = "blockcypher", providerType = ProviderType.BitcoinLike.Blockcypher),
     CardanoAdalite(id = "adalite", providerType = ProviderType.Cardano.Adalite),
     CardanoRosetta(id = "tangemRosetta", providerType = ProviderType.Cardano.Rosetta),
-    CardanoMock(id = "mock", providerType = ProviderType.Mock),
+    WireMock(id = "mock", providerType = ProviderType.Mock),
     ChiaFireAcademy(id = "fireAcademy", providerType = ProviderType.Chia.FireAcademy),
     ChiaTangem(id = "tangemChia", providerType = ProviderType.Chia.Tangem),
     ChiaTangemNew(id = "tangemChia3", providerType = ProviderType.Chia.TangemNew),

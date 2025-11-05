@@ -9,11 +9,12 @@ internal data class TangemPayDetailsUM(
     val topBarConfig: TangemPayDetailsTopBarConfig,
     val pullToRefreshConfig: PullToRefreshConfig,
     val balanceBlockState: TangemPayDetailsBalanceBlockState,
-    val cardDetailsUM: TangemPayCardDetailsUM,
+    val addToWalletBlockState: AddToWalletBlockState?,
     val isBalanceHidden: Boolean,
+    val addFundsEnabled: Boolean,
 )
 
-data class TangemPayCardDetailsUM(
+internal data class TangemPayCardDetailsUM(
     val number: String = "",
     val expiry: String = "",
     val cvv: String = "",
@@ -43,3 +44,8 @@ internal sealed class TangemPayDetailsBalanceBlockState {
         override val actionButtons: ImmutableList<ActionButtonConfig>,
     ) : TangemPayDetailsBalanceBlockState()
 }
+
+internal data class AddToWalletBlockState(
+    val onClick: () -> Unit,
+    val onClickClose: () -> Unit,
+)

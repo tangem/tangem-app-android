@@ -22,6 +22,7 @@ import com.tangem.datasource.local.datastore.RuntimeStateStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.markets.*
 import com.tangem.domain.markets.repositories.MarketsTokenRepository
+import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.pagination.*
@@ -250,6 +251,7 @@ internal class DefaultMarketsTokenRepository(
         userWalletId: UserWalletId,
         token: TokenMarketParams,
         network: TokenMarketInfo.Network,
+        accountIndex: DerivationIndex?,
     ): CryptoCurrency? {
         val userWallet = userWalletsStore.getSyncOrNull(userWalletId) ?: error("UserWalletId [$userWalletId] not found")
         val blockchain = Blockchain.fromNetworkId(network.networkId) ?: error("Unknown network [${network.networkId}]")
@@ -259,12 +261,14 @@ internal class DefaultMarketsTokenRepository(
                 blockchain = blockchain,
                 extraDerivationPath = null,
                 userWallet = userWallet,
+                accountIndex = accountIndex,
             )
         } else {
             val currencyNetwork = networkFactory.create(
                 blockchain = blockchain,
                 extraDerivationPath = null,
                 userWallet = userWallet,
+                accountIndex = accountIndex,
             ) ?: return null
 
             cryptoCurrencyFactory.createToken(
