@@ -13,6 +13,8 @@ internal sealed class YieldSupplyFeeUM {
     data class Content(
         val transactionDataList: ImmutableList<TransactionData.Uncompiled>,
         val feeFiatValue: TextReference,
+        // TODO move to FeePolicyUM
+        val estimatedFiatValue: TextReference,
         val tokenFeeFiatValue: TextReference,
         val maxNetworkFeeFiatValue: TextReference,
         val minTopUpFiatValue: TextReference,
