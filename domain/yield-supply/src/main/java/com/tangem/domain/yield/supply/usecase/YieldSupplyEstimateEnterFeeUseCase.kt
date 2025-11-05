@@ -6,11 +6,13 @@ import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyEnterCallData
 import com.tangem.domain.blockaid.BlockAidGasEstimate
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.yield.supply.fixFee
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.transaction.FeeRepository
 import com.tangem.domain.transaction.error.FeeErrorResolver
 import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.domain.yield.supply.INCREASE_GAS_LIMIT_FOR_SUPPLY
+import com.tangem.domain.yield.supply.fixFee
+import com.tangem.domain.yield.supply.increaseGasLimitBy
 import com.tangem.utils.extensions.isSingleItem
 import timber.log.Timber
 
@@ -73,7 +75,10 @@ class YieldSupplyEstimateEnterFeeUseCase(
         )
 
         return transactionDataList.zip(estimatedFees.estimatedGasList) { transaction, estimatedGas ->
-            transaction.copy(fee = fee.fixFee(cryptoCurrency, estimatedGas))
+            transaction.copy(
+                fee = fee.fixFee(cryptoCurrency, estimatedGas)
+                    .increaseGasLimitBy(INCREASE_GAS_LIMIT_FOR_SUPPLY),
+            )
         }
     }
 

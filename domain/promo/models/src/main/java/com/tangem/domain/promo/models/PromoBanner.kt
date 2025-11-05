@@ -28,4 +28,5 @@ data class PromoBanner(
 enum class PromoId {
     Referral,
     Sepa,
+    VisaPresale,
 }

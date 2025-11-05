@@ -2,8 +2,8 @@ package com.tangem.domain.wallets.usecase
 
 import com.tangem.common.card.FirmwareVersion
 import com.tangem.common.services.Result
-import com.tangem.domain.common.TwinCardNumber
-import com.tangem.domain.common.TwinsHelper
+import com.tangem.domain.card.common.TwinCardNumber
+import com.tangem.domain.card.common.TwinsHelper
 import com.tangem.domain.models.ArtworkModel
 import com.tangem.domain.wallets.models.Artwork
 import com.tangem.operations.attestation.ArtworkSize

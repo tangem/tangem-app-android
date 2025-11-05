@@ -59,7 +59,10 @@ internal class YieldSupplyStartEarningEntryModel @Inject constructor(
 
     override fun onFeePolicyClick() {
         analyticsEventHandler.send(
-            YieldSupplyAnalytics.ButtonFeePolicy,
+            YieldSupplyAnalytics.ButtonFeePolicy(
+                token = params.cryptoCurrency.symbol,
+                blockchain = params.cryptoCurrency.network.name,
+            ),
         )
         router.push(YieldSupplyStartEarningRoute.FeePolicy)
     }

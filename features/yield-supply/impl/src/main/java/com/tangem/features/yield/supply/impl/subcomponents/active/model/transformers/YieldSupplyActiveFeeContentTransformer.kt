@@ -1,5 +1,6 @@
 package com.tangem.features.yield.supply.impl.subcomponents.active.model.transformers
 
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
@@ -9,6 +10,7 @@ import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
 import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.impl.subcomponents.active.entity.YieldSupplyActiveContentUM
 import com.tangem.utils.transformer.Transformer
@@ -22,6 +24,7 @@ internal class YieldSupplyActiveFeeContentTransformer(
     private val appCurrency: AppCurrency,
     private val feeValue: BigDecimal,
     private val maxNetworkFee: BigDecimal,
+    private val analyticsHandler: AnalyticsEventHandler,
 ) : Transformer<YieldSupplyActiveContentUM> {
 
     override fun transform(prevState: YieldSupplyActiveContentUM): YieldSupplyActiveContentUM {
@@ -47,6 +50,15 @@ internal class YieldSupplyActiveFeeContentTransformer(
         )
 
         val isHighFee = feeValue > maxNetworkFee
+
+        if (isHighFee) {
+            analyticsHandler.send(
+                YieldSupplyAnalytics.NoticeHighNetworkFee(
+                    token = cryptoCurrency.symbol,
+                    blockchain = cryptoCurrency.network.name,
+                ),
+            )
+        }
 
         return prevState.copy(
             currentFee = stringReference(tokenFiatFeeValueText),
