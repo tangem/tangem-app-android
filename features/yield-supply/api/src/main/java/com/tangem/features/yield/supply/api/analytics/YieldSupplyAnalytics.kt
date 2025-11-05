@@ -77,12 +77,26 @@ sealed class YieldSupplyAnalytics(
         ),
     )
 
-    data object ButtonFeePolicy : YieldSupplyAnalytics(
+    data class ButtonFeePolicy(
+        val token: String,
+        val blockchain: String,
+    ) : YieldSupplyAnalytics(
         event = "Button - Fee Policy",
+        params = mapOf(
+            TOKEN_PARAM to token,
+            BLOCKCHAIN to blockchain,
+        ),
     )
 
-    data object EarnInProgressScreen : YieldSupplyAnalytics(
+    data class EarnInProgressScreen(
+        val token: String,
+        val blockchain: String,
+    ) : YieldSupplyAnalytics(
         event = "Earn In Progress Screen",
+        params = mapOf(
+            TOKEN_PARAM to token,
+            BLOCKCHAIN to blockchain,
+        ),
     )
 
     data object FundsEarned : YieldSupplyAnalytics(
@@ -162,10 +176,10 @@ sealed class YieldSupplyAnalytics(
         val errorDescription: String?,
     ) : YieldSupplyAnalytics(
         event = "Earn Errors",
-        params = buildMap {
-            ACTION to action
-            ERROR_DESCRIPTION to errorDescription.orEmpty()
-        },
+        params = mapOf(
+            ACTION to action.value,
+            ERROR_DESCRIPTION to errorDescription.orEmpty(),
+        ),
     )
 
     data object ApyChartViewed : YieldSupplyAnalytics(
@@ -184,6 +198,7 @@ sealed class YieldSupplyAnalytics(
     )
 
     enum class Action(val value: String) {
+        Start("Start"),
         Approve("Approve"),
         Stop("Stop"),
     }
