@@ -41,7 +41,10 @@ internal class DefaultPortfolioFetcher @AssistedInject constructor(
         get() = _mode
 
     init {
-        _mode.flatMapLatest(::combineUseCases)
+        _mode
+            // reset cache if mode(StateFlow) changed
+            .onEach { _data.resetReplayCache() }
+            .flatMapLatest(::combineUseCases)
             .flowOn(dispatchers.default)
             .onEach { _data.emit(it) }
             .launchIn(scope)

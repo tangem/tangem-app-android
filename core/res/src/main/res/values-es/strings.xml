@@ -194,6 +194,7 @@
   <string name="common_fee_selector_title">Velocidad y tarifa</string>
   <string name="common_finish">Finalizar</string>
   <string name="common_generate_addresses">Sincronizar direcciones</string>
+  <string name="common_get_started">Comenzar</string>
   <string name="common_go_to_provider">Ir al proveedor</string>
   <string name="common_go_to_token">Ir al token</string>
   <string name="common_got_it">Entendido</string>
@@ -984,6 +985,7 @@
   <string name="staking_details_account_fee_info">Una cuenta de staking es una cuenta especial donde se almacenan los tokens SOL de staking. Se crea cuando delegas sus tokens a un validador para participar en la validación de transacciones y ganar recompensas. Se cobra una pequeña tarifa por crear la cuenta de staking, que se devuelve una vez que se completa el staking.</string>
   <string name="staking_details_annual_percentage_rate">Porcentaje de rendimiento anual</string>
   <string name="staking_details_annual_percentage_rate_info">El porcentaje de rendimiento anual que podrá ganar como participante en el staking.</string>
+  <string name="staking_details_annual_percentage_yield_info">APY muestra el porcentaje de rendimiento anual del validador en función de su rendimiento</string>
   <string name="staking_details_apr">APR</string>
   <string name="staking_details_apy">APY</string>
   <string name="staking_details_auto_claiming_rewards_daily_text">Las recompensas se acumulan automáticamente en su saldo de staking diariamente.</string>
@@ -1160,6 +1162,7 @@
   <string name="token_button_unavailability_reason_pending_transaction_send">El envío de fondos estará disponible una vez que se complete(n) la(s) transacción(es) pendiente(s) en la red %s</string>
   <string name="token_button_unavailability_reason_sell_unavailable">Vender %s no es compatible con los proveedores actuales, pero estamos trabajando para agregar más opciones.</string>
   <string name="token_button_unavailability_reason_staking_unavailable">El staking de %s no es compatible con los proveedores actuales, pero estamos trabajando para agregar más opciones.</string>
+  <string name="token_button_unavailability_reason_yield_supply_approval">Se ha revocado la aprobación. Sus fondos permanecen en modo de rendimiento. Para realizar acciones, vuelva al modo de rendimiento y otorgue el permiso nuevamente.</string>
   <string name="token_details_generate_xpub">Generar XPUB</string>
   <string name="token_details_hide_alert_hide">Ocultar</string>
   <string name="token_details_hide_alert_message">Está a punto de ocultar este token de la pantalla principal. Puede volver a agregarlo en cualquier momento a través de la página de gestión de tokens.</string>
@@ -1549,6 +1552,7 @@
   <string name="yield_module_stop_earning_sheet_description">Al desactivar esto, retirará sus fondos de Aave a %s en su billetera y dejará de ganar recompensas.</string>
   <string name="yield_module_stop_earning_sheet_fee_note">La comisión de red se deducirá del importe que retire.</string>
   <string name="yield_module_stop_earning_sheet_title">Desactivar el modo de rendimiento</string>
+  <string name="yield_module_supply">Suministrar</string>
   <string name="yield_module_supply_apr">Suministro APY</string>
   <string name="yield_module_token_details_earn_notification_apy">APY</string>
   <string name="yield_module_token_details_earn_notification_description">Los intereses se devengan automáticamente</string>
@@ -1560,5 +1564,6 @@
   <string name="yield_module_unable_to_cover_fee_description">Deposite algo de %1$s %2$s para cubrir la tarifa de red para las transacciones</string>
   <string name="yield_module_unable_to_cover_fee_title">No se puede cubrir la tarifa %s</string>
   <string name="yield_module_unavailable_subtitle">El servicio de intereses no está disponible en este momento. Vuelva a intentarlo más tarde.</string>
-  <string name="yield_module_unavailable_title">Ganancias no disponibles</string>
+  <string name="yield_module_unavailable_title">Modo de rendimiento no disponible</string>
+  <string name="yield_supply_chart_loading_error">No se puede cargar el gráfico...</string>
 </resources>
