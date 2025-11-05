@@ -64,6 +64,7 @@ class SendFeedbackEmailUseCase(
             is FeedbackEmailType.PreActivatedWallet,
             is FeedbackEmailType.CardAttestationFailed,
             is FeedbackEmailType.Visa.Dispute,
+            is FeedbackEmailType.Visa.DisputeV2,
             -> this
             is FeedbackEmailType.DirectUserRequest,
             is FeedbackEmailType.RateCanBeBetter,

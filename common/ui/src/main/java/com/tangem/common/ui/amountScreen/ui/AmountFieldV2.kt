@@ -25,6 +25,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDirection
@@ -47,6 +48,7 @@ import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.SendScreenTestTags
 import com.tangem.core.ui.utils.rememberDecimalFormat
 import kotlinx.coroutines.delay
 
@@ -191,7 +193,8 @@ private fun BoxScope.AmountFieldCurrencyInfo(amountUM: AmountState.Data, onCurre
                 .size(16.dp)
                 .graphicsLayer {
                     rotationY = iconRotateState
-                },
+                }
+                .testTag(SendScreenTestTags.EXCHANGE_ICON),
         )
         AmountFieldCurrencyIcon(
             amountUM = amountUM,
@@ -227,6 +230,7 @@ private fun AmountFieldCurrencyIcon(amountUM: AmountState.Data) {
                 style = TangemTheme.typography.caption2.copy(textDirection = TextDirection.ContentOrLtr),
                 color = TangemTheme.colors.text.primary1,
                 textAlign = TextAlign.Center,
+                modifier = Modifier.testTag(SendScreenTestTags.EQUIVALENT_INPUT_AMOUNT),
             )
             if (isFiatValue) {
                 CurrencyIcon(

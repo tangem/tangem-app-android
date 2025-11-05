@@ -6,8 +6,11 @@ internal interface OnrampV2Intents {
     fun onAmountValueChanged(value: String)
     fun openSettings()
     fun openCurrenciesList()
-    fun onBuyClick(quote: OnrampProviderWithQuote.Data, onrampOfferAdvantagesUM: OnrampOfferAdvantagesUM)
+    fun onBuyClick(
+        quote: OnrampProviderWithQuote.Data,
+        onrampOfferAdvantagesUM: OnrampOfferAdvantagesUM,
+        categoryUM: OnrampOfferCategoryUM,
+    )
     fun openProviders()
     fun onRefresh()
-    fun onContinueClick()
 }
