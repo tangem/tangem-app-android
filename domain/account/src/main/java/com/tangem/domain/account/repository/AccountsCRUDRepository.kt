@@ -67,6 +67,13 @@ interface AccountsCRUDRepository {
      *
      * @param accountList the list of accounts to be saved.
      */
+    suspend fun saveAccountsLocally(accountList: AccountList)
+
+    /**
+     * Saves a list of accounts to the repository
+     *
+     * @param accountList the list of accounts to be saved.
+     */
     suspend fun saveAccounts(accountList: AccountList)
 
     /**
