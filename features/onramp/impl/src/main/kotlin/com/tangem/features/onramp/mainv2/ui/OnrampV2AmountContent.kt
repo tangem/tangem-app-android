@@ -92,7 +92,11 @@ private fun OnrampAmountField(amountField: AmountFieldModel, currencyCode: Strin
             symbol = currencyCode,
             currencyCode = currencyCode,
             decimalFormat = decimalFormat,
-            symbolColor = TangemTheme.colors.text.disabled,
+            symbolColor = if (amountField.fiatValue.isBlank()) {
+                TangemTheme.colors.text.disabled
+            } else {
+                TangemTheme.colors.text.primary1
+            },
         ),
         onValueChange = amountField.onValueChange,
         keyboardOptions = amountField.keyboardOptions,
