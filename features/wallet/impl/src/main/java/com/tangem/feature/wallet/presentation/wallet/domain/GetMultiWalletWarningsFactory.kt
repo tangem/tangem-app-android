@@ -97,7 +97,7 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
             isReadyToShowRateAppUseCase(),
             isNeedToBackupUseCase(userWallet.walletId),
             seedPhraseNotificationUseCase(userWalletId = userWallet.walletId),
-            shouldShowPromoWalletUseCase(userWalletId = userWallet.walletId, promoId = PromoId.Referral),
+            shouldShowPromoWalletUseCase(userWalletId = userWallet.walletId, promoId = PromoId.VisaPresale),
             shouldShowPromoWalletUseCase(userWalletId = userWallet.walletId, promoId = PromoId.Sepa),
             notificationsRepository.getShouldShowNotification(NotificationId.EnablePushesReminderNotification.key),
         ) { array -> array }
@@ -109,7 +109,7 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
                 val isReadyToShowRating = array[1] as Boolean
                 val isNeedToBackup = array[2] as Boolean
                 val seedPhraseIssueStatus = array[3] as SeedPhraseNotificationsStatus
-                val shouldShowReferralPromo = array[4] as Boolean
+                val shouldShowVisaPromo = array[4] as Boolean
                 val shouldShowSepaBanner = array[5] as Boolean
                 val shouldShowEnablePushesReminderNotification = array[6] as Boolean
 
@@ -120,7 +120,7 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
 
                     addFinishWalletActivationNotification(userWallet, totalFiatBalance, clickIntents)
 
-                    addReferralPromoNotification(cardTypesResolver, clickIntents, shouldShowReferralPromo)
+                    addVisaPresalePromoNotification(clickIntents, shouldShowVisaPromo)
 
                     addSepaPromoNotification(userWallet, clickIntents, shouldShowSepaBanner)
 
@@ -274,17 +274,16 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
             .map(CryptoCurrencyStatus::currency)
     }
 
-    private fun MutableList<WalletNotification>.addReferralPromoNotification(
-        cardTypesResolver: CardTypesResolver?,
+    private fun MutableList<WalletNotification>.addVisaPresalePromoNotification(
         clickIntents: WalletClickIntents,
         shouldShowPromo: Boolean,
     ) {
         addIf(
-            element = WalletNotification.ReferralPromo(
-                onCloseClick = { clickIntents.onClosePromoClick(promoId = PromoId.Referral) },
-                onClick = { clickIntents.onPromoClick(promoId = PromoId.Referral) },
+            element = WalletNotification.VisaPresalePromo(
+                onCloseClick = { clickIntents.onClosePromoClick(promoId = PromoId.VisaPresale) },
+                onClick = { clickIntents.onPromoClick(promoId = PromoId.VisaPresale) },
             ),
-            condition = shouldShowPromo && (cardTypesResolver == null || cardTypesResolver.isTangemWallet()),
+            condition = shouldShowPromo,
         )
     }
 
