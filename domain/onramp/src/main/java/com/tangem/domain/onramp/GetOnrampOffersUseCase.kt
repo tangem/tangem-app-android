@@ -199,9 +199,9 @@ class GetOnrampOffersUseCase(
     ): List<OnrampOffer> {
         return buildList {
             if (isSameOffer(bestRateOffer, fastestOffer)) {
-                bestRateOffer?.let { offer ->
+                if (bestRateOffer != null && !isSameOffer(bestRateOffer, recentOffer)) {
                     add(
-                        offer.copy(
+                        bestRateOffer.copy(
                             advantages = OnrampOfferAdvantages.GreatRate,
                             rateDif = null,
                         ),
