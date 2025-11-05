@@ -296,14 +296,6 @@ internal object TokensDomainModule {
 
     @Provides
     @Singleton
-    fun provideRunPolkadotAccountHealthCheckUseCase(
-        repository: PolkadotAccountHealthCheckRepository,
-    ): RunPolkadotAccountHealthCheckUseCase {
-        return RunPolkadotAccountHealthCheckUseCase(repository)
-    }
-
-    @Provides
-    @Singleton
     fun provideGetNetworkStatusesUseCase(networksRepository: NetworksRepository): GetNetworkAddressesUseCase {
         return GetNetworkAddressesUseCase(
             networksRepository = networksRepository,
