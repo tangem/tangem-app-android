@@ -13,6 +13,7 @@ import javax.inject.Inject
 @ModelScoped
 internal class WalletContentLoaderFactory @Inject constructor(
     private val multiWalletContentLoaderFactory: MultiWalletContentLoaderFactory,
+    private val multiWalletContentLoaderV2Factory: MultiWalletContentLoaderV2.Factory,
     private val singleWalletWithTokenContentLoaderFactory: SingleWalletWithTokenContentLoaderFactory,
     private val singleWalletWithTokenContentLoaderV2Factory: SingleWalletWithTokenContentLoaderV2.Factory,
     private val accountsFeatureToggles: AccountsFeatureToggles,
@@ -28,7 +29,11 @@ internal class WalletContentLoaderFactory @Inject constructor(
     ): WalletContentLoader? {
         return when {
             userWallet.isMultiCurrency -> {
-                multiWalletContentLoaderFactory.create(userWallet, clickIntents)
+                if (accountsFeatureToggles.isFeatureEnabled) {
+                    multiWalletContentLoaderV2Factory.create(userWallet)
+                } else {
+                    multiWalletContentLoaderFactory.create(userWallet, clickIntents)
+                }
             }
             userWallet is UserWallet.Cold && userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken() -> {
                 if (accountsFeatureToggles.isFeatureEnabled) {
