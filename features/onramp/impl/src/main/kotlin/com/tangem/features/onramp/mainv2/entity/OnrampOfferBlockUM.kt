@@ -34,8 +34,16 @@ internal enum class OnrampOfferCategoryUM {
     RecentlyUsed, Recommended
 }
 
-internal enum class OnrampOfferAdvantagesUM {
-    Default, BestRate, GreatRate, Fastest, Unavailable;
+internal sealed interface OnrampOfferAdvantagesUM {
+    data object Default : OnrampOfferAdvantagesUM
+    data object BestRate : OnrampOfferAdvantagesUM
+    data object GreatRate : OnrampOfferAdvantagesUM
+    data object Fastest : OnrampOfferAdvantagesUM
+
+    sealed interface Unavailable : OnrampOfferAdvantagesUM {
+        data object MinAmount : Unavailable
+        data object MaxAmount : Unavailable
+    }
 
     fun toAnalyticsEvent(
         cryptoCurrencySymbol: String,
@@ -55,7 +63,7 @@ internal enum class OnrampOfferAdvantagesUM {
             )
             Default,
             BestRate,
-            Unavailable,
+            is Unavailable,
             -> null
         }
     }
