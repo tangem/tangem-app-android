@@ -1,5 +1,6 @@
 package com.tangem.features.walletconnect.connections.entity
 
+import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import kotlinx.collections.immutable.ImmutableList
 
@@ -10,7 +11,7 @@ data class WcConnectedAppInfoUM(
     val verifiedDAppState: VerifiedDAppState,
     val notification: WcAppInfoSecurityNotification? = null,
     val appSubtitle: String,
-    val walletName: String,
+    val portfolioName: AccountTitleUM?,
     val connectingTime: Long?,
     val networks: ImmutableList<WcNetworkInfoItem.Required>,
     val disconnectButtonConfig: WcPrimaryButtonConfig,
