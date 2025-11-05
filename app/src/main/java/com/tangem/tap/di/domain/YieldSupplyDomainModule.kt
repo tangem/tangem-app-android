@@ -169,8 +169,8 @@ internal object YieldSupplyDomainModule {
         yieldSupplyRepository: YieldSupplyRepository,
         quotesRepository: QuotesRepository,
         currenciesRepository: CurrenciesRepository,
-    ): YieldSupplyGetTokenMaxFeeUseCase {
-        return YieldSupplyGetTokenMaxFeeUseCase(
+    ): YieldSupplyGetMaxFeeUseCase {
+        return YieldSupplyGetMaxFeeUseCase(
             yieldSupplyRepository = yieldSupplyRepository,
             quotesRepository = quotesRepository,
             currenciesRepository = currenciesRepository,
