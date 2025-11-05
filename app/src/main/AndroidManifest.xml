@@ -310,4 +310,8 @@
             </intent-filter>
         </service>
     </application>
+    <queries>
+        <!-- Needed from Android 11 to open Google Wallet for payment with Visa card -->
+       <package android:name="com.google.android.apps.walletnfcrel" />
+   </queries>
 </manifest>

@@ -5,6 +5,7 @@ import com.tangem.domain.markets.FilterAvailableNetworksForWalletUseCase
 import com.tangem.domain.markets.GetTokenMarketCryptoCurrency
 import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.domain.markets.TokenMarketParams
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -28,11 +29,19 @@ internal class AvailableToAddDataConverter @Inject constructor(
         marketParams: TokenMarketParams,
     ): AvailableToAddData {
         suspend fun AccountStatus.getAvailableToAddAccount(wallet: UserWallet): AvailableToAddAccount {
-            val addedNetworks = availableNetworks
-                .mapNotNull { createCryptoCurrency(wallet, it, marketParams) }
-                .mapNotNull { getAccountCurrencyStatusUseCase.invokeSync(wallet.walletId, it) }
-                .mapNotNull { it.getOrNull()?.status?.currency?.network }
-                .toSet()
+            val currencies = availableNetworks
+                .mapNotNull { createCryptoCurrency(wallet, it, marketParams, this.account) }
+
+            val addedNetworks = getAccountCurrencyStatusUseCase.invokeSync(wallet.walletId, currencies)
+                .fold(
+                    ifEmpty = { emptySet() },
+                    ifSome = { map ->
+                        map.values.flatMapTo(hashSetOf()) { statuses ->
+                            statuses.map { it.currency.network }
+                        }
+                    },
+                )
+
             return AvailableToAddAccount(
                 account = this,
                 availableNetworks = availableNetworks,
@@ -60,7 +69,7 @@ internal class AvailableToAddDataConverter @Inject constructor(
 
         val availableToAddWallets: Map<UserWalletId, AvailableToAddWallet> = balances
             .map {
-                val (wallet, balance) = it
+                val (wallet, _) = it
                 val availableToAddWallet = getAvailableToAddWallet(it)
                 wallet.walletId to availableToAddWallet
             }
@@ -82,9 +91,16 @@ internal class AvailableToAddDataConverter @Inject constructor(
         userWallet: UserWallet,
         network: TokenMarketInfo.Network,
         marketParams: TokenMarketParams,
-    ): CryptoCurrency? = getTokenMarketCryptoCurrency(
-        userWalletId = userWallet.walletId,
-        tokenMarketParams = marketParams,
-        network = network,
-    )
+        account: Account,
+    ): CryptoCurrency? {
+        val derivationIndex = when (account) {
+            is Account.CryptoPortfolio -> account.derivationIndex
+        }
+        return getTokenMarketCryptoCurrency(
+            userWalletId = userWallet.walletId,
+            tokenMarketParams = marketParams,
+            network = network,
+            accountIndex = derivationIndex,
+        )
+    }
 }
