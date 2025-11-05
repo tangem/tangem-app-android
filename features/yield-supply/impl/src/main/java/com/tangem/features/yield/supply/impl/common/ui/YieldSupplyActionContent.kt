@@ -149,6 +149,7 @@ private class YieldSupplyActionContentPreviewProvider : PreviewParameterProvider
                     maxNetworkFeeFiatValue = stringReference("$8.50"),
                     minTopUpFiatValue = stringReference("$50"),
                     feeNoteValue = TextReference.EMPTY,
+                    estimatedFiatValue = TextReference.EMPTY,
                 ),
                 isPrimaryButtonEnabled = false,
                 isTransactionSending = false,
