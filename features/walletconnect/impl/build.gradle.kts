@@ -12,6 +12,7 @@ android {
 }
 
 dependencies {
+    implementation(projects.features.account.api)
     implementation(projects.features.wallet.api)
     implementation(projects.features.walletconnect.api)
     implementation(projects.features.sendV2.api)
@@ -28,6 +29,7 @@ dependencies {
     implementation(projects.core.ui)
 
     /** Domain models */
+    implementation(projects.domain.account)
     implementation(projects.domain.appCurrency.models)
     implementation(projects.domain.balanceHiding.models)
     implementation(projects.domain.blockaid.models)
