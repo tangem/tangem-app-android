@@ -1,12 +1,14 @@
 package com.tangem.features.onramp.hottokens.portfolio.model
 
 import arrow.core.getOrElse
+import arrow.core.left
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
-import com.tangem.domain.wallets.usecase.DerivePublicKeysUseCase
-import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
+import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
+import com.tangem.domain.wallets.usecase.DerivePublicKeysUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.onramp.hottokens.portfolio.OnrampAddToPortfolioComponent
 import com.tangem.features.onramp.hottokens.portfolio.entity.OnrampAddToPortfolioUM
@@ -35,6 +37,7 @@ internal class OnrampAddToPortfolioModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val derivePublicKeysUseCase: DerivePublicKeysUseCase,
     private val addCryptoCurrenciesUseCase: AddCryptoCurrenciesUseCase,
+    private val accountsFeatureToggles: AccountsFeatureToggles,
     private val getUserWalletUseCase: GetUserWalletUseCase,
 ) : Model() {
 
@@ -73,16 +76,25 @@ internal class OnrampAddToPortfolioModel @Inject constructor(
         modelScope.launch {
             changeAddButtonProgressStatus(isProgress = true)
 
-            derivePublicKeysUseCase(params.userWalletId, listOfNotNull(params.cryptoCurrency)).getOrElse {
-                Timber.e("Failed to derive public keys: $it")
+            if (accountsFeatureToggles.isFeatureEnabled) {
+                // saveCryptoCurrenciesUseCase(
+                //     accountId = params.accountId,
+                //     add = params.cryptoCurrency,
+                // )
+                // TODO account
+                IllegalStateException("Not implemented yet").left()
+            } else {
+                derivePublicKeysUseCase(params.userWalletId, listOfNotNull(params.cryptoCurrency)).getOrElse {
+                    Timber.e("Failed to derive public keys: $it")
 
-                changeAddButtonProgressStatus(isProgress = false)
+                    changeAddButtonProgressStatus(isProgress = false)
+                }
+
+                addCryptoCurrenciesUseCase(
+                    userWalletId = params.userWalletId,
+                    currency = params.cryptoCurrency,
+                )
             }
-
-            addCryptoCurrenciesUseCase(
-                userWalletId = params.userWalletId,
-                currency = params.cryptoCurrency,
-            )
                 .onRight { params.onSuccessAdding(params.cryptoCurrency.id) }
                 .onLeft { changeAddButtonProgressStatus(isProgress = false) }
         }
