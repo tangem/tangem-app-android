@@ -172,6 +172,7 @@
   <string name="common_fee_selector_title">Vitesse et frais</string>
   <string name="common_finish">Terminer</string>
   <string name="common_generate_addresses">Synchroniser les adresses</string>
+  <string name="common_get_started">Commencer</string>
   <string name="common_go_to_provider">Aller au fournisseur</string>
   <string name="common_go_to_token">Aller au jeton</string>
   <string name="common_got_it">Compris</string>
@@ -372,6 +373,7 @@
   <string name="express_provider">Fournisseur</string>
   <string name="express_provider_best_rate">Meilleur taux</string>
   <string name="express_provider_fca_warning_list">Liste d’avertissement de la FCA</string>
+  <string name="express_provider_great_rate">Meilleur choix</string>
   <string name="express_provider_max_amount">Disponible jusqu\'à %s</string>
   <string name="express_provider_min_amount">Disponible à partir de %s</string>
   <string name="express_provider_not_available">Indisponible pour cette paire</string>
@@ -753,6 +755,7 @@
   <string name="organize_tokens_sort_by_balance">Par solde</string>
   <string name="organize_tokens_title">Organiser les jetons</string>
   <string name="organize_tokens_ungroup">Dégrouper</string>
+  <string name="provider_name_support">Assistance %s</string>
   <string name="push_notifications_more_info">Plus d\'infos</string>
   <string name="push_notifications_permission_alert_description">Vous pouvez activer les notifications pour Tangem dans les paramètres.</string>
   <string name="push_notifications_permission_alert_negative_button">Activer plus tard</string>
@@ -947,6 +950,7 @@
   <string name="settings_forget_wallet_footer">Cela supprimera le portefeuille de l\'application. Le portefeuille lui-même peut être ajouté à nouveau.</string>
   <string name="settings_wallet_name_title">Nom</string>
   <string name="stake_token_description">Faites travailler votre jeton pour vous</string>
+  <string name="staking_account_initialization_message">Pour commencer à staker, votre compte TON doit être activé avec une transaction de 1 TON. Les fonds restent sur votre compte, car cette étape sert uniquement à l\'activer pour le staking.</string>
   <string name="staking_amount_requirement_error">Le montant à staker doit être au moins %s</string>
   <string name="staking_amount_tron_integer_error">Le montant du staking sera arrondi à %1$s TRX en raison des règles du réseau.</string>
   <string name="staking_amount_tron_integer_error_unstaking">Le montant d\'annulation du staking sera arrondi à %1$s TRX en raison des règles du réseau.</string>
@@ -1011,6 +1015,7 @@
   <string name="staking_notification_restake_rewards_text">Réinvestissez vos récompenses gagnées dans le montant que vous avez staké, augmentant ainsi vos gains potentiels.</string>
   <string name="staking_notification_restake_text">L\'option de restaker vous permet de déplacer vos fonds d\'un validateur à un autre sans avoir besoin de les déstaker.</string>
   <string name="staking_notification_stake_entire_balance_text">Vous êtes sur le point de staker l\'intégralité de votre solde. Nous vous recommandons de laisser un petit montant pour couvrir les frais de réseau pour unstaking ou la réclamation des récompenses.</string>
+  <string name="staking_notification_ton_account_initialization_message">Pour commencer le staking, vous devez d’abord activer votre compte TON</string>
   <string name="staking_notification_ton_activate_account">Pour commencer à staker TON, effectuez d\'abord une transaction sortante de n\'importe quel montant — cela activera votre portefeuille.</string>
   <string name="staking_notification_ton_extra_reserve_info">Jusqu\'à 0,2 TON peuvent être requis en plus des frais de réseau pour terminer la transaction. Tout montant non utilisé sera remboursé.</string>
   <string name="staking_notification_ton_extra_reserve_is_required">0,2 TON requis pour effectuer cette opération, en plus des frais de réseau. Veuillez recharger votre solde.</string>
@@ -1469,7 +1474,7 @@
   <string name="yield_module_balance_info_sheet_subtitle">Vos fonds sont actuellement affectés au protocole Aave, mais vous pouvez les gérer à tout moment.</string>
   <string name="yield_module_balance_info_sheet_title">Vos %s sont déposés dans Aave.</string>
   <string name="yield_module_chart_loading_error">Impossible de charger le graphique...</string>
-  <string name="yield_module_deposit_error_notification_title">Le montant reçu, %1$s %2$s, n\'a pas été fourni à Aave.</string>
+  <string name="yield_module_deposit_error_notification_title">L’approvisionnement de %1$s %2$s sur Aave est en attente.</string>
   <string name="yield_module_earn_badge">APY %1$s%%</string>
   <string name="yield_module_earn_sheet_available_title">Disponible</string>
   <string name="yield_module_earn_sheet_current_apy_title">APY actuel</string>
@@ -1487,7 +1492,7 @@
   <string name="yield_module_fee_policy_sheet_fee_note">Des frais de réseau d\'environ %1$s (%2$s) seront déduits de chaque recharge future, sans dépasser votre limite de %3$s (%4$s).</string>
   <string name="yield_module_fee_policy_sheet_max_fee_note">Si les frais de réseau dépassent le montant maximal, la transaction ne sera pas effectuée tant qu\'ils n\'auront pas diminué. Vous pouvez modifier cette limite ultérieurement.</string>
   <string name="yield_module_fee_policy_sheet_max_fee_title">Frais maximaux</string>
-  <string name="yield_module_fee_policy_sheet_min_amount_note">Le montant minimum est calculé à partir des frais de réseau actuels afin de garantir qu\'il ne dépasse pas 4 %%, ce qui donne un minimum de %1$s (%2$s).</string>
+  <string name="yield_module_fee_policy_sheet_min_amount_note">Le montant minimum est calculé en fonction des frais réseau actuels afin de ne pas dépasser 4%% du montant du rechargement, ce qui donne un minimum de %1$s (%2$s).</string>
   <string name="yield_module_fee_policy_sheet_min_amount_title">Recharge minimale</string>
   <string name="yield_module_fee_policy_sheet_title">Politique tarifaire</string>
   <string name="yield_module_fee_policy_tangem_service_fee_title">Tangem prélève également des frais de service de 15% sur les revenus générés.</string>
@@ -1520,9 +1525,10 @@
   <string name="yield_module_start_earning_sheet_next_deposits">Vos prochains dépôts seront automatiquement transférés vers Aave.</string>
   <string name="yield_module_status_active">Actif</string>
   <string name="yield_module_status_paused">En pause</string>
-  <string name="yield_module_stop_earning">Désactiver le mode rendement</string>
+  <string name="yield_module_stop_earning">Désactivation du mode de rendement</string>
   <string name="yield_module_stop_earning_sheet_description">En désactivant cela, vos fonds seront retirés d\'Aave vers %s dans votre portefeuille et vous ne gagnerez plus de récompenses.</string>
   <string name="yield_module_stop_earning_sheet_fee_note">Les frais de réseau seront déduits du montant que vous retirez.</string>
+  <string name="yield_module_stop_earning_sheet_title">Désactiver le mode rendement</string>
   <string name="yield_module_supply_apr">Rendement annuel brut (APY)</string>
   <string name="yield_module_token_details_earn_notification_apy">APY</string>
   <string name="yield_module_token_details_earn_notification_description">Les intérêts sont cumulés automatiquement.</string>

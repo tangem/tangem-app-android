@@ -2,7 +2,9 @@ package com.tangem.datasource.utils
 
 import android.os.Build
 import com.tangem.datasource.api.common.AuthProvider
+import com.tangem.datasource.api.common.config.ApiEnvironment
 import com.tangem.datasource.utils.RequestHeader.CacheControlHeader.checkHeaderValueOrEmpty
+import com.tangem.utils.Provider
 import com.tangem.utils.ProviderSuspend
 import com.tangem.utils.info.AppInfoProvider
 import com.tangem.utils.version.AppVersionProvider
@@ -38,6 +40,13 @@ sealed class RequestHeader(vararg pairs: Pair<String, ProviderSuspend<String>>) 
             TimeZone.getDefault().getDisplayName(false, TimeZone.SHORT).checkHeaderValueOrEmpty()
         },
         "device" to ProviderSuspend { "${Build.MANUFACTURER} ${Build.MODEL}".checkHeaderValueOrEmpty() },
+    )
+
+    /**
+     * Use ONLY for tangemApi (not express or yields)
+     */
+    class TangemApiKeyHeader(authProvider: AuthProvider, apiEnvironment: Provider<ApiEnvironment>) : RequestHeader(
+        "api-key" to authProvider.getApiKey(apiEnvironment),
     )
 
     /**

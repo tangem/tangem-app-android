@@ -4,7 +4,6 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.promo.GetStoryContentUseCase
 import com.tangem.domain.staking.usecase.StakingApyFlowUseCase
-import com.tangem.domain.tokens.RunPolkadotAccountHealthCheckUseCase
 import com.tangem.domain.wallets.usecase.ShouldSaveUserWalletsUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyApyFlowUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
@@ -31,7 +30,6 @@ internal class SingleWalletWithTokenContentLoader(
     private val getMultiWalletWarningsFactory: GetMultiWalletWarningsFactory,
     private val tokenListStore: MultiWalletTokenListStore,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
-    private val runPolkadotAccountHealthCheckUseCase: RunPolkadotAccountHealthCheckUseCase,
     private val shouldSaveUserWalletsUseCase: ShouldSaveUserWalletsUseCase,
     private val getStoryContentUseCase: GetStoryContentUseCase,
     private val accountDependencies: AccountDependencies,
@@ -49,7 +47,6 @@ internal class SingleWalletWithTokenContentLoader(
                 walletWithFundsChecker = walletWithFundsChecker,
                 tokenListStore = tokenListStore,
                 getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
-                runPolkadotAccountHealthCheckUseCase = runPolkadotAccountHealthCheckUseCase,
                 accountDependencies = accountDependencies,
                 yieldSupplyApyFlowUseCase = yieldSupplyApyFlowUseCase,
                 stakingApyFlowUseCase = stakingApyFlowUseCase,
