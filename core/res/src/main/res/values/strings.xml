@@ -969,6 +969,7 @@
   </plurals>
   <string name="onramp_timing_minutes">%s min</string>
   <string name="onramp_title_available_from">Available from</string>
+  <string name="onramp_title_available_up_to">Available up to</string>
   <string name="onramp_title_you_get">You get</string>
   <string name="onramp_tos_external_providers">Service is provided by an external provider. \nTangem is not responsible.</string>
   <string name="onramp_transaction_status_footer_text">You can close this screen and check the transaction status on the token details screen.</string>
@@ -1370,6 +1371,8 @@
   <string name="tangem_pay_status_pending">Pending</string>
   <string name="tangem_pay_transaction_declined_notification_text">The bank rejected this transaction request.</string>
   <string name="tangem_pay_transaction_fee_notification_text">This fee goes to cover the cost of handling your transfer.</string>
+  <string name="tangem_pay_unfreeze_card_alert_body">Keep using your money. You can freeze anytime.</string>
+  <string name="tangem_pay_unfreeze_card_alert_title">Unfreeze your card?</string>
   <string name="tangem_pay_withdrawal">Withdrawal</string>
   <string name="tangempay_card_details_add_funds">Add funds</string>
   <string name="tangempay_card_details_add_funds_subtitle">Top-up options</string>
@@ -1394,6 +1397,7 @@
   <string name="tangempay_card_details_reveal_text">Reveal</string>
   <string name="tangempay_card_details_swap_description">Swap any asset in your portfolio for card</string>
   <string name="tangempay_card_details_title">Card details</string>
+  <string name="tangempay_card_details_unfreeze_card">Unfreeze Card</string>
   <string name="tangempay_issue_card_notification_title">Create account and issue a card</string>
   <string name="tangempay_kyc_card_ready_notification_title">Tangem Pay</string>
   <string name="tangempay_kyc_in_progress_notification_button">View Status</string>

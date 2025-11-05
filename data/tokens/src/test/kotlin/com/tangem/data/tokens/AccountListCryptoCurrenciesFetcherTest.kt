@@ -1,10 +1,13 @@
 package com.tangem.data.tokens
 
 import arrow.core.left
+import arrow.core.right
 import com.tangem.common.test.utils.assertEither
 import com.tangem.common.test.utils.assertEitherRight
 import com.tangem.data.common.account.WalletAccountsFetcher
+import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.datasource.local.userwallet.UserWalletsStore
+import com.tangem.domain.express.ExpressServiceFetcher
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isMultiCurrency
@@ -21,11 +24,13 @@ internal class AccountListCryptoCurrenciesFetcherTest {
 
     private val userWalletsStore: UserWalletsStore = mockk(relaxUnitFun = true)
     private val walletAccountsFetcher: WalletAccountsFetcher = mockk(relaxUnitFun = true)
+    private val expressServiceFetcher: ExpressServiceFetcher = mockk()
     private val dispatchers = TestingCoroutineDispatcherProvider()
 
     private val fetcher = AccountListCryptoCurrenciesFetcher(
         userWalletsStore = userWalletsStore,
         walletAccountsFetcher = walletAccountsFetcher,
+        expressServiceFetcher = expressServiceFetcher,
         dispatchers = dispatchers,
     )
 
@@ -59,8 +64,11 @@ internal class AccountListCryptoCurrenciesFetcherTest {
         // Arrange
         val params = MultiWalletCryptoCurrenciesFetcher.Params(userWalletId = userWalletId)
         val mockUserWallet = mockk<UserWallet> { every { isMultiCurrency } returns true }
+        val response = mockk<GetWalletAccountsResponse>(relaxed = true)
 
         every { userWalletsStore.getSyncStrict(key = params.userWalletId) } returns mockUserWallet
+        coEvery { walletAccountsFetcher.fetch(userWalletId = params.userWalletId) } returns response
+        coEvery { expressServiceFetcher.fetch(userWallet = mockUserWallet, assetIds = emptySet()) } returns Unit.right()
 
         // Act
         val actual = fetcher(params)
@@ -71,6 +79,7 @@ internal class AccountListCryptoCurrenciesFetcherTest {
         coVerify(ordering = Ordering.SEQUENCE) {
             userWalletsStore.getSyncStrict(key = params.userWalletId)
             walletAccountsFetcher.fetch(userWalletId = params.userWalletId)
+            expressServiceFetcher.fetch(userWallet = mockUserWallet, assetIds = emptySet())
         }
     }
 

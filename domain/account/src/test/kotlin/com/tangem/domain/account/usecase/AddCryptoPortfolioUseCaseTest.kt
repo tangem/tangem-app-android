@@ -69,6 +69,7 @@ class AddCryptoPortfolioUseCaseTest {
         coVerifySequence {
             singleAccountListFetcher(SingleAccountListFetcher.Params(userWalletId))
             crudRepository.getAccountListSync(userWalletId)
+            crudRepository.checkDefaultAccountName(accountList, newAccount.accountName)
             crudRepository.saveAccounts(updatedAccountList)
             mainAccountTokensMigration.migrate(userWalletId, newAccount.derivationIndex)
         }
@@ -177,6 +178,7 @@ class AddCryptoPortfolioUseCaseTest {
         coVerifySequence {
             singleAccountListFetcher(SingleAccountListFetcher.Params(userWalletId))
             crudRepository.getAccountListSync(userWalletId)
+            crudRepository.checkDefaultAccountName(accountList, newAccount.accountName)
         }
 
         coVerify(inverse = true) {
@@ -249,6 +251,7 @@ class AddCryptoPortfolioUseCaseTest {
         coVerifySequence {
             singleAccountListFetcher(SingleAccountListFetcher.Params(userWalletId))
             crudRepository.getAccountListSync(userWalletId)
+            crudRepository.checkDefaultAccountName(accountList, newAccount.accountName)
             crudRepository.saveAccounts(updatedAccountList)
         }
 
@@ -288,6 +291,7 @@ class AddCryptoPortfolioUseCaseTest {
         coVerifySequence {
             singleAccountListFetcher(SingleAccountListFetcher.Params(userWalletId))
             crudRepository.getAccountListSync(userWalletId)
+            crudRepository.checkDefaultAccountName(accountList, newAccount.accountName)
             crudRepository.saveAccounts(updatedAccountList)
             mainAccountTokensMigration.migrate(userWalletId, newAccount.derivationIndex)
         }
