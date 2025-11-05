@@ -7,7 +7,6 @@ import com.tangem.domain.staking.usecase.StakingApyFlowUseCase
 import com.tangem.domain.wallets.usecase.ShouldSaveUserWalletsUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyApyFlowUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
-import com.tangem.feature.wallet.presentation.account.AccountDependencies
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.TokenListAnalyticsSender
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.WalletWarningsAnalyticsSender
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.WalletWarningsSingleEventSender
@@ -32,7 +31,6 @@ internal class SingleWalletWithTokenContentLoader(
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val shouldSaveUserWalletsUseCase: ShouldSaveUserWalletsUseCase,
     private val getStoryContentUseCase: GetStoryContentUseCase,
-    private val accountDependencies: AccountDependencies,
     private val yieldSupplyApyFlowUseCase: YieldSupplyApyFlowUseCase,
     private val stakingApyFlowUseCase: StakingApyFlowUseCase,
 ) : WalletContentLoader(id = userWallet.walletId) {
@@ -47,7 +45,6 @@ internal class SingleWalletWithTokenContentLoader(
                 walletWithFundsChecker = walletWithFundsChecker,
                 tokenListStore = tokenListStore,
                 getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
-                accountDependencies = accountDependencies,
                 yieldSupplyApyFlowUseCase = yieldSupplyApyFlowUseCase,
                 stakingApyFlowUseCase = stakingApyFlowUseCase,
             ).let(::add)
