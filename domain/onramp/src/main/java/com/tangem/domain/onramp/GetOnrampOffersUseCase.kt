@@ -3,8 +3,6 @@ package com.tangem.domain.onramp
 import arrow.core.left
 import arrow.core.right
 import com.tangem.domain.core.utils.EitherFlow
-import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.onramp.model.*
 import com.tangem.domain.onramp.model.cache.OnrampTransaction
 import com.tangem.domain.onramp.model.error.OnrampError
@@ -25,13 +23,10 @@ class GetOnrampOffersUseCase(
     private val settingsRepository: SettingsRepository,
 ) {
 
-    operator fun invoke(
-        userWalletId: UserWalletId,
-        cryptoCurrencyId: CryptoCurrency.ID,
-    ): EitherFlow<OnrampError, List<OnrampOffersBlock>> {
+    operator fun invoke(): EitherFlow<OnrampError, List<OnrampOffersBlock>> {
         return combine(
             onrampRepository.getQuotes(),
-            onrampTransactionRepository.getTransactions(userWalletId, cryptoCurrencyId),
+            onrampTransactionRepository.getAllTransactions(),
         ) { quotes, transactions ->
             processOffers(quotes, transactions)
         }
