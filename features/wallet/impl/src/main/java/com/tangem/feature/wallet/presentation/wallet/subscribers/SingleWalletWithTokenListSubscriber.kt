@@ -19,6 +19,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 
+@Deprecated("Use SingleWalletWithTokenSubscriber instead")
 @Suppress("LongParameterList")
 internal class SingleWalletWithTokenListSubscriber(
     override val userWallet: UserWallet.Cold,

@@ -7,6 +7,7 @@ import com.tangem.blockchainsdk.utils.toCoinId
 import com.tangem.data.common.network.NetworkFactory
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.domain.card.common.util.cardTypesResolver
+import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
@@ -18,26 +19,31 @@ class ResponseCryptoCurrenciesFactory @Inject constructor(
     private val networkFactory: NetworkFactory,
 ) {
 
-    fun createCurrency(currencyId: String, response: UserTokensResponse, userWallet: UserWallet): CryptoCurrency {
-        return response.tokens
-            .asSequence()
-            .mapNotNull { createCurrency(it, userWallet) }
-            .first { it.id.value == currencyId }
+    fun createCurrencies(
+        response: UserTokensResponse,
+        userWallet: UserWallet,
+        accountIndex: DerivationIndex? = null,
+    ): List<CryptoCurrency> {
+        return createCurrencies(tokens = response.tokens, userWallet = userWallet, accountIndex = accountIndex)
     }
 
-    fun createCurrencies(response: UserTokensResponse, userWallet: UserWallet): List<CryptoCurrency> {
-        return createCurrencies(tokens = response.tokens, userWallet = userWallet)
-    }
-
-    fun createCurrencies(tokens: List<UserTokensResponse.Token>, userWallet: UserWallet): List<CryptoCurrency> {
+    fun createCurrencies(
+        tokens: List<UserTokensResponse.Token>,
+        userWallet: UserWallet,
+        accountIndex: DerivationIndex? = null,
+    ): List<CryptoCurrency> {
         return tokens
             .asSequence()
-            .mapNotNull { createCurrency(it, userWallet) }
+            .mapNotNull { createCurrency(it, userWallet, accountIndex) }
             .distinctBy(CryptoCurrency::id)
             .toList()
     }
 
-    fun createCurrency(responseToken: UserTokensResponse.Token, userWallet: UserWallet): CryptoCurrency? {
+    fun createCurrency(
+        responseToken: UserTokensResponse.Token,
+        userWallet: UserWallet,
+        accountIndex: DerivationIndex? = null,
+    ): CryptoCurrency? {
         var blockchain = Blockchain.fromNetworkId(responseToken.networkId)
         if (blockchain == null || blockchain == Blockchain.Unknown) {
             Timber.e("Unable to find a blockchain with the network ID: ${responseToken.networkId}")
@@ -52,6 +58,7 @@ class ResponseCryptoCurrenciesFactory @Inject constructor(
             blockchain = blockchain,
             extraDerivationPath = responseToken.derivationPath,
             userWallet = userWallet,
+            accountIndex = accountIndex,
         ) ?: return null
 
         return createCurrency(responseToken = responseToken, userWallet = userWallet, network = network)
