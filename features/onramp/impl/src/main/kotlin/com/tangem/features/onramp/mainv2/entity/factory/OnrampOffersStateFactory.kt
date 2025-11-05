@@ -37,10 +37,12 @@ internal class OnrampOffersStateFactory(
                     is OnrampQuote.Error,
                     -> Unit
                     is OnrampQuote.Data -> {
+                        val advantages = mapOfferAdvantagesDTOtoUM(offer.advantages)
+                        val category = mapOfferCategoryDTOtoUM(block.category)
                         allOffersUM.add(
                             OnrampOfferUM(
-                                category = mapOfferCategoryDTOtoUM(block.category),
-                                advantages = mapOfferAdvantagesDTOtoUM(offer.advantages),
+                                category = category,
+                                advantages = advantages,
                                 paymentMethod = currentQuote.paymentMethod,
                                 providerName = currentQuote.provider.info.name,
                                 rate = currentQuote.toAmount.value.format {
@@ -58,7 +60,8 @@ internal class OnrampOffersStateFactory(
                                             toAmount = currentQuote.toAmount,
                                             fromAmount = currentQuote.fromAmount,
                                         ),
-                                        onrampOfferAdvantagesUM = mapOfferAdvantagesDTOtoUM(offer.advantages),
+                                        onrampOfferAdvantagesUM = advantages,
+                                        categoryUM = category,
                                     )
                                 },
                             ),
