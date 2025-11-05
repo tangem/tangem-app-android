@@ -13,5 +13,10 @@ data class OnrampPaymentMethodGroup(
 
 sealed interface PaymentMethodStatus {
     data object Available : PaymentMethodStatus
-    data class Unavailable(val availableFrom: BigDecimal) : PaymentMethodStatus
+    sealed interface Unavailable : PaymentMethodStatus {
+        val requiredAmount: BigDecimal
+
+        data class MinAmount(override val requiredAmount: BigDecimal) : Unavailable
+        data class MaxAmount(override val requiredAmount: BigDecimal) : Unavailable
+    }
 }
