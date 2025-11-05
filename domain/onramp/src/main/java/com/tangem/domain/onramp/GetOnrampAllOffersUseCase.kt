@@ -167,10 +167,16 @@ class GetOnrampAllOffersUseCase(
         return if (hasAtLeastOneValidQuote) {
             PaymentMethodStatus.Available
         } else {
-            val minSum = methodQuotes
-                .filterIsInstance<OnrampQuote.AmountError>()
-                .minOfOrNull { it.error.requiredAmount } ?: BigDecimal.ZERO
-            PaymentMethodStatus.Unavailable(minSum)
+            val amountErrorQuotes = methodQuotes.filterIsInstance<OnrampQuote.AmountError>()
+            val minAmountErrors = amountErrorQuotes.filter { it.error is OnrampError.AmountError.TooSmallError }
+
+            if (minAmountErrors.isNotEmpty()) {
+                val minRequiredAmount = minAmountErrors.minOf { it.error.requiredAmount }
+                PaymentMethodStatus.Unavailable.MinAmount(minRequiredAmount)
+            } else {
+                val maxAmount = amountErrorQuotes.maxOfOrNull { it.error.requiredAmount } ?: BigDecimal.ZERO
+                PaymentMethodStatus.Unavailable.MaxAmount(maxAmount)
+            }
         }
     }
 }
