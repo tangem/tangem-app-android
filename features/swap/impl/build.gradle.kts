@@ -44,6 +44,9 @@ dependencies {
     implementation(projects.domain.txhistory)
     implementation(projects.domain.txhistory.models)
     implementation(projects.domain.express.models)
+    implementation(projects.domain.account)
+    implementation(projects.domain.account.status)
+    implementation(projects.domain.visa)
 
     /** Feature modules */
     implementation(projects.features.swap.domain)
