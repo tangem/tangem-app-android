@@ -2,7 +2,6 @@ package com.tangem.domain.onramp
 
 import com.google.common.truth.Truth
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.onramp.model.*
 import com.tangem.domain.onramp.model.cache.OnrampTransaction
 import com.tangem.domain.onramp.repositories.OnrampErrorResolver
@@ -25,7 +24,6 @@ class GetOnrampOffersUseCaseTest {
     private val errorResolver: OnrampErrorResolver = mockk(relaxUnitFun = true)
     private val settingsRepository: SettingsRepository = mockk(relaxUnitFun = true)
     private val cryptoCurrencyId: CryptoCurrency.ID = mockk(relaxUnitFun = true)
-    private val userWalletId: UserWalletId = mockk(relaxUnitFun = true)
 
     private lateinit var useCase: GetOnrampOffersUseCase
 
@@ -47,11 +45,11 @@ class GetOnrampOffersUseCaseTest {
 
         coEvery { settingsRepository.isGooglePayAvailability() } returns false
         coEvery { onrampRepository.getQuotes() } returns flowOf(emptyQuotes)
-        coEvery { onrampTransactionRepository.getTransactions(userWalletId, cryptoCurrencyId) } returns flowOf(
+        coEvery { onrampTransactionRepository.getAllTransactions() } returns flowOf(
             emptyTransactions,
         )
 
-        val result = useCase(userWalletId, cryptoCurrencyId)
+        val result = useCase()
 
         result.collect { either ->
             Truth.assertThat(either.isRight()).isTrue()
@@ -62,7 +60,7 @@ class GetOnrampOffersUseCaseTest {
         }
 
         coVerify { onrampRepository.getQuotes() }
-        coVerify { onrampTransactionRepository.getTransactions(userWalletId, cryptoCurrencyId) }
+        coVerify { onrampTransactionRepository.getAllTransactions() }
     }
 
     @Test
@@ -83,11 +81,11 @@ class GetOnrampOffersUseCaseTest {
 
         coEvery { settingsRepository.isGooglePayAvailability() } returns false
         coEvery { onrampRepository.getQuotes() } returns flowOf(quotes)
-        coEvery { onrampTransactionRepository.getTransactions(userWalletId, cryptoCurrencyId) } returns flowOf(
+        coEvery { onrampTransactionRepository.getAllTransactions() } returns flowOf(
             transactions,
         )
 
-        val result = useCase(userWalletId, cryptoCurrencyId)
+        val result = useCase()
 
         result.collect { either ->
             Truth.assertThat(either.isRight()).isTrue()
@@ -128,11 +126,11 @@ class GetOnrampOffersUseCaseTest {
 
         coEvery { settingsRepository.isGooglePayAvailability() } returns false
         coEvery { onrampRepository.getQuotes() } returns flowOf(quotes)
-        coEvery { onrampTransactionRepository.getTransactions(userWalletId, cryptoCurrencyId) } returns flowOf(
+        coEvery { onrampTransactionRepository.getAllTransactions() } returns flowOf(
             transactions,
         )
 
-        val result = useCase(userWalletId, cryptoCurrencyId)
+        val result = useCase()
 
         result.collect { either ->
             Truth.assertThat(either.isRight()).isTrue()
@@ -175,11 +173,11 @@ class GetOnrampOffersUseCaseTest {
 
         coEvery { settingsRepository.isGooglePayAvailability() } returns false
         coEvery { onrampRepository.getQuotes() } returns flowOf(quotes)
-        coEvery { onrampTransactionRepository.getTransactions(userWalletId, cryptoCurrencyId) } returns flowOf(
+        coEvery { onrampTransactionRepository.getAllTransactions() } returns flowOf(
             transactions,
         )
 
-        val result = useCase(userWalletId, cryptoCurrencyId)
+        val result = useCase()
 
         result.collect { either ->
             Truth.assertThat(either.isRight()).isTrue()
@@ -229,11 +227,11 @@ class GetOnrampOffersUseCaseTest {
 
         coEvery { settingsRepository.isGooglePayAvailability() } returns false
         coEvery { onrampRepository.getQuotes() } returns flowOf(quotes)
-        coEvery { onrampTransactionRepository.getTransactions(userWalletId, cryptoCurrencyId) } returns flowOf(
+        coEvery { onrampTransactionRepository.getAllTransactions() } returns flowOf(
             transactions,
         )
 
-        val result = useCase(userWalletId, cryptoCurrencyId)
+        val result = useCase()
 
         result.collect { either ->
             Truth.assertThat(either.isRight()).isTrue()
