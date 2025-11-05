@@ -9,6 +9,9 @@ import com.tangem.datasource.api.common.config.ApiEnvironment
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.datasource.api.pay.TangemPayApi
 import com.tangem.datasource.api.pay.models.request.CardDetailsRequest
+import com.tangem.datasource.api.pay.models.request.SetPinRequest
+import com.tangem.datasource.local.visa.TangemPayStorage
+import com.tangem.domain.pay.model.SetPinResult
 import com.tangem.domain.pay.model.TangemPayCardBalance
 import com.tangem.domain.pay.model.TangemPayCardDetails
 import com.tangem.domain.pay.repository.CardDetailsRepository
@@ -22,6 +25,7 @@ internal class DefaultCardDetailsRepository @Inject constructor(
     private val visaLibLoader: VisaLibLoader,
     private val apiConfigsManager: ApiConfigsManager,
     private val rainCryptoUtil: RainCryptoUtil,
+    private val storage: TangemPayStorage,
 ) : CardDetailsRepository {
 
     override suspend fun getCardBalance(): Either<UniversalError, TangemPayCardBalance> {
@@ -39,7 +43,7 @@ internal class DefaultCardDetailsRepository @Inject constructor(
     override suspend fun revealCardDetails(): Either<UniversalError, TangemPayCardDetails> {
         return requestHelper.runWithErrorLogs(TAG) {
             val publicKeyBase64 = getPublicKeyBase64()
-            val (secretKeyHex, sessionId) = rainCryptoUtil.generateSecretKeyAndSessionId(publicKeyBase64)
+            val (secretKeyBytes, sessionId) = rainCryptoUtil.generateSecretKeyAndSessionId(publicKeyBase64)
 
             val result = requestHelper.request { authHeader ->
                 tangemPayApi.revealCardDetails(
@@ -51,14 +55,15 @@ internal class DefaultCardDetailsRepository @Inject constructor(
             val pan = rainCryptoUtil.decryptSecret(
                 base64Secret = result.pan.secret,
                 base64Iv = result.pan.iv,
-                secretKeyHex = secretKeyHex,
+                secretKeyBytes = secretKeyBytes,
             )
 
             val cvv = rainCryptoUtil.decryptSecret(
                 base64Secret = result.cvv.secret,
                 base64Iv = result.cvv.iv,
-                secretKeyHex = secretKeyHex,
+                secretKeyBytes = secretKeyBytes,
             )
+            secretKeyBytes.fill(0)
 
             TangemPayCardDetails(
                 pan = pan,
@@ -66,6 +71,44 @@ internal class DefaultCardDetailsRepository @Inject constructor(
                 expirationYear = result.expirationYear,
                 expirationMonth = result.expirationMonth,
             )
+        }
+    }
+
+    override suspend fun setPin(pin: String): Either<UniversalError, SetPinResult> {
+        return requestHelper.runWithErrorLogs(TAG) {
+            val publicKeyBase64 = getPublicKeyBase64()
+            val (secretKeyBytes, sessionId) = rainCryptoUtil.generateSecretKeyAndSessionId(publicKeyBase64)
+            val encryptedData = rainCryptoUtil.encryptPin(pin = pin, secretKeyBytes = secretKeyBytes)
+            secretKeyBytes.fill(0)
+
+            val status = requestHelper.request { authHeader ->
+                tangemPayApi.setPin(
+                    authHeader = authHeader,
+                    body = SetPinRequest(
+                        sessionId = sessionId,
+                        pin = encryptedData.encryptedBase64,
+                        iv = encryptedData.ivBase64,
+                    ),
+                )
+            }.result?.result ?: error("Cannot set pin code")
+            when (status) {
+                SetPinResult.SUCCESS.name -> SetPinResult.SUCCESS
+                SetPinResult.PIN_TOO_WEAK.name -> SetPinResult.PIN_TOO_WEAK
+                SetPinResult.DECRYPTION_ERROR.name -> SetPinResult.DECRYPTION_ERROR
+                else -> SetPinResult.UNKNOWN_ERROR
+            }
+        }
+    }
+
+    override suspend fun isAddToWalletDone(): Either<UniversalError, Boolean> {
+        return requestHelper.runWithErrorLogs(TAG) {
+            storage.getAddToWalletDone(requestHelper.getCustomerWalletAddress())
+        }
+    }
+
+    override suspend fun setAddToWalletAsDone(): Either<UniversalError, Unit> {
+        return requestHelper.runWithErrorLogs(TAG) {
+            storage.storeAddToWalletDone(requestHelper.getCustomerWalletAddress(), isDone = true)
         }
     }
 

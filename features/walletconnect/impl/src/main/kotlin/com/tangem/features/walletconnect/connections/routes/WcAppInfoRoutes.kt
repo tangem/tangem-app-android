@@ -13,6 +13,9 @@ internal sealed class WcAppInfoRoutes : Route {
     data object AppInfo : WcAppInfoRoutes()
 
     @Serializable
+    data object PortfolioSelector : WcAppInfoRoutes()
+
+    @Serializable
     data class SelectWallet(val selectedWalletId: UserWalletId) : WcAppInfoRoutes()
 
     @Serializable
