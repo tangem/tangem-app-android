@@ -9,6 +9,7 @@ import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.yield.supply.models.YieldSupplyMaxFee
 import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyActionUM
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyFeeUM
@@ -24,8 +25,7 @@ internal class YieldSupplyStartEarningFeeContentTransformer(
     private val appCurrency: AppCurrency,
     private val updatedTransactionList: List<TransactionData.Uncompiled>,
     private val feeValue: BigDecimal,
-    private val maxNetworkFee: BigDecimal,
-    private val maxNetworkFeeFiat: BigDecimal,
+    private val maxNetworkFee: YieldSupplyMaxFee,
     private val minAmount: BigDecimal,
 ) : Transformer<YieldSupplyActionUM> {
     override fun transform(prevState: YieldSupplyActionUM): YieldSupplyActionUM {
@@ -40,11 +40,10 @@ internal class YieldSupplyStartEarningFeeContentTransformer(
             feeFiat?.divide(rate, cryptoCurrency.decimals, RoundingMode.HALF_UP)
         }
         val tokenCryptoFeeValueText = tokenCryptoFee.format { crypto(cryptoCurrency) }
-        val tokenFiatFee = feeFiat // same fiat amount
-        val tokenFiatFeeValueText = tokenFiatFee.format { fiat(appCurrency.code, appCurrency.symbol) }
+        val tokenFiatFeeValueText = feeFiat.format { fiat(appCurrency.code, appCurrency.symbol) }
 
-        val maxFeeCryptoValueText = maxNetworkFee.format { crypto(cryptoCurrency) }
-        val maxFiatFeeValueText = maxNetworkFeeFiat.format { fiat(appCurrency.code, appCurrency.symbol) }
+        val maxFeeCryptoValueText = maxNetworkFee.tokenMaxFee.format { crypto(cryptoCurrency) }
+        val maxFiatFeeValueText = maxNetworkFee.fiatMaxFee.format { fiat(appCurrency.code, appCurrency.symbol) }
 
         val minAmountCryptoText = minAmount.format { crypto(cryptoCurrency) }
         val minAmountFiat = tokenFiatRate?.let(minAmount::multiply)
