@@ -5,7 +5,7 @@ import com.tangem.common.card.EllipticCurve
 import com.tangem.common.core.CardSession
 import com.tangem.common.core.CardSessionRunnable
 import com.tangem.common.core.CompletionCallback
-import com.tangem.domain.common.TwinsHelper
+import com.tangem.domain.card.common.TwinsHelper
 import com.tangem.operations.attestation.AttestationTask
 import com.tangem.operations.wallet.CreateWalletResponse
 import com.tangem.operations.wallet.CreateWalletTask
