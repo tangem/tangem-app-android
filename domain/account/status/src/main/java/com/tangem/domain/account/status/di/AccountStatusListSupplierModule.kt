@@ -21,7 +21,7 @@ internal object AccountStatusListSupplierModule {
     ): SingleAccountStatusListSupplier {
         return object : SingleAccountStatusListSupplier(
             factory = factory,
-            keyCreator = { "account_status_list_${it.userWalletId}" },
+            keyCreator = { "account_status_list_${it.userWalletId.stringValue}" },
         ) {}
     }
 
