@@ -25,7 +25,7 @@ import java.math.RoundingMode
  * Uses YieldMarketToken.maxFeeNative and the same conversion logic as
  * [YieldSupplyGetCurrentFeeUseCase].
  */
-class YieldSupplyGetTokenMaxFeeUseCase(
+class YieldSupplyGetMaxFeeUseCase(
     private val yieldSupplyRepository: YieldSupplyRepository,
     private val quotesRepository: QuotesRepository,
     private val currenciesRepository: CurrenciesRepository,
