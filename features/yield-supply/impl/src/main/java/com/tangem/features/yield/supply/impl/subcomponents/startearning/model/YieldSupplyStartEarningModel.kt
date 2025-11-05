@@ -62,7 +62,7 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
     private val yieldSupplyAlertFactory: YieldSupplyAlertFactory,
     private val yieldSupplyActivateUseCase: YieldSupplyActivateUseCase,
     private val yieldSupplyMinAmountUseCase: YieldSupplyMinAmountUseCase,
-    private val yieldSupplyGetTokenMaxFeeUseCase: YieldSupplyGetTokenMaxFeeUseCase,
+    private val yieldSupplyGetMaxFeeUseCase: YieldSupplyGetMaxFeeUseCase,
     private val yieldSupplyRepository: YieldSupplyRepository,
 ) : Model(), YieldSupplyNotificationsComponent.ModelCallback {
 
@@ -137,7 +137,7 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
             it.copy(yieldSupplyFeeUM = YieldSupplyFeeUM.Loading)
         }
 
-        val maxFee = yieldSupplyGetTokenMaxFeeUseCase(userWallet, cryptoCurrencyStatus).getOrNull() ?: return
+        val maxFee = yieldSupplyGetMaxFeeUseCase(userWallet, cryptoCurrencyStatus).getOrNull() ?: return
 
         val transactionListData = yieldSupplyStartEarningUseCase(
             userWalletId = userWallet.walletId,
