@@ -2,6 +2,8 @@ package com.tangem.features.yield.supply.impl.subcomponents.stopearning.model
 
 import arrow.core.getOrElse
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.Basic
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -16,7 +18,9 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.tokens.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
+import com.tangem.domain.yield.supply.INCREASE_GAS_LIMIT_FOR_SUPPLY
 import com.tangem.domain.yield.supply.YieldSupplyRepository
+import com.tangem.domain.yield.supply.increaseGasLimitBy
 import com.tangem.domain.yield.supply.models.YieldSupplyEnterStatus
 import com.tangem.domain.yield.supply.usecase.YieldSupplyDeactivateUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyStopEarningUseCase
@@ -82,7 +86,7 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
     val uiState: StateFlow<YieldSupplyActionUM>
         field: MutableStateFlow<YieldSupplyActionUM> = MutableStateFlow(
             YieldSupplyActionUM(
-                title = resourceReference(R.string.yield_module_stop_earning),
+                title = resourceReference(R.string.yield_module_stop_earning_sheet_title),
                 subtitle = resourceReference(
                     id = R.string.yield_module_stop_earning_sheet_description,
                     formatArgs = wrappedList(cryptoCurrency.symbol),
@@ -168,6 +172,17 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
                             blockchain = cryptoCurrency.network.name,
                         ),
                     )
+                    val event = AnalyticsParam.TxSentFrom.Earning(
+                        blockchain = cryptoCurrency.network.name,
+                        token = cryptoCurrency.symbol,
+                        feeType = AnalyticsParam.FeeType.Normal,
+                    )
+                    analytics.send(
+                        Basic.TransactionSent(
+                            sentFrom = event,
+                            memoType = Basic.TransactionSent.MemoType.Null,
+                        ),
+                    )
                     val address = cryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value
                     if (address != null) {
                         yieldSupplyDeactivateUseCase(cryptoCurrency, address)
@@ -223,7 +238,7 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
                 }
             },
             ifRight = { fee ->
-                val fee = fee.normal
+                val fee = fee.normal.increaseGasLimitBy(INCREASE_GAS_LIMIT_FOR_SUPPLY)
                 val feeCryptoValue = fee.amount.value.orZero()
 
                 uiState.update(
