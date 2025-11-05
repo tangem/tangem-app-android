@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
@@ -40,6 +41,7 @@ import com.tangem.utils.StringsSigns
 internal fun YieldSupplyBlockContent(yieldSupplyUM: YieldSupplyUM, modifier: Modifier = Modifier) {
     AnimatedContent(
         targetState = yieldSupplyUM,
+        contentKey = { it::class },
     ) { supplyUM ->
         when (supplyUM) {
             is YieldSupplyUM.Available -> SupplyAvailable(supplyUM, modifier)
@@ -90,6 +92,7 @@ private fun SupplyUnavailable(modifier: Modifier = Modifier) {
     )
 }
 
+@Suppress("LongMethod")
 @Composable
 private fun SupplyContent(supplyUM: YieldSupplyUM.Content, modifier: Modifier = Modifier) {
     Row(
@@ -114,21 +117,30 @@ private fun SupplyContent(supplyUM: YieldSupplyUM.Content, modifier: Modifier = 
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 Text(
+                    modifier = Modifier.weight(1.0f, fill = false),
                     text = supplyUM.title.resolveReference(),
                     style = TangemTheme.typography.subtitle1,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                     color = TangemTheme.colors.text.primary1,
                 )
-                Text(
-                    text = StringsSigns.DOT,
-                    style = TangemTheme.typography.subtitle1,
-                    color = TangemTheme.colors.text.tertiary,
-                )
-                Text(
-                    text = supplyUM.rewardsApy.resolveReference(),
-                    style = TangemTheme.typography.subtitle1,
-                    maxLines = 1,
-                    color = TangemTheme.colors.text.accent,
-                )
+                AnimatedVisibility(supplyUM.rewardsApy != TextReference.EMPTY) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    ) {
+                        Text(
+                            text = StringsSigns.DOT,
+                            style = TangemTheme.typography.subtitle1,
+                            color = TangemTheme.colors.text.tertiary,
+                        )
+                        Text(
+                            text = supplyUM.rewardsApy.resolveReference(),
+                            style = TangemTheme.typography.subtitle1,
+                            maxLines = 1,
+                            color = TangemTheme.colors.text.accent,
+                        )
+                    }
+                }
             }
             Text(
                 text = supplyUM.subtitle.resolveReference(),
@@ -337,17 +349,17 @@ private class PreviewProvider : PreviewParameterProvider<YieldSupplyUM> {
                 onClick = {},
             ),
             YieldSupplyUM.Content(
-                title = stringReference("Aave lending is active"),
+                title = stringReference("Aave l"),
                 subtitle = stringReference("Interest accrues automatically"),
-                rewardsApy = stringReference("5.1 % APY"),
+                rewardsApy = stringReference("APY 5.1%"),
                 onClick = {},
                 apy = "5.1",
                 showWarningIcon = false,
             ),
             YieldSupplyUM.Content(
-                title = stringReference("Aave lending is active"),
+                title = stringReference("Aave lending is active "),
                 subtitle = stringReference("Interest accrues automatically"),
-                rewardsApy = stringReference("5.1 % APY"),
+                rewardsApy = stringReference("APY 5.1%"),
                 onClick = {},
                 apy = "5.1",
                 showWarningIcon = true,
