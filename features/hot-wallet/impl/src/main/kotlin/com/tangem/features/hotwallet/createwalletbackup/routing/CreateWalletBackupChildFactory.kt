@@ -16,31 +16,32 @@ internal class CreateWalletBackupChildFactory @Inject constructor() {
         childContext: AppComponentContext,
         model: CreateWalletBackupModel,
     ): ComposableContentComponent = when (route) {
-        CreateWalletBackupRoute.RecoveryPhraseStart -> ManualBackupStartComponent(
+        is CreateWalletBackupRoute.RecoveryPhraseStart -> ManualBackupStartComponent(
             context = childContext,
             params = ManualBackupStartComponent.Params(
                 callbacks = model.manualBackupStartModelCallbacks,
             ),
         )
-        CreateWalletBackupRoute.RecoveryPhrase -> ManualBackupPhraseComponent(
+        is CreateWalletBackupRoute.RecoveryPhrase -> ManualBackupPhraseComponent(
             context = childContext,
             params = ManualBackupPhraseComponent.Params(
                 userWalletId = model.params.userWalletId,
                 callbacks = model.manualBackupPhraseModelCallbacks,
             ),
         )
-        CreateWalletBackupRoute.ConfirmBackup -> ManualBackupCheckComponent(
+        is CreateWalletBackupRoute.ConfirmBackup -> ManualBackupCheckComponent(
             context = childContext,
             params = ManualBackupCheckComponent.Params(
                 userWalletId = model.params.userWalletId,
                 callbacks = model.manualBackupCheckModelCallbacks,
             ),
         )
-        CreateWalletBackupRoute.BackupCompleted -> ManualBackupCompletedComponent(
+        is CreateWalletBackupRoute.BackupCompleted -> ManualBackupCompletedComponent(
             context = childContext,
             params = ManualBackupCompletedComponent.Params(
                 userWalletId = model.params.userWalletId,
                 callbacks = model.manualBackupCompletedModelCallbacks,
+                isUpgradeFlow = route.isUpgradeFlow,
             ),
         )
     }

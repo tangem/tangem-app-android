@@ -7,6 +7,7 @@ import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.networkIconResId
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.themedColor
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
@@ -83,7 +84,7 @@ internal class TokenDetailsSkeletonStateConverter(
             addGenerateXPubMenuItem(cryptoCurrency)
             TangemDropdownMenuItem(
                 title = TextReference.Res(id = R.string.token_details_hide_token),
-                textColorProvider = { TangemTheme.colors.text.warning },
+                textColor = themedColor { TangemTheme.colors.text.warning },
                 onClick = clickIntents::onHideClick,
             ).let(::add)
         }.toImmutableList(),
@@ -102,7 +103,7 @@ internal class TokenDetailsSkeletonStateConverter(
             add(
                 TangemDropdownMenuItem(
                     title = resourceReference(R.string.token_details_generate_xpub),
-                    textColorProvider = { TangemTheme.colors.text.primary1 },
+                    textColor = themedColor { TangemTheme.colors.text.primary1 },
                     onClick = clickIntents::onGenerateExtendedKey,
                 ),
             )
