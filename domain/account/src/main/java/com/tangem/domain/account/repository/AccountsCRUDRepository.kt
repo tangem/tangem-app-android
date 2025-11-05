@@ -5,6 +5,7 @@ import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.models.ArchivedAccount
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
+import com.tangem.domain.models.account.AccountName
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import kotlinx.coroutines.flow.Flow
@@ -66,6 +67,13 @@ interface AccountsCRUDRepository {
      *
      * @param accountList the list of accounts to be saved.
      */
+    suspend fun saveAccountsLocally(accountList: AccountList)
+
+    /**
+     * Saves a list of accounts to the repository
+     *
+     * @param accountList the list of accounts to be saved.
+     */
     suspend fun saveAccounts(accountList: AccountList)
 
     /**
@@ -79,18 +87,26 @@ interface AccountsCRUDRepository {
     suspend fun syncTokens(userWalletId: UserWalletId)
 
     /**
-     * Retrieves the total count of accounts associated with a specific user wallet including archived accounts
+     * Retrieves the total count of active accounts associated with a specific user wallet excluding archived accounts
      *
      * @param userWalletId the unique identifier of the user wallet
      */
     suspend fun getTotalAccountsCountSync(userWalletId: UserWalletId): Option<Int>
 
     /**
-     * Provides a flow of the total count of accounts associated with a specific user wallet including archived accounts
+     * Retrieves the total count of active accounts associated with a specific user wallet excluding archived accounts
      *
      * @param userWalletId the unique identifier of the user wallet
      */
-    fun getTotalAccountsCount(userWalletId: UserWalletId): Flow<Option<Int>>
+    suspend fun getTotalActiveAccountsCountSync(userWalletId: UserWalletId): Option<Int>
+
+    /**
+     * Provides a flow of the total count of active accounts associated with a specific user wallet excluding
+     * archived accounts
+     *
+     * @param userWalletId the unique identifier of the user wallet
+     */
+    fun getTotalActiveAccountsCount(userWalletId: UserWalletId): Flow<Option<Int>>
 
     /**
      * Retrieves a user wallet by its unique identifier
@@ -105,4 +121,12 @@ interface AccountsCRUDRepository {
 
     /** Synchronously retrieves all user wallets */
     fun getUserWalletsSync(): List<UserWallet>
+
+    /** Checks if the provided account name is the default name within the given account list
+     *
+     * @param accountList the list of accounts to check against
+     * @param accountName the account name to be checked
+     * @throws IllegalArgumentException if the account name matches the default name
+     */
+    fun checkDefaultAccountName(accountList: AccountList, accountName: AccountName)
 }

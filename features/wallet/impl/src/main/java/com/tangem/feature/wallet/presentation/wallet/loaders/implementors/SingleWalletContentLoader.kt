@@ -2,6 +2,7 @@ package com.tangem.feature.wallet.presentation.wallet.loaders.implementors
 
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.onramp.GetOnrampTransactionsUseCase
 import com.tangem.domain.onramp.OnrampRemoveTransactionUseCase
 import com.tangem.domain.settings.SetWalletWithFundsFoundUseCase
@@ -9,10 +10,8 @@ import com.tangem.domain.tokens.GetCryptoCurrencyActionsUseCase
 import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
-import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.usecase.ShouldSaveUserWalletsUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
-import com.tangem.feature.wallet.presentation.account.AccountDependencies
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.WalletWarningsAnalyticsSender
 import com.tangem.feature.wallet.presentation.wallet.domain.GetSingleWalletWarningsFactory
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
@@ -36,7 +35,6 @@ internal class SingleWalletContentLoader(
     private val shouldSaveUserWalletsUseCase: ShouldSaveUserWalletsUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val walletWarningsAnalyticsSender: WalletWarningsAnalyticsSender,
-    private val accountDependencies: AccountDependencies,
 ) : WalletContentLoader(id = userWallet.walletId) {
 
     override fun create(): List<WalletSubscriber> {
@@ -55,7 +53,6 @@ internal class SingleWalletContentLoader(
                 clickIntents = clickIntents,
                 getSingleCryptoCurrencyStatusUseCase = getSingleCryptoCurrencyStatusUseCase,
                 getCryptoCurrencyActionsUseCase = getCryptoCurrencyActionsUseCase,
-                accountDependencies = accountDependencies,
             ),
             SingleWalletNotificationsSubscriber(
                 userWallet = userWallet,

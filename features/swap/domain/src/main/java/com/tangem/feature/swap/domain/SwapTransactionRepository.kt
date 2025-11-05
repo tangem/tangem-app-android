@@ -1,5 +1,6 @@
 package com.tangem.feature.swap.domain
 
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
@@ -11,10 +12,13 @@ import kotlinx.coroutines.flow.Flow
 
 interface SwapTransactionRepository {
 
+    @Suppress("LongParameterList")
     suspend fun storeTransaction(
         userWalletId: UserWalletId,
         fromCryptoCurrency: CryptoCurrency,
         toCryptoCurrency: CryptoCurrency,
+        fromAccount: Account.CryptoPortfolio?,
+        toAccount: Account.CryptoPortfolio?,
         transaction: SavedSwapTransactionModel,
     )
 

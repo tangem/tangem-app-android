@@ -9,6 +9,9 @@ import com.tangem.data.swap.models.SwapStatusDTO
 import com.tangem.data.swap.models.SwapTransactionDTO
 import com.tangem.data.swap.models.SwapTransactionListDTO
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
+import com.tangem.domain.account.models.AccountList
+import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
@@ -32,11 +35,11 @@ internal class SavedSwapTransactionListConverter(
         toCryptoCurrencyId = value.toCryptoCurrencyId,
         fromTokensResponse = userTokensResponseFactory.createResponseToken(
             currency = value.fromCryptoCurrency,
-            accountId = null,
+            accountId = value.fromAccount?.accountId,
         ),
         toTokensResponse = userTokensResponseFactory.createResponseToken(
             currency = value.toCryptoCurrency,
-            accountId = null,
+            accountId = value.toAccount?.accountId,
         ),
         transactions = savedSwapTransactionConverter.convertList(value.transactions),
     )
@@ -45,9 +48,12 @@ internal class SavedSwapTransactionListConverter(
         value: SwapTransactionListDTO,
         userWallet: UserWallet,
         txStatuses: Map<String, SwapStatusDTO>,
+        multiAccountList: List<AccountList>,
     ): SwapTransactionListModel? {
         val fromToken = value.fromTokensResponse
         val toToken = value.toTokensResponse
+        val fromDerivationIndex = fromToken?.getDerivationIndex()
+        val toDerivationIndex = toToken?.getDerivationIndex()
         return if (fromToken == null || toToken == null) {
             null
         } else {
@@ -73,14 +79,25 @@ internal class SavedSwapTransactionListConverter(
                 toCryptoCurrencyId = value.toCryptoCurrencyId,
                 fromCryptoCurrency = fromCryptoCurrency,
                 toCryptoCurrency = toCryptoCurrency,
+                fromAccount = getAccountByDerivationIndex(
+                    multiAccountList = multiAccountList,
+                    derivationIndex = fromDerivationIndex,
+                ),
+                toAccount = getAccountByDerivationIndex(
+                    multiAccountList = multiAccountList,
+                    derivationIndex = toDerivationIndex,
+                ),
             )
         }
     }
 
+    @Suppress("LongParameterList")
     fun default(
         userWalletId: UserWalletId,
         fromCryptoCurrency: CryptoCurrency,
         toCryptoCurrency: CryptoCurrency,
+        fromAccount: Account.CryptoPortfolio?,
+        toAccount: Account.CryptoPortfolio?,
         tokenTransactions: List<SwapTransactionDTO>,
     ) = SwapTransactionListDTO(
         userWalletId = userWalletId.stringValue,
@@ -88,9 +105,12 @@ internal class SavedSwapTransactionListConverter(
         toCryptoCurrencyId = toCryptoCurrency.id.value,
         fromTokensResponse = userTokensResponseFactory.createResponseToken(
             currency = fromCryptoCurrency,
-            accountId = null,
+            accountId = fromAccount?.accountId,
         ),
-        toTokensResponse = userTokensResponseFactory.createResponseToken(currency = toCryptoCurrency, accountId = null),
+        toTokensResponse = userTokensResponseFactory.createResponseToken(
+            currency = toCryptoCurrency,
+            accountId = toAccount?.accountId,
+        ),
         transactions = tokenTransactions,
     )
 
@@ -108,7 +128,24 @@ internal class SavedSwapTransactionListConverter(
                 blockchain = blockchain,
                 extraDerivationPath = token.derivationPath,
                 userWallet = userWallet,
+                accountIndex = token.accountId?.toIntOrNull()?.let { DerivationIndex(it).getOrNull() },
             )
         }
+    }
+
+    private fun getAccountByDerivationIndex(
+        multiAccountList: List<AccountList>,
+        derivationIndex: DerivationIndex?,
+    ): Account.CryptoPortfolio? {
+        if (derivationIndex == null) return null
+
+        return multiAccountList.asSequence().firstNotNullOfOrNull { accountList ->
+            accountList.accounts.asSequence().filterIsInstance<Account.CryptoPortfolio>()
+                .firstOrNull { it.derivationIndex == derivationIndex }
+        }
+    }
+
+    private fun UserTokensResponse.Token.getDerivationIndex(): DerivationIndex? {
+        return accountId?.toIntOrNull()?.let { DerivationIndex(it).getOrNull() }
     }
 }
