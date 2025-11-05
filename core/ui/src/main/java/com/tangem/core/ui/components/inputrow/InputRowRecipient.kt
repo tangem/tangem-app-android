@@ -134,6 +134,7 @@ fun InputRowRecipient(
                     QrButton(
                         visible = value.isBlank(),
                         onQrCodeClick = onQrCodeClick,
+                        modifier = Modifier.testTag(SendAddressScreenTestTags.QR_BUTTON),
                     )
                     PasteButton(
                         isPasteButtonVisible = value.isBlank(),
