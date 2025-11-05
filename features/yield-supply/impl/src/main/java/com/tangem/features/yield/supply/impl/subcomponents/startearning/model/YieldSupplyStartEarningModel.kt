@@ -63,6 +63,7 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
     private val yieldSupplyActivateUseCase: YieldSupplyActivateUseCase,
     private val yieldSupplyMinAmountUseCase: YieldSupplyMinAmountUseCase,
     private val yieldSupplyGetMaxFeeUseCase: YieldSupplyGetMaxFeeUseCase,
+    private val yieldSupplyGetCurrentFeeUseCase: YieldSupplyGetCurrentFeeUseCase,
     private val yieldSupplyRepository: YieldSupplyRepository,
 ) : Model(), YieldSupplyNotificationsComponent.ModelCallback {
 
@@ -138,6 +139,7 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
         }
 
         val maxFee = yieldSupplyGetMaxFeeUseCase(userWallet, cryptoCurrencyStatus).getOrNull() ?: return
+        val estimatedFee = yieldSupplyGetCurrentFeeUseCase(userWallet, cryptoCurrencyStatus).getOrNull() ?: return
 
         val transactionListData = yieldSupplyStartEarningUseCase(
             userWalletId = userWallet.walletId,
@@ -187,6 +189,7 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
                         updatedTransactionList = updatedTransactionList,
                         feeValue = feeSum,
                         maxNetworkFee = maxFee,
+                        estimatedFeeValue = estimatedFee,
                         minAmount = minAmount,
                     ),
                 )
