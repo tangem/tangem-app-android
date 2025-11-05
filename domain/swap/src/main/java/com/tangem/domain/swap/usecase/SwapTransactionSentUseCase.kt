@@ -3,6 +3,7 @@ package com.tangem.domain.swap.usecase
 import arrow.core.Either
 import com.tangem.domain.express.models.ExpressProvider
 import com.tangem.domain.express.models.ExpressProviderType.Companion.shouldStoreSwapTransaction
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.swap.SwapErrorResolver
@@ -21,6 +22,8 @@ class SwapTransactionSentUseCase(
         userWallet: UserWallet,
         fromCryptoCurrencyStatus: CryptoCurrencyStatus,
         toCryptoCurrencyStatus: CryptoCurrencyStatus,
+        fromAccount: Account.CryptoPortfolio?,
+        toAccount: Account.CryptoPortfolio?,
         swapDataTransactionModel: SwapDataTransactionModel,
         provider: ExpressProvider,
         txHash: String,
@@ -32,6 +35,8 @@ class SwapTransactionSentUseCase(
                 userWalletId = userWallet.walletId,
                 fromCryptoCurrency = fromCryptoCurrencyStatus.currency,
                 toCryptoCurrency = toCryptoCurrencyStatus.currency,
+                fromAccount = fromAccount,
+                toAccount = toAccount,
                 transaction = SwapTransactionModel(
                     txId = swapDataTransactionModel.txId,
                     provider = provider,
