@@ -240,7 +240,7 @@ class GetOnrampAllOffersUseCaseTest {
                     val cardGroup = offers.first()
                     Truth.assertThat(
                         cardGroup.methodStatus,
-                    ).isEqualTo(PaymentMethodStatus.Unavailable(BigDecimal("50.0")))
+                    ).isEqualTo(PaymentMethodStatus.Unavailable.MinAmount(BigDecimal("50.0")))
                     Truth.assertThat(cardGroup.offers).hasSize(2)
 
                     Truth.assertThat(cardGroup.bestRateOffer).isNotNull()
@@ -446,14 +446,17 @@ class GetOnrampAllOffersUseCaseTest {
         paymentMethod: OnrampPaymentMethod,
         provider: OnrampProvider,
         requiredAmount: BigDecimal = BigDecimal("50.0"),
+        isMinAmountError: Boolean = true,
     ): OnrampQuote.AmountError {
         return mockk<OnrampQuote.AmountError> {
             every { this@mockk.paymentMethod } returns paymentMethod
             every { this@mockk.provider } returns provider
             every { this@mockk.fromAmount } returns createMockAmount(BigDecimal("10.0"))
             every { this@mockk.countryCode } returns "US"
-            every { this@mockk.error } returns mockk<OnrampError.AmountError> {
-                every { this@mockk.requiredAmount } returns requiredAmount
+            every { this@mockk.error } returns if (isMinAmountError) {
+                OnrampError.AmountError.TooSmallError(requiredAmount = requiredAmount)
+            } else {
+                OnrampError.AmountError.TooBigError(requiredAmount = requiredAmount)
             }
         }
     }
