@@ -69,20 +69,6 @@ internal object TokensDataModule {
 
     @Provides
     @Singleton
-    fun providePolkadotAccountHealthCheckRepository(
-        walletManagersFacade: WalletManagersFacade,
-        appPreferencesStore: AppPreferencesStore,
-        dispatchers: CoroutineDispatcherProvider,
-    ): PolkadotAccountHealthCheckRepository {
-        return DefaultPolkadotAccountHealthCheckRepository(
-            walletManagersFacade = walletManagersFacade,
-            appPreferencesStore = appPreferencesStore,
-            dispatchers = dispatchers,
-        )
-    }
-
-    @Provides
-    @Singleton
     fun provideTokenReceiveWarningsViewedRepository(
         tokenReceiveWarningActionStore: TokenReceiveWarningActionStore,
     ): TokenReceiveWarningsViewedRepository {

@@ -25,6 +25,7 @@ internal class YieldSupplyStartEarningFeeContentTransformer(
     private val updatedTransactionList: List<TransactionData.Uncompiled>,
     private val feeValue: BigDecimal,
     private val maxNetworkFee: BigDecimal,
+    private val maxNetworkFeeFiat: BigDecimal,
     private val minAmount: BigDecimal,
 ) : Transformer<YieldSupplyActionUM> {
     override fun transform(prevState: YieldSupplyActionUM): YieldSupplyActionUM {
@@ -42,14 +43,8 @@ internal class YieldSupplyStartEarningFeeContentTransformer(
         val tokenFiatFee = feeFiat // same fiat amount
         val tokenFiatFeeValueText = tokenFiatFee.format { fiat(appCurrency.code, appCurrency.symbol) }
 
-        val maxFiatFee = feeFiatRate?.let { rate ->
-            maxNetworkFee.multiply(rate)
-        }
-        val maxFeeCryptoValueText = tokenFiatRate?.let { rate ->
-            maxFiatFee?.divide(rate, cryptoCurrency.decimals, RoundingMode.HALF_UP)
-        }.format { crypto(cryptoCurrency) }
-
-        val maxFiatFeeValueText = maxFiatFee.format { fiat(appCurrency.code, appCurrency.symbol) }
+        val maxFeeCryptoValueText = maxNetworkFee.format { crypto(cryptoCurrency) }
+        val maxFiatFeeValueText = maxNetworkFeeFiat.format { fiat(appCurrency.code, appCurrency.symbol) }
 
         val minAmountCryptoText = minAmount.format { crypto(cryptoCurrency) }
         val minAmountFiat = tokenFiatRate?.let(minAmount::multiply)
