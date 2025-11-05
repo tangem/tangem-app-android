@@ -1,10 +1,12 @@
 package com.tangem.domain.account.usecase
 
 import arrow.core.Either
+import arrow.core.Either.Companion.catch
 import arrow.core.getOrElse
 import arrow.core.raise.Raise
 import arrow.core.raise.catch
 import arrow.core.raise.either
+import arrow.core.raise.withError
 import com.tangem.domain.account.fetcher.SingleAccountListFetcher
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.repository.AccountsCRUDRepository
@@ -49,8 +51,10 @@ class AddCryptoPortfolioUseCase(
 
         val newAccount = createAccount(userWalletId, accountName, icon, derivationIndex)
 
-        val updatedAccounts = (accountList + newAccount).getOrElse {
-            raise(Error.AccountListRequirementsNotMet(it))
+        val updatedAccounts = withError({ Error.AccountListRequirementsNotMet(it) }) {
+            checkDefaultName(accountList, accountName)
+
+            (accountList + newAccount).bind()
         }
 
         saveAccounts(accountList = updatedAccounts)
@@ -79,6 +83,12 @@ class AddCryptoPortfolioUseCase(
             derivationIndex = derivationIndex,
             cryptoCurrencies = emptySet(),
         )
+    }
+
+    private fun Raise<AccountList.Error>.checkDefaultName(accountList: AccountList, accountName: AccountName) {
+        withError({ AccountList.Error.DuplicateAccountNames }) {
+            catch { crudRepository.checkDefaultAccountName(accountList, accountName) }.bind()
+        }
     }
 
     private suspend fun Raise<Error>.getAccountList(userWalletId: UserWalletId): AccountList {

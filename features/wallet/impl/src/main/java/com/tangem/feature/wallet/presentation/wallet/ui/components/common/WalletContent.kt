@@ -22,10 +22,11 @@ internal fun LazyListScope.contentItems(
     txHistoryItems: LazyPagingItems<TxHistoryState.TxHistoryItemState>?,
     isBalanceHidden: Boolean,
     modifier: Modifier = Modifier,
+    selectedWalletChanged: Boolean,
 ) {
     when (state) {
         is WalletState.MultiCurrency -> {
-            tokensListItems(state.tokensListState, modifier, isBalanceHidden)
+            tokensListItems(state.tokensListState, modifier, isBalanceHidden, selectedWalletChanged)
         }
         is WalletState.SingleCurrency -> {
             txHistoryItems(state.txHistoryState, txHistoryItems, isBalanceHidden, modifier)

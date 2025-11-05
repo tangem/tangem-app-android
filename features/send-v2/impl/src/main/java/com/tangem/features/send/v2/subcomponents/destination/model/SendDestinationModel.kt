@@ -12,8 +12,9 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
-import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
+import com.tangem.domain.account.status.supplier.MultiAccountStatusListSupplier
 import com.tangem.domain.account.usecase.IsAccountsModeEnabledUseCase
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.network.CryptoCurrencyAddress
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.isLocked
@@ -68,9 +69,9 @@ internal class SendDestinationModel @Inject constructor(
     private val listenToQrScanningUseCase: ListenToQrScanningUseCase,
     private val parseQrCodeUseCase: ParseQrCodeUseCase,
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
-    private val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val accountsFeatureToggles: AccountsFeatureToggles,
+    private val multiAccountStatusListSupplier: MultiAccountStatusListSupplier,
 ) : Model(), SendDestinationClickIntents {
     private val params: SendDestinationComponentParams = paramsContainer.require()
 
@@ -189,8 +190,14 @@ internal class SendDestinationModel @Inject constructor(
 
     private fun getWalletsAndRecent() {
         combine(
-            flow = getWalletsUseCase().conflate().map {
-                waitForDelay(RECENT_LOAD_DELAY) { it.toAvailableWallets() }
+            flow = if (accountsFeatureToggles.isFeatureEnabled) {
+                getAddedAddresses()
+            } else {
+                getWalletsUseCase().conflate().map {
+                    waitForDelay(RECENT_LOAD_DELAY) {
+                        it.toAvailableWallets()
+                    }
+                }
             },
             flow2 = getFixedTxHistoryItemsUseCase(
                 userWalletId = userWalletId,
@@ -200,12 +207,7 @@ internal class SendDestinationModel @Inject constructor(
                 waitForDelay(RECENT_LOAD_DELAY) { it }
             }.conflate(),
             flow3 = isAccountsModeEnabledUseCase().distinctUntilChanged(),
-            flow4 = if (accountsFeatureToggles.isFeatureEnabled) {
-                getAccountCurrencyStatusUseCase(userWalletId, cryptoCurrency).distinctUntilChanged()
-            } else {
-                flowOf(null)
-            },
-        ) { destinationWalletList, txHistoryList, isAccountsMode, accountCurrencyStatus ->
+        ) { destinationWalletList, txHistoryList, isAccountsMode ->
             val isSelfSendAvailable = isSelfSendAvailableUseCase.invokeSync(
                 userWalletId = userWalletId,
                 network = cryptoCurrency.network,
@@ -217,7 +219,6 @@ internal class SendDestinationModel @Inject constructor(
                     isSelfSendAvailable = isSelfSendAvailable,
                     destinationWalletList = destinationWalletList,
                     txHistoryList = txHistoryList,
-                    account = accountCurrencyStatus?.account,
                     isAccountsMode = isAccountsMode,
                 ),
             )
@@ -266,6 +267,46 @@ internal class SendDestinationModel @Inject constructor(
         }
     }
 
+    private fun getAddedAddresses(): Flow<List<DestinationWalletUM>> {
+        return combine(
+            flow = getWalletsUseCase().conflate(),
+            flow2 = multiAccountStatusListSupplier().conflate(),
+        ) { wallets, accountList ->
+            val cryptoCurrencyNetwork = cryptoCurrency.network
+
+            coroutineScope {
+                accountList.mapNotNull { accountStatusList ->
+                    val wallet =
+                        wallets.filterNot { it.isLocked }.firstOrNull { it.walletId == accountStatusList.userWalletId }
+                            ?: return@mapNotNull null
+
+                    async {
+                        accountStatusList.accountStatuses.map { accountStatus ->
+                            async {
+                                accountStatus.flattenCurrencies()
+                                    .filter { it.currency.network.rawId == cryptoCurrencyNetwork.rawId }
+                                    .mapNotNull { cryptoCurrencyStatus ->
+                                        val address = cryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value
+                                            ?: return@mapNotNull null
+
+                                        async {
+                                            DestinationWalletUM(
+                                                name = wallet.name,
+                                                address = address,
+                                                cryptoCurrency = cryptoCurrencyStatus.currency,
+                                                userWalletId = wallet.walletId,
+                                                account = accountStatus.account as? Account.CryptoPortfolio,
+                                            )
+                                        }
+                                    }.awaitAll()
+                            }
+                        }.awaitAll().flatten()
+                    }
+                }.awaitAll().flatten()
+            }
+        }.flowOn(dispatchers.default)
+    }
+
     private fun validate(address: String, memo: String?, type: EnterAddressSource? = null) {
         modelScope.launch {
             _uiState.update(SendDestinationValidationStartedTransformer)
@@ -291,7 +332,12 @@ internal class SendDestinationModel @Inject constructor(
                     ),
                 )
             }
-            _uiState.update(SendDestinationValidationResultTransformer(addressValidationResult, memoValidationResult))
+            _uiState.update(
+                SendDestinationValidationResultTransformer(
+                    addressValidationResult,
+                    memoValidationResult,
+                ),
+            )
             autoNextFromRecipient(type, addressValidationResult.isRight(), memoValidationResult.isRight())
         }.saveIn(validationJobHolder)
     }

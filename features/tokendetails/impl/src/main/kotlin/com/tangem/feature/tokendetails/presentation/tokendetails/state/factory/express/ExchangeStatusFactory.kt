@@ -6,7 +6,7 @@ import com.tangem.datasource.local.swap.ExpressAnalyticsStatus
 import com.tangem.datasource.local.swap.SwapTransactionStatusStore
 import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
-import com.tangem.domain.account.status.usecase.SaveCryptoCurrenciesUseCase
+import com.tangem.domain.account.status.usecase.ManageCryptoCurrenciesUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -41,7 +41,7 @@ internal class ExchangeStatusFactory @AssistedInject constructor(
     private val addCryptoCurrenciesUseCase: AddCryptoCurrenciesUseCase,
     private val accountsFeatureToggles: AccountsFeatureToggles,
     private val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase,
-    private val saveCryptoCurrenciesUseCase: SaveCryptoCurrenciesUseCase,
+    private val manageCryptoCurrenciesUseCase: ManageCryptoCurrenciesUseCase,
     private val swapTransactionStatusStore: SwapTransactionStatusStore,
     private val analyticsEventsHandler: AnalyticsEventHandler,
     @Assisted private val clickIntents: TokenDetailsClickIntents,
@@ -203,7 +203,7 @@ internal class ExchangeStatusFactory @AssistedInject constructor(
 
         if (refundNetwork == null || refundContractAddress == null) return null
 
-        return saveCryptoCurrenciesUseCase.add(
+        return manageCryptoCurrenciesUseCase.add(
             accountId = accountId,
             contractAddress = refundContractAddress,
             networkId = refundNetwork,

@@ -8,6 +8,8 @@ import com.reown.walletkit.client.WalletKit
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.data.walletconnect.utils.*
 import com.tangem.datasource.local.walletconnect.WalletConnectStore
+import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
+import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.walletconnect.WcAnalyticEvents
 import com.tangem.domain.walletconnect.model.WcSession
@@ -31,16 +33,20 @@ internal class DefaultWcSessionsManager(
     private val dispatchers: CoroutineDispatcherProvider,
     private val wcNetworksConverter: WcNetworksConverter,
     private val analytics: AnalyticsEventHandler,
+    private val accountsFeatureToggles: AccountsFeatureToggles,
     private val scope: WcScope,
 ) : WcSessionsManager, WcSdkObserver {
 
     private val onSessionDelete = Channel<Wallet.Model.SessionDelete>(capacity = Channel.BUFFERED)
+    private val oneTimeMigration = MutableStateFlow(false)
 
     override val sessions: Flow<Map<UserWallet, List<WcSession>>>
         get() = combine(getWallets(), store.sessions) { wallets, inStore -> wallets to inStore }
             .transform { pair ->
                 val (wallets, inStore) = pair
                 val inSdk: List<Wallet.Model.Session> = WalletKit.getListOfActiveSessions()
+                val someMigrate = migrateToAccountSession(inStore)
+                if (someMigrate) return@transform
                 val associatedSessions: List<WcSession> = associate(inSdk, inStore, wallets)
                 val someRemove = removeUnknownSessions(inStore, inSdk, associatedSessions)
                 if (someRemove) return@transform // ignore emit, wait next one
@@ -48,6 +54,26 @@ internal class DefaultWcSessionsManager(
             }
             .distinctUntilChanged()
             .flowOn(dispatchers.io)
+
+    private suspend fun migrateToAccountSession(inStore: Set<WcSessionDTO>): Boolean {
+        if (!accountsFeatureToggles.isFeatureEnabled) return false
+        if (oneTimeMigration.value) return false
+
+        var someMigrated = false
+
+        val updatedSessions = inStore.mapTo(mutableSetOf()) { sessionDTO ->
+            if (sessionDTO.accountId == null) {
+                someMigrated = true
+                val mainAccountId = AccountId.forMainCryptoPortfolio(sessionDTO.walletId)
+                sessionDTO.copy(accountId = mainAccountId)
+            } else {
+                sessionDTO
+            }
+        }
+        if (someMigrated) store.saveSessions(updatedSessions)
+        oneTimeMigration.value = true
+        return someMigrated
+    }
 
     override fun onWcSdkInit() {
         listenOnSessionDelete()
@@ -90,7 +116,11 @@ internal class DefaultWcSessionsManager(
         val wcSessions = savedPending.plus(inStore).mapNotNull { storeSession ->
             val wallet = wallets.find { it.walletId == storeSession.walletId } ?: return@mapNotNull null
             val sdkSession = inSdk.find { it.topic == storeSession.topic } ?: return@mapNotNull null
-            val networks = wcNetworksConverter.findWalletNetworks(wallet, sdkSession)
+            val account = storeSession.accountId?.let { wcNetworksConverter.getAccount(it) }
+            if (accountsFeatureToggles.isFeatureEnabled && account == null) {
+                return@mapNotNull null
+            }
+            val networks = wcNetworksConverter.findWalletNetworks(wallet, account, sdkSession)
             val originUrl = storeSession.url ?: sdkSession.metaData?.url ?: ""
             WcSession(
                 wallet = wallet,
@@ -102,6 +132,7 @@ internal class DefaultWcSessionsManager(
                 ),
                 securityStatus = storeSession.securityStatus,
                 networks = networks,
+                account = account,
                 connectingTime = storeSession.connectingTime,
                 showWalletInfo = wallets.size > 1,
             )
