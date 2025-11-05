@@ -47,7 +47,7 @@ class SwapTokenTest : BaseTestCase() {
                 onTokenDetailsScreen { title.assertIsDisplayed() }
             }
             step("Click on 'Swap' button") {
-                onTokenDetailsScreen { swapButton.performClick() }
+                onTokenDetailsScreen { swapButton().performClick() }
             }
             step("Close 'Stories' screen") {
                 onSwapStoriesScreen { closeButton.clickWithAssertion() }
@@ -131,7 +131,7 @@ class SwapTokenTest : BaseTestCase() {
                 disableMobileData()
             }
             step("Click on 'Swap' button") {
-                onTokenDetailsScreen { swapButton.performClick() }
+                onTokenDetailsScreen { swapButton().performClick() }
             }
             step("Close 'Stories' screen") {
                 onSwapStoriesScreen { closeButton.clickWithAssertion() }
@@ -175,7 +175,7 @@ class SwapTokenTest : BaseTestCase() {
                 onTokenDetailsScreen { title.assertIsDisplayed() }
             }
             step("Click on 'Swap' button") {
-                onTokenDetailsScreen { swapButton.performClick() }
+                onTokenDetailsScreen { swapButton().performClick() }
             }
             step("Close 'Stories' screen") {
                 onSwapStoriesScreen { closeButton.clickWithAssertion() }
