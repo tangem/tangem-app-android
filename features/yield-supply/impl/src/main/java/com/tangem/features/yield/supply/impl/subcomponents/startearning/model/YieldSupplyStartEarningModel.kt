@@ -62,7 +62,7 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
     private val yieldSupplyAlertFactory: YieldSupplyAlertFactory,
     private val yieldSupplyActivateUseCase: YieldSupplyActivateUseCase,
     private val yieldSupplyMinAmountUseCase: YieldSupplyMinAmountUseCase,
-    private val yieldSupplyGetMaxFeeUseCase: YieldSupplyGetMaxFeeUseCase,
+    private val yieldSupplyGetTokenMaxFeeUseCase: YieldSupplyGetTokenMaxFeeUseCase,
     private val yieldSupplyRepository: YieldSupplyRepository,
 ) : Model(), YieldSupplyNotificationsComponent.ModelCallback {
 
@@ -130,10 +130,6 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
         }
     }
 
-    private suspend fun getMaxFeePair(): Pair<BigDecimal, BigDecimal>? {
-        return yieldSupplyGetMaxFeeUseCase(userWallet, cryptoCurrencyStatus).getOrNull()
-    }
-
     private suspend fun onLoadFee() {
         if (cryptoCurrencyStatus.value is CryptoCurrencyStatus.Loading || uiState.value.isTransactionSending) return
 
@@ -141,15 +137,12 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
             it.copy(yieldSupplyFeeUM = YieldSupplyFeeUM.Loading)
         }
 
-        val maxFeePair = getMaxFeePair() ?: return
-
-        val maxFee = maxFeePair.first
-        val maxFeeFiat = maxFeePair.second
+        val maxFee = yieldSupplyGetTokenMaxFeeUseCase(userWallet, cryptoCurrencyStatus).getOrNull() ?: return
 
         val transactionListData = yieldSupplyStartEarningUseCase(
             userWalletId = userWallet.walletId,
             cryptoCurrencyStatus = cryptoCurrencyStatus,
-            maxNetworkFee = maxFee,
+            maxNetworkFee = maxFee.nativeMaxFee,
         ).getOrNull()
 
         if (transactionListData == null) {
@@ -194,7 +187,6 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
                         updatedTransactionList = updatedTransactionList,
                         feeValue = feeSum,
                         maxNetworkFee = maxFee,
-                        maxNetworkFeeFiat = maxFeeFiat,
                         minAmount = minAmount,
                     ),
                 )
@@ -255,7 +247,10 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
                         token = cryptoCurrency.symbol,
                         feeType = AnalyticsParam.FeeType.Normal,
                     )
-                    analytics.send(YieldSupplyAnalytics.FundsEarned)
+                    analytics.send(YieldSupplyAnalytics.FundsEarned(
+                        blockchain = cryptoCurrency.network.name,
+                        token = cryptoCurrency.symbol,
+                    ))
                     yieldSupplyFeeUM.transactionDataList.forEach {
                         analytics.send(
                             Basic.TransactionSent(
