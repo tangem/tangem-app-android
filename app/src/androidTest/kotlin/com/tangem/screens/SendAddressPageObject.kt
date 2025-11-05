@@ -16,6 +16,11 @@ import com.tangem.core.ui.R as CoreUiR
 class SendAddressPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
     ComposeScreen<SendAddressPageObject>(semanticsProvider = semanticsProvider) {
 
+    val container: KNode = child {
+        hasTestTag(SendAddressScreenTestTags.CONTAINER)
+        useUnmergedTree = true
+    }
+
     val addressTextFieldTitle: KNode = child {
         hasTestTag(SendAddressScreenTestTags.ADDRESS_TEXT_FIELD_TITLE)
         useUnmergedTree = true
@@ -28,6 +33,11 @@ class SendAddressPageObject(semanticsProvider: SemanticsNodeInteractionsProvider
 
     val addressPasteButton: KNode = child {
         hasTestTag(SendAddressScreenTestTags.ADDRESS_PASTE_BUTTON)
+        useUnmergedTree = true
+    }
+
+    val qrButton: KNode = child {
+        hasTestTag(SendAddressScreenTestTags.QR_BUTTON)
         useUnmergedTree = true
     }
 
