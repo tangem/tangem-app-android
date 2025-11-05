@@ -1,10 +1,13 @@
 package com.tangem.features.nft.collections.entity.transformer
 
+import com.tangem.common.ui.account.AccountTitleUM
+import com.tangem.common.ui.account.toUM
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.nft.models.*
 import com.tangem.features.nft.collections.entity.*
 import com.tangem.features.nft.impl.R
@@ -16,6 +19,8 @@ import kotlinx.collections.immutable.toPersistentList
 @Suppress("LongParameterList")
 internal class UpdateDataStateTransformer(
     private val nftCollections: List<NFTCollections>,
+    private val walletNFTCollections: WalletNFTCollections? = null,
+    private val isAccountMode: Boolean = false,
     private val onReceiveClick: () -> Unit,
     private val onRetryClick: () -> Unit,
     private val onExpandCollectionClick: (NFTCollection) -> Unit,
@@ -25,7 +30,9 @@ internal class UpdateDataStateTransformer(
     private val collectionIdProvider: NFTCollection.() -> String,
 ) : Transformer<NFTCollectionsStateUM> {
 
+    @Suppress("CyclomaticComplexMethod")
     override fun transform(prevState: NFTCollectionsStateUM): NFTCollectionsStateUM {
+        val nftCollections = walletNFTCollections?.flattenCollections ?: this.nftCollections
         val hasQuery = !(prevState.content as? NFTCollectionsUM.Content)?.search?.query.isNullOrEmpty()
         val content = when {
             !hasQuery && nftCollections.allCollectionsFailed() ->
@@ -66,16 +73,45 @@ internal class UpdateDataStateTransformer(
         } else {
             initialSearchBarFactory()
         },
-        collections = nftCollections
+        collections = walletNFTCollections
+            ?.let { createCollections(it) }
+            ?: createNFTsUM(nftCollections).toPersistentList(),
+        warnings = transformNotifications(),
+        onReceiveClick = onReceiveClick,
+    )
+
+    private fun NFTCollectionsStateUM.createCollections(walletNFTCollections: WalletNFTCollections) =
+        if (isAccountMode) {
+            val result = mutableListOf<NFTCollectionItem>()
+            walletNFTCollections.collections.forEach { (account, nfts) ->
+                if (nfts.isEmpty()) return@forEach
+                result.add(account.toAccountPortfolioUM())
+                result.addAll(createNFTsUM(nfts))
+            }
+            result.toPersistentList()
+        } else {
+            val mainAccountCollection = walletNFTCollections.collections.values.firstOrNull() ?: listOf()
+            createNFTsUM(mainAccountCollection).toPersistentList()
+        }
+
+    private fun Account.toAccountPortfolioUM(): NFTCollectionPortfolioUM = NFTCollectionPortfolioUM(
+        id = this.accountId.value,
+        title = AccountTitleUM.Account(
+            prefixText = TextReference.EMPTY,
+            name = this.accountName.toUM().value,
+            icon = when (this) {
+                is Account.CryptoPortfolio -> this.icon.toUM()
+            },
+        ),
+    )
+
+    private fun NFTCollectionsStateUM.createNFTsUM(nftCollections: List<NFTCollections>): Sequence<NFTCollectionUM> =
+        nftCollections
             .map { it.content }
             .asSequence()
             .filterIsInstance<NFTCollections.Content.Collections>()
             .map { it.collections.orEmpty().transform(this) }
             .flatten()
-            .toPersistentList(),
-        warnings = transformNotifications(),
-        onReceiveClick = onReceiveClick,
-    )
 
     private fun List<NFTCollection>.transform(state: NFTCollectionsStateUM): ImmutableList<NFTCollectionUM> = map {
         NFTCollectionUM(
@@ -97,6 +133,8 @@ internal class UpdateDataStateTransformer(
     }.toPersistentList()
 
     private fun transformNotifications(): ImmutableList<NFTCollectionsWarningUM> = buildList {
+        val nftCollections = walletNFTCollections?.flattenCollections
+            ?: this@UpdateDataStateTransformer.nftCollections
         if (nftCollections.anyCollectionFailed()) {
             add(
                 NFTCollectionsWarningUM(
@@ -152,6 +190,7 @@ internal class UpdateDataStateTransformer(
     private fun NFTCollection.isExpanded(state: NFTCollectionsStateUM): Boolean =
         (state.content as? NFTCollectionsUM.Content)
             ?.collections
+            ?.filterIsInstance<NFTCollectionUM>()
             ?.firstOrNull { it.id == this.collectionIdProvider() }
             ?.isExpanded
             ?: false
