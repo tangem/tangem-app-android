@@ -1,5 +1,6 @@
 package com.tangem.datasource.utils
 
+import com.tangem.utils.ProviderSuspend
 import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor
 import okhttp3.Response
@@ -12,21 +13,17 @@ import okhttp3.Response
 [REDACTED_AUTHOR]
  */
 class AddHeadersInterceptor(
-    private val requestHeaders: Set<RequestHeader>,
+    private val requestHeaders: Map<String, ProviderSuspend<String>>,
 ) : Interceptor {
-
-    constructor(requestHeader: RequestHeader) : this(requestHeaders = setOf(requestHeader))
 
     override fun intercept(chain: Interceptor.Chain): Response {
         val requestBuilder = chain.request().newBuilder()
 
-        requestHeaders
-            .flatMap { it.values.toList() }
-            .forEach { (name, valueProvider) ->
-                val value = runBlocking { valueProvider() }
+        requestHeaders.forEach { (name, valueProvider) ->
+            val value = runBlocking { valueProvider() }
 
-                requestBuilder.addHeader(name = name, value = value)
-            }
+            requestBuilder.addHeader(name = name, value = value)
+        }
 
         val request = requestBuilder.build()
 
