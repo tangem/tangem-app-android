@@ -947,6 +947,7 @@
   </plurals>
   <string name="onramp_timing_minutes">%s min</string>
   <string name="onramp_title_available_from">Available from</string>
+  <string name="onramp_title_available_up_to">Available up to</string>
   <string name="onramp_title_you_get">You get</string>
   <string name="onramp_tos_external_providers">Service is provided by an external provider. \nTangem is not responsible.</string>
   <string name="onramp_transaction_status_footer_text">You can close this screen and check the transaction status on the token details screen.</string>
