@@ -9,18 +9,94 @@ import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
 import io.github.kakaocup.compose.node.element.KNode
 import io.github.kakaocup.kakao.common.utilities.getResourceString
+import androidx.compose.ui.test.hasTestTag as withTestTag
+import androidx.compose.ui.test.hasText as withText
+import com.tangem.core.ui.R as CoreUiR
 
 class SendAddressPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
     ComposeScreen<SendAddressPageObject>(semanticsProvider = semanticsProvider) {
+
+    val addressTextFieldTitle: KNode = child {
+        hasTestTag(SendAddressScreenTestTags.ADDRESS_TEXT_FIELD_TITLE)
+        useUnmergedTree = true
+    }
 
     val addressTextField: KNode = child {
         hasTestTag(SendAddressScreenTestTags.ADDRESS_TEXT_FIELD)
         useUnmergedTree = true
     }
 
+    val addressPasteButton: KNode = child {
+        hasTestTag(SendAddressScreenTestTags.ADDRESS_PASTE_BUTTON)
+        useUnmergedTree = true
+    }
+
+    val clearTextFieldButton: KNode = child {
+        hasContentDescription(getResourceString(CoreUiR.string.common_close))
+        useUnmergedTree = true
+    }
+
+    val resolvedAddress: KNode = child {
+        hasTestTag(SendAddressScreenTestTags.RESOLVED_ADDRESS)
+    }
+
+    val recentAddressesTitle: KNode = child {
+        hasText(getResourceString(CoreUiR.string.send_recent_transactions))
+        useUnmergedTree = true
+    }
+
+    fun destinationTagBlockTitle(isMemoCorrectOrEmpty: Boolean = true): KNode = child {
+        hasTestTag(SendAddressScreenTestTags.DESTINATION_TAG_TEXT_FIELD_TITLE)
+        useUnmergedTree = true
+        if(isMemoCorrectOrEmpty) {
+            hasText(getResourceString(CoreUiR.string.send_destination_tag_field))
+        } else {
+            hasText(getResourceString(CoreUiR.string.send_memo_destination_tag_error))
+        }
+    }
+
+    val destinationTagTextField: KNode = child {
+        hasTestTag(SendAddressScreenTestTags.DESTINATION_TAG_TEXT_FIELD)
+        useUnmergedTree = true
+    }
+
+    val destinationTagBlockText: KNode = child {
+        hasText(
+            getResourceString(CoreUiR.string.send_recipient_memo_footer_v2) + "\n" +
+                getResourceString(CoreUiR.string.send_recipient_memo_footer_v2_highlighted)
+        )
+        useUnmergedTree = true
+    }
+
+    val destinationTagBlockCaution: KNode = child {
+        hasText(getResourceString(CoreUiR.string.send_recipient_memo_footer_v2_highlighted))
+    }
+
+    val destinationTagPasteButton: KNode = child {
+        hasTestTag(SendAddressScreenTestTags.DESTINATION_TAG_PASTE_BUTTON)
+        useUnmergedTree = true
+    }
+
+    val clearDestinationTagTextFieldButton: KNode = child {
+        hasTestTag(SendAddressScreenTestTags.DESTINATION_TAG_CLEAR_TEXT_FIELD_BUTTON)
+        useUnmergedTree = true
+    }
+
     val nextButton: KNode = child {
+        hasTestTag(BaseButtonTestTags.BUTTON)
+        hasAnyDescendant(withText(getResourceString(R.string.common_next)))
+        useUnmergedTree = true
+    }
+
+    val continueButton: KNode = child {
         hasTestTag(BaseButtonTestTags.TEXT)
-        hasText(getResourceString(R.string.common_next))
+        hasText(getResourceString(R.string.common_continue))
+        useUnmergedTree = true
+    }
+
+    fun recentAddressWithText(recipientAddress: String): KNode = child {
+        hasParent(withTestTag(SendAddressScreenTestTags.RECENT_ADDRESS_TITLE))
+        hasText(recipientAddress)
         useUnmergedTree = true
     }
 
