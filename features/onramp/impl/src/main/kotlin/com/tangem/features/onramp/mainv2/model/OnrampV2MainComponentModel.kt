@@ -226,19 +226,18 @@ internal class OnrampV2MainComponentModel @Inject constructor(
     }
 
     private fun subscribeOnOffers() = modelScope.launch {
-        getOnrampOffersUseCase.invoke(
-            userWalletId = userWallet.walletId,
-            cryptoCurrencyId = params.cryptoCurrency.id,
-        ).collectLatest { maybeOffers ->
-            maybeOffers.fold(
-                ifLeft = ::handleOnrampError,
-                ifRight = { offers ->
-                    if (offers.isNotEmpty()) {
-                        _state.update { onrampOffersStateFactory.getOffersState(offers) }
-                    }
-                },
-            )
-        }
+        getOnrampOffersUseCase
+            .invoke()
+            .collectLatest { maybeOffers ->
+                maybeOffers.fold(
+                    ifLeft = ::handleOnrampError,
+                    ifRight = { offers ->
+                        if (offers.isNotEmpty()) {
+                            _state.update { onrampOffersStateFactory.getOffersState(offers) }
+                        }
+                    },
+                )
+            }
     }
 
     private fun subscribeToAmountChanges() = modelScope.launch {
