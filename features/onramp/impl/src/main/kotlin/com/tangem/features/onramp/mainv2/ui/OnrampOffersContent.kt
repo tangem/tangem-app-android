@@ -119,7 +119,7 @@ internal fun Offer(onrampOfferUM: OnrampOfferUM, modifier: Modifier = Modifier) 
                 RateBlock(
                     rate = onrampOfferUM.rate,
                     diff = onrampOfferUM.diff,
-                    isOfferUnavailable = onrampOfferUM.advantages == OnrampOfferAdvantagesUM.Unavailable,
+                    isOfferUnavailable = onrampOfferUM.advantages is OnrampOfferAdvantagesUM.Unavailable,
                 )
             }
             SpacerWMax()
@@ -127,7 +127,7 @@ internal fun Offer(onrampOfferUM: OnrampOfferUM, modifier: Modifier = Modifier) 
                 size = TangemButtonSize.RoundedAction,
                 text = stringResourceSafe(R.string.common_buy),
                 onClick = onrampOfferUM.onBuyClicked,
-                enabled = onrampOfferUM.advantages != OnrampOfferAdvantagesUM.Unavailable,
+                enabled = onrampOfferUM.advantages !is OnrampOfferAdvantagesUM.Unavailable,
             )
         }
         SpacerH(10.dp)
@@ -184,9 +184,13 @@ private fun OfferHeader(advantage: OnrampOfferAdvantagesUM) {
                 color = TangemTheme.colors.icon.attention,
             )
         }
-        OnrampOfferAdvantagesUM.Unavailable -> {
+        is OnrampOfferAdvantagesUM.Unavailable -> {
+            val textResId = when (advantage) {
+                OnrampOfferAdvantagesUM.Unavailable.MinAmount -> R.string.onramp_title_available_from
+                OnrampOfferAdvantagesUM.Unavailable.MaxAmount -> R.string.onramp_title_available_up_to
+            }
             Text(
-                text = stringResourceSafe(R.string.onramp_title_available_from),
+                text = stringResourceSafe(textResId),
                 style = TangemTheme.typography.caption1,
                 color = TangemTheme.colors.text.tertiary,
             )
