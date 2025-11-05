@@ -101,6 +101,10 @@ internal class FeedbackDataBuilder {
 
     fun addBlockchainError(info: BlockchainInfo, error: BlockchainErrorInfo) {
         builder.appendKeyValue("Blockchain", info.blockchain)
+        builder.appendAddresses(
+            key = "Explorer link${info.explorerLinks.isMultiple(suffix = "s")}",
+            addresses = info.explorerLinks,
+        )
         builder.appendKeyValue("Derivation path", info.derivationPath)
         builder.appendKeyValue("Host", info.host)
         builder.appendKeyValue("Token", error.tokenSymbol)
