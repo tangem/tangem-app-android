@@ -30,6 +30,7 @@ typealias MaybeTxHistoryCount = Either<TxHistoryStateError, Int>
 typealias MaybeTxHistoryItems = Either<TxHistoryListError, Flow<PagingData<TxInfo>>>
 
 @Suppress("LongParameterList")
+@Deprecated("Use TxHistorySubscriberV2 instead")
 internal class TxHistorySubscriber(
     private val userWallet: UserWallet.Cold,
     private val isRefresh: Boolean,

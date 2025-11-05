@@ -74,4 +74,10 @@ internal object ApiConfigsModule {
     fun provideBlockAidConfig(environmentConfigStorage: EnvironmentConfigStorage): ApiConfig {
         return BlockAid(environmentConfigStorage)
     }
+
+    @Provides
+    @IntoSet
+    fun provideMoonPayConfig(): ApiConfig {
+        return MoonPay()
+    }
 }

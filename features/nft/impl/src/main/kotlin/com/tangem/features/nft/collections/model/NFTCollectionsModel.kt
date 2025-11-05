@@ -7,6 +7,8 @@ import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfi
 import com.tangem.core.ui.components.fields.InputManager
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
+import com.tangem.domain.account.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.nft.FetchNFTCollectionAssetsUseCase
 import com.tangem.domain.nft.GetNFTCollectionsUseCase
 import com.tangem.domain.nft.RefreshAllNFTUseCase
@@ -31,6 +33,8 @@ internal class NFTCollectionsModel @Inject constructor(
     private val getNFTCollectionsUseCase: GetNFTCollectionsUseCase,
     private val fetchNFTCollectionAssetsUseCase: FetchNFTCollectionAssetsUseCase,
     private val refreshAllNFTUseCase: RefreshAllNFTUseCase,
+    private val accountsFeatureToggles: AccountsFeatureToggles,
+    private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     paramsContainer: ParamsContainer,
 ) : Model() {
 
@@ -62,7 +66,11 @@ internal class NFTCollectionsModel @Inject constructor(
     }
 
     init {
-        subscribeToNFTCollections()
+        if (accountsFeatureToggles.isFeatureEnabled) {
+            subscribeToNFTCollectionsNew()
+        } else {
+            subscribeToNFTCollections()
+        }
     }
 
     private fun subscribeToNFTCollections() {
@@ -73,6 +81,38 @@ internal class NFTCollectionsModel @Inject constructor(
             _state.update {
                 UpdateDataStateTransformer(
                     nftCollections = nftCollections.filter(query),
+                    onReceiveClick = {
+                        params.onReceiveClick()
+                    },
+                    onRetryClick = ::onRefresh,
+                    onExpandCollectionClick = ::onExpandCollectionClick,
+                    onRetryAssetsClick = ::onRetryAssetsClick,
+                    onAssetClick = { asset, collection ->
+                        params.onAssetClick(asset, collection)
+                    },
+                    initialSearchBarFactory = ::getInitialSearchBar,
+                    collectionIdProvider = collectionIdProvider,
+                ).transform(it)
+            }
+        }
+            .onStart { onRefresh() }
+            .launchIn(modelScope)
+    }
+
+    private fun subscribeToNFTCollectionsNew() {
+        combine(
+            flow = getNFTCollectionsUseCase.invokeForAccounts(params.userWalletId),
+            flow2 = searchManager.query.distinctUntilChanged(),
+            flow3 = isAccountsModeEnabledUseCase(),
+        ) { nftCollections, query, isAccountMode ->
+            val filteredNFTs = nftCollections.collections
+                .mapValues { (_, nfts) -> nfts.filter(query) }
+
+            _state.update {
+                UpdateDataStateTransformer(
+                    nftCollections = listOf(),
+                    isAccountMode = isAccountMode,
+                    walletNFTCollections = nftCollections.copy(collections = filteredNFTs),
                     onReceiveClick = {
                         params.onReceiveClick()
                     },

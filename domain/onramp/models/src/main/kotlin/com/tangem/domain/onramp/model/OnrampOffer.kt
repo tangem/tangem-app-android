@@ -5,7 +5,6 @@ import java.math.BigDecimal
 data class OnrampOffersBlock(
     val category: OnrampOfferCategory,
     val offers: List<OnrampOffer>,
-    val hasMoreOffers: Boolean,
 )
 
 data class OnrampOffer(
@@ -15,7 +14,7 @@ data class OnrampOffer(
 )
 
 enum class OnrampOfferAdvantages {
-    Default, BestRate, Fastest,
+    Default, BestRate, Fastest, GreatRate,
 }
 
 enum class OnrampOfferCategory {

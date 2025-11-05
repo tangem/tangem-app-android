@@ -14,10 +14,12 @@ sealed class ApiResponse<T : Any> {
      * Represents a successful response from the API
      *
      * @property data    the data returned by the API
+     * @property code    the HTTP status code of the response
      * @property headers the headers returned by the API
      */
     data class Success<T : Any>(
         val data: T,
+        val code: ApiResponseError.HttpException.Code = ApiResponseError.HttpException.Code.OK,
         override val headers: Map<String, List<String>> = emptyMap(),
     ) : ApiResponse<T>()
 
@@ -37,11 +39,20 @@ sealed class ApiResponse<T : Any> {
  * Wraps data in a [ApiResponse.Success] instance
  *
  * @param data    the data to wrap
+ * @param code    the HTTP status code of the response
  * @param headers the headers returned by the API
  * @return a [ApiResponse.Success] instance containing the provided data
  */
-internal fun <T : Any> apiSuccess(data: T, headers: Map<String, List<String>>): ApiResponse<T> {
-    return ApiResponse.Success(data, headers)
+internal fun <T : Any> apiSuccess(
+    data: T,
+    code: ApiResponseError.HttpException.Code?,
+    headers: Map<String, List<String>>,
+): ApiResponse<T> {
+    return ApiResponse.Success(
+        data = data,
+        code = code ?: ApiResponseError.HttpException.Code.OK,
+        headers = headers,
+    )
 }
 
 /**
