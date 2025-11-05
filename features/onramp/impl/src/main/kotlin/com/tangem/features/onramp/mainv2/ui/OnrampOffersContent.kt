@@ -1,6 +1,7 @@
 package com.tangem.features.onramp.mainv2.ui
 
 import android.content.res.Configuration
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -57,14 +58,19 @@ internal fun OnrampOffersContent(state: OnrampOffersBlockUM) {
                     }
                 }
 
-                Text(
-                    modifier = Modifier.padding(start = 12.dp),
-                    text = stringResourceSafe(R.string.onramp_recommended_title),
-                    style = TangemTheme.typography.subtitle2,
-                    color = TangemTheme.colors.text.tertiary,
-                )
-
-                SpacerH(8.dp)
+                AnimatedVisibility(
+                    visible = state.recommended.isNotEmpty(),
+                ) {
+                    if (state.recommended.isNotEmpty()) {
+                        Text(
+                            modifier = Modifier.padding(start = 12.dp),
+                            text = stringResourceSafe(R.string.onramp_recommended_title),
+                            style = TangemTheme.typography.subtitle2,
+                            color = TangemTheme.colors.text.tertiary,
+                        )
+                        SpacerH(8.dp)
+                    }
+                }
 
                 state.recommended.fastForEach { offer ->
                     key("${offer.paymentMethod.id} ${offer.providerName} ${offer.rate}") {
