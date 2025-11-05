@@ -6,10 +6,7 @@ import com.tangem.domain.card.ScanCardUseCase
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.express.ExpressServiceFetcher
-import com.tangem.domain.tokens.GetPolkadotCheckHasImmortalUseCase
-import com.tangem.domain.tokens.GetPolkadotCheckHasResetUseCase
 import com.tangem.domain.tokens.repository.CurrenciesRepository
-import com.tangem.domain.tokens.repository.PolkadotAccountHealthCheckRepository
 import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.tap.domain.scanCard.repository.DefaultScanCardRepository
@@ -82,21 +79,5 @@ internal object ActivityModule {
             secretKeyProvider = Provider { environmentConfigStorage.getConfigSync().moonPayApiSecretKey },
             userWalletProvider = { getSelectedWalletUseCase.sync().getOrNull() },
         )
-    }
-
-    @Provides
-    @Singleton
-    fun provideGetPolkadotCheckHasResetUseCase(
-        polkadotAccountHealthCheckRepository: PolkadotAccountHealthCheckRepository,
-    ): GetPolkadotCheckHasResetUseCase {
-        return GetPolkadotCheckHasResetUseCase(polkadotAccountHealthCheckRepository)
-    }
-
-    @Provides
-    @Singleton
-    fun provideGetPolkadotCheckHasImmortalUseCase(
-        polkadotAccountHealthCheckRepository: PolkadotAccountHealthCheckRepository,
-    ): GetPolkadotCheckHasImmortalUseCase {
-        return GetPolkadotCheckHasImmortalUseCase(polkadotAccountHealthCheckRepository)
     }
 }
