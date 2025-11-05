@@ -3,15 +3,21 @@ package com.tangem.data.account.fetcher
 import com.tangem.data.account.converter.createGetWalletAccountsResponse
 import com.tangem.data.account.converter.createWalletAccountDTO
 import com.tangem.data.account.utils.DefaultWalletAccountsResponseFactory
-import com.tangem.data.account.utils.toUserTokensResponse
+import com.tangem.data.common.cache.etag.ETagsStore
 import com.tangem.data.common.currency.UserTokensSaver
+import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.common.response.ApiResponseError.HttpException.Code
+import com.tangem.datasource.api.common.response.ETAG_HEADER
+import com.tangem.datasource.api.tangemTech.TangemTechApi
+import com.tangem.datasource.api.tangemTech.models.OnlyWalletIdBody
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
+import com.tangem.datasource.api.tangemTech.models.account.toUserTokensResponse
 import com.tangem.datasource.local.token.UserTokensResponseStore
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -27,14 +33,19 @@ import org.junit.jupiter.api.TestInstance
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class FetchWalletAccountsErrorHandlerTest {
 
+    private val tangemTechApi: TangemTechApi = mockk()
     private val userTokensSaver: UserTokensSaver = mockk(relaxUnitFun = true)
     private val userTokensResponseStore: UserTokensResponseStore = mockk(relaxUnitFun = true)
     private val defaultWalletAccountsResponseFactory: DefaultWalletAccountsResponseFactory = mockk()
+    private val eTagsStore: ETagsStore = mockk(relaxUnitFun = true)
 
     private val handler = FetchWalletAccountsErrorHandler(
+        tangemTechApi = tangemTechApi,
         userTokensSaver = userTokensSaver,
         userTokensResponseStore = userTokensResponseStore,
         defaultWalletAccountsResponseFactory = defaultWalletAccountsResponseFactory,
+        eTagsStore = eTagsStore,
+        dispatchers = TestingCoroutineDispatcherProvider(),
     )
 
     private val pushWalletAccounts: suspend (UserWalletId, List<WalletAccountDTO>) -> GetWalletAccountsResponse =
@@ -53,6 +64,8 @@ class FetchWalletAccountsErrorHandlerTest {
     @Test
     fun `does not update accounts when response is up to date`() = runTest {
         // Arrange
+        val response = createGetWalletAccountsResponse(userWalletId)
+
         val error = ApiResponseError.HttpException(
             code = Code.NOT_MODIFIED,
             message = "Not Modified",
@@ -63,7 +76,7 @@ class FetchWalletAccountsErrorHandlerTest {
         handler.handle(
             error = error,
             userWalletId = userWalletId,
-            savedAccountsResponse = null,
+            savedAccountsResponse = response,
             pushWalletAccounts = pushWalletAccounts,
             storeWalletAccounts = storeWalletAccounts,
         )
@@ -91,6 +104,16 @@ class FetchWalletAccountsErrorHandlerTest {
 
         val savedAccountsResponse = createGetWalletAccountsResponse(userWalletId)
 
+        val eTagValue = "etag-value"
+        val apiResponse = ApiResponse.Success(
+            data = Unit,
+            headers = mapOf(ETAG_HEADER to listOf(eTagValue)),
+            code = Code.CREATED,
+        )
+
+        coEvery {
+            tangemTechApi.createWallet(OnlyWalletIdBody(userWalletId.stringValue))
+        } returns apiResponse
         coEvery { pushWalletAccounts(userWalletId, listOf(accountDTO)) } returns savedAccountsResponse
 
         // Act
@@ -105,6 +128,8 @@ class FetchWalletAccountsErrorHandlerTest {
         // Assert
         coVerify {
             userTokensSaver.push(userWalletId, response = savedAccountsResponse.toUserTokensResponse())
+            tangemTechApi.createWallet(OnlyWalletIdBody(userWalletId.stringValue))
+            eTagsStore.store(userWalletId, ETagsStore.Key.WalletAccounts, eTagValue)
             pushWalletAccounts(userWalletId, listOf(accountDTO))
             storeWalletAccounts(userWalletId, savedAccountsResponse)
         }

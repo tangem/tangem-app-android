@@ -2,12 +2,17 @@ package com.tangem.domain.feedback
 
 import com.tangem.domain.feedback.models.*
 import com.tangem.domain.feedback.utils.breakLine
+import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import com.tangem.domain.visa.model.VisaTxDetails
 import com.tangem.domain.feedback.models.BlockchainInfo.Addresses as BlockchainAddresses
 
 internal class FeedbackDataBuilder {
 
     private val builder = StringBuilder()
+
+    fun addTangemPayTxInfo(item: TangemPayTxHistoryItem) {
+        builder.append(item.jsonRepresentation)
+    }
 
     fun addVisaTxInfo(txDetails: VisaTxDetails) {
         builder.appendKeyValue("Type", txDetails.type)
