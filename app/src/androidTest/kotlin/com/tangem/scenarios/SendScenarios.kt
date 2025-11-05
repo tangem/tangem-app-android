@@ -37,6 +37,21 @@ fun BaseTestCase.openSendConfirmScreen(
     inputAmount: String,
     recipientAddress: String
 ) {
+    step("Open 'Send Address' screen") {
+        openSendAddressScreen(tokenName, inputAmount)
+    }
+    step("Type recipient address") {
+        onSendAddressScreen { addressTextField.performTextReplacement(recipientAddress) }
+    }
+    step("Click on 'Next' button") {
+        onSendAddressScreen { nextButton.clickWithAssertion() }
+    }
+}
+
+fun BaseTestCase.openSendAddressScreen(
+    tokenName: String,
+    inputAmount: String
+) {
     step("Click on token with name: '$tokenName'") {
         onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
     }
@@ -52,10 +67,22 @@ fun BaseTestCase.openSendConfirmScreen(
     step("Click on 'Next' button") {
         onSendScreen { nextButton.clickWithAssertion() }
     }
-    step("Type recipient address") {
-        onSendAddressScreen { addressTextField.performTextReplacement(recipientAddress) }
+    step("Assert 'Send Address' container is displayed") {
+        onSendAddressScreen { container.assertIsDisplayed() }
     }
-    step("Click on 'Next' button") {
-        onSendAddressScreen { nextButton.clickWithAssertion() }
+}
+
+fun BaseTestCase.checkScanQrScreen() {
+    step("Assert 'Back' button is displayed") {
+        onScanQrScreen { backTopAppBarButton.assertIsDisplayed() }
+    }
+    step("Assert 'Flashlight' button is displayed") {
+        onScanQrScreen { flashlightButton.assertIsDisplayed() }
+    }
+    step("Assert 'Gallery' button is displayed") {
+        onScanQrScreen { galleryButton.assertIsDisplayed() }
+    }
+    step("Assert 'Paste from clipboard' is displayed") {
+        onScanQrScreen { pasteFromClipboardButton.assertIsDisplayed() }
     }
 }

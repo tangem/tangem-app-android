@@ -1,5 +1,6 @@
 package com.tangem.tests.send.addressScreen
 
+import android.Manifest
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.ENS_ETHEREUM_RECIPIENT_ADDRESS
 import com.tangem.common.constants.TestConstants.ENS_ETHEREUM_RECIPIENT_SHORTENED_ADDRESS
@@ -9,15 +10,17 @@ import com.tangem.common.constants.TestConstants.ETHEREUM_RECIPIENT_ADDRESS
 import com.tangem.common.constants.TestConstants.ETHEREUM_RECIPIENT_SHORTENED_ADDRESS
 import com.tangem.common.constants.TestConstants.XRP_RECIPIENT_ADDRESS
 import com.tangem.common.extensions.clickWithAssertion
-import com.tangem.common.utils.*
+import com.tangem.common.utils.clearClipboard
+import com.tangem.common.utils.resetWireMockScenarioState
+import com.tangem.common.utils.setClipboardText
+import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.ui.R
+import com.tangem.scenarios.checkScanQrScreen
 import com.tangem.scenarios.openMainScreen
+import com.tangem.scenarios.openSendAddressScreen
 import com.tangem.scenarios.synchronizeAddresses
 import com.tangem.screens.*
-import com.tangem.screens.onMainScreen
-import com.tangem.screens.onSendAddressScreen
-import com.tangem.screens.onSendScreen
-import com.tangem.screens.onTokenDetailsScreen
+import com.tangem.wallet.BuildConfig
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 import io.qameta.allure.kotlin.AllureId
@@ -332,6 +335,128 @@ class SendAddressScreenTest : BaseTestCase() {
             }
             step("Assert invalid address error title is displayed") {
                 onSendAddressScreen { addressTextFieldTitle.assertTextContains(notAValidAddress) }
+            }
+        }
+    }
+
+    @AllureId("4574")
+    @DisplayName("Send (address screen): check scan QR code screen")
+    @Test
+    fun checkQrCodeScreenTest() {
+        val tokenName = "Ethereum"
+        val sendAmount = "1"
+        val packageName = BuildConfig.APPLICATION_ID
+        val permissionName = Manifest.permission.CAMERA
+
+        setupHooks(
+            additionalBeforeSection = {
+                device.uiDevice.executeShellCommand("pm grant $packageName $permissionName")
+            }
+        ).run {
+            step("Open 'Main Screen'") {
+                openMainScreen()
+            }
+            step("Synchronize addresses") {
+                synchronizeAddresses()
+            }
+            step("Open 'Send Address' screen") {
+                openSendAddressScreen(tokenName, sendAmount)
+            }
+            step("Click on 'QR' button") {
+                onSendAddressScreen { qrButton.clickWithAssertion() }
+            }
+            step("Check 'Scan QR code' screen") {
+                checkScanQrScreen()
+            }
+        }
+    }
+
+    @AllureId("4576")
+    @DisplayName("Send (address screen): give camera permission")
+    @Test
+    fun giveCameraPermissionScreenTest() {
+        val tokenName = "Ethereum"
+        val sendAmount = "1"
+
+        setupHooks().run {
+
+            step("Open 'Main Screen'") {
+                openMainScreen()
+            }
+            step("Synchronize addresses") {
+                synchronizeAddresses()
+            }
+            step("Open 'Send Address' screen") {
+                openSendAddressScreen(tokenName, sendAmount)
+            }
+            step("Click on 'QR' button") {
+                onSendAddressScreen { qrButton.clickWithAssertion() }
+            }
+            step("Assert 'While using app' button is displayed") {
+                waitForIdle()
+                PermissionDialogPageObject { allowWhileUsingButton.isDisplayed() }
+            }
+            step("Assert 'Allow only this time' button is displayed") {
+                PermissionDialogPageObject { allowOnlyThisTimeButton.isDisplayed() }
+            }
+            step("Assert 'Don't allow' button is displayed") {
+                PermissionDialogPageObject { doNotAllowButton.isDisplayed() }
+            }
+            step("CLick on 'While using app' button") {
+                PermissionDialogPageObject { allowWhileUsingButton.click() }
+            }
+            step("Check 'Scan QR code' screen") {
+                checkScanQrScreen()
+            }
+        }
+    }
+
+    @AllureId("4578")
+    @DisplayName("Send (address screen): don't give camera permission")
+    @Test
+    fun doNotGiveCameraPermissionScreenTest() {
+        val tokenName = "Ethereum"
+        val sendAmount = "1"
+
+        setupHooks().run {
+
+            step("Open 'Main Screen'") {
+                openMainScreen()
+            }
+            step("Synchronize addresses") {
+                synchronizeAddresses()
+            }
+            step("Open 'Send Address' screen") {
+                openSendAddressScreen(tokenName, sendAmount)
+            }
+            step("Click on 'QR' button") {
+                onSendAddressScreen { qrButton.clickWithAssertion() }
+            }
+            step("Click on 'Don't allow' button") {
+                waitForIdle()
+                PermissionDialogPageObject { doNotAllowButton.click() }
+            }
+            step("Assert 'Camera access denied' bottom sheet title is displayed") {
+                waitForIdle()
+                onCameraAccessDeniedBottomSheet { title.assertIsDisplayed() }
+            }
+            step("Assert 'Camera access denied' bottom sheet subtitle is displayed") {
+                onCameraAccessDeniedBottomSheet { subtitle.assertIsDisplayed() }
+            }
+            step("Assert 'Settings' button is displayed") {
+                onCameraAccessDeniedBottomSheet { settingsButton.assertIsDisplayed() }
+            }
+            step("Assert 'Select from the gallery' button is displayed") {
+                onCameraAccessDeniedBottomSheet { selectFromGalleryButton.assertIsDisplayed() }
+            }
+            step("Assert 'Close' button is displayed") {
+                onCameraAccessDeniedBottomSheet { closeButton.assertIsDisplayed() }
+            }
+            step("Click on 'Close' button") {
+                onCameraAccessDeniedBottomSheet { closeButton.performClick() }
+            }
+            step("Assert 'Address' screen is displayed") {
+                onSendAddressScreen { container.assertIsDisplayed() }
             }
         }
     }
