@@ -46,26 +46,6 @@ sealed class WalletScreenAnalyticsEvent {
         )
     }
 
-    sealed class Token(
-        event: String,
-        params: Map<String, String> = mapOf(),
-    ) : AnalyticsEvent(category = "Token", event = event, params = params) {
-
-        class PolkadotAccountReset(hasReset: Boolean) : Token(
-            event = "Polkadot Account Reset",
-            params = mapOf(
-                AnalyticsParam.STATE to if (hasReset) "Yes" else "No",
-            ),
-        )
-
-        class PolkadotImmortalTransactions(hasImmortalTransaction: Boolean) : Token(
-            event = "Polkadot Immortal Transactions",
-            params = mapOf(
-                AnalyticsParam.STATE to if (hasImmortalTransaction) "Yes" else "No",
-            ),
-        )
-    }
-
     sealed class MainScreen(
         event: String,
         params: Map<String, String> = mapOf(),
