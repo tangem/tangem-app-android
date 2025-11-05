@@ -6,6 +6,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -29,9 +31,7 @@ import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.impl.promo.entity.YieldSupplyPromoUM
 import com.tangem.features.yield.supply.impl.promo.model.YieldSupplyPromoClickIntents
-import com.tangem.utils.StringsSigns
 
-@Suppress("MagicNumber")
 @Composable
 internal fun YieldSupplyPromoContent(
     yieldSupplyPromoUM: YieldSupplyPromoUM,
@@ -39,50 +39,18 @@ internal fun YieldSupplyPromoContent(
     modifier: Modifier = Modifier,
 ) {
     Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
             .background(color = TangemTheme.colors.background.tertiary)
-            .fillMaxWidth()
+            .fillMaxSize()
             .imePadding()
-            .systemBarsPadding()
-            .padding(horizontal = 16.dp),
+            .systemBarsPadding(),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         YieldStatusAppBar(
             onBackClick = clickIntents::onBackClick,
             onHowItWorksClick = clickIntents::onHowItWorksClick,
         )
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(horizontal = 20.dp),
-        ) {
-            Icon(
-                imageVector = ImageVector.vectorResource(R.drawable.ic_analytics_up_24),
-                tint = TangemTheme.colors.icon.accent,
-                contentDescription = null,
-                modifier = Modifier
-                    .background(TangemTheme.colors.icon.accent.copy(0.1f), CircleShape)
-                    .padding(12.dp)
-                    .size(32.dp),
-            )
-            SpacerH(20.dp)
-            Text(
-                text = yieldSupplyPromoUM.title.resolveReference(),
-                style = TangemTheme.typography.h2,
-                color = TangemTheme.colors.text.primary1,
-            )
-            SpacerH8()
-            Label(
-                state = LabelUM(
-                    text = yieldSupplyPromoUM.subtitle,
-                    style = LabelStyle.REGULAR,
-                    icon = R.drawable.ic_information_24,
-                    onIconClick = clickIntents::onApyInfoClick,
-                ),
-            )
-            SpacerH32()
-            PromoItems()
-        }
-        SpacerHMax()
+        Content(yieldSupplyPromoUM = yieldSupplyPromoUM, clickIntents = clickIntents)
         YieldSupplyTosText(
             tosLink = yieldSupplyPromoUM.tosLink,
             policyLink = yieldSupplyPromoUM.policyLink,
@@ -91,16 +59,72 @@ internal fun YieldSupplyPromoContent(
         PrimaryButton(
             text = stringResourceSafe(R.string.yield_module_start_earning),
             onClick = clickIntents::onStartEarningClick,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .padding(
+                    start = 16.dp,
+                    end = 16.dp,
+                    bottom = 8.dp,
+                )
+                .fillMaxWidth(),
         )
-        SpacerH8()
+    }
+}
+
+@Suppress("MagicNumber")
+@Composable
+private fun ColumnScope.Content(yieldSupplyPromoUM: YieldSupplyPromoUM, clickIntents: YieldSupplyPromoClickIntents) {
+    Box(modifier = Modifier.weight(1f)) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp)
+                .verticalScroll(rememberScrollState()),
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.padding(horizontal = 20.dp),
+            ) {
+                Icon(
+                    imageVector = ImageVector.vectorResource(R.drawable.ic_analytics_up_24),
+                    tint = TangemTheme.colors.icon.accent,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .background(TangemTheme.colors.icon.accent.copy(0.1f), CircleShape)
+                        .padding(12.dp)
+                        .size(32.dp),
+                )
+                SpacerH(20.dp)
+                Text(
+                    text = yieldSupplyPromoUM.title.resolveReference(),
+                    style = TangemTheme.typography.h2,
+                    color = TangemTheme.colors.text.primary1,
+                )
+                SpacerH8()
+                Label(
+                    state = LabelUM(
+                        text = yieldSupplyPromoUM.subtitle,
+                        style = LabelStyle.REGULAR,
+                        icon = R.drawable.ic_information_24,
+                        onIconClick = clickIntents::onApyInfoClick,
+                    ),
+                )
+                SpacerH32()
+                PromoItems()
+            }
+            SpacerH32()
+        }
+        Fade(
+            backgroundColor = TangemTheme.colors.background.tertiary,
+            modifier = Modifier.align(Alignment.BottomCenter),
+        )
     }
 }
 
 @Composable
 private fun YieldStatusAppBar(onBackClick: () -> Unit, onHowItWorksClick: () -> Unit) {
     Row(
-        modifier = Modifier.padding(vertical = 16.dp),
+        modifier = Modifier.padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
@@ -166,7 +190,12 @@ private fun PromoItem(@DrawableRes icon: Int, title: TextReference, subtitle: Te
 }
 
 @Composable
-private fun YieldSupplyTosText(tosLink: String, policyLink: String, onClick: (String) -> Unit) {
+private fun YieldSupplyTosText(
+    tosLink: String,
+    policyLink: String,
+    onClick: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val tosTitle = stringResourceSafe(R.string.common_terms_of_use)
     val policyTitle = stringResourceSafe(R.string.common_privacy_policy)
     val fullString = stringResourceSafe(id = R.string.yield_module_promo_screen_terms_disclaimer, tosTitle, policyTitle)
@@ -175,8 +204,6 @@ private fun YieldSupplyTosText(tosLink: String, policyLink: String, onClick: (St
 
     Text(
         text = buildAnnotatedString {
-            append(StringsSigns.POINT_SIGN)
-            appendSpace()
             append(fullString.substring(0, tosIndex))
             withLink(
                 link = LinkAnnotation.Clickable(
@@ -207,7 +234,7 @@ private fun YieldSupplyTosText(tosLink: String, policyLink: String, onClick: (St
         textAlign = TextAlign.Center,
         style = TangemTheme.typography.caption2,
         color = TangemTheme.colors.text.tertiary,
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(16.dp),
     )
