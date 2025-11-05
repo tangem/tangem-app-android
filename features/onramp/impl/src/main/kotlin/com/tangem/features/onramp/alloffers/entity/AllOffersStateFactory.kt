@@ -175,9 +175,14 @@ internal class AllOffersStateFactory(
         offer: OnrampOffer,
         currencyCode: String,
     ): OnrampOfferUM {
+        val advantages = when (quote.error) {
+            is OnrampError.AmountError.TooSmallError -> OnrampOfferAdvantagesUM.Unavailable.MinAmount
+            is OnrampError.AmountError.TooBigError -> OnrampOfferAdvantagesUM.Unavailable.MaxAmount
+        }
+
         return OnrampOfferUM(
             category = OnrampOfferCategoryUM.Recommended,
-            advantages = OnrampOfferAdvantagesUM.Unavailable,
+            advantages = advantages,
             paymentMethod = quote.paymentMethod,
             providerName = quote.provider.info.name,
             rate = formatRequiredAmount(quote, currencyCode),
