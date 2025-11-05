@@ -19,7 +19,7 @@ internal class MultiWalletCryptoCurrenciesSupplierModule {
     ): MultiWalletCryptoCurrenciesSupplier {
         return object : MultiWalletCryptoCurrenciesSupplier(
             factory = factory,
-            keyCreator = { "multi_crypto_currency_${it.userWalletId}" },
+            keyCreator = { "multi_crypto_currency_${it.userWalletId.stringValue}" },
         ) {}
     }
 }
