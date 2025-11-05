@@ -172,6 +172,7 @@
   <string name="common_fee_selector_title">Швидкість та комісія</string>
   <string name="common_finish">Завершити</string>
   <string name="common_generate_addresses">Синхронізувати адреси</string>
+  <string name="common_get_started">Почати</string>
   <string name="common_go_to_provider">Перейти до провайдера</string>
   <string name="common_go_to_token">Перейти до токену</string>
   <string name="common_got_it">Зrozуміло</string>
