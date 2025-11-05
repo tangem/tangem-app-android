@@ -6,20 +6,6 @@ import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResp
 import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
 import com.tangem.domain.models.wallet.UserWalletId
 
-/** Flattens the tokens from all wallet accounts into a single list */
-internal fun GetWalletAccountsResponse.flattenTokens(): List<UserTokensResponse.Token> {
-    return accounts.flatMap { it.tokens.orEmpty() }
-}
-
-/** Converts the [GetWalletAccountsResponse] into a [UserTokensResponse] */
-internal fun GetWalletAccountsResponse.toUserTokensResponse(): UserTokensResponse {
-    return UserTokensResponse(
-        group = wallet.group,
-        sort = wallet.sort,
-        tokens = flattenTokens(),
-    )
-}
-
 /**
  * Assigns tokens from a [UserTokensResponse] to the wallet accounts in the [GetWalletAccountsResponse]
  *

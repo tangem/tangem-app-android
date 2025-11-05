@@ -29,6 +29,8 @@ class DefaultSingleAccountListFetcherTest {
         // Arrange
         val params = SingleAccountListFetcher.Params(userWalletId = userWalletId)
 
+        coEvery { walletAccountsFetcher.fetch(userWalletId) } returns mockk()
+
         // Act
         val actual = fetcher.invoke(params)
 

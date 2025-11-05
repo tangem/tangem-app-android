@@ -4,6 +4,8 @@ import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import kotlinx.serialization.Serializable
 
+typealias AccountCryptoCurrencyStatuses = Map<Account.CryptoPortfolio, List<CryptoCurrencyStatus>>
+
 /**
  * Combines an [Account] with its corresponding [CryptoCurrencyStatus].
  *

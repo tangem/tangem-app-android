@@ -154,9 +154,8 @@ internal abstract class BasicTokenListSubscriber : WalletSubscriber() {
             val accountFlattenCurrencies = accountFlattenTokensList
                 .map { it.flattenCurrencies() }
                 .flatten()
-            val mainAccount: AccountStatus.CryptoPortfolio = when (val mainAccount = accountList.mainAccount) {
-                is AccountStatus.CryptoPortfolio -> mainAccount
-            }
+
+            val mainAccount = accountList.mainAccount
 
             suspend fun singleAccountTransform(maybeTokenList: Lce<TokenListError, TokenList>) =
                 this.singleAccountTransform(
