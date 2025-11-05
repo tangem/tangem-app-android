@@ -11,6 +11,10 @@ import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.wallets.derivations.DerivationsRepository
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * Use case for saving tokens from Markets
@@ -31,6 +35,7 @@ class SaveMarketTokensUseCase(
     private val multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
     private val multiYieldBalanceFetcher: MultiYieldBalanceFetcher,
     private val stakingIdFactory: StakingIdFactory,
+    private val parallelUpdatingScope: CoroutineScope,
 ) {
 
     suspend operator fun invoke(
@@ -70,11 +75,13 @@ class SaveMarketTokensUseCase(
                 currencies = addedCurrencies,
             )
 
-            refreshUpdatedNetworks(userWalletId, savedCurrencies)
-
-            refreshUpdatedYieldBalances(userWalletId, savedCurrencies)
-
-            refreshUpdatedQuotes(savedCurrencies)
+            parallelUpdatingScope.launch {
+                withContext(NonCancellable) {
+                    launch { refreshUpdatedNetworks(userWalletId, savedCurrencies) }
+                    launch { refreshUpdatedYieldBalances(userWalletId, savedCurrencies) }
+                    launch { refreshUpdatedQuotes(savedCurrencies) }
+                }
+            }
         }
     }
 
