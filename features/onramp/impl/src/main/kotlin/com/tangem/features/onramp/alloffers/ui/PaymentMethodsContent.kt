@@ -108,6 +108,7 @@ private fun PaymentMethod(methodUM: AllOffersPaymentMethodUM, modifier: Modifier
                     UnavailablePaymentMethodInfoBlock(
                         paymentMethodName = methodUM.methodConfig.method.name,
                         errorAmount = methodUM.rate,
+                        unavailableStatus = methodUM.paymentMethodStatus,
                     )
                 }
             }
@@ -116,7 +117,11 @@ private fun PaymentMethod(methodUM: AllOffersPaymentMethodUM, modifier: Modifier
 }
 
 @Composable
-private fun UnavailablePaymentMethodInfoBlock(paymentMethodName: String, errorAmount: String) {
+private fun UnavailablePaymentMethodInfoBlock(
+    paymentMethodName: String,
+    errorAmount: String,
+    unavailableStatus: PaymentMethodStatus.Unavailable,
+) {
     Column(modifier = Modifier.padding(bottom = 14.dp)) {
         Text(
             text = paymentMethodName,
@@ -125,8 +130,12 @@ private fun UnavailablePaymentMethodInfoBlock(paymentMethodName: String, errorAm
             modifier = Modifier.testTag(SelectPaymentMethodBottomSheetTestTags.PAYMENT_METHOD_NAME),
         )
         SpacerH(2.dp)
+        val messageResId = when (unavailableStatus) {
+            is PaymentMethodStatus.Unavailable.MinAmount -> R.string.onramp_provider_min_amount
+            is PaymentMethodStatus.Unavailable.MaxAmount -> R.string.onramp_provider_max_amount
+        }
         Text(
-            text = stringResourceSafe(R.string.onramp_provider_min_amount, errorAmount),
+            text = stringResourceSafe(messageResId, errorAmount),
             style = TangemTheme.typography.caption2,
             color = TangemTheme.colors.text.tertiary,
             modifier = Modifier.testTag(SelectPaymentMethodBottomSheetTestTags.UP_TO_TEXT),
