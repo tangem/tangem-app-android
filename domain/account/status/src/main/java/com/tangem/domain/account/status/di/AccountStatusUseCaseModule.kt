@@ -60,6 +60,18 @@ internal object AccountStatusUseCaseModule {
 
     @Provides
     @Singleton
+    fun provideApplyTokenListSortingUseCaseV2(
+        accountsCRUDRepository: AccountsCRUDRepository,
+        dispatchers: CoroutineDispatcherProvider,
+    ): ApplyTokenListSortingUseCaseV2 {
+        return ApplyTokenListSortingUseCaseV2(
+            accountsCRUDRepository = accountsCRUDRepository,
+            dispatchers = dispatchers,
+        )
+    }
+
+    @Provides
+    @Singleton
     fun provideGetWalletTotalBalanceUseCaseV2(
         multiAccountStatusListSupplier: MultiAccountStatusListSupplier,
     ): GetWalletTotalBalanceUseCaseV2 {
