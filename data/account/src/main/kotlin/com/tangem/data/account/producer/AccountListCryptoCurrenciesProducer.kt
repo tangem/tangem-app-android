@@ -3,9 +3,9 @@ package com.tangem.data.account.producer
 import arrow.core.Option
 import arrow.core.some
 import com.tangem.data.account.store.AccountsResponseStoreFactory
-import com.tangem.data.account.utils.toUserTokensResponse
 import com.tangem.data.common.currency.ResponseCryptoCurrenciesFactory
 import com.tangem.datasource.local.userwallet.UserWalletsStore
+import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesProducer
@@ -48,12 +48,16 @@ internal class AccountListCryptoCurrenciesProducer @AssistedInject constructor(
             .map { response ->
                 if (response == null) return@map emptySet()
 
-                responseCryptoCurrenciesFactory.createCurrencies(
-                    response = response.toUserTokensResponse(),
-                    userWallet = userWallet,
-                ).toSet()
+                response.accounts.flatMapTo(hashSetOf()) { accountDTO ->
+                    responseCryptoCurrenciesFactory.createCurrencies(
+                        tokens = accountDTO.tokens.orEmpty(),
+                        userWallet = userWallet,
+                        accountIndex = DerivationIndex(accountDTO.derivationIndex).getOrNull(),
+                    )
+                }
             }
             .onEmpty { emit(emptySet()) }
+            .distinctUntilChanged()
             .flowOn(dispatchers.default)
     }
 
