@@ -41,6 +41,7 @@ import com.tangem.features.onboarding.v2.multiwallet.impl.model.OnboardingMultiW
 import com.tangem.features.onboarding.v2.multiwallet.impl.model.OnboardingMultiWalletState.Step.*
 import com.tangem.features.onboarding.v2.multiwallet.impl.ui.OnboardingMultiWallet
 import com.tangem.features.onboarding.v2.multiwallet.impl.ui.WalletArtworksState
+import com.tangem.features.onboarding.v2.util.ResetCardsComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -51,6 +52,7 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
     @Assisted private val context: AppComponentContext,
     @Assisted private val params: OnboardingMultiWalletComponent.Params,
     private val analyticsHandler: AnalyticsEventHandler,
+    private val resetCardsComponentFactory: ResetCardsComponent.Factory,
 ) : OnboardingMultiWalletComponent, AppComponentContext by context {
 
     private val model: OnboardingMultiWalletModel = getOrCreateModel(params)
@@ -178,6 +180,7 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
             )
             Finalize -> MultiWalletFinalizeComponent(
                 context = childContext,
+                resetCardsComponentFactory = resetCardsComponentFactory,
                 params = childParams,
                 backButtonClickFlow = backButtonClickFlow,
                 onBack = { model.onBack() },
@@ -248,6 +251,9 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
             }
             MultiWalletFinalizeComponent.Event.ThreeBackupCardsAdded -> {
                 handleNavigationEvent(Done)
+            }
+            MultiWalletFinalizeComponent.Event.ExitFromFlow -> {
+                params.onForceExit()
             }
         }
     }
