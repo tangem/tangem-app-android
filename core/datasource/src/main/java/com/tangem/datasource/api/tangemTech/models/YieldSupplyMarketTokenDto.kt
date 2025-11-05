@@ -10,8 +10,9 @@ data class YieldSupplyMarketTokenDto(
     @Json(name = "tokenSymbol") val tokenSymbol: String? = null,
     @Json(name = "tokenName") val tokenName: String? = null,
     @Json(name = "apy") val apy: BigDecimal? = null,
+    @Json(name = "decimals") val decimals: Int? = null,
     @Json(name = "isActive") val isActive: Boolean? = null,
     @Json(name = "chainId") val chainId: Int? = null,
-    @Json(name = "maxFeeNative") val maxFeeNative: String? = null,
-    @Json(name = "maxFeeUSD") val maxFeeUSD: String? = null,
+    @Json(name = "maxFeeNative") val maxFeeNative: BigDecimal? = null,
+    @Json(name = "maxFeeUSD") val maxFeeUSD: BigDecimal? = null,
 )

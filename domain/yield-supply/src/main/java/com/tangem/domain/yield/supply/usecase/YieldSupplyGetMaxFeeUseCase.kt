@@ -14,11 +14,15 @@ import java.math.BigDecimal
 import java.math.RoundingMode
 
 /**
- * Calculates max allowed network fee for Yield Supply enter transaction expressed in token units.
+ * Calculates the max allowed network fee for a Yield Supply transaction.
  *
- * Uses YieldMarketToken.maxFeeNative (native coin units) and converts it to token units with the
- * same conversion logic as [YieldSupplyGetCurrentFeeUseCase]: based on fiat rate ratio
- * (nativeFiatRate / tokenFiatRate).
+ * Result is a Pair<BigDecimal, BigDecimal> where:
+ * - first: fee in native coin units (maxFeeNative)
+ * - second: the same fee converted to token units using the fiat-rate ratio
+ *   (nativeFiatRate / tokenFiatRate).
+ *
+ * Uses YieldMarketToken.maxFeeNative and the same conversion logic as
+ * [YieldSupplyGetCurrentFeeUseCase].
  */
 class YieldSupplyGetMaxFeeUseCase(
     private val yieldSupplyRepository: YieldSupplyRepository,
@@ -29,7 +33,7 @@ class YieldSupplyGetMaxFeeUseCase(
     suspend operator fun invoke(
         userWallet: UserWallet,
         cryptoCurrencyStatus: CryptoCurrencyStatus,
-    ): Either<Throwable, BigDecimal> = catch {
+    ): Either<Throwable, Pair<BigDecimal, BigDecimal>> = catch {
         val token = cryptoCurrencyStatus.currency as? CryptoCurrency.Token
             ?: error("CryptoCurrency must be token for max fee calculation")
 
@@ -55,7 +59,7 @@ class YieldSupplyGetMaxFeeUseCase(
         val cachedMarketToken = yieldSupplyRepository.getCachedMarkets().orEmpty()
             .firstOrNull { it.yieldSupplyKey == token.yieldSupplyKey() }
         val marketToken = cachedMarketToken ?: yieldSupplyRepository.getTokenStatus(token)
-        val maxFeeNative = marketToken.maxFeeNative.toBigDecimal()
+        val maxFeeNative = marketToken.maxFeeNative
 
         val rateRatio = nativeFiatRate.divide(
             fiatRate,
@@ -65,6 +69,6 @@ class YieldSupplyGetMaxFeeUseCase(
 
         val tokenValue = rateRatio.multiply(maxFeeNative)
 
-        tokenValue.stripTrailingZeros()
+        maxFeeNative to tokenValue.stripTrailingZeros()
     }
 }

@@ -18,13 +18,13 @@ import com.tangem.domain.promo.models.PromoId
 import com.tangem.domain.promo.models.StoryContent
 import com.tangem.feature.referral.domain.ReferralRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.runCatching
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
-import com.tangem.utils.coroutines.runCatching
 
 internal class DefaultPromoRepository(
     private val tangemApi: TangemTechApi,
@@ -51,6 +51,11 @@ internal class DefaultPromoRepository(
 
                     isActive && shouldShow
                 }
+                PromoId.VisaPresale -> {
+                    val isActive = getVisaPromoBanner()?.isActive ?: false
+
+                    isActive && shouldShow
+                }
             }
         }
     }
@@ -59,6 +64,7 @@ internal class DefaultPromoRepository(
         return when (promoId) {
             PromoId.Referral -> flowOf(false)
             PromoId.Sepa -> flowOf(false)
+            PromoId.VisaPresale -> flowOf(false)
         }
     }
 
@@ -134,8 +140,17 @@ internal class DefaultPromoRepository(
         }.getOrNull()
     }
 
+    private suspend fun getVisaPromoBanner(): PromoBanner? {
+        return runCatching(dispatchers.io) {
+            promoBannerConverter.convert(
+                tangemApi.getPromoBanner(VISA_NAME).getOrThrow(),
+            )
+        }.getOrNull()
+    }
+
     private companion object {
         const val SEPA_NAME = "sepa"
+        const val VISA_NAME = "visa-waitlist"
         const val STORIES_LOAD_DELAY = 1000L
     }
 }

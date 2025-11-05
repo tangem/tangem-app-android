@@ -5,7 +5,6 @@ import com.tangem.blockchain.common.TransactionData
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.extensions.TextReference
 import kotlinx.collections.immutable.ImmutableList
-import java.math.BigDecimal
 
 @Immutable
 internal sealed class YieldSupplyFeeUM {
@@ -31,5 +30,4 @@ internal data class YieldSupplyActionUM(
     val yieldSupplyFeeUM: YieldSupplyFeeUM,
     val isPrimaryButtonEnabled: Boolean,
     val isTransactionSending: Boolean,
-    val maxFee: BigDecimal = BigDecimal.ZERO,
 )
