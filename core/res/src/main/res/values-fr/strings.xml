@@ -172,6 +172,7 @@
   <string name="common_fee_selector_title">Vitesse et frais</string>
   <string name="common_finish">Terminer</string>
   <string name="common_generate_addresses">Synchroniser les adresses</string>
+  <string name="common_get_started">Commencer</string>
   <string name="common_go_to_provider">Aller au fournisseur</string>
   <string name="common_go_to_token">Aller au jeton</string>
   <string name="common_got_it">Compris</string>
@@ -949,6 +950,7 @@
   <string name="settings_forget_wallet_footer">Cela supprimera le portefeuille de l\'application. Le portefeuille lui-même peut être ajouté à nouveau.</string>
   <string name="settings_wallet_name_title">Nom</string>
   <string name="stake_token_description">Faites travailler votre jeton pour vous</string>
+  <string name="staking_account_initialization_message">Pour commencer à staker, votre compte TON doit être activé avec une transaction de 1 TON. Les fonds restent sur votre compte, car cette étape sert uniquement à l\'activer pour le staking.</string>
   <string name="staking_amount_requirement_error">Le montant à staker doit être au moins %s</string>
   <string name="staking_amount_tron_integer_error">Le montant du staking sera arrondi à %1$s TRX en raison des règles du réseau.</string>
   <string name="staking_amount_tron_integer_error_unstaking">Le montant d\'annulation du staking sera arrondi à %1$s TRX en raison des règles du réseau.</string>

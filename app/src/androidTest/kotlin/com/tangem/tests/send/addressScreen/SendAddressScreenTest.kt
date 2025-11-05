@@ -1,0 +1,338 @@
+package com.tangem.tests.send.addressScreen
+
+import com.tangem.common.BaseTestCase
+import com.tangem.common.constants.TestConstants.ENS_ETHEREUM_RECIPIENT_ADDRESS
+import com.tangem.common.constants.TestConstants.ENS_ETHEREUM_RECIPIENT_SHORTENED_ADDRESS
+import com.tangem.common.constants.TestConstants.ENS_NAME
+import com.tangem.common.constants.TestConstants.ETHEREUM_ADDRESS
+import com.tangem.common.constants.TestConstants.ETHEREUM_RECIPIENT_ADDRESS
+import com.tangem.common.constants.TestConstants.ETHEREUM_RECIPIENT_SHORTENED_ADDRESS
+import com.tangem.common.constants.TestConstants.XRP_RECIPIENT_ADDRESS
+import com.tangem.common.extensions.clickWithAssertion
+import com.tangem.common.utils.*
+import com.tangem.core.ui.R
+import com.tangem.scenarios.openMainScreen
+import com.tangem.scenarios.synchronizeAddresses
+import com.tangem.screens.*
+import com.tangem.screens.onMainScreen
+import com.tangem.screens.onSendAddressScreen
+import com.tangem.screens.onSendScreen
+import com.tangem.screens.onTokenDetailsScreen
+import dagger.hilt.android.testing.HiltAndroidTest
+import io.github.kakaocup.kakao.common.utilities.getResourceString
+import io.qameta.allure.kotlin.AllureId
+import io.qameta.allure.kotlin.junit4.DisplayName
+import org.junit.Test
+
+@HiltAndroidTest
+class SendAddressScreenTest : BaseTestCase() {
+
+    @AllureId("4006")
+    @DisplayName("Send (address screen): check address history")
+    @Test
+    fun sendAddressHistoryTest() {
+        val tokenName = "Ethereum"
+        val sendAmount = "1"
+        val recipientShortenedAddress = ETHEREUM_RECIPIENT_SHORTENED_ADDRESS
+        val recipientAddress = ETHEREUM_RECIPIENT_ADDRESS
+
+        setupHooks().run {
+            step("Open 'Main Screen'") {
+                openMainScreen()
+            }
+            step("Synchronize addresses") {
+                synchronizeAddresses()
+            }
+            step("Click on token with name: '$tokenName'") {
+                onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
+            }
+            step("Click on 'Send' button") {
+                onTokenDetailsScreen { sendButton().performClick() }
+            }
+            step("Type '$sendAmount' in input text field") {
+                onSendScreen {
+                    amountInputTextField.performClick()
+                    amountInputTextField.performTextReplacement(sendAmount)
+                }
+            }
+            step("Click on 'Next' button") {
+                onSendScreen { nextButton.clickWithAssertion() }
+            }
+            step("Click on previous address") {
+                onSendAddressScreen { recentAddressWithText(recipientShortenedAddress).clickWithAssertion() }
+            }
+            step("Assert recipient address is displayed") {
+                onSendConfirmScreen { recipientAddress(recipientAddress).assertIsDisplayed() }
+            }
+            step("Press system 'Back' button") {
+                device.uiDevice.pressBack()
+            }
+            step("Assert address text field contains correct recipient address") {
+                onSendAddressScreen { addressTextField.assertTextContains(recipientAddress) }
+            }
+            step("Assert 'Recent' title is displayed") {
+                onSendAddressScreen { recentAddressesTitle.assertIsNotDisplayed() }
+            }
+            step("Assert 'Next' button is enabled") {
+                onSendAddressScreen { nextButton.assertIsEnabled() }
+            }
+            step("Click on 'Cross' button") {
+                onSendAddressScreen { clearTextFieldButton.clickWithAssertion() }
+            }
+            step("Assert recipient text field is empty") {
+                onSendAddressScreen { addressTextField.assertTextEquals("") }
+            }
+            step("Assert 'Recent' title is displayed") {
+                onSendAddressScreen { recentAddressesTitle.assertIsDisplayed() }
+            }
+            step("Assert 'Next' button is disabled") {
+                onSendAddressScreen { nextButton.assertIsNotEnabled() }
+            }
+        }
+    }
+
+    @AllureId("4004")
+    @DisplayName("Send (address screen): check destination tag")
+    @Test
+    fun sendDestinationTagTest() {
+        val tokenName = "XRP Ledger"
+        val sendAmount = "1"
+        val correctMemo = "123"
+        val invalidMemo = "hz"
+        val xrpRecipientAddress = XRP_RECIPIENT_ADDRESS
+        val userTokensScenarioName = "user_tokens_api"
+        val userTokensScenarioState = "XRP"
+        val context = device.context
+
+        setupHooks(
+            additionalAfterSection = {
+                resetWireMockScenarioState(userTokensScenarioName)
+            }
+        ).run {
+            step("Set WireMock scenario: '$userTokensScenarioName' to state: '$userTokensScenarioState'") {
+                setWireMockScenarioState(scenarioName = userTokensScenarioName, state = userTokensScenarioState)
+            }
+            step("Open 'Main Screen'") {
+                openMainScreen()
+            }
+            step("Synchronize addresses") {
+                synchronizeAddresses()
+            }
+            step("Click on token with name: '$tokenName'") {
+                onMainScreen { tokenWithTitleAndAddress(tokenName).performClick() }
+            }
+            step("Click on 'Send' button") {
+                onTokenDetailsScreen { sendButton().performClick() }
+            }
+            step("Type '$sendAmount' in input text field") {
+                onSendScreen {
+                    amountInputTextField.performClick()
+                    amountInputTextField.performTextReplacement(sendAmount)
+                }
+            }
+            step("Click on 'Next' button") {
+                onSendScreen { nextButton.clickWithAssertion() }
+            }
+            step("Set clipboard text") {
+                setClipboardText(context, correctMemo)
+            }
+            step("Assert 'Destination Tag' title is displayed") {
+                onSendAddressScreen { destinationTagBlockTitle().assertIsDisplayed() }
+            }
+            step("Assert 'Destination Tag' text is displayed") {
+                onSendAddressScreen { destinationTagBlockText.assertIsDisplayed() }
+            }
+            step("CLick on 'Paste' button") {
+                onSendAddressScreen { destinationTagPasteButton.clickWithAssertion() }
+            }
+            step("Assert 'Next' button is disabled") {
+                onSendAddressScreen { nextButton.assertIsNotEnabled() }
+            }
+            step("Type address in input text field") {
+                onSendAddressScreen { addressTextField.performTextReplacement(xrpRecipientAddress) }
+            }
+            step("Assert 'Next' button is enabled") {
+                onSendAddressScreen { nextButton.assertIsEnabled() }
+            }
+            step("Click on 'Clear text field button'") {
+                onSendAddressScreen { clearDestinationTagTextFieldButton.clickWithAssertion() }
+            }
+            step("Type invalid memo in input text field") {
+                onSendAddressScreen { destinationTagTextField.performTextReplacement(invalidMemo) }
+            }
+            step("Assert 'Invalid memo' title is displayed") {
+                onSendAddressScreen { destinationTagBlockTitle(isMemoCorrectOrEmpty = false).assertIsDisplayed() }
+            }
+            step("Assert 'Next' button is disabled") {
+                onSendAddressScreen { nextButton.assertIsNotEnabled() }
+            }
+        }
+    }
+
+    @AllureId("4543")
+    @DisplayName("Send (address screen): check address field")
+    @Test
+    fun sendAddressFieldTest() {
+        val tokenName = "Ethereum"
+        val sendAmount = "1"
+        val recipientAddress = ETHEREUM_RECIPIENT_ADDRESS
+        val invalidAddress = "s"
+        val walletAddress = ETHEREUM_ADDRESS
+        val context = device.context
+        val recipient = getResourceString(R.string.send_recipient)
+        val notAValidAddress = getResourceString(R.string.send_recipient_address_error)
+        val sameAsWalletAddress = getResourceString(R.string.send_error_address_same_as_wallet)
+
+        setupHooks(
+            additionalAfterSection = {
+                clearClipboard()
+            }
+        ).run {
+            step("Open 'Main Screen'") {
+                openMainScreen()
+            }
+            step("Synchronize addresses") {
+                synchronizeAddresses()
+            }
+            step("Click on token with name: '$tokenName'") {
+                onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
+            }
+            step("Click on 'Send' button") {
+                onTokenDetailsScreen { sendButton().performClick() }
+            }
+            step("Type '$sendAmount' in input text field") {
+                onSendScreen {
+                    amountInputTextField.performClick()
+                    amountInputTextField.performTextReplacement(sendAmount)
+                }
+            }
+            step("Click on 'Next' button") {
+                onSendScreen { nextButton.clickWithAssertion() }
+            }
+            step("Set clipboard text") {
+                setClipboardText(context, recipientAddress)
+            }
+            step("Click on 'Paste' button") {
+                onSendAddressScreen { addressPasteButton.clickWithAssertion() }
+            }
+            step("Assert address text field contains correct recipient address") {
+                onSendAddressScreen { addressTextField.assertTextContains(recipientAddress) }
+            }
+            step("Assert address text field title is displayed") {
+                onSendAddressScreen { addressTextFieldTitle.assertTextContains(recipient) }
+            }
+            step("Assert 'Next' button is enabled") {
+                onSendAddressScreen { nextButton.assertIsEnabled() }
+            }
+            step("Set clipboard text") {
+                setClipboardText(context, invalidAddress)
+            }
+            step("Click on 'Cross' button") {
+                onSendAddressScreen { clearTextFieldButton.clickWithAssertion() }
+            }
+            step("Click on 'Paste' button") {
+                onSendAddressScreen { addressPasteButton.clickWithAssertion() }
+            }
+            step("Assert address text field contains invalid address") {
+                onSendAddressScreen { addressTextField.assertTextContains(invalidAddress) }
+            }
+            step("Assert invalid address text field title is displayed") {
+                onSendAddressScreen { addressTextFieldTitle.assertTextContains(notAValidAddress) }
+            }
+            step("Assert 'Next' button is disabled") {
+                onSendAddressScreen { nextButton.assertIsNotEnabled() }
+            }
+            step("Set clipboard text") {
+                setClipboardText(context, walletAddress)
+            }
+            step("Click on 'Cross' button") {
+                onSendAddressScreen { clearTextFieldButton.clickWithAssertion() }
+            }
+            step("Click on 'Paste' button") {
+                onSendAddressScreen { addressPasteButton.clickWithAssertion() }
+            }
+            step("Assert address text field contains invalid address") {
+                onSendAddressScreen { addressTextField.assertTextContains(walletAddress) }
+            }
+            step("Assert 'Address is the same as wallet address' error title is displayed") {
+                onSendAddressScreen { addressTextFieldTitle.assertTextContains(sameAsWalletAddress) }
+            }
+            step("Assert 'Next' button is disabled") {
+                onSendAddressScreen { nextButton.assertIsNotEnabled() }
+            }
+        }
+    }
+
+    @AllureId("4004")
+    @DisplayName("Send (address screen): check ENS name")
+    @Test
+    fun sendEnsNameTest() {
+        val tokenName = "Ethereum"
+        val sendAmount = "1"
+        val ensName = ENS_NAME
+        val invalidEnsName = "l"
+        val ensAddress = ENS_ETHEREUM_RECIPIENT_ADDRESS
+        val ensShortenedAddress = ENS_ETHEREUM_RECIPIENT_SHORTENED_ADDRESS
+        val scenarioName = "eth_call_api"
+        val scenarioState = "EnsName"
+        val notAValidAddress = getResourceString(R.string.send_recipient_address_error)
+
+        setupHooks(
+            additionalAfterSection = {
+                resetWireMockScenarioState(scenarioName)
+            }
+        ).run {
+            step("Open 'Main Screen'") {
+                openMainScreen()
+            }
+            step("Synchronize addresses") {
+                synchronizeAddresses()
+            }
+            step("Click on token with name: '$tokenName'") {
+                onMainScreen { tokenWithTitleAndAddress(tokenName).performClick() }
+            }
+            step("Click on 'Send' button") {
+                onTokenDetailsScreen { sendButton().performClick() }
+            }
+            step("Set WireMock scenario: '$scenarioName' to state: '$scenarioState'") {
+                setWireMockScenarioState(scenarioName = scenarioName, state = scenarioState)
+            }
+            step("Type '$sendAmount' in input text field") {
+                onSendScreen {
+                    amountInputTextField.performClick()
+                    amountInputTextField.performTextReplacement(sendAmount)
+                }
+            }
+            step("Click on 'Next' button") {
+                onSendScreen { nextButton.clickWithAssertion() }
+            }
+            step("Type ENS name: '$ensName' in text field") {
+                onSendAddressScreen { addressTextField.performTextReplacement(ensName) }
+            }
+            step("Assert ENS address displayed") {
+                onSendAddressScreen { resolvedAddress.assertTextContains(ensAddress, substring = true) }
+            }
+            step("Click on 'Next' button") {
+                onSendAddressScreen { nextButton.clickWithAssertion() }
+            }
+            step("Assert recipient address is displayed") {
+                onSendConfirmScreen { recipientAddress(ensName).assertIsDisplayed() }
+            }
+            step("Assert blockchain address is displayed") {
+                onSendConfirmScreen { blockchainAddress.assertTextContains(ensShortenedAddress, substring = true) }
+            }
+            step("Click on recipient address") {
+                onSendConfirmScreen { recipientAddress(ensName).performClick() }
+            }
+            step("Click on 'Cross' button") {
+                onSendAddressScreen { clearTextFieldButton.clickWithAssertion() }
+            }
+            step("Type invalid ENS name: '$invalidEnsName' in text field") {
+                onSendAddressScreen { addressTextField.performTextReplacement(invalidEnsName) }
+            }
+            step("Assert invalid address error title is displayed") {
+                onSendAddressScreen { addressTextFieldTitle.assertTextContains(notAValidAddress) }
+            }
+        }
+    }
+}

@@ -7,20 +7,19 @@ import com.tangem.domain.tokens.GetCryptoCurrencyActionsUseCase
 import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
-import com.tangem.feature.wallet.presentation.account.AccountDependencies
 import com.tangem.feature.wallet.presentation.wallet.domain.collectLatest
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetCryptoCurrencyActionsTransformer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.*
 
+@Deprecated("Use SingleWalletButtonsSubscriberV2 instead")
 internal class SingleWalletButtonsSubscriber(
     private val userWallet: UserWallet,
     private val stateHolder: WalletStateController,
     private val clickIntents: WalletClickIntents,
     private val getSingleCryptoCurrencyStatusUseCase: GetSingleCryptoCurrencyStatusUseCase,
     private val getCryptoCurrencyActionsUseCase: GetCryptoCurrencyActionsUseCase,
-    private val accountDependencies: AccountDependencies,
 ) : WalletSubscriber() {
 
     override fun create(coroutineScope: CoroutineScope): Flow<TokenActionsState> {
@@ -31,11 +30,10 @@ internal class SingleWalletButtonsSubscriber(
             }
         }
             .onEach { actions ->
-                val portfolioId = when (accountDependencies.accountsFeatureToggles.isFeatureEnabled) {
-                    true -> TODO("account") // get main account id for single wallet
-                    false -> PortfolioId(userWallet.walletId)
-                }
-                updateContent(actions, portfolioId)
+                updateContent(
+                    tokenActionsState = actions,
+                    portfolioId = PortfolioId(userWallet.walletId),
+                )
             }
     }
 

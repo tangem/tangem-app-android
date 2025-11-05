@@ -65,8 +65,6 @@ internal fun ManualBackupCompletedContent(state: ManualBackupCompletedUM, modifi
         PrimaryButton(
             modifier = Modifier.fillMaxWidth(),
             text = stringResourceSafe(R.string.common_continue),
-            showProgress = false,
-            enabled = true,
             onClick = state.onContinueClick,
         )
     }
@@ -75,11 +73,26 @@ internal fun ManualBackupCompletedContent(state: ManualBackupCompletedUM, modifi
 @Preview(showBackground = true, widthDp = 360)
 @Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun PreviewManualBackupCompletedContent() {
+private fun PreviewManualBackupCompletedContentRegular() {
     TangemThemePreview {
         ManualBackupCompletedContent(
             state = ManualBackupCompletedUM(
-                onContinueClick = {},
+                isLoading = false,
+                onContinueClick = { },
+            ),
+        )
+    }
+}
+
+@Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun PreviewManualBackupCompletedContentUpgrade() {
+    TangemThemePreview {
+        ManualBackupCompletedContent(
+            state = ManualBackupCompletedUM(
+                isLoading = false,
+                onContinueClick = { },
             ),
         )
     }

@@ -13,6 +13,7 @@ android {
 
 dependencies {
     /** Api */
+    implementation(projects.features.account.api)
     implementation(projects.features.nft.api)
     implementation(projects.features.tokenRecieve.api)
 
@@ -28,6 +29,8 @@ dependencies {
     implementation(projects.core.datasource)
 
     /** Domain modules */
+    implementation(projects.domain.account)
+    implementation(projects.domain.wallets)
     implementation(projects.domain.appCurrency.models)
     implementation(projects.domain.appCurrency)
     implementation(projects.domain.models)

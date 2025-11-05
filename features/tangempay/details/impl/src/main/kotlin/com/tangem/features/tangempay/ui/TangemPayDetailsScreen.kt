@@ -2,20 +2,14 @@ package com.tangem.features.tangempay.ui
 
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
@@ -39,6 +33,8 @@ import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.TokenDetailsTopBarTestTags
+import com.tangem.features.tangempay.components.cardDetails.PreviewTangemPayCardDetailsBlockComponent
+import com.tangem.features.tangempay.components.cardDetails.TangemPayCardDetailsBlockComponent
 import com.tangem.features.tangempay.components.txHistory.PreviewTangemPayTxHistoryComponent
 import com.tangem.features.tangempay.components.txHistory.TangemPayTxHistoryComponent
 import com.tangem.features.tangempay.details.impl.R
@@ -46,12 +42,11 @@ import com.tangem.features.tangempay.entity.*
 import com.tangem.utils.StringsSigns.DASH_SIGN
 import kotlinx.collections.immutable.persistentListOf
 
-private const val REVEAL_ANIMATION_MILLIS = 500
-
 @Composable
 internal fun TangemPayDetailsScreen(
     state: TangemPayDetailsUM,
     txHistoryComponent: TangemPayTxHistoryComponent,
+    cardDetailsBlockComponent: TangemPayCardDetailsBlockComponent,
     modifier: Modifier = Modifier,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ) {
@@ -70,6 +65,7 @@ internal fun TangemPayDetailsScreen(
         val listState = rememberLazyListState()
         val bottomBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getBottom(this).toDp() }
         val txHistoryState by txHistoryComponent.state.collectAsStateWithLifecycle()
+        val cardDetailsState by cardDetailsBlockComponent.state.collectAsStateWithLifecycle()
 
         TangemPullToRefreshContainer(
             config = state.pullToRefreshConfig,
@@ -94,19 +90,22 @@ internal fun TangemPayDetailsScreen(
                         )
                     },
                 )
-                item(
-                    key = TangemPayCardDetailsUM::class.java,
-                    content = {
-                        TangemPayCardDetailsBlock(
-                            modifier = modifier
-                                .padding(top = TangemTheme.dimens.spacing12)
-                                .padding(horizontal = TangemTheme.dimens.spacing16)
-                                .fillMaxWidth(),
-                            state = state.cardDetailsUM,
-                        )
-                    },
-                )
-
+                if (state.addToWalletBlockState != null) {
+                    item(
+                        key = AddToWalletBlockState::class.java,
+                        content = {
+                            TangemPayAddToWalletBlock(
+                                state = state.addToWalletBlockState,
+                                modifier = Modifier
+                                    .padding(top = TangemTheme.dimens.spacing12)
+                                    .padding(horizontal = TangemTheme.dimens.spacing16),
+                            )
+                        },
+                    )
+                }
+                item(TangemPayCardDetailsUM::class.java) {
+                    TangemPayCardDetailsBlockItem(component = cardDetailsBlockComponent, state = cardDetailsState)
+                }
                 with(txHistoryComponent) { txHistoryContent(listState = listState, state = txHistoryState) }
             }
         }
@@ -218,136 +217,6 @@ private fun CryptoBalance(
 }
 // endregion
 
-// region Card details block
-@Composable
-private fun TangemPayCardDetailsBlock(state: TangemPayCardDetailsUM, modifier: Modifier = Modifier) {
-    val alpha = if (state.isLoading) {
-        val infiniteTransition = rememberInfiniteTransition()
-        val animation by infiniteTransition.animateFloat(
-            initialValue = 1f,
-            targetValue = 0.3f,
-            animationSpec = infiniteRepeatable(
-                animation = tween(REVEAL_ANIMATION_MILLIS, easing = LinearEasing),
-                repeatMode = RepeatMode.Reverse,
-            ),
-        )
-        animation
-    } else {
-        1f
-    }
-    Column(
-        modifier = modifier
-            .background(
-                color = TangemTheme.colors.background.primary,
-                shape = TangemTheme.shapes.roundedCornersMedium,
-            ),
-    ) {
-        CardDetailsBlockHeader(state)
-        CardDetailsTextContainer(
-            modifier = Modifier
-                .graphicsLayer { this.alpha = alpha }
-                .fillMaxWidth()
-                .padding(start = 12.dp, end = 12.dp, top = 4.dp),
-            text = state.number,
-            onCopy = { state.onCopy(state.number) },
-            isHidden = state.isHidden,
-        )
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 12.dp, end = 12.dp, bottom = 12.dp, top = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            CardDetailsTextContainer(
-                modifier = Modifier
-                    .graphicsLayer { this.alpha = alpha }
-                    .weight(1f),
-                text = state.expiry,
-                onCopy = { state.onCopy(state.expiry) },
-                isHidden = state.isHidden,
-            )
-            CardDetailsTextContainer(
-                modifier = Modifier
-                    .graphicsLayer { this.alpha = alpha }
-                    .weight(1f),
-                text = state.cvv,
-                onCopy = { state.onCopy(state.cvv) },
-                isHidden = state.isHidden,
-            )
-        }
-    }
-}
-
-@Composable
-private fun CardDetailsBlockHeader(state: TangemPayCardDetailsUM, modifier: Modifier = Modifier) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-    ) {
-        Text(
-            modifier = Modifier
-                .padding(start = 12.dp, top = 12.dp),
-            text = stringResourceSafe(R.string.tangempay_card_details_title),
-            color = TangemTheme.colors.text.tertiary,
-            style = TangemTheme.typography.subtitle2,
-        )
-        Text(
-            modifier = Modifier
-                .padding(top = 8.dp, end = 4.dp)
-                .clip(TangemTheme.shapes.roundedCornersMedium)
-                .clickable(onClick = state.onClick)
-                .padding(horizontal = 8.dp, vertical = 4.dp),
-            text = state.buttonText.resolveReference(),
-            color = TangemTheme.colors.text.accent,
-            style = TangemTheme.typography.body2,
-        )
-    }
-}
-
-@Composable
-private fun CardDetailsTextContainer(
-    text: String,
-    isHidden: Boolean,
-    onCopy: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Row(
-        modifier = modifier
-            .heightIn(min = 48.dp)
-            .background(color = TangemTheme.colors.field.primary, shape = RoundedCornerShape(16.dp)),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(
-            modifier = Modifier.padding(vertical = 4.dp, horizontal = 12.dp),
-            text = text,
-            maxLines = 1,
-            color = if (isHidden) TangemTheme.colors.text.disabled else TangemTheme.colors.text.primary1,
-            style = TangemTheme.typography.body2,
-        )
-
-        if (!isHidden) {
-            Spacer(modifier = Modifier.weight(1f))
-
-            IconButton(
-                modifier = Modifier
-                    .padding(end = TangemTheme.dimens.spacing8)
-                    .size(TangemTheme.dimens.size32),
-                onClick = onCopy,
-            ) {
-                Icon(
-                    modifier = Modifier.size(TangemTheme.dimens.size24),
-                    painter = painterResource(id = R.drawable.ic_copy_new_24),
-                    tint = TangemTheme.colors.icon.informative,
-                    contentDescription = null,
-                )
-            }
-        }
-    }
-}
-
-// endregion
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun TangemPayDetailsTopAppBar(config: TangemPayDetailsTopBarConfig, modifier: Modifier = Modifier) {
@@ -411,6 +280,16 @@ private fun TangemPayDetailsScreenPreview(
             txHistoryComponent = PreviewTangemPayTxHistoryComponent(
                 txHistoryUM = PreviewTangemPayTxHistoryComponent.contentUM,
             ),
+            cardDetailsBlockComponent = PreviewTangemPayCardDetailsBlockComponent(
+                TangemPayCardDetailsUM(
+                    number = "•••• •••• •••• 1245",
+                    expiry = "••/••",
+                    cvv = "•••",
+                    onCopy = {},
+                    onClick = {},
+                    buttonText = TextReference.Res(R.string.tangempay_card_details_hide_text),
+                ),
+            ),
         )
     }
 }
@@ -432,29 +311,17 @@ private class TangemPayDetailsUMProvider : CollectionPreviewParameterProvider<Ta
                 fiatBalance = "$1234.56",
                 isBalanceFlickering = false,
             ),
-            cardDetailsUM = TangemPayCardDetailsUM(
-                number = "•••• •••• •••• 1245",
-                expiry = "••/••",
-                cvv = "•••",
-                onCopy = {},
-                onClick = {},
-                buttonText = TextReference.Res(R.string.tangempay_card_details_reveal_text),
-            ),
+            addToWalletBlockState = AddToWalletBlockState({}, {}),
             isBalanceHidden = false,
+            addFundsEnabled = true,
         ),
         TangemPayDetailsUM(
             topBarConfig = TangemPayDetailsTopBarConfig(onBackClick = {}, items = null),
             pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = {}),
             balanceBlockState = TangemPayDetailsBalanceBlockState.Loading(actionButtons = persistentListOf()),
-            cardDetailsUM = TangemPayCardDetailsUM(
-                number = "•••• •••• •••• 1245",
-                expiry = "••/••",
-                cvv = "•••",
-                onCopy = {},
-                onClick = {},
-                buttonText = TextReference.Res(R.string.tangempay_card_details_hide_text),
-            ),
+            addToWalletBlockState = AddToWalletBlockState({}, {}),
             isBalanceHidden = false,
+            addFundsEnabled = true,
         ),
     ),
 )
@@ -468,6 +335,16 @@ private fun TangemPayDetailsTxHistoryScreenPreview(
         TangemPayDetailsScreen(
             state = TangemPayDetailsUMProvider().values.first(),
             txHistoryComponent = PreviewTangemPayTxHistoryComponent(txHistoryUM = state),
+            cardDetailsBlockComponent = PreviewTangemPayCardDetailsBlockComponent(
+                TangemPayCardDetailsUM(
+                    number = "•••• •••• •••• 1245",
+                    expiry = "••/••",
+                    cvv = "•••",
+                    onCopy = {},
+                    onClick = {},
+                    buttonText = TextReference.Res(R.string.tangempay_card_details_hide_text),
+                ),
+            ),
         )
     }
 }

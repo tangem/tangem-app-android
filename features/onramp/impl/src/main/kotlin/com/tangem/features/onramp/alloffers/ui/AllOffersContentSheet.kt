@@ -26,6 +26,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.domain.onramp.model.OnrampPaymentMethod
+import com.tangem.domain.onramp.model.PaymentMethodStatus
 import com.tangem.domain.onramp.model.PaymentMethodType
 import com.tangem.features.onramp.alloffers.entity.AllOffersPaymentMethodUM
 import com.tangem.features.onramp.alloffers.entity.AllOffersStateUM
@@ -204,7 +205,6 @@ private fun AllOffersContentSheetPaymentPreview() {
                     imageUrl = "https://s3.eu-central-1.amazonaws.com/tangem.api/express/PaymentMethods/visa-mc.png",
                     type = PaymentMethodType.CARD,
                 ),
-                providerId = "providerId1",
                 providerName = "Simplex",
                 rate = "0,0245334 BTC",
                 diff = null,
@@ -219,7 +219,6 @@ private fun AllOffersContentSheetPaymentPreview() {
                     imageUrl = "https://s3.eu-central-1.amazonaws.com/tangem.api/express/PaymentMethods/visa-mc.png",
                     type = PaymentMethodType.CARD,
                 ),
-                providerId = "providerId2",
                 providerName = "Simplex",
                 rate = "0,00145334 BTC",
                 diff = stringReference("–0.07%"),
@@ -239,6 +238,7 @@ private fun AllOffersContentSheetPaymentPreview() {
         rate = "0,0245334 BTC",
         providersCount = 2,
         isBestRate = true,
+        paymentMethodStatus = PaymentMethodStatus.Available,
     )
 
     TangemThemePreview {
@@ -270,7 +270,6 @@ private fun AllOffersContentSheetOffersPreview() {
                         "https://s3.eu-central-1.amazonaws.com/tangem.api/express/PaymentMethods/visa-mc.png",
                         type = PaymentMethodType.CARD,
                     ),
-                    providerId = "providerId1",
                     providerName = "Simplex",
                     rate = "0,0245334 BTC",
                     diff = null,
@@ -286,7 +285,6 @@ private fun AllOffersContentSheetOffersPreview() {
                         "https://s3.eu-central-1.amazonaws.com/tangem.api/express/PaymentMethods/visa-mc.png",
                         type = PaymentMethodType.CARD,
                     ),
-                    providerId = "providerId2",
                     providerName = "Simplex",
                     rate = "0,00145334 BTC",
                     diff = stringReference("–0.07%"),
@@ -306,6 +304,7 @@ private fun AllOffersContentSheetOffersPreview() {
             rate = "0,0245334 BTC",
             providersCount = 2,
             isBestRate = true,
+            paymentMethodStatus = PaymentMethodStatus.Available,
         )
     }
 
