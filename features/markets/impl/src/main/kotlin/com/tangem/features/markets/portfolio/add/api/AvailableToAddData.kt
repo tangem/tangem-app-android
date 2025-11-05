@@ -7,6 +7,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import kotlinx.serialization.Serializable
 
 internal data class AvailableToAddData(
     val availableToAddWallets: Map<UserWalletId, AvailableToAddWallet>,
@@ -19,11 +20,12 @@ internal data class AvailableToAddData(
 
 internal data class AvailableToAddWallet(
     val userWallet: UserWallet,
-    val accounts: Set<AccountStatus>,
+    val accounts: List<AccountStatus>,
     val availableNetworks: Set<TokenMarketInfo.Network>,
     val availableToAddAccounts: Map<AccountId, AvailableToAddAccount>,
 )
 
+@Serializable
 internal data class AvailableToAddAccount(
     val account: AccountStatus,
     val availableNetworks: Set<TokenMarketInfo.Network>,
@@ -41,6 +43,7 @@ internal data class AvailableToAddAccount(
         .toSet()
 }
 
+@Serializable
 internal data class SelectedPortfolio(
     val userWallet: UserWallet,
     val account: AvailableToAddAccount,

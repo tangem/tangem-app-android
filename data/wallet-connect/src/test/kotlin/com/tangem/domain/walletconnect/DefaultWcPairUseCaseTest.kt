@@ -14,9 +14,13 @@ import com.tangem.data.walletconnect.pair.CaipNamespaceDelegate
 import com.tangem.data.walletconnect.pair.DefaultWcPairUseCase
 import com.tangem.data.walletconnect.pair.WcPairSdkDelegate
 import com.tangem.data.walletconnect.utils.WcSdkSessionConverter
+import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.blockaid.BlockAidVerifier
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.walletconnect.model.*
+import com.tangem.domain.walletconnect.model.WcPairError
+import com.tangem.domain.walletconnect.model.WcPairRequest
+import com.tangem.domain.walletconnect.model.WcSession
+import com.tangem.domain.walletconnect.model.WcSessionApprove
 import com.tangem.domain.walletconnect.usecase.pair.WcPairState
 import io.mockk.coEvery
 import io.mockk.coVerifyOrder
@@ -33,6 +37,7 @@ internal class DefaultWcPairUseCaseTest {
     private val analytics: AnalyticsEventHandler = mockk<AnalyticsEventHandler>(relaxed = true)
     private val sdkDelegate: WcPairSdkDelegate = mockk<WcPairSdkDelegate>()
     private val blockAidVerifier: BlockAidVerifier = mockk<BlockAidVerifier>()
+    private val accountsFeatureToggles = mockk<AccountsFeatureToggles>()
 
     private val url = "testUrl"
     private val source = WcPairRequest.Source.QR
@@ -70,6 +75,7 @@ internal class DefaultWcPairUseCaseTest {
         get() = WcSessionApprove(
             wallet = MockUserWalletFactory.create(),
             network = listOf(),
+            account = null,
         )
 
     private val sdkApprove: Wallet.Params.SessionApprove
@@ -102,6 +108,7 @@ internal class DefaultWcPairUseCaseTest {
             networks = setOf(),
             connectingTime = null,
             showWalletInfo = false,
+            account = null,
         )
 
     private fun useCaseFactory() = DefaultWcPairUseCase(
@@ -110,12 +117,14 @@ internal class DefaultWcPairUseCaseTest {
         sdkDelegate = sdkDelegate,
         blockAidVerifier = blockAidVerifier,
         analytics = analytics,
+        accountsFeatureToggles = accountsFeatureToggles,
         pairRequest = WcPairRequest(userWalletId = UserWalletId(""), uri = url, source = source),
     )
 
     @Before
     fun setup() {
         coEvery { associateNetworksDelegate.associate(sdkProposal) } returns mapOf()
+        coEvery { accountsFeatureToggles.isFeatureEnabled } returns false
         coEvery {
             caipNamespaceDelegate.associate(
                 sessionProposal = sdkProposal,

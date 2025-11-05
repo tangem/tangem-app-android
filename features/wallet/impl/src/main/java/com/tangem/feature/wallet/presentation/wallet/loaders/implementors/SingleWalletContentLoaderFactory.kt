@@ -3,6 +3,7 @@ package com.tangem.feature.wallet.presentation.wallet.loaders.implementors
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.onramp.GetOnrampTransactionsUseCase
 import com.tangem.domain.onramp.OnrampRemoveTransactionUseCase
 import com.tangem.domain.settings.SetWalletWithFundsFoundUseCase
@@ -10,10 +11,8 @@ import com.tangem.domain.tokens.GetCryptoCurrencyActionsUseCase
 import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
-import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.usecase.ShouldSaveUserWalletsUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
-import com.tangem.feature.wallet.presentation.account.AccountDependencies
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.WalletWarningsAnalyticsSender
 import com.tangem.feature.wallet.presentation.wallet.domain.GetSingleWalletWarningsFactory
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
@@ -21,6 +20,7 @@ import javax.inject.Inject
 
 @ModelScoped
 @Suppress("LongParameterList")
+@Deprecated("Use SingleWalletContentLoaderV2.Factory instead")
 internal class SingleWalletContentLoaderFactory @Inject constructor(
     private val stateHolder: WalletStateController,
     private val getSingleCryptoCurrencyStatusUseCase: GetSingleCryptoCurrencyStatusUseCase,
@@ -35,14 +35,12 @@ internal class SingleWalletContentLoaderFactory @Inject constructor(
     private val shouldSaveUserWalletsUseCase: ShouldSaveUserWalletsUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val walletWarningsAnalyticsSender: WalletWarningsAnalyticsSender,
-    private val accountDependencies: AccountDependencies,
 ) {
 
     fun create(userWallet: UserWallet.Cold, clickIntents: WalletClickIntents, isRefresh: Boolean): WalletContentLoader {
         return SingleWalletContentLoader(
             userWallet = userWallet,
             clickIntents = clickIntents,
-            accountDependencies = accountDependencies,
             isRefresh = isRefresh,
             stateHolder = stateHolder,
             getSingleCryptoCurrencyStatusUseCase = getSingleCryptoCurrencyStatusUseCase,
