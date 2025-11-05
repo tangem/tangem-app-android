@@ -19,7 +19,7 @@ import com.tangem.domain.card.common.TapWorkarounds.isNotSupportedInThatRelease
 import com.tangem.domain.card.common.TapWorkarounds.isStart2Coin
 import com.tangem.domain.card.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.card.common.TapWorkarounds.isVisa
-import com.tangem.domain.common.TwinsHelper
+import com.tangem.domain.card.common.TwinsHelper
 import com.tangem.domain.wallets.derivations.derivationStyleProvider
 import com.tangem.domain.card.common.visa.VisaUtilities
 import com.tangem.domain.card.configs.CardConfig
