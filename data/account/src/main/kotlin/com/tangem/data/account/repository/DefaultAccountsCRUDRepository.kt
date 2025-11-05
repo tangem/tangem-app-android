@@ -132,6 +132,17 @@ internal class DefaultAccountsCRUDRepository(
         }
     }
 
+    override suspend fun saveAccountsLocally(accountList: AccountList) {
+        val converter = convertersContainer.createWalletAccountsResponseConverter(
+            userWalletId = accountList.userWalletId,
+        )
+
+        walletAccountsSaver.store(
+            userWalletId = accountList.userWalletId,
+            response = converter.convert(accountList),
+        )
+    }
+
     override suspend fun saveAccounts(accountList: AccountList) {
         val converter = convertersContainer.createCryptoPortfolioConverter(userWalletId = accountList.userWalletId)
 
