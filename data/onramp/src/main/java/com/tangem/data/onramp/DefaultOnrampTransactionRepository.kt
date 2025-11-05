@@ -44,6 +44,12 @@ internal class DefaultOnrampTransactionRepository(
         }
     }
 
+    override fun getAllTransactions(): Flow<List<OnrampTransaction>> {
+        return appPreferencesStore
+            .getObjectSet<OnrampTransactionDTO>(PreferencesKeys.ONRAMP_TRANSACTIONS_STATUSES_KEY)
+            .map { transactions -> transactions.map(transactionConverter::convert) }
+    }
+
     override suspend fun getTransactionById(txId: String): OnrampTransaction? = withContext(dispatchers.io) {
         val stored = appPreferencesStore.getObjectSetSync<OnrampTransactionDTO>(
             PreferencesKeys.ONRAMP_TRANSACTIONS_STATUSES_KEY,
