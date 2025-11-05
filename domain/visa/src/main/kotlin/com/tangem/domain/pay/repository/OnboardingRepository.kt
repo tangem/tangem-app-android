@@ -9,6 +9,10 @@ interface OnboardingRepository {
 
     suspend fun validateDeeplink(link: String): Either<UniversalError, Boolean>
 
+    suspend fun isTangemPayInitialDataProduced(): Boolean
+
+    suspend fun produceInitialData()
+
     suspend fun getCustomerInfo(): Either<UniversalError, CustomerInfo>
 
     suspend fun createOrder(): Either<UniversalError, Unit>

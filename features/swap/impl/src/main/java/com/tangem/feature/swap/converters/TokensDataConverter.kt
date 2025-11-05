@@ -12,13 +12,14 @@ import com.tangem.feature.swap.domain.models.domain.CryptoCurrencySwapInfo
 import com.tangem.feature.swap.models.CurrenciesGroupWithFromCurrency
 import com.tangem.feature.swap.models.SwapSelectTokenStateHolder
 import com.tangem.feature.swap.models.TokenBalanceData
+import com.tangem.feature.swap.models.TokenListUMData
 import com.tangem.feature.swap.models.TokenToSelectState
 import com.tangem.feature.swap.presentation.R
 import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.toImmutableList
 
-class TokensDataConverter(
+internal class TokensDataConverter(
     private val onSearchEntered: (String) -> Unit,
     private val onTokenSelected: (String) -> Unit,
     private val isBalanceHiddenProvider: Provider<Boolean>,
@@ -53,8 +54,10 @@ class TokensDataConverter(
                     }
                 }
                 .toImmutableList(),
+            tokensListData = TokenListUMData.EmptyList,
             onSearchEntered = onSearchEntered,
             onTokenSelected = onTokenSelected,
+            isBalanceHidden = isBalanceHiddenProvider(),
             afterSearch = group.isAfterSearch,
         )
     }
