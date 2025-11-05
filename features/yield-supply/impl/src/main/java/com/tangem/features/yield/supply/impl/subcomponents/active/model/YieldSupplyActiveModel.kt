@@ -21,7 +21,7 @@ import com.tangem.domain.yield.supply.usecase.YieldSupplyGetProtocolBalanceUseCa
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetTokenStatusUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyMinAmountUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetCurrentFeeUseCase
-import com.tangem.domain.yield.supply.usecase.YieldSupplyGetTokenMaxFeeUseCase
+import com.tangem.domain.yield.supply.usecase.YieldSupplyGetMaxFeeUseCase
 import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
 import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.impl.subcomponents.active.YieldSupplyActiveComponent
@@ -50,7 +50,7 @@ internal class YieldSupplyActiveModel @Inject constructor(
     private val yieldSupplyGetTokenStatusUseCase: YieldSupplyGetTokenStatusUseCase,
     private val yieldSupplyMinAmountUseCase: YieldSupplyMinAmountUseCase,
     private val yieldSupplyGetCurrentFeeUseCase: YieldSupplyGetCurrentFeeUseCase,
-    private val yieldSupplyGetTokenMaxFeeUseCase: YieldSupplyGetTokenMaxFeeUseCase,
+    private val yieldSupplyGetMaxFeeUseCase: YieldSupplyGetMaxFeeUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
 ) : Model() {
 
@@ -237,7 +237,7 @@ internal class YieldSupplyActiveModel @Inject constructor(
                 cryptoCurrencyStatus = cryptoStatus,
             ).getOrNull()
 
-            val maxFee = yieldSupplyGetTokenMaxFeeUseCase(
+            val maxFee = yieldSupplyGetMaxFeeUseCase(
                 userWallet = params.userWallet,
                 cryptoCurrencyStatus = cryptoStatus,
             ).getOrNull()
