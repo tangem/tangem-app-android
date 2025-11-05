@@ -16,6 +16,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -27,6 +28,7 @@ import com.tangem.core.ui.components.containers.FooterContainer
 import com.tangem.core.ui.components.inputrow.InputRowRecipient
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.test.SendAddressScreenTestTags
 import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationRecipientListUM
 import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationTextFieldUM
 import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationUM
@@ -38,6 +40,7 @@ import kotlinx.collections.immutable.ImmutableList
 private const val ADDRESS_FIELD_KEY = "ADDRESS_FIELD_KEY"
 private const val MEMO_FIELD_KEY = "MEMO_FIELD_KEY"
 
+@Suppress("LongMethod")
 @Composable
 internal fun SendDestinationContent(
     state: DestinationUM,
@@ -53,7 +56,8 @@ internal fun SendDestinationContent(
     LazyColumn(
         modifier = Modifier // Do not put fillMaxSize() in here
             .background(TangemTheme.colors.background.tertiary)
-            .padding(horizontal = 16.dp),
+            .padding(horizontal = 16.dp)
+            .testTag(SendAddressScreenTestTags.CONTAINER),
     ) {
         addressItem(
             address = address,
