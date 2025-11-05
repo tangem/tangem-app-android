@@ -74,7 +74,8 @@ sealed interface AccountName {
 
     companion object {
 
-        private const val MAX_LENGTH = 20
+        /** Maximum allowed length for an account name */
+        const val MAX_LENGTH = 20
 
         /**
          * Factory method to create an [AccountName] instance.

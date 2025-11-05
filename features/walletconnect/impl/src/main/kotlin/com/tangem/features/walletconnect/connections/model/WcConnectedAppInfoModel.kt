@@ -24,6 +24,7 @@ import com.tangem.features.walletconnect.connections.entity.WcAppInfoSecurityNot
 import com.tangem.features.walletconnect.connections.model.transformers.WcAppSubtitleConverter
 import com.tangem.features.walletconnect.connections.routes.ConnectedAppInfoRoutes
 import com.tangem.features.walletconnect.impl.R
+import com.tangem.features.walletconnect.transaction.converter.WcPortfolioNameDelegate
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -39,10 +40,12 @@ internal class WcConnectedAppInfoModel @Inject constructor(
     private val wcSessionsUseCase: WcSessionsUseCase,
     private val messageSender: UiMessageSender,
     private val disconnectUseCase: WcDisconnectUseCase,
+    portfolioNameDelegateFactory: WcPortfolioNameDelegate.Factory,
     override val dispatchers: CoroutineDispatcherProvider,
     paramsContainer: ParamsContainer,
 ) : Model() {
 
+    private val portfolioNameDelegate = portfolioNameDelegateFactory.create(modelScope)
     private val params = paramsContainer.require<WcConnectedAppInfoContainerComponent.Params>()
     val uiState: StateFlow<WcConnectedAppInfoUM?>
         field = MutableStateFlow<WcConnectedAppInfoUM?>(null)
@@ -68,7 +71,7 @@ internal class WcConnectedAppInfoModel @Inject constructor(
                         isVerified = session.securityStatus == CheckDAppResult.SAFE,
                         verifiedDAppState = extractVerifiedState(session),
                         appSubtitle = WcAppSubtitleConverter.convert(session.sdkModel.appMetaData),
-                        walletName = session.wallet.name,
+                        portfolioName = portfolioNameDelegate.createAccountTitleUM(session),
                         connectingTime = session.connectingTime,
                         networks = session.networks
                             .distinctBy { network -> network.rawId }

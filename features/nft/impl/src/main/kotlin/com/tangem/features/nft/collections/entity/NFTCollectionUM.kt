@@ -1,10 +1,20 @@
 package com.tangem.features.nft.collections.entity
 
 import androidx.annotation.DrawableRes
+import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.core.ui.extensions.TextReference
 
+internal sealed interface NFTCollectionItem {
+    val id: String
+}
+
+internal data class NFTCollectionPortfolioUM(
+    override val id: String,
+    val title: AccountTitleUM,
+) : NFTCollectionItem
+
 internal data class NFTCollectionUM(
-    val id: String,
+    override val id: String,
     val name: String,
     @DrawableRes val networkIconId: Int,
     val logoUrl: String?,
@@ -12,4 +22,4 @@ internal data class NFTCollectionUM(
     val assets: NFTCollectionAssetsListUM,
     val isExpanded: Boolean,
     val onExpandClick: () -> Unit,
-)
+) : NFTCollectionItem
