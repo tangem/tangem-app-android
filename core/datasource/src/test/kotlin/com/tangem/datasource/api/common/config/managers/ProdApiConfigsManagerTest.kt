@@ -12,6 +12,7 @@ import com.tangem.datasource.api.common.config.ApiConfig.Companion.INTERNAL_BUIL
 import com.tangem.datasource.api.common.config.ApiConfig.Companion.MOCKED_BUILD_TYPE
 import com.tangem.datasource.api.common.config.ApiConfig.Companion.RELEASE_BUILD_TYPE
 import com.tangem.datasource.api.common.config.managers.MockEnvironmentConfigStorage.Companion.BLOCK_AID_API_KEY
+import com.tangem.datasource.api.common.config.managers.MockEnvironmentConfigStorage.Companion.TANGEM_API_KEY
 import com.tangem.lib.auth.ExpressAuthProvider
 import com.tangem.lib.auth.StakeKitAuthProvider
 import com.tangem.utils.ProviderSuspend
@@ -40,8 +41,9 @@ internal class ProdApiConfigsManagerTest {
     private val stakeKitAuthProvider = mockk<StakeKitAuthProvider>()
     private val appAuthProvider = mockk<AuthProvider>()
     private val appInfoProvider = mockk<AppInfoProvider>()
+    private val tangemApiKeyProvider = mockk<ProviderSuspend<String>>()
 
-    private val manager = ProdApiConfigsManager(apiConfigs = createApiConfigs())
+    private lateinit var manager: ProdApiConfigsManager
 
     @BeforeEach
     fun setup() {
@@ -56,9 +58,14 @@ internal class ProdApiConfigsManagerTest {
         every { appVersionProvider.versionName } returns VERSION_NAME
         every { expressAuthProvider.getSessionId() } returns EXPRESS_SESSION_ID
         every { stakeKitAuthProvider.getApiKey() } returns STAKE_KIT_API_KEY
+        every { appAuthProvider.getApiKey(any()) } returns tangemApiKeyProvider
+        coEvery { tangemApiKeyProvider.invoke() } returns TANGEM_API_KEY
         coEvery { appAuthProvider.getCardId() } returns APP_CARD_ID
         coEvery { appAuthProvider.getCardPublicKey() } returns APP_CARD_PUBLIC_KEY
+
         every { appInfoProvider.osVersion } returns "Android 16"
+
+        manager = ProdApiConfigsManager(apiConfigs = createApiConfigs())
     }
 
     @ParameterizedTest
@@ -94,7 +101,6 @@ internal class ProdApiConfigsManagerTest {
                 }
                 ApiConfig.ID.TangemTech -> {
                     TangemTech(
-                        environmentConfigStorage = environmentConfigStorage,
                         appVersionProvider = appVersionProvider,
                         authProvider = appAuthProvider,
                         appInfoProvider = appInfoProvider,
@@ -177,7 +183,7 @@ internal class ProdApiConfigsManagerTest {
                 environment = ApiEnvironment.PROD,
                 baseUrl = "https://api.tangem.org/",
                 headers = mapOf(
-                    "api-key" to ProviderSuspend { MockEnvironmentConfigStorage.TANGEM_API_KEY },
+                    "api-key" to ProviderSuspend { TANGEM_API_KEY },
                     "card_id" to ProviderSuspend { APP_CARD_ID },
                     "card_public_key" to ProviderSuspend { APP_CARD_PUBLIC_KEY },
                     "version" to ProviderSuspend { VERSION_NAME },
