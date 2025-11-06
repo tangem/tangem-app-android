@@ -91,6 +91,16 @@ internal class YieldSupplyModel @Inject constructor(
 
     init {
         checkIfYieldSupplyIsAvailable()
+        if (params.handleNavigation != null) {
+            if (params.handleNavigation == true) {
+                modelScope.launch {
+                    delay(timeMillis = 1000)
+                    bottomSheetNavigation.activate(Unit)
+                }
+            } else {
+                onStartEarningClick()
+            }
+        }
     }
 
     private fun checkIfYieldSupplyIsAvailable() {
