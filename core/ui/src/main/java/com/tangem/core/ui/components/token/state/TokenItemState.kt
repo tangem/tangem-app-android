@@ -179,6 +179,7 @@ sealed class TokenItemState {
             val isAvailable: Boolean = true,
             val earnApy: TextReference? = null,
             val earnApyIsActive: Boolean = false,
+            val onApyLabelClick: (() -> Unit)? = null,
         ) : TitleState()
 
         data object Loading : TitleState()

@@ -21,10 +21,10 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.components.token.state.TokenItemState.TitleState as TokenTitleState
 
 @Composable
-internal fun TokenTitle(state: TokenTitleState?, onApyClick: () -> Unit, modifier: Modifier = Modifier) {
+internal fun TokenTitle(state: TokenTitleState?, modifier: Modifier = Modifier) {
     when (state) {
         is TokenTitleState.Content -> {
-            ContentTitle(state = state, modifier = modifier, onApyClick = onApyClick)
+            ContentTitle(state = state, modifier = modifier)
         }
         is TokenTitleState.Loading -> {
             RectangleShimmer(modifier = modifier.placeholderSize(), radius = TangemTheme.dimens.radius4)
@@ -37,7 +37,7 @@ internal fun TokenTitle(state: TokenTitleState?, onApyClick: () -> Unit, modifie
 }
 
 @Composable
-private fun ContentTitle(state: TokenTitleState.Content, onApyClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun ContentTitle(state: TokenTitleState.Content, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing6),
@@ -64,7 +64,7 @@ private fun ContentTitle(state: TokenTitleState.Content, onApyClick: () -> Unit,
             modifier = Modifier
                 .align(alignment = Alignment.CenterVertically)
                 .clickable {
-                    onApyClick()
+                    state.onApyLabelClick?.invoke()
                 },
         )
     }

@@ -59,7 +59,7 @@ internal class TokenListStateConverter(
         stakingApyMap = stakingApyMap,
         onItemClick = { _, status -> onTokenClick(accountId, status) },
         onItemLongClick = { _, status -> onTokenLongClick(accountId, status) },
-        onApyLabelClick = { _, status -> onApyLabelClick(status) },
+        onApyLabelClick = { status -> onApyLabelClick(status) },
     )
 
     override fun convert(value: WalletTokensListState): WalletTokensListState {
