@@ -1,4 +1,4 @@
-package com.tangem.features.markets.portfolio.add.impl.ui
+package com.tangem.common.ui.addtoken
 
 import android.content.res.Configuration
 import androidx.compose.foundation.background
@@ -9,6 +9,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import com.tangem.core.ui.R
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -44,12 +45,10 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.WalletConnectBottomSheetTestTags
 import com.tangem.domain.models.account.AccountName
-import com.tangem.features.markets.impl.R
-import com.tangem.features.markets.portfolio.add.impl.ui.state.AddTokenUM
 import java.util.UUID
 
 @Composable
-internal fun AddTokenContent(state: AddTokenUM, modifier: Modifier = Modifier) {
+fun AddTokenContent(state: AddTokenUM, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier.fillMaxWidth(),
     ) {
