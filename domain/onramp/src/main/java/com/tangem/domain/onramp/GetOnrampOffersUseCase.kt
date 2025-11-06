@@ -67,12 +67,16 @@ class GetOnrampOffersUseCase(
     }
 
     private fun findRecentOffer(offers: List<OnrampOffer>, transactions: List<OnrampTransaction>): OnrampOffer? {
-        val lastTransaction = transactions.maxByOrNull { it.timestamp } ?: return null
-
-        return offers.find { offer ->
-            offer.quote.provider.info.name == lastTransaction.providerName &&
-                offer.quote.paymentMethod.name == lastTransaction.paymentMethod && isRecentUsed(lastTransaction.status)
+        if (transactions.isEmpty()) return null
+        val matchingPairs = transactions.mapNotNull { transaction ->
+            if (!isRecentUsed(transaction.status)) return@mapNotNull null
+            val matchingOffer = offers.find { offer ->
+                offer.quote.provider.info.name == transaction.providerName &&
+                    offer.quote.paymentMethod.name == transaction.paymentMethod
+            }
+            matchingOffer?.let { it to transaction }
         }
+        return matchingPairs.maxByOrNull { (_, transaction) -> transaction.timestamp }?.first
     }
 
     private fun findBestRateOffer(offers: List<OnrampOffer>, isGooglePayAvailable: Boolean): OnrampOffer? {
