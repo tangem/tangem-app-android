@@ -91,8 +91,8 @@ internal class YieldSupplyModel @Inject constructor(
 
     init {
         checkIfYieldSupplyIsAvailable()
-        if (params.handleNavigation != null) {
-            if (params.handleNavigation == true) {
+        params.handleNavigation?.let { handle ->
+            if (handle) {
                 modelScope.launch {
                     delay(timeMillis = 1000)
                     bottomSheetNavigation.activate(Unit)
