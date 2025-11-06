@@ -24,7 +24,7 @@ internal class AvailableToAddDataConverter @Inject constructor(
 ) {
 
     suspend fun convert(
-        balances: Map<UserWallet, PortfolioFetcher.PortfolioBalance>,
+        balances: Map<UserWalletId, PortfolioFetcher.PortfolioBalance>,
         availableNetworks: Set<TokenMarketInfo.Network>,
         marketParams: TokenMarketParams,
     ): AvailableToAddData {
@@ -50,9 +50,10 @@ internal class AvailableToAddDataConverter @Inject constructor(
         }
 
         suspend fun getAvailableToAddWallet(
-            entry: Map.Entry<UserWallet, PortfolioFetcher.PortfolioBalance>,
+            entry: Map.Entry<UserWalletId, PortfolioFetcher.PortfolioBalance>,
         ): AvailableToAddWallet {
-            val (wallet, balance) = entry
+            val (walletId, balance) = entry
+            val wallet = balance.userWallet
             val filteredNetworks = wallet.filteredAvailableNetworks(availableNetworks)
             val accounts = balance.accountsBalance.accountStatuses
             val availableToAddAccounts: Map<AccountId, AvailableToAddAccount> = accounts
@@ -69,9 +70,9 @@ internal class AvailableToAddDataConverter @Inject constructor(
 
         val availableToAddWallets: Map<UserWalletId, AvailableToAddWallet> = balances
             .map {
-                val (wallet, _) = it
+                val (walletId, _) = it
                 val availableToAddWallet = getAvailableToAddWallet(it)
-                wallet.walletId to availableToAddWallet
+                walletId to availableToAddWallet
             }
             .filter { (_, wallet) -> wallet.availableToAddAccounts.isNotEmpty() }
             .toMap()
