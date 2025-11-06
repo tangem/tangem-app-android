@@ -1,7 +1,6 @@
 package com.tangem.features.markets.portfolio.add.impl
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
@@ -12,7 +11,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.features.markets.portfolio.add.api.SelectedNetwork
 import com.tangem.features.markets.portfolio.add.api.SelectedPortfolio
 import com.tangem.features.markets.portfolio.add.impl.model.AddTokenModel
-import com.tangem.features.markets.portfolio.add.impl.ui.AddTokenContent
+import com.tangem.common.ui.addtoken.AddTokenContent
 import com.tangem.features.markets.portfolio.impl.analytics.PortfolioAnalyticsEvent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
