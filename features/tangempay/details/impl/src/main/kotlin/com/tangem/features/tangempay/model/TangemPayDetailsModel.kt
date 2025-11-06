@@ -12,24 +12,25 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig.ShowRefreshState
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.pay.TangemPayTopUpData
 import com.tangem.domain.pay.model.TangemPayCardBalance
-import com.tangem.domain.pay.repository.CardDetailsRepository
+import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import com.tangem.features.tangempay.components.AddFundsListener
 import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
+import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.entity.TangemPayDetailsErrorType
 import com.tangem.features.tangempay.entity.TangemPayDetailsNavigation
 import com.tangem.features.tangempay.entity.TangemPayDetailsStateFactory
 import com.tangem.features.tangempay.entity.TangemPayDetailsUM
 import com.tangem.features.tangempay.model.listener.CardDetailsEvent
 import com.tangem.features.tangempay.model.listener.CardDetailsEventListener
-import com.tangem.features.tangempay.model.transformers.DetailsAddToWalletBannerTransformer
-import com.tangem.features.tangempay.model.transformers.DetailsBalanceTransformer
-import com.tangem.features.tangempay.model.transformers.TangemPayDetailsRefreshTransformer
+import com.tangem.features.tangempay.model.transformers.*
 import com.tangem.features.tangempay.navigation.TangemPayDetailsInnerRoute
-import com.tangem.features.tangempay.utils.TangemPayErrorMessageFactory
+import com.tangem.features.tangempay.utils.TangemPayMessagesFactory
 import com.tangem.features.tangempay.utils.TangemPayTxHistoryUiActions
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
@@ -48,7 +49,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
-    private val cardDetailsRepository: CardDetailsRepository,
+    private val cardDetailsRepository: TangemPayCardDetailsRepository,
     private val uiMessageSender: UiMessageSender,
     private val cardDetailsEventListener: CardDetailsEventListener,
 ) : Model(), TangemPayTxHistoryUiActions, AddFundsListener {
@@ -60,7 +61,9 @@ internal class TangemPayDetailsModel @Inject constructor(
         onRefresh = ::onRefreshSwipe,
         onAddFunds = ::onClickAddFunds,
         onClickChangePin = ::onClickChangePin,
+        isCardFrozen = params.config.isCardFrozen,
         onClickFreezeCard = ::onClickFreezeCard,
+        onClickUnfreezeCard = ::onClickUnfreezeCard,
     )
 
     val uiState: StateFlow<TangemPayDetailsUM>
@@ -84,7 +87,65 @@ internal class TangemPayDetailsModel @Inject constructor(
     }
 
     private fun onClickFreezeCard() {
-        // TODO [REDACTED_JIRA]
+        uiMessageSender.send(TangemPayMessagesFactory.createFreezeCardMessage(onFreezeClicked = ::freezeCard))
+    }
+
+    private fun onClickUnfreezeCard() {
+        uiMessageSender.send(TangemPayMessagesFactory.createUnfreezeCardMessage(onUnfreezeClicked = ::unfreezeCard))
+    }
+
+    private fun freezeCard() {
+        modelScope.launch {
+            uiState.update(TangemPayFreezeUnfreezeProcessTransformer)
+            cardDetailsRepository.freezeCard(cardId = params.config.cardId)
+                .onLeft {
+                    uiMessageSender.send(SnackbarMessage(resourceReference(R.string.tangem_pay_freeze_card_failed)))
+                    uiState.update(
+                        TangemPayFreezeUnfreezeStateTransformer(
+                            frozen = false,
+                            onFreezeClick = ::onClickFreezeCard,
+                            onUnfreezeClick = ::onClickUnfreezeCard,
+                        ),
+                    )
+                }
+                .onRight {
+                    uiMessageSender.send(SnackbarMessage(resourceReference(R.string.tangem_pay_freeze_card_success)))
+                    uiState.update(
+                        TangemPayFreezeUnfreezeStateTransformer(
+                            frozen = true,
+                            onFreezeClick = ::onClickFreezeCard,
+                            onUnfreezeClick = ::onClickUnfreezeCard,
+                        ),
+                    )
+                }
+        }
+    }
+
+    private fun unfreezeCard() {
+        modelScope.launch {
+            uiState.update(TangemPayFreezeUnfreezeProcessTransformer)
+            cardDetailsRepository.unfreezeCard(cardId = params.config.cardId)
+                .onLeft {
+                    uiMessageSender.send(SnackbarMessage(resourceReference(R.string.tangem_pay_unfreeze_card_failed)))
+                    uiState.update(
+                        TangemPayFreezeUnfreezeStateTransformer(
+                            frozen = true,
+                            onFreezeClick = ::onClickFreezeCard,
+                            onUnfreezeClick = ::onClickUnfreezeCard,
+                        ),
+                    )
+                }
+                .onRight {
+                    uiMessageSender.send(SnackbarMessage(resourceReference(R.string.tangem_pay_unfreeze_card_success)))
+                    uiState.update(
+                        TangemPayFreezeUnfreezeStateTransformer(
+                            frozen = false,
+                            onFreezeClick = ::onClickFreezeCard,
+                            onUnfreezeClick = ::onClickUnfreezeCard,
+                        ),
+                    )
+                }
+        }
     }
 
     private fun onClickAddFunds() {
@@ -188,6 +249,6 @@ internal class TangemPayDetailsModel @Inject constructor(
     }
 
     private fun showBottomSheetError(type: TangemPayDetailsErrorType) {
-        uiMessageSender.send(message = TangemPayErrorMessageFactory.createErrorMessage(type = type))
+        uiMessageSender.send(message = TangemPayMessagesFactory.createErrorMessage(type = type))
     }
 }
