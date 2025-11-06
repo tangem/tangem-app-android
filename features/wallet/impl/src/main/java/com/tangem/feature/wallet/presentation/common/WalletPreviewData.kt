@@ -8,15 +8,13 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.feature.wallet.presentation.wallet.state.model.ActionsBottomSheetConfig
-import com.tangem.feature.wallet.presentation.wallet.state.model.TokenActionButtonConfig
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletAdditionalInfo
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletBottomSheetConfig
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.organizetokens.model.DraggableItem
 import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensListState
+import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensListUM
 import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensState
 import com.tangem.feature.wallet.presentation.wallet.state.model.*
+import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toPersistentList
@@ -88,7 +86,7 @@ internal object WalletPreviewData {
 
     private const val networksSize = 10
     private const val tokensSize = 3
-    private val draggableItems by lazy {
+    private val draggableItems: PersistentList<DraggableItem> by lazy {
         List(networksSize) { it }
             .flatMap { index ->
                 val lastNetworkIndex = networksSize - 1
@@ -98,11 +96,13 @@ internal object WalletPreviewData {
                 val group = DraggableItem.GroupHeader(
                     id = networkNumber,
                     networkName = "$networkNumber",
+
                     roundingMode = when (index) {
                         0 -> DraggableItem.RoundingMode.Top()
                         lastNetworkIndex -> DraggableItem.RoundingMode.Bottom()
                         else -> DraggableItem.RoundingMode.None
                     },
+                    accountId = "account_$networkNumber",
                 )
 
                 val tokens: MutableList<DraggableItem.Token> = mutableListOf()
@@ -117,6 +117,7 @@ internal object WalletPreviewData {
                                 ),
                             ),
                             groupId = group.id,
+                            accountId = "account_$networkNumber",
                             roundingMode = when {
                                 i == lastTokenIndex && index == lastNetworkIndex -> DraggableItem.RoundingMode.Bottom()
                                 else -> DraggableItem.RoundingMode.None
@@ -125,7 +126,10 @@ internal object WalletPreviewData {
                     )
                 }
 
-                val divider = DraggableItem.Placeholder(id = "divider_$networkNumber")
+                val divider = DraggableItem.Placeholder(
+                    id = "divider_$networkNumber",
+                    accountId = "account_$networkNumber",
+                )
 
                 buildList {
                     add(group)
@@ -154,6 +158,7 @@ internal object WalletPreviewData {
             itemsState = OrganizeTokensListState.GroupedByNetwork(
                 items = draggableItems,
             ),
+            tokenListUM = OrganizeTokensListUM.EmptyList,
             header = OrganizeTokensState.HeaderConfig(
                 onSortClick = {},
                 onGroupClick = {},
