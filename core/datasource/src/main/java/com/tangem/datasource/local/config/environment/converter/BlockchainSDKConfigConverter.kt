@@ -105,6 +105,7 @@ internal object BlockchainSDKConfigConverter : Converter<EnvironmentConfigModel,
                 sui = GetBlockAccessToken(jsonRpc = accessTokens.sui?.jsonRPC),
                 telos = GetBlockAccessToken(jsonRpc = accessTokens.telos?.jsonRPC),
                 tezos = GetBlockAccessToken(rest = accessTokens.tezos?.rest),
+                unichain = GetBlockAccessToken(jsonRpc = accessTokens.unichain?.jsonRPC),
             )
         }
     }
