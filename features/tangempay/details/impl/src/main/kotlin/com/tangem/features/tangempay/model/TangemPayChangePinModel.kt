@@ -5,7 +5,7 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.pay.model.SetPinResult
-import com.tangem.domain.pay.repository.CardDetailsRepository
+import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
 import com.tangem.features.tangempay.entity.TangemPayChangePinUM
 import kotlinx.coroutines.flow.*
 import com.tangem.features.tangempay.model.transformers.PinCodeChangeTransformer
@@ -22,7 +22,7 @@ import javax.inject.Inject
 internal class TangemPayChangePinModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
-    private val cardDetailsRepository: CardDetailsRepository,
+    private val cardDetailsRepository: TangemPayCardDetailsRepository,
 ) : Model() {
 
     val uiState: StateFlow<TangemPayChangePinUM>
