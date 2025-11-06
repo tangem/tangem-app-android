@@ -21,9 +21,11 @@ import com.tangem.core.ui.message.bottomSheetMessage
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.domain.wallets.usecase.UnlockHotWalletContextualUseCase
 import com.tangem.features.hotwallet.WalletHardwareBackupComponent
 import com.tangem.features.hotwallet.impl.R
 import com.tangem.features.hotwallet.wallethardwarebackup.entity.WalletHardwareBackupUM
+import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.delay
@@ -31,6 +33,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -40,6 +43,7 @@ internal class WalletHardwareBackupModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
     private val generateBuyTangemCardLinkUseCase: GenerateBuyTangemCardLinkUseCase,
+    private val unlockHotWalletContextualUseCase: UnlockHotWalletContextualUseCase,
     private val urlOpener: UrlOpener,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val messageSender: UiMessageSender,
@@ -122,11 +126,23 @@ internal class WalletHardwareBackupModel @Inject constructor(
             if (!userWallet.backedUp) {
                 messageSender.send(makeBackupAtFirstAlertBS)
             } else {
-                router.push(
-                    AppRoute.UpgradeWallet(
-                        userWalletId = params.userWalletId,
-                    ),
-                )
+                val hotWalletId = userWallet.hotWalletId
+                when (hotWalletId.authType) {
+                    HotWalletId.AuthType.NoPassword -> {
+                        router.push(AppRoute.UpgradeWallet(userWalletId = params.userWalletId))
+                    }
+                    HotWalletId.AuthType.Password,
+                    HotWalletId.AuthType.Biometry,
+                    -> modelScope.launch {
+                        unlockHotWalletContextualUseCase.invoke(hotWalletId)
+                            .onLeft {
+                                Timber.e(it, "Unable to unlock wallet with id ${params.userWalletId}")
+                            }
+                            .onRight {
+                                router.push(AppRoute.UpgradeWallet(userWalletId = params.userWalletId))
+                            }
+                    }
+                }
             }
         }
     }
