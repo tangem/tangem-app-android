@@ -1,6 +1,7 @@
 package com.tangem.data.pay.repository
 
 import arrow.core.Either
+import arrow.core.Either.Companion.catch
 import com.squareup.moshi.Moshi
 import com.tangem.core.error.UniversalError
 import com.tangem.data.pay.util.TangemPayErrorConverter
@@ -11,6 +12,7 @@ import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.local.visa.TangemPayStorage
 import com.tangem.domain.pay.datasource.TangemPayAuthDataSource
+import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.domain.visa.model.VisaAuthTokens
 import com.tangem.domain.visa.model.getAuthHeader
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -21,7 +23,6 @@ import kotlinx.coroutines.sync.withLock
 import timber.log.Timber
 import javax.inject.Inject
 
-@Suppress("LongParameterList")
 internal class TangemPayRequestPerformer @Inject constructor(
     @NetworkMoshi moshi: Moshi,
     private val dispatchers: CoroutineDispatcherProvider,
@@ -52,6 +53,16 @@ internal class TangemPayRequestPerformer @Inject constructor(
                 }
             }
         }
+    }
+
+    suspend fun <T : Any> makeSafeRequest(
+        requestBlock: suspend (header: String) -> ApiResponse<T>,
+    ): Either<VisaApiError, T> {
+        return catch { request(requestBlock) }
+            .mapLeft { exception ->
+                Timber.tag("TangemPayRequestPerformer").e(exception)
+                errorConverter.convert(exception)
+            }
     }
 
     suspend fun <T : Any> request(requestBlock: suspend (header: String) -> ApiResponse<T>): T =
