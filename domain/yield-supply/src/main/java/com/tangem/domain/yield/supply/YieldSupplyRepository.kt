@@ -59,25 +59,32 @@ interface YieldSupplyRepository {
     suspend fun deactivateProtocol(cryptoCurrencyToken: CryptoCurrency.Token, address: String): Boolean
 
     /**
-     * Save the last user-initiated yield protocol action for the given currency.
+     * Save the last user‑initiated yield protocol action for the given wallet and currency.
      *
      * The saved value helps the UI render an intermediate "processing" state while waiting
      * for the definitive protocol status to be fetched from the network. This information
-     * is transient and not intended to be persisted across app restarts.
+     * is transient (in‑memory only) and is not persisted across app restarts.
      *
+     * @param userWalletId the wallet the action was performed with
      * @param cryptoCurrency the currency or token the action relates to
      * @param yieldSupplyEnterStatus the last action intent: [YieldSupplyEnterStatus.Enter] or [YieldSupplyEnterStatus.Exit]
      */
-    suspend fun saveTokenProtocolStatus(cryptoCurrency: CryptoCurrency, yieldSupplyEnterStatus: YieldSupplyEnterStatus)
+    suspend fun saveTokenProtocolStatus(
+        userWalletId: UserWalletId,
+        cryptoCurrency: CryptoCurrency,
+        yieldSupplyEnterStatus: YieldSupplyEnterStatus,
+    )
 
     /**
-     * Get the last saved user-initiated yield protocol action for the given currency, if any.
+     * Get the last saved user‑initiated yield protocol action for the given wallet and currency, if any.
      *
      * Used to determine whether the UI should display an intermediate "processing" state
-     * until the protocol status retrieved from backend reflects the change.
+     * until the protocol status retrieved from backend reflects the change. The value is
+     * transient (in‑memory only) and is not persisted across app restarts.
      *
+     * @param userWalletId the wallet to query
      * @param cryptoCurrency the currency or token to query
      * @return the last action intent or null if nothing has been recorded
      */
-    fun getTokenProtocolStatus(cryptoCurrency: CryptoCurrency): YieldSupplyEnterStatus?
+    fun getTokenProtocolStatus(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): YieldSupplyEnterStatus?
 }
