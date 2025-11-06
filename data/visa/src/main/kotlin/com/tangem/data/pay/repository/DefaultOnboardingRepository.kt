@@ -137,8 +137,18 @@ internal class DefaultOnboardingRepository @Inject constructor(
         } else {
             null
         }
+        val productInstance = response?.productInstance?.let { instance ->
+            ProductInstance(
+                id = instance.id,
+                cardId = instance.cardId,
+                status = when (instance.status) {
+                    CustomerMeResponse.ProductInstance.Status.ACTIVE -> ProductInstance.Status.ACTIVE
+                    else -> ProductInstance.Status.INACTIVE
+                },
+            )
+        }
         return CustomerInfo(
-            productInstance = response?.productInstance?.let { ProductInstance(id = it.id, status = it.status) },
+            productInstance = productInstance,
             isKycApproved = response?.kyc?.status == APPROVED_KYC_STATUS,
             cardInfo = cardInfo,
         )
