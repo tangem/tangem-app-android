@@ -244,35 +244,45 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
                     )
                 },
                 ifRight = {
-                    yieldSupplyRepository.saveTokenProtocolStatus(cryptoCurrency, YieldSupplyEnterStatus.Enter)
-                    val event = AnalyticsParam.TxSentFrom.Earning(
-                        blockchain = cryptoCurrency.network.name,
-                        token = cryptoCurrency.symbol,
-                        feeType = AnalyticsParam.FeeType.Normal,
-                    )
-                    analytics.send(YieldSupplyAnalytics.FundsEarned(
-                        blockchain = cryptoCurrency.network.name,
-                        token = cryptoCurrency.symbol,
-                    ))
-                    yieldSupplyFeeUM.transactionDataList.forEach {
-                        analytics.send(
-                            Basic.TransactionSent(
-                                sentFrom = event,
-                                memoType = Basic.TransactionSent.MemoType.Null,
-                            ),
-                        )
-                    }
-
-                    val address = cryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value
-                    if (address != null) {
-                        yieldSupplyActivateUseCase(cryptoCurrency, address)
-                    }
-
-                    modelScope.launch {
-                        params.callback.onTransactionSent()
-                    }
+                    onStartEarningTransactionSuccess(yieldSupplyFeeUM)
                 },
             )
+        }
+    }
+
+    private suspend fun onStartEarningTransactionSuccess(yieldSupplyFeeUM: YieldSupplyFeeUM.Content) {
+        yieldSupplyRepository.saveTokenProtocolStatus(
+            userWallet.walletId,
+            cryptoCurrency,
+            YieldSupplyEnterStatus.Enter,
+        )
+        val event = AnalyticsParam.TxSentFrom.Earning(
+            blockchain = cryptoCurrency.network.name,
+            token = cryptoCurrency.symbol,
+            feeType = AnalyticsParam.FeeType.Normal,
+        )
+        analytics.send(
+            YieldSupplyAnalytics.FundsEarned(
+                blockchain = cryptoCurrency.network.name,
+                token = cryptoCurrency.symbol,
+            ),
+        )
+        yieldSupplyFeeUM.transactionDataList.forEach {
+            analytics.send(
+                Basic.TransactionSent(
+                    sentFrom = event,
+                    memoType = Basic.TransactionSent.MemoType.Null,
+                ),
+            )
+        }
+
+        val address = cryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value
+        if (address != null) {
+            yieldSupplyActivateUseCase(cryptoCurrency, address)
+        }
+
+        modelScope.launch {
+            params.callback.onTransactionSent()
         }
     }
 
