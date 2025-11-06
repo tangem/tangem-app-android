@@ -110,7 +110,6 @@ fun TokenItem(
 
         TokenTitle(
             state = state.titleState,
-            onApyClick = { state.onApyLabelClick?.invoke(state) },
             modifier = Modifier
                 .layoutId(layoutId = LayoutId.TITLE)
                 .padding(end = TangemTheme.dimens.spacing8)
