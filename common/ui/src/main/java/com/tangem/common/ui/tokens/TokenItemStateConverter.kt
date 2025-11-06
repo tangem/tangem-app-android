@@ -48,8 +48,11 @@ class TokenItemStateConverter(
     private val iconStateProvider: (CryptoCurrencyStatus) -> CurrencyIconState = {
         CryptoCurrencyToIconStateConverter().convert(it)
     },
+    private val onApyLabelClick: ((CryptoCurrencyStatus) -> Unit)? = null,
     private val titleStateProvider: (CryptoCurrencyStatus) -> TokenItemState.TitleState = {
-        createTitleState(it, yieldModuleApyMap, stakingApyMap)
+        createTitleState(it, yieldModuleApyMap, stakingApyMap, {
+            onApyLabelClick?.invoke(it)
+        })
     },
     private val subtitleStateProvider: (CryptoCurrencyStatus) -> TokenItemState.SubtitleState? = {
         createSubtitleState(it, appCurrency)
@@ -62,7 +65,6 @@ class TokenItemStateConverter(
     },
     private val onItemClick: ((TokenItemState, CryptoCurrencyStatus) -> Unit)? = null,
     private val onItemLongClick: ((TokenItemState, CryptoCurrencyStatus) -> Unit)? = null,
-    private val onApyLabelClick: ((TokenItemState, CryptoCurrencyStatus) -> Unit)? = null,
 ) : Converter<CryptoCurrencyStatus, TokenItemState> {
 
     override fun convert(value: CryptoCurrencyStatus): TokenItemState {
@@ -104,7 +106,7 @@ class TokenItemStateConverter(
                 { onItemLongClick(it, this) }
             },
             onApyLabelClick = onApyLabelClick?.let { onApyLabelClick ->
-                { onApyLabelClick(it, this) }
+                { onApyLabelClick(this) }
             },
         )
     }
@@ -164,6 +166,7 @@ class TokenItemStateConverter(
             currencyStatus: CryptoCurrencyStatus,
             yieldModuleApyMap: Map<String, String>,
             stakingApyMap: Map<String, List<Yield.Validator>>,
+            onApyLabelClick: () -> Unit,
         ): TokenItemState.TitleState {
             return when (val value = currencyStatus.value) {
                 is CryptoCurrencyStatus.Loading,
@@ -188,6 +191,7 @@ class TokenItemStateConverter(
                         hasPending = value.hasCurrentNetworkTransactions,
                         earnApy = earnApyText,
                         earnApyIsActive = isActive,
+                        onApyLabelClick = onApyLabelClick,
                     )
                 }
             }
