@@ -1357,6 +1357,7 @@
   <string name="swapping_to_title">You receive</string>
   <string name="swapping_token_list_title">Choose token</string>
   <string name="swapping_token_not_available">not available</string>
+  <string name="tangem_pay_card_frozen">Card frozen</string>
   <string name="tangem_pay_deposit">Deposit</string>
   <string name="tangem_pay_dispute">Dispute</string>
   <string name="tangem_pay_explore_transaction">Explore transaction</string>
@@ -1364,7 +1365,9 @@
   <string name="tangem_pay_fee_title">Fee</string>
   <string name="tangem_pay_freeze_card_alert_body">Keep your money safe if your card is lost or stolen. You can unfreeze anytime.</string>
   <string name="tangem_pay_freeze_card_alert_title">Freeze your card?</string>
+  <string name="tangem_pay_freeze_card_failed">Failed to freeze the card. Try again later.</string>
   <string name="tangem_pay_freeze_card_freeze">Freeze</string>
+  <string name="tangem_pay_freeze_card_success">Your card is frozen.</string>
   <string name="tangem_pay_get_help">Get Help</string>
   <string name="tangem_pay_status_completed">Completed</string>
   <string name="tangem_pay_status_declined">Declined</string>
@@ -1373,6 +1376,8 @@
   <string name="tangem_pay_transaction_fee_notification_text">This fee goes to cover the cost of handling your transfer.</string>
   <string name="tangem_pay_unfreeze_card_alert_body">Keep using your money. You can freeze anytime.</string>
   <string name="tangem_pay_unfreeze_card_alert_title">Unfreeze your card?</string>
+  <string name="tangem_pay_unfreeze_card_failed">Failed to unfreeze the card. Try again later.</string>
+  <string name="tangem_pay_unfreeze_card_success">Your card is unfrozen.</string>
   <string name="tangem_pay_withdrawal">Withdrawal</string>
   <string name="tangempay_card_details_add_funds">Add funds</string>
   <string name="tangempay_card_details_add_funds_subtitle">Top-up options</string>

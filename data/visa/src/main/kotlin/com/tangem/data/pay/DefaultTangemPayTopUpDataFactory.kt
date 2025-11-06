@@ -1,6 +1,7 @@
 package com.tangem.data.pay
 
 import arrow.core.Either
+import arrow.core.Either.Companion.catch
 import com.squareup.moshi.Moshi
 import com.tangem.blockchain.blockchains.ethereum.Chain
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
@@ -16,7 +17,6 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.pay.TangemPayTopUpData
 import com.tangem.domain.pay.TangemPayTopUpDataFactory
-import kotlinx.coroutines.CancellationException
 import timber.log.Timber
 import java.math.BigDecimal
 import javax.inject.Inject
@@ -68,10 +68,10 @@ internal class DefaultTangemPayTopUpDataFactory @Inject constructor(
         cryptoBalance: BigDecimal,
         fiatBalance: BigDecimal,
     ): Either<UniversalError, TangemPayTopUpData> {
-        return try {
+        return catch {
             val wallet = tangemPayWalletsManager.getDefaultWalletForTangemPayBlocking()
             val currency = getCurrency(wallet, chainId)
-            val result = TangemPayTopUpData(
+            TangemPayTopUpData(
                 currency = currency,
                 walletId = wallet.walletId,
                 cryptoBalance = cryptoBalance,
@@ -79,18 +79,9 @@ internal class DefaultTangemPayTopUpDataFactory @Inject constructor(
                 depositAddress = depositAddress,
                 receiveAddress = listOf(ReceiveAddressModel(nameService = NameService.Default, value = depositAddress)),
             )
-
-            Either.Right(result)
-        } catch (exception: Exception) {
-            when (exception) {
-                is CancellationException -> {
-                    throw exception
-                }
-                else -> {
-                    Timber.tag(TAG).e(exception)
-                    Either.Left(errorConverter.convert(exception))
-                }
-            }
+        }.mapLeft { exception ->
+            Timber.tag(TAG).e(exception)
+            errorConverter.convert(exception)
         }
     }
 }

@@ -8,7 +8,7 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.message.SnackbarMessage
-import com.tangem.domain.pay.repository.CardDetailsRepository
+import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
 import com.tangem.features.tangempay.components.cardDetails.TangemPayCardDetailsBlockComponent
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.entity.TangemPayCardDetailsBlockStateFactory
@@ -33,7 +33,7 @@ import javax.inject.Inject
 internal class TangemPayCardDetailsBlockModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
-    private val cardDetailsRepository: CardDetailsRepository,
+    private val cardDetailsRepository: TangemPayCardDetailsRepository,
     private val clipboardManager: ClipboardManager,
     private val uiMessageSender: UiMessageSender,
     private val cardDetailsEventListener: CardDetailsEventListener,

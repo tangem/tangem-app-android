@@ -7,7 +7,7 @@ import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.entity.TangemPayAddFundsItemUM
 import com.tangem.features.tangempay.entity.TangemPayAddFundsUM
 import com.tangem.features.tangempay.entity.TangemPayDetailsErrorType
-import com.tangem.features.tangempay.utils.TangemPayErrorMessageFactory
+import com.tangem.features.tangempay.utils.TangemPayMessagesFactory
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.persistentListOf
 
@@ -20,7 +20,7 @@ internal class TangemPayAddFundsUMConverter(
             TangemPayAddFundsUM(
                 items = persistentListOf(),
                 dismiss = listener::onDismissAddFunds,
-                errorMessage = TangemPayErrorMessageFactory.createErrorMessage(
+                errorMessage = TangemPayMessagesFactory.createErrorMessage(
                     type = TangemPayDetailsErrorType.Receive,
                 ).messageBottomSheetUMV2,
             )

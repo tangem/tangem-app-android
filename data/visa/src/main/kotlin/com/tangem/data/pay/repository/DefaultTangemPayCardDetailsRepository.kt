@@ -9,24 +9,29 @@ import com.tangem.datasource.api.common.config.ApiEnvironment
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.datasource.api.pay.TangemPayApi
 import com.tangem.datasource.api.pay.models.request.CardDetailsRequest
+import com.tangem.datasource.api.pay.models.request.FreezeUnfreezeCardRequest
 import com.tangem.datasource.api.pay.models.request.SetPinRequest
+import com.tangem.datasource.api.pay.models.response.FreezeUnfreezeCardResponse
 import com.tangem.datasource.local.visa.TangemPayStorage
 import com.tangem.domain.pay.model.SetPinResult
 import com.tangem.domain.pay.model.TangemPayCardBalance
 import com.tangem.domain.pay.model.TangemPayCardDetails
-import com.tangem.domain.pay.repository.CardDetailsRepository
+import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
+import com.tangem.domain.visa.error.VisaApiError
+import timber.log.Timber
 import javax.inject.Inject
 
 private const val TAG = "TangemPay: CardDetailsRepository"
 
-internal class DefaultCardDetailsRepository @Inject constructor(
+@Suppress("OptionalUnit")
+internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
     private val tangemPayApi: TangemPayApi,
     private val requestHelper: TangemPayRequestPerformer,
     private val visaLibLoader: VisaLibLoader,
     private val apiConfigsManager: ApiConfigsManager,
     private val rainCryptoUtil: RainCryptoUtil,
     private val storage: TangemPayStorage,
-) : CardDetailsRepository {
+) : TangemPayCardDetailsRepository {
 
     override suspend fun getCardBalance(): Either<UniversalError, TangemPayCardBalance> {
         return requestHelper.runWithErrorLogs(TAG) {
@@ -109,6 +114,34 @@ internal class DefaultCardDetailsRepository @Inject constructor(
     override suspend fun setAddToWalletAsDone(): Either<UniversalError, Unit> {
         return requestHelper.runWithErrorLogs(TAG) {
             storage.storeAddToWalletDone(requestHelper.getCustomerWalletAddress(), isDone = true)
+        }
+    }
+
+    override suspend fun freezeCard(cardId: String): Either<UniversalError, Unit> {
+        return requestHelper.makeSafeRequest {
+            tangemPayApi.freezeCard(authHeader = it, body = FreezeUnfreezeCardRequest(cardId = cardId))
+        }.map { response ->
+            val result = response.result
+            if (result != null && result.status == FreezeUnfreezeCardResponse.Status.COMPLETED) {
+                Either.Right(Unit)
+            } else {
+                Timber.e("Card freeze failed with status: ${response.result?.status}")
+                Either.Left(VisaApiError.UnknownWithoutCode)
+            }
+        }
+    }
+
+    override suspend fun unfreezeCard(cardId: String): Either<UniversalError, Unit> {
+        return requestHelper.makeSafeRequest {
+            tangemPayApi.unfreezeCard(authHeader = it, body = FreezeUnfreezeCardRequest(cardId = cardId))
+        }.map { response ->
+            val result = response.result
+            if (result != null && result.status == FreezeUnfreezeCardResponse.Status.COMPLETED) {
+                Either.Right(Unit)
+            } else {
+                Timber.e("Card unfreeze failed with status: ${response.result?.status}")
+                Either.Left(VisaApiError.UnknownWithoutCode)
+            }
         }
     }
 
