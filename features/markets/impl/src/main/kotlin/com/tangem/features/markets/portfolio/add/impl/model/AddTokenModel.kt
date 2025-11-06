@@ -16,7 +16,7 @@ import com.tangem.features.markets.portfolio.add.api.SelectedNetwork
 import com.tangem.features.markets.portfolio.add.api.SelectedPortfolio
 import com.tangem.features.markets.portfolio.add.impl.AddTokenComponent
 import com.tangem.features.markets.portfolio.add.impl.model.AddTokenUiBuilder.Companion.toggleProgress
-import com.tangem.features.markets.portfolio.add.impl.ui.state.AddTokenUM
+import com.tangem.common.ui.addtoken.AddTokenUM
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
