@@ -15,9 +15,9 @@ internal data class TangemPayDetailsUM(
 )
 
 internal data class TangemPayCardDetailsUM(
-    val number: String = "",
-    val expiry: String = "",
-    val cvv: String = "",
+    val number: String,
+    val expiry: String,
+    val cvv: String,
     val buttonText: TextReference = TextReference.EMPTY,
     val onClick: () -> Unit = {},
     val onCopy: (String) -> Unit = {},
@@ -28,13 +28,16 @@ internal data class TangemPayCardDetailsUM(
 internal sealed class TangemPayDetailsBalanceBlockState {
 
     abstract val actionButtons: ImmutableList<ActionButtonConfig>
+    abstract val frozenState: CardFrozenState
 
     data class Loading(
         override val actionButtons: ImmutableList<ActionButtonConfig>,
+        override val frozenState: CardFrozenState,
     ) : TangemPayDetailsBalanceBlockState()
 
     data class Content(
         override val actionButtons: ImmutableList<ActionButtonConfig>,
+        override val frozenState: CardFrozenState,
         val cryptoBalance: String,
         val fiatBalance: String,
         val isBalanceFlickering: Boolean,
@@ -42,7 +45,14 @@ internal sealed class TangemPayDetailsBalanceBlockState {
 
     data class Error(
         override val actionButtons: ImmutableList<ActionButtonConfig>,
+        override val frozenState: CardFrozenState,
     ) : TangemPayDetailsBalanceBlockState()
+}
+
+sealed class CardFrozenState {
+    data object Pending : CardFrozenState()
+    data class Frozen(val onUnfreeze: () -> Unit) : CardFrozenState()
+    data object Unfrozen : CardFrozenState()
 }
 
 internal data class AddToWalletBlockState(
