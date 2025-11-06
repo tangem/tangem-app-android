@@ -3,6 +3,7 @@ package com.tangem.core.ui.components.token.internal
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -20,10 +21,10 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.components.token.state.TokenItemState.TitleState as TokenTitleState
 
 @Composable
-internal fun TokenTitle(state: TokenTitleState?, modifier: Modifier = Modifier) {
+internal fun TokenTitle(state: TokenTitleState?, onApyClick: () -> Unit, modifier: Modifier = Modifier) {
     when (state) {
         is TokenTitleState.Content -> {
-            ContentTitle(state = state, modifier = modifier)
+            ContentTitle(state = state, modifier = modifier, onApyClick = onApyClick)
         }
         is TokenTitleState.Loading -> {
             RectangleShimmer(modifier = modifier.placeholderSize(), radius = TangemTheme.dimens.radius4)
@@ -36,7 +37,7 @@ internal fun TokenTitle(state: TokenTitleState?, modifier: Modifier = Modifier) 
 }
 
 @Composable
-private fun ContentTitle(state: TokenTitleState.Content, modifier: Modifier = Modifier) {
+private fun ContentTitle(state: TokenTitleState.Content, onApyClick: () -> Unit, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing6),
@@ -60,7 +61,11 @@ private fun ContentTitle(state: TokenTitleState.Content, modifier: Modifier = Mo
         YieldSupplyApyLabel(
             apy = state.earnApy,
             isActive = state.earnApyIsActive,
-            modifier = Modifier.align(alignment = Alignment.CenterVertically),
+            modifier = Modifier
+                .align(alignment = Alignment.CenterVertically)
+                .clickable {
+                    onApyClick()
+                },
         )
     }
 }
