@@ -185,7 +185,10 @@ internal class YieldSupplyModel @Inject constructor(
     @Suppress("MaximumLineLength")
     private fun onCryptoCurrencyStatusUpdated(cryptoCurrencyStatus: CryptoCurrencyStatus) {
         val yieldSupplyStatus = cryptoCurrencyStatus.value.yieldSupplyStatus
-        val tokenProtocolStatus = yieldSupplyRepository.getTokenProtocolStatus(cryptoCurrency)
+        val tokenProtocolStatus = yieldSupplyRepository.getTokenProtocolStatus(
+            userWallet.walletId,
+            cryptoCurrency,
+        )
         val isActive = yieldSupplyStatus?.isActive == true
         val isCryptoCurrencyStatusFromCache = cryptoCurrencyStatus.value.sources.networkSource != StatusSource.ACTUAL
         val processing = uiState.value is YieldSupplyUM.Processing
