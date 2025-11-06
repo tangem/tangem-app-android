@@ -1,4 +1,4 @@
-package com.tangem.features.markets.portfolio.add.impl.ui.state
+package com.tangem.common.ui.addtoken
 
 import androidx.annotation.DrawableRes
 import com.tangem.common.ui.account.PortfolioSelectUM
