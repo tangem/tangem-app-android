@@ -8,6 +8,7 @@ import org.burnoutcrew.reorderable.ItemPosition
 internal data class OrganizeTokensState(
     val onBackClick: () -> Unit,
     val itemsState: OrganizeTokensListState,
+    val tokenListUM: OrganizeTokensListUM,
     val header: HeaderConfig,
     val actions: ActionsConfig,
     val dndConfig: DragAndDropConfig,
