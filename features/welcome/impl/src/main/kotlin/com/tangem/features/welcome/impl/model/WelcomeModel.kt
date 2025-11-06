@@ -7,6 +7,8 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.error.UnlockWalletError
@@ -192,7 +194,12 @@ internal class WelcomeModel @Inject constructor(
                 router.replaceAll(AppRoute.Wallet)
             }
             UnlockWalletError.ScannedCardWalletNotMatched -> {
-                // TODO Scanned card does not match the wallet
+                uiMessageSender.send(
+                    message = DialogMessage(
+                        title = resourceReference(R.string.common_warning),
+                        message = resourceReference(R.string.error_wrong_wallet_tapped),
+                    ),
+                )
             }
             UnlockWalletError.UnableToUnlock -> {
                 // TODO Unable to unlock the wallet"
