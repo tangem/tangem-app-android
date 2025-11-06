@@ -311,7 +311,11 @@ internal class YieldSupplyModel @Inject constructor(
         val address = cryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value ?: return
         modelScope.launch(dispatchers.default) {
             if (cryptoCurrencyStatus.value.yieldSupplyStatus?.isActive == true) {
-                yieldSupplyActivateUseCase(token, address).onRight {
+                yieldSupplyActivateUseCase(
+                    userWalletId = userWallet.walletId,
+                    cryptoCurrency = token,
+                    address = address,
+                ).onRight {
                     lastYieldSupplyStatus = cryptoCurrencyStatus.value.yieldSupplyStatus
                 }
             } else {
