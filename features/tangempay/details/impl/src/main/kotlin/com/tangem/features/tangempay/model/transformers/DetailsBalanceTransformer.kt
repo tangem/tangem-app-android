@@ -18,7 +18,10 @@ internal class DetailsBalanceTransformer(
     override fun transform(prevState: TangemPayDetailsUM): TangemPayDetailsUM {
         val balance = when (balance) {
             is Either.Left<UniversalError> -> {
-                TangemPayDetailsBalanceBlockState.Error(persistentListOf())
+                TangemPayDetailsBalanceBlockState.Error(
+                    actionButtons = persistentListOf(),
+                    frozenState = prevState.balanceBlockState.frozenState,
+                )
             }
             is Either.Right<TangemPayCardBalance> -> {
                 TangemPayDetailsBalanceBlockState.Content(
@@ -27,6 +30,7 @@ internal class DetailsBalanceTransformer(
                     // TODO [REDACTED_TASK_KEY]: Add crypto balance when the BFF is ready
                     cryptoBalance = "",
                     actionButtons = prevState.balanceBlockState.actionButtons,
+                    frozenState = prevState.balanceBlockState.frozenState,
                 )
             }
         }
