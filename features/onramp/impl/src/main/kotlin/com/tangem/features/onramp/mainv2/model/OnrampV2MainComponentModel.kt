@@ -293,6 +293,9 @@ internal class OnrampV2MainComponentModel @Inject constructor(
             quotes.all { it is OnrampQuote.AmountError } -> {
                 _state.update { amountStateFactory.getSecondaryFieldAmountErrorState(quotes) }
             }
+            quotes.none { it is OnrampQuote.Data } -> {
+                _state.update { stateFactory.getErrorState(onRefresh = ::onRetryQuotes) }
+            }
             else -> {
                 _state.update { amountStateFactory.getAmountSecondaryFieldResetState() }
             }
