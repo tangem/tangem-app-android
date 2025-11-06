@@ -103,14 +103,18 @@ internal class DefaultYieldSupplyRepository(
         }
 
     override suspend fun saveTokenProtocolStatus(
+        userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency,
         yieldSupplyEnterStatus: YieldSupplyEnterStatus,
     ) {
-        statusMap[cryptoCurrency.id.value] = yieldSupplyEnterStatus
+        statusMap["${userWalletId}_${cryptoCurrency.id.value}"] = yieldSupplyEnterStatus
     }
 
-    override fun getTokenProtocolStatus(cryptoCurrency: CryptoCurrency): YieldSupplyEnterStatus? {
-        return statusMap[cryptoCurrency.id.value]
+    override fun getTokenProtocolStatus(
+        userWalletId: UserWalletId,
+        cryptoCurrency: CryptoCurrency,
+    ): YieldSupplyEnterStatus? {
+        return statusMap["${userWalletId}_${cryptoCurrency.id.value}"]
     }
 
     private fun List<YieldMarketToken>.enrichNetworkIds(): List<YieldMarketToken> {
