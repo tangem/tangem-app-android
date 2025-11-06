@@ -107,8 +107,8 @@ class YieldSupplyGetRewardsBalanceUseCaseTest {
                 chainId = 1,
                 apy = BigDecimal.ZERO,
                 isActive = true,
-                maxFeeNative = "0",
-                maxFeeUSD = "0",
+                maxFeeNative = BigDecimal.ZERO,
+                maxFeeUSD = BigDecimal.ZERO,
                 backendId = "id",
             ),
         )
@@ -152,8 +152,8 @@ class YieldSupplyGetRewardsBalanceUseCaseTest {
                 chainId = 1,
                 apy = apy,
                 isActive = true,
-                maxFeeNative = "0",
-                maxFeeUSD = "0",
+                maxFeeNative = BigDecimal.ZERO,
+                maxFeeUSD = BigDecimal.ZERO,
                 backendId = "id",
             ),
         )
