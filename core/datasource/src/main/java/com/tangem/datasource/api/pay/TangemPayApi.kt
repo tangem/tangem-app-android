@@ -153,4 +153,16 @@ interface TangemPayApi {
         @Header("Authorization") authHeader: String,
         @Body body: SetPinRequest,
     ): ApiResponse<SetPinResponse>
+
+    @POST("v1/customer/card/freeze")
+    suspend fun freezeCard(
+        @Header("Authorization") authHeader: String,
+        @Body body: FreezeUnfreezeCardRequest,
+    ): ApiResponse<FreezeUnfreezeCardResponse>
+
+    @POST("v1/customer/card/unfreeze")
+    suspend fun unfreezeCard(
+        @Header("Authorization") authHeader: String,
+        @Body body: FreezeUnfreezeCardRequest,
+    ): ApiResponse<FreezeUnfreezeCardResponse>
 }
