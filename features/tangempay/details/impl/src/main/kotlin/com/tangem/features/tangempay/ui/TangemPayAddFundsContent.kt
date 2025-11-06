@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastForEach
 import com.tangem.core.ui.components.SpacerH16
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
@@ -70,7 +71,7 @@ internal fun TangemPayAddFundsContent(state: TangemPayAddFundsUM) {
                         color = TangemTheme.colors.text.tertiary,
                         style = TangemTheme.typography.subtitle2,
                     )
-                    state.items.forEach {
+                    state.items.fastForEach {
                         key(it.title) {
                             TangemPayTopUpItem(state = it)
                         }
