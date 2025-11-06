@@ -15,6 +15,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayDetailsConfig
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.redux.StateDialog
+import com.tangem.domain.tokens.model.details.NavigationAction
 import com.tangem.domain.tokens.model.details.TokenAction
 import com.tangem.feature.wallet.navigation.WalletRoute
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletDialogConfig
@@ -66,13 +67,18 @@ internal class DefaultWalletRouter @Inject constructor(
         urlOpener.openUrl(url)
     }
 
-    override fun openTokenDetails(userWalletId: UserWalletId, currencyStatus: CryptoCurrencyStatus) {
+    override fun openTokenDetails(
+        userWalletId: UserWalletId,
+        currencyStatus: CryptoCurrencyStatus,
+        navigationAction: NavigationAction?,
+    ) {
         val networkAddress = currencyStatus.value.networkAddress
         if (networkAddress != null && networkAddress.defaultAddress.value.isNotEmpty()) {
             router.push(
                 AppRoute.CurrencyDetails(
                     userWalletId = userWalletId,
                     currency = currencyStatus.currency,
+                    navigationAction = navigationAction,
                 ),
             )
         }
