@@ -33,6 +33,7 @@ import com.tangem.core.ui.components.SecondaryButton
 import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
 import com.tangem.core.ui.components.buttons.actions.RoundedActionButton
 import com.tangem.core.ui.components.token.TokenItem
+import com.tangem.core.ui.components.tokenlist.ExpandedPortfolioHeader
 import com.tangem.core.ui.components.tokenlist.internal.DraggableGroupTitleItem
 import com.tangem.core.ui.event.EventEffect
 import com.tangem.core.ui.extensions.TextReference
@@ -47,6 +48,7 @@ import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
 import com.tangem.feature.wallet.presentation.organizetokens.model.DraggableItem
 import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensListState
+import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensListUM
 import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensState
 import org.burnoutcrew.reorderable.ReorderableLazyListState
 import org.burnoutcrew.reorderable.rememberReorderableLazyListState
@@ -73,6 +75,7 @@ internal fun OrganizeTokensScreen(state: OrganizeTokensState, modifier: Modifier
                     .padding(paddingValues)
                     .fillMaxSize(),
                 listState = tokensListState,
+                tokensListUM = state.tokenListUM,
                 state = state.itemsState,
                 dndConfig = state.dndConfig,
                 isBalanceHidden = state.isBalanceHidden,
@@ -96,11 +99,17 @@ internal fun OrganizeTokensScreen(state: OrganizeTokensState, modifier: Modifier
 private fun TokenList(
     listState: LazyListState,
     state: OrganizeTokensListState,
+    tokensListUM: OrganizeTokensListUM,
     dndConfig: OrganizeTokensState.DragAndDropConfig,
     isBalanceHidden: Boolean,
     modifier: Modifier = Modifier,
 ) {
     val hapticFeedback = LocalHapticFeedback.current
+    val tokenList = if (tokensListUM !is OrganizeTokensListUM.EmptyList) {
+        tokensListUM.items
+    } else {
+        state.items
+    }
     Box(modifier = modifier) {
         val onDragEnd: (Int, Int) -> Unit = remember {
             { _, _ ->
@@ -127,7 +136,7 @@ private fun TokenList(
         // because sometimes items disappear after reordering in 1.7.4+ compose-runtime version
         // check removing after update to compose-runtime 1.8.0+
         val forceRecompose = remember { mutableIntStateOf(0) }
-        LaunchedEffect(state.items) {
+        LaunchedEffect(tokenList) {
             forceRecompose.intValue++
         }
 
@@ -140,7 +149,7 @@ private fun TokenList(
             contentPadding = listContentPadding,
         ) {
             itemsIndexed(
-                items = state.items,
+                items = tokenList,
                 key = { _, item -> item.id },
             ) { index, item ->
 
@@ -206,6 +215,13 @@ private fun LazyItemScope.DraggableItem(
             )
             // Should be presented in the list but remain invisible
             is DraggableItem.Placeholder -> Box(modifier = Modifier.fillMaxWidth())
+            is DraggableItem.Portfolio -> ExpandedPortfolioHeader(
+                state = item.tokenItemState,
+                isCollapsable = false,
+                modifier = modifierWithBackground
+                    .padding(top = 8.dp)
+                    .fillMaxWidth(),
+            )
         }
     }
 
