@@ -24,6 +24,7 @@ import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChild
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.upgradewallet.ui.state.MultiWalletUpgradeWalletUM
 import com.tangem.features.onboarding.v2.multiwallet.impl.common.ui.resetCardDialog
 import com.tangem.features.onboarding.v2.multiwallet.impl.model.OnboardingMultiWalletState.Step
+import com.tangem.hot.sdk.model.SeedPhrasePrivateInfo
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -68,6 +69,8 @@ internal class MultiWalletUpgradeWalletModel @Inject constructor(
     val uiState: StateFlow<MultiWalletUpgradeWalletUM> = _uiState
     val onDone = MutableSharedFlow<Step>()
 
+    private var privateInfo: SeedPhrasePrivateInfo? = null
+
     init {
         // TODO [REDACTED_TASK_KEY] track screen opened
     }
@@ -80,9 +83,11 @@ internal class MultiWalletUpgradeWalletModel @Inject constructor(
             val userWallet = getUserWalletUseCase(mode.userWalletId)
                 .getOrElse { error("User wallet with id ${mode.userWalletId} not found") }
             if (userWallet is UserWallet.Hot) {
-                val privateInfo = exportSeedPhraseUseCase
+                // not allowed to use contextual unlock twice or more times
+                val privateInfo = privateInfo ?: exportSeedPhraseUseCase
                     .invoke(userWallet.hotWalletId)
-                    .getOrElse { error("Unable to export seed phrase for wallet with id ${mode.userWalletId}") }
+                    .getOrElse { error(it) }
+                    .also { privateInfo = it }
 
                 modelScope.launch {
                     val result = tangemSdkManager.importWallet(
