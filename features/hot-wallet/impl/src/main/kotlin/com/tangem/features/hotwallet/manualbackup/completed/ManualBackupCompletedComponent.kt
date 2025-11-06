@@ -35,6 +35,7 @@ internal class ManualBackupCompletedComponent @AssistedInject constructor(
     data class Params(
         val userWalletId: UserWalletId,
         val callbacks: ModelCallbacks,
-        val isUpgradeFlow: Boolean,
+        val isImportFlow: Boolean = false,
+        val isUpgradeFlow: Boolean = false,
     )
 }
