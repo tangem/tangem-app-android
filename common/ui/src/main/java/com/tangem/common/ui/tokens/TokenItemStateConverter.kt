@@ -62,6 +62,7 @@ class TokenItemStateConverter(
     },
     private val onItemClick: ((TokenItemState, CryptoCurrencyStatus) -> Unit)? = null,
     private val onItemLongClick: ((TokenItemState, CryptoCurrencyStatus) -> Unit)? = null,
+    private val onApyLabelClick: ((TokenItemState, CryptoCurrencyStatus) -> Unit)? = null,
 ) : Converter<CryptoCurrencyStatus, TokenItemState> {
 
     override fun convert(value: CryptoCurrencyStatus): TokenItemState {
@@ -101,6 +102,9 @@ class TokenItemStateConverter(
             },
             onItemLongClick = onItemLongClick?.let { onItemLongClick ->
                 { onItemLongClick(it, this) }
+            },
+            onApyLabelClick = onApyLabelClick?.let { onApyLabelClick ->
+                { onApyLabelClick(it, this) }
             },
         )
     }
