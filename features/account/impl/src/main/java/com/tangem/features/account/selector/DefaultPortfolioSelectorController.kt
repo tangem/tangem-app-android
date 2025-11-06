@@ -44,7 +44,7 @@ internal class DefaultPortfolioSelectorController @Inject constructor(
                 data.balances.forEach { wallet, balance ->
                     val accountStatuses = balance.accountsBalance.accountStatuses
                         .find { accountId == it.account.accountId }
-                    if (accountStatuses != null) result = wallet to accountStatuses
+                    if (accountStatuses != null) result = balance.userWallet to accountStatuses
                 }
 
                 return@combine result
