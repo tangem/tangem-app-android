@@ -37,11 +37,11 @@ internal class YieldSupplyStartEarningFeeContentTransformer(
         val feeFiat = feeFiatRate?.let(feeValue::multiply)
         val feeFiatValueText = feeFiat.format { fiat(appCurrency.code, appCurrency.symbol) }
 
-        val estimatedFeeFiat = feeFiatRate?.let(estimatedFeeValue::multiply)
+        val estimatedFeeFiat = estimatedFeeValue
         val estimatedFeeFiatValueText = estimatedFeeFiat.format { fiat(appCurrency.code, appCurrency.symbol) }
 
         val tokenCryptoFee = tokenFiatRate?.let { rate ->
-            estimatedFeeFiat?.divide(rate, cryptoCurrency.decimals, RoundingMode.HALF_UP)
+            estimatedFeeFiat.divide(rate, cryptoCurrency.decimals, RoundingMode.HALF_UP)
         }
         val tokenCryptoFeeValueText = tokenCryptoFee.format { crypto(cryptoCurrency) }
         val tokenFiatFeeValueText = estimatedFeeFiat.format { fiat(appCurrency.code, appCurrency.symbol) }
