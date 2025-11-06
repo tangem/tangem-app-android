@@ -76,18 +76,22 @@ internal class DefaultYieldSupplyRepository(
             (walletManager as? YieldSupplyProvider)?.isSupported() ?: false
         }
 
-    override suspend fun activateProtocol(cryptoCurrencyToken: CryptoCurrency.Token, address: String): Boolean =
-        withContext(dispatchers.io) {
-            val chainId = Blockchain.fromNetworkId(cryptoCurrencyToken.network.backendId)?.getChainId()
-                ?: error("Chain id is required for evm's")
-            yieldSupplyApi.activateYieldModule(
-                YieldSupplyChangeTokenStatusBody(
-                    tokenAddress = cryptoCurrencyToken.contractAddress,
-                    chainId = chainId,
-                    userAddress = address,
-                ),
-            ).getOrThrow().isActive
-        }
+    override suspend fun activateProtocol(
+        userWalletId: UserWalletId,
+        cryptoCurrencyToken: CryptoCurrency.Token,
+        address: String,
+    ): Boolean = withContext(dispatchers.io) {
+        val chainId = Blockchain.fromNetworkId(cryptoCurrencyToken.network.backendId)?.getChainId()
+            ?: error("Chain id is required for evm's")
+        yieldSupplyApi.activateYieldModule(
+            body = YieldSupplyChangeTokenStatusBody(
+                tokenAddress = cryptoCurrencyToken.contractAddress,
+                chainId = chainId,
+                userAddress = address,
+            ),
+            userWalletId = userWalletId.stringValue,
+        ).getOrThrow().isActive
+    }
 
     override suspend fun deactivateProtocol(cryptoCurrencyToken: CryptoCurrency.Token, address: String): Boolean =
         withContext(dispatchers.io) {
