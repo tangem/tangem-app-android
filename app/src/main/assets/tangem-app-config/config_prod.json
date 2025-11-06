@@ -129,6 +129,9 @@
 		},
 		"tezos": {
 			"rest": "PLACEHOLDER"
+		},
+		"unichain": {
+			"jsonRpc": "PLACEHOLDER"
 		}
 	},
 	"kaspaSecondaryApiUrl": "PLACEHOLDER",
