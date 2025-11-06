@@ -278,7 +278,11 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
 
         val address = cryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value
         if (address != null) {
-            yieldSupplyActivateUseCase(cryptoCurrency, address)
+            yieldSupplyActivateUseCase(
+                userWalletId = userWallet.walletId,
+                cryptoCurrency = cryptoCurrency,
+                address = address,
+            )
         }
 
         modelScope.launch {
