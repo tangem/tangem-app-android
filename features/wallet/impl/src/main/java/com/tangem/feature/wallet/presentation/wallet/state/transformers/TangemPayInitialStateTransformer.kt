@@ -5,6 +5,7 @@ import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.pay.TangemPayDetailsConfig
 import com.tangem.domain.pay.model.CustomerInfo.CardInfo
+import com.tangem.domain.pay.model.CustomerInfo.ProductInstance
 import com.tangem.domain.pay.model.MainScreenCustomerInfo
 import com.tangem.domain.pay.model.OrderStatus.CANCELED
 import com.tangem.domain.pay.model.OrderStatus.UNKNOWN
@@ -35,29 +36,36 @@ internal class TangemPayInitialStateTransformer(
 
     private fun createInitialState(): TangemPayState {
         val cardInfo = value?.info?.cardInfo
+        val productInstance = value?.info?.productInstance
         return when {
             value == null -> TangemPayState.Empty
             !value.info.isKycApproved -> createKycInProgressState(onClickKyc)
-            cardInfo != null -> getCardInfoState(cardInfo)
+            cardInfo != null && productInstance != null -> getCardInfoState(cardInfo, productInstance)
             value.orderStatus == UNKNOWN || value.orderStatus == CANCELED -> createIssueAvailableState(onClickIssue)
             else -> createIssueProgressState()
         }
     }
 
-    private fun getCardInfoState(cardInfo: CardInfo): TangemPayState = TangemPayState.Card(
-        lastFourDigits = TextReference.Str("*${cardInfo.lastFourDigits}"),
-        balanceText = TextReference.Str(getBalanceText(cardInfo)),
-        onClick = {
-            openDetails(
-                TangemPayDetailsConfig(
-                    customerWalletAddress = cardInfo.customerWalletAddress,
-                    cardNumberEnd = cardInfo.lastFourDigits,
-                    chainId = POLYGON_CHAIN_ID,
-                    depositAddress = cardInfo.depositAddress,
-                ),
-            )
-        },
-    )
+    private fun getCardInfoState(cardInfo: CardInfo, productInstance: ProductInstance): TangemPayState =
+        TangemPayState.Card(
+            lastFourDigits = TextReference.Str("*${cardInfo.lastFourDigits}"),
+            balanceText = TextReference.Str(getBalanceText(cardInfo)),
+            onClick = {
+                openDetails(
+                    TangemPayDetailsConfig(
+                        cardId = productInstance.cardId,
+                        isCardFrozen = when (productInstance.status) {
+                            ProductInstance.Status.ACTIVE -> false
+                            ProductInstance.Status.INACTIVE -> true
+                        },
+                        customerWalletAddress = cardInfo.customerWalletAddress,
+                        cardNumberEnd = cardInfo.lastFourDigits,
+                        chainId = POLYGON_CHAIN_ID,
+                        depositAddress = cardInfo.depositAddress,
+                    ),
+                )
+            },
+        )
 
     private fun getBalanceText(cardInfo: CardInfo): String {
         val currency = Currency.getInstance(cardInfo.currencyCode)
