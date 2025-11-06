@@ -83,7 +83,7 @@ fun PortfolioTokensListItem(state: PortfolioTokensListItemUM, isBalanceHidden: B
 }
 
 @Composable
-private fun ExpandedPortfolioHeader(state: TokenItemState, isCollapsable: Boolean, modifier: Modifier = Modifier) {
+fun ExpandedPortfolioHeader(state: TokenItemState, isCollapsable: Boolean, modifier: Modifier = Modifier) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier

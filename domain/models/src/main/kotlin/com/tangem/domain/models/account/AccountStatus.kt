@@ -38,4 +38,8 @@ sealed interface AccountStatus {
     fun flattenCurrencies(): List<CryptoCurrencyStatus> = when (this) {
         is CryptoPortfolio -> tokenList.flattenCurrencies()
     }
+
+    fun getCryptoTokenList(): TokenList = when (this) {
+        is CryptoPortfolio -> tokenList
+    }
 }
