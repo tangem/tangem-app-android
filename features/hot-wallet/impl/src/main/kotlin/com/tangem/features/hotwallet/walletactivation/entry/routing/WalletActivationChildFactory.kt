@@ -50,7 +50,6 @@ internal class WalletActivationChildFactory @Inject constructor(
                 params = ManualBackupCompletedComponent.Params(
                     userWalletId = model.params.userWalletId,
                     callbacks = model.manualBackupCompletedModelCallbacks,
-                    isUpgradeFlow = false,
                 ),
             )
             is WalletActivationRoute.SetAccessCode -> accessCodeComponentFactory.create(
