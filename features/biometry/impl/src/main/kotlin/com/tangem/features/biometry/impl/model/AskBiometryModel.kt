@@ -114,6 +114,7 @@ internal class AskBiometryModel @Inject constructor(
 
         if (hotWalletFeatureToggles.isHotWalletEnabled) {
             walletsRepository.setUseBiometricAuthentication(value = true)
+            walletsRepository.setRequireAccessCode(value = false)
             setBiometryLockForAllWallets()
             cardSdkConfigRepository.setAccessCodeRequestPolicy(
                 isBiometricsRequestPolicy = walletsRepository.requireAccessCode().not(),
