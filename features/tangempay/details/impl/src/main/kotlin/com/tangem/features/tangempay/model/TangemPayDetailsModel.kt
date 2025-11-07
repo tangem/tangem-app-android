@@ -101,9 +101,8 @@ internal class TangemPayDetailsModel @Inject constructor(
                 .onLeft {
                     uiMessageSender.send(SnackbarMessage(resourceReference(R.string.tangem_pay_freeze_card_failed)))
                     uiState.update(
-                        TangemPayFreezeUnfreezeStateTransformer(
-                            frozen = false,
-                            onFreezeClick = ::onClickFreezeCard,
+                        TangemPayFreezeUnfreezeFailedStateTransformer(
+                            isCardFrozen = false,
                             onUnfreezeClick = ::onClickUnfreezeCard,
                         ),
                     )
@@ -128,9 +127,8 @@ internal class TangemPayDetailsModel @Inject constructor(
                 .onLeft {
                     uiMessageSender.send(SnackbarMessage(resourceReference(R.string.tangem_pay_unfreeze_card_failed)))
                     uiState.update(
-                        TangemPayFreezeUnfreezeStateTransformer(
-                            frozen = true,
-                            onFreezeClick = ::onClickFreezeCard,
+                        TangemPayFreezeUnfreezeFailedStateTransformer(
+                            isCardFrozen = true,
                             onUnfreezeClick = ::onClickUnfreezeCard,
                         ),
                     )
