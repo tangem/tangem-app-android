@@ -50,6 +50,7 @@ import com.tangem.features.pushnotifications.api.analytics.PushNotificationAnaly
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.PersistentList
+import kotlinx.collections.immutable.mutate
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
@@ -100,6 +101,11 @@ internal class WalletSettingsModel @Inject constructor(
             onPushNotificationPermissionGranted = ::onPushNotificationPermissionGranted,
             isWalletBackedUp = true,
             walletUpgradeDismissed = false,
+            accountReorderUM = AccountReorderUM(
+                isDragEnabled = false,
+                onMove = ::onAccountReorder,
+                onDragStopped = ::onAccountDragStopped,
+            ),
         ),
     )
 
@@ -129,6 +135,12 @@ internal class WalletSettingsModel @Inject constructor(
                         isNotificationsPermissionGranted = isNotificationsPermissionGranted(),
                         isUpgradeNotificationEnabled = isUpgradeNotificationEnabled,
                         accountList = accountList,
+                    ),
+                    accountReorderUM = AccountReorderUM(
+                        isDragEnabled = accountsFeatureToggles.isFeatureEnabled &&
+                            accountList.count { it is WalletSettingsAccountsUM.Account } > 1,
+                        onMove = ::onAccountReorder,
+                        onDragStopped = ::onAccountDragStopped,
                     ),
                     isWalletBackedUp = isWalletBackedUp,
                 )
@@ -414,6 +426,20 @@ internal class WalletSettingsModel @Inject constructor(
                 }
             }
         }
+    }
+
+    private fun onAccountReorder(fromIndex: Int, toIndex: Int) {
+        state.update { prevState ->
+            prevState.copy(
+                items = prevState.items.mutate {
+                    it.add(toIndex - 1, it.removeAt(fromIndex - 1))
+                },
+            )
+        }
+    }
+
+    private fun onAccountDragStopped() {
+        // TODO() Implement saving the new order of accounts
     }
 
     // TODO actualize strings [REDACTED_TASK_KEY] and remove MaximumLineLength
