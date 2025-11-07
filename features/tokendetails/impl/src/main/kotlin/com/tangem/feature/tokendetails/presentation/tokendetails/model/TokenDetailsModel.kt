@@ -63,6 +63,7 @@ import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.domain.tokens.model.analytics.*
 import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent.Companion.toReasonAnalyticsText
 import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent.DetailsScreenOpened.TokenBalance
+import com.tangem.domain.tokens.model.details.NavigationAction
 import com.tangem.domain.tokens.model.details.TokenAction
 import com.tangem.domain.transaction.error.AssociateAssetError
 import com.tangem.domain.transaction.error.IncompleteTransactionError
@@ -222,6 +223,7 @@ internal class TokenDetailsModel @Inject constructor(
         updateContent()
         handleBalanceHiding()
         checkForActionUpdates()
+        handleNavigationParam()
     }
 
     fun onResume() {
@@ -1243,6 +1245,12 @@ internal class TokenDetailsModel @Inject constructor(
                     shareManager.shareText(text = it)
                 },
             )
+        }
+    }
+
+    private fun handleNavigationParam() {
+        if (params.navigationAction is NavigationAction.Staking) {
+            openStaking()
         }
     }
 
