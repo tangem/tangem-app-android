@@ -296,6 +296,7 @@ internal class ChildFactory @Inject constructor(
                     params = TokenDetailsComponent.Params(
                         userWalletId = route.userWalletId,
                         currency = route.currency,
+                        navigationAction = route.navigationAction,
                     ),
                     componentFactory = tokenDetailsComponentFactory,
                 )
