@@ -41,6 +41,7 @@ compose-navigation = "2.7.7"
 compose-accompanist = "0.30.1"
 compose-paging = "3.2.1"
 compose-reorderable = "0.9.6"
+compose-reorderable-v2 = "3.0.0"
 compose-lifecycle-runtime = "2.7.0"
 # endregion Compose
 
@@ -186,6 +187,7 @@ compose-accompanist-webView = { module = "com.google.accompanist:accompanist-web
 compose-accompanist-permission = { module = "com.google.accompanist:accompanist-permissions", version.ref = "compose-accompanist" }
 compose-paging = { module = "androidx.paging:paging-compose", version.ref = "compose-paging" }
 compose-reorderable = { module = "org.burnoutcrew.composereorderable:reorderable", version.ref = "compose-reorderable" }
+compose-reorderableV2 = { module = "sh.calvin.reorderable:reorderable", version.ref = "compose-reorderable-v2" }
 # endregion Compose
 
 # region Firebase
