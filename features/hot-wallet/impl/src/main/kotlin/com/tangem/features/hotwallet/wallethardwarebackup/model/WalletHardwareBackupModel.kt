@@ -16,7 +16,6 @@ import com.tangem.core.ui.components.bottomsheets.message.primaryButton
 import com.tangem.core.ui.components.label.entity.LabelStyle
 import com.tangem.core.ui.components.label.entity.LabelUM
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.bottomSheetMessage
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
@@ -51,7 +50,6 @@ internal class WalletHardwareBackupModel @Inject constructor(
 
     private val params = paramsContainer.require<WalletHardwareBackupComponent.Params>()
 
-    // TODO actualize strings [REDACTED_TASK_KEY]
     private val makeBackupAtFirstAlertBS
         get() = bottomSheetMessage {
             infoBlock {
@@ -59,8 +57,8 @@ internal class WalletHardwareBackupModel @Inject constructor(
                     type = MessageBottomSheetUMV2.Icon.Type.Accent
                     backgroundType = MessageBottomSheetUMV2.Icon.BackgroundType.SameAsTint
                 }
-                title = stringReference("Finish Backup First")
-                body = stringReference("To upgrade your wallet to hardware, back it up first.")
+                title = resourceReference(R.string.hw_backup_need_finish_first)
+                body = resourceReference(R.string.hw_backup_to_upgrade_description)
             }
             primaryButton {
                 text = resourceReference(R.string.hw_backup_need_action)
@@ -76,27 +74,24 @@ internal class WalletHardwareBackupModel @Inject constructor(
             }
         }
 
-    // TODO actualize strings [REDACTED_TASK_KEY]
     internal val uiState: StateFlow<WalletHardwareBackupUM>
         field = MutableStateFlow(
             WalletHardwareBackupUM(
                 onBackClick = { router.pop() },
                 blocks = persistentListOf(
                     WalletHardwareBackupUM.Block(
-                        title = stringReference("Create new wallet"),
+                        title = resourceReference(R.string.hw_backup_hardware_create_title),
                         titleLabel = LabelUM(
                             text = resourceReference(R.string.common_recommended),
                             style = LabelStyle.ACCENT,
                         ),
-                        description = stringReference(
-                            "Create a new secure wallet and transfer your funds for extra protection.",
-                        ),
+                        description = resourceReference(R.string.hw_backup_hardware_create_description),
                         onClick = ::onCreateNewWalletClick,
                     ),
                     WalletHardwareBackupUM.Block(
-                        title = stringReference("Upgrade current wallet"),
+                        title = resourceReference(R.string.hw_backup_hardware_upgrade_title),
                         titleLabel = null,
-                        description = stringReference("Move your current wallet into Tangem Wallet."),
+                        description = resourceReference(R.string.hw_backup_hardware_upgrade_description),
                         onClick = ::onUpgradeCurrentWalletClick,
                     ),
                 ),
