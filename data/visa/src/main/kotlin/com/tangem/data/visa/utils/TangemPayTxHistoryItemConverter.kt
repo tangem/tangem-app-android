@@ -4,6 +4,8 @@ import com.squareup.moshi.Moshi
 import com.tangem.datasource.api.pay.models.response.TangemPayTxHistoryResponse
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import com.tangem.utils.converter.Converter
+import org.joda.time.DateTime
+import org.joda.time.DateTimeZone
 import timber.log.Timber
 import java.util.Currency
 
@@ -30,7 +32,7 @@ internal class TangemPayTxHistoryItemConverter(moshi: Moshi) :
         return TangemPayTxHistoryItem.Spend(
             id = id,
             jsonRepresentation = spendAdapter.toJson(spend),
-            date = spend.authorizedAt,
+            date = spend.authorizedAt.withLocalZone(),
             amount = spend.amount,
             currency = Currency.getInstance(spend.currency),
             enrichedMerchantName = spend.enrichedMerchantName,
@@ -49,7 +51,7 @@ internal class TangemPayTxHistoryItemConverter(moshi: Moshi) :
         return TangemPayTxHistoryItem.Payment(
             id = id,
             jsonRepresentation = paymentAdapter.toJson(payment),
-            date = payment.postedAt,
+            date = payment.postedAt.withLocalZone(),
             currency = Currency.getInstance(payment.currency),
             amount = payment.amount,
             transactionHash = payment.transactionHash,
@@ -60,9 +62,10 @@ internal class TangemPayTxHistoryItemConverter(moshi: Moshi) :
         return TangemPayTxHistoryItem.Fee(
             id = id,
             jsonRepresentation = feeAdapter.toJson(fee),
-            date = fee.postedAt,
+            date = fee.postedAt.withLocalZone(),
             currency = Currency.getInstance(fee.currency),
             amount = fee.amount,
+            description = fee.description,
         )
     }
 
@@ -77,10 +80,14 @@ internal class TangemPayTxHistoryItemConverter(moshi: Moshi) :
         return TangemPayTxHistoryItem.Collateral(
             id = id,
             jsonRepresentation = collateralAdapter.toJson(collateral),
-            date = date,
+            date = date.withLocalZone(),
             currency = Currency.getInstance("usd"),
             amount = collateral.amount,
             transactionHash = collateral.transactionHash,
         )
+    }
+
+    private fun DateTime.withLocalZone(): DateTime {
+        return withZone(DateTimeZone.getDefault())
     }
 }
