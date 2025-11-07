@@ -84,7 +84,7 @@ internal class FetchWalletAccountsErrorHandler @Inject constructor(
                 eTagsStore.store(userWalletId = userWalletId, key = ETagsStore.Key.WalletAccounts, value = eTag)
 
                 pushWalletAccounts(userWalletId, accountDTOs)
-                userTokensSaver.push(userWalletId, userTokensResponse)
+                userTokensSaver.pushWithRetryer(userWalletId, userTokensResponse)
             }
         }
 
