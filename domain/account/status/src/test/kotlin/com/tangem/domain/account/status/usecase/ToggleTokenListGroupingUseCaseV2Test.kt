@@ -64,7 +64,7 @@ class ToggleTokenListGroupingUseCaseV2Test {
             currencies = listOf(mockk(relaxed = true)),
         )
 
-        val accountStatusList = createAccountStatusList(tokenList)
+        val accountStatusList = createAccountStatusList(tokenList, TokensGroupType.NONE)
 
         // Act
         val actual = useCase(accountStatusList)
@@ -86,7 +86,7 @@ class ToggleTokenListGroupingUseCaseV2Test {
             sortedBy = TokensSortType.BALANCE,
         )
 
-        val accountStatusList = createAccountStatusList(tokenList)
+        val accountStatusList = createAccountStatusList(tokenList, TokensGroupType.NONE)
 
         val updatedTokenList = createGroupedByNetwork(
             statuses = listOf(
@@ -101,7 +101,7 @@ class ToggleTokenListGroupingUseCaseV2Test {
         val actual = useCase(accountStatusList)
 
         // Assert
-        val expected = createAccountStatusList(updatedTokenList).right()
+        val expected = createAccountStatusList(updatedTokenList, TokensGroupType.NETWORK).right()
         Truth.assertThat(actual).isEqualTo(expected)
     }
 
@@ -116,7 +116,7 @@ class ToggleTokenListGroupingUseCaseV2Test {
             ),
         )
 
-        val accountStatusList = createAccountStatusList(tokenList)
+        val accountStatusList = createAccountStatusList(tokenList, TokensGroupType.NONE)
 
         val updatedTokenList = createGroupedByNetwork(
             statuses = listOf(
@@ -130,7 +130,7 @@ class ToggleTokenListGroupingUseCaseV2Test {
         val actual = useCase(accountStatusList)
 
         // Assert
-        val expected = createAccountStatusList(updatedTokenList).right()
+        val expected = createAccountStatusList(updatedTokenList, TokensGroupType.NETWORK).right()
         Truth.assertThat(actual).isEqualTo(expected)
     }
 
@@ -146,7 +146,7 @@ class ToggleTokenListGroupingUseCaseV2Test {
             sortedBy = TokensSortType.BALANCE,
         )
 
-        val accountStatusList = createAccountStatusList(tokenList)
+        val accountStatusList = createAccountStatusList(tokenList, TokensGroupType.NETWORK)
 
         val updatedTokenList = createUngrouped(
             statuses = listOf(
@@ -161,7 +161,7 @@ class ToggleTokenListGroupingUseCaseV2Test {
         val actual = useCase(accountStatusList)
 
         // Assert
-        val expected = createAccountStatusList(updatedTokenList).right()
+        val expected = createAccountStatusList(updatedTokenList, TokensGroupType.NONE).right()
         Truth.assertThat(actual).isEqualTo(expected)
     }
 
@@ -176,7 +176,7 @@ class ToggleTokenListGroupingUseCaseV2Test {
             ),
         )
 
-        val accountStatusList = createAccountStatusList(tokenList)
+        val accountStatusList = createAccountStatusList(tokenList, TokensGroupType.NETWORK)
 
         val updatedTokenList = createUngrouped(
             statuses = listOf(
@@ -190,11 +190,11 @@ class ToggleTokenListGroupingUseCaseV2Test {
         val actual = useCase(accountStatusList)
 
         // Assert
-        val expected = createAccountStatusList(updatedTokenList).right()
+        val expected = createAccountStatusList(updatedTokenList, TokensGroupType.NONE).right()
         Truth.assertThat(actual).isEqualTo(expected)
     }
 
-    private fun createAccountStatusList(tokenList: TokenList): AccountStatusList {
+    private fun createAccountStatusList(tokenList: TokenList, groupType: TokensGroupType): AccountStatusList {
         val accountStatus = AccountStatus.CryptoPortfolio(
             account = Account.CryptoPortfolio.createMainAccount(userWalletId),
             tokenList = tokenList,
@@ -207,7 +207,7 @@ class ToggleTokenListGroupingUseCaseV2Test {
             totalAccounts = 1,
             totalFiatBalance = tokenList.totalFiatBalance,
             sortType = tokenList.sortedBy,
-            groupType = TokensGroupType.NONE,
+            groupType = groupType,
         )
     }
 }

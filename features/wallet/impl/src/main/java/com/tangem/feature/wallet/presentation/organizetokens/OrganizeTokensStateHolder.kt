@@ -79,6 +79,18 @@ internal class OrganizeTokensStateHolder(
         }
     }
 
+    fun updateStateAfterTokenListSortingV2(accountStatusList: AccountStatusList, isAccountsModeEnabled: Boolean) {
+        updateState {
+            TokenListToStateConverterV2(
+                accountStatusList = accountStatusList,
+                isAccountsMode = isAccountsModeEnabled,
+                appCurrency = appCurrencyProvider(),
+            ).transform(this).copy(
+                scrollListToTop = triggeredEvent(Unit, ::consumeScrollListToTopEvent),
+            )
+        }
+    }
+
     fun updateStateToDisplayProgress() {
         updateState { inProgressStateConverter.convert(value = this) }
     }
