@@ -30,7 +30,8 @@ class DefaultMainAccountTokensMigrationTest {
     private val accountsResponseStore = mockk<AccountsResponseStore>()
     private val accountsResponseStoreFlow = MutableStateFlow<GetWalletAccountsResponse?>(value = null)
 
-    private val userTokensSaver = mockk<UserTokensSaver>(relaxed = true)
+    private val userTokensSaver = mockk<UserTokensSaver>(relaxUnitFun = true)
+
     private val migration = DefaultMainAccountTokensMigration(
         accountsResponseStoreFactory = accountsResponseStoreFactory,
         userTokensSaver = userTokensSaver,
@@ -62,7 +63,7 @@ class DefaultMainAccountTokensMigrationTest {
         coVerify(inverse = true) {
             accountsResponseStoreFactory.create(any())
             accountsResponseStore.data
-            userTokensSaver.push(userWalletId = any(), response = any(), onFailSend = any())
+            userTokensSaver.pushWithRetryer(userWalletId = any(), response = any(), onFailSend = any())
         }
     }
 
@@ -81,7 +82,7 @@ class DefaultMainAccountTokensMigrationTest {
         }
 
         coVerify(inverse = true) {
-            userTokensSaver.push(userWalletId = any(), response = any(), onFailSend = any())
+            userTokensSaver.pushWithRetryer(userWalletId = any(), response = any(), onFailSend = any())
         }
     }
 
@@ -110,7 +111,7 @@ class DefaultMainAccountTokensMigrationTest {
         }
 
         coVerify(inverse = true) {
-            userTokensSaver.push(userWalletId = any(), response = any(), onFailSend = any())
+            userTokensSaver.pushWithRetryer(userWalletId = any(), response = any(), onFailSend = any())
         }
     }
 
@@ -145,7 +146,7 @@ class DefaultMainAccountTokensMigrationTest {
         }
 
         coVerify(inverse = true) {
-            userTokensSaver.push(userWalletId = any(), response = any(), onFailSend = any())
+            userTokensSaver.pushWithRetryer(userWalletId = any(), response = any(), onFailSend = any())
         }
     }
 
@@ -202,7 +203,7 @@ class DefaultMainAccountTokensMigrationTest {
             accountsResponseStoreFactory.create(userWalletId)
             accountsResponseStore.data
             accountsResponseStore.updateData(any())
-            userTokensSaver.push(
+            userTokensSaver.pushWithRetryer(
                 userWalletId = userWalletId,
                 response = migratedResponse.toUserTokensResponse(),
                 onFailSend = any(),
