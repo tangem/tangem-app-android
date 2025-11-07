@@ -79,12 +79,14 @@ internal fun OnrampOffersContent(state: OnrampOffersBlockUM) {
                     }
                 }
 
-                SpacerH(12.dp)
-                SecondaryButton(
-                    modifier = Modifier.fillMaxWidth(),
-                    text = state.onrampAllOffersButtonConfig.title.resolveReference(),
-                    onClick = state.onrampAllOffersButtonConfig.onClick,
-                )
+                state.onrampAllOffersButtonConfig?.let {
+                    SpacerH(12.dp)
+                    SecondaryButton(
+                        modifier = Modifier.fillMaxWidth(),
+                        text = it.title.resolveReference(),
+                        onClick = it.onClick,
+                    )
+                }
             }
         }
         OnrampOffersBlockUM.Loading -> {
