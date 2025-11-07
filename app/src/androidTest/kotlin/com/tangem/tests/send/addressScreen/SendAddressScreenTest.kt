@@ -31,7 +31,7 @@ import org.junit.Test
 @HiltAndroidTest
 class SendAddressScreenTest : BaseTestCase() {
 
-    @AllureId("4006")
+    @AllureId("4005")
     @DisplayName("Send (address screen): check address history")
     @Test
     fun sendAddressHistoryTest() {
