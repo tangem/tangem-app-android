@@ -11,6 +11,9 @@ import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.status.producer.SingleAccountStatusListProducer
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
+import com.tangem.domain.account.status.usecase.ApplyTokenListSortingUseCaseV2
+import com.tangem.domain.account.status.usecase.ToggleTokenListGroupingUseCaseV2
+import com.tangem.domain.account.status.usecase.ToggleTokenListSortingUseCaseV2
 import com.tangem.domain.account.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -55,6 +58,9 @@ internal class OrganizeTokensModel @Inject constructor(
     private val accountsFeatureToggles: AccountsFeatureToggles,
     private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
+    private val toggleTokenListGroupingUseCaseV2: ToggleTokenListGroupingUseCaseV2,
+    private val toggleTokenListSortingUseCaseV2: ToggleTokenListSortingUseCaseV2,
+    private val applyTokenListSortingUseCaseV2: ApplyTokenListSortingUseCaseV2,
 ) : Model(), OrganizeTokensIntents {
 
     private val selectedAppCurrencyFlow = createSelectedAppCurrencyFlow()
@@ -81,6 +87,8 @@ internal class OrganizeTokensModel @Inject constructor(
 
     private var cachedTokenList: TokenList? = null
     private var cachedAccountStatusList: AccountStatusList? = null
+
+    private var isAccountsModeEnabled: Boolean = false
 
     val uiState: StateFlow<OrganizeTokensState> = stateHolder.stateFlow
 
@@ -112,7 +120,13 @@ internal class OrganizeTokensModel @Inject constructor(
             analyticsEventsHandler.send(PortfolioOrganizeTokensAnalyticsEvent.ByBalance)
 
             modelScope.launch {
-                // todo account token list sorting
+                toggleTokenListSortingUseCaseV2(list).fold(
+                    ifLeft = stateHolder::updateStateWithError,
+                    ifRight = {
+                        stateHolder.updateStateAfterTokenListSortingV2(it, isAccountsModeEnabled)
+                        cachedAccountStatusList = it
+                    },
+                )
             }
         } else {
             val list = cachedTokenList ?: return
@@ -134,10 +148,18 @@ internal class OrganizeTokensModel @Inject constructor(
 
     override fun onGroupClick() {
         if (accountsFeatureToggles.isFeatureEnabled) {
-            cachedAccountStatusList ?: return
+            val list = cachedAccountStatusList ?: return
+
             analyticsEventsHandler.send(PortfolioOrganizeTokensAnalyticsEvent.Group)
+
             modelScope.launch {
-                // todo account token list grouping
+                toggleTokenListGroupingUseCaseV2(list).fold(
+                    ifLeft = stateHolder::updateStateWithError,
+                    ifRight = {
+                        stateHolder.updateStateAfterTokenListSortingV2(it, isAccountsModeEnabled)
+                        cachedAccountStatusList = it
+                    },
+                )
             }
         } else {
             val list = cachedTokenList ?: return
@@ -172,8 +194,11 @@ internal class OrganizeTokensModel @Inject constructor(
                     isSortedByBalance = isSortedByBalance,
                 )
 
-                // val sorted = resolver.resolveV2(tokensListUM, cachedAccountStatusList)
-                TODO("Implement account token list sorting")
+                applyTokenListSortingUseCaseV2(
+                    sortedTokensIdsByAccount = resolver.resolveV2(tokensListUM, cachedAccountStatusList),
+                    isGroupedByNetwork = isGroupedByNetwork,
+                    isSortedByBalance = isSortedByBalance,
+                )
             } else {
                 val listState = uiState.value.itemsState
 
@@ -215,7 +240,7 @@ internal class OrganizeTokensModel @Inject constructor(
                     SingleAccountStatusListProducer.Params(userWalletId),
                 ) ?: return@launch
 
-                val isAccountsModeEnabled = isAccountsModeEnabledUseCase.invokeSync()
+                isAccountsModeEnabled = isAccountsModeEnabledUseCase.invokeSync()
 
                 stateHolder.updateStateWithAccountList(
                     accountStatusList = accountList,
