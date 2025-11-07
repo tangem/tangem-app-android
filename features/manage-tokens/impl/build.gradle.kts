@@ -38,6 +38,7 @@ dependencies {
     implementation(projects.domain.notifications)
 
     // region Project - Libs
+    implementation(projects.libs.blockchainSdk)
     implementation(projects.libs.crypto)
     // endregion
 
