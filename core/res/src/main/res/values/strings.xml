@@ -574,10 +574,12 @@
   <string name="hw_backup_need_action">Go to backup</string>
   <string name="hw_backup_need_description">Please back up your wallet before creating an access code.</string>
   <string name="hw_backup_need_title">Finalize backup first</string>
+  <string name="hw_backup_need_finish_first">Finish backup first</string>
   <string name="hw_backup_no_backup">Incomplete</string>
   <string name="hw_backup_section_other_title">Other methods</string>
   <string name="hw_backup_seed_description">Physical devices that securely store your private key offline.</string>
   <string name="hw_backup_seed_title">Recovery phrase</string>
+  <string name="hw_backup_to_secure_description">To secure your wallet with a Access Code, complete the backup first.</string>
   <string name="hw_backup_to_upgrade_description">To upgrade your wallet to hardware, back it up first.</string>
   <string name="hw_create_keys_description">Your private keys are securely encrypted and stored on your phone</string>
   <string name="hw_create_keys_title">Keys are stored in the app</string>
