@@ -99,8 +99,15 @@ sealed class YieldSupplyAnalytics(
         ),
     )
 
-    data object FundsEarned : YieldSupplyAnalytics(
+    data class FundsEarned(
+        val token: String,
+        val blockchain: String,
+    ) : YieldSupplyAnalytics(
         event = "Funds Earned",
+        params = mapOf(
+            TOKEN_PARAM to token,
+            BLOCKCHAIN to blockchain,
+        ),
     )
 
     data class FundsWithdrawn(
