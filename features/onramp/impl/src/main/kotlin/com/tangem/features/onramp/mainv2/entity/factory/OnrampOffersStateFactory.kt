@@ -76,10 +76,14 @@ internal class OnrampOffersStateFactory(
         return OnrampOffersBlockUM.Content(
             recentOffer = allOffersUM.firstOrNull { it.category == OnrampOfferCategoryUM.RecentlyUsed },
             recommended = allOffersUM.filter { it.category == OnrampOfferCategoryUM.Recommended }.toPersistentList(),
-            onrampAllOffersButtonConfig = OnrampAllOffersButtonConfig(
-                title = TextReference.Res(R.string.onramp_all_offers_button_title),
-                onClick = { onrampIntents.openProviders() },
-            ),
+            onrampAllOffersButtonConfig = if (offersBlocks.any { it.hasMoreOffers }) {
+                OnrampAllOffersButtonConfig(
+                    title = TextReference.Res(R.string.onramp_all_offers_button_title),
+                    onClick = { onrampIntents.openProviders() },
+                )
+            } else {
+                null
+            },
         )
     }
 
