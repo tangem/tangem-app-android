@@ -55,7 +55,7 @@ internal class SavedSwapTransactionListConverter(
                 userWallet = userWallet,
                 network = fromNetwork,
             ) ?: return null
-            val toNetwork = createSwapTransactionNetwork(fromToken, userWallet) ?: return null
+            val toNetwork = createSwapTransactionNetwork(toToken, userWallet) ?: return null
             val toCryptoCurrency = responseCryptoCurrenciesFactory.createCurrency(
                 responseToken = toToken,
                 userWallet = userWallet,
