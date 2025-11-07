@@ -86,7 +86,7 @@ class FetchWalletAccountsErrorHandlerTest {
             userTokensResponseStore.getSyncOrNull(userWalletId = any())
             defaultWalletAccountsResponseFactory.create(userWalletId = any(), userTokensResponse = any())
             pushWalletAccounts(any(), any())
-            userTokensSaver.push(userWalletId = any(), response = any())
+            userTokensSaver.pushWithRetryer(userWalletId = any(), response = any())
             storeWalletAccounts(any(), any())
         }
     }
@@ -127,7 +127,7 @@ class FetchWalletAccountsErrorHandlerTest {
 
         // Assert
         coVerify {
-            userTokensSaver.push(userWalletId, response = savedAccountsResponse.toUserTokensResponse())
+            userTokensSaver.pushWithRetryer(userWalletId, response = savedAccountsResponse.toUserTokensResponse())
             tangemTechApi.createWallet(OnlyWalletIdBody(userWalletId.stringValue))
             eTagsStore.store(userWalletId, ETagsStore.Key.WalletAccounts, eTagValue)
             pushWalletAccounts(userWalletId, listOf(accountDTO))
@@ -191,7 +191,7 @@ class FetchWalletAccountsErrorHandlerTest {
 
         coVerify(inverse = true) {
             pushWalletAccounts(any(), any())
-            userTokensSaver.push(userWalletId = any(), response = any())
+            userTokensSaver.pushWithRetryer(userWalletId = any(), response = any())
         }
     }
 
