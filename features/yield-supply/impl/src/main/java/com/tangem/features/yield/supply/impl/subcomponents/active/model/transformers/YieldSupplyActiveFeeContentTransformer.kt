@@ -10,6 +10,7 @@ import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.yield.supply.models.YieldSupplyMaxFee
 import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
 import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.impl.subcomponents.active.entity.YieldSupplyActiveContentUM
@@ -23,7 +24,7 @@ internal class YieldSupplyActiveFeeContentTransformer(
     private val cryptoCurrencyStatus: CryptoCurrencyStatus,
     private val appCurrency: AppCurrency,
     private val feeValue: BigDecimal,
-    private val maxNetworkFee: BigDecimal,
+    private val maxNetworkFee: YieldSupplyMaxFee,
     private val analyticsHandler: AnalyticsEventHandler,
 ) : Transformer<YieldSupplyActiveContentUM> {
 
@@ -35,9 +36,12 @@ internal class YieldSupplyActiveFeeContentTransformer(
         val tokenFiatFee = tokenFiatRate?.let(feeValue::multiply)
         val tokenFiatFeeValueText = tokenFiatFee.format { fiat(appCurrency.code, appCurrency.symbol) }
 
-        val maxFeeCryptoValueText = maxNetworkFee.format { crypto(cryptoCurrency) }
-        val maxFiatFee = tokenFiatRate?.let { rate -> maxNetworkFee.multiply(rate) }
-        val maxFiatFeeValueText = maxFiatFee.format { fiat(appCurrency.code, appCurrency.symbol) }
+        val maxFeeCryptoValueText = maxNetworkFee.tokenMaxFee.format { crypto(cryptoCurrency) }
+        val maxFiatFeeValueText = maxNetworkFee.fiatMaxFee.format { fiat(
+            appCurrency.code,
+            appCurrency
+                .symbol,
+        ) }
 
         val feeNoteValue: TextReference = resourceReference(
             id = R.string.yield_module_fee_policy_sheet_fee_note,
@@ -49,7 +53,7 @@ internal class YieldSupplyActiveFeeContentTransformer(
             ),
         )
 
-        val isHighFee = feeValue > maxNetworkFee
+        val isHighFee = feeValue > maxNetworkFee.tokenMaxFee
 
         if (isHighFee) {
             analyticsHandler.send(
