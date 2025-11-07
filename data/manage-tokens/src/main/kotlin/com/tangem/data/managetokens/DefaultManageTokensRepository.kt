@@ -19,6 +19,7 @@ import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.CoinsResponse
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
+import com.tangem.datasource.api.tangemTech.models.orDefault
 import com.tangem.datasource.local.config.testnet.TestnetTokensStorage
 import com.tangem.datasource.local.token.UserTokensResponseStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
@@ -197,8 +198,8 @@ internal class DefaultManageTokensRepository(
 
         val tokensResponse = response?.let {
             UserTokensResponse(
-                group = response.wallet.group,
-                sort = response.wallet.sort,
+                group = response.wallet.group.orDefault(),
+                sort = response.wallet.sort.orDefault(),
                 tokens = accountDTO?.tokens.orEmpty(),
             )
         }
@@ -295,8 +296,8 @@ internal class DefaultManageTokensRepository(
 
         val tokensResponse = response?.let {
             UserTokensResponse(
-                group = response.wallet.group,
-                sort = response.wallet.sort,
+                group = response.wallet.group.orDefault(),
+                sort = response.wallet.sort.orDefault(),
                 tokens = accountDTO?.tokens.orEmpty(),
             )
         }
