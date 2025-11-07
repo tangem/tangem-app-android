@@ -14,7 +14,7 @@ import com.tangem.features.tangempay.entity.TangemPayTxHistoryDetailsUM
 import com.tangem.features.tangempay.entity.TangemPayTxHistoryDetailsUM.ButtonState
 import com.tangem.utils.StringsSigns
 import com.tangem.utils.converter.Converter
-import com.tangem.utils.extensions.isPositive
+import com.tangem.utils.extensions.isZero
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -49,13 +49,7 @@ internal object TangemPayTxHistoryDetailsConverter :
         return when (this) {
             is TangemPayTxHistoryItem.Collateral -> ImageReference.Res(R.drawable.ic_arrow_down_24)
             is TangemPayTxHistoryItem.Fee -> ImageReference.Res(R.drawable.ic_percent_24)
-            is TangemPayTxHistoryItem.Payment -> {
-                if (this.amount.isPositive()) {
-                    ImageReference.Res(R.drawable.ic_arrow_down_24)
-                } else {
-                    ImageReference.Res(R.drawable.ic_arrow_up_24)
-                }
-            }
+            is TangemPayTxHistoryItem.Payment -> ImageReference.Res(R.drawable.ic_arrow_up_24)
             is TangemPayTxHistoryItem.Spend -> {
                 val merchantIcon = this.enrichedMerchantIconUrl
                 if (merchantIcon != null) {
@@ -69,14 +63,12 @@ internal object TangemPayTxHistoryDetailsConverter :
 
     private fun TangemPayTxHistoryItem.extractTransactionTitle(): TextReference {
         return when (this) {
-            is TangemPayTxHistoryItem.Fee -> resourceReference(R.string.tangem_pay_fee_title)
             is TangemPayTxHistoryItem.Spend -> stringReference(this.enrichedMerchantName ?: this.merchantName)
-            is TangemPayTxHistoryItem.Payment -> if (this.amount.isPositive()) {
-                resourceReference(R.string.tangem_pay_deposit)
-            } else {
-                resourceReference(R.string.tangem_pay_withdrawal)
-            }
+            is TangemPayTxHistoryItem.Payment -> resourceReference(R.string.tangem_pay_withdrawal)
             is TangemPayTxHistoryItem.Collateral -> resourceReference(R.string.tangem_pay_deposit)
+            is TangemPayTxHistoryItem.Fee -> {
+                this.description?.let(::stringReference) ?: resourceReference(R.string.tangem_pay_fee_title)
+            }
         }
     }
 
@@ -92,7 +84,7 @@ internal object TangemPayTxHistoryDetailsConverter :
     private fun TangemPayTxHistoryItem.extractAmount(): String {
         return when (this) {
             is TangemPayTxHistoryItem.Fee,
-            is TangemPayTxHistoryItem.Spend,
+            is TangemPayTxHistoryItem.Payment,
             -> {
                 val amount = this.amount.format {
                     fiat(
@@ -102,20 +94,28 @@ internal object TangemPayTxHistoryDetailsConverter :
                 }
                 StringsSigns.MINUS + amount
             }
-            is TangemPayTxHistoryItem.Payment,
-            is TangemPayTxHistoryItem.Collateral,
-            -> {
+            is TangemPayTxHistoryItem.Spend -> {
+                val amountPrefix = when {
+                    this.amount.isZero() -> ""
+                    this.status == TangemPayTxHistoryItem.Status.DECLINED -> ""
+                    else -> StringsSigns.MINUS
+                }
                 val amount = this.amount.format {
                     fiat(
                         fiatCurrencyCode = this@extractAmount.currency.currencyCode,
                         fiatCurrencySymbol = this@extractAmount.currency.symbol,
                     )
                 }
-                if (this.amount.isPositive()) {
-                    StringsSigns.PLUS + amount
-                } else {
-                    StringsSigns.MINUS + amount
+                amountPrefix + amount
+            }
+            is TangemPayTxHistoryItem.Collateral -> {
+                val amount = this.amount.format {
+                    fiat(
+                        fiatCurrencyCode = this@extractAmount.currency.currencyCode,
+                        fiatCurrencySymbol = this@extractAmount.currency.symbol,
+                    )
                 }
+                StringsSigns.PLUS + amount
             }
         }
     }
@@ -124,14 +124,8 @@ internal object TangemPayTxHistoryDetailsConverter :
         return when (this) {
             is TangemPayTxHistoryItem.Fee,
             is TangemPayTxHistoryItem.Spend,
+            is TangemPayTxHistoryItem.Payment,
             -> themedColor { TangemTheme.colors.text.primary1 }
-            is TangemPayTxHistoryItem.Payment -> themedColor {
-                if (this.amount.isPositive()) {
-                    TangemTheme.colors.text.accent
-                } else {
-                    TangemTheme.colors.text.primary1
-                }
-            }
             is TangemPayTxHistoryItem.Collateral -> themedColor { TangemTheme.colors.text.accent }
         }
     }
@@ -203,16 +197,11 @@ internal object TangemPayTxHistoryDetailsConverter :
             )
             is TangemPayTxHistoryItem.Payment -> persistentListOf(
                 ButtonState(
-                    text = resourceReference(R.string.tangem_pay_explore_transaction),
-                    onClick = { this.onExplorerClick(this.item.transactionHash) },
+                    text = resourceReference(R.string.tangem_pay_get_help),
+                    onClick = this.onDisputeClick,
                 ),
             )
             is TangemPayTxHistoryItem.Collateral -> persistentListOf(
-                ButtonState(
-                    text = resourceReference(R.string.tangem_pay_explore_transaction),
-                    startIcon = ImageReference.Res(R.drawable.ic_explore_20),
-                    onClick = { this.onExplorerClick(this.item.transactionHash) },
-                ),
                 ButtonState(
                     text = resourceReference(R.string.tangem_pay_get_help),
                     onClick = this.onDisputeClick,
