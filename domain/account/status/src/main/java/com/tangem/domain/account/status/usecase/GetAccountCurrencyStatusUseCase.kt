@@ -76,6 +76,23 @@ class GetAccountCurrencyStatusUseCase(
             .toOption()
     }
 
+    suspend fun invokeSync(
+        userWalletId: UserWalletId,
+        networkId: Network.ID,
+        derivationPath: Network.DerivationPath,
+        contractAddress: String?,
+    ): Option<AccountCryptoCurrencyStatus> {
+        val accountStatusList = getAccountStatusListSync(userWalletId) ?: return none()
+
+        return AccountCryptoCurrencyStatusFinder(
+            accountStatusList = accountStatusList,
+            networkId = networkId,
+            derivationPath = derivationPath,
+            contractAddress = contractAddress,
+        )
+            .toOption()
+    }
+
     /**
      * Retrieves the status of a specific cryptocurrency for a given user wallet as a [Flow].
      *
