@@ -75,7 +75,6 @@ internal class HotCryptoCurrencyConverter(
         }
     }
 
-    // TODO account
     private fun createNetwork(networkId: String): Network? {
         val blockchain = Blockchain.fromNetworkId(networkId) ?: return null
 
