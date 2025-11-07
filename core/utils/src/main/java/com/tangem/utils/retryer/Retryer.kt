@@ -1,5 +1,6 @@
 package com.tangem.utils.retryer
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlin.math.pow
 import kotlin.random.Random
@@ -14,7 +15,7 @@ import kotlin.random.Random
  */
 class Retryer(
     private val attempt: Int,
-    private val block: suspend () -> Boolean,
+    private val block: suspend (Int) -> Boolean,
 ) {
 
     init {
@@ -24,13 +25,24 @@ class Retryer(
     /**
      * Launches the retry mechanism, executing the block up to the specified number of attempts.
      * If the block returns true, the retrying stops.
+     *
+     * @throws CancellationException if the coroutine is cancelled during execution.
+     * @throws Error if the block throws an Error.
      */
     suspend fun launch() {
-        repeat(attempt) {
-            val timeInMillis = calculateDelay(iteration = it)
+        repeat(attempt) { iteration ->
+            val timeInMillis = calculateDelay(iteration = iteration)
             delay(timeInMillis)
 
-            val result = block()
+            val result = try {
+                block(iteration)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Error) {
+                throw e
+            } catch (_: Exception) {
+                false
+            }
 
             if (result) return
         }
