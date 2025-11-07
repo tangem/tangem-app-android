@@ -8,7 +8,6 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.SnackbarMessage
@@ -69,21 +68,20 @@ internal class ForgetWalletModel @Inject constructor(
     }
 
     private fun onForgetWalletClick() {
-        // TODO actualize strings [REDACTED_TASK_KEY]
         uiMessageSender.send(
             DialogMessage(
-                title = stringReference("Attention"),
-                message = stringReference("Are you sure you want to do this?"),
+                title = resourceReference(R.string.common_attention),
+                message = resourceReference(R.string.hw_remove_wallet_confirmation_title),
                 firstActionBuilder = {
                     EventMessageAction(
-                        title = stringReference("Forget"),
+                        title = resourceReference(R.string.common_forget),
                         isWarning = true,
                         onClick = ::forgetWallet,
                     )
                 },
                 secondActionBuilder = {
                     EventMessageAction(
-                        title = stringReference("Cancel"),
+                        title = resourceReference(R.string.common_cancel),
                         onClick = {},
                     )
                 },

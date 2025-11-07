@@ -19,7 +19,6 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.settings.SettingsManager
 import com.tangem.core.ui.components.bottomsheets.message.*
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.SnackbarMessage
@@ -385,8 +384,8 @@ internal class WalletSettingsModel @Inject constructor(
                     type = MessageBottomSheetUMV2.Icon.Type.Accent
                     backgroundType = MessageBottomSheetUMV2.Icon.BackgroundType.SameAsTint
                 }
-                title = resourceReference(R.string.hw_backup_need_title)
-                body = resourceReference(R.string.hw_backup_need_description)
+                title = resourceReference(R.string.hw_backup_need_finish_first)
+                body = resourceReference(R.string.hw_backup_to_secure_description)
             }
             primaryButton {
                 text = resourceReference(R.string.hw_backup_need_action)
@@ -442,8 +441,7 @@ internal class WalletSettingsModel @Inject constructor(
         // TODO() Implement saving the new order of accounts
     }
 
-    // TODO actualize strings [REDACTED_TASK_KEY] and remove MaximumLineLength
-    @Suppress("LongMethod", "MaximumLineLength")
+    @Suppress("LongMethod")
     private fun onForgetWalletClick(userWallet: UserWallet) {
         val message = when (userWallet) {
             is UserWallet.Cold -> {
@@ -468,16 +466,16 @@ internal class WalletSettingsModel @Inject constructor(
                             type = MessageBottomSheetUMV2.Icon.Type.Warning
                             backgroundType = MessageBottomSheetUMV2.Icon.BackgroundType.SameAsTint
                         }
-                        title = stringReference("Forget this wallet?")
+                        title = resourceReference(R.string.hw_remove_wallet_notification_title)
                         body = if (userWallet.backedUp) {
-                            stringReference("A backup for this wallet exists. Review it before forgetting to make sure you can recover later.")
+                            resourceReference(R.string.hw_remove_wallet_notification_description_has_backup)
                         } else {
-                            stringReference("If you forget this wallet without a backup, you’ll permanently lose access to your funds.")
+                            resourceReference(R.string.hw_remove_wallet_notification_description_without_backup)
                         }
                     }
                     if (userWallet.backedUp) {
                         secondaryButton {
-                            text = stringReference("Forget wallet")
+                            text = resourceReference(R.string.hw_remove_wallet_notification_action_forget)
                             onClick {
                                 router.push(AppRoute.ForgetWallet(userWallet.walletId))
                                 closeBs()
@@ -485,7 +483,7 @@ internal class WalletSettingsModel @Inject constructor(
                         }
                     } else {
                         secondaryButton {
-                            text = stringReference("Forget Anyway")
+                            text = resourceReference(R.string.hw_remove_wallet_notification_action_forget_anyway)
                             onClick {
                                 router.push(AppRoute.ForgetWallet(userWallet.walletId))
                                 closeBs()
@@ -494,7 +492,7 @@ internal class WalletSettingsModel @Inject constructor(
                     }
                     if (userWallet.backedUp) {
                         primaryButton {
-                            text = stringReference("View backup")
+                            text = resourceReference(R.string.hw_remove_wallet_notification_action_backup_view)
                             onClick {
                                 unlockWalletIfNeedAndProceed {
                                     router.push(AppRoute.ViewPhrase(userWallet.walletId))
@@ -504,7 +502,7 @@ internal class WalletSettingsModel @Inject constructor(
                         }
                     } else {
                         primaryButton {
-                            text = stringReference("Go to backup")
+                            text = resourceReference(R.string.hw_remove_wallet_notification_action_backup_go)
                             onClick {
                                 router.push(
                                     AppRoute.CreateWalletBackup(
