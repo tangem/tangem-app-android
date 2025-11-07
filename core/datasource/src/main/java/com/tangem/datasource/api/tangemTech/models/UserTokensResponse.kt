@@ -3,6 +3,9 @@ package com.tangem.datasource.api.tangemTech.models
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 import com.tangem.common.extensions.calculateHashCode
+import com.tangem.datasource.api.tangemTech.models.UserTokensResponse.GroupType
+import com.tangem.datasource.api.tangemTech.models.UserTokensResponse.GroupType.NONE
+import com.tangem.datasource.api.tangemTech.models.UserTokensResponse.SortType
 
 @JsonClass(generateAdapter = true)
 @Suppress("BooleanPropertyNaming")
@@ -69,3 +72,7 @@ data class UserTokensResponse(
         MARKETCAP,
     }
 }
+
+fun GroupType?.orDefault(): GroupType = this ?: NONE
+
+fun SortType?.orDefault(): SortType = this ?: SortType.MANUAL
