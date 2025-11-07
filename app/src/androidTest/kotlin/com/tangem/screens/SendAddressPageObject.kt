@@ -70,6 +70,11 @@ class SendAddressPageObject(semanticsProvider: SemanticsNodeInteractionsProvider
         useUnmergedTree = true
     }
 
+    val destinationTagTextFieldHint: KNode = child {
+        hasParent(withTestTag(SendAddressScreenTestTags.DESTINATION_TAG_TEXT_FIELD))
+        useUnmergedTree = true
+    }
+
     val destinationTagBlockText: KNode = child {
         hasText(
             getResourceString(CoreUiR.string.send_recipient_memo_footer_v2) + "\n" +
@@ -79,7 +84,14 @@ class SendAddressPageObject(semanticsProvider: SemanticsNodeInteractionsProvider
     }
 
     val destinationTagBlockCaution: KNode = child {
-        hasText(getResourceString(CoreUiR.string.send_recipient_memo_footer_v2_highlighted))
+        hasText(
+            getResourceString(
+                CoreUiR.string.send_recipient_memo_footer_v2,
+                CoreUiR.string.send_recipient_memo_footer_v2_highlighted
+            ),
+            substring = true
+        )
+        useUnmergedTree = true
     }
 
     val destinationTagPasteButton: KNode = child {
