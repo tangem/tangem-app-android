@@ -124,7 +124,7 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
     }
 
     private suspend fun calculateMinAmount(userWallet: UserWallet, cryptoCurrencyStatus: CryptoCurrencyStatus) {
-        yieldSupplyMinAmountUseCase(userWallet, cryptoCurrencyStatus).onRight {
+        yieldSupplyMinAmountUseCase(userWallet.walletId, cryptoCurrencyStatus).onRight {
             minAmount = it
         }.onLeft {
             minAmount = BigDecimal.ZERO
@@ -138,8 +138,8 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
             it.copy(yieldSupplyFeeUM = YieldSupplyFeeUM.Loading)
         }
 
-        val maxFee = yieldSupplyGetMaxFeeUseCase(userWallet, cryptoCurrencyStatus).getOrNull() ?: return
-        val estimatedFee = yieldSupplyGetCurrentFeeUseCase(userWallet, cryptoCurrencyStatus).getOrNull() ?: return
+        val maxFee = yieldSupplyGetMaxFeeUseCase(userWallet.walletId, cryptoCurrencyStatus).getOrNull() ?: return
+        val estimatedFee = yieldSupplyGetCurrentFeeUseCase(userWallet.walletId, cryptoCurrencyStatus).getOrNull() ?: return
 
         val transactionListData = yieldSupplyStartEarningUseCase(
             userWalletId = userWallet.walletId,
