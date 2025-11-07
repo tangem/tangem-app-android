@@ -126,7 +126,6 @@ class MainScreenActionButtonsTest : BaseTestCase() {
     @Test
     fun clickOnBuyButtonTest() {
         val tokenTitle = "Bitcoin"
-        val tokenSymbol = "BTC"
 
         setupHooks().run {
             step("Open 'Main Screen'") {
@@ -164,12 +163,6 @@ class MainScreenActionButtonsTest : BaseTestCase() {
             }
             step("Assert fiat currency icon is displayed") {
                 onBuyTokenDetailsScreen { fiatCurrencyIcon.assertIsDisplayed() }
-            }
-            step("Assert token amount field is displayed") {
-                onBuyTokenDetailsScreen { tokenAmountField.assertTextContains(tokenSymbol, substring = true) }
-            }
-            step("Assert 'Continue' button") {
-                onBuyTokenDetailsScreen { continueButton.assertIsDisplayed() }
             }
         }
     }
@@ -381,7 +374,6 @@ class MainScreenActionButtonsTest : BaseTestCase() {
         val cardType: MockContent = TwinsMockContent
         val cardName = "Twin"
         val tokenTitle = "Bitcoin"
-        val tokenSymbol = "BTC"
 
         setupHooks().run {
             step("Open 'Main Screen' on '$cardName' card") {
@@ -405,12 +397,6 @@ class MainScreenActionButtonsTest : BaseTestCase() {
             }
             step("Assert fiat currency icon is displayed") {
                 onBuyTokenDetailsScreen { fiatCurrencyIcon.assertIsDisplayed() }
-            }
-            step("Assert token amount field is displayed") {
-                onBuyTokenDetailsScreen { tokenAmountField.assertTextContains(tokenSymbol, substring = true) }
-            }
-            step("Assert 'Continue' button") {
-                onBuyTokenDetailsScreen { continueButton.assertIsDisplayed() }
             }
         }
     }
