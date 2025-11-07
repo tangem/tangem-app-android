@@ -63,6 +63,7 @@ class GetOnrampOffersUseCase(
             recentOffer = recentOffer,
             bestRateOffer = bestRateOffer,
             fastestOffer = fastestOffer,
+            allOffers = offers,
         )
     }
 
@@ -142,12 +143,19 @@ class GetOnrampOffersUseCase(
         recentOffer: OnrampOffer?,
         bestRateOffer: OnrampOffer?,
         fastestOffer: OnrampOffer?,
+        allOffers: List<OnrampOffer>,
     ): List<OnrampOffersBlock> {
+        val isSingleOffer = allOffers.size == 1
+
         val recommendedOffers = buildRecommendedOffers(
             recentOffer = recentOffer,
             bestRateOffer = bestRateOffer,
             fastestOffer = fastestOffer,
+            isSingleOffer = isSingleOffer,
         )
+
+        val shownOffersCount = (if (recentOffer != null) 1 else 0) + recommendedOffers.size
+        val hasMoreOffers = allOffers.size > shownOffersCount
 
         return buildList {
             if (recentOffer != null) {
@@ -160,10 +168,12 @@ class GetOnrampOffersUseCase(
                                     recentOffer,
                                     bestRateOffer,
                                     fastestOffer,
+                                    isSingleOffer,
                                 ),
                                 rateDif = if (bestRateOffer != null) recentOffer.rateDif else null,
                             ),
                         ),
+                        hasMoreOffers = false,
                     ),
                 )
             }
@@ -173,6 +183,7 @@ class GetOnrampOffersUseCase(
                     OnrampOffersBlock(
                         category = OnrampOfferCategory.Recommended,
                         offers = recommendedOffers,
+                        hasMoreOffers = hasMoreOffers,
                     ),
                 )
             }
@@ -183,7 +194,11 @@ class GetOnrampOffersUseCase(
         recentOffer: OnrampOffer,
         bestRateOffer: OnrampOffer?,
         fastestOffer: OnrampOffer?,
+        isSingleOffer: Boolean,
     ): OnrampOfferAdvantages {
+        if (isSingleOffer) {
+            return OnrampOfferAdvantages.Default
+        }
         if (isSameOffer(recentOffer, bestRateOffer) && isSameOffer(recentOffer, fastestOffer)) {
             return OnrampOfferAdvantages.GreatRate
         }
@@ -200,13 +215,18 @@ class GetOnrampOffersUseCase(
         recentOffer: OnrampOffer?,
         bestRateOffer: OnrampOffer?,
         fastestOffer: OnrampOffer?,
+        isSingleOffer: Boolean,
     ): List<OnrampOffer> {
         return buildList {
             if (isSameOffer(bestRateOffer, fastestOffer)) {
                 if (bestRateOffer != null && !isSameOffer(bestRateOffer, recentOffer)) {
                     add(
                         bestRateOffer.copy(
-                            advantages = OnrampOfferAdvantages.GreatRate,
+                            advantages = if (isSingleOffer) {
+                                OnrampOfferAdvantages.Default
+                            } else {
+                                OnrampOfferAdvantages.GreatRate
+                            },
                             rateDif = null,
                         ),
                     )
@@ -215,7 +235,11 @@ class GetOnrampOffersUseCase(
                 if (bestRateOffer != null && !isSameOffer(bestRateOffer, recentOffer)) {
                     add(
                         bestRateOffer.copy(
-                            advantages = OnrampOfferAdvantages.GreatRate,
+                            advantages = if (isSingleOffer) {
+                                OnrampOfferAdvantages.Default
+                            } else {
+                                OnrampOfferAdvantages.GreatRate
+                            },
                             rateDif = null,
                         ),
                     )
@@ -226,7 +250,11 @@ class GetOnrampOffersUseCase(
                 ) {
                     add(
                         fastestOffer.copy(
-                            advantages = OnrampOfferAdvantages.Fastest,
+                            advantages = if (isSingleOffer) {
+                                OnrampOfferAdvantages.Default
+                            } else {
+                                OnrampOfferAdvantages.Fastest
+                            },
                             rateDif = if (bestRateOffer != null) fastestOffer.rateDif else null,
                         ),
                     )
