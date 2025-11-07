@@ -3,6 +3,7 @@ package com.tangem.features.hotwallet.upgradewallet
 import com.tangem.common.core.TangemError
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.doOnFailure
+import com.tangem.common.doOnResult
 import com.tangem.common.doOnSuccess
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.di.ModelScoped
@@ -111,6 +112,9 @@ internal class UpgradeWalletModel @Inject constructor(
                 }
                 .doOnFailure {
                     showCardVerificationFailedDialog(it)
+                }
+                .doOnResult {
+                    setLoading(false)
                 }
         }
     }
