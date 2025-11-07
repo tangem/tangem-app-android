@@ -91,6 +91,16 @@ internal class YieldSupplyModel @Inject constructor(
 
     init {
         checkIfYieldSupplyIsAvailable()
+        params.handleNavigation?.let { handle ->
+            if (handle) {
+                modelScope.launch {
+                    delay(timeMillis = 1000)
+                    bottomSheetNavigation.activate(Unit)
+                }
+            } else {
+                onStartEarningClick()
+            }
+        }
     }
 
     private fun checkIfYieldSupplyIsAvailable() {
@@ -185,7 +195,10 @@ internal class YieldSupplyModel @Inject constructor(
     @Suppress("MaximumLineLength")
     private fun onCryptoCurrencyStatusUpdated(cryptoCurrencyStatus: CryptoCurrencyStatus) {
         val yieldSupplyStatus = cryptoCurrencyStatus.value.yieldSupplyStatus
-        val tokenProtocolStatus = yieldSupplyRepository.getTokenProtocolStatus(cryptoCurrency)
+        val tokenProtocolStatus = yieldSupplyRepository.getTokenProtocolStatus(
+            userWallet.walletId,
+            cryptoCurrency,
+        )
         val isActive = yieldSupplyStatus?.isActive == true
         val isCryptoCurrencyStatusFromCache = cryptoCurrencyStatus.value.sources.networkSource != StatusSource.ACTUAL
         val processing = uiState.value is YieldSupplyUM.Processing
@@ -298,7 +311,11 @@ internal class YieldSupplyModel @Inject constructor(
         val address = cryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value ?: return
         modelScope.launch(dispatchers.default) {
             if (cryptoCurrencyStatus.value.yieldSupplyStatus?.isActive == true) {
-                yieldSupplyActivateUseCase(token, address).onRight {
+                yieldSupplyActivateUseCase(
+                    userWalletId = userWallet.walletId,
+                    cryptoCurrency = token,
+                    address = address,
+                ).onRight {
                     lastYieldSupplyStatus = cryptoCurrencyStatus.value.yieldSupplyStatus
                 }
             } else {
