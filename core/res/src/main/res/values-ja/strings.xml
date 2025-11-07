@@ -253,7 +253,6 @@
   <string name="common_enable">有効にする</string>
   <string name="common_enabled">有効</string>
   <string name="common_error">エラー</string>
-  <string name="common_estimated_fee">ネットワークサービス手数料</string>
   <string name="common_exchange">スワップ</string>
   <string name="common_explore">移動する</string>
   <string name="common_explore_transaction_history">取引履歴を調べる</string>
@@ -949,6 +948,7 @@
   </plurals>
   <string name="onramp_timing_minutes">%s分</string>
   <string name="onramp_title_available_from">利用可能：</string>
+  <string name="onramp_title_available_up_to">利用可能金額</string>
   <string name="onramp_title_you_get">以下が手に入ります。</string>
   <string name="onramp_tos_external_providers">サービスは外部プロバイダーによって提供されます。 \nTangemは責任を負いません。</string>
   <string name="onramp_transaction_status_footer_text">この画面を閉じて、トークンの詳細画面で取引状況を確認できます。</string>
@@ -1158,11 +1158,12 @@
   <string name="settings_wallet_name_title">名前</string>
   <string name="stake_token_description">トークンを活用しよう</string>
   <string name="staking_account_initialization_footer">ネットワーク手数料とは、ブロックチェーン上で取引を処理し、承認するために支払う少額の料金です。</string>
-  <string name="staking_account_initialization_message">ステーキングを始めるには、1 TONの自己取引によってTONアカウントを有効化する必要があります。資金はウォレット内にそのまま残ります。これは、ステーキング有効化のためのステップにすぎません。</string>
+  <string name="staking_account_initialization_message">ステーキングを始めるには、1 TONを取引してTONアカウントを有効化する必要があります。資金はウォレット内にそのまま残ります。これは、ステーキング有効化のためのステップにすぎません。</string>
   <string name="staking_account_initialization_title">アカウントの有効化</string>
   <string name="staking_amount_requirement_error">ステーキング金額は %s 以上である必要があります</string>
   <string name="staking_amount_tron_integer_error">ネットワークルールにより、ステーキング金額は%1$s TRX に切り上げられます。</string>
   <string name="staking_amount_tron_integer_error_unstaking">ネットワークルールにより、ステーキング解除の量は%1$s TRX に切り上げられます。</string>
+  <string name="staking_apr_earn_badge">APR %1$s%</string>
   <string name="staking_claim_unstaked">ステーキング解除分を請求する</string>
   <string name="staking_details_account_fee">ステーキングアカウント手数料</string>
   <string name="staking_details_account_fee_info">ステーキングアカウントとは、ステーキングされたSOLが保管される特別なアカウントです。トークンをバリデーターに委任し、取引の検証に参加して報酬を受け取る際に作成されます。ステーキングアカウントの作成には少額の手数料がかかりますが、ステーキング完了後に返金されます。</string>
@@ -1346,6 +1347,8 @@
   <string name="tangem_pay_status_pending">保留中</string>
   <string name="tangem_pay_transaction_declined_notification_text">銀行がこの取引リクエストを拒否しました。</string>
   <string name="tangem_pay_transaction_fee_notification_text">この手数料は、送金処理にかかるコストをカバーするためのものです。</string>
+  <string name="tangem_pay_unfreeze_card_alert_body">資金は引き続き使用できます。いつでも一時停止できます。</string>
+  <string name="tangem_pay_unfreeze_card_alert_title">カードの一時停止を解除しますか?</string>
   <string name="tangem_pay_withdrawal">出金</string>
   <string name="tangempay_card_details_add_funds">資金を追加</string>
   <string name="tangempay_card_details_add_funds_subtitle">入金オプション</string>
@@ -1370,6 +1373,7 @@
   <string name="tangempay_card_details_reveal_text">表示</string>
   <string name="tangempay_card_details_swap_description">ポートフォリオ内のあらゆる資産をカードと交換</string>
   <string name="tangempay_card_details_title">カードの詳細</string>
+  <string name="tangempay_card_details_unfreeze_card">カードの一時停止を解除</string>
   <string name="tangempay_issue_card_notification_title">アカウントを作成してカードを発行</string>
   <string name="tangempay_kyc_card_ready_notification_title">Tangem Pay</string>
   <string name="tangempay_kyc_in_progress_notification_button">ステータスを表示</string>
@@ -1856,7 +1860,7 @@
   <string name="yield_module_start_earning_sheet_next_deposits">次回の入金は自動的にAaveに供給されます。</string>
   <string name="yield_module_status_active">アクティブ</string>
   <string name="yield_module_status_paused">停止中</string>
-  <string name="yield_module_stop_earning">利回りモードを無効にする</string>
+  <string name="yield_module_stop_earning">利回りモードを解除中</string>
   <string name="yield_module_stop_earning_sheet_description">これをオフにすると、Aaveから資産が引き出され、ウォレット内の%sに変換され、利回りの発生が停止します。</string>
   <string name="yield_module_stop_earning_sheet_fee_note">出金金額からネットワーク手数料が差し引かれます。</string>
   <string name="yield_module_stop_earning_sheet_title">利回りモードを無効にする</string>

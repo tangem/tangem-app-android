@@ -258,7 +258,7 @@
   <string name="common_enable">Enable</string>
   <string name="common_enabled">Enabled</string>
   <string name="common_error">Error</string>
-  <string name="common_estimated_fee">Network service fee</string>
+  <string name="common_estimated_fee">Estimated fee</string>
   <string name="common_exchange">Swap</string>
   <string name="common_explore">Explore</string>
   <string name="common_explore_transaction_history">Explore transaction history</string>
@@ -274,7 +274,7 @@
   <string name="common_free">Free</string>
   <string name="common_from">From</string>
   <string name="common_generate_addresses">Synchronize addresses</string>
-  <string name="common_get_started">Get started</string>
+  <string name="common_get_started">Learn more</string>
   <string name="common_get_token">Get token</string>
   <string name="common_go_to_provider">Go to provider</string>
   <string name="common_go_to_token">Go to token</string>
@@ -573,11 +573,13 @@
   <string name="hw_backup_hardware_upgrade_title">Upgrade current wallet</string>
   <string name="hw_backup_need_action">Go to backup</string>
   <string name="hw_backup_need_description">Please back up your wallet before creating an access code.</string>
+  <string name="hw_backup_need_finish_first">Finish Backup First</string>
   <string name="hw_backup_need_title">Finalize backup first</string>
   <string name="hw_backup_no_backup">Incomplete</string>
   <string name="hw_backup_section_other_title">Other methods</string>
   <string name="hw_backup_seed_description">Physical devices that securely store your private key offline.</string>
   <string name="hw_backup_seed_title">Recovery phrase</string>
+  <string name="hw_backup_to_secure_description">To secure your wallet with a Access Code, complete the backup first.</string>
   <string name="hw_backup_to_upgrade_description">To upgrade your wallet to hardware, back it up first.</string>
   <string name="hw_create_keys_description">Your private keys are securely encrypted and stored on your phone</string>
   <string name="hw_create_keys_title">Keys are stored in the app</string>
@@ -969,6 +971,7 @@
   </plurals>
   <string name="onramp_timing_minutes">%s min</string>
   <string name="onramp_title_available_from">Available from</string>
+  <string name="onramp_title_available_up_to">Available up to</string>
   <string name="onramp_title_you_get">You get</string>
   <string name="onramp_tos_external_providers">Service is provided by an external provider. \nTangem is not responsible.</string>
   <string name="onramp_transaction_status_footer_text">You can close this screen and check the transaction status on the token details screen.</string>
@@ -1356,6 +1359,7 @@
   <string name="swapping_to_title">You receive</string>
   <string name="swapping_token_list_title">Choose token</string>
   <string name="swapping_token_not_available">not available</string>
+  <string name="tangem_pay_card_frozen">Card frozen</string>
   <string name="tangem_pay_deposit">Deposit</string>
   <string name="tangem_pay_dispute">Dispute</string>
   <string name="tangem_pay_explore_transaction">Explore transaction</string>
@@ -1363,13 +1367,19 @@
   <string name="tangem_pay_fee_title">Fee</string>
   <string name="tangem_pay_freeze_card_alert_body">Keep your money safe if your card is lost or stolen. You can unfreeze anytime.</string>
   <string name="tangem_pay_freeze_card_alert_title">Freeze your card?</string>
+  <string name="tangem_pay_freeze_card_failed">Failed to freeze the card. Try again later.</string>
   <string name="tangem_pay_freeze_card_freeze">Freeze</string>
+  <string name="tangem_pay_freeze_card_success">Your card is frozen.</string>
   <string name="tangem_pay_get_help">Get Help</string>
   <string name="tangem_pay_status_completed">Completed</string>
   <string name="tangem_pay_status_declined">Declined</string>
   <string name="tangem_pay_status_pending">Pending</string>
   <string name="tangem_pay_transaction_declined_notification_text">The bank rejected this transaction request.</string>
   <string name="tangem_pay_transaction_fee_notification_text">This fee goes to cover the cost of handling your transfer.</string>
+  <string name="tangem_pay_unfreeze_card_alert_body">Keep using your money. You can freeze anytime.</string>
+  <string name="tangem_pay_unfreeze_card_alert_title">Unfreeze your card?</string>
+  <string name="tangem_pay_unfreeze_card_failed">Failed to unfreeze the card. Try again later.</string>
+  <string name="tangem_pay_unfreeze_card_success">Your card is unfrozen.</string>
   <string name="tangem_pay_withdrawal">Withdrawal</string>
   <string name="tangempay_card_details_add_funds">Add funds</string>
   <string name="tangempay_card_details_add_funds_subtitle">Top-up options</string>
@@ -1394,6 +1404,7 @@
   <string name="tangempay_card_details_reveal_text">Reveal</string>
   <string name="tangempay_card_details_swap_description">Swap any asset in your portfolio for card</string>
   <string name="tangempay_card_details_title">Card details</string>
+  <string name="tangempay_card_details_unfreeze_card">Unfreeze Card</string>
   <string name="tangempay_issue_card_notification_title">Create account and issue a card</string>
   <string name="tangempay_kyc_card_ready_notification_title">Tangem Pay</string>
   <string name="tangempay_kyc_in_progress_notification_button">View Status</string>
@@ -1925,7 +1936,7 @@
   <string name="yield_module_receive_sheet_description">When you top up, your funds will be automatically sent to Aave to start earning interest. %s will be deducted to cover the transaction fee.</string>
   <string name="yield_module_start_earning">Supply assets</string>
   <string name="yield_module_start_earning_sheet_description">Your %s will be supplied to Aave, but will remain manageable.</string>
-  <string name="yield_module_start_earning_sheet_fee_policy">See fee policy</string>
+  <string name="yield_module_start_earning_sheet_fee_policy">See top-up fee policy</string>
   <string name="yield_module_start_earning_sheet_next_deposits">Your next top-ups will be automatically supplied to Aave.</string>
   <string name="yield_module_status_active">Active</string>
   <string name="yield_module_status_paused">Paused</string>
