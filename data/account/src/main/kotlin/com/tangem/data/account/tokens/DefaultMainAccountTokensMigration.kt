@@ -80,12 +80,11 @@ internal class DefaultMainAccountTokensMigration(
 
         store.updateData { updatedResponse }
 
-        userTokensSaver.push(
+        val userTokensResponse = updatedResponse.toUserTokensResponse()
+        userTokensSaver.pushWithRetryer(
             userWalletId = userWalletId,
-            response = updatedResponse.toUserTokensResponse(),
+            response = userTokensResponse,
             onFailSend = {
-                // TODO: save failed state to retry later
-                //  [REDACTED_JIRA]
                 val exception = IllegalStateException("Failed to push updated tokens after migration")
                 Timber.e(exception)
                 raise(exception)
