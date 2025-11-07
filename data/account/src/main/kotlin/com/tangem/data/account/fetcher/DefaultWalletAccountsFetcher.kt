@@ -182,7 +182,7 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
 
         store(userWalletId = userWalletId, response = accountsResponseWithTokens)
 
-        userTokensSaver.push(
+        userTokensSaver.pushWithRetryer(
             userWalletId = userWalletId,
             response = accountsResponseWithTokens.toUserTokensResponse(),
         )
