@@ -255,6 +255,7 @@ internal class YieldSupplyApproveModel @Inject constructor(
                         maxNetworkFeeFiatValue = TextReference.EMPTY,
                         minTopUpFiatValue = TextReference.EMPTY,
                         feeNoteValue = TextReference.EMPTY,
+                        estimatedFiatValue = TextReference.EMPTY,
                     ),
                 )
             }

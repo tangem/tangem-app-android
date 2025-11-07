@@ -76,18 +76,22 @@ internal class DefaultYieldSupplyRepository(
             (walletManager as? YieldSupplyProvider)?.isSupported() ?: false
         }
 
-    override suspend fun activateProtocol(cryptoCurrencyToken: CryptoCurrency.Token, address: String): Boolean =
-        withContext(dispatchers.io) {
-            val chainId = Blockchain.fromNetworkId(cryptoCurrencyToken.network.backendId)?.getChainId()
-                ?: error("Chain id is required for evm's")
-            yieldSupplyApi.activateYieldModule(
-                YieldSupplyChangeTokenStatusBody(
-                    tokenAddress = cryptoCurrencyToken.contractAddress,
-                    chainId = chainId,
-                    userAddress = address,
-                ),
-            ).getOrThrow().isActive
-        }
+    override suspend fun activateProtocol(
+        userWalletId: UserWalletId,
+        cryptoCurrencyToken: CryptoCurrency.Token,
+        address: String,
+    ): Boolean = withContext(dispatchers.io) {
+        val chainId = Blockchain.fromNetworkId(cryptoCurrencyToken.network.backendId)?.getChainId()
+            ?: error("Chain id is required for evm's")
+        yieldSupplyApi.activateYieldModule(
+            body = YieldSupplyChangeTokenStatusBody(
+                tokenAddress = cryptoCurrencyToken.contractAddress,
+                chainId = chainId,
+                userAddress = address,
+            ),
+            userWalletId = userWalletId.stringValue,
+        ).getOrThrow().isActive
+    }
 
     override suspend fun deactivateProtocol(cryptoCurrencyToken: CryptoCurrency.Token, address: String): Boolean =
         withContext(dispatchers.io) {
@@ -103,14 +107,18 @@ internal class DefaultYieldSupplyRepository(
         }
 
     override suspend fun saveTokenProtocolStatus(
+        userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency,
         yieldSupplyEnterStatus: YieldSupplyEnterStatus,
     ) {
-        statusMap[cryptoCurrency.id.value] = yieldSupplyEnterStatus
+        statusMap["${userWalletId}_${cryptoCurrency.id.value}"] = yieldSupplyEnterStatus
     }
 
-    override fun getTokenProtocolStatus(cryptoCurrency: CryptoCurrency): YieldSupplyEnterStatus? {
-        return statusMap[cryptoCurrency.id.value]
+    override fun getTokenProtocolStatus(
+        userWalletId: UserWalletId,
+        cryptoCurrency: CryptoCurrency,
+    ): YieldSupplyEnterStatus? {
+        return statusMap["${userWalletId}_${cryptoCurrency.id.value}"]
     }
 
     private fun List<YieldMarketToken>.enrichNetworkIds(): List<YieldMarketToken> {
