@@ -86,7 +86,7 @@ internal fun YieldSupplyFeePolicyContent(
                     .padding(horizontal = 16.dp),
             ) {
                 val currentFee = when (yieldSupplyFeeUM) {
-                    is YieldSupplyFeeUM.Content -> yieldSupplyFeeUM.tokenFeeFiatValue
+                    is YieldSupplyFeeUM.Content -> yieldSupplyFeeUM.estimatedFiatValue
                     YieldSupplyFeeUM.Error -> stringReference(StringsSigns.DASH_SIGN)
                     YieldSupplyFeeUM.Loading -> null
                 }
@@ -184,6 +184,7 @@ private fun YieldSupplyFeePolicyContent_Preview() {
                         stringReference("2.46 USDT"),
                     ),
                 ),
+                estimatedFiatValue = stringReference("$8.50"),
             ),
             tokenSymbol = "USDT",
             modifier = Modifier.background(TangemTheme.colors.background.primary),

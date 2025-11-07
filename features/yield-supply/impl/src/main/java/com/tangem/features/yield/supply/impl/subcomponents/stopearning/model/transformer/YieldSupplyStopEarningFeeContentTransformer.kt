@@ -38,6 +38,7 @@ internal class YieldSupplyStopEarningFeeContentTransformer(
                     maxNetworkFeeFiatValue = TextReference.EMPTY,
                     minTopUpFiatValue = TextReference.EMPTY,
                     feeNoteValue = TextReference.EMPTY,
+                    estimatedFiatValue = TextReference.EMPTY,
                 ),
             )
         }
