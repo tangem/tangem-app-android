@@ -97,9 +97,9 @@ class UserTokensResponseAccountIdEnricherTest {
         val validNetworkId = mockCryptoCurrencyFactory.ethereum.network.rawId
 
         val tokenWithUnknownNetworkId = mockCryptoCurrencyFactory.ethereum.toResponseToken(
+            accountId = null,
             networkId = unknownNetworkId,
             derivationPath = "m/44'/60'/0'/0/0",
-            accountId = null,
         )
 
         val tokenWithValidNetworkId = mockCryptoCurrencyFactory.ethereum.toResponseToken(
@@ -117,6 +117,32 @@ class UserTokensResponseAccountIdEnricherTest {
         val expected = listOf(
             tokenWithUnknownNetworkId,
             tokenWithValidNetworkId.enrichWithAccountId(accountIndex = 0),
+        ).toResponse()
+
+        Truth.assertThat(actual).isEqualTo(expected)
+    }
+
+    @Test
+    fun `skips tokens with existing account ids`() {
+        // Arrange
+        val tokenWithAccountId = mockCryptoCurrencyFactory.ethereum
+            .toResponseToken(derivationPath = "m/44'/60'/0'/0/0")
+            .enrichWithAccountId(accountIndex = 0)
+
+        val tokenWithoutAccountId = mockCryptoCurrencyFactory.ethereum.toResponseToken(
+            accountId = null,
+            derivationPath = "m/44'/60'/0'/0/0",
+        )
+
+        val response = listOf(tokenWithAccountId, tokenWithoutAccountId).toResponse()
+
+        // Act
+        val actual = UserTokensResponseAccountIdEnricher(userWalletId, response)
+
+        // Assert
+        val expected = listOf(
+            tokenWithAccountId,
+            tokenWithoutAccountId.enrichWithAccountId(accountIndex = 0),
         ).toResponse()
 
         Truth.assertThat(actual).isEqualTo(expected)
