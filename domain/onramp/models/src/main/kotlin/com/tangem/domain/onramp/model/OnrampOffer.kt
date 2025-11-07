@@ -5,6 +5,7 @@ import java.math.BigDecimal
 data class OnrampOffersBlock(
     val category: OnrampOfferCategory,
     val offers: List<OnrampOffer>,
+    val hasMoreOffers: Boolean,
 )
 
 data class OnrampOffer(
