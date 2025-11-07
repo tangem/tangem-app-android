@@ -57,7 +57,7 @@ internal fun YieldSupplyPromoContent(
             onClick = clickIntents::onUrlClick,
         )
         PrimaryButton(
-            text = stringResourceSafe(R.string.yield_module_start_earning),
+            text = stringResourceSafe(R.string.common_continue),
             onClick = clickIntents::onStartEarningClick,
             modifier = Modifier
                 .padding(
