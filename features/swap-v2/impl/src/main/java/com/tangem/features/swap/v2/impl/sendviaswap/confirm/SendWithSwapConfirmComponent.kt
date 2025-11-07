@@ -189,6 +189,6 @@ internal class SendWithSwapConfirmComponent @AssistedInject constructor(
     }
 
     interface ModelCallback {
-        fun onResult(sendWithSwapUM: SendWithSwapUM)
+        fun onResult(route: SendWithSwapRoute, sendWithSwapUM: SendWithSwapUM)
     }
 }
