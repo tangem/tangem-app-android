@@ -19,8 +19,11 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.components.PrimaryButtonIconEnd
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetTitle
-import com.tangem.core.ui.decompose.ComposableModularContentComponent
+import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetWithFooter
+import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -34,7 +37,7 @@ import kotlinx.coroutines.flow.StateFlow
 internal class YieldSupplyStopEarningComponent(
     private val appComponentContext: AppComponentContext,
     private val params: Params,
-) : ComposableModularContentComponent, AppComponentContext by appComponentContext {
+) : ComposableBottomSheetComponent, AppComponentContext by appComponentContext {
 
     private val model: YieldSupplyStopEarningModel = getOrCreateModel(params = params)
 
@@ -48,54 +51,61 @@ internal class YieldSupplyStopEarningComponent(
         ),
     )
 
-    @Composable
-    override fun Title() {
-        TangemModalBottomSheetTitle(
-            startIconRes = R.drawable.ic_back_24,
-            onStartClick = params.callback::onBackClick,
-        )
+    override fun dismiss() {
+        params.callback.onDismissClick()
     }
 
-    @Suppress("MagicNumber")
     @Composable
-    override fun Content(modifier: Modifier) {
+    override fun BottomSheet() {
         val state by model.uiState.collectAsStateWithLifecycle()
-        YieldSupplyActionContent(
-            yieldSupplyActionUM = state,
-            onFooterClick = model::onReadMoreClick,
-            yieldSupplyNotificationsComponent = yieldSupplyNotificationsComponent,
-            modifier = modifier,
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(56.dp)
-                    .background(TangemTheme.colors.icon.attention.copy(0.1f), CircleShape),
-            ) {
-                Icon(
-                    imageVector = ImageVector.vectorResource(R.drawable.ic_alert_triangle_20),
-                    contentDescription = null,
-                    tint = TangemTheme.colors.icon.attention,
-                    modifier = Modifier
-                        .padding(12.dp)
-                        .size(32.dp),
+
+        TangemModalBottomSheetWithFooter<TangemBottomSheetConfigContent.Empty>(
+            config = TangemBottomSheetConfig(
+                isShown = true,
+                onDismissRequest = params.callback::onDismissClick,
+                content = TangemBottomSheetConfigContent.Empty,
+            ),
+            containerColor = TangemTheme.colors.background.tertiary,
+            title = {
+                TangemModalBottomSheetTitle(
+                    endIconRes = R.drawable.ic_close_24,
+                    onEndClick = params.callback::onDismissClick,
                 )
-            }
-        }
-    }
-
-    @Composable
-    override fun Footer() {
-        val state by model.uiState.collectAsStateWithLifecycle()
-
-        PrimaryButtonIconEnd(
-            text = stringResourceSafe(R.string.common_confirm),
-            onClick = model::onClick,
-            iconResId = walletInterationIcon(params.userWallet),
-            enabled = state.isPrimaryButtonEnabled,
-            showProgress = state.isTransactionSending,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
+            },
+            footer = {
+                PrimaryButtonIconEnd(
+                    text = stringResourceSafe(R.string.common_confirm),
+                    onClick = model::onClick,
+                    iconResId = walletInterationIcon(params.userWallet),
+                    enabled = state.isPrimaryButtonEnabled,
+                    showProgress = state.isTransactionSending,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                )
+            },
+            content = {
+                YieldSupplyActionContent(
+                    yieldSupplyActionUM = state,
+                    onFooterClick = model::onReadMoreClick,
+                    yieldSupplyNotificationsComponent = yieldSupplyNotificationsComponent,
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(56.dp)
+                            .background(TangemTheme.colors.icon.attention.copy(0.1f), CircleShape),
+                    ) {
+                        Icon(
+                            imageVector = ImageVector.vectorResource(R.drawable.ic_alert_triangle_20),
+                            contentDescription = null,
+                            tint = TangemTheme.colors.icon.attention,
+                            modifier = Modifier
+                                .padding(12.dp)
+                                .size(32.dp),
+                        )
+                    }
+                }
+            },
         )
     }
 
@@ -106,7 +116,7 @@ internal class YieldSupplyStopEarningComponent(
     )
 
     interface ModelCallback {
-        fun onBackClick()
+        fun onDismissClick()
         fun onTransactionSent()
     }
 }
