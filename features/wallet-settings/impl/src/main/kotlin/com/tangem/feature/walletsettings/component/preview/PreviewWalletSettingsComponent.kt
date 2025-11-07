@@ -12,6 +12,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.feature.walletsettings.component.WalletSettingsComponent
+import com.tangem.feature.walletsettings.entity.AccountReorderUM
 import com.tangem.feature.walletsettings.entity.WalletSettingsAccountsUM
 import com.tangem.feature.walletsettings.entity.WalletSettingsAccountsUM.Footer.AddAccountUM
 import com.tangem.feature.walletsettings.entity.WalletSettingsItemUM
@@ -75,6 +76,11 @@ internal class PreviewWalletSettingsComponent : WalletSettingsComponent {
         ),
         requestPushNotificationsPermission = false,
         onPushNotificationPermissionGranted = {},
+        accountReorderUM = AccountReorderUM(
+            isDragEnabled = true,
+            onMove = { _, _ -> },
+            onDragStopped = {},
+        ),
     )
 
     private fun previewAccounts() = buildList {
