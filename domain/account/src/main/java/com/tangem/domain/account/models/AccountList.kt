@@ -40,6 +40,10 @@ data class AccountList private constructor(
     val canAddMoreAccounts: Boolean
         get() = accounts.size < MAX_ACCOUNTS_COUNT
 
+    /** Returns the number of active accounts in the list */
+    val activeAccounts: Int
+        get() = accounts.size
+
     /**
      * Adds an account to the account list.
      * If an account with the same identifier already exists, it will be replaced.

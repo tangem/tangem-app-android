@@ -15,9 +15,9 @@ data class GetWalletAccountsResponse(
 
     @JsonClass(generateAdapter = true)
     data class Wallet(
-        @Json(name = "version") val version: Int = 0,
-        @Json(name = "group") val group: GroupType,
-        @Json(name = "sort") val sort: SortType,
+        @Json(name = "version") val version: Int? = 0,
+        @Json(name = "group") val group: GroupType?,
+        @Json(name = "sort") val sort: SortType?,
         @Json(name = "totalAccounts") val totalAccounts: Int,
     )
 }
@@ -30,8 +30,8 @@ fun GetWalletAccountsResponse.flattenTokens(): List<UserTokensResponse.Token> {
 /** Converts the [GetWalletAccountsResponse] into a [UserTokensResponse] */
 fun GetWalletAccountsResponse.toUserTokensResponse(): UserTokensResponse {
     return UserTokensResponse(
-        group = wallet.group,
-        sort = wallet.sort,
+        group = wallet.group ?: GroupType.NONE,
+        sort = wallet.sort ?: SortType.MANUAL,
         tokens = flattenTokens(),
     )
 }
