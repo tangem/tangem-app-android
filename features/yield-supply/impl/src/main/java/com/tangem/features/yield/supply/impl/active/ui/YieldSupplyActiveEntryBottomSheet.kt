@@ -1,4 +1,4 @@
-package com.tangem.features.yield.supply.impl.subcomponents.active.ui
+package com.tangem.features.yield.supply.impl.active.ui
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.runtime.Composable
@@ -9,7 +9,7 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetWithFooter
 import com.tangem.core.ui.decompose.ComposableModularContentComponent
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.features.yield.supply.impl.subcomponents.active.model.YieldSupplyActiveRoute
+import com.tangem.features.yield.supply.impl.active.model.YieldSupplyActiveRoute
 
 @Composable
 internal fun YieldSupplyActiveEntryBottomSheet(
