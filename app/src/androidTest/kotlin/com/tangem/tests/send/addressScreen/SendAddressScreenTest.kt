@@ -1,6 +1,7 @@
 package com.tangem.tests.send.addressScreen
 
 import android.Manifest
+import androidx.compose.ui.test.hasText
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.ENS_ETHEREUM_RECIPIENT_ADDRESS
 import com.tangem.common.constants.TestConstants.ENS_ETHEREUM_RECIPIENT_SHORTENED_ADDRESS
@@ -9,16 +10,16 @@ import com.tangem.common.constants.TestConstants.ETHEREUM_ADDRESS
 import com.tangem.common.constants.TestConstants.ETHEREUM_RECIPIENT_ADDRESS
 import com.tangem.common.constants.TestConstants.ETHEREUM_RECIPIENT_SHORTENED_ADDRESS
 import com.tangem.common.constants.TestConstants.XRP_RECIPIENT_ADDRESS
+import com.tangem.common.constants.TestConstants.XRP_X_ADDRESS
+import com.tangem.common.constants.TestConstants.XRP_X_RECIPIENT_ADDRESS
+import com.tangem.common.constants.TestConstants.XRP_X_RECIPIENT_ADDRESS_WITH_TAG
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.utils.clearClipboard
 import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setClipboardText
 import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.core.ui.R
-import com.tangem.scenarios.checkScanQrScreen
-import com.tangem.scenarios.openMainScreen
-import com.tangem.scenarios.openSendAddressScreen
-import com.tangem.scenarios.synchronizeAddresses
+import com.tangem.scenarios.*
 import com.tangem.screens.*
 import com.tangem.wallet.BuildConfig
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -46,20 +47,8 @@ class SendAddressScreenTest : BaseTestCase() {
             step("Synchronize addresses") {
                 synchronizeAddresses()
             }
-            step("Click on token with name: '$tokenName'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
-            }
-            step("Click on 'Send' button") {
-                onTokenDetailsScreen { sendButton().performClick() }
-            }
-            step("Type '$sendAmount' in input text field") {
-                onSendScreen {
-                    amountInputTextField.performClick()
-                    amountInputTextField.performTextReplacement(sendAmount)
-                }
-            }
-            step("Click on 'Next' button") {
-                onSendScreen { nextButton.clickWithAssertion() }
+            step("Open 'Send Address' screen") {
+                openSendAddressScreen(tokenName, sendAmount)
             }
             step("Click on previous address") {
                 onSendAddressScreen { recentAddressWithText(recipientShortenedAddress).clickWithAssertion() }
@@ -121,20 +110,8 @@ class SendAddressScreenTest : BaseTestCase() {
             step("Synchronize addresses") {
                 synchronizeAddresses()
             }
-            step("Click on token with name: '$tokenName'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenName).performClick() }
-            }
-            step("Click on 'Send' button") {
-                onTokenDetailsScreen { sendButton().performClick() }
-            }
-            step("Type '$sendAmount' in input text field") {
-                onSendScreen {
-                    amountInputTextField.performClick()
-                    amountInputTextField.performTextReplacement(sendAmount)
-                }
-            }
-            step("Click on 'Next' button") {
-                onSendScreen { nextButton.clickWithAssertion() }
+            step("Open 'Send Address' screen") {
+                openSendAddressScreen(tokenName, sendAmount)
             }
             step("Set clipboard text") {
                 setClipboardText(context, correctMemo)
@@ -197,20 +174,8 @@ class SendAddressScreenTest : BaseTestCase() {
             step("Synchronize addresses") {
                 synchronizeAddresses()
             }
-            step("Click on token with name: '$tokenName'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
-            }
-            step("Click on 'Send' button") {
-                onTokenDetailsScreen { sendButton().performClick() }
-            }
-            step("Type '$sendAmount' in input text field") {
-                onSendScreen {
-                    amountInputTextField.performClick()
-                    amountInputTextField.performTextReplacement(sendAmount)
-                }
-            }
-            step("Click on 'Next' button") {
-                onSendScreen { nextButton.clickWithAssertion() }
+            step("Open 'Send Address' screen") {
+                openSendAddressScreen(tokenName, sendAmount)
             }
             step("Set clipboard text") {
                 setClipboardText(context, recipientAddress)
@@ -457,6 +422,214 @@ class SendAddressScreenTest : BaseTestCase() {
             }
             step("Assert 'Address' screen is displayed") {
                 onSendAddressScreen { container.assertIsDisplayed() }
+            }
+        }
+    }
+
+    @AllureId("4590")
+    @DisplayName("Send (address screen): enter 'r' address (XRP)")
+    @Test
+    fun xrpEnterRAddressTest() {
+        val tokenName = "XRP Ledger"
+        val sendAmount = "1"
+        val xrpRecipientAddress = XRP_RECIPIENT_ADDRESS
+        val userTokensScenarioName = "user_tokens_api"
+        val userTokensScenarioState = "XRP"
+        val optionalText = getResourceString(R.string.send_optional_field)
+
+        setupHooks(
+            additionalAfterSection = {
+                resetWireMockScenarioState(userTokensScenarioName)
+            }
+        ).run {
+            step("Set WireMock scenario: '$userTokensScenarioName' to state: '$userTokensScenarioState'") {
+                setWireMockScenarioState(scenarioName = userTokensScenarioName, state = userTokensScenarioState)
+            }
+            step("Open 'Main Screen'") {
+                openMainScreen()
+            }
+            step("Synchronize addresses") {
+                synchronizeAddresses()
+            }
+            step("Open 'Send Address' screen") {
+                openSendAddressScreen(tokenName, sendAmount)
+            }
+            step("Type address in input text field") {
+                onSendAddressScreen { addressTextField.performTextReplacement(xrpRecipientAddress) }
+            }
+            step("Check 'Destination tag' block") {
+                checkDestinationTagBlock(hint = optionalText)
+            }
+        }
+    }
+
+    @AllureId("4591")
+    @DisplayName("Send (address screen): enter 'X' address without tag (XRP)")
+    @Test
+    fun xrpEnterXAddressWithoutTagTest() {
+        val tokenName = "XRP Ledger"
+        val sendAmount = "1"
+        val xrpRecipientAddress = XRP_X_RECIPIENT_ADDRESS
+        val userTokensScenarioName = "user_tokens_api"
+        val userTokensScenarioState = "XRP"
+        val tagAlreadyIncluded = getResourceString(R.string.send_additional_field_already_included)
+
+        setupHooks(
+            additionalAfterSection = {
+                resetWireMockScenarioState(userTokensScenarioName)
+            }
+        ).run {
+            step("Set WireMock scenario: '$userTokensScenarioName' to state: '$userTokensScenarioState'") {
+                setWireMockScenarioState(scenarioName = userTokensScenarioName, state = userTokensScenarioState)
+            }
+            step("Open 'Main Screen'") {
+                openMainScreen()
+            }
+            step("Synchronize addresses") {
+                synchronizeAddresses()
+            }
+            step("Open 'Send Address' screen") {
+                openSendAddressScreen(tokenName, sendAmount)
+            }
+            step("Type address in input text field") {
+                onSendAddressScreen { addressTextField.performTextReplacement(xrpRecipientAddress) }
+            }
+            step("Check 'Destination tag' block") {
+                checkDestinationTagBlock(hint = tagAlreadyIncluded)
+            }
+            step("Assert 'Next' button is enabled") {
+                onSendAddressScreen { nextButton.assertIsEnabled() }
+            }
+        }
+    }
+
+    @AllureId("4592")
+    @DisplayName("Send (address screen): enter 'X' address with tag (XRP)")
+    @Test
+    fun xrpEnterXAddressWithTagTest() {
+        val tokenName = "XRP Ledger"
+        val sendAmount = "1"
+        val xrpRecipientAddress = XRP_X_RECIPIENT_ADDRESS_WITH_TAG
+        val userTokensScenarioName = "user_tokens_api"
+        val userTokensScenarioState = "XRP"
+        val tagAlreadyIncluded = getResourceString(R.string.send_additional_field_already_included)
+
+        setupHooks(
+            additionalAfterSection = {
+                resetWireMockScenarioState(userTokensScenarioName)
+            }
+        ).run {
+            step("Set WireMock scenario: '$userTokensScenarioName' to state: '$userTokensScenarioState'") {
+                setWireMockScenarioState(scenarioName = userTokensScenarioName, state = userTokensScenarioState)
+            }
+            step("Open 'Main Screen'") {
+                openMainScreen()
+            }
+            step("Synchronize addresses") {
+                synchronizeAddresses()
+            }
+            step("Open 'Send Address' screen") {
+                openSendAddressScreen(tokenName, sendAmount)
+            }
+            step("Type address in input text field") {
+                onSendAddressScreen { addressTextField.performTextReplacement(xrpRecipientAddress) }
+            }
+            step("Check 'Destination tag' block") {
+                checkDestinationTagBlock(hint = tagAlreadyIncluded)
+            }
+            step("Assert 'Next' button is enabled") {
+                onSendAddressScreen { nextButton.assertIsEnabled() }
+            }
+        }
+    }
+
+    @AllureId("4594")
+    @DisplayName("Send (address screen): enter own address (XRP)")
+    @Test
+    fun xrpEnterOwnXAddressTest() {
+        val tokenName = "XRP Ledger"
+        val sendAmount = "1"
+        val walletAddress = XRP_X_ADDRESS
+        val userTokensScenarioName = "user_tokens_api"
+        val userTokensScenarioState = "XRP"
+        val sameAsWalletAddress = getResourceString(R.string.send_error_address_same_as_wallet)
+
+        setupHooks(
+            additionalAfterSection = {
+                resetWireMockScenarioState(userTokensScenarioName)
+            }
+        ).run {
+            step("Set WireMock scenario: '$userTokensScenarioName' to state: '$userTokensScenarioState'") {
+                setWireMockScenarioState(scenarioName = userTokensScenarioName, state = userTokensScenarioState)
+            }
+            step("Open 'Main Screen'") {
+                openMainScreen()
+            }
+            step("Synchronize addresses") {
+                synchronizeAddresses()
+            }
+            step("Open 'Send Address' screen") {
+                openSendAddressScreen(tokenName, sendAmount)
+            }
+            step("Type address in input text field") {
+                onSendAddressScreen { addressTextField.performTextReplacement(walletAddress) }
+            }
+            step("Assert 'Address is the same as wallet address' error title is displayed") {
+                onSendAddressScreen { addressTextFieldTitle.assertTextContains(sameAsWalletAddress) }
+            }
+            step("Assert 'Next' button is disabled") {
+                onSendAddressScreen { nextButton.assertIsNotEnabled() }
+            }
+        }
+    }
+
+    @AllureId("4593")
+    @DisplayName("Send (address screen): enter tag before address (XRP)")
+    @Test
+    fun xrpEnterTagBeforeAddressTest() {
+        val tokenName = "XRP Ledger"
+        val sendAmount = "1"
+        val xrpRecipientAddress = XRP_X_RECIPIENT_ADDRESS
+        val destinationTag = "12345"
+        val emptyText = ""
+        val userTokensScenarioName = "user_tokens_api"
+        val userTokensScenarioState = "XRP"
+        val tagAlreadyIncluded = getResourceString(R.string.send_additional_field_already_included)
+
+        setupHooks(
+            additionalAfterSection = {
+                resetWireMockScenarioState(userTokensScenarioName)
+            }
+        ).run {
+            step("Set WireMock scenario: '$userTokensScenarioName' to state: '$userTokensScenarioState'") {
+                setWireMockScenarioState(scenarioName = userTokensScenarioName, state = userTokensScenarioState)
+            }
+            step("Open 'Main Screen'") {
+                openMainScreen()
+            }
+            step("Synchronize addresses") {
+                synchronizeAddresses()
+            }
+            step("Open 'Send Address' screen") {
+                openSendAddressScreen(tokenName, sendAmount)
+            }
+            step("Type destination tag in input text field") {
+                onSendAddressScreen { destinationTagTextField.performTextReplacement(destinationTag) }
+            }
+            step("Type X address in input text field") {
+                onSendAddressScreen { addressTextField.performTextReplacement(xrpRecipientAddress) }
+            }
+            step("Destination tag text field doesn't contains destination tag: '$destinationTag'") {
+                onSendAddressScreen { destinationTagTextField.assert (!hasText(destinationTag)) }
+            }
+            step("Destination tag text field cleared") {
+                onSendAddressScreen { destinationTagTextField.assertTextEquals(emptyText) }
+            }
+            step("Check 'Destination tag' block") {
+                checkDestinationTagBlock(hint = tagAlreadyIncluded)
+            }
+            step("Assert 'Next' button is enabled") {
+                onSendAddressScreen { nextButton.assertIsEnabled() }
             }
         }
     }
