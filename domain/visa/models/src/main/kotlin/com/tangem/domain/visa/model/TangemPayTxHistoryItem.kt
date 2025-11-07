@@ -45,6 +45,7 @@ sealed class TangemPayTxHistoryItem {
         override val date: SerializedDateTime,
         override val amount: SerializedBigDecimal,
         override val currency: SerializedCurrency,
+        val description: String?,
     ) : TangemPayTxHistoryItem()
 
     @Serializable
