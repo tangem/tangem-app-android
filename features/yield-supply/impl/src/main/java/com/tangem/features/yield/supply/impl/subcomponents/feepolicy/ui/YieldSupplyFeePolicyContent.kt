@@ -91,7 +91,7 @@ internal fun YieldSupplyFeePolicyContent(
                     YieldSupplyFeeUM.Loading -> null
                 }
                 YieldSupplyFeeRow(
-                    title = resourceReference(R.string.yield_module_fee_policy_sheet_current_fee_title),
+                    title = resourceReference(R.string.common_estimated_fee),
                     value = currentFee,
                     modifier = Modifier.padding(vertical = 12.dp),
                 )
