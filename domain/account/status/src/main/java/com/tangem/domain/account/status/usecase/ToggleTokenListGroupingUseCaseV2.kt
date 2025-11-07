@@ -4,6 +4,7 @@ import arrow.core.Either
 import arrow.core.raise.ensure
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.core.utils.eitherOn
+import com.tangem.domain.models.TokensGroupType
 import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.tokenlist.TokenList
@@ -42,11 +43,18 @@ class ToggleTokenListGroupingUseCaseV2(
             TokenListSortingError.TokenListIsLoading
         }
 
-        accountStatusList.copy(
-            accountStatuses = accountStatusList.accountStatuses.map { account ->
-                if (account !is AccountStatus.CryptoPortfolio) return@map account
+        val updatedAccountList = accountStatusList.accountStatuses.map { account ->
+            if (account !is AccountStatus.CryptoPortfolio) return@map account
 
-                account.copy(tokenList = account.tokenList.reverseGroupType())
+            account.copy(tokenList = account.tokenList.reverseGroupType())
+        }
+
+        accountStatusList.copy(
+            accountStatuses = updatedAccountList,
+            groupType = when (updatedAccountList.firstOrNull()?.getCryptoTokenList()) {
+                is TokenList.GroupedByNetwork -> TokensGroupType.NETWORK
+                is TokenList.Ungrouped -> TokensGroupType.NONE
+                else -> accountStatusList.groupType
             },
         )
     }
