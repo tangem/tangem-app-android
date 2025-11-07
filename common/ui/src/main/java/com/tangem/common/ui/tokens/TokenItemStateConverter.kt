@@ -48,8 +48,11 @@ class TokenItemStateConverter(
     private val iconStateProvider: (CryptoCurrencyStatus) -> CurrencyIconState = {
         CryptoCurrencyToIconStateConverter().convert(it)
     },
+    private val onApyLabelClick: ((CryptoCurrencyStatus) -> Unit)? = null,
     private val titleStateProvider: (CryptoCurrencyStatus) -> TokenItemState.TitleState = {
-        createTitleState(it, yieldModuleApyMap, stakingApyMap)
+        createTitleState(it, yieldModuleApyMap, stakingApyMap, {
+            onApyLabelClick?.invoke(it)
+        })
     },
     private val subtitleStateProvider: (CryptoCurrencyStatus) -> TokenItemState.SubtitleState? = {
         createSubtitleState(it, appCurrency)
@@ -101,6 +104,9 @@ class TokenItemStateConverter(
             },
             onItemLongClick = onItemLongClick?.let { onItemLongClick ->
                 { onItemLongClick(it, this) }
+            },
+            onApyLabelClick = onApyLabelClick?.let { onApyLabelClick ->
+                { onApyLabelClick(this) }
             },
         )
     }
@@ -160,6 +166,7 @@ class TokenItemStateConverter(
             currencyStatus: CryptoCurrencyStatus,
             yieldModuleApyMap: Map<String, String>,
             stakingApyMap: Map<String, List<Yield.Validator>>,
+            onApyLabelClick: () -> Unit,
         ): TokenItemState.TitleState {
             return when (val value = currencyStatus.value) {
                 is CryptoCurrencyStatus.Loading,
@@ -184,6 +191,7 @@ class TokenItemStateConverter(
                         hasPending = value.hasCurrentNetworkTransactions,
                         earnApy = earnApyText,
                         earnApyIsActive = isActive,
+                        onApyLabelClick = onApyLabelClick,
                     )
                 }
             }
