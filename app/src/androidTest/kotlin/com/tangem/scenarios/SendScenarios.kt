@@ -86,3 +86,21 @@ fun BaseTestCase.checkScanQrScreen() {
         onScanQrScreen { pasteFromClipboardButton.assertIsDisplayed() }
     }
 }
+
+fun BaseTestCase.checkDestinationTagBlock(hint: String) {
+    step("Assert 'Destination Tag' title is displayed") {
+        onSendAddressScreen { destinationTagBlockTitle().assertIsDisplayed() }
+    }
+    step("Assert 'Destination Tag' text is displayed") {
+        onSendAddressScreen { destinationTagBlockText.assertIsDisplayed() }
+    }
+    step("Assert 'Destination Tag' text field hint contains text '$hint'") {
+        onSendAddressScreen { destinationTagTextFieldHint.assertTextContains(hint) }
+    }
+    step("Assert 'Destination Tag' text field is displayed") {
+        onSendAddressScreen { destinationTagTextField.assertIsDisplayed() }
+    }
+    step("Assert 'Destination Tag' caution is displayed") {
+        onSendAddressScreen { destinationTagBlockCaution.assertIsDisplayed() }
+    }
+}
