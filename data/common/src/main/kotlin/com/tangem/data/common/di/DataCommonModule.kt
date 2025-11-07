@@ -16,10 +16,13 @@ import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.retryer.RetryerPool
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
 import javax.inject.Singleton
 
 @Module
@@ -76,6 +79,9 @@ internal object DataCommonModule {
             dispatchers = dispatchers,
             addressesEnricher = addressesEnricher,
             accountsFeatureToggles = accountsFeatureToggles,
+            pushTokensRetryerPool = RetryerPool(
+                coroutineScope = CoroutineScope(SupervisorJob() + dispatchers.default),
+            ),
         )
     }
 
