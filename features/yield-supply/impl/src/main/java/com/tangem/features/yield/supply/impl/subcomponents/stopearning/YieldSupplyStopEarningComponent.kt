@@ -34,6 +34,7 @@ import com.tangem.features.yield.supply.impl.subcomponents.notifications.YieldSu
 import com.tangem.features.yield.supply.impl.subcomponents.stopearning.model.YieldSupplyStopEarningModel
 import kotlinx.coroutines.flow.StateFlow
 
+@Suppress("MagicNumber")
 internal class YieldSupplyStopEarningComponent(
     private val appComponentContext: AppComponentContext,
     private val params: Params,
