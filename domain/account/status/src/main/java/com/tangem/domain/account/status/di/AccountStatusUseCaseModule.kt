@@ -136,4 +136,24 @@ internal object AccountStatusUseCaseModule {
             parallelUpdatingScope = CoroutineScope(SupervisorJob() + dispatchers.default),
         )
     }
+
+    @Provides
+    @Singleton
+    fun provideToggleTokenListSortingUseCaseV2(
+        dispatchers: CoroutineDispatcherProvider,
+    ): ToggleTokenListSortingUseCaseV2 {
+        return ToggleTokenListSortingUseCaseV2(
+            dispatchers = dispatchers,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideToggleTokenListGroupingUseCaseV2(
+        dispatchers: CoroutineDispatcherProvider,
+    ): ToggleTokenListGroupingUseCaseV2 {
+        return ToggleTokenListGroupingUseCaseV2(
+            dispatchers = dispatchers,
+        )
+    }
 }
