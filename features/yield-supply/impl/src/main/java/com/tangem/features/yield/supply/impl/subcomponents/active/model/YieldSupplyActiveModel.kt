@@ -248,7 +248,7 @@ internal class YieldSupplyActiveModel @Inject constructor(
                         cryptoCurrencyStatus = cryptoStatus,
                         appCurrency = appCurrency,
                         feeValue = currentFee,
-                        maxNetworkFee = maxFee.second,
+                        maxNetworkFee = maxFee,
                         analyticsHandler = analyticsHandler,
                     ),
                 )
