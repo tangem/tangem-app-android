@@ -9,6 +9,7 @@ import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayDetailsConfig
+import com.tangem.domain.tokens.model.details.NavigationAction
 import com.tangem.domain.tokens.model.details.TokenAction
 import com.tangem.feature.wallet.navigation.WalletRoute
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletDialogConfig
@@ -42,7 +43,11 @@ internal interface InnerWalletRouter {
     fun openUrl(url: String)
 
     /** Open token details screen */
-    fun openTokenDetails(userWalletId: UserWalletId, currencyStatus: CryptoCurrencyStatus)
+    fun openTokenDetails(
+        userWalletId: UserWalletId,
+        currencyStatus: CryptoCurrencyStatus,
+        navigationAction: NavigationAction? = null,
+    )
 
     /** Open stories screen */
     fun openStoriesScreen()
