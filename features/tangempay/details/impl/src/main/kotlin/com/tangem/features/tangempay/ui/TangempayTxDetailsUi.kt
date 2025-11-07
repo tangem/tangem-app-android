@@ -245,7 +245,7 @@ private class TangemPayTxHistoryDetailsUMProvider : CollectionPreviewParameterPr
             notification = null,
             buttons = persistentListOf(
                 TangemPayTxHistoryDetailsUM.ButtonState(
-                    text = resourceReference(R.string.tangem_pay_explore_transaction),
+                    text = resourceReference(R.string.tangem_pay_get_help),
                     onClick = {},
                 ),
             ),
@@ -261,11 +261,6 @@ private class TangemPayTxHistoryDetailsUMProvider : CollectionPreviewParameterPr
             labelState = null,
             notification = null,
             buttons = persistentListOf(
-                TangemPayTxHistoryDetailsUM.ButtonState(
-                    text = resourceReference(R.string.tangem_pay_explore_transaction),
-                    startIcon = ImageReference.Res(R.drawable.ic_explore_20),
-                    onClick = {},
-                ),
                 TangemPayTxHistoryDetailsUM.ButtonState(
                     text = resourceReference(R.string.tangem_pay_get_help),
                     onClick = {},
