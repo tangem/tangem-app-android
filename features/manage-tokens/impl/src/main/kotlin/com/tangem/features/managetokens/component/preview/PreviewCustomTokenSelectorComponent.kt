@@ -43,7 +43,7 @@ internal class PreviewCustomTokenSelectorComponent(
                     value = d.value.value.orEmpty(),
                     networkName = stringReference(d.name),
                     isSelected = d.value == params.selectedDerivationPath?.value,
-                    onSelectedStateChange = { params.onDerivationPathSelected(d) },
+                    onSelectedStateChange = { params.onDerivationPathSelected(d, null) },
                 )
             }
             is Params.NetworkSelector -> {
