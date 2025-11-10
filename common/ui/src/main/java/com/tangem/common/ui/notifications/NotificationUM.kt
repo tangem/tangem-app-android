@@ -275,14 +275,6 @@ sealed class NotificationUM(val config: NotificationConfig) {
             title = resourceReference(id = R.string.yield_module_balance_info_sheet_title, wrappedList(tokenName)),
             subtitle = resourceReference(id = R.string.yield_module_balance_info_sheet_subtitle),
         )
-
-        data class YieldSupplyNotAllAmountSupplied(val formattedAmount: String, val symbol: String) : Warning(
-            title = resourceReference(
-                id = R.string.yield_module_amount_not_transfered_to_aave_title,
-                formatArgs = wrappedList(formattedAmount, symbol),
-            ),
-            subtitle = TextReference.EMPTY,
-        )
     }
 
     open class Info(
@@ -301,7 +293,15 @@ sealed class NotificationUM(val config: NotificationConfig) {
             onCloseClick = onCloseClick,
             iconTint = iconTint,
         ),
-    )
+    ) {
+        data class YieldSupplyNotAllAmountSupplied(val formattedAmount: String, val symbol: String) : Info(
+            title = resourceReference(
+                id = R.string.yield_module_amount_not_transfered_to_aave_title,
+                formatArgs = wrappedList(formattedAmount, symbol),
+            ),
+            subtitle = TextReference.EMPTY,
+        )
+    }
 
     sealed interface Cardano {
 
