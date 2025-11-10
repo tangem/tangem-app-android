@@ -7,6 +7,7 @@ import com.tangem.domain.account.status.usecase.RecoverCryptoPortfolioUseCase
 import com.tangem.domain.account.status.utils.CryptoCurrencyBalanceFetcher
 import com.tangem.domain.account.tokens.MainAccountTokensMigration
 import com.tangem.domain.account.usecase.*
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -84,6 +85,18 @@ internal object AccountDomainModule {
         return IsAccountsModeEnabledUseCase(
             crudRepository = accountsCRUDRepository,
             accountsFeatureToggles = accountsFeatureToggles,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideApplyAccountListSortingUseCase(
+        accountsCRUDRepository: AccountsCRUDRepository,
+        dispatchers: CoroutineDispatcherProvider,
+    ): ApplyAccountListSortingUseCase {
+        return ApplyAccountListSortingUseCase(
+            accountsCRUDRepository = accountsCRUDRepository,
+            dispatchers = dispatchers,
         )
     }
 }
