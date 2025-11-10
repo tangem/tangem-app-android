@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SumSub Web SDK</title>
+    <script src="https://static.sumsub.com/idensic/static/sns-websdk-builder.js"></script>
+</head>
+<body>
+<div id="sumsub-websdk-container"></div>
+<script>
+    function initSumsub(accessToken) {
+      if (!accessToken) return;
+
+      const sdk = snsWebSdk
+        .init(accessToken, () => Promise.resolve(accessToken))
+        .build();
+
+      sdk.launch("#sumsub-websdk-container");
+    }
+</script>
+</body>
+</html>
