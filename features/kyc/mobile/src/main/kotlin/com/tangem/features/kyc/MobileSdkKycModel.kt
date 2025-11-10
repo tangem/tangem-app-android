@@ -13,7 +13,7 @@ import javax.inject.Inject
 
 @Stable
 @ModelScoped
-class DefaultKycModel @Inject constructor(
+class MobileSdkKycModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val kycRepository: KycRepository,
 ) : Model() {

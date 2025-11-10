@@ -30,6 +30,8 @@ internal fun BaseExtension.configureCompose(project: Project) {
             contains(Regex(pattern = ":features:markets:api\$")) || // provides Composable function
             contains(Regex(pattern = ":features:manage-tokens:api\$")) || // provides Composable function
             contains(Regex(pattern = ":features:txhistory:api\$")) || // provides Composable function
+            contains(Regex(pattern = ":features:kyc:mobile")) ||
+            contains(Regex(pattern = ":features:kyc:web")) ||
             contains(Regex(pattern = ":impl\$"))
     }
 
