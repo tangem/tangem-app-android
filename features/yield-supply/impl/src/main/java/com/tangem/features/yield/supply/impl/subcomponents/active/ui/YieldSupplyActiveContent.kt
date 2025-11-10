@@ -74,6 +74,11 @@ internal fun YieldSupplyActiveContent(
                     Notification(
                         config = notificationUM.config,
                         containerColor = TangemTheme.colors.background.action,
+                        iconTint = if (notificationUM is NotificationUM.Info) {
+                            TangemTheme.colors.icon.accent
+                        } else {
+                            null
+                        },
                     )
                 }
             }
