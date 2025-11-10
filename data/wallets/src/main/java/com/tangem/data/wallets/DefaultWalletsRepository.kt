@@ -254,8 +254,13 @@ internal class DefaultWalletsRepository(
 
     override suspend fun createWallet(userWalletId: UserWalletId) {
         withContext(dispatchers.io) {
+            val userWallet = userWalletsStore.getSyncStrict(key = userWalletId)
+
             tangemTechApi.createWallet(
-                body = OnlyWalletIdBody(userWalletId.stringValue),
+                body = WalletIdBody(
+                    walletId = userWalletId.stringValue,
+                    name = userWallet.name,
+                ),
             )
         }
     }
