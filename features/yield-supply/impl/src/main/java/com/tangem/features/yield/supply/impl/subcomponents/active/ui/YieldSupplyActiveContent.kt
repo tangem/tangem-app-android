@@ -26,7 +26,10 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.notifications.NotificationUM
-import com.tangem.core.ui.components.*
+import com.tangem.core.ui.components.SpacerH4
+import com.tangem.core.ui.components.SpacerH8
+import com.tangem.core.ui.components.SpacerWMax
+import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.decompose.ComposableContentComponent
@@ -61,7 +64,7 @@ internal fun YieldSupplyActiveContent(
                 .padding(12.dp),
         ) {
             CurrentApy(state.apy)
-            chartComponent.Content(Modifier.padding(bottom = 12.dp))
+            chartComponent.Content(Modifier)
         }
 
         AnimatedVisibility(state.notifications.isNotEmpty()) {
@@ -104,7 +107,7 @@ internal fun YieldSupplyActiveContent(
 
 @Composable
 private fun CurrentApy(apy: TextReference?, modifier: Modifier = Modifier) {
-    Column(modifier = modifier.padding(vertical = 12.dp)) {
+    Column(modifier = modifier) {
         Text(
             modifier = Modifier,
             text = stringResourceSafe(R.string.yield_module_earn_sheet_current_apy_title),
@@ -156,7 +159,11 @@ private fun YieldSupplyActiveMyFunds(
             .clip(RoundedCornerShape(16.dp))
             .background(TangemTheme.colors.background.action)
             .fillMaxWidth()
-            .padding(12.dp),
+            .padding(
+                top = 12.dp,
+                start = 12.dp,
+                end = 12.dp,
+            ),
     ) {
         Text(
             text = stringResourceSafe(R.string.yield_module_earn_sheet_my_funds_title),
