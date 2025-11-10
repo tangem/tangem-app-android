@@ -12,10 +12,16 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.account.AccountName
 import com.tangem.features.managetokens.component.AddCustomTokenComponent
 import com.tangem.features.managetokens.component.AddCustomTokenMode
 import com.tangem.features.managetokens.component.ManageTokensComponent
 import com.tangem.features.managetokens.entity.managetokens.ManageTokensBottomSheetConfig
+import com.tangem.features.managetokens.impl.R
 import com.tangem.features.managetokens.model.ManageTokensModel
 import com.tangem.features.managetokens.ui.ManageTokensScreen
 import dagger.assisted.Assisted
@@ -64,7 +70,20 @@ internal class DefaultManageTokensComponent @AssistedInject constructor(
                 mode = mode,
                 source = params.source,
                 onDismiss = model.bottomSheetNavigation::dismiss,
-                onCurrencyAdded = model::reloadList,
+                onCurrencyAdded = { account ->
+                    val accountName = account?.accountName as? AccountName.Custom
+                    if (accountName != null && (account as? Account.CryptoPortfolio)?.isMainAccount == false) {
+                        messageSender.send(
+                            SnackbarMessage(
+                                message = resourceReference(
+                                    R.string.custom_token_another_account_snackbar_text,
+                                    wrappedList(accountName.value),
+                                ),
+                            ),
+                        )
+                    }
+                    model.reloadList()
+                },
             ),
         )
     }

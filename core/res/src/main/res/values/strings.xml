@@ -378,6 +378,7 @@
   <string name="currency_subtitle_expanded">Available networks</string>
   <string name="custom_token_another_account_dialog_description">Derivation of your token matches the derivation of %1$s. Your token will be added to this account.</string>
   <string name="custom_token_another_account_dialog_title">Derivation belongs to another account.</string>
+  <string name="custom_token_another_account_snackbar_text">Token added to %1$s account</string>
   <string name="custom_token_contract_address_input_title">Contract address</string>
   <string name="custom_token_creation_error_invalid_contract_address">Contract address is invalid</string>
   <string name="custom_token_creation_error_network_not_selected">Please select the network</string>
