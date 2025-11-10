@@ -16,6 +16,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -68,9 +69,18 @@ fun Label(state: LabelUM, modifier: Modifier = Modifier) {
             horizontalArrangement = Arrangement.spacedBy(4.dp),
             modifier = modifier
                 .padding(horizontal = 4.dp)
-                .background(
-                    color = backgroundColor,
-                    shape = TangemTheme.shapes.roundedCorners8,
+                .clip(TangemTheme.shapes.roundedCorners8)
+                .background(color = backgroundColor)
+                .then(
+                    if (state.onClick != null) {
+                        Modifier.clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = ripple(),
+                            onClick = state.onClick,
+                        )
+                    } else {
+                        Modifier
+                    },
                 )
                 .padding(horizontal = 8.dp, vertical = 4.dp),
         ) {
@@ -86,11 +96,13 @@ fun Label(state: LabelUM, modifier: Modifier = Modifier) {
                     imageVector = ImageVector.vectorResource(wrappedIcon),
                     tint = iconColor,
                     contentDescription = null,
-                    modifier = Modifier.size(16.dp).clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = ripple(bounded = false),
-                        onClick = { state.onIconClick?.invoke() },
-                    ),
+                    modifier = Modifier
+                        .size(16.dp)
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = ripple(bounded = false),
+                            onClick = { state.onIconClick?.invoke() },
+                        ),
                 )
             }
         }
