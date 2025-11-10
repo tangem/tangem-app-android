@@ -10,12 +10,13 @@ import com.tangem.datasource.api.common.response.ApiResponseError.HttpException.
 import com.tangem.datasource.api.common.response.ETAG_HEADER
 import com.tangem.datasource.api.common.response.isNetworkError
 import com.tangem.datasource.api.tangemTech.TangemTechApi
-import com.tangem.datasource.api.tangemTech.models.OnlyWalletIdBody
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
+import com.tangem.datasource.api.tangemTech.models.WalletIdBody
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
 import com.tangem.datasource.api.tangemTech.models.account.toUserTokensResponse
 import com.tangem.datasource.local.token.UserTokensResponseStore
+import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
@@ -37,9 +38,11 @@ import javax.inject.Singleton
  *
 [REDACTED_AUTHOR]
  */
+@Suppress("LongParameterList")
 @Singleton
 internal class FetchWalletAccountsErrorHandler @Inject constructor(
     private val tangemTechApi: TangemTechApi,
+    private val userWalletsStore: UserWalletsStore,
     private val userTokensSaver: UserTokensSaver,
     private val userTokensResponseStore: UserTokensResponseStore,
     private val defaultWalletAccountsResponseFactory: DefaultWalletAccountsResponseFactory,
@@ -117,9 +120,14 @@ internal class FetchWalletAccountsErrorHandler @Inject constructor(
 
      */
     private suspend fun createWallet(userWalletId: UserWalletId): String? {
+        val userWallet = userWalletsStore.getSyncOrNull(key = userWalletId) ?: return null
+
         val creationResponse = withContext(dispatchers.io) {
             tangemTechApi.createWallet(
-                body = OnlyWalletIdBody(walletId = userWalletId.stringValue),
+                body = WalletIdBody(
+                    walletId = userWalletId.stringValue,
+                    name = userWallet.name,
+                ),
             )
         }
 
