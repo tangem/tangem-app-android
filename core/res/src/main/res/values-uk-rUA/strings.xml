@@ -160,6 +160,7 @@
   <string name="common_enable">Увімкнути</string>
   <string name="common_enabled">Увімкнено</string>
   <string name="common_error">Помилка</string>
+  <string name="common_estimated_fee">Комісія мережі за поповнення</string>
   <string name="common_exchange">Обміняти</string>
   <string name="common_explore">Оглядач</string>
   <string name="common_explore_transaction_history">Переглянути історію транзакцій</string>
@@ -1139,6 +1140,7 @@
   <string name="token_button_unavailability_reason_pending_transaction_send">Надсилання коштів стане доступним після завершення транзакції(-ій) в мережі %s</string>
   <string name="token_button_unavailability_reason_sell_unavailable">Наразі продаж %s недоступний. Слідкуйте за нашими оновленнями.</string>
   <string name="token_button_unavailability_reason_staking_unavailable">Стейкінг %s зараз недоступний. Будь ласка, слідкуйте за нашими оновленнями.</string>
+  <string name="token_button_unavailability_reason_yield_supply_approval">Дозвіл скасовано. Ваші кошти залишаються в режимі прибутковості. Щоб виконати дії, перейдіть у режим прибутковості та надайте дозвіл знову.</string>
   <string name="token_details_generate_xpub">Згенерувати XPUB</string>
   <string name="token_details_hide_alert_hide">Приховати</string>
   <string name="token_details_hide_alert_message">Ви збираєтеся приховати цей токен з головного екрану. Ви можете додати його назад будь-коли на сторінці керування токенами.</string>
