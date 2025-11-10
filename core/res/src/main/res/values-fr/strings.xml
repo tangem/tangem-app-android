@@ -160,6 +160,7 @@
   <string name="common_enable">Activer</string>
   <string name="common_enabled">Activé</string>
   <string name="common_error">Erreur</string>
+  <string name="common_estimated_fee">Frais estimés</string>
   <string name="common_exchange">Echanger</string>
   <string name="common_explore">Explorez</string>
   <string name="common_explore_transaction_history">Explorez l\'historique des transactions</string>
@@ -1134,6 +1135,7 @@
   <string name="token_button_unavailability_reason_pending_transaction_send">L\'envoi de fonds sera disponible une fois la ou les transactions en attente dans le réseau %s terminées.</string>
   <string name="token_button_unavailability_reason_sell_unavailable">L\'achat de %s n\'est pas pris en charge par les fournisseurs actuels mais nous travaillons à ajouter plus d\'options.</string>
   <string name="token_button_unavailability_reason_staking_unavailable">Le staking de %s n\'est pas pris en charge par les fournisseurs actuels, mais nous travaillons à ajouter plus d\'options.</string>
+  <string name="token_button_unavailability_reason_yield_supply_approval">L’autorisation a été révoquée. Vos fonds restent en mode rendement. Pour effectuer des actions, accédez au mode rendement et accordez à nouveau l’autorisation.</string>
   <string name="token_details_generate_xpub">Générer XPUB</string>
   <string name="token_details_hide_alert_hide">Masquer</string>
   <string name="token_details_hide_alert_message">Vous êtes sur le point de masquer ce jeton de l\'écran principal. Vous pouvez le rajouter à tout moment via la page de gestion des jetons.</string>
