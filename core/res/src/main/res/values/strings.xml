@@ -258,7 +258,7 @@
   <string name="common_enable">Enable</string>
   <string name="common_enabled">Enabled</string>
   <string name="common_error">Error</string>
-  <string name="common_estimated_fee">Network service fee</string>
+  <string name="common_estimated_fee">Top-up network fee</string>
   <string name="common_exchange">Swap</string>
   <string name="common_explore">Explore</string>
   <string name="common_explore_transaction_history">Explore transaction history</string>
@@ -274,7 +274,7 @@
   <string name="common_free">Free</string>
   <string name="common_from">From</string>
   <string name="common_generate_addresses">Synchronize addresses</string>
-  <string name="common_get_started">Get started</string>
+  <string name="common_get_started">Learn more</string>
   <string name="common_get_token">Get token</string>
   <string name="common_go_to_provider">Go to provider</string>
   <string name="common_go_to_token">Go to token</string>
@@ -573,8 +573,8 @@
   <string name="hw_backup_hardware_upgrade_title">Upgrade current wallet</string>
   <string name="hw_backup_need_action">Go to backup</string>
   <string name="hw_backup_need_description">Please back up your wallet before creating an access code.</string>
+  <string name="hw_backup_need_finish_first">Finish Backup First</string>
   <string name="hw_backup_need_title">Finalize backup first</string>
-  <string name="hw_backup_need_finish_first">Finish backup first</string>
   <string name="hw_backup_no_backup">Incomplete</string>
   <string name="hw_backup_section_other_title">Other methods</string>
   <string name="hw_backup_seed_description">Physical devices that securely store your private key offline.</string>
@@ -1374,6 +1374,7 @@
   <string name="tangem_pay_status_completed">Completed</string>
   <string name="tangem_pay_status_declined">Declined</string>
   <string name="tangem_pay_status_pending">Pending</string>
+  <string name="tangem_pay_terms_fees_limits">Terms, Fees &amp; Limits</string>
   <string name="tangem_pay_transaction_declined_notification_text">The bank rejected this transaction request.</string>
   <string name="tangem_pay_transaction_fee_notification_text">This fee goes to cover the cost of handling your transfer.</string>
   <string name="tangem_pay_unfreeze_card_alert_body">Keep using your money. You can freeze anytime.</string>
@@ -1410,12 +1411,12 @@
   <string name="tangempay_kyc_in_progress_notification_button">View Status</string>
   <string name="tangempay_kyc_in_progress_notification_title">KYC in progress for Tangem Pay</string>
   <string name="tangempay_onboarding_get_card_button_text">Get card</string>
-  <string name="tangempay_onboarding_pay_description">Add to your wallet and pay with your phone anywhere.</string>
-  <string name="tangempay_onboarding_pay_title">Apple Pay &amp; Google Pay</string>
-  <string name="tangempay_onboarding_purchases_description">Use your USDC balance to pay for everyday purchases seamlessly.</string>
-  <string name="tangempay_onboarding_purchases_title">Everyday purchases</string>
-  <string name="tangempay_onboarding_security_description">Your card details are protected — full control in the app.</string>
-  <string name="tangempay_onboarding_security_title">Built-in security</string>
+  <string name="tangempay_onboarding_pay_description">Spend your crypto anywhere</string>
+  <string name="tangempay_onboarding_pay_title">With digital card that works with Apple Pay and Google Pay</string>
+  <string name="tangempay_onboarding_purchases_description">There are no additional fees for purchases</string>
+  <string name="tangempay_onboarding_purchases_title">Pay exactly what you see</string>
+  <string name="tangempay_onboarding_security_description">A separate payment account will be created without disclosing your addresses and assets</string>
+  <string name="tangempay_onboarding_security_title">Unrivaled privacy</string>
   <string name="tangempay_onboarding_title">Get your free Crypto Card\nin minutes</string>
   <string name="tangempay_title">Tangem Pay</string>
   <string name="this_is_my_wallet_title">This is my wallet</string>
@@ -1880,7 +1881,7 @@
   <string name="yield_module_alert_description">With Yield mode active, all future deposits to this address will go to Aave. You can still manage your funds freely.</string>
   <string name="yield_module_alert_title">Your %s is supplied to Aave</string>
   <string name="yield_module_amount_not_transfered_to_aave_title">Supplying %1$s %2$s to Aave is pending</string>
-  <string name="yield_module_approve_needed_notification_cta">Give Approve</string>
+  <string name="yield_module_approve_needed_notification_cta">Approve</string>
   <string name="yield_module_approve_needed_notification_description">Your token’s approval has been revoked. Grant it again to resume service functionality.</string>
   <string name="yield_module_approve_needed_notification_title">Approve needed</string>
   <string name="yield_module_approve_sheet_fee_note">The fee will be taken out, and your assets will be lent again.</string>
@@ -1909,7 +1910,7 @@
   <string name="yield_module_fee_policy_sheet_max_fee_title">Maximum fee</string>
   <string name="yield_module_fee_policy_sheet_min_amount_note">The minimum amount is calculated based on the current network fee so that it does not exceed 4%% of the top-up amount, which makes the minimum %1$s (%2$s).</string>
   <string name="yield_module_fee_policy_sheet_min_amount_title">Minimum top-up</string>
-  <string name="yield_module_fee_policy_sheet_title">Fee policy</string>
+  <string name="yield_module_fee_policy_sheet_title">Top-up fee policy</string>
   <string name="yield_module_fee_policy_tangem_service_fee_title">Tangem also takes a 15% service fee on yield earned.</string>
   <string name="yield_module_high_fee_error">Your funds will be automatically supplied to Aave once network fees are lower or your balance meets the minimum required amount.</string>
   <string name="yield_module_historical_returns">Historical returns</string>
@@ -1936,7 +1937,7 @@
   <string name="yield_module_receive_sheet_description">When you top up, your funds will be automatically sent to Aave to start earning interest. %s will be deducted to cover the transaction fee.</string>
   <string name="yield_module_start_earning">Supply assets</string>
   <string name="yield_module_start_earning_sheet_description">Your %s will be supplied to Aave, but will remain manageable.</string>
-  <string name="yield_module_start_earning_sheet_fee_policy">See fee policy</string>
+  <string name="yield_module_start_earning_sheet_fee_policy">See top-up fee policy</string>
   <string name="yield_module_start_earning_sheet_next_deposits">Your next top-ups will be automatically supplied to Aave.</string>
   <string name="yield_module_status_active">Active</string>
   <string name="yield_module_status_paused">Paused</string>
@@ -1950,7 +1951,7 @@
   <string name="yield_module_token_details_earn_notification_description">Interest accrues automatically.</string>
   <string name="yield_module_token_details_earn_notification_earning_on_your_balance_subtitle">Interest accrues automatically</string>
   <string name="yield_module_token_details_earn_notification_earning_on_your_balance_title">Yield mode</string>
-  <string name="yield_module_token_details_earn_notification_processing">Processing your deposit</string>
+  <string name="yield_module_token_details_earn_notification_processing">Processing your top-up</string>
   <string name="yield_module_token_details_earn_notification_title">Yield Mode</string>
   <string name="yield_module_transfer_mode_automatic">Automatic</string>
   <string name="yield_module_unable_to_cover_fee_description">Deposit some %1$s %2$s to cover the network fee for transactions</string>
