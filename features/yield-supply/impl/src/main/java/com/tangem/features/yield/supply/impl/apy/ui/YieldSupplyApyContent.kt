@@ -12,10 +12,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.Placeholder
 import androidx.compose.ui.text.PlaceholderVerticalAlign
@@ -114,7 +116,10 @@ internal fun YieldSupplyApyContent(
                 ApyChart(
                     isChartLoading = isLoading,
                     chartComponent = chartComponent,
-                    modifier = Modifier.padding(horizontal = 12.dp),
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(TangemTheme.colors.background.action)
+                        .padding(12.dp),
                 )
 
                 SpacerH16()
