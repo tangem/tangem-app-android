@@ -253,8 +253,8 @@ internal class YieldSupplyModel @Inject constructor(
 
     private fun loadActiveState(cryptoCurrencyStatus: CryptoCurrencyStatus, yieldSupplyStatus: YieldSupplyStatus) {
         val cryptoCurrencyToken = cryptoCurrency as? CryptoCurrency.Token ?: return
-        val showWarningIcon = !yieldSupplyStatus.isAllowedToSpend ||
-            cryptoCurrencyStatus.yieldSupplyNotAllAmountSupplied()
+        val showWarningIcon = !yieldSupplyStatus.isAllowedToSpend
+        val showInfoIcon = cryptoCurrencyStatus.yieldSupplyNotAllAmountSupplied()
         if (!yieldSupplyStatus.isAllowedToSpend) {
             analyticsEventsHandler.send(
                 YieldSupplyAnalytics.NoticeApproveNeeded(
@@ -282,6 +282,7 @@ internal class YieldSupplyModel @Inject constructor(
                             ),
                             onClick = ::onActiveClick,
                             showWarningIcon = showWarningIcon,
+                            showInfoIcon = showInfoIcon,
                             apy = tokenStatus.apy.toString(),
                         )
                     }
@@ -298,6 +299,7 @@ internal class YieldSupplyModel @Inject constructor(
                             rewardsApy = TextReference.EMPTY,
                             onClick = ::onActiveClick,
                             showWarningIcon = showWarningIcon,
+                            showInfoIcon = showInfoIcon,
                             apy = "",
                         )
                     }
