@@ -304,11 +304,19 @@ internal class MultiWalletFinalizeModel @Inject constructor(
             }
 
             if (userWallet.scanResponse.cardTypesResolver.isWallet2() && userWallet.isImported) {
-                launch(NonCancellable) { walletsRepository.markWallet2WasCreated(userWallet.walletId) }
+                launch(NonCancellable) {
+                    runCatching {
+                        walletsRepository.markWallet2WasCreated(userWallet.walletId)
+                    }
+                }
             }
 
             if (userWallet.isMultiCurrency) {
-                launch(NonCancellable) { walletsRepository.createWallet(userWallet.walletId) }
+                launch(NonCancellable) {
+                    runCatching {
+                        walletsRepository.createWallet(userWallet.walletId)
+                    }
+                }
             }
 
             // user wallet is fully created and saved, remove scan response from preferences
