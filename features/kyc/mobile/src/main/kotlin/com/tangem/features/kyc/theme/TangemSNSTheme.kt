@@ -6,7 +6,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.core.content.res.ResourcesCompat
 import com.sumsub.sns.core.theme.*
 import com.tangem.core.ui.res.TangemColorPalette
-import com.tangem.features.kyc.impl.R
+import com.tangem.features.kyc.mobile.R
 
 /**
  * Custom theme settings for SumSub SDK
