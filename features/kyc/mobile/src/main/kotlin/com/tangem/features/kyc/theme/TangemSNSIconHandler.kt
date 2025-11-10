@@ -5,7 +5,7 @@ import android.graphics.drawable.Drawable
 import androidx.core.content.res.ResourcesCompat
 import com.sumsub.sns.core.data.listener.SNSDefaultIconHandler
 import com.sumsub.sns.core.data.listener.SNSIconHandler
-import com.tangem.features.kyc.impl.R
+import com.tangem.features.kyc.mobile.R
 
 /**
  * Custom icons' settings for SumSub SDK

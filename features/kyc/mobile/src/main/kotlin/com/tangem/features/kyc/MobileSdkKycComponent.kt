@@ -17,12 +17,12 @@ import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 import java.util.Locale
 
-class DefaultKycComponent @AssistedInject constructor(
+class MobileSdkKycComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
     @Assisted params: KycComponent.Params,
 ) : KycComponent, AppComponentContext by appComponentContext {
 
-    private val model: DefaultKycModel = getOrCreateModel(params)
+    private val model: MobileSdkKycModel = getOrCreateModel(params)
 
     init {
         componentScope.launch {
@@ -57,6 +57,6 @@ class DefaultKycComponent @AssistedInject constructor(
 
     @AssistedFactory
     interface Factory : KycComponent.Factory {
-        override fun create(context: AppComponentContext, params: KycComponent.Params): DefaultKycComponent
+        override fun create(context: AppComponentContext, params: KycComponent.Params): MobileSdkKycComponent
     }
 }

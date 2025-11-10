@@ -2,9 +2,9 @@ package com.tangem.features.kyc.di
 
 import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.model.Model
-import com.tangem.features.kyc.DefaultKycComponent
-import com.tangem.features.kyc.DefaultKycModel
 import com.tangem.features.kyc.KycComponent
+import com.tangem.features.kyc.WebSdkKycComponent
+import com.tangem.features.kyc.WebSdkKycModel
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -17,7 +17,7 @@ import dagger.multibindings.IntoMap
 internal interface FeatureModule {
 
     @Binds
-    fun bindComponentFactory(impl: DefaultKycComponent.Factory): KycComponent.Factory
+    fun bindComponentFactory(impl: WebSdkKycComponent.Factory): KycComponent.Factory
 }
 
 @Module
@@ -25,6 +25,6 @@ internal interface FeatureModule {
 internal interface ModelModule {
     @Binds
     @IntoMap
-    @ClassKey(DefaultKycModel::class)
-    fun provideModel(model: DefaultKycModel): Model
+    @ClassKey(WebSdkKycModel::class)
+    fun provideWebSdkKycModel(model: WebSdkKycModel): Model
 }
