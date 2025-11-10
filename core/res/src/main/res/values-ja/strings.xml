@@ -253,7 +253,7 @@
   <string name="common_enable">有効にする</string>
   <string name="common_enabled">有効</string>
   <string name="common_error">エラー</string>
-  <string name="common_estimated_fee">ネットワークサービス手数料</string>
+  <string name="common_estimated_fee">ネットワーク手数料</string>
   <string name="common_exchange">スワップ</string>
   <string name="common_explore">移動する</string>
   <string name="common_explore_transaction_history">取引履歴を調べる</string>
@@ -269,7 +269,7 @@
   <string name="common_free">無料</string>
   <string name="common_from">送信元</string>
   <string name="common_generate_addresses">アドレスを同期する</string>
-  <string name="common_get_started">はじめる</string>
+  <string name="common_get_started">もっと詳しく</string>
   <string name="common_get_token">トークンを取得</string>
   <string name="common_go_to_provider">プロバイダーへ移動</string>
   <string name="common_go_to_token">トークンへ移動</string>
@@ -565,10 +565,12 @@
   <string name="hw_backup_hardware_upgrade_title">現在のウォレットをアップグレードする</string>
   <string name="hw_backup_need_action">バックアップへ移動</string>
   <string name="hw_backup_need_description">アクセスコードを作成する前にウォレットをバックアップしてください。</string>
+  <string name="hw_backup_need_finish_first">まずバックアップを完了する</string>
   <string name="hw_backup_need_title">まずバックアップを完了する</string>
   <string name="hw_backup_section_other_title">その他の方法</string>
   <string name="hw_backup_seed_description">秘密鍵をオフラインで安全に保存する物理デバイス。</string>
   <string name="hw_backup_seed_title">リカバリーフレーズ</string>
+  <string name="hw_backup_to_secure_description">アクセスコードを使用してウォレットを保護するには、まずバックアップを完了してください。</string>
   <string name="hw_backup_to_upgrade_description">ウォレットをハードウェアにアップグレードするには、まずバックアップしてください。</string>
   <string name="hw_create_keys_title">鍵はアプリに保存されます</string>
   <string name="hw_create_seed_title">シードフレーズのバックアップ</string>
@@ -949,6 +951,7 @@
   </plurals>
   <string name="onramp_timing_minutes">%s分</string>
   <string name="onramp_title_available_from">利用可能：</string>
+  <string name="onramp_title_available_up_to">利用可能金額</string>
   <string name="onramp_title_you_get">以下が手に入ります。</string>
   <string name="onramp_tos_external_providers">サービスは外部プロバイダーによって提供されます。 \nTangemは責任を負いません。</string>
   <string name="onramp_transaction_status_footer_text">この画面を閉じて、トークンの詳細画面で取引状況を確認できます。</string>
@@ -1158,11 +1161,12 @@
   <string name="settings_wallet_name_title">名前</string>
   <string name="stake_token_description">トークンを活用しよう</string>
   <string name="staking_account_initialization_footer">ネットワーク手数料とは、ブロックチェーン上で取引を処理し、承認するために支払う少額の料金です。</string>
-  <string name="staking_account_initialization_message">ステーキングを始めるには、1 TONの自己取引によってTONアカウントを有効化する必要があります。資金はウォレット内にそのまま残ります。これは、ステーキング有効化のためのステップにすぎません。</string>
+  <string name="staking_account_initialization_message">ステーキングを始めるには、1 TONを取引してTONアカウントを有効化する必要があります。資金はウォレット内にそのまま残ります。これは、ステーキング有効化のためのステップにすぎません。</string>
   <string name="staking_account_initialization_title">アカウントの有効化</string>
   <string name="staking_amount_requirement_error">ステーキング金額は %s 以上である必要があります</string>
   <string name="staking_amount_tron_integer_error">ネットワークルールにより、ステーキング金額は%1$s TRX に切り上げられます。</string>
   <string name="staking_amount_tron_integer_error_unstaking">ネットワークルールにより、ステーキング解除の量は%1$s TRX に切り上げられます。</string>
+  <string name="staking_apr_earn_badge">APR %1$s%</string>
   <string name="staking_claim_unstaked">ステーキング解除分を請求する</string>
   <string name="staking_details_account_fee">ステーキングアカウント手数料</string>
   <string name="staking_details_account_fee_info">ステーキングアカウントとは、ステーキングされたSOLが保管される特別なアカウントです。トークンをバリデーターに委任し、取引の検証に参加して報酬を受け取る際に作成されます。ステーキングアカウントの作成には少額の手数料がかかりますが、ステーキング完了後に返金されます。</string>
@@ -1332,6 +1336,7 @@
   <string name="swapping_to_title">受け取る</string>
   <string name="swapping_token_list_title">トークンを選択</string>
   <string name="swapping_token_not_available">利用不可</string>
+  <string name="tangem_pay_card_frozen">カードが凍結されています</string>
   <string name="tangem_pay_deposit">入金</string>
   <string name="tangem_pay_dispute">異議申し立て</string>
   <string name="tangem_pay_explore_transaction">取引を表示</string>
@@ -1339,13 +1344,19 @@
   <string name="tangem_pay_fee_title">手数料</string>
   <string name="tangem_pay_freeze_card_alert_body">カードを紛失したり盗まれたりしても、資金を安全に保てます。一時停止はいつでも解除できます。</string>
   <string name="tangem_pay_freeze_card_alert_title">カードを一時停止しますか？</string>
+  <string name="tangem_pay_freeze_card_failed">カードを凍結できませんでした。しばらくしてからもう一度お試しください。</string>
   <string name="tangem_pay_freeze_card_freeze">一時停止</string>
+  <string name="tangem_pay_freeze_card_success">カードが凍結されています</string>
   <string name="tangem_pay_get_help">サポートを受ける</string>
   <string name="tangem_pay_status_completed">完了</string>
   <string name="tangem_pay_status_declined">拒否</string>
   <string name="tangem_pay_status_pending">保留中</string>
   <string name="tangem_pay_transaction_declined_notification_text">銀行がこの取引リクエストを拒否しました。</string>
   <string name="tangem_pay_transaction_fee_notification_text">この手数料は、送金処理にかかるコストをカバーするためのものです。</string>
+  <string name="tangem_pay_unfreeze_card_alert_body">資金は引き続き使用できます。いつでも一時停止できます。</string>
+  <string name="tangem_pay_unfreeze_card_alert_title">カードの一時停止を解除しますか?</string>
+  <string name="tangem_pay_unfreeze_card_failed">カードの凍結解除に失敗しました。しばらくしてからもう一度お試しください。</string>
+  <string name="tangem_pay_unfreeze_card_success">カードの凍結が解除されました</string>
   <string name="tangem_pay_withdrawal">出金</string>
   <string name="tangempay_card_details_add_funds">資金を追加</string>
   <string name="tangempay_card_details_add_funds_subtitle">入金オプション</string>
@@ -1370,6 +1381,7 @@
   <string name="tangempay_card_details_reveal_text">表示</string>
   <string name="tangempay_card_details_swap_description">ポートフォリオ内のあらゆる資産をカードと交換</string>
   <string name="tangempay_card_details_title">カードの詳細</string>
+  <string name="tangempay_card_details_unfreeze_card">カードの一時停止を解除</string>
   <string name="tangempay_issue_card_notification_title">アカウントを作成してカードを発行</string>
   <string name="tangempay_kyc_card_ready_notification_title">Tangem Pay</string>
   <string name="tangempay_kyc_in_progress_notification_button">ステータスを表示</string>
@@ -1825,7 +1837,7 @@
   <string name="yield_module_fee_policy_sheet_max_fee_title">最大手数料</string>
   <string name="yield_module_fee_policy_sheet_min_amount_note">最小金額は、ネットワーク手数料がチャージ額の4％を超えないように現在の手数料に基づいて計算されます。その結果、最小金額は%1$s（%2$s）となります。</string>
   <string name="yield_module_fee_policy_sheet_min_amount_title">最低入金額</string>
-  <string name="yield_module_fee_policy_sheet_title">手数料ポリシー</string>
+  <string name="yield_module_fee_policy_sheet_title">入金手数料ポリシー</string>
   <string name="yield_module_fee_policy_tangem_service_fee_title">Tangemはまた、得られた利回りに対して15%のサービス手数料を差し引きます。</string>
   <string name="yield_module_high_fee_error">ネットワーク手数料が下がるか、残高が最低必要額に達すると、資金は自動的にAaveに供給されます。</string>
   <string name="yield_module_historical_returns">過去のリターン</string>
@@ -1852,11 +1864,11 @@
   <string name="yield_module_receive_sheet_description">入金すると、資金は自動的にAaveに送金され、利息が付き始めます。%sが取引手数料として差し引かれます。</string>
   <string name="yield_module_start_earning">資産を供給する</string>
   <string name="yield_module_start_earning_sheet_description">%sはAaveに供給されますが、管理可能な状態のままになります。</string>
-  <string name="yield_module_start_earning_sheet_fee_policy">手数料ポリシーを見る</string>
+  <string name="yield_module_start_earning_sheet_fee_policy">入金手数料ポリシーを見る</string>
   <string name="yield_module_start_earning_sheet_next_deposits">次回の入金は自動的にAaveに供給されます。</string>
   <string name="yield_module_status_active">アクティブ</string>
   <string name="yield_module_status_paused">停止中</string>
-  <string name="yield_module_stop_earning">利回りモードを無効にする</string>
+  <string name="yield_module_stop_earning">利回りモードを解除中</string>
   <string name="yield_module_stop_earning_sheet_description">これをオフにすると、Aaveから資産が引き出され、ウォレット内の%sに変換され、利回りの発生が停止します。</string>
   <string name="yield_module_stop_earning_sheet_fee_note">出金金額からネットワーク手数料が差し引かれます。</string>
   <string name="yield_module_stop_earning_sheet_title">利回りモードを無効にする</string>
