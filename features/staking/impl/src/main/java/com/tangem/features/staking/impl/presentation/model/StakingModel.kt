@@ -943,6 +943,11 @@ internal class StakingModel @Inject constructor(
     }
 
     override fun onActivateTonAccountNotificationClick() {
+        analyticsEventHandler.send(
+            StakingAnalyticsEvent.UninitializedAddressScreen(
+                token = cryptoCurrencyStatus.currency.symbol,
+            ),
+        )
         modelScope.launch {
             stateController.update(
                 ShowTonInitializeBottomSheetTransformer(
@@ -996,7 +1001,20 @@ internal class StakingModel @Inject constructor(
         }
     }
 
+    override fun onActivateTonAccountNotificationShow() {
+        analyticsEventHandler.send(
+            StakingAnalyticsEvent.UninitializedAddress(
+                token = cryptoCurrencyStatus.currency.symbol,
+            ),
+        )
+    }
+
     override fun onActivateTonAccountClick() {
+        analyticsEventHandler.send(
+            StakingAnalyticsEvent.ButtonActivate(
+                token = cryptoCurrencyStatus.currency.symbol,
+            ),
+        )
         modelScope.launch {
             tonAccountInitializeTransaction?.let { transaction ->
                 sendTransactionUseCase.invoke(
