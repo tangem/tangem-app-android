@@ -602,7 +602,6 @@ internal class DefaultCurrenciesRepository(
         return demoConfig.isDemoCardId(userWallet.cardId) && response == null
     }
 
-    // TODO [REDACTED_JIRA]
     private suspend fun fetchExpressAssetsByNetworkIds(userWallet: UserWallet, userTokens: UserTokensResponse) {
         val tokens = userTokens.tokens.mapTo(hashSetOf()) { token ->
             ExpressAsset.ID(
