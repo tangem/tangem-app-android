@@ -23,6 +23,6 @@ sealed interface PortfolioSelectorItemUM {
         val item: UserWalletItemUM,
         val isSelected: Boolean,
     ) : PortfolioSelectorItemUM {
-        override val id: String = item.id.stringValue
+        override val id: String = item.id
     }
 }
