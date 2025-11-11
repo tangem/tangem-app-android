@@ -10,12 +10,11 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.account.Account
-import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.converter.Converter
 
 class AccountPortfolioItemUMConverter(
-    private val onClick: (AccountId) -> Unit,
+    private val onClick: () -> Unit,
     private val appCurrency: AppCurrency? = null,
     private val accountBalance: TotalFiatBalance? = null,
     private val isBalanceHidden: Boolean = false,
@@ -26,14 +25,14 @@ class AccountPortfolioItemUMConverter(
     override fun convert(value: Account): UserWalletItemUM {
         return with(value) {
             UserWalletItemUM(
-                id = UserWalletId(value.accountId.value),
-                name = value.accountName.toUM().value,
-                information = getInfo(value),
+                id = UserWalletId(accountId.value),
+                name = accountName.toUM().value,
+                information = getInfo(account = this),
                 balance = getBalanceInfo(),
                 isEnabled = isEnabled,
                 endIcon = endIcon,
-                onClick = { onClick(value.accountId) },
-                imageState = getImageState(value),
+                onClick = onClick,
+                imageState = getImageState(account = this),
             )
         }
     }
