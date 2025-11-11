@@ -32,7 +32,6 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.account.impl.R
 import com.tangem.features.account.selector.entity.PortfolioSelectorItemUM
 import com.tangem.features.account.selector.entity.PortfolioSelectorUM
@@ -132,7 +131,7 @@ internal object PortfolioSelectorPreviewData {
 
     private val accountItem: UserWalletItemUM
         get() = UserWalletItemUM(
-            id = UserWalletId(UUID.randomUUID().toString().encodeToByteArray()),
+            id = UUID.randomUUID().toString(),
             name = accountName,
             information = UserWalletItemUM.Information.Loaded(stringReference("12 tokens")),
             balance = UserWalletItemUM.Balance.Loaded("$726.04", false),
@@ -149,7 +148,7 @@ internal object PortfolioSelectorPreviewData {
 
     private val walletItem: UserWalletItemUM
         get() = UserWalletItemUM(
-            id = UserWalletId(UUID.randomUUID().toString().encodeToByteArray()),
+            id = UUID.randomUUID().toString(),
             name = walletName,
             information = UserWalletItemUM.Information.Loaded(stringReference("12 tokens")),
             balance = UserWalletItemUM.Balance.Loaded("$726.04", false),
