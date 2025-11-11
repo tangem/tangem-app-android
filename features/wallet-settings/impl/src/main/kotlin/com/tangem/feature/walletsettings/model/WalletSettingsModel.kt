@@ -448,7 +448,7 @@ internal class WalletSettingsModel @Inject constructor(
             val id = (it as? WalletSettingsAccountsUM.Account)?.state?.id
                 ?: return@mapNotNull null
 
-            AccountId.forCryptoPortfolio(userWalletId = params.userWalletId, value = id.stringValue).getOrNull()
+            AccountId.forCryptoPortfolio(userWalletId = params.userWalletId, value = id).getOrNull()
         }
 
         accountListSortingSaver.save(accountIds = accountIds)
