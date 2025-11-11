@@ -27,11 +27,14 @@ internal class AccountListSortingSaver @Inject constructor(
     dispatchers: CoroutineDispatcherProvider,
 ) {
 
+    /** Flow to hold the account IDs for sorting, with an initial null value. */
+    val accountsOrderFlow: StateFlow<List<AccountId>?>
+        private field = MutableStateFlow<List<AccountId>?>(value = null)
+
     private val coroutineScope = CoroutineScope(SupervisorJob() + dispatchers.io)
-    private val applySortingFlow = MutableStateFlow<List<AccountId>?>(value = null)
 
     init {
-        applySortingFlow
+        accountsOrderFlow
             .filterNotNull()
             .debounce { 3.seconds }
             .onEach { accountIds ->
@@ -48,6 +51,6 @@ internal class AccountListSortingSaver @Inject constructor(
      * @param accountIds List of AccountId representing the desired order.
      */
     fun save(accountIds: List<AccountId>) {
-        applySortingFlow.value = accountIds
+        accountsOrderFlow.value = accountIds
     }
 }
