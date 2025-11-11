@@ -114,6 +114,7 @@ private fun Content(state: WalletSettingsUM, modifier: Modifier = Modifier) {
         items(
             items = state.items,
             key = WalletSettingsItemUM::id,
+            contentType = { it::class.java },
         ) { item ->
             val offsetModifier = when (item) {
                 is WalletSettingsAccountsUM.Account,
@@ -335,6 +336,7 @@ private fun LazyItemScope.AccountItem(
     ReorderableItem(
         state = reorderableListState,
         key = model.id,
+        modifier = modifier,
     ) { isDragging ->
         val elevation by animateDpAsState(if (isDragging) 9.dp else 0.dp)
         val scale by animateFloatAsState(if (isDragging) 1.04f else 1f)
@@ -343,7 +345,7 @@ private fun LazyItemScope.AccountItem(
         Surface(
             shape = RoundedCornerShape(shapeRadius),
             shadowElevation = elevation,
-            modifier = modifier.scale(scale),
+            modifier = Modifier.scale(scale),
         ) {
             UserWalletItem(
                 state = model.state,
