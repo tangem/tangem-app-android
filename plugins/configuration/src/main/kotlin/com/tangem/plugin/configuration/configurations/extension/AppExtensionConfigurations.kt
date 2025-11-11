@@ -4,6 +4,7 @@ import com.android.build.gradle.AppExtension
 import com.tangem.plugin.configuration.model.AppConfig
 import com.tangem.plugin.configuration.model.BuildType
 import com.tangem.plugin.configuration.utils.BuildConfigFieldFactory
+import com.tangem.plugin.configuration.utils.VersionNameProvider
 import org.gradle.api.Project
 import com.android.build.gradle.internal.dsl.BuildType as AndroidBuildType
 
@@ -29,11 +30,11 @@ private fun AppExtension.configureDefaultConfig(project: Project) {
             AppConfig.versionCode
         }
 
-        versionName = if (project.hasProperty("versionName")) {
-            project.property("versionName") as String
-        } else {
-            AppConfig.versionName
-        }
+        // Get version name from property, git branch, or default config
+        val versionNameProvider = VersionNameProvider(project)
+        versionName = versionNameProvider.getVersionName()
+
+        project.logger.lifecycle("Resolved versionName: $versionName")
 
         buildFeatures.buildConfig = true
 
