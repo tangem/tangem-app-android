@@ -29,7 +29,7 @@ internal class PreviewWalletSettingsComponent : WalletSettingsComponent {
 
     private val accountItem: UserWalletItemUM
         get() = UserWalletItemUM(
-            id = UserWalletId(UUID.randomUUID().toString().encodeToByteArray()),
+            id = UUID.randomUUID().toString(),
             name = accountName,
             information = UserWalletItemUM.Information.Loaded(stringReference("12 tokens")),
             balance = UserWalletItemUM.Balance.Loaded("$726.04", false),
