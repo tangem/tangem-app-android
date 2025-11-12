@@ -150,12 +150,42 @@ class GetOnrampAllOffersUseCase(
     }
 
     private fun sortOffers(methodOffers: List<OnrampOffer>): List<OnrampOffer> {
-        return methodOffers.sortedByDescending { offer ->
+        val (availableOffers, unavailableOffers) = methodOffers.partition { it.quote is OnrampQuote.Data }
+
+        val sortedAvailableOffers = sortAvailableOffers(availableOffers)
+        val sortedUnavailableOffers = sortUnavailableOffers(unavailableOffers)
+
+        return sortedAvailableOffers + sortedUnavailableOffers
+    }
+
+    private fun sortAvailableOffers(availableOffers: List<OnrampOffer>): List<OnrampOffer> {
+        return availableOffers.sortedByDescending { offer ->
             when (val quote = offer.quote) {
                 is OnrampQuote.Data -> quote.toAmount.value
                 else -> BigDecimal.ZERO
             }
         }
+    }
+
+    private fun sortUnavailableOffers(unavailableOffers: List<OnrampOffer>): List<OnrampOffer> {
+        if (unavailableOffers.isEmpty()) return emptyList()
+
+        val (amountErrorOffers, otherOffers) = unavailableOffers.partition { it.quote is OnrampQuote.AmountError }
+        if (amountErrorOffers.isEmpty()) return otherOffers
+
+        val (tooSmallOffers, tooBigOffers) = amountErrorOffers.partition { offer ->
+            val error = (offer.quote as OnrampQuote.AmountError).error
+            error is OnrampError.AmountError.TooSmallError
+        }
+
+        val sortedTooSmallOffers = tooSmallOffers.sortedBy { offer ->
+            (offer.quote as OnrampQuote.AmountError).error.requiredAmount
+        }
+        val sortedTooBigOffers = tooBigOffers.sortedByDescending { offer ->
+            (offer.quote as OnrampQuote.AmountError).error.requiredAmount
+        }
+
+        return sortedTooSmallOffers + sortedTooBigOffers + otherOffers
     }
 
     private fun countUniqueProviders(methodOffers: List<OnrampOffer>): Int {
