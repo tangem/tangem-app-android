@@ -173,7 +173,7 @@ class GetOnrampOffersUseCase(
                                 rateDif = if (bestRateOffer != null) recentOffer.rateDif else null,
                             ),
                         ),
-                        hasMoreOffers = false,
+                        hasMoreOffers = hasMoreOffers,
                     ),
                 )
             }
