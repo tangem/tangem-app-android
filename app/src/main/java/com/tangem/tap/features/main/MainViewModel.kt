@@ -4,9 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tangem.blockchainsdk.BlockchainSDKFactory
 import com.tangem.common.keyboard.KeyboardValidator
-import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.event.TechAnalyticsEvent
+import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.core.decompose.di.GlobalUiMessageSender
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.R
@@ -38,7 +38,6 @@ import com.tangem.domain.wallets.usecase.GetSavedWalletsCountUseCase
 import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
 import com.tangem.domain.wallets.usecase.UpdateRemoteWalletsInfoUseCase
 import com.tangem.feature.swap.analytics.StoriesEvents
-import com.tangem.tap.common.extensions.setContext
 import com.tangem.tap.network.exchangeServices.SellService
 import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.tap.routing.configurator.AppRouterConfig
@@ -82,6 +81,7 @@ internal class MainViewModel @Inject constructor(
     private val getSelectedWalletUseCase: GetSelectedWalletUseCase,
     private val appRouterConfig: AppRouterConfig,
     private val sellService: SellService,
+    private val trackingContextProxy: TrackingContextProxy,
     getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
 ) : ViewModel() {
 
@@ -177,7 +177,7 @@ internal class MainViewModel @Inject constructor(
             .mapLeft { emptyFlow<UserWallet>() }
             .onRight { wallet ->
                 wallet.distinctUntilChanged()
-                    .onEach { Analytics.setContext(it) }
+                    .onEach { trackingContextProxy.setContext(it) }
                     .flowOn(dispatchers.io)
                     .launchIn(viewModelScope)
             }
