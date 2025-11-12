@@ -6,5 +6,5 @@ internal class DefaultHotWalletFeatureToggles(
     private val featureTogglesManager: FeatureTogglesManager,
 ) : HotWalletFeatureToggles {
     override val isHotWalletEnabled: Boolean
-        get() = featureTogglesManager.isFeatureEnabled(name = "HOT_WALLET_ENABLED")
+        get() = featureTogglesManager.isFeatureEnabled(name = "HOT_WALLET_ENABLED").let { true }
 }
