@@ -32,6 +32,7 @@ import com.tangem.features.tangempay.model.transformers.*
 import com.tangem.features.tangempay.navigation.TangemPayDetailsInnerRoute
 import com.tangem.features.tangempay.utils.TangemPayMessagesFactory
 import com.tangem.features.tangempay.utils.TangemPayTxHistoryUiActions
+import com.tangem.features.tangempay.utils.TangemPayTxHistoryUpdateListener
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
@@ -52,6 +53,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     private val cardDetailsRepository: TangemPayCardDetailsRepository,
     private val uiMessageSender: UiMessageSender,
     private val cardDetailsEventListener: CardDetailsEventListener,
+    private val txHistoryUpdateListener: TangemPayTxHistoryUpdateListener,
 ) : Model(), TangemPayTxHistoryUiActions, AddFundsListener {
 
     private val params: TangemPayDetailsContainerComponent.Params = paramsContainer.require()
@@ -187,8 +189,9 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     private fun onRefreshSwipe(refreshState: ShowRefreshState) {
         modelScope.launch {
-            cardDetailsEventListener.send(CardDetailsEvent.Hide)
             uiState.update(TangemPayDetailsRefreshTransformer(isRefreshing = refreshState.value))
+            cardDetailsEventListener.send(CardDetailsEvent.Hide)
+            txHistoryUpdateListener.triggerUpdate()
             fetchBalance().join()
             uiState.update(TangemPayDetailsRefreshTransformer(isRefreshing = false))
         }.saveIn(refreshStateJobHolder)
