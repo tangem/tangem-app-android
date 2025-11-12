@@ -6,9 +6,11 @@ import com.tangem.domain.models.wallet.UserWallet
 /**
 [REDACTED_AUTHOR]
  */
-interface AnalyticsContextProxy {
+interface TrackingContextProxy {
 
     fun setContext(scanResponse: ScanResponse)
+
+    fun setContext(userWallet: UserWallet)
 
     fun addContext(userWallet: UserWallet)
 
