@@ -9,6 +9,7 @@ import com.tangem.domain.tangempay.repository.TangemPayTxHistoryRepository
 import com.tangem.features.tangempay.components.txHistory.DefaultTangemPayTxHistoryComponent
 import com.tangem.features.tangempay.entity.TangemPayTxHistoryUM
 import com.tangem.features.tangempay.utils.TangemPayTxHistoryListManager
+import com.tangem.features.tangempay.utils.TangemPayTxHistoryUpdateListener
 import com.tangem.pagination.PaginationStatus
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.ImmutableList
@@ -19,10 +20,11 @@ import javax.inject.Inject
 @Stable
 @ModelScoped
 internal class TangemPayTxHistoryModel @Inject constructor(
-    private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
-    override val dispatchers: CoroutineDispatcherProvider,
-    tangemPayTxHistoryRepository: TangemPayTxHistoryRepository,
     paramsContainer: ParamsContainer,
+    tangemPayTxHistoryRepository: TangemPayTxHistoryRepository,
+    override val dispatchers: CoroutineDispatcherProvider,
+    private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
+    private val txHistoryUpdateListener: TangemPayTxHistoryUpdateListener,
 ) : Model() {
 
     private val params: DefaultTangemPayTxHistoryComponent.Params = paramsContainer.require()
@@ -40,6 +42,7 @@ internal class TangemPayTxHistoryModel @Inject constructor(
         handleBalanceHiding()
         launchPagination()
         subscribeToUiItemChanges()
+        subscribeToUpdateListener()
     }
 
     private fun launchPagination() {
@@ -55,6 +58,12 @@ internal class TangemPayTxHistoryModel @Inject constructor(
             .launchIn(modelScope)
         listManager.emptyStatus
             .onEach(::handleEmptyState)
+            .launchIn(modelScope)
+    }
+
+    private fun subscribeToUpdateListener() {
+        txHistoryUpdateListener.updates
+            .onEach { reload() }
             .launchIn(modelScope)
     }
 
