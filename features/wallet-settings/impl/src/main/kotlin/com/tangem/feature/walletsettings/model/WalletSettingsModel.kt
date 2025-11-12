@@ -10,7 +10,7 @@ import com.tangem.common.routing.AppRoute.ManageTokens.Source
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam.OnOffState.Off
 import com.tangem.core.analytics.models.AnalyticsParam.OnOffState.On
-import com.tangem.core.analytics.utils.AnalyticsContextProxy
+import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -70,7 +70,7 @@ internal class WalletSettingsModel @Inject constructor(
     private val accountItemsDelegate: AccountItemsDelegate,
     override val dispatchers: CoroutineDispatcherProvider,
     private val analyticsEventHandler: AnalyticsEventHandler,
-    private val analyticsContextProxy: AnalyticsContextProxy,
+    private val trackingContextProxy: TrackingContextProxy,
     walletCardItemDelegateFactory: WalletCardItemDelegate.Factory,
     private val isDemoCardUseCase: IsDemoCardUseCase,
     getWalletNFTEnabledUseCase: GetWalletNFTEnabledUseCase,
@@ -112,7 +112,7 @@ internal class WalletSettingsModel @Inject constructor(
 
     init {
         getUserWalletUseCase.invoke(params.userWalletId).onRight {
-            analyticsContextProxy.addContext(it)
+            trackingContextProxy.addContext(it)
         }
 
         fun combineUI(wallet: UserWallet) = combine(
@@ -160,7 +160,7 @@ internal class WalletSettingsModel @Inject constructor(
 
     override fun onDestroy() {
         super.onDestroy()
-        analyticsContextProxy.removeContext()
+        trackingContextProxy.removeContext()
     }
 
     private fun isNotificationsPermissionGranted(): Boolean {
@@ -263,7 +263,7 @@ internal class WalletSettingsModel @Inject constructor(
 
     private fun onLinkMoreCardsClick(scanResponse: ScanResponse) {
         analyticsEventHandler.send(Settings.ButtonCreateBackup)
-        analyticsContextProxy.addContext(scanResponse)
+        trackingContextProxy.addContext(scanResponse)
 
         router.push(
             AppRoute.Onboarding(
