@@ -169,6 +169,7 @@ dependencies {
     implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
     implementation(projects.core.navigation)
+    implementation(projects.core.abTests)
     implementation(projects.core.configToggles)
     implementation(projects.core.res)
     implementation(projects.core.ui)

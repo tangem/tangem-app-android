@@ -3,15 +3,12 @@ package com.tangem.tap.domain.scanCard.chains
 import arrow.core.left
 import arrow.core.right
 import com.tangem.common.routing.AppRoute
-import com.tangem.core.analytics.Analytics
 import com.tangem.domain.card.ScanCardException
 import com.tangem.domain.card.common.util.twinsIsTwinned
 import com.tangem.domain.core.chain.Chain
 import com.tangem.domain.core.chain.ResultChain
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.tap.common.extensions.addContext
 import com.tangem.tap.common.extensions.inject
-import com.tangem.tap.common.extensions.setContext
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.features.onboarding.OnboardingHelper
 import com.tangem.tap.proxy.redux.DaggerGraphState
@@ -34,9 +31,11 @@ class CheckForOnboardingChain(
 ) : ResultChain<ScanCardException, ScanResponse>() {
 
     override suspend fun launch(previousChainResult: ScanResponse): ScanChainResult {
+        val trackingContextProxy = store.inject(DaggerGraphState::trackingContextProxy)
+
         return when {
             OnboardingHelper.isOnboardingCase(previousChainResult) -> {
-                Analytics.addContext(previousChainResult)
+                trackingContextProxy.addContext(previousChainResult)
                 ScanChainException.OnboardingNeeded(
                     AppRoute.Onboarding(
                         scanResponse = previousChainResult,
@@ -45,7 +44,7 @@ class CheckForOnboardingChain(
                 ).left()
             }
             else -> {
-                Analytics.setContext(previousChainResult)
+                trackingContextProxy.setContext(previousChainResult)
 
                 val wasTwinsOnboardingShown = store.inject(DaggerGraphState::wasTwinsOnboardingShownUseCase)
                     .invokeSync()
