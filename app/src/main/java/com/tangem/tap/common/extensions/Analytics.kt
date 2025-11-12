@@ -3,6 +3,7 @@ package com.tangem.tap.common.extensions
 import com.tangem.core.analytics.Analytics
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
 import com.tangem.tap.common.analytics.paramsInterceptor.HotWalletContextInterceptor
 import com.tangem.tap.common.analytics.paramsInterceptor.LinkedCardContextInterceptor
@@ -14,8 +15,7 @@ import com.tangem.tap.common.analytics.paramsInterceptor.LinkedCardContextInterc
 /**
  * Sets the new context
  */
-fun Analytics.setContext(scanResponse: ScanResponse) {
-    val userWalletId = UserWalletIdBuilder.scanResponse(scanResponse).build()
+fun Analytics.setContext(userWalletId: UserWalletId?, scanResponse: ScanResponse) {
     if (userWalletId != null) {
         setUserId(userWalletId.stringValue)
     }
@@ -63,7 +63,7 @@ fun Analytics.addContext(userWallet: UserWallet) {
         is UserWallet.Hot -> HotWalletContextInterceptor(parent = currentContext)
     }
 
-    setUserId(userWalletId = userWallet.walletId.stringValue)
+    setUserId(userId = userWallet.walletId.stringValue)
     addParamsInterceptor(newContext)
 }
 
