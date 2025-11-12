@@ -4,7 +4,7 @@ import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.push
 import com.arkivanov.decompose.router.stack.replaceAll
-import com.tangem.core.analytics.utils.AnalyticsContextProxy
+import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.core.decompose.di.GlobalUiMessageSender
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -40,7 +40,7 @@ internal class WalletActivationModel @Inject constructor(
     private val router: Router,
     private val shouldAskPermissionUseCase: ShouldAskPermissionUseCase,
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
-    private val analyticsContextProxy: AnalyticsContextProxy,
+    private val trackingContextProxy: TrackingContextProxy,
 ) : Model() {
 
     val params = paramsContainer.require<WalletActivationComponent.Params>()
@@ -59,12 +59,12 @@ internal class WalletActivationModel @Inject constructor(
     val currentRoute: MutableStateFlow<WalletActivationRoute> = MutableStateFlow(startRoute)
 
     init {
-        analyticsContextProxy.addHotWalletContext()
+        trackingContextProxy.addHotWalletContext()
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        analyticsContextProxy.removeContext()
+        trackingContextProxy.removeContext()
     }
 
     fun onChildBack() {
