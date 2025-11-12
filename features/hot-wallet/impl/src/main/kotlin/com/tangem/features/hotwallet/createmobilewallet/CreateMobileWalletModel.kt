@@ -1,7 +1,7 @@
 package com.tangem.features.hotwallet.createmobilewallet
 
 import com.tangem.common.routing.AppRoute
-import com.tangem.core.analytics.utils.AnalyticsContextProxy
+import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.navigation.Router
@@ -26,7 +26,7 @@ internal class CreateMobileWalletModel @Inject constructor(
     private val saveUserWalletUseCase: SaveWalletUseCase,
     private val router: Router,
     private val tangemHotSdk: TangemHotSdk,
-    private val analyticsContextProxy: AnalyticsContextProxy,
+    private val trackingContextProxy: TrackingContextProxy,
 ) : Model() {
 
     internal val uiState: StateFlow<CreateMobileWalletUM>
@@ -40,12 +40,12 @@ internal class CreateMobileWalletModel @Inject constructor(
         )
 
     init {
-        analyticsContextProxy.addHotWalletContext()
+        trackingContextProxy.addHotWalletContext()
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        analyticsContextProxy.removeContext()
+        trackingContextProxy.removeContext()
     }
 
     private fun onImportClick() {
