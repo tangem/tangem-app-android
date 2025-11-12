@@ -37,6 +37,7 @@ dependencies {
     /** Other libraries */
     implementation(deps.timber)
     implementation(deps.arrow.core)
+    implementation(deps.androidx.webkit)
 
     /** DI */
     implementation(deps.hilt.android)
