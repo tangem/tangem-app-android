@@ -248,6 +248,8 @@ dependencies {
     implementation(projects.features.walletSettings.impl)
     implementation(projects.features.markets.api)
     implementation(projects.features.markets.impl)
+    implementation(projects.features.feed.api)
+    implementation(projects.features.feed.impl)
     implementation(projects.features.onramp.api)
     implementation(projects.features.onramp.impl)
     implementation(projects.features.onboardingV2.api)

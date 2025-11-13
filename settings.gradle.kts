@@ -294,6 +294,9 @@ include(":features:token-recieve:impl")
 
 include(":features:yield-supply:api")
 include(":features:yield-supply:impl")
+
+include(":features:feed:api")
+include(":features:feed:impl")
 // endregion Feature modules
 
 // region Domain modules
