@@ -43,7 +43,7 @@ internal class DefaultCardCryptoCurrencyFactoryTest {
     private val walletAccountsFetcher = mockk<WalletAccountsFetcher>()
 
     private val factory = DefaultCardCryptoCurrencyFactory(
-        demoConfig = DemoConfig(),
+        demoConfig = DemoConfig,
         excludedBlockchains = excludedBlockchains,
         userWalletsStore = userWalletsStore,
         userTokensResponseStore = userTokensResponseStore,
