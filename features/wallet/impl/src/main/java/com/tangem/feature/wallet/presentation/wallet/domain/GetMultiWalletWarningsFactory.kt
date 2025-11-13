@@ -36,7 +36,6 @@ import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.account.AccountDependencies
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotification
-import com.tangem.features.yield.supply.api.YieldSupplyFeatureToggles
 import com.tangem.lib.crypto.BlockchainUtils.isBitcoin
 import com.tangem.utils.extensions.addIf
 import com.tangem.utils.extensions.isPositive
@@ -62,7 +61,6 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
     private val onrampSepaAvailableUseCase: OnrampSepaAvailableUseCase,
     private val getOnrampCountryUseCase: GetOnrampCountryUseCase,
     private val notificationsRepository: NotificationsRepository,
-    private val yieldSupplyFeatureToggles: YieldSupplyFeatureToggles,
     private val accountDependencies: AccountDependencies,
 ) {
 
@@ -134,7 +132,8 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
                             !notificationsRepository.isUserAllowToSubscribeOnPushNotifications(),
                     )
 
-                    addYieldSupplyNotifications(flattenCurrencies)
+                    // Remove in first iteration of yield supply feature
+                    // addYieldSupplyNotifications(flattenCurrencies)
 
                     val hasCriticalOrWarning = any { notification ->
                         notification is WalletNotification.Critical || notification is WalletNotification.Warning
@@ -319,14 +318,14 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
         )
     }
 
-    private fun MutableList<WalletNotification>.addYieldSupplyNotifications(
-        flattenCurrencies: Lce<TokenListError, List<CryptoCurrencyStatus>>,
-    ) {
-        addIf(
-            element = WalletNotification.Warning.YeildSupplyApprove,
-            condition = flattenCurrencies.hasTokensWithActivatedSupplyWithoutApprove(),
-        )
-    }
+    // private fun MutableList<WalletNotification>.addYieldSupplyNotifications(
+    //     flattenCurrencies: Lce<TokenListError, List<CryptoCurrencyStatus>>,
+    // ) {
+    //     addIf(
+    //         element = WalletNotification.Warning.YeildSupplyApprove,
+    //         condition = flattenCurrencies.hasTokensWithActivatedSupplyWithoutApprove(),
+    //     )
+    // }
 
     private fun MutableList<WalletNotification>.addWarningNotifications(
         cardTypesResolver: CardTypesResolver?,
@@ -371,13 +370,14 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
         return flattenCurrencies.any { it.value is CryptoCurrencyStatus.Unreachable }
     }
 
-    private fun Lce<TokenListError, List<CryptoCurrencyStatus>>.hasTokensWithActivatedSupplyWithoutApprove(): Boolean {
-        val flattenCurrencies = getOrNull(isPartialContentAccepted = false) ?: return false
-        val yieldSupplyEnabled = yieldSupplyFeatureToggles.isYieldSupplyFeatureEnabled
-        return yieldSupplyEnabled && flattenCurrencies.any {
-            it.value.yieldSupplyStatus?.isAllowedToSpend == false
-        }
-    }
+    // Remove in first iteration of yield supply feature
+    // private fun Lce<TokenListError, List<CryptoCurrencyStatus>>.hasTokensWithActivatedSupplyWithoutApprove(): Boolean {
+    //     val flattenCurrencies = getOrNull(isPartialContentAccepted = false) ?: return false
+    //     val yieldSupplyEnabled = yieldSupplyFeatureToggles.isYieldSupplyFeatureEnabled
+    //     return yieldSupplyEnabled && flattenCurrencies.any {
+    //         it.value.yieldSupplyStatus?.isAllowedToSpend == false
+    //     }
+    // }
 
     private fun MutableList<WalletNotification>.addRateTheAppNotification(
         isReadyToShowRating: Boolean,
