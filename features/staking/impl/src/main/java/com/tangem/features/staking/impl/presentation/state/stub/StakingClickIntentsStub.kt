@@ -81,5 +81,7 @@ internal object StakingClickIntentsStub : StakingClickIntents {
 
     override fun onActivateTonAccountNotificationClick() {}
 
+    override fun onActivateTonAccountNotificationShow() {}
+
     override fun onActivateTonAccountClick() {}
 }

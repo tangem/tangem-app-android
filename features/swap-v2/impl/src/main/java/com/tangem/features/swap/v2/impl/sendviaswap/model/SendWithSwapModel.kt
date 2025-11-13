@@ -116,8 +116,10 @@ internal class SendWithSwapModel @Inject constructor(
         uiState.update { it.copy(destinationUM = destinationUM) }
     }
 
-    override fun onResult(sendWithSwapUM: SendWithSwapUM) {
-        uiState.value = sendWithSwapUM
+    override fun onResult(route: SendWithSwapRoute, sendWithSwapUM: SendWithSwapUM) {
+        if (currentRoute.value == route) {
+            uiState.value = sendWithSwapUM
+        }
     }
 
     override fun onNavigationResult(navigationUM: NavigationUM) {
