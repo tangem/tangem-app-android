@@ -24,19 +24,16 @@ internal class ExpandedAccountsHolder @Inject constructor(
             flow = walletAccounts(userWallet),
             flow2 = isAccountsModeEnabledUseCase.invoke(),
             transform = { accountList, isAccountsMode ->
-                if (!isAccountsMode) {
-                    expandedAccounts.update { emptyMap() }
-                    return@combine
-                }
                 val isSingleAccount = accountList.accounts.size == 1
                 val defaultExpanded = when {
+                    !isAccountsMode -> setOf()
                     isSingleAccount -> setOf(accountList.mainAccount.accountId)
                     else -> setOf()
                 }
                 expandedAccounts.update { map ->
                     var expandedSet = map[userWallet.walletId] ?: defaultExpanded
                     // force expand for single account
-                    if (isSingleAccount) expandedSet = defaultExpanded
+                    if (isSingleAccount || !isAccountsMode) expandedSet = defaultExpanded
                     map.plus(userWallet.walletId to expandedSet)
                 }
             },
