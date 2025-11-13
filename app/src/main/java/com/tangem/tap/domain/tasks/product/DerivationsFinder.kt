@@ -38,7 +38,7 @@ internal class DerivationsFinder(
             getBlockchains(userWalletId)
         }.ifEmpty {
             if (DemoHelper.isDemoCardId(card.cardId)) {
-                getDemoBlockchains(derivationStyle)
+                getDemoBlockchains(derivationStyle, card.cardId)
             } else {
                 getDefaultBlockchains(derivationStyle)
             }
@@ -77,8 +77,8 @@ internal class DerivationsFinder(
     }
 
     // TODO: Move to user wallet config
-    private fun getDemoBlockchains(derivationStyle: DerivationStyle?): MutableSet<BlockchainToDerive> {
-        return DemoHelper.config.demoBlockchains.mapToBlockchainsWithDerivations(derivationStyle)
+    private fun getDemoBlockchains(derivationStyle: DerivationStyle?, cardId: String): MutableSet<BlockchainToDerive> {
+        return DemoHelper.config.getDemoBlockchains(cardId).mapToBlockchainsWithDerivations(derivationStyle)
     }
 
     // TODO: Move to user wallet config
