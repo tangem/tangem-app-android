@@ -113,14 +113,20 @@ class FetchWalletAccountsErrorHandlerTest {
         )
 
         val walletName = "Wallet"
-        val userWallet = mockk<UserWallet> {
+        val userWallet = mockk<UserWallet.Cold> {
             every { this@mockk.walletId } returns userWalletId
             every { this@mockk.name } returns walletName
         }
         coEvery { userWalletsStore.getSyncOrNull(userWalletId) } returns userWallet
 
         coEvery {
-            tangemTechApi.createWallet(WalletIdBody(walletId = userWalletId.stringValue, name = walletName))
+            tangemTechApi.createWallet(
+                WalletIdBody(
+                    walletId = userWalletId.stringValue,
+                    name = walletName,
+                    walletType = WalletIdBody.WalletType.COLD,
+                ),
+            )
         } returns apiResponse
         coEvery { pushWalletAccounts(userWalletId, listOf(accountDTO)) } returns savedAccountsResponse
 
@@ -136,7 +142,13 @@ class FetchWalletAccountsErrorHandlerTest {
         // Assert
         coVerify {
             userTokensSaver.pushWithRetryer(userWalletId, response = savedAccountsResponse.toUserTokensResponse())
-            tangemTechApi.createWallet(WalletIdBody(walletId = userWalletId.stringValue, name = "Wallet"))
+            tangemTechApi.createWallet(
+                WalletIdBody(
+                    walletId = userWalletId.stringValue,
+                    name = walletName,
+                    walletType = WalletIdBody.WalletType.COLD,
+                ),
+            )
             eTagsStore.store(userWalletId, ETagsStore.Key.WalletAccounts, eTagValue)
             pushWalletAccounts(userWalletId, listOf(accountDTO))
             storeWalletAccounts(userWalletId, savedAccountsResponse)
