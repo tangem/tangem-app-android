@@ -72,6 +72,7 @@ internal class YieldSupplyModel @Inject constructor(
 
     val bottomSheetNavigation: SlotNavigation<Unit> = SlotNavigation()
 
+    private val handleNavigation = params.handleNavigation
     private val cryptoCurrency = params.cryptoCurrency
     var userWallet: UserWallet by Delegates.notNull()
 
@@ -91,8 +92,13 @@ internal class YieldSupplyModel @Inject constructor(
 
     init {
         checkIfYieldSupplyIsAvailable()
-        params.handleNavigation?.let { handle ->
-            if (handle) {
+
+        val protocolStatus = yieldSupplyRepository.getTokenProtocolStatus(
+            userWalletId = params.userWalletId,
+            cryptoCurrency = cryptoCurrency,
+        )
+        if (handleNavigation != null && protocolStatus == null) {
+            if (handleNavigation) {
                 modelScope.launch {
                     delay(timeMillis = 1000)
                     bottomSheetNavigation.activate(Unit)
