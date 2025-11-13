@@ -144,7 +144,7 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
         val transactionListData = yieldSupplyStartEarningUseCase(
             userWalletId = userWallet.walletId,
             cryptoCurrencyStatus = cryptoCurrencyStatus,
-            maxNetworkFee = maxFee.nativeMaxFee,
+            maxNetworkFee = maxFee.tokenMaxFee,
         ).getOrNull()
 
         if (transactionListData == null) {
