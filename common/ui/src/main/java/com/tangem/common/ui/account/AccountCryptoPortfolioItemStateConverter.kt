@@ -16,6 +16,7 @@ import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.quote.PriceChange
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.extensions.isZero
@@ -49,7 +50,7 @@ class AccountCryptoPortfolioItemStateConverter(
             )
         }
         return TokenItemState.Content(
-            id = account.accountId.value,
+            id = account.accountId.toItemId(),
             iconState = AccountIconItemStateConverter.convert(this),
             titleState = TokenItemState.TitleState.Content(
                 text = accountName.toUM().value,
@@ -75,7 +76,7 @@ class AccountCryptoPortfolioItemStateConverter(
 
     private fun Account.CryptoPortfolio.mapToLoadingState(): TokenItemState.Content {
         return TokenItemState.Content(
-            id = account.accountId.value,
+            id = account.accountId.toItemId(),
             iconState = AccountIconItemStateConverter.convert(account),
             titleState = TokenItemState.TitleState.Content(
                 text = accountName.toUM().value,
@@ -97,7 +98,7 @@ class AccountCryptoPortfolioItemStateConverter(
 
     private fun Account.CryptoPortfolio.mapToUnreachableState(): TokenItemState.Unreachable {
         return TokenItemState.Unreachable(
-            id = account.accountId.value,
+            id = account.accountId.toItemId(),
             iconState = AccountIconItemStateConverter.convert(account),
             titleState = TokenItemState.TitleState.Content(
                 text = accountName.toUM().value,
@@ -118,6 +119,8 @@ class AccountCryptoPortfolioItemStateConverter(
             },
         )
     }
+
+    private fun AccountId.toItemId() = this.userWalletId.stringValue + this.value
 
     private fun BigDecimal.getPriceChangeType(): PriceChangeType = PriceChangeConverter.fromBigDecimal(value = this)
 
