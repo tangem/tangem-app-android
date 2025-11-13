@@ -176,11 +176,10 @@ class NetworkFactory @Inject constructor(
                 Network.DerivationPath.Card(defaultDerivationPath)
             }
         } else {
-            val isMainIndexOrNull = accountIndex == null || accountIndex == DerivationIndex.Main
-            if (extraDerivationPath != defaultDerivationPath && isMainIndexOrNull) {
-                Network.DerivationPath.Custom(extraDerivationPath)
+            if (extraDerivationPath == defaultDerivationPath) {
+                Network.DerivationPath.Card(defaultDerivationPath)
             } else {
-                Network.DerivationPath.Card(extraDerivationPath)
+                Network.DerivationPath.Custom(extraDerivationPath)
             }
         }
     }
