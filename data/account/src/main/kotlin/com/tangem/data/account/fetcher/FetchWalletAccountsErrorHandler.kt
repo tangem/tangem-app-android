@@ -12,11 +12,13 @@ import com.tangem.datasource.api.common.response.isNetworkError
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.api.tangemTech.models.WalletIdBody
+import com.tangem.datasource.api.tangemTech.models.WalletIdBody.WalletType
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
 import com.tangem.datasource.api.tangemTech.models.account.toUserTokensResponse
 import com.tangem.datasource.local.token.UserTokensResponseStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
@@ -127,6 +129,10 @@ internal class FetchWalletAccountsErrorHandler @Inject constructor(
                 body = WalletIdBody(
                     walletId = userWalletId.stringValue,
                     name = userWallet.name,
+                    walletType = when (userWallet) {
+                        is UserWallet.Cold -> WalletType.COLD
+                        is UserWallet.Hot -> WalletType.HOT
+                    },
                 ),
             )
         }
