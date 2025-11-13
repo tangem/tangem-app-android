@@ -160,6 +160,7 @@
   <string name="common_enable">Activer</string>
   <string name="common_enabled">Activé</string>
   <string name="common_error">Erreur</string>
+  <string name="common_estimated_fee">Frais estimés</string>
   <string name="common_exchange">Echanger</string>
   <string name="common_explore">Explorez</string>
   <string name="common_explore_transaction_history">Explorez l\'historique des transactions</string>
