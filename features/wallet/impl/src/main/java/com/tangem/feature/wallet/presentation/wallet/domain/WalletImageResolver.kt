@@ -52,6 +52,7 @@ internal class WalletImageResolver @Inject constructor(
             cardTypesResolver.isTangemTwins() -> R.drawable.ill_twins_120_106
             cardTypesResolver.isStart2Coin() -> R.drawable.ill_start2coin_120_106
             cardTypesResolver.isTangemNote() -> noteImage?.imageResId
+            DemoConfig.isDemoNoteAsMultiwallet(userWallet.cardId) -> R.drawable.ill_wallet2_cards2_120_106
             else -> null
         }
     }
@@ -84,7 +85,7 @@ internal class WalletImageResolver @Inject constructor(
         @DrawableRes twoBackupResId: Int = R.drawable.ill_wallet2_cards3_120_106,
     ): Int? {
         return resolveWalletWithBackups { count ->
-            if (DemoConfig().isDemoCardId(cardId)) return@resolveWalletWithBackups oneBackupResId
+            if (DemoConfig.isDemoCardId(cardId)) return@resolveWalletWithBackups oneBackupResId
 
             when (count) {
                 WALLET_WITH_ONE_BACKUP_COUNT -> oneBackupResId
