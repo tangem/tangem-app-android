@@ -20,6 +20,10 @@
         "version": "undefined"
     },
     {
+        "name": "STAKING_ETH_ENABLED",
+        "version": "undefined"
+    },
+    {
         "name": "USEDESK_ENABLED",
         "version": "undefined"
     },
