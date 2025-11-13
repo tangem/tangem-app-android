@@ -12,6 +12,8 @@ import com.tangem.datasource.api.tangemTech.YieldSupplyApi
 import com.tangem.datasource.api.tangemTech.models.YieldSupplyChangeTokenStatusBody
 import com.tangem.datasource.local.yieldsupply.YieldMarketsStore
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.yield.supply.YieldSupplyRepository
@@ -109,16 +111,21 @@ internal class DefaultYieldSupplyRepository(
     override suspend fun saveTokenProtocolStatus(
         userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency,
-        yieldSupplyEnterStatus: YieldSupplyEnterStatus,
+        yieldSupplyEnterStatus: YieldSupplyEnterStatus?,
     ) {
-        statusMap["${userWalletId}_${cryptoCurrency.id.value}"] = yieldSupplyEnterStatus
+        val key = getTokenProtocolStatusKey(userWalletId, cryptoCurrency)
+        if (yieldSupplyEnterStatus != null) {
+            statusMap[key] = yieldSupplyEnterStatus
+        } else {
+            statusMap.remove(key)
+        }
     }
 
     override fun getTokenProtocolStatus(
         userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency,
     ): YieldSupplyEnterStatus? {
-        return statusMap["${userWalletId}_${cryptoCurrency.id.value}"]
+        return statusMap[getTokenProtocolStatusKey(userWalletId, cryptoCurrency)]
     }
 
     private fun List<YieldMarketToken>.enrichNetworkIds(): List<YieldMarketToken> {
@@ -127,4 +134,41 @@ internal class DefaultYieldSupplyRepository(
             token.copy(backendId = chainIdMap[token.chainId])
         }
     }
+
+    override suspend fun getTokenPendingStatus(
+        userWalletId: UserWalletId,
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+    ): YieldSupplyEnterStatus? {
+        val cryptoCurrency = cryptoCurrencyStatus.currency
+        val walletManager = walletManagersFacade.getOrCreateWalletManager(
+            userWalletId = userWalletId,
+            blockchain = cryptoCurrency.network.toBlockchain(),
+            derivationPath = cryptoCurrency.network.derivationPath.value,
+        ) ?: error("Wallet manager not found")
+
+        val pendingTxs = cryptoCurrencyStatus.value.pendingTransactions
+
+        val yieldAddress = walletManager.calculateYieldModuleAddress()
+        val hasRecentYieldEnterTxs = pendingTxs.hasYieldEnterTransactions(yieldAddress)
+        val hasRecentYieldExitTxs = pendingTxs.hasYieldExitTransactions()
+
+        return when {
+            hasRecentYieldEnterTxs -> YieldSupplyEnterStatus.Enter
+            hasRecentYieldExitTxs -> YieldSupplyEnterStatus.Exit
+            else -> null
+        }
+    }
+
+    private fun Set<TxInfo>.hasYieldEnterTransactions(yieldAddress: String) = any {
+        it.type == TxInfo.TransactionType.YieldSupply.Enter ||
+            it.type == TxInfo.TransactionType.Approve &&
+            (it.interactionAddressType as? TxInfo.InteractionAddressType.Contract)?.address == yieldAddress
+    }
+
+    private fun Set<TxInfo>.hasYieldExitTransactions() = any {
+        it.type == TxInfo.TransactionType.YieldSupply.Exit
+    }
+
+    private fun getTokenProtocolStatusKey(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): String =
+        "${userWalletId}_${cryptoCurrency.id.value}"
 }
