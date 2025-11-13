@@ -1484,7 +1484,7 @@
   <string name="yield_module_earn_sheet_high_fee_description">Les frais de réseau sont actuellement trop élevés pour permettre l\'exécution des prêts. Les fonds seront versés dès qu\'ils auront baissé à %1$s ou moins.</string>
   <string name="yield_module_earn_sheet_my_funds_title">Mes fonds</string>
   <string name="yield_module_earn_sheet_provider_description">Vos %1$s sont désormais déposés chez Aave et rapportent des intérêts. Vous détenez %2$s tokens, ce qui représente votre solde et augmente au fil du temps. Lorsque vous déposez davantage de fonds, ceux-ci sont fournis à Aave afin de rapporter des intérêts, moins les frais de transaction.</string>
-  <string name="yield_module_earn_sheet_title">Gagner</string>
+  <string name="yield_module_earn_sheet_title">Mode Rendement</string>
   <string name="yield_module_earn_sheet_total_earnings_title">Total des gains</string>
   <string name="yield_module_earn_sheet_transfers_title">Transferts vers Aave</string>
   <string name="yield_module_explore_sheet_explore_aave_button_title">Découvrez Aave</string>
@@ -1500,7 +1500,7 @@
   <string name="yield_module_fee_policy_tangem_service_fee_title">Tangem prélève également des frais de service de 15% sur les revenus générés.</string>
   <string name="yield_module_high_fee_error">Vos fonds seront automatiquement transférés vers Aave dès que les frais de réseau seront moins élevés ou que votre solde atteindra le montant minimum requis.</string>
   <string name="yield_module_historical_returns">Rendements historiques</string>
-  <string name="yield_module_main_view_approve_notification_description">L\'autorisation pour votre token en mode Yield a été révoquée. Ouvrez le token pour accorder à nouveau l\'autorisation.</string>
+  <string name="yield_module_main_view_approve_notification_description">L\'autorisation pour votre token en mode Rendement a été révoquée. Ouvrez le token pour accorder à nouveau l\'autorisation.</string>
   <string name="yield_module_main_view_approve_notification_title">Approbations de tokens nécessaires</string>
   <string name="yield_module_network_fee_unreachable_notification_description">Vérifiez votre connexion réseau.</string>
   <string name="yield_module_network_fee_unreachable_notification_title">Informations sur les frais de réseau inaccessibles</string>
@@ -1535,12 +1535,12 @@
   <string name="yield_module_token_details_earn_notification_apy">APY</string>
   <string name="yield_module_token_details_earn_notification_description">Les intérêts sont cumulés automatiquement.</string>
   <string name="yield_module_token_details_earn_notification_earning_on_your_balance_subtitle">Les intérêts sont cumulés automatiquement.</string>
-  <string name="yield_module_token_details_earn_notification_earning_on_your_balance_title">Mode de rendement</string>
+  <string name="yield_module_token_details_earn_notification_earning_on_your_balance_title">Mode Rendement</string>
   <string name="yield_module_token_details_earn_notification_processing">Traitement de votre dépôt</string>
   <string name="yield_module_token_details_earn_notification_title">Mode Rendement</string>
   <string name="yield_module_transfer_mode_automatic">Automatique</string>
   <string name="yield_module_unable_to_cover_fee_description">Déposez %1$s %2$s pour couvrir les frais de réseau liés aux transactions.</string>
   <string name="yield_module_unable_to_cover_fee_title">Impossible de couvrir les frais %s</string>
-  <string name="yield_module_unavailable_subtitle">Le service d\'intérêt n\'est pas disponible pour le moment. Veuillez réessayer plus tard.</string>
-  <string name="yield_module_unavailable_title">Gains indisponibles</string>
+  <string name="yield_module_unavailable_subtitle">Le mode rendement n\'est pas disponible pour le moment. Veuillez réessayer plus tard.</string>
+  <string name="yield_module_unavailable_title">Le mode Rendement est indisponible</string>
 </resources>
