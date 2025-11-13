@@ -28,6 +28,7 @@ dependencies {
     implementation(projects.domain.yieldSupply.models)
     implementation(projects.domain.walletManager)
     implementation(projects.domain.legacy)
+    implementation(projects.domain.txhistory.models)
 
     implementation(projects.libs.blockchainSdk)
 
