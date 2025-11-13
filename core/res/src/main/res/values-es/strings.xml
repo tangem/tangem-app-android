@@ -182,6 +182,7 @@
   <string name="common_enable">Activar</string>
   <string name="common_enabled">Activado</string>
   <string name="common_error">Error</string>
+  <string name="common_estimated_fee">Comisión de red por recarga</string>
   <string name="common_exchange">Intercambiar</string>
   <string name="common_explore">Explore</string>
   <string name="common_explore_transaction_history">Explore historial de transacciones</string>
