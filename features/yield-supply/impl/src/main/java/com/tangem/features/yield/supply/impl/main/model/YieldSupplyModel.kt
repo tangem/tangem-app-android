@@ -1,5 +1,6 @@
 package com.tangem.features.yield.supply.impl.main.model
 
+import android.os.SystemClock
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.tangem.common.routing.AppRoute.YieldSupplyPromo
@@ -46,7 +47,7 @@ import timber.log.Timber
 import javax.inject.Inject
 import kotlin.properties.Delegates
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 @ModelScoped
 internal class YieldSupplyModel @Inject constructor(
     paramsContainer: ParamsContainer,
@@ -89,6 +90,8 @@ internal class YieldSupplyModel @Inject constructor(
 
     private var lastYieldSupplyStatus: YieldSupplyStatus? = null
     private val fetchCurrencyJobHolder = JobHolder()
+
+    private var lastStatusCheckTimestamp = 0L
 
     init {
         checkIfYieldSupplyIsAvailable()
@@ -228,22 +231,51 @@ internal class YieldSupplyModel @Inject constructor(
 
         when {
             tokenProtocolStatus != null && tokenPendingStatus != null -> {
-                uiState.update {
-                    when (tokenPendingStatus) {
-                        YieldSupplyEnterStatus.Enter -> YieldSupplyUM.Processing.Enter
-                        YieldSupplyEnterStatus.Exit -> YieldSupplyUM.Processing.Exit
+                showProcessing(tokenPendingStatus)
+                lastStatusCheckTimestamp = 0L
+            }
+            tokenProtocolStatus == YieldSupplyEnterStatus.Exit && isActive ||
+                tokenProtocolStatus == YieldSupplyEnterStatus.Enter && !isActive -> {
+                if (lastStatusCheckTimestamp != 0L) {
+                    if (SystemClock.elapsedRealtime() - lastStatusCheckTimestamp > MAX_STATUS_CHECK_LIMIT) {
+                        loadStatus(cryptoCurrencyStatus)
+                        lastStatusCheckTimestamp = 0L
+                    } else {
+                        showProcessing(tokenProtocolStatus)
                     }
+                } else {
+                    showProcessing(tokenProtocolStatus)
+                    lastStatusCheckTimestamp = SystemClock.elapsedRealtime()
                 }
-                fetchCurrencyWithDelay()
             }
             else -> {
+                loadStatus(cryptoCurrencyStatus)
+                lastStatusCheckTimestamp = 0L
+            }
+        }
+    }
+
+    private fun showProcessing(status: YieldSupplyEnterStatus) {
+        uiState.update {
+            when (status) {
+                YieldSupplyEnterStatus.Enter -> YieldSupplyUM.Processing.Enter
+                YieldSupplyEnterStatus.Exit -> YieldSupplyUM.Processing.Exit
+            }
+        }
+        fetchCurrencyWithDelay()
+    }
+
+    private fun loadStatus(cryptoCurrencyStatus: CryptoCurrencyStatus) {
+        val yieldSupplyStatus = cryptoCurrencyStatus.value.yieldSupplyStatus
+        modelScope
+            .launch {
                 yieldSupplyRepository.saveTokenProtocolStatus(
                     userWalletId = userWallet.walletId,
                     cryptoCurrency = cryptoCurrency,
                     yieldSupplyEnterStatus = null,
                 )
                 sendInfoAboutProtocolStatus(cryptoCurrencyStatus)
-                if (isActive) {
+                if (yieldSupplyStatus?.isActive == true) {
                     loadActiveState(
                         cryptoCurrencyStatus = cryptoCurrencyStatus,
                         yieldSupplyStatus = yieldSupplyStatus,
@@ -252,7 +284,6 @@ internal class YieldSupplyModel @Inject constructor(
                     loadTokenStatus()
                 }
             }
-        }
     }
 
     private fun fetchCurrencyWithDelay() {
@@ -348,5 +379,6 @@ internal class YieldSupplyModel @Inject constructor(
 
     private companion object {
         const val PROCESSING_UPDATE_DELAY = 10_000L
+        const val MAX_STATUS_CHECK_LIMIT = 10_000L
     }
 }
