@@ -35,9 +35,9 @@ import com.tangem.features.yield.supply.impl.main.entity.YieldSupplyUM
 import com.tangem.features.yield.supply.impl.main.model.transformers.YieldSupplyTokenStatusSuccessTransformer
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.DelayedWork
-import com.tangem.utils.transformer.update
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
+import com.tangem.utils.transformer.update
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
@@ -193,42 +193,54 @@ internal class YieldSupplyModel @Inject constructor(
     }
 
     @Suppress("MaximumLineLength")
-    private fun onCryptoCurrencyStatusUpdated(cryptoCurrencyStatus: CryptoCurrencyStatus) {
+    private fun onCryptoCurrencyStatusUpdated(cryptoCurrencyStatus: CryptoCurrencyStatus) = modelScope.launch {
         val yieldSupplyStatus = cryptoCurrencyStatus.value.yieldSupplyStatus
         val tokenProtocolStatus = yieldSupplyRepository.getTokenProtocolStatus(
             userWallet.walletId,
             cryptoCurrency,
         )
+        val tokenPendingStatus = yieldSupplyRepository.getTokenPendingStatus(
+            userWallet.walletId,
+            cryptoCurrencyStatus,
+        )
+
         val isActive = yieldSupplyStatus?.isActive == true
         val isCryptoCurrencyStatusFromCache = cryptoCurrencyStatus.value.sources.networkSource != StatusSource.ACTUAL
         val processing = uiState.value is YieldSupplyUM.Processing
         Timber.d(
-            "currentUiState ${uiState.value.javaClass} \n" +
-                "yieldSupplyStatus $yieldSupplyStatus" +
+            "YIELD " +
+                "yieldSupplyStatus $yieldSupplyStatus " +
                 "tokenProtocolStatus $tokenProtocolStatus " +
+                "tokenPendingStatus $tokenPendingStatus " +
                 "isActive $isActive " +
                 "processing $processing " +
                 "isCryptoCurrencyStatusFromCache $isCryptoCurrencyStatusFromCache",
         )
         if (isCryptoCurrencyStatusFromCache && processing) {
-            return
+            return@launch
         }
 
         when {
-            !isActive && tokenProtocolStatus == YieldSupplyEnterStatus.Enter -> {
-                uiState.update { YieldSupplyUM.Processing.Enter }
-                fetchCurrencyWithDelay()
-            }
-            isActive && tokenProtocolStatus == YieldSupplyEnterStatus.Exit -> {
-                uiState.update { YieldSupplyUM.Processing.Exit }
+            tokenProtocolStatus != null && tokenPendingStatus != null -> {
+                uiState.update {
+                    when (tokenPendingStatus) {
+                        YieldSupplyEnterStatus.Enter -> YieldSupplyUM.Processing.Enter
+                        YieldSupplyEnterStatus.Exit -> YieldSupplyUM.Processing.Exit
+                    }
+                }
                 fetchCurrencyWithDelay()
             }
             else -> {
+                yieldSupplyRepository.saveTokenProtocolStatus(
+                    userWalletId = userWallet.walletId,
+                    cryptoCurrency = cryptoCurrency,
+                    yieldSupplyEnterStatus = null,
+                )
                 sendInfoAboutProtocolStatus(cryptoCurrencyStatus)
                 if (isActive) {
                     loadActiveState(
                         cryptoCurrencyStatus = cryptoCurrencyStatus,
-                        yieldSupplyStatus = requireNotNull(yieldSupplyStatus),
+                        yieldSupplyStatus = yieldSupplyStatus,
                     )
                 } else {
                     loadTokenStatus()
