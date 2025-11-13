@@ -259,6 +259,56 @@ class GetOnrampAllOffersUseCaseTest {
     }
 
     @Test
+    fun `should use largest required amount for TooBig errors`() = runTest {
+        val paymentMethod = createMockPaymentMethod("card", "Card", PaymentMethodType.CARD)
+        val provider1 = createMockProvider("provider1", "Provider 1")
+        val provider2 = createMockProvider("provider2", "Provider 2")
+        val provider3 = createMockProvider("provider3", "Provider 3")
+
+        val quotes = listOf(
+            createMockAmountErrorQuote(
+                paymentMethod = paymentMethod,
+                provider = provider1,
+                requiredAmount = BigDecimal("150.0"),
+                isMinAmountError = false,
+            ),
+            createMockAmountErrorQuote(
+                paymentMethod = paymentMethod,
+                provider = provider2,
+                requiredAmount = BigDecimal("75.0"),
+                isMinAmountError = false,
+            ),
+            createMockAmountErrorQuote(
+                paymentMethod = paymentMethod,
+                provider = provider3,
+                requiredAmount = BigDecimal("300.0"),
+                isMinAmountError = false,
+            ),
+        )
+
+        coEvery { onrampRepository.getQuotes() } returns flowOf(quotes)
+        coEvery { settingsRepository.isGooglePayAvailability() } returns false
+
+        val result = useCase(userWalletId, cryptoCurrencyId)
+
+        result.collect { either ->
+            Truth.assertThat(either.isRight()).isTrue()
+            either.fold(
+                ifLeft = { error -> Truth.assertThat(error).isNull() },
+                ifRight = { offers ->
+                    Truth.assertThat(offers).hasSize(1)
+
+                    val cardGroup = offers.first()
+                    Truth.assertThat(cardGroup.offers).hasSize(3)
+                    Truth.assertThat(
+                        cardGroup.methodStatus,
+                    ).isEqualTo(PaymentMethodStatus.Unavailable.MaxAmount(BigDecimal("300.0")))
+                },
+            )
+        }
+    }
+
+    @Test
     fun `should not include Error quotes in groups`() = runTest {
         val paymentMethod = createMockPaymentMethod("card", "Card", PaymentMethodType.CARD)
         val provider1 = createMockProvider("provider1", "Provider 1")
