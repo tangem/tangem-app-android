@@ -7,5 +7,16 @@ import com.squareup.moshi.JsonClass
 data class WalletIdBody(
     @Json(name = "id") val walletId: String,
     @Json(name = "name") val name: String,
+    @Json(name = "type") val walletType: WalletType? = null,
     @Json(name = "cards") val cards: List<CardInfoBody>? = null,
-)
+) {
+
+    @JsonClass(generateAdapter = false)
+    enum class WalletType {
+        @Json(name = "card")
+        COLD,
+
+        @Json(name = "mobile")
+        HOT,
+    }
+}
