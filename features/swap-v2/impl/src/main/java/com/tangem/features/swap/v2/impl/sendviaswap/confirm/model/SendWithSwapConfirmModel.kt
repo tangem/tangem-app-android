@@ -425,7 +425,8 @@ internal class SendWithSwapConfirmModel @Inject constructor(
             val confirmUM = state.confirmUM
             val isReadyToSend = confirmUM is ConfirmUM.Content && !confirmUM.isTransactionInProcess
             params.callback.onResult(
-                state.copy(
+                route = SendWithSwapRoute.Confirm,
+                sendWithSwapUM = state.copy(
                     navigationUM = NavigationUM.Content(
                         title = resourceReference(id = R.string.send_with_swap_confirm_title),
                         subtitle = null,
