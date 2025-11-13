@@ -186,6 +186,7 @@
   <string name="common_enable">Включить</string>
   <string name="common_enabled">Включено</string>
   <string name="common_error">Ошибка</string>
+  <string name="common_estimated_fee">Комиссия сети</string>
   <string name="common_exchange">Обменять</string>
   <string name="common_explore">Обозреватель</string>
   <string name="common_explore_transaction_history">Посмотреть историю транзакций</string>
@@ -1615,7 +1616,7 @@
   <string name="yield_module_fee_policy_sheet_max_fee_title">Максимальная комиссия</string>
   <string name="yield_module_fee_policy_sheet_min_amount_note">Минимальная сумма рассчитывается исходя из текущей комиссии сети, чтобы она не превышала 4%% от суммы пополнения, что составляет минимум %1$s (%2$s).</string>
   <string name="yield_module_fee_policy_sheet_min_amount_title">Минимальный депозит</string>
-  <string name="yield_module_fee_policy_sheet_title">Политика комиссий</string>
+  <string name="yield_module_fee_policy_sheet_title">Политика комиссий за пополнение</string>
   <string name="yield_module_fee_policy_tangem_service_fee_title">Tangem взимает комиссию за обслуживание в размере 15% от полученного дохода.</string>
   <string name="yield_module_high_fee_error">Ваши средства будут автоматически переведены в Aave, как только комиссия сети снизится или баланс достигнет минимально необходимой суммы.</string>
   <string name="yield_module_historical_returns">Историческая доходность</string>

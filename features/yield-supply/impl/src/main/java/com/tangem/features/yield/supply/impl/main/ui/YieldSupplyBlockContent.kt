@@ -71,7 +71,7 @@ private fun SupplyAvailable(supplyUM: YieldSupplyUM.Available, modifier: Modifie
         modifier = modifier,
         button = {
             SecondaryButton(
-                text = stringResourceSafe(R.string.common_get_started),
+                text = stringResourceSafe(R.string.common_learn_more),
                 onClick = supplyUM.onClick,
                 size = TangemButtonSize.WideAction,
                 modifier = Modifier.fillMaxWidth(),
