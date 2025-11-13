@@ -195,7 +195,7 @@ internal class YieldSupplyActiveModel @Inject constructor(
                     blockchain = cryptoCurrency.network.name,
                 ),
             )
-            NotificationUM.Warning.YieldSupplyNotAllAmountSupplied(
+            NotificationUM.Info.YieldSupplyNotAllAmountSupplied(
                 formattedAmount = formattedAmount,
                 symbol = cryptoCurrency.symbol,
             )
