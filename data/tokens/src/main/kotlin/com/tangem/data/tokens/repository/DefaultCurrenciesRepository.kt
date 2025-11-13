@@ -48,7 +48,7 @@ internal class DefaultCurrenciesRepository(
     excludedBlockchains: ExcludedBlockchains,
 ) : CurrenciesRepository {
 
-    private val demoConfig = DemoConfig()
+    private val demoConfig = DemoConfig
     private val cryptoCurrencyFactory = CryptoCurrencyFactory(excludedBlockchains)
     private val userTokensResponseFactory = UserTokensResponseFactory()
     private val customTokensMerger = CustomTokensMerger(
