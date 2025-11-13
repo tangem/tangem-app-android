@@ -17,7 +17,7 @@ fun getDefaultWalletBlockchains(userWallet: UserWallet, demoConfig: DemoConfig):
             val card = userWallet.scanResponse.card
 
             var blockchainsInternal = if (demoConfig.isDemoCardId(card.cardId)) {
-                demoConfig.demoBlockchains
+                demoConfig.getDemoBlockchains(card.cardId)
             } else {
                 listOf(Blockchain.Bitcoin, Blockchain.Ethereum)
             }
