@@ -160,6 +160,7 @@
   <string name="common_enable">Увімкнути</string>
   <string name="common_enabled">Увімкнено</string>
   <string name="common_error">Помилка</string>
+  <string name="common_estimated_fee">Комісія мережі за поповнення</string>
   <string name="common_exchange">Обміняти</string>
   <string name="common_explore">Оглядач</string>
   <string name="common_explore_transaction_history">Переглянути історію транзакцій</string>

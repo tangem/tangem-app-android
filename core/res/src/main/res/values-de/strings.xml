@@ -258,6 +258,7 @@
   <string name="common_enable">Aktivieren</string>
   <string name="common_enabled">Aktiviert</string>
   <string name="common_error">Fehler</string>
+  <string name="common_estimated_fee">Geschätzte Gebühr</string>
   <string name="common_exchange">Umtausch</string>
   <string name="common_explore">Erkunden</string>
   <string name="common_explore_transaction_history">Transaktionsverlauf einsehen</string>
@@ -1194,7 +1195,7 @@
   <string name="staking_details_annual_percentage_yield">Jährlicher prozentualer Ertrag</string>
   <string name="staking_details_annual_percentage_yield_info">APY zeigt den jährlichen prozentualen Ertrag des Validators basierend auf seiner Leistung</string>
   <string name="staking_details_apr">Effektiver Jahreszins</string>
-  <string name="staking_details_apy">Effektiver Jahreszins</string>
+  <string name="staking_details_apy">APY</string>
   <string name="staking_details_auto_claiming_rewards_daily_text">Belohnungen sammeln sich täglich automatisch in deinem Staking-Konto an.</string>
   <string name="staking_details_available">Verfügbar</string>
   <string name="staking_details_average_reward_rate">Durchschnittliche Belohnungsquote</string>
@@ -1384,12 +1385,14 @@
   <string name="tangempay_card_details_open_wallet_button">Google Wallet öffnen</string>
   <string name="tangempay_card_details_open_wallet_notification_subtitle">Richte Tangem Pay mit wenigen Klicks ein und bezahlen mit Google Pay.</string>
   <string name="tangempay_card_details_open_wallet_notification_title">Karte zu Google Pay hinzufügen</string>
+  <string name="tangempay_card_details_open_wallet_notification_title_apple">Karte zu Apple Pay hinzufügen</string>
   <string name="tangempay_card_details_open_wallet_step_1">Google Wallet öffnen</string>
   <string name="tangempay_card_details_open_wallet_step_2">Tippe auf „Karte hinzufügen“.</string>
   <string name="tangempay_card_details_open_wallet_step_3">Gebe die Kartendaten manuell ein</string>
   <string name="tangempay_card_details_open_wallet_step_4">Verifiziere die Karte mit dem Einmalpasswort (OPT), das an Dein Gerät gesendet wird.</string>
   <string name="tangempay_card_details_open_wallet_step_5">Alles erledigt! Deine Karte ist einsatzbereit.</string>
   <string name="tangempay_card_details_open_wallet_title">Karte zu Google Pay hinzufügen</string>
+  <string name="tangempay_card_details_open_wallet_title_apple">Karte zu Apple Pay hinzufügen</string>
   <string name="tangempay_card_details_receive_description">Teile Deine Adresse mit oder zeig den QR-Code.</string>
   <string name="tangempay_card_details_receive_error_description">Es wurden technische Probleme festgestellt. Bitte versuche es später erneut oder kontaktiere den Support.</string>
   <string name="tangempay_card_details_receive_error_title">Empfangen ist jetzt nicht verfügbar</string>
