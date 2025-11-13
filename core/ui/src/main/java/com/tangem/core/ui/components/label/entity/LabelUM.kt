@@ -8,6 +8,7 @@ data class LabelUM(
     val style: LabelStyle,
     @DrawableRes val icon: Int? = null,
     val onIconClick: (() -> Unit)? = null,
+    val onClick: (() -> Unit)? = null,
 )
 
 enum class LabelStyle {

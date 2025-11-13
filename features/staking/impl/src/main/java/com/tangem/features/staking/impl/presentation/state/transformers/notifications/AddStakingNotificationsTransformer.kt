@@ -295,6 +295,7 @@ internal class AddStakingNotificationsTransformer(
         val cryptoCurrencyNetworkIdValue = cryptoCurrencyStatusProvider().currency.network.rawId
 
         if (isTon(cryptoCurrencyNetworkIdValue) && !isAccountInitialized) {
+            prevState.clickIntents.onActivateTonAccountNotificationShow()
             add(
                 StakingNotification.Warning.InitializeTonAccount(
                     onInitializeClick = prevState.clickIntents::onActivateTonAccountNotificationClick,
