@@ -1,7 +1,6 @@
 package com.tangem.domain.card
 
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchain.common.Blockchain.Companion.fromId
 import com.tangem.blockchain.common.Token
 import com.tangem.common.card.EllipticCurve
 import com.tangem.common.card.FirmwareVersion
@@ -12,6 +11,7 @@ import com.tangem.domain.card.common.TapWorkarounds.isTestCard
 import com.tangem.domain.card.common.TapWorkarounds.isWallet2
 import com.tangem.domain.card.common.getTwinCardIdForUser
 import com.tangem.domain.card.common.visa.VisaUtilities
+import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.operations.attestation.Attestation
@@ -23,7 +23,16 @@ internal class TangemCardTypesResolver(
     private val walletData: WalletData?,
 ) : CardTypesResolver {
 
-    override fun isTangemNote(): Boolean = productType == ProductType.Note
+    override fun isTangemNote(): Boolean {
+        val isNote = productType == ProductType.Note
+        /**
+         * @workaround
+         * There were produced 20k Note demo cards that should work like multiwallet (except Onboarding)
+         * for that reasons we've just added some specific checks for their BatchId
+         */
+        val isNotDemoNoteAsMulti = !DemoConfig.isDemoNoteAsMultiwallet(card.cardId)
+        return isNote && isNotDemoNoteAsMulti
+    }
 
     override fun isTangemWallet(): Boolean {
         return card.settings.isBackupAllowed && card.settings.isHDWalletAllowed &&
