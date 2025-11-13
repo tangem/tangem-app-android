@@ -1,6 +1,7 @@
 package com.tangem.domain.yield.supply
 
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.yield.supply.models.YieldMarketToken
 import com.tangem.domain.yield.supply.models.YieldSupplyEnterStatus
@@ -76,7 +77,7 @@ interface YieldSupplyRepository {
     suspend fun saveTokenProtocolStatus(
         userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency,
-        yieldSupplyEnterStatus: YieldSupplyEnterStatus,
+        yieldSupplyEnterStatus: YieldSupplyEnterStatus?,
     )
 
     /**
@@ -91,4 +92,20 @@ interface YieldSupplyRepository {
      * @return the last action intent or null if nothing has been recorded
      */
     fun getTokenProtocolStatus(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): YieldSupplyEnterStatus?
+
+    /**
+     * Get the pending status of the yield protocol action for the given wallet and currency, if any.
+     *
+     * Used to determine whether the UI should display an intermediate "processing" state
+     * until the protocol status retrieved from backend reflects the change. The value is
+     * transient (in‑memory only) and is not persisted across app restarts.
+     *
+     * @param userWalletId the wallet to query
+     * @param cryptoCurrencyStatus the currency status to query
+     * @return the pending action intent or null if nothing has been recorded
+     */
+    suspend fun getTokenPendingStatus(
+        userWalletId: UserWalletId,
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+    ): YieldSupplyEnterStatus?
 }
