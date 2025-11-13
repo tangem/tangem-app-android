@@ -56,7 +56,7 @@ class UserTokensResponseFactory @Inject constructor() {
         accountId: AccountId?,
     ): UserTokensResponse {
         val tokens = userWallet?.let {
-            getDefaultWalletBlockchains(userWallet = it, demoConfig = DemoConfig())
+            getDefaultWalletBlockchains(userWallet = it, demoConfig = DemoConfig)
                 .map { blockchain ->
                     val derivationPath = networkFactory.createDerivationPath(
                         blockchain = blockchain,
