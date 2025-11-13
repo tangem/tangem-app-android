@@ -24,6 +24,7 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 import java.util.concurrent.ConcurrentHashMap
 
 internal class DefaultYieldSupplyRepository(
@@ -138,7 +139,7 @@ internal class DefaultYieldSupplyRepository(
     override suspend fun getTokenPendingStatus(
         userWalletId: UserWalletId,
         cryptoCurrencyStatus: CryptoCurrencyStatus,
-    ): YieldSupplyEnterStatus? {
+    ): YieldSupplyEnterStatus? = try {
         val cryptoCurrency = cryptoCurrencyStatus.currency
         val walletManager = walletManagersFacade.getOrCreateWalletManager(
             userWalletId = userWalletId,
@@ -152,11 +153,14 @@ internal class DefaultYieldSupplyRepository(
         val hasRecentYieldEnterTxs = pendingTxs.hasYieldEnterTransactions(yieldAddress)
         val hasRecentYieldExitTxs = pendingTxs.hasYieldExitTransactions()
 
-        return when {
+        when {
             hasRecentYieldEnterTxs -> YieldSupplyEnterStatus.Enter
             hasRecentYieldExitTxs -> YieldSupplyEnterStatus.Exit
             else -> null
         }
+    } catch (e: Exception) {
+        Timber.e(e, "Failed to get pending yield supply status")
+        null
     }
 
     private fun Set<TxInfo>.hasYieldEnterTransactions(yieldAddress: String) = any {
