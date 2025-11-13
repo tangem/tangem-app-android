@@ -46,7 +46,7 @@ internal class MultiWalletCryptoCurrenciesFetcherModule {
             )
         } else {
             DefaultMultiWalletCryptoCurrenciesFetcher(
-                demoConfig = DemoConfig(),
+                demoConfig = DemoConfig,
                 userWalletsStore = userWalletsStore,
                 tangemTechApi = tangemTechApi,
                 customTokensMerger = CustomTokensMerger(
