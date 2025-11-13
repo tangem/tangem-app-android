@@ -160,8 +160,18 @@ sealed class StakingAnalyticsEvent(
         ),
     )
 
-    data class UnitializedAddress(val token: String) : StakingAnalyticsEvent(
+    data class UninitializedAddress(val token: String) : StakingAnalyticsEvent(
         event = "Notice - Uninitialized Address",
+        params = mapOf(AnalyticsParam.TOKEN_PARAM to token),
+    )
+
+    data class UninitializedAddressScreen(val token: String) : StakingAnalyticsEvent(
+        event = "Uninitialized Address Screen",
+        params = mapOf(AnalyticsParam.TOKEN_PARAM to token),
+    )
+
+    data class ButtonActivate(val token: String) : StakingAnalyticsEvent(
+        event = "Button - Activate",
         params = mapOf(AnalyticsParam.TOKEN_PARAM to token),
     )
 }
