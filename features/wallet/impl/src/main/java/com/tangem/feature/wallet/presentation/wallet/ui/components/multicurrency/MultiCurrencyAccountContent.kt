@@ -8,9 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -27,7 +25,7 @@ internal fun LazyListScope.portfolioContentItems(
     items: ImmutableList<TokensListItemUM.Portfolio>,
     modifier: Modifier = Modifier,
     isBalanceHidden: Boolean,
-    selectedWalletChanged: Boolean,
+    portfolioVisibleState: (portfolio: TokensListItemUM.Portfolio) -> MutableTransitionState<Boolean>,
 ) {
     items.forEachIndexed { index, item ->
         portfolioTokensList(
@@ -35,7 +33,7 @@ internal fun LazyListScope.portfolioContentItems(
             modifier = modifier,
             portfolioIndex = index,
             isBalanceHidden = isBalanceHidden,
-            selectedWalletChanged = selectedWalletChanged,
+            portfolioVisibleState = portfolioVisibleState,
         )
     }
 }
@@ -45,7 +43,7 @@ internal fun LazyListScope.portfolioTokensList(
     modifier: Modifier,
     portfolioIndex: Int,
     isBalanceHidden: Boolean,
-    selectedWalletChanged: Boolean,
+    portfolioVisibleState: (portfolio: TokensListItemUM.Portfolio) -> MutableTransitionState<Boolean>,
 ) {
     val tokens = portfolio.tokens
     val isExpanded = portfolio.isExpanded
@@ -55,7 +53,7 @@ internal fun LazyListScope.portfolioTokensList(
         modifier = modifier,
         portfolioIndex = portfolioIndex,
         isBalanceHidden = isBalanceHidden,
-        selectedWalletChanged = selectedWalletChanged,
+        portfolioVisibleState = portfolioVisibleState,
     )
     if (!isExpanded) return
     if (tokens.isEmpty()) {
@@ -63,17 +61,22 @@ internal fun LazyListScope.portfolioTokensList(
             key = "$NON_CONTENT_TOKENS_LIST_KEY account-${portfolio.id}",
             contentType = "$NON_CONTENT_TOKENS_LIST_KEY account-${portfolio.id}",
         ) {
-            NonContentItemContent(
-                modifier = Modifier
+            val appear = portfolioVisibleState(portfolio)
+            SlideInItemVisibility(
+                modifier = modifier
                     .animateItem()
                     .roundedShapeItemDecoration(
                         radius = TangemTheme.dimens.radius14,
                         currentIndex = 1,
                         lastIndex = 1,
                         backgroundColor = TangemTheme.colors.background.primary,
-                    )
-                    .padding(vertical = TangemTheme.dimens.spacing28),
-            )
+                    ),
+                visibleState = appear,
+            ) {
+                NonContentItemContent(
+                    modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing28),
+                )
+            }
         }
         return
     }
@@ -84,10 +87,7 @@ internal fun LazyListScope.portfolioTokensList(
         itemContent = { tokenIndex, token ->
             val indexWithHeader = tokenIndex.inc()
             val lastIndex = tokens.lastIndex.inc()
-            val isPreview = LocalInspectionMode.current
-            val appear = remember {
-                MutableTransitionState(selectedWalletChanged || isPreview).apply { targetState = true }
-            }
+            val appear = portfolioVisibleState(portfolio)
             SlideInItemVisibility(
                 modifier = modifier
                     .testModifier(indexWithHeader)
@@ -116,7 +116,7 @@ private fun LazyListScope.portfolioItem(
     modifier: Modifier,
     portfolioIndex: Int,
     isBalanceHidden: Boolean,
-    selectedWalletChanged: Boolean,
+    portfolioVisibleState: (portfolio: TokensListItemUM.Portfolio) -> MutableTransitionState<Boolean>,
 ) {
     val tokens = portfolio.tokens
     val isExpanded = portfolio.isExpanded
@@ -140,11 +140,7 @@ private fun LazyListScope.portfolioItem(
                 lastIndex = lastIndex,
                 backgroundColor = TangemTheme.colors.background.primary,
             )
-        val isPreview = LocalInspectionMode.current
-        val appear = remember {
-            MutableTransitionState(selectedWalletChanged || isPreview || tokens.isEmpty())
-                .apply { targetState = true }
-        }
+        val appear = portfolioVisibleState(portfolio)
         if (isExpanded) {
             SlideInItemVisibility(
                 modifier = anchorModifier,
