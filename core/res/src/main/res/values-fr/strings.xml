@@ -1534,7 +1534,7 @@
   <string name="yield_module_status_paused">En pause</string>
   <string name="yield_module_stop_earning">Désactivation du mode de rendement</string>
   <string name="yield_module_stop_earning_sheet_description">En désactivant cela, vos fonds seront retirés d\'Aave vers %s dans votre portefeuille et vous ne gagnerez plus de récompenses.</string>
-  <string name="yield_module_stop_earning_sheet_fee_note">Les frais de réseau seront déduits du montant que vous retirez.</string>
+  <string name="yield_module_stop_earning_sheet_fee_note">Des frais de réseau sont prélevés par la blockchain lorsque vous quittez le mode Yield.</string>
   <string name="yield_module_stop_earning_sheet_title">Désactiver le mode rendement</string>
   <string name="yield_module_supply_apr">Rendement annuel brut (APY)</string>
   <string name="yield_module_token_details_earn_notification_apy">APY</string>
