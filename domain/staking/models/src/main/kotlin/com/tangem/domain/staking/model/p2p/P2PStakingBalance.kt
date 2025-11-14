@@ -1,7 +1,6 @@
 package com.tangem.domain.staking.model.p2p
 
 import com.tangem.domain.models.serialization.SerializedBigDecimal
-import kotlinx.serialization.Serializable
 import org.joda.time.Instant
 
 /**

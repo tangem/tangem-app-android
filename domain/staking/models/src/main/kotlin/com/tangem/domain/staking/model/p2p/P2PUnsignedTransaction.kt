@@ -1,7 +1,6 @@
 package com.tangem.domain.staking.model.p2p
 
 import com.tangem.domain.models.serialization.SerializedBigDecimal
-import kotlinx.serialization.Serializable
 
 /**
  * P2P.org unsigned transaction ready for signing
