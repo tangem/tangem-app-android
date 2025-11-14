@@ -7,4 +7,5 @@ data class YieldSupplyPromoUM(
     val policyLink: String,
     val title: TextReference,
     val subtitle: TextReference,
+    val tokenSymbol: String,
 )
