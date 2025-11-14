@@ -14,6 +14,7 @@ import com.tangem.datasource.api.express.TangemExpressApi
 import com.tangem.datasource.api.markets.TangemTechMarketsApi
 import com.tangem.datasource.api.moonpay.MoonPayApi
 import com.tangem.datasource.api.onramp.OnrampApi
+import com.tangem.datasource.api.p2p.P2PApi
 import com.tangem.datasource.api.pay.TangemPayApi
 import com.tangem.datasource.api.stakekit.StakeKitApi
 import com.tangem.datasource.api.tangemTech.TangemTechApi
@@ -70,6 +71,15 @@ internal object NetworkModule {
                 readTimeoutSeconds = STAKE_KIT_API_TIMEOUT_SECONDS,
                 writeTimeoutSeconds = STAKE_KIT_API_TIMEOUT_SECONDS,
             ),
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideP2PApi(retrofitApiBuilder: RetrofitApiBuilder): P2PApi {
+        return retrofitApiBuilder.build(
+            apiConfigId = ApiConfig.ID.P2P,
+            applyTimeoutAnnotations = false,
         )
     }
 

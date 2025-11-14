@@ -4,6 +4,7 @@ import com.tangem.datasource.api.common.AuthProvider
 import com.tangem.datasource.api.common.config.*
 import com.tangem.datasource.local.config.environment.EnvironmentConfigStorage
 import com.tangem.lib.auth.ExpressAuthProvider
+import com.tangem.lib.auth.P2PAuthProvider
 import com.tangem.lib.auth.StakeKitAuthProvider
 import com.tangem.utils.info.AppInfoProvider
 import com.tangem.utils.version.AppVersionProvider
@@ -37,6 +38,12 @@ internal object ApiConfigsModule {
     @IntoSet
     fun provideStakeKitConfig(stakeKitAuthProvider: StakeKitAuthProvider): ApiConfig {
         return StakeKit(stakeKitAuthProvider)
+    }
+
+    @Provides
+    @IntoSet
+    fun provideP2PConfig(p2pAuthProvider: P2PAuthProvider): ApiConfig {
+        return P2P(p2pAuthProvider)
     }
 
     @Provides
