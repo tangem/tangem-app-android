@@ -27,7 +27,7 @@ internal class MobileWalletSetupFinishedComponent @AssistedInject constructor(
     }
 
     interface ModelCallbacks {
-        fun onContinueClick()
+        fun onFinishClick()
     }
 
     data class Params(
