@@ -1836,6 +1836,7 @@
   <string name="yield_module_balance_info_sheet_title">あなたの%sはAaveに預けられています</string>
   <string name="yield_module_chart_loading_error">チャートを読み込めません・・</string>
   <string name="yield_module_deposit_error_notification_title">Aaveへの%1$s %2$sの供給は保留中です。</string>
+  <string name="yield_module_disable_button">利回りモードを無効にする</string>
   <string name="yield_module_earn_badge">年利%1$s%%</string>
   <string name="yield_module_earn_sheet_available_title">利用可能</string>
   <string name="yield_module_earn_sheet_current_apy_title">現在のAPY</string>
@@ -1864,9 +1865,10 @@
   <string name="yield_module_network_fee_unreachable_notification_description">ネットワーク接続を確認してください</string>
   <string name="yield_module_network_fee_unreachable_notification_title">ネットワーク手数料についての情報にアクセスできません</string>
   <string name="yield_module_promo_screen_auto_balance_subtitle">あなたが行うすべての入金は、自動的にAaveへ供給されます。</string>
+  <string name="yield_module_promo_screen_auto_balance_subtitle_v2">アカウントのすべての %1$s は自動的に Aave に供給されます。</string>
   <string name="yield_module_promo_screen_auto_balance_title">Aaveへの自動送金</string>
   <string name="yield_module_promo_screen_cash_out_subtitle">いつでも、即座に資金を送信、交換、売却できます。</string>
-  <string name="yield_module_promo_screen_cash_out_title">いつでも資金にアクセス可能</string>
+  <string name="yield_module_promo_screen_cash_out_title">すぐに利用可能</string>
   <string name="yield_module_promo_screen_how_it_works_button_title">使い方</string>
   <string name="yield_module_promo_screen_self_custodial_subtitle">Aaveは、総額610億ドル以上の資産を管理する分散型プロトコルです。</string>
   <string name="yield_module_promo_screen_self_custodial_title">分散型・自己管理型</string>
@@ -1884,6 +1886,7 @@
   <string name="yield_module_start_earning_sheet_description">%sはAaveに供給されますが、管理可能な状態のままになります。</string>
   <string name="yield_module_start_earning_sheet_fee_policy">入金手数料ポリシーを見る</string>
   <string name="yield_module_start_earning_sheet_next_deposits">次回の入金は自動的にAaveに供給されます。</string>
+  <string name="yield_module_start_earning_sheet_next_deposits_v2">今後のすべての %1$s 入金は自動的に Aave に供給されます。</string>
   <string name="yield_module_status_active">アクティブ</string>
   <string name="yield_module_status_paused">停止中</string>
   <string name="yield_module_stop_earning">利回りモードを解除中</string>
