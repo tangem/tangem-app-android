@@ -8,8 +8,8 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
+import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyActionUM
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyFeeUM
 import com.tangem.features.yield.supply.impl.subcomponents.feepolicy.YieldSupplyFeePolicyComponent
@@ -54,7 +54,9 @@ internal class YieldSupplyStartEarningEntryModel @Inject constructor(
     }
 
     override fun onBackClick() {
-        router.pop()
+        if (!uiState.value.isTransactionSending) {
+            router.pop()
+        }
     }
 
     override fun onFeePolicyClick() {
