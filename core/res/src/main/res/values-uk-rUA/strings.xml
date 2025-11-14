@@ -1453,6 +1453,7 @@
   <string name="yield_module_balance_info_sheet_title">Ваш %s внесений у Aave</string>
   <string name="yield_module_chart_loading_error">Неможливо завантажити графік</string>
   <string name="yield_module_deposit_error_notification_title">Поповнення %1$s %2$s на Aave очікує виконання.</string>
+  <string name="yield_module_disable_button">Завершити заробіток</string>
   <string name="yield_module_earn_badge">APY %1$s%%</string>
   <string name="yield_module_earn_sheet_available_title">Доступно</string>
   <string name="yield_module_earn_sheet_current_apy_title">Поточний APY</string>
@@ -1481,11 +1482,12 @@
   <string name="yield_module_network_fee_unreachable_notification_description">Перевірте підключення до мережі</string>
   <string name="yield_module_network_fee_unreachable_notification_title">Інформація про комісію недоступна</string>
   <string name="yield_module_promo_screen_auto_balance_subtitle">Кожен ваш депозит буде автоматично надходити до Aave.</string>
+  <string name="yield_module_promo_screen_auto_balance_subtitle_v2">Всі %1$s на вашому рахунку будуть автоматично передані в Aave.</string>
   <string name="yield_module_promo_screen_auto_balance_title">Автопереказ до AAVE</string>
   <string name="yield_module_promo_screen_cash_out_subtitle">Відправляйте, обмінюйте або продавайте свої кошти миттєво, в будь-який час.</string>
-  <string name="yield_module_promo_screen_cash_out_title">Миттєвий вивід коштів</string>
+  <string name="yield_module_promo_screen_cash_out_title">Вільний доступ</string>
   <string name="yield_module_promo_screen_how_it_works_button_title">Як це працює?</string>
-  <string name="yield_module_promo_screen_self_custodial_subtitle">Aave — децентралізований протокол, що керує активами на понад $61 млрд.</string>
+  <string name="yield_module_promo_screen_self_custodial_subtitle">Aave — це ончейн-протокол для створення некостодіальних ринків ліквідності, що дозволяє отримувати дохід з змінною ставкою.</string>
   <string name="yield_module_promo_screen_self_custodial_title">Децентралізований та некастодіальний</string>
   <string name="yield_module_promo_screen_terms_disclaimer">Використовуючи сервіс, ви погоджуєтесь з умовами провайдера %1$s та %2$s</string>
   <string name="yield_module_promo_screen_title">Підключити Aave</string>
@@ -1501,6 +1503,7 @@
   <string name="yield_module_start_earning_sheet_description">Ваш %s буде передано до Aave, і залишиться завжди доступним.</string>
   <string name="yield_module_start_earning_sheet_fee_policy">Політика комісій</string>
   <string name="yield_module_start_earning_sheet_next_deposits">Ваші наступні поповнення рахунку автоматично надходитимуть до Aave.</string>
+  <string name="yield_module_start_earning_sheet_next_deposits_v2">Всі ваші майбутні надходження %1$s будуть автоматично спрямовані в Aave.</string>
   <string name="yield_module_status_active">Активний</string>
   <string name="yield_module_status_paused">На паузі</string>
   <string name="yield_module_stop_earning">Вимкнення режиму прибутковості</string>
