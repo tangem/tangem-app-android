@@ -107,29 +107,35 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             error("Failed to get user wallet")
         }
 
-    override suspend fun getTokensDataState(currency: CryptoCurrency): TokensDataStateExpress {
-        return if (accountsFeatureToggles.isFeatureEnabled) {
+    override suspend fun getTokensDataState(currency: CryptoCurrency, filterInitial: Boolean): TokensDataStateExpress {
+        return if (accountsFeatureToggles.isFeatureEnabled && filterInitial) {
             getAccountCurrencyTokensDataState(currency)
         } else {
-            getCurrencyTokensDataState(currency)
+            getCurrencyTokensDataState(currency, filterInitial)
         }
     }
 
-    private suspend fun getCurrencyTokensDataState(currency: CryptoCurrency): TokensDataStateExpress {
+    private suspend fun getCurrencyTokensDataState(
+        currency: CryptoCurrency,
+        filterInitial: Boolean,
+    ): TokensDataStateExpress {
         val walletCurrencyStatuses = getMultiCryptoCurrencyStatusUseCase
             .invokeMultiWalletSync(userWalletId)
             .getOrElse { emptyList() }
 
-        val walletCurrencyStatusesExceptInitial = walletCurrencyStatuses
-            .filter {
+        val walletCurrencyStatusesFiltered = if (filterInitial) {
+            walletCurrencyStatuses.filter {
                 val currencyFilter = it.currency.network.backendId != currency.network.backendId ||
                     it.currency.getContractAddress() != currency.getContractAddress()
                 val statusFilter = it.value is CryptoCurrencyStatus.Loaded || it.value is CryptoCurrencyStatus.NoAccount
                 val notCustomTokenFilter = !it.currency.isCustom
                 statusFilter && currencyFilter && notCustomTokenFilter
             }
+        } else {
+            walletCurrencyStatuses
+        }
 
-        if (walletCurrencyStatusesExceptInitial.isEmpty()) {
+        if (walletCurrencyStatusesFiltered.isEmpty()) {
             return TokensDataStateExpress.EMPTY
         }
 
@@ -139,23 +145,25 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                 contractAddress = (currency as? CryptoCurrency.Token)?.contractAddress ?: "0",
                 network = currency.network.backendId,
             ),
-            currenciesList = walletCurrencyStatusesExceptInitial.map { it.currency },
+            currenciesList = walletCurrencyStatusesFiltered.map { it.currency },
         )
 
         return TokensDataStateExpress(
             fromGroup = getToCurrenciesGroup(
                 currency = currency,
                 leastPairs = pairsLeast.pairs,
-                cryptoCurrenciesList = walletCurrencyStatusesExceptInitial,
+                cryptoCurrenciesList = walletCurrencyStatusesFiltered,
                 tokenInfoForFilter = { it.to },
                 tokenInfoForAvailable = { it.from },
+                filterInitial = filterInitial,
             ),
             toGroup = getToCurrenciesGroup(
                 currency = currency,
                 leastPairs = pairsLeast.pairs,
-                cryptoCurrenciesList = walletCurrencyStatusesExceptInitial,
+                cryptoCurrenciesList = walletCurrencyStatusesFiltered,
                 tokenInfoForFilter = { it.from },
                 tokenInfoForAvailable = { it.to },
+                filterInitial = filterInitial,
             ),
             allProviders = pairsLeast.allProviders,
         )
@@ -226,6 +234,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         cryptoCurrenciesList: List<CryptoCurrencyStatus>,
         tokenInfoForFilter: (SwapPairLeast) -> LeastTokenInfo,
         tokenInfoForAvailable: (SwapPairLeast) -> LeastTokenInfo,
+        filterInitial: Boolean,
     ): CurrenciesGroup {
         val filteredPairs = leastPairs.filter {
             tokenInfoForFilter(it).contractAddress == currency.getContractAddress() &&
@@ -233,7 +242,11 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         }
 
         val availableCryptoCurrencies = cryptoCurrenciesList.mapNotNull { cryptoCurrencyStatus ->
-            val providers = findProvidersForPair(cryptoCurrencyStatus, filteredPairs, tokenInfoForAvailable)
+            val providers = findProvidersForPair(
+                cryptoCurrencyStatuses = cryptoCurrencyStatus,
+                swapPairsLeastList = if (filterInitial) filteredPairs else leastPairs,
+                tokenInfoForAvailable = tokenInfoForAvailable,
+            )
             if (providers != null) {
                 CryptoCurrencySwapInfo(cryptoCurrencyStatus, providers)
             } else {
