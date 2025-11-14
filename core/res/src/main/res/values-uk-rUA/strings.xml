@@ -964,7 +964,8 @@
   <string name="staking_details_account_fee">Комісія за стейкінг-акаунт</string>
   <string name="staking_details_account_fee_info">Стейкінг-акаунт — це спеціальний рахунок, на якому зберігаються застейкані SOL токени. Він створюється, коли ви делегуєте свої токени валідатору для участі у перевірці транзакцій та отримання винагород. За створення стейкінг-акаунту стягується невелика комісія, яка повертається після завершення стейкінгу.</string>
   <string name="staking_details_annual_percentage_rate">Процентна ставка</string>
-  <string name="staking_details_annual_percentage_rate_info">Річний відсоток, який ви можете отримати, беручи участь у стейкінгу.</string>
+  <string name="staking_details_annual_percentage_rate_info">APR: Показує відсоток, який ви можете заробити за рік без урахування складного відсотка. Нараховані відсотки не додаються до вашого балансу, тому на них не нараховуються додаткові відсотки.</string>
+  <string name="staking_details_annual_percentage_yield_info">APY: Показує загальний відсоток, який ви можете заробити за рік з урахуванням складного відсотка. Складний відсоток означає, що нараховані відсотки додаються до вашого балансу, і на них також нараховуються відсотки.</string>
   <string name="staking_details_apr">APR</string>
   <string name="staking_details_apy">APY</string>
   <string name="staking_details_auto_claiming_rewards_daily_text">Винагороди автоматично накопичуються на вашому балансі щодня.</string>
@@ -1054,6 +1055,7 @@
   <string name="staking_reward_schedule_month">Місяць</string>
   <string name="staking_reward_schedule_week">Потижнево</string>
   <string name="staking_rewards">Винагороди</string>
+  <string name="staking_solana_details_auto_claiming_rewards_daily_text">Нагороди на Solana автоматично додаються до вашого стейкінг-балансу і не можуть відображатися окремо.</string>
   <string name="staking_stake_locked">Стейкінг закрито</string>
   <string name="staking_stake_more">Застейкати більше</string>
   <string name="staking_stake_more_button_unavailability_reason">При стейкінгу %1$s, весь ваш %2$s Баланс застейкний. Будь-які додаткові %2$s поповнены на Ваш гаманець Tangem буде також автоматично застейкано.</string>
