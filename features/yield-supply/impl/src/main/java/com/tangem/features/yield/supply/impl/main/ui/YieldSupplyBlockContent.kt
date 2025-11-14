@@ -55,8 +55,9 @@ internal fun YieldSupplyBlockContent(yieldSupplyUM: YieldSupplyUM, modifier: Mod
                 resourceReference(R.string.yield_module_stop_earning),
                 modifier,
             )
-            YieldSupplyUM.Unavailable -> SupplyUnavailable(modifier)
-            YieldSupplyUM.Initial -> Unit
+            YieldSupplyUM.Unavailable,
+            YieldSupplyUM.Initial,
+            -> Unit
         }
     }
 }
@@ -77,18 +78,6 @@ private fun SupplyAvailable(supplyUM: YieldSupplyUM.Available, modifier: Modifie
                 modifier = Modifier.fillMaxWidth(),
             )
         },
-    )
-}
-
-@Composable
-private fun SupplyUnavailable(modifier: Modifier = Modifier) {
-    SupplyInfo(
-        title = resourceReference(R.string.yield_module_unavailable_title),
-        subtitle = resourceReference(R.string.yield_module_unavailable_subtitle),
-        rewardsApy = null,
-        iconTint = TangemTheme.colors.icon.inactive,
-        button = null,
-        modifier = modifier,
     )
 }
 
