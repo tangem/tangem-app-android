@@ -461,6 +461,7 @@ private val state = SwapStateHolder(
             onClick = {},
         ),
     ),
+    changeCardsButtonState = ChangeCardsButtonState.ENABLED,
 )
 
 @Preview(widthDp = 360, showBackground = true)
