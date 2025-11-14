@@ -1174,8 +1174,8 @@
   <string name="staking_details_account_fee">ステーキングアカウント手数料</string>
   <string name="staking_details_account_fee_info">ステーキングアカウントとは、ステーキングされたSOLが保管される特別なアカウントです。トークンをバリデーターに委任し、取引の検証に参加して報酬を受け取る際に作成されます。ステーキングアカウントの作成には少額の手数料がかかりますが、ステーキング完了後に返金されます。</string>
   <string name="staking_details_annual_percentage_rate">年率</string>
-  <string name="staking_details_annual_percentage_rate_info">ステーキングに参加することで得られる年間収益率。</string>
-  <string name="staking_details_annual_percentage_yield_info">APYは、バリデータのパフォーマンスに基づいた年間利回りを示します。</string>
+  <string name="staking_details_annual_percentage_rate_info">APR：1年間で得られる利息を単利で表示します。得た利息は残高に加算されず、その利息にはさらに利息がつきません。</string>
+  <string name="staking_details_annual_percentage_yield_info">APY：1年間で得られる合計利息を複利込みで表示します。複利とは、得た利息が残高に加算され、その利息にもさらに利息がつくことを意味します。</string>
   <string name="staking_details_apr">APR</string>
   <string name="staking_details_apy">APY</string>
   <string name="staking_details_auto_claiming_rewards_daily_text">報酬は毎日自動的にステーキング残高に蓄積されます。</string>
