@@ -179,6 +179,7 @@
     <item quantity="other">дней</item>
   </plurals>
   <string name="common_delete">Удалить</string>
+  <string name="common_disable">Отключить</string>
   <string name="common_disabled">Отключено</string>
   <string name="common_disconnect">Отключить</string>
   <string name="common_done">Готово</string>
@@ -1597,6 +1598,7 @@
   <string name="yield_module_balance_info_sheet_title">Ваш %s внесён в Aave</string>
   <string name="yield_module_chart_loading_error">Невозможно загрузить график</string>
   <string name="yield_module_deposit_error_notification_title">Отправка %1$s %2$s на Aave ожидает выполнения.</string>
+  <string name="yield_module_disable_button">Завершить режим доходности</string>
   <string name="yield_module_earn_badge">APY %1$s%%</string>
   <string name="yield_module_earn_sheet_available_title">Доступно</string>
   <string name="yield_module_earn_sheet_current_apy_title">Текущий APY</string>
@@ -1625,11 +1627,12 @@
   <string name="yield_module_network_fee_unreachable_notification_description">Проверьте ваше интернет соединение</string>
   <string name="yield_module_network_fee_unreachable_notification_title">Информация о комиссии недоступна</string>
   <string name="yield_module_promo_screen_auto_balance_subtitle">Каждое пополнение вашего адреса автоматически будет отправляться в Aave.</string>
+  <string name="yield_module_promo_screen_auto_balance_subtitle_v2">Все %1$s на вашем счёте будут автоматически переданы в Aave.</string>
   <string name="yield_module_promo_screen_auto_balance_title">Автоперевод в AAVE</string>
   <string name="yield_module_promo_screen_cash_out_subtitle">Отправляйте, обменивайте или продавайте свои средства мгновенно, когда захотите.</string>
-  <string name="yield_module_promo_screen_cash_out_title">Мгновенный вывод средств</string>
+  <string name="yield_module_promo_screen_cash_out_title">Свободный доступ</string>
   <string name="yield_module_promo_screen_how_it_works_button_title">Как это работает?</string>
-  <string name="yield_module_promo_screen_self_custodial_subtitle">Aave — децентрализованный протокол, управляющий активами на сумму более $61 млрд.</string>
+  <string name="yield_module_promo_screen_self_custodial_subtitle">Aave — это ончейн-протокол для создания некостодиальных рынков ликвидности, позволяющий получать доход с переменной ставкой.</string>
   <string name="yield_module_promo_screen_self_custodial_title">Децентрализованный и некастодиальный</string>
   <string name="yield_module_promo_screen_terms_disclaimer">Используя сервис, вы соглашаетесь с условиями провайдера %1$s и %2$s</string>
   <string name="yield_module_promo_screen_title">Подключить Aave</string>
@@ -1645,6 +1648,7 @@
   <string name="yield_module_start_earning_sheet_description">Ваш %s будет передан в Aave и останется всегда доступным.</string>
   <string name="yield_module_start_earning_sheet_fee_policy">Политика комиссий</string>
   <string name="yield_module_start_earning_sheet_next_deposits">Следующие пополнения вашего счёта автоматически поступят в Aave.</string>
+  <string name="yield_module_start_earning_sheet_next_deposits_v2">Все ваши будущие поступления %1$s будут автоматически направляться в Aave.</string>
   <string name="yield_module_status_active">Активен</string>
   <string name="yield_module_status_paused">На паузе</string>
   <string name="yield_module_stop_earning">Завершение режима доходности</string>
