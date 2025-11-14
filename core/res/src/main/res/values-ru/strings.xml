@@ -1620,7 +1620,7 @@
   <string name="yield_module_fee_policy_tangem_service_fee_title">Tangem взимает комиссию за обслуживание в размере 15% от полученного дохода.</string>
   <string name="yield_module_high_fee_error">Ваши средства будут автоматически переведены в Aave, как только комиссия сети снизится или баланс достигнет минимально необходимой суммы.</string>
   <string name="yield_module_historical_returns">Историческая доходность</string>
-  <string name="yield_module_main_view_approve_notification_description">Разрешение для вашего токена в Yield сервисе было отозвано. Откройте токен, чтобы выдать разрешение снова.</string>
+  <string name="yield_module_main_view_approve_notification_description">Разрешение для вашего токена в режиме доходности было отозвано. Откройте токен, чтобы выдать разрешение снова.</string>
   <string name="yield_module_main_view_approve_notification_title">Необходимо разрешение для токена</string>
   <string name="yield_module_network_fee_unreachable_notification_description">Проверьте ваше интернет соединение</string>
   <string name="yield_module_network_fee_unreachable_notification_title">Информация о комиссии недоступна</string>
@@ -1662,7 +1662,7 @@
   <string name="yield_module_transfer_mode_automatic">Автоматически</string>
   <string name="yield_module_unable_to_cover_fee_description">Внесите немного %1$s %2$s, чтобы покрыть комиссию сети за транзакции.</string>
   <string name="yield_module_unable_to_cover_fee_title">Невозможно покрыть комиссию в %s</string>
-  <string name="yield_module_unavailable_subtitle">Сервис доходности в данный момент недоступен. Пожалуйста, попробуйте позже.</string>
+  <string name="yield_module_unavailable_subtitle">Режим доходности в данный момент недоступен. Пожалуйста, попробуйте позже.</string>
   <string name="yield_module_unavailable_title">Режим доходности недоступен</string>
   <string name="yield_supply_chart_loading_error">Невозможно загрузить график</string>
 </resources>
