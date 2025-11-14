@@ -223,19 +223,7 @@ internal class SwapModel @Inject constructor(
                     initTokens(isInitiallyReversed)
                 }
             } else {
-                val fromStatus = if (tangemPayInput != null) {
-                    getTangemPayCurrencyStatusUseCase(
-                        currency = initialCurrencyFrom,
-                        cryptoAmount = tangemPayInput.cryptoAmount,
-                        fiatAmount = tangemPayInput.fiatAmount,
-                        depositAddress = tangemPayInput.depositAddress,
-                    )
-                } else {
-                    getSingleCryptoCurrencyStatusUseCase.invokeMultiWalletSync(
-                        userWalletId = userWalletId,
-                        cryptoCurrencyId = initialCurrencyFrom.id,
-                    ).getOrNull()
-                }
+                val fromStatus = getFromStatus()
                 val toStatus = initialCurrencyTo?.let {
                     getSingleCryptoCurrencyStatusUseCase.invokeMultiWalletSync(
                         userWalletId = userWalletId,
@@ -567,7 +555,6 @@ internal class SwapModel @Inject constructor(
                     selectedFeeType = dataState.selectedFee?.feeType ?: FeeType.NORMAL,
                     isReverseSwapPossible = isReverseSwapPossible(),
                     needApplyFCARestrictions = userCountry.needApplyFCARestrictions(),
-                    isForTangemPaySwap = tangemPayInput != null,
                 )
                 if (uiState.notifications.any { it is SwapNotificationUM.Error.UnableToCoverFeeWarning }) {
                     analyticsEventHandler.send(
@@ -587,7 +574,6 @@ internal class SwapModel @Inject constructor(
                     toTokenStatus = toTokenStatus,
                     isReverseSwapPossible = isReverseSwapPossible(),
                     toAccount = dataState.toAccount,
-                    isForTangemPaySwap = tangemPayInput != null,
                 )
             }
             is SwapState.SwapError -> {
@@ -602,7 +588,6 @@ internal class SwapModel @Inject constructor(
                     isReverseSwapPossible = isReverseSwapPossible(),
                     needApplyFCARestrictions = userCountry.needApplyFCARestrictions(),
                     toAccount = dataState.toAccount,
-                    isForTangemPaySwap = tangemPayInput != null,
                 )
                 sendErrorAnalyticsEvent(state.error, provider)
             }
@@ -776,9 +761,11 @@ internal class SwapModel @Inject constructor(
                         swapRouter.openScreen(SwapNavScreen.Success)
                     }
                     SwapTransactionState.DemoMode -> {
-                        uiState = stateBuilder.createDemoModeAlert(uiState) {
-                            uiState = stateBuilder.clearAlert(uiState)
-                        }
+                        uiState = stateBuilder.createDemoModeAlert(
+                            uiState = uiState,
+                            onDismiss = { uiState = stateBuilder.clearAlert(uiState) },
+                            isReverseSwapPossible = isReverseSwapPossible(),
+                        )
                     }
                     is SwapTransactionState.Error -> {
                         startLoadingQuotesFromLastState()
@@ -787,6 +774,7 @@ internal class SwapModel @Inject constructor(
                             error = it,
                             onDismiss = { uiState = stateBuilder.clearAlert(uiState) },
                             onSupportClick = ::onFailedTxEmailClick,
+                            isReverseSwapPossible = isReverseSwapPossible(),
                         )
                     }
                 }
@@ -867,12 +855,15 @@ internal class SwapModel @Inject constructor(
                                 error = it,
                                 onDismiss = { uiState = stateBuilder.clearAlert(uiState) },
                                 onSupportClick = ::onFailedTxEmailClick,
+                                isReverseSwapPossible = isReverseSwapPossible(),
                             )
                         }
                         SwapTransactionState.DemoMode -> {
-                            uiState = stateBuilder.createDemoModeAlert(uiState) {
-                                uiState = stateBuilder.clearAlert(uiState)
-                            }
+                            uiState = stateBuilder.createDemoModeAlert(
+                                uiState = uiState,
+                                onDismiss = { uiState = stateBuilder.clearAlert(uiState) },
+                                isReverseSwapPossible = isReverseSwapPossible(),
+                            )
                         }
                     }
                 }.onFailure { makeDefaultAlert() }
@@ -1354,9 +1345,9 @@ internal class SwapModel @Inject constructor(
                     isPriceImpact = isPriceImpact,
                     token = currencySymbol,
                     provider = selectedProvider,
-                ) {
-                    uiState = stateBuilder.clearAlert(uiState)
-                }
+                    isReverseSwapPossible = isReverseSwapPossible(),
+                    onDismiss = { uiState = stateBuilder.clearAlert(uiState) },
+                )
             },
             onLinkClick = urlOpener::openUrl,
             onSelectTokenClick = {
@@ -1499,6 +1490,7 @@ internal class SwapModel @Inject constructor(
     }
 
     private fun isReverseSwapPossible(): Boolean {
+        if (tangemPayInput != null) return false
         val from = dataState.fromCryptoCurrency ?: return false
         val to = dataState.toCryptoCurrency ?: return false
 
@@ -1609,6 +1601,22 @@ internal class SwapModel @Inject constructor(
             name = this.network.name,
             blockchainId = this.network.rawId,
         )
+    }
+
+    private suspend fun getFromStatus(): CryptoCurrencyStatus? {
+        return if (tangemPayInput != null) {
+            getTangemPayCurrencyStatusUseCase(
+                currency = initialCurrencyFrom,
+                cryptoAmount = tangemPayInput.cryptoAmount,
+                fiatAmount = tangemPayInput.fiatAmount,
+                depositAddress = tangemPayInput.depositAddress,
+            )
+        } else {
+            getSingleCryptoCurrencyStatusUseCase.invokeMultiWalletSync(
+                userWalletId = userWalletId,
+                cryptoCurrencyId = initialCurrencyFrom.id,
+            ).getOrNull()
+        }
     }
 
     private companion object {
