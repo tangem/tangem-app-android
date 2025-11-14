@@ -1909,7 +1909,7 @@
   <string name="yield_module_balance_info_sheet_subtitle">Your funds are currently supplied to the Aave protocol, but you can manage them at any time.</string>
   <string name="yield_module_balance_info_sheet_title">Your %s is supplied to Aave</string>
   <string name="yield_module_chart_loading_error">Unable to load chart...</string>
-  <string name="yield_module_deposit_error_notification_title">Supply of %1$s %2$s to Aave is pending.</string>
+  <string name="yield_module_deposit_error_notification_title">Supplying %1$s %2$s to Aave.</string>
   <string name="yield_module_disable_button">Disable Yield Mode</string>
   <string name="yield_module_earn_badge">APY %1$s%%</string>
   <string name="yield_module_earn_sheet_available_title">Available</string>
@@ -1965,13 +1965,13 @@
   <string name="yield_module_status_paused">Paused</string>
   <string name="yield_module_stop_earning">Disabling Yield Mode</string>
   <string name="yield_module_stop_earning_sheet_description">Turning this off will withdraw your assets from Aave, convert them back to %s in your wallet, and stop yield accrual.</string>
-  <string name="yield_module_stop_earning_sheet_fee_note">The network fee will be deducted from the amount you withdraw.</string>
+  <string name="yield_module_stop_earning_sheet_fee_note">A network fee is charged by the blockchain when you exit Yield Mode.</string>
   <string name="yield_module_stop_earning_sheet_title">Disable Yield Mode</string>
   <string name="yield_module_supply">Supply</string>
   <string name="yield_module_supply_apr">Supply APY</string>
   <string name="yield_module_token_details_earn_notification_apy">APY</string>
-  <string name="yield_module_token_details_earn_notification_description">Yield accrues automatically.</string>
-  <string name="yield_module_token_details_earn_notification_earning_on_your_balance_subtitle">Yield accrues automatically</string>
+  <string name="yield_module_token_details_earn_notification_description">Interest accrues automatically</string>
+  <string name="yield_module_token_details_earn_notification_earning_on_your_balance_subtitle">Interest accrues automatically</string>
   <string name="yield_module_token_details_earn_notification_earning_on_your_balance_title">Yield Mode</string>
   <string name="yield_module_token_details_earn_notification_processing">Enabling Yield Mode</string>
   <string name="yield_module_token_details_earn_notification_title">Yield Mode</string>
