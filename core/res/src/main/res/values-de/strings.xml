@@ -1191,9 +1191,9 @@
   <string name="staking_details_account_fee">Gebühr für das Staking-Konto</string>
   <string name="staking_details_account_fee_info">Ein Staking-Konto ist ein spezielles Konto, auf dem eingesetzte SOL-Token gespeichert werden. Es wird erstellt, indem Sie Ihre Token an einen Validator delegieren, um an der Transaktionsvalidierung teilzunehmen und Belohnungen zu erhalten. Für die Einrichtung des Staking-Kontos wird eine geringe Gebühr erhoben, die nach Abschluss des Stakings zurückerstattet wird.</string>
   <string name="staking_details_annual_percentage_rate">Jährliche prozentuale Rendite</string>
-  <string name="staking_details_annual_percentage_rate_info">Die jährliche prozentuale Rendite, die du durch die Teilnahme am Staking erzielen kannst.</string>
+  <string name="staking_details_annual_percentage_rate_info">APR: Zeigt den Zinssatz, den Sie in einem Jahr ohne Zinseszins verdienen könnten. Die verdienten Zinsen werden nicht zu Ihrem Kontostand hinzugefügt, sodass Sie auf diese Zinsen keine zusätzlichen Zinsen erhalten.</string>
   <string name="staking_details_annual_percentage_yield">Jährlicher prozentualer Ertrag</string>
-  <string name="staking_details_annual_percentage_yield_info">APY zeigt den jährlichen prozentualen Ertrag des Validators basierend auf seiner Leistung</string>
+  <string name="staking_details_annual_percentage_yield_info">APY: Zeigt die gesamten Zinsen, die Sie in einem Jahr mit Zinseszins verdienen könnten. Zinseszins bedeutet, dass die verdienten Zinsen Ihrem Kontostand hinzugefügt werden, sodass Sie auch auf diese Zinsen Zinsen erhalten.</string>
   <string name="staking_details_apr">Effektiver Jahreszins</string>
   <string name="staking_details_apy">APY</string>
   <string name="staking_details_auto_claiming_rewards_daily_text">Belohnungen sammeln sich täglich automatisch in deinem Staking-Konto an.</string>
