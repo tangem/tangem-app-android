@@ -362,6 +362,7 @@ include(":domain:wallet-manager")
 include(":domain:wallet-manager:models")
 include(":domain:yield-supply")
 include(":domain:yield-supply:models")
+include(":domain:news")
 // endregion Domain modules
 
 // region Data modules
@@ -396,4 +397,5 @@ include(":data:swap")
 include(":data:express")
 include(":data:wallet-manager")
 include(":data:yield-supply")
+include(":data:news")
 // endregion Data modules
