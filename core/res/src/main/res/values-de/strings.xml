@@ -1884,6 +1884,7 @@
   <string name="yield_module_balance_info_sheet_title">Deine%s ist in Aave hinterlegt</string>
   <string name="yield_module_chart_loading_error">Chart konnte nicht geladen werden...</string>
   <string name="yield_module_deposit_error_notification_title">Das Bereitstellen von %1$s %2$s bei Aave steht aus.</string>
+  <string name="yield_module_disable_button">Deaktiviere den Yield-Modus</string>
   <string name="yield_module_earn_badge">APY %1$s%%</string>
   <string name="yield_module_earn_sheet_available_title">Verfügbar</string>
   <string name="yield_module_earn_sheet_current_apy_title">Aktueller effektiver Jahreszins</string>
@@ -1912,11 +1913,12 @@
   <string name="yield_module_network_fee_unreachable_notification_description">Prüfe Deine Netzwerkverbindung</string>
   <string name="yield_module_network_fee_unreachable_notification_title">Informationen zu den Netzwerkgebühren nicht erreichbar</string>
   <string name="yield_module_promo_screen_auto_balance_subtitle">Jede Einzahlung, die Du tätigst, wird automatisch an Aave weitergeleitet.</string>
+  <string name="yield_module_promo_screen_auto_balance_subtitle_v2">Alle %1$s auf Ihrem Konto werden automatisch an Aave bereitgestellt.</string>
   <string name="yield_module_promo_screen_auto_balance_title">Automatische Übertragung zu Aave</string>
   <string name="yield_module_promo_screen_cash_out_subtitle">Senden, tauschen oder verkaufen Deine Gelder sofort, wann immer Du willst.</string>
-  <string name="yield_module_promo_screen_cash_out_title">Jederzeit Zugriff auf Dein Geld</string>
+  <string name="yield_module_promo_screen_cash_out_title">Sofort verfügbar</string>
   <string name="yield_module_promo_screen_how_it_works_button_title">Wie funktioniert das?</string>
-  <string name="yield_module_promo_screen_self_custodial_subtitle">Aave ist ein dezentrales Protokoll, das ein Gesamtvermögen von über 61 Milliarden Dollar verwaltet.</string>
+  <string name="yield_module_promo_screen_self_custodial_subtitle">Aave ist ein On-Chain-Protokoll zur Erstellung von nicht-kustodialen Liquiditätsmärkten, um Zinsen mit variablem Satz zu verdienen.</string>
   <string name="yield_module_promo_screen_self_custodial_title">Dezentral und selbstverwahrend</string>
   <string name="yield_module_promo_screen_terms_disclaimer">Durch die Nutzung dieses Dienstes erklärst Du Dich mit provider\n%1$s und %2$s einverstanden</string>
   <string name="yield_module_promo_screen_title">Mit Aave verbinden</string>
@@ -1932,6 +1934,7 @@
   <string name="yield_module_start_earning_sheet_description">Dein %s wird an Aave übermittelt, bleibt aber verwaltbar.</string>
   <string name="yield_module_start_earning_sheet_fee_policy">Siehe Gebührenrichtlinie</string>
   <string name="yield_module_start_earning_sheet_next_deposits">Deine nächste Aufladung wird automatisch an Aave weitergeleitet.</string>
+  <string name="yield_module_start_earning_sheet_next_deposits_v2">Alle Ihre zukünftigen eingehenden %1$s-Einlagen werden automatisch an Aave bereitgestellt.</string>
   <string name="yield_module_status_active">Aktiv</string>
   <string name="yield_module_status_paused">Pausiert</string>
   <string name="yield_module_stop_earning">Deaktiviere den Yield-Modus</string>
