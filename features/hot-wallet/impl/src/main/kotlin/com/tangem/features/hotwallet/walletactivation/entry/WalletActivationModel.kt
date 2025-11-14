@@ -176,7 +176,7 @@ internal class WalletActivationModel @Inject constructor(
     }
 
     inner class MobileWalletSetupFinishedModelCallbacks : MobileWalletSetupFinishedComponent.ModelCallbacks {
-        override fun onContinueClick() {
+        override fun onFinishClick() {
             router.pop()
         }
     }
