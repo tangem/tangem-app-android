@@ -40,7 +40,10 @@ internal class YieldSupplyStartEarningEntryModel @Inject constructor(
                     R.string.yield_module_start_earning_sheet_description,
                     wrappedList(params.cryptoCurrency.symbol),
                 ),
-                footer = resourceReference(R.string.yield_module_start_earning_sheet_next_deposits),
+                footer = resourceReference(
+                    R.string.yield_module_start_earning_sheet_next_deposits_v2,
+                    wrappedList(params.cryptoCurrency.symbol),
+                ),
                 footerLink = resourceReference(R.string.yield_module_start_earning_sheet_fee_policy),
                 currencyIconState = CryptoCurrencyToIconStateConverter().convert(params.cryptoCurrency),
                 yieldSupplyFeeUM = YieldSupplyFeeUM.Loading,
