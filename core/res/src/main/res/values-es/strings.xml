@@ -1499,6 +1499,7 @@
   <string name="yield_module_balance_info_sheet_title">Su %s está depositado en Aave</string>
   <string name="yield_module_chart_loading_error">No se puede cargar el gráfico...</string>
   <string name="yield_module_deposit_error_notification_title">El suministro de %1$s %2$s a Aave está pendiente.</string>
+  <string name="yield_module_disable_button">Desactivar el modo de rendimiento</string>
   <string name="yield_module_earn_badge">APY %1$s%%</string>
   <string name="yield_module_earn_sheet_available_title">Disponible</string>
   <string name="yield_module_earn_sheet_current_apy_title">APY actual</string>
@@ -1527,11 +1528,12 @@
   <string name="yield_module_network_fee_unreachable_notification_description">Compruebe su conexión de red</string>
   <string name="yield_module_network_fee_unreachable_notification_title">Información de tarifas de red inaccesible</string>
   <string name="yield_module_promo_screen_auto_balance_subtitle">Cada depósito que realice se suministrará a Aave automáticamente.</string>
+  <string name="yield_module_promo_screen_auto_balance_subtitle_v2">Todos los %1$s en tu cuenta se suministrarán automáticamente a Aave.</string>
   <string name="yield_module_promo_screen_auto_balance_title">Transferencia automática a Aave</string>
   <string name="yield_module_promo_screen_cash_out_subtitle">Envíe, intercambie o venda sus fondos al instante, cuando quiera.</string>
-  <string name="yield_module_promo_screen_cash_out_title">Acceda a sus fondos en cualquier momento</string>
+  <string name="yield_module_promo_screen_cash_out_title">Acceso inmediato</string>
   <string name="yield_module_promo_screen_how_it_works_button_title">¿Cómo funciona?</string>
-  <string name="yield_module_promo_screen_self_custodial_subtitle">Aave es un protocolo descentralizado que administra más de 61 billones de dólares en valor total.</string>
+  <string name="yield_module_promo_screen_self_custodial_subtitle">Aave es un protocolo on-chain para crear mercados de liquidez no custodiales y ganar intereses a tasa variable.</string>
   <string name="yield_module_promo_screen_self_custodial_title">Descentralizado y autocustodiado</string>
   <string name="yield_module_promo_screen_terms_disclaimer">Al utilizar este servicio, usted acepta que el proveedor\n%1$s y %2$s</string>
   <string name="yield_module_promo_screen_title">Conectar Aave</string>
@@ -1547,6 +1549,7 @@
   <string name="yield_module_start_earning_sheet_description">Su %s se suministrará a Aave, pero seguirá siendo gestionable.</string>
   <string name="yield_module_start_earning_sheet_fee_policy">Ver política de tarifas</string>
   <string name="yield_module_start_earning_sheet_next_deposits">Sus próximas recargas se suministrarán automáticamente a Aave.</string>
+  <string name="yield_module_start_earning_sheet_next_deposits_v2">Todos tus futuros depósitos %1$s se suministrarán automáticamente a Aave.</string>
   <string name="yield_module_status_active">Activo</string>
   <string name="yield_module_status_paused">En pausa</string>
   <string name="yield_module_stop_earning">Desactivación del modo de rendimiento</string>
