@@ -1510,7 +1510,7 @@
   <string name="yield_module_status_paused">На паузі</string>
   <string name="yield_module_stop_earning">Вимкнення режиму прибутковості</string>
   <string name="yield_module_stop_earning_sheet_description">Вимкнення цієї опції виведе ваші активи з Aave, отримаєте їх назад у %s у вашому гаманці і зупинить накопичення нагород.</string>
-  <string name="yield_module_stop_earning_sheet_fee_note">Комісія мережі буде вирахувана з суми, яку ви знімаєте.</string>
+  <string name="yield_module_stop_earning_sheet_fee_note">Комісію мережі стягує блокчейн при виході з режиму доходності.</string>
   <string name="yield_module_stop_earning_sheet_title">Завершити заробіток</string>
   <string name="yield_module_supply_apr">Річна прибутковість (APY)</string>
   <string name="yield_module_token_details_earn_notification_apy">APY</string>
