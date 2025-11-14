@@ -54,11 +54,6 @@ internal class GeneralUserWalletsListManager(
                     emitAll(impl.userWallets)
                 }
             }
-            // To avoid returning empty flow to subscriber while implementation and userWallets are null
-            // Flow is called first time when implementation is null and then when its assigned with implementation
-            // that may have not user wallets (null or empty).
-            // As a result subscription occurs on empty flow, than will not change if user wallets are available
-            .filter { requireImplementation.hasUserWallets }
 
     override val savedWalletsCount: Flow<Int>
         get() = implementation
@@ -78,17 +73,9 @@ internal class GeneralUserWalletsListManager(
                     emitAll(impl.selectedUserWallet)
                 }
             }
-            // To avoid returning empty flow to subscriber while implementation and userWallets are null
-            // Flow is called first time when implementation is null and then when its assigned with implementation
-            // that may have not user wallets (null or empty).
-            // As a result subscription occurs on empty flow, than will not change if user wallets are available
-            .filter { requireImplementation.hasUserWallets }
 
     override val selectedUserWalletSync: UserWallet?
         get() = requireImplementation.selectedUserWalletSync
-
-    override val hasUserWallets: Boolean
-        get() = requireImplementation.hasUserWallets
 
     override val walletsCount: Int
         get() = requireImplementation.walletsCount
@@ -114,6 +101,8 @@ internal class GeneralUserWalletsListManager(
                 error("RuntimeUserWalletsListManager is not lockable")
             }
         }
+
+    override suspend fun hasUserWallets(): Boolean = requireImplementation.hasUserWallets()
 
     override suspend fun select(userWalletId: UserWalletId): CompletionResult<UserWallet> {
         return requireImplementation.select(userWalletId)

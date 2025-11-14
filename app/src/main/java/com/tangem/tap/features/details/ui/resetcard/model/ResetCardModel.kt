@@ -181,7 +181,9 @@ internal class ResetCardModel @Inject constructor(
 
     private fun makeFullReset() {
         modelScope.launch {
-            resetCardUseCase(cardId = primaryCardId, params = currentUserCodeParams).onRight {
+            val resetResult = resetCardUseCase(cardId = primaryCardId, params = currentUserCodeParams)
+
+            val shouldContinue = resetResult.onRight {
                 deleteSavedAccessCodesUseCase(cardId = primaryCardId)
                 val hasUserWallets = deleteWalletUseCase(userWalletId = currentUserWalletId).getOrElse { error ->
                     Timber.e("Unable to delete user wallet: $error")
@@ -195,9 +197,10 @@ internal class ResetCardModel @Inject constructor(
 
                     store.onUserWalletSelected(newSelectedWallet)
                 }
+            }.isRight()
 
+            if (shouldContinue) {
                 delay(DELAY_SDK_DIALOG_CLOSE)
-
                 checkRemainingBackupCards()
             }
         }
@@ -207,21 +210,23 @@ internal class ResetCardModel @Inject constructor(
         dismissDialog()
 
         modelScope.launch {
-            resetCardUseCase(
+            val resetResult = resetCardUseCase(
                 cardNumber = resetBackupCardCount + 1,
                 params = currentUserCodeParams,
                 userWalletId = currentUserWalletId,
             )
-                .onRight { isResetCompleted ->
-                    if (isResetCompleted) {
-                        resetBackupCardCount++
-                    }
 
-                    delay(DELAY_SDK_DIALOG_CLOSE)
-
-                    checkRemainingBackupCards()
+            resetResult.onRight { isResetCompleted ->
+                if (isResetCompleted) {
+                    resetBackupCardCount++
                 }
-                .onLeft { showDialog(ResetCardDialog.InterruptedResetDialog) }
+            }
+            resetResult.onLeft { showDialog(ResetCardDialog.InterruptedResetDialog) }
+
+            if (resetResult.isRight()) {
+                delay(DELAY_SDK_DIALOG_CLOSE)
+                checkRemainingBackupCards()
+            }
         }
     }
 
@@ -237,7 +242,7 @@ internal class ResetCardModel @Inject constructor(
         dismissAndFinishFullReset()
     }
 
-    private fun checkRemainingBackupCards() {
+    private suspend fun checkRemainingBackupCards() {
         val backupCardsCount = getBackupCardsCount()
 
         when {
@@ -255,10 +260,12 @@ internal class ResetCardModel @Inject constructor(
     private fun dismissAndFinishFullReset() {
         dismissDialog()
 
-        finishFullReset()
+        modelScope.launch {
+            finishFullReset()
+        }
     }
 
-    private fun finishFullReset() {
+    private suspend fun finishFullReset() {
         cardSettingsInteractor.clear()
 
         val newSelectedWallet = getSelectedWalletSyncUseCase.invoke().getOrNull()
@@ -270,7 +277,7 @@ internal class ResetCardModel @Inject constructor(
                 store.dispatchNavigationAction { replaceAll(AppRoute.Home()) }
             } else {
                 val isLocked = runCatching { userWalletsListManager.asLockable()?.isLocked }.isSuccess
-                if (isLocked && userWalletsListManager.hasUserWallets) {
+                if (isLocked && userWalletsListManager.hasUserWallets()) {
                     store.dispatchNavigationAction { popTo<AppRoute.Welcome>() }
                 } else {
                     store.dispatchNavigationAction { replaceAll(AppRoute.Home()) }

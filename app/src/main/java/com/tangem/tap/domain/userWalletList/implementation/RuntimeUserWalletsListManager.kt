@@ -32,14 +32,13 @@ internal class RuntimeUserWalletsListManager : UserWalletsListManager {
     override val selectedUserWalletSync: UserWallet?
         get() = state.value.userWallet
 
-    override val hasUserWallets: Boolean
-        get() = state.value.userWallet != null
-
     /**
      * only 1 wallet stored in runtime implementation
      */
     override val walletsCount: Int
-        get() = if (hasUserWallets) 1 else 0
+        get() = if (state.value.userWallet != null) 1 else 0
+
+    override suspend fun hasUserWallets(): Boolean = state.value.userWallet != null
 
     override val savedWalletsCount: Flow<Int>
         get() = state
