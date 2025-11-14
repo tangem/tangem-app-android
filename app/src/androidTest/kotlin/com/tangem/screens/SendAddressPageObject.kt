@@ -55,6 +55,21 @@ class SendAddressPageObject(semanticsProvider: SemanticsNodeInteractionsProvider
         useUnmergedTree = true
     }
 
+    fun recentAddressItem(recipientAddress: String): KNode = child {
+        hasTestTag(SendAddressScreenTestTags.RECENT_ADDRESS_ITEM)
+        hasAnySibling(withText(getResourceString(CoreUiR.string.send_recent_transactions)))
+        hasAnyChild(withTestTag(SendAddressScreenTestTags.RECENT_ADDRESS_ICON))
+        hasAnyDescendant(withText(recipientAddress))
+        hasAnyDescendant(withTestTag(SendAddressScreenTestTags.RECENT_ADDRESS_TEXT))
+        hasAnyDescendant(withTestTag(SendAddressScreenTestTags.RECENT_ADDRESS_TRANSACTION_ICON))
+        useUnmergedTree = true
+    }
+
+    fun recentAddressItemDescription(recipientAddress: String): KNode = recentAddressItem(recipientAddress).child {
+        hasParent(withTestTag(SendAddressScreenTestTags.RECENT_ADDRESS_TEXT))
+        useUnmergedTree = true
+    }
+
     fun destinationTagBlockTitle(isMemoCorrectOrEmpty: Boolean = true): KNode = child {
         hasTestTag(SendAddressScreenTestTags.DESTINATION_TAG_TEXT_FIELD_TITLE)
         useUnmergedTree = true
@@ -113,12 +128,6 @@ class SendAddressPageObject(semanticsProvider: SemanticsNodeInteractionsProvider
     val continueButton: KNode = child {
         hasTestTag(BaseButtonTestTags.TEXT)
         hasText(getResourceString(R.string.common_continue))
-        useUnmergedTree = true
-    }
-
-    fun recentAddressWithText(recipientAddress: String): KNode = child {
-        hasParent(withTestTag(SendAddressScreenTestTags.RECENT_ADDRESS_TITLE))
-        hasText(recipientAddress)
         useUnmergedTree = true
     }
 
