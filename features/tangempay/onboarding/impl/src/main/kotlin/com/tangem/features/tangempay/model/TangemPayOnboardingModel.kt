@@ -6,6 +6,7 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.features.tangempay.TangemPayConstants
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
@@ -81,7 +82,7 @@ internal class TangemPayOnboardingModel @Inject constructor(
     }
 
     private fun onTermsClick() {
-        urlOpener.openUrl("https://tangem.com/docs/en/tangem-visa-tariffs.pdf")
+        urlOpener.openUrl(TangemPayConstants.TERMS_AND_LIMITS_LINK)
     }
 
     private fun onGetCardClick() {
