@@ -9,32 +9,51 @@ import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.slot.childSlot
 import com.arkivanov.decompose.router.slot.dismiss
+import com.arkivanov.essenty.lifecycle.subscribe
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableDialogComponent
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.message.DialogMessage
+import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.utils.requestPermission
+import com.tangem.datasource.local.accounts.AccountTokenMigrationStore
+import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.feature.walletsettings.component.NetworksAvailableForNotificationsComponent
 import com.tangem.feature.walletsettings.component.RenameWalletComponent
 import com.tangem.feature.walletsettings.component.WalletSettingsComponent
 import com.tangem.feature.walletsettings.entity.DialogConfig
 import com.tangem.feature.walletsettings.entity.NetworksAvailableForNotificationBSConfig
+import com.tangem.feature.walletsettings.impl.R
 import com.tangem.feature.walletsettings.model.WalletSettingsModel
 import com.tangem.feature.walletsettings.ui.WalletSettingsScreen
 import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
+import com.tangem.utils.coroutines.JobHolder
+import com.tangem.utils.coroutines.saveIn
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 
 internal class DefaultWalletSettingsComponent @AssistedInject constructor(
     @Assisted context: AppComponentContext,
-    @Assisted params: WalletSettingsComponent.Params,
+    @Assisted private val params: WalletSettingsComponent.Params,
     private val renameWalletComponentFactory: RenameWalletComponent.Factory,
     private val networksAvailableForNotificationsComponent: NetworksAvailableForNotificationsComponent.Factory,
+    private val accountTokenMigrationStore: AccountTokenMigrationStore,
+    private val accountsFeatureToggles: AccountsFeatureToggles,
 ) : WalletSettingsComponent, AppComponentContext by context {
 
     private val model: WalletSettingsModel = getOrCreateModel(params)
+
+    private val accountMigrationJobHolder = JobHolder()
 
     private val bottomSheetSlot = childSlot(
         source = model.bottomSheetNavigation,
@@ -51,6 +70,17 @@ internal class DefaultWalletSettingsComponent @AssistedInject constructor(
         key = "dialogSlot",
         childFactory = ::dialogChild,
     )
+
+    init {
+        lifecycle.subscribe(
+            onResume = {
+                if (accountsFeatureToggles.isFeatureEnabled) {
+                    showMigrationAlertIfNeeded()
+                }
+            },
+            onPause = { accountMigrationJobHolder.cancel() },
+        )
+    }
 
     @Composable
     override fun Content(modifier: Modifier) {
@@ -105,6 +135,36 @@ internal class DefaultWalletSettingsComponent @AssistedInject constructor(
             onDismiss = model.bottomSheetNavigation::dismiss,
         ),
     )
+
+    private fun showMigrationAlertIfNeeded() {
+        accountTokenMigrationStore.get(params.userWalletId)
+            .distinctUntilChanged()
+            .filterNotNull()
+            .onEach { (fromAccount, toAccount) ->
+                messageSender.send(
+                    DialogMessage(
+                        title = resourceReference(R.string.accounts_migration_alert_title),
+                        message = resourceReference(
+                            R.string.accounts_migration_alert_message,
+                            wrappedList(fromAccount, toAccount),
+                        ),
+                        firstActionBuilder = {
+                            EventMessageAction(
+                                title = resourceReference(R.string.common_got_it),
+                                onClick = { /* no-op */ },
+                            )
+                        },
+                        onDismissRequest = {
+                            componentScope.launch {
+                                accountTokenMigrationStore.remove(params.userWalletId)
+                            }
+                        },
+                    ),
+                )
+            }
+            .launchIn(componentScope)
+            .saveIn(accountMigrationJobHolder)
+    }
 
     @AssistedFactory
     interface Factory : WalletSettingsComponent.Factory {

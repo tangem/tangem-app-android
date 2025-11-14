@@ -269,7 +269,7 @@
   <string name="common_free">無料</string>
   <string name="common_from">送信元</string>
   <string name="common_generate_addresses">アドレスを同期する</string>
-  <string name="common_get_started">もっと詳しく</string>
+  <string name="common_get_started">はじめる</string>
   <string name="common_get_token">トークンを取得</string>
   <string name="common_go_to_provider">プロバイダーへ移動</string>
   <string name="common_go_to_token">トークンへ移動</string>
