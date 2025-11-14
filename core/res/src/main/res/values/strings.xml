@@ -1196,9 +1196,9 @@
   <string name="staking_details_account_fee">Stake account fee</string>
   <string name="staking_details_account_fee_info">A staking account is a special account where staked SOL tokens are stored. It is created when you delegate your tokens to a validator to participate in transaction validation and receive rewards. A small fee is charged for creating the staking account, which is returned after the staking is completed.</string>
   <string name="staking_details_annual_percentage_rate">Annual percentage rate</string>
-  <string name="staking_details_annual_percentage_rate_info">The annual percentage return you can earn from participating in staking.</string>
+  <string name="staking_details_annual_percentage_rate_info">APR: Shows the interest rate you could earn in a year without compounding. Your earned interest is not added to your balance, so your earnings don’t grow on themselves.</string>
   <string name="staking_details_annual_percentage_yield">Annual percentage yield</string>
-  <string name="staking_details_annual_percentage_yield_info">APY shows the validator’s annual percentage yield based on its performance</string>
+  <string name="staking_details_annual_percentage_yield_info">APY: Shows the total interest you could earn in a year with compounding. Compounding means your earned interest is added to your balance, so you also earn interest on that interest.</string>
   <string name="staking_details_apr">APR</string>
   <string name="staking_details_apy">APY</string>
   <string name="staking_details_auto_claiming_rewards_daily_text">Rewards automatically accumulate in your staking balance daily.</string>
@@ -1434,7 +1434,7 @@
   <string name="tangempay_onboarding_purchases_title">Pay exactly what you see</string>
   <string name="tangempay_onboarding_security_description">A separate payment account will be created without disclosing your addresses and assets</string>
   <string name="tangempay_onboarding_security_title">Unrivaled privacy</string>
-  <string name="tangempay_onboarding_title">Get your free Crypto Card\nin minutes</string>
+  <string name="tangempay_onboarding_title">Get your free Tangem Pay Card in minutes</string>
   <string name="tangempay_service_unavailable_description">We’re fixing a technical issue. Please try again later.</string>
   <string name="tangempay_service_unavailable_title">Service temporarily unavailable</string>
   <string name="tangempay_title">Tangem Pay</string>
@@ -1973,7 +1973,7 @@
   <string name="yield_module_token_details_earn_notification_description">Yield accrues automatically.</string>
   <string name="yield_module_token_details_earn_notification_earning_on_your_balance_subtitle">Yield accrues automatically</string>
   <string name="yield_module_token_details_earn_notification_earning_on_your_balance_title">Yield Mode</string>
-  <string name="yield_module_token_details_earn_notification_processing">Processing your top-up</string>
+  <string name="yield_module_token_details_earn_notification_processing">Enabling Yield Mode</string>
   <string name="yield_module_token_details_earn_notification_title">Yield Mode</string>
   <string name="yield_module_transfer_mode_automatic">Automatic</string>
   <string name="yield_module_unable_to_cover_fee_description">Add some %1$s %2$s to cover the network fee for transactions.</string>
