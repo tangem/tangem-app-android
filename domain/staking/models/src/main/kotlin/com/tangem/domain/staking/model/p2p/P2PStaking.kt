@@ -7,7 +7,6 @@ import kotlinx.serialization.Serializable
  * P2P.org pooled staking information (similar to StakeKit's Yield)
  * Contains vault details, APY, status, and metadata
  */
-@Serializable
 data class P2PStaking(
     val id: String, // Vault address used as unique ID
     val vault: P2PVaultDetails,
@@ -18,13 +17,11 @@ data class P2PStaking(
     val network: P2PNetwork,
 ) {
 
-    @Serializable
     data class Status(
         val enter: Boolean, // Can deposit
         val exit: Boolean, // Can unstake/withdraw
     )
 
-    @Serializable
     data class Metadata(
         val name: String,
         val description: String?,
@@ -39,12 +36,10 @@ data class P2PStaking(
         val rewardClaiming: RewardClaiming,
     ) {
 
-        @Serializable
         data class Period(
             val days: Int,
         )
 
-        @Serializable
         data class Fee(
             val enabled: Boolean,
             val percent: SerializedBigDecimal?,
@@ -69,7 +64,6 @@ data class P2PStaking(
 /**
  * Detailed vault information for P2P staking
  */
-@Serializable
 data class P2PVaultDetails(
     val vaultAddress: String,
     val displayName: String,
@@ -80,5 +74,5 @@ data class P2PVaultDetails(
     val isGenesis: Boolean,
     val isSmoothingPool: Boolean,
     val isErc20: Boolean,
-    val createdAt: String?, // ISO 8601 date string
+    val createdAt: String?,
 )

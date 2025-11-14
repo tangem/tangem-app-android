@@ -7,7 +7,6 @@ import kotlinx.serialization.Serializable
  * P2P.org unsigned transaction ready for signing
  * Contains all necessary data for transaction signing
  */
-@Serializable
 data class P2PUnsignedTransaction(
     val serializeTx: String,
     val to: String,

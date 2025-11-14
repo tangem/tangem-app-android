@@ -29,7 +29,6 @@ data class P2PBalanceItem(
 /**
  * Types of balances in P2P staking
  */
-@Serializable
 enum class P2PBalanceType {
     STAKED,
     REWARDS,
@@ -51,7 +50,6 @@ data class P2PPendingAction(
 /**
  * Types of pending actions
  */
-@Serializable
 enum class P2PActionType {
     UNSTAKE_PENDING,
     WITHDRAWAL_AVAILABLE,
