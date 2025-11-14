@@ -15,6 +15,7 @@ internal data class TangemPayDetailsTopBarMenuItem(
 
 internal enum class TangemPayDetailsTopBarMenuItemType {
     ChangePin,
+    TermsAndLimits,
     FreezeCard,
     UnfreezeCard,
 }
