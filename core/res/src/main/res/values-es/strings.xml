@@ -1555,7 +1555,7 @@
   <string name="yield_module_status_paused">En pausa</string>
   <string name="yield_module_stop_earning">Desactivación del modo de rendimiento</string>
   <string name="yield_module_stop_earning_sheet_description">Al desactivar esto, retirará sus fondos de Aave a %s en su billetera y dejará de ganar recompensas.</string>
-  <string name="yield_module_stop_earning_sheet_fee_note">La comisión de red se deducirá del importe que retire.</string>
+  <string name="yield_module_stop_earning_sheet_fee_note">Se cobra una comisión de red por la blockchain al salir del modo Yield.</string>
   <string name="yield_module_stop_earning_sheet_title">Desactivar el modo de rendimiento</string>
   <string name="yield_module_supply">Suministrar</string>
   <string name="yield_module_supply_apr">Suministro APY</string>
