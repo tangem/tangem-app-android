@@ -70,7 +70,7 @@ internal fun MobileWalletSetupFinishedContent(state: MobileWalletSetupFinishedUM
                     top = 12.dp,
                     end = 48.dp,
                 ),
-            text = stringResourceSafe(R.string.backup_complete_description),
+            text = stringResourceSafe(R.string.onboarding_done_wallet),
             style = TangemTheme.typography.body1,
             color = TangemTheme.colors.text.secondary,
             textAlign = TextAlign.Center,
@@ -78,10 +78,10 @@ internal fun MobileWalletSetupFinishedContent(state: MobileWalletSetupFinishedUM
         Spacer(modifier = Modifier.weight(2f))
         PrimaryButton(
             modifier = Modifier.fillMaxWidth(),
-            text = stringResourceSafe(R.string.common_continue),
+            text = stringResourceSafe(R.string.common_finish),
             showProgress = false,
             enabled = true,
-            onClick = state.onContinueClick,
+            onClick = state.onFinishClick,
         )
     }
 
@@ -112,7 +112,7 @@ private fun PreviewMobileWalletSetupFinishedContent() {
     TangemThemePreview {
         MobileWalletSetupFinishedContent(
             state = MobileWalletSetupFinishedUM(
-                onContinueClick = {},
+                onFinishClick = {},
             ),
         )
     }
