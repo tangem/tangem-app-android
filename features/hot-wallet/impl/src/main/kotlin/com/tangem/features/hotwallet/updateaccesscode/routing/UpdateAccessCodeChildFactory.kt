@@ -4,6 +4,7 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.hotwallet.updateaccesscode.UpdateAccessCodeModel
 import com.tangem.features.hotwallet.accesscode.AccessCodeComponent
+import com.tangem.features.hotwallet.setupfinished.MobileWalletSetupFinishedComponent
 import javax.inject.Inject
 
 internal class UpdateAccessCodeChildFactory @Inject constructor(
@@ -29,6 +30,12 @@ internal class UpdateAccessCodeChildFactory @Inject constructor(
                     accessCodeToConfirm = route.accessCode,
                     userWalletId = route.userWalletId,
                     callbacks = model,
+                ),
+            )
+            is UpdateAccessCodeRoute.SetupFinished -> MobileWalletSetupFinishedComponent(
+                context = childContext,
+                params = MobileWalletSetupFinishedComponent.Params(
+                    callbacks = model.mobileWalletSetupFinishedComponentModelCallbacks,
                 ),
             )
         }
