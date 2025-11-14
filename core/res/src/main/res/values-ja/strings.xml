@@ -1891,7 +1891,7 @@
   <string name="yield_module_status_paused">停止中</string>
   <string name="yield_module_stop_earning">利回りモードを解除中</string>
   <string name="yield_module_stop_earning_sheet_description">これをオフにすると、Aaveから資産が引き出され、ウォレット内の%sに変換され、利回りの発生が停止します。</string>
-  <string name="yield_module_stop_earning_sheet_fee_note">出金金額からネットワーク手数料が差し引かれます。</string>
+  <string name="yield_module_stop_earning_sheet_fee_note">ネットワーク手数料とは、ブロックチェーン上で取引を処理して承認するためにユーザーが支払う料金のことです。</string>
   <string name="yield_module_stop_earning_sheet_title">利回りモードを無効にする</string>
   <string name="yield_module_supply">供給</string>
   <string name="yield_module_supply_apr">供給APY</string>
