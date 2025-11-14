@@ -13,6 +13,7 @@ import com.tangem.data.common.account.WalletAccountsFetcher
 import com.tangem.data.common.account.WalletAccountsSaver
 import com.tangem.data.common.currency.UserTokensSaver
 import com.tangem.datasource.api.tangemTech.TangemTechApi
+import com.tangem.datasource.local.accounts.AccountTokenMigrationStore
 import com.tangem.datasource.local.datastore.RuntimeStateStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
@@ -75,9 +76,11 @@ internal object AccountDataModule {
     fun provideMainAccountTokensMigration(
         accountsResponseStoreFactory: AccountsResponseStoreFactory,
         userTokensSaver: UserTokensSaver,
+        accountTokenMigrationStore: AccountTokenMigrationStore,
     ): MainAccountTokensMigration {
         return DefaultMainAccountTokensMigration(
             accountsResponseStoreFactory = accountsResponseStoreFactory,
+            accountTokenMigrationStore = accountTokenMigrationStore,
             userTokensSaver = userTokensSaver,
         )
     }
