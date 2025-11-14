@@ -1462,7 +1462,7 @@
   <string name="yield_module_earn_sheet_fee_description">При поповненні для кредитування з балансу буде вирахувано комісію мережі, що не перевищує %1$s.</string>
   <string name="yield_module_earn_sheet_high_fee_description">Наразі мережева комісія є занадто високою, щоб здійснювати кредитування. Кошти будуть надані, як тільки вона знизиться до %1$s або нижче.</string>
   <string name="yield_module_earn_sheet_my_funds_title">Мої кошти</string>
-  <string name="yield_module_earn_sheet_provider_description">Ваші %1$s тепер розміщено в Aave і приносить дохід. У вас є токен %2$s, який представляє ваш баланс і з часом збільшується. При поповненні кошти автоматично направляються в Aave для отримання процентів з вирахуванням комісії за транзакцію.</string>
+  <string name="yield_module_earn_sheet_provider_description">Ваші %1$s тепер розміщені в Aave і приносять дохід. У вас є токен %2$s, який представляє ваш баланс і з часом збільшується. При поповненні кошти автоматично направляються в Aave для отримання процентів з вирахуванням комісії за транзакцію.</string>
   <string name="yield_module_earn_sheet_title">Режим дохідності</string>
   <string name="yield_module_earn_sheet_total_earnings_title">Підсумковий дохід</string>
   <string name="yield_module_earn_sheet_transfers_title">Перекази в Aave</string>
