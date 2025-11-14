@@ -959,7 +959,8 @@
   <string name="staking_details_account_fee">Frais de staking du compte</string>
   <string name="staking_details_account_fee_info">Un compte de staking est un compte spécial où sont stockés les jetons SOL stakés. Il est créé lorsque vous déléguez vos jetons à un validateur pour participer à la validation des transactions et gagner des récompenses. Des frais minimes sont facturés pour la création du compte de staking, qui sont restitués une fois le staking terminé.</string>
   <string name="staking_details_annual_percentage_rate">Pourcentage de rendement annuel</string>
-  <string name="staking_details_annual_percentage_rate_info">Le pourcentage de rendement annuel que vous pouvez gagner en participant au staking.</string>
+  <string name="staking_details_annual_percentage_rate_info">APR : Montre le taux d’intérêt que vous pourriez gagner en un an sans capitalisation. Les intérêts gagnés ne sont pas ajoutés à votre solde, donc vous ne gagnez pas d’intérêts supplémentaires dessus.</string>
+  <string name="staking_details_annual_percentage_yield_info">APY : Montre le total des intérêts que vous pourriez gagner en un an avec capitalisation. La capitalisation signifie que les intérêts gagnés sont ajoutés à votre solde, et vous gagnez également des intérêts sur ces intérêts.</string>
   <string name="staking_details_apr">APR</string>
   <string name="staking_details_apy">APY</string>
   <string name="staking_details_auto_claiming_rewards_daily_text">Les récompenses s\'accumulent automatiquement sur votre solde de staking quotidiennement.</string>
@@ -1049,6 +1050,7 @@
   <string name="staking_reward_schedule_month">Mois</string>
   <string name="staking_reward_schedule_week">Semaine</string>
   <string name="staking_rewards">Récompenses</string>
+  <string name="staking_solana_details_auto_claiming_rewards_daily_text">Les récompenses sur Solana sont automatiquement ajoutées à votre solde de staking et ne peuvent pas être affichées séparément.</string>
   <string name="staking_stake_locked">Stake verrouillé</string>
   <string name="staking_stake_more">Staker plus</string>
   <string name="staking_stake_more_button_unavailability_reason">Lorsque vous stakez %1$s, la totalité de votre solde %2$s est stakeée. Tout dépôt supplémentaire de %2$s sur votre portefeuille Tangem sera également staké automatiquement.</string>
