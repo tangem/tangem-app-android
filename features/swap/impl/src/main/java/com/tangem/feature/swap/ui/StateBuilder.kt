@@ -327,7 +327,11 @@ internal class StateBuilder(
                 coinId = fromCurrencyStatus.currency.network.backendId,
                 isNotNativeToken = uiStateHolder.sendCardData.isNotNativeToken,
                 tokenCurrency = uiStateHolder.sendCardData.tokenCurrency,
-                canSelectAnotherToken = uiStateHolder.sendCardData.canSelectAnotherToken,
+                canSelectAnotherToken = if (isForTangemPaySwap) {
+                    true
+                } else {
+                    uiStateHolder.sendCardData.canSelectAnotherToken
+                },
                 networkIconRes = uiStateHolder.sendCardData.networkIconRes,
                 balance = fromCurrencyStatus.getFormattedAmount(isNeedSymbol = false),
                 isBalanceHidden = isBalanceHiddenProvider(),
@@ -432,7 +436,7 @@ internal class StateBuilder(
         }
     }
 
-    @Suppress("LongParameterList")
+    @Suppress("LongParameterList", "LongMethod")
     fun createQuotesErrorState(
         uiStateHolder: SwapStateHolder,
         swapProvider: SwapProvider,
@@ -492,6 +496,11 @@ internal class StateBuilder(
             sendCardData = uiStateHolder.sendCardData.copy(
                 amountEquivalent = getFormattedFiatAmount(fromToken.amountFiat),
                 balance = fromToken.cryptoCurrencyStatus.getFormattedAmount(isNeedSymbol = false),
+                canSelectAnotherToken = if (isForTangemPaySwap) {
+                    true
+                } else {
+                    uiStateHolder.sendCardData.canSelectAnotherToken
+                },
             ),
             receiveCardData = receiveCardData,
             notifications = notifications,
@@ -575,7 +584,11 @@ internal class StateBuilder(
                 coinId = uiStateHolder.sendCardData.coinId,
                 isNotNativeToken = uiStateHolder.sendCardData.isNotNativeToken,
                 tokenCurrency = uiStateHolder.sendCardData.tokenCurrency,
-                canSelectAnotherToken = uiStateHolder.sendCardData.canSelectAnotherToken,
+                canSelectAnotherToken = if (isForTangemPaySwap) {
+                    true
+                } else {
+                    uiStateHolder.sendCardData.canSelectAnotherToken
+                },
                 networkIconRes = uiStateHolder.sendCardData.networkIconRes,
                 balance = fromTokenStatus.getFormattedAmount(isNeedSymbol = false),
                 isBalanceHidden = isBalanceHiddenProvider(),

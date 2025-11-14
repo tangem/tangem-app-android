@@ -15,7 +15,7 @@ import java.math.BigDecimal
 
 interface SwapInteractor {
 
-    suspend fun getTokensDataState(currency: CryptoCurrency): TokensDataStateExpress
+    suspend fun getTokensDataState(currency: CryptoCurrency, filterInitial: Boolean): TokensDataStateExpress
 
     /**
      * Gives permission to swap, this starts scan card process
