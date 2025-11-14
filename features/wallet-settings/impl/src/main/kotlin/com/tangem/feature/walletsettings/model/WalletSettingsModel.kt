@@ -361,8 +361,13 @@ internal class WalletSettingsModel @Inject constructor(
         if (!state.value.isWalletBackedUp) {
             showMakeBackupAtFirstAlertBS(isUpgradeFlow = false)
         } else {
-            unlockWalletIfNeedAndProceed {
-                router.push(AppRoute.UpdateAccessCode(params.userWalletId))
+            unlockWalletIfNeedAndProceed { authorizationRequired ->
+                router.push(
+                    route = AppRoute.UpdateAccessCode(
+                        userWalletId = params.userWalletId,
+                        isFirstSetup = !authorizationRequired,
+                    ),
+                )
             }
         }
     }
@@ -409,14 +414,14 @@ internal class WalletSettingsModel @Inject constructor(
         messageSender.send(message)
     }
 
-    private fun unlockWalletIfNeedAndProceed(action: () -> Unit) {
+    private fun unlockWalletIfNeedAndProceed(action: (authorizationRequired: Boolean) -> Unit) {
         val userWallet = getUserWalletUseCase(params.userWalletId)
             .getOrElse { error("User wallet with id ${params.userWalletId} not found") }
         if (userWallet is UserWallet.Hot) {
             val hotWalletId = userWallet.hotWalletId
             when (hotWalletId.authType) {
                 HotWalletId.AuthType.NoPassword -> {
-                    action()
+                    action(false)
                 }
                 HotWalletId.AuthType.Password,
                 HotWalletId.AuthType.Biometry,
@@ -426,7 +431,7 @@ internal class WalletSettingsModel @Inject constructor(
                             Timber.e(it, "Unable to unlock wallet with id ${params.userWalletId}")
                         }
                         .onRight {
-                            action()
+                            action(true)
                         }
                 }
             }
