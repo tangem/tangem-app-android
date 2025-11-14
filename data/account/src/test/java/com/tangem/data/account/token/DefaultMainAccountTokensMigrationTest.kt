@@ -11,6 +11,7 @@ import com.tangem.data.common.currency.UserTokensSaver
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.toUserTokensResponse
+import com.tangem.datasource.local.accounts.AccountTokenMigrationStore
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.wallet.UserWalletId
@@ -29,11 +30,12 @@ class DefaultMainAccountTokensMigrationTest {
     private val accountsResponseStoreFactory = mockk<AccountsResponseStoreFactory>()
     private val accountsResponseStore = mockk<AccountsResponseStore>()
     private val accountsResponseStoreFlow = MutableStateFlow<GetWalletAccountsResponse?>(value = null)
-
+    private val accountTokenMigrationStore = mockk<AccountTokenMigrationStore>(relaxUnitFun = true)
     private val userTokensSaver = mockk<UserTokensSaver>(relaxUnitFun = true)
 
     private val migration = DefaultMainAccountTokensMigration(
         accountsResponseStoreFactory = accountsResponseStoreFactory,
+        accountTokenMigrationStore = accountTokenMigrationStore,
         userTokensSaver = userTokensSaver,
     )
 
