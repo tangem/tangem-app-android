@@ -25,7 +25,7 @@ internal data class SwapStateHolder(
     val notifications: ImmutableList<NotificationUM> = persistentListOf(),
     val isInsufficientFunds: Boolean,
     val event: StateEvent<SwapEvent> = consumedEvent(),
-    val changeCardsButtonState: ChangeCardsButtonState = ChangeCardsButtonState.ENABLED,
+    val changeCardsButtonState: ChangeCardsButtonState,
     val providerState: ProviderState,
 
     val fee: FeeItemState = FeeItemState.Empty,
