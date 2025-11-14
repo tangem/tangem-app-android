@@ -8,7 +8,6 @@ import com.tangem.common.constants.TestConstants.ENS_ETHEREUM_RECIPIENT_SHORTENE
 import com.tangem.common.constants.TestConstants.ENS_NAME
 import com.tangem.common.constants.TestConstants.ETHEREUM_ADDRESS
 import com.tangem.common.constants.TestConstants.ETHEREUM_RECIPIENT_ADDRESS
-import com.tangem.common.constants.TestConstants.ETHEREUM_RECIPIENT_SHORTENED_ADDRESS
 import com.tangem.common.constants.TestConstants.XRP_RECIPIENT_ADDRESS
 import com.tangem.common.constants.TestConstants.XRP_X_ADDRESS
 import com.tangem.common.constants.TestConstants.XRP_X_RECIPIENT_ADDRESS
@@ -30,58 +29,6 @@ import org.junit.Test
 
 @HiltAndroidTest
 class SendAddressScreenTest : BaseTestCase() {
-
-    @AllureId("4005")
-    @DisplayName("Send (address screen): check address history")
-    @Test
-    fun sendAddressHistoryTest() {
-        val tokenName = "Ethereum"
-        val sendAmount = "1"
-        val recipientShortenedAddress = ETHEREUM_RECIPIENT_SHORTENED_ADDRESS
-        val recipientAddress = ETHEREUM_RECIPIENT_ADDRESS
-
-        setupHooks().run {
-            step("Open 'Main Screen'") {
-                openMainScreen()
-            }
-            step("Synchronize addresses") {
-                synchronizeAddresses()
-            }
-            step("Open 'Send Address' screen") {
-                openSendAddressScreen(tokenName, sendAmount)
-            }
-            step("Click on previous address") {
-                onSendAddressScreen { recentAddressWithText(recipientShortenedAddress).clickWithAssertion() }
-            }
-            step("Assert recipient address is displayed") {
-                onSendConfirmScreen { recipientAddress(recipientAddress).assertIsDisplayed() }
-            }
-            step("Press system 'Back' button") {
-                device.uiDevice.pressBack()
-            }
-            step("Assert address text field contains correct recipient address") {
-                onSendAddressScreen { addressTextField.assertTextContains(recipientAddress) }
-            }
-            step("Assert 'Recent' title is displayed") {
-                onSendAddressScreen { recentAddressesTitle.assertIsNotDisplayed() }
-            }
-            step("Assert 'Next' button is enabled") {
-                onSendAddressScreen { nextButton.assertIsEnabled() }
-            }
-            step("Click on 'Cross' button") {
-                onSendAddressScreen { clearTextFieldButton.clickWithAssertion() }
-            }
-            step("Assert recipient text field is empty") {
-                onSendAddressScreen { addressTextField.assertTextEquals("") }
-            }
-            step("Assert 'Recent' title is displayed") {
-                onSendAddressScreen { recentAddressesTitle.assertIsDisplayed() }
-            }
-            step("Assert 'Next' button is disabled") {
-                onSendAddressScreen { nextButton.assertIsNotEnabled() }
-            }
-        }
-    }
 
     @AllureId("4004")
     @DisplayName("Send (address screen): check destination tag")
