@@ -72,7 +72,7 @@ fun BaseTestCase.openSendAddressScreen(
     }
 }
 
-fun BaseTestCase.checkScanQrScreen() {
+fun BaseTestCase.checkScanQrScreen(emptyClipboard: Boolean = true) {
     step("Assert 'Back' button is displayed") {
         onScanQrScreen { backTopAppBarButton.assertIsDisplayed() }
     }
@@ -82,8 +82,10 @@ fun BaseTestCase.checkScanQrScreen() {
     step("Assert 'Gallery' button is displayed") {
         onScanQrScreen { galleryButton.assertIsDisplayed() }
     }
-    step("Assert 'Paste from clipboard' is displayed") {
-        onScanQrScreen { pasteFromClipboardButton.assertIsDisplayed() }
+    if (!emptyClipboard) {
+        step("Assert 'Paste from clipboard' is displayed") {
+            onScanQrScreen { pasteFromClipboardButton.assertIsDisplayed() }
+        }
     }
 }
 
@@ -102,5 +104,21 @@ fun BaseTestCase.checkDestinationTagBlock(hint: String) {
     }
     step("Assert 'Destination Tag' caution is displayed") {
         onSendAddressScreen { destinationTagBlockCaution.assertIsDisplayed() }
+    }
+}
+
+fun BaseTestCase.checkRecentAddressItem(address: String, description: String) {
+    step("Assert recent address '$address' is displayed") {
+        onSendAddressScreen {
+            recentAddressItem(address).assertIsDisplayed()
+        }
+    }
+    step("Assert recent address item description is '$description'") {
+        onSendAddressScreen {
+            recentAddressItemDescription(description).assertTextContains(
+                description,
+                substring = true
+            )
+        }
     }
 }
