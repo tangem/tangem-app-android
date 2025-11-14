@@ -1380,6 +1380,7 @@
   <string name="tangem_pay_status_declined">Declined</string>
   <string name="tangem_pay_status_pending">Pending</string>
   <string name="tangem_pay_terms_fees_limits">Terms, Fees &amp; Limits</string>
+  <string name="tangem_pay_terms_limits">Terms and Limits</string>
   <string name="tangem_pay_transaction_declined_notification_text">The bank rejected this transaction request.</string>
   <string name="tangem_pay_transaction_fee_notification_text">This fee goes to cover the cost of handling your transfer.</string>
   <string name="tangem_pay_unfreeze_card_alert_body">Keep using your money. You can freeze anytime.</string>
@@ -1433,7 +1434,7 @@
   <string name="tangempay_onboarding_purchases_title">Pay exactly what you see</string>
   <string name="tangempay_onboarding_security_description">A separate payment account will be created without disclosing your addresses and assets</string>
   <string name="tangempay_onboarding_security_title">Unrivaled privacy</string>
-  <string name="tangempay_onboarding_title">Get your free Crypto Card\nin minutes</string>
+  <string name="tangempay_onboarding_title">Get your free Tangem Pay Card in minutes</string>
   <string name="tangempay_service_unavailable_description">We’re fixing a technical issue. Please try again later.</string>
   <string name="tangempay_service_unavailable_title">Service temporarily unavailable</string>
   <string name="tangempay_title">Tangem Pay</string>
