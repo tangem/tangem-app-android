@@ -277,7 +277,6 @@ internal class StateBuilder(
         selectedFeeType: FeeType,
         isReverseSwapPossible: Boolean,
         needApplyFCARestrictions: Boolean,
-        isForTangemPaySwap: Boolean,
     ): SwapStateHolder {
         if (uiStateHolder.sendCardData !is SwapCardState.SwapCardData) return uiStateHolder
         if (uiStateHolder.receiveCardData !is SwapCardState.SwapCardData) return uiStateHolder
@@ -370,11 +369,7 @@ internal class StateBuilder(
                 enabled = getSwapButtonEnabled(notifications),
                 onClick = actions.onSwapClick,
             ),
-            changeCardsButtonState = if (isReverseSwapPossible && !isForTangemPaySwap) {
-                ChangeCardsButtonState.ENABLED
-            } else {
-                ChangeCardsButtonState.DISABLED
-            },
+            changeCardsButtonState = getChangeCardsButtonState(isReverseSwapPossible),
             providerState = swapProvider.convertToContentClickableProviderState(
                 isBestRate = bestRatedProviderId == swapProvider.providerId,
                 fromTokenInfo = quoteModel.fromTokenInfo,
@@ -443,7 +438,6 @@ internal class StateBuilder(
         expressDataError: ExpressDataError,
         isReverseSwapPossible: Boolean,
         needApplyFCARestrictions: Boolean,
-        isForTangemPaySwap: Boolean,
     ): SwapStateHolder {
         if (uiStateHolder.sendCardData !is SwapCardState.SwapCardData) return uiStateHolder
         if (uiStateHolder.receiveCardData !is SwapCardState.SwapCardData) return uiStateHolder
@@ -502,11 +496,7 @@ internal class StateBuilder(
                 enabled = false,
                 onClick = actions.onSwapClick,
             ),
-            changeCardsButtonState = if (isReverseSwapPossible && !isForTangemPaySwap) {
-                ChangeCardsButtonState.ENABLED
-            } else {
-                ChangeCardsButtonState.DISABLED
-            },
+            changeCardsButtonState = getChangeCardsButtonState(isReverseSwapPossible),
             providerState = providerState,
             priceImpact = PriceImpact.Empty(),
             tosState = createTosState(swapProvider),
@@ -561,7 +551,6 @@ internal class StateBuilder(
         toTokenStatus: CryptoCurrencyStatus?,
         toAccount: Account.CryptoPortfolio?,
         isReverseSwapPossible: Boolean,
-        isForTangemPaySwap: Boolean,
     ): SwapStateHolder {
         if (uiStateHolder.sendCardData !is SwapCardState.SwapCardData) return uiStateHolder
         if (uiStateHolder.receiveCardData !is SwapCardState.SwapCardData) return uiStateHolder
@@ -604,11 +593,7 @@ internal class StateBuilder(
                 enabled = false,
                 onClick = { },
             ),
-            changeCardsButtonState = if (isReverseSwapPossible && !isForTangemPaySwap) {
-                ChangeCardsButtonState.ENABLED
-            } else {
-                ChangeCardsButtonState.DISABLED
-            },
+            changeCardsButtonState = getChangeCardsButtonState(isReverseSwapPossible),
             providerState = ProviderState.Empty(),
             priceImpact = PriceImpact.Empty(),
         )
@@ -873,6 +858,7 @@ internal class StateBuilder(
         error: SwapTransactionState.Error,
         onDismiss: () -> Unit,
         onSupportClick: (String) -> Unit,
+        isReverseSwapPossible: Boolean,
     ): SwapStateHolder {
         val errorAlert = SwapTransactionErrorStateConverter(
             onSupportClick = onSupportClick,
@@ -885,26 +871,32 @@ internal class StateBuilder(
                     onConsume = onDismiss,
                 )
             } ?: consumedEvent(),
-            changeCardsButtonState = ChangeCardsButtonState.ENABLED,
+            changeCardsButtonState = getChangeCardsButtonState(isReverseSwapPossible),
         )
     }
 
-    fun createDemoModeAlert(uiState: SwapStateHolder, onDismiss: () -> Unit): SwapStateHolder {
+    fun createDemoModeAlert(
+        uiState: SwapStateHolder,
+        onDismiss: () -> Unit,
+        isReverseSwapPossible: Boolean,
+    ): SwapStateHolder {
         return uiState.copy(
             event = triggeredEvent(
                 data = SwapEvent.ShowAlert(AlertDemoModeUM(onDismiss)),
                 onConsume = onDismiss,
             ),
-            changeCardsButtonState = ChangeCardsButtonState.ENABLED,
+            changeCardsButtonState = getChangeCardsButtonState(isReverseSwapPossible),
         )
     }
 
+    @Suppress("LongParameterList")
     fun createAlert(
         uiState: SwapStateHolder,
         isPriceImpact: Boolean,
         token: String,
         provider: SwapProvider,
         onDismiss: () -> Unit,
+        isReverseSwapPossible: Boolean,
     ): SwapStateHolder {
         val slippage = provider.slippage?.let { "${it.parseBigDecimal(1)}$PERCENT" }
         val combinedMessage = buildList {
@@ -951,7 +943,7 @@ internal class StateBuilder(
                 ),
                 onConsume = onDismiss,
             ),
-            changeCardsButtonState = ChangeCardsButtonState.ENABLED,
+            changeCardsButtonState = getChangeCardsButtonState(isReverseSwapPossible),
         )
     }
 
@@ -1394,6 +1386,12 @@ internal class StateBuilder(
         } else {
             AccountTitleUM.Text(resourceReference(R.string.swapping_to_title))
         }
+    }
+
+    private fun getChangeCardsButtonState(isReverseSwapPossible: Boolean) = if (isReverseSwapPossible) {
+        ChangeCardsButtonState.ENABLED
+    } else {
+        ChangeCardsButtonState.DISABLED
     }
 
     private companion object {
