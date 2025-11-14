@@ -4,6 +4,7 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.producer.SingleAccountListProducer
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
+import com.tangem.domain.account.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
@@ -13,25 +14,30 @@ import javax.inject.Inject
 @ModelScoped
 internal class ExpandedAccountsHolder @Inject constructor(
     private val singleAccountListSupplier: SingleAccountListSupplier,
+    private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
 ) {
 
     private val expandedAccounts = MutableStateFlow<Map<UserWalletId, Set<AccountId>>>(mapOf())
 
     fun expandedAccounts(userWallet: UserWallet): Flow<Set<AccountId>> = channelFlow {
-        walletAccounts(userWallet)
-            .onEach { accountList ->
+        combine(
+            flow = walletAccounts(userWallet),
+            flow2 = isAccountsModeEnabledUseCase.invoke(),
+            transform = { accountList, isAccountsMode ->
                 val isSingleAccount = accountList.accounts.size == 1
                 val defaultExpanded = when {
+                    !isAccountsMode -> setOf()
                     isSingleAccount -> setOf(accountList.mainAccount.accountId)
                     else -> setOf()
                 }
                 expandedAccounts.update { map ->
                     var expandedSet = map[userWallet.walletId] ?: defaultExpanded
                     // force expand for single account
-                    if (isSingleAccount) expandedSet = defaultExpanded
+                    if (isSingleAccount || !isAccountsMode) expandedSet = defaultExpanded
                     map.plus(userWallet.walletId to expandedSet)
                 }
-            }.launchIn(this)
+            },
+        ).launchIn(this)
 
         expandedAccounts
             .mapNotNull { map -> map[userWallet.walletId] }
