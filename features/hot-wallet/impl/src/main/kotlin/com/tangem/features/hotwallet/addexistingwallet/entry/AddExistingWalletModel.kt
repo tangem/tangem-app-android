@@ -150,7 +150,7 @@ internal class AddExistingWalletModel @Inject constructor(
 
     inner class MobileWalletSetupFinishedComponentModelCallbacks :
         MobileWalletSetupFinishedComponent.ModelCallbacks {
-        override fun onContinueClick() {
+        override fun onFinishClick() {
             router.replaceAll(AppRoute.Wallet)
         }
     }
