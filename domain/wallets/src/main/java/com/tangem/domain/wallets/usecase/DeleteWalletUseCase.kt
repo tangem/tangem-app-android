@@ -41,7 +41,7 @@ class DeleteWalletUseCase(
                     raise(DeleteWalletError.UnableToDelete)
                 }
 
-            userWalletsListManager.hasUserWallets
+            userWalletsListManager.hasUserWallets()
         }
     }
 }

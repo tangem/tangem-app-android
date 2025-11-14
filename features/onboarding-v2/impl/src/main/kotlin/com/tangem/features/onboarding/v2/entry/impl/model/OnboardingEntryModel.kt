@@ -228,16 +228,18 @@ internal class OnboardingEntryModel @Inject constructor(
         }
 
         // legacy flow
-        if (userWalletsListManager.hasUserWallets) {
-            val isLocked = runCatching { userWalletsListManager.asLockable()?.isLocked!! }.getOrElse { false }
+        modelScope.launch {
+            if (userWalletsListManager.hasUserWallets()) {
+                val isLocked = runCatching { userWalletsListManager.asLockable()?.isLocked!! }.getOrElse { false }
 
-            if (isLocked) {
-                router.replaceAll(AppRoute.Welcome())
+                if (isLocked) {
+                    router.replaceAll(AppRoute.Welcome())
+                } else {
+                    router.replaceAll(AppRoute.Wallet)
+                }
             } else {
-                router.replaceAll(AppRoute.Wallet)
+                router.replaceAll(AppRoute.Home())
             }
-        } else {
-            router.replaceAll(AppRoute.Home())
         }
     }
 

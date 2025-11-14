@@ -29,11 +29,11 @@ interface UserWalletsListManager {
     @Deprecated("You should provide the selected wallet via routing parameters due to the scalability of the features")
     val selectedUserWalletSync: UserWallet?
 
-    /** Indicates that the [UserWalletsListManager] contains at least one saved [UserWallet] */
-    val hasUserWallets: Boolean
-
     /** Count of saved user wallets */
     val walletsCount: Int
+
+    /** Indicates that the [UserWalletsListManager] contains at least one saved [UserWallet] */
+    suspend fun hasUserWallets(): Boolean
 
     /**
      * Set [UserWallet] with provided [UserWalletId] as selected

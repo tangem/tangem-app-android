@@ -134,7 +134,7 @@ internal class LockUserWalletsTimer(
         } else {
             val userWalletsListManager = userWalletsListManager.asLockable() ?: return@launch
 
-            if (userWalletsListManager.hasUserWallets) {
+            if (userWalletsListManager.hasUserWallets()) {
                 val currentTime = System.currentTimeMillis()
 
                 Timber.i(

@@ -35,5 +35,5 @@ internal interface UserWalletsKeysRepository {
      * Determine if the user has saved user wallets
      * @return [Boolean] true if user has saved wallets
      * */
-    fun hasSavedEncryptionKeys(): Boolean
+    suspend fun hasSavedEncryptionKeys(): Boolean
 }

@@ -15,7 +15,6 @@ import com.tangem.domain.wallets.legacy.UserWalletsListError
 import com.tangem.tap.domain.userWalletList.model.UserWalletEncryptionKey
 import com.tangem.tap.domain.userWalletList.repository.UserWalletsKeysRepository
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 
 internal class BiometricUserWalletsKeysRepository(
@@ -85,10 +84,8 @@ internal class BiometricUserWalletsKeysRepository(
         }
     }
 
-    override fun hasSavedEncryptionKeys(): Boolean {
-        return runBlocking {
-            getUserWalletsIds().isNotEmpty()
-        }
+    override suspend fun hasSavedEncryptionKeys(): Boolean {
+        return getUserWalletsIds().isNotEmpty()
     }
 
     private suspend fun getAllInternal(): CompletionResult<List<UserWalletEncryptionKey>> {
