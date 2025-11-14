@@ -11,6 +11,7 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig.ShowRefreshState
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.SnackbarMessage
@@ -19,6 +20,7 @@ import com.tangem.domain.pay.TangemPayTopUpData
 import com.tangem.domain.pay.model.TangemPayCardBalance
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
+import com.tangem.features.tangempay.TangemPayConstants
 import com.tangem.features.tangempay.components.AddFundsListener
 import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
 import com.tangem.features.tangempay.details.impl.R
@@ -30,6 +32,7 @@ import com.tangem.features.tangempay.model.listener.CardDetailsEvent
 import com.tangem.features.tangempay.model.listener.CardDetailsEventListener
 import com.tangem.features.tangempay.model.transformers.*
 import com.tangem.features.tangempay.navigation.TangemPayDetailsInnerRoute
+import com.tangem.features.tangempay.utils.TangemPayDetailIntents
 import com.tangem.features.tangempay.utils.TangemPayMessagesFactory
 import com.tangem.features.tangempay.utils.TangemPayTxHistoryUiActions
 import com.tangem.features.tangempay.utils.TangemPayTxHistoryUpdateListener
@@ -50,22 +53,19 @@ internal class TangemPayDetailsModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
+    private val urlOpener: UrlOpener,
     private val cardDetailsRepository: TangemPayCardDetailsRepository,
     private val uiMessageSender: UiMessageSender,
     private val cardDetailsEventListener: CardDetailsEventListener,
     private val txHistoryUpdateListener: TangemPayTxHistoryUpdateListener,
-) : Model(), TangemPayTxHistoryUiActions, AddFundsListener {
+) : Model(), TangemPayTxHistoryUiActions, TangemPayDetailIntents, AddFundsListener {
 
     private val params: TangemPayDetailsContainerComponent.Params = paramsContainer.require()
 
     private val stateFactory = TangemPayDetailsStateFactory(
         onBack = router::pop,
-        onRefresh = ::onRefreshSwipe,
-        onAddFunds = ::onClickAddFunds,
-        onClickChangePin = ::onClickChangePin,
+        intents = this,
         isCardFrozen = params.config.isCardFrozen,
-        onClickFreezeCard = ::onClickFreezeCard,
-        onClickUnfreezeCard = ::onClickUnfreezeCard,
     )
 
     val uiState: StateFlow<TangemPayDetailsUM>
@@ -84,15 +84,15 @@ internal class TangemPayDetailsModel @Inject constructor(
         fetchBalance()
     }
 
-    private fun onClickChangePin() {
+    override fun onClickChangePin() {
         router.push(TangemPayDetailsInnerRoute.ChangePIN)
     }
 
-    private fun onClickFreezeCard() {
+    override fun onClickFreezeCard() {
         uiMessageSender.send(TangemPayMessagesFactory.createFreezeCardMessage(onFreezeClicked = ::freezeCard))
     }
 
-    private fun onClickUnfreezeCard() {
+    override fun onClickUnfreezeCard() {
         uiMessageSender.send(TangemPayMessagesFactory.createUnfreezeCardMessage(onUnfreezeClicked = ::unfreezeCard))
     }
 
@@ -150,7 +150,7 @@ internal class TangemPayDetailsModel @Inject constructor(
         }
     }
 
-    private fun onClickAddFunds() {
+    override fun onClickAddFunds() {
         if (params.config.depositAddress == null || balance == null) {
             showBottomSheetError(TangemPayDetailsErrorType.Receive)
         } else {
@@ -187,7 +187,7 @@ internal class TangemPayDetailsModel @Inject constructor(
         }.saveIn(addToWalletBannerJobHolder)
     }
 
-    private fun onRefreshSwipe(refreshState: ShowRefreshState) {
+    override fun onRefreshSwipe(refreshState: ShowRefreshState) {
         modelScope.launch {
             uiState.update(TangemPayDetailsRefreshTransformer(isRefreshing = refreshState.value))
             cardDetailsEventListener.send(CardDetailsEvent.Hide)
@@ -249,6 +249,10 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     override fun onTransactionClick(item: TangemPayTxHistoryItem) {
         bottomSheetNavigation.activate(TangemPayDetailsNavigation.TransactionDetails(item))
+    }
+
+    override fun onClickTermsAndLimits() {
+        urlOpener.openUrl(TangemPayConstants.TERMS_AND_LIMITS_LINK)
     }
 
     private fun showBottomSheetError(type: TangemPayDetailsErrorType) {
