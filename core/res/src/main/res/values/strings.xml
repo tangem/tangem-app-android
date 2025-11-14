@@ -1910,6 +1910,7 @@
   <string name="yield_module_balance_info_sheet_title">Your %s is supplied to Aave</string>
   <string name="yield_module_chart_loading_error">Unable to load chart...</string>
   <string name="yield_module_deposit_error_notification_title">Supply of %1$s %2$s to Aave is pending.</string>
+  <string name="yield_module_disable_button">Disable Yield Mode</string>
   <string name="yield_module_earn_badge">APY %1$s%%</string>
   <string name="yield_module_earn_sheet_available_title">Available</string>
   <string name="yield_module_earn_sheet_current_apy_title">Current APY</string>
@@ -1927,7 +1928,7 @@
   <string name="yield_module_fee_policy_sheet_fee_note">An approximate network fee of %1$s (%2$s) will be deducted from each future top-up, and it won\'t exceed your %3$s (%4$s) limit.</string>
   <string name="yield_module_fee_policy_sheet_max_fee_note">If network fees rise above the maximum fee, the transaction won\'t go through until they decrease. You can change this limit later.</string>
   <string name="yield_module_fee_policy_sheet_max_fee_title">Maximum fee</string>
-  <string name="yield_module_fee_policy_sheet_min_amount_note">The minimum amount is calculated based on the current network fee, ensuring it doesn\'t exceed 4% of the top-up amount, which equals the minimum %1$s (%2$s).</string>
+  <string name="yield_module_fee_policy_sheet_min_amount_note">The minimum amount is calculated based on the current network fee, ensuring it doesn\'t exceed 4%% of the top-up amount, which equals the minimum %1$s (%2$s).</string>
   <string name="yield_module_fee_policy_sheet_min_amount_title">Minimum top-up</string>
   <string name="yield_module_fee_policy_sheet_title">Top-up fee policy</string>
   <string name="yield_module_fee_policy_tangem_service_fee_title">Tangem also takes a 15% service fee on yield generated.</string>
@@ -1938,11 +1939,12 @@
   <string name="yield_module_network_fee_unreachable_notification_description">Check your network connection</string>
   <string name="yield_module_network_fee_unreachable_notification_title">Network fee info unreachable</string>
   <string name="yield_module_promo_screen_auto_balance_subtitle">Every top-up will be supplied to Aave automatically.</string>
+  <string name="yield_module_promo_screen_auto_balance_subtitle_v2">All %1$s on your account will be supplied to Aave automatically.</string>
   <string name="yield_module_promo_screen_auto_balance_title">Auto-supply to Aave</string>
   <string name="yield_module_promo_screen_cash_out_subtitle">Send, swap, or sell your funds instantly, anytime you want.</string>
-  <string name="yield_module_promo_screen_cash_out_title">Access your funds anytime</string>
+  <string name="yield_module_promo_screen_cash_out_title">No lock-ups</string>
   <string name="yield_module_promo_screen_how_it_works_button_title">How it works?</string>
-  <string name="yield_module_promo_screen_self_custodial_subtitle">Aave is a decentralized protocol managing over $61 billion in total value.</string>
+  <string name="yield_module_promo_screen_self_custodial_subtitle">Aave is an on-chain protocol that offers non-custodial liquidity markets, enabling users to accrue yield at variable rates.</string>
   <string name="yield_module_promo_screen_self_custodial_title">Decentralized and self-custodial</string>
   <string name="yield_module_promo_screen_terms_disclaimer">By using this service, you agree with provider\n%1$s and %2$s</string>
   <string name="yield_module_promo_screen_title">Connect to Aave</string>
@@ -1955,9 +1957,10 @@
   <string name="yield_module_rate_info_sheet_title">Interest rate is variable</string>
   <string name="yield_module_receive_sheet_description">When you top up, your funds will be automatically supplied to Aave to start generating yield. %s will be deducted to cover the transaction fee.</string>
   <string name="yield_module_start_earning">Supply assets</string>
-  <string name="yield_module_start_earning_sheet_description">Your %s will be supplied to Aave, but will remain manageable.</string>
+  <string name="yield_module_start_earning_sheet_description">Your %s will be supplied to Aave with no lock-ups and will remain fully accessible.</string>
   <string name="yield_module_start_earning_sheet_fee_policy">See top-up fee policy</string>
   <string name="yield_module_start_earning_sheet_next_deposits">Your next top-ups will be automatically supplied to Aave.</string>
+  <string name="yield_module_start_earning_sheet_next_deposits_v2">All your future incoming %1$s deposits will be automatically supplied to Aave.</string>
   <string name="yield_module_status_active">Active</string>
   <string name="yield_module_status_paused">Paused</string>
   <string name="yield_module_stop_earning">Disabling Yield Mode</string>
