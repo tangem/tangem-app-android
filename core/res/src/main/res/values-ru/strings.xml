@@ -1606,7 +1606,7 @@
   <string name="yield_module_earn_sheet_fee_description">При пополнении в режиме доходности с баланса будет удержана комиссия сети, не превышающая %1$s.</string>
   <string name="yield_module_earn_sheet_high_fee_description">Сейчас комиссия сети слишком высока для выполнения операции. Средства будут отправлены, как только она снизится до %1$s или ниже.</string>
   <string name="yield_module_earn_sheet_my_funds_title">Мои средства</string>
-  <string name="yield_module_earn_sheet_provider_description">Ваши %1$s теперь внесён в Aave и приносит проценты. У вас есть токен %2$s, который отражает ваш баланс и со временем увеличивается. При пополнении средства автоматически направляются в Aave для получения процентов за вычетом комиссии за транзакцию.</string>
+  <string name="yield_module_earn_sheet_provider_description">Ваши %1$s теперь внесены в Aave и приносят проценты. У вас есть токен %2$s, который отражает ваш баланс и со временем увеличивается. При пополнении средства автоматически направляются в Aave для получения процентов за вычетом комиссии за транзакцию.</string>
   <string name="yield_module_earn_sheet_title">Режим доходности</string>
   <string name="yield_module_earn_sheet_total_earnings_title">Итоговый доход</string>
   <string name="yield_module_earn_sheet_transfers_title">Переводы в Aave</string>
@@ -1628,14 +1628,14 @@
   <string name="yield_module_network_fee_unreachable_notification_description">Проверьте ваше интернет соединение</string>
   <string name="yield_module_network_fee_unreachable_notification_title">Информация о комиссии недоступна</string>
   <string name="yield_module_promo_screen_auto_balance_subtitle">Каждое пополнение вашего адреса автоматически будет отправляться в Aave.</string>
-  <string name="yield_module_promo_screen_auto_balance_subtitle_v2">Все %1$s на вашем счёте будут автоматически переданы в Aave.</string>
+  <string name="yield_module_promo_screen_auto_balance_subtitle_v2">Все %1$s на вашем аккаунте будут автоматически переданы в Aave.</string>
   <string name="yield_module_promo_screen_auto_balance_title">Автоперевод в AAVE</string>
   <string name="yield_module_promo_screen_cash_out_subtitle">Отправляйте, обменивайте или продавайте свои средства мгновенно, когда захотите.</string>
   <string name="yield_module_promo_screen_cash_out_title">Свободный доступ</string>
   <string name="yield_module_promo_screen_how_it_works_button_title">Как это работает?</string>
-  <string name="yield_module_promo_screen_self_custodial_subtitle">Aave — это ончейн-протокол для создания некостодиальных рынков ликвидности, позволяющий получать доход с переменной ставкой.</string>
-  <string name="yield_module_promo_screen_self_custodial_title">Децентрализованный и некастодиальный</string>
-  <string name="yield_module_promo_screen_terms_disclaimer">Используя сервис, вы соглашаетесь с условиями провайдера %1$s и %2$s</string>
+  <string name="yield_module_promo_screen_self_custodial_subtitle">Aave — ончейн-протокол для некостодиальных рынков ликвидности, позволяющий получать доход с переменной ставкой.</string>
+  <string name="yield_module_promo_screen_self_custodial_title">Децентрализованный и некостодиальный</string>
+  <string name="yield_module_promo_screen_terms_disclaimer">Используя сервис, вы соглашаетесь с %1$s и %2$s</string>
   <string name="yield_module_promo_screen_title">Подключить Aave</string>
   <string name="yield_module_promo_screen_variable_rate_info">Aave %1$s%% • Плавающая ставка</string>
   <string name="yield_module_provider">Aave</string>
@@ -1646,7 +1646,7 @@
   <string name="yield_module_rate_info_sheet_title">Ставка может меняться</string>
   <string name="yield_module_receive_sheet_description">При пополнении ваши средства автоматически отправляются в Aave для начала начисления процентов. Для покрытия комиссии с вас будет удержана небольшая плата в размере %s.</string>
   <string name="yield_module_start_earning">Начать зарабатывать</string>
-  <string name="yield_module_start_earning_sheet_description">Ваш %s будет передан в Aave и останется всегда доступным.</string>
+  <string name="yield_module_start_earning_sheet_description">Ваши %s будет переданы в Aave и останутся всегда доступными.</string>
   <string name="yield_module_start_earning_sheet_fee_policy">Политика комиссий</string>
   <string name="yield_module_start_earning_sheet_next_deposits">Следующие пополнения вашего счёта автоматически поступят в Aave.</string>
   <string name="yield_module_start_earning_sheet_next_deposits_v2">Все ваши будущие поступления %1$s будут автоматически направляться в Aave.</string>
