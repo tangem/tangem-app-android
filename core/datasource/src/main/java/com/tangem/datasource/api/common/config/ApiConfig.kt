@@ -24,7 +24,7 @@ sealed class ApiConfig {
         Express,
         TangemTech,
         StakeKit,
-        P2P,
+        P2PEthPool,
         TangemPay,
         BlockAid,
         YieldSupply,
@@ -36,7 +36,7 @@ sealed class ApiConfig {
             is Express -> ID.Express
             is TangemTech -> ID.TangemTech
             is StakeKit -> ID.StakeKit
-            is P2P -> ID.P2P
+            is P2PEthPool -> ID.P2PEthPool
             is TangemPay -> ID.TangemPay
             is BlockAid -> ID.BlockAid
             is YieldSupply -> ID.YieldSupply

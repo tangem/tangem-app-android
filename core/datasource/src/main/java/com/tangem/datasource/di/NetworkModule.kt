@@ -14,7 +14,7 @@ import com.tangem.datasource.api.express.TangemExpressApi
 import com.tangem.datasource.api.markets.TangemTechMarketsApi
 import com.tangem.datasource.api.moonpay.MoonPayApi
 import com.tangem.datasource.api.onramp.OnrampApi
-import com.tangem.datasource.api.p2p.P2PApi
+import com.tangem.datasource.api.ethpool.P2PEthPoolApi
 import com.tangem.datasource.api.pay.TangemPayApi
 import com.tangem.datasource.api.stakekit.StakeKitApi
 import com.tangem.datasource.api.tangemTech.TangemTechApi
@@ -76,9 +76,9 @@ internal object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideP2PApi(retrofitApiBuilder: RetrofitApiBuilder): P2PApi {
+    fun provideP2PEthPoolApi(retrofitApiBuilder: RetrofitApiBuilder): P2PEthPoolApi {
         return retrofitApiBuilder.build(
-            apiConfigId = ApiConfig.ID.P2P,
+            apiConfigId = ApiConfig.ID.P2PEthPool,
             applyTimeoutAnnotations = false,
         )
     }

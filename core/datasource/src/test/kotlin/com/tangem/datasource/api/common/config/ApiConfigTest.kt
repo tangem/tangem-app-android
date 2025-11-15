@@ -72,7 +72,7 @@ class ApiConfigTest {
                 ApiConfig.ID.TangemPay -> TangemPay(appVersionProvider = mockk())
                 ApiConfig.ID.BlockAid -> BlockAid(configStorage = mockk())
                 ApiConfig.ID.MoonPay -> MoonPay()
-                ApiConfig.ID.P2P -> P2P(p2pAuthProvider = mockk())
+                ApiConfig.ID.P2PEthPool -> P2PEthPool(p2pAuthProvider = mockk())
             }
         }
     }
