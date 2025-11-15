@@ -1,4 +1,5 @@
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     alias(deps.plugins.kotlin.android) apply false
@@ -34,19 +35,30 @@ interface Injected {
 
 // Test Logging
 subprojects {
-    tasks.withType<Test>().configureEach {
-        val taskName = name.lowercase()
-        if (taskName.contains("external") ||
-            taskName.contains("internal") ||
-            taskName.contains("release") ||
-            taskName.contains("mocked") ||
-            taskName.contains("huawei")
-        ) {
-            enabled = false
-            println("Skipping test task: $name")
-        } else {
-            println("Test task scheduled: $name")
+    tasks.withType<KotlinCompile>().configureEach {
+        compilerOptions {
+            freeCompilerArgs.addAll(
+                "-Xsuppress-version-warnings",
+                "-Xopt-in=kotlin.RequiresOptIn"
+            )
         }
+    }
+
+    val disabledVariantsForUnitTest = setOf("external", "internal", "release", "mocked", "huawei")
+
+    tasks.withType<Test>().matching { task ->
+        val taskNameLower = task.name.lowercase()
+        disabledVariantsForUnitTest.any { taskNameLower.contains(it) }
+    }.configureEach {
+        enabled = false
+        logger.lifecycle("Skipping test task: $name")
+    }
+
+    tasks.withType<Test>().matching { task ->
+        val taskNameLower = task.name.lowercase()
+        disabledVariantsForUnitTest.none { taskNameLower.contains(it) }
+    }.configureEach {
+        logger.lifecycle("Configuring test task: $name")
 
         testLogging {
             exceptionFormat = TestExceptionFormat.FULL
