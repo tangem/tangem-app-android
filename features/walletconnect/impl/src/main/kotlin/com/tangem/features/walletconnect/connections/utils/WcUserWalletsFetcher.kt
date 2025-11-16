@@ -30,6 +30,7 @@ internal class WcUserWalletsFetcher(
         messageSender = messageSender,
         onlyMultiCurrency = true,
         isAuthMode = false,
+        clickableIfLocked = false,
         onWalletClick = { onWalletSelected(it) },
     )
 

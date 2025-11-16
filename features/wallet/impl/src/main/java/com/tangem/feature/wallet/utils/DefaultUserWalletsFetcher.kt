@@ -48,6 +48,7 @@ internal class DefaultUserWalletsFetcher @AssistedInject constructor(
     @Assisted private val messageSender: UiMessageSender,
     @Assisted("onlyMultiCurrency") private val onlyMultiCurrency: Boolean,
     @Assisted("isAuthMode") private val isAuthMode: Boolean,
+    @Assisted("clickableIfLocked") private val clickableIfLocked: Boolean,
     private val userWalletImageFetcher: UserWalletImageFetcher,
     dispatchers: CoroutineDispatcherProvider,
 ) : UserWalletsFetcher {
@@ -60,6 +61,7 @@ internal class DefaultUserWalletsFetcher @AssistedInject constructor(
         val uiModels = UserWalletItemUMConverter(
             onClick = onWalletClick,
             isAuthMode = isAuthMode,
+            clickableIfLocked = clickableIfLocked,
         ).convertList(wallets)
             .toImmutableList()
 
@@ -144,6 +146,7 @@ internal class DefaultUserWalletsFetcher @AssistedInject constructor(
                         UserWalletItemUM.EndIcon.None
                     },
                     isAuthMode = isAuthMode,
+                    clickableIfLocked = clickableIfLocked,
                 )
                     .convert(userWallet)
             }
@@ -163,6 +166,7 @@ internal class DefaultUserWalletsFetcher @AssistedInject constructor(
             messageSender: UiMessageSender,
             @Assisted("onlyMultiCurrency") onlyMultiCurrency: Boolean,
             @Assisted("isAuthMode") isAuthMode: Boolean,
+            @Assisted("clickableIfLocked") clickableIfLocked: Boolean,
             onWalletClick: (UserWalletId) -> Unit,
         ): DefaultUserWalletsFetcher
     }

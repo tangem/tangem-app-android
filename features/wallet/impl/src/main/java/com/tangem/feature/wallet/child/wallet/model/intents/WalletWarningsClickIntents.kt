@@ -120,6 +120,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val scanCardToUnlockWalletClickHandler: ScanCardToUnlockWalletClickHandler,
     private val unlockWalletsUseCase: UnlockWalletsUseCase,
+    private val nonBiometricUnlockWalletUseCase: NonBiometricUnlockWalletUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val dispatchers: CoroutineDispatcherProvider,
     private val shouldShowPromoWalletUseCase: ShouldShowPromoWalletUseCase,
@@ -220,12 +221,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
             modelScope.launch {
                 userWalletsListRepository.unlockAllWallets()
                     .onLeft {
-                        val selectedUserWallet = getSelectedUserWallet() ?: return@onLeft
-                        val method = when (selectedUserWallet) {
-                            is UserWallet.Cold -> UserWalletsListRepository.UnlockMethod.Scan()
-                            is UserWallet.Hot -> UserWalletsListRepository.UnlockMethod.AccessCode
-                        }
-                        userWalletsListRepository.unlock(stateHolder.getSelectedWalletId(), method)
+                        nonBiometricUnlockWalletUseCase(stateHolder.getSelectedWalletId())
                     }
             }
             return
