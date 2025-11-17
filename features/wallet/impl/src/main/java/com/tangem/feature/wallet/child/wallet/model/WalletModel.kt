@@ -19,6 +19,8 @@ import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.nft.ObserveAndClearNFTCacheIfNeedUseCase
 import com.tangem.domain.notifications.GetIsHuaweiDeviceWithoutGoogleServicesUseCase
 import com.tangem.domain.notifications.repository.NotificationsRepository
+import com.tangem.domain.pay.model.MainScreenCustomerInfo
+import com.tangem.domain.pay.model.OrderStatus
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.usecase.TangemPayIssueOrderUseCase
 import com.tangem.domain.pay.usecase.TangemPayMainScreenCustomerInfoUseCase
@@ -355,6 +357,13 @@ internal class WalletModel @Inject constructor(
             // fast exit
             if (!tangemPayFeatureToggles.isTangemPayEnabled) return@onEach
 
+            // Don't refresh customer info periodically if the card was already issued, only update on swipe to refresh
+            val savedCustomerInfo = tangemPayOnboardingRepository.getSavedCustomerInfo()
+            if (savedCustomerInfo?.cardInfo != null) {
+                updateTangemPay(MainScreenCustomerInfo(info = savedCustomerInfo, orderStatus = OrderStatus.COMPLETED))
+                return@onEach
+            }
+
             updateTangemPayJobHolder.cancel()
 
             modelScope.launch {
@@ -375,21 +384,23 @@ internal class WalletModel @Inject constructor(
 
     private suspend fun refreshTangemPayInfo() {
         val info = tangemPayMainScreenCustomerInfoUseCase()
-        if (info != null) {
-            stateHolder.update(
-                transformer = TangemPayInitialStateTransformer(
-                    value = info,
-                    onClickIssue = ::issueOrder,
-                    onClickKyc = innerWalletRouter::openTangemPayOnboarding,
-                    openDetails = { config ->
-                        innerWalletRouter.openTangemPayDetails(
-                            userWalletId = stateHolder.getSelectedWalletId(),
-                            config = config,
-                        )
-                    },
-                ),
-            )
-        }
+        if (info != null) updateTangemPay(info)
+    }
+
+    private fun updateTangemPay(info: MainScreenCustomerInfo) {
+        stateHolder.update(
+            transformer = TangemPayInitialStateTransformer(
+                value = info,
+                onClickIssue = ::issueOrder,
+                onClickKyc = innerWalletRouter::openTangemPayOnboarding,
+                openDetails = { config ->
+                    innerWalletRouter.openTangemPayDetails(
+                        userWalletId = stateHolder.getSelectedWalletId(),
+                        config = config,
+                    )
+                },
+            ),
+        )
     }
 
     private fun issueOrder() {

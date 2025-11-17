@@ -33,6 +33,9 @@ internal class DefaultOnboardingRepository @Inject constructor(
     private val tangemPayWalletsManager: TangemPayWalletsManager,
 ) : OnboardingRepository {
 
+    // Save data for a session
+    private var lastFetchedCustomerInfo: CustomerInfo? = null
+
     override suspend fun validateDeeplink(link: String): Either<UniversalError, Boolean> {
         return requestHelper.runWithErrorLogs(TAG) {
             val result = tangemPayApi.validateDeeplink(DeeplinkValidityRequest(link))
@@ -111,6 +114,10 @@ internal class DefaultOnboardingRepository @Inject constructor(
         }
     }
 
+    override fun getSavedCustomerInfo(): CustomerInfo? {
+        return lastFetchedCustomerInfo
+    }
+
     override suspend fun createOrder(): Either<UniversalError, Unit> = withContext(dispatcherProvider.io) {
         requestHelper.runWithErrorLogs(TAG) {
             val walletAddress = requestHelper.getCustomerWalletAddress()
@@ -151,7 +158,7 @@ internal class DefaultOnboardingRepository @Inject constructor(
             productInstance = productInstance,
             isKycApproved = response?.kyc?.status == APPROVED_KYC_STATUS,
             cardInfo = cardInfo,
-        )
+        ).also { lastFetchedCustomerInfo = it }
     }
 
     private suspend fun getOrderStatus(orderId: String): OrderStatus {
