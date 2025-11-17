@@ -345,6 +345,12 @@ internal class DefaultUserWalletsListRepository(
         userWalletEncryptionKeysRepository.clear()
     }
 
+    override suspend fun hasSecuredWallets(): Boolean {
+        val userWallets = userWalletsSync()
+        val unsecuredWalletIds = userWalletEncryptionKeysRepository.getAllUnsecured().map { it.walletId }.toSet()
+        return userWallets.any { it.walletId !in unsecuredWalletIds }
+    }
+
     private suspend fun requestPasswordRecursive(
         hotWalletId: HotWalletId,
         block: suspend (CharArray) -> UserWalletEncryptionKey?,
