@@ -3,6 +3,7 @@ package com.tangem.core.decompose.navigation.inner
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.pushNew
+import com.arkivanov.decompose.router.stack.replaceCurrent
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.navigation.Route
 import com.tangem.core.decompose.navigation.Router
@@ -29,6 +30,14 @@ inline fun <reified T : Route> AppComponentContext.InnerRouter(
             stackNavigation.pushNew(route, onComplete)
         } else {
             fallBackRouter.push(route, onComplete)
+        }
+    }
+
+    override fun replaceCurrent(route: Route, onComplete: (Boolean) -> Unit) {
+        if (route is T) {
+            stackNavigation.replaceCurrent(route, { onComplete(true) })
+        } else {
+            fallBackRouter.replaceCurrent(route, onComplete)
         }
     }
 
