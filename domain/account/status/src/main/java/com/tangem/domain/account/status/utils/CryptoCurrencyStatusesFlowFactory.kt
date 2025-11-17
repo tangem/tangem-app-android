@@ -62,7 +62,6 @@ internal class CryptoCurrencyStatusesFlowFactory @Inject constructor(
                     CryptoCurrencyStatus(currency = currency, value = CryptoCurrencyStatus.Loading),
                 )
             }
-            .conflate()
             .distinctUntilChanged()
     }
 
@@ -88,6 +87,7 @@ internal class CryptoCurrencyStatusesFlowFactory @Inject constructor(
         val quoteStatusFlow = currency.id.rawCurrencyId?.let(::getQuoteStatusFlow)
 
         return combine(networkStatusFlow, yieldBalanceFlow, quoteStatusFlow)
+            .distinctUntilChanged()
     }
 
     private fun combine(
@@ -120,7 +120,6 @@ internal class CryptoCurrencyStatusesFlowFactory @Inject constructor(
         return singleNetworkStatusSupplier(
             params = SingleNetworkStatusProducer.Params(userWalletId = userWalletId, network = network),
         )
-            .conflate()
             .distinctUntilChanged()
     }
 
@@ -128,7 +127,6 @@ internal class CryptoCurrencyStatusesFlowFactory @Inject constructor(
         return singleQuoteStatusSupplier(
             params = SingleQuoteStatusProducer.Params(rawCurrencyId = rawCurrencyId),
         )
-            .conflate()
             .distinctUntilChanged()
     }
 
@@ -147,7 +145,6 @@ internal class CryptoCurrencyStatusesFlowFactory @Inject constructor(
             singleYieldBalanceSupplier(
                 params = SingleYieldBalanceProducer.Params(userWalletId = userWalletId, stakingId = stakingId),
             )
-                .conflate()
                 .distinctUntilChanged()
         } else {
             flowOf(null)

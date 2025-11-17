@@ -5,6 +5,7 @@ import com.tangem.domain.managetokens.model.ManagedCryptoCurrency
 import com.tangem.domain.managetokens.repository.CustomTokensRepository
 import com.tangem.domain.models.wallet.UserWalletId
 
+@Deprecated("Use SaveCryptoCurrenciesUseCase")
 class RemoveCustomManagedCryptoCurrencyUseCase(private val repository: CustomTokensRepository) {
 
     suspend operator fun invoke(
