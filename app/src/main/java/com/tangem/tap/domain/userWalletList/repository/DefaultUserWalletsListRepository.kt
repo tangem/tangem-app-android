@@ -288,7 +288,6 @@ internal class DefaultUserWalletsListRepository(
 
     override suspend fun unlockAllWallets(): Either<UnlockWalletError, Unit> = either {
         val userWallets = userWalletsSync()
-        val userWalletIds = userWallets.map { it.walletId }.toSet()
         val biometricKeys = runCatching {
             userWalletEncryptionKeysRepository.getAllBiometric()
         }.getOrElse {
@@ -309,8 +308,9 @@ internal class DefaultUserWalletsListRepository(
             removePasswordAttempts(it)
         }
 
-        // if we cant unlock all wallets
-        if (userWalletIds.all { it in unlockedWalletsIds }.not()) {
+        // if we cant unlock any of the locked wallets, return error
+        // (isLocked remains `true` here because we haven't updated the wallets yet)
+        if (unlockedWallets.any { it.isLocked }.not()) {
             raise(UnlockWalletError.UnableToUnlock)
         }
 
