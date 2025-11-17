@@ -1,6 +1,5 @@
 package com.tangem.domain.account.status.utils
 
-import arrow.core.some
 import arrow.core.toOption
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -52,7 +51,7 @@ internal class CryptoCurrencyStatusesFlowFactory @Inject constructor(
             .map { statusSources ->
                 CryptoCurrencyStatusFactory.create(
                     currency = currency,
-                    maybeNetworkStatus = statusSources.networkStatus.some(),
+                    maybeNetworkStatus = statusSources.networkStatus.toOption(),
                     maybeQuoteStatus = statusSources.quoteStatus.toOption(),
                     maybeYieldBalance = statusSources.yieldBalance.toOption(),
                 )
@@ -74,11 +73,15 @@ internal class CryptoCurrencyStatusesFlowFactory @Inject constructor(
 
         val yieldBalanceFlow = if (userWallet.isMultiCurrency) {
             networkStatusFlow.flatMapLatest { networkStatus ->
-                getYieldBalanceFlow(
-                    userWalletId = userWallet.walletId,
-                    currencyId = currency.id,
-                    networkStatus = networkStatus,
-                )
+                if (networkStatus != null) {
+                    getYieldBalanceFlow(
+                        userWalletId = userWallet.walletId,
+                        currencyId = currency.id,
+                        networkStatus = networkStatus,
+                    )
+                } else {
+                    flowOf(null)
+                }
             }
         } else {
             null
@@ -91,7 +94,7 @@ internal class CryptoCurrencyStatusesFlowFactory @Inject constructor(
     }
 
     private fun combine(
-        networkStatusFlow: Flow<NetworkStatus>,
+        networkStatusFlow: Flow<NetworkStatus?>,
         yieldBalanceFlow: Flow<YieldBalance?>?,
         quoteStatusFlow: Flow<QuoteStatus>?,
     ): Flow<CryptoCurrencyStatusSources> {
@@ -116,11 +119,14 @@ internal class CryptoCurrencyStatusesFlowFactory @Inject constructor(
         }
     }
 
-    private fun getNetworkStatusFlow(userWalletId: UserWalletId, network: Network): Flow<NetworkStatus> {
+    private fun getNetworkStatusFlow(userWalletId: UserWalletId, network: Network): Flow<NetworkStatus?> {
         return singleNetworkStatusSupplier(
             params = SingleNetworkStatusProducer.Params(userWalletId = userWalletId, network = network),
         )
             .distinctUntilChanged()
+            .onEmpty<NetworkStatus?> {
+                emit(value = null)
+            }
     }
 
     private fun getQuoteStatusFlow(rawCurrencyId: CryptoCurrency.RawID): Flow<QuoteStatus> {
@@ -152,7 +158,7 @@ internal class CryptoCurrencyStatusesFlowFactory @Inject constructor(
     }
 
     private data class CryptoCurrencyStatusSources(
-        val networkStatus: NetworkStatus,
+        val networkStatus: NetworkStatus? = null,
         val yieldBalance: YieldBalance? = null,
         val quoteStatus: QuoteStatus? = null,
     )
