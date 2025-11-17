@@ -23,11 +23,7 @@ import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.visa.model.TangemPayInitialCredentials
-import com.tangem.domain.visa.model.VisaActivationInput
-import com.tangem.domain.visa.model.VisaDataForApprove
-import com.tangem.domain.visa.model.VisaSignedDataByCustomerWallet
-import com.tangem.domain.visa.model.sign
+import com.tangem.domain.visa.model.*
 import com.tangem.domain.wallets.derivations.derivationStyleProvider
 import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.operations.ScanTask
@@ -82,12 +78,11 @@ internal class DefaultTangemSdkManager(
             secureStorage = tangemSdk.secureStorage,
         )
     }
+    override val needEnrollBiometrics: Boolean
+        get() = tangemSdk.authenticationManager.needEnrollBiometrics
 
     override val canUseBiometry: Boolean
         get() = tangemSdk.authenticationManager.canAuthenticate || needEnrollBiometrics
-
-    override val needEnrollBiometrics: Boolean
-        get() = tangemSdk.authenticationManager.needEnrollBiometrics
 
     override val keystoreManager: KeystoreManager
         get() = tangemSdk.keystoreManager
