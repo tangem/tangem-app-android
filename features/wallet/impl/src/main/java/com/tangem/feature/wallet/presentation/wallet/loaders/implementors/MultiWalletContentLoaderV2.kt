@@ -1,0 +1,59 @@
+package com.tangem.feature.wallet.presentation.wallet.loaders.implementors
+
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.promo.GetStoryContentUseCase
+import com.tangem.domain.wallets.usecase.ShouldSaveUserWalletsUseCase
+import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
+import com.tangem.feature.wallet.presentation.wallet.analytics.utils.WalletWarningsAnalyticsSender
+import com.tangem.feature.wallet.presentation.wallet.analytics.utils.WalletWarningsSingleEventSender
+import com.tangem.feature.wallet.presentation.wallet.domain.GetMultiWalletWarningsFactory
+import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
+import com.tangem.feature.wallet.presentation.wallet.subscribers.*
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
+
+@Suppress("LongParameterList")
+internal class MultiWalletContentLoaderV2 @AssistedInject constructor(
+    @Assisted private val userWallet: UserWallet,
+    private val accountListSubscriberFactory: AccountListSubscriber.Factory,
+    private val walletNFTListSubscriberV2Factory: WalletNFTListSubscriberV2.Factory,
+    private val stateController: WalletStateController,
+    private val clickIntents: WalletClickIntents,
+    private val walletWarningsAnalyticsSender: WalletWarningsAnalyticsSender,
+    private val walletWarningsSingleEventSender: WalletWarningsSingleEventSender,
+    private val getMultiWalletWarningsFactory: GetMultiWalletWarningsFactory,
+    private val shouldSaveUserWalletsUseCase: ShouldSaveUserWalletsUseCase,
+    private val getStoryContentUseCase: GetStoryContentUseCase,
+    private val checkWalletWithFundsSubscriberFactory: CheckWalletWithFundsSubscriber.Factory,
+) : WalletContentLoader(id = userWallet.walletId) {
+
+    override fun create(): List<WalletSubscriber> = listOf(
+        accountListSubscriberFactory.create(userWallet = userWallet),
+        walletNFTListSubscriberV2Factory.create(userWallet = userWallet),
+        checkWalletWithFundsSubscriberFactory.create(userWallet = userWallet),
+        MultiWalletWarningsSubscriber(
+            userWallet = userWallet,
+            stateHolder = stateController,
+            clickIntents = clickIntents,
+            getMultiWalletWarningsFactory = getMultiWalletWarningsFactory,
+            walletWarningsAnalyticsSender = walletWarningsAnalyticsSender,
+            walletWarningsSingleEventSender = walletWarningsSingleEventSender,
+        ),
+        MultiWalletActionButtonsSubscriber(
+            userWallet = userWallet,
+            stateHolder = stateController,
+            getStoryContentUseCase = getStoryContentUseCase,
+        ),
+        WalletDropDownItemsSubscriber(
+            stateHolder = stateController,
+            shouldSaveUserWalletsUseCase = shouldSaveUserWalletsUseCase,
+            clickIntents = clickIntents,
+        ),
+    )
+
+    @AssistedFactory
+    interface Factory {
+        fun create(userWallet: UserWallet): MultiWalletContentLoaderV2
+    }
+}

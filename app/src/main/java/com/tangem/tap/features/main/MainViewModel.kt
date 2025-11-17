@@ -4,9 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tangem.blockchainsdk.BlockchainSDKFactory
 import com.tangem.common.keyboard.KeyboardValidator
-import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.event.TechAnalyticsEvent
+import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.core.decompose.di.GlobalUiMessageSender
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.R
@@ -16,14 +16,11 @@ import com.tangem.core.ui.message.BottomSheetMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
-import com.tangem.datasource.local.config.environment.EnvironmentConfig
-import com.tangem.datasource.local.config.environment.EnvironmentConfigStorage
 import com.tangem.domain.appcurrency.FetchAppCurrenciesUseCase
 import com.tangem.domain.balancehiding.BalanceHidingSettings
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.balancehiding.ListenToFlipsUseCase
 import com.tangem.domain.balancehiding.UpdateBalanceHidingSettingsUseCase
-import com.tangem.domain.common.LogConfig
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.notifications.GetApplicationIdUseCase
 import com.tangem.domain.notifications.SendPushTokenUseCase
@@ -41,9 +38,7 @@ import com.tangem.domain.wallets.usecase.GetSavedWalletsCountUseCase
 import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
 import com.tangem.domain.wallets.usecase.UpdateRemoteWalletsInfoUseCase
 import com.tangem.feature.swap.analytics.StoriesEvents
-import com.tangem.tap.common.extensions.setContext
-import com.tangem.tap.network.exchangeServices.ExchangeService
-import com.tangem.tap.network.exchangeServices.moonpay.MoonPayService
+import com.tangem.tap.network.exchangeServices.SellService
 import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.tap.routing.configurator.AppRouterConfig
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -83,9 +78,10 @@ internal class MainViewModel @Inject constructor(
     private val apiConfigsManager: ApiConfigsManager,
     private val multiQuoteUpdater: MultiQuoteUpdater,
     private val appStateHolder: AppStateHolder,
-    private val environmentConfigStorage: EnvironmentConfigStorage,
     private val getSelectedWalletUseCase: GetSelectedWalletUseCase,
     private val appRouterConfig: AppRouterConfig,
+    private val sellService: SellService,
+    private val trackingContextProxy: TrackingContextProxy,
     getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
 ) : ViewModel() {
 
@@ -181,7 +177,7 @@ internal class MainViewModel @Inject constructor(
             .mapLeft { emptyFlow<UserWallet>() }
             .onRight { wallet ->
                 wallet.distinctUntilChanged()
-                    .onEach { Analytics.setContext(it) }
+                    .onEach { trackingContextProxy.setContext(it) }
                     .flowOn(dispatchers.io)
                     .launchIn(viewModelScope)
             }
@@ -195,20 +191,10 @@ internal class MainViewModel @Inject constructor(
 
     private fun initializeOffRamp() {
         viewModelScope.launch {
-            val sellService = makeSellExchangeService(environmentConfig = environmentConfigStorage.getConfigSync())
             appStateHolder.sellService = sellService
 
             sellService.update()
         }
-    }
-
-    private fun makeSellExchangeService(environmentConfig: EnvironmentConfig): ExchangeService {
-        return MoonPayService(
-            apiKey = environmentConfig.moonPayApiKey,
-            secretKey = environmentConfig.moonPayApiSecretKey,
-            isLogEnabled = LogConfig.network.moonPayService,
-            userWalletProvider = { getSelectedWalletUseCase.sync().getOrNull() },
-        )
     }
 
     private fun observeFlips() {

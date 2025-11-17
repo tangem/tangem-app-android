@@ -34,12 +34,13 @@ import com.tangem.core.ui.haptic.VibratorHapticManager
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
-import com.tangem.domain.account.status.usecase.SaveCryptoCurrenciesUseCase
+import com.tangem.domain.account.status.usecase.ManageCryptoCurrenciesUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.demo.IsDemoCardUseCase
+import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TokenReceiveNotification
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -74,6 +75,7 @@ import com.tangem.domain.wallets.usecase.GetExploreUrlUseCase
 import com.tangem.domain.wallets.usecase.GetExtendedPublicKeyForCurrencyUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.NetworkHasDerivationUseCase
+import com.tangem.domain.yield.supply.usecase.YieldSupplyGetRewardsBalanceUseCase
 import com.tangem.feature.tokendetails.deeplink.TokenDetailsDeepLinkActionListener
 import com.tangem.feature.tokendetails.presentation.router.InnerTokenDetailsRouter
 import com.tangem.feature.tokendetails.presentation.tokendetails.analytics.TokenDetailsCurrencyStatusAnalyticsSender
@@ -150,7 +152,8 @@ internal class TokenDetailsModel @Inject constructor(
     private val needShowYieldSupplyDepositedWarningUseCase: NeedShowYieldSupplyDepositedWarningUseCase,
     private val accountsFeatureToggles: AccountsFeatureToggles,
     private val getAccountCryptoCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase,
-    private val saveCryptoCurrenciesUseCase: SaveCryptoCurrenciesUseCase,
+    private val manageCryptoCurrenciesUseCase: ManageCryptoCurrenciesUseCase,
+    private val yieldSupplyGetRewardsBalanceUseCase: YieldSupplyGetRewardsBalanceUseCase,
 ) : Model(), TokenDetailsClickIntents, YieldSupplyDepositedWarningComponent.ModelCallback {
 
     private val params = paramsContainer.require<TokenDetailsComponent.Params>()
@@ -165,6 +168,7 @@ internal class TokenDetailsModel @Inject constructor(
     private val expressTxJobHolder = JobHolder()
     private val buttonsJobHolder = JobHolder()
     private val stakingJobHolder = JobHolder()
+    private val yieldSupplyBalanceJobHolder = JobHolder()
     private val selectedAppCurrencyFlow: StateFlow<AppCurrency> = createSelectedAppCurrencyFlow()
 
     private var cryptoCurrencyStatus: CryptoCurrencyStatus? = null
@@ -352,6 +356,7 @@ internal class TokenDetailsModel @Inject constructor(
                     updateButtons(currencyStatus = status)
                     updateWarnings(status)
                     subscribeOnUpdateStakingInfo(status)
+                    subscribeOnYieldSupplyBalanceIfActive(status)
                 }
                 currencyStatusAnalyticsSender.send(maybeCurrencyStatus)
             }
@@ -393,6 +398,26 @@ internal class TokenDetailsModel @Inject constructor(
             .flowOn(dispatchers.main)
             .launchIn(modelScope)
             .saveIn(expressTxJobHolder)
+    }
+
+    private fun subscribeOnYieldSupplyBalanceIfActive(status: CryptoCurrencyStatus) {
+        if (yieldSupplyFeatureToggles.isYieldSupplyFeatureEnabled &&
+            status.value.yieldSupplyStatus?.isActive == true
+        ) {
+            if (yieldSupplyBalanceJobHolder.isActive && status.value.sources.networkSource != StatusSource.ACTUAL) {
+                return
+            }
+            yieldSupplyGetRewardsBalanceUseCase(status = status, appCurrency = selectedAppCurrencyFlow.value)
+                .onEach { formatted ->
+                    internalUiState.value = stateFactory.getStateWithUpdatedYieldSupplyDisplayBalance(formatted)
+                }
+                .flowOn(dispatchers.main)
+                .launchIn(modelScope)
+                .saveIn(yieldSupplyBalanceJobHolder)
+        } else {
+            yieldSupplyBalanceJobHolder.cancel()
+            internalUiState.value = stateFactory.getStateWithUpdatedYieldSupplyDisplayBalance(null)
+        }
     }
 
     private fun updateNetworkToSwapBalance(toCryptoCurrency: CryptoCurrency) {
@@ -726,7 +751,7 @@ internal class TokenDetailsModel @Inject constructor(
                     return@launch
                 }
 
-                saveCryptoCurrenciesUseCase(accountId = accountId, remove = cryptoCurrency)
+                manageCryptoCurrenciesUseCase(accountId = accountId, remove = cryptoCurrency)
             } else {
                 removeCurrencyUseCase(userWalletId, cryptoCurrency)
             }
