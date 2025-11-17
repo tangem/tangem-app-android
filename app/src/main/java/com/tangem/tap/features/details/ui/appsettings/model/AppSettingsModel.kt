@@ -10,6 +10,7 @@ import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
 import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.apptheme.repository.AppThemeModeRepository
 import com.tangem.domain.balancehiding.repositories.BalanceHidingRepository
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.settings.CanUseBiometryUseCase
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.wallets.repository.WalletsRepository
@@ -48,6 +49,7 @@ internal class AppSettingsModel @Inject constructor(
     private val appCurrencyRepository: AppCurrencyRepository,
     private val walletsRepository: WalletsRepository,
     private val canUseBiometryUseCase: CanUseBiometryUseCase,
+    private val userWalletsListRepository: UserWalletsListRepository,
     private val balanceHidingRepository: BalanceHidingRepository,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val appThemeModeRepository: AppThemeModeRepository,
@@ -114,7 +116,8 @@ internal class AppSettingsModel @Inject constructor(
             )
 
             if (hotWalletFeatureToggles.isHotWalletEnabled) {
-                val canUseBiometrics = !state.needEnrollBiometrics && !state.isInProgress
+                val canUseBiometrics =
+                    !state.needEnrollBiometrics && !state.isInProgress && state.hasSecuredWallets
 
                 add(
                     itemsFactory.createUseBiometricsSwitch(
@@ -126,7 +129,7 @@ internal class AppSettingsModel @Inject constructor(
 
                 add(
                     itemsFactory.createRequireAccessCodeSwitch(
-                        isChecked = state.requireAccessCode,
+                        isChecked = state.requireAccessCode || !state.useBiometricAuthentication,
                         isEnabled = canUseBiometrics && state.useBiometricAuthentication,
                         onCheckedChange = ::onRequireAccessCodeToggled,
                     ),
@@ -206,14 +209,12 @@ internal class AppSettingsModel @Inject constructor(
         // analyticsEventHandler.send(Settings.AppSettings.BiometricAuthenticationChanged(param))
         if (isChecked) {
             onSettingsToggled(AppSetting.BiometricAuthentication, enable = true)
-            onSettingsToggled(AppSetting.RequireAccessCode, enable = true)
         } else {
             updateContentState {
                 copy(
                     dialog = dialogsFactory.createDisableBiometricAuthenticationAlert(
                         onDisable = {
                             onSettingsToggled(AppSetting.BiometricAuthentication, enable = false)
-                            onSettingsToggled(AppSetting.RequireAccessCode, enable = true)
                             dismissDialog()
                         },
                         onDismiss = ::dismissDialog,
@@ -323,6 +324,7 @@ internal class AppSettingsModel @Inject constructor(
             isHidingEnabled = balanceHidingRepository.getBalanceHidingSettings().isHidingEnabledInSettings,
             selectedAppCurrency = appCurrencyRepository.getSelectedAppCurrency().firstOrNull() ?: AppCurrency.Default,
             selectedThemeMode = appThemeModeRepository.getAppThemeMode().firstOrNull() ?: AppThemeMode.DEFAULT,
+            hasSecuredWallets = userWalletsListRepository.hasSecuredWallets(),
         )
 
         store.dispatchWithMain(DetailsAction.AppSettings.Prepare(state))

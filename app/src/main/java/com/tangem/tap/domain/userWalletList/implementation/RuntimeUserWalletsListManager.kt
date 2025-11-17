@@ -20,11 +20,6 @@ internal class RuntimeUserWalletsListManager : UserWalletsListManager {
             .mapLatest { listOfNotNull(it.userWallet) }
             .distinctUntilChanged()
 
-    override val savedWalletsCount: Flow<Int>
-        get() = state
-            .mapLatest { walletsCount }
-            .distinctUntilChanged()
-
     override val selectedUserWallet: Flow<UserWallet>
         get() = state
             .mapLatest { it.userWallet }
@@ -45,6 +40,11 @@ internal class RuntimeUserWalletsListManager : UserWalletsListManager {
      */
     override val walletsCount: Int
         get() = if (hasUserWallets) 1 else 0
+
+    override val savedWalletsCount: Flow<Int>
+        get() = state
+            .mapLatest { walletsCount }
+            .distinctUntilChanged()
 
     override suspend fun select(userWalletId: UserWalletId): CompletionResult<UserWallet> = catching {
         state.value.userWallet

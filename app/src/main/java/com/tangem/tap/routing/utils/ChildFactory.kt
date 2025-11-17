@@ -551,6 +551,7 @@ internal class ChildFactory @Inject constructor(
                     context = context,
                     params = WalletActivationComponent.Params(
                         userWalletId = route.userWalletId,
+                        isBackupExists = route.isBackupExists,
                     ),
                     componentFactory = walletActivationComponentFactory,
                 )
@@ -561,6 +562,7 @@ internal class ChildFactory @Inject constructor(
                     params = CreateWalletBackupComponent.Params(
                         userWalletId = route.userWalletId,
                         isUpgradeFlow = route.isUpgradeFlow,
+                        setAccessCode = route.setAccessCode,
                     ),
                     componentFactory = createWalletBackupComponentFactory,
                 )

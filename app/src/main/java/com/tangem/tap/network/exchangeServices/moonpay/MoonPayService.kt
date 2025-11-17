@@ -33,11 +33,11 @@ class MoonPayService(
     private val userWalletProvider: () -> UserWallet?,
 ) : SellService {
 
-    override val initializationStatus: StateFlow<SellServiceInitializationStatus>
-        get() = _initializationStatus
-
     private val _initializationStatus: MutableStateFlow<SellServiceInitializationStatus> =
         MutableStateFlow(value = lceLoading())
+
+    override val initializationStatus: StateFlow<SellServiceInitializationStatus>
+        get() = _initializationStatus
 
     private var status: MoonPayStatus? = null
 
