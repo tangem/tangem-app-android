@@ -94,7 +94,8 @@ internal fun YieldSupplyActionContent(
                 YieldSupplyFeeRow(
                     title = resourceReference(R.string.common_network_fee_title),
                     value = fee,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
                         .clip(RoundedCornerShape(14.dp))
                         .background(TangemTheme.colors.background.action)
                         .padding(horizontal = 16.dp, vertical = 12.dp),
@@ -139,7 +140,10 @@ private class YieldSupplyActionContentPreviewProvider : PreviewParameterProvider
                     R.string.yield_module_start_earning_sheet_description,
                     wrappedList("USDT"),
                 ),
-                footer = resourceReference(R.string.yield_module_start_earning_sheet_next_deposits),
+                footer = resourceReference(
+                    R.string.yield_module_start_earning_sheet_next_deposits_v2,
+                    wrappedList("USDT"),
+                ),
                 footerLink = resourceReference(R.string.yield_module_start_earning_sheet_fee_policy),
                 currencyIconState = CurrencyIconState.Loading,
                 yieldSupplyFeeUM = YieldSupplyFeeUM.Content(
