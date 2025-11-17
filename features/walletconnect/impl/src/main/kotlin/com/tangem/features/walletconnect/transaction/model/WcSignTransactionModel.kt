@@ -22,6 +22,7 @@ import com.tangem.domain.walletconnect.usecase.method.WcSignStep
 import com.tangem.domain.walletconnect.usecase.method.WcSignUseCase
 import com.tangem.features.walletconnect.transaction.components.common.WcTransactionModelParams
 import com.tangem.features.walletconnect.transaction.converter.WcHandleMethodErrorConverter
+import com.tangem.features.walletconnect.transaction.converter.WcPortfolioNameDelegate
 import com.tangem.features.walletconnect.transaction.converter.WcSignTransactionUMConverter
 import com.tangem.features.walletconnect.transaction.converter.WcSignTypedDataUMConverter
 import com.tangem.features.walletconnect.transaction.entity.common.WcCommonTransactionModel
@@ -50,6 +51,7 @@ internal class WcSignTransactionModel @Inject constructor(
     private val useCaseFactory: WcRequestUseCaseFactory,
     private val signTypedDataUMConverter: WcSignTypedDataUMConverter,
     private val signTransactionUMConverter: WcSignTransactionUMConverter,
+    portfolioNameDelegateFactory: WcPortfolioNameDelegate.Factory,
 ) : Model(), WcCommonTransactionModel {
 
     private val params = paramsContainer.require<WcTransactionModelParams>()
@@ -61,6 +63,7 @@ internal class WcSignTransactionModel @Inject constructor(
 
     private var useCase by Delegates.notNull<WcMessageSignUseCase>()
     private val signatureReceivedAnalyticsSendState = MutableStateFlow(false)
+    private val portfolioNameDelegate = portfolioNameDelegateFactory.create(modelScope)
 
     init {
         modelScope.launch {
@@ -95,6 +98,7 @@ internal class WcSignTransactionModel @Inject constructor(
                     signState = signState,
                     signModel = signState.signModel,
                     actions = actions,
+                    portfolioName = portfolioNameDelegate.createAccountTitleUM(useCase.session),
                 ),
             )
             is WcEthMethod.MessageSign, is WcSolanaMethod.SignMessage -> signTransactionUMConverter.convert(
@@ -103,6 +107,7 @@ internal class WcSignTransactionModel @Inject constructor(
                     signState = signState,
                     signModel = signState.signModel,
                     actions = actions,
+                    portfolioName = portfolioNameDelegate.createAccountTitleUM(useCase.session),
                 ),
             )
             else -> null

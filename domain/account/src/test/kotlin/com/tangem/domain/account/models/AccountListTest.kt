@@ -28,7 +28,7 @@ class AccountListTest {
 
         val accountList = AccountList(
             userWalletId = userWalletId,
-            accounts = setOf(mainAccount),
+            accounts = listOf(mainAccount),
             totalAccounts = 1,
         )
             .getOrNull()!!
@@ -69,7 +69,7 @@ class AccountListTest {
         // Assert
         val expected = AccountList(
             userWalletId = userWalletId,
-            accounts = setOf(Account.CryptoPortfolio.createMainAccount(userWalletId = userWalletId)),
+            accounts = listOf(Account.CryptoPortfolio.createMainAccount(userWalletId = userWalletId)),
             totalAccounts = 1,
         ).getOrNull()!!
 
@@ -96,17 +96,17 @@ class AccountListTest {
 
         private fun provideTestModels() = listOf(
             CreateTestModel(
-                accounts = emptySet(),
+                accounts = emptyList(),
                 expected = AccountList.Error.EmptyAccountsList.left(),
             ),
             CreateTestModel(
-                accounts = setOf(
+                accounts = listOf(
                     createAccount(userWalletId = userWalletId, derivationIndex = 1),
                 ),
                 expected = AccountList.Error.MainAccountNotFound.left(),
             ),
             CreateTestModel(
-                accounts = setOf(
+                accounts = listOf(
                     Account.CryptoPortfolio.createMainAccount(userWalletId),
                     Account.CryptoPortfolio.createMainAccount(userWalletId).copy(
                         icon = CryptoPortfolioIcon.ofDefaultCustomAccount(),
@@ -131,7 +131,7 @@ class AccountListTest {
                 expected = AccountList.Error.ExceedsMaxAccountsCount.left(),
             ),
             CreateTestModel(
-                accounts = setOf(
+                accounts = listOf(
                     createAccount(userWalletId = userWalletId, derivationIndex = 0),
                     createAccount(userWalletId = userWalletId, derivationIndex = 1),
                     createAccount(userWalletId = userWalletId, derivationIndex = 1),
@@ -139,7 +139,7 @@ class AccountListTest {
                 expected = AccountList.Error.DuplicateAccountIds.left(),
             ),
             CreateTestModel(
-                accounts = setOf(
+                accounts = listOf(
                     createAccount(userWalletId = userWalletId, name = "Name", derivationIndex = 0),
                     createAccount(userWalletId = userWalletId, name = "Name", derivationIndex = 1),
                 ),
@@ -149,7 +149,7 @@ class AccountListTest {
     }
 
     data class CreateTestModel(
-        val accounts: Set<Account>,
+        val accounts: List<Account>,
         val expected: Either<AccountList.Error, AccountList>,
     )
 
@@ -176,13 +176,13 @@ class AccountListTest {
                 PlusTestModel(
                     initial = AccountList(
                         userWalletId = userWalletId,
-                        accounts = setOf(mainAccount),
+                        accounts = listOf(mainAccount),
                         totalAccounts = 1,
                     ).getOrNull()!!,
                     toAdd = newAccount,
                     expected = AccountList(
                         userWalletId = userWalletId,
-                        accounts = setOf(mainAccount, newAccount),
+                        accounts = listOf(mainAccount, newAccount),
                         totalAccounts = 2,
                     ),
                 )
@@ -196,13 +196,13 @@ class AccountListTest {
                 PlusTestModel(
                     initial = AccountList(
                         userWalletId = userWalletId,
-                        accounts = setOf(mainAccount),
+                        accounts = listOf(mainAccount),
                         totalAccounts = 1,
                     ).getOrNull()!!,
                     toAdd = newAccount,
                     expected = AccountList(
                         userWalletId = userWalletId,
-                        accounts = setOf(newAccount),
+                        accounts = listOf(newAccount),
                         totalAccounts = 1,
                     ),
                 )
@@ -249,13 +249,13 @@ class AccountListTest {
                 MinusTestModel(
                     initial = AccountList(
                         userWalletId = userWalletId,
-                        accounts = setOf(mainAccount, secondaryAccount),
+                        accounts = listOf(mainAccount, secondaryAccount),
                         totalAccounts = 2,
                     ).getOrNull()!!,
                     toRemove = secondaryAccount,
                     expected = AccountList(
                         userWalletId = userWalletId,
-                        accounts = setOf(mainAccount),
+                        accounts = listOf(mainAccount),
                         totalAccounts = 1,
                     ),
                 )
@@ -269,13 +269,13 @@ class AccountListTest {
                 MinusTestModel(
                     initial = AccountList(
                         userWalletId = userWalletId,
-                        accounts = setOf(mainAccount),
+                        accounts = listOf(mainAccount),
                         totalAccounts = 1,
                     ).getOrNull()!!,
                     toRemove = notInList,
                     expected = AccountList(
                         userWalletId = userWalletId,
-                        accounts = setOf(mainAccount),
+                        accounts = listOf(mainAccount),
                         totalAccounts = 1,
                     ),
                 )
@@ -288,7 +288,7 @@ class AccountListTest {
                 MinusTestModel(
                     initial = AccountList(
                         userWalletId = userWalletId,
-                        accounts = setOf(mainAccount),
+                        accounts = listOf(mainAccount),
                         totalAccounts = 1,
                     ).getOrNull()!!,
                     toRemove = mainAccount,
@@ -304,7 +304,7 @@ class AccountListTest {
                 MinusTestModel(
                     initial = AccountList(
                         userWalletId = userWalletId,
-                        accounts = setOf(mainAccount, secondaryAccount),
+                        accounts = listOf(mainAccount, secondaryAccount),
                         totalAccounts = 2,
                     ).getOrNull()!!,
                     toRemove = mainAccount,

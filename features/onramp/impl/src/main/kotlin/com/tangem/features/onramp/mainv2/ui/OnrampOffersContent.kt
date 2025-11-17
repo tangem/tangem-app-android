@@ -2,12 +2,10 @@ package com.tangem.features.onramp.mainv2.ui
 
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -35,27 +33,13 @@ import com.tangem.core.ui.test.OnrampOffersBlockTestTags
 import com.tangem.domain.onramp.model.OnrampPaymentMethod
 import com.tangem.domain.onramp.model.PaymentMethodType
 import com.tangem.features.onramp.impl.R
-import com.tangem.features.onramp.mainv2.entity.OnrampOfferAdvantagesUM
-import com.tangem.features.onramp.mainv2.entity.OnrampOfferCategoryUM
-import com.tangem.features.onramp.mainv2.entity.OnrampOfferUM
-import com.tangem.features.onramp.mainv2.entity.OnrampOffersBlockUM
+import com.tangem.features.onramp.mainv2.entity.*
 import kotlinx.collections.immutable.persistentListOf
 
 @Composable
 internal fun OnrampOffersContent(state: OnrampOffersBlockUM) {
-    AnimatedVisibility(
-        visible = state.isBlockVisible,
-        enter = slideInVertically(
-            initialOffsetY = { it },
-            animationSpec = tween(durationMillis = 300),
-        ),
-        exit = slideOutVertically(
-            targetOffsetY = { it },
-            animationSpec = tween(durationMillis = 300),
-        ),
-        label = "Offers block animation",
-    ) {
-        if (state is OnrampOffersBlockUM.Content) {
+    when (state) {
+        is OnrampOffersBlockUM.Content -> {
             Column(modifier = Modifier.fillMaxWidth()) {
                 state.recentOffer?.let { recentOffer ->
                     Column {
@@ -74,14 +58,19 @@ internal fun OnrampOffersContent(state: OnrampOffersBlockUM) {
                     }
                 }
 
-                Text(
-                    modifier = Modifier.padding(start = 12.dp),
-                    text = stringResourceSafe(R.string.onramp_recommended_title),
-                    style = TangemTheme.typography.subtitle2,
-                    color = TangemTheme.colors.text.tertiary,
-                )
-
-                SpacerH(8.dp)
+                AnimatedVisibility(
+                    visible = state.recommended.isNotEmpty(),
+                ) {
+                    if (state.recommended.isNotEmpty()) {
+                        Text(
+                            modifier = Modifier.padding(start = 12.dp),
+                            text = stringResourceSafe(R.string.onramp_recommended_title),
+                            style = TangemTheme.typography.subtitle2,
+                            color = TangemTheme.colors.text.tertiary,
+                        )
+                        SpacerH(8.dp)
+                    }
+                }
 
                 state.recommended.fastForEach { offer ->
                     key("${offer.paymentMethod.id} ${offer.providerName} ${offer.rate}") {
@@ -100,6 +89,15 @@ internal fun OnrampOffersContent(state: OnrampOffersBlockUM) {
                 }
             }
         }
+        OnrampOffersBlockUM.Loading -> {
+            Box(
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.Center,
+            ) {
+                LoadingBlock()
+            }
+        }
+        OnrampOffersBlockUM.Empty -> Unit
     }
 }
 
@@ -120,13 +118,18 @@ internal fun Offer(onrampOfferUM: OnrampOfferUM, modifier: Modifier = Modifier) 
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 OfferHeader(advantage = onrampOfferUM.advantages)
-                RateBlock(rate = onrampOfferUM.rate, diff = onrampOfferUM.diff)
+                RateBlock(
+                    rate = onrampOfferUM.rate,
+                    diff = onrampOfferUM.diff,
+                    isOfferUnavailable = onrampOfferUM.advantages is OnrampOfferAdvantagesUM.Unavailable,
+                )
             }
             SpacerWMax()
-            SecondaryButton(
+            PrimaryButton(
                 size = TangemButtonSize.RoundedAction,
                 text = stringResourceSafe(R.string.common_buy),
                 onClick = onrampOfferUM.onBuyClicked,
+                enabled = onrampOfferUM.advantages !is OnrampOfferAdvantagesUM.Unavailable,
             )
         }
         SpacerH(10.dp)
@@ -142,6 +145,14 @@ internal fun Offer(onrampOfferUM: OnrampOfferUM, modifier: Modifier = Modifier) 
 @Composable
 private fun OfferHeader(advantage: OnrampOfferAdvantagesUM) {
     when (advantage) {
+        OnrampOfferAdvantagesUM.GreatRate -> {
+            Text(
+                text = stringResourceSafe(R.string.express_provider_great_rate),
+                style = TangemTheme.typography.caption1,
+                color = TangemTheme.colors.icon.accent,
+                modifier = Modifier.testTag(OnrampOffersBlockTestTags.BEST_RATE_TITLE),
+            )
+        }
         OnrampOfferAdvantagesUM.Default -> {
             Text(
                 text = stringResourceSafe(R.string.onramp_title_you_get),
@@ -169,27 +180,28 @@ private fun OfferHeader(advantage: OnrampOfferAdvantagesUM) {
             }
         }
         OnrampOfferAdvantagesUM.Fastest -> {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-            ) {
-                Icon(
-                    imageVector = ImageVector.vectorResource(R.drawable.ic_fastest_16),
-                    tint = TangemTheme.colors.icon.attention,
-                    contentDescription = null,
-                )
-                Text(
-                    text = stringResourceSafe(R.string.onramp_offer_type_fastet),
-                    style = TangemTheme.typography.caption1,
-                    color = TangemTheme.colors.icon.attention,
-                )
+            Text(
+                text = stringResourceSafe(R.string.onramp_offer_type_fastet),
+                style = TangemTheme.typography.caption1,
+                color = TangemTheme.colors.icon.attention,
+            )
+        }
+        is OnrampOfferAdvantagesUM.Unavailable -> {
+            val textResId = when (advantage) {
+                OnrampOfferAdvantagesUM.Unavailable.MinAmount -> R.string.onramp_title_available_from
+                OnrampOfferAdvantagesUM.Unavailable.MaxAmount -> R.string.onramp_title_available_up_to
             }
+            Text(
+                text = stringResourceSafe(textResId),
+                style = TangemTheme.typography.caption1,
+                color = TangemTheme.colors.text.tertiary,
+            )
         }
     }
 }
 
 @Composable
-private fun RateBlock(rate: String, diff: TextReference?) {
+private fun RateBlock(rate: String, diff: TextReference?, isOfferUnavailable: Boolean) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -197,7 +209,7 @@ private fun RateBlock(rate: String, diff: TextReference?) {
         Text(
             text = rate,
             style = TangemTheme.typography.subtitle1,
-            color = TangemTheme.colors.text.primary1,
+            color = if (isOfferUnavailable) TangemTheme.colors.text.tertiary else TangemTheme.colors.text.primary1,
             modifier = Modifier.testTag(OnrampOffersBlockTestTags.OFFER_TOKEN_AMOUNT),
         )
         diff?.let {
@@ -314,7 +326,7 @@ internal fun TimingBlock(speed: PaymentMethodType.PaymentSpeed) {
 }
 
 @Composable
-fun DrawDot(color: Color) {
+private fun DrawDot(color: Color) {
     Spacer(
         modifier = Modifier
             .size(4.dp)
@@ -330,6 +342,30 @@ fun DrawDot(color: Color) {
     )
 }
 
+@Composable
+private fun LoadingBlock(modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        SpacerH(100.dp)
+
+        Text(
+            text = stringResourceSafe(R.string.onramp_fetching_best_rates),
+            style = TangemTheme.typography.subtitle2,
+            color = TangemTheme.colors.text.tertiary,
+        )
+
+        SpacerH(8.dp)
+
+        CircularProgressIndicator(
+            modifier = Modifier.size(20.dp),
+            color = TangemTheme.colors.icon.informative,
+            strokeWidth = TangemTheme.dimens.size2,
+        )
+    }
+}
+
 // will be hardcoded till server will be ready to provide this values
 private const val FEW_MINS_VALUE = "3-5"
 private const val FEW_DAYS_VALUE = 3
@@ -340,7 +376,6 @@ private const val PLENTY_DAYS_VALUE = 5
 @Composable
 private fun OnrampOffersContentPreview() {
     val state = OnrampOffersBlockUM.Content(
-        isBlockVisible = true,
         recentOffer = OnrampOfferUM(
             category = OnrampOfferCategoryUM.RecentlyUsed,
             advantages = OnrampOfferAdvantagesUM.Default,
@@ -350,7 +385,6 @@ private fun OnrampOffersContentPreview() {
                 imageUrl = "https://s3.eu-central-1.amazonaws.com/tangem.api/express/PaymentMethods/visa-mc.png",
                 type = PaymentMethodType.CARD,
             ),
-            providerId = "providerId3",
             providerName = "Simplex",
             rate = "0,00045334 BTC",
             diff = stringReference("–27%"),
@@ -359,14 +393,13 @@ private fun OnrampOffersContentPreview() {
         recommended = persistentListOf(
             OnrampOfferUM(
                 category = OnrampOfferCategoryUM.Recommended,
-                advantages = OnrampOfferAdvantagesUM.BestRate,
+                advantages = OnrampOfferAdvantagesUM.GreatRate,
                 paymentMethod = OnrampPaymentMethod(
                     id = "card",
                     name = "Card",
                     imageUrl = "https://s3.eu-central-1.amazonaws.com/tangem.api/express/PaymentMethods/visa-mc.png",
                     type = PaymentMethodType.CARD,
                 ),
-                providerId = "providerId1",
                 providerName = "Simplex",
                 rate = "0,0245334 BTC",
                 diff = null,
@@ -381,16 +414,27 @@ private fun OnrampOffersContentPreview() {
                     imageUrl = "https://s3.eu-central-1.amazonaws.com/tangem.api/express/PaymentMethods/visa-mc.png",
                     type = PaymentMethodType.CARD,
                 ),
-                providerId = "providerId2",
                 providerName = "Simplex",
                 rate = "0,00145334 BTC",
                 diff = stringReference("–0.07%"),
                 onBuyClicked = {},
             ),
         ),
-        onrampAllOffersButtonConfig = null,
+        onrampAllOffersButtonConfig = OnrampAllOffersButtonConfig(
+            title = TextReference.Res(R.string.onramp_all_offers_button_title),
+            onClick = { },
+        ),
     )
     TangemThemePreview {
         OnrampOffersContent(state)
+    }
+}
+
+@Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun OnrampOffersLoadingPreview() {
+    TangemThemePreview {
+        OnrampOffersContent(OnrampOffersBlockUM.Loading)
     }
 }

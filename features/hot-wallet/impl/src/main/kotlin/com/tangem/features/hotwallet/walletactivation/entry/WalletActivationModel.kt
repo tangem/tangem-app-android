@@ -4,6 +4,7 @@ import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.push
 import com.arkivanov.decompose.router.stack.replaceAll
+import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.core.decompose.di.GlobalUiMessageSender
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -16,6 +17,7 @@ import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.settings.ShouldAskPermissionUseCase
+import com.tangem.domain.hotwallet.SetAccessCodeSkippedUseCase
 import com.tangem.features.hotwallet.manualbackup.check.ManualBackupCheckComponent
 import com.tangem.features.hotwallet.manualbackup.completed.ManualBackupCompletedComponent
 import com.tangem.features.hotwallet.manualbackup.phrase.ManualBackupPhraseComponent
@@ -32,6 +34,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 @ModelScoped
 internal class WalletActivationModel @Inject constructor(
     paramsContainer: ParamsContainer,
@@ -39,6 +42,8 @@ internal class WalletActivationModel @Inject constructor(
     private val router: Router,
     private val shouldAskPermissionUseCase: ShouldAskPermissionUseCase,
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
+    private val trackingContextProxy: TrackingContextProxy,
+    private val setAccessCodeSkippedUseCase: SetAccessCodeSkippedUseCase,
 ) : Model() {
 
     val params = paramsContainer.require<WalletActivationComponent.Params>()
@@ -52,9 +57,23 @@ internal class WalletActivationModel @Inject constructor(
     val pushNotificationsCallbacks = PushNotificationsCallbacks()
     val mobileWalletSetupFinishedModelCallbacks = MobileWalletSetupFinishedModelCallbacks()
 
+    val isStartingWithAccessCode = params.isBackupExists
     val stackNavigation = StackNavigation<WalletActivationRoute>()
-    val startRoute = WalletActivationRoute.ManualBackupStart
+    val startRoute = if (isStartingWithAccessCode) {
+        WalletActivationRoute.SetAccessCode
+    } else {
+        WalletActivationRoute.ManualBackupStart
+    }
     val currentRoute: MutableStateFlow<WalletActivationRoute> = MutableStateFlow(startRoute)
+
+    init {
+        trackingContextProxy.addHotWalletContext()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        trackingContextProxy.removeContext()
+    }
 
     fun onChildBack() {
         when (currentRoute.value) {
@@ -62,7 +81,9 @@ internal class WalletActivationModel @Inject constructor(
             is WalletActivationRoute.ManualBackupPhrase -> stackNavigation.pop()
             is WalletActivationRoute.ManualBackupCheck -> stackNavigation.pop()
             is WalletActivationRoute.ManualBackupCompleted -> Unit
-            is WalletActivationRoute.SetAccessCode -> Unit
+            is WalletActivationRoute.SetAccessCode -> if (isStartingWithAccessCode) {
+                router.pop()
+            }
             is WalletActivationRoute.ConfirmAccessCode -> stackNavigation.pop()
             is WalletActivationRoute.PushNotifications -> Unit
             is WalletActivationRoute.SetupFinished -> Unit
@@ -85,6 +106,8 @@ internal class WalletActivationModel @Inject constructor(
     }
 
     private fun showSkipAccessCodeWarningDialog() {
+        val userWalletId = params.userWalletId
+
         uiMessageSender.send(
             DialogMessage(
                 message = resourceReference(R.string.access_code_alert_skip_description),
@@ -95,7 +118,12 @@ internal class WalletActivationModel @Inject constructor(
                 ),
                 secondAction = EventMessageAction(
                     title = resourceReference(R.string.access_code_alert_skip_ok),
-                    onClick = { navigateToPushNotificationsOrNext() },
+                    onClick = {
+                        modelScope.launch {
+                            setAccessCodeSkippedUseCase(userWalletId, true)
+                        }
+                        navigateToPushNotificationsOrNext()
+                    },
                 ),
                 shouldDismissOnFirstAction = true,
             ),
@@ -136,6 +164,8 @@ internal class WalletActivationModel @Inject constructor(
         override fun onContinueClick(userWalletId: UserWalletId) {
             stackNavigation.push(WalletActivationRoute.SetAccessCode)
         }
+
+        override fun onUpgradeClick(userWalletId: UserWalletId) = Unit
     }
 
     inner class AccessCodeModelCallbacks : AccessCodeComponent.ModelCallbacks {
@@ -163,7 +193,7 @@ internal class WalletActivationModel @Inject constructor(
     }
 
     inner class MobileWalletSetupFinishedModelCallbacks : MobileWalletSetupFinishedComponent.ModelCallbacks {
-        override fun onContinueClick() {
+        override fun onFinishClick() {
             router.pop()
         }
     }

@@ -17,6 +17,9 @@ import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.walletconnect.model.WcPairRequest
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.features.account.PortfolioSelectorComponent
+import com.tangem.features.walletconnect.connections.components.WcSelectNetworksComponent.*
+import com.tangem.features.walletconnect.connections.components.WcSelectWalletComponent.*
 import com.tangem.features.walletconnect.connections.model.WcPairModel
 import com.tangem.features.walletconnect.connections.routes.WcAppInfoRoutes
 import com.tangem.features.walletconnect.connections.routes.WcAppInfoRoutes.Alert
@@ -24,6 +27,7 @@ import com.tangem.features.walletconnect.connections.utils.WcAlertsFactory
 
 internal class WcPairComponent(
     private val appComponentContext: AppComponentContext,
+    private val portfolioSelectorComponentFactory: PortfolioSelectorComponent.Factory,
     params: Params,
 ) : AppComponentContext by appComponentContext, ComposableContentComponent {
 
@@ -65,6 +69,7 @@ internal class WcPairComponent(
             }
             is WcAppInfoRoutes.SelectNetworks,
             is WcAppInfoRoutes.SelectWallet,
+            is WcAppInfoRoutes.PortfolioSelector,
             -> model.stackNavigation.pop()
         }
     }
@@ -105,6 +110,14 @@ internal class WcPairComponent(
                     selectedWalletId = config.selectedWalletId,
                     onDismiss = ::dismiss,
                     callback = model,
+                ),
+            )
+            WcAppInfoRoutes.PortfolioSelector -> portfolioSelectorComponentFactory.create(
+                context = appComponentContext,
+                params = PortfolioSelectorComponent.Params(
+                    portfolioFetcher = model.portfolioFetcher!!,
+                    bsCallback = model.portfolioSelectorCallback,
+                    controller = model.selectorController,
                 ),
             )
         }
