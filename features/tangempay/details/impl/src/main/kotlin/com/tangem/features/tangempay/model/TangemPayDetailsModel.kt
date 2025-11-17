@@ -15,6 +15,7 @@ import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig.ShowRefreshState
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.pay.TangemPayTopUpData
 import com.tangem.domain.pay.model.TangemPayCardBalance
@@ -41,8 +42,8 @@ import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import com.tangem.utils.transformer.update
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -55,6 +56,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     private val router: Router,
     private val urlOpener: UrlOpener,
     private val cardDetailsRepository: TangemPayCardDetailsRepository,
+    private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val uiMessageSender: UiMessageSender,
     private val cardDetailsEventListener: CardDetailsEventListener,
     private val txHistoryUpdateListener: TangemPayTxHistoryUpdateListener,
@@ -80,6 +82,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     val bottomSheetNavigation: SlotNavigation<TangemPayDetailsNavigation> = SlotNavigation()
 
     init {
+        handleBalanceHiding()
         fetchAddToWalletBanner()
         fetchBalance()
     }
@@ -172,6 +175,12 @@ internal class TangemPayDetailsModel @Inject constructor(
             val result = cardDetailsRepository.getCardBalance().onRight { balance = it }
             uiState.update(DetailsBalanceTransformer(balance = result))
         }.saveIn(fetchBalanceJobHolder)
+    }
+
+    private fun handleBalanceHiding() {
+        getBalanceHidingSettingsUseCase().onEach {
+            uiState.update(DetailBalanceVisibilityTransformer(isHidden = it.isBalanceHidden))
+        }.launchIn(modelScope)
     }
 
     private fun fetchAddToWalletBanner() {
