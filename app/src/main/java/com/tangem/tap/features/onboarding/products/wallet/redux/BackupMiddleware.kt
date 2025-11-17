@@ -14,6 +14,7 @@ import com.tangem.tap.store
 import kotlinx.coroutines.launch
 import org.rekotlin.Middleware
 
+@Suppress("MemberNameEqualsClassName")
 class BackupMiddleware {
     val backupMiddleware: Middleware<AppState> = { dispatch, state ->
         { next ->
