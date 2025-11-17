@@ -131,7 +131,12 @@ class GetOnrampAllOffersUseCase(
                 )
             }
             amountErrorQuotes.isNotEmpty() -> {
-                amountErrorQuotes.minByOrNull { it.error.requiredAmount }
+                val minAmountErrors = amountErrorQuotes.filter { it.error is OnrampError.AmountError.TooSmallError }
+                if (minAmountErrors.isNotEmpty()) {
+                    minAmountErrors.minByOrNull { it.error.requiredAmount }
+                } else {
+                    amountErrorQuotes.maxByOrNull { it.error.requiredAmount }
+                }
             }
             else -> validMethodQuotes.firstOrNull()
         }
