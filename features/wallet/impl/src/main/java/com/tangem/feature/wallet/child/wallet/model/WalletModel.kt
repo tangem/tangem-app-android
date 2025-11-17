@@ -117,7 +117,13 @@ internal class WalletModel @Inject constructor(
     init {
         analyticsEventsHandler.send(WalletScreenAnalyticsEvent.MainScreen.ScreenOpened)
 
-        suggestToEnableBiometrics()
+        screenLifecycleProvider.isBackgroundState
+            .onEach { isBackground ->
+                if (isBackground.not()) {
+                    suggestToEnableBiometrics()
+                }
+            }.launchIn(modelScope)
+
         suggestToOpenMarkets()
 
         maybeMigrateNames()
@@ -162,15 +168,13 @@ internal class WalletModel @Inject constructor(
         walletScreenContentLoader.cancelAll()
     }
 
-    private fun suggestToEnableBiometrics() {
-        modelScope.launch(dispatchers.main) {
-            withContext(dispatchers.io) { delay(timeMillis = 1_800) }
+    private suspend fun suggestToEnableBiometrics() {
+        if (shouldShowAskBiometryBottomSheet()) {
+            delay(timeMillis = 1_800)
 
-            if (shouldShowAskBiometryBottomSheet()) {
-                innerWalletRouter.dialogNavigation.activate(
-                    configuration = WalletDialogConfig.AskForBiometry,
-                )
-            }
+            innerWalletRouter.dialogNavigation.activate(
+                configuration = WalletDialogConfig.AskForBiometry,
+            )
         }
     }
 
