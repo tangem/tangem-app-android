@@ -54,6 +54,8 @@
   <string name="account_unsaved_dialog_message_create">新しいアカウントを破棄してもよろしいですか？</string>
   <string name="account_unsaved_dialog_message_edit">編集内容を破棄してもよろしいですか？</string>
   <string name="account_unsaved_dialog_title">保存されていない変更</string>
+  <string name="accounts_migration_alert_message">一部のカスタムトークンは、その派生がそのアカウントに属しているため、「 %1$s 」から「 %2$s 」に移動されました。</string>
+  <string name="accounts_migration_alert_title">一部のカスタムトークンが移動されました</string>
   <string name="action_buttons_buy_empty_search_message">トークンが見つかりませんか？メインページのマーケットセクションに移動し、ポートフォリオに追加して買付できるようにします。</string>
   <string name="action_buttons_sell_empty_search_message">トークンが見つかりませんか？メインページのマーケットセクションに移動し、ポートフォリオに追加して売却できるようにします。</string>
   <string name="action_buttons_sell_navigation_bar_title">売却</string>
@@ -1172,8 +1174,8 @@
   <string name="staking_details_account_fee">ステーキングアカウント手数料</string>
   <string name="staking_details_account_fee_info">ステーキングアカウントとは、ステーキングされたSOLが保管される特別なアカウントです。トークンをバリデーターに委任し、取引の検証に参加して報酬を受け取る際に作成されます。ステーキングアカウントの作成には少額の手数料がかかりますが、ステーキング完了後に返金されます。</string>
   <string name="staking_details_annual_percentage_rate">年率</string>
-  <string name="staking_details_annual_percentage_rate_info">ステーキングに参加することで得られる年間収益率。</string>
-  <string name="staking_details_annual_percentage_yield_info">APYは、バリデータのパフォーマンスに基づいた年間利回りを示します。</string>
+  <string name="staking_details_annual_percentage_rate_info">APR：1年間で得られる利息を単利で表示します。得た利息は残高に加算されず、その利息にはさらに利息がつきません。</string>
+  <string name="staking_details_annual_percentage_yield_info">APY：1年間で得られる合計利息を複利込みで表示します。複利とは、得た利息が残高に加算され、その利息にもさらに利息がつくことを意味します。</string>
   <string name="staking_details_apr">APR</string>
   <string name="staking_details_apy">APY</string>
   <string name="staking_details_auto_claiming_rewards_daily_text">報酬は毎日自動的にステーキング残高に蓄積されます。</string>
@@ -1834,6 +1836,7 @@
   <string name="yield_module_balance_info_sheet_title">あなたの%sはAaveに預けられています</string>
   <string name="yield_module_chart_loading_error">チャートを読み込めません・・</string>
   <string name="yield_module_deposit_error_notification_title">Aaveへの%1$s %2$sの供給は保留中です。</string>
+  <string name="yield_module_disable_button">利回りモードを無効にする</string>
   <string name="yield_module_earn_badge">年利%1$s%%</string>
   <string name="yield_module_earn_sheet_available_title">利用可能</string>
   <string name="yield_module_earn_sheet_current_apy_title">現在のAPY</string>
@@ -1862,9 +1865,10 @@
   <string name="yield_module_network_fee_unreachable_notification_description">ネットワーク接続を確認してください</string>
   <string name="yield_module_network_fee_unreachable_notification_title">ネットワーク手数料についての情報にアクセスできません</string>
   <string name="yield_module_promo_screen_auto_balance_subtitle">あなたが行うすべての入金は、自動的にAaveへ供給されます。</string>
+  <string name="yield_module_promo_screen_auto_balance_subtitle_v2">アカウントのすべての %1$s は自動的に Aave に供給されます。</string>
   <string name="yield_module_promo_screen_auto_balance_title">Aaveへの自動送金</string>
   <string name="yield_module_promo_screen_cash_out_subtitle">いつでも、即座に資金を送信、交換、売却できます。</string>
-  <string name="yield_module_promo_screen_cash_out_title">いつでも資金にアクセス可能</string>
+  <string name="yield_module_promo_screen_cash_out_title">すぐに利用可能</string>
   <string name="yield_module_promo_screen_how_it_works_button_title">使い方</string>
   <string name="yield_module_promo_screen_self_custodial_subtitle">Aaveは、総額610億ドル以上の資産を管理する分散型プロトコルです。</string>
   <string name="yield_module_promo_screen_self_custodial_title">分散型・自己管理型</string>
@@ -1882,11 +1886,12 @@
   <string name="yield_module_start_earning_sheet_description">%sはAaveに供給されますが、管理可能な状態のままになります。</string>
   <string name="yield_module_start_earning_sheet_fee_policy">入金手数料ポリシーを見る</string>
   <string name="yield_module_start_earning_sheet_next_deposits">次回の入金は自動的にAaveに供給されます。</string>
+  <string name="yield_module_start_earning_sheet_next_deposits_v2">今後のすべての %1$s 入金は自動的に Aave に供給されます。</string>
   <string name="yield_module_status_active">アクティブ</string>
   <string name="yield_module_status_paused">停止中</string>
   <string name="yield_module_stop_earning">利回りモードを解除中</string>
   <string name="yield_module_stop_earning_sheet_description">これをオフにすると、Aaveから資産が引き出され、ウォレット内の%sに変換され、利回りの発生が停止します。</string>
-  <string name="yield_module_stop_earning_sheet_fee_note">出金金額からネットワーク手数料が差し引かれます。</string>
+  <string name="yield_module_stop_earning_sheet_fee_note">ネットワーク手数料とは、ブロックチェーン上で取引を処理して承認するためにユーザーが支払う料金のことです。</string>
   <string name="yield_module_stop_earning_sheet_title">利回りモードを無効にする</string>
   <string name="yield_module_supply">供給</string>
   <string name="yield_module_supply_apr">供給APY</string>
