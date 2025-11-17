@@ -6,6 +6,7 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
+import com.tangem.core.ui.security.DisableScreenshotsDisposableEffect
 import com.tangem.features.hotwallet.ViewPhraseComponent
 import com.tangem.features.hotwallet.viewphrase.model.ViewPhraseModel
 import com.tangem.features.hotwallet.viewphrase.ui.ViewPhraseContent
@@ -22,6 +23,9 @@ internal class DefaultViewPhraseComponent @AssistedInject constructor(
     @Composable
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
+
+        DisableScreenshotsDisposableEffect()
+
         ViewPhraseContent(
             state = state,
             modifier = modifier,
