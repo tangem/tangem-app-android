@@ -1,11 +1,17 @@
 package com.tangem.data.common.currency
 
+import com.tangem.blockchainsdk.utils.toCoinId
+import com.tangem.blockchainsdk.utils.toNetworkId
+import com.tangem.data.common.network.NetworkFactory
+import com.tangem.data.common.tokens.getDefaultWalletBlockchains
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
+import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.wallets.derivations.derivationStyleProvider
 import javax.inject.Inject
 
-// TODO: [REDACTED_JIRA]
 class UserTokensResponseFactory @Inject constructor() {
 
     fun createUserTokensResponse(
@@ -42,5 +48,39 @@ class UserTokensResponseFactory @Inject constructor() {
                 contractAddress = (this as? CryptoCurrency.Token)?.contractAddress,
             )
         }
+    }
+
+    fun createDefaultResponse(
+        userWallet: UserWallet?,
+        networkFactory: NetworkFactory,
+        accountId: AccountId?,
+    ): UserTokensResponse {
+        val tokens = userWallet?.let {
+            getDefaultWalletBlockchains(userWallet = it, demoConfig = DemoConfig)
+                .map { blockchain ->
+                    val derivationPath = networkFactory.createDerivationPath(
+                        blockchain = blockchain,
+                        extraDerivationPath = null,
+                        cardDerivationStyleProvider = userWallet.derivationStyleProvider,
+                    ).value
+
+                    UserTokensResponse.Token(
+                        id = blockchain.toCoinId(),
+                        accountId = accountId?.value,
+                        networkId = blockchain.toNetworkId(),
+                        derivationPath = derivationPath,
+                        name = blockchain.getCoinName(),
+                        symbol = blockchain.currency,
+                        decimals = blockchain.decimals(),
+                        contractAddress = null,
+                    )
+                }
+        }
+
+        return UserTokensResponse(
+            group = UserTokensResponse.GroupType.NONE,
+            sort = UserTokensResponse.SortType.MANUAL,
+            tokens = tokens.orEmpty(),
+        )
     }
 }

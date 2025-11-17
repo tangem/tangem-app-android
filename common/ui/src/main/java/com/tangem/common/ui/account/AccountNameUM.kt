@@ -1,5 +1,6 @@
 package com.tangem.common.ui.account
 
+import androidx.annotation.StringRes
 import androidx.compose.runtime.Immutable
 import arrow.core.Either
 import arrow.core.raise.either
@@ -25,7 +26,10 @@ sealed interface AccountNameUM {
      */
     data object DefaultMain : AccountNameUM {
 
-        override val value: TextReference = resourceReference(R.string.account_main_account_title)
+        @get:StringRes
+        val stringResId: Int = R.string.account_main_account_title
+
+        override val value: TextReference = resourceReference(stringResId)
     }
 
     /**
@@ -33,7 +37,7 @@ sealed interface AccountNameUM {
      *
      * @property raw the raw string value of the custom account name
      */
-    class Custom(internal val raw: String) : AccountNameUM {
+    data class Custom(internal val raw: String) : AccountNameUM {
 
         override val value: TextReference = stringReference(value = raw)
     }

@@ -7,10 +7,11 @@ import com.tangem.data.account.converter.createWalletAccountDTO
 import com.tangem.data.account.store.AccountsResponseStore
 import com.tangem.data.account.store.AccountsResponseStoreFactory
 import com.tangem.data.account.tokens.DefaultMainAccountTokensMigration
-import com.tangem.data.account.utils.toUserTokensResponse
 import com.tangem.data.common.currency.UserTokensSaver
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
+import com.tangem.datasource.api.tangemTech.models.account.toUserTokensResponse
+import com.tangem.datasource.local.accounts.AccountTokenMigrationStore
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.wallet.UserWalletId
@@ -29,10 +30,12 @@ class DefaultMainAccountTokensMigrationTest {
     private val accountsResponseStoreFactory = mockk<AccountsResponseStoreFactory>()
     private val accountsResponseStore = mockk<AccountsResponseStore>()
     private val accountsResponseStoreFlow = MutableStateFlow<GetWalletAccountsResponse?>(value = null)
+    private val accountTokenMigrationStore = mockk<AccountTokenMigrationStore>(relaxUnitFun = true)
+    private val userTokensSaver = mockk<UserTokensSaver>(relaxUnitFun = true)
 
-    private val userTokensSaver = mockk<UserTokensSaver>(relaxed = true)
     private val migration = DefaultMainAccountTokensMigration(
         accountsResponseStoreFactory = accountsResponseStoreFactory,
+        accountTokenMigrationStore = accountTokenMigrationStore,
         userTokensSaver = userTokensSaver,
     )
 
@@ -62,7 +65,7 @@ class DefaultMainAccountTokensMigrationTest {
         coVerify(inverse = true) {
             accountsResponseStoreFactory.create(any())
             accountsResponseStore.data
-            userTokensSaver.push(userWalletId = any(), response = any(), onFailSend = any())
+            userTokensSaver.pushWithRetryer(userWalletId = any(), response = any(), onFailSend = any())
         }
     }
 
@@ -81,7 +84,7 @@ class DefaultMainAccountTokensMigrationTest {
         }
 
         coVerify(inverse = true) {
-            userTokensSaver.push(userWalletId = any(), response = any(), onFailSend = any())
+            userTokensSaver.pushWithRetryer(userWalletId = any(), response = any(), onFailSend = any())
         }
     }
 
@@ -110,7 +113,7 @@ class DefaultMainAccountTokensMigrationTest {
         }
 
         coVerify(inverse = true) {
-            userTokensSaver.push(userWalletId = any(), response = any(), onFailSend = any())
+            userTokensSaver.pushWithRetryer(userWalletId = any(), response = any(), onFailSend = any())
         }
     }
 
@@ -145,7 +148,7 @@ class DefaultMainAccountTokensMigrationTest {
         }
 
         coVerify(inverse = true) {
-            userTokensSaver.push(userWalletId = any(), response = any(), onFailSend = any())
+            userTokensSaver.pushWithRetryer(userWalletId = any(), response = any(), onFailSend = any())
         }
     }
 
@@ -183,6 +186,8 @@ class DefaultMainAccountTokensMigrationTest {
 
         accountsResponseStoreFlow.value = response
 
+        coEvery { accountsResponseStore.updateData(any()) } returns mockk()
+
         // Act
         val actual = migration.migrate(userWalletId, derivationIndex)
 
@@ -199,7 +204,8 @@ class DefaultMainAccountTokensMigrationTest {
         coVerifySequence {
             accountsResponseStoreFactory.create(userWalletId)
             accountsResponseStore.data
-            userTokensSaver.push(
+            accountsResponseStore.updateData(any())
+            userTokensSaver.pushWithRetryer(
                 userWalletId = userWalletId,
                 response = migratedResponse.toUserTokensResponse(),
                 onFailSend = any(),
