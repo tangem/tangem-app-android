@@ -296,6 +296,7 @@ internal class DefaultStakingRepository(
         return when (networkId.toBlockchain()) {
             Blockchain.TON -> stakingFeatureToggles.isTonStakingEnabled
             Blockchain.Cardano -> stakingFeatureToggles.isCardanoStakingEnabled
+            Blockchain.Ethereum -> stakingFeatureToggles.isEthStakingEnabled
             else -> true
         }
     }
