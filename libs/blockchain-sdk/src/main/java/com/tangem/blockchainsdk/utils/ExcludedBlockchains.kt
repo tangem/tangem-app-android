@@ -5,6 +5,7 @@ import com.tangem.core.configtoggle.blockchain.ExcludedBlockchainsManager
 import org.jetbrains.annotations.TestOnly
 import javax.inject.Inject
 
+@Suppress("MemberNameEqualsClassName")
 class ExcludedBlockchains @Inject internal constructor(
     private val excludedBlockchainsManager: ExcludedBlockchainsManager,
 ) : Set<Blockchain> {

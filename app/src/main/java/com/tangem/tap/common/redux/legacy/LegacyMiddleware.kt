@@ -18,6 +18,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import org.rekotlin.Middleware
 
+@Suppress("MemberNameEqualsClassName")
 internal object LegacyMiddleware {
     private val prepareDetailsScreenJobHolder = JobHolder()
 
