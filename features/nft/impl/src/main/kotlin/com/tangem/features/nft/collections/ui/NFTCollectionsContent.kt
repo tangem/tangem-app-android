@@ -8,30 +8,38 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CornerSize
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
+import androidx.compose.ui.util.fastForEachIndexed
+import com.tangem.common.ui.account.AccountIconPreviewData
+import com.tangem.common.ui.account.AccountTitle
+import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.UnableToLoadData
 import com.tangem.core.ui.components.fields.SearchBar
 import com.tangem.core.ui.components.fields.TangemSearchBarDefaults
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.components.notifications.NotificationConfig
-import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.nft.collections.entity.*
 import com.tangem.features.nft.impl.R
 import kotlinx.collections.immutable.persistentListOf
+import java.util.UUID
 
 @Suppress("LongMethod")
 @Composable
@@ -89,41 +97,24 @@ internal fun NFTCollectionsContent(content: NFTCollectionsUM.Content, modifier: 
                         .padding(
                             top = TangemTheme.dimens.spacing16,
                             bottom = bottomPadding,
-                        )
-                        .clip(TangemTheme.shapes.roundedCornersXMedium)
-                        .background(TangemTheme.colors.background.primary),
+                        ),
+                    // .clip(TangemTheme.shapes.roundedCornersXMedium)
+                    // .background(TangemTheme.colors.background.primary),
                     state = listState,
                 ) {
-                    content.collections.fastForEach { collection ->
-                        item(key = collection.id) {
-                            NFTCollection(
-                                modifier = Modifier.fillMaxWidth(),
-                                state = collection,
+                    content.collections.fastForEachIndexed { index, item ->
+                        val previousItem = content.collections.getOrNull(index.dec())
+                        val nextItem = content.collections.getOrNull(index.inc())
+                        when (item) {
+                            is NFTCollectionPortfolioUM -> nftPortfolioItem(
+                                item = item,
+                                shape = getRoundShape(item, previousItem, nextItem),
                             )
-                        }
-                        when (val assets = collection.assets) {
-                            is NFTCollectionAssetsListUM.Init -> Unit
-                            is NFTCollectionAssetsListUM.Loading -> {
-                                assetsListLoading(
-                                    collectionId = collection.id,
-                                    content = assets,
-                                    expanded = collection.isExpanded,
-                                )
-                            }
-                            is NFTCollectionAssetsListUM.Failed -> {
-                                assetsListFailed(
-                                    collectionId = collection.id,
-                                    content = assets,
-                                    expanded = collection.isExpanded,
-                                )
-                            }
-                            is NFTCollectionAssetsListUM.Content -> {
-                                assetsListContent(
-                                    collectionId = collection.id,
-                                    content = assets,
-                                    expanded = collection.isExpanded,
-                                )
-                            }
+                            is NFTCollectionUM -> nftCollectionItem(
+                                collection = item,
+                                shape = getRoundShape(item, previousItem, nextItem),
+                                isNextItemNFTCollection = nextItem is NFTCollectionUM,
+                            )
                         }
                     }
                 }
@@ -139,9 +130,94 @@ internal fun NFTCollectionsContent(content: NFTCollectionsUM.Content, modifier: 
     }
 }
 
+private fun getRoundShape(
+    item: NFTCollectionItem,
+    previousItem: NFTCollectionItem?,
+    nextItem: NFTCollectionItem?,
+): RoundedCornerShape {
+    val radius = 16.dp
+    val topRound = RoundedCornerShape(topStart = radius, topEnd = radius)
+    val bottomRound = RoundedCornerShape(bottomStart = radius, bottomEnd = radius)
+    val allRound = RoundedCornerShape(size = radius)
+    return when (item) {
+        is NFTCollectionPortfolioUM -> topRound
+        is NFTCollectionUM -> when {
+            previousItem == null && nextItem == null -> allRound
+            previousItem == null && nextItem is NFTCollectionUM -> topRound
+            previousItem != null && nextItem !is NFTCollectionUM -> bottomRound
+            else -> RoundedCornerShape(0.dp)
+        }
+    }
+}
+
+private fun LazyListScope.nftPortfolioItem(item: NFTCollectionPortfolioUM, shape: RoundedCornerShape) {
+    item(item.id) {
+        AccountTitle(
+            textColor = TangemTheme.colors.text.primary1,
+            textStyle = TangemTheme.typography.caption1,
+            accountTitleUM = item.title,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 12.dp)
+                .clip(shape)
+                .background(TangemTheme.colors.background.action)
+                .padding(start = 12.dp, end = 12.dp, top = 12.dp, bottom = 8.dp),
+        )
+    }
+}
+
+private fun LazyListScope.nftCollectionItem(
+    collection: NFTCollectionUM,
+    shape: RoundedCornerShape,
+    isNextItemNFTCollection: Boolean,
+) {
+    item(key = collection.id) {
+        val itemShape = if (collection.isExpanded) {
+            shape.copy(bottomEnd = CornerSize(0.dp), bottomStart = CornerSize(0.dp))
+        } else {
+            shape
+        }
+        NFTCollection(
+            modifier = Modifier
+                .clip(itemShape)
+                .background(TangemTheme.colors.background.action)
+                .fillMaxWidth(),
+            state = collection,
+        )
+    }
+    when (val assets = collection.assets) {
+        is NFTCollectionAssetsListUM.Init -> Unit
+        is NFTCollectionAssetsListUM.Loading -> {
+            assetsListLoading(
+                collectionId = collection.id,
+                content = assets,
+                expanded = collection.isExpanded,
+                isNextItemNFTCollection = isNextItemNFTCollection,
+            )
+        }
+        is NFTCollectionAssetsListUM.Failed -> {
+            assetsListFailed(
+                collectionId = collection.id,
+                content = assets,
+                expanded = collection.isExpanded,
+                isNextItemNFTCollection = isNextItemNFTCollection,
+            )
+        }
+        is NFTCollectionAssetsListUM.Content -> {
+            assetsListContent(
+                collectionId = collection.id,
+                content = assets,
+                expanded = collection.isExpanded,
+                isNextItemNFTCollection = isNextItemNFTCollection,
+            )
+        }
+    }
+}
+
 private fun LazyListScope.assetsListLoading(
     collectionId: String,
     content: NFTCollectionAssetsListUM.Loading,
+    isNextItemNFTCollection: Boolean,
     expanded: Boolean,
 ) {
     val itemsCount = content.itemsCount
@@ -164,6 +240,8 @@ private fun LazyListScope.assetsListLoading(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .clip(assetsShape(isNextItemNFTCollection))
+                        .background(TangemTheme.colors.background.action)
                         .padding(TangemTheme.dimens.spacing6),
                 ) {
                     NFTCollectionAssetLoading(
@@ -193,6 +271,7 @@ private fun LazyListScope.assetsListLoading(
 private fun LazyListScope.assetsListFailed(
     collectionId: String,
     content: NFTCollectionAssetsListUM.Failed,
+    isNextItemNFTCollection: Boolean,
     expanded: Boolean,
 ) {
     item(
@@ -206,6 +285,8 @@ private fun LazyListScope.assetsListFailed(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .clip(assetsShape(isNextItemNFTCollection))
+                    .background(TangemTheme.colors.background.action)
                     .height(TangemTheme.dimens.size142),
                 contentAlignment = Alignment.Center,
             ) {
@@ -220,6 +301,7 @@ private fun LazyListScope.assetsListFailed(
 private fun LazyListScope.assetsListContent(
     collectionId: String,
     content: NFTCollectionAssetsListUM.Content,
+    isNextItemNFTCollection: Boolean,
     expanded: Boolean,
 ) {
     val items = content.items
@@ -244,6 +326,10 @@ private fun LazyListScope.assetsListContent(
                 )
                 Row(
                     modifier = Modifier
+                        .conditional(rowIndex.inc() == rowCount) {
+                            clip(assetsShape(isNextItemNFTCollection))
+                        }
+                        .background(TangemTheme.colors.background.action)
                         .fillMaxWidth()
                         .padding(TangemTheme.dimens.spacing6),
                 ) {
@@ -277,105 +363,150 @@ private fun LazyListScope.assetsListContent(
     }
 }
 
+private fun assetsShape(isNextItemNFTCollection: Boolean): Shape = if (isNextItemNFTCollection) {
+    RoundedCornerShape(0.dp)
+} else {
+    RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp)
+}
+
 @Suppress("LongMethod")
 @Preview(widthDp = 360, showBackground = true)
 @Preview(widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview_NFTCollectionsContent() {
+private fun Preview_NFTCollectionsContent(@PreviewParameter(PreviewProvider::class) state: NFTCollectionsUM.Content) {
     TangemThemePreview {
         NFTCollectionsContent(
-            content = NFTCollectionsUM.Content(
-                search = SearchBarUM(
-                    placeholderText = resourceReference(R.string.common_search),
-                    query = "",
-                    onQueryChange = {},
-                    isActive = false,
-                    onActiveChange = { },
+            content = state,
+        )
+    }
+}
+
+private class PreviewProvider : PreviewParameterProvider<NFTCollectionsUM.Content> {
+
+    val search
+        get() = SearchBarUM(
+            placeholderText = resourceReference(R.string.common_search),
+            query = "",
+            onQueryChange = {},
+            isActive = false,
+            onActiveChange = { },
+        )
+
+    val warnings
+        get() = persistentListOf(
+            NFTCollectionsWarningUM(
+                id = "loading troubles",
+                config = NotificationConfig(
+                    title = TextReference.Res(R.string.nft_collections_warning_title),
+                    subtitle = TextReference.Res(R.string.nft_collections_warning_subtitle),
+                    iconResId = R.drawable.ic_alert_triangle_20,
                 ),
-                collections = persistentListOf(
-                    NFTCollectionUM(
+            ),
+        )
+
+    val collection
+        get() = NFTCollectionUM(
+            id = UUID.randomUUID().toString(),
+            name = "Nethers",
+            logoUrl = "",
+            networkIconId = R.drawable.img_eth_22,
+            description = TextReference.Str("3 items"),
+            assets = NFTCollectionAssetsListUM.Content(persistentListOf()),
+            isExpanded = false,
+            onExpandClick = { },
+        )
+
+    val collectionLoading
+        get() = collection.copy(
+            assets = NFTCollectionAssetsListUM.Loading(
+                itemsCount = 1,
+            ),
+            isExpanded = true,
+        )
+
+    val collectionFailed
+        get() = collection.copy(
+            assets = NFTCollectionAssetsListUM.Failed(
+                onRetryClick = { },
+            ),
+            isExpanded = true,
+        )
+
+    val collectionContent
+        get() = collection.copy(
+            assets = NFTCollectionAssetsListUM.Content(
+                items = persistentListOf(
+                    NFTCollectionAssetUM(
                         id = "item1",
-                        name = "Nethers",
-                        logoUrl = "",
-                        networkIconId = R.drawable.img_eth_22,
-                        description = TextReference.Str("3 items"),
-                        assets = NFTCollectionAssetsListUM.Content(persistentListOf()),
-                        isExpanded = false,
-                        onExpandClick = { },
+                        name = "Nethers #0854",
+                        imageUrl = "img",
+                        price = NFTSalePriceUM.Content(
+                            price = stringReference("0.05 ETH"),
+                        ),
+                        onItemClick = { },
                     ),
-                    NFTCollectionUM(
+                    NFTCollectionAssetUM(
                         id = "item2",
-                        name = "Nethers",
-                        logoUrl = "",
-                        networkIconId = R.drawable.img_eth_22,
-                        description = TextReference.Str("3 items"),
-                        assets = NFTCollectionAssetsListUM.Loading(
-                            itemsCount = 1,
-                        ),
-                        isExpanded = true,
-                        onExpandClick = { },
+                        name = "Nethers #0855",
+                        imageUrl = "img",
+                        price = NFTSalePriceUM.Loading,
+                        onItemClick = { },
                     ),
-                    NFTCollectionUM(
+                    NFTCollectionAssetUM(
                         id = "item3",
-                        name = "Nethers",
-                        logoUrl = "",
-                        networkIconId = R.drawable.img_eth_22,
-                        description = TextReference.Str("3 items"),
-                        assets = NFTCollectionAssetsListUM.Failed(
-                            onRetryClick = { },
-                        ),
-                        isExpanded = true,
-                        onExpandClick = { },
-                    ),
-                    NFTCollectionUM(
-                        id = "item4",
-                        name = "Nethers",
-                        logoUrl = "",
-                        networkIconId = R.drawable.img_eth_22,
-                        description = TextReference.Str("3 items"),
-                        assets = NFTCollectionAssetsListUM.Content(
-                            items = persistentListOf(
-                                NFTCollectionAssetUM(
-                                    id = "item1",
-                                    name = "Nethers #0854",
-                                    imageUrl = "img",
-                                    price = NFTSalePriceUM.Content(
-                                        price = stringReference("0.05 ETH"),
-                                    ),
-                                    onItemClick = { },
-                                ),
-                                NFTCollectionAssetUM(
-                                    id = "item2",
-                                    name = "Nethers #0855",
-                                    imageUrl = "img",
-                                    price = NFTSalePriceUM.Loading,
-                                    onItemClick = { },
-                                ),
-                                NFTCollectionAssetUM(
-                                    id = "item3",
-                                    name = "Nethers #0856",
-                                    imageUrl = "img",
-                                    price = NFTSalePriceUM.Failed,
-                                    onItemClick = { },
-                                ),
-                            ),
-                        ),
-                        isExpanded = true,
-                        onExpandClick = { },
+                        name = "Nethers #0856",
+                        imageUrl = "img",
+                        price = NFTSalePriceUM.Failed,
+                        onItemClick = { },
                     ),
                 ),
-                warnings = persistentListOf(
-                    NFTCollectionsWarningUM(
-                        id = "loading troubles",
-                        config = NotificationConfig(
-                            title = TextReference.Res(R.string.nft_collections_warning_title),
-                            subtitle = TextReference.Res(R.string.nft_collections_warning_subtitle),
-                            iconResId = R.drawable.ic_alert_triangle_20,
-                        ),
-                    ),
+            ),
+            isExpanded = true,
+        )
+
+    val accountHeader
+        get() = NFTCollectionPortfolioUM(
+            title = AccountTitleUM.Account(
+                icon = AccountIconPreviewData.randomAccountIcon(),
+                name = stringReference("Main Account"),
+                prefixText = TextReference.EMPTY,
+            ),
+            id = UUID.randomUUID().toString(),
+        )
+
+    override val values: Sequence<NFTCollectionsUM.Content>
+        get() = sequenceOf(
+            NFTCollectionsUM.Content(
+                search = search,
+                collections = persistentListOf(
+                    collection,
+                    collectionLoading,
+                    collectionFailed,
+                    collectionContent,
                 ),
+                warnings = warnings,
+                onReceiveClick = { },
+            ),
+            NFTCollectionsUM.Content(
+                search = search,
+                collections = persistentListOf(
+                    accountHeader,
+                    collection,
+                    accountHeader,
+                    collectionContent,
+                    collection,
+                ),
+                warnings = warnings,
+                onReceiveClick = { },
+            ),
+            NFTCollectionsUM.Content(
+                search = search,
+                collections = persistentListOf(
+                    collectionContent,
+                    collection,
+                ),
+                warnings = warnings,
                 onReceiveClick = { },
             ),
         )
-    }
 }
