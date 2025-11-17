@@ -128,7 +128,6 @@ internal class WalletBackupModel @Inject constructor(
             router.push(
                 AppRoute.CreateWalletBackup(
                     userWalletId = params.userWalletId,
-                    isUpgradeFlow = false,
                 ),
             )
         }
