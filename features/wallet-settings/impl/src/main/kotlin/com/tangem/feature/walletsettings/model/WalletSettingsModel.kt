@@ -525,7 +525,6 @@ internal class WalletSettingsModel @Inject constructor(
                                 router.push(
                                     AppRoute.CreateWalletBackup(
                                         userWalletId = userWallet.walletId,
-                                        isUpgradeFlow = false,
                                     ),
                                 )
                                 closeBs()
