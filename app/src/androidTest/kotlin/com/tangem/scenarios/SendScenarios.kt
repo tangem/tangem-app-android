@@ -1,13 +1,38 @@
 package com.tangem.scenarios
 
 import com.tangem.common.BaseTestCase
+import com.tangem.common.constants.TestConstants.QUOTES_API_SCENARIO
+import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
 import com.tangem.common.extensions.clickWithAssertion
+import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.screens.*
 import com.tangem.screens.onMainScreen
 import com.tangem.screens.onSendConfirmScreen
 import com.tangem.screens.onSendScreen
 import com.tangem.screens.onTokenDetailsScreen
 import io.qameta.allure.kotlin.Allure.step
+
+fun BaseTestCase.openSendScreen(tokenName: String, mockState: String = "") {
+    val scenarioState = mockState.ifEmpty { tokenName }
+    step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$scenarioState'") {
+        setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = scenarioState)
+    }
+    step("Set WireMock scenario: '$QUOTES_API_SCENARIO' to state: '$scenarioState'") {
+        setWireMockScenarioState(scenarioName = QUOTES_API_SCENARIO, state = scenarioState)
+    }
+    step("Open 'Main Screen'") {
+        openMainScreen()
+    }
+    step("Synchronize addresses") {
+        synchronizeAddresses()
+    }
+    step("Click on token with name: '$tokenName'") {
+        onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
+    }
+    step("Click on 'Send' button") {
+        onTokenDetailsScreen { sendButton().performClick() }
+    }
+}
 
 fun BaseTestCase.checkNetworkFeeBlock(currentFeeAmount: String, withFeeSelector: Boolean) {
     step("Assert fee selector block is displayed") {
