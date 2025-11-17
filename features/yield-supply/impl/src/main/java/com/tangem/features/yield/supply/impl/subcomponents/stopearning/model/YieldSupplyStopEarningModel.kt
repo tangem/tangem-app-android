@@ -126,6 +126,8 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
     }
 
     fun onClick() {
+        params.callback.onTransactionProgress(true)
+
         val yieldSupplyFeeUM = uiState.value.yieldSupplyFeeUM as? YieldSupplyFeeUM.Content ?: return
         analytics.send(
             YieldSupplyAnalytics.ButtonStopEarning(
@@ -163,6 +165,7 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
                             }
                         },
                     )
+                    params.callback.onTransactionProgress(false)
                 },
                 ifRight = {
                     onStopEarningTransactionSuccess()
