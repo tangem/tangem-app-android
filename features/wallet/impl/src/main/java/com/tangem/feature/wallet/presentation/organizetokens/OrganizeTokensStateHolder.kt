@@ -2,19 +2,24 @@ package com.tangem.feature.wallet.presentation.organizetokens
 
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.event.triggeredEvent
+import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
+import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.error.TokenListSortingError
 import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensListState
+import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensListUM
 import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensState
 import com.tangem.feature.wallet.presentation.organizetokens.utils.converter.InProgressStateConverter
 import com.tangem.feature.wallet.presentation.organizetokens.utils.converter.TokenListToStateConverter
+import com.tangem.feature.wallet.presentation.organizetokens.utils.converter.TokenListToStateConverterV2
 import com.tangem.feature.wallet.presentation.organizetokens.utils.converter.error.TokenListErrorConverter
 import com.tangem.feature.wallet.presentation.organizetokens.utils.converter.error.TokenListSortingErrorConverter
 import com.tangem.feature.wallet.presentation.organizetokens.utils.converter.items.CryptoCurrencyToDraggableItemConverter
 import com.tangem.feature.wallet.presentation.organizetokens.utils.converter.items.NetworkGroupToDraggableItemsConverter
 import com.tangem.feature.wallet.presentation.organizetokens.utils.converter.items.TokenListToListStateConverter
+import com.tangem.feature.wallet.presentation.organizetokens.utils.dnd.DragAndDropAdapterV2
 import com.tangem.utils.Provider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -23,7 +28,9 @@ import kotlinx.coroutines.flow.update
 internal class OrganizeTokensStateHolder(
     private val intents: OrganizeTokensIntents,
     private val dragAndDropIntents: DragAndDropIntents,
+    private val dragAndDropAdapterV2: DragAndDropAdapterV2,
     private val appCurrencyProvider: Provider<AppCurrency>,
+    private val accountsFeatureToggles: AccountsFeatureToggles,
 ) {
 
     private val stateFlowInternal: MutableStateFlow<OrganizeTokensState> = MutableStateFlow(getInitialState())
@@ -54,9 +61,31 @@ internal class OrganizeTokensStateHolder(
         updateState { tokenListConverter.convert(tokenList) }
     }
 
+    fun updateStateWithAccountList(accountStatusList: AccountStatusList, isAccountsModeEnabled: Boolean) {
+        updateState {
+            TokenListToStateConverterV2(
+                accountStatusList = accountStatusList,
+                isAccountsMode = isAccountsModeEnabled,
+                appCurrency = appCurrencyProvider(),
+            ).transform(this)
+        }
+    }
+
     fun updateStateAfterTokenListSorting(tokenList: TokenList) {
         updateState {
             tokenListConverter.convert(tokenList).copy(
+                scrollListToTop = triggeredEvent(Unit, ::consumeScrollListToTopEvent),
+            )
+        }
+    }
+
+    fun updateStateAfterTokenListSortingV2(accountStatusList: AccountStatusList, isAccountsModeEnabled: Boolean) {
+        updateState {
+            TokenListToStateConverterV2(
+                accountStatusList = accountStatusList,
+                isAccountsMode = isAccountsModeEnabled,
+                appCurrency = appCurrencyProvider(),
+            ).transform(this).copy(
                 scrollListToTop = triggeredEvent(Unit, ::consumeScrollListToTopEvent),
             )
         }
@@ -68,6 +97,10 @@ internal class OrganizeTokensStateHolder(
 
     fun updateStateToHideProgress() {
         updateState { inProgressStateConverter.convertBack(value = this) }
+    }
+
+    fun updateStateWithManualSortingV2(tokenListUM: OrganizeTokensListUM) {
+        updateState { copy(tokenListUM = tokenListUM) }
     }
 
     fun updateStateWithManualSorting(itemsState: OrganizeTokensListState) {
@@ -94,6 +127,7 @@ internal class OrganizeTokensStateHolder(
         return OrganizeTokensState(
             onBackClick = intents::onBackClick,
             itemsState = OrganizeTokensListState.Empty,
+            tokenListUM = OrganizeTokensListUM.EmptyList,
             header = OrganizeTokensState.HeaderConfig(
                 onSortClick = intents::onSortClick,
                 onGroupClick = intents::onGroupClick,
@@ -102,12 +136,21 @@ internal class OrganizeTokensStateHolder(
                 onApplyClick = intents::onApplyClick,
                 onCancelClick = intents::onCancelClick,
             ),
-            dndConfig = OrganizeTokensState.DragAndDropConfig(
-                onItemDragged = dragAndDropIntents::onItemDragged,
-                onItemDragStart = dragAndDropIntents::onItemDraggingStart,
-                onItemDragEnd = dragAndDropIntents::onItemDraggingEnd,
-                canDragItemOver = dragAndDropIntents::canDragItemOver,
-            ),
+            dndConfig = if (accountsFeatureToggles.isFeatureEnabled) {
+                OrganizeTokensState.DragAndDropConfig(
+                    onItemDragged = dragAndDropAdapterV2::onItemDragged,
+                    onItemDragStart = dragAndDropAdapterV2::onItemDraggingStart,
+                    onItemDragEnd = dragAndDropAdapterV2::onItemDraggingEnd,
+                    canDragItemOver = dragAndDropAdapterV2::canDragItemOver,
+                )
+            } else {
+                OrganizeTokensState.DragAndDropConfig(
+                    onItemDragged = dragAndDropIntents::onItemDragged,
+                    onItemDragStart = dragAndDropIntents::onItemDraggingStart,
+                    onItemDragEnd = dragAndDropIntents::onItemDraggingEnd,
+                    canDragItemOver = dragAndDropIntents::canDragItemOver,
+                )
+            },
             scrollListToTop = consumedEvent(),
             isBalanceHidden = true,
         )

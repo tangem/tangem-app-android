@@ -63,7 +63,7 @@ internal class PreviewAddCustomTokenComponent(
                                 mode = config.mode,
                                 selectedNetwork = config.selectedNetwork!!,
                                 selectedDerivationPath = config.selectedDerivationPath!!,
-                                onDerivationPathSelected = {},
+                                onDerivationPathSelected = { _, _ -> },
                             ),
                         ).Content(modifier)
                     }

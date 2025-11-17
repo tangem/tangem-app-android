@@ -12,4 +12,7 @@ internal class DefaultStakingFeatureToggles(
 
     override val isCardanoStakingEnabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled("STAKING_CARDANO_ENABLED")
+
+    override val isEthStakingEnabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled("STAKING_ETH_ENABLED")
 }

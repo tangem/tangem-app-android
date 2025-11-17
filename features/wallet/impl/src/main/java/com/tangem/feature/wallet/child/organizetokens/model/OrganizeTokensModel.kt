@@ -7,6 +7,14 @@ import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
+import com.tangem.domain.account.models.AccountStatusList
+import com.tangem.domain.account.status.producer.SingleAccountStatusListProducer
+import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
+import com.tangem.domain.account.status.usecase.ApplyTokenListSortingUseCaseV2
+import com.tangem.domain.account.status.usecase.ToggleTokenListGroupingUseCaseV2
+import com.tangem.domain.account.status.usecase.ToggleTokenListSortingUseCaseV2
+import com.tangem.domain.account.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
@@ -27,6 +35,7 @@ import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeToken
 import com.tangem.feature.wallet.presentation.organizetokens.utils.CryptoCurrenciesIdsResolver
 import com.tangem.feature.wallet.presentation.organizetokens.utils.common.disableSortingByBalance
 import com.tangem.feature.wallet.presentation.organizetokens.utils.dnd.DragAndDropAdapter
+import com.tangem.feature.wallet.presentation.organizetokens.utils.dnd.DragAndDropAdapterV2
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.*
@@ -46,6 +55,12 @@ internal class OrganizeTokensModel @Inject constructor(
     private val applyTokenListSortingUseCase: ApplyTokenListSortingUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val analyticsEventsHandler: AnalyticsEventHandler,
+    private val accountsFeatureToggles: AccountsFeatureToggles,
+    private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
+    private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
+    private val toggleTokenListGroupingUseCaseV2: ToggleTokenListGroupingUseCaseV2,
+    private val toggleTokenListSortingUseCaseV2: ToggleTokenListSortingUseCaseV2,
+    private val applyTokenListSortingUseCaseV2: ApplyTokenListSortingUseCaseV2,
 ) : Model(), OrganizeTokensIntents {
 
     private val selectedAppCurrencyFlow = createSelectedAppCurrencyFlow()
@@ -56,15 +71,24 @@ internal class OrganizeTokensModel @Inject constructor(
         listStateProvider = Provider { uiState.value.itemsState },
     )
 
+    private val dragAndDropAdapterV2 = DragAndDropAdapterV2(
+        tokenListUMProvider = Provider { uiState.value.tokenListUM },
+    )
+
     private val stateHolder = OrganizeTokensStateHolder(
         intents = this,
         dragAndDropIntents = dragAndDropAdapter,
+        dragAndDropAdapterV2 = dragAndDropAdapterV2,
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
+        accountsFeatureToggles = accountsFeatureToggles,
     )
 
     private val userWalletId = paramsContainer.require<OrganizeTokensComponent.Params>().userWalletId
 
     private var cachedTokenList: TokenList? = null
+    private var cachedAccountStatusList: AccountStatusList? = null
+
+    private var isAccountsModeEnabled: Boolean = false
 
     val uiState: StateFlow<OrganizeTokensState> = stateHolder.stateFlow
 
@@ -89,59 +113,109 @@ internal class OrganizeTokensModel @Inject constructor(
     }
 
     override fun onSortClick() {
-        val list = cachedTokenList ?: return
-        if (list.sortedBy == TokensSortType.BALANCE) return
+        if (accountsFeatureToggles.isFeatureEnabled) {
+            val list = cachedAccountStatusList ?: return
+            if (list.sortType == TokensSortType.BALANCE) return
 
-        analyticsEventsHandler.send(PortfolioOrganizeTokensAnalyticsEvent.ByBalance)
+            analyticsEventsHandler.send(PortfolioOrganizeTokensAnalyticsEvent.ByBalance)
 
-        modelScope.launch {
-            toggleTokenListSortingUseCase(list).fold(
-                ifLeft = stateHolder::updateStateWithError,
-                ifRight = {
-                    stateHolder.updateStateAfterTokenListSorting(it)
-                    cachedTokenList = it
-                },
-            )
+            modelScope.launch {
+                toggleTokenListSortingUseCaseV2(list).fold(
+                    ifLeft = stateHolder::updateStateWithError,
+                    ifRight = {
+                        stateHolder.updateStateAfterTokenListSortingV2(it, isAccountsModeEnabled)
+                        cachedAccountStatusList = it
+                    },
+                )
+            }
+        } else {
+            val list = cachedTokenList ?: return
+            if (list.sortedBy == TokensSortType.BALANCE) return
+
+            analyticsEventsHandler.send(PortfolioOrganizeTokensAnalyticsEvent.ByBalance)
+
+            modelScope.launch {
+                toggleTokenListSortingUseCase(list).fold(
+                    ifLeft = stateHolder::updateStateWithError,
+                    ifRight = {
+                        stateHolder.updateStateAfterTokenListSorting(it)
+                        cachedTokenList = it
+                    },
+                )
+            }
         }
     }
 
     override fun onGroupClick() {
-        val list = cachedTokenList ?: return
+        if (accountsFeatureToggles.isFeatureEnabled) {
+            val list = cachedAccountStatusList ?: return
 
-        analyticsEventsHandler.send(PortfolioOrganizeTokensAnalyticsEvent.Group)
+            analyticsEventsHandler.send(PortfolioOrganizeTokensAnalyticsEvent.Group)
 
-        modelScope.launch {
-            toggleTokenListGroupingUseCase(list).fold(
-                ifLeft = stateHolder::updateStateWithError,
-                ifRight = {
-                    stateHolder.updateStateAfterTokenListSorting(it)
-                    cachedTokenList = it
-                },
-            )
+            modelScope.launch {
+                toggleTokenListGroupingUseCaseV2(list).fold(
+                    ifLeft = stateHolder::updateStateWithError,
+                    ifRight = {
+                        stateHolder.updateStateAfterTokenListSortingV2(it, isAccountsModeEnabled)
+                        cachedAccountStatusList = it
+                    },
+                )
+            }
+        } else {
+            val list = cachedTokenList ?: return
+
+            analyticsEventsHandler.send(PortfolioOrganizeTokensAnalyticsEvent.Group)
+
+            modelScope.launch {
+                toggleTokenListGroupingUseCase(list).fold(
+                    ifLeft = stateHolder::updateStateWithError,
+                    ifRight = {
+                        stateHolder.updateStateAfterTokenListSorting(it)
+                        cachedTokenList = it
+                    },
+                )
+            }
         }
     }
 
     override fun onApplyClick() {
         modelScope.launch {
             stateHolder.updateStateToDisplayProgress()
-
-            val listState = uiState.value.itemsState
             val resolver = CryptoCurrenciesIdsResolver()
-
-            val isGroupedByNetwork = listState is OrganizeTokensListState.GroupedByNetwork
             val isSortedByBalance = uiState.value.header.isSortedByBalance
 
-            sendAnalyticsEvent(
-                isGroupedByNetwork = isGroupedByNetwork,
-                isSortedByBalance = isSortedByBalance,
-            )
+            val result = if (accountsFeatureToggles.isFeatureEnabled) {
+                val tokensListUM = uiState.value.tokenListUM
 
-            val result = applyTokenListSortingUseCase(
-                userWalletId = userWalletId,
-                sortedTokensIds = resolver.resolve(listState, cachedTokenList),
-                isGroupedByNetwork = isGroupedByNetwork,
-                isSortedByBalance = isSortedByBalance,
-            )
+                val isGroupedByNetwork = tokensListUM.isGrouped
+
+                sendAnalyticsEvent(
+                    isGroupedByNetwork = isGroupedByNetwork,
+                    isSortedByBalance = isSortedByBalance,
+                )
+
+                applyTokenListSortingUseCaseV2(
+                    sortedTokensIdsByAccount = resolver.resolveV2(tokensListUM, cachedAccountStatusList),
+                    isGroupedByNetwork = isGroupedByNetwork,
+                    isSortedByBalance = isSortedByBalance,
+                )
+            } else {
+                val listState = uiState.value.itemsState
+
+                val isGroupedByNetwork = listState is OrganizeTokensListState.GroupedByNetwork
+
+                sendAnalyticsEvent(
+                    isGroupedByNetwork = isGroupedByNetwork,
+                    isSortedByBalance = isSortedByBalance,
+                )
+
+                applyTokenListSortingUseCase(
+                    userWalletId = userWalletId,
+                    sortedTokensIds = resolver.resolve(listState, cachedTokenList),
+                    isGroupedByNetwork = isGroupedByNetwork,
+                    isSortedByBalance = isSortedByBalance,
+                )
+            }
 
             result.fold(
                 ifLeft = stateHolder::updateStateWithError,
@@ -161,10 +235,24 @@ internal class OrganizeTokensModel @Inject constructor(
 
     private fun bootstrapTokenList() {
         modelScope.launch {
-            val tokenList = getTokenList() ?: return@launch
+            if (accountsFeatureToggles.isFeatureEnabled) {
+                val accountList = singleAccountStatusListSupplier.getSyncOrNull(
+                    SingleAccountStatusListProducer.Params(userWalletId),
+                ) ?: return@launch
 
-            stateHolder.updateStateWithTokenList(tokenList)
-            cachedTokenList = tokenList
+                isAccountsModeEnabled = isAccountsModeEnabledUseCase.invokeSync()
+
+                stateHolder.updateStateWithAccountList(
+                    accountStatusList = accountList,
+                    isAccountsModeEnabled = isAccountsModeEnabled,
+                )
+
+                cachedAccountStatusList = accountList
+            } else {
+                val tokenList = getTokenList() ?: return@launch
+                stateHolder.updateStateWithTokenList(tokenList)
+                cachedTokenList = tokenList
+            }
         }
     }
 
@@ -180,14 +268,25 @@ internal class OrganizeTokensModel @Inject constructor(
     }
 
     private fun bootstrapDragAndDropUpdates() {
-        dragAndDropAdapter.dragAndDropUpdates
-            .distinctUntilChanged()
-            .onEach { (type, updatedListState) ->
-                disableSortingByBalanceIfListChanged(type)
+        if (accountsFeatureToggles.isFeatureEnabled) {
+            dragAndDropAdapterV2.dragAndDropUpdates
+                .distinctUntilChanged()
+                .onEach { (type, updatedListState) ->
+                    disableSortingByBalanceIfListChangedV2(type)
 
-                stateHolder.updateStateWithManualSorting(updatedListState)
-            }
-            .launchIn(modelScope)
+                    stateHolder.updateStateWithManualSortingV2(updatedListState)
+                }
+                .launchIn(modelScope)
+        } else {
+            dragAndDropAdapter.dragAndDropUpdates
+                .distinctUntilChanged()
+                .onEach { (type, updatedListState) ->
+                    disableSortingByBalanceIfListChanged(type)
+
+                    stateHolder.updateStateWithManualSorting(updatedListState)
+                }
+                .launchIn(modelScope)
+        }
     }
 
     private fun disableSortingByBalanceIfListChanged(dragOperationType: DragAndDropAdapter.DragOperation.Type) {
@@ -195,6 +294,15 @@ internal class OrganizeTokensModel @Inject constructor(
 
         if (uiState.value.header.isSortedByBalance && dragOperationType.isItemsOrderChanged) {
             cachedTokenList = cachedTokenList?.disableSortingByBalance()
+            stateHolder.disableSortingByBalance()
+        }
+    }
+
+    private fun disableSortingByBalanceIfListChangedV2(dragOperationType: DragAndDropAdapterV2.DragOperation.Type) {
+        if (dragOperationType !is DragAndDropAdapterV2.DragOperation.Type.End) return
+
+        if (uiState.value.header.isSortedByBalance && dragOperationType.isItemsOrderChanged) {
+            cachedAccountStatusList = cachedAccountStatusList?.copy(sortType = TokensSortType.NONE)
             stateHolder.disableSortingByBalance()
         }
     }

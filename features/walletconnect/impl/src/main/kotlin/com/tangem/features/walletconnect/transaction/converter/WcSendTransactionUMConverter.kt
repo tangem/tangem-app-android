@@ -1,5 +1,6 @@
 package com.tangem.features.walletconnect.transaction.converter
 
+import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.walletconnect.model.WcEthMethod
 import com.tangem.domain.walletconnect.model.WcSolanaMethod
@@ -48,7 +49,7 @@ internal class WcSendTransactionUMConverter @Inject constructor(
                         ),
                     ),
                     feeState = value.feeState,
-                    walletName = value.context.session.wallet.name.takeIf { value.context.session.showWalletInfo },
+                    portfolioName = value.portfolioName,
                     networkInfo = networkInfoUMConverter.convert(value.context.network),
                     estimatedWalletChanges = WcSendReceiveTransactionCheckResultsUM(),
                     isLoading = value.signState.domainStep == WcSignStep.Signing,
@@ -83,6 +84,7 @@ internal class WcSendTransactionUMConverter @Inject constructor(
 
     data class Input(
         val context: WcMethodContext,
+        val portfolioName: AccountTitleUM?,
         val feeState: WcTransactionFeeState,
         val signState: WcSignState<*>,
         val actions: WcTransactionActionsUM,

@@ -6,20 +6,6 @@ import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResp
 import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
 import com.tangem.domain.models.wallet.UserWalletId
 
-/** Flattens the tokens from all wallet accounts into a single list */
-internal fun GetWalletAccountsResponse.flattenTokens(): List<UserTokensResponse.Token> {
-    return accounts.flatMap { it.tokens.orEmpty() }
-}
-
-/** Converts the [GetWalletAccountsResponse] into a [UserTokensResponse] */
-internal fun GetWalletAccountsResponse.toUserTokensResponse(): UserTokensResponse {
-    return UserTokensResponse(
-        group = wallet.group,
-        sort = wallet.sort,
-        tokens = flattenTokens(),
-    )
-}
-
 /**
  * Assigns tokens from a [UserTokensResponse] to the wallet accounts in the [GetWalletAccountsResponse]
  *
@@ -46,13 +32,30 @@ internal fun List<WalletAccountDTO>.assignTokens(
     userWalletId: UserWalletId,
     tokens: List<UserTokensResponse.Token>,
 ): List<WalletAccountDTO> {
-    val enrichedTokens = UserTokensResponseAccountIdEnricher(userWalletId, tokens)
+    val enrichedTokensByAccountId = UserTokensResponseAccountIdEnricher(userWalletId, tokens)
         .groupBy { it.accountId }
 
     return map { accountDTO ->
-        accountDTO.copy(
-            tokens = enrichedTokens[accountDTO.id].orEmpty(),
-        )
+        val accountTokens = enrichedTokensByAccountId[accountDTO.id].orEmpty()
+        val isMainAccount = accountDTO.derivationIndex == 0
+
+        val tokens = if (isMainAccount) {
+            val existingAccountIds = map(WalletAccountDTO::id).toSet()
+            val unexistingAccountIds = enrichedTokensByAccountId.keys - existingAccountIds
+
+            val customTokens = unexistingAccountIds.flatMap {
+                enrichedTokensByAccountId[it].orEmpty().map { token ->
+                    // Tokens from unexisting accounts should be copied to the main account
+                    token.copy(accountId = accountDTO.id)
+                }
+            }
+
+            accountTokens + customTokens
+        } else {
+            accountTokens
+        }
+
+        accountDTO.copy(tokens = accountDTO.tokens.orEmpty() + tokens)
     }
 }
 
@@ -63,5 +66,5 @@ internal fun WalletAccountDTO.assignTokens(
     val enrichedTokens = UserTokensResponseAccountIdEnricher(userWalletId, tokens)
         .filter { it.accountId == this.id }
 
-    return copy(tokens = enrichedTokens)
+    return copy(tokens = this.tokens.orEmpty() + enrichedTokens)
 }

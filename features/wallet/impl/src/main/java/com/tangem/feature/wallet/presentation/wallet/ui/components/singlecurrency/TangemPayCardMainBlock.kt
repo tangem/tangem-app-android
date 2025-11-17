@@ -13,13 +13,18 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.R
+import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.presentation.wallet.state.model.TangemPayState
 
 @Composable
-internal fun TangemPayCardMainBlock(state: TangemPayState.Card, modifier: Modifier = Modifier) {
+internal fun TangemPayCardMainBlock(
+    state: TangemPayState.Card,
+    isBalanceHidden: Boolean,
+    modifier: Modifier = Modifier,
+) {
     Surface(
         modifier = modifier.fillMaxWidth(),
         shape = TangemTheme.shapes.roundedCornersXMedium,
@@ -72,7 +77,7 @@ internal fun TangemPayCardMainBlock(state: TangemPayState.Card, modifier: Modifi
                 contentAlignment = Alignment.TopEnd,
             ) {
                 Text(
-                    text = state.balanceText.resolveReference(),
+                    text = state.balanceText.resolveReference().orMaskWithStars(isBalanceHidden),
                     style = TangemTheme.typography.body2,
                     color = TangemTheme.colors.text.primary1,
                     textAlign = TextAlign.End,

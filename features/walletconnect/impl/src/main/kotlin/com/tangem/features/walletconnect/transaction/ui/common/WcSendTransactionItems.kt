@@ -11,6 +11,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
+import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.core.ui.components.divider.DividerWithPadding
 import com.tangem.core.ui.extensions.clickableSingle
 import com.tangem.core.ui.res.TangemTheme
@@ -22,7 +23,7 @@ import com.tangem.features.walletconnect.transaction.entity.common.WcTransaction
 @Suppress("LongParameterList")
 @Composable
 internal fun WcSendTransactionItems(
-    walletName: String?,
+    portfolioName: AccountTitleUM?,
     networkInfo: WcNetworkInfoUM,
     feeState: WcTransactionFeeState,
     feeSelectorBlockComponent: FeeSelectorBlockComponent?,
@@ -48,10 +49,10 @@ internal fun WcSendTransactionItems(
             .fillMaxWidth()
             .padding(TangemTheme.dimens.spacing12)
 
-        if (walletName != null) {
-            WcWalletItem(
+        if (portfolioName != null) {
+            WcPortfolioItem(
                 modifier = itemsModifier,
-                walletName = walletName,
+                portfolioName = portfolioName,
             )
             DividerWithPadding(start = TangemTheme.dimens.spacing40, end = TangemTheme.dimens.spacing12)
         }

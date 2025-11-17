@@ -1,17 +1,13 @@
 package com.tangem.feature.walletsettings.utils
 
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRoute.ManageTokens.Source
-import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.components.block.model.BlockUM
 import com.tangem.core.ui.components.label.entity.LabelStyle
 import com.tangem.core.ui.components.label.entity.LabelUM
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.domain.models.PortfolioId
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.feature.walletsettings.analytics.Settings
 import com.tangem.feature.walletsettings.entity.WalletSettingsAccountsUM
 import com.tangem.feature.walletsettings.entity.WalletSettingsItemUM
 import com.tangem.feature.walletsettings.impl.R
@@ -24,7 +20,6 @@ import javax.inject.Inject
 @ModelScoped
 internal class ItemsBuilder @Inject constructor(
     private val router: Router,
-    private val analyticsEventHandler: AnalyticsEventHandler,
 ) {
 
     @Suppress("LongParameterList")
@@ -38,7 +33,6 @@ internal class ItemsBuilder @Inject constructor(
         isNFTFeatureEnabled: Boolean,
         isNFTEnabled: Boolean,
         onCheckedNFTChange: (Boolean) -> Unit,
-        isNotificationsFeatureEnabled: Boolean,
         isNotificationsEnabled: Boolean,
         isNotificationsPermissionGranted: Boolean,
         onCheckedNotificationsChanged: (Boolean) -> Unit,
@@ -46,6 +40,7 @@ internal class ItemsBuilder @Inject constructor(
         forgetWallet: () -> Unit,
         onLinkMoreCardsClick: () -> Unit,
         onReferralClick: () -> Unit,
+        onManageTokensClick: () -> Unit,
         onAccessCodeClick: () -> Unit,
         walletUpgradeDismissed: Boolean,
         onUpgradeWalletClick: () -> Unit,
@@ -70,11 +65,11 @@ internal class ItemsBuilder @Inject constructor(
                 isManageTokensAvailable = isManageTokensAvailable,
                 onLinkMoreCardsClick = onLinkMoreCardsClick,
                 onReferralClick = onReferralClick,
+                onManageTokensClick = onManageTokensClick,
             ),
         )
         .addAll(
             buildNotificationItems(
-                isNotificationsFeatureEnabled = isNotificationsFeatureEnabled,
                 isNotificationsPermissionGranted = isNotificationsPermissionGranted,
                 isNotificationsEnabled = isNotificationsEnabled,
                 onCheckedNotificationsChanged = onCheckedNotificationsChanged,
@@ -103,13 +98,11 @@ internal class ItemsBuilder @Inject constructor(
     }
 
     private fun buildNotificationItems(
-        isNotificationsFeatureEnabled: Boolean,
         isNotificationsPermissionGranted: Boolean,
         isNotificationsEnabled: Boolean,
         onCheckedNotificationsChanged: (Boolean) -> Unit,
         onNotificationsDescriptionClick: () -> Unit,
     ): List<WalletSettingsItemUM> {
-        if (!isNotificationsFeatureEnabled) return emptyList()
         return buildList {
             if (!isNotificationsPermissionGranted) {
                 add(buildNotificationsPermissionItem())
@@ -179,6 +172,7 @@ internal class ItemsBuilder @Inject constructor(
         isManageTokensAvailable: Boolean,
         onLinkMoreCardsClick: () -> Unit,
         onReferralClick: () -> Unit,
+        onManageTokensClick: () -> Unit,
     ) = WalletSettingsItemUM.WithItems(
         id = "card",
         description = resourceReference(R.string.settings_card_settings_footer),
@@ -208,10 +202,7 @@ internal class ItemsBuilder @Inject constructor(
                 BlockUM(
                     text = resourceReference(R.string.add_tokens_title),
                     iconRes = R.drawable.ic_tether_24,
-                    onClick = {
-                        analyticsEventHandler.send(Settings.ButtonManageTokens)
-                        router.push(AppRoute.ManageTokens(Source.SETTINGS, PortfolioId(userWalletId)))
-                    },
+                    onClick = onManageTokensClick,
                 ).let(::add)
             }
 

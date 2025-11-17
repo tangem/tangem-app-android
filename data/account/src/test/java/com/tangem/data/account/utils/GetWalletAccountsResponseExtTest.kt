@@ -4,6 +4,8 @@ import com.google.common.truth.Truth
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
+import com.tangem.datasource.api.tangemTech.models.account.flattenTokens
+import com.tangem.datasource.api.tangemTech.models.account.toUserTokensResponse
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.wallet.UserWalletId
@@ -68,9 +70,9 @@ class GetWalletAccountsResponseExtTest {
         @Test
         fun `flattenTokens returns all tokens from multiple accounts`() {
             // Arrange
-            val token1 = createUserToken(id = "0")
-            val token2 = createUserToken(id = "1")
-            val token3 = createUserToken(id = "2")
+            val token1 = createUserToken(accountIndex = 0)
+            val token2 = createUserToken(accountIndex = 1)
+            val token3 = createUserToken(accountIndex = 2)
 
             val account1 = createWalletAccountDTO(derivationIndex = 0, tokens = listOf(token1, token2))
             val account2 = createWalletAccountDTO(derivationIndex = 1, tokens = listOf(token3))
@@ -129,10 +131,9 @@ class GetWalletAccountsResponseExtTest {
         @Test
         fun `toUserTokensResponse includes tokens from accounts and unassignedTokens`() {
             // Arrange
-            val token1 = createUserToken(id = "0")
-            val token2 = createUserToken(id = "1")
+            val token1 = createUserToken(accountIndex = 0)
+            val token2 = createUserToken(accountIndex = 1)
             val account = createWalletAccountDTO(derivationIndex = 0, tokens = listOf(token1))
-            val unassignedToken = token2
 
             val response = GetWalletAccountsResponse(
                 wallet = GetWalletAccountsResponse.Wallet(
@@ -142,7 +143,7 @@ class GetWalletAccountsResponseExtTest {
                     totalAccounts = 1,
                 ),
                 accounts = listOf(account),
-                unassignedTokens = listOf(unassignedToken),
+                unassignedTokens = listOf(token2),
             )
 
             // Act
@@ -167,8 +168,8 @@ class GetWalletAccountsResponseExtTest {
         fun `assignTokens correctly assigns tokens to accounts`() {
             // Arrange
             val accountId = "957B88B12730E646E0F33D3618B77DFA579E8231E3C59C7104BE7165611C8027"
-            val token1 = createUserToken(id = "0", accountId = null)
-            val token2 = createUserToken(id = "1", accountId = null)
+            val token1 = createUserToken(accountIndex = 0, accountId = null)
+            val token2 = createUserToken(accountIndex = 1, accountId = null)
             val account1 = createWalletAccountDTO(derivationIndex = 0)
             val account2 = createWalletAccountDTO(derivationIndex = 1)
             val response = GetWalletAccountsResponse(
@@ -192,10 +193,13 @@ class GetWalletAccountsResponseExtTest {
                     account1.copy(
                         tokens = listOf(
                             token1.copy(accountId = accountId),
+                        ),
+                    ),
+                    account2.copy(
+                        tokens = listOf(
                             token2.copy(accountId = accountId),
                         ),
                     ),
-                    account2,
                 ),
                 unassignedTokens = emptyList(),
             )
@@ -230,6 +234,44 @@ class GetWalletAccountsResponseExtTest {
 
             Truth.assertThat(actual).isEqualTo(expected)
         }
+
+        @Test
+        fun `unassignedTokens contain tokens for unexisting accounts`() {
+            // Arrange
+            val token1 = createUserToken(accountIndex = 0, accountId = null)
+            val token2 = createUserToken(accountIndex = 3, accountId = null)
+            val account = createWalletAccountDTO(derivationIndex = 0)
+
+            val response = GetWalletAccountsResponse(
+                wallet = GetWalletAccountsResponse.Wallet(
+                    version = 1,
+                    group = UserTokensResponse.GroupType.NONE,
+                    sort = UserTokensResponse.SortType.MANUAL,
+                    totalAccounts = 2,
+                ),
+                accounts = listOf(account),
+                unassignedTokens = listOf(token1, token2),
+            )
+
+            // Act
+            val actual = response.assignTokens(userWalletId)
+
+            // Assert
+            val expected = GetWalletAccountsResponse(
+                wallet = response.wallet,
+                accounts = listOf(
+                    account.copy(
+                        tokens = listOf(
+                            token1.copy(accountId = "957B88B12730E646E0F33D3618B77DFA579E8231E3C59C7104BE7165611C8027"),
+                            token2.copy(accountId = "957B88B12730E646E0F33D3618B77DFA579E8231E3C59C7104BE7165611C8027"),
+                        ),
+                    ),
+                ),
+                unassignedTokens = emptyList(),
+            )
+
+            Truth.assertThat(actual).isEqualTo(expected)
+        }
     }
 
     @Nested
@@ -240,8 +282,8 @@ class GetWalletAccountsResponseExtTest {
         fun `assignTokens correctly assigns tokens to accounts`() {
             // Arrange
             val accountId = "957B88B12730E646E0F33D3618B77DFA579E8231E3C59C7104BE7165611C8027"
-            val token1 = createUserToken(id = "0", accountId = null)
-            val token2 = createUserToken(id = "1", accountId = null)
+            val token1 = createUserToken(accountIndex = 0, accountId = null)
+            val token2 = createUserToken(accountIndex = 1, accountId = null)
             val account1 = createWalletAccountDTO(derivationIndex = 0)
             val account2 = createWalletAccountDTO(derivationIndex = 1)
 
@@ -256,10 +298,13 @@ class GetWalletAccountsResponseExtTest {
                 account1.copy(
                     tokens = listOf(
                         token1.copy(accountId = accountId),
+                    ),
+                ),
+                account2.copy(
+                    tokens = listOf(
                         token2.copy(accountId = accountId),
                     ),
                 ),
-                account2,
             )
 
             Truth.assertThat(actual).isEqualTo(expected)
@@ -269,7 +314,7 @@ class GetWalletAccountsResponseExtTest {
         fun `assignTokens does not change accounts if there are no unassignedTokens`() {
             // Arrange
             val accountId = "957B88B12730E646E0F33D3618B77DFA579E8231E3C59C7104BE7165611C8027"
-            val token1 = createUserToken(id = "0", accountId = accountId)
+            val token1 = createUserToken(accountIndex = 0, accountId = accountId)
             val account1 = createWalletAccountDTO(derivationIndex = 0)
 
             // Act
@@ -306,19 +351,19 @@ class GetWalletAccountsResponseExtTest {
             totalNetworks = 1,
         )
 
-    private fun createUserToken(id: String, accountId: String? = "account_id") = UserTokensResponse.Token(
-        id = id,
-        accountId = accountId,
-        networkId = "ethereum",
-        derivationPath = "m/44'/60'/0'/0/0",
-        name = "Token",
-        symbol = "T",
-        contractAddress = "0x$id",
-        decimals = 18,
-    )
+    companion object {
 
-    private companion object {
+        private val userWalletId = UserWalletId("011")
 
-        val userWalletId = UserWalletId("011")
+        fun createUserToken(accountIndex: Int, accountId: String? = "account_id") = UserTokensResponse.Token(
+            id = accountIndex.toString(),
+            accountId = accountId,
+            networkId = "ethereum",
+            derivationPath = "m/44'/60'/0'/0/$accountIndex",
+            name = "Token",
+            symbol = "T",
+            contractAddress = "0x$accountIndex",
+            decimals = 18,
+        )
     }
 }
