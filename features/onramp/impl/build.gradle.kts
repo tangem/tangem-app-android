@@ -13,6 +13,7 @@ android {
 
 dependencies {
     /** Project - API */
+    implementation(projects.features.account.api)
     implementation(projects.features.onramp.api)
     implementation(projects.features.swap.domain)
     implementation(projects.features.swap.domain.api)
