@@ -34,6 +34,7 @@ internal class YieldSupplyPromoModel @Inject constructor(
     val uiState: YieldSupplyPromoUM = YieldSupplyPromoUM(
         tosLink = TangemBlogUrlBuilder.YIELD_SUPPLY_TOS_URL,
         policyLink = TangemBlogUrlBuilder.YIELD_SUPPLY_PRIVACY_URL,
+        tokenSymbol = params.currency.symbol,
         title = resourceReference(R.string.yield_module_promo_screen_title),
         subtitle = resourceReference(
             R.string.yield_module_promo_screen_variable_rate_info,
