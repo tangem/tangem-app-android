@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.arkivanov.decompose.extensions.compose.stack.Children
 import com.arkivanov.decompose.extensions.compose.stack.animation.slide
@@ -31,11 +32,19 @@ internal fun SetAccessCodeContent(
             .imePadding()
             .systemBarsPadding(),
     ) {
-        TangemTopAppBar(
-            modifier = Modifier,
-            title = stringResourceSafe(R.string.access_code_navtitle),
-            startButton = TopAppBarButtonUM.Back(onBackClick),
-        )
+        if (stackState.active.configuration is UpdateAccessCodeRoute.SetupFinished) {
+            TangemTopAppBar(
+                modifier = Modifier,
+                title = stringResourceSafe(R.string.access_code_navtitle),
+                titleAlignment = Alignment.CenterHorizontally,
+            )
+        } else {
+            TangemTopAppBar(
+                modifier = Modifier,
+                title = stringResourceSafe(R.string.access_code_navtitle),
+                startButton = TopAppBarButtonUM.Back(onBackClick),
+            )
+        }
         Children(
             stack = stackState,
             animation = stackAnimation(slide()),
