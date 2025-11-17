@@ -14,6 +14,7 @@ import com.tangem.datasource.api.common.config.ApiConfig.Companion.RELEASE_BUILD
 import com.tangem.datasource.api.common.config.managers.MockEnvironmentConfigStorage.Companion.BLOCK_AID_API_KEY
 import com.tangem.datasource.api.common.config.managers.MockEnvironmentConfigStorage.Companion.TANGEM_API_KEY
 import com.tangem.lib.auth.ExpressAuthProvider
+import com.tangem.lib.auth.P2PEthPoolAuthProvider
 import com.tangem.lib.auth.StakeKitAuthProvider
 import com.tangem.utils.ProviderSuspend
 import com.tangem.utils.info.AppInfoProvider
@@ -39,6 +40,7 @@ internal class ProdApiConfigsManagerTest {
     private val appVersionProvider = mockk<AppVersionProvider>()
     private val expressAuthProvider = mockk<ExpressAuthProvider>()
     private val stakeKitAuthProvider = mockk<StakeKitAuthProvider>()
+    private val p2pEthPoolAuthProvider = mockk<P2PEthPoolAuthProvider>()
     private val appAuthProvider = mockk<AuthProvider>()
     private val appInfoProvider = mockk<AppInfoProvider>()
     private val tangemApiKeyProvider = mockk<ProviderSuspend<String>>()
@@ -58,6 +60,7 @@ internal class ProdApiConfigsManagerTest {
         every { appVersionProvider.versionName } returns VERSION_NAME
         every { expressAuthProvider.getSessionId() } returns EXPRESS_SESSION_ID
         every { stakeKitAuthProvider.getApiKey() } returns STAKE_KIT_API_KEY
+        every { p2pEthPoolAuthProvider.getApiKey() } returns P2P_API_KEY
         every { appAuthProvider.getApiKey(any()) } returns tangemApiKeyProvider
         coEvery { tangemApiKeyProvider.invoke() } returns TANGEM_API_KEY
         coEvery { appAuthProvider.getCardId() } returns APP_CARD_ID
@@ -110,6 +113,7 @@ internal class ProdApiConfigsManagerTest {
                 ApiConfig.ID.TangemPay -> TangemPay(appVersionProvider = appVersionProvider)
                 ApiConfig.ID.BlockAid -> BlockAid(configStorage = environmentConfigStorage)
                 ApiConfig.ID.MoonPay -> MoonPay()
+                ApiConfig.ID.P2PEthPool -> P2PEthPool(p2pAuthProvider = p2pEthPoolAuthProvider)
             }
         }
     }
@@ -123,6 +127,7 @@ internal class ProdApiConfigsManagerTest {
             ApiConfig.ID.TangemPay -> createTangemPayModel()
             ApiConfig.ID.BlockAid -> createBlockAidSdkModel()
             ApiConfig.ID.MoonPay -> createMoonPayModel()
+            ApiConfig.ID.P2PEthPool -> createP2PModel()
         }
     }
 
@@ -275,6 +280,21 @@ internal class ProdApiConfigsManagerTest {
         )
     }
 
+    private fun createP2PModel(): TestModel {
+        return TestModel(
+            id = ApiConfig.ID.P2PEthPool,
+            expected = ApiEnvironmentConfig(
+                environment = ApiEnvironment.PROD,
+                baseUrl = "https://api.p2p.org/",
+                headers = mapOf(
+                    "Authorization" to ProviderSuspend { "Bearer $P2P_API_KEY" },
+                    "accept" to ProviderSuspend { "application/json" },
+                    "Content-Type" to ProviderSuspend { "application/json" },
+                ),
+            ),
+        )
+    }
+
     private fun String.checkHeaderValueOrEmpty(): String {
         for (i in this.indices) {
             val c = this[i]
@@ -293,6 +313,7 @@ internal class ProdApiConfigsManagerTest {
         const val VERSION_NAME = "debug"
         const val EXPRESS_SESSION_ID = "express_session_id"
         const val STAKE_KIT_API_KEY = "stake_kit_api_key"
+        const val P2P_API_KEY = "p2p_api_key"
         const val APP_CARD_ID = "app_card_id"
         const val APP_CARD_PUBLIC_KEY = "Bearer app_public_key"
     }
