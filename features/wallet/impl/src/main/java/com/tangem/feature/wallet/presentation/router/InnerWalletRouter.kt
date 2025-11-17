@@ -65,7 +65,7 @@ internal interface InnerWalletRouter {
 
     fun openTangemPayOnboarding()
 
-    fun openTangemPayDetails(config: TangemPayDetailsConfig)
+    fun openTangemPayDetails(userWalletId: UserWalletId, config: TangemPayDetailsConfig)
 
     /** Open BS abput yield supply active and all money deposited in AAVE */
     fun openYieldSupplyBottomSheet(
