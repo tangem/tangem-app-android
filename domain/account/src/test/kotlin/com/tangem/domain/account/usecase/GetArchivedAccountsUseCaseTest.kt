@@ -7,14 +7,10 @@ import com.tangem.domain.core.utils.lceContent
 import com.tangem.domain.core.utils.lceError
 import com.tangem.domain.core.utils.lceLoading
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.test.core.getEmittedValues
 import io.mockk.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.test.TestScope
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -84,16 +80,5 @@ class GetArchivedAccountsUseCaseTest {
 
         coVerifyOrder { crudRepository.fetchArchivedAccounts(userWalletId) }
         coVerify(inverse = true) { crudRepository.getArchivedAccounts(any()) }
-    }
-
-    @OptIn(ExperimentalCoroutinesApi::class)
-    fun <T> TestScope.getEmittedValues(flow: Flow<T>): List<T> {
-        val values = mutableListOf<T>()
-
-        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
-            flow.toList(values)
-        }
-
-        return values
     }
 }
