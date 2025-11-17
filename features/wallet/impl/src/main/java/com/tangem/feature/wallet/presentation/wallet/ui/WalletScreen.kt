@@ -221,7 +221,7 @@ private fun WalletContent(
             item(
                 key = "TangemPayMainScreenBlock",
                 contentType = state.tangemPayState::class.java,
-            ) { TangemPayMainScreenBlock(state.tangemPayState, itemModifier) }
+            ) { TangemPayMainScreenBlock(state.tangemPayState, isBalanceHidden = state.isHidingMode, itemModifier) }
 
             (selectedWallet as? WalletState.SingleCurrency)?.let { walletState ->
                 walletState.marketPriceBlockState?.let { marketPriceBlockState ->
