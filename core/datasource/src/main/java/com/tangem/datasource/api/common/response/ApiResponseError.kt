@@ -18,8 +18,13 @@ sealed class ApiResponseError : Exception() {
         val errorBody: String?,
     ) : ApiResponseError() {
 
+        // TODO: extract Code from HttpException
         // region Error Codes
         enum class Code(val numericCode: Int) {
+            // 2xx Success
+            OK(numericCode = 200),
+            CREATED(numericCode = 201),
+            ACCEPTED(numericCode = 202),
             // 3xx Server Errors
             NOT_MODIFIED(numericCode = 304),
             // 4xx Server Errors
