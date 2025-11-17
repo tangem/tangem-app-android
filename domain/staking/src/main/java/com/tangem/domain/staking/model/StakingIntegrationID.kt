@@ -31,56 +31,73 @@ sealed interface StakingIntegrationID {
      */
     val networkId: String
 
-    /** Represents blockchains whose native coins can be staked */
-    enum class Coin : StakingIntegrationID {
-        Ton {
-            override val value: String = "ton-ton-chorus-one-pools-staking"
-            override val blockchain: Blockchain = Blockchain.TON
-            override val networkId: String = "ton"
-        },
-        Solana {
-            override val value: String = "solana-sol-native-multivalidator-staking"
-            override val blockchain: Blockchain = Blockchain.Solana
-            override val networkId: String = "solana"
-        },
-        Cosmos {
-            override val value: String = "cosmos-atom-native-staking"
-            override val blockchain: Blockchain = Blockchain.Cosmos
-            override val networkId: String = "cosmos"
-        },
-        Tron {
-            override val value: String = "tron-trx-native-staking"
-            override val blockchain: Blockchain = Blockchain.Tron
-            override val networkId: String = "tron"
-        },
-        BSC {
-            override val value: String = "bsc-bnb-native-staking"
-            override val blockchain: Blockchain = Blockchain.BSC
-            override val networkId: String = "binance"
-        },
-        Cardano {
-            override val value: String = "cardano-ada-native-staking"
-            override val blockchain: Blockchain = Blockchain.Cardano
-            override val networkId: String = "cardano"
-        },
+    /**
+     * Represents StakeKit staking integrations
+     */
+    sealed interface StakeKit : StakingIntegrationID {
+
+        /** Represents blockchains whose native coins can be staked via StakeKit */
+        enum class Coin : StakeKit {
+            Ton {
+                override val value: String = "ton-ton-chorus-one-pools-staking"
+                override val blockchain: Blockchain = Blockchain.TON
+                override val networkId: String = "ton"
+            },
+            Solana {
+                override val value: String = "solana-sol-native-multivalidator-staking"
+                override val blockchain: Blockchain = Blockchain.Solana
+                override val networkId: String = "solana"
+            },
+            Cosmos {
+                override val value: String = "cosmos-atom-native-staking"
+                override val blockchain: Blockchain = Blockchain.Cosmos
+                override val networkId: String = "cosmos"
+            },
+            Tron {
+                override val value: String = "tron-trx-native-staking"
+                override val blockchain: Blockchain = Blockchain.Tron
+                override val networkId: String = "tron"
+            },
+            BSC {
+                override val value: String = "bsc-bnb-native-staking"
+                override val blockchain: Blockchain = Blockchain.BSC
+                override val networkId: String = "binance"
+            },
+            Cardano {
+                override val value: String = "cardano-ada-native-staking"
+                override val blockchain: Blockchain = Blockchain.Cardano
+                override val networkId: String = "cardano"
+            },
+        }
+
+        /**
+         * Represents staking integrations for Ethereum-based tokens via StakeKit
+         *
+         * @property subBlockchain the specific Ethereum-based blockchain associated with the integration
+         */
+        enum class EthereumToken(val subBlockchain: Blockchain) : StakeKit {
+            Polygon(subBlockchain = Blockchain.Polygon) {
+                override val value: String = "ethereum-matic-native-staking"
+                override val approval: StakingApproval.Needed =
+                    StakingApproval.Needed(spenderAddress = "0x5e3Ef299fDDf15eAa0432E6e66473ace8c13D908")
+                override val networkId: String = "ethereum"
+            },
+            ;
+
+            /** Blockchain associated with Ethereum-based staking integrations. */
+            override val blockchain: Blockchain = Blockchain.Ethereum
+        }
     }
 
     /**
-     * Represents staking integrations for Ethereum-based tokens
-     *
-     * @property subBlockchain the specific Ethereum-based blockchain associated with the integration
+     * Represents P2P staking integrations
      */
-    enum class EthereumToken(val subBlockchain: Blockchain) : StakingIntegrationID {
-        Polygon(subBlockchain = Blockchain.Polygon) {
-            override val value: String = "ethereum-matic-native-staking"
-            override val approval: StakingApproval.Needed =
-                StakingApproval.Needed(spenderAddress = "0x5e3Ef299fDDf15eAa0432E6e66473ace8c13D908")
+    enum class P2P : StakingIntegrationID {
+        EthereumPooled {
+            override val value: String = "p2p-ethereum-pooled"
+            override val blockchain: Blockchain = Blockchain.Ethereum
             override val networkId: String = "ethereum"
         },
-        ;
-
-        /** Blockchain associated with Ethereum-based staking integrations. */
-        override val blockchain: Blockchain = Blockchain.Ethereum
     }
 
     // Polkadot {
@@ -111,7 +128,17 @@ sealed interface StakingIntegrationID {
     companion object {
 
         /** List of all native staking integration IDs */
-        val entries: List<StakingIntegrationID> by lazy { Coin.entries + EthereumToken.entries }
+        val entries: List<StakingIntegrationID> by lazy {
+            StakeKit.Coin.entries + StakeKit.EthereumToken.entries + P2P.entries
+        }
+
+        val stakeKitEntries: List<StakingIntegrationID.StakeKit> by lazy {
+            StakeKit.Coin.entries + StakeKit.EthereumToken.entries
+        }
+
+        val p2pEntries: List<P2P> by lazy {
+            P2P.entries
+        }
 
         /**
          * Creates a [StakingIntegrationID] for the given cryptocurrency ID
@@ -123,22 +150,13 @@ sealed interface StakingIntegrationID {
         fun create(currencyId: CryptoCurrency.ID): StakingIntegrationID? {
             val blockchain = Blockchain.fromId(id = currencyId.rawNetworkId)
 
-            val integrationId = blockchain.integrationId ?: return null
-
-            if (integrationId is Coin && !currencyId.contractAddress.isNullOrBlank()) {
-                return null
-            }
-
-            return when (integrationId) {
-                is Coin -> integrationId
-                is EthereumToken -> {
-                    val coinId = integrationId.subBlockchain.toMigratedCoinId()
-
-                    if (coinId == currencyId.rawCurrencyId?.value) {
-                        integrationId
-                    } else {
-                        null
-                    }
+            return if (currencyId.contractAddress.isNullOrBlank()) {
+                P2P.entries.firstOrNull { it.blockchain == blockchain }
+                    ?: StakeKit.Coin.entries.firstOrNull { it.blockchain == blockchain }
+            } else {
+                StakeKit.EthereumToken.entries.firstOrNull { token ->
+                    token.blockchain == blockchain &&
+                        token.subBlockchain.toMigratedCoinId() == currencyId.rawCurrencyId?.value
                 }
             }
         }

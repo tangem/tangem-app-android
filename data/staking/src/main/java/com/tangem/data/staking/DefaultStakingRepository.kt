@@ -94,7 +94,7 @@ internal class DefaultStakingRepository(
 
     override suspend fun fetchEnabledYields() {
         withContext(dispatchers.io) {
-            val yieldsResponses = getAvailableIntegrationsIds().map {
+            val yieldsResponses = getAvailableStakeKitIntegrationsIds().map {
                 async { it.getYieldRequest() }
             }.awaitAll()
 
@@ -157,13 +157,13 @@ internal class DefaultStakingRepository(
         }
     }
 
-    private suspend fun StakingIntegrationID.getYieldRequest(): ApiResponse<EnabledYieldsResponse> {
+    private suspend fun StakingIntegrationID.StakeKit.getYieldRequest(): ApiResponse<EnabledYieldsResponse> {
         return when (this) {
-            is StakingIntegrationID.Coin -> stakeKitApi.getEnabledYields(
+            is StakingIntegrationID.StakeKit.Coin -> stakeKitApi.getEnabledYields(
                 preferredValidatorsOnly = false,
                 network = networkId,
             )
-            is StakingIntegrationID.EthereumToken -> stakeKitApi.getEnabledYields(
+            is StakingIntegrationID.StakeKit.EthereumToken -> stakeKitApi.getEnabledYields(
                 preferredValidatorsOnly = false,
                 yieldId = value,
                 network = networkId,
@@ -171,8 +171,8 @@ internal class DefaultStakingRepository(
         }
     }
 
-    private fun getAvailableIntegrationsIds(): List<StakingIntegrationID> {
-        return StakingIntegrationID.entries.filterNot {
+    private fun getAvailableStakeKitIntegrationsIds(): List<StakingIntegrationID.StakeKit> {
+        return StakingIntegrationID.stakeKitEntries.filterNot {
             it.blockchain == Blockchain.Cardano && !stakingFeatureToggles.isCardanoStakingEnabled
         }
     }
