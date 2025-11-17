@@ -507,4 +507,12 @@ internal object WalletsDomainModule {
             dispatchers = dispatcherProvider,
         )
     }
+
+    @Provides
+    @Singleton
+    fun provideHasSecuredWalletsUseCase(
+        userWalletsListRepository: UserWalletsListRepository,
+    ): HasSecuredWalletsUseCase {
+        return HasSecuredWalletsUseCase(userWalletsListRepository = userWalletsListRepository)
+    }
 }
