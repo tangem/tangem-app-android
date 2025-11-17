@@ -27,6 +27,7 @@ import com.tangem.tap.domain.userWalletList.utils.toUserWallets
 import com.tangem.tap.domain.userWalletList.utils.updateWith
 import com.tangem.utils.Provider
 import com.tangem.utils.ProviderSuspend
+import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.extensions.indexOfFirstOrNull
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
@@ -149,7 +150,7 @@ internal class DefaultUserWalletsListRepository(
         val encryptionKey = userWallet.encryptionKey
             ?: raise(SetLockError.UserWalletLocked)
 
-        runCatching {
+        runSuspendCatching {
             userWalletEncryptionKeysRepository.save(
                 encryptionKey = UserWalletEncryptionKey(
                     walletId = userWalletId,
@@ -232,7 +233,7 @@ internal class DefaultUserWalletsListRepository(
                 val encryptionKey = requestPasswordRecursive(
                     hotWalletId = userWallet.hotWalletId,
                     block = { password ->
-                        runCatching {
+                        runSuspendCatching {
                             userWalletEncryptionKeysRepository.getEncryptedWithPassword(userWalletId, password)
                         }.onFailure {
                             raise(UnlockWalletError.UnableToUnlock)
@@ -288,7 +289,7 @@ internal class DefaultUserWalletsListRepository(
 
     override suspend fun unlockAllWallets(): Either<UnlockWalletError, Unit> = either {
         val userWallets = userWalletsSync()
-        val biometricKeys = runCatching {
+        val biometricKeys = runSuspendCatching {
             userWalletEncryptionKeysRepository.getAllBiometric()
         }.getOrElse {
             // TODO handle error properly [REDACTED_TASK_KEY]

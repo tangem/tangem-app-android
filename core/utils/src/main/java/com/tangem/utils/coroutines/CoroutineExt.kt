@@ -19,6 +19,16 @@ suspend fun <R> waitForDelay(delay: Long, block: suspend CoroutineScope.() -> R)
     actionInvoke.await()
 }
 
+suspend inline fun <T, R> T.runSuspendCatching(block: suspend T.() -> R): Result<R> {
+    return try {
+        Result.success(block())
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Throwable) {
+        Result.failure(e)
+    }
+}
+
 class Debouncer {
 
     private var debounceJob: Job? = null

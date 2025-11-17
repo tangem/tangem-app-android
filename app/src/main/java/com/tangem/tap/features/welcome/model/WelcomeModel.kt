@@ -77,9 +77,13 @@ internal class WelcomeModel @Inject constructor(
                 warning = warning,
                 error = state.error
                     ?.takeIf { !it.silent && warning == null }
-                    ?.let { e ->
-                        e.messageResId?.let { TextReference.Res(it) }
-                            ?: TextReference.Str(e.customMessage)
+                    ?.let { error ->
+                        val messageResId = error.messageResId
+                        if (messageResId != null) {
+                            TextReference.Res(messageResId)
+                        } else {
+                            TextReference.Str(error.customMessage)
+                        }
                     },
             )
         }

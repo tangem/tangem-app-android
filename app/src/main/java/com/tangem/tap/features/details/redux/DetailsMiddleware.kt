@@ -34,6 +34,7 @@ import org.rekotlin.Action
 import org.rekotlin.Middleware
 import timber.log.Timber
 
+@Suppress("MemberNameEqualsClassName")
 class DetailsMiddleware {
     private val appSettingsMiddleware = AppSettingsMiddleware()
     val detailsMiddleware: Middleware<AppState> = { _, stateProvider ->

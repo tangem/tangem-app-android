@@ -113,7 +113,7 @@ private fun ColumnScope.Content(yieldSupplyPromoUM: YieldSupplyPromoUM, clickInt
                     ),
                 )
                 SpacerH32()
-                PromoItems()
+                PromoItems(yieldSupplyPromoUM.tokenSymbol)
             }
             SpacerH32()
         }
@@ -151,7 +151,7 @@ private fun YieldStatusAppBar(onBackClick: () -> Unit, onHowItWorksClick: () -> 
 }
 
 @Composable
-private fun PromoItems() {
+private fun PromoItems(tokenSymbol: String) {
     PromoItem(
         icon = R.drawable.ic_flash_new_24,
         title = resourceReference(R.string.yield_module_promo_screen_cash_out_title),
@@ -161,7 +161,10 @@ private fun PromoItems() {
     PromoItem(
         icon = R.drawable.ic_repeat_24,
         title = resourceReference(R.string.yield_module_promo_screen_auto_balance_title),
-        subtitle = resourceReference(R.string.yield_module_promo_screen_auto_balance_subtitle),
+        subtitle = resourceReference(
+            R.string.yield_module_promo_screen_auto_balance_subtitle_v2,
+            wrappedList(tokenSymbol),
+        ),
     )
     SpacerH24()
     PromoItem(
@@ -258,6 +261,7 @@ private fun YieldSupplyPromoContent_Preview() {
                 tosLink = "https://tangem.com/terms-of-service/",
                 policyLink = "https://tangem.com/privacy-policy/",
                 title = resourceReference(R.string.yield_module_promo_screen_title),
+                tokenSymbol = "USDT",
                 subtitle = resourceReference(R.string.yield_module_promo_screen_variable_rate_info, wrappedList("5.3")),
             ),
             clickIntents = object : YieldSupplyPromoClickIntents {
