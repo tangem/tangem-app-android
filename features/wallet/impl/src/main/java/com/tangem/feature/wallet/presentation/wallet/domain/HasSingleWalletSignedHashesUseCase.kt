@@ -44,7 +44,7 @@ class HasSingleWalletSignedHashesUseCase @Inject constructor(
 
     private fun UserWallet.Cold.isCorrectCardType(): Boolean {
         return with(scanResponse.cardTypesResolver) {
-            !DemoConfig().isDemoCardId(cardId) && isReleaseFirmwareType() && !isMultiwalletAllowed() && !isTangemTwins()
+            !DemoConfig.isDemoCardId(cardId) && isReleaseFirmwareType() && !isMultiwalletAllowed() && !isTangemTwins()
         }
     }
 }
