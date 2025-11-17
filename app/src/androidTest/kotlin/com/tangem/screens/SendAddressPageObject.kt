@@ -55,14 +55,24 @@ class SendAddressPageObject(semanticsProvider: SemanticsNodeInteractionsProvider
         useUnmergedTree = true
     }
 
-    fun recentAddressItem(recipientAddress: String): KNode = child {
+    val myWalletsTitle: KNode = child {
+        hasText(getResourceString(CoreUiR.string.send_recipient_wallets_title))
+        useUnmergedTree = true
+    }
+
+    fun recentAddressItem(recipientAddress: String, isMyWallet: Boolean = false): KNode = child {
         hasTestTag(SendAddressScreenTestTags.RECENT_ADDRESS_ITEM)
-        hasAnySibling(withText(getResourceString(CoreUiR.string.send_recent_transactions)))
         hasAnyChild(withTestTag(SendAddressScreenTestTags.RECENT_ADDRESS_ICON))
         hasAnyDescendant(withText(recipientAddress))
         hasAnyDescendant(withTestTag(SendAddressScreenTestTags.RECENT_ADDRESS_TEXT))
-        hasAnyDescendant(withTestTag(SendAddressScreenTestTags.RECENT_ADDRESS_TRANSACTION_ICON))
         useUnmergedTree = true
+        if (isMyWallet) {
+            hasAnySibling(withText(getResourceString(CoreUiR.string.send_recipient_wallets_title)))
+            hasAnyDescendant(withText(getResourceString(CoreUiR.string.manage_tokens_network_selector_wallet)))
+        } else {
+            hasAnySibling(withText(getResourceString(CoreUiR.string.send_recent_transactions)))
+            hasAnyDescendant(withTestTag(SendAddressScreenTestTags.RECENT_ADDRESS_TRANSACTION_ICON))
+        }
     }
 
     fun recentAddressItemDescription(recipientAddress: String): KNode = recentAddressItem(recipientAddress).child {
