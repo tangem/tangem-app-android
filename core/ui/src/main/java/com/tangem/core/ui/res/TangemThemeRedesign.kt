@@ -13,7 +13,7 @@ import androidx.compose.runtime.*
 fun TangemThemeRedesign(content: @Composable () -> Unit) {
     val themeColors = if (LocalIsInDarkTheme.current) darkThemeColors() else lightThemeColors(redesign = true)
     val rememberedColors = remember { themeColors }
-        .also { it.update(themeColors) }
+        .apply { update(themeColors) }
     val rootBackgroundColor = rememberedColors.background.secondary
 
     MaterialTheme(
