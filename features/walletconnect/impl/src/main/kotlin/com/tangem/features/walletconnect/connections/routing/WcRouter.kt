@@ -17,6 +17,10 @@ internal class WcRouter(
         onComplete(isComplete)
     }
 
+    override fun replaceCurrent(route: Route, onComplete: (Boolean) -> Unit) {
+        /** Not allowed */
+    }
+
     override fun replaceAll(vararg routes: Route, onComplete: (Boolean) -> Unit) {
         /** Not allowed */
     }
