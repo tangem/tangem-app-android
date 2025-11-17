@@ -44,10 +44,40 @@ internal class StakingIdFactoryTest {
         private val defaultAddress = "address"
 
         @Test
-        fun `create returns UnsupportedCurrency if integrationId is null`() = runTest {
+        fun `create returns P2P StakingID for Ethereum`() = runTest {
             // Arrange
             val userWalletId = UserWalletId(stringValue = "011")
             val currency = MockCryptoCurrencyFactory().ethereum
+
+            coEvery {
+                walletManagersFacade.getDefaultAddress(userWalletId = userWalletId, network = currency.network)
+            } returns defaultAddress
+
+            // Act
+            val actual = factory.create(
+                userWalletId = userWalletId,
+                currencyId = currency.id,
+                network = currency.network,
+            )
+
+            // Assert
+            val expected = StakingID(
+                integrationId = StakingIntegrationID.P2P.EthereumPooled.value,
+                address = defaultAddress,
+            ).right()
+
+            Truth.assertThat(actual).isEqualTo(expected)
+
+            coVerify(exactly = 1) {
+                walletManagersFacade.getDefaultAddress(userWalletId = userWalletId, network = currency.network)
+            }
+        }
+
+        @Test
+        fun `create returns UnsupportedCurrency if integrationId is null`() = runTest {
+            // Arrange
+            val userWalletId = UserWalletId(stringValue = "011")
+            val currency = MockCryptoCurrencyFactory().createCoin(Blockchain.Bitcoin)
 
             // Act
             val actual = factory.create(
@@ -85,7 +115,7 @@ internal class StakingIdFactoryTest {
 
             // Assert
             val expected = StakingIdFactory.Error.UnableToGetAddress(
-                integrationId = StakingIntegrationID.Coin.Ton,
+                integrationId = StakingIntegrationID.StakeKit.Coin.Ton,
             )
 
             Truth.assertThat(actual.leftOrNull()).isEqualTo(expected)
@@ -126,31 +156,37 @@ internal class StakingIdFactoryTest {
             ),
             CreateModel(
                 currencyId = createCurrencyId(blockchain = Blockchain.TON),
-                expected = createStakingId(integrationId = StakingIntegrationID.Coin.Ton),
+                expected = createStakingId(integrationId = StakingIntegrationID.StakeKit.Coin.Ton),
             ),
             CreateModel(
                 currencyId = createCurrencyId(blockchain = Blockchain.Solana),
-                expected = createStakingId(integrationId = StakingIntegrationID.Coin.Solana),
+                expected = createStakingId(integrationId = StakingIntegrationID.StakeKit.Coin.Solana),
             ),
             CreateModel(
                 currencyId = createCurrencyId(blockchain = Blockchain.Cosmos),
-                expected = createStakingId(integrationId = StakingIntegrationID.Coin.Cosmos),
+                expected = createStakingId(integrationId = StakingIntegrationID.StakeKit.Coin.Cosmos),
             ),
             CreateModel(
                 currencyId = createCurrencyId(blockchain = Blockchain.Tron),
-                expected = createStakingId(integrationId = StakingIntegrationID.Coin.Tron),
+                expected = createStakingId(integrationId = StakingIntegrationID.StakeKit.Coin.Tron),
             ),
             CreateModel(
                 currencyId = createCurrencyId(blockchain = Blockchain.BSC),
-                expected = createStakingId(integrationId = StakingIntegrationID.Coin.BSC),
+                expected = createStakingId(integrationId = StakingIntegrationID.StakeKit.Coin.BSC),
             ),
             CreateModel(
                 currencyId = createCurrencyId(blockchain = Blockchain.Cardano),
-                expected = createStakingId(integrationId = StakingIntegrationID.Coin.Cardano),
+                expected = createStakingId(integrationId = StakingIntegrationID.StakeKit.Coin.Cardano),
             ),
             CreateModel(
-                currencyId = CryptoCurrency.ID.fromValue(value = "coin⟨ETH⟩polygon-ecosystem-token⚓"),
-                expected = createStakingId(integrationId = StakingIntegrationID.EthereumToken.Polygon),
+                currencyId = createCurrencyId(blockchain = Blockchain.Ethereum),
+                expected = createStakingId(integrationId = StakingIntegrationID.P2P.EthereumPooled),
+            ),
+            CreateModel(
+                currencyId = CryptoCurrency.ID.fromValue(
+                    value = "token⟨ETH⟩polygon-ecosystem-token⚓0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0",
+                ),
+                expected = createStakingId(integrationId = StakingIntegrationID.StakeKit.EthereumToken.Polygon),
             ),
         )
 
