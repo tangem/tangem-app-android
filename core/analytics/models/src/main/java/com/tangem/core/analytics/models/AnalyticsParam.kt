@@ -84,6 +84,7 @@ sealed class AnalyticsParam {
         data object LongTap : ScreensSources("Long Tap")
         data object Markets : ScreensSources("Markets")
         data object HotWallet : ScreensSources("Hot Wallet")
+        data object TangemPay : ScreensSources("Tangem Pay")
     }
 
     sealed class TxSentFrom(val value: String) {

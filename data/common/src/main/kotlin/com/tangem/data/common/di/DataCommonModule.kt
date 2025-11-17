@@ -1,6 +1,7 @@
 package com.tangem.data.common.di
 
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
+import com.tangem.data.common.account.WalletAccountsFetcher
 import com.tangem.data.common.cache.etag.DefaultETagsStore
 import com.tangem.data.common.cache.etag.ETagsStore
 import com.tangem.data.common.currency.*
@@ -15,10 +16,13 @@ import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.retryer.RetryerPool
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
 import javax.inject.Singleton
 
 @Module
@@ -30,13 +34,17 @@ internal object DataCommonModule {
     fun provideCardCryptoCurrencyFactory(
         excludedBlockchains: ExcludedBlockchains,
         userWalletsStore: UserWalletsStore,
+        accountsFeatureToggles: AccountsFeatureToggles,
+        walletAccountsFetcher: WalletAccountsFetcher,
         userTokensResponseStore: UserTokensResponseStore,
         responseCryptoCurrenciesFactory: ResponseCryptoCurrenciesFactory,
     ): CardCryptoCurrencyFactory {
         return DefaultCardCryptoCurrencyFactory(
-            demoConfig = DemoConfig(),
+            demoConfig = DemoConfig,
             excludedBlockchains = excludedBlockchains,
             userWalletsStore = userWalletsStore,
+            accountsFeatureToggles = accountsFeatureToggles,
+            walletAccountsFetcher = walletAccountsFetcher,
             userTokensResponseStore = userTokensResponseStore,
             responseCryptoCurrenciesFactory = responseCryptoCurrenciesFactory,
         )
@@ -71,6 +79,9 @@ internal object DataCommonModule {
             dispatchers = dispatchers,
             addressesEnricher = addressesEnricher,
             accountsFeatureToggles = accountsFeatureToggles,
+            pushTokensRetryerPool = RetryerPool(
+                coroutineScope = CoroutineScope(SupervisorJob() + dispatchers.default),
+            ),
         )
     }
 

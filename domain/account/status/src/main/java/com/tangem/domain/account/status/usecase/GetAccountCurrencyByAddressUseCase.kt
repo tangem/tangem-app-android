@@ -9,9 +9,9 @@ import arrow.core.raise.option
 import arrow.core.toNonEmptyListOrNull
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.producer.SingleAccountListProducer
+import com.tangem.domain.account.repository.AccountsCRUDRepository
 import com.tangem.domain.account.status.model.AccountCryptoCurrency
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
-import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.getAddress
@@ -29,14 +29,14 @@ private typealias WalletIdWithNetworkId = Pair<UserWalletId, Network.ID>
 /**
  * Use case to retrieve an [AccountCryptoCurrency] based on a provided address.
  *
- * @property userWalletsListRepository Repository to access user wallets.
+ * @property accountsCRUDRepository Repository to access user wallets.
  * @property multiNetworkStatusSupplier Supplier to get network status for multiple networks.
  * @property singleAccountListSupplier Supplier to get account lists for a single wallet.
  *
 [REDACTED_AUTHOR]
  */
 class GetAccountCurrencyByAddressUseCase(
-    private val userWalletsListRepository: UserWalletsListRepository,
+    private val accountsCRUDRepository: AccountsCRUDRepository,
     private val multiNetworkStatusSupplier: MultiNetworkStatusSupplier,
     private val singleAccountListSupplier: SingleAccountListSupplier,
 ) {
@@ -65,7 +65,7 @@ class GetAccountCurrencyByAddressUseCase(
     }
 
     private fun OptionRaise.getUserWalletIds(): NonEmptyList<UserWalletId> {
-        val userWalletIds = userWalletsListRepository.userWallets.value.orEmpty()
+        val userWalletIds = accountsCRUDRepository.getUserWalletsSync()
             .filter(UserWallet::isMultiCurrency)
             .map(UserWallet::walletId)
             .toNonEmptyListOrNull()
