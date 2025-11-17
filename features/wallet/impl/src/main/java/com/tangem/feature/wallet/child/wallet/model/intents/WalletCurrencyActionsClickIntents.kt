@@ -24,7 +24,7 @@ import com.tangem.core.ui.haptic.TangemHapticEffect
 import com.tangem.core.ui.haptic.VibratorHapticManager
 import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
-import com.tangem.domain.account.status.usecase.SaveCryptoCurrenciesUseCase
+import com.tangem.domain.account.status.usecase.ManageCryptoCurrenciesUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.extenstions.unwrap
 import com.tangem.domain.core.lce.Lce
@@ -157,7 +157,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
     private val removeCurrencyUseCase: RemoveCurrencyUseCase,
     private val accountsFeatureToggles: AccountsFeatureToggles,
     private val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase,
-    private val saveCryptoCurrenciesUseCase: SaveCryptoCurrenciesUseCase,
+    private val manageCryptoCurrenciesUseCase: ManageCryptoCurrenciesUseCase,
 ) : BaseWalletClickIntents(), WalletCurrencyActionsClickIntents {
 
     override fun onSendClick(
@@ -360,7 +360,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
                     return@launch
                 }
 
-                saveCryptoCurrenciesUseCase(accountId = accountId, remove = cryptoCurrencyStatus.currency)
+                manageCryptoCurrenciesUseCase(accountId = accountId, remove = cryptoCurrencyStatus.currency)
             } else {
                 removeCurrencyUseCase(userWalletId, cryptoCurrencyStatus.currency)
             }
@@ -507,7 +507,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
             appRouter.push(
                 AppRoute.Staking(
                     userWalletId = userWalletId,
-                    cryptoCurrencyId = cryptoCurrency.id,
+                    cryptoCurrency = cryptoCurrency,
                     yieldId = yield?.id ?: return@launch,
                 ),
             )
