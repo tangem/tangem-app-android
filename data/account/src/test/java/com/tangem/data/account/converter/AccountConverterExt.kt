@@ -77,7 +77,7 @@ internal fun createAccountList(
 ): AccountList {
     return AccountList(
         userWalletId = userWalletId,
-        accounts = setOf(createCryptoPortfolio(userWalletId)),
+        accounts = listOf(createCryptoPortfolio(userWalletId)),
         totalAccounts = 1,
         sortType = sortType,
         groupType = groupType,
