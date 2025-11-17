@@ -3,6 +3,7 @@ package com.tangem.data.staking.di
 import com.squareup.moshi.Moshi
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
+import com.tangem.data.staking.DefaultP2PEthPoolRepository
 import com.tangem.data.staking.DefaultStakingActionRepository
 import com.tangem.data.staking.DefaultStakingErrorResolver
 import com.tangem.data.staking.DefaultStakingRepository
@@ -11,12 +12,14 @@ import com.tangem.data.staking.converters.error.StakeKitErrorConverter
 import com.tangem.data.staking.store.YieldsBalancesStore
 import com.tangem.data.staking.toggles.DefaultStakingFeatureToggles
 import com.tangem.data.staking.utils.DefaultStakingCleaner
+import com.tangem.datasource.api.ethpool.P2PEthPoolApi
 import com.tangem.datasource.api.stakekit.StakeKitApi
 import com.tangem.datasource.api.stakekit.models.response.model.error.StakeKitErrorResponse
 import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.token.StakingActionsStore
 import com.tangem.datasource.local.token.StakingYieldsStore
+import com.tangem.domain.staking.repositories.P2PEthPoolRepository
 import com.tangem.domain.staking.repositories.StakingActionRepository
 import com.tangem.domain.staking.repositories.StakingErrorResolver
 import com.tangem.domain.staking.repositories.StakingRepository
@@ -57,6 +60,18 @@ internal object StakingDataModule {
             getUserWalletUseCase = getUserWalletUseCase,
             stakingFeatureToggles = stakingFeatureToggles,
             moshi = moshi,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideP2PEthPoolRepository(
+        p2pApi: P2PEthPoolApi,
+        dispatchers: CoroutineDispatcherProvider,
+    ): P2PEthPoolRepository {
+        return DefaultP2PEthPoolRepository(
+            p2pApi = p2pApi,
+            dispatchers = dispatchers,
         )
     }
 
