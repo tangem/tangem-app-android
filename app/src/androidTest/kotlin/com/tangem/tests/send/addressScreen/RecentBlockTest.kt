@@ -149,7 +149,7 @@ class RecentBlockTest : BaseTestCase() {
         }
     }
 
-    @AllureId("4596")
+    @AllureId("4598")
     @DisplayName("Send (address screen): check 'Recent' block, transaction history does not load")
     @Test
     fun recentBlockTransactionHistoryDoesNotLoadTest() {
