@@ -157,13 +157,19 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
         userWalletId: UserWalletId,
         accountsResponse: GetWalletAccountsResponse,
     ): GetWalletAccountsResponse {
+        val hasSavedTokens = accountsResponse.unassignedTokens.isNotEmpty()
+
         val response = defaultWalletAccountsResponseFactory.create(
             userWalletId = userWalletId,
-            userTokensResponse = UserTokensResponse(
-                group = accountsResponse.wallet.group.orDefault(),
-                sort = accountsResponse.wallet.sort.orDefault(),
-                tokens = accountsResponse.unassignedTokens,
-            ),
+            userTokensResponse = if (hasSavedTokens) {
+                UserTokensResponse(
+                    group = accountsResponse.wallet.group.orDefault(),
+                    sort = accountsResponse.wallet.sort.orDefault(),
+                    tokens = accountsResponse.unassignedTokens,
+                )
+            } else {
+                null
+            },
         )
 
         store(userWalletId = userWalletId, response = response)
