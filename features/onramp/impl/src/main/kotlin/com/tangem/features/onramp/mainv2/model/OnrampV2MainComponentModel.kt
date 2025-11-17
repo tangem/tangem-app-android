@@ -96,6 +96,7 @@ internal class OnrampV2MainComponentModel @Inject constructor(
         modelScope.launch {
             clearOnrampCacheUseCase()
         }
+        startLoadingQuotes()
         sendScreenOpenAnalytics()
         checkResidenceCountry()
         subscribeToAmountChanges()
@@ -164,10 +165,6 @@ internal class OnrampV2MainComponentModel @Inject constructor(
             checkResidenceCountry()
             handleOnrampAvailable()
         }
-    }
-
-    fun onStart() {
-        startLoadingQuotes()
     }
 
     fun onStop() {
@@ -317,10 +314,12 @@ internal class OnrampV2MainComponentModel @Inject constructor(
         fetchPairsUseCase.invoke(userWallet, params.cryptoCurrency).fold(
             ifLeft = ::handleOnrampError,
             ifRight = {
-                _state.update { amountStateFactory.getAmountSecondaryFieldResetState() }
+                _state.update {
+                    amountStateFactory.getAmountSecondaryFieldResetState()
+                }
+                startLoadingQuotes()
             },
         )
-        startLoadingQuotes()
     }
 
     private fun handleOnrampError(onrampError: OnrampError) {
