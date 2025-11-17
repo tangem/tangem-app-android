@@ -18,6 +18,7 @@ data class P2PEthPoolVaultsResponse(
 /**
  * Network identifier in P2P API
  */
+@JsonClass(generateAdapter = false)
 enum class P2PEthPoolNetworkDTO {
     @Json(name = "mainnet")
     MAINNET,
