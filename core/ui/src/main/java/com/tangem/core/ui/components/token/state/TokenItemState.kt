@@ -240,6 +240,12 @@ sealed class TokenItemState {
             val isFlickering: Boolean = false,
         ) : Subtitle2State()
 
+        data class PriceChangeContent(
+            val priceChangePercent: String,
+            val type: PriceChangeType,
+            val isFlickering: Boolean = false,
+        ) : Subtitle2State()
+
         data class LabelContent(val auditLabelUM: AuditLabelUM) : Subtitle2State()
 
         data object Unreachable : Subtitle2State()
