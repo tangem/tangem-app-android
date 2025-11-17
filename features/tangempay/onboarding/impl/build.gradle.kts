@@ -16,6 +16,8 @@ dependencies {
     implementation(projects.core.decompose)
     implementation(projects.core.ui)
     implementation(projects.core.error)
+    implementation(projects.core.navigation)
+    implementation(deps.arrow.core)
     implementation(deps.arrow.core)
 
     /** Common */
@@ -39,4 +41,7 @@ dependencies {
     /** DI */
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
+
+    /** Other */
+    implementation(deps.timber)
 }
