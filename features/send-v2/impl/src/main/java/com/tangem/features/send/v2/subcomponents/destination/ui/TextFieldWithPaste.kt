@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment.Companion.CenterEnd
 import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.fields.SimpleTextField
@@ -19,6 +20,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.components.containers.FooterContainer
+import com.tangem.core.ui.test.SendAddressScreenTestTags
 
 @Suppress("LongMethod", "LongParameterList")
 @Composable
@@ -61,6 +63,7 @@ internal fun TextFieldWithPaste(
                         text = title.resolveReference(),
                         style = labelStyle,
                         color = color,
+                        modifier = Modifier.testTag(SendAddressScreenTestTags.DESTINATION_TAG_TEXT_FIELD_TITLE),
                     )
                     SimpleTextField(
                         value = value,
@@ -71,7 +74,8 @@ internal fun TextFieldWithPaste(
                         isValuePasted = isValuePasted,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(top = 8.dp),
+                            .padding(top = 8.dp)
+                            .testTag(SendAddressScreenTestTags.DESTINATION_TAG_TEXT_FIELD),
                     )
                 }
                 AnimatedVisibility(
@@ -84,6 +88,7 @@ internal fun TextFieldWithPaste(
                 ) {
                     CrossIcon(
                         onClick = onPasteClick,
+                        modifier = Modifier.testTag(SendAddressScreenTestTags.DESTINATION_TAG_CLEAR_TEXT_FIELD_BUTTON),
                     )
                 }
             }
@@ -100,7 +105,8 @@ internal fun TextFieldWithPaste(
                     backgroundColorEnabled = TangemTheme.colors.button.secondary,
                     textColor = TangemTheme.colors.text.primary1,
                     modifier = Modifier
-                        .padding(start = TangemTheme.dimens.spacing8),
+                        .padding(start = TangemTheme.dimens.spacing8)
+                        .testTag(SendAddressScreenTestTags.DESTINATION_TAG_PASTE_BUTTON),
                 )
             }
         }

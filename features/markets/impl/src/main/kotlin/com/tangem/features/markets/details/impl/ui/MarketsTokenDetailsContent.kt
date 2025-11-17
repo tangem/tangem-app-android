@@ -58,6 +58,7 @@ internal fun MarketsTokenDetailsContent(
     onBackClick: () -> Unit,
     onHeaderSizeChange: (Dp) -> Unit,
     backButtonEnabled: Boolean,
+    isAccountEnabled: Boolean,
     modifier: Modifier = Modifier,
     portfolioBlock: @Composable ((Modifier) -> Unit)?,
 ) {
@@ -69,6 +70,7 @@ internal fun MarketsTokenDetailsContent(
         onHeaderSizeChange = onHeaderSizeChange,
         backButtonEnabled = backButtonEnabled,
         portfolioBlock = portfolioBlock,
+        isAccountEnabled = isAccountEnabled,
         addTopBarStatusBarInsets = addTopBarStatusBarPadding,
     )
 
@@ -88,6 +90,7 @@ private fun Content(
     onBackClick: () -> Unit,
     onHeaderSizeChange: (Dp) -> Unit,
     backButtonEnabled: Boolean,
+    isAccountEnabled: Boolean,
     modifier: Modifier = Modifier,
     portfolioBlock: @Composable ((Modifier) -> Unit)?,
 ) {
@@ -153,6 +156,7 @@ private fun Content(
 
             tokenMarketDetailsBody(
                 state = state.body,
+                isAccountEnabled = isAccountEnabled,
                 portfolioBlock = portfolioBlock,
             )
         }
@@ -348,6 +352,7 @@ private fun Preview() {
             backgroundColor = TangemTheme.colors.background.tertiary,
             portfolioBlock = {},
             backButtonEnabled = true,
+            isAccountEnabled = true,
             addTopBarStatusBarPadding = false,
         )
     }

@@ -8,6 +8,7 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.dropdownmenu.TangemDropdownMenuItem
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.themedColor
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.card.common.util.cardTypesResolver
@@ -28,6 +29,7 @@ import com.tangem.domain.wallets.usecase.NetworkHasDerivationUseCase
 import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDetailsClickIntents
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenBalanceSegmentedButtonConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsAppBarMenuConfig
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsBalanceBlockState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsDialogConfig
 import com.tangem.features.tokendetails.impl.R
@@ -313,6 +315,19 @@ internal class TokenDetailsStateFactory(
         return balanceSelectStateConverter.convert(buttonConfig)
     }
 
+    fun getStateWithUpdatedYieldSupplyDisplayBalance(displayBalance: String?): TokenDetailsState {
+        val state = currentStateProvider()
+        val balanceState = state.tokenBalanceBlockState
+        return state.copy(
+            tokenBalanceBlockState = when (balanceState) {
+                is TokenDetailsBalanceBlockState.Content ->
+                    balanceState.copy(displayYeildSupplyCryptoBalance = displayBalance)
+                is TokenDetailsBalanceBlockState.Error -> balanceState
+                is TokenDetailsBalanceBlockState.Loading -> balanceState
+            },
+        )
+    }
+
     fun getStateWithConfirmHideExpressStatus(): TokenDetailsState {
         return currentStateProvider().copy(
             dialogConfig = TokenDetailsDialogConfig(
@@ -345,13 +360,13 @@ internal class TokenDetailsStateFactory(
                 if (isSupported && hasDerivations) {
                     TangemDropdownMenuItem(
                         title = resourceReference(R.string.token_details_generate_xpub),
-                        textColorProvider = { TangemTheme.colors.text.primary1 },
+                        textColor = themedColor { TangemTheme.colors.text.primary1 },
                         onClick = clickIntents::onGenerateExtendedKey,
                     ).let(::add)
                 }
                 TangemDropdownMenuItem(
                     title = TextReference.Res(id = R.string.token_details_hide_token),
-                    textColorProvider = { TangemTheme.colors.text.warning },
+                    textColor = themedColor { TangemTheme.colors.text.warning },
                     onClick = clickIntents::onHideClick,
                 ).let(::add)
             }.toImmutableList(),
