@@ -120,16 +120,14 @@ internal class LegacyScanProcessor @Inject constructor(
             }
     }
 
-    private fun sendAnalytics(analyticsEvent: AnalyticsEvent?, scanResponse: ScanResponse) {
-        analyticsEvent?.let { event ->
-            // this workaround needed to send CardWasScannedEvent without adding a context
-            val interceptor = CardContextInterceptor(scanResponse)
-            val params = event.params.toMutableMap()
-            interceptor.intercept(params)
-            event.params = params.toMap()
+    private fun sendAnalytics(analyticsEvent: AnalyticsEvent, scanResponse: ScanResponse) {
+        // this workaround needed to send CardWasScannedEvent without adding a context
+        val interceptor = CardContextInterceptor(scanResponse)
+        val params = analyticsEvent.params.toMutableMap()
+        interceptor.intercept(params)
+        analyticsEvent.params = params.toMap()
 
-            Analytics.send(event)
-        }
+        Analytics.send(analyticsEvent)
     }
 
     // TODO: [REDACTED_JIRA]
