@@ -30,6 +30,7 @@ dependencies {
     implementation(projects.domain.tokens)
     implementation(projects.domain.networks)
     implementation(projects.domain.walletManager)
+    implementation(projects.domain.quotes)
 
     /** Feature API - remove after removing [HotWalletFeatureToggles] */
     implementation(projects.features.hotWallet.api)
