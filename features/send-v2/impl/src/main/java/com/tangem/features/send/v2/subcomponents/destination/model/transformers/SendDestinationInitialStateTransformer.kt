@@ -6,9 +6,9 @@ import androidx.compose.ui.text.input.KeyboardType
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
-import com.tangem.features.send.v2.impl.R
 import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationTextFieldUM
 import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationUM
+import com.tangem.features.send.v2.impl.R
 import com.tangem.utils.transformer.Transformer
 
 internal class SendDestinationInitialStateTransformer(
@@ -54,12 +54,12 @@ internal class SendDestinationInitialStateTransformer(
                     isValuePasted = false,
                 )
             },
-            accountTitleUM = null,
             wallets = loadingListState(WALLET_KEY_TAG, WALLET_DEFAULT_COUNT),
             recent = loadingListState(RECENT_KEY_TAG, RECENT_DEFAULT_COUNT),
             networkName = cryptoCurrency.network.name,
             isValidating = false,
             isRecentHidden = false,
+            isAccountsMode = null,
         )
     }
 }
