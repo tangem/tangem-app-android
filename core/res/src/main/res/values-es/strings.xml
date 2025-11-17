@@ -985,8 +985,8 @@
   <string name="staking_details_account_fee">Tarifa de staking de la cuenta </string>
   <string name="staking_details_account_fee_info">Una cuenta de staking es una cuenta especial donde se almacenan los tokens SOL de staking. Se crea cuando delegas sus tokens a un validador para participar en la validación de transacciones y ganar recompensas. Se cobra una pequeña tarifa por crear la cuenta de staking, que se devuelve una vez que se completa el staking.</string>
   <string name="staking_details_annual_percentage_rate">Porcentaje de rendimiento anual</string>
-  <string name="staking_details_annual_percentage_rate_info">El porcentaje de rendimiento anual que podrá ganar como participante en el staking.</string>
-  <string name="staking_details_annual_percentage_yield_info">APY muestra el porcentaje de rendimiento anual del validador en función de su rendimiento</string>
+  <string name="staking_details_annual_percentage_rate_info">APR: Muestra el interés que podrías ganar en un año sin capitalización. Los intereses ganados no se añaden a tu saldo, por lo que no ganas intereses adicionales sobre ellos.</string>
+  <string name="staking_details_annual_percentage_yield_info">APY: Muestra el total de intereses que podrías ganar en un año con capitalización. La capitalización significa que los intereses ganados se añaden a tu saldo, por lo que también ganas intereses sobre esos intereses.</string>
   <string name="staking_details_apr">APR</string>
   <string name="staking_details_apy">APY</string>
   <string name="staking_details_auto_claiming_rewards_daily_text">Las recompensas se acumulan automáticamente en su saldo de staking diariamente.</string>
@@ -1076,6 +1076,7 @@
   <string name="staking_reward_schedule_month">Mensual</string>
   <string name="staking_reward_schedule_week">Semanal</string>
   <string name="staking_rewards">Recompensas</string>
+  <string name="staking_solana_details_auto_claiming_rewards_daily_text">Las recompensas en Solana se agregan automáticamente a tu saldo de staking y no pueden mostrarse por separado.</string>
   <string name="staking_stake_locked">El stake está bloqueado</string>
   <string name="staking_stake_more">Hacer más staking</string>
   <string name="staking_stake_more_button_unavailability_reason">Al hacer staking de %1$s, se realiza sobre todo su saldo de %2$s. Cualquier %2$s adicional que deposite en su billetera Tangem también se pondrá en staking automáticamente.</string>
@@ -1499,6 +1500,7 @@
   <string name="yield_module_balance_info_sheet_title">Su %s está depositado en Aave</string>
   <string name="yield_module_chart_loading_error">No se puede cargar el gráfico...</string>
   <string name="yield_module_deposit_error_notification_title">El suministro de %1$s %2$s a Aave está pendiente.</string>
+  <string name="yield_module_disable_button">Desactivar el modo de rendimiento</string>
   <string name="yield_module_earn_badge">APY %1$s%%</string>
   <string name="yield_module_earn_sheet_available_title">Disponible</string>
   <string name="yield_module_earn_sheet_current_apy_title">APY actual</string>
@@ -1527,11 +1529,12 @@
   <string name="yield_module_network_fee_unreachable_notification_description">Compruebe su conexión de red</string>
   <string name="yield_module_network_fee_unreachable_notification_title">Información de tarifas de red inaccesible</string>
   <string name="yield_module_promo_screen_auto_balance_subtitle">Cada depósito que realice se suministrará a Aave automáticamente.</string>
+  <string name="yield_module_promo_screen_auto_balance_subtitle_v2">Todos los %1$s en tu cuenta se suministrarán automáticamente a Aave.</string>
   <string name="yield_module_promo_screen_auto_balance_title">Transferencia automática a Aave</string>
   <string name="yield_module_promo_screen_cash_out_subtitle">Envíe, intercambie o venda sus fondos al instante, cuando quiera.</string>
-  <string name="yield_module_promo_screen_cash_out_title">Acceda a sus fondos en cualquier momento</string>
+  <string name="yield_module_promo_screen_cash_out_title">Acceso inmediato</string>
   <string name="yield_module_promo_screen_how_it_works_button_title">¿Cómo funciona?</string>
-  <string name="yield_module_promo_screen_self_custodial_subtitle">Aave es un protocolo descentralizado que administra más de 61 billones de dólares en valor total.</string>
+  <string name="yield_module_promo_screen_self_custodial_subtitle">Aave es un protocolo on-chain para crear mercados de liquidez no custodiales y ganar intereses a tasa variable.</string>
   <string name="yield_module_promo_screen_self_custodial_title">Descentralizado y autocustodiado</string>
   <string name="yield_module_promo_screen_terms_disclaimer">Al utilizar este servicio, usted acepta que el proveedor\n%1$s y %2$s</string>
   <string name="yield_module_promo_screen_title">Conectar Aave</string>
@@ -1547,11 +1550,12 @@
   <string name="yield_module_start_earning_sheet_description">Su %s se suministrará a Aave, pero seguirá siendo gestionable.</string>
   <string name="yield_module_start_earning_sheet_fee_policy">Ver política de tarifas</string>
   <string name="yield_module_start_earning_sheet_next_deposits">Sus próximas recargas se suministrarán automáticamente a Aave.</string>
+  <string name="yield_module_start_earning_sheet_next_deposits_v2">Todos tus futuros depósitos %1$s se suministrarán automáticamente a Aave.</string>
   <string name="yield_module_status_active">Activo</string>
   <string name="yield_module_status_paused">En pausa</string>
   <string name="yield_module_stop_earning">Desactivación del modo de rendimiento</string>
   <string name="yield_module_stop_earning_sheet_description">Al desactivar esto, retirará sus fondos de Aave a %s en su billetera y dejará de ganar recompensas.</string>
-  <string name="yield_module_stop_earning_sheet_fee_note">La comisión de red se deducirá del importe que retire.</string>
+  <string name="yield_module_stop_earning_sheet_fee_note">Se cobra una comisión de red por la blockchain al salir del modo Yield.</string>
   <string name="yield_module_stop_earning_sheet_title">Desactivar el modo de rendimiento</string>
   <string name="yield_module_supply">Suministrar</string>
   <string name="yield_module_supply_apr">Suministro APY</string>

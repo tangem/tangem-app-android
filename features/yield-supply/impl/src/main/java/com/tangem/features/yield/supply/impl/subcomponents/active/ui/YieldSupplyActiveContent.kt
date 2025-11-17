@@ -226,7 +226,7 @@ private fun YieldSupplyActiveMyFunds(
             color = TangemTheme.colors.stroke.primary,
         )
         HighComissionInfoRow(
-            title = resourceReference(R.string.common_network_fee_title),
+            title = resourceReference(R.string.common_estimated_fee),
             info = state.currentFee,
             isHighComission = state.isHighFee,
         )

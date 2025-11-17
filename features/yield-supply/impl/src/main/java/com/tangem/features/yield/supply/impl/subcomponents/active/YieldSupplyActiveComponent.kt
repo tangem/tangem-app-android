@@ -58,7 +58,7 @@ internal class YieldSupplyActiveComponent(
     @Composable
     override fun Footer() {
         SecondaryButton(
-            text = stringResourceSafe(R.string.yield_module_stop_earning),
+            text = stringResourceSafe(R.string.yield_module_disable_button),
             onClick = params.callback::onStopEarning,
             modifier = Modifier
                 .fillMaxWidth()
