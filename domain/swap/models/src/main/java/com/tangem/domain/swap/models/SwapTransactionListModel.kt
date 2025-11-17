@@ -1,6 +1,7 @@
 package com.tangem.domain.swap.models
 
 import com.tangem.domain.express.models.ExpressProvider
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import java.math.BigDecimal
 
@@ -13,6 +14,8 @@ data class SwapTransactionListModel(
     val toCryptoCurrencyId: String,
     val fromCryptoCurrency: CryptoCurrency,
     val toCryptoCurrency: CryptoCurrency,
+    val fromAccount: Account.CryptoPortfolio?,
+    val toAccount: Account.CryptoPortfolio?,
     val transactions: List<SwapTransactionModel>,
 )
 
