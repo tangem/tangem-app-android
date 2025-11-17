@@ -110,7 +110,7 @@ internal interface WalletWarningsClickIntents {
 
     fun onDenyPermissions()
 
-    fun onFinishWalletActivationClick(type: WalletActivationBannerType)
+    fun onFinishWalletActivationClick(bannerType: WalletActivationBannerType, isBackupExists: Boolean)
 }
 
 @Suppress("LargeClass", "LongParameterList", "TooManyFunctions")
@@ -146,32 +146,6 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     private val getWalletsListForEnablingUseCase: GetWalletsForAutomaticallyPushEnablingUseCase,
     private val uiMessageSender: UiMessageSender,
 ) : BaseWalletClickIntents(), WalletWarningsClickIntents {
-
-    private val finalizeWalletSetupAlertBS
-        get() = bottomSheetMessage {
-            infoBlock {
-                icon(R.drawable.img_knight_shield_32) {
-                    type = MessageBottomSheetUMV2.Icon.Type.Warning
-                    backgroundType = MessageBottomSheetUMV2.Icon.BackgroundType.SameAsTint
-                }
-                title = resourceReference(R.string.hw_activation_need_title)
-                body = resourceReference(R.string.hw_activation_need_description)
-            }
-            secondaryButton {
-                text = resourceReference(R.string.common_later)
-                onClick {
-                    closeBs()
-                }
-            }
-            primaryButton {
-                text = resourceReference(R.string.hw_activation_need_backup)
-                onClick {
-                    val userWallet = getSelectedUserWallet() ?: return@onClick
-                    appRouter.push(WalletActivation(userWallet.walletId))
-                    closeBs()
-                }
-            }
-        }
 
     override fun onAddBackupCardClick() {
         analyticsEventHandler.send(MainScreen.NoticeBackupYourWalletTapped)
@@ -501,14 +475,38 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
         }
     }
 
-    override fun onFinishWalletActivationClick(type: WalletActivationBannerType) {
-        when (type) {
+    override fun onFinishWalletActivationClick(bannerType: WalletActivationBannerType, isBackupExists: Boolean) {
+        when (bannerType) {
             WalletActivationBannerType.Attention -> {
                 val userWallet = getSelectedUserWallet() ?: return
-                appRouter.push(WalletActivation(userWallet.walletId))
+                appRouter.push(WalletActivation(userWallet.walletId, isBackupExists))
             }
             WalletActivationBannerType.Warning -> {
-                messageSender.send(finalizeWalletSetupAlertBS)
+                val message = bottomSheetMessage {
+                    infoBlock {
+                        icon(R.drawable.img_knight_shield_32) {
+                            type = MessageBottomSheetUMV2.Icon.Type.Warning
+                            backgroundType = MessageBottomSheetUMV2.Icon.BackgroundType.SameAsTint
+                        }
+                        title = resourceReference(R.string.hw_activation_need_title)
+                        body = resourceReference(R.string.hw_activation_need_description)
+                    }
+                    secondaryButton {
+                        text = resourceReference(R.string.common_later)
+                        onClick {
+                            closeBs()
+                        }
+                    }
+                    primaryButton {
+                        text = resourceReference(R.string.hw_activation_need_backup)
+                        onClick {
+                            val userWallet = getSelectedUserWallet() ?: return@onClick
+                            appRouter.push(WalletActivation(userWallet.walletId, isBackupExists))
+                            closeBs()
+                        }
+                    }
+                }
+                messageSender.send(message)
             }
         }
     }
