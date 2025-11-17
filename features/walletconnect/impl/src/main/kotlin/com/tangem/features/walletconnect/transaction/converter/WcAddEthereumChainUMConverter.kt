@@ -1,5 +1,6 @@
 package com.tangem.features.walletconnect.transaction.converter
 
+import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.domain.walletconnect.usecase.method.WcAddNetworkUseCase
 import com.tangem.features.walletconnect.transaction.entity.chain.WcAddEthereumChainItemUM
 import com.tangem.features.walletconnect.transaction.entity.chain.WcAddEthereumChainUM
@@ -24,7 +25,7 @@ internal class WcAddEthereumChainUMConverter @Inject constructor(
                         onShowVerifiedAlert = value.actions.onShowVerifiedAlert,
                     ),
                 ),
-                walletName = value.useCase.session.wallet.name,
+                portfolioName = value.portfolioName,
                 isLoading = false,
             ),
             transactionRequestInfo = WcTransactionRequestInfoUM(
@@ -36,6 +37,7 @@ internal class WcAddEthereumChainUMConverter @Inject constructor(
 
     data class Input(
         val useCase: WcAddNetworkUseCase,
+        val portfolioName: AccountTitleUM?,
         val actions: WcTransactionActionsUM,
     )
 }

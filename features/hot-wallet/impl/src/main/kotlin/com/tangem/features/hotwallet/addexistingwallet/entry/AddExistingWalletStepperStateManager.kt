@@ -21,7 +21,7 @@ internal class AddExistingWalletStepperStateManager {
             is AddExistingWalletRoute.BackupCompleted -> HotWalletStepperComponent.StepperUM(
                 currentStep = STEP_BACKUP,
                 steps = STEPS_COUNT,
-                title = resourceReference(R.string.common_backup),
+                title = resourceReference(R.string.wallet_import_title),
                 showBackButton = false,
                 showSkipButton = false,
                 showFeedbackButton = false,
