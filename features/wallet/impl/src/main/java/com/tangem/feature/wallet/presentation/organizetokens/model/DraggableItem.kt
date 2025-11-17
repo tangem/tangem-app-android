@@ -6,7 +6,6 @@ import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.feature.wallet.impl.R
-import com.tangem.feature.wallet.presentation.organizetokens.model.DraggableItem.RoundingMode
 
 /**
  * Helper class for the DND list items
@@ -26,12 +25,14 @@ internal sealed class DraggableItem {
      *
      * @property id ID of the network group
      * @property networkName network group name
+     * @property accountId account id
      * @property roundingMode item [RoundingMode]
      * @property showShadow if true then item should be elevated
      * */
     data class GroupHeader(
         override val id: Int,
         val networkName: String,
+        val accountId: String = "",
         override val roundingMode: RoundingMode = RoundingMode.None,
         override val showShadow: Boolean = false,
     ) : DraggableItem() {
@@ -50,6 +51,7 @@ internal sealed class DraggableItem {
      *
      * @property tokenItemState state of the token item
      * @property groupId ID of the network group which contains this token
+     * @property accountId account id
      * @property id ID of the token
      * @property roundingMode item [RoundingMode]
      * @property showShadow if true then item should be elevated
@@ -57,6 +59,7 @@ internal sealed class DraggableItem {
     data class Token(
         val tokenItemState: TokenItemState.Draggable,
         val groupId: Int,
+        val accountId: String = "",
         override val showShadow: Boolean = false,
         override val roundingMode: RoundingMode = RoundingMode.None,
     ) : DraggableItem() {
@@ -67,12 +70,30 @@ internal sealed class DraggableItem {
      * Helper item used to detect possible positions where a draggable item can be placed.
      *
      * @property id ID of the placeholder
+     * @property accountId account id
      * */
     data class Placeholder(
         override val id: String,
+        val accountId: String = "",
     ) : DraggableItem() {
         override val showShadow: Boolean = false
         override val roundingMode: RoundingMode = RoundingMode.None
+    }
+
+    /**
+     * Item for portfolio.
+     *
+     * @property tokenItemState state of the portfolio item
+     * @property id ID of the portfolio
+     * @property roundingMode item [RoundingMode]
+     * @property showShadow if true then item should be elevated
+     * */
+    data class Portfolio(
+        override val roundingMode: RoundingMode = RoundingMode.None,
+        val tokenItemState: TokenItemState,
+    ) : DraggableItem() {
+        override val id: String = tokenItemState.id
+        override val showShadow: Boolean = false
     }
 
     /**
@@ -122,6 +143,7 @@ internal sealed class DraggableItem {
      * */
     fun updateRoundingMode(mode: RoundingMode): DraggableItem = when (this) {
         is Placeholder -> this
+        is Portfolio -> this.copy(roundingMode = mode)
         is GroupHeader -> this.copy(roundingMode = mode)
         is Token -> this.copy(roundingMode = mode)
     }
@@ -134,7 +156,9 @@ internal sealed class DraggableItem {
      * @return updated [DraggableItem]
      * */
     fun updateShadowVisibility(show: Boolean): DraggableItem = when (this) {
-        is Placeholder -> this
+        is Portfolio,
+        is Placeholder,
+        -> this
         is GroupHeader -> this.copy(showShadow = show)
         is Token -> this.copy(showShadow = show)
     }
