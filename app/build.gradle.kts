@@ -162,6 +162,7 @@ dependencies {
     implementation(projects.domain.walletManager.models)
     implementation(projects.domain.yieldSupply)
     implementation(projects.domain.blockaid)
+    implementation(projects.domain.hotWallet)
 
     implementation(projects.common)
     implementation(projects.common.routing)
@@ -212,6 +213,7 @@ dependencies {
     implementation(projects.data.swap)
     implementation(projects.data.walletManager)
     implementation(projects.data.yieldSupply)
+    implementation(projects.data.hotWallet)
 
     /** Features */
     implementation(projects.features.referral.impl)
