@@ -30,7 +30,7 @@ class TapWalletManager(
         // ensuring that only one job is active at any given time.
         loadUserWalletDataJob = CoroutineScope(dispatchers.io)
             .launch { loadUserWalletData(userWallet) }
-            .also { it.join() }
+            .apply { join() }
     }
 
     private suspend fun loadUserWalletData(userWallet: UserWallet) {
