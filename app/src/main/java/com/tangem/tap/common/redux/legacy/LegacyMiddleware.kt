@@ -29,7 +29,14 @@ internal object LegacyMiddleware {
                         val walletsRepository = store.inject(DaggerGraphState::walletsRepository)
 
                         selectedUserWallet()
-                            .distinctUntilChanged()
+                            .distinctUntilChanged { old, new ->
+                                if (old is UserWallet.Cold && new is UserWallet.Cold) {
+                                    old.walletId == new.walletId &&
+                                        old.scanResponse == new.scanResponse
+                                } else {
+                                    old.walletId == new.walletId
+                                }
+                            }
                             .onEach { selectedUserWallet ->
                                 val initializedAppSettingsStateContent = initializeAppSettingsState(
                                     shouldSaveUserWallets = walletsRepository.shouldSaveUserWalletsSync(),
@@ -78,6 +85,7 @@ internal object LegacyMiddleware {
             isHidingEnabled = store.inject(DaggerGraphState::balanceHidingRepository)
                 .getBalanceHidingSettings().isHidingEnabledInSettings,
             needEnrollBiometrics = runCatching(tangemSdkManager::needEnrollBiometrics).getOrNull() == true,
+            hasSecuredWallets = store.inject(DaggerGraphState::userWalletsListRepository).hasSecuredWallets(),
         )
     }
 }
