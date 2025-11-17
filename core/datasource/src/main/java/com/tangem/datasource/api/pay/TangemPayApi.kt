@@ -7,6 +7,7 @@ import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.POST
+import retrofit2.http.PUT
 import retrofit2.http.Path
 import retrofit2.http.Query
 
@@ -146,4 +147,22 @@ interface TangemPayApi {
         @Header("Authorization") authHeader: String,
         @Body body: CardDetailsRequest,
     ): ApiResponse<CardDetailsResponse>
+
+    @PUT("v1/customer/card/pin")
+    suspend fun setPin(
+        @Header("Authorization") authHeader: String,
+        @Body body: SetPinRequest,
+    ): ApiResponse<SetPinResponse>
+
+    @POST("v1/customer/card/freeze")
+    suspend fun freezeCard(
+        @Header("Authorization") authHeader: String,
+        @Body body: FreezeUnfreezeCardRequest,
+    ): ApiResponse<FreezeUnfreezeCardResponse>
+
+    @POST("v1/customer/card/unfreeze")
+    suspend fun unfreezeCard(
+        @Header("Authorization") authHeader: String,
+        @Body body: FreezeUnfreezeCardRequest,
+    ): ApiResponse<FreezeUnfreezeCardResponse>
 }
