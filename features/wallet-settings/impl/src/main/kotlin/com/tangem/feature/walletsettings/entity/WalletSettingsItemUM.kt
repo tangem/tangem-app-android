@@ -67,13 +67,13 @@ internal sealed class WalletSettingsAccountsUM : WalletSettingsItemUM() {
     data class Account(
         val state: UserWalletItemUM,
     ) : WalletSettingsAccountsUM() {
-        override val id: String get() = state.id.stringValue
+        override val id: String = state.id
     }
 
     data class Footer(
         override val id: String,
         val addAccount: AddAccountUM,
-        val archivedAccounts: BlockUM,
+        val archivedAccounts: BlockUM?,
         val showDescription: Boolean,
         val description: TextReference,
     ) : WalletSettingsAccountsUM() {
