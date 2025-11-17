@@ -45,7 +45,7 @@ import java.math.BigDecimal
 import javax.inject.Inject
 import kotlin.properties.Delegates
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 @ModelScoped
 internal class YieldSupplyStartEarningModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
@@ -96,7 +96,10 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
                     R.string.yield_module_start_earning_sheet_description,
                     wrappedList(cryptoCurrency.symbol),
                 ),
-                footer = resourceReference(R.string.yield_module_start_earning_sheet_next_deposits),
+                footer = resourceReference(
+                    R.string.yield_module_start_earning_sheet_next_deposits_v2,
+                    wrappedList(cryptoCurrency.symbol),
+                ),
                 footerLink = resourceReference(R.string.yield_module_start_earning_sheet_fee_policy),
                 currencyIconState = CryptoCurrencyToIconStateConverter().convert(params.cryptoCurrency),
                 yieldSupplyFeeUM = YieldSupplyFeeUM.Loading,
