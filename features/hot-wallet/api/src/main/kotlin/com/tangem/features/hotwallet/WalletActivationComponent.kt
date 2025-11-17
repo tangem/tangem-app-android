@@ -8,6 +8,7 @@ interface WalletActivationComponent : ComposableContentComponent {
 
     data class Params(
         val userWalletId: UserWalletId,
+        val isBackupExists: Boolean,
     )
 
     interface Factory : ComponentFactory<Params, WalletActivationComponent>
