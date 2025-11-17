@@ -358,6 +358,7 @@ sealed class AppRoute(val path: String) : Route {
     @Serializable
     data class WalletActivation(
         val userWalletId: UserWalletId,
+        val isBackupExists: Boolean,
     ) : AppRoute(path = "/wallet_activation/${userWalletId.stringValue}")
 
     @Serializable
