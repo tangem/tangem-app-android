@@ -9,10 +9,12 @@ import com.tangem.common.test.domain.card.MockScanResponseFactory
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.common.test.domain.wallet.MockUserWalletFactory
 import com.tangem.common.test.utils.ProvideTestModels
+import com.tangem.data.common.account.WalletAccountsFetcher
 import com.tangem.data.common.network.NetworkFactory
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.local.token.UserTokensResponseStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
+import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.card.configs.GenericCardConfig
 import com.tangem.domain.demo.models.DemoConfig
@@ -37,15 +39,19 @@ internal class DefaultCardCryptoCurrencyFactoryTest {
     private val userWalletsStore: UserWalletsStore = mockk()
     private val userTokensResponseStore: UserTokensResponseStore = mockk()
     private val excludedBlockchains = ExcludedBlockchains()
+    private val accountsFeatureToggles = mockk<AccountsFeatureToggles>()
+    private val walletAccountsFetcher = mockk<WalletAccountsFetcher>()
 
     private val factory = DefaultCardCryptoCurrencyFactory(
-        demoConfig = DemoConfig(),
+        demoConfig = DemoConfig,
         excludedBlockchains = excludedBlockchains,
         userWalletsStore = userWalletsStore,
         userTokensResponseStore = userTokensResponseStore,
         responseCryptoCurrenciesFactory = ResponseCryptoCurrenciesFactory(
             networkFactory = NetworkFactory(excludedBlockchains = excludedBlockchains),
         ),
+        accountsFeatureToggles = accountsFeatureToggles,
+        walletAccountsFetcher = walletAccountsFetcher,
     )
 
     private val cryptoCurrencyFactory = MockCryptoCurrencyFactory()
@@ -57,7 +63,7 @@ internal class DefaultCardCryptoCurrencyFactoryTest {
 
     @BeforeEach
     fun init() {
-        clearMocks(userWalletsStore, userTokensResponseStore, iconUri)
+        clearMocks(userWalletsStore, userTokensResponseStore, accountsFeatureToggles, walletAccountsFetcher, iconUri)
 
         mockkStatic(Uri::class)
         every { Uri.parse(any()) } returns iconUri
@@ -75,6 +81,7 @@ internal class DefaultCardCryptoCurrencyFactoryTest {
             val userTokensResponse = model.userTokensResponse
             val network = ethereum.network
 
+            every { accountsFeatureToggles.isFeatureEnabled } returns false
             coEvery { userWalletsStore.getSyncStrict(key = userWallet.walletId) } returns userWallet
             coEvery { userTokensResponseStore.getSyncOrNull(userWallet.walletId) } returns userTokensResponse
 
@@ -236,6 +243,7 @@ internal class DefaultCardCryptoCurrencyFactoryTest {
                 val networks = setOf(ethereum.network, bitcoin.network)
                 val userTokensResponse = model.userTokensResponse
 
+                every { accountsFeatureToggles.isFeatureEnabled } returns false
                 coEvery { userTokensResponseStore.getSyncOrNull(userWallet.walletId) } returns userTokensResponse
 
                 // Act
