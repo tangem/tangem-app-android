@@ -66,7 +66,7 @@ fun TangemTheme(
 ) {
     val themeColors = if (isDark) darkThemeColors() else lightThemeColors()
     val rememberedColors = remember { themeColors }
-        .also { it.update(themeColors) }
+        .apply { update(themeColors) }
     val systemUiController = rememberSystemUiController()
     val systemBarsIconsController = remember(systemUiController) { SystemBarsIconsController(systemUiController) }
 
