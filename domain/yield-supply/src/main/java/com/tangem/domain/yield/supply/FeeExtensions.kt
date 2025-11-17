@@ -6,7 +6,7 @@ import java.math.BigInteger
 import java.math.RoundingMode
 
 private val HUNDRED_PERCENT = 100.toBigInteger() // base 100%
-val INCREASE_GAS_LIMIT_FOR_SUPPLY = 112.toBigInteger() // 12% increase
+val INCREASE_GAS_LIMIT_FOR_SUPPLY = 120.toBigInteger() // 20% increase
 
 fun Fee.fixFee(cryptoCurrency: CryptoCurrency, gasLimit: BigInteger): Fee = when (this) {
     is Fee.Ethereum.Legacy -> copy(
