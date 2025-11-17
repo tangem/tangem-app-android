@@ -9,11 +9,11 @@ import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountName
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.MethodSource
 
 /**
 [REDACTED_AUTHOR]
@@ -81,7 +81,7 @@ class AccountListTest {
     inner class Create {
 
         @ParameterizedTest
-        @MethodSource("provideTestModels")
+        @ProvideTestModels
         fun invoke(model: CreateTestModel) {
             // Act
             val actual = AccountList(
@@ -158,7 +158,7 @@ class AccountListTest {
     inner class Plus {
 
         @ParameterizedTest
-        @MethodSource("provideTestModels")
+        @ProvideTestModels
         fun invoke(model: PlusTestModel) {
             // Act
             val actual = model.initial.plus(other = model.toAdd)
@@ -231,7 +231,7 @@ class AccountListTest {
     inner class Minus {
 
         @ParameterizedTest
-        @MethodSource("provideTestModels")
+        @ProvideTestModels
         fun invoke(model: MinusTestModel) {
             // Act
             val actual = model.initial.minus(model.toRemove)
