@@ -34,10 +34,7 @@ internal class DefaultOnrampV2MainComponent @AssistedInject constructor(
     private val model: OnrampV2MainComponentModel = getOrCreateModel(params)
 
     init {
-        lifecycle.subscribe(
-            onStart = model::onStart,
-            onStop = model::onStop,
-        )
+        lifecycle.subscribe(onStop = model::onStop)
     }
 
     private val bottomSheetSlot = childSlot(
