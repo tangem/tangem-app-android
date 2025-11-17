@@ -1,6 +1,7 @@
 package com.tangem.feature.referral.models
 
 import androidx.annotation.DrawableRes
+import androidx.compose.runtime.Immutable
 import com.tangem.common.ui.account.PortfolioSelectUM
 import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.feature.referral.domain.models.ExpectedAwards
@@ -14,6 +15,7 @@ internal data class ReferralStateHolder(
 
     data class HeaderState(val onBackClicked: () -> Unit)
 
+    @Immutable
     sealed interface ReferralInfoContentState {
         val award: String
         val networkName: String
@@ -22,6 +24,7 @@ internal data class ReferralStateHolder(
         val accountAward: AccountAward?
     }
 
+    @Immutable
     sealed interface ReferralInfoState {
         data class ParticipantContent(
             override val award: String,
@@ -49,6 +52,7 @@ internal data class ReferralStateHolder(
         data object Loading : ReferralInfoState
     }
 
+    @Immutable
     data class ErrorSnackbar(
         val throwable: Throwable,
         val onOkClicked: () -> Unit,
