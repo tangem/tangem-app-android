@@ -3,7 +3,9 @@ package com.tangem.features.kyc.ui
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.webkit.PermissionRequest
+import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
 import android.webkit.WebView
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -14,7 +16,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
@@ -23,6 +24,8 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.kyc.SumSubWebViewClient
 import com.tangem.features.kyc.entity.WebSdkKycUM
+
+private const val GALLERY_IMAGE_FILTER = "image/*"
 
 @Composable
 internal fun KycWebViewScreen(state: WebSdkKycUM, modifier: Modifier = Modifier) {
@@ -48,16 +51,6 @@ internal fun KycWebViewScreen(state: WebSdkKycUM, modifier: Modifier = Modifier)
 
 @Composable
 private fun WebViewContent(state: WebSdkKycUM, modifier: Modifier = Modifier) {
-    val context = LocalContext.current
-    var permissionGranted by remember { mutableStateOf(context.isCameraGranted()) }
-    val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
-        permissionGranted = it[Manifest.permission.CAMERA] ?: context.isCameraGranted()
-    }
-
-    LaunchedEffect(Unit) {
-        if (!permissionGranted) permission.launch(arrayOf(Manifest.permission.CAMERA))
-    }
-
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -86,6 +79,30 @@ private fun SumSubLoading(modifier: Modifier = Modifier) {
 @Composable
 private fun SumSubContent(accessToken: String, url: String, modifier: Modifier = Modifier) {
     val sumSubWebViewClient = remember { SumSubWebViewClient(accessToken = accessToken) }
+    var pendingPermissionRequest by remember { mutableStateOf<PermissionRequest?>(null) }
+    var filePathCallback by remember { mutableStateOf<ValueCallback<Array<Uri>>?>(null) }
+
+    val permissionLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+            pendingPermissionRequest?.let { request ->
+                if (isGranted) {
+                    request.grant(request.resources)
+                } else {
+                    request.deny()
+                }
+            }
+            pendingPermissionRequest = null
+        }
+
+    val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        if (uri != null) {
+            filePathCallback?.onReceiveValue(arrayOf(uri))
+        } else {
+            filePathCallback?.onReceiveValue(null)
+        }
+        filePathCallback = null
+    }
+
     AndroidView(
         modifier = modifier.fillMaxSize(),
         factory = { context ->
@@ -93,7 +110,27 @@ private fun SumSubContent(accessToken: String, url: String, modifier: Modifier =
                 settings.javaScriptEnabled = true
                 webChromeClient = object : WebChromeClient() {
                     override fun onPermissionRequest(request: PermissionRequest?) {
-                        request?.grant(request.resources)
+                        if (request == null) return
+                        val requestedCamera = request.resources.contains(PermissionRequest.RESOURCE_VIDEO_CAPTURE)
+                        when {
+                            !requestedCamera || context.isCameraGranted() -> {
+                                request.grant(request.resources)
+                            }
+                            else -> {
+                                pendingPermissionRequest = request
+                                permissionLauncher.launch(Manifest.permission.CAMERA)
+                            }
+                        }
+                    }
+                    override fun onShowFileChooser(
+                        webView: WebView?,
+                        callback: ValueCallback<Array<Uri>>?,
+                        params: FileChooserParams?,
+                    ): Boolean {
+                        filePathCallback?.onReceiveValue(null)
+                        filePathCallback = callback
+                        galleryLauncher.launch(GALLERY_IMAGE_FILTER)
+                        return true
                     }
                 }
                 webViewClient = sumSubWebViewClient
