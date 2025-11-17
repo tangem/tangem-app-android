@@ -1,9 +1,11 @@
 package com.tangem.features.nft.collections.entity
 
 import androidx.annotation.DrawableRes
+import androidx.compose.runtime.Immutable
 import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.core.ui.extensions.TextReference
 
+@Immutable
 internal sealed interface NFTCollectionItem {
     val id: String
 }
