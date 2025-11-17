@@ -20,6 +20,7 @@ import com.tangem.domain.transaction.models.AssetRequirementsCondition
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runCatching
+import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.isNullOrZero
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
@@ -35,7 +36,7 @@ internal class DefaultRampManager(
         userWallet: UserWallet,
         cryptoCurrency: CryptoCurrency,
     ): ScenarioUnavailabilityReason {
-        val availabilityState = runCatching { getOnrampAvailableState(userWallet.walletId, cryptoCurrency) }
+        val availabilityState = runSuspendCatching { getOnrampAvailableState(userWallet.walletId, cryptoCurrency) }
             .getOrNull()
             ?: ExpressAvailabilityState.Error
 
@@ -84,7 +85,7 @@ internal class DefaultRampManager(
         userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency,
     ): ScenarioUnavailabilityReason {
-        val availabilityState = runCatching {
+        val availabilityState = runSuspendCatching {
             getExchangeableState(userWalletId, cryptoCurrency)
         }.getOrNull() ?: ExpressAvailabilityState.Error
         return availabilityState.toReason(cryptoCurrency.name)
