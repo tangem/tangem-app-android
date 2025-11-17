@@ -177,7 +177,7 @@ class VisaCardActivationTask @AssistedInject constructor(
             .getOrElse { raise(it.tangemError) }
 
         if (remoteState !is VisaActivationRemoteState.CardWalletSignatureRequired) {
-            return raise(VisaActivationError.WrongRemoteState.tangemError)
+            raise(VisaActivationError.WrongRemoteState.tangemError)
         }
 
         visaActivationRepository.getCardWalletAcceptanceData(
