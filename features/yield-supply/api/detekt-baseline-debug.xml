@@ -1,0 +1,8 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>BooleanPropertyNaming:YieldSupplyComponent.kt$YieldSupplyComponent.Params$val handleNavigation: Boolean? = null</ID>
+    <ID>UseEmptyCounterpart:YieldSupplyAnalytics.kt$YieldSupplyAnalytics$mapOf()</ID>
+  </CurrentIssues>
+</SmellBaseline>

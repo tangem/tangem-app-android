@@ -1,0 +1,9 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>BooleanPropertyNaming:AppRoute.kt$AppRoute.CreateWalletBackup$val setAccessCode: Boolean = false</ID>
+    <ID>NestedScopeFunctions:PayloadToDeeplinkConverter.kt$PayloadToDeeplinkConverter$let { addQueryParam(NAME_KEY, it) }</ID>
+    <ID>NestedScopeFunctions:PayloadToDeeplinkConverter.kt$PayloadToDeeplinkConverter$let { addQueryParam(TRANSACTION_ID_KEY, it) }</ID>
+  </CurrentIssues>
+</SmellBaseline>
