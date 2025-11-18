@@ -2,15 +2,15 @@ package com.tangem.domain.models.account
 
 import com.google.common.truth.Truth
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.MethodSource
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class AccountIdTest {
 
     @ParameterizedTest
-    @MethodSource("provideTestModels")
+    @ProvideTestModels
     fun forCryptoPortfolio(model: ForCryptoPortfolioModel) {
         // Arrange
         val userWalletId = UserWalletId("27163F47405CE73110837F24DF82607FF11C7AF9D78C93F409E4FEAFF3400C8F")

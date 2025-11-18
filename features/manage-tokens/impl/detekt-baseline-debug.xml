@@ -1,0 +1,51 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>BooleanPropertyNaming:AddCustomTokenUM.kt$AddCustomTokenUM$val showBackButton: Boolean</ID>
+    <ID>BooleanPropertyNaming:CustomCurrencyValidator.kt$CustomCurrencyValidator.Status.Validated$val fillForm: Boolean</ID>
+    <ID>BooleanPropertyNaming:CustomTokenFormModel.kt$CustomTokenFormModel$val needColdWalletInteraction = coldWalletAndHasMissedDerivationsUseCase.invoke( userWalletId = params.mode.userWalletId, networksWithDerivationPath = mapOf(currency.network.backendId to getDerivationPath().value), )</ID>
+    <ID>BooleanPropertyNaming:ManageTokensListManager.kt$ManageTokensListManager$val loadUserTokensFromRemote = when (mode) { is ManageTokensMode.Wallet, is ManageTokensMode.Account, -&gt; source == ManageTokensSource.ONBOARDING ManageTokensMode.None, -&gt; false }</ID>
+    <ID>BooleanPropertyNaming:ManageTokensModel.kt$ManageTokensModel$val needToInteractWithColdWallet = useCasesFacade.needColdWalletInteraction(networks)</ID>
+    <ID>BooleanPropertyNaming:ManageTokensUM.kt$ManageTokensUM.ManageContent$val needToInteractWithColdWallet: Boolean</ID>
+    <ID>BooleanPropertyNaming:OnboardingManageTokensModel.kt$OnboardingManageTokensModel$val showTangemIcon = useCasesFacade.needColdWalletInteraction(network = network)</ID>
+    <ID>BooleanPropertyNaming:OnboardingManageTokensUM.kt$OnboardingManageTokensUM.ActionButtonConfig$abstract val showProgress: Boolean</ID>
+    <ID>BooleanPropertyNaming:OnboardingManageTokensUM.kt$OnboardingManageTokensUM.ActionButtonConfig.Continue$val showTangemIcon: Boolean</ID>
+    <ID>MaxChainedCallsOnSameLine:ChooseManagedTokensModel.kt$ChooseManagedTokensModel$params.initialCurrency.network.id.rawId.value</ID>
+    <ID>MultilineLambdaItParameter:ChooseManagedTokenContent.kt${ add( CurrencyItemUM.Basic( id = ManagedCryptoCurrency.ID( value = "ID+$it", ), name = "Bitcoin", symbol = "BTC", icon = CurrencyIconState.Loading, networks = CurrencyItemUM.Basic.NetworksUM.Collapsed, onExpandClick = {}, ), ) }</ID>
+    <ID>MultilineLambdaItParameter:ChooseManagedTokensModel.kt$ChooseManagedTokensModel${ it.copy( notificationUM = null, ) }</ID>
+    <ID>MultilineLambdaItParameter:CurrencyItemMapper.kt${ it.toCurrencyNetworkModel( isSelected = it.network in addedIn, isEditable = false, onSelectedStateChange = { _, _ -&gt; }, onLongTap = { _ -&gt; }, ) }</ID>
+    <ID>MultilineLambdaItParameter:CurrencyNetworksMapper.kt${ it.toCurrencyNetworkModel( isSelected = it.network in addedIn, isEditable = isItemsEditable, onSelectedStateChange = onSelectedStateChange, onLongTap = onLongTap, ) }</ID>
+    <ID>MultilineLambdaItParameter:CustomCurrencyFormOperations.kt${ it[Field.CONTRACT_ADDRESS] = it.getValue(Field.CONTRACT_ADDRESS).copy( error = when (exception) { CustomTokenFormValidationException.ContractAddress.Invalid -&gt; { resourceReference(R.string.custom_token_creation_error_invalid_contract_address) } }, ) }</ID>
+    <ID>MultilineLambdaItParameter:CustomCurrencyFormOperations.kt${ it[Field.DECIMALS] = it.getValue(Field.DECIMALS).copy( error = when (exception) { is CustomTokenFormValidationException.Decimals.Empty -&gt; { null // Should not display this error } is CustomTokenFormValidationException.Decimals.Invalid -&gt; { resourceReference( R.string.custom_token_creation_error_wrong_decimals, wrappedList(ValidateTokenFormUseCase.MAX_DECIMALS), ) } }, ) }</ID>
+    <ID>MultilineLambdaItParameter:CustomTokenFormContent.kt$PreviewCustomTokenFormComponentProvider${ it[Field.CONTRACT_ADDRESS] = it[Field.CONTRACT_ADDRESS]!!.copy( label = stringReference("Contract address"), value = "0x1234567890", error = stringReference("Contract address is invalid"), placeholder = stringReference("0x1234567890"), ) }</ID>
+    <ID>MultilineLambdaItParameter:CustomTokenFormContent.kt$PreviewCustomTokenFormComponentProvider${ it[Field.CONTRACT_ADDRESS] = it[Field.CONTRACT_ADDRESS]!!.copy( label = stringReference("Contract address"), value = "0x1234567890", placeholder = stringReference("0x1234567890"), ) }</ID>
+    <ID>MultilineLambdaItParameter:CustomTokenFormModel.kt$CustomTokenFormModel${ Timber.e(it, "Failed to add currency") showErrorDialog() return@resource }</ID>
+    <ID>MultilineLambdaItParameter:CustomTokenFormModel.kt$CustomTokenFormModel${ Timber.e(it, "Failed to derive public keys") showErrorDialog() return@resource }</ID>
+    <ID>MultilineLambdaItParameter:CustomTokenSelectorModel.kt$CustomTokenSelectorModel${ when (it) { is AccountStatus.CryptoPortfolio -&gt; it.sameNodeAndNotMain() } }</ID>
+    <ID>MultilineLambdaItParameter:ManageTokensListManager.kt$ManageTokensListManager${ Timber.e( it, """ Failed to check currency unsupported state |- Mode: $mode |- Source Network: $sourceNetwork """.trimIndent(), ) val message = SnackbarMessage( message = it.localizedMessage ?.let(::stringReference) ?: resourceReference(R.string.common_error), ) messageSender.send(message) null }</ID>
+    <ID>MultilineLambdaItParameter:ManageTokensListManager.kt$ManageTokensListManager${ Timber.e( it, """ Failed to check linked tokens |- Mode: $mode |- Network ID: ${network.id} """.trimIndent(), ) val message = SnackbarMessage( message = it.localizedMessage ?.let(::stringReference) ?: resourceReference(R.string.common_error), ) messageSender.send(message) false }</ID>
+    <ID>MultilineLambdaItParameter:ManageTokensModel.kt$ManageTokensModel${ Timber.e(it, "Failed to save changes") return@resource }</ID>
+    <ID>MultilineLambdaItParameter:ManageTokensUseCasesFacade.kt$ManageTokensUseCasesFacade${ it is CryptoCurrency.Token &amp;&amp; it.network.backendId == network.backendId &amp;&amp; it.network.derivationPath == network.derivationPath }</ID>
+    <ID>MultilineLambdaItParameter:OnboardingManageTokensModel.kt$OnboardingManageTokensModel${ Timber.e(it, "Failed to save changes") return@resource }</ID>
+    <ID>MultilineLambdaItParameter:PreviewManageTokensComponent.kt$PreviewManageTokensComponent${ it.fastForEachIndexed { index, network -&gt; if (index == networkIndex) { it[index] = network.copy( iconResId = if (isSelected) { R.drawable.img_eth_22 } else { R.drawable.ic_eth_16 }, isSelected = isSelected, ) } } }</ID>
+    <ID>NamedArguments:ChangedCurrenciesManager.kt$ChangedCurrenciesManager$updateChangedItems(currency, network, currenciesToAdd, currenciesToRemove)</ID>
+    <ID>NamedArguments:ChangedCurrenciesManager.kt$ChangedCurrenciesManager$updateChangedItems(currency, network, currenciesToRemove, currenciesToAdd)</ID>
+    <ID>NamedArguments:ChooseManagedTokensModel.kt$ChooseManagedTokensModel$TokenSearched( params.analyticsCategoryName, token = null, blockchain = null, isTokenChosen = false, )</ID>
+    <ID>NamedArguments:ManageTokensListManager.kt$ManageTokensListManager$selectNetwork(currencyBatch.key, currency, networkId, isSelected)</ID>
+    <ID>NamedArguments:ManageTokensListManager.kt$ManageTokensListManager$sendSelectCurrencyAction(batchKey, currency.id, network, isSelected = false)</ID>
+    <ID>NamedArguments:ManageTokensListManager.kt$ManageTokensListManager$sendSelectCurrencyAction(batchKey, currency.id, network, isSelected = true)</ID>
+    <ID>NestedScopeFunctions:CustomTokenSelectorModel.kt$CustomTokenSelectorModel$let { recognizer.recognize(it) }</ID>
+    <ID>NullableBooleanCheck:CustomCurrencyFormOperations.kt$this.tokenForm?.wasFilled ?: false</ID>
+    <ID>PropertyUsedBeforeDeclaration:ChooseManagedTokensModel.kt$ChooseManagedTokensModel$bottomSheetNavigation</ID>
+    <ID>PropertyUsedBeforeDeclaration:ChooseManagedTokensModel.kt$ChooseManagedTokensModel$uiState</ID>
+    <ID>UnsafeCallOnNullableType:CustomTokenFormContent.kt$PreviewCustomTokenFormComponentProvider$it[Field.CONTRACT_ADDRESS]!!</ID>
+    <ID>UnsafeCallOnNullableType:PreviewAddCustomTokenComponent.kt$PreviewAddCustomTokenComponent$config.selectedDerivationPath!!</ID>
+    <ID>UnsafeCallOnNullableType:PreviewAddCustomTokenComponent.kt$PreviewAddCustomTokenComponent$config.selectedNetwork!!</ID>
+    <ID>UseEmptyCounterpart:CustomTokenAnalyticsEvent.kt$CustomTokenAnalyticsEvent$mapOf()</ID>
+    <ID>UseEmptyCounterpart:ManageTokensAnalyticEvent.kt$ManageTokensAnalyticEvent$mapOf()</ID>
+    <ID>UseOrEmpty:ChangedCurrenciesManager.kt$ChangedCurrenciesManager$items[currency] ?: emptySet()</ID>
+    <ID>UseOrEmpty:PreviewCustomTokenSelectorComponent.kt$PreviewCustomTokenSelectorComponent$d.id?.rawId?.value ?: ""</ID>
+    <ID>VarCouldBeVal:CustomTokenFormModel.kt$CustomTokenFormModel$private var useCasesFacade: CustomTokenFormUseCasesFacade = customTokenFormUseCasesFacadeFactory.create(params.mode)</ID>
+  </CurrentIssues>
+</SmellBaseline>
