@@ -1,7 +1,7 @@
 package com.tangem.tap.di.domain
 
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
-import com.tangem.domain.wallets.derivations.DerivationsRepository
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.markets.*
 import com.tangem.domain.markets.repositories.MarketsTokenRepository
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
@@ -12,13 +12,16 @@ import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
 import com.tangem.domain.tokens.repository.CurrenciesRepository
+import com.tangem.domain.wallets.derivations.DerivationsRepository
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
-import com.tangem.domain.core.wallets.UserWalletsListRepository
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
 import javax.inject.Singleton
 
 @Module
@@ -67,6 +70,7 @@ object MarketsDomainModule {
         multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
         multiYieldBalanceFetcher: MultiYieldBalanceFetcher,
         stakingIdFactory: StakingIdFactory,
+        dispatchers: CoroutineDispatcherProvider,
     ): SaveMarketTokensUseCase {
         return SaveMarketTokensUseCase(
             derivationsRepository = derivationsRepository,
@@ -76,6 +80,17 @@ object MarketsDomainModule {
             multiQuoteStatusFetcher = multiQuoteStatusFetcher,
             multiYieldBalanceFetcher = multiYieldBalanceFetcher,
             stakingIdFactory = stakingIdFactory,
+            parallelUpdatingScope = CoroutineScope(SupervisorJob() + dispatchers.default),
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetTokenMarketCryptoCurrency(
+        marketsTokenRepository: MarketsTokenRepository,
+    ): GetTokenMarketCryptoCurrency {
+        return GetTokenMarketCryptoCurrency(
+            marketsTokenRepository = marketsTokenRepository,
         )
     }
 

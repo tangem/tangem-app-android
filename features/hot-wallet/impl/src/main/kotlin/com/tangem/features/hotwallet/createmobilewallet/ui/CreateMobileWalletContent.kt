@@ -12,6 +12,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.PrimaryButton
+import com.tangem.core.ui.components.SecondaryButton
 import com.tangem.core.ui.components.appbar.TangemTopAppBar
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.extensions.TextReference
@@ -80,13 +81,23 @@ internal fun CreateMobileWalletContent(state: CreateMobileWalletUM, modifier: Mo
                 iconRes = R.drawable.ic_settings_24,
             )
         }
+        SecondaryButton(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    start = 16.dp,
+                    top = 16.dp,
+                    end = 16.dp,
+                ),
+            text = stringResourceSafe(R.string.hw_import_existing_wallet),
+            onClick = state.onImportClick,
+        )
         PrimaryButton(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            text = stringResourceSafe(R.string.common_create),
+            text = stringResourceSafe(R.string.onboarding_create_wallet_button_create_wallet),
             showProgress = state.createButtonLoading,
-            enabled = true,
             onClick = state.onCreateClick,
         )
     }
@@ -134,6 +145,7 @@ private fun PreviewCreateWalletContent() {
             state = CreateMobileWalletUM(
                 onBackClick = {},
                 createButtonLoading = false,
+                onImportClick = {},
                 onCreateClick = {},
             ),
         )

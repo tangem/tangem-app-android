@@ -40,7 +40,7 @@ internal fun YieldSupplyDepositedWarningContent(warningUM: YieldSupplyDepositedW
             onDismissRequest = onDismiss,
             content = TangemBottomSheetConfigContent.Empty,
         ),
-        containerColor = TangemTheme.colors.background.primary,
+        containerColor = TangemTheme.colors.background.tertiary,
         onBack = null,
         title = {
             TangemModalBottomSheetTitle(
@@ -57,7 +57,7 @@ internal fun YieldSupplyDepositedWarningContent(warningUM: YieldSupplyDepositedW
                     .padding(horizontal = 16.dp)
                     .fillMaxWidth(),
                 text = stringResourceSafe(CoreUiR.string.balance_hidden_got_it_button),
-                onClick = onDismiss,
+                onClick = warningUM.onWarningAcknowledged,
             )
         },
     )
@@ -68,7 +68,6 @@ private fun Content(warningUM: YieldSupplyDepositedWarningUM) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(color = TangemTheme.colors.background.primary)
             .padding(
                 start = 16.dp,
                 end = 16.dp,
@@ -145,7 +144,7 @@ private class YieldSupplyWarningContentProvider : PreviewParameterProvider<Yield
         fallbackTint = TangemColorPalette.Black,
         fallbackBackground = TangemColorPalette.Meadow,
         isGrayscale = false,
-        showCustomBadge = false,
+        shouldShowCustomBadge = false,
     )
 
     override val values: Sequence<YieldSupplyDepositedWarningUM>

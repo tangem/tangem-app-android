@@ -41,6 +41,11 @@ internal class DefaultCustomTokensRepository(
     private val networkFactory: NetworkFactory,
 ) : CustomTokensRepository {
 
+    private val excludedBlockchainsForCustom = setOf(
+        Blockchain.Quai,
+        Blockchain.QuaiTestnet,
+    )
+
     private val cryptoCurrencyFactory = CryptoCurrencyFactory(excludedBlockchains)
     private val userTokensResponseFactory = UserTokensResponseFactory()
     private val tokenAddressConverter = TokenAddressesConverter()
@@ -268,6 +273,7 @@ internal class DefaultCustomTokensRepository(
                 val scanResponse = userWallet.scanResponse
 
                 Blockchain.entries
+                    .filter { it !in excludedBlockchainsForCustom }
                     .mapNotNull { blockchain ->
                         val canHandleBlockchain = scanResponse.card.canHandleBlockchain(
                             blockchain,

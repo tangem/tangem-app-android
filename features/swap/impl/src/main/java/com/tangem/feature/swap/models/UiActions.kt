@@ -32,4 +32,5 @@ data class UiActions(
     val onSuccess: () -> Unit,
     val onLinkClick: (String) -> Unit,
     val onReceiveCardWarningClick: () -> Unit,
+    val onOpenLearnMoreAboutApproveClick: () -> Unit,
 )
