@@ -192,7 +192,7 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
                         updatedTransactionList = updatedTransactionList,
                         feeValue = feeSum,
                         maxNetworkFee = maxFee,
-                        estimatedFeeValue = estimatedFee,
+                        estimatedFeeValueInTokenCurrency = estimatedFee,
                         minAmount = minAmount,
                     ),
                 )
