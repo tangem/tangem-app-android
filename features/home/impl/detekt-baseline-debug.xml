@@ -1,0 +1,14 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>BooleanPropertyNaming:HomeButtons.kt$HomeButtonsState$val btnScanStateInProgress: Boolean</ID>
+    <ID>BooleanPropertyNaming:HomeUM.kt$HomeUM$val scanInProgress: Boolean</ID>
+    <ID>MultilineLambdaItParameter:HomeModel.kt$HomeModel${ delay(HIDE_PROGRESS_DELAY) setLoading(false) when (it) { is SaveWalletError.DataError -&gt; Timber.e(it.toString(), "Unable to save user wallet") is SaveWalletError.WalletAlreadySaved -&gt; appRouter.replaceAll(AppRoute.Wallet) } }</ID>
+    <ID>MultilineLambdaItParameter:StoriesProgressBar.kt${ when (index) { currentStep -&gt; it.fillMaxWidth(progress.value) in 0 until currentStep -&gt; it.fillMaxWidth(fraction = 1f) else -&gt; it } }</ID>
+    <ID>NonBooleanPropertyPrefixedWithIs:StoriesAnimation.kt$val isFirstStepLaunched = remember { mutableStateOf(false) }</ID>
+    <ID>NonBooleanPropertyPrefixedWithIs:StoriesAnimation.kt$val isLaunched = remember { mutableStateOf(false) }</ID>
+    <ID>NonBooleanPropertyPrefixedWithIs:StoriesAnimation.kt$val isSecondStepLaunched = remember { mutableStateOf(false) }</ID>
+    <ID>ReusedModifierInstance:HomeButtonsV2.kt$StoriesButton( modifier = modifier, text = stringResourceSafe(id = R.string.common_get_started), useDarkerColors = false, onClick = onGetStartedClick, )</ID>
+  </CurrentIssues>
+</SmellBaseline>

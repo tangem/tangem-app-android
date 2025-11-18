@@ -1,0 +1,26 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>MultilineLambdaItParameter:DefaultNFTRepository.kt$DefaultNFTRepository${ NFTCollections( network = network, content = NFTCollections.Content.Collections( collections = it ?.map { collection -&gt; nftSdkCollectionConverter.convert(network to collection) } ?.filter { it.id !is NFTCollection.Identifier.Unknown }, source = StatusSource.CACHE, ), ) }</ID>
+    <ID>MultilineLambdaItParameter:DefaultNFTRepository.kt$DefaultNFTRepository${ getNFTPersistenceStore(userWalletId, it).clear() getNFTRuntimeStore(userWalletId, it).clear() }</ID>
+    <ID>MultilineLambdaItParameter:DefaultNFTRepository.kt$DefaultNFTRepository${ if (it !is UnsupportedOperationException) { saveFailedStateInRuntime( userWalletId = userWalletId, network = network, error = it, ) } }</ID>
+    <ID>MultilineLambdaItParameter:DefaultNFTRepository.kt$DefaultNFTRepository${ if (it.id == collectionId) { it.changeAssetsStatusSource(source) } else { it } }</ID>
+    <ID>MultilineLambdaItParameter:DefaultNFTRepository.kt$DefaultNFTRepository${ if (it.identifier == sdkCollectionId) { it.copy(assets = assets) } else { it } }</ID>
+    <ID>MultilineLambdaItParameter:DefaultNFTRepository.kt$DefaultNFTRepository${ networkFactory.create( blockchain = it, extraDerivationPath = null, userWallet = userWallet, ) }</ID>
+    <ID>MultilineLambdaItParameter:DefaultNFTRepository.kt$DefaultNFTRepository${ nftRuntimeStores[storeId] = it val storedCollections = getStoredCollections(userWalletId, network) val storedPrices = getStoredPrices(userWalletId, network) it.initialize( collections = storedCollections, prices = storedPrices, ) }</ID>
+    <ID>MultilineLambdaItParameter:DefaultNFTRepository.kt$DefaultNFTRepository${ saveCollectionsInRuntime( userWalletId = userWalletId, network = network, collections = it, ) saveCollectionsInPersistence( userWalletId = userWalletId, network = network, collections = it, ) }</ID>
+    <ID>MultilineLambdaItParameter:DefaultNFTRepository.kt$DefaultNFTRepository${ saveFailedStateInRuntime( userWalletId = userWalletId, network = network, error = it, ) }</ID>
+    <ID>MultilineLambdaItParameter:DefaultNFTRepository.kt$DefaultNFTRepository${ storedCollections.copy( content = it, ) }</ID>
+    <ID>MultilineLambdaItParameter:DefaultNFTRepository.kt$DefaultNFTRepository${ val (assetId, _) = it assetIdConverter.convert(assetId) }</ID>
+    <ID>MultilineLambdaItParameter:DefaultNFTRepository.kt$DefaultNFTRepository${ val (assetId, price) = it val nftCurrency = getNFTCurrency(network) NFTSalePrice.Value( assetId = assetId, value = price.value, fiatValue = null, symbol = nftCurrency.symbol, decimals = nftCurrency.decimals, ) }</ID>
+    <ID>MultilineLambdaItParameter:DefaultNFTRepository.kt$DefaultNFTRepository${ val assetId = assetIdConverter.convert(it.identifier) val price = getNFTRuntimeStore(userWalletId, network).getSalePriceSync(assetId) if (price is NFTSalePrice.Empty || price is NFTSalePrice.Error) { refreshSalePrice(userWalletId, network, sdkCollectionId, it.identifier) } }</ID>
+    <ID>MultilineLambdaItParameter:DefaultNFTRepository.kt$DefaultNFTRepository${ val sdkAssetId = assetIdConverter.convertBack(assetId) saveSalePriceInPersistence(userWalletId, network, sdkAssetId, it) }</ID>
+    <ID>NamedArguments:DefaultNFTRepository.kt$DefaultNFTRepository$refreshSalePrice(userWalletId, network, sdkCollectionId, it.identifier)</ID>
+    <ID>NamedArguments:DefaultNFTRepository.kt$DefaultNFTRepository$saveSalePriceInPersistence(userWalletId, network, sdkAssetId, it)</ID>
+    <ID>NoNameShadowing:DefaultNFTRepository.kt$DefaultNFTRepository${ it.id !is NFTCollection.Identifier.Unknown }</ID>
+    <ID>SuspendFunSwallowedCancellation:DefaultNFTRepository.kt$DefaultNFTRepository$runCatching</ID>
+    <ID>SuspendFunWithFlowReturnType:DefaultNFTRepository.kt$DefaultNFTRepository$suspend</ID>
+    <ID>UnnecessaryLet:DefaultNFTRepository.kt$DefaultNFTRepository$let { prices -&gt; prices .mapKeys { val (assetId, _) = it assetIdConverter.convert(assetId) } .mapValues { val (assetId, price) = it val nftCurrency = getNFTCurrency(network) NFTSalePrice.Value( assetId = assetId, value = price.value, fiatValue = null, symbol = nftCurrency.symbol, decimals = nftCurrency.decimals, ) } }</ID>
+  </CurrentIssues>
+</SmellBaseline>
