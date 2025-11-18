@@ -5,7 +5,6 @@ import com.tangem.common.test.domain.card.MockScanResponseFactory
 import com.tangem.common.test.domain.network.MockNetworkStatusFactory
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.common.test.domain.wallet.MockUserWalletFactory
-import com.tangem.common.test.utils.getEmittedValues
 import com.tangem.data.common.network.NetworkFactory
 import com.tangem.data.networks.models.SimpleNetworkStatus
 import com.tangem.data.networks.store.NetworksStatusesStore
@@ -14,6 +13,7 @@ import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.card.configs.GenericCardConfig
 import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.networks.multi.MultiNetworkStatusProducer
+import com.tangem.test.core.getEmittedValues
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
 import kotlinx.coroutines.flow.*
