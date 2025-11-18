@@ -67,12 +67,15 @@ internal class TxHistoryItemStateConverter(
         }
     }
 
+    @Suppress("CyclomaticComplexMethod")
     private fun TxInfo.extractTitle(): TextReference = when (val type = type) {
         is TransactionType.Approve -> resourceReference(R.string.common_approval)
         is TransactionType.Operation -> stringReference(type.name)
         is TransactionType.Swap -> resourceReference(R.string.common_swap)
         is TransactionType.Transfer -> resourceReference(R.string.common_transfer)
-        is TransactionType.YieldSupply -> resourceReference(R.string.yield_module_supply)
+        is TransactionType.YieldSupply.Enter -> resourceReference(R.string.yield_module_transaction_enter)
+        is TransactionType.YieldSupply.Exit -> resourceReference(R.string.yield_module_transaction_exit)
+        is TransactionType.YieldSupply.Topup -> resourceReference(R.string.yield_module_transaction_topup)
         is TransactionType.Staking.Stake -> resourceReference(R.string.common_stake)
         is TransactionType.Staking.Unstake -> resourceReference(R.string.common_unstake)
         is TransactionType.Staking.Vote -> resourceReference(R.string.staking_vote)
