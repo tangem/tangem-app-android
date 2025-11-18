@@ -48,10 +48,7 @@ dependencies {
 
     /* Test */
     testImplementation(projects.common.test)
-    testImplementation(deps.test.coroutine)
-    testImplementation(deps.test.junit5)
+    testImplementation(projects.test.core)
     testRuntimeOnly(deps.test.junit5.engine)
-    testImplementation(deps.test.mockk)
-    testImplementation(deps.test.truth)
     testImplementation(deps.moshi)
 }

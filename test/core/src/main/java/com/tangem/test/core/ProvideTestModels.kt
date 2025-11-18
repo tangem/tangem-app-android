@@ -1,4 +1,4 @@
-package com.tangem.common.test.utils
+package com.tangem.test.core
 
 import org.junit.jupiter.params.provider.MethodSource
 
