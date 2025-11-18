@@ -20,15 +20,16 @@ import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import java.math.BigDecimal
-import javax.inject.Inject
 
 private const val DECIMALS_AMOUNT = 2
 
 @Suppress("CyclomaticComplexMethod", "LongMethod")
-internal class WcSendAndReceiveBlockAidUiConverter @Inject constructor(
-    private val estimatedWalletChangeUMConverter: WcEstimatedWalletChangeUMConverter,
-    private val spendAllowanceUMConverter: WcSpendAllowanceUMConverter,
-) : Converter<WcSendAndReceiveBlockAidUiConverter.Input, WcSendReceiveTransactionCheckResultsUM> {
+internal class WcSendAndReceiveBlockAidUiConverter :
+    Converter<WcSendAndReceiveBlockAidUiConverter.Input, WcSendReceiveTransactionCheckResultsUM> {
+
+    private val estimatedWalletChangeUMConverter = WcEstimatedWalletChangeUMConverter()
+    private val spendAllowanceUMConverter = WcSpendAllowanceUMConverter()
+
     override fun convert(value: Input): WcSendReceiveTransactionCheckResultsUM {
         val description = value.result.description?.let { if (it.isNotEmpty()) TextReference.Str(it) else null }
         val simulation = value.result.simulation
@@ -118,7 +119,12 @@ internal class WcSendAndReceiveBlockAidUiConverter @Inject constructor(
                 when (data) {
                     is SimulationData.SendAndReceive, SimulationData.NoWalletChangesDetected -> null
                     is SimulationData.Approve -> value.approvedAmount?.let {
-                        spendAllowanceUMConverter.convert(it)
+                        spendAllowanceUMConverter.convert(
+                            WcSpendAllowanceUMConverter.Input(
+                                approvedAmount = it,
+                                onLearnMoreClick = value.onApproveLearnMoreClick,
+                            ),
+                        )
                     }
                 }
             },
@@ -128,6 +134,7 @@ internal class WcSendAndReceiveBlockAidUiConverter @Inject constructor(
     data class Input(
         val result: CheckTransactionResult,
         val approvedAmount: WcApprovedAmount?,
+        val onApproveLearnMoreClick: () -> Unit,
     )
 }
 

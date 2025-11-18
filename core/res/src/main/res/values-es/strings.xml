@@ -182,6 +182,7 @@
   <string name="common_enable">Activar</string>
   <string name="common_enabled">Activado</string>
   <string name="common_error">Error</string>
+  <string name="common_estimated_fee">Comisión de red por recarga</string>
   <string name="common_exchange">Intercambiar</string>
   <string name="common_explore">Explore</string>
   <string name="common_explore_transaction_history">Explore historial de transacciones</string>
@@ -194,6 +195,7 @@
   <string name="common_fee_selector_title">Velocidad y tarifa</string>
   <string name="common_finish">Finalizar</string>
   <string name="common_generate_addresses">Sincronizar direcciones</string>
+  <string name="common_get_started">Comenzar</string>
   <string name="common_go_to_provider">Ir al proveedor</string>
   <string name="common_go_to_token">Ir al token</string>
   <string name="common_got_it">Entendido</string>
@@ -396,6 +398,7 @@
   <string name="express_provider">Proveedor</string>
   <string name="express_provider_best_rate">Mejor tarifa</string>
   <string name="express_provider_fca_warning_list">Lista de advertencias de la FCA</string>
+  <string name="express_provider_great_rate">Mejor opción</string>
   <string name="express_provider_in_fca_warning_list">Proveedor en la lista de advertencias de la FCA</string>
   <string name="express_provider_max_amount">Disponible hasta %s</string>
   <string name="express_provider_min_amount">Disponible desde %s</string>
@@ -780,6 +783,7 @@
   <string name="organize_tokens_sort_by_balance">Por saldo</string>
   <string name="organize_tokens_title">Organizar tokens</string>
   <string name="organize_tokens_ungroup">Desagrupar</string>
+  <string name="provider_name_support">Soporte de %s</string>
   <string name="push_notifications_more_info">Más información</string>
   <string name="push_notifications_permission_alert_description">Puede activar las Notificaciones para Tangem en Ajustes.</string>
   <string name="push_notifications_permission_alert_negative_button">Activar más tarde</string>
@@ -973,6 +977,7 @@
   <string name="settings_forget_wallet_footer">Esto eliminará la wallet de la aplicación. La wallet en sí puede\nañadirse de nuevo.</string>
   <string name="settings_wallet_name_title">Nombre</string>
   <string name="stake_token_description">Haga que su token trabaje para Ud.</string>
+  <string name="staking_account_initialization_message">Para comenzar a hacer staking, debe activar su cuenta TON con una auto-transacción de 1 TON. Los fondos permanecerán en su billetera; este paso solo es necesario para habilitar su cuenta para staking.</string>
   <string name="staking_amount_requirement_error">La cantidad del staking debe ser al menos %s</string>
   <string name="staking_amount_tron_integer_error">La cantidad de staking se redondeará a %1$s TRX debido a las reglas de la red.</string>
   <string name="staking_amount_tron_integer_error_unstaking">La cantidad de unstaking se redondeará a %1$s TRX debido a las reglas de la red.</string>
@@ -980,7 +985,8 @@
   <string name="staking_details_account_fee">Tarifa de staking de la cuenta </string>
   <string name="staking_details_account_fee_info">Una cuenta de staking es una cuenta especial donde se almacenan los tokens SOL de staking. Se crea cuando delegas sus tokens a un validador para participar en la validación de transacciones y ganar recompensas. Se cobra una pequeña tarifa por crear la cuenta de staking, que se devuelve una vez que se completa el staking.</string>
   <string name="staking_details_annual_percentage_rate">Porcentaje de rendimiento anual</string>
-  <string name="staking_details_annual_percentage_rate_info">El porcentaje de rendimiento anual que podrá ganar como participante en el staking.</string>
+  <string name="staking_details_annual_percentage_rate_info">APR: Muestra el interés que podrías ganar en un año sin capitalización. Los intereses ganados no se añaden a tu saldo, por lo que no ganas intereses adicionales sobre ellos.</string>
+  <string name="staking_details_annual_percentage_yield_info">APY: Muestra el total de intereses que podrías ganar en un año con capitalización. La capitalización significa que los intereses ganados se añaden a tu saldo, por lo que también ganas intereses sobre esos intereses.</string>
   <string name="staking_details_apr">APR</string>
   <string name="staking_details_apy">APY</string>
   <string name="staking_details_auto_claiming_rewards_daily_text">Las recompensas se acumulan automáticamente en su saldo de staking diariamente.</string>
@@ -1037,6 +1043,7 @@
   <string name="staking_notification_restake_rewards_text">Reinvierta las recompensas obtenidas en el monto apostado, aumentando las ganancias potenciales.</string>
   <string name="staking_notification_restake_text">La opción de volver a staking le permite mover sus fondos de un validador a otro sin necesidad de retirarlos.</string>
   <string name="staking_notification_stake_entire_balance_text">Está a punto de hacer staking con todo su saldo. Recomendamos dejar una pequeña cantidad para cubrir las tarifas de red para hacer unstaking o reclamar recompensas.</string>
+  <string name="staking_notification_ton_account_initialization_message">Para empezar a hacer staking, primero debes activar tu cuenta de TON.</string>
   <string name="staking_notification_ton_activate_account">Para empezar a hacer staking en TON, realice primero una transacción de salida de cualquier importe - esto activará su billetera.</string>
   <string name="staking_notification_ton_extra_reserve_info">Es posible que se requieran hasta 0.2 TON además de la tarifa de red para completar la transacción. Cualquier cantidad no utilizada será reembolsada.</string>
   <string name="staking_notification_ton_extra_reserve_is_required">Se requieren 0.2 TON para realizar esta operación, además de la tarifa de red. Por favor, recargue su saldo.</string>
@@ -1069,6 +1076,7 @@
   <string name="staking_reward_schedule_month">Mensual</string>
   <string name="staking_reward_schedule_week">Semanal</string>
   <string name="staking_rewards">Recompensas</string>
+  <string name="staking_solana_details_auto_claiming_rewards_daily_text">Las recompensas en Solana se agregan automáticamente a tu saldo de staking y no pueden mostrarse por separado.</string>
   <string name="staking_stake_locked">El stake está bloqueado</string>
   <string name="staking_stake_more">Hacer más staking</string>
   <string name="staking_stake_more_button_unavailability_reason">Al hacer staking de %1$s, se realiza sobre todo su saldo de %2$s. Cualquier %2$s adicional que deposite en su billetera Tangem también se pondrá en staking automáticamente.</string>
@@ -1156,6 +1164,7 @@
   <string name="token_button_unavailability_reason_pending_transaction_send">El envío de fondos estará disponible una vez que se complete(n) la(s) transacción(es) pendiente(s) en la red %s</string>
   <string name="token_button_unavailability_reason_sell_unavailable">Vender %s no es compatible con los proveedores actuales, pero estamos trabajando para agregar más opciones.</string>
   <string name="token_button_unavailability_reason_staking_unavailable">El staking de %s no es compatible con los proveedores actuales, pero estamos trabajando para agregar más opciones.</string>
+  <string name="token_button_unavailability_reason_yield_supply_approval">Se ha revocado la aprobación. Sus fondos permanecen en modo de rendimiento. Para realizar acciones, vuelva al modo de rendimiento y otorgue el permiso nuevamente.</string>
   <string name="token_details_generate_xpub">Generar XPUB</string>
   <string name="token_details_hide_alert_hide">Ocultar</string>
   <string name="token_details_hide_alert_message">Está a punto de ocultar este token de la pantalla principal. Puede volver a agregarlo en cualquier momento a través de la página de gestión de tokens.</string>
@@ -1490,7 +1499,8 @@
   <string name="yield_module_balance_info_sheet_subtitle">Sus fondos se suministran actualmente al protocolo Aave, pero puede gestionarlos en cualquier momento.</string>
   <string name="yield_module_balance_info_sheet_title">Su %s está depositado en Aave</string>
   <string name="yield_module_chart_loading_error">No se puede cargar el gráfico...</string>
-  <string name="yield_module_deposit_error_notification_title">La cantidad recibida, %1$s %2$s no fue suministrada a Aave.</string>
+  <string name="yield_module_deposit_error_notification_title">El suministro de %1$s %2$s a Aave está pendiente.</string>
+  <string name="yield_module_disable_button">Desactivar el modo de rendimiento</string>
   <string name="yield_module_earn_badge">APY %1$s%%</string>
   <string name="yield_module_earn_sheet_available_title">Disponible</string>
   <string name="yield_module_earn_sheet_current_apy_title">APY actual</string>
@@ -1508,7 +1518,7 @@
   <string name="yield_module_fee_policy_sheet_fee_note">Se deducirá una comisión de red aproximada de %1$s (%2$s) de cada recarga futura, y no superará su límite de %3$s (%4$s).</string>
   <string name="yield_module_fee_policy_sheet_max_fee_note">Si las tarifas de red superan la tarifa máxima, la transacción no se realizará hasta que disminuyan. Puede cambiar este límite más adelante.</string>
   <string name="yield_module_fee_policy_sheet_max_fee_title">Tarifa máxima</string>
-  <string name="yield_module_fee_policy_sheet_min_amount_note">El monto mínimo se calcula a partir de la tarifa de red actual para garantizar que no exceda 4%%, lo que hace que el mínimo sea %1$s (%2$s).</string>
+  <string name="yield_module_fee_policy_sheet_min_amount_note">El monto mínimo se calcula en función de la comisión de la red actual para que no supere el 4%% del importe de la recarga, lo que hace que el mínimo sea %1$s (%2$s).</string>
   <string name="yield_module_fee_policy_sheet_min_amount_title">Recarga mínima</string>
   <string name="yield_module_fee_policy_sheet_title">Política de tarifas</string>
   <string name="yield_module_fee_policy_tangem_service_fee_title">Tangem también cobra una comisión de servicio del 15% sobre el rendimiento obtenido.</string>
@@ -1519,11 +1529,12 @@
   <string name="yield_module_network_fee_unreachable_notification_description">Compruebe su conexión de red</string>
   <string name="yield_module_network_fee_unreachable_notification_title">Información de tarifas de red inaccesible</string>
   <string name="yield_module_promo_screen_auto_balance_subtitle">Cada depósito que realice se suministrará a Aave automáticamente.</string>
+  <string name="yield_module_promo_screen_auto_balance_subtitle_v2">Todos los %1$s en tu cuenta se suministrarán automáticamente a Aave.</string>
   <string name="yield_module_promo_screen_auto_balance_title">Transferencia automática a Aave</string>
   <string name="yield_module_promo_screen_cash_out_subtitle">Envíe, intercambie o venda sus fondos al instante, cuando quiera.</string>
-  <string name="yield_module_promo_screen_cash_out_title">Acceda a sus fondos en cualquier momento</string>
+  <string name="yield_module_promo_screen_cash_out_title">Acceso inmediato</string>
   <string name="yield_module_promo_screen_how_it_works_button_title">¿Cómo funciona?</string>
-  <string name="yield_module_promo_screen_self_custodial_subtitle">Aave es un protocolo descentralizado que administra más de 61 billones de dólares en valor total.</string>
+  <string name="yield_module_promo_screen_self_custodial_subtitle">Aave es un protocolo on-chain para crear mercados de liquidez no custodiales y ganar intereses a tasa variable.</string>
   <string name="yield_module_promo_screen_self_custodial_title">Descentralizado y autocustodiado</string>
   <string name="yield_module_promo_screen_terms_disclaimer">Al utilizar este servicio, usted acepta que el proveedor\n%1$s y %2$s</string>
   <string name="yield_module_promo_screen_title">Conectar Aave</string>
@@ -1539,19 +1550,25 @@
   <string name="yield_module_start_earning_sheet_description">Su %s se suministrará a Aave, pero seguirá siendo gestionable.</string>
   <string name="yield_module_start_earning_sheet_fee_policy">Ver política de tarifas</string>
   <string name="yield_module_start_earning_sheet_next_deposits">Sus próximas recargas se suministrarán automáticamente a Aave.</string>
+  <string name="yield_module_start_earning_sheet_next_deposits_v2">Todos tus futuros depósitos %1$s se suministrarán automáticamente a Aave.</string>
   <string name="yield_module_status_active">Activo</string>
   <string name="yield_module_status_paused">En pausa</string>
-  <string name="yield_module_stop_earning">Desactivar el modo de rendimiento</string>
+  <string name="yield_module_stop_earning">Desactivación del modo de rendimiento</string>
   <string name="yield_module_stop_earning_sheet_description">Al desactivar esto, retirará sus fondos de Aave a %s en su billetera y dejará de ganar recompensas.</string>
-  <string name="yield_module_stop_earning_sheet_fee_note">La comisión de red se deducirá del importe que retire.</string>
+  <string name="yield_module_stop_earning_sheet_fee_note">Se cobra una comisión de red por la blockchain al salir del modo Yield.</string>
+  <string name="yield_module_stop_earning_sheet_title">Desactivar el modo de rendimiento</string>
+  <string name="yield_module_supply">Suministrar</string>
   <string name="yield_module_supply_apr">Suministro APY</string>
   <string name="yield_module_token_details_earn_notification_apy">APY</string>
+  <string name="yield_module_token_details_earn_notification_description">Los intereses se devengan automáticamente</string>
   <string name="yield_module_token_details_earn_notification_earning_on_your_balance_subtitle">Los intereses se devengan automáticamente</string>
   <string name="yield_module_token_details_earn_notification_earning_on_your_balance_title">Modo de rendimiento</string>
   <string name="yield_module_token_details_earn_notification_processing">Procesando su depósito</string>
+  <string name="yield_module_token_details_earn_notification_title">Modo Rendimiento</string>
   <string name="yield_module_transfer_mode_automatic">Automático</string>
   <string name="yield_module_unable_to_cover_fee_description">Deposite algo de %1$s %2$s para cubrir la tarifa de red para las transacciones</string>
   <string name="yield_module_unable_to_cover_fee_title">No se puede cubrir la tarifa %s</string>
   <string name="yield_module_unavailable_subtitle">El servicio de intereses no está disponible en este momento. Vuelva a intentarlo más tarde.</string>
-  <string name="yield_module_unavailable_title">Ganancias no disponibles</string>
+  <string name="yield_module_unavailable_title">Modo de rendimiento no disponible</string>
+  <string name="yield_supply_chart_loading_error">No se puede cargar el gráfico...</string>
 </resources>

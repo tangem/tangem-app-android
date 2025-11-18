@@ -21,7 +21,7 @@ fun TopAppBarButton(button: TopAppBarButtonUM, tint: Color, modifier: Modifier =
     when (button) {
         is TopAppBarButtonUM.Icon -> {
             IconButton(
-                enabled = button.enabled,
+                enabled = button.isEnabled,
                 modifier = modifier.size(TangemTheme.dimens.size32),
                 onClick = button.onClicked,
             ) {
@@ -36,7 +36,7 @@ fun TopAppBarButton(button: TopAppBarButtonUM, tint: Color, modifier: Modifier =
         is TopAppBarButtonUM.Text -> {
             Text(
                 modifier = modifier
-                    .conditional(button.enabled) {
+                    .conditional(button.isEnabled) {
                         clickable { button.onClicked() }
                     }
                     .padding(4.dp),

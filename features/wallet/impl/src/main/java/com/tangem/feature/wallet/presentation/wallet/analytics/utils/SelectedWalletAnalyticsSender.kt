@@ -29,6 +29,14 @@ internal class SelectedWalletAnalyticsSender @Inject constructor(
      * */
     private fun getEvent(userWallet: UserWallet): AnalyticsEvent? = when {
         userWallet.isLocked -> WalletScreenAnalyticsEvent.MainScreen.WalletUnlock
-        else -> null
+
+        else -> WalletScreenAnalyticsEvent.MainScreen.WalletSelected(userWallet.isImported())
+    }
+
+    private fun UserWallet.isImported(): Boolean {
+        return when (this) {
+            is UserWallet.Cold -> isImported
+            is UserWallet.Hot -> true
+        }
     }
 }

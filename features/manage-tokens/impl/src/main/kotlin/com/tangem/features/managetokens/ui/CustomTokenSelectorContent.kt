@@ -163,9 +163,9 @@ private fun NetworkItem(model: CurrencyNetworkUM, modifier: Modifier = Modifier)
                     url = null,
                     fallbackResId = model.iconResId,
                     isGrayscale = false,
-                    showCustomBadge = false,
+                    shouldShowCustomBadge = false,
                 ),
-                showCustom = false,
+                shouldShowCustom = false,
             )
         },
         action = {
