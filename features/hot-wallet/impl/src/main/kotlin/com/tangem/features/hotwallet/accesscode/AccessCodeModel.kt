@@ -6,10 +6,11 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.ui.components.fields.PinTextColor
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
-import com.tangem.domain.core.wallets.UserWalletsListRepository
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.settings.CanUseBiometryUseCase
@@ -56,10 +57,11 @@ internal class AccessCodeModel @Inject constructor(
     private val params = paramsContainer.require<AccessCodeComponent.Params>()
 
     internal val uiState: StateFlow<AccessCodeUM>
-    field = MutableStateFlow(getInitialState())
+        field = MutableStateFlow(getInitialState())
 
     private fun getInitialState() = AccessCodeUM(
         accessCode = "",
+        accessCodeColor = PinTextColor.Primary,
         onAccessCodeChange = ::onAccessCodeChange,
         isConfirmMode = params.accessCodeToConfirm != null,
         buttonEnabled = false,
@@ -75,6 +77,12 @@ internal class AccessCodeModel @Inject constructor(
                     value == params.accessCodeToConfirm
                 } else {
                     value.length == uiState.value.accessCodeLength
+                },
+                accessCodeColor = when {
+                    params.accessCodeToConfirm == null -> PinTextColor.Primary
+                    value.length != uiState.value.accessCodeLength -> PinTextColor.Primary
+                    value == params.accessCodeToConfirm -> PinTextColor.Success
+                    else -> PinTextColor.WrongCode
                 },
             )
         }

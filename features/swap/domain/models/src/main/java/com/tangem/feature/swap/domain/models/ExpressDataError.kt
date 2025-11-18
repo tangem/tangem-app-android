@@ -6,6 +6,8 @@ sealed class ExpressDataError {
 
     abstract val code: Int
 
+    open val message: String? = null
+
     data class BadRequest(override val code: Int) : ExpressDataError()
 
     data class SwapsAreUnavailableNowError(override val code: Int) : ExpressDataError()
@@ -56,5 +58,15 @@ sealed class ExpressDataError {
 
     data object UnknownError : ExpressDataError() {
         override val code: Int = -1
+    }
+
+    data object TooLargeSolanaTransactionError : ExpressDataError() {
+        override val code: Int = -2
+        override val message: String = "tooLargeSolanaTransaction"
+    }
+
+    data object DexActiveSupplyError : ExpressDataError() {
+        override val code: Int = -3
+        override val message: String = "dexActiveSupplyError"
     }
 }

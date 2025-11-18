@@ -2,7 +2,9 @@ package com.tangem.datasource.utils
 
 import android.os.Build
 import com.tangem.datasource.api.common.AuthProvider
+import com.tangem.datasource.api.common.config.ApiEnvironment
 import com.tangem.datasource.utils.RequestHeader.CacheControlHeader.checkHeaderValueOrEmpty
+import com.tangem.utils.Provider
 import com.tangem.utils.ProviderSuspend
 import com.tangem.utils.info.AppInfoProvider
 import com.tangem.utils.version.AppVersionProvider
@@ -41,13 +43,20 @@ sealed class RequestHeader(vararg pairs: Pair<String, ProviderSuspend<String>>) 
     )
 
     /**
+     * Use ONLY for tangemApi (not express or yields)
+     */
+    class TangemApiKeyHeader(authProvider: AuthProvider, apiEnvironment: Provider<ApiEnvironment>) : RequestHeader(
+        "api-key" to authProvider.getApiKey(apiEnvironment),
+    )
+
+    /**
      * Use it to avoid crash in okhttp headers
      */
     fun String.checkHeaderValueOrEmpty(): String {
         for (i in this.indices) {
             val c = this[i]
-            val charCondition = c == '\t' || c in '\u0020'..'\u007e'
-            if (!charCondition) {
+            val isChar = c == '\t' || c in '\u0020'..'\u007e'
+            if (!isChar) {
                 return ""
             }
         }

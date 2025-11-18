@@ -36,12 +36,12 @@ fun SwapCurrencies.getGroupWithDirection(swapDirection: SwapDirection): SwapCurr
  *
  * @param available list of available currencies to swap
  * @param available list of unavailable currencies to swap
- * @param afterSearch flag indicates whether user searched token
+ * @param isAfterSearch flag indicates whether user searched token
  */
 data class SwapCurrenciesGroup(
     val available: List<SwapCryptoCurrency>,
     val unavailable: List<SwapCryptoCurrency>,
-    val afterSearch: Boolean,
+    val isAfterSearch: Boolean,
 )
 
 /**
