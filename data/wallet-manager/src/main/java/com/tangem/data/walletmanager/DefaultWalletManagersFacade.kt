@@ -64,7 +64,7 @@ internal class DefaultWalletManagersFacade @Inject constructor(
     blockchainSDKFactory: BlockchainSDKFactory,
 ) : WalletManagersFacade {
 
-    private val demoConfig by lazy { DemoConfig() }
+    private val demoConfig by lazy { DemoConfig }
     private val resultFactory by lazy { UpdateWalletManagerResultFactory() }
     private val walletManagerFactory by lazy { WalletManagerFactory(blockchainSDKFactory) }
     private val sdkTokenConverter by lazy { SdkTokenConverter() }

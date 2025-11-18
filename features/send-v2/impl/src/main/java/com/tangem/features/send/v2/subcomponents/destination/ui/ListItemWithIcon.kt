@@ -105,7 +105,8 @@ private fun ListItemWithIcon(
         modifier = modifier
             .fillMaxWidth()
             .clickable { hapticFeedback() }
-            .padding(horizontal = 12.dp),
+            .padding(horizontal = 12.dp)
+            .testTag(SendAddressScreenTestTags.RECENT_ADDRESS_ITEM),
     ) {
         IdentIcon(
             address = title,
@@ -139,7 +140,8 @@ private fun ListItemWithIcon(
                             .padding(end = 2.dp)
                             .size(16.dp)
                             .background(TangemTheme.colors.background.tertiary, CircleShape)
-                            .padding(2.dp),
+                            .padding(2.dp)
+                            .testTag(SendAddressScreenTestTags.RECENT_ADDRESS_TRANSACTION_ICON),
                     )
                 }
                 val (text, offset) = remember(subtitle, info) {

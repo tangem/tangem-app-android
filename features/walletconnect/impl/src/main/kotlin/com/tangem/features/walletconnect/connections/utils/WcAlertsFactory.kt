@@ -124,6 +124,7 @@ internal object WcAlertsFactory {
                 text = resourceReference(R.string.common_got_it)
                 onClick { onDismiss() }
             }
+            onDismissRequest = onDismiss
         }
     }
 

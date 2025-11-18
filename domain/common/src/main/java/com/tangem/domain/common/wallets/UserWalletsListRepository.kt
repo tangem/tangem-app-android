@@ -123,6 +123,11 @@ interface UserWalletsListRepository {
      */
     suspend fun clearPersistentData()
 
+    /**
+     * Checks if there are any secured wallets (wallets that are not locked with [LockMethod.NoLock]).
+     */
+    suspend fun hasSecuredWallets(): Boolean
+
     sealed class LockMethod {
         data object Biometric : LockMethod()
         class AccessCode(val accessCode: CharArray) : LockMethod()

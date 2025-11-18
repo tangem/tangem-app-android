@@ -600,7 +600,7 @@ internal class SwapAmountModel @Inject constructor(
             return
         }
 
-        if (!isSilentReload) { uiState.transformerUpdate(SwapQuoteLoadingStateTransformer) }
+        if (!isSilentReload) uiState.transformerUpdate(SwapQuoteLoadingStateTransformer)
 
         modelScope.launch {
             val quotes = state.swapCurrencies.getGroupWithDirection(state.swapDirection).available.filter {

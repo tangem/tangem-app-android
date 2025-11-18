@@ -63,7 +63,8 @@ class GetOnrampOffersUseCase(
             recentOffer = recentOffer,
             bestRateOffer = bestRateOffer,
             fastestOffer = fastestOffer,
-            allOffers = offers,
+            allQuotes = quotes,
+            isSingleOffer = offers.size == 1,
         )
     }
 
@@ -143,10 +144,9 @@ class GetOnrampOffersUseCase(
         recentOffer: OnrampOffer?,
         bestRateOffer: OnrampOffer?,
         fastestOffer: OnrampOffer?,
-        allOffers: List<OnrampOffer>,
+        allQuotes: List<OnrampQuote>,
+        isSingleOffer: Boolean,
     ): List<OnrampOffersBlock> {
-        val isSingleOffer = allOffers.size == 1
-
         val recommendedOffers = buildRecommendedOffers(
             recentOffer = recentOffer,
             bestRateOffer = bestRateOffer,
@@ -155,7 +155,7 @@ class GetOnrampOffersUseCase(
         )
 
         val shownOffersCount = (if (recentOffer != null) 1 else 0) + recommendedOffers.size
-        val hasMoreOffers = allOffers.size > shownOffersCount
+        val hasMoreOffers = allQuotes.size > shownOffersCount
 
         return buildList {
             if (recentOffer != null) {
@@ -173,7 +173,7 @@ class GetOnrampOffersUseCase(
                                 rateDif = if (bestRateOffer != null) recentOffer.rateDif else null,
                             ),
                         ),
-                        hasMoreOffers = false,
+                        hasMoreOffers = hasMoreOffers,
                     ),
                 )
             }

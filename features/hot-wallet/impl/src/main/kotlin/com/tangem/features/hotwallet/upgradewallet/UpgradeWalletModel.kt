@@ -101,7 +101,16 @@ internal class UpgradeWalletModel @Inject constructor(
                 .doOnSuccess {
                     // Check if user attempted to upgrade before but something went wrong and a full reset is required
                     val userWallet = coldUserWalletBuilderFactory.create(it).build()
-                    if (userWallet?.walletId == params.userWalletId && BackupValidator.isValidFull(it.card).not()) {
+                    val sameWalletButNotFinishedBackup by lazy {
+                        userWallet?.walletId == params.userWalletId &&
+                            BackupValidator.isValidFull(it.card).not()
+                    }
+                    val otherWalletAndAlreadyCreated by lazy {
+                        userWallet?.walletId != params.userWalletId &&
+                            it.card.wallets.map { it.curve }.toSet().isNotEmpty()
+                    }
+
+                    if (userWallet != null && (sameWalletButNotFinishedBackup || otherWalletAndAlreadyCreated)) {
                         startResetCardsFlow.emit(userWallet)
                         return@doOnSuccess
                     }

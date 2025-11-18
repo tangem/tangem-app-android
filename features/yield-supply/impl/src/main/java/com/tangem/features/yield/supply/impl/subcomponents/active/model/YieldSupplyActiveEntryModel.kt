@@ -11,6 +11,9 @@ import com.tangem.features.yield.supply.impl.subcomponents.approve.YieldSupplyAp
 import com.tangem.features.yield.supply.impl.subcomponents.stopearning.YieldSupplyStopEarningComponent
 import com.tangem.utils.TangemBlogUrlBuilder
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
 import javax.inject.Inject
 
 @ModelScoped
@@ -25,15 +28,25 @@ internal class YieldSupplyActiveEntryModel @Inject constructor(
 
     private val params = paramsContainer.require<YieldSupplyActiveEntryComponent.Params>()
 
+    val isTransactionInProgressFlow: StateFlow<Boolean>
+        field = MutableStateFlow(false)
+
     override fun onStopEarning() {
         router.push(YieldSupplyActiveRoute.Exit)
     }
 
     override fun onBackClick() {
-        router.pop()
+        if (!isTransactionInProgressFlow.value) {
+            router.pop()
+        }
+    }
+
+    override fun onTransactionProgress(inProgress: Boolean) {
+        isTransactionInProgressFlow.update { inProgress }
     }
 
     override fun onTransactionSent() {
+        isTransactionInProgressFlow.update { false }
         params.onDismiss()
     }
 

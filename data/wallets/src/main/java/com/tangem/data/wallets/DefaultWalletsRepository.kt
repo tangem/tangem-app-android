@@ -12,6 +12,7 @@ import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.*
 import com.tangem.datasource.api.tangemTech.models.SeedPhraseNotificationDTO.Status
+import com.tangem.datasource.api.tangemTech.models.WalletIdBody.WalletType
 import com.tangem.datasource.local.datastore.RuntimeStateStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
@@ -260,6 +261,10 @@ internal class DefaultWalletsRepository(
                 body = WalletIdBody(
                     walletId = userWalletId.stringValue,
                     name = userWallet.name,
+                    walletType = when (userWallet) {
+                        is UserWallet.Cold -> WalletType.COLD
+                        is UserWallet.Hot -> WalletType.HOT
+                    },
                 ),
             )
         }
@@ -386,10 +391,16 @@ internal class DefaultWalletsRepository(
     override suspend fun associateWallets(applicationId: String, wallets: List<UserWallet>) =
         withContext(dispatchers.io) {
             val publicKeys = authProvider.getCardsPublicKeys()
-            val walletsBody = wallets.filterIsInstance<UserWallet.Cold>().map { userWallet ->
+            val walletsBody = wallets.map { userWallet ->
                 WalletIdBodyConverter.convert(
                     userWallet = userWallet,
-                    publicKeys = publicKeys.filterKeys { userWallet.cardsInWallet.contains(it) },
+                    publicKeys = if (userWallet is UserWallet.Cold) {
+                        publicKeys.filterKeys {
+                            userWallet.cardsInWallet.contains(it)
+                        }
+                    } else {
+                        emptyMap()
+                    },
                 )
             }
 

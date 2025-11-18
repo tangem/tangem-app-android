@@ -48,7 +48,7 @@ internal class DefaultCurrenciesRepository(
     excludedBlockchains: ExcludedBlockchains,
 ) : CurrenciesRepository {
 
-    private val demoConfig = DemoConfig()
+    private val demoConfig = DemoConfig
     private val cryptoCurrencyFactory = CryptoCurrencyFactory(excludedBlockchains)
     private val userTokensResponseFactory = UserTokensResponseFactory()
     private val customTokensMerger = CustomTokensMerger(
@@ -602,7 +602,6 @@ internal class DefaultCurrenciesRepository(
         return demoConfig.isDemoCardId(userWallet.cardId) && response == null
     }
 
-    // TODO [REDACTED_JIRA]
     private suspend fun fetchExpressAssetsByNetworkIds(userWallet: UserWallet, userTokens: UserTokensResponse) {
         val tokens = userTokens.tokens.mapTo(hashSetOf()) { token ->
             ExpressAsset.ID(
