@@ -15,6 +15,7 @@ import com.tangem.pagination.exception.EndOfPaginationException
 import com.tangem.pagination.fetcher.BatchFetcher
 import com.tangem.pagination.toBatchFlow
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.runSuspendCatching
 import javax.inject.Inject
 
 /**
@@ -69,7 +70,7 @@ internal class DefaultNewsRepository @Inject constructor(
         private var state: NewsPaginationState? = null
 
         override suspend fun fetchFirst(requestParams: NewsListConfig): BatchFetchResult<List<ShortArticle>> {
-            return runCatching {
+            return runSuspendCatching {
                 loadPage(
                     page = FIRST_PAGE,
                     params = requestParams,
@@ -102,7 +103,7 @@ internal class DefaultNewsRepository @Inject constructor(
             val pageToLoad = if (shouldReset) FIRST_PAGE else currentState.nextPage
             val snapshot = if (shouldReset) overrideRequestParams.snapshot else currentState.snapshot
 
-            return runCatching {
+            return runSuspendCatching {
                 loadPage(
                     page = pageToLoad,
                     params = params,
