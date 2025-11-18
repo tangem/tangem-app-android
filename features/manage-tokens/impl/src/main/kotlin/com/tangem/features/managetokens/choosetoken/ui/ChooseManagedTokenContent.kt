@@ -153,7 +153,7 @@ private fun LazyListScope.contentItems(items: ImmutableList<CurrencyItemUM>) {
                             name = name,
                             type = symbol,
                             icon = icon,
-                            showCustom = false,
+                            shouldShowCustom = false,
                         )
                     },
                     modifier = Modifier
