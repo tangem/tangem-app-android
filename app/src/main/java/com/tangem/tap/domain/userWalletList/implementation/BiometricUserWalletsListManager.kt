@@ -63,12 +63,12 @@ internal class BiometricUserWalletsListManager(
     override val walletsCount: Int
         get() = state.value.userWallets.size
 
-    override suspend fun hasUserWallets(): Boolean = keysRepository.hasSavedEncryptionKeys()
-
     override val savedWalletsCount: Flow<Int>
         get() = state
             .mapLatest { walletsCount }
             .distinctUntilChanged()
+
+    override suspend fun hasUserWallets(): Boolean = keysRepository.hasSavedEncryptionKeys()
 
     override suspend fun unlock(type: UnlockType): CompletionResult<UserWallet> {
         return unlockAndSetSelectedUserWallet(type)
