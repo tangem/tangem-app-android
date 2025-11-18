@@ -18,11 +18,11 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.card.ScanCardProcessor
+import com.tangem.domain.common.wallets.error.SaveWalletError
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
-import com.tangem.domain.core.wallets.error.SaveWalletError
-import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
 import com.tangem.domain.wallets.usecase.ShouldSaveUserWalletsSyncUseCase
 import com.tangem.features.details.impl.R

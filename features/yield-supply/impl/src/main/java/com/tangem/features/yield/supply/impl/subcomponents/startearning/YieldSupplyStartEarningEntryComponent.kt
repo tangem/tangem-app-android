@@ -2,6 +2,7 @@ package com.tangem.features.yield.supply.impl.subcomponents.startearning
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
@@ -12,9 +13,9 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableModularContentComponent
-import com.tangem.core.ui.decompose.getEmptyComposableModularContentComponent
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.features.yield.supply.impl.subcomponents.feepolicy.YieldSupplyFeePolicyComponent
 import com.tangem.features.yield.supply.impl.subcomponents.startearning.model.YieldSupplyStartEarningEntryModel
 import com.tangem.features.yield.supply.impl.subcomponents.startearning.ui.YieldSupplyStartEarningBottomSheet
 
@@ -56,9 +57,11 @@ internal class YieldSupplyStartEarningEntryComponent(
     @Composable
     override fun BottomSheet() {
         val stackState by innerStack.subscribeAsState()
+        val uiState by model.uiState.collectAsStateWithLifecycle()
 
         YieldSupplyStartEarningBottomSheet(
             stackState = stackState,
+            dismissOnClickOutside = { !uiState.isTransactionSending },
             onDismiss = ::dismiss,
         )
     }
@@ -67,12 +70,21 @@ internal class YieldSupplyStartEarningEntryComponent(
         route: YieldSupplyStartEarningRoute,
         factoryContext: AppComponentContext,
     ): ComposableModularContentComponent = when (route) {
-        YieldSupplyStartEarningRoute.FeePolicy -> getEmptyComposableModularContentComponent() // todo fee policy
+        YieldSupplyStartEarningRoute.FeePolicy -> YieldSupplyFeePolicyComponent(
+            appComponentContext = factoryContext,
+            params = YieldSupplyFeePolicyComponent.Params(
+                userWalletId = params.userWalletId,
+                cryptoCurrency = params.cryptoCurrency,
+                yieldSupplyActionUMFlow = model.uiState,
+                callback = model,
+            ),
+        )
         YieldSupplyStartEarningRoute.Action -> YieldSupplyStartEarningComponent(
             appComponentContext = factoryContext,
             params = YieldSupplyStartEarningComponent.Params(
                 userWalletId = params.userWalletId,
                 cryptoCurrency = params.cryptoCurrency,
+                yieldSupplyActionUM = model.uiState.value,
                 callback = model,
             ),
         )

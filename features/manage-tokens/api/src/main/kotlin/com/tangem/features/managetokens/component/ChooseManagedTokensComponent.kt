@@ -12,7 +12,7 @@ interface ChooseManagedTokensComponent : ComposableContentComponent {
         val initialCurrency: CryptoCurrency,
         val selectedCurrency: CryptoCurrency?,
         val source: Source,
-        val showSendViaSwapNotification: Boolean,
+        val shouldShowSendViaSwapNotification: Boolean,
         val callback: ModelCallback? = null,
         val analyticsCategoryName: String,
     )

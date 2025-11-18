@@ -23,10 +23,10 @@ internal class ScanCardExceptionConverter : TwoWayConverter<TangemError, ScanCar
     }
 
     private fun convertTangemSdkError(value: TangemSdkError): ScanCardException = when (value) {
-        is TangemSdkError.UserCancelled -> ScanCardException.UserCancelled
+        is TangemSdkError.UserCancelled -> ScanCardException.UserCancelled()
         is TangemSdkError.WrongAccessCode,
         is TangemSdkError.WrongPasscode,
-        -> ScanCardException.WrongAccessCode
+        -> ScanCardException.WrongAccessCode()
         is TangemSdkError.WrongCardNumber -> ScanCardException.WrongCardId(value.cardId)
         else -> ScanCardException.UnknownException(value)
     }

@@ -7,11 +7,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.swap.SwapErrorResolver
 import com.tangem.domain.swap.SwapRepositoryV2
-import com.tangem.domain.swap.models.SwapCryptoCurrency
-import com.tangem.domain.swap.models.SwapCurrencies
-import com.tangem.domain.swap.models.SwapCurrenciesGroup
-import com.tangem.domain.swap.models.SwapPairModel
-import com.tangem.domain.swap.models.SwapTxType
+import com.tangem.domain.swap.models.*
 
 /**
  * Get list of swap pairs
@@ -67,13 +63,14 @@ class GetSwapPairsUseCase(
         groupingCurrency: (SwapPairModel) -> CryptoCurrencyStatus,
         cryptoCurrencyStatusList: List<CryptoCurrencyStatus>,
     ): SwapCurrenciesGroup {
-        val availableCryptoCurrencies = filter { pair -> filteringCurrency(pair).currency.id == initialCurrency.id }
+        val availableCryptoCurrencies = filter { pair ->
+            filteringCurrency(pair).currency.id.rawCurrencyId == initialCurrency.id.rawCurrencyId
+        }.filter { pair ->
             // Search available to swap currency
-            .filter { pair ->
-                cryptoCurrencyStatusList.any { currencyStatus ->
-                    currencyStatus.currency.id == pair.to.currency.id
-                }
-            }.map { pair -> SwapCryptoCurrency(groupingCurrency(pair), pair.providers) }
+            cryptoCurrencyStatusList.any { currencyStatus ->
+                currencyStatus.currency.id == pair.to.currency.id
+            }
+        }.map { pair -> SwapCryptoCurrency(groupingCurrency(pair), pair.providers) }
 
         val unavailableCryptoCurrencies =
             cryptoCurrencyStatusList - availableCryptoCurrencies.map { it.currencyStatus }.toSet()
@@ -81,7 +78,7 @@ class GetSwapPairsUseCase(
         return SwapCurrenciesGroup(
             available = availableCryptoCurrencies,
             unavailable = unavailableCryptoCurrencies.map { pair -> SwapCryptoCurrency(pair, emptyList()) },
-            afterSearch = false,
+            isAfterSearch = false,
         )
     }
 }

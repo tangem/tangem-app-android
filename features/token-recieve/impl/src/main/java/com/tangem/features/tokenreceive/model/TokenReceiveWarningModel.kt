@@ -21,11 +21,11 @@ internal class TokenReceiveWarningModel @Inject constructor(
     private val params = paramsContainer.require<TokenReceiveWarningComponent.TokenReceiveWarningParams>()
 
     internal val state: StateFlow<WarningUM>
-    field = MutableStateFlow<WarningUM>(
-        WarningUM(
-            iconState = params.iconState,
-            onWarningAcknowledged = params.callback::onWarningAcknowledged,
-            network = params.network.name,
-        ),
-    )
+        field = MutableStateFlow<WarningUM>(
+            WarningUM(
+                iconState = params.iconState,
+                onWarningAcknowledged = params.callback::onWarningAcknowledged,
+                network = params.network.name,
+            ),
+        )
 }

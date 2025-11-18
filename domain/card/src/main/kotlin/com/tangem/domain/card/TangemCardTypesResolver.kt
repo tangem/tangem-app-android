@@ -109,8 +109,8 @@ internal class TangemCardTypesResolver(
     override fun isAttestationFailed(): Boolean = card.attestation.status == Attestation.Status.Failed
 
     override fun hasWalletSignedHashes(): Boolean {
-        return card.wallets.any {
-            val totalSignedHashes = it.totalSignedHashes ?: 0
+        return card.wallets.any { wallet ->
+            val totalSignedHashes = wallet.totalSignedHashes ?: 0
             totalSignedHashes > 0
         }
     }

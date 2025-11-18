@@ -1,8 +1,10 @@
 package com.tangem.domain.staking.model
 
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.blockchainsdk.utils.toMigratedCoinId
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.network.Network
 
 /**
  * Represents a staking integration identifier.
@@ -23,31 +25,43 @@ sealed interface StakingIntegrationID {
     /** Approval requirements for the staking integration. Defaults to no approval needed */
     val approval: StakingApproval get() = StakingApproval.Empty
 
+    /**
+     * Represents the network ID associated with the staking integration from provider
+     * https://docs.yield.xyz/reference/yieldscontroller_getyields
+     */
+    val networkId: String
+
     /** Represents blockchains whose native coins can be staked */
     enum class Coin : StakingIntegrationID {
         Ton {
             override val value: String = "ton-ton-chorus-one-pools-staking"
             override val blockchain: Blockchain = Blockchain.TON
+            override val networkId: String = "ton"
         },
         Solana {
             override val value: String = "solana-sol-native-multivalidator-staking"
             override val blockchain: Blockchain = Blockchain.Solana
+            override val networkId: String = "solana"
         },
         Cosmos {
             override val value: String = "cosmos-atom-native-staking"
             override val blockchain: Blockchain = Blockchain.Cosmos
+            override val networkId: String = "cosmos"
         },
         Tron {
             override val value: String = "tron-trx-native-staking"
             override val blockchain: Blockchain = Blockchain.Tron
+            override val networkId: String = "tron"
         },
         BSC {
             override val value: String = "bsc-bnb-native-staking"
             override val blockchain: Blockchain = Blockchain.BSC
+            override val networkId: String = "binance"
         },
         Cardano {
             override val value: String = "cardano-ada-native-staking"
             override val blockchain: Blockchain = Blockchain.Cardano
+            override val networkId: String = "cardano"
         },
     }
 
@@ -61,6 +75,7 @@ sealed interface StakingIntegrationID {
             override val value: String = "ethereum-matic-native-staking"
             override val approval: StakingApproval.Needed =
                 StakingApproval.Needed(spenderAddress = "0x5e3Ef299fDDf15eAa0432E6e66473ace8c13D908")
+            override val networkId: String = "ethereum"
         },
         ;
 
@@ -110,7 +125,7 @@ sealed interface StakingIntegrationID {
 
             val integrationId = blockchain.integrationId ?: return null
 
-            if (integrationId is Coin && currencyId.contractAddress != null) {
+            if (integrationId is Coin && !currencyId.contractAddress.isNullOrBlank()) {
                 return null
             }
 
@@ -129,6 +144,9 @@ sealed interface StakingIntegrationID {
         }
     }
 }
+
+val Network.isStakingSupported: Boolean
+    get() = this.toBlockchain().isStakingSupported
 
 /**
  * Extension property to check if staking is supported for a blockchain.

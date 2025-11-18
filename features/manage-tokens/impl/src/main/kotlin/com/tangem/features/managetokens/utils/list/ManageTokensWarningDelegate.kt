@@ -77,7 +77,7 @@ internal class ManageTokensWarningDelegate @AssistedInject constructor(
             firstActionBuilder = {
                 EventMessageAction(
                     title = resourceReference(R.string.token_details_hide_alert_hide),
-                    warning = true,
+                    isWarning = true,
                     onClick = onConfirm,
                 )
             },

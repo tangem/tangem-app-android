@@ -20,7 +20,7 @@ internal class DefaultCardRepository(
     override fun wasCardScanned(cardId: String): Flow<Boolean> {
         return appPreferencesStore.getObjectList<UsedCardInfo>(key = PreferencesKeys.USED_CARDS_INFO_KEY)
             .map { savedCards ->
-                savedCards?.any { it.cardId == cardId } ?: false
+                savedCards?.any { it.cardId == cardId } == true
             }
     }
 
@@ -63,11 +63,11 @@ internal class DefaultCardRepository(
     }
 
     override suspend fun isActivationStarted(cardId: String): Boolean {
-        return getUsedCardSync(cardId)?.isActivationStarted ?: false
+        return getUsedCardSync(cardId)?.isActivationStarted == true
     }
 
     override suspend fun isActivationFinished(cardId: String): Boolean {
-        return getUsedCardSync(cardId)?.isActivationFinished ?: false
+        return getUsedCardSync(cardId)?.isActivationFinished == true
     }
 
     override suspend fun isActivationInProgress(cardId: String): Boolean {

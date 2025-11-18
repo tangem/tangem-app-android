@@ -19,7 +19,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.card.repository.CardRepository
-import com.tangem.domain.core.wallets.UserWalletsListRepository
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.onboarding.repository.OnboardingRepository
 import com.tangem.features.hotwallet.HotAccessCodeRequestComponent
@@ -133,7 +133,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
                 AppRoute.Wallet
             }
         }.also {
-            appRouterConfig.isInitialized.value = true
+            appRouterConfig.initializedState.value = true
             checkForUnfinishedBackup()
         }
     }
@@ -141,13 +141,13 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
     @Composable
     override fun Content(modifier: Modifier) {
         RootContent(
-            modifier = modifier,
             stack = stack,
+            backHandler = backHandler,
             uiDependencies = uiDependencies,
+            onBack = router::pop,
+            modifier = modifier,
             wcContent = { wcRoutingComponent.Content(it) },
             hotAccessCodeContent = { hotAccessCodeRequestComponent.Content(it) },
-            backHandler = backHandler,
-            onBack = router::pop,
         )
     }
 

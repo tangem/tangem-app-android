@@ -63,7 +63,7 @@ object MockScanResponseFactory {
                     isResettingUserCodesAllowed = false,
                     isLinkedTerminalEnabled = false,
                     isBackupAllowed = cardConfig is MultiWalletCardConfig,
-                    supportedEncryptionModes = listOf(),
+                    supportedEncryptionModes = emptyList(),
                     isFilesAllowed = true,
                     isHDWalletAllowed = cardConfig is MultiWalletCardConfig,
                     isKeysImportAllowed = true,
@@ -72,7 +72,7 @@ object MockScanResponseFactory {
                 linkedTerminalStatus = CardDTO.LinkedTerminalStatus.Current,
                 isAccessCodeSet = false,
                 isPasscodeSet = null,
-                supportedCurves = listOf(),
+                supportedCurves = emptyList(),
                 wallets = cardConfig.mandatoryCurves.map {
                     CardDTO.Wallet(
                         CardWallet(
@@ -85,7 +85,7 @@ object MockScanResponseFactory {
                             index = 0,
                             isImported = true,
                             hasBackup = true,
-                            derivedKeys = mapOf(),
+                            derivedKeys = emptyMap(),
                         ),
                     )
                 },

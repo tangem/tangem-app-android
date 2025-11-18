@@ -32,7 +32,7 @@ private fun ManagedCryptoCurrency.Custom.toUiModel(
                 url = iconUrl,
                 fallbackResId = network.id.getIconRes(isColored = true),
                 isGrayscale = false,
-                showCustomBadge = true,
+                shouldShowCustomBadge = true,
             )
         }
         is ManagedCryptoCurrency.Custom.Token -> {
@@ -44,7 +44,7 @@ private fun ManagedCryptoCurrency.Custom.toUiModel(
                 fallbackTint = getTintForTokenIcon(background),
                 topBadgeIconResId = network.id.getIconRes(isColored = true),
                 isGrayscale = false,
-                showCustomBadge = true,
+                shouldShowCustomBadge = true,
             )
         }
     },
@@ -68,7 +68,7 @@ private fun ManagedCryptoCurrency.Token.toUiModel(
             url = iconUrl,
             topBadgeIconResId = null,
             isGrayscale = if (isEditable) !isAdded else false,
-            showCustomBadge = false,
+            shouldShowCustomBadge = false,
             fallbackTint = getTintForTokenIcon(background),
             fallbackBackground = background,
         ),

@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
@@ -15,7 +14,6 @@ import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
 import com.tangem.core.ui.components.buttons.actions.ActionButtonContent
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.test.MainScreenTestTags
 
 /**
 [REDACTED_AUTHOR]
@@ -50,7 +48,7 @@ internal fun MultiCurrencyAction(
                 paddingBetweenIconAndText = 4.dp,
             )
         },
-        modifier = modifier.testTag(MainScreenTestTags.MULTI_CURRENCY_ACTION_BUTTON),
+        modifier = modifier,
         color = TangemTheme.colors.button.secondary,
     )
 }

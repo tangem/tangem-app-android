@@ -32,12 +32,12 @@ class NFTSdkCollectionConverter(
                 .filter {
                     it.id !is NFTAsset.Identifier.Unknown
                 }
-                .let {
-                    if (it.isEmpty()) {
+                .let { items ->
+                    if (items.isEmpty()) {
                         NFTCollection.Assets.Empty
                     } else {
                         NFTCollection.Assets.Value(
-                            items = it,
+                            items = items,
                             source = StatusSource.CACHE,
                         )
                     }

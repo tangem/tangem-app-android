@@ -1,5 +1,7 @@
 package com.tangem.features.onramp.swap.entity
 
+import androidx.compose.runtime.Immutable
+import com.tangem.common.ui.account.CryptoPortfolioIconUM
 import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.extensions.TextReference
 
@@ -11,7 +13,7 @@ import com.tangem.core.ui.extensions.TextReference
 internal sealed interface ExchangeCardUM {
 
     /** Title reference */
-    val titleReference: TextReference
+    val titleUM: TitleUM
 
     /** Remove button UI model */
     val removeButtonUM: RemoveButtonUM?
@@ -19,11 +21,11 @@ internal sealed interface ExchangeCardUM {
     /**
      * Empty state
      *
-     * @property titleReference    title reference
+     * @property titleUM    title reference
      * @property subtitleReference empty token subtitle reference
      */
     data class Empty(
-        override val titleReference: TextReference,
+        override val titleUM: TitleUM,
         val subtitleReference: TextReference,
     ) : ExchangeCardUM {
 
@@ -33,15 +35,29 @@ internal sealed interface ExchangeCardUM {
     /**
      * Filled
      *
-     * @property titleReference title reference
+     * @property titleUM title reference
      * @property removeButtonUM remove button UI model
      * @property tokenItemState token item state
      */
     data class Filled(
-        override val titleReference: TextReference,
+        override val titleUM: TitleUM,
         override val removeButtonUM: RemoveButtonUM?,
         val tokenItemState: TokenItemState,
     ) : ExchangeCardUM
 
     data class RemoveButtonUM(val onClick: () -> Unit)
+
+    @Immutable
+    sealed interface TitleUM {
+
+        data class Text(
+            val title: TextReference,
+        ) : TitleUM
+
+        data class Account(
+            val prefixText: TextReference,
+            val name: TextReference,
+            val icon: CryptoPortfolioIconUM,
+        ) : TitleUM
+    }
 }

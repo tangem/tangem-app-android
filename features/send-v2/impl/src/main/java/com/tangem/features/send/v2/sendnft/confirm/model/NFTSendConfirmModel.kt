@@ -36,6 +36,7 @@ import com.tangem.features.send.v2.api.callbacks.FeeSelectorModelCallback
 import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationUM
 import com.tangem.features.send.v2.api.subcomponents.feeSelector.FeeSelectorCheckReloadListener
 import com.tangem.features.send.v2.api.subcomponents.feeSelector.FeeSelectorCheckReloadTrigger
+import com.tangem.features.send.v2.api.subcomponents.feeSelector.FeeSelectorReloadTrigger
 import com.tangem.features.send.v2.api.subcomponents.notifications.SendNotificationsUpdateListener
 import com.tangem.features.send.v2.api.subcomponents.notifications.SendNotificationsUpdateTrigger
 import com.tangem.features.send.v2.common.CommonSendRoute
@@ -47,15 +48,8 @@ import com.tangem.features.send.v2.sendnft.analytics.NFTSendAnalyticHelper
 import com.tangem.features.send.v2.sendnft.confirm.NFTSendConfirmComponent
 import com.tangem.features.send.v2.sendnft.confirm.model.transformers.NFTSendConfirmInitialStateTransformer
 import com.tangem.features.send.v2.sendnft.confirm.model.transformers.NFTSendConfirmSendingStateTransformer
-import com.tangem.features.send.v2.sendnft.confirm.model.transformers.NFTSendConfirmationNotificationsTransformer
 import com.tangem.features.send.v2.sendnft.confirm.model.transformers.NFTSendConfirmationNotificationsTransformerV2
 import com.tangem.features.send.v2.sendnft.ui.state.NFTSendUM
-import com.tangem.features.send.v2.subcomponents.fee.SendFeeCheckReloadListener
-import com.tangem.features.send.v2.subcomponents.fee.SendFeeCheckReloadTrigger
-import com.tangem.features.send.v2.subcomponents.fee.SendFeeData
-import com.tangem.features.send.v2.subcomponents.fee.SendFeeReloadTrigger
-import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeSelectorUM
-import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.stripZeroPlainString
 import com.tangem.utils.transformer.update
@@ -83,8 +77,6 @@ internal class NFTSendConfirmModel @Inject constructor(
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val notificationsUpdateTrigger: SendNotificationsUpdateTrigger,
     private val notificationsUpdateListener: SendNotificationsUpdateListener,
-    private val sendFeeCheckReloadTrigger: SendFeeCheckReloadTrigger,
-    private val sendFeeCheckReloadListener: SendFeeCheckReloadListener,
     private val feeSelectorCheckReloadTrigger: FeeSelectorCheckReloadTrigger,
     private val feeSelectorCheckReloadListener: FeeSelectorCheckReloadListener,
     private val alertFactory: SendConfirmAlertFactory,
@@ -93,7 +85,7 @@ internal class NFTSendConfirmModel @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val nftSendAnalyticHelper: NFTSendAnalyticHelper,
     private val nftSendSuccessTrigger: NFTSendSuccessTrigger,
-    private val sendFeeReloadTrigger: SendFeeReloadTrigger,
+    private val feeSelectorReloadTrigger: FeeSelectorReloadTrigger,
     sendBalanceUpdaterFactory: SendBalanceUpdater.Factory,
 ) : Model(), NFTSendConfirmClickIntents, SendNotificationsComponent.ModelCallback, FeeSelectorModelCallback {
 
@@ -114,25 +106,13 @@ internal class NFTSendConfirmModel @Inject constructor(
 
     private val destinationUM
         get() = uiState.value.destinationUM as? DestinationUM.Content
-    private val feeUM
-        get() = uiState.value.feeUM as? FeeUM.Content
-    private val feeSelectorUM
-        get() = feeUM?.feeSelectorUM as? FeeSelectorUM.Content
 
     val confirmData: ConfirmData
         get() = ConfirmData(
             enteredDestination = destinationUM?.addressTextField?.actualAddress,
             enteredMemo = destinationUM?.memoTextField?.value,
-            fee = if (uiState.value.isRedesignEnabled) {
-                (uiState.value.feeSelectorUM as? FeeSelectorUMRedesigned.Content)?.selectedFeeItem?.fee
-            } else {
-                feeSelectorUM?.selectedFee
-            },
-            feeError = if (uiState.value.isRedesignEnabled) {
-                (uiState.value.feeSelectorUM as? FeeSelectorUMRedesigned.Error)?.error
-            } else {
-                (feeUM?.feeSelectorUM as? FeeSelectorUM.Error)?.error
-            },
+            fee = (uiState.value.feeSelectorUM as? FeeSelectorUMRedesigned.Content)?.selectedFeeItem?.fee,
+            feeError = (uiState.value.feeSelectorUM as? FeeSelectorUMRedesigned.Error)?.error,
         )
 
     private var sendIdleTimer: Long = 0L
@@ -150,12 +130,6 @@ internal class NFTSendConfirmModel @Inject constructor(
         updateConfirmNotifications()
     }
 
-    fun onFeeResult(feeUM: FeeUM) {
-        sendIdleTimer = SystemClock.elapsedRealtime()
-        _uiState.update { it.copy(feeUM = feeUM) }
-        updateConfirmNotifications()
-    }
-
     override fun onFeeResult(feeSelectorUM: FeeSelectorUMRedesigned) {
         sendIdleTimer = SystemClock.elapsedRealtime()
         _uiState.update { it.copy(feeSelectorUM = feeSelectorUM) }
@@ -169,13 +143,7 @@ internal class NFTSendConfirmModel @Inject constructor(
 
     override fun onFeeReload() {
         modelScope.launch {
-            sendFeeReloadTrigger.triggerUpdate(
-                // For now transfer one nft asset at a time
-                feeData = SendFeeData(
-                    amount = BigDecimal.ZERO,
-                    destinationAddress = confirmData.enteredDestination,
-                ),
-            )
+            feeSelectorReloadTrigger.triggerUpdate()
         }
     }
 
@@ -192,30 +160,13 @@ internal class NFTSendConfirmModel @Inject constructor(
         }
     }
 
-    override fun showEditFee() {
-        modelScope.launch {
-            neverShowTapHelpUseCase()
-            analyticsEventHandler.send(
-                CommonSendAnalyticEvents.ScreenReopened(
-                    categoryName = analyticsCategoryName,
-                    source = SendScreenSource.Fee,
-                ),
-            )
-            router.push(CommonSendRoute.Fee)
-        }
-    }
-
     override fun onSendClick() {
         _uiState.update(NFTSendConfirmSendingStateTransformer(isSending = true))
         if (SystemClock.elapsedRealtime() - sendIdleTimer < CHECK_FEE_UPDATE_DELAY) {
             verifyAndSendTransaction()
         } else {
             modelScope.launch {
-                if (uiState.value.isRedesignEnabled) {
-                    feeSelectorCheckReloadTrigger.triggerCheckUpdate()
-                } else {
-                    sendFeeCheckReloadTrigger.triggerCheckUpdate()
-                }
+                feeSelectorCheckReloadTrigger.triggerCheckUpdate()
             }
         }
     }
@@ -257,11 +208,7 @@ internal class NFTSendConfirmModel @Inject constructor(
 
     private fun initialState() {
         val confirmUM = uiState.value.confirmUM
-        val isEmptyFee = if (uiState.value.isRedesignEnabled) {
-            uiState.value.feeSelectorUM !is FeeSelectorUMRedesigned.Content
-        } else {
-            uiState.value.feeUM is FeeUM.Empty
-        }
+        val isEmptyFee = uiState.value.feeSelectorUM !is FeeSelectorUMRedesigned.Content
 
         modelScope.launch {
             val isShowTapHelp = isSendTapHelpEnabledUseCase.invokeSync().getOrElse { false }
@@ -293,13 +240,7 @@ internal class NFTSendConfirmModel @Inject constructor(
         notificationsUpdateListener.hasErrorFlow
             .onEach { hasError ->
                 _uiState.update {
-                    val isFeeNotNull = if (uiState.value.isRedesignEnabled) {
-                        it.feeSelectorUM is FeeSelectorUMRedesigned.Content
-                    } else {
-                        val feeUM = it.feeUM as? FeeUM.Content
-                        val feeSelectorUM = feeUM?.feeSelectorUM as? FeeSelectorUM.Content
-                        feeSelectorUM != null
-                    }
+                    val isFeeNotNull = it.feeSelectorUM is FeeSelectorUMRedesigned.Content
 
                     it.copy(
                         confirmUM = (it.confirmUM as? ConfirmUM.Content)?.copy(
@@ -372,24 +313,13 @@ internal class NFTSendConfirmModel @Inject constructor(
                 updateTransactionStatus(txData)
                 sendBalanceUpdater.scheduleUpdates()
                 nftSendAnalyticHelper.nftSendSuccessAnalytics(cryptoCurrency, uiState.value)
-                if (uiState.value.isRedesignEnabled) {
-                    params.callback.onResult(uiState.value)
-                    params.onSendTransaction()
-                }
+                params.callback.onResult(uiState.value)
+                params.onSendTransaction()
             },
         )
     }
 
     private fun subscribeOnCheckFeeResultUpdates() {
-        sendFeeCheckReloadListener.checkReloadResultFlow.onEach { isFeeResultSuccess ->
-            sendIdleTimer = SystemClock.elapsedRealtime()
-            if (isFeeResultSuccess) {
-                _uiState.update(NFTSendConfirmSendingStateTransformer(isSending = true))
-                verifyAndSendTransaction()
-            } else {
-                _uiState.update(NFTSendConfirmSendingStateTransformer(isSending = false))
-            }
-        }.launchIn(modelScope)
         feeSelectorCheckReloadListener.checkReloadResultFlow.onEach { isFeeResultSuccess ->
             sendIdleTimer = SystemClock.elapsedRealtime()
             if (isFeeResultSuccess) {
@@ -425,23 +355,13 @@ internal class NFTSendConfirmModel @Inject constructor(
         }
         _uiState.update {
             it.copy(
-                confirmUM = if (uiState.value.isRedesignEnabled) {
-                    NFTSendConfirmationNotificationsTransformerV2(
-                        feeSelectorUM = uiState.value.feeSelectorUM,
-                        analyticsEventHandler = analyticsEventHandler,
-                        cryptoCurrency = cryptoCurrencyStatus.currency,
-                        appCurrency = params.appCurrency,
-                        analyticsCategoryName = analyticsCategoryName,
-                    )
-                } else {
-                    NFTSendConfirmationNotificationsTransformer(
-                        feeUM = uiState.value.feeUM,
-                        analyticsEventHandler = analyticsEventHandler,
-                        cryptoCurrency = cryptoCurrencyStatus.currency,
-                        analyticsCategoryName = analyticsCategoryName,
-                        appCurrency = params.appCurrency,
-                    )
-                }.transform(uiState.value.confirmUM),
+                confirmUM = NFTSendConfirmationNotificationsTransformerV2(
+                    feeSelectorUM = uiState.value.feeSelectorUM,
+                    analyticsEventHandler = analyticsEventHandler,
+                    cryptoCurrency = cryptoCurrencyStatus.currency,
+                    appCurrency = params.appCurrency,
+                    analyticsCategoryName = analyticsCategoryName,
+                ).transform(uiState.value.confirmUM),
             )
         }
     }
@@ -453,23 +373,14 @@ internal class NFTSendConfirmModel @Inject constructor(
             transform = { state, route -> state to route },
         ).onEach { (state, _) ->
             val confirmUM = state.confirmUM
-            val confirmUMContent = confirmUM as? ConfirmUM.Content
             params.callback.onResult(
                 state.copy(
                     navigationUM = NavigationUM.Content(
                         title = resourceReference(R.string.nft_send),
-                        subtitle = if (uiState.value.isRedesignEnabled) {
-                            null
-                        } else {
-                            confirmUMContent?.walletName
-                        },
-                        backIconRes = if (state.isRedesignEnabled) {
-                            when (confirmUM) {
-                                is ConfirmUM.Success -> R.drawable.ic_close_24
-                                else -> R.drawable.ic_back_24
-                            }
-                        } else {
-                            R.drawable.ic_close_24
+                        subtitle = null,
+                        backIconRes = when (confirmUM) {
+                            is ConfirmUM.Success -> R.drawable.ic_close_24
+                            else -> R.drawable.ic_back_24
                         },
                         backIconClick = {
                             analyticsEventHandler.send(
@@ -480,11 +391,7 @@ internal class NFTSendConfirmModel @Inject constructor(
                                     isValid = confirmUM.isPrimaryButtonEnabled,
                                 ),
                             )
-                            if (state.isRedesignEnabled) {
-                                router.pop()
-                            } else {
-                                appRouter.pop()
-                            }
+                            router.pop()
                         },
                         primaryButton = primaryButtonUM(),
                         prevButton = null,

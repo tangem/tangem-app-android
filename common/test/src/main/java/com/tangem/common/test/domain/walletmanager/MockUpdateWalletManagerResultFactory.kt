@@ -67,10 +67,12 @@ class MockUpdateWalletManagerResultFactory {
                     value = BigDecimal.ONE,
                     currencyRawId = CryptoCurrency.RawID("token"),
                     contractAddress = "0xTokenAddress",
-                    yieldSupplyStatus = YieldSupplyStatus(
+                    yieldSupplyStatus =
+                    YieldSupplyStatus(
                         isActive = true,
                         isInitialized = true,
                         isAllowedToSpend = false,
+                        effectiveProtocolBalance = BigDecimal.ONE,
                     ),
                 ),
             ),

@@ -4,6 +4,7 @@ import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 
 @JsonClass(generateAdapter = true)
+@Suppress("BooleanPropertyNaming")
 data class CreateUserNetworkAccountResponse(
     @Json(name = "status") val status: Boolean,
     @Json(name = "data") val data: AccountCreated,

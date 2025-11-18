@@ -29,22 +29,22 @@ fun Modifier.flicker(
     targetTextAlpha: Float = 0.4f,
     animationDurationMillis: Int = 1500,
 ): Modifier = composed {
-    var alphaChange by remember { mutableStateOf(false) }
+    var shouldAlphaChange by remember { mutableStateOf(false) }
 
     val alpha: Float by animateFloatAsState(
-        targetValue = if (alphaChange) targetTextAlpha else 1f,
+        targetValue = if (shouldAlphaChange) targetTextAlpha else 1f,
         animationSpec = tween(
             durationMillis = animationDurationMillis,
             easing = CubicBezierEasing(a = 0.45f, b = 0.0f, c = 0.55f, d = 1.0f),
         ),
         finishedListener = {
-            alphaChange = it == 1f && isFlickering
+            shouldAlphaChange = it == 1f && isFlickering
         },
     )
 
     LaunchedEffect(isFlickering) {
         if (isFlickering) {
-            alphaChange = true
+            shouldAlphaChange = true
         }
     }
 
