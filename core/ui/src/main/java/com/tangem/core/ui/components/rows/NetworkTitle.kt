@@ -71,7 +71,6 @@ fun NetworkTitle(
             Spacer(modifier = Modifier.size(TangemTheme.dimens.spacing8))
             Box(
                 modifier = Modifier
-                    .weight(weight = 1f)
                     .heightIn(min = TangemTheme.dimens.size24),
                 contentAlignment = Alignment.CenterEnd,
                 content = action,

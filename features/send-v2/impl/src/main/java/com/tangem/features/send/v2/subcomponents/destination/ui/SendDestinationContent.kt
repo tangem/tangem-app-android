@@ -16,18 +16,19 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
-import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.containers.FooterContainer
 import com.tangem.core.ui.components.inputrow.InputRowRecipient
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.test.SendAddressScreenTestTags
 import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationRecipientListUM
 import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationTextFieldUM
 import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationUM
@@ -39,6 +40,7 @@ import kotlinx.collections.immutable.ImmutableList
 private const val ADDRESS_FIELD_KEY = "ADDRESS_FIELD_KEY"
 private const val MEMO_FIELD_KEY = "MEMO_FIELD_KEY"
 
+@Suppress("LongMethod")
 @Composable
 internal fun SendDestinationContent(
     state: DestinationUM,
@@ -54,7 +56,8 @@ internal fun SendDestinationContent(
     LazyColumn(
         modifier = Modifier // Do not put fillMaxSize() in here
             .background(TangemTheme.colors.background.tertiary)
-            .padding(horizontal = 16.dp),
+            .padding(horizontal = 16.dp)
+            .testTag(SendAddressScreenTestTags.CONTAINER),
     ) {
         addressItem(
             address = address,
@@ -69,18 +72,18 @@ internal fun SendDestinationContent(
             onMemoChange = clickIntents::onRecipientMemoValueChange,
         )
         listHeaderItem(
-            titleRes = when (state.accountTitleUM) {
-                is AccountTitleUM.Account -> R.string.common_accounts
-                else -> R.string.send_recipient_wallets_title
+            titleRes = if (state.isAccountsMode == true) {
+                R.string.common_accounts
+            } else {
+                R.string.send_recipient_wallets_title
             },
-            isLoading = state.accountTitleUM == null,
+            isLoading = state.isAccountsMode == null,
             isVisible = wallets.isNotEmpty() && wallets.first().isVisible && !state.isRecentHidden,
             isFirst = true,
         )
         listItem(
             list = wallets,
             isLast = recipients.any { !it.isVisible },
-            accountTitleUM = state.accountTitleUM,
             isBalanceHidden = false,
             isRecentHidden = state.isRecentHidden,
             onClick = { title ->
@@ -92,7 +95,7 @@ internal fun SendDestinationContent(
         )
         listHeaderItem(
             titleRes = R.string.send_recent_transactions,
-            isLoading = state.accountTitleUM == null,
+            isLoading = state.isAccountsMode == null,
             isVisible = recipients.isNotEmpty() && recipients.first().isVisible && !state.isRecentHidden,
             isFirst = wallets.any { !it.isVisible },
         )
@@ -245,7 +248,6 @@ private fun LazyListScope.listItem(
     isBalanceHidden: Boolean,
     isRecentHidden: Boolean,
     onClick: (String) -> Unit,
-    accountTitleUM: AccountTitleUM? = null,
 ) {
     items(
         count = list.size,
@@ -259,7 +261,7 @@ private fun LazyListScope.listItem(
             ListItemWithIcon(
                 title = title,
                 subtitle = item.subtitle.orMaskWithStars(isBalanceHidden).resolveReference(),
-                accountTitleUM = accountTitleUM,
+                accountTitleUM = item.accountTitleUM,
                 info = item.timestamp?.resolveReference(),
                 subtitleEndOffset = item.subtitleEndOffset,
                 subtitleIconRes = item.subtitleIconRes,

@@ -1,6 +1,7 @@
 package com.tangem.features.nft.collections.entity.transformer
 
 import com.tangem.domain.nft.models.NFTCollection
+import com.tangem.features.nft.collections.entity.NFTCollectionUM
 import com.tangem.features.nft.collections.entity.NFTCollectionsStateUM
 import com.tangem.features.nft.collections.entity.NFTCollectionsUM
 import com.tangem.utils.transformer.Transformer
@@ -21,7 +22,7 @@ internal class ChangeCollectionExpandedStateTransformer(
             is NFTCollectionsUM.Content -> prevState.content.copy(
                 collections = prevState.content.collections.map {
                     val collectionId = collection.collectionIdProvider()
-                    if (it.id == collectionId) {
+                    if (it.id == collectionId && it is NFTCollectionUM) {
                         if (!it.isExpanded) {
                             onFirstExpanded()
                         }

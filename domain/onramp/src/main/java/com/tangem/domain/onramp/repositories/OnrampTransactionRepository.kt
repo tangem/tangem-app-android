@@ -12,6 +12,8 @@ interface OnrampTransactionRepository {
 
     suspend fun getTransactionById(txId: String): OnrampTransaction?
 
+    fun getAllTransactions(): Flow<List<OnrampTransaction>>
+
     fun getTransactions(userWalletId: UserWalletId, cryptoCurrencyId: CryptoCurrency.ID): Flow<List<OnrampTransaction>>
 
     suspend fun updateTransactionStatus(

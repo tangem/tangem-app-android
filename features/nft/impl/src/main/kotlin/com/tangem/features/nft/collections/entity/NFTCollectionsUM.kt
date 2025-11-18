@@ -23,7 +23,7 @@ internal sealed class NFTCollectionsUM {
 
     data class Content(
         val search: SearchBarUM,
-        val collections: ImmutableList<NFTCollectionUM>,
+        val collections: ImmutableList<NFTCollectionItem>,
         val warnings: ImmutableList<NFTCollectionsWarningUM>,
         val onReceiveClick: () -> Unit,
     ) : NFTCollectionsUM()

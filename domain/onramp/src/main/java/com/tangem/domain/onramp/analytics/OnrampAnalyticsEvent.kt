@@ -190,6 +190,19 @@ sealed class OnrampAnalyticsEvent(
         ),
     )
 
+    data class RecentlyBuyClicked(
+        private val tokenSymbol: String,
+        private val providerName: String,
+        private val paymentMethod: String,
+    ) : OnrampAnalyticsEvent(
+        event = "Recently Used Clicked",
+        params = mapOf(
+            TOKEN_PARAM to tokenSymbol,
+            PROVIDER to providerName,
+            PAYMENT_METHOD to paymentMethod,
+        ),
+    )
+
     data object AllOffersClicked : OnrampAnalyticsEvent(
         event = "Button - All Offers",
         params = emptyMap(),

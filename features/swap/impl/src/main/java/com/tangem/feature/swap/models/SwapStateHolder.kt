@@ -2,10 +2,10 @@ package com.tangem.feature.swap.models
 
 import androidx.annotation.DrawableRes
 import androidx.compose.ui.text.input.TextFieldValue
+import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.common.ui.bottomsheet.permission.state.GiveTxPermissionState
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.common.ui.swapStoriesScreen.SwapStoriesUM
-import com.tangem.core.ui.R
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.event.StateEvent
 import com.tangem.core.ui.event.consumedEvent
@@ -25,7 +25,7 @@ internal data class SwapStateHolder(
     val notifications: ImmutableList<NotificationUM> = persistentListOf(),
     val isInsufficientFunds: Boolean,
     val event: StateEvent<SwapEvent> = consumedEvent(),
-    val changeCardsButtonState: ChangeCardsButtonState = ChangeCardsButtonState.ENABLED,
+    val changeCardsButtonState: ChangeCardsButtonState,
     val providerState: ProviderState,
 
     val fee: FeeItemState = FeeItemState.Empty,
@@ -83,21 +83,21 @@ data class SwapButton(
 
 sealed interface TransactionCardType {
 
-    val header: TextReference
+    val accountTitleUM: AccountTitleUM?
     val inputError: InputError
 
     data class Inputtable(
         val onAmountChanged: ((String) -> Unit),
         val onFocusChanged: ((Boolean) -> Unit),
         override val inputError: InputError,
-        override val header: TextReference = TextReference.Res(R.string.swapping_from_title),
+        override val accountTitleUM: AccountTitleUM?,
     ) : TransactionCardType
 
     data class ReadOnly(
         val showWarning: Boolean = false,
         val onWarningClick: (() -> Unit)? = null,
         override val inputError: InputError = InputError.Empty,
-        override val header: TextReference = TextReference.Res(R.string.swapping_to_title),
+        override val accountTitleUM: AccountTitleUM? = null,
     ) : TransactionCardType
 
     sealed interface InputError {

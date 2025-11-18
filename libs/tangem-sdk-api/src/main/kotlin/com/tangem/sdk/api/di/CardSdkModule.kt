@@ -26,7 +26,7 @@ internal object CardSdkModule {
             artworksDirectory = File(
                 context.getExternalFilesDir(null) ?: context.filesDir,
                 "card_artworks",
-            ).also { it.mkdirs() },
+            ).apply { mkdirs() },
         )
     }
 }

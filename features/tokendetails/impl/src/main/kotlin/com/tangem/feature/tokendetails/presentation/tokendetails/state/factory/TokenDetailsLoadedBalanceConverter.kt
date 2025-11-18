@@ -98,6 +98,8 @@ internal class TokenDetailsLoadedBalanceConverter(
                     stakingCryptoAmount,
                     currentState.selectedBalanceType,
                 ),
+                displayYeildSupplyCryptoBalance = (currentState as? TokenDetailsBalanceBlockState.Content)
+                    ?.displayYeildSupplyCryptoBalance,
                 balanceSegmentedButtonConfig = currentState.balanceSegmentedButtonConfig,
                 onBalanceSelect = clickIntents::onBalanceSelect,
                 selectedBalanceType = currentState.selectedBalanceType,
