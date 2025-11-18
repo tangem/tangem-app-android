@@ -34,16 +34,16 @@ fun SimpleActionRow(title: String, description: String, modifier: Modifier = Mod
                 .align(Alignment.CenterStart),
             verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
         ) {
-            AnimatedContent(targetState = title, label = "") {
+            AnimatedContent(targetState = title, label = "") { title ->
                 Text(
-                    text = it,
+                    text = title,
                     style = TangemTheme.typography.caption2,
                     color = TangemTheme.colors.text.secondary,
                 )
             }
-            AnimatedContent(targetState = description, label = "") {
+            AnimatedContent(targetState = description, label = "") { description ->
                 Text(
-                    text = it,
+                    text = description,
                     style = TangemTheme.typography.body2,
                     color = TangemTheme.colors.text.primary1,
                 )

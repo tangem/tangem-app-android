@@ -25,7 +25,15 @@ inline fun LazyItemScope.ReorderableItem(
     index: Int? = null,
     orientationLocked: Boolean = true,
     content: @Composable BoxScope.(isDragging: Boolean) -> Unit,
-) = ReorderableItem(reorderableState, key, modifier, Modifier.animateItem(), orientationLocked, index, content)
+) = ReorderableItem(
+    state = reorderableState,
+    key = key,
+    modifier = modifier,
+    defaultDraggingModifier = Modifier.animateItem(),
+    orientationLocked = orientationLocked,
+    index = index,
+    content = content,
+)
 
 /**
  * Fixed version of ReorderableItem from reorderable library.
@@ -41,7 +49,15 @@ inline fun LazyGridItemScope.ReorderableItem(
     modifier: Modifier = Modifier,
     index: Int? = null,
     content: @Composable BoxScope.(isDragging: Boolean) -> Unit,
-) = ReorderableItem(reorderableState, key, modifier, Modifier.animateItem(), false, index, content)
+) = ReorderableItem(
+    state = reorderableState,
+    key = key,
+    modifier = modifier,
+    defaultDraggingModifier = Modifier.animateItem(),
+    orientationLocked = false,
+    index = index,
+    content = content,
+)
 
 /**
  * Fixed version of ReorderableItem from reorderable library.
@@ -79,7 +95,8 @@ inline fun ReorderableItem(
                 key == state.dragCancelledAnimation.position?.key
             }
             if (cancel) {
-                Modifier.zIndex(1f)
+                Modifier
+                    .zIndex(1f)
                     .graphicsLayer {
                         translationX = if (!orientationLocked || !state.isVerticalScroll) {
                             state.dragCancelledAnimation.offset.x
