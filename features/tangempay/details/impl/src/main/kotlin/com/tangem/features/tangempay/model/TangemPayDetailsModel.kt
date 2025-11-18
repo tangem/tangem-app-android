@@ -11,14 +11,17 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig.ShowRefreshState
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.pay.TangemPayTopUpData
 import com.tangem.domain.pay.model.TangemPayCardBalance
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
+import com.tangem.features.tangempay.TangemPayConstants
 import com.tangem.features.tangempay.components.AddFundsListener
 import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
 import com.tangem.features.tangempay.details.impl.R
@@ -30,15 +33,17 @@ import com.tangem.features.tangempay.model.listener.CardDetailsEvent
 import com.tangem.features.tangempay.model.listener.CardDetailsEventListener
 import com.tangem.features.tangempay.model.transformers.*
 import com.tangem.features.tangempay.navigation.TangemPayDetailsInnerRoute
+import com.tangem.features.tangempay.utils.TangemPayDetailIntents
 import com.tangem.features.tangempay.utils.TangemPayMessagesFactory
 import com.tangem.features.tangempay.utils.TangemPayTxHistoryUiActions
+import com.tangem.features.tangempay.utils.TangemPayTxHistoryUpdateListener
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import com.tangem.utils.transformer.update
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -49,21 +54,20 @@ internal class TangemPayDetailsModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
+    private val urlOpener: UrlOpener,
     private val cardDetailsRepository: TangemPayCardDetailsRepository,
+    private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val uiMessageSender: UiMessageSender,
     private val cardDetailsEventListener: CardDetailsEventListener,
-) : Model(), TangemPayTxHistoryUiActions, AddFundsListener {
+    private val txHistoryUpdateListener: TangemPayTxHistoryUpdateListener,
+) : Model(), TangemPayTxHistoryUiActions, TangemPayDetailIntents, AddFundsListener {
 
     private val params: TangemPayDetailsContainerComponent.Params = paramsContainer.require()
 
     private val stateFactory = TangemPayDetailsStateFactory(
         onBack = router::pop,
-        onRefresh = ::onRefreshSwipe,
-        onAddFunds = ::onClickAddFunds,
-        onClickChangePin = ::onClickChangePin,
+        intents = this,
         isCardFrozen = params.config.isCardFrozen,
-        onClickFreezeCard = ::onClickFreezeCard,
-        onClickUnfreezeCard = ::onClickUnfreezeCard,
     )
 
     val uiState: StateFlow<TangemPayDetailsUM>
@@ -78,19 +82,20 @@ internal class TangemPayDetailsModel @Inject constructor(
     val bottomSheetNavigation: SlotNavigation<TangemPayDetailsNavigation> = SlotNavigation()
 
     init {
+        handleBalanceHiding()
         fetchAddToWalletBanner()
         fetchBalance()
     }
 
-    private fun onClickChangePin() {
+    override fun onClickChangePin() {
         router.push(TangemPayDetailsInnerRoute.ChangePIN)
     }
 
-    private fun onClickFreezeCard() {
+    override fun onClickFreezeCard() {
         uiMessageSender.send(TangemPayMessagesFactory.createFreezeCardMessage(onFreezeClicked = ::freezeCard))
     }
 
-    private fun onClickUnfreezeCard() {
+    override fun onClickUnfreezeCard() {
         uiMessageSender.send(TangemPayMessagesFactory.createUnfreezeCardMessage(onUnfreezeClicked = ::unfreezeCard))
     }
 
@@ -148,7 +153,7 @@ internal class TangemPayDetailsModel @Inject constructor(
         }
     }
 
-    private fun onClickAddFunds() {
+    override fun onClickAddFunds() {
         if (params.config.depositAddress == null || balance == null) {
             showBottomSheetError(TangemPayDetailsErrorType.Receive)
         } else {
@@ -172,6 +177,12 @@ internal class TangemPayDetailsModel @Inject constructor(
         }.saveIn(fetchBalanceJobHolder)
     }
 
+    private fun handleBalanceHiding() {
+        getBalanceHidingSettingsUseCase().onEach {
+            uiState.update(DetailBalanceVisibilityTransformer(isHidden = it.isBalanceHidden))
+        }.launchIn(modelScope)
+    }
+
     private fun fetchAddToWalletBanner() {
         modelScope.launch {
             val isDone = cardDetailsRepository.isAddToWalletDone().getOrNull() ?: false
@@ -185,10 +196,11 @@ internal class TangemPayDetailsModel @Inject constructor(
         }.saveIn(addToWalletBannerJobHolder)
     }
 
-    private fun onRefreshSwipe(refreshState: ShowRefreshState) {
+    override fun onRefreshSwipe(refreshState: ShowRefreshState) {
         modelScope.launch {
-            cardDetailsEventListener.send(CardDetailsEvent.Hide)
             uiState.update(TangemPayDetailsRefreshTransformer(isRefreshing = refreshState.value))
+            cardDetailsEventListener.send(CardDetailsEvent.Hide)
+            txHistoryUpdateListener.triggerUpdate()
             fetchBalance().join()
             uiState.update(TangemPayDetailsRefreshTransformer(isRefreshing = false))
         }.saveIn(refreshStateJobHolder)
@@ -246,6 +258,10 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     override fun onTransactionClick(item: TangemPayTxHistoryItem) {
         bottomSheetNavigation.activate(TangemPayDetailsNavigation.TransactionDetails(item))
+    }
+
+    override fun onClickTermsAndLimits() {
+        urlOpener.openUrl(TangemPayConstants.TERMS_AND_LIMITS_LINK)
     }
 
     private fun showBottomSheetError(type: TangemPayDetailsErrorType) {

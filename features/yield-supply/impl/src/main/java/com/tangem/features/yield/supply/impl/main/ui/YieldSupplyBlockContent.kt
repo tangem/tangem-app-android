@@ -55,8 +55,9 @@ internal fun YieldSupplyBlockContent(yieldSupplyUM: YieldSupplyUM, modifier: Mod
                 resourceReference(R.string.yield_module_stop_earning),
                 modifier,
             )
-            YieldSupplyUM.Unavailable -> SupplyUnavailable(modifier)
-            YieldSupplyUM.Initial -> Unit
+            YieldSupplyUM.Unavailable,
+            YieldSupplyUM.Initial,
+            -> Unit
         }
     }
 }
@@ -77,18 +78,6 @@ private fun SupplyAvailable(supplyUM: YieldSupplyUM.Available, modifier: Modifie
                 modifier = Modifier.fillMaxWidth(),
             )
         },
-    )
-}
-
-@Composable
-private fun SupplyUnavailable(modifier: Modifier = Modifier) {
-    SupplyInfo(
-        title = resourceReference(R.string.yield_module_unavailable_title),
-        subtitle = resourceReference(R.string.yield_module_unavailable_subtitle),
-        rewardsApy = null,
-        iconTint = TangemTheme.colors.icon.inactive,
-        button = null,
-        modifier = modifier,
     )
 }
 
@@ -149,12 +138,21 @@ private fun SupplyContent(supplyUM: YieldSupplyUM.Content, modifier: Modifier = 
             )
         }
         SpacerW8()
-        AnimatedVisibility(supplyUM.showWarningIcon) {
-            Icon(
-                imageVector = ImageVector.vectorResource(R.drawable.ic_alert_triangle_20),
-                contentDescription = null,
-                tint = TangemTheme.colors.icon.attention,
-            )
+        AnimatedContent(
+            targetState = supplyUM,
+        ) { currentState ->
+            when {
+                currentState.showWarningIcon -> Icon(
+                    imageVector = ImageVector.vectorResource(R.drawable.ic_alert_triangle_20),
+                    contentDescription = null,
+                    tint = TangemTheme.colors.icon.attention,
+                )
+                currentState.showInfoIcon -> Icon(
+                    imageVector = ImageVector.vectorResource(R.drawable.ic_alert_circle_red_20),
+                    contentDescription = null,
+                    tint = TangemTheme.colors.icon.accent,
+                )
+            }
         }
         Icon(
             imageVector = ImageVector.vectorResource(R.drawable.ic_chevron_right_24),
@@ -355,6 +353,7 @@ private class PreviewProvider : PreviewParameterProvider<YieldSupplyUM> {
                 onClick = {},
                 apy = "5.1",
                 showWarningIcon = false,
+                showInfoIcon = true,
             ),
             YieldSupplyUM.Content(
                 title = stringReference("Aave lending is active "),
@@ -363,6 +362,7 @@ private class PreviewProvider : PreviewParameterProvider<YieldSupplyUM> {
                 onClick = {},
                 apy = "5.1",
                 showWarningIcon = true,
+                showInfoIcon = false,
             ),
             YieldSupplyUM.Loading,
             YieldSupplyUM.Processing.Enter,

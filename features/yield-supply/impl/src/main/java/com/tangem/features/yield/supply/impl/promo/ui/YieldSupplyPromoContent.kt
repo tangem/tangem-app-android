@@ -4,13 +4,16 @@ import android.content.res.Configuration
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -57,7 +60,7 @@ internal fun YieldSupplyPromoContent(
             onClick = clickIntents::onUrlClick,
         )
         PrimaryButton(
-            text = stringResourceSafe(R.string.yield_module_start_earning),
+            text = stringResourceSafe(R.string.common_continue),
             onClick = clickIntents::onStartEarningClick,
             modifier = Modifier
                 .padding(
@@ -106,11 +109,11 @@ private fun ColumnScope.Content(yieldSupplyPromoUM: YieldSupplyPromoUM, clickInt
                         text = yieldSupplyPromoUM.subtitle,
                         style = LabelStyle.REGULAR,
                         icon = R.drawable.ic_information_24,
-                        onIconClick = clickIntents::onApyInfoClick,
+                        onClick = clickIntents::onApyInfoClick,
                     ),
                 )
                 SpacerH32()
-                PromoItems()
+                PromoItems(yieldSupplyPromoUM.tokenSymbol)
             }
             SpacerH32()
         }
@@ -131,7 +134,11 @@ private fun YieldStatusAppBar(onBackClick: () -> Unit, onHowItWorksClick: () -> 
             imageVector = ImageVector.vectorResource(R.drawable.ic_back_24),
             contentDescription = null,
             tint = TangemTheme.colors.icon.primary1,
-            modifier = Modifier.clickable(onClick = onBackClick),
+            modifier = Modifier.clickable(
+                onClick = onBackClick,
+                interactionSource = remember { MutableInteractionSource() },
+                indication = ripple(bounded = false),
+            ),
         )
         SpacerWMax()
         Text(
@@ -144,7 +151,7 @@ private fun YieldStatusAppBar(onBackClick: () -> Unit, onHowItWorksClick: () -> 
 }
 
 @Composable
-private fun PromoItems() {
+private fun PromoItems(tokenSymbol: String) {
     PromoItem(
         icon = R.drawable.ic_flash_new_24,
         title = resourceReference(R.string.yield_module_promo_screen_cash_out_title),
@@ -154,7 +161,10 @@ private fun PromoItems() {
     PromoItem(
         icon = R.drawable.ic_repeat_24,
         title = resourceReference(R.string.yield_module_promo_screen_auto_balance_title),
-        subtitle = resourceReference(R.string.yield_module_promo_screen_auto_balance_subtitle),
+        subtitle = resourceReference(
+            R.string.yield_module_promo_screen_auto_balance_subtitle_v2,
+            wrappedList(tokenSymbol),
+        ),
     )
     SpacerH24()
     PromoItem(
@@ -251,6 +261,7 @@ private fun YieldSupplyPromoContent_Preview() {
                 tosLink = "https://tangem.com/terms-of-service/",
                 policyLink = "https://tangem.com/privacy-policy/",
                 title = resourceReference(R.string.yield_module_promo_screen_title),
+                tokenSymbol = "USDT",
                 subtitle = resourceReference(R.string.yield_module_promo_screen_variable_rate_info, wrappedList("5.3")),
             ),
             clickIntents = object : YieldSupplyPromoClickIntents {

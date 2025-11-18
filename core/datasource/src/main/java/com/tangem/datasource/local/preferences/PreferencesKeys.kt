@@ -121,6 +121,8 @@ object PreferencesKeys {
 
     val YIELD_SUPPLY_WARNINGS_STATES_KEY by lazy { stringPreferencesKey(name = "yieldSupplyWarningsStates") }
 
+    val ACCESS_CODE_SKIPPED_STATES_KEY by lazy { stringPreferencesKey(name = "accessCodeSkippedStates") }
+
     // region Notifications
     val NOTIFICATIONS_APPLICATION_ID_KEY by lazy { stringPreferencesKey(name = "notificationsApplicationId") }
 

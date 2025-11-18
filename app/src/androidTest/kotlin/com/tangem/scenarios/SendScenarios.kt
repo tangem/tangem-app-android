@@ -1,13 +1,38 @@
 package com.tangem.scenarios
 
 import com.tangem.common.BaseTestCase
+import com.tangem.common.constants.TestConstants.QUOTES_API_SCENARIO
+import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
 import com.tangem.common.extensions.clickWithAssertion
+import com.tangem.common.utils.setWireMockScenarioState
 import com.tangem.screens.*
 import com.tangem.screens.onMainScreen
 import com.tangem.screens.onSendConfirmScreen
 import com.tangem.screens.onSendScreen
 import com.tangem.screens.onTokenDetailsScreen
 import io.qameta.allure.kotlin.Allure.step
+
+fun BaseTestCase.openSendScreen(tokenName: String, mockState: String = "") {
+    val scenarioState = mockState.ifEmpty { tokenName }
+    step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$scenarioState'") {
+        setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = scenarioState)
+    }
+    step("Set WireMock scenario: '$QUOTES_API_SCENARIO' to state: '$scenarioState'") {
+        setWireMockScenarioState(scenarioName = QUOTES_API_SCENARIO, state = scenarioState)
+    }
+    step("Open 'Main Screen'") {
+        openMainScreen()
+    }
+    step("Synchronize addresses") {
+        synchronizeAddresses()
+    }
+    step("Click on token with name: '$tokenName'") {
+        onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
+    }
+    step("Click on 'Send' button") {
+        onTokenDetailsScreen { sendButton().performClick() }
+    }
+}
 
 fun BaseTestCase.checkNetworkFeeBlock(currentFeeAmount: String, withFeeSelector: Boolean) {
     step("Assert fee selector block is displayed") {
@@ -72,7 +97,7 @@ fun BaseTestCase.openSendAddressScreen(
     }
 }
 
-fun BaseTestCase.checkScanQrScreen() {
+fun BaseTestCase.checkScanQrScreen(emptyClipboard: Boolean = true) {
     step("Assert 'Back' button is displayed") {
         onScanQrScreen { backTopAppBarButton.assertIsDisplayed() }
     }
@@ -82,8 +107,10 @@ fun BaseTestCase.checkScanQrScreen() {
     step("Assert 'Gallery' button is displayed") {
         onScanQrScreen { galleryButton.assertIsDisplayed() }
     }
-    step("Assert 'Paste from clipboard' is displayed") {
-        onScanQrScreen { pasteFromClipboardButton.assertIsDisplayed() }
+    if (!emptyClipboard) {
+        step("Assert 'Paste from clipboard' is displayed") {
+            onScanQrScreen { pasteFromClipboardButton.assertIsDisplayed() }
+        }
     }
 }
 
@@ -102,5 +129,21 @@ fun BaseTestCase.checkDestinationTagBlock(hint: String) {
     }
     step("Assert 'Destination Tag' caution is displayed") {
         onSendAddressScreen { destinationTagBlockCaution.assertIsDisplayed() }
+    }
+}
+
+fun BaseTestCase.checkRecentAddressItem(address: String, description: String) {
+    step("Assert recent address '$address' is displayed") {
+        onSendAddressScreen {
+            recentAddressItem(address).assertIsDisplayed()
+        }
+    }
+    step("Assert recent address item description is '$description'") {
+        onSendAddressScreen {
+            recentAddressItemDescription(description).assertTextContains(
+                description,
+                substring = true
+            )
+        }
     }
 }
