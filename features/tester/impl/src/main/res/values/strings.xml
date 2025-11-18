@@ -3,7 +3,9 @@
     <string name="tester_menu" translatable="false">Tester menu</string>
     <string name="feature_toggles" translatable="false">Feature toggles</string>
     <string name="custom_setup_warning_title" translatable="false">Custom setup</string>
+    <string name="initial_setup_warning_title" translatable="false">Initial setup</string>
     <string name="feature_toggles_custom_setup_warning_description" translatable="false">Toggles differs from v%s config</string>
+    <string name="feature_toggles_initial_setup_warning_description" translatable="false">Toggles matches v%s config</string>
     <string name="blockchain_providers_custom_setup_warning_description" translatable="false">Providers differs from release config</string>
     <string name="restart_app" translatable="false">Restart app</string>
     <string name="environment_toggles" translatable="false">Environment toggles</string>
@@ -15,4 +17,5 @@
     <string name="blockchain_providers" translatable="false">Blockchain providers</string>
     <string name="share_logs" translatable="false">Share logs</string>
     <string name="test_push" translatable="false">Test push</string>
+    <string name="accounts" translatable="false">Accounts</string>
 </resources>

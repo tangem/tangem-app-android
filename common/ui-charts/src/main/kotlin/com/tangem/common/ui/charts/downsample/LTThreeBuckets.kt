@@ -51,10 +51,10 @@ object LTThreeBuckets {
         val yRes = ArrayList<Double>(points.size)
         val indexesRes = ArrayList<Int>(points.size)
 
-        results.fastForEach {
-            xRes.add(it.x)
-            yRes.add(it.y)
-            indexesRes.add(it.originalIndex!!)
+        results.fastForEach { result ->
+            xRes.add(result.x)
+            yRes.add(result.y)
+            indexesRes.add(requireNotNull(result.originalIndex))
         }
 
         return Result(

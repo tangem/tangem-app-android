@@ -37,6 +37,7 @@ inline fun <reified M : Model> AppComponentContext.getOrCreateModel(): M = getOr
  * @param params The parameters to store in the [ParamsContainer],
 
  */
+@Suppress("NullableToStringCall")
 inline fun <reified M : Model, reified P : Any> AppComponentContext.getOrCreateModel(
     params: P?,
     messageSender: UiMessageSender? = null,

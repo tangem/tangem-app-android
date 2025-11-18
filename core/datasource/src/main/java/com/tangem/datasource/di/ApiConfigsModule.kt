@@ -53,6 +53,20 @@ internal object ApiConfigsModule {
 
     @Provides
     @IntoSet
+    fun provideYieldSupplyConfig(
+        environmentConfigStorage: EnvironmentConfigStorage,
+        appVersionProvider: AppVersionProvider,
+        authProvider: AuthProvider,
+        appInfoProvider: AppInfoProvider,
+    ): ApiConfig = YieldSupply(
+        environmentConfigStorage = environmentConfigStorage,
+        appVersionProvider = appVersionProvider,
+        authProvider = authProvider,
+        appInfoProvider = appInfoProvider,
+    )
+
+    @Provides
+    @IntoSet
     fun provideTangemVisaConfig(appVersionProvider: AppVersionProvider): ApiConfig = TangemPay(appVersionProvider)
 
     @Provides
