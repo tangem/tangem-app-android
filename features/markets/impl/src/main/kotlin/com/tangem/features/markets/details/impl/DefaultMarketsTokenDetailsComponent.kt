@@ -46,7 +46,7 @@ internal class DefaultMarketsTokenDetailsComponent @AssistedInject constructor(
 
     private val model: MarketsTokenDetailsModel = getOrCreateModel(updatedParams)
 
-    private val portfolioComponent: MarketsPortfolioComponent? = if (updatedParams.showPortfolio) {
+    private val portfolioComponent: MarketsPortfolioComponent? = if (updatedParams.shouldShowPortfolio) {
         portfolioComponentFactory.create(
             context = child("my_portfolio"),
             params = MarketsPortfolioComponent.Params(

@@ -3,17 +3,20 @@ package com.tangem.feature.wallet.presentation.router
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRoute.ManageTokens.Source
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.domain.models.TokenReceiveConfig
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.TangemPayDetailsConfig
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.redux.StateDialog
+import com.tangem.domain.tokens.model.details.NavigationAction
+import com.tangem.domain.tokens.model.details.TokenAction
 import com.tangem.feature.wallet.navigation.WalletRoute
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletDialogConfig
 import kotlinx.coroutines.channels.BufferOverflow
@@ -64,13 +67,18 @@ internal class DefaultWalletRouter @Inject constructor(
         urlOpener.openUrl(url)
     }
 
-    override fun openTokenDetails(userWalletId: UserWalletId, currencyStatus: CryptoCurrencyStatus) {
+    override fun openTokenDetails(
+        userWalletId: UserWalletId,
+        currencyStatus: CryptoCurrencyStatus,
+        navigationAction: NavigationAction?,
+    ) {
         val networkAddress = currencyStatus.value.networkAddress
         if (networkAddress != null && networkAddress.defaultAddress.value.isNotEmpty()) {
             router.push(
                 AppRoute.CurrencyDetails(
                     userWalletId = userWalletId,
                     currency = currencyStatus.currency,
+                    navigationAction = navigationAction,
                 ),
             )
         }
@@ -82,10 +90,6 @@ internal class DefaultWalletRouter @Inject constructor(
 
     override fun isWalletLastScreen(): Boolean {
         return router.stack.lastOrNull() is AppRoute.Wallet
-    }
-
-    override fun openManageTokensScreen(userWalletId: UserWalletId) {
-        router.push(AppRoute.ManageTokens(Source.SETTINGS, userWalletId))
     }
 
     override fun openScanFailedDialog(onTryAgain: () -> Unit) {
@@ -104,6 +108,28 @@ internal class DefaultWalletRouter @Inject constructor(
     override fun openTokenReceiveBottomSheet(tokenReceiveConfig: TokenReceiveConfig) {
         dialogNavigation.activate(
             configuration = WalletDialogConfig.TokenReceive(tokenReceiveConfig),
+        )
+    }
+
+    override fun openTangemPayOnboarding() {
+        router.push(AppRoute.TangemPayOnboarding(AppRoute.TangemPayOnboarding.Mode.ContinueOnboarding))
+    }
+
+    override fun openTangemPayDetails(config: TangemPayDetailsConfig) {
+        router.push(AppRoute.TangemPayDetails(config))
+    }
+
+    override fun openYieldSupplyBottomSheet(
+        cryptoCurrency: CryptoCurrency,
+        tokenAction: TokenAction,
+        onWarningAcknowledged: (TokenAction) -> Unit,
+    ) {
+        dialogNavigation.activate(
+            configuration = WalletDialogConfig.YieldSupplyWarning(
+                cryptoCurrency = cryptoCurrency,
+                tokenAction = tokenAction,
+                onWarningAcknowledged = onWarningAcknowledged,
+            ),
         )
     }
 }

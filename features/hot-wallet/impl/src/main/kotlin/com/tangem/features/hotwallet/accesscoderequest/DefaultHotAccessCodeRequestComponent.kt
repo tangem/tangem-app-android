@@ -5,7 +5,7 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
-import com.tangem.core.ui.components.FullScreen
+import com.tangem.core.ui.components.DialogFullScreen
 import com.tangem.domain.wallets.hot.HotWalletPasswordRequester
 import com.tangem.features.hotwallet.HotAccessCodeRequestComponent
 import com.tangem.features.hotwallet.accesscoderequest.ui.HotAccessCodeRequestFullScreenContent
@@ -47,7 +47,7 @@ internal class DefaultHotAccessCodeRequestComponent @AssistedInject constructor(
         var isShownIfProxy by remember { mutableStateOf(state.isShown) }
 
         if (isShownIfProxy) {
-            FullScreen(focusable = true, onBackClick = state.onDismiss) {
+            DialogFullScreen(onDismissRequest = state.onDismiss) {
                 HotAccessCodeRequestFullScreenContent(
                     state = state.copy(isShown = isShownProxy),
                     modifier = modifier,
