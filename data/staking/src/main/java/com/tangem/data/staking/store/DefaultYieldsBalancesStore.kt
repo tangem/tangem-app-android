@@ -96,6 +96,16 @@ internal class DefaultYieldsBalancesStore(
         )
     }
 
+    override suspend fun clear(userWalletId: UserWalletId, stakingIds: Set<StakingID>) {
+        persistenceStore.updateData { current ->
+            current.toMutableMap().apply {
+                this[userWalletId.stringValue] = this[userWalletId.stringValue].orEmpty()
+                    .filterNot { it.getStakingId() in stakingIds }
+                    .toSet()
+            }
+        }
+    }
+
     private suspend fun storeInRuntime(userWalletId: UserWalletId, values: Set<YieldBalanceWrapperDTO>) {
         val newBalances = YieldBalanceConverter(isCached = false).convertSet(input = values)
             .filterNotNull()

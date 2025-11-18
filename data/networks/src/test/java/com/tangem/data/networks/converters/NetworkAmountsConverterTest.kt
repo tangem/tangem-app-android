@@ -1,77 +1,99 @@
 package com.tangem.data.networks.converters
 
 import com.google.common.truth.Truth
+import com.tangem.datasource.local.network.entity.NetworkStatusDM
+import com.tangem.datasource.local.network.entity.NetworkStatusDM.CurrencyId
 import com.tangem.domain.models.currency.CryptoCurrency.ID
-import com.tangem.domain.models.currency.CryptoCurrency.ID.Body
-import com.tangem.domain.models.currency.CryptoCurrency.ID.Prefix
-import com.tangem.domain.models.network.NetworkStatus.Amount
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.NetworkStatus.Amount.Loaded
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 import java.math.BigDecimal
 
 /**
 [REDACTED_AUTHOR]
  */
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class NetworkAmountsConverterTest {
+
+    private val rawNetworkId = "ETH"
+    private val derivationPath = Network.DerivationPath.Card(value = "m/44'/60'/0'/0/0")
+    private val derivationPathHashCode = "-1843072795"
+    private val converter = NetworkAmountsConverter(rawNetworkId = rawNetworkId, derivationPath = derivationPath)
 
     @Test
     fun convert() {
         // Arrange
-        val value = mapOf(
-            "coin⟨BCH⟩bitcoin-cash" to BigDecimal.ZERO,
-            "coin⟨ETH→12367123⟩ethereum" to BigDecimal.ONE,
+        val value = listOf(
+            NetworkStatusDM.CurrencyAmount(CurrencyId.createCoinId(coinId = "ethereum"), BigDecimal.ONE),
+            NetworkStatusDM.CurrencyAmount(
+                id = CurrencyId.createTokenId(
+                    rawTokenId = "usdt",
+                    contractAddress = "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+                ),
+                amount = BigDecimal.ZERO,
+            ),
+            NetworkStatusDM.CurrencyAmount(
+                id = CurrencyId.createTokenId(
+                    rawTokenId = null,
+                    contractAddress = "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+                ),
+                amount = BigDecimal.TEN,
+            ),
         )
 
         // Act
-        val actual = NetworkAmountsConverter.convert(value)
+        val actual = converter.convert(value)
 
         // Assert
         val expected = mapOf(
-            ID(
-                prefix = Prefix.COIN_PREFIX,
-                body = Body.NetworkId(rawId = "BCH"),
-                suffix = ID.Suffix.RawID(rawId = "bitcoin-cash"),
+            ID.fromValue("coin⟨ETH→$derivationPathHashCode⟩ethereum") to Loaded(value = BigDecimal.ONE),
+            ID.fromValue(
+                value = "token⟨ETH→$derivationPathHashCode⟩usdt⚓0xdAC17F958D2ee523a2206206994597C13D831ec7",
             ) to Loaded(value = BigDecimal.ZERO),
-            ID(
-                prefix = Prefix.COIN_PREFIX,
-                body = Body.NetworkIdWithDerivationPath(rawId = "ETH", derivationPathHashCode = 12367123),
-                suffix = ID.Suffix.RawID(rawId = "ethereum"),
-            ) to Loaded(value = BigDecimal.ONE),
+            ID.fromValue(
+                value = "token⟨ETH→$derivationPathHashCode⟩0xdAC17F958D2ee523a2206206994597C13D831ec7",
+            ) to Loaded(value = BigDecimal.TEN),
         )
 
-        Truth.assertThat(actual).isEqualTo(expected)
+        Truth.assertThat(actual).containsExactlyEntriesIn(expected)
     }
 
     @Test
     fun convertBack() {
         // Arrange
         val value = mapOf(
-            ID(
-                prefix = Prefix.COIN_PREFIX,
-                body = Body.NetworkId(rawId = "BCH"),
-                suffix = ID.Suffix.RawID(rawId = "bitcoin-cash"),
+            ID.fromValue("coin⟨ETH→$derivationPathHashCode⟩ethereum") to Loaded(value = BigDecimal.ONE),
+            ID.fromValue(
+                value = "token⟨ETH→$derivationPathHashCode⟩usdt⚓0xdAC17F958D2ee523a2206206994597C13D831ec7",
             ) to Loaded(value = BigDecimal.ZERO),
-            ID(
-                prefix = Prefix.COIN_PREFIX,
-                body = Body.NetworkIdWithDerivationPath(rawId = "ETH", derivationPathHashCode = 12367123),
-                suffix = ID.Suffix.RawID(rawId = "ethereum"),
-            ) to Loaded(value = BigDecimal.ONE),
-            ID(
-                prefix = Prefix.COIN_PREFIX,
-                body = Body.NetworkId(rawId = "BTC"),
-                suffix = ID.Suffix.RawID(rawId = "bitcoin"),
-            ) to Amount.NotFound,
+            ID.fromValue(
+                value = "token⟨ETH→$derivationPathHashCode⟩0xdAC17F958D2ee523a2206206994597C13D831ec7",
+            ) to Loaded(value = BigDecimal.TEN),
         )
 
         // Act
-        val actual = NetworkAmountsConverter.convertBack(value)
+        val actual = converter.convertBack(value)
 
         // Assert
-        val expected = mapOf(
-            "coin⟨BCH⟩bitcoin-cash" to BigDecimal.ZERO,
-            "coin⟨ETH→12367123⟩ethereum" to BigDecimal.ONE,
+        val expected = listOf(
+            NetworkStatusDM.CurrencyAmount(CurrencyId.createCoinId(coinId = "ethereum"), BigDecimal.ONE),
+            NetworkStatusDM.CurrencyAmount(
+                id = CurrencyId.createTokenId(
+                    rawTokenId = "usdt",
+                    contractAddress = "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+                ),
+                amount = BigDecimal.ZERO,
+            ),
+            NetworkStatusDM.CurrencyAmount(
+                id = CurrencyId.createTokenId(
+                    rawTokenId = null,
+                    contractAddress = "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+                ),
+                amount = BigDecimal.TEN,
+            ),
         )
 
-        Truth.assertThat(actual).isEqualTo(expected)
+        Truth.assertThat(actual).containsExactlyElementsIn(expected)
     }
 }

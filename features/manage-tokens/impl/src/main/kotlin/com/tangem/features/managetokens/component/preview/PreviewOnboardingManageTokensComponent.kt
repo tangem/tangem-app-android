@@ -66,7 +66,7 @@ internal class PreviewOnboardingManageTokensComponent(
             background = Color.Black,
             topBadgeIconResId = R.drawable.img_eth_22,
             isGrayscale = false,
-            showCustomBadge = true,
+            shouldShowCustomBadge = true,
         ),
         onRemoveClick = {},
     )
@@ -79,7 +79,7 @@ internal class PreviewOnboardingManageTokensComponent(
             url = null,
             fallbackResId = R.drawable.img_btc_22,
             isGrayscale = false,
-            showCustomBadge = false,
+            shouldShowCustomBadge = false,
         ),
         networks = if (index == 2) {
             CurrencyItemUM.Basic.NetworksUM.Expanded(getCurrencyNetworks())

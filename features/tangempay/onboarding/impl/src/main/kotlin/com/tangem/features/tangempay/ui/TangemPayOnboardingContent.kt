@@ -19,7 +19,11 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.tangempay.onboarding.impl.R
 
 @Composable
-internal fun TangemPayOnboardingContent(state: TangemPayOnboardingScreenState, modifier: Modifier = Modifier) {
+internal fun TangemPayOnboardingContent(
+    state: TangemPayOnboardingScreenState,
+    onButtonClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     if (state.fullScreenLoading) {
         Box(
             modifier = modifier.fillMaxSize(),
@@ -71,8 +75,8 @@ internal fun TangemPayOnboardingContent(state: TangemPayOnboardingScreenState, m
                     textReference = resourceReference(R.string.tangempay_onboarding_get_card_button_text),
                     iconRes = R.drawable.ic_tangem_24,
                     isIconVisible = true,
-                    showProgress = state.buttonLoading,
-                    onClick = {},
+                    shouldShowProgress = state.buttonLoading,
+                    onClick = onButtonClick,
                 ),
             )
         }

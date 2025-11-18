@@ -30,13 +30,13 @@ object MockYieldDTOFactory {
                 logoURI = null,
                 isPoints = null,
             ),
-            tokens = listOf(),
+            tokens = emptyList(),
             args = YieldDTO.ArgsDTO(
                 enter = YieldDTO.ArgsDTO.Enter(
                     addresses = YieldDTO.ArgsDTO.Enter.Addresses(
                         address = AddressArgumentDTO(required = false),
                     ),
-                    args = mapOf(),
+                    args = emptyMap(),
                 ),
                 exit = null,
             ),
@@ -69,7 +69,7 @@ object MockYieldDTOFactory {
                     logoURI = null,
                     isPoints = null,
                 ),
-                tokensDTO = listOf(),
+                tokensDTO = emptyList(),
                 type = "type",
                 rewardSchedule = YieldDTO.MetadataDTO.RewardScheduleDTO.DAY,
                 cooldownPeriod = null,
@@ -81,7 +81,7 @@ object MockYieldDTOFactory {
                 revshare = YieldDTO.MetadataDTO.EnabledDTO(enabled = true),
                 fee = YieldDTO.MetadataDTO.EnabledDTO(enabled = true),
             ),
-            validators = listOf(),
+            validators = emptyList(),
             isAvailable = true,
         )
     }

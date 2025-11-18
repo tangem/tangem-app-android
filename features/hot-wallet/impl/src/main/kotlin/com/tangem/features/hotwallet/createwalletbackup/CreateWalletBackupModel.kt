@@ -14,7 +14,6 @@ import com.tangem.features.hotwallet.manualbackup.check.ManualBackupCheckCompone
 import com.tangem.features.hotwallet.manualbackup.completed.ManualBackupCompletedComponent
 import com.tangem.features.hotwallet.manualbackup.phrase.ManualBackupPhraseComponent
 import com.tangem.features.hotwallet.manualbackup.start.ManualBackupStartComponent
-import com.tangem.features.hotwallet.stepper.api.HotWalletStepperComponent
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import javax.inject.Inject
@@ -28,7 +27,6 @@ internal class CreateWalletBackupModel @Inject constructor(
 
     val params = paramsContainer.require<CreateWalletBackupComponent.Params>()
 
-    val hotWalletStepperComponentModelCallback = HotWalletStepperComponentModelCallback()
     val manualBackupStartModelCallbacks = ManualBackupStartModelCallbacks()
     val manualBackupPhraseModelCallbacks = ManualBackupPhraseModelCallbacks()
     val manualBackupCheckModelCallbacks = ManualBackupCheckModelCallbacks()
@@ -61,14 +59,6 @@ internal class CreateWalletBackupModel @Inject constructor(
 
     fun onManualBackupCompleted() {
         router.pop()
-    }
-
-    inner class HotWalletStepperComponentModelCallback : HotWalletStepperComponent.ModelCallback {
-        override fun onBackClick() {
-            onBack()
-        }
-
-        override fun onSkipClick() = Unit
     }
 
     inner class ManualBackupStartModelCallbacks : ManualBackupStartComponent.ModelCallbacks {

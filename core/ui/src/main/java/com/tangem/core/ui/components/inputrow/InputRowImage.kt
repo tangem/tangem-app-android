@@ -102,7 +102,7 @@ fun InputRowImage(
                         modifier = Modifier.padding(top = TangemTheme.dimens.spacing2),
                     )
                 }
-                iconRes?.let {
+                iconRes?.let { iconRes ->
                     Icon(
                         painter = painterResource(id = iconRes),
                         contentDescription = null,
@@ -137,7 +137,7 @@ private fun InputRowInputEnterInfoPreview(
             iconRes = data.actionIconRes,
             onIconClick = {},
             showNetworkIcon = false,
-            showDivider = data.showDivider,
+            showDivider = data.shouldShowDivider,
         )
     }
 }
@@ -147,9 +147,9 @@ private data class InputRowImagePreviewData(
     val subtitle: TextReference,
     val caption: TextReference,
     val iconState: CurrencyIconState,
-    val showDivider: Boolean,
+    val shouldShowDivider: Boolean,
     val actionIconRes: Int?,
-    val showNetworkIcon: Boolean = false,
+    val shouldShowNetworkIcon: Boolean = false,
 )
 
 private class InputRowImagePreviewDataProvider :
@@ -162,8 +162,8 @@ private class InputRowImagePreviewDataProvider :
                 caption = TextReference.Str("caption"),
                 iconState = CurrencyIconState.Locked,
                 actionIconRes = null,
-                showDivider = false,
-                showNetworkIcon = false,
+                shouldShowDivider = false,
+                shouldShowNetworkIcon = false,
             ),
             InputRowImagePreviewData(
                 title = TextReference.Str("title"),
@@ -171,8 +171,8 @@ private class InputRowImagePreviewDataProvider :
                 caption = TextReference.Str("caption"),
                 iconState = CurrencyIconState.Locked,
                 actionIconRes = R.drawable.ic_chevron_right_24,
-                showDivider = true,
-                showNetworkIcon = true,
+                shouldShowDivider = true,
+                shouldShowNetworkIcon = true,
             ),
         )
 }

@@ -2,8 +2,8 @@ package com.tangem.tap.di.domain
 
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.domain.card.ScanCardProcessor
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
-import com.tangem.domain.core.wallets.UserWalletsListRepository
 import com.tangem.domain.wallets.usecase.GenerateWalletNameUseCase
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.tap.domain.scanCard.CardScanningFeatureToggles

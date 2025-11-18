@@ -2,7 +2,10 @@ package com.tangem.core.analytics.models.event
 
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.AnalyticsParam.Key.ACTION
+import com.tangem.core.analytics.models.AnalyticsParam.Key.BLOCKCHAIN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ERROR_CODE
+import com.tangem.core.analytics.models.AnalyticsParam.Key.STATE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.TOKEN_PARAM
 
 /**
@@ -107,6 +110,21 @@ sealed class MainScreenAnalyticsEvent(
     data class HotTokenError(val errorCode: String) : MainScreenAnalyticsEvent(
         event = "Hot Token Error",
         params = mapOf(ERROR_CODE to errorCode),
+    )
+
+    data class ApyClicked(
+        val token: String,
+        val blockchain: String,
+        val action: String,
+        val state: String,
+    ) : MainScreenAnalyticsEvent(
+        event = "APY Clicked",
+        params = mapOf(
+            TOKEN_PARAM to token,
+            BLOCKCHAIN to blockchain,
+            ACTION to action,
+            STATE to state,
+        ),
     )
     // endregion
 

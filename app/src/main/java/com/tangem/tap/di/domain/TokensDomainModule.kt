@@ -22,8 +22,8 @@ import com.tangem.domain.tokens.operations.BaseCurrencyStatusOperations
 import com.tangem.domain.tokens.operations.CachedCurrenciesStatusesOperations
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
-import com.tangem.domain.tokens.repository.PolkadotAccountHealthCheckRepository
 import com.tangem.domain.tokens.repository.TokenReceiveWarningsViewedRepository
+import com.tangem.domain.tokens.repository.YieldSupplyWarningsViewedRepository
 import com.tangem.domain.tokens.wallet.WalletBalanceFetcher
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.tap.domain.tokens.DefaultTokensFeatureToggles
@@ -335,14 +335,6 @@ internal object TokensDomainModule {
 
     @Provides
     @Singleton
-    fun provideRunPolkadotAccountHealthCheckUseCase(
-        repository: PolkadotAccountHealthCheckRepository,
-    ): RunPolkadotAccountHealthCheckUseCase {
-        return RunPolkadotAccountHealthCheckUseCase(repository)
-    }
-
-    @Provides
-    @Singleton
     fun provideGetNetworkStatusesUseCase(networksRepository: NetworksRepository): GetNetworkAddressesUseCase {
         return GetNetworkAddressesUseCase(
             networksRepository = networksRepository,
@@ -454,5 +446,22 @@ internal object TokensDomainModule {
         tokenReceiveWarningsViewedRepository: TokenReceiveWarningsViewedRepository,
     ): SaveViewedTokenReceiveWarningUseCase {
         return SaveViewedTokenReceiveWarningUseCase(tokenReceiveWarningsViewedRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideNeedShowYieldSupplyDepositedWarningUseCase(
+        yieldSupplyWarningsViewedRepository: YieldSupplyWarningsViewedRepository,
+        dispatchers: CoroutineDispatcherProvider,
+    ): NeedShowYieldSupplyDepositedWarningUseCase {
+        return NeedShowYieldSupplyDepositedWarningUseCase(yieldSupplyWarningsViewedRepository, dispatchers)
+    }
+
+    @Provides
+    @Singleton
+    fun provideSaveViewedYieldSupplyWarningUseCase(
+        yieldSupplyWarningsViewedRepository: YieldSupplyWarningsViewedRepository,
+    ): SaveViewedYieldSupplyWarningUseCase {
+        return SaveViewedYieldSupplyWarningUseCase(yieldSupplyWarningsViewedRepository)
     }
 }

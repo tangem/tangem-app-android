@@ -19,11 +19,11 @@ import com.tangem.wallet.R
 @Composable
 internal fun SettingsScreensScaffold(
     onBackClick: () -> Unit,
-    content: @Composable () -> Unit,
     modifier: Modifier = Modifier,
     @StringRes titleRes: Int? = null,
-    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     addBottomInsets: Boolean = true,
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
+    content: @Composable () -> Unit,
     fab: @Composable () -> Unit = {},
 ) {
     val backgroundColor = TangemTheme.colors.background.secondary
@@ -129,18 +129,18 @@ internal fun DetailsMainButton(
 }
 
 @Composable
-internal fun DetailsRadioButtonElement(title: String, subtitle: String, selected: Boolean, onClick: () -> Unit) {
+internal fun DetailsRadioButtonElement(title: String, subtitle: String, isSelected: Boolean, onClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .selectable(
-                selected = selected,
+                selected = isSelected,
                 onClick = { onClick() },
             )
             .padding(start = 20.dp, end = 20.dp, top = 16.dp, bottom = 16.dp),
     ) {
         RadioButton(
-            selected = selected,
+            selected = isSelected,
             onClick = null,
             modifier = Modifier.padding(end = 20.dp),
             colors = RadioButtonDefaults.colors(

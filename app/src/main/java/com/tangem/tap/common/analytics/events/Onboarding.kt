@@ -8,7 +8,7 @@ import com.tangem.core.analytics.models.AnalyticsEvent
 sealed class Onboarding(
     category: String,
     event: String,
-    params: Map<String, String> = mapOf(),
+    params: Map<String, String> = emptyMap(),
 ) : AnalyticsEvent(category, event, params) {
 
     class Started : Onboarding("Onboarding", "Onboarding Started")
@@ -16,7 +16,7 @@ sealed class Onboarding(
 
     sealed class CreateWallet(
         event: String,
-        params: Map<String, String> = mapOf(),
+        params: Map<String, String> = emptyMap(),
     ) : Onboarding("Onboarding / Create Wallet", event, params) {
 
         class ScreenOpened : CreateWallet("Create Wallet Screen Opened")
@@ -36,7 +36,7 @@ sealed class Onboarding(
 
     sealed class Backup(
         event: String,
-        params: Map<String, String> = mapOf(),
+        params: Map<String, String> = emptyMap(),
     ) : Onboarding("Onboarding / Backup", event, params) {
 
         class ScreenOpened : Backup("Backup Screen Opened")
@@ -64,7 +64,7 @@ sealed class Onboarding(
 
     sealed class Topup(
         event: String,
-        params: Map<String, String> = mapOf(),
+        params: Map<String, String> = emptyMap(),
     ) : Onboarding("Onboarding / Top Up", event, params) {
 
         class ScreenOpened : Topup("Activation Screen Opened")
@@ -79,7 +79,7 @@ sealed class Onboarding(
 
     sealed class Twins(
         event: String,
-        params: Map<String, String> = mapOf(),
+        params: Map<String, String> = emptyMap(),
     ) : Onboarding("Onboarding / Twins", event, params) {
 
         class ScreenOpened : Twins("Twinning Screen Opened")

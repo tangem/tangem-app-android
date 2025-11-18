@@ -9,9 +9,11 @@ fun interface ComposableContentComponent {
 
     @Composable
     fun Content(modifier: Modifier)
-}
 
-fun getEmptyComposableContentComponent() = EmptyComposableContentComponent
+    companion object {
+        val EMPTY = EmptyComposableContentComponent
+    }
+}
 
 object EmptyComposableContentComponent : ComposableContentComponent {
     @Composable

@@ -76,7 +76,7 @@ internal fun AccessCode(state: AccessCodeUM, modifier: Modifier = Modifier) {
                     length = state.accessCodeLength,
                     isPasswordVisual = state.isConfirmMode,
                     value = state.accessCode,
-                    pinTextColor = PinTextColor.Primary,
+                    pinTextColor = state.accessCodeColor,
                     onValueChange = state.onAccessCodeChange,
                 )
             }
@@ -109,6 +109,7 @@ private fun PreviewSet() {
         AccessCode(
             state = AccessCodeUM(
                 accessCode = "",
+                accessCodeColor = PinTextColor.Primary,
                 onAccessCodeChange = {},
                 isConfirmMode = false,
                 buttonEnabled = false,
@@ -127,6 +128,7 @@ private fun PreviewConfirm() {
         AccessCode(
             state = AccessCodeUM(
                 accessCode = "123456",
+                accessCodeColor = PinTextColor.Success,
                 onAccessCodeChange = {},
                 isConfirmMode = true,
                 buttonEnabled = true,
