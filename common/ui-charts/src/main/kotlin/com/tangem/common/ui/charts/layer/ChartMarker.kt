@@ -62,12 +62,7 @@ internal fun rememberTangemChartMarker(color: Color): CartesianMarker {
             },
             indicatorSizeDp = INDICATOR_SIZE_DP,
             guideline = guideline,
-            valueFormatter = object : CartesianMarkerValueFormatter {
-                override fun format(
-                    context: CartesianDrawContext,
-                    targets: List<CartesianMarker.Target>,
-                ): CharSequence = ""
-            },
+            valueFormatter = CartesianMarkerValueFormatter { _, _ -> "" },
         ) {
             override fun updateInsets(
                 context: CartesianMeasureContext,
@@ -76,7 +71,12 @@ internal fun rememberTangemChartMarker(color: Color): CartesianMarker {
                 insets: Insets,
             ) {
                 with(context) {
-                    super.updateInsets(context, horizontalDimensions, model, insets)
+                    super.updateInsets(
+                        context = context,
+                        horizontalDimensions = horizontalDimensions,
+                        model = model,
+                        insets = insets,
+                    )
                     val baseShadowInsetDp =
                         CLIPPING_FREE_SHADOW_RADIUS_MULTIPLIER * LABEL_BACKGROUND_SHADOW_RADIUS_DP
                     val topInset = (baseShadowInsetDp - LABEL_BACKGROUND_SHADOW_DY_DP).pixels
@@ -90,11 +90,11 @@ internal fun rememberTangemChartMarker(color: Color): CartesianMarker {
                 cacheStore
                     .getOrSet(keyNamespace, indicator, outColor) { indicator.invoke(outColor) }
                     .draw(
-                        this,
-                        x - halfIndicatorSize,
-                        y - halfIndicatorSize,
-                        x + halfIndicatorSize,
-                        y + halfIndicatorSize,
+                        context = this,
+                        left = x - halfIndicatorSize,
+                        top = y - halfIndicatorSize,
+                        right = x + halfIndicatorSize,
+                        bottom = y + halfIndicatorSize,
                     )
             }
         }
