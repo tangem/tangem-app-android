@@ -13,7 +13,9 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.core.decompose.context.AppComponentContext
+import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.components.PrimaryButtonIconEnd
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetTitle
@@ -24,8 +26,13 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.yield.supply.impl.R
+import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyActionUM
+import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyFeeUM
 import com.tangem.features.yield.supply.impl.common.ui.YieldSupplyActionContent
+import com.tangem.features.yield.supply.impl.subcomponents.notifications.YieldSupplyNotificationsComponent
 import com.tangem.features.yield.supply.impl.subcomponents.startearning.model.YieldSupplyStartEarningModel
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 
 internal class YieldSupplyStartEarningComponent(
     private val appComponentContext: AppComponentContext,
@@ -33,6 +40,20 @@ internal class YieldSupplyStartEarningComponent(
 ) : ComposableModularContentComponent, AppComponentContext by appComponentContext {
 
     private val model: YieldSupplyStartEarningModel = getOrCreateModel(params = params)
+
+    private val yieldSupplyNotificationsComponent = YieldSupplyNotificationsComponent(
+        appComponentContext = child("yieldSupplyEnterNotifications"),
+        params = YieldSupplyNotificationsComponent.Params(
+            userWalletId = params.userWalletId,
+            cryptoCurrencyStatusFlow = model.cryptoCurrencyStatusFlow,
+            feeCryptoCurrencyStatusFlow = model.feeCryptoCurrencyStatusFlow,
+            callback = model,
+        ),
+    )
+
+    init {
+        model.uiState.onEach(params.callback::onResult).launchIn(componentScope)
+    }
 
     @Composable
     override fun Title() {
@@ -49,6 +70,9 @@ internal class YieldSupplyStartEarningComponent(
 
         YieldSupplyActionContent(
             yieldSupplyActionUM = state,
+            onFooterClick = params.callback::onFeePolicyClick,
+            enableFooterClick = state.yieldSupplyFeeUM is YieldSupplyFeeUM.Content,
+            yieldSupplyNotificationsComponent = yieldSupplyNotificationsComponent,
             modifier = modifier,
         ) {
             Box(
@@ -82,11 +106,18 @@ internal class YieldSupplyStartEarningComponent(
     override fun Footer() {
         val state by model.uiState.collectAsStateWithLifecycle()
 
+        val icon = if (state.isPrimaryButtonEnabled) {
+            walletInterationIcon(model.userWallet)
+        } else {
+            null
+        }
+
         PrimaryButtonIconEnd(
             text = stringResourceSafe(R.string.yield_module_start_earning),
             onClick = model::onClick,
             enabled = state.isPrimaryButtonEnabled,
-            iconResId = R.drawable.ic_tangem_24,
+            iconResId = icon,
+            showProgress = state.isTransactionSending,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
@@ -96,10 +127,12 @@ internal class YieldSupplyStartEarningComponent(
     data class Params(
         val userWalletId: UserWalletId,
         val cryptoCurrency: CryptoCurrency,
+        val yieldSupplyActionUM: YieldSupplyActionUM,
         val callback: ModelCallback,
     )
 
     interface ModelCallback {
+        fun onResult(yieldSupplyActionUM: YieldSupplyActionUM)
         fun onBackClick()
         fun onFeePolicyClick()
         fun onTransactionSent()

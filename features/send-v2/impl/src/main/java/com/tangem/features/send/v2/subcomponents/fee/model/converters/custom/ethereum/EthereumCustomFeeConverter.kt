@@ -11,8 +11,8 @@ import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.features.send.v2.api.entity.CustomFeeFieldUM
+import com.tangem.features.send.v2.api.subcomponents.feeSelector.utils.FeeCalculationUtils.checkExceedBalance
 import com.tangem.features.send.v2.impl.R
-import com.tangem.features.send.v2.subcomponents.fee.model.checkExceedBalance
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 

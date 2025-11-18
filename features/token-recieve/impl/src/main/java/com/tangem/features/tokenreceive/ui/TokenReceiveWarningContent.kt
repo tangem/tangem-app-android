@@ -9,6 +9,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -25,6 +26,7 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.TokenReceiveWarningBottomSheetTestTags
 import com.tangem.features.tokenreceive.impl.R
 import com.tangem.features.tokenreceive.ui.state.WarningUM
 
@@ -40,7 +42,7 @@ internal fun TokenReceiveWarningContent(warningUM: WarningUM) {
                 start = 16.dp,
                 end = 16.dp,
                 bottom = 16.dp,
-            ),
+            ).testTag(TokenReceiveWarningBottomSheetTestTags.BOTTOM_SHEET),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         CurrencyIcon(
@@ -120,7 +122,7 @@ private class TokenReceiveWarningContentProvider : PreviewParameterProvider<Warn
         fallbackTint = TangemColorPalette.Black,
         fallbackBackground = TangemColorPalette.Meadow,
         isGrayscale = false,
-        showCustomBadge = false,
+        shouldShowCustomBadge = false,
     )
 
     override val values: Sequence<WarningUM>
