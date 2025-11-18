@@ -26,22 +26,22 @@ object NFTSdkAssetConverter : TwoWayConverter<Pair<Network, SdkNFTAsset>, NFTAss
             amount = asset.amount,
             decimals = asset.decimals,
             salePrice = salePrice,
-            rarity = asset.rarity?.let {
+            rarity = asset.rarity?.let { rarity ->
                 NFTAsset.Rarity(
-                    rank = it.rank,
-                    label = it.label,
+                    rank = rarity.rank,
+                    label = rarity.label,
                 )
             },
-            media = asset.media?.let {
+            media = asset.media?.let { media ->
                 NFTAsset.Media(
-                    animationUrl = it.animationUrl,
-                    imageUrl = it.imageUrl,
+                    animationUrl = media.animationUrl,
+                    imageUrl = media.imageUrl,
                 )
             },
-            traits = asset.traits.map {
+            traits = asset.traits.map { trait ->
                 NFTAsset.Trait(
-                    name = it.name,
-                    value = it.value,
+                    name = trait.name,
+                    value = trait.value,
                 )
             },
             source = StatusSource.CACHE,
@@ -65,22 +65,22 @@ object NFTSdkAssetConverter : TwoWayConverter<Pair<Network, SdkNFTAsset>, NFTAss
             amount = value.amount,
             decimals = value.decimals,
             salePrice = salePrice,
-            rarity = value.rarity?.let {
+            rarity = value.rarity?.let { rarity ->
                 SdkNFTAsset.Rarity(
-                    rank = it.rank,
-                    label = it.label,
+                    rank = rarity.rank,
+                    label = rarity.label,
                 )
             },
-            media = value.media?.let {
+            media = value.media?.let { media ->
                 SdkNFTAsset.Media(
-                    animationUrl = it.animationUrl,
-                    imageUrl = it.imageUrl,
+                    animationUrl = media.animationUrl,
+                    imageUrl = media.imageUrl,
                 )
             },
-            traits = value.traits.map {
+            traits = value.traits.map { trait ->
                 SdkNFTAsset.Trait(
-                    name = it.name,
-                    value = it.value,
+                    name = trait.name,
+                    value = trait.value,
                 )
             },
         )

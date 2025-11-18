@@ -21,6 +21,9 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import com.tangem.common.ui.account.AccountTitleUM
+import com.tangem.core.ui.components.SpacerH
+import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.containers.FooterContainer
 import com.tangem.core.ui.components.inputrow.InputRowRecipient
 import com.tangem.core.ui.extensions.*
@@ -45,18 +48,13 @@ internal fun SendDestinationContent(
     if (state !is DestinationUM.Content) return
     val recipients = state.recent
     val wallets = state.wallets
-    val memoField = state.memoTextField
     val address = state.addressTextField
     val isValidating by remember(state.isValidating) { derivedStateOf { state.isValidating } }
     val isError by remember(address.isError) { derivedStateOf { address.isError } }
     LazyColumn(
         modifier = Modifier // Do not put fillMaxSize() in here
             .background(TangemTheme.colors.background.tertiary)
-            .padding(
-                start = 16.dp,
-                end = 16.dp,
-                bottom = 16.dp,
-            ),
+            .padding(horizontal = 16.dp),
     ) {
         addressItem(
             address = address,
@@ -65,22 +63,25 @@ internal fun SendDestinationContent(
             isValidating = isValidating,
             onAddressChange = clickIntents::onRecipientAddressValueChange,
             onQrCodeClick = clickIntents::onQrCodeScanClick,
-            isRedesignEnabled = state.isRedesignEnabled,
         )
         memoField(
-            memoField = memoField,
+            memoField = state.memoTextField,
             onMemoChange = clickIntents::onRecipientMemoValueChange,
-            isRedesignEnabled = state.isRedesignEnabled,
         )
         listHeaderItem(
-            titleRes = R.string.send_recipient_wallets_title,
+            titleRes = when (state.accountTitleUM) {
+                is AccountTitleUM.Account -> R.string.common_accounts
+                else -> R.string.send_recipient_wallets_title
+            },
+            isLoading = state.accountTitleUM == null,
             isVisible = wallets.isNotEmpty() && wallets.first().isVisible && !state.isRecentHidden,
             isFirst = true,
         )
         listItem(
             list = wallets,
             isLast = recipients.any { !it.isVisible },
-            isBalanceHidden = isBalanceHidden,
+            accountTitleUM = state.accountTitleUM,
+            isBalanceHidden = false,
             isRecentHidden = state.isRecentHidden,
             onClick = { title ->
                 clickIntents.onRecipientAddressValueChange(
@@ -91,6 +92,7 @@ internal fun SendDestinationContent(
         )
         listHeaderItem(
             titleRes = R.string.send_recent_transactions,
+            isLoading = state.accountTitleUM == null,
             isVisible = recipients.isNotEmpty() && recipients.first().isVisible && !state.isRecentHidden,
             isFirst = wallets.any { !it.isVisible },
         )
@@ -106,6 +108,9 @@ internal fun SendDestinationContent(
                 )
             },
         )
+        item("SPACER_KEY") {
+            SpacerH(16.dp)
+        }
     }
 }
 
@@ -117,7 +122,6 @@ private fun LazyListScope.addressItem(
     isValidating: Boolean,
     onAddressChange: (String, EnterAddressSource) -> Unit,
     onQrCodeClick: () -> Unit,
-    isRedesignEnabled: Boolean,
 ) {
     item(key = ADDRESS_FIELD_KEY) {
         FooterContainer(
@@ -130,7 +134,6 @@ private fun LazyListScope.addressItem(
                 onValueChange = { onAddressChange(it, EnterAddressSource.InputField) },
                 onPasteClick = { onAddressChange(it, EnterAddressSource.PasteButton) },
                 onQrCodeClick = onQrCodeClick,
-                isRedesignEnabled = isRedesignEnabled,
                 isError = isError,
                 isLoading = isValidating,
                 error = address.error,
@@ -149,7 +152,6 @@ private fun LazyListScope.addressItem(
 private fun LazyListScope.memoField(
     memoField: DestinationTextFieldUM.RecipientMemo?,
     onMemoChange: (String, Boolean) -> Unit,
-    isRedesignEnabled: Boolean,
 ) {
     if (memoField != null) {
         item(key = MEMO_FIELD_KEY) {
@@ -158,24 +160,20 @@ private fun LazyListScope.memoField(
                 value = memoField.value,
                 label = memoField.label,
                 placeholder = placeholder,
-                footer = if (isRedesignEnabled) {
-                    annotatedReference(
-                        buildAnnotatedString {
-                            append(stringResourceSafe(R.string.send_recipient_memo_footer_v2))
-                            append("\n")
-                            withStyle(SpanStyle(fontWeight = FontWeight.Medium)) {
-                                appendColored(
-                                    text = stringResourceSafe(
-                                        R.string.send_recipient_memo_footer_v2_highlighted,
-                                    ),
-                                    color = TangemTheme.colors.text.secondary,
-                                )
-                            }
-                        },
-                    )
-                } else {
-                    resourceReference(R.string.send_recipient_memo_footer)
-                },
+                footer = annotatedReference(
+                    buildAnnotatedString {
+                        append(stringResourceSafe(R.string.send_recipient_memo_footer_v2))
+                        append("\n")
+                        withStyle(SpanStyle(fontWeight = FontWeight.Medium)) {
+                            appendColored(
+                                text = stringResourceSafe(
+                                    R.string.send_recipient_memo_footer_v2_highlighted,
+                                ),
+                                color = TangemTheme.colors.text.secondary,
+                            )
+                        }
+                    },
+                ),
                 onValueChange = { onMemoChange(it, false) },
                 onPasteClick = { onMemoChange(it, true) },
                 modifier = Modifier.padding(top = 20.dp),
@@ -184,13 +182,17 @@ private fun LazyListScope.memoField(
                 error = memoField.error,
                 isReadOnly = !memoField.isEnabled,
                 isValuePasted = memoField.isValuePasted,
-                isRedesignEnabled = isRedesignEnabled,
             )
         }
     }
 }
 
-private fun LazyListScope.listHeaderItem(@StringRes titleRes: Int, isVisible: Boolean, isFirst: Boolean) {
+private fun LazyListScope.listHeaderItem(
+    @StringRes titleRes: Int,
+    isVisible: Boolean,
+    isLoading: Boolean,
+    isFirst: Boolean,
+) {
     item(key = titleRes) {
         AnimateRecentAppearance(isVisible) {
             val (topPadding, paddingFromTop) = if (isFirst) {
@@ -199,10 +201,8 @@ private fun LazyListScope.listHeaderItem(@StringRes titleRes: Int, isVisible: Bo
                 0.dp to 8.dp
             }
             val topRadius = if (isFirst) 16.dp else 0.dp
-            Text(
-                text = stringResourceSafe(titleRes),
-                style = TangemTheme.typography.subtitle2,
-                color = TangemTheme.colors.text.tertiary,
+            AnimatedContent(
+                targetState = isLoading,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = topPadding)
@@ -219,7 +219,22 @@ private fun LazyListScope.listHeaderItem(@StringRes titleRes: Int, isVisible: Bo
                         start = 12.dp,
                         end = 12.dp,
                     ),
-            )
+            ) { currentIsLoading ->
+                if (currentIsLoading) {
+                    Box {
+                        TextShimmer(
+                            style = TangemTheme.typography.subtitle2,
+                            text = stringResourceSafe(titleRes),
+                        )
+                    }
+                } else {
+                    Text(
+                        text = stringResourceSafe(titleRes),
+                        style = TangemTheme.typography.subtitle2,
+                        color = TangemTheme.colors.text.tertiary,
+                    )
+                }
+            }
         }
     }
 }
@@ -230,6 +245,7 @@ private fun LazyListScope.listItem(
     isBalanceHidden: Boolean,
     isRecentHidden: Boolean,
     onClick: (String) -> Unit,
+    accountTitleUM: AccountTitleUM? = null,
 ) {
     items(
         count = list.size,
@@ -243,6 +259,7 @@ private fun LazyListScope.listItem(
             ListItemWithIcon(
                 title = title,
                 subtitle = item.subtitle.orMaskWithStars(isBalanceHidden).resolveReference(),
+                accountTitleUM = accountTitleUM,
                 info = item.timestamp?.resolveReference(),
                 subtitleEndOffset = item.subtitleEndOffset,
                 subtitleIconRes = item.subtitleIconRes,

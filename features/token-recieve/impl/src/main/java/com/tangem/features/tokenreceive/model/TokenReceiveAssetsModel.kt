@@ -37,21 +37,24 @@ internal class TokenReceiveAssetsModel @Inject constructor(
     }
 
     internal val state: StateFlow<ReceiveAssetsUM>
-    field = MutableStateFlow<ReceiveAssetsUM>(
-        ReceiveAssetsUM(
-            onCopyClick = {
-                params.callback.onCopyClick(
-                    address = it,
-                    source = TokenReceiveCopyActionSource.Receive,
-                )
-            },
-            onOpenQrCodeClick = params.callback::onQrCodeClick,
-            addresses = params.addresses,
-            showMemoDisclaimer = params.showMemoDisclaimer,
-            isEnsResultLoading = false,
-            notificationConfigs = params.notificationConfigs,
-        ),
-    )
+        field = MutableStateFlow<ReceiveAssetsUM>(
+            ReceiveAssetsUM(
+                onCopyClick = {
+                    params.callback.onCopyClick(
+                        address = it,
+                        source = TokenReceiveCopyActionSource.Receive,
+                    )
+                },
+                onOpenQrCodeClick = params.callback::onQrCodeClick,
+                addresses = params.addresses,
+                showMemoDisclaimer = params.showMemoDisclaimer,
+                isEnsResultLoading = false,
+                notificationConfigs = params.notificationConfigs,
+                currencyIconState = params.currencyIconState,
+                network = params.tokenName,
+                onShareClick = params.callback::onShareClick,
+            ),
+        )
 
     private fun configureEnsStatus(): AnalyticsParam.EnsStatus {
         val hasEnsAddress = params.addresses.any { it.type == ReceiveAddress.Type.Ens }

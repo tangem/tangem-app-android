@@ -81,7 +81,7 @@ fun InputRowBestRate(
                 )
             }
             SpacerWMax()
-            onIconClick?.let {
+            if (onIconClick != null) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_chevron_right_24),
                     contentDescription = null,
@@ -144,7 +144,7 @@ private fun InputRowBestRatePreview(
             title = data.title,
             titleExtra = data.titleExtra,
             subtitle = data.subtitle,
-            showTag = data.showTag,
+            showTag = data.shouldShowTag,
             onIconClick = data.iconClick,
             modifier = Modifier
                 .background(TangemTheme.colors.background.action),
@@ -155,7 +155,7 @@ private fun InputRowBestRatePreview(
 private data class InputRowBestRatePreviewData(
     val title: TextReference,
     val titleExtra: TextReference,
-    val showTag: Boolean,
+    val shouldShowTag: Boolean,
     val subtitle: TextReference,
     val iconClick: (() -> Unit)?,
 )
@@ -167,14 +167,14 @@ private class InputRowBestRatePreviewDataProvider : PreviewParameterProvider<Inp
                 title = TextReference.Str("1inch"),
                 titleExtra = TextReference.Str("DEX"),
                 subtitle = TextReference.Str("0,64554846 DAI ≈ 1 MATIC "),
-                showTag = true,
+                shouldShowTag = true,
                 iconClick = {},
             ),
             InputRowBestRatePreviewData(
                 title = TextReference.Str("ChangeNow"),
                 titleExtra = TextReference.Str("CEX"),
                 subtitle = TextReference.Str("0,64554846 DAI ≈ 1 MATIC "),
-                showTag = false,
+                shouldShowTag = false,
                 iconClick = null,
             ),
         )

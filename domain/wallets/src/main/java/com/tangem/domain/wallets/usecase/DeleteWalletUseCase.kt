@@ -3,10 +3,10 @@ package com.tangem.domain.wallets.usecase
 import arrow.core.Either
 import arrow.core.raise.either
 import com.tangem.common.doOnFailure
-import com.tangem.domain.wallets.legacy.UserWalletsListManager
-import com.tangem.domain.core.wallets.error.DeleteWalletError
+import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.common.wallets.error.DeleteWalletError
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.core.wallets.UserWalletsListRepository
+import com.tangem.domain.wallets.legacy.UserWalletsListManager
 
 /**
  * Use case for deleting user wallet
@@ -26,7 +26,7 @@ class DeleteWalletUseCase(
      *
      * @param userWalletId ID of user wallet to be deleted.
      *
-     * @return [Either] with [DeleteWalletError] or [Boolean] which indicates that there are still saved wallets.
+     * @return [Either] with [com.tangem.domain.common.wallets.error.DeleteWalletError] or [Boolean] which indicates that there are still saved wallets.
      * */
     suspend operator fun invoke(userWalletId: UserWalletId): Either<DeleteWalletError, Boolean> {
         if (useNewRepository) {

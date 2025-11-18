@@ -55,7 +55,7 @@ internal class WcConnectionsModel @Inject constructor(
 
     private val params = paramsContainer.require<WcConnectionsComponent.Params>()
     val uiState: StateFlow<WcConnectionsState>
-    field = MutableStateFlow<WcConnectionsState>(getInitialState())
+        field = MutableStateFlow<WcConnectionsState>(getInitialState())
     val bottomSheetNavigation: SlotNavigation<WcConnectionsBottomSheetConfig> = SlotNavigation()
 
     init {

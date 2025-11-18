@@ -57,7 +57,13 @@ fun TangemLinearProgressIndicator(
     ) {
         val strokeWidth = size.height
         drawLinearIndicatorBackground(backgroundColor, strokeWidth, strokeCap)
-        drawLinearIndicator(0f, coercedProgress(), color, strokeWidth, strokeCap)
+        drawLinearIndicator(
+            startFraction = 0f,
+            endFraction = coercedProgress(),
+            color = color,
+            strokeWidth = strokeWidth,
+            strokeCap = strokeCap,
+        )
     }
 }
 
@@ -135,20 +141,20 @@ fun TangemLinearProgressIndicator(
         drawLinearIndicatorBackground(backgroundColor, strokeWidth, strokeCap)
         if (firstLineHead - firstLineTail > 0) {
             drawLinearIndicator(
-                firstLineHead,
-                firstLineTail,
-                color,
-                strokeWidth,
-                strokeCap,
+                startFraction = firstLineHead,
+                endFraction = firstLineTail,
+                color = color,
+                strokeWidth = strokeWidth,
+                strokeCap = strokeCap,
             )
         }
         if ((secondLineHead - secondLineTail) > 0) {
             drawLinearIndicator(
-                secondLineHead,
-                secondLineTail,
-                color,
-                strokeWidth,
-                strokeCap,
+                startFraction = secondLineHead,
+                endFraction = secondLineTail,
+                color = color,
+                strokeWidth = strokeWidth,
+                strokeCap = strokeCap,
             )
         }
     }
@@ -198,7 +204,12 @@ private fun DrawScope.drawLinearIndicator(
     // if there isn't enough space to draw the stroke caps, fall back to StrokeCap.Butt
     if (strokeCap == StrokeCap.Butt || height > width) {
         // Progress line
-        drawLine(color, Offset(barStart, yOffset), Offset(barEnd, yOffset), strokeWidth)
+        drawLine(
+            color = color,
+            start = Offset(barStart, yOffset),
+            end = Offset(barEnd, yOffset),
+            strokeWidth = strokeWidth,
+        )
     } else {
         // need to adjust barStart and barEnd for the stroke caps
         val strokeCapOffset = strokeWidth / 2
@@ -209,18 +220,24 @@ private fun DrawScope.drawLinearIndicator(
         if (abs(endFraction - startFraction) > 0) {
             // Progress line
             drawLine(
-                color,
-                Offset(adjustedBarStart, yOffset),
-                Offset(adjustedBarEnd, yOffset),
-                strokeWidth,
-                strokeCap,
+                color = color,
+                start = Offset(adjustedBarStart, yOffset),
+                end = Offset(adjustedBarEnd, yOffset),
+                strokeWidth = strokeWidth,
+                cap = strokeCap,
             )
         }
     }
 }
 
 private fun DrawScope.drawLinearIndicatorBackground(color: Color, strokeWidth: Float, strokeCap: StrokeCap) =
-    drawLinearIndicator(0f, 1f, color, strokeWidth, strokeCap)
+    drawLinearIndicator(
+        startFraction = 0f,
+        endFraction = 1f,
+        color = color,
+        strokeWidth = strokeWidth,
+        strokeCap = strokeCap,
+    )
 
 // Indeterminate linear indicator transition specs
 // Total duration for one cycle
@@ -238,10 +255,10 @@ private const val FIRST_LINE_TAIL_DELAY = 333
 private const val SECOND_LINE_HEAD_DELAY = 1000
 private const val SECOND_LINE_TAIL_DELAY = 1267
 
-private val FIRST_LINE_HEAD_EASING = CubicBezierEasing(0.2f, 0f, 0.8f, 1f)
-private val FIRST_LINE_TAIL_EASING = CubicBezierEasing(0.4f, 0f, 1f, 1f)
-private val SECOND_LINE_HEAD_EASING = CubicBezierEasing(0f, 0f, 0.65f, 1f)
-private val SECOND_LINE_TAIL_EASING = CubicBezierEasing(0.1f, 0f, 0.45f, 1f)
+private val FIRST_LINE_HEAD_EASING = CubicBezierEasing(a = 0.2f, b = 0f, c = 0.8f, d = 1f)
+private val FIRST_LINE_TAIL_EASING = CubicBezierEasing(a = 0.4f, b = 0f, c = 1f, d = 1f)
+private val SECOND_LINE_HEAD_EASING = CubicBezierEasing(a = 0f, b = 0f, c = 0.65f, d = 1f)
+private val SECOND_LINE_TAIL_EASING = CubicBezierEasing(a = 0.1f, b = 0f, c = 0.45f, d = 1f)
 
 // region Preview
 @Preview(showBackground = true, widthDp = 360)

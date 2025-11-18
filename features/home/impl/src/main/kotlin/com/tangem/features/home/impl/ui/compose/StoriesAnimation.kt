@@ -95,11 +95,11 @@ fun StoriesTextAnimation(
 
 @Composable
 fun StoriesBottomImageAnimation(
+    firstStepDuration: Int,
+    totalDuration: Int,
     initialScale: Float = 2.5f,
     secondStageScale: Float = SCALE_SWITCH_BARRIER,
     targetScale: Float = 1.0f,
-    firstStepDuration: Int,
-    totalDuration: Int,
     content: @Composable (Modifier) -> Unit,
 ) {
     val secondStepDuration = totalDuration - firstStepDuration

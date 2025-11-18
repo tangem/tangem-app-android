@@ -75,7 +75,12 @@ fun AmountTextField(
     val decimalFormat = rememberDecimalFormat()
     BoxWithConstraints(modifier = modifier) {
         val fontSize = if (isAutoResize) {
-            resizeFont(visualTransformation, value, textStyle, reduceFactor)
+            resizeFont(
+                visualTransformation = visualTransformation,
+                value = value,
+                textStyle = textStyle,
+                reduceFactor = reduceFactor,
+            )
         } else {
             textStyle.fontSize
         }
@@ -189,24 +194,24 @@ private class AmountTextFieldPreviewProvider : PreviewParameterProvider<AmountTe
             value = "1000000,123123",
             decimals = 3,
             placeholderAlignment = TopStart,
-            showPlaceholder = true,
+            shouldShowPlaceholder = true,
         ),
         AmountTextFieldPreviewData(
             value = "1000000.123123",
             decimals = 6,
             placeholderAlignment = TopStart,
-            showPlaceholder = false,
+            shouldShowPlaceholder = false,
         ),
         AmountTextFieldPreviewData(
             value = null,
             decimals = 2,
-            showPlaceholder = true,
+            shouldShowPlaceholder = true,
             placeholderAlignment = TopCenter,
         ),
         AmountTextFieldPreviewData(
             value = null,
             decimals = 2,
-            showPlaceholder = true,
+            shouldShowPlaceholder = true,
             placeholderAlignment = TopStart,
         ),
     )
@@ -215,7 +220,7 @@ private class AmountTextFieldPreviewProvider : PreviewParameterProvider<AmountTe
 private data class AmountTextFieldPreviewData(
     val value: String? = null,
     val decimals: Int = 2,
-    val showPlaceholder: Boolean,
+    val shouldShowPlaceholder: Boolean,
     val placeholderAlignment: Alignment,
 )
 // endregion

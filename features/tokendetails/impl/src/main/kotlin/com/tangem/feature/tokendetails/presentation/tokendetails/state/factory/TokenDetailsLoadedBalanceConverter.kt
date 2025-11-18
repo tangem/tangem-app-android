@@ -16,8 +16,10 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDeta
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.BalanceType
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsBalanceBlockState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsYieldSupplyState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsNotification
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.utils.getBalance
+import com.tangem.features.yield.supply.api.YieldSupplyFeatureToggles
 import com.tangem.utils.Provider
 import com.tangem.utils.StringsSigns.DASH_SIGN
 import com.tangem.utils.converter.Converter
@@ -29,6 +31,7 @@ internal class TokenDetailsLoadedBalanceConverter(
     private val currentStateProvider: Provider<TokenDetailsState>,
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val clickIntents: TokenDetailsClickIntents,
+    private val yieldSupplyFeatureToggles: YieldSupplyFeatureToggles,
 ) : Converter<Either<CurrencyStatusError, CryptoCurrencyStatus>, TokenDetailsState> {
 
     override fun convert(value: Either<CurrencyStatusError, CryptoCurrencyStatus>): TokenDetailsState {
@@ -100,6 +103,14 @@ internal class TokenDetailsLoadedBalanceConverter(
                 selectedBalanceType = currentState.selectedBalanceType,
                 isBalanceSelectorEnabled = isBalanceSelectorEnabled,
                 isBalanceFlickering = status.value.isFlickering(),
+                yieldSupplyState =
+                if (yieldSupplyFeatureToggles.isYieldSupplyFeatureEnabled &&
+                    status.value.yieldSupplyStatus?.isActive == true
+                ) {
+                    TokenDetailsYieldSupplyState.Active(clickIntents::onYieldInfoClick)
+                } else {
+                    TokenDetailsYieldSupplyState.Empty
+                },
             )
             is CryptoCurrencyStatus.Loading -> TokenDetailsBalanceBlockState.Loading(
                 actionButtons = currentState.actionButtons,

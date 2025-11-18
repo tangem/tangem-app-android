@@ -1,12 +1,11 @@
 package com.tangem.features.kyc
 
-import com.tangem.core.decompose.context.AppComponentContext
+import com.tangem.core.decompose.factory.ComponentFactory
+import com.tangem.core.ui.decompose.ComposableContentComponent
 
-interface KycComponent {
+interface KycComponent : ComposableContentComponent {
 
-    fun launch()
+    data object Params
 
-    interface Factory {
-        fun create(appComponentContext: AppComponentContext): KycComponent
-    }
+    interface Factory : ComponentFactory<Params, KycComponent>
 }

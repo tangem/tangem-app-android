@@ -221,14 +221,19 @@ internal data class DropdownMenuPositionProvider(
         val toTop = anchorBounds.top - contentOffsetY - popupContentSize.height
         val toCenter = anchorBounds.top - popupContentSize.height / 2
         val toDisplayBottom = windowSize.height - popupContentSize.height - verticalMargin
-        val y = sequenceOf(toBottom, toTop, toCenter, toDisplayBottom).firstOrNull {
-            it >= verticalMargin &&
-                it + popupContentSize.height <= windowSize.height - verticalMargin
+        val y = sequenceOf(toBottom, toTop, toCenter, toDisplayBottom).firstOrNull { element ->
+            element >= verticalMargin &&
+                element + popupContentSize.height <= windowSize.height - verticalMargin
         } ?: toTop
 
         onPositionCalculated(
             anchorBounds,
-            IntRect(x, y, x + popupContentSize.width, y + popupContentSize.height),
+            IntRect(
+                left = x,
+                top = y,
+                right = x + popupContentSize.width,
+                bottom = y + popupContentSize.height,
+            ),
         )
         return IntOffset(x, y)
     }

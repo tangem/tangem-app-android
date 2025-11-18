@@ -16,7 +16,7 @@ internal class EmailMessageTitleResolver(private val resources: Resources) {
 
     /** Resolve email message title by [type] */
     fun resolve(type: FeedbackEmailType): String {
-        return when (type) {
+        val resId = when (type) {
             is FeedbackEmailType.DirectUserRequest,
             is FeedbackEmailType.CurrencyDescriptionError,
             is FeedbackEmailType.CardAttestationFailed,
@@ -32,6 +32,7 @@ internal class EmailMessageTitleResolver(private val resources: Resources) {
             -> R.string.feedback_preface_tx_failed
             is FeedbackEmailType.PreActivatedWallet -> R.string.feedback_preface_support
         }
-            .let(resources::getStringSafe)
+
+        return resources.getStringSafe(resId)
     }
 }

@@ -18,8 +18,8 @@ internal class SetApprovalBottomSheetInProgressTransformer(
                     config.copy(
                         data = config.data.copy(
                             approveButton = config.data.approveButton.copy(
-                                enabled = false,
-                                loading = true,
+                                isEnabled = false,
+                                isLoading = true,
                             ),
                             cancelButton = config.data.cancelButton.copy(
                                 enabled = false,

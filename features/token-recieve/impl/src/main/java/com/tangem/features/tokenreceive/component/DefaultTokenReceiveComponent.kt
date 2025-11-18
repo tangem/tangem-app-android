@@ -77,6 +77,7 @@ internal class DefaultTokenReceiveComponent @AssistedInject constructor(
             is TokenReceiveRoutes.QrCode -> TokenReceiveQrCodeComponent(
                 appComponentContext = appComponentContext,
                 params = TokenReceiveQrCodeComponent.TokenReceiveQrCodeParams(
+                    type = model.params.config.type,
                     cryptoCurrency = model.params.config.cryptoCurrency,
                     address = model.state.value.addresses.find { it.value == config.address } ?: error(
                         "Address has to be there",
@@ -95,6 +96,7 @@ internal class DefaultTokenReceiveComponent @AssistedInject constructor(
                     showMemoDisclaimer = model.params.config.showMemoDisclaimer,
                     fullName = model.params.config.cryptoCurrency.network.name,
                     tokenName = model.getTokenName(),
+                    currencyIconState = model.state.value.iconState,
                 ),
             )
             TokenReceiveRoutes.Warning -> TokenReceiveWarningComponent(

@@ -28,6 +28,7 @@ android {
     packaging {
         jniLibs {
             useLegacyPackaging = true
+            excludes.add("lib/x86_64/libargon2.so")
         }
         resources.excludes.add("META-INF/LICENSE.md")
         resources.excludes.add("META-INF/NOTICE.md")
@@ -96,6 +97,9 @@ configurations.all {
 
         force(
             "org.bouncycastle:bcpkix-jdk15on:1.70",
+            deps.kotlin.coroutines,
+            deps.kotlin.coroutines.jvm,
+            deps.kotlin.coroutines.android,
         )
     }
 }
@@ -111,6 +115,7 @@ dependencies {
     implementation(projects.domain.account)
     implementation(projects.domain.models)
     implementation(projects.domain.core)
+    api(projects.domain.common)
     implementation(projects.domain.card)
     implementation(projects.domain.demo)
     implementation(projects.domain.demo.models)
@@ -154,6 +159,7 @@ dependencies {
     implementation(projects.domain.walletManager)
     implementation(projects.domain.walletManager.models)
     implementation(projects.domain.yieldSupply)
+    implementation(projects.domain.blockaid)
 
     implementation(projects.common)
     implementation(projects.common.routing)
@@ -267,6 +273,8 @@ dependencies {
     implementation(projects.features.welcome.impl)
     implementation(projects.features.createWalletSelection.api)
     implementation(projects.features.createWalletSelection.impl)
+    implementation(projects.features.createWalletStart.api)
+    implementation(projects.features.createWalletStart.impl)
     implementation(projects.features.home.api)
     implementation(projects.features.home.impl)
     implementation(projects.features.account.api)

@@ -25,7 +25,12 @@ class GetTxHistoryItemsUseCase(private val repository: TxHistoryRepository) {
     ): Either<TxHistoryListError, Flow<PagingData<TxInfo>>> {
         return either {
             repository
-                .getTxHistoryItems(userWalletId, currency, pageSize, refresh)
+                .getTxHistoryItems(
+                    userWalletId = userWalletId,
+                    currency = currency,
+                    pageSize = pageSize,
+                    refresh = refresh,
+                )
                 .catch { raise(TxHistoryListError.DataError(it)) }
         }
     }
