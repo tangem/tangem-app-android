@@ -7,11 +7,15 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
+import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
+import com.tangem.domain.account.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.express.models.ExpressError
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
@@ -50,7 +54,10 @@ internal class SendWithSwapModel @Inject constructor(
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
+    private val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase,
+    private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     private val swapAlertFactory: SwapAlertFactory,
+    private val accountsFeatureToggles: AccountsFeatureToggles,
     paramsContainer: ParamsContainer,
 ) : Model(),
     SwapAmountComponent.ModelCallback,
@@ -60,6 +67,7 @@ internal class SendWithSwapModel @Inject constructor(
     private val params: SendWithSwapComponent.Params = paramsContainer.require()
 
     val analyticCategoryName = CommonSendAnalyticEvents.SEND_CATEGORY
+    val analyticsSendSource = CommonSendAnalyticEvents.CommonSendSource.SendWithSwap
     val initialRoute = SendWithSwapRoute.Amount(false)
     val currentRoute = MutableStateFlow<SendWithSwapRoute>(initialRoute)
 
@@ -67,26 +75,32 @@ internal class SendWithSwapModel @Inject constructor(
     var appCurrency: AppCurrency = AppCurrency.Default
 
     val uiState: StateFlow<SendWithSwapUM>
-    field = MutableStateFlow(initialState())
+        field = MutableStateFlow(initialState())
 
     val isBalanceHiddenFlow: StateFlow<Boolean>
-    field = MutableStateFlow(false)
+        field = MutableStateFlow(false)
 
     val primaryCryptoCurrencyStatusFlow: StateFlow<CryptoCurrencyStatus>
-    field = MutableStateFlow(
-        CryptoCurrencyStatus(
-            currency = params.currency,
-            value = CryptoCurrencyStatus.Loading,
-        ),
-    )
+        field = MutableStateFlow(
+            CryptoCurrencyStatus(
+                currency = params.currency,
+                value = CryptoCurrencyStatus.Loading,
+            ),
+        )
 
     val primaryFeePaidCurrencyStatusFlow: StateFlow<CryptoCurrencyStatus>
-    field = MutableStateFlow(
-        CryptoCurrencyStatus(
-            currency = params.currency,
-            value = CryptoCurrencyStatus.Loading,
-        ),
-    )
+        field = MutableStateFlow(
+            CryptoCurrencyStatus(
+                currency = params.currency,
+                value = CryptoCurrencyStatus.Loading,
+            ),
+        )
+
+    val accountFlow: StateFlow<Account.CryptoPortfolio?>
+        field = MutableStateFlow(null)
+
+    val isAccountModeFlow: StateFlow<Boolean>
+        field = MutableStateFlow(false)
 
     init {
         initUserWallet()
@@ -102,8 +116,10 @@ internal class SendWithSwapModel @Inject constructor(
         uiState.update { it.copy(destinationUM = destinationUM) }
     }
 
-    override fun onResult(sendWithSwapUM: SendWithSwapUM) {
-        uiState.value = sendWithSwapUM
+    override fun onResult(route: SendWithSwapRoute, sendWithSwapUM: SendWithSwapUM) {
+        if (currentRoute.value == route) {
+            uiState.value = sendWithSwapUM
+        }
     }
 
     override fun onNavigationResult(navigationUM: NavigationUM) {
@@ -191,36 +207,54 @@ internal class SendWithSwapModel @Inject constructor(
         val isSingleWalletWithToken = wallet is UserWallet.Cold &&
             wallet.scanResponse.cardTypesResolver.isSingleWalletWithToken()
 
-        getCurrencyStatus(
-            cryptoCurrency = cryptoCurrency,
-            isSingleWalletWithToken = isSingleWalletWithToken,
-            isMultiCurrency = isMultiCurrency,
-        ).onEach { maybeCryptoCurrency ->
-            maybeCryptoCurrency.fold(
-                ifRight = { cryptoCurrencyStatus ->
-                    primaryCryptoCurrencyStatusFlow.value = cryptoCurrencyStatus
-                    primaryFeePaidCurrencyStatusFlow.value = getFeePaidCryptoCurrencyStatusSyncUseCase(
-                        userWalletId = params.userWalletId,
-                        cryptoCurrencyStatus = cryptoCurrencyStatus,
-                    ).getOrNull() ?: cryptoCurrencyStatus
-                },
-                ifLeft = { error ->
-                    swapAlertFactory.getGenericErrorState(
-                        expressError = ExpressError.UnknownError,
-                        onFailedTxEmailClick = {
-                            modelScope.launch {
-                                swapAlertFactory.onFailedTxEmailClick(
-                                    userWallet = userWallet,
-                                    cryptoCurrency = params.currency,
-                                    errorMessage = error.toString(),
-                                )
-                            }
-                        },
-                        popBack = ::onBackClick,
-                    )
-                },
-            )
-        }.launchIn(modelScope)
+        if (accountsFeatureToggles.isFeatureEnabled) {
+            getAccountCurrencyStatusUseCase(
+                userWalletId = params.userWalletId,
+                currency = cryptoCurrency,
+            ).onEach { (account, cryptoCurrencyStatus) ->
+                accountFlow.value = account
+                isAccountModeFlow.value = isAccountsModeEnabledUseCase.invokeSync()
+
+                primaryCryptoCurrencyStatusFlow.value = cryptoCurrencyStatus
+                primaryFeePaidCurrencyStatusFlow.value = getFeePaidCryptoCurrencyStatusSyncUseCase(
+                    userWalletId = params.userWalletId,
+                    cryptoCurrencyStatus = cryptoCurrencyStatus,
+                ).getOrNull() ?: cryptoCurrencyStatus
+            }.flowOn(dispatchers.default)
+                .launchIn(modelScope)
+        } else {
+            getCurrencyStatus(
+                cryptoCurrency = cryptoCurrency,
+                isSingleWalletWithToken = isSingleWalletWithToken,
+                isMultiCurrency = isMultiCurrency,
+            ).onEach { maybeCryptoCurrency ->
+                maybeCryptoCurrency.fold(
+                    ifRight = { cryptoCurrencyStatus ->
+                        primaryCryptoCurrencyStatusFlow.value = cryptoCurrencyStatus
+                        primaryFeePaidCurrencyStatusFlow.value = getFeePaidCryptoCurrencyStatusSyncUseCase(
+                            userWalletId = params.userWalletId,
+                            cryptoCurrencyStatus = cryptoCurrencyStatus,
+                        ).getOrNull() ?: cryptoCurrencyStatus
+                    },
+                    ifLeft = { error ->
+                        swapAlertFactory.getGenericErrorState(
+                            expressError = ExpressError.UnknownError,
+                            onFailedTxEmailClick = {
+                                modelScope.launch {
+                                    swapAlertFactory.onFailedTxEmailClick(
+                                        userWallet = userWallet,
+                                        cryptoCurrency = params.currency,
+                                        errorMessage = error.toString(),
+                                    )
+                                }
+                            },
+                            popBack = ::onBackClick,
+                        )
+                    },
+                )
+            }.flowOn(dispatchers.default)
+                .launchIn(modelScope)
+        }
     }
 
     private fun getCurrencyStatus(

@@ -24,6 +24,7 @@ import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.stakekit.StakeKitApi
 import com.tangem.datasource.api.stakekit.models.request.*
+import com.tangem.datasource.api.stakekit.models.response.EnabledYieldsResponse
 import com.tangem.datasource.api.stakekit.models.response.model.NetworkTypeDTO
 import com.tangem.datasource.api.stakekit.models.response.model.action.StakingActionStatusDTO
 import com.tangem.datasource.api.stakekit.models.response.model.transaction.tron.TronStakeKitTransaction
@@ -56,6 +57,8 @@ import com.tangem.lib.crypto.BlockchainUtils.isCardano
 import com.tangem.lib.crypto.BlockchainUtils.isSolana
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.orZero
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -91,17 +94,20 @@ internal class DefaultStakingRepository(
 
     override suspend fun fetchEnabledYields() {
         withContext(dispatchers.io) {
-            when (val stakingTokensWithYields = stakeKitApi.getEnabledYields(preferredValidatorsOnly = false)) {
-                is ApiResponse.Success -> stakingYieldsStore.store(
-                    stakingTokensWithYields.data.data.filter {
-                        it.isAvailable == true
-                    },
-                )
-                else -> {
-                    stakingYieldsStore.store(emptyList())
-                    throw (stakingTokensWithYields as ApiResponse.Error).cause
+            val yieldsResponses = getAvailableIntegrationsIds().map {
+                async { it.getYieldRequest() }
+            }.awaitAll()
+
+            val yields = yieldsResponses.flatMap { response ->
+                when (response) {
+                    is ApiResponse.Success -> response.data.data.filter { yield -> yield.isAvailable == true }
+                    else -> {
+                        Timber.e("Error fetching enabled yields: ${(response as? ApiResponse.Error)?.cause}")
+                        emptyList()
+                    }
                 }
             }
+            stakingYieldsStore.store(yields)
         }
     }
 
@@ -151,6 +157,26 @@ internal class DefaultStakingRepository(
         }
     }
 
+    private suspend fun StakingIntegrationID.getYieldRequest(): ApiResponse<EnabledYieldsResponse> {
+        return when (this) {
+            is StakingIntegrationID.Coin -> stakeKitApi.getEnabledYields(
+                preferredValidatorsOnly = false,
+                network = networkId,
+            )
+            is StakingIntegrationID.EthereumToken -> stakeKitApi.getEnabledYields(
+                preferredValidatorsOnly = false,
+                yieldId = value,
+                network = networkId,
+            )
+        }
+    }
+
+    private fun getAvailableIntegrationsIds(): List<StakingIntegrationID> {
+        return StakingIntegrationID.entries.filterNot {
+            it.blockchain == Blockchain.Cardano && !stakingFeatureToggles.isCardanoStakingEnabled
+        }
+    }
+
     private fun NetworkTypeDTO.extractJsonName(): String {
         return networkTypeAdapter.toJson(this).replace("\"", "")
     }
@@ -164,7 +190,11 @@ internal class DefaultStakingRepository(
             val yield = getYield(cryptoCurrencyId, symbol)
 
             StakingEntryInfo(
-                apr = requireNotNull(yield.preferredValidators.maxByOrNull { it.apr.orZero() }?.apr),
+                rewardInfo = requireNotNull(
+                    yield
+                        .preferredValidators
+                        .maxByOrNull { it.rewardInfo?.rate.orZero() }?.rewardInfo,
+                ),
                 rewardSchedule = yield.metadata.rewardSchedule,
                 tokenSymbol = yield.token.symbol,
             )
@@ -360,7 +390,8 @@ internal class DefaultStakingRepository(
             )
 
             val transaction = transactionConverter.convert(transactionResponse.getOrThrow())
-            val unsignedTransaction = transaction.unsignedTransaction ?: error("No unsigned transaction available")
+            val unsignedTransaction =
+                transaction.unsignedTransaction ?: error("No unsigned transaction available")
             val transactionData = TransactionData.Compiled(
                 value = getTransactionDataType(networkId, unsignedTransaction),
                 fee = fee,
@@ -469,7 +500,7 @@ internal class DefaultStakingRepository(
         )
     }
 
-    private fun getEnabledYields(): Flow<List<Yield>> {
+    override fun getEnabledYields(): Flow<List<Yield>> {
         return stakingYieldsStore.get().map {
             YieldConverter.convertListIgnoreErrors(
                 input = it,
