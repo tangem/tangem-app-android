@@ -1,0 +1,9 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>NamedArguments:TangemCardTypesResolver.kt$TangemCardTypesResolver$Token( cardToken.name, cardToken.symbol, cardToken.contractAddress, cardToken.decimals, )</ID>
+    <ID>PropertyUsedBeforeDeclaration:TapWorkarounds.kt$TapWorkarounds$excludedBatches</ID>
+    <ID>PropertyUsedBeforeDeclaration:TapWorkarounds.kt$TapWorkarounds$excludedIssuers</ID>
+  </CurrentIssues>
+</SmellBaseline>
