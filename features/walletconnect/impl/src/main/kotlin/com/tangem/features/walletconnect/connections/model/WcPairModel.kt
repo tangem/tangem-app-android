@@ -22,7 +22,11 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.walletconnect.WcAnalyticEvents
-import com.tangem.domain.walletconnect.model.*
+import com.tangem.domain.walletconnect.model.WcPairError
+import com.tangem.domain.walletconnect.model.WcPairError.Unknown
+import com.tangem.domain.walletconnect.model.WcPairRequest
+import com.tangem.domain.walletconnect.model.WcSessionApprove
+import com.tangem.domain.walletconnect.model.WcSessionProposal
 import com.tangem.domain.walletconnect.model.sdkcopy.WcAppMetaData
 import com.tangem.domain.walletconnect.usecase.pair.WcPairState
 import com.tangem.domain.walletconnect.usecase.pair.WcPairUseCase
@@ -80,7 +84,7 @@ internal class WcPairModel @Inject constructor(
     private val dAppVerifiedStateConverter = WcDAppVerifiedStateConverter(onVerifiedClick = ::showVerifiedAlert)
 
     val appInfoUiState: StateFlow<WcAppInfoUM>
-    field = MutableStateFlow<WcAppInfoUM>(createLoadingState())
+        field = MutableStateFlow<WcAppInfoUM>(createLoadingState())
 
     init {
         loadDAppInfo()
@@ -114,35 +118,40 @@ internal class WcPairModel @Inject constructor(
                         val availableWallets = pairState.dAppSession.proposalNetwork.keys
                             .filter { !it.isLocked && it.isMultiCurrency }
                         sessionProposal = pairState.dAppSession
-                        proposalNetwork = sessionProposal.proposalNetwork.getValue(selectedUserWalletFlow.value)
-                        additionallyEnabledNetworks = proposalNetwork.available
-                        appInfoUiState.transformerUpdate(
-                            WcAppInfoTransformer(
-                                dAppSession = sessionProposal,
-                                dAppVerifiedStateConverter = dAppVerifiedStateConverter,
-                                onDismiss = ::rejectPairing,
-                                onConnect = ::onConnect,
-                                onWalletClick = {
-                                    stackNavigation.pushNew(
-                                        WcAppInfoRoutes.SelectWallet(selectedUserWalletFlow.value.walletId),
-                                    )
-                                }.takeIf { availableWallets.size >= WC_WALLETS_SELECTOR_MIN_COUNT },
-                                onNetworksClick = {
-                                    stackNavigation.pushNew(
-                                        WcAppInfoRoutes.SelectNetworks(
-                                            missingRequiredNetworks = proposalNetwork.missingRequired,
-                                            requiredNetworks = proposalNetwork.required,
-                                            availableNetworks = proposalNetwork.available,
-                                            enabledAvailableNetworks = additionallyEnabledNetworks,
-                                            notAddedNetworks = proposalNetwork.notAdded,
-                                        ),
-                                    )
-                                },
-                                userWallet = selectedUserWalletFlow.value,
-                                proposalNetwork = proposalNetwork,
-                                additionallyEnabledNetworks = additionallyEnabledNetworks,
-                            ),
-                        )
+                        val foundNetwork = sessionProposal.proposalNetwork[selectedUserWalletFlow.value]
+                        if (foundNetwork == null) {
+                            processError(Unknown("Selected wallet not found"))
+                        } else {
+                            proposalNetwork = foundNetwork
+                            additionallyEnabledNetworks = proposalNetwork.available
+                            appInfoUiState.transformerUpdate(
+                                WcAppInfoTransformer(
+                                    dAppSession = sessionProposal,
+                                    dAppVerifiedStateConverter = dAppVerifiedStateConverter,
+                                    onDismiss = ::rejectPairing,
+                                    onConnect = ::onConnect,
+                                    onWalletClick = {
+                                        stackNavigation.pushNew(
+                                            WcAppInfoRoutes.SelectWallet(selectedUserWalletFlow.value.walletId),
+                                        )
+                                    }.takeIf { availableWallets.size >= WC_WALLETS_SELECTOR_MIN_COUNT },
+                                    onNetworksClick = {
+                                        stackNavigation.pushNew(
+                                            WcAppInfoRoutes.SelectNetworks(
+                                                missingRequiredNetworks = proposalNetwork.missingRequired,
+                                                requiredNetworks = proposalNetwork.required,
+                                                availableNetworks = proposalNetwork.available,
+                                                enabledAvailableNetworks = additionallyEnabledNetworks,
+                                                notAddedNetworks = proposalNetwork.notAdded,
+                                            ),
+                                        )
+                                    },
+                                    userWallet = selectedUserWalletFlow.value,
+                                    proposalNetwork = proposalNetwork,
+                                    additionallyEnabledNetworks = additionallyEnabledNetworks,
+                                ),
+                            )
+                        }
                     }
                 }
             }
@@ -234,7 +243,7 @@ internal class WcPairModel @Inject constructor(
 
     override fun onWalletSelected(userWalletId: UserWalletId) {
         val selectedUserWallet = sessionProposal.proposalNetwork.keys.first { it.walletId == userWalletId }
-        proposalNetwork = sessionProposal.proposalNetwork.getValue(selectedUserWallet)
+        proposalNetwork = sessionProposal.proposalNetwork[selectedUserWallet] ?: return
         selectedUserWalletFlow.update { selectedUserWallet }
         additionallyEnabledNetworks = proposalNetwork.available
         appInfoUiState.transformerUpdate(
