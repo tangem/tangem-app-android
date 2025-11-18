@@ -40,8 +40,12 @@ class EnvironmentConfigModel(
     @Json(name = "moralisApiKey") val moralisApiKey: String?,
     @Json(name = "nftScanApiKey") val nftScanApiKey: String?,
     @Json(name = "blockaidApiKey") val blockaidApiKey: String?,
+    @Json(name = "tangemApiKey") val tangemApiKey: String?,
+    @Json(name = "tangemApiKeyDev") val tangemApiKeyDev: String?,
+    @Json(name = "tangemApiKeyStage") val tangemApiKeyStage: String?,
     @Json(name = "etherscanApiKey") val etherScanApiKey: String?,
     @Json(name = "yieldModuleApiKey") val yieldModuleApiKey: String?,
+    @Json(name = "yieldModuleApiKeyDev") val yieldModuleApiKeyDev: String?,
     @Json(name = "blinkApiKey") val blinkApiKey: String?,
     @Json(name = "tatumApiKey") val tatumApiKey: String?,
 )

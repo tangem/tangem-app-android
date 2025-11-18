@@ -50,8 +50,8 @@ internal object PreferencesDataStore {
 
     private fun createCorruptionHandler(): ReplaceFileCorruptionHandler<Preferences> {
         return ReplaceFileCorruptionHandler(
-            produceNewData = {
-                Timber.w(it)
+            produceNewData = { corruptionException ->
+                Timber.w(corruptionException)
                 emptyPreferences()
             },
         )
