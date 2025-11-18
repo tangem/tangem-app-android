@@ -38,12 +38,12 @@ internal class RuntimeUserWalletsListManager : UserWalletsListManager {
     override val walletsCount: Int
         get() = if (state.value.userWallet != null) 1 else 0
 
-    override suspend fun hasUserWallets(): Boolean = state.value.userWallet != null
-
     override val savedWalletsCount: Flow<Int>
         get() = state
             .mapLatest { walletsCount }
             .distinctUntilChanged()
+
+    override suspend fun hasUserWallets(): Boolean = state.value.userWallet != null
 
     override suspend fun select(userWalletId: UserWalletId): CompletionResult<UserWallet> = catching {
         state.value.userWallet
