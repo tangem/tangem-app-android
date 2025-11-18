@@ -12,6 +12,7 @@
 **/build/outputs/**
 **/build/reports/**
 **/build/tmp/**
+**/test-results/**
 
 # Local configuration file (sdk path, etc)
 local.properties
@@ -52,3 +53,4 @@ app/src/external/google-services.json
 
 # Kotlin Plugin
 .kotlin/
+find-latest-release-branch.output

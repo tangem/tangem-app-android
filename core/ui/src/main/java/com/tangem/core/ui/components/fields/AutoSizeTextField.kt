@@ -72,7 +72,12 @@ fun AutoSizeTextField(
 ) {
     BoxWithConstraints(modifier = boxModifier) {
         val fontSize = if (isAutoResize) {
-            resizeFont(visualTransformation, value, textStyle, reduceFactor)
+            resizeFont(
+                visualTransformation = visualTransformation,
+                value = value,
+                textStyle = textStyle,
+                reduceFactor = reduceFactor,
+            )
         } else {
             textStyle.fontSize
         }
@@ -141,7 +146,7 @@ private fun AmountTextFieldPreview(
             textFieldModifier = Modifier.fillMaxWidth(),
             value = text,
             onValueChange = { text = it },
-            centered = data.centered,
+            centered = data.isCentered,
             isAutoResize = data.isAutoResize,
             placeholder = data.placeholder,
         )
@@ -154,43 +159,43 @@ private class AutoSizeTextFieldPreviewProvider : PreviewParameterProvider<AutoSi
             value = "AutoSizeTextField",
             placeholder = stringReference("placeholder"),
             isAutoResize = true,
-            centered = false,
+            isCentered = false,
         ),
         AutoSizeTextFieldPreviewData(
             value = "AutoSizeTextFieldAutoSizeTextFieldAutoSizeTextFieldAutoSizeTextField",
             placeholder = stringReference("placeholder"),
             isAutoResize = true,
-            centered = false,
+            isCentered = false,
         ),
         AutoSizeTextFieldPreviewData(
             value = "AutoSizeTextFieldAutoSizeTextFieldAutoSizeTextFieldAutoSizeTextField",
             placeholder = stringReference("Placeholder"),
             isAutoResize = true,
-            centered = false,
+            isCentered = false,
         ),
         AutoSizeTextFieldPreviewData(
             value = "",
             placeholder = stringReference("Placeholder"),
             isAutoResize = true,
-            centered = false,
+            isCentered = false,
         ),
         AutoSizeTextFieldPreviewData(
             value = "AutoSizeTextField",
             placeholder = stringReference("Placeholder"),
             isAutoResize = false,
-            centered = true,
+            isCentered = true,
         ),
         AutoSizeTextFieldPreviewData(
             value = "AutoSizeTextFieldAutoSizeTextFieldAutoSizeTextFieldAutoSizeTextField",
             placeholder = stringReference("Placeholder"),
             isAutoResize = false,
-            centered = true,
+            isCentered = true,
         ),
         AutoSizeTextFieldPreviewData(
             value = "",
             placeholder = stringReference("Placeholder"),
             isAutoResize = false,
-            centered = true,
+            isCentered = true,
         ),
     )
 }
@@ -199,6 +204,6 @@ private data class AutoSizeTextFieldPreviewData(
     val value: String,
     val placeholder: TextReference,
     val isAutoResize: Boolean,
-    val centered: Boolean,
+    val isCentered: Boolean,
 )
 // endregion

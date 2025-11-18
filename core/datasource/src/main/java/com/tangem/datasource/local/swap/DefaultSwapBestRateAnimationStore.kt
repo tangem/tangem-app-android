@@ -12,10 +12,10 @@ internal class DefaultSwapBestRateAnimationStore(
      * If true, reset flag to false
      */
     override suspend fun getSyncOrNull(): Boolean {
-        val value = dataStore.getSyncOrNull() ?: true
-        if (value) {
+        val shouldShowBestRateAnimation = dataStore.getSyncOrNull() != false
+        if (shouldShowBestRateAnimation) {
             dataStore.store(false)
         }
-        return value
+        return shouldShowBestRateAnimation
     }
 }

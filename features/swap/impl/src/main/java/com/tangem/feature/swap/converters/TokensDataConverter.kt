@@ -55,7 +55,7 @@ class TokensDataConverter(
                 .toImmutableList(),
             onSearchEntered = onSearchEntered,
             onTokenSelected = onTokenSelected,
-            afterSearch = group.afterSearch,
+            afterSearch = group.isAfterSearch,
         )
     }
 
@@ -85,7 +85,7 @@ class TokensDataConverter(
                     url = currency.iconUrl,
                     fallbackResId = currency.networkIconResId,
                     isGrayscale = !isAvailable,
-                    showCustomBadge = currency.isCustom,
+                    shouldShowCustomBadge = currency.isCustom,
                 )
             }
             is CryptoCurrency.Token -> {
@@ -95,7 +95,7 @@ class TokensDataConverter(
                 CurrencyIconState.TokenIcon(
                     url = currency.iconUrl,
                     isGrayscale = !isAvailable,
-                    showCustomBadge = currency.isCustom,
+                    shouldShowCustomBadge = currency.isCustom,
                     topBadgeIconResId = currency.networkIconResId,
                     fallbackTint = tint,
                     fallbackBackground = background,

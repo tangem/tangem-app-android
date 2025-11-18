@@ -4,8 +4,6 @@ internal interface NFTSendConfirmClickIntents {
 
     fun showEditDestination()
 
-    fun showEditFee()
-
     fun onSendClick()
 
     fun onExploreClick()

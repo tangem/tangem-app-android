@@ -14,6 +14,10 @@ import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.derivations.DerivationsRepository
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @Suppress("LongParameterList")
 class SaveManagedTokensUseCase(
@@ -25,6 +29,7 @@ class SaveManagedTokensUseCase(
     private val multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
     private val multiYieldBalanceFetcher: MultiYieldBalanceFetcher,
     private val stakingIdFactory: StakingIdFactory,
+    private val parallelUpdatingScope: CoroutineScope,
 ) {
 
     suspend operator fun invoke(
@@ -53,11 +58,23 @@ class SaveManagedTokensUseCase(
                 currencies = addingCurrencies,
             )
 
-            refreshUpdatedNetworks(userWalletId = userWalletId, addedCurrencies = savedCurrencies)
-
-            refreshUpdatedYieldBalances(userWalletId = userWalletId, addedCurrencies = savedCurrencies)
-
-            refreshUpdatedQuotes(addedCurrencies = savedCurrencies)
+            parallelUpdatingScope.launch {
+                withContext(NonCancellable) {
+                    launch {
+                        refreshUpdatedNetworks(
+                            userWalletId = userWalletId,
+                            addedCurrencies = savedCurrencies,
+                        )
+                    }
+                    launch {
+                        refreshUpdatedYieldBalances(
+                            userWalletId = userWalletId,
+                            addedCurrencies = savedCurrencies,
+                        )
+                    }
+                    launch { refreshUpdatedQuotes(addedCurrencies = savedCurrencies) }
+                }
+            }
         }
     }
 

@@ -440,5 +440,42 @@ internal class DefaultQuotesFetcherTest {
         }
     }
 
+    @Test
+    fun `fetch successfully if not all quotes are fetched`() = runTest {
+        // Arrange
+        val apiQuote = MockQuoteResponseFactory.createSinglePrice(BigDecimal.ONE)
+        val apiResponse = ApiResponse.Success(
+            data = QuotesResponse(quotes = mapOf("ethereum" to apiQuote)),
+        )
+
+        coEvery {
+            tangemTechApi.getQuotes(currencyId = "usd", coinIds = "ethereum,bitcoin", fields = "price")
+        } returns apiResponse
+
+        // Act
+        val actual = fetcher.fetch(
+            fiatCurrencyId = "usd",
+            currenciesIds = setOf("ethereum", "bitcoin"),
+            fields = setOf(Field.PRICE),
+        )
+
+        // Assert
+        val expected = QuotesResponse(
+            quotes = mapOf(
+                "ethereum" to apiQuote,
+                "bitcoin" to QuotesResponse.Quote.EMPTY,
+            ),
+        ).right()
+        Truth.assertThat(actual).isEqualTo(expected)
+
+        coVerify(exactly = 1) {
+            tangemTechApi.getQuotes(
+                currencyId = "usd",
+                coinIds = "ethereum,bitcoin",
+                fields = "price",
+            )
+        }
+    }
+
     private fun Iterable<QuoteMetadata>?.toResponseQuotes() = this!!.associate { it.cryptoCurrencyId to it.value }
 }

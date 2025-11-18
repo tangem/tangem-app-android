@@ -22,7 +22,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.core.net.toUri
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import arrow.core.getOrElse
@@ -38,17 +37,14 @@ import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.card.ScanCardUseCase
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.card.repository.CardSdkConfigRepository
-import com.tangem.domain.core.wallets.UserWalletsListRepository
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.settings.SetGooglePayAvailabilityUseCase
 import com.tangem.domain.settings.SetGoogleServicesAvailabilityUseCase
 import com.tangem.domain.settings.ShouldInitiallyAskPermissionUseCase
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.staking.SendUnsubmittedHashesUseCase
-import com.tangem.domain.tokens.GetPolkadotCheckHasImmortalUseCase
-import com.tangem.domain.tokens.GetPolkadotCheckHasResetUseCase
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.usecase.ClearAllHotWalletContextualUnlockUseCase
-import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tester.api.TesterMenuLauncher
@@ -114,12 +110,6 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
 
     @Inject
     lateinit var sendUnsubmittedHashesUseCase: SendUnsubmittedHashesUseCase
-
-    @Inject
-    lateinit var getPolkadotCheckHasResetUseCase: GetPolkadotCheckHasResetUseCase
-
-    @Inject
-    lateinit var getPolkadotCheckHasImmortalUseCase: GetPolkadotCheckHasImmortalUseCase
 
     @Inject
     lateinit var analyticsEventsHandler: AnalyticsEventHandler
@@ -228,7 +218,6 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
 
         initContent()
 
-        observePolkadotAccountHealthCheck()
         sendStakingUnsubmittedHashes()
         checkGoogleServicesAvailability()
 
@@ -264,7 +253,7 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
         tangemSdkManager = injectedTangemSdkManager
 
         backupServiceHolder.createAndSetService(cardSdkConfigRepository.sdk, this)
-        backupService = backupServiceHolder.backupService.get()!! // will be deleted eventually
+        backupService = requireNotNull(backupServiceHolder.backupService.get()) // will be deleted eventually
 
         lockUserWalletsTimer = LockUserWalletsTimer(
             context = this,
@@ -371,17 +360,15 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
         }
     }
 
-    override fun onNewIntent(intent: Intent?) {
+    override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
 
-        val fromPush = intent?.extras?.containsKey(OPENED_FROM_GCM_PUSH) ?: false
-        if (fromPush) {
+        val isFromPush = intent.extras?.containsKey(OPENED_FROM_GCM_PUSH) == true
+        if (isFromPush) {
             analyticsEventsHandler.send(Push.PushNotificationOpened)
         }
 
-        if (intent != null) {
-            handleDeepLink(intent = intent, isFromOnNewIntent = true)
-        }
+        handleDeepLink(intent = intent, isFromOnNewIntent = true)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -406,8 +393,8 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
     }
 
     override fun dispatchTouchEvent(event: MotionEvent): Boolean {
-        val result = WindowObscurationObserver.dispatchTouchEvent(event, analyticsEventsHandler)
-        return if (result) super.dispatchTouchEvent(event) else false
+        val isHandled = WindowObscurationObserver.dispatchTouchEvent(event, analyticsEventsHandler)
+        return if (isHandled) super.dispatchTouchEvent(event) else false
     }
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
@@ -435,27 +422,6 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
             webLink?.uriValidate() == true -> {
                 urlOpener.openUrl(webLink)
             }
-        }
-    }
-
-    private fun observePolkadotAccountHealthCheck() {
-        lifecycleScope.launch {
-            getPolkadotCheckHasResetUseCase()
-                .flowWithLifecycle(lifecycle, minActiveState = Lifecycle.State.CREATED)
-                .distinctUntilChanged()
-                .collect {
-                    analyticsEventsHandler.send(WalletScreenAnalyticsEvent.Token.PolkadotAccountReset(it.second))
-                }
-        }
-        lifecycleScope.launch {
-            getPolkadotCheckHasImmortalUseCase()
-                .flowWithLifecycle(lifecycle, minActiveState = Lifecycle.State.CREATED)
-                .distinctUntilChanged()
-                .collect {
-                    analyticsEventsHandler.send(
-                        WalletScreenAnalyticsEvent.Token.PolkadotImmortalTransactions(it.second),
-                    )
-                }
         }
     }
 

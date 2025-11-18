@@ -20,8 +20,8 @@ import java.math.BigDecimal
 fun rememberMarketChartState(
     dataProducer: MarketChartDataProducer = remember { MarketChartDataProducer.build {} },
     colorMapper: (MarketChartLook.Type) -> Color = remember {
-        {
-            when (it) {
+        { type ->
+            when (type) {
                 MarketChartLook.Type.Growing -> Color.Green
                 MarketChartLook.Type.Falling -> Color.Red
                 MarketChartLook.Type.Neutral -> Color.Gray
@@ -33,7 +33,12 @@ fun rememberMarketChartState(
     val lookState = dataProducer.lookState.collectAsState()
 
     val state = remember(dataProducer, lookState, colorMapper, onMarkerShown) {
-        MarketChartState(dataProducer, lookState, colorMapper, onMarkerShown)
+        MarketChartState(
+            dataProducer = dataProducer,
+            lookState = lookState,
+            colorMapper = colorMapper,
+            markerCallback = onMarkerShown,
+        )
     }
 
     return state
@@ -61,8 +66,8 @@ class MarketChartState internal constructor(
         colorMapper(lookState.value.type)
     }
 
-    internal val markerHighlightRightSide by derivedStateOf {
-        lookState.value.markerHighlightRightSide
+    internal val shouldMarkerHighlightRightSide by derivedStateOf {
+        lookState.value.shouldMarkerHighlightRightSide
     }
 
     internal val xValueFormatter = CartesianValueFormatter { value, _, _ ->

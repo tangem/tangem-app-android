@@ -83,6 +83,11 @@ internal class ManageTokensListManager @AssistedInject constructor(
         .distinctUntilChanged()
     val uiItems: Flow<ImmutableList<CurrencyItemUM>> = uiManager.items
 
+    /**
+     * Launch pagination flow to get currencies
+     *
+     * @param isCollapsed   set initial display state of networks. !!! WARNING !!! Use `false` flag with cation
+     */
     suspend fun launchPagination(isCollapsed: Boolean) = coroutineScope {
         val loadUserTokensFromRemote = when (mode) {
             is ManageTokensMode.Wallet -> source == ManageTokensSource.ONBOARDING

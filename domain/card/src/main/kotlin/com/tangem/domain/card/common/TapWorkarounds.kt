@@ -36,14 +36,14 @@ object TapWorkarounds {
     val CardDTO.canSkipBackup: Boolean
         get() = this.firmwareVersion < backupRequiredFirmwareVersion || demoConfig.isDemoCardId(cardId)
 
-    val CardDTO.useOldStyleDerivation: Boolean
+    val CardDTO.hasOldStyleDerivation: Boolean
         get() = batchId == "AC01" || batchId == "AC02" || batchId == "CB95"
 
     val CardDTO.isExcluded: Boolean
         get() {
-            val excludedBatch = excludedBatches.contains(batchId)
-            val excludedIssuerName = excludedIssuers.contains(issuer.name.uppercase(Locale.ROOT))
-            return excludedBatch || excludedIssuerName
+            val isBatchExcluded = excludedBatches.contains(batchId)
+            val isIssuerNameExcluded = excludedIssuers.contains(issuer.name.uppercase(Locale.ROOT))
+            return isBatchExcluded || isIssuerNameExcluded
         }
 
     val CardDTO.isNotSupportedInThatRelease: Boolean

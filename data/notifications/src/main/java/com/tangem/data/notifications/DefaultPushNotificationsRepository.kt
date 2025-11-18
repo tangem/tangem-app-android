@@ -23,7 +23,7 @@ internal class DefaultPushNotificationsRepository @Inject constructor(
 ) : PushNotificationsRepository {
 
     override suspend fun createApplicationId(pushToken: String?): ApplicationId = withContext(dispatchers.io) {
-        tangemTechApi.createApplicationId(
+        val appId = tangemTechApi.createApplicationId(
             NotificationApplicationCreateBody(
                 platform = appInfoProvider.platform.lowercase(),
                 device = appInfoProvider.device,
@@ -33,7 +33,9 @@ internal class DefaultPushNotificationsRepository @Inject constructor(
                 version = appInfoProvider.appVersion,
                 pushToken = pushToken,
             ),
-        ).getOrThrow().appId.let(::ApplicationId)
+        ).getOrThrow().appId
+
+        ApplicationId(appId)
     }
 
     override suspend fun saveApplicationId(appId: ApplicationId) {

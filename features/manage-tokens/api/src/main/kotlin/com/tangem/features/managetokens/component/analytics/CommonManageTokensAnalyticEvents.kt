@@ -8,7 +8,7 @@ import com.tangem.core.analytics.models.AnalyticsParam.Key.TOKEN_PARAM
 sealed class CommonManageTokensAnalyticEvents(
     category: String,
     event: String,
-    params: Map<String, String> = mapOf(),
+    params: Map<String, String> = emptyMap(),
 ) : AnalyticsEvent(category = category, event = event, params = params) {
 
     data class TokenSearchClicked(
@@ -26,8 +26,8 @@ sealed class CommonManageTokensAnalyticEvents(
         event = "Token Searched",
         params = buildMap {
             put(CHOSEN_TOKEN, if (isTokenChosen) "Yes" else "No")
-            token?.let { put(TOKEN_PARAM, token) }
-            blockchain?.let { put(BLOCKCHAIN, blockchain) }
+            if (token != null) { put(TOKEN_PARAM, token) }
+            if (blockchain != null) { put(BLOCKCHAIN, blockchain) }
         },
     )
 }

@@ -1,6 +1,5 @@
 package com.tangem.features.send.v2.di
 
-import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.features.send.v2.DefaultSendFeatureToggles
 import com.tangem.features.send.v2.api.*
 import com.tangem.features.send.v2.entrypoint.DefaultSendEntryPointComponent
@@ -19,8 +18,8 @@ import javax.inject.Singleton
 internal object SendFeatureModule {
 
     @Provides
-    fun provideSendFeatureToggles(featureTogglesManager: FeatureTogglesManager): SendFeatureToggles {
-        return DefaultSendFeatureToggles(featureTogglesManager)
+    fun provideSendFeatureToggles(): SendFeatureToggles {
+        return DefaultSendFeatureToggles()
     }
 }
 

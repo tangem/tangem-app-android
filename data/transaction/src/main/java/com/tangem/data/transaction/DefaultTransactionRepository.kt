@@ -57,6 +57,17 @@ internal class DefaultTransactionRepository(
 
         val extras = txExtras ?: getMemoExtras(networkId = network.rawId, memo)
 
+        val destination = if (amount.type is AmountType.TokenYieldSupply) {
+            walletManager.getYieldModuleAddress()
+        } else {
+            destination
+        }
+        val amount = if (amount.type is AmountType.TokenYieldSupply) {
+            amount.copy(value = BigDecimal.ZERO)
+        } else {
+            amount
+        }
+
         return@withContext if (fee != null) {
             walletManager.createTransaction(
                 amount = amount,
@@ -86,11 +97,6 @@ internal class DefaultTransactionRepository(
         nonce: BigInteger?,
     ): TransactionData.Uncompiled = withContext(dispatchers.io) {
         val blockchain = network.toBlockchain()
-        val walletManager = walletManagersFacade.getOrCreateWalletManager(
-            userWalletId = userWalletId,
-            blockchain = blockchain,
-            derivationPath = network.derivationPath.value,
-        ) ?: error("Wallet manager not found")
 
         val callData = SmartContractCallDataProviderFactory.getTokenTransferCallData(
             destinationAddress = destination,
@@ -98,7 +104,7 @@ internal class DefaultTransactionRepository(
             blockchain = blockchain,
         )
 
-        val extras = if (amount.type is AmountType.Token && callData != null) {
+        val extras = if (callData != null) {
             createTransactionDataExtras(
                 callData = callData,
                 network = network,
@@ -109,25 +115,15 @@ internal class DefaultTransactionRepository(
             null
         }
 
-        return@withContext if (fee != null) {
-            createTransaction(
-                amount = amount,
-                fee = fee,
-                memo = null,
-                destination = destination,
-                userWalletId = userWalletId,
-                network = network,
-                txExtras = getMemoExtras(networkId = network.rawId, memo = memo) ?: extras,
-            )
-        } else {
-            TransactionData.Uncompiled(
-                amount = amount,
-                sourceAddress = walletManager.wallet.address,
-                destinationAddress = destination,
-                extras = getMemoExtras(networkId = network.rawId, memo = memo) ?: extras,
-                fee = null,
-            )
-        }
+        createTransaction(
+            amount = amount,
+            fee = fee,
+            memo = null,
+            destination = destination,
+            userWalletId = userWalletId,
+            network = network,
+            txExtras = getMemoExtras(networkId = network.rawId, memo = memo) ?: extras,
+        )
     }
 
     override suspend fun createApprovalTransaction(
@@ -141,6 +137,12 @@ internal class DefaultTransactionRepository(
     ): TransactionData.Uncompiled = withContext(dispatchers.io) {
         val blockchain = network.toBlockchain()
 
+        val walletManager = walletManagersFacade.getOrCreateWalletManager(
+            userWalletId = userWalletId,
+            blockchain = blockchain,
+            derivationPath = network.derivationPath.value,
+        ) ?: error("Wallet manager not found")
+
         val extras = createTransactionDataExtras(
             callData = SmartContractCallDataProviderFactory.getApprovalCallData(
                 spenderAddress = spenderAddress,
@@ -152,15 +154,23 @@ internal class DefaultTransactionRepository(
             gasLimit = null,
         )
 
-        return@withContext createTransaction(
-            amount = amount,
-            fee = fee,
-            memo = null,
-            destination = contractAddress,
-            userWalletId = userWalletId,
-            network = network,
-            txExtras = extras,
-        )
+        return@withContext if (fee != null) {
+            walletManager.createTransaction(
+                amount = amount,
+                fee = fee,
+                destination = contractAddress,
+            ).copy(
+                extras = extras,
+            )
+        } else {
+            TransactionData.Uncompiled(
+                amount = amount,
+                sourceAddress = walletManager.wallet.address,
+                destinationAddress = contractAddress,
+                extras = extras,
+                fee = null,
+            )
+        }
     }
 
     override suspend fun createNFTTransferTransaction(

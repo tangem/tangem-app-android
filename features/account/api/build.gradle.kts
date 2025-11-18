@@ -21,4 +21,5 @@ dependencies {
     implementation(projects.domain.appCurrency.models)
     implementation(projects.domain.tokens)
     implementation(projects.domain.tokens.models)
+    implementation(projects.domain.account)
 }

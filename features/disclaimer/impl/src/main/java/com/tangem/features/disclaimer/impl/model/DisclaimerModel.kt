@@ -1,6 +1,7 @@
 package com.tangem.features.disclaimer.impl.model
 
 import com.tangem.common.routing.AppRoute
+import com.tangem.common.ui.notifications.NotificationId
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -49,6 +50,10 @@ internal class DisclaimerModel @Inject constructor(
             cardRepository.acceptTangemTOS()
             val shouldAskPushPermission = notificationsRepository.shouldShowSubscribeOnNotificationsAfterUpdate()
             if (shouldAskPushPermission) {
+                notificationsRepository.setShouldShowNotifications(
+                    key = NotificationId.EnablePushesReminderNotification.key,
+                    value = false,
+                )
                 router.push(AppRoute.PushNotification(AppRoute.PushNotification.Source.Stories))
             } else {
                 neverToInitiallyAskPermissionUseCase(PUSH_PERMISSION)

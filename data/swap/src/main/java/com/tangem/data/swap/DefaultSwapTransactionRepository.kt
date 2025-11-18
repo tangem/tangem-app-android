@@ -2,6 +2,7 @@ package com.tangem.data.swap
 
 import com.tangem.data.common.currency.ResponseCryptoCurrenciesFactory
 import com.tangem.data.common.currency.UserTokensResponseFactory
+import com.tangem.data.common.network.NetworkFactory
 import com.tangem.data.swap.converter.transaction.SavedSwapStatusConverter
 import com.tangem.data.swap.converter.transaction.SavedSwapTransactionConverter
 import com.tangem.data.swap.converter.transaction.SavedSwapTransactionListConverter
@@ -14,6 +15,7 @@ import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObjectList
 import com.tangem.datasource.local.preferences.utils.getObjectListSync
 import com.tangem.datasource.local.preferences.utils.getObjectMap
+import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
@@ -30,11 +32,15 @@ import kotlinx.coroutines.flow.flowOn
 internal class DefaultSwapTransactionRepository(
     private val appPreferencesStore: AppPreferencesStore,
     private val responseCryptoCurrenciesFactory: ResponseCryptoCurrenciesFactory,
+    private val networkFactory: NetworkFactory,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : SwapTransactionRepository {
 
     private val listConverter by lazy(LazyThreadSafetyMode.NONE) {
-        SavedSwapTransactionListConverter(responseCryptoCurrenciesFactory = responseCryptoCurrenciesFactory)
+        SavedSwapTransactionListConverter(
+            responseCryptoCurrenciesFactory = responseCryptoCurrenciesFactory,
+            networkFactory = networkFactory,
+        )
     }
     private val converter by lazy(LazyThreadSafetyMode.NONE) {
         SavedSwapTransactionConverter(responseCryptoCurrenciesFactory = responseCryptoCurrenciesFactory)
@@ -54,7 +60,7 @@ internal class DefaultSwapTransactionRepository(
             storeTransactionState(
                 txId = transaction.txId,
                 status = it,
-                refundTokenCurrency = null,
+                accountWithCurrency = null,
             )
         }
         appPreferencesStore.editData { mutablePreferences ->
@@ -123,52 +129,25 @@ internal class DefaultSwapTransactionRepository(
         }
     }.flowOn(dispatchers.default)
 
-    override suspend fun removeTransaction(
-        userWalletId: UserWalletId,
-        fromCryptoCurrency: CryptoCurrency,
-        toCryptoCurrency: CryptoCurrency,
-        txId: String,
-    ) {
+    override suspend fun removeTransaction(userWalletId: UserWalletId, txId: String) {
         clearTransactionsStatuses(txId = txId)
         appPreferencesStore.editData { mutablePreferences ->
             val savedList: List<SwapTransactionListDTO>? = mutablePreferences.getObjectList(
                 key = PreferencesKeys.SWAP_TRANSACTIONS_KEY,
             )
             val tokenTransactions = savedList
-                ?.firstOrNull {
-                    it.checkId(
-                        checkUserWalletId = userWalletId,
-                        fromCurrencyId = fromCryptoCurrency.id,
-                        toCurrencyId = toCryptoCurrency.id,
-                    )
-                }
-                ?.transactions
-                ?.filterNot { it.txId == txId }
+                ?.asSequence()
+                ?.map {
+                    it.copy(transactions = it.transactions.filterNot { it.txId == txId })
+                }?.filterNot { it.transactions.isEmpty() }
+                ?.toList()
 
-            val editedList =
-                if (tokenTransactions.isNullOrEmpty()) {
-                    savedList?.filterNot {
-                        it.checkId(
-                            checkUserWalletId = userWalletId,
-                            fromCurrencyId = fromCryptoCurrency.id,
-                            toCurrencyId = toCryptoCurrency.id,
-                        )
-                    }
-                } else {
-                    savedList.updateList(
-                        userWalletId = userWalletId,
-                        fromCryptoCurrency = fromCryptoCurrency,
-                        toCryptoCurrency = toCryptoCurrency,
-                        transactions = tokenTransactions,
-                    )
-                }
-
-            if (editedList.isNullOrEmpty()) {
+            if (tokenTransactions.isNullOrEmpty()) {
                 mutablePreferences.remove(key = PreferencesKeys.SWAP_TRANSACTIONS_KEY)
             } else {
                 mutablePreferences.setObject(
                     key = PreferencesKeys.SWAP_TRANSACTIONS_KEY,
-                    value = editedList,
+                    value = tokenTransactions,
                 )
             }
         }
@@ -177,7 +156,7 @@ internal class DefaultSwapTransactionRepository(
     override suspend fun storeTransactionState(
         txId: String,
         status: SwapStatusModel,
-        refundTokenCurrency: CryptoCurrency?,
+        accountWithCurrency: Pair<AccountId?, CryptoCurrency>?,
     ) {
         appPreferencesStore.editData { mutablePreferences ->
             val savedMap = mutablePreferences.getObjectMap<SwapStatusDTO>(
@@ -187,8 +166,8 @@ internal class DefaultSwapTransactionRepository(
             val updatesMap = savedMap.toMutableMap()
             updatesMap[txId] = savedStatusConverter.convert(
                 status.copy(
-                    refundTokensResponse = refundTokenCurrency?.let {
-                        userTokensResponseFactory.createResponseToken(refundTokenCurrency)
+                    refundTokensResponse = accountWithCurrency?.let { (accountId, currency) ->
+                        userTokensResponseFactory.createResponseToken(currency, accountId)
                     },
                 ),
             )

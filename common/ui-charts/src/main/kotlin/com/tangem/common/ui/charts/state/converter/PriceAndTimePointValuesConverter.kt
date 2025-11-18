@@ -8,7 +8,7 @@ import java.math.BigDecimal
 
 @Suppress("MagicNumber")
 class PriceAndTimePointValuesConverter(
-    private val needToFormatAxis: Boolean,
+    private val shouldFormatAxis: Boolean,
 ) : PointValuesConverter {
 
     private data class MinMaxCache(
@@ -18,7 +18,12 @@ class PriceAndTimePointValuesConverter(
         val maxY: BigDecimal,
     )
 
-    private var minMaxCache = MinMaxCache(BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO)
+    private var minMaxCache = MinMaxCache(
+        minX = BigDecimal.ZERO,
+        maxX = BigDecimal.ZERO,
+        minY = BigDecimal.ZERO,
+        maxY = BigDecimal.ZERO,
+    )
     private val formatYValuesCache = mutableMapOf<Double, BigDecimal>()
     private val formatXValuesCache = mutableMapOf<Double, BigDecimal>()
 
@@ -37,15 +42,14 @@ class PriceAndTimePointValuesConverter(
         val normX = data.x.normalizeTime(min = cache.minX, max = cache.maxX)
 
         return if (normX.size > MAX_POINTS) {
-            LTThreeBuckets
+            val downsampled = LTThreeBuckets
                 .downsample(normX, normY, MAX_POINTS - 2)
-                .let {
-                    MarketChartRawData(
-                        originalIndexes = it.originalIndexes.toImmutableList(),
-                        x = it.x.toImmutableList(),
-                        y = it.y.toImmutableList(),
-                    )
-                }
+
+            MarketChartRawData(
+                originalIndexes = downsampled.originalIndexes.toImmutableList(),
+                x = downsampled.x.toImmutableList(),
+                y = downsampled.y.toImmutableList(),
+            )
         } else {
             MarketChartRawData(
                 x = normX.toImmutableList(),
@@ -55,8 +59,8 @@ class PriceAndTimePointValuesConverter(
     }
 
     override fun prepareRawXForFormat(rawX: Double, data: MarketChartData.Data): BigDecimal {
-        if (!needToFormatAxis) return BigDecimal.ZERO
-        if (formatXValuesCache.containsKey(rawX)) return formatXValuesCache[rawX]!!
+        if (!shouldFormatAxis) return BigDecimal.ZERO
+        if (formatXValuesCache.containsKey(rawX)) return requireNotNull(formatXValuesCache[rawX])
 
         val result = (rawX * MINUTE).toBigDecimal()
 
@@ -65,8 +69,8 @@ class PriceAndTimePointValuesConverter(
     }
 
     override fun prepareRawYForFormat(rawY: Double, data: MarketChartData.Data): BigDecimal {
-        if (!needToFormatAxis) return BigDecimal.ZERO
-        if (formatYValuesCache.containsKey(rawY)) return formatYValuesCache[rawY]!!
+        if (!shouldFormatAxis) return BigDecimal.ZERO
+        if (formatYValuesCache.containsKey(rawY)) return requireNotNull(formatYValuesCache[rawY])
 
         val min = minMaxCache.minY
         val max = minMaxCache.maxY

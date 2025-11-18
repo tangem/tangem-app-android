@@ -131,6 +131,12 @@ sealed class AnalyticsParam {
             override val token: String,
             override val feeType: FeeType,
         ) : TxSentFrom("Send&Swap"), TxData
+
+        data class Earning(
+            override val blockchain: String,
+            override val token: String,
+            override val feeType: FeeType,
+        ) : TxSentFrom("Earning"), TxData
     }
 
     sealed interface TxData {

@@ -16,9 +16,9 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.toWrappedList
 import com.tangem.datasource.local.config.issuers.IssuersConfigStorage
+import com.tangem.domain.card.common.TwinCardNumber
+import com.tangem.domain.card.common.getTwinCardNumber
 import com.tangem.domain.card.repository.CardRepository
-import com.tangem.domain.common.TwinCardNumber
-import com.tangem.domain.common.getTwinCardNumber
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.models.scan.ScanResponse
@@ -68,6 +68,7 @@ internal class OnboardingTwinModel @Inject constructor(
     private val params = paramsContainer.require<OnboardingTwinComponent.Params>()
     private val firstCardTwinNumber = params.scanResponse.card.getTwinCardNumber() ?: error("Not twin")
     private val cryptoCurrencyStatusJobHolder = JobHolder()
+    private var twinCardsIds = Pair<String?, String?>(null, null)
 
     private val _uiState = MutableStateFlow(
         when (params.mode) {
@@ -159,6 +160,7 @@ internal class OnboardingTwinModel @Inject constructor(
                 }
                 is CompletionResult.Success -> {
                     if (params.mode == Mode.CreateWallet) {
+                        twinCardsIds = twinCardsIds.copy(first = result.data.cardId)
                         cardRepository.startCardActivation(result.data.cardId)
                     }
 
@@ -216,6 +218,7 @@ internal class OnboardingTwinModel @Inject constructor(
                 }
                 is CompletionResult.Success -> {
                     if (params.mode == Mode.CreateWallet) {
+                        twinCardsIds = twinCardsIds.copy(second = result.data.cardId)
                         cardRepository.startCardActivation(result.data.cardId)
                     }
 
@@ -299,7 +302,12 @@ internal class OnboardingTwinModel @Inject constructor(
             return@coroutineScope
         }
 
-        cardRepository.finishCardActivation(params.scanResponse.card.cardId)
+        twinCardsIds.first?.let {
+            cardRepository.finishCardActivation(it)
+        }
+        twinCardsIds.second?.let {
+            cardRepository.finishCardActivation(it)
+        }
 
         params.modelCallbacks.onDone()
     }
