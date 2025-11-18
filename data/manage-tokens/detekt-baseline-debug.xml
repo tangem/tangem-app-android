@@ -1,0 +1,17 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>MultilineLambdaItParameter:DefaultCustomTokensRepository.kt$DefaultCustomTokensRepository${ // TODO: refactor https://tangem.atlassian.net/browse/AND-10006\ if (it.isTestnet() || it in excludedBlockchains || it in hotWalletExcludedBlockchains) { return@mapNotNull null } networkFactory.create( blockchain = it, extraDerivationPath = null, userWallet = userWallet, ) }</ID>
+    <ID>MultilineLambdaItParameter:DefaultManageTokensRepository.kt$DefaultManageTokensRepository${ it.contractAddress != null &amp;&amp; it.networkId == network.backendId &amp;&amp; it.derivationPath == network.derivationPath.value }</ID>
+    <ID>MultilineLambdaItParameter:ManageTokensUpdateFetcher.kt$ManageTokensUpdateFetcher${ if (it.key == toUpdate[index].key) { Batch(it.key, updatedItems) } else { null } }</ID>
+    <ID>NamedArguments:ManagedCryptoCurrencyFactory.kt$ManagedCryptoCurrencyFactory$create(coinsResponse, tokensResponse, userWallet, accountIndex)</ID>
+    <ID>NamedArguments:ManagedCryptoCurrencyFactory.kt$ManagedCryptoCurrencyFactory$createToken(coin, tokensResponse, coinsResponse.imageHost, userWallet, accountIndex)</ID>
+    <ID>NamedArguments:ManagedCryptoCurrencyFactory.kt$ManagedCryptoCurrencyFactory$findAddedInNetworks(coinResponse.id, tokensResponse, userWallet, accountIndex)</ID>
+    <ID>NamedArguments:ManagedCryptoCurrencyFactory.kt$ManagedCryptoCurrencyFactory$findAddedInNetworks(testnetToken.id, tokensResponse, userWallet, accountIndex)</ID>
+    <ID>SuspendFunSwallowedCancellation:DefaultManageTokensRepository.kt$DefaultManageTokensRepository$runCatching</ID>
+    <ID>UnsafeCallOnNullableType:DefaultCustomTokensRepository.kt$DefaultCustomTokensRepository$coinNetwork.decimalCount!!</ID>
+    <ID>UseOrEmpty:ManagedCryptoCurrencyFactory.kt$ManagedCryptoCurrencyFactory$testnetToken.networks?.mapNotNull { network -&gt; createSource( networkId = network.id, contractAddress = network.address, decimals = network.decimalCount, userWallet = userWallet, accountIndex = accountIndex, ) } ?: emptyList()</ID>
+    <ID>UseOrEmpty:ManagedCryptoCurrencyFactory.kt$ManagedCryptoCurrencyFactory$tokensResponse ?.let { createCustomTokens(it, userWallet, accountIndex) } ?: emptyList()</ID>
+  </CurrentIssues>
+</SmellBaseline>
