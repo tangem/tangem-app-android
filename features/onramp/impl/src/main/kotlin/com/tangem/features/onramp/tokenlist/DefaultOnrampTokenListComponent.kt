@@ -1,17 +1,17 @@
 package com.tangem.features.onramp.tokenlist
 
-import androidx.compose.runtime.Composable
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.runtime.Stable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
+import com.tangem.features.onramp.tokenlist.entity.TokenListUM
 import com.tangem.features.onramp.tokenlist.model.OnrampTokenListModel
-import com.tangem.features.onramp.tokenlist.ui.TokenList
+import com.tangem.features.onramp.tokenlist.ui.onrampTokenList
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.flow.StateFlow
 
 @Stable
 internal class DefaultOnrampTokenListComponent @AssistedInject constructor(
@@ -21,11 +21,11 @@ internal class DefaultOnrampTokenListComponent @AssistedInject constructor(
 
     private val model: OnrampTokenListModel = getOrCreateModel(params)
 
-    @Composable
-    override fun Content(modifier: Modifier) {
-        val state by model.state.collectAsStateWithLifecycle()
+    override val uiState: StateFlow<TokenListUM>
+        get() = model.state
 
-        TokenList(state = state, modifier = modifier)
+    override fun LazyListScope.content(uiState: TokenListUM, modifier: Modifier) {
+        onrampTokenList(state = uiState)
     }
 
     @AssistedFactory

@@ -29,8 +29,8 @@ import com.tangem.core.ui.res.TangemThemePreview
  */
 @Composable
 fun NetworkTitle(
-    title: @Composable BoxScope.() -> Unit,
     modifier: Modifier = Modifier,
+    title: @Composable BoxScope.() -> Unit,
     action: (@Composable BoxScope.() -> Unit)? = null,
 ) {
     val minHeight = if (action == null) TangemTheme.dimens.size36 else TangemTheme.dimens.size40

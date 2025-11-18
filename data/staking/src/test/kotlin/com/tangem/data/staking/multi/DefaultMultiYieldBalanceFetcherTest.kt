@@ -309,7 +309,7 @@ internal class DefaultMultiYieldBalanceFetcherTest {
         val requests = setOf(tonId, solanaId).map(YieldBalanceRequestBodyFactory::create)
 
         @Suppress("UNCHECKED_CAST")
-        val errorResponse = ApiResponse.Error(ApiResponseError.NetworkException)
+        val errorResponse = ApiResponse.Error(ApiResponseError.NetworkException())
             as ApiResponse<Set<YieldBalanceWrapperDTO>>
 
         coEvery { stakeKitApi.getMultipleYieldBalances(requests) } returns errorResponse
@@ -328,7 +328,7 @@ internal class DefaultMultiYieldBalanceFetcherTest {
 
         coVerify(inverse = true) { yieldsBalancesStore.storeActual(userWalletId = any(), values = any()) }
 
-        val expected = ApiResponseError.NetworkException
+        val expected = ApiResponseError.NetworkException()
 
         assertEitherLeft(actual, expected)
     }
