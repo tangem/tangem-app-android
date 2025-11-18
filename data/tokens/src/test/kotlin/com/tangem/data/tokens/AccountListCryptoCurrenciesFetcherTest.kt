@@ -2,8 +2,6 @@ package com.tangem.data.tokens
 
 import arrow.core.left
 import arrow.core.right
-import com.tangem.common.test.utils.assertEither
-import com.tangem.common.test.utils.assertEitherRight
 import com.tangem.data.common.account.WalletAccountsFetcher
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.datasource.local.userwallet.UserWalletsStore
@@ -12,6 +10,8 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesFetcher
+import com.tangem.test.core.assertEither
+import com.tangem.test.core.assertEitherRight
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
