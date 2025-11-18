@@ -118,7 +118,7 @@ private fun InputRowImageSelectorPreview(
 private data class InputRowImageSelectorPreviewData(
     val subtitle: TextReference,
     val caption: TextReference,
-    val showDivider: Boolean,
+    val shouldShowDivider: Boolean,
     val actionIconRes: Int?,
     val isSelected: Boolean,
 )
@@ -131,14 +131,14 @@ private class InputRowImageSelectorPreviewDataProvider :
                 subtitle = TextReference.Str("subtitle"),
                 caption = TextReference.Str("caption"),
                 actionIconRes = null,
-                showDivider = false,
+                shouldShowDivider = false,
                 isSelected = false,
             ),
             InputRowImageSelectorPreviewData(
                 subtitle = TextReference.Str("subtitle"),
                 caption = TextReference.Str("caption"),
                 actionIconRes = R.drawable.ic_chevron_right_24,
-                showDivider = true,
+                shouldShowDivider = true,
                 isSelected = true,
             ),
         )

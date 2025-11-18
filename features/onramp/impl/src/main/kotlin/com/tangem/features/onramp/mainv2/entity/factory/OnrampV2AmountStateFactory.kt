@@ -84,7 +84,9 @@ internal class OnrampV2AmountStateFactory(
             amountBlockState = amountState.copy(
                 secondaryFieldModel = OnrampNewAmountSecondaryFieldUM.Loading,
             ),
-            offersBlockState = OnrampOffersBlockUM.Loading(isBlockVisible = false),
+            offersBlockState = OnrampOffersBlockUM.Loading(
+                isBlockVisible = currentState.offersBlockState.isBlockVisible,
+            ),
             continueButtonConfig = currentState.continueButtonConfig.copy(enabled = false),
             errorNotification = null,
             onrampAmountButtonUMState = OnrampV2AmountButtonUMState.None,

@@ -88,7 +88,7 @@ lateinit var store: Store<AppState>
 val foregroundActivityObserver = ForegroundActivityObserver
 internal lateinit var derivationsFinder: DerivationsFinder
 
-abstract class TangemApplication : Application(), ImageLoaderFactory, Configuration.Provider {
+open class TangemApplication : Application(), ImageLoaderFactory, Configuration.Provider {
 
     // region DI
     private val entryPoint: ApplicationEntryPoint
@@ -290,7 +290,7 @@ abstract class TangemApplication : Application(), ImageLoaderFactory, Configurat
     /**
      * Initialize components that need to be initialized before [super.onCreate] is called
      */
-    private fun preInit() {
+    fun preInit() {
         tangemAppLoggerInitializer.initialize()
         registerActivityLifecycleCallbacks(foregroundActivityObserver.callbacks)
     }

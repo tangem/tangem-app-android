@@ -6,7 +6,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -17,7 +16,6 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import com.tangem.core.ui.components.icons.identicon.IdentIcon
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
@@ -33,7 +31,6 @@ internal fun DestinationBlock(
     destinationUM: DestinationUM,
     isClickDisabled: Boolean,
     isEditingDisabled: Boolean,
-    isRedesignEnabled: Boolean,
     onClick: () -> Unit,
 ) {
     if (destinationUM !is DestinationUM.Content) return
@@ -46,72 +43,9 @@ internal fun DestinationBlock(
             .clickable(enabled = !isClickDisabled && !isEditingDisabled, onClick = onClick)
             .padding(TangemTheme.dimens.spacing12),
     ) {
-        if (isRedesignEnabled) {
-            AddressWithMemoBlock(
-                address = destinationUM.addressTextField,
-                memo = destinationUM.memoTextField,
-            )
-        } else {
-            AddressBlock(destinationUM.addressTextField)
-            MemoBlock(destinationUM.memoTextField)
-        }
-    }
-}
-
-@Composable
-private fun AddressBlock(address: DestinationTextFieldUM.RecipientAddress) {
-    Text(
-        text = address.label.resolveReference(),
-        style = TangemTheme.typography.subtitle2,
-        color = TangemTheme.colors.text.tertiary,
-    )
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
-        modifier = Modifier.padding(top = TangemTheme.dimens.spacing8),
-    ) {
-        IdentIcon(
-            address = address.value,
-            modifier = Modifier
-                .size(TangemTheme.dimens.size36)
-                .clip(RoundedCornerShape(TangemTheme.dimens.radius18))
-                .background(TangemTheme.colors.background.tertiary),
-        )
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = address.value,
-                style = TangemTheme.typography.body2,
-                color = TangemTheme.colors.text.primary1,
-            )
-            val blockchainAddress = address.briefBlockchainAddress
-            if (!blockchainAddress.isNullOrBlank()) {
-                Text(
-                    text = blockchainAddress,
-                    style = TangemTheme.typography.caption2,
-                    color = TangemTheme.colors.text.tertiary,
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun MemoBlock(memo: DestinationTextFieldUM.RecipientMemo?) {
-    if (memo != null && memo.value.isNotBlank()) {
-        HorizontalDivider(
-            color = TangemTheme.colors.icon.inactive,
-            modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing12),
-        )
-        Text(
-            text = memo.label.resolveReference(),
-            style = TangemTheme.typography.subtitle2,
-            color = TangemTheme.colors.text.tertiary,
-        )
-        Text(
-            text = memo.value,
-            style = TangemTheme.typography.body2,
-            color = TangemTheme.colors.text.primary1,
-            modifier = Modifier.padding(top = TangemTheme.dimens.spacing8),
+        AddressWithMemoBlock(
+            address = destinationUM.addressTextField,
+            memo = destinationUM.memoTextField,
         )
     }
 }
@@ -176,7 +110,6 @@ private fun DestinationBlockPreview(
             destinationUM = state,
             isClickDisabled = false,
             isEditingDisabled = false,
-            isRedesignEnabled = state.isRedesignEnabled,
             onClick = {},
         )
     }
@@ -210,8 +143,8 @@ private class DestinationBlockPreviewProvider : PreviewParameterProvider<Destina
         networkName = "Ethereum",
         isValidating = false,
         isInitialized = true,
-        isRedesignEnabled = false,
         isRecentHidden = false,
+        accountTitleUM = null,
     )
 
     override val values: Sequence<DestinationUM.Content>
@@ -223,13 +156,11 @@ private class DestinationBlockPreviewProvider : PreviewParameterProvider<Destina
                     blockchainAddress = "0x34B4492A412D84A6E606288f3Bd714b89135D4dE",
                 ),
             ),
-            previewItem.copy(isRedesignEnabled = true),
             previewItem.copy(
                 addressTextField = previewItem.addressTextField.copy(
                     value = "vitalik.eth",
                     blockchainAddress = "0x34B4492A412D84A6E606288f3Bd714b89135D4dE",
                 ),
-                isRedesignEnabled = true,
             ),
         )
 }

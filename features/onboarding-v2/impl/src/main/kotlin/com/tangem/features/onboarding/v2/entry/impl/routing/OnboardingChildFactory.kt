@@ -81,7 +81,7 @@ internal class OnboardingChildFactory @Inject constructor(
             is OnboardingRoute.AskBiometry -> askBiometryComponentFactory.create(
                 context = childContext,
                 params = AskBiometryComponent.Params(
-                    bottomSheetVariant = false,
+                    isBottomSheetVariant = false,
                     modelCallbacks = route.modelCallbacks,
                 ),
             )
