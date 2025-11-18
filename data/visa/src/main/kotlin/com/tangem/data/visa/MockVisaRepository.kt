@@ -15,7 +15,7 @@ internal class MockVisaRepository @Inject constructor() : VisaRepository {
         TODO("Not implemented for this build type")
     }
 
-    override suspend fun getTxHistory(
+    override fun getTxHistory(
         userWalletId: UserWalletId,
         pageSize: Int,
         isRefresh: Boolean,
