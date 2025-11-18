@@ -90,10 +90,6 @@ dependencies {
     implementation(deps.room.ktx)
     ksp(deps.room.compiler)
 
-    testImplementation(deps.test.coroutine)
-    testImplementation(deps.test.junit5)
+    testImplementation(projects.test.core)
     testRuntimeOnly(deps.test.junit5.engine)
-    testImplementation(deps.test.mockk)
-    testImplementation(deps.test.truth)
-    testImplementation(projects.common.test)
 }
