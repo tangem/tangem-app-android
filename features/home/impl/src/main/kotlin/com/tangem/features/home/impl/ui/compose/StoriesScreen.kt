@@ -43,12 +43,18 @@ internal fun StoriesScreen(
     var currentStory by remember { mutableStateOf(state.firstStory) }
     val currentStoryIndex by rememberUpdatedState(newValue = state.stepOf(currentStory))
 
+    LaunchedEffect(currentStoryIndex) {
+        if (currentStoryIndex < 0) {
+            currentStory = state.firstStory
+        }
+    }
+
     val goToPreviousStory = remember(currentStory, currentStoryIndex) {
         { currentStory = state.stories[max(0, currentStoryIndex - 1)] }
     }
     val goToNextStory = remember(currentStory, currentStoryIndex) {
         {
-            currentStory = if (currentStoryIndex < state.stories.lastIndex) {
+            currentStory = if (currentStoryIndex >= 0 && currentStoryIndex < state.stories.lastIndex) {
                 state.stories[currentStoryIndex + 1]
             } else {
                 state.firstStory

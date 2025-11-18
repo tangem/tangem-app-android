@@ -24,8 +24,19 @@ internal class DefaultStakingYieldsStore(
     }
 
     override suspend fun store(items: List<YieldDTO>) {
-        dataStore.updateData { _ ->
-            items
+        dataStore.updateData { data ->
+            val updatedItems = data.toMutableList()
+            items.forEach { newItem ->
+                val existingItemIndex = data.indexOfFirst { it.id == newItem.id }
+                if (existingItemIndex != -1) {
+                    // Update existing item
+                    updatedItems[existingItemIndex] = newItem
+                } else {
+                    // Add new item
+                    updatedItems.add(newItem)
+                }
+            }
+            updatedItems
         }
     }
 

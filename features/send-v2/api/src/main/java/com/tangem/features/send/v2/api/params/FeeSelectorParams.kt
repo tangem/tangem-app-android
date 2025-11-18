@@ -6,6 +6,7 @@ import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.v2.api.callbacks.FeeSelectorModelCallback
 import com.tangem.features.send.v2.api.entity.FeeSelectorUM
 
@@ -17,6 +18,7 @@ sealed class FeeSelectorParams {
     abstract val feeStateConfiguration: FeeStateConfiguration
     abstract val feeDisplaySource: FeeDisplaySource
     abstract val analyticsCategoryName: String
+    abstract val analyticsSendSource: CommonSendAnalyticEvents.CommonSendSource
 
     data class FeeSelectorBlockParams(
         override val state: FeeSelectorUM,
@@ -26,6 +28,7 @@ sealed class FeeSelectorParams {
         override val feeStateConfiguration: FeeStateConfiguration,
         override val feeDisplaySource: FeeDisplaySource,
         override val analyticsCategoryName: String,
+        override val analyticsSendSource: CommonSendAnalyticEvents.CommonSendSource,
     ) : FeeSelectorParams()
 
     data class FeeSelectorDetailsParams(
@@ -36,6 +39,7 @@ sealed class FeeSelectorParams {
         override val feeStateConfiguration: FeeStateConfiguration,
         override val feeDisplaySource: FeeDisplaySource,
         override val analyticsCategoryName: String,
+        override val analyticsSendSource: CommonSendAnalyticEvents.CommonSendSource,
         val callback: FeeSelectorModelCallback,
     ) : FeeSelectorParams()
 

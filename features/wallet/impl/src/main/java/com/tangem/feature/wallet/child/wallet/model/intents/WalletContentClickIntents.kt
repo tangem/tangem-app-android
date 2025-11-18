@@ -3,19 +3,24 @@ package com.tangem.feature.wallet.child.wallet.model.intents
 import arrow.core.getOrElse
 import com.tangem.common.ui.expressStatus.ExpressStatusBottomSheetConfig
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
+import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.staking.YieldBalance
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.nft.analytics.NFTAnalyticsEvent
-import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.settings.ShouldShowMarketsTooltipUseCase
 import com.tangem.domain.tokens.GetCryptoCurrencyActionsUseCase
 import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
-import com.tangem.domain.tokens.TokensAction
 import com.tangem.domain.tokens.model.TokenActionsState
+import com.tangem.domain.tokens.model.details.NavigationAction
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.feature.wallet.presentation.account.AccountDependencies
 import com.tangem.feature.wallet.presentation.wallet.domain.OnrampStatusFactory
 import com.tangem.feature.wallet.presentation.wallet.domain.unwrap
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
@@ -36,15 +41,19 @@ internal interface WalletContentClickIntents {
 
     fun onDetailsClick()
 
-    fun onManageTokensClick()
-
     fun onOrganizeTokensClick()
 
     fun onDismissMarketsOnboarding()
 
-    fun onTokenItemClick(currencyStatus: CryptoCurrencyStatus)
+    fun onTokenItemClick(userWalletId: UserWalletId, currencyStatus: CryptoCurrencyStatus)
 
-    fun onTokenItemLongClick(cryptoCurrencyStatus: CryptoCurrencyStatus)
+    fun onTokenItemLongClick(userWalletId: UserWalletId, cryptoCurrencyStatus: CryptoCurrencyStatus)
+
+    fun onApyLabelClick(userWalletId: UserWalletId, currencyStatus: CryptoCurrencyStatus)
+
+    fun onAccountExpandClick(account: Account)
+
+    fun onAccountCollapseClick(account: Account)
 
     fun onTransactionClick(txHash: String)
 
@@ -74,10 +83,10 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
     private val shouldShowMarketsTooltipUseCase: ShouldShowMarketsTooltipUseCase,
     private val dispatchers: CoroutineDispatcherProvider,
-    private val reduxStateHolder: ReduxStateHolder,
     private val walletEventSender: WalletEventSender,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
+    private val accountDependencies: AccountDependencies,
 ) : BaseWalletClickIntents(), WalletContentClickIntents {
 
     override fun onDetailsClick() {
@@ -114,11 +123,6 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
         }
     }
 
-    override fun onManageTokensClick() {
-        reduxStateHolder.dispatch(action = TokensAction.SetArgs.ManageAccess)
-        router.openManageTokensScreen(userWalletId = stateHolder.getSelectedWalletId())
-    }
-
     override fun onOrganizeTokensClick() {
         router.openOrganizeTokensScreen(userWalletId = stateHolder.getSelectedWalletId())
     }
@@ -130,13 +134,12 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
         }
     }
 
-    override fun onTokenItemClick(currencyStatus: CryptoCurrencyStatus) {
-        router.openTokenDetails(stateHolder.getSelectedWalletId(), currencyStatus)
+    override fun onTokenItemClick(userWalletId: UserWalletId, currencyStatus: CryptoCurrencyStatus) {
+        router.openTokenDetails(userWalletId, currencyStatus)
     }
 
-    override fun onTokenItemLongClick(cryptoCurrencyStatus: CryptoCurrencyStatus) {
+    override fun onTokenItemLongClick(userWalletId: UserWalletId, cryptoCurrencyStatus: CryptoCurrencyStatus) {
         modelScope.launch(dispatchers.main) {
-            val userWalletId = stateHolder.getSelectedWalletId()
             val userWallet = getUserWalletUseCase(userWalletId).getOrElse {
                 Timber.e(
                     """
@@ -155,6 +158,52 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
                     showActionsBottomSheet(it, userWallet)
                 }
         }
+    }
+
+    override fun onApyLabelClick(userWalletId: UserWalletId, currencyStatus: CryptoCurrencyStatus) {
+        val navigationAction = if (currencyStatus.currency is CryptoCurrency.Token) {
+            NavigationAction.YieldSupply(currencyStatus.value.yieldSupplyStatus?.isActive == true)
+        } else {
+            NavigationAction.Staking
+        }
+        val event = when (navigationAction) {
+            is NavigationAction.YieldSupply -> {
+                MainScreenAnalyticsEvent.ApyClicked(
+                    token = currencyStatus.currency.symbol,
+                    blockchain = currencyStatus.currency.network.name,
+                    action = "Earning",
+                    state = if (currencyStatus.value.yieldSupplyStatus?.isActive == true) {
+                        "Enabled"
+                    } else {
+                        "Disabled"
+                    },
+                )
+            }
+            is NavigationAction.Staking -> {
+                MainScreenAnalyticsEvent.ApyClicked(
+                    token = currencyStatus.currency.symbol,
+                    blockchain = currencyStatus.currency.network.name,
+                    action = "Staking",
+                    state = if (currencyStatus.value.yieldBalance is YieldBalance.Data) {
+                        "Enabled"
+                    } else {
+                        "Disabled"
+                    },
+                )
+            }
+        }
+        analyticsEventHandler.send(event)
+        router.openTokenDetails(userWalletId, currencyStatus, navigationAction)
+    }
+
+    override fun onAccountExpandClick(account: Account) {
+        val userWalletId = stateHolder.getSelectedWalletId()
+        accountDependencies.expandedAccountsHolder.expandAccount(userWalletId, account.accountId)
+    }
+
+    override fun onAccountCollapseClick(account: Account) {
+        val userWalletId = stateHolder.getSelectedWalletId()
+        accountDependencies.expandedAccountsHolder.collapseAccount(userWalletId, account.accountId)
     }
 
     private fun showActionsBottomSheet(tokenActionsState: TokenActionsState, userWallet: UserWallet) {

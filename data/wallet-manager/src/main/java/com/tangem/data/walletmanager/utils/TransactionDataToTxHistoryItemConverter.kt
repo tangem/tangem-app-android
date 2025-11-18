@@ -1,6 +1,13 @@
 package com.tangem.data.walletmanager.utils
 
+import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
+import com.tangem.blockchain.blockchains.ethereum.tokenmethods.ApprovalERC20TokenCallData
 import com.tangem.blockchain.common.*
+import com.tangem.blockchain.yieldsupply.providers.ethereum.factory.EthereumYieldSupplyDeployCallData
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyEnterCallData
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyExitCallData
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyInitTokenCallData
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyReactivateTokenCallData
 import com.tangem.blockchainsdk.models.UpdateWalletManagerResult.Address
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.utils.converter.Converter
@@ -33,14 +40,12 @@ internal class TransactionDataToTxHistoryItemConverter(
                 addressType = TxInfo.AddressType.User(value.destinationAddress),
             ),
             sourceType = TxInfo.SourceType.Single(value.sourceAddress),
-            interactionAddressType = TxInfo.InteractionAddressType.User(
-                address = if (isOutgoing) value.destinationAddress else value.sourceAddress,
-            ),
+            interactionAddressType = getInteractionAddressType(value, isOutgoing),
             status = when (value.status) {
                 TransactionStatus.Confirmed -> TxInfo.TransactionStatus.Confirmed
                 TransactionStatus.Unconfirmed -> TxInfo.TransactionStatus.Unconfirmed
             },
-            type = TxInfo.TransactionType.Transfer,
+            type = getTransactionType(value.extras),
             amount = amount,
         )
     }
@@ -73,5 +78,42 @@ internal class TransactionDataToTxHistoryItemConverter(
     private fun isSameToken(amountToken: Token, feeToken: Token): Boolean {
         return amountToken.contractAddress.equals(feeToken.contractAddress, ignoreCase = true) &&
             amountToken.symbol.equals(feeToken.symbol, ignoreCase = true)
+    }
+
+    private fun getInteractionAddressType(
+        value: TransactionData.Uncompiled,
+        isOutgoing: Boolean,
+    ): TxInfo.InteractionAddressType = when (val extras = value.extras) {
+        is EthereumTransactionExtras -> {
+            when (val callData = extras.callData) {
+                is ApprovalERC20TokenCallData -> TxInfo.InteractionAddressType.Contract(
+                    address = callData.spenderAddress,
+                )
+                else -> TxInfo.InteractionAddressType.User(
+                    address = if (isOutgoing) value.destinationAddress else value.sourceAddress,
+                )
+            }
+        }
+        else -> TxInfo.InteractionAddressType.User(
+            address = if (isOutgoing) value.destinationAddress else value.sourceAddress,
+        )
+    }
+
+    private fun getTransactionType(extras: TransactionExtras?): TxInfo.TransactionType {
+        return when (extras) {
+            is EthereumTransactionExtras -> {
+                when (extras.callData) {
+                    is EthereumYieldSupplyDeployCallData,
+                    is EthereumYieldSupplyReactivateTokenCallData,
+                    is EthereumYieldSupplyInitTokenCallData,
+                    is EthereumYieldSupplyEnterCallData,
+                    -> TxInfo.TransactionType.YieldSupply.Enter
+                    is EthereumYieldSupplyExitCallData -> TxInfo.TransactionType.YieldSupply.Exit
+                    is ApprovalERC20TokenCallData -> TxInfo.TransactionType.Approve
+                    else -> TxInfo.TransactionType.Transfer
+                }
+            }
+            else -> TxInfo.TransactionType.Transfer
+        }
     }
 }

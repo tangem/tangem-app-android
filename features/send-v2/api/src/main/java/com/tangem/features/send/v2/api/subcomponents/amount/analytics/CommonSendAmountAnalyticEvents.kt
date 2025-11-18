@@ -2,8 +2,10 @@ package com.tangem.features.send.v2.api.subcomponents.amount.analytics
 
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam.Key.BLOCKCHAIN
+import com.tangem.core.analytics.models.AnalyticsParam.Key.SOURCE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.TOKEN_PARAM
 import com.tangem.core.analytics.models.AnalyticsParam.Key.TYPE
+import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents
 
 sealed class CommonSendAmountAnalyticEvents(
     category: String,
@@ -26,12 +28,14 @@ sealed class CommonSendAmountAnalyticEvents(
         val categoryName: String,
         val token: String,
         val blockchain: String,
+        val source: CommonSendAnalyticEvents.CommonSendSource,
     ) : CommonSendAmountAnalyticEvents(
         category = categoryName,
         event = "Max Amount Taped",
         params = mapOf(
             TOKEN_PARAM to token,
             BLOCKCHAIN to blockchain,
+            SOURCE to source.analyticsName,
         ),
     )
 

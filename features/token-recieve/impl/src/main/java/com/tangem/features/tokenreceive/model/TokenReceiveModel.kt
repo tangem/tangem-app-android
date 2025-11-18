@@ -9,6 +9,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.domain.models.Asset
+import com.tangem.domain.models.TokenReceiveType
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.tokens.SaveViewedTokenReceiveWarningUseCase
 import com.tangem.domain.tokens.model.analytics.TokenReceiveCopyActionSource
@@ -48,6 +49,7 @@ internal class TokenReceiveModel @Inject constructor(
             addresses = params.config.receiveAddress,
             tokenReceiveNotification = params.config.tokenReceiveNotification,
             currentStateProvider = Provider { state.value },
+            tokenReceiveType = params.config.type,
         )
     }
 
@@ -56,7 +58,7 @@ internal class TokenReceiveModel @Inject constructor(
     val stackNavigation = StackNavigation<TokenReceiveRoutes>()
 
     internal val state: StateFlow<TokenReceiveUM>
-    field = MutableStateFlow<TokenReceiveUM>(tokenReceiveStateFactory.getInitialState(getTokenName()))
+        field = MutableStateFlow<TokenReceiveUM>(tokenReceiveStateFactory.getInitialState(getTokenName()))
 
     init {
         modelScope.launch {
@@ -96,9 +98,12 @@ internal class TokenReceiveModel @Inject constructor(
     }
 
     internal fun getTokenName(): String {
-        return when (val asset = params.config.asset) {
-            Asset.Currency -> params.config.cryptoCurrency.symbol
-            Asset.NFT -> asset.name
+        return when (val type = params.config.type) {
+            is TokenReceiveType.Default -> when (val asset = params.config.asset) {
+                Asset.Currency -> params.config.cryptoCurrency.symbol
+                Asset.NFT -> asset.name
+            }
+            is TokenReceiveType.Custom -> type.tokenName
         }
     }
 

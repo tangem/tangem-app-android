@@ -16,6 +16,11 @@ internal class MockEnvironmentConfigStorage : EnvironmentConfigStorage {
         express = ExpressModel(apiKey = EXPRESS_API_KEY, signVerifierPublicKey = "vocibus"),
         devExpress = ExpressModel(apiKey = EXPRESS_DEV_API_KEY, signVerifierPublicKey = "pellentesque"),
         blockAidApiKey = BLOCK_AID_API_KEY,
+        tangemApiKey = TANGEM_API_KEY,
+        tangemApiKeyDev = TANGEM_API_KEY_DEV,
+        tangemApiKeyStage = TANGEM_API_KEY_STAGE,
+        yieldModuleApiKey = YIELD_MODULE_KEY,
+        yieldModuleApiKeyDev = YIELD_MODULE_KEY_DEV,
     )
 
     override suspend fun initialize() = environmentConfig
@@ -26,5 +31,10 @@ internal class MockEnvironmentConfigStorage : EnvironmentConfigStorage {
         const val EXPRESS_API_KEY = "express_api_key"
         const val EXPRESS_DEV_API_KEY = "express_dev_api_key"
         const val BLOCK_AID_API_KEY = "block_aid_api_key"
+        const val TANGEM_API_KEY = "tangem_api_key"
+        const val TANGEM_API_KEY_DEV = "tangem_api_key_dev"
+        const val TANGEM_API_KEY_STAGE = "tangem_api_key_stage"
+        const val YIELD_MODULE_KEY = "yield_module_api_key"
+        const val YIELD_MODULE_KEY_DEV = "yield_module_api_key_dev"
     }
 }

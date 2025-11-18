@@ -1,6 +1,7 @@
 package com.tangem.features.onramp.swap.entity.transformer
 
 import com.tangem.core.ui.components.token.state.TokenItemState
+import com.tangem.domain.models.account.Account
 import com.tangem.features.onramp.swap.entity.ExchangeCardUM
 import com.tangem.features.onramp.swap.entity.SwapSelectTokensUM
 import com.tangem.features.onramp.swap.entity.SwapSelectTokensUMTransformer
@@ -15,12 +16,19 @@ import com.tangem.features.onramp.swap.entity.utils.toFilled
  */
 internal class SelectToTokenTransformer(
     private val selectedTokenItemState: TokenItemState,
+    private val isAccountsMode: Boolean,
+    private val account: Account.CryptoPortfolio?,
 ) : SwapSelectTokensUMTransformer {
 
     override fun transform(prevState: SwapSelectTokensUM): SwapSelectTokensUM {
         return prevState.copy(
             exchangeFrom = prevState.exchangeFrom.hideRemoveButton(),
-            exchangeTo = prevState.exchangeTo.toFilled(selectedTokenItemState = selectedTokenItemState),
+            exchangeTo = prevState.exchangeTo.toFilled(
+                selectedTokenItemState = selectedTokenItemState,
+                isAccountsMode = isAccountsMode,
+                account = account,
+                isFromCurrency = false,
+            ),
         )
     }
 

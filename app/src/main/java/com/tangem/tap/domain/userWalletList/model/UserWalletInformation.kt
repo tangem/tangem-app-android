@@ -21,6 +21,7 @@ internal data class UserWalletSensitiveInformation(
     val mobileWallets: List<MobileWallet>? = null,
 )
 
+@Suppress("BooleanPropertyNaming")
 @JsonClass(generateAdapter = true)
 internal data class UserWalletPublicInformation(
     // Common

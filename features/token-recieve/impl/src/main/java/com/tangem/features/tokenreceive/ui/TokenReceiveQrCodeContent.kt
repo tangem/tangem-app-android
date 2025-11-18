@@ -21,6 +21,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -32,6 +33,7 @@ import com.tangem.core.ui.components.*
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.TokenReceiveQrCodeBottomSheetTestTags
 import com.tangem.features.tokenreceive.impl.R
 import com.tangem.features.tokenreceive.ui.state.QrCodeUM
 import kotlinx.coroutines.launch
@@ -88,6 +90,7 @@ private fun QrCodePage(addressFullName: TextReference, addressValue: String, net
                 color = TangemTheme.colors.text.primary1,
                 textAlign = TextAlign.Center,
                 style = TangemTheme.typography.h3,
+                modifier = Modifier.testTag(TokenReceiveQrCodeBottomSheetTestTags.TITLE),
             )
 
             SpacerH(20.dp)
@@ -99,7 +102,8 @@ private fun QrCodePage(addressFullName: TextReference, addressValue: String, net
                         color = TangemTheme.colors.icon.constant,
                         shape = RoundedCornerShape(8.dp),
                     )
-                    .padding(8.dp),
+                    .padding(8.dp)
+                    .testTag(TokenReceiveQrCodeBottomSheetTestTags.QR_CODE),
 
             ) {
                 Image(
@@ -126,6 +130,7 @@ private fun QrCodePage(addressFullName: TextReference, addressValue: String, net
             color = TangemTheme.colors.text.primary1,
             textAlign = TextAlign.Center,
             style = TangemTheme.typography.subtitle1,
+            modifier = Modifier.testTag(TokenReceiveQrCodeBottomSheetTestTags.ADDRESS),
         )
     }
 }

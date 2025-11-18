@@ -9,7 +9,6 @@ import com.tangem.common.core.TangemError
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.deserialization.WalletDataDeserializer
 import com.tangem.common.extensions.*
-import com.tangem.common.map
 import com.tangem.common.tlv.Tlv
 import com.tangem.common.tlv.TlvDecoder
 import com.tangem.crypto.CryptoUtils
@@ -20,7 +19,7 @@ import com.tangem.domain.card.common.TapWorkarounds.isNotSupportedInThatRelease
 import com.tangem.domain.card.common.TapWorkarounds.isStart2Coin
 import com.tangem.domain.card.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.card.common.TapWorkarounds.isVisa
-import com.tangem.domain.common.TwinsHelper
+import com.tangem.domain.card.common.TwinsHelper
 import com.tangem.domain.wallets.derivations.derivationStyleProvider
 import com.tangem.domain.card.common.visa.VisaUtilities
 import com.tangem.domain.card.configs.CardConfig
@@ -111,13 +110,13 @@ internal class ScanProductTask(
     }
 
     private fun getErrorIfExcludedCard(cardDto: CardDTO, card: Card): TangemError? {
-        if (cardDto.isExcluded) return TapSdkError.CardForDifferentApp
-        if (cardDto.isNotSupportedInThatRelease) return TapSdkError.CardNotSupportedByRelease
+        if (cardDto.isExcluded) return TapSdkError.CardForDifferentApp()
+        if (cardDto.isNotSupportedInThatRelease) return TapSdkError.CardNotSupportedByRelease()
         // according ios decline card lower Ed25519Slip0010Available version and contains imported wallets
         if (card.firmwareVersion < FirmwareVersion.Ed25519Slip0010Available &&
             card.wallets.any { it.isImported }
         ) {
-            return TapSdkError.CardNotSupportedByRelease
+            return TapSdkError.CardNotSupportedByRelease()
         }
         return null
     }
@@ -145,11 +144,11 @@ internal class ScanProductTask(
                         card = cardDto,
                         session = session,
                     ) { scanResponseResult ->
-                        callback(
-                            scanResponseResult.map { scanResponse ->
-                                scanResponse.copy(visaCardActivationStatus = result.data)
-                            },
-                        )
+                        // callback(
+                        // scanResponseResult.map { scanResponse ->
+                        //     scanResponse.copy(visaCardActivationStatus = result.data)
+                        // },
+                        // )
                     }
                 }
                 is CompletionResult.Failure -> {
@@ -253,12 +252,13 @@ private class ScanWalletProcessor(
         callback: (result: CompletionResult<ScanResponse>) -> Unit,
     ) {
         mainScope.launch {
-            val activationInProgress = store.inject(DaggerGraphState::cardRepository)
+            val isActivationInProgress = store.inject(DaggerGraphState::cardRepository)
                 .isActivationInProgress(card.cardId)
 
             @Suppress("ComplexCondition")
-            if (card.backupStatus == CardDTO.BackupStatus.NoBackup && card.wallets.isNotEmpty() &&
-                activationInProgress
+            if (card.backupStatus == CardDTO.BackupStatus.NoBackup &&
+                card.wallets.isNotEmpty() &&
+                isActivationInProgress
             ) {
                 StartPrimaryCardLinkingTask().run(session) { linkingResult ->
                     when (linkingResult) {
@@ -372,8 +372,8 @@ private class ScanTwinProcessor : ProductCommandProcessor<ScanResponse> {
                         return@run
                     }
 
-                    val verified = TwinsHelper.verifyTwinPublicKey(readDataResult.data.issuerData, publicKey)
-                    val response = if (verified) {
+                    val isVerified = TwinsHelper.verifyTwinPublicKey(readDataResult.data.issuerData, publicKey)
+                    val response = if (isVerified) {
                         val twinPublicKey = readDataResult.data.issuerData.sliceArray(0 until 65)
                         val walletData = session.environment.walletData
                         ScanResponse(

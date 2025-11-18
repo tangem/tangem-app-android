@@ -150,7 +150,7 @@ internal class MainViewModel @Inject constructor(
             prepareSelectedWalletFeedback()
 
             // await while initial route stack is initialized
-            appRouterConfig.isInitialized.first { it }
+            appRouterConfig.initializedState.first { it }
 
             isSplashScreenShown = false
         }
@@ -165,7 +165,7 @@ internal class MainViewModel @Inject constructor(
     private fun launchAPIRequests(function: suspend CoroutineScope.() -> Unit) {
         viewModelScope.launch {
             if (BuildConfig.TESTER_MENU_ENABLED) {
-                apiConfigsManager.isInitialized
+                apiConfigsManager.initializedState
                     .filter { it }
                     .first() // wait until isInitialized becomes true
 
@@ -179,11 +179,9 @@ internal class MainViewModel @Inject constructor(
     private fun prepareSelectedWalletFeedback() {
         getSelectedWalletUseCase.invoke()
             .mapLeft { emptyFlow<UserWallet>() }
-            .onRight {
-                it.distinctUntilChanged()
-                    .onEach { userWallet ->
-                        Analytics.setContext(userWallet)
-                    }
+            .onRight { wallet ->
+                wallet.distinctUntilChanged()
+                    .onEach { Analytics.setContext(it) }
                     .flowOn(dispatchers.io)
                     .launchIn(viewModelScope)
             }
@@ -208,7 +206,7 @@ internal class MainViewModel @Inject constructor(
         return MoonPayService(
             apiKey = environmentConfig.moonPayApiKey,
             secretKey = environmentConfig.moonPayApiSecretKey,
-            logEnabled = LogConfig.network.moonPayService,
+            isLogEnabled = LogConfig.network.moonPayService,
             userWalletProvider = { getSelectedWalletUseCase.sync().getOrNull() },
         )
     }
@@ -224,8 +222,8 @@ internal class MainViewModel @Inject constructor(
             .filter {
                 it.isBalanceHidingNotificationEnabled && it.isBalanceHidden
             }
-            .onEach {
-                if (!it.isUpdateFromToast) {
+            .onEach { settings ->
+                if (!settings.isUpdateFromToast) {
                     listenToFlipsUseCase.changeUpdateEnabled(false)
 
                     val message = BottomSheetMessage.invoke(
@@ -354,6 +352,7 @@ internal class MainViewModel @Inject constructor(
         listenToFlipsUseCase.changeUpdateEnabled(isUpdateEnabled = true)
     }
 
+    @Suppress("NullableToStringCall")
     private fun sendKeyboardIdentifierEvent() {
         viewModelScope.launch {
             val keyboardId = keyboardValidator.getKeyboardId()
@@ -378,22 +377,26 @@ internal class MainViewModel @Inject constructor(
     private fun preloadImages() {
         try {
             viewModelScope.launch {
-                val swapStories = getStoryContentUseCase.invokeSync(
+                getStoryContentUseCase.invokeSync(
                     id = StoryContentIds.STORY_FIRST_TIME_SWAP.id,
                     refresh = true,
-                ).getOrNull()
-
-                if (swapStories == null) {
-                    analyticsEventHandler.send(
-                        StoriesEvents.Error(
-                            type = StoryContentIds.STORY_FIRST_TIME_SWAP.analyticType,
-                        ),
-                    )
-                } else {
-                    val storiesImages = swapStories.getImageUrls()
-                    // try to preload images for stories
-                    storiesImages.forEach(imagePreloader::preload)
-                }
+                ).fold(
+                    ifLeft = { error ->
+                        Timber.e(error)
+                        analyticsEventHandler.send(
+                            StoriesEvents.Error(
+                                type = StoryContentIds.STORY_FIRST_TIME_SWAP.analyticType,
+                            ),
+                        )
+                    },
+                    ifRight = { swapStories ->
+                        if (swapStories != null) {
+                            val storiesImages = swapStories.getImageUrls()
+                            // try to preload images for stories
+                            storiesImages.forEach(imagePreloader::preload)
+                        }
+                    },
+                )
             }
         } catch (ex: Exception) {
             Timber.e(ex)

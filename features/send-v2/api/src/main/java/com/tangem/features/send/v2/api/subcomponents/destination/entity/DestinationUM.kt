@@ -1,6 +1,7 @@
 package com.tangem.features.send.v2.api.subcomponents.destination.entity
 
 import androidx.compose.runtime.Immutable
+import com.tangem.common.ui.account.AccountTitleUM
 import kotlinx.collections.immutable.ImmutableList
 
 @Immutable
@@ -15,9 +16,9 @@ sealed class DestinationUM {
         val recent: ImmutableList<DestinationRecipientListUM>,
         val wallets: ImmutableList<DestinationRecipientListUM>,
         val networkName: String,
+        val accountTitleUM: AccountTitleUM?,
         val isValidating: Boolean = false,
         val isInitialized: Boolean = false,
-        val isRedesignEnabled: Boolean = false,
         val isRecentHidden: Boolean,
     ) : DestinationUM()
 

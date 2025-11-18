@@ -169,12 +169,12 @@ private fun Preview_Tree() {
             },
             content = {
                 ArrowRowItems(
-                    itemPadding = PaddingValues(vertical = TangemTheme.dimens.spacing4),
                     items = persistentListOf(
                         stringReference("Fist item"),
                         stringReference("Second item"),
                         stringReference("Third item"),
                     ),
+                    itemPadding = PaddingValues(vertical = TangemTheme.dimens.spacing4),
                     rootContent = {
                         PreviewItem(stringReference("Root"))
                     },

@@ -110,7 +110,9 @@ private fun EmptyConnectionsBlock(onNewConnectionClick: () -> Unit, modifier: Mo
         Image(
             painter = painterResource(R.drawable.img_wallet_connect_76),
             contentDescription = "Wallet Connect",
-            modifier = Modifier.size(76.dp),
+            modifier = Modifier
+                .size(76.dp)
+                .testTag(WalletConnectScreenTestTags.WALLET_CONNECT_IMAGE),
         )
         Text(
             modifier = Modifier.padding(top = TangemTheme.dimens.spacing24),
