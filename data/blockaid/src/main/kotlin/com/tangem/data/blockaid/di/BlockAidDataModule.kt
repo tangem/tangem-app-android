@@ -1,6 +1,8 @@
 package com.tangem.data.blockaid.di
 
+import com.tangem.data.blockaid.DefaultBlockAidGasEstimate
 import com.tangem.data.blockaid.DefaultBlockAidVerifier
+import com.tangem.domain.blockaid.BlockAidGasEstimate
 import com.tangem.domain.blockaid.BlockAidVerifier
 import dagger.Binds
 import dagger.Module
@@ -15,4 +17,8 @@ interface BlockAidDataModule {
     @Binds
     @Singleton
     fun bindVerifier(verifier: DefaultBlockAidVerifier): BlockAidVerifier
+
+    @Binds
+    @Singleton
+    fun bindBlockAidGasEstimate(gasEstimate: DefaultBlockAidGasEstimate): BlockAidGasEstimate
 }

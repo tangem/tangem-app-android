@@ -4,13 +4,17 @@ import com.tangem.common.ui.expressStatus.ExpressStatusBottomSheetConfig
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.datasource.local.swap.ExpressAnalyticsStatus
 import com.tangem.datasource.local.swap.SwapTransactionStatusStore
+import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
+import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
+import com.tangem.domain.account.status.usecase.SaveCryptoCurrenciesUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.quote.QuoteStatus
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.quotes.QuotesRepository
 import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
 import com.tangem.domain.tokens.model.analytics.TokenExchangeAnalyticsEvent
-import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.feature.swap.domain.SwapTransactionRepository
 import com.tangem.feature.swap.domain.api.SwapRepository
 import com.tangem.feature.swap.domain.models.domain.*
@@ -27,6 +31,7 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.map
+import timber.log.Timber
 
 @Suppress("LongParameterList")
 internal class ExchangeStatusFactory @AssistedInject constructor(
@@ -34,6 +39,9 @@ internal class ExchangeStatusFactory @AssistedInject constructor(
     private val swapRepository: SwapRepository,
     private val quotesRepository: QuotesRepository,
     private val addCryptoCurrenciesUseCase: AddCryptoCurrenciesUseCase,
+    private val accountsFeatureToggles: AccountsFeatureToggles,
+    private val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase,
+    private val saveCryptoCurrenciesUseCase: SaveCryptoCurrenciesUseCase,
     private val swapTransactionStatusStore: SwapTransactionStatusStore,
     private val analyticsEventsHandler: AnalyticsEventHandler,
     @Assisted private val clickIntents: TokenDetailsClickIntents,
@@ -80,8 +88,6 @@ internal class ExchangeStatusFactory @AssistedInject constructor(
         if (shouldDispose) {
             swapTransactionRepository.removeTransaction(
                 userWalletId = userWallet.walletId,
-                fromCryptoCurrency = selectedTx.fromCryptoCurrency,
-                toCryptoCurrency = selectedTx.toCryptoCurrency,
                 txId = selectedTx.info.txId,
             )
         }
@@ -111,9 +117,41 @@ internal class ExchangeStatusFactory @AssistedInject constructor(
                 ifRight = { statusModel ->
                     sendStatusUpdateAnalytics(statusModel, provider)
 
-                    val refundTokenCurrency = addRefundCurrencyIfNeeded(statusModel, provider.type)
+                    val accountId = if (accountsFeatureToggles.isFeatureEnabled) {
+                        getAccountCurrencyStatusUseCase.invokeSync(
+                            userWalletId = userWallet.walletId,
+                            currency = cryptoCurrency,
+                        )
+                            .map { it.account.accountId }
+                            .getOrNull()
+                    } else {
+                        null
+                    }
 
-                    swapTransactionRepository.storeTransactionState(txId, statusModel, refundTokenCurrency)
+                    val refundTokenCurrency = if (accountsFeatureToggles.isFeatureEnabled) {
+                        if (accountId != null) {
+                            addRefundCurrencyIfNeededNew(
+                                accountId = accountId,
+                                status = statusModel,
+                                type = provider.type,
+                            )
+                        } else {
+                            Timber.e("Account ID is null, cannot add refund currency ${cryptoCurrency.id}")
+                            null
+                        }
+                    } else {
+                        addRefundCurrencyIfNeededLegacy(status = statusModel, type = provider.type)
+                    }
+
+                    swapTransactionRepository.storeTransactionState(
+                        txId = txId,
+                        status = statusModel,
+                        accountWithCurrency = if (refundTokenCurrency != null) {
+                            Pair(accountId, refundTokenCurrency)
+                        } else {
+                            null
+                        },
+                    )
                     statusModel.copy(refundCurrency = refundTokenCurrency)
                 },
             )
@@ -135,7 +173,7 @@ internal class ExchangeStatusFactory @AssistedInject constructor(
     /**
      * For now do it only for dex-bridge provider
      */
-    private suspend fun addRefundCurrencyIfNeeded(
+    private suspend fun addRefundCurrencyIfNeededLegacy(
         status: ExchangeStatusModel?,
         type: ExchangeProviderType,
     ): CryptoCurrency? {
@@ -151,6 +189,27 @@ internal class ExchangeStatusFactory @AssistedInject constructor(
             ).getOrNull()
         }
         return null
+    }
+
+    private suspend fun addRefundCurrencyIfNeededNew(
+        accountId: AccountId,
+        status: ExchangeStatusModel?,
+        type: ExchangeProviderType,
+    ): CryptoCurrency? {
+        status ?: return null
+        if (type != ExchangeProviderType.DEX_BRIDGE) return null
+        val refundNetwork = status.refundNetwork
+        val refundContractAddress = status.refundContractAddress
+
+        if (refundNetwork == null || refundContractAddress == null) return null
+
+        return saveCryptoCurrenciesUseCase.add(
+            accountId = accountId,
+            contractAddress = refundContractAddress,
+            networkId = refundNetwork,
+        )
+            .onLeft(Timber::e)
+            .getOrNull()
     }
 
     private fun getExchangeStatusState(
