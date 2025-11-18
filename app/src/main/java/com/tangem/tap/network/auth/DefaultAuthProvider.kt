@@ -2,14 +2,19 @@ package com.tangem.tap.network.auth
 
 import com.tangem.common.extensions.toHexString
 import com.tangem.datasource.api.common.AuthProvider
+import com.tangem.datasource.api.common.config.ApiEnvironment
+import com.tangem.datasource.local.config.environment.EnvironmentConfigStorage
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
-import com.tangem.domain.core.wallets.UserWalletsListRepository
+import com.tangem.utils.Provider
+import com.tangem.utils.ProviderSuspend
 
 internal class DefaultAuthProvider(
     private val userWalletsListManager: UserWalletsListManager,
     private val userWalletsListRepository: UserWalletsListRepository,
-    private val useNewListRepository: Boolean = false,
+    private val shouldUseNewListRepository: Boolean = false,
+    private val environmentConfigStorage: EnvironmentConfigStorage,
 ) : AuthProvider {
 
     override suspend fun getCardPublicKey(): String {
@@ -38,8 +43,22 @@ internal class DefaultAuthProvider(
         }
     }
 
+    override fun getApiKey(apiEnvironment: Provider<ApiEnvironment>): ProviderSuspend<String> {
+        return ProviderSuspend {
+            when (apiEnvironment.invoke()) {
+                ApiEnvironment.MOCK,
+                ApiEnvironment.DEV,
+                ApiEnvironment.DEV_2,
+                ApiEnvironment.DEV_3,
+                -> environmentConfigStorage.getConfigSync().tangemApiKeyDev
+                ApiEnvironment.STAGE -> environmentConfigStorage.getConfigSync().tangemApiKeyStage
+                ApiEnvironment.PROD -> environmentConfigStorage.getConfigSync().tangemApiKey
+            } ?: error("No tangem tech api config provided")
+        }
+    }
+
     private suspend fun getWallets(): List<UserWallet> {
-        return if (useNewListRepository) {
+        return if (shouldUseNewListRepository) {
             userWalletsListRepository.userWalletsSync()
         } else {
             userWalletsListManager.userWalletsSync
@@ -47,7 +66,7 @@ internal class DefaultAuthProvider(
     }
 
     private suspend fun getSelectedWallet(): UserWallet? {
-        return if (useNewListRepository) {
+        return if (shouldUseNewListRepository) {
             userWalletsListRepository.selectedUserWalletSync()
         } else {
             userWalletsListManager.selectedUserWalletSync
