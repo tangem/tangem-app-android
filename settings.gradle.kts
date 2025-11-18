@@ -149,6 +149,8 @@ enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 include(":app")
 include(":plugins:detekt-rules")
 
+include(":test:core")
+
 // region Core modules
 include(":core:analytics")
 include(":core:analytics:models")
