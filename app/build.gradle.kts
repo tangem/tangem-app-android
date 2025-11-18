@@ -163,6 +163,7 @@ dependencies {
     implementation(projects.domain.yieldSupply)
     implementation(projects.domain.blockaid)
     implementation(projects.domain.hotWallet)
+    implementation(projects.domain.news)
 
     implementation(projects.common)
     implementation(projects.common.routing)
