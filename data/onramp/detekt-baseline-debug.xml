@@ -1,0 +1,17 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>BooleanPropertyNaming:DefaultOnrampRepository.kt$DefaultOnrampRepository$val cachedValue = onrampSepaAvailabilityStore.getSyncOrNull(key)</ID>
+    <ID>MultilineLambdaItParameter:DefaultHotCryptoRepository.kt$DefaultHotCryptoRepository${ Timber.e(it, "Unable to fetch hot crypto") analyticsEventHandler.send( event = MainScreenAnalyticsEvent.HotTokenError( errorCode = (it as? ApiResponseError.HttpException)?.code?.numericCode?.toString().orEmpty(), ), ) }</ID>
+    <ID>MultilineLambdaItParameter:DefaultHotCryptoRepository.kt$DefaultHotCryptoRepository${ if (it.id == OLD_POLYGON_NAME) { it.copy(id = NEW_POLYGON_NAME) } else { it } }</ID>
+    <ID>MultilineLambdaItParameter:DefaultHotCryptoRepository.kt$DefaultHotCryptoRepository${ val userWallet = userWalletsStore.getSyncOrNull(userWalletId) ?: error("UserWalletId [$userWalletId] not found") HotCryptoCurrencyConverter( userWallet = userWallet, imageHost = it.imageHost, excludedBlockchains = excludedBlockchains, ) .convertList(input = it.tokens) .filterNotNull() }</ID>
+    <ID>MultilineLambdaItParameter:DefaultOnrampRepository.kt$DefaultOnrampRepository${ Timber.w(it, "Unable to fetch express providers") throw it }</ID>
+    <ID>MultilineLambdaItParameter:DefaultOnrampRepository.kt$DefaultOnrampRepository${ Timber.w(it, "Unable to fetch onramp pairs") throw it }</ID>
+    <ID>MultilineLambdaItParameter:DefaultOnrampRepository.kt$DefaultOnrampRepository${ Timber.w(it, "Unable to fetch onramp payment methods") throw it }</ID>
+    <ID>UnnecessaryLet:DefaultOnrampRepository.kt$DefaultOnrampRepository$let(countryConverter::convert)</ID>
+    <ID>UnnecessaryLet:DefaultOnrampRepository.kt$DefaultOnrampRepository$let(paymentMethodsConverter::convertList)</ID>
+    <ID>UnnecessaryLet:DefaultOnrampRepository.kt$DefaultOnrampRepository$let(statusConverter::convert)</ID>
+    <ID>UseOrEmpty:DefaultOnrampTransactionRepository.kt$DefaultOnrampTransactionRepository$stored ?: emptySet()</ID>
+  </CurrentIssues>
+</SmellBaseline>
