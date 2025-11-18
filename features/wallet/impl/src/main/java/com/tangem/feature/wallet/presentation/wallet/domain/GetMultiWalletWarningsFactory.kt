@@ -31,12 +31,13 @@ import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.wallets.models.SeedPhraseNotificationsStatus
 import com.tangem.domain.wallets.usecase.IsNeedToBackupUseCase
 import com.tangem.domain.wallets.usecase.SeedPhraseNotificationUseCase
+import com.tangem.domain.hotwallet.GetAccessCodeSkippedUseCase
 import com.tangem.feature.wallet.child.wallet.model.WalletActivationBannerType
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.account.AccountDependencies
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotification
-import com.tangem.features.yield.supply.api.YieldSupplyFeatureToggles
+import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.lib.crypto.BlockchainUtils.isBitcoin
 import com.tangem.utils.extensions.addIf
 import com.tangem.utils.extensions.isPositive
@@ -62,8 +63,8 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
     private val onrampSepaAvailableUseCase: OnrampSepaAvailableUseCase,
     private val getOnrampCountryUseCase: GetOnrampCountryUseCase,
     private val notificationsRepository: NotificationsRepository,
-    private val yieldSupplyFeatureToggles: YieldSupplyFeatureToggles,
     private val accountDependencies: AccountDependencies,
+    private val getAccessCodeSkippedUseCase: GetAccessCodeSkippedUseCase,
 ) {
 
     @Suppress("UNCHECKED_CAST", "MagicNumber")
@@ -100,6 +101,7 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
             shouldShowPromoWalletUseCase(userWalletId = userWallet.walletId, promoId = PromoId.VisaPresale),
             shouldShowPromoWalletUseCase(userWalletId = userWallet.walletId, promoId = PromoId.Sepa),
             notificationsRepository.getShouldShowNotification(NotificationId.EnablePushesReminderNotification.key),
+            getAccessCodeSkippedUseCase(userWallet.walletId),
         ) { array -> array }
             .combine(tokenListFlow()) { array, any: Any -> arrayOf(any).plus(elements = array) }
             .map { array ->
@@ -112,13 +114,14 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
                 val shouldShowVisaPromo = array[4] as Boolean
                 val shouldShowSepaBanner = array[5] as Boolean
                 val shouldShowEnablePushesReminderNotification = array[6] as Boolean
+                val accessCodeSkipped = array[7] as Boolean
 
                 buildList {
                     addUsedOutdatedDataNotification(totalFiatBalance)
 
                     addCriticalNotifications(userWallet, seedPhraseIssueStatus, clickIntents)
 
-                    addFinishWalletActivationNotification(userWallet, totalFiatBalance, clickIntents)
+                    addFinishWalletActivationNotification(userWallet, totalFiatBalance, clickIntents, accessCodeSkipped)
 
                     addVisaPresalePromoNotification(clickIntents, shouldShowVisaPromo)
 
@@ -134,7 +137,8 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
                             !notificationsRepository.isUserAllowToSubscribeOnPushNotifications(),
                     )
 
-                    addYieldSupplyNotifications(flattenCurrencies)
+                    // Remove in first iteration of yield supply feature
+                    // addYieldSupplyNotifications(flattenCurrencies)
 
                     val hasCriticalOrWarning = any { notification ->
                         notification is WalletNotification.Critical || notification is WalletNotification.Warning
@@ -319,14 +323,14 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
         )
     }
 
-    private fun MutableList<WalletNotification>.addYieldSupplyNotifications(
-        flattenCurrencies: Lce<TokenListError, List<CryptoCurrencyStatus>>,
-    ) {
-        addIf(
-            element = WalletNotification.Warning.YeildSupplyApprove,
-            condition = flattenCurrencies.hasTokensWithActivatedSupplyWithoutApprove(),
-        )
-    }
+    // private fun MutableList<WalletNotification>.addYieldSupplyNotifications(
+    //     flattenCurrencies: Lce<TokenListError, List<CryptoCurrencyStatus>>,
+    // ) {
+    //     addIf(
+    //         element = WalletNotification.Warning.YeildSupplyApprove,
+    //         condition = flattenCurrencies.hasTokensWithActivatedSupplyWithoutApprove(),
+    //     )
+    // }
 
     private fun MutableList<WalletNotification>.addWarningNotifications(
         cardTypesResolver: CardTypesResolver?,
@@ -371,13 +375,14 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
         return flattenCurrencies.any { it.value is CryptoCurrencyStatus.Unreachable }
     }
 
-    private fun Lce<TokenListError, List<CryptoCurrencyStatus>>.hasTokensWithActivatedSupplyWithoutApprove(): Boolean {
-        val flattenCurrencies = getOrNull(isPartialContentAccepted = false) ?: return false
-        val yieldSupplyEnabled = yieldSupplyFeatureToggles.isYieldSupplyFeatureEnabled
-        return yieldSupplyEnabled && flattenCurrencies.any {
-            it.value.yieldSupplyStatus?.isAllowedToSpend == false
-        }
-    }
+    // Remove in first iteration of yield supply feature
+    // private fun Lce<TokenListError, List<CryptoCurrencyStatus>>.hasTokensWithActivatedSupplyWithoutApprove(): Boolean {
+    //     val flattenCurrencies = getOrNull(isPartialContentAccepted = false) ?: return false
+    //     val yieldSupplyEnabled = yieldSupplyFeatureToggles.isYieldSupplyFeatureEnabled
+    //     return yieldSupplyEnabled && flattenCurrencies.any {
+    //         it.value.yieldSupplyStatus?.isAllowedToSpend == false
+    //     }
+    // }
 
     private fun MutableList<WalletNotification>.addRateTheAppNotification(
         isReadyToShowRating: Boolean,
@@ -405,10 +410,14 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
         userWallet: UserWallet,
         totalFiatBalance: Lce<TokenListError, TotalFiatBalance>,
         clickIntents: WalletClickIntents,
+        accessCodeSkipped: Boolean,
     ) {
         if (userWallet !is UserWallet.Hot) return
 
-        val shouldShowFinishActivation = !userWallet.backedUp
+        val isBackupExists = userWallet.backedUp
+        val isAccessCodeRequired = userWallet.hotWalletId.authType == HotWalletId.AuthType.NoPassword &&
+            !accessCodeSkipped
+        val shouldShowFinishActivation = !isBackupExists || isAccessCodeRequired
 
         val type = totalFiatBalance.fold(
             ifLoading = { it.getFinishWalletActivationType() },
@@ -427,11 +436,11 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
                 buttonsState = when (type) {
                     WalletActivationBannerType.Warning -> ButtonsState.PrimaryButtonConfig(
                         text = resourceReference(R.string.hw_activation_need_finish),
-                        onClick = { clickIntents.onFinishWalletActivationClick(type) },
+                        onClick = { clickIntents.onFinishWalletActivationClick(type, isBackupExists) },
                     )
                     else -> ButtonsState.SecondaryButtonConfig(
                         text = resourceReference(R.string.hw_activation_need_finish),
-                        onClick = { clickIntents.onFinishWalletActivationClick(type) },
+                        onClick = { clickIntents.onFinishWalletActivationClick(type, isBackupExists) },
                     )
                 },
             ),

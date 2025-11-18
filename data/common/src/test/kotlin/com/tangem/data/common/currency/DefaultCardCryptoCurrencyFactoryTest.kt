@@ -8,7 +8,6 @@ import com.tangem.common.card.WalletData
 import com.tangem.common.test.domain.card.MockScanResponseFactory
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.common.test.domain.wallet.MockUserWalletFactory
-import com.tangem.common.test.utils.ProvideTestModels
 import com.tangem.data.common.account.WalletAccountsFetcher
 import com.tangem.data.common.network.NetworkFactory
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
@@ -23,6 +22,7 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.test.core.ProvideTestModels
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
@@ -43,7 +43,7 @@ internal class DefaultCardCryptoCurrencyFactoryTest {
     private val walletAccountsFetcher = mockk<WalletAccountsFetcher>()
 
     private val factory = DefaultCardCryptoCurrencyFactory(
-        demoConfig = DemoConfig(),
+        demoConfig = DemoConfig,
         excludedBlockchains = excludedBlockchains,
         userWalletsStore = userWalletsStore,
         userTokensResponseStore = userTokensResponseStore,

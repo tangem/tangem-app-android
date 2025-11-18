@@ -55,6 +55,31 @@ class SendAddressPageObject(semanticsProvider: SemanticsNodeInteractionsProvider
         useUnmergedTree = true
     }
 
+    val myWalletsTitle: KNode = child {
+        hasText(getResourceString(CoreUiR.string.send_recipient_wallets_title))
+        useUnmergedTree = true
+    }
+
+    fun recentAddressItem(recipientAddress: String, isMyWallet: Boolean = false): KNode = child {
+        hasTestTag(SendAddressScreenTestTags.RECENT_ADDRESS_ITEM)
+        hasAnyChild(withTestTag(SendAddressScreenTestTags.RECENT_ADDRESS_ICON))
+        hasAnyDescendant(withText(recipientAddress))
+        hasAnyDescendant(withTestTag(SendAddressScreenTestTags.RECENT_ADDRESS_TEXT))
+        useUnmergedTree = true
+        if (isMyWallet) {
+            hasAnySibling(withText(getResourceString(CoreUiR.string.send_recipient_wallets_title)))
+            hasAnyDescendant(withText(getResourceString(CoreUiR.string.manage_tokens_network_selector_wallet)))
+        } else {
+            hasAnySibling(withText(getResourceString(CoreUiR.string.send_recent_transactions)))
+            hasAnyDescendant(withTestTag(SendAddressScreenTestTags.RECENT_ADDRESS_TRANSACTION_ICON))
+        }
+    }
+
+    fun recentAddressItemDescription(recipientAddress: String): KNode = recentAddressItem(recipientAddress).child {
+        hasParent(withTestTag(SendAddressScreenTestTags.RECENT_ADDRESS_TEXT))
+        useUnmergedTree = true
+    }
+
     fun destinationTagBlockTitle(isMemoCorrectOrEmpty: Boolean = true): KNode = child {
         hasTestTag(SendAddressScreenTestTags.DESTINATION_TAG_TEXT_FIELD_TITLE)
         useUnmergedTree = true
@@ -113,12 +138,6 @@ class SendAddressPageObject(semanticsProvider: SemanticsNodeInteractionsProvider
     val continueButton: KNode = child {
         hasTestTag(BaseButtonTestTags.TEXT)
         hasText(getResourceString(R.string.common_continue))
-        useUnmergedTree = true
-    }
-
-    fun recentAddressWithText(recipientAddress: String): KNode = child {
-        hasParent(withTestTag(SendAddressScreenTestTags.RECENT_ADDRESS_TITLE))
-        hasText(recipientAddress)
         useUnmergedTree = true
     }
 

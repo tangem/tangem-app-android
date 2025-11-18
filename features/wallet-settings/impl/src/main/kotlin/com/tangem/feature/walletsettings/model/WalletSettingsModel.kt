@@ -10,7 +10,7 @@ import com.tangem.common.routing.AppRoute.ManageTokens.Source
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam.OnOffState.Off
 import com.tangem.core.analytics.models.AnalyticsParam.OnOffState.On
-import com.tangem.core.analytics.utils.AnalyticsContextProxy
+import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -43,6 +43,7 @@ import com.tangem.feature.walletsettings.component.WalletSettingsComponent
 import com.tangem.feature.walletsettings.entity.*
 import com.tangem.feature.walletsettings.impl.R
 import com.tangem.feature.walletsettings.utils.AccountItemsDelegate
+import com.tangem.feature.walletsettings.utils.AccountListSortingSaver
 import com.tangem.feature.walletsettings.utils.ItemsBuilder
 import com.tangem.feature.walletsettings.utils.WalletCardItemDelegate
 import com.tangem.features.pushnotifications.api.analytics.PushNotificationAnalyticEvents
@@ -69,7 +70,7 @@ internal class WalletSettingsModel @Inject constructor(
     private val accountItemsDelegate: AccountItemsDelegate,
     override val dispatchers: CoroutineDispatcherProvider,
     private val analyticsEventHandler: AnalyticsEventHandler,
-    private val analyticsContextProxy: AnalyticsContextProxy,
+    private val trackingContextProxy: TrackingContextProxy,
     walletCardItemDelegateFactory: WalletCardItemDelegate.Factory,
     private val isDemoCardUseCase: IsDemoCardUseCase,
     getWalletNFTEnabledUseCase: GetWalletNFTEnabledUseCase,
@@ -85,6 +86,7 @@ internal class WalletSettingsModel @Inject constructor(
     private val dismissUpgradeWalletNotificationUseCase: DismissUpgradeWalletNotificationUseCase,
     private val unlockHotWalletContextualUseCase: UnlockHotWalletContextualUseCase,
     private val accountsFeatureToggles: AccountsFeatureToggles,
+    private val accountListSortingSaver: AccountListSortingSaver,
 ) : Model() {
 
     val params: WalletSettingsComponent.Params = paramsContainer.require()
@@ -110,12 +112,16 @@ internal class WalletSettingsModel @Inject constructor(
 
     init {
         getUserWalletUseCase.invoke(params.userWalletId).onRight {
-            analyticsContextProxy.addContext(it)
+            trackingContextProxy.addContext(it)
         }
 
         fun combineUI(wallet: UserWallet) = combine(
-            flow = getWalletNFTEnabledUseCase.invoke(params.userWalletId),
-            flow2 = getWalletNotificationsEnabledUseCase(params.userWalletId),
+            flow = getWalletNFTEnabledUseCase.invoke(params.userWalletId)
+                .distinctUntilChanged()
+                .conflate(),
+            flow2 = getWalletNotificationsEnabledUseCase(params.userWalletId)
+                .distinctUntilChanged()
+                .conflate(),
             flow3 = isUpgradeWalletNotificationEnabledUseCase(params.userWalletId),
             flow4 = walletCardItemDelegate.cardItemFlow(wallet),
             flow5 = accountItemsDelegate.loadAccount(),
@@ -154,7 +160,7 @@ internal class WalletSettingsModel @Inject constructor(
 
     override fun onDestroy() {
         super.onDestroy()
-        analyticsContextProxy.removeContext()
+        trackingContextProxy.removeContext()
     }
 
     private fun isNotificationsPermissionGranted(): Boolean {
@@ -257,7 +263,7 @@ internal class WalletSettingsModel @Inject constructor(
 
     private fun onLinkMoreCardsClick(scanResponse: ScanResponse) {
         analyticsEventHandler.send(Settings.ButtonCreateBackup)
-        analyticsContextProxy.addContext(scanResponse)
+        trackingContextProxy.addContext(scanResponse)
 
         router.push(
             AppRoute.Onboarding(
@@ -355,8 +361,13 @@ internal class WalletSettingsModel @Inject constructor(
         if (!state.value.isWalletBackedUp) {
             showMakeBackupAtFirstAlertBS(isUpgradeFlow = false)
         } else {
-            unlockWalletIfNeedAndProceed {
-                router.push(AppRoute.UpdateAccessCode(params.userWalletId))
+            unlockWalletIfNeedAndProceed { authorizationRequired ->
+                router.push(
+                    route = AppRoute.UpdateAccessCode(
+                        userWalletId = params.userWalletId,
+                        isFirstSetup = !authorizationRequired,
+                    ),
+                )
             }
         }
     }
@@ -403,14 +414,14 @@ internal class WalletSettingsModel @Inject constructor(
         messageSender.send(message)
     }
 
-    private fun unlockWalletIfNeedAndProceed(action: () -> Unit) {
+    private fun unlockWalletIfNeedAndProceed(action: (authorizationRequired: Boolean) -> Unit) {
         val userWallet = getUserWalletUseCase(params.userWalletId)
             .getOrElse { error("User wallet with id ${params.userWalletId} not found") }
         if (userWallet is UserWallet.Hot) {
             val hotWalletId = userWallet.hotWalletId
             when (hotWalletId.authType) {
                 HotWalletId.AuthType.NoPassword -> {
-                    action()
+                    action(false)
                 }
                 HotWalletId.AuthType.Password,
                 HotWalletId.AuthType.Biometry,
@@ -420,7 +431,7 @@ internal class WalletSettingsModel @Inject constructor(
                             Timber.e(it, "Unable to unlock wallet with id ${params.userWalletId}")
                         }
                         .onRight {
-                            action()
+                            action(true)
                         }
                 }
             }
@@ -438,7 +449,14 @@ internal class WalletSettingsModel @Inject constructor(
     }
 
     private fun onAccountDragStopped() {
-        // TODO() Implement saving the new order of accounts
+        val accountIds = state.value.items.mapNotNull {
+            val id = (it as? WalletSettingsAccountsUM.Account)?.state?.id
+                ?: return@mapNotNull null
+
+            AccountId.forCryptoPortfolio(userWalletId = params.userWalletId, value = id).getOrNull()
+        }
+
+        accountListSortingSaver.save(accountIds = accountIds)
     }
 
     @Suppress("LongMethod")
@@ -507,7 +525,6 @@ internal class WalletSettingsModel @Inject constructor(
                                 router.push(
                                     AppRoute.CreateWalletBackup(
                                         userWalletId = userWallet.walletId,
-                                        isUpgradeFlow = false,
                                     ),
                                 )
                                 closeBs()
