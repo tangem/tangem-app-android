@@ -2,6 +2,11 @@ package com.tangem.feature.swap.analytics
 
 import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
 import com.tangem.core.analytics.models.AnalyticsEvent
+import com.tangem.core.analytics.models.AnalyticsParam.Key.ERROR_CODE
+import com.tangem.core.analytics.models.AnalyticsParam.Key.ERROR_MESSAGE
+import com.tangem.core.analytics.models.AnalyticsParam.Key.PROVIDER
+import com.tangem.core.analytics.models.AnalyticsParam.Key.RECEIVE_TOKEN
+import com.tangem.core.analytics.models.AnalyticsParam.Key.SEND_TOKEN
 import com.tangem.feature.swap.domain.models.domain.SwapProvider
 import com.tangem.feature.swap.domain.models.ui.FeeType
 
@@ -108,14 +113,16 @@ sealed class SwapEvents(
         val receiveToken: String,
         val provider: SwapProvider,
         val errorCode: Int,
+        val errorMessage: String?,
     ) : SwapEvents(
         event = "Notice - Express Error",
-        params = mapOf(
-            "Send Token" to sendToken,
-            "Receive Token" to receiveToken,
-            "Provider" to provider.name,
-            "Error Code" to errorCode.toString(),
-        ),
+        params = buildMap {
+            put(SEND_TOKEN, sendToken)
+            put(RECEIVE_TOKEN, receiveToken)
+            put(PROVIDER, provider.name)
+            put(ERROR_CODE, errorCode.toString())
+            errorMessage?.let { put(ERROR_MESSAGE, it) }
+        },
     )
     // TODO parameters
 

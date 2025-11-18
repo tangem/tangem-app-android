@@ -287,7 +287,7 @@ private val token = TokenToSelectState.TokenToSelect(
         url = "",
         fallbackResId = 0,
         isGrayscale = false,
-        showCustomBadge = false,
+        shouldShowCustomBadge = false,
     ),
     id = "",
     name = "Optimistic Ethereum (ETH)",
