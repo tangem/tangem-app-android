@@ -2,10 +2,10 @@ package com.tangem.domain.staking
 
 import com.google.common.truth.Truth
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.common.test.utils.ProvideTestModels
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.staking.model.StakingApproval
 import com.tangem.domain.staking.model.StakingIntegrationID
+import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
