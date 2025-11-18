@@ -57,6 +57,7 @@ import com.tangem.core.ui.utils.WindowInsetsZero
 import com.tangem.core.ui.utils.rememberHideKeyboardNestedScrollConnection
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.managetokens.component.ManageTokensComponent
+import com.tangem.features.managetokens.component.ManageTokensMode
 import com.tangem.features.managetokens.component.ManageTokensSource
 import com.tangem.features.managetokens.component.preview.PreviewManageTokensComponent
 import com.tangem.features.managetokens.entity.item.CurrencyItemUM
@@ -290,7 +291,7 @@ private fun CustomCurrencyItem(item: CurrencyItemUM.Custom, modifier: Modifier =
                 name = name,
                 type = symbol,
                 icon = icon,
-                showCustom = true,
+                shouldShowCustom = true,
             )
         },
         action = {
@@ -316,7 +317,7 @@ private fun BasicCurrencyItem(item: CurrencyItemUM.Basic, isEditable: Boolean, m
                     name = name,
                     type = symbol,
                     icon = icon,
-                    showCustom = false,
+                    shouldShowCustom = false,
                 )
             },
             action = {
@@ -442,20 +443,23 @@ private class PreviewManageTokensComponentProvider : PreviewParameterProvider<Ma
                 showTangemIcon = true,
                 params = ManageTokensComponent.Params(
                     source = ManageTokensSource.ONBOARDING,
-                    userWalletId = UserWalletId("wallet_id"),
+                    mode = ManageTokensMode.Wallet(UserWalletId("0x")),
                 ),
             ),
             PreviewManageTokensComponent(
                 isLoading = false,
                 showTangemIcon = true,
-                params = ManageTokensComponent.Params(source = ManageTokensSource.ONBOARDING, userWalletId = null),
+                params = ManageTokensComponent.Params(
+                    source = ManageTokensSource.ONBOARDING,
+                    mode = ManageTokensMode.None,
+                ),
             ),
             PreviewManageTokensComponent(
                 isLoading = false,
                 showTangemIcon = false,
                 params = ManageTokensComponent.Params(
                     source = ManageTokensSource.ONBOARDING,
-                    userWalletId = UserWalletId("wallet_id"),
+                    mode = ManageTokensMode.Wallet(UserWalletId("0x")),
                 ),
             ),
         )
