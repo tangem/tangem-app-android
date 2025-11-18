@@ -37,11 +37,12 @@ internal class YieldSupplyActiveFeeContentTransformer(
         val tokenFiatFeeValueText = tokenFiatFee.format { fiat(appCurrency.code, appCurrency.symbol) }
 
         val maxFeeCryptoValueText = maxNetworkFee.tokenMaxFee.format { crypto(cryptoCurrency) }
-        val maxFiatFeeValueText = maxNetworkFee.fiatMaxFee.format { fiat(
-            appCurrency.code,
-            appCurrency
-                .symbol,
-        ) }
+        val maxFiatFeeValueText = maxNetworkFee.fiatMaxFee.format {
+            fiat(
+                appCurrency.code,
+                appCurrency.symbol,
+            )
+        }
 
         val feeNoteValue: TextReference = resourceReference(
             id = R.string.yield_module_fee_policy_sheet_fee_note,
