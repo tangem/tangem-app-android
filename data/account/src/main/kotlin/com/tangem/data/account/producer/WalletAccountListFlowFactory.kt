@@ -4,9 +4,11 @@ import com.tangem.data.account.converter.AccountListConverter
 import com.tangem.data.account.store.AccountsResponseStore
 import com.tangem.data.account.store.AccountsResponseStoreFactory
 import com.tangem.data.common.currency.CardCryptoCurrencyFactory
+import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.models.wallet.requireColdWallet
 import kotlinx.coroutines.flow.*
@@ -22,12 +24,15 @@ import javax.inject.Inject
 [REDACTED_AUTHOR]
  */
 internal class WalletAccountListFlowFactory @Inject constructor(
+    private val userWalletsStore: UserWalletsStore,
     private val accountsResponseStoreFactory: AccountsResponseStoreFactory,
     private val accountListConverterFactory: AccountListConverter.Factory,
     private val cardCryptoCurrencyFactory: CardCryptoCurrencyFactory,
 ) {
 
-    fun create(userWallet: UserWallet): Flow<AccountList> {
+    fun create(userWalletId: UserWalletId): Flow<AccountList> {
+        val userWallet = userWalletsStore.getSyncStrict(userWalletId)
+
         return if (userWallet.isMultiCurrency) {
             createForMultiWallet(userWallet)
         } else {
@@ -50,9 +55,9 @@ internal class WalletAccountListFlowFactory @Inject constructor(
         val currencies = if (isSingleWalletWithToken) {
             cardCryptoCurrencyFactory.createCurrenciesForSingleCurrencyCardWithToken(userWallet = userWallet).toSet()
         } else {
-            cardCryptoCurrencyFactory.createPrimaryCurrencyForSingleCurrencyCard(userWallet = userWallet).let(::setOf)
+            setOf(cardCryptoCurrencyFactory.createPrimaryCurrencyForSingleCurrencyCard(userWallet = userWallet))
         }
 
-        return AccountList.empty(userWallet = userWallet, cryptoCurrencies = currencies)
+        return AccountList.empty(userWalletId = userWallet.walletId, cryptoCurrencies = currencies)
     }
 }

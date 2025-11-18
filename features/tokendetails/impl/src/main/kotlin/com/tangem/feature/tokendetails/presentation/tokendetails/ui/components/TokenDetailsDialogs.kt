@@ -21,7 +21,7 @@ private fun TokenDetailsDialog(config: TokenDetailsDialogConfig) {
         message = config.content.message.resolveReference(),
         confirmButton = DialogButtonUM(
             title = config.content.confirmButtonConfig.text.resolveReference(),
-            warning = config.content.confirmButtonConfig.warning,
+            isWarning = config.content.confirmButtonConfig.warning,
             onClick = config.content.confirmButtonConfig.onClick,
         ),
         onDismissDialog = config.onDismissRequest,
@@ -29,7 +29,7 @@ private fun TokenDetailsDialog(config: TokenDetailsDialogConfig) {
         dismissButton = config.content.cancelButtonConfig?.let { cancelButtonConfig ->
             DialogButtonUM(
                 title = cancelButtonConfig.text.resolveReference(),
-                warning = cancelButtonConfig.warning,
+                isWarning = cancelButtonConfig.warning,
                 onClick = cancelButtonConfig.onClick,
             )
         },

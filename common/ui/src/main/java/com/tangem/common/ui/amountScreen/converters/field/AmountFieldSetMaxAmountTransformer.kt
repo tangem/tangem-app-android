@@ -54,7 +54,7 @@ class AmountFieldSetMaxAmountTransformer(
                 isError = isLessThanMinimumIfProvided,
                 error = when {
                     isLessThanMinimumIfProvided -> {
-                        val minimumAmount = minAmount?.amount.format { crypto(cryptoCurrencyStatus.currency) }
+                        val minimumAmount = minAmount.amount.format { crypto(cryptoCurrencyStatus.currency) }
                         resourceReference(
                             R.string.transfer_notification_invalid_minimum_transaction_amount_text,
                             wrappedList(minimumAmount, minimumAmount),

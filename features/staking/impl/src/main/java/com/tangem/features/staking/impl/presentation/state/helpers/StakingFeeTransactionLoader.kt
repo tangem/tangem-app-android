@@ -189,7 +189,7 @@ internal class StakingFeeTransactionLoader @AssistedInject constructor(
         val tokenCurrency = cryptoCurrencyStatus.currency as? CryptoCurrency.Token
             ?: return onApprovalFeeError(GetFeeError.UnknownError)
         val approvalTransactionData = createApprovalTransactionUseCase(
-            cryptoCurrency = tokenCurrency,
+            cryptoCurrencyStatus = cryptoCurrencyStatus,
             userWalletId = userWallet.walletId,
             amount = amount,
             contractAddress = tokenCurrency.contractAddress,
