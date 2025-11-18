@@ -3,6 +3,7 @@ package com.tangem.feature.walletsettings.component.preview
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.tangem.common.ui.account.AccountIconPreviewData
+import com.tangem.common.ui.userwallet.state.UserWalletItemUM
 import com.tangem.common.ui.userwallet.state.UserWalletItemUM.ImageState
 import com.tangem.core.analytics.DummyAnalyticsEventHandler
 import com.tangem.core.decompose.navigation.DummyRouter
@@ -20,8 +21,25 @@ import com.tangem.feature.walletsettings.impl.R
 import com.tangem.feature.walletsettings.ui.WalletSettingsScreen
 import com.tangem.feature.walletsettings.utils.ItemsBuilder
 import com.tangem.hot.sdk.model.HotWalletId
+import java.util.UUID
 
 internal class PreviewWalletSettingsComponent : WalletSettingsComponent {
+
+    private val accountName get() = stringReference(value = "Main account")
+
+    private val accountItem: UserWalletItemUM
+        get() = UserWalletItemUM(
+            id = UserWalletId(UUID.randomUUID().toString().encodeToByteArray()),
+            name = accountName,
+            information = UserWalletItemUM.Information.Loaded(stringReference("12 tokens")),
+            balance = UserWalletItemUM.Balance.Loaded("$726.04", false),
+            isEnabled = true,
+            onClick = { },
+            imageState = ImageState.Account(
+                name = accountName,
+                icon = AccountIconPreviewData.randomAccountIcon(),
+            ),
+        )
 
     private val previewState = WalletSettingsUM(
         popBack = {},
@@ -66,14 +84,7 @@ internal class PreviewWalletSettingsComponent : WalletSettingsComponent {
             id = "accounts_header",
             text = resourceReference(R.string.common_accounts),
         ).let(::add)
-        WalletSettingsAccountsUM.Account(
-            id = "accountId",
-            accountName = stringReference("Main account"),
-            accountIconUM = AccountIconPreviewData.randomAccountIcon(),
-            tokensInfo = stringReference("10 tokens"),
-            networksInfo = stringReference("2 networks"),
-            onClick = {},
-        ).let(::add)
+        add(WalletSettingsAccountsUM.Account(accountItem))
         WalletSettingsAccountsUM.Footer(
             id = "accounts_footer",
             addAccount = AddAccountUM(
@@ -86,6 +97,7 @@ internal class PreviewWalletSettingsComponent : WalletSettingsComponent {
                 iconRes = R.drawable.ic_archive_24,
                 onClick = {},
             ),
+            showDescription = true,
             description = resourceReference(R.string.account_reorder_description),
         ).let(::add)
     }

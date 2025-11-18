@@ -62,16 +62,6 @@ object PreferencesKeys {
 
     val APP_LOGS_KEY by lazy { stringPreferencesKey(name = "app_logs") }
 
-    val POLKADOT_HEALTH_CHECK_LAST_INDEXED_TX_KEY by lazy {
-        stringPreferencesKey(name = "POLKADOT_HEALTH_CHECK_LAST_INDEXED_TX")
-    }
-    val POLKADOT_HEALTH_CHECKED_RESET_ACCOUNTS_KEY by lazy {
-        stringPreferencesKey(name = "POLKADOT_HEALTH_CHECKED_RESET_ACCOUNTS")
-    }
-    val POLKADOT_HEALTH_CHECKED_IMMUTABLE_ACCOUNTS_KEY by lazy {
-        stringPreferencesKey(name = "POLKADOT_HEALTH_CHECKED_IMMUTABLE_ACCOUNTS")
-    }
-
     val SEND_TAP_HELP_PREVIEW_KEY by lazy { booleanPreferencesKey(name = "sendTapHelpPreview") }
 
     val WAS_APPLICATION_STOPPED_KEY by lazy { booleanPreferencesKey(name = "applicationStopped") }
@@ -129,6 +119,8 @@ object PreferencesKeys {
 
     val WALLETS_NFT_ENABLED_STATES_KEY by lazy { stringPreferencesKey(name = "walletsNftEnabledStates") }
 
+    val YIELD_SUPPLY_WARNINGS_STATES_KEY by lazy { stringPreferencesKey(name = "yieldSupplyWarningsStates") }
+
     // region Notifications
     val NOTIFICATIONS_APPLICATION_ID_KEY by lazy { stringPreferencesKey(name = "notificationsApplicationId") }
 
@@ -161,6 +153,9 @@ object PreferencesKeys {
 
     // region Permission
     fun getShouldShowPermission(permission: String) = booleanPreferencesKey("shouldShowPushPermission_$permission")
+
+    fun getShouldShowAskNotificationPermissionViaBs() =
+        booleanPreferencesKey("ShouldShowAskNotificationPermissionViaBs")
 
     fun getShouldShowInitialPermissionScreen(permission: String) =
         booleanPreferencesKey("shouldShowInitialPushPermissionScreen_$permission")
