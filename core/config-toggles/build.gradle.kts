@@ -89,9 +89,9 @@ fun Task.generateToggles(inputFilePath: String, generatedFileName: String) {
             .add("mapOf(\n")
             .indent()
             .apply {
-                entries.forEachIndexed { index, entry ->
+                entries.forEach { entry ->
                     add(entry)
-                    if (index != entries.lastIndex) add(",\n") else add("\n")
+                    add(",\n")
                 }
             }
             .unindent()
@@ -113,5 +113,15 @@ fun Task.generateToggles(inputFilePath: String, generatedFileName: String) {
         val outputPackageDir = File(outputDir, "")
         outputPackageDir.mkdirs()
         fileSpec.writeTo(outputPackageDir)
+
+        // Remove redundant public visibility modifiers
+        val generatedFile = File(outputPackageDir, "com/tangem/core/configtoggle/$generatedFileName.kt")
+        if (generatedFile.exists()) {
+            val content = generatedFile.readText()
+            val fixedContent = content
+                .replace("public object ", "object ")
+                .replace("public val ", "val ")
+            generatedFile.writeText(fixedContent)
+        }
     }
 }
