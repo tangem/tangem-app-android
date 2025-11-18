@@ -59,6 +59,9 @@ internal class SdkTransactionTypeConverter(
             "withdrawRewardsPOL",
             -> TxInfo.TransactionType.Staking.ClaimRewards
             "redelegate" -> TxInfo.TransactionType.Staking.Restake
+            "supplyEnter" -> TxInfo.TransactionType.YieldSupply.Enter
+            "supplyExit" -> TxInfo.TransactionType.YieldSupply.Exit
+            "supplyTopUp" -> TxInfo.TransactionType.YieldSupply.Topup
             null -> TxInfo.TransactionType.UnknownOperation
             else -> TxInfo.TransactionType.Operation(name = methodName.replaceFirstChar { it.titlecase() })
         }
