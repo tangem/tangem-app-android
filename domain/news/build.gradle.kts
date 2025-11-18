@@ -7,5 +7,6 @@ plugins {
 dependencies {
     api(projects.domain.core)
     api(projects.domain.models)
+    api(projects.core.pagination)
     implementation(deps.kotlin.serialization)
 }
