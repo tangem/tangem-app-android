@@ -13,7 +13,10 @@ import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.ToastMessage
 import com.tangem.domain.account.usecase.ArchiveCryptoPortfolioUseCase
+import com.tangem.domain.models.PortfolioId
 import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.wallet.isMultiCurrency
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.account.AccountDetailsComponent
 import com.tangem.features.account.createedit.entity.AccountCreateEditUMBuilder.Companion.portfolioIcon
 import com.tangem.features.account.details.entity.AccountDetailsUM
@@ -30,6 +33,7 @@ internal class AccountDetailsModel @Inject constructor(
     private val router: Router,
     override val dispatchers: CoroutineDispatcherProvider,
     private val archiveCryptoPortfolioUseCase: ArchiveCryptoPortfolioUseCase,
+    private val getUserWalletUseCase: GetUserWalletUseCase,
 ) : Model() {
 
     private val params = paramsContainer.require<AccountDetailsComponent.Params>()
@@ -42,8 +46,11 @@ internal class AccountDetailsModel @Inject constructor(
     }
 
     private fun onManageTokensClick() {
-        // todo account add account param
-        router.push(AppRoute.ManageTokens(source = AppRoute.ManageTokens.Source.SETTINGS))
+        val route = AppRoute.ManageTokens(
+            source = AppRoute.ManageTokens.Source.SETTINGS,
+            portfolioId = PortfolioId(params.account.accountId),
+        )
+        router.push(route)
     }
 
     private fun onArchiveAccountClick() {
@@ -57,7 +64,7 @@ internal class AccountDetailsModel @Inject constructor(
         )
         val firstAction = EventMessageAction(
             title = resourceReference(R.string.account_details_archive_action),
-            warning = true,
+            isWarning = true,
             onClick = ::archiveCryptoPortfolio,
         )
         messageSender.send(
@@ -89,6 +96,8 @@ internal class AccountDetailsModel @Inject constructor(
                 )
             }
         }
+        val isMultiCurrency = getUserWalletUseCase(params.account.accountId.userWalletId)
+            .getOrNull()?.isMultiCurrency ?: false
         return AccountDetailsUM(
             accountName = params.account.accountName.toUM().value,
             accountIcon = params.account.portfolioIcon.toUM(),
@@ -96,6 +105,7 @@ internal class AccountDetailsModel @Inject constructor(
             onAccountEditClick = ::onEditAccountClick,
             onManageTokensClick = ::onManageTokensClick,
             archiveMode = archiveMode,
+            isManageTokensAvailable = isMultiCurrency,
         )
     }
 }
