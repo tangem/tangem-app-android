@@ -16,12 +16,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
+import com.tangem.common.ui.account.AccountTitle
+import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.utils.getFiatReference
 import com.tangem.common.ui.navigationButtons.NavigationButton
 import com.tangem.common.ui.navigationButtons.NavigationButtonsBlockV2
 import com.tangem.common.ui.navigationButtons.NavigationUM
-import com.tangem.core.ui.components.BottomFade
+import com.tangem.core.ui.components.Fade
 import com.tangem.core.ui.components.currency.icon.CurrencyIcon
 import com.tangem.core.ui.components.icons.identicon.IdentIcon
 import com.tangem.core.ui.components.inputrow.InputRowBestRate
@@ -61,82 +63,93 @@ import java.math.BigDecimal
 internal fun SendWithSwapSuccessContent(sendWithSwapUM: SendWithSwapUM) {
     if (sendWithSwapUM.navigationUM !is NavigationUM.Content) return
 
+    Column {
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .background(TangemTheme.colors.background.tertiary),
+        ) {
+            SuccessContent(
+                sendWithSwapUM = sendWithSwapUM,
+                modifier = Modifier.fillMaxHeight(),
+            )
+            Fade(
+                modifier = Modifier.align(Alignment.BottomCenter),
+                backgroundColor = TangemTheme.colors.background.tertiary,
+            )
+        }
+        NavigationButtonsBlockV2(
+            navigationUM = sendWithSwapUM.navigationUM,
+            modifier = Modifier.padding(
+                start = 16.dp,
+                end = 16.dp,
+                bottom = 16.dp,
+            ),
+        )
+    }
+}
+
+@Composable
+private fun SuccessContent(sendWithSwapUM: SendWithSwapUM, modifier: Modifier = Modifier) {
     val confirmUM = sendWithSwapUM.confirmUM as? ConfirmUM.Success ?: return
     val amountUM = sendWithSwapUM.amountUM as? SwapAmountUM.Content ?: return
     val quoteUM = amountUM.selectedQuote as? SwapQuoteUM.Content ?: return
     val destinationUM = sendWithSwapUM.destinationUM as? DestinationUM.Content ?: return
     val feeSelectorUM = sendWithSwapUM.feeSelectorUM as? FeeSelectorUM.Content ?: return
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(TangemTheme.colors.background.tertiary),
+    Column(
+        modifier = modifier
+            .padding(horizontal = 16.dp)
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Column(
-            modifier = Modifier
-                .padding(horizontal = 16.dp)
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            TransactionDoneTitle(
-                title = resourceReference(R.string.sent_transaction_sent_title),
-                subtitle = resourceReference(
-                    id = R.string.send_date_format,
-                    formatArgs = wrappedList(
-                        confirmUM.transactionDate.toTimeFormat(DateTimeFormatters.dateFormatter),
-                        confirmUM.transactionDate.toTimeFormat(),
-                    ),
+        TransactionDoneTitle(
+            title = resourceReference(R.string.sent_transaction_sent_title),
+            subtitle = resourceReference(
+                id = R.string.send_date_format,
+                formatArgs = wrappedList(
+                    confirmUM.transactionDate.toTimeFormat(DateTimeFormatters.dateFormatter),
+                    confirmUM.transactionDate.toTimeFormat(),
                 ),
-                modifier = Modifier.padding(vertical = 12.dp),
-            )
-            SwapAmountBlock(amountUM = amountUM)
-            InputRowBestRate(
-                imageUrl = confirmUM.provider.imageLarge,
-                title = stringReference(confirmUM.provider.name),
-                titleExtra = stringReference(confirmUM.provider.type.typeName),
-                subtitle = quoteUM.rate,
-                modifier = Modifier
-                    .clip(TangemTheme.shapes.roundedCornersXMedium)
-                    .background(TangemTheme.colors.background.action),
-            )
-            DestinationBlock(destinationUM.addressTextField)
-            FeeBlock(feeSelectorUM = feeSelectorUM)
-            Spacer(Modifier.height(128.dp))
-        }
-        BottomFade(Modifier.align(Alignment.BottomCenter), TangemTheme.colors.background.tertiary)
-        NavigationButtonsBlockV2(
-            navigationUM = sendWithSwapUM.navigationUM,
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(
-                    start = 16.dp,
-                    end = 16.dp,
-                    bottom = 16.dp,
-                ),
+            ),
+            modifier = Modifier.padding(vertical = 12.dp),
         )
+        SwapAmountBlock(amountUM = amountUM)
+        InputRowBestRate(
+            imageUrl = confirmUM.provider.imageLarge,
+            title = stringReference(confirmUM.provider.name),
+            titleExtra = stringReference(confirmUM.provider.type.typeName),
+            subtitle = quoteUM.rate,
+            modifier = Modifier
+                .clip(TangemTheme.shapes.roundedCornersXMedium)
+                .background(TangemTheme.colors.background.action),
+        )
+        DestinationBlock(destinationUM.addressTextField)
+        FeeBlock(feeSelectorUM = feeSelectorUM)
+        Spacer(Modifier.height(16.dp))
     }
 }
 
 @Composable
 private fun SwapAmountBlock(amountUM: SwapAmountUM.Content) {
+    val amountFieldUM = amountUM.primaryAmount.amountField as? AmountState.Data ?: return
+
     AmountBlock(
-        title = resourceReference(
-            id = R.string.send_from_wallet_name,
-            formatArgs = wrappedList(
-                (amountUM.primaryAmount.amountField as? AmountState.Data)?.title
-                    ?: TextReference.EMPTY,
-            ),
-        ),
+        accountTitleUM = amountFieldUM.accountTitleUM,
         amountFieldUM = amountUM.primaryAmount,
     )
     AmountBlock(
-        title = resourceReference(R.string.send_with_swap_recipient_amount_success_title),
+        accountTitleUM = AccountTitleUM.Text(resourceReference(R.string.send_with_swap_recipient_amount_success_title)),
         amountFieldUM = amountUM.secondaryAmount,
     )
 }
 
 @Composable
-private fun AmountBlock(title: TextReference, amountFieldUM: SwapAmountFieldUM, modifier: Modifier = Modifier) {
+private fun AmountBlock(
+    accountTitleUM: AccountTitleUM,
+    amountFieldUM: SwapAmountFieldUM,
+    modifier: Modifier = Modifier,
+) {
     val amountFieldData = amountFieldUM.amountField as? AmountState.Data ?: return
     val cryptoAmount = amountFieldData.amountTextField.cryptoAmount
     val fiatAmount = amountFieldData.amountTextField.fiatAmount
@@ -147,11 +160,7 @@ private fun AmountBlock(title: TextReference, amountFieldUM: SwapAmountFieldUM, 
             .background(TangemTheme.colors.background.action)
             .padding(12.dp),
     ) {
-        Text(
-            text = title.resolveReference(),
-            style = TangemTheme.typography.subtitle2,
-            color = TangemTheme.colors.text.tertiary,
-        )
+        AccountTitle(accountTitleUM)
         Row(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -300,14 +309,14 @@ private fun SendWithSwapSuccessContent_Preview() {
                     networkName = "Polygon",
                     isValidating = false,
                     isInitialized = false,
-                    isRedesignEnabled = false,
                     isRecentHidden = false,
+                    accountTitleUM = AccountTitleUM.Text(resourceReference(R.string.send_recipient_wallets_title)),
                 ),
                 feeSelectorUM = FeeSelectorUM.Content(
                     fees = TransactionFee.Single(
                         normal = Fee.Common(
                             BigDecimal.ONE.convertToSdkAmount(
-                                SwapAmountContentPreview.cryptoCurrencyStatus.currency,
+                                SwapAmountContentPreview.cryptoCurrencyStatus,
                             ),
                         ),
                     ),
@@ -315,7 +324,7 @@ private fun SendWithSwapSuccessContent_Preview() {
                     selectedFeeItem = FeeItem.Market(
                         Fee.Common(
                             BigDecimal.ONE.convertToSdkAmount(
-                                SwapAmountContentPreview.cryptoCurrencyStatus.currency,
+                                SwapAmountContentPreview.cryptoCurrencyStatus,
                             ),
                         ),
                     ),

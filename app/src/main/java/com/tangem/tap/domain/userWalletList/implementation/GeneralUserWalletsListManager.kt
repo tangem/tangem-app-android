@@ -93,23 +93,23 @@ internal class GeneralUserWalletsListManager(
     override val walletsCount: Int
         get() = requireImplementation.walletsCount
 
-    override val isLocked: Flow<Boolean>
+    override val lockedState: Flow<Boolean>
         get() = implementation.transformLatest { impl ->
             if (impl == null) return@transformLatest
 
             if (impl is UserWalletsListManager.Lockable) {
-                emitAll(impl.isLocked)
+                emitAll(impl.lockedState)
             } else {
                 error("RuntimeUserWalletsListManager is not lockable")
             }
         }
 
-    override val isLockedSync: Boolean
+    override val isLocked: Boolean
         get() {
             val impl = requireImplementation
 
             return if (impl is UserWalletsListManager.Lockable) {
-                impl.isLockedSync
+                impl.isLocked
             } else {
                 error("RuntimeUserWalletsListManager is not lockable")
             }
@@ -173,10 +173,10 @@ internal class GeneralUserWalletsListManager(
                 }
 
                 if (possibleManager == implementation.value) {
-                    Timber.e("Switch to the same manager ${possibleManager::class.simpleName}")
+                    Timber.e("Switch to the same manager ${possibleManager::class.simpleName.orEmpty()}")
                 }
 
-                Timber.i("Switch to ${possibleManager::class.simpleName}")
+                Timber.i("Switch to ${possibleManager::class.simpleName.orEmpty()}")
 
                 val previousManager = implementation.value
                 implementation.value = copySelectedUserWallet(

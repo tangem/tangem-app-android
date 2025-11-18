@@ -138,6 +138,11 @@ sealed class WalletNotification(val config: NotificationConfig) {
                 formatArgs = wrappedList(count),
             ),
         )
+
+        data object YeildSupplyApprove : Warning(
+            title = resourceReference(R.string.yield_module_main_view_approve_notification_title),
+            subtitle = resourceReference(R.string.yield_module_main_view_approve_notification_description),
+        )
     }
 
     sealed class Informational(
@@ -322,6 +327,25 @@ sealed class WalletNotification(val config: NotificationConfig) {
             buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
                 text = resourceReference(R.string.notification_sepa_button),
                 onClick = onClick,
+            ),
+            iconSize = 54.dp,
+        ),
+    )
+
+    data class PushNotifications(
+        val onCloseClick: () -> Unit,
+        val onEnabledClick: () -> Unit,
+    ) : WalletNotification(
+        config = NotificationConfig(
+            title = resourceReference(R.string.user_push_notification_banner_title),
+            subtitle = resourceReference(R.string.user_push_notification_banner_subtitle),
+            iconResId = R.drawable.img_push_reminder,
+            onCloseClick = onCloseClick,
+            buttonsState = NotificationConfig.ButtonsState.PairButtonsConfig(
+                primaryText = resourceReference(id = R.string.common_enable),
+                onPrimaryClick = onEnabledClick,
+                secondaryText = resourceReference(id = R.string.common_later),
+                onSecondaryClick = onCloseClick,
             ),
             iconSize = 54.dp,
         ),
