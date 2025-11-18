@@ -1,5 +1,7 @@
 package com.tangem.domain.wallets.usecase
 
+import com.tangem.domain.models.scan.CardDTO
+import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.requireUserWalletsSync
 import com.tangem.domain.models.scan.ProductType
@@ -14,10 +16,14 @@ class GenerateWalletNameUseCase(
     private val useNewRepository: Boolean,
 ) {
 
-    operator fun invoke(productType: ProductType, isBackupNotAllowed: Boolean, isStartToCoin: Boolean): String {
+    private val CardDTO.isBackupNotAllowed: Boolean
+        get() = !settings.isBackupAllowed
+
+    operator fun invoke(productType: ProductType, card: CardDTO, isStartToCoin: Boolean): String {
         val defaultName = getDefaultName(
             productType = productType,
-            isBackupNotAllowed = isBackupNotAllowed,
+            card = card,
+            isBackupNotAllowed = card.isBackupNotAllowed,
             isStartToCoin = isStartToCoin,
         )
 
@@ -55,7 +61,20 @@ class GenerateWalletNameUseCase(
         return defaultName
     }
 
-    private fun getDefaultName(productType: ProductType, isBackupNotAllowed: Boolean, isStartToCoin: Boolean): String {
+    private fun getDefaultName(
+        productType: ProductType,
+        card: CardDTO,
+        isBackupNotAllowed: Boolean,
+        isStartToCoin: Boolean,
+    ): String {
+        /**
+         * @workaround
+         * There were produced 20k Note demo cards that should work like multiwallet (except Onboarding)
+         * for that reasons we've just added some specific checks for their BatchId
+         */
+        if (DemoConfig.isDemoNoteAsMultiwallet(card.cardId)) {
+            return "Wallet"
+        }
         return when (productType) {
             ProductType.Note -> "Note"
             ProductType.Twins -> "Twin"

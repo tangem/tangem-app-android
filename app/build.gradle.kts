@@ -162,6 +162,7 @@ dependencies {
     implementation(projects.domain.walletManager.models)
     implementation(projects.domain.yieldSupply)
     implementation(projects.domain.blockaid)
+    implementation(projects.domain.hotWallet)
 
     implementation(projects.common)
     implementation(projects.common.routing)
@@ -169,6 +170,7 @@ dependencies {
     implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
     implementation(projects.core.navigation)
+    implementation(projects.core.abTests)
     implementation(projects.core.configToggles)
     implementation(projects.core.res)
     implementation(projects.core.ui)
@@ -211,6 +213,7 @@ dependencies {
     implementation(projects.data.swap)
     implementation(projects.data.walletManager)
     implementation(projects.data.yieldSupply)
+    implementation(projects.data.hotWallet)
 
     /** Features */
     implementation(projects.features.referral.impl)
@@ -247,6 +250,8 @@ dependencies {
     implementation(projects.features.walletSettings.impl)
     implementation(projects.features.markets.api)
     implementation(projects.features.markets.impl)
+    implementation(projects.features.feed.api)
+    implementation(projects.features.feed.impl)
     implementation(projects.features.onramp.api)
     implementation(projects.features.onramp.impl)
     implementation(projects.features.onboardingV2.api)

@@ -107,6 +107,7 @@ internal class YieldSupplyStopEarningComponent(
 
     interface ModelCallback {
         fun onBackClick()
+        fun onTransactionProgress(inProgress: Boolean)
         fun onTransactionSent()
     }
 }

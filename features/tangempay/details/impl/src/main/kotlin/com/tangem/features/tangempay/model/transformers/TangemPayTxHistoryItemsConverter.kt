@@ -14,7 +14,6 @@ import com.tangem.features.tangempay.entity.TangemPayTransactionState
 import com.tangem.features.tangempay.utils.TangemPayTxHistoryUiActions
 import com.tangem.utils.StringsSigns
 import com.tangem.utils.converter.Converter
-import com.tangem.utils.extensions.isPositive
 import com.tangem.utils.extensions.isZero
 import org.joda.time.DateTimeZone
 
@@ -59,27 +58,18 @@ internal class TangemPayTxHistoryItemsConverter(
     }
 
     private fun convertPayment(payment: TangemPayTxHistoryItem.Payment): TangemPayTransactionState.Content.Payment {
-        val isIncome = payment.amount.isPositive()
-        val amountPrefix = when {
-            payment.amount.isZero() -> ""
-            isIncome -> StringsSigns.PLUS
-            else -> StringsSigns.MINUS
-        }
-        val amount = amountPrefix + payment.amount.format {
+        val amount = StringsSigns.MINUS + payment.amount.format {
             fiat(fiatCurrencyCode = payment.currency.currencyCode, fiatCurrencySymbol = payment.currency.symbol)
         }
-        val title = if (payment.amount.isPositive()) "Deposit" else "Withdrawal"
         return TangemPayTransactionState.Content.Payment(
             id = payment.id,
             onClick = { txHistoryUiActions.onTransactionClick(payment) },
             amount = amount,
-            amountColor = themedColor {
-                if (payment.amount.isPositive()) TangemTheme.colors.text.accent else TangemTheme.colors.text.primary1
-            },
-            title = stringReference(title),
+            amountColor = themedColor { TangemTheme.colors.text.primary1 },
+            title = resourceReference(R.string.tangem_pay_withdrawal),
             subtitle = stringReference("Transfers"),
             time = DateTimeFormatters.formatDate(payment.date, DateTimeFormatters.timeFormatter),
-            icon = ImageReference.Res(if (isIncome) R.drawable.ic_arrow_down_24 else R.drawable.ic_arrow_up_24),
+            icon = ImageReference.Res(R.drawable.ic_arrow_up_24),
         )
     }
 
@@ -93,8 +83,8 @@ internal class TangemPayTxHistoryItemsConverter(
             onClick = { txHistoryUiActions.onTransactionClick(fee) },
             amount = amount,
             amountColor = themedColor { TangemTheme.colors.text.primary1 },
-            title = stringReference("Fee"),
-            subtitle = stringReference("Service fees"),
+            title = resourceReference(R.string.tangem_pay_fee_title),
+            subtitle = fee.description?.let(::stringReference) ?: resourceReference(R.string.tangem_pay_fee_subtitle),
             icon = ImageReference.Res(R.drawable.ic_percent_24),
             time = DateTimeFormatters.formatDate(fee.date, DateTimeFormatters.timeFormatter),
         )

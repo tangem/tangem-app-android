@@ -3,6 +3,7 @@ package com.tangem.features.hotwallet.upgradewallet
 import com.tangem.common.core.TangemError
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.doOnFailure
+import com.tangem.common.doOnResult
 import com.tangem.common.doOnSuccess
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.di.ModelScoped
@@ -100,7 +101,16 @@ internal class UpgradeWalletModel @Inject constructor(
                 .doOnSuccess {
                     // Check if user attempted to upgrade before but something went wrong and a full reset is required
                     val userWallet = coldUserWalletBuilderFactory.create(it).build()
-                    if (userWallet?.walletId == params.userWalletId && BackupValidator.isValidFull(it.card).not()) {
+                    val sameWalletButNotFinishedBackup by lazy {
+                        userWallet?.walletId == params.userWalletId &&
+                            BackupValidator.isValidFull(it.card).not()
+                    }
+                    val otherWalletAndAlreadyCreated by lazy {
+                        userWallet?.walletId != params.userWalletId &&
+                            it.card.wallets.map { it.curve }.toSet().isNotEmpty()
+                    }
+
+                    if (userWallet != null && (sameWalletButNotFinishedBackup || otherWalletAndAlreadyCreated)) {
                         startResetCardsFlow.emit(userWallet)
                         return@doOnSuccess
                     }
@@ -111,6 +121,9 @@ internal class UpgradeWalletModel @Inject constructor(
                 }
                 .doOnFailure {
                     showCardVerificationFailedDialog(it)
+                }
+                .doOnResult {
+                    setLoading(false)
                 }
         }
     }

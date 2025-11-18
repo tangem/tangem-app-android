@@ -88,8 +88,9 @@ internal class PortfolioSelectorModel @Inject constructor(
         val appCurrency = portfolioData.appCurrency
         val isBalanceHidden = portfolioData.isBalanceHidden
         val lockedWallets = mutableListOf<PortfolioSelectorItemUM>()
-        portfolioData.balances.forEach { wallet, portfolio ->
+        portfolioData.balances.forEach { walletId, portfolio ->
             val balance = portfolio.walletBalance
+            val wallet = portfolio.userWallet
             val walletItemUM = UserWalletItemUMConverter(
                 onClick = {
                     selectorController.selectAccount(portfolio.accountsBalance.mainAccount.account.accountId)
@@ -130,8 +131,9 @@ internal class PortfolioSelectorModel @Inject constructor(
         val appCurrency = portfolioData.appCurrency
         val isBalanceHidden = portfolioData.isBalanceHidden
         val lockedWallets = mutableListOf<PortfolioSelectorItemUM>()
-        portfolioData.balances.forEach { wallet, portfolio ->
+        portfolioData.balances.forEach { walletId, portfolio ->
             val balance = portfolio.walletBalance
+            val wallet = portfolio.userWallet
             val walletItemUM = UserWalletItemUMConverter(
                 onClick = {
                     selectorController.selectAccount(portfolio.accountsBalance.mainAccount.account.accountId)

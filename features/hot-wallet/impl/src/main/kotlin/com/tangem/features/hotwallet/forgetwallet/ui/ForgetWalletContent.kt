@@ -18,6 +18,7 @@ import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.appbar.TangemTopAppBar
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.hotwallet.forgetwallet.entity.ForgetWalletUM
@@ -26,7 +27,6 @@ import com.tangem.features.hotwallet.forgetwallet.entity.ForgetWalletUM
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun ForgetWalletContent(state: ForgetWalletUM, modifier: Modifier = Modifier) {
-    // TODO actualize strings [REDACTED_TASK_KEY]
     Column(
         modifier = modifier
             .background(TangemTheme.colors.background.primary)
@@ -53,14 +53,14 @@ internal fun ForgetWalletContent(state: ForgetWalletUM, modifier: Modifier = Mod
             )
             Spacer(modifier = Modifier.height(24.dp))
             Text(
-                text = "Attention",
+                text = stringResourceSafe(R.string.common_attention),
                 style = TangemTheme.typography.h2,
                 color = TangemTheme.colors.text.primary1,
                 textAlign = TextAlign.Center,
             )
             Spacer(modifier = Modifier.height(12.dp))
             Text(
-                text = "This wallet will be permanently removed from your device",
+                text = stringResourceSafe(R.string.hw_remove_wallet_attention_description),
                 style = TangemTheme.typography.body1,
                 color = TangemTheme.colors.text.secondary,
                 textAlign = TextAlign.Center,
@@ -72,21 +72,21 @@ internal fun ForgetWalletContent(state: ForgetWalletUM, modifier: Modifier = Mod
             modifier = Modifier.padding(horizontal = 16.dp),
             checked = state.firstCheckboxChecked,
             onCheckedChange = state.onFirstCheckboxClick,
-            text = "I understand that removing my wallet does not delete it—but simply removes it from my device.",
+            text = stringResourceSafe(R.string.hw_remove_wallet_warning_device),
         )
         Spacer(modifier = Modifier.height(16.dp))
         CheckboxItem(
             modifier = Modifier.padding(horizontal = 16.dp),
             checked = state.secondCheckboxChecked,
             onCheckedChange = state.onSecondCheckboxClick,
-            text = "I understand that if I haven't backed up my wallet before removing it, I may lose access to it.",
+            text = stringResourceSafe(R.string.hw_remove_wallet_warning_access),
         )
         Spacer(modifier = Modifier.height(32.dp))
         PrimaryButton(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            text = "Forget wallet",
+            text = stringResourceSafe(R.string.hw_remove_wallet_action_forget_title),
             onClick = state.onForgetWalletClick,
             enabled = state.isForgetButtonEnabled,
         )
@@ -95,7 +95,6 @@ internal fun ForgetWalletContent(state: ForgetWalletUM, modifier: Modifier = Mod
 
 @Composable
 private fun CheckboxItem(checked: Boolean, onCheckedChange: () -> Unit, text: String, modifier: Modifier = Modifier) {
-    // TODO actualize strings [REDACTED_TASK_KEY]
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.Start,

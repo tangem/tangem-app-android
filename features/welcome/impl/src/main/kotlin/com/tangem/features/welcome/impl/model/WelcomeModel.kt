@@ -7,6 +7,8 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.error.UnlockWalletError
@@ -89,7 +91,10 @@ internal class WelcomeModel @Inject constructor(
                         router.replaceAll(AppRoute.Wallet)
                     }
                     .onLeft {
-                        it.handle(null, onUserCancelled = { tryToUnlockWithAccessCodeRightAway() })
+                        it.handle(
+                            specificWalletId = null,
+                            onUserCancelled = { tryToUnlockWithAccessCodeRightAway() },
+                        )
                         setSelectWalletState()
                     }
             } else {
@@ -101,10 +106,10 @@ internal class WelcomeModel @Inject constructor(
 
     private suspend fun tryToUnlockWithAccessCodeRightAway() {
         if (onlyOneHotWalletWithAccessCode()) {
-            val userWallets = userWalletsListRepository.userWalletsSync()
-            val userWallet = userWallets.first()
+            val hotWalletLockedWithAccessCode = userWalletsListRepository.userWalletsSync()
+                .first { it.isLocked && it is UserWallet.Hot } as UserWallet.Hot
             uiState.value = WelcomeUM.Empty
-            unlockWallet(userWallet.walletId, UserWalletsListRepository.UnlockMethod.AccessCode)
+            unlockWallet(hotWalletLockedWithAccessCode.walletId, UserWalletsListRepository.UnlockMethod.AccessCode)
         }
     }
 
@@ -142,7 +147,7 @@ internal class WelcomeModel @Inject constructor(
     }
 
     private suspend fun onlyOneHotWalletWithAccessCode(): Boolean {
-        val userWalletsWithLock = userWalletsListRepository.userWalletsSync().filter { it.isLocked }
+        val userWalletsWithLock = userWalletsListRepository.userWalletsSync()
         if (userWalletsWithLock.size != 1) return false
         val wallet = userWalletsWithLock.first()
         return wallet is UserWallet.Hot && wallet.hotWalletId.authType != HotWalletId.AuthType.NoPassword
@@ -192,7 +197,12 @@ internal class WelcomeModel @Inject constructor(
                 router.replaceAll(AppRoute.Wallet)
             }
             UnlockWalletError.ScannedCardWalletNotMatched -> {
-                // TODO Scanned card does not match the wallet
+                uiMessageSender.send(
+                    message = DialogMessage(
+                        title = resourceReference(R.string.common_warning),
+                        message = resourceReference(R.string.error_wrong_wallet_tapped),
+                    ),
+                )
             }
             UnlockWalletError.UnableToUnlock -> {
                 // TODO Unable to unlock the wallet"

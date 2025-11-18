@@ -82,7 +82,7 @@ private fun Preview_TooltipText() {
         ) {
             TooltipText(
                 text = stringReference("Text"),
-                onInfoClick = { /* [REDACTED_TODO_COMMENT]*/ },
+                onInfoClick = { },
             )
         }
     }

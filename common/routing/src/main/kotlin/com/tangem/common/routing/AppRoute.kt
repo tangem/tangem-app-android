@@ -20,6 +20,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.nft.models.NFTAsset
 import com.tangem.domain.onramp.model.OnrampSource
 import com.tangem.domain.pay.TangemPayDetailsConfig
+import com.tangem.domain.tokens.model.details.NavigationAction
 import kotlinx.serialization.Serializable
 
 @SuppressLint("UnsafeOptInUsageError")
@@ -55,6 +56,7 @@ sealed class AppRoute(val path: String) : Route {
     data class CurrencyDetails(
         val userWalletId: UserWalletId,
         val currency: CryptoCurrency,
+        val navigationAction: NavigationAction? = null,
     ) : AppRoute(path = "/currency_details/${userWalletId.stringValue}/${currency.id.value}")
 
     @Serializable
@@ -356,17 +358,20 @@ sealed class AppRoute(val path: String) : Route {
     @Serializable
     data class WalletActivation(
         val userWalletId: UserWalletId,
+        val isBackupExists: Boolean,
     ) : AppRoute(path = "/wallet_activation/${userWalletId.stringValue}")
 
     @Serializable
     data class CreateWalletBackup(
         val userWalletId: UserWalletId,
-        val isUpgradeFlow: Boolean,
+        val isUpgradeFlow: Boolean = false,
+        val setAccessCode: Boolean = false,
     ) : AppRoute(path = "/create_wallet_backup/${userWalletId.stringValue}")
 
     @Serializable
     data class UpdateAccessCode(
         val userWalletId: UserWalletId,
+        val isFirstSetup: Boolean,
     ) : AppRoute(path = "/update_access_code/${userWalletId.stringValue}")
 
     @Serializable

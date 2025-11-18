@@ -67,7 +67,7 @@ internal sealed class WalletSettingsAccountsUM : WalletSettingsItemUM() {
     data class Account(
         val state: UserWalletItemUM,
     ) : WalletSettingsAccountsUM() {
-        override val id: String get() = state.id.stringValue
+        override val id: String = state.id
     }
 
     data class Footer(

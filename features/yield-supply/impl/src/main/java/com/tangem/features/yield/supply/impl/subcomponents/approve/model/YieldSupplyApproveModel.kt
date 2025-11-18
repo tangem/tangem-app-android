@@ -117,6 +117,8 @@ internal class YieldSupplyApproveModel @Inject constructor(
     }
 
     fun onClick() {
+        params.callback.onTransactionProgress(true)
+
         val yieldSupplyFeeUM = uiState.value.yieldSupplyFeeUM as? YieldSupplyFeeUM.Content ?: return
         uiState.update(YieldSupplyTransactionInProgressTransformer)
 
@@ -153,6 +155,7 @@ internal class YieldSupplyApproveModel @Inject constructor(
                             }
                         },
                     )
+                    params.callback.onTransactionProgress(false)
                 },
                 ifRight = {
                     val event = AnalyticsParam.TxSentFrom.Earning(
@@ -255,6 +258,7 @@ internal class YieldSupplyApproveModel @Inject constructor(
                         maxNetworkFeeFiatValue = TextReference.EMPTY,
                         minTopUpFiatValue = TextReference.EMPTY,
                         feeNoteValue = TextReference.EMPTY,
+                        estimatedFiatValue = TextReference.EMPTY,
                     ),
                 )
             }

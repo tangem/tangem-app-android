@@ -45,7 +45,7 @@ import java.math.BigDecimal
 import javax.inject.Inject
 import kotlin.properties.Delegates
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 @ModelScoped
 internal class YieldSupplyStartEarningModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
@@ -63,6 +63,7 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
     private val yieldSupplyActivateUseCase: YieldSupplyActivateUseCase,
     private val yieldSupplyMinAmountUseCase: YieldSupplyMinAmountUseCase,
     private val yieldSupplyGetMaxFeeUseCase: YieldSupplyGetMaxFeeUseCase,
+    private val yieldSupplyGetCurrentFeeUseCase: YieldSupplyGetCurrentFeeUseCase,
     private val yieldSupplyRepository: YieldSupplyRepository,
 ) : Model(), YieldSupplyNotificationsComponent.ModelCallback {
 
@@ -95,7 +96,10 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
                     R.string.yield_module_start_earning_sheet_description,
                     wrappedList(cryptoCurrency.symbol),
                 ),
-                footer = resourceReference(R.string.yield_module_start_earning_sheet_next_deposits),
+                footer = resourceReference(
+                    R.string.yield_module_start_earning_sheet_next_deposits_v2,
+                    wrappedList(cryptoCurrency.symbol),
+                ),
                 footerLink = resourceReference(R.string.yield_module_start_earning_sheet_fee_policy),
                 currencyIconState = CryptoCurrencyToIconStateConverter().convert(params.cryptoCurrency),
                 yieldSupplyFeeUM = YieldSupplyFeeUM.Loading,
@@ -130,10 +134,6 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
         }
     }
 
-    private suspend fun getMaxFeePair(): Pair<BigDecimal, BigDecimal>? {
-        return yieldSupplyGetMaxFeeUseCase(userWallet, cryptoCurrencyStatus).getOrNull()
-    }
-
     private suspend fun onLoadFee() {
         if (cryptoCurrencyStatus.value is CryptoCurrencyStatus.Loading || uiState.value.isTransactionSending) return
 
@@ -141,15 +141,13 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
             it.copy(yieldSupplyFeeUM = YieldSupplyFeeUM.Loading)
         }
 
-        val maxFeePair = getMaxFeePair() ?: return
-
-        val maxFee = maxFeePair.first
-        val maxFeeFiat = maxFeePair.second
+        val maxFee = yieldSupplyGetMaxFeeUseCase(userWallet, cryptoCurrencyStatus).getOrNull() ?: return
+        val estimatedFee = yieldSupplyGetCurrentFeeUseCase(userWallet, cryptoCurrencyStatus).getOrNull() ?: return
 
         val transactionListData = yieldSupplyStartEarningUseCase(
             userWalletId = userWallet.walletId,
             cryptoCurrencyStatus = cryptoCurrencyStatus,
-            maxNetworkFee = maxFee,
+            maxNetworkFee = maxFee.tokenMaxFee,
         ).getOrNull()
 
         if (transactionListData == null) {
@@ -194,7 +192,7 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
                         updatedTransactionList = updatedTransactionList,
                         feeValue = feeSum,
                         maxNetworkFee = maxFee,
-                        maxNetworkFeeFiat = maxFeeFiat,
+                        estimatedFeeValue = estimatedFee,
                         minAmount = minAmount,
                     ),
                 )
@@ -249,32 +247,49 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
                     )
                 },
                 ifRight = {
-                    yieldSupplyRepository.saveTokenProtocolStatus(cryptoCurrency, YieldSupplyEnterStatus.Enter)
-                    val event = AnalyticsParam.TxSentFrom.Earning(
-                        blockchain = cryptoCurrency.network.name,
-                        token = cryptoCurrency.symbol,
-                        feeType = AnalyticsParam.FeeType.Normal,
-                    )
-                    analytics.send(YieldSupplyAnalytics.FundsEarned)
-                    yieldSupplyFeeUM.transactionDataList.forEach {
-                        analytics.send(
-                            Basic.TransactionSent(
-                                sentFrom = event,
-                                memoType = Basic.TransactionSent.MemoType.Null,
-                            ),
-                        )
-                    }
-
-                    val address = cryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value
-                    if (address != null) {
-                        yieldSupplyActivateUseCase(cryptoCurrency, address)
-                    }
-
-                    modelScope.launch {
-                        params.callback.onTransactionSent()
-                    }
+                    onStartEarningTransactionSuccess(yieldSupplyFeeUM)
                 },
             )
+        }
+    }
+
+    private suspend fun onStartEarningTransactionSuccess(yieldSupplyFeeUM: YieldSupplyFeeUM.Content) {
+        yieldSupplyRepository.saveTokenProtocolStatus(
+            userWallet.walletId,
+            cryptoCurrency,
+            YieldSupplyEnterStatus.Enter,
+        )
+        val event = AnalyticsParam.TxSentFrom.Earning(
+            blockchain = cryptoCurrency.network.name,
+            token = cryptoCurrency.symbol,
+            feeType = AnalyticsParam.FeeType.Normal,
+        )
+        analytics.send(
+            YieldSupplyAnalytics.FundsEarned(
+                blockchain = cryptoCurrency.network.name,
+                token = cryptoCurrency.symbol,
+            ),
+        )
+        yieldSupplyFeeUM.transactionDataList.forEach {
+            analytics.send(
+                Basic.TransactionSent(
+                    sentFrom = event,
+                    memoType = Basic.TransactionSent.MemoType.Null,
+                ),
+            )
+        }
+
+        val address = cryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value
+        if (address != null) {
+            yieldSupplyActivateUseCase(
+                userWalletId = userWallet.walletId,
+                cryptoCurrency = cryptoCurrency,
+                address = address,
+            )
+        }
+
+        modelScope.launch {
+            params.callback.onTransactionSent()
         }
     }
 

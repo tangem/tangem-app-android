@@ -4,7 +4,6 @@ import arrow.core.left
 import arrow.core.right
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
-import com.tangem.common.test.utils.assertEither
 import com.tangem.data.common.currency.CardCryptoCurrencyFactory
 import com.tangem.data.common.currency.UserTokensResponseFactory
 import com.tangem.data.common.currency.UserTokensSaver
@@ -22,6 +21,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesFetcher
+import com.tangem.test.core.assertEither
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
@@ -47,7 +47,7 @@ internal class DefaultMultiWalletCryptoCurrenciesFetcherTest {
     private val expressServiceFetcher: ExpressServiceFetcher = mockk(relaxUnitFun = true)
 
     private val fetcher = DefaultMultiWalletCryptoCurrenciesFetcher(
-        demoConfig = DemoConfig(),
+        demoConfig = DemoConfig,
         userWalletsStore = userWalletsStore,
         tangemTechApi = tangemTechApi,
         customTokensMerger = customTokensMerger,

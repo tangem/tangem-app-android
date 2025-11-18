@@ -2,7 +2,7 @@ package com.tangem.utils.retryer
 
 import com.google.common.truth.Truth
 import io.mockk.coEvery
-import io.mockk.coVerify
+import io.mockk.coVerifyOrder
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
@@ -58,17 +58,20 @@ class RetryerTest {
     fun `retryer should be repeated until block returns true`() = runTest {
         // Arrange
         val attempt = 5
-        val block = mockk<() -> Boolean>()
+        val block = mockk<suspend (Int) -> Boolean>()
         val retryer = Retryer(attempt = attempt, block = block)
 
-        coEvery { block() } returnsMany List(attempt) { it == attempt - 2 } // returns true on the 4th call
+        coEvery { block(any()) } returnsMany List(attempt) { it == attempt - 2 } // returns true on the 4th call
 
         // Act
         retryer.launch()
 
         // Assert
-        coVerify(exactly = attempt - 1) {
-            block.invoke()
+        coVerifyOrder {
+            block.invoke(0)
+            block.invoke(1)
+            block.invoke(2)
+            block.invoke(3)
         }
     }
 
@@ -76,17 +79,17 @@ class RetryerTest {
     fun `retryer should be called once`() = runTest {
         // Arrange
         val attempt = 5
-        val block = mockk<() -> Boolean>()
+        val block = mockk<suspend (Int) -> Boolean>()
         val retryer = Retryer(attempt = attempt, block = block)
 
-        coEvery { block() } returns true // for the first attempt
+        coEvery { block(1) } returns true // for the first attempt
 
         // Act
         retryer.launch()
 
         // Assert
-        coVerify(exactly = 1) {
-            block.invoke()
+        coVerifyOrder {
+            block.invoke(1)
         }
     }
 
@@ -94,17 +97,40 @@ class RetryerTest {
     fun `retryer should throw after all attempts failed`() = runTest {
         // Arrange
         val attempt = 3
-        val block = mockk<() -> Boolean>()
+        val block = mockk<suspend (Int) -> Boolean>()
         val retryer = Retryer(attempt = attempt, block = block)
 
-        coEvery { block() } returnsMany List(attempt) { false }
+        coEvery { block(any()) } returnsMany List(attempt) { false }
 
         // Act
         retryer.launch()
 
         // Assert
-        coVerify(exactly = attempt) {
-            block.invoke()
+        coVerifyOrder {
+            block.invoke(0)
+            block.invoke(1)
+            block.invoke(2)
+        }
+    }
+
+    @Test
+    fun `retryer should handle exceptions in block and continue retrying`() = runTest {
+        // Arrange
+        val attempt = 4
+        val block = mockk<suspend (Int) -> Boolean>()
+        val retryer = Retryer(attempt = attempt, block = block)
+
+        coEvery { block(any()) } throws IllegalStateException("Test Exception") andThenMany List(attempt - 1) { false }
+
+        // Act
+        retryer.launch()
+
+        // Assert
+        coVerifyOrder {
+            block.invoke(0)
+            block.invoke(1)
+            block.invoke(2)
+            block.invoke(3)
         }
     }
 }

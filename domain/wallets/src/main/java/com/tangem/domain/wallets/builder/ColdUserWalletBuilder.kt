@@ -1,7 +1,6 @@
 package com.tangem.domain.wallets.builder
 
 import com.tangem.domain.card.common.util.cardTypesResolver
-import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.usecase.GenerateWalletNameUseCase
@@ -15,9 +14,6 @@ class ColdUserWalletBuilder @AssistedInject constructor(
 ) {
     private var backupCardsIds: Set<String> = emptySet()
     private var hasBackupError: Boolean = false
-
-    private val CardDTO.isBackupNotAllowed: Boolean
-        get() = !settings.isBackupAllowed
 
     /**
      * DANGEROUS!!!
@@ -44,8 +40,8 @@ class ColdUserWalletBuilder @AssistedInject constructor(
                     UserWallet.Cold(
                         walletId = it,
                         name = generateWalletNameUseCase(
+                            card = card,
                             productType = productType,
-                            isBackupNotAllowed = card.isBackupNotAllowed,
                             isStartToCoin = cardTypesResolver.isStart2Coin(),
                         ),
                         cardsInWallet = backupCardsIds.plus(card.cardId),

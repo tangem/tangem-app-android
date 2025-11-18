@@ -4,7 +4,6 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth
 import com.tangem.common.test.data.quote.MockQuoteResponseFactory
-import com.tangem.common.test.utils.assertEither
 import com.tangem.data.common.quote.QuotesFetcher
 import com.tangem.data.quotes.store.QuotesStatusesStore
 import com.tangem.data.quotes.store.setSourceAsCache
@@ -15,6 +14,7 @@ import com.tangem.datasource.api.tangemTech.models.QuotesResponse
 import com.tangem.datasource.appcurrency.AppCurrencyResponseStore
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
+import com.tangem.test.core.assertEither
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
 import kotlinx.coroutines.test.runTest

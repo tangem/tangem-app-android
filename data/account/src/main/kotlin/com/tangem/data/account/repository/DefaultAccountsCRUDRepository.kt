@@ -181,7 +181,7 @@ internal class DefaultAccountsCRUDRepository(
             return
         }
 
-        userTokensSaver.push(userWalletId = userWalletId, response = response.toUserTokensResponse())
+        userTokensSaver.pushWithRetryer(userWalletId = userWalletId, response = response.toUserTokensResponse())
     }
 
     override suspend fun getTotalAccountsCountSync(userWalletId: UserWalletId): Option<Int> = option {

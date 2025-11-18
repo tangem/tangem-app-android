@@ -79,12 +79,14 @@ internal fun OnrampOffersContent(state: OnrampOffersBlockUM) {
                     }
                 }
 
-                SpacerH(12.dp)
-                SecondaryButton(
-                    modifier = Modifier.fillMaxWidth(),
-                    text = state.onrampAllOffersButtonConfig.title.resolveReference(),
-                    onClick = state.onrampAllOffersButtonConfig.onClick,
-                )
+                state.onrampAllOffersButtonConfig?.let {
+                    SpacerH(12.dp)
+                    SecondaryButton(
+                        modifier = Modifier.fillMaxWidth(),
+                        text = it.title.resolveReference(),
+                        onClick = it.onClick,
+                    )
+                }
             }
         }
         OnrampOffersBlockUM.Loading -> {
@@ -186,11 +188,11 @@ private fun OfferHeader(advantage: OnrampOfferAdvantagesUM) {
         }
         is OnrampOfferAdvantagesUM.Unavailable -> {
             val textResId = when (advantage) {
-                OnrampOfferAdvantagesUM.Unavailable.MinAmount -> R.string.onramp_title_available_from
-                OnrampOfferAdvantagesUM.Unavailable.MaxAmount -> R.string.onramp_title_available_up_to
+                OnrampOfferAdvantagesUM.Unavailable.MinAmount -> R.string.onramp_provider_min_amount
+                OnrampOfferAdvantagesUM.Unavailable.MaxAmount -> R.string.onramp_provider_max_amount
             }
             Text(
-                text = stringResourceSafe(textResId),
+                text = stringResourceSafe(textResId, ""),
                 style = TangemTheme.typography.caption1,
                 color = TangemTheme.colors.text.tertiary,
             )

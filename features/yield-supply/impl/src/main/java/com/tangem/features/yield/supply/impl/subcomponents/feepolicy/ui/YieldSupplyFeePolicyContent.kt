@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -86,12 +87,12 @@ internal fun YieldSupplyFeePolicyContent(
                     .padding(horizontal = 16.dp),
             ) {
                 val currentFee = when (yieldSupplyFeeUM) {
-                    is YieldSupplyFeeUM.Content -> yieldSupplyFeeUM.tokenFeeFiatValue
+                    is YieldSupplyFeeUM.Content -> yieldSupplyFeeUM.estimatedFiatValue
                     YieldSupplyFeeUM.Error -> stringReference(StringsSigns.DASH_SIGN)
                     YieldSupplyFeeUM.Loading -> null
                 }
                 YieldSupplyFeeRow(
-                    title = resourceReference(R.string.yield_module_fee_policy_sheet_current_fee_title),
+                    title = resourceReference(R.string.common_estimated_fee),
                     value = currentFee,
                     modifier = Modifier.padding(vertical = 12.dp),
                 )
@@ -100,6 +101,10 @@ internal fun YieldSupplyFeePolicyContent(
                     YieldSupplyFeeUM.Error -> stringReference(StringsSigns.DASH_SIGN)
                     YieldSupplyFeeUM.Loading -> null
                 }
+                HorizontalDivider(
+                    thickness = 0.5.dp,
+                    color = TangemTheme.colors.stroke.primary,
+                )
                 YieldSupplyFeeRow(
                     title = resourceReference(R.string.yield_module_fee_policy_sheet_max_fee_title),
                     value = maxFee,
@@ -184,6 +189,7 @@ private fun YieldSupplyFeePolicyContent_Preview() {
                         stringReference("2.46 USDT"),
                     ),
                 ),
+                estimatedFiatValue = stringReference("$8.50"),
             ),
             tokenSymbol = "USDT",
             modifier = Modifier.background(TangemTheme.colors.background.primary),

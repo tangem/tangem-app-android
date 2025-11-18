@@ -19,6 +19,7 @@ import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResp
 import com.tangem.datasource.api.tangemTech.models.account.SaveWalletAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
 import com.tangem.datasource.api.tangemTech.models.account.toUserTokensResponse
+import com.tangem.datasource.api.tangemTech.models.orDefault
 import com.tangem.datasource.utils.getSyncOrNull
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -156,21 +157,27 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
         userWalletId: UserWalletId,
         accountsResponse: GetWalletAccountsResponse,
     ): GetWalletAccountsResponse {
+        val hasSavedTokens = accountsResponse.unassignedTokens.isNotEmpty()
+
         val response = defaultWalletAccountsResponseFactory.create(
             userWalletId = userWalletId,
-            userTokensResponse = UserTokensResponse(
-                group = accountsResponse.wallet.group,
-                sort = accountsResponse.wallet.sort,
-                tokens = accountsResponse.unassignedTokens,
-            ),
+            userTokensResponse = if (hasSavedTokens) {
+                UserTokensResponse(
+                    group = accountsResponse.wallet.group.orDefault(),
+                    sort = accountsResponse.wallet.sort.orDefault(),
+                    tokens = accountsResponse.unassignedTokens,
+                )
+            } else {
+                null
+            },
         )
 
+        store(userWalletId = userWalletId, response = response)
+
+        push(userWalletId = userWalletId, accounts = response.accounts)
         userTokensSaver.push(userWalletId = userWalletId, response = response.toUserTokensResponse())
-        val syncedResponse = push(userWalletId = userWalletId, accounts = response.accounts) ?: response
 
-        store(userWalletId = userWalletId, response = syncedResponse)
-
-        return syncedResponse
+        return response
     }
 
     private suspend fun assignTokens(
@@ -181,7 +188,7 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
 
         store(userWalletId = userWalletId, response = accountsResponseWithTokens)
 
-        userTokensSaver.push(
+        userTokensSaver.pushWithRetryer(
             userWalletId = userWalletId,
             response = accountsResponseWithTokens.toUserTokensResponse(),
         )
