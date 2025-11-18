@@ -34,7 +34,6 @@ internal class YieldSupplyStopEarningFeeContentTransformer(
                 yieldSupplyFeeUM = YieldSupplyFeeUM.Content(
                     transactionDataList = transactions.toPersistentList(),
                     feeFiatValue = stringReference(fiatFeeText),
-                    tokenFeeFiatValue = TextReference.EMPTY,
                     maxNetworkFeeFiatValue = TextReference.EMPTY,
                     minTopUpFiatValue = TextReference.EMPTY,
                     feeNoteValue = TextReference.EMPTY,
