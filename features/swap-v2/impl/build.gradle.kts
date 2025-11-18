@@ -68,6 +68,8 @@ dependencies {
     implementation(projects.domain.notifications)
     implementation(projects.domain.feedback.models)
     implementation(projects.domain.feedback)
+    implementation(projects.domain.account)
+    implementation(projects.domain.account.status)
 
     /** Compose */
     implementation(deps.compose.foundation)

@@ -6,10 +6,12 @@ import com.tangem.core.ui.components.fields.PinTextColor
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.domain.core.wallets.UserWalletsListRepository
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.settings.CanUseBiometryUseCase
 import com.tangem.domain.wallets.hot.HotWalletAccessCodeAttemptsRepository
 import com.tangem.domain.wallets.hot.HotWalletAccessCodeAttemptsRepository.Attempts
+import com.tangem.domain.wallets.hot.HotWalletAccessCodeAttemptsRepository.Companion.MAX_FAST_FORWARD_ATTEMPTS
 import com.tangem.domain.wallets.hot.HotWalletPasswordRequester
 import com.tangem.features.hotwallet.accesscode.ACCESS_CODE_LENGTH
 import com.tangem.features.hotwallet.accesscoderequest.entity.HotAccessCodeRequestUM
@@ -30,6 +32,7 @@ internal class HotAccessCodeRequestModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val hotAccessCodeAttemptsRepository: HotWalletAccessCodeAttemptsRepository,
     private val userWalletsListRepository: UserWalletsListRepository,
+    private val canUseBiometryUseCase: CanUseBiometryUseCase,
 ) : Model() {
 
     private val result = MutableStateFlow<HotWalletPasswordRequester.Result?>(null)
@@ -43,7 +46,7 @@ internal class HotAccessCodeRequestModel @Inject constructor(
         )
 
     val uiState: StateFlow<HotAccessCodeRequestUM>
-    field = MutableStateFlow(getInitialState())
+        field = MutableStateFlow(getInitialState())
 
     suspend fun show(attemptRequest: HotWalletPasswordRequester.AttemptRequest) {
         if (userWalletExists(attemptRequest.hotWalletId).not()) {
@@ -59,7 +62,7 @@ internal class HotAccessCodeRequestModel @Inject constructor(
             it.copy(
                 isShown = true,
                 accessCode = "",
-                useBiometricVisible = attemptRequest.hasBiometry,
+                useBiometricVisible = attemptRequest.isBiometryButtonVisible(),
                 onAccessCodeChange = ::onAccessCodeChange,
             )
         }
@@ -82,6 +85,7 @@ internal class HotAccessCodeRequestModel @Inject constructor(
             it.copy(
                 accessCodeColor = PinTextColor.WrongCode,
                 onAccessCodeChange = {},
+                useBiometricVisible = currentRequest.isBiometryButtonVisible(),
             )
         }
         delay(timeMillis = 500) // Delay to show the wrong access code state
@@ -121,7 +125,10 @@ internal class HotAccessCodeRequestModel @Inject constructor(
 
         if (accessCode.length == ACCESS_CODE_LENGTH) {
             uiState.update {
-                it.copy(onAccessCodeChange = {})
+                it.copy(
+                    onAccessCodeChange = {},
+                    useBiometricVisible = false,
+                )
             }
 
             result.value = HotWalletPasswordRequester.Result.EnteredPassword(HotAuth.Password(accessCode.toCharArray()))
@@ -143,7 +150,24 @@ internal class HotAccessCodeRequestModel @Inject constructor(
         suspend fun collectAttempts(attempts: Attempts) {
             when (attempts) {
                 is Attempts.FastForward -> {
-                    /** ignore */
+                    if (attempts.count > 0) {
+                        uiState.update {
+                            it.copy(
+                                wrongAccessCodeText = resourceReference(
+                                    R.string.access_code_check_warining_lock,
+                                    wrappedList(MAX_FAST_FORWARD_ATTEMPTS - attempts.count),
+                                ),
+                                onAccessCodeChange = ::onAccessCodeChange,
+                            )
+                        }
+                    } else {
+                        uiState.update {
+                            it.copy(
+                                wrongAccessCodeText = null,
+                                onAccessCodeChange = ::onAccessCodeChange,
+                            )
+                        }
+                    }
                 }
                 is Attempts.WithDelay -> {
                     uiState.update {
@@ -189,6 +213,9 @@ internal class HotAccessCodeRequestModel @Inject constructor(
         userWalletsListRepository.delete(listOf(userWallet.walletId))
         dismiss()
     }
+
+    private suspend fun HotWalletPasswordRequester.AttemptRequest.isBiometryButtonVisible(): Boolean =
+        hasBiometry && canUseBiometryUseCase()
 
     private fun dismissState() {
         uiState.update {

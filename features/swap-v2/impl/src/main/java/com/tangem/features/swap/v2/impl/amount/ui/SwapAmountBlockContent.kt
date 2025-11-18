@@ -22,10 +22,13 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstrainedLayoutReference
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.ConstraintLayoutScope
+import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.ui.AmountBlockV2
 import com.tangem.core.ui.extensions.TextReference
@@ -126,8 +129,7 @@ private fun ConstraintLayoutScope.SwapAmountBlock(
     )
     AmountBlockV2(
         amountState = (amountUM.secondaryAmount.amountField as? AmountState.Data)?.copy(
-            title = resourceReference(R.string.send_with_swap_recipient_amount_title),
-            availableBalance = TextReference.EMPTY,
+            accountTitleUM = AccountTitleUM.Text(resourceReference(R.string.send_with_swap_recipient_amount_title)),
             availableBalanceCrypto = TextReference.EMPTY,
         ) ?: amountUM.secondaryAmount.amountField,
         isClickDisabled = true,
@@ -232,10 +234,12 @@ private fun BoxScope.SwapDivider() {
 @Composable
 @Preview(showBackground = true, widthDp = 360)
 @Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
-private fun SwapAmountBlockContent_Preview() {
+private fun SwapAmountBlockContent_Preview(
+    @PreviewParameter(SwapAmountBlockContentPreviewProvider::class) params: SwapAmountUM,
+) {
     TangemThemePreview {
         SwapAmountBlockContent(
-            amountUM = SwapAmountContentPreview.defaultState,
+            amountUM = params,
             isClickEnabled = true,
             onProviderSelectClick = {},
             onInfoClick = {},
@@ -243,5 +247,13 @@ private fun SwapAmountBlockContent_Preview() {
             onFinishAnimation = {},
         )
     }
+}
+
+private class SwapAmountBlockContentPreviewProvider : PreviewParameterProvider<SwapAmountUM> {
+    override val values: Sequence<SwapAmountUM>
+        get() = sequenceOf(
+            SwapAmountContentPreview.defaultState,
+            SwapAmountContentPreview.defaultStateAccount,
+        )
 }
 // endregion

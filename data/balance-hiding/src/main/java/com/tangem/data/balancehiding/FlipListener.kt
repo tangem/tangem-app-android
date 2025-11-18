@@ -17,9 +17,9 @@ internal class FlipListener(private val action: () -> Unit) : SensorEventListene
     }
 
     override fun onSensorChanged(event: SensorEvent?) {
-        event?.let {
+        if (event != null) {
             val currentTime = SystemClock.elapsedRealtime()
-            val zAxisValue = it.values[2]
+            val zAxisValue = event.values[2]
 
             if (zAxisValue < zAxisThreshold && !isScreenDown) {
                 isScreenDown = true
