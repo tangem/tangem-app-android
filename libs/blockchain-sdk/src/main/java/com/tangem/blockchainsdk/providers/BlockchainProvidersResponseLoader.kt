@@ -37,8 +37,8 @@ internal class BlockchainProvidersResponseLoader @Inject constructor(
                     remote = remoteResponse,
                 )
             },
-            onFailure = {
-                Timber.e(it, "Failed to load blockchain provider types from backend")
+            onFailure = { throwable ->
+                Timber.e(throwable, "Failed to load blockchain provider types from backend")
                 localResponse
             },
         )

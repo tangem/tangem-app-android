@@ -14,7 +14,9 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.core.decompose.context.AppComponentContext
+import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.components.PrimaryButtonIconEnd
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetTitle
@@ -25,6 +27,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.impl.common.ui.YieldSupplyActionContent
+import com.tangem.features.yield.supply.impl.subcomponents.notifications.YieldSupplyNotificationsComponent
 import com.tangem.features.yield.supply.impl.subcomponents.stopearning.model.YieldSupplyStopEarningModel
 import kotlinx.coroutines.flow.StateFlow
 
@@ -34,6 +37,16 @@ internal class YieldSupplyStopEarningComponent(
 ) : ComposableModularContentComponent, AppComponentContext by appComponentContext {
 
     private val model: YieldSupplyStopEarningModel = getOrCreateModel(params = params)
+
+    private val yieldSupplyNotificationsComponent = YieldSupplyNotificationsComponent(
+        appComponentContext = child("yieldSupplyExitNotifications"),
+        params = YieldSupplyNotificationsComponent.Params(
+            userWalletId = params.userWallet.walletId,
+            cryptoCurrencyStatusFlow = params.cryptoCurrencyStatusFlow,
+            feeCryptoCurrencyStatusFlow = model.feeCryptoCurrencyStatusFlow,
+            callback = model,
+        ),
+    )
 
     @Composable
     override fun Title() {
@@ -49,6 +62,8 @@ internal class YieldSupplyStopEarningComponent(
         val state by model.uiState.collectAsStateWithLifecycle()
         YieldSupplyActionContent(
             yieldSupplyActionUM = state,
+            onFooterClick = model::onReadMoreClick,
+            yieldSupplyNotificationsComponent = yieldSupplyNotificationsComponent,
             modifier = modifier,
         ) {
             Box(
@@ -75,8 +90,9 @@ internal class YieldSupplyStopEarningComponent(
         PrimaryButtonIconEnd(
             text = stringResourceSafe(R.string.common_confirm),
             onClick = model::onClick,
-            iconResId = R.drawable.ic_tangem_24,
+            iconResId = walletInterationIcon(params.userWallet),
             enabled = state.isPrimaryButtonEnabled,
+            showProgress = state.isTransactionSending,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
@@ -91,6 +107,7 @@ internal class YieldSupplyStopEarningComponent(
 
     interface ModelCallback {
         fun onBackClick()
+        fun onTransactionProgress(inProgress: Boolean)
         fun onTransactionSent()
     }
 }

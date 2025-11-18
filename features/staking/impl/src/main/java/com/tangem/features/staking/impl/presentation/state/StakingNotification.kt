@@ -60,6 +60,15 @@ internal object StakingNotification {
             title = resourceReference(R.string.staking_notification_low_staked_balance_title),
             subtitle = resourceReference(R.string.staking_notification_low_staked_balance_text),
         )
+
+        data class InitializeTonAccount(private val onInitializeClick: () -> Unit) : Info(
+            title = resourceReference(R.string.staking_notification_ton_account_initialization_title),
+            subtitle = resourceReference(R.string.staking_notification_ton_account_initialization_message),
+            buttonsState = NotificationConfig.ButtonsState.PrimaryButtonConfig(
+                text = resourceReference(R.string.common_activate),
+                onClick = onInitializeClick,
+            ),
+        )
     }
 
     sealed class Info(

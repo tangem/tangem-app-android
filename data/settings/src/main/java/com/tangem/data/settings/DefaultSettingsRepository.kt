@@ -7,6 +7,7 @@ import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.get
 import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
+import com.tangem.datasource.local.preferences.utils.getSyncOrNull
 import com.tangem.datasource.local.preferences.utils.store
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.settings.usercountry.models.GB_COUNTRY
@@ -91,11 +92,16 @@ internal class DefaultSettingsRepository(
     }
 
     override suspend fun shouldSaveAccessCodes(): Boolean {
-        return appPreferencesStore.getSyncOrDefault(key = PreferencesKeys.SHOULD_SAVE_ACCESS_CODES_KEY, default = false)
+        return appPreferencesStore.getSyncOrNull(key = PreferencesKeys.REQUIRE_ACCESS_CODE_KEY)?.not()
+            ?: appPreferencesStore.getSyncOrDefault(
+                key = PreferencesKeys.SHOULD_SAVE_ACCESS_CODES_KEY,
+                default = false,
+            )
     }
 
     override suspend fun setShouldSaveAccessCodes(value: Boolean) {
         appPreferencesStore.store(key = PreferencesKeys.SHOULD_SAVE_ACCESS_CODES_KEY, value = value)
+        appPreferencesStore.store(key = PreferencesKeys.REQUIRE_ACCESS_CODE_KEY, value = value.not())
     }
 
     override suspend fun incrementAppLaunchCounter() {

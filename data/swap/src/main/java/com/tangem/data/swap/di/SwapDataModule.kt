@@ -2,6 +2,7 @@ package com.tangem.data.swap.di
 
 import com.squareup.moshi.Moshi
 import com.tangem.data.common.currency.ResponseCryptoCurrenciesFactory
+import com.tangem.data.common.network.NetworkFactory
 import com.tangem.data.express.converter.ExpressErrorConverter
 import com.tangem.data.swap.DefaultSwapErrorResolver
 import com.tangem.data.swap.DefaultSwapRepositoryV2
@@ -17,7 +18,6 @@ import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import com.tangem.domain.swap.SwapErrorResolver
 import com.tangem.domain.swap.SwapRepositoryV2
 import com.tangem.domain.swap.SwapTransactionRepository
-import com.tangem.domain.tokens.utils.CurrencyStatusProxyCreator
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
@@ -59,7 +59,6 @@ internal object SwapDataModule {
             moshi = moshi,
             singleQuoteStatusSupplier = singleQuoteStatusSupplier,
             singleQuoteStatusFetcher = singleQuoteStatusFetcher,
-            currencyStatusProxyCreator = CurrencyStatusProxyCreator(),
         )
     }
 
@@ -68,11 +67,13 @@ internal object SwapDataModule {
     fun provideSwapTransactionRepository(
         appPreferencesStore: AppPreferencesStore,
         responseCryptoCurrenciesFactory: ResponseCryptoCurrenciesFactory,
+        networkFactory: NetworkFactory,
         dispatchers: CoroutineDispatcherProvider,
     ): SwapTransactionRepository {
         return DefaultSwapTransactionRepository(
             appPreferencesStore = appPreferencesStore,
             responseCryptoCurrenciesFactory = responseCryptoCurrenciesFactory,
+            networkFactory = networkFactory,
             dispatchers = dispatchers,
         )
     }

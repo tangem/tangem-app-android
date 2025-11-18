@@ -11,6 +11,7 @@ import com.tangem.data.account.store.ArchivedAccountsStore
 import com.tangem.data.account.store.ArchivedAccountsStoreFactory
 import com.tangem.data.common.account.WalletAccountsSaver
 import com.tangem.data.common.cache.etag.ETagsStore
+import com.tangem.data.common.currency.UserTokensSaver
 import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
@@ -25,7 +26,6 @@ import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountName
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.domain.models.account.DerivationIndex
-import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
@@ -37,6 +37,7 @@ import kotlin.time.Duration.Companion.minutes
 /**
 [REDACTED_AUTHOR]
  */
+@Suppress("UnusedFlow")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class DefaultAccountsCRUDRepositoryTest {
 
@@ -52,6 +53,7 @@ class DefaultAccountsCRUDRepositoryTest {
     private val archivedAccountsStore = ArchivedAccountsStore(runtimeStore = archivedAccountsInnerStore)
 
     private val userWalletsStore: UserWalletsStore = mockk()
+    private val userTokensSaver: UserTokensSaver = mockk()
     private val eTagsStore: ETagsStore = mockk()
 
     private val convertersContainer: AccountConverterFactoryContainer = mockk()
@@ -64,6 +66,7 @@ class DefaultAccountsCRUDRepositoryTest {
         accountsResponseStoreFactory = accountsResponseStoreFactory,
         archivedAccountsStoreFactory = archivedAccountsStoreFactory,
         userWalletsStore = userWalletsStore,
+        userTokensSaver = userTokensSaver,
         eTagsStore = eTagsStore,
         convertersContainer = convertersContainer,
         dispatchers = TestingCoroutineDispatcherProvider(),
@@ -580,22 +583,18 @@ class DefaultAccountsCRUDRepositoryTest {
         @Test
         fun `saveAccounts should call API and update store`() = runTest {
             // Arrange
-            val userWallet = mockk<UserWallet> {
-                every { this@mockk.walletId } returns userWalletId
-            }
+            val accountList = AccountList.empty(userWalletId = userWalletId)
+            val accounts = accountList.accounts.filterIsInstance<CryptoPortfolio>()
 
-            val accountList = AccountList.empty(userWallet = userWallet)
-
-            val accountsResponse = mockk<GetWalletAccountsResponse>()
+            val accountsResponse = createGetWalletAccountsResponse(userWalletId)
             accountsResponseStoreFlow.value = accountsResponse
 
-            val converter = mockk<GetWalletAccountsResponseConverter> {
-                every { this@mockk.convert(accountList) } returns accountsResponse
+            val converter = mockk<CryptoPortfolioConverter> {
+                every { this@mockk.convertListBack(accounts) } returns accountsResponse.accounts
             }
 
-            every {
-                convertersContainer.getWalletAccountsResponseCF.create(userWallet = userWallet)
-            } returns converter
+            every { convertersContainer.createCryptoPortfolioConverter(userWalletId) } returns converter
+            coEvery { walletAccountsSaver.push(userWalletId, accountsResponse.accounts) } returns accountsResponse
 
             // Act
             repository.saveAccounts(accountList)
@@ -604,35 +603,30 @@ class DefaultAccountsCRUDRepositoryTest {
             Truth.assertThat(accountsResponseStoreFlow.value).isEqualTo(accountsResponse)
 
             coVerifyOrder {
-                convertersContainer.getWalletAccountsResponseCF.create(userWallet)
-                converter.convert(accountList)
-                walletAccountsSaver.pushAndStore(userWalletId, accountsResponse)
+                convertersContainer.createCryptoPortfolioConverter(userWalletId)
+                converter.convertListBack(accounts)
+                walletAccountsSaver.push(userWalletId, accountsResponse.accounts)
             }
         }
 
         @Test
         fun `saveAccounts if API request is failed`() = runTest {
             // Arrange
-            val userWallet = mockk<UserWallet> {
-                every { this@mockk.walletId } returns userWalletId
-            }
+            val accountList = AccountList.empty(userWalletId = userWalletId)
+            val accounts = accountList.accounts.filterIsInstance<CryptoPortfolio>()
 
-            val accountList = AccountList.empty(userWallet = userWallet)
-
-            val accountsResponse = mockk<GetWalletAccountsResponse>()
+            val accountsResponse = createGetWalletAccountsResponse(userWalletId)
             accountsResponseStoreFlow.value = accountsResponse
 
-            val converter = mockk<GetWalletAccountsResponseConverter> {
-                every { this@mockk.convert(accountList) } returns accountsResponse
+            val converter = mockk<CryptoPortfolioConverter> {
+                every { this@mockk.convertListBack(accounts) } returns accountsResponse.accounts
             }
 
-            every {
-                convertersContainer.getWalletAccountsResponseCF.create(userWallet = userWallet)
-            } returns converter
+            every { convertersContainer.createCryptoPortfolioConverter(userWalletId) } returns converter
 
             val exception = Exception("Test error")
 
-            coEvery { walletAccountsSaver.pushAndStore(userWalletId, accountsResponse) } throws exception
+            coEvery { walletAccountsSaver.push(userWalletId, accountsResponse.accounts) } throws exception
 
             // Act
             val actual = runCatching { repository.saveAccounts(accountList) }.exceptionOrNull()!!
@@ -642,9 +636,8 @@ class DefaultAccountsCRUDRepositoryTest {
             Truth.assertThat(actual).hasMessageThat().isEqualTo(exception.message)
 
             coVerifyOrder {
-                convertersContainer.getWalletAccountsResponseCF.create(userWallet)
-                converter.convert(accountList)
-                walletAccountsSaver.pushAndStore(userWalletId, accountsResponse)
+                convertersContainer.createCryptoPortfolioConverter(userWalletId)
+                converter.convertListBack(accounts)
             }
         }
     }

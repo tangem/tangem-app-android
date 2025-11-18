@@ -181,6 +181,20 @@ internal object OnrampDomainModule {
 
     @Provides
     @Singleton
+    fun provideGetOnrampV2QuotesUseCase(
+        settingsRepository: SettingsRepository,
+        onrampRepository: OnrampRepository,
+        onrampErrorResolver: OnrampErrorResolver,
+    ): GetOnrampV2QuotesUseCase {
+        return GetOnrampV2QuotesUseCase(
+            settingsRepository = settingsRepository,
+            repository = onrampRepository,
+            errorResolver = onrampErrorResolver,
+        )
+    }
+
+    @Provides
+    @Singleton
     fun provideGetOnrampProviderWithQuoteUseCase(
         onrampRepository: OnrampRepository,
         onrampErrorResolver: OnrampErrorResolver,
