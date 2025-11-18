@@ -13,6 +13,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalView
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.tangem.core.ui.UiDependencies
+import com.tangem.core.ui.components.LocalSystemBarsIconsController
+import com.tangem.core.ui.components.SystemBarsIconsController
 import com.tangem.core.ui.components.TangemShimmer
 import com.tangem.core.ui.components.text.BladeAnimation
 import com.tangem.core.ui.components.text.rememberBladeAnimation
@@ -52,10 +54,10 @@ fun TangemTheme(
 
 @Composable
 fun TangemTheme(
-    isDark: Boolean = false,
     windowSize: WindowSize,
     typography: TangemTypography = TangemTheme.typography,
     dimens: TangemDimens = TangemTheme.dimens,
+    isDark: Boolean = false,
     vibratorHapticManager: VibratorHapticManager? = null,
     eventMessageHandler: EventMessageHandler = remember { EventMessageHandler() },
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
@@ -65,6 +67,8 @@ fun TangemTheme(
     val themeColors = if (isDark) darkThemeColors() else lightThemeColors()
     val rememberedColors = remember { themeColors }
         .also { it.update(themeColors) }
+    val systemUiController = rememberSystemUiController()
+    val systemBarsIconsController = remember(systemUiController) { SystemBarsIconsController(systemUiController) }
 
     val shapes = remember { TangemShapes(dimens) }
 
@@ -103,6 +107,7 @@ fun TangemTheme(
             LocalEventMessageHandler provides eventMessageHandler,
             LocalWindowSize provides windowSize,
             LocalBladeAnimation provides rememberBladeAnimation(),
+            LocalSystemBarsIconsController provides systemBarsIconsController,
         ) {
             CompositionLocalProvider(
                 LocalTangemShimmer provides TangemShimmer,
@@ -117,6 +122,14 @@ fun TangemTheme(
             }
         }
     }
+}
+
+@Composable
+fun ForceDarkTheme(content: @Composable () -> Unit) {
+    CompositionLocalProvider(
+        LocalTangemColors provides darkThemeColors(),
+        content = content,
+    )
 }
 
 object TangemTheme {

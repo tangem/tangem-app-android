@@ -45,17 +45,31 @@ fun CardDTO.supportedBlockchains(
     excludedBlockchains: ExcludedBlockchains,
 ): List<Blockchain> {
     val supportedBlockchains = if (firmwareVersion < FirmwareVersion.MultiWalletAvailable) {
-        Blockchain.fromCurve(EllipticCurve.Secp256k1).toMutableList()
+        Blockchain.fromCurve(EllipticCurve.Secp256k1)
     } else if (!cardTypesResolver.isWallet2() && !cardTypesResolver.isTangemWallet()) {
         // need for old multiwallet that supports only secp256k1
-        wallets.flatMap { Blockchain.fromCurve(it.curve) }.distinct().toMutableList()
+        wallets.flatMap { Blockchain.fromCurve(it.curve) }.distinct()
     } else {
         // multiwallet supports all blockchains, move this logic to config
-        Blockchain.entries.toMutableList()
+        Blockchain.entries
     }
     return supportedBlockchains
         .filter { isTestCard == it.isTestnet() }
+        .filterNot(::isBlockchainUnsupported)
         .filter { it !in excludedBlockchains }
+}
+
+/**
+ * Filters out blockchains that are not supported by the specific card firmware.
+ * @return `false` if blockchain is not supported, `true` otherwise.
+ */
+private fun CardDTO.isBlockchainUnsupported(blockchain: Blockchain): Boolean {
+    return when (blockchain) {
+        Blockchain.Quai, Blockchain.QuaiTestnet -> {
+            firmwareVersion <= FirmwareVersion.HDWalletAvailable
+        }
+        else -> false
+    }
 }
 
 fun CardDTO.supportedTokens(

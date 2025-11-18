@@ -17,8 +17,10 @@ import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.test.StakingSendDetailsScreenTestTags
+import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.StakingStates
+import com.tangem.features.staking.impl.presentation.state.utils.getRewardTypeShortText
 import com.tangem.features.staking.impl.presentation.ui.ValidatorImagePlaceholder
 import com.tangem.utils.extensions.orZero
 
@@ -57,16 +59,16 @@ internal fun ValidatorBlock(validatorState: StakingStates.ValidatorState, isClic
 @Composable
 private fun StakingStates.ValidatorState.Data.getInfoTitleColored() = combinedReference(
     annotatedReference {
-        append(resourceReference(R.string.staking_details_apr).resolveReference())
+        append(getRewardTypeShortText(chosenValidator.rewardInfo?.type ?: Yield.RewardType.UNKNOWN).resolveReference())
         appendSpace()
         appendColored(
-            text = chosenValidator.apr.orZero().format { percent() },
+            text = chosenValidator.rewardInfo?.rate.orZero().format { percent() },
             color = TangemTheme.colors.text.accent,
         )
     },
 )
 
 private fun StakingStates.ValidatorState.Data.getInfoTitleNeutral() = combinedReference(
-    resourceReference(R.string.staking_details_apr),
-    stringReference(" " + chosenValidator.apr.orZero().format { percent() }),
+    getRewardTypeShortText(chosenValidator.rewardInfo?.type ?: Yield.RewardType.UNKNOWN),
+    stringReference(" " + chosenValidator.rewardInfo?.rate?.orZero().format { percent() }),
 )

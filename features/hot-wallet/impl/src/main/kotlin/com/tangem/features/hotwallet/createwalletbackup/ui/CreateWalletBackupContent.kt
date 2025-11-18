@@ -11,15 +11,19 @@ import com.arkivanov.decompose.extensions.compose.stack.Children
 import com.arkivanov.decompose.extensions.compose.stack.animation.slide
 import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
 import com.arkivanov.decompose.router.stack.ChildStack
+import com.tangem.features.hotwallet.impl.R
+import com.tangem.core.ui.components.appbar.TangemTopAppBar
+import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.hotwallet.createwalletbackup.routing.CreateWalletBackupRoute
-import com.tangem.features.hotwallet.stepper.api.HotWalletStepperComponent
 
 @Composable
 internal fun CreateWalletBackupContent(
     stackState: ChildStack<CreateWalletBackupRoute, ComposableContentComponent>,
-    stepperComponent: HotWalletStepperComponent?,
+    showTopBar: Boolean,
+    onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -29,7 +33,15 @@ internal fun CreateWalletBackupContent(
             .imePadding()
             .systemBarsPadding(),
     ) {
-        stepperComponent?.Content(Modifier)
+        if (showTopBar) {
+            TangemTopAppBar(
+                modifier = Modifier,
+                startButton = TopAppBarButtonUM.Back(
+                    onBackClicked = onBackClick,
+                ),
+                title = stringResourceSafe(id = R.string.common_backup),
+            )
+        }
 
         Children(
             stack = stackState,

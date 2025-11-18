@@ -105,7 +105,10 @@ internal class SetVisaInfoTransformer(
             },
         )
 
-        return WalletAdditionalInfo(hideable = true, infoContent)
+        return WalletAdditionalInfo(
+            hideable = true,
+            content = infoContent,
+        )
     }
 
     private fun getRefreshTokenExpiredState(prevState: WalletState.Visa.Content): WalletState {
@@ -148,7 +151,11 @@ internal class SetVisaInfoTransformer(
                 enabled = true,
                 dimContent = false,
                 onClick = {
-                    clickIntents.onReceiveClick(cryptoCurrencyStatus, MainScreenAnalyticsEvent.ButtonReceive)
+                    clickIntents.onReceiveClick(
+                        userWalletId = userWalletId,
+                        cryptoCurrencyStatus = cryptoCurrencyStatus,
+                        event = MainScreenAnalyticsEvent.ButtonReceive,
+                    )
                 },
                 onLongClick = {
                     clickIntents.onCopyAddressLongClick(cryptoCurrencyStatus)

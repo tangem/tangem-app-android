@@ -14,12 +14,14 @@ import com.tangem.features.yield.supply.impl.subcomponents.active.model.YieldSup
 @Composable
 internal fun YieldSupplyActiveEntryBottomSheet(
     stackState: ChildStack<YieldSupplyActiveRoute, ComposableModularContentComponent>,
+    dismissOnClickOutside: () -> Boolean,
     onDismiss: () -> Unit,
 ) {
     TangemModalBottomSheetWithFooter<TangemBottomSheetConfigContent.Empty>(
         config = TangemBottomSheetConfig(
             isShown = true,
             onDismissRequest = onDismiss,
+            dismissOnClickOutside = dismissOnClickOutside,
             content = TangemBottomSheetConfigContent.Empty,
         ),
         containerColor = TangemTheme.colors.background.tertiary,

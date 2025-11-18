@@ -15,7 +15,7 @@ class GetVisaTxHistoryUseCase(
     private val visaRepository: VisaRepository,
 ) {
 
-    suspend operator fun invoke(
+    operator fun invoke(
         userWalletId: UserWalletId,
         pageSize: Int = DEFAULT_PAGE_SIZE,
         isRefresh: Boolean = false,

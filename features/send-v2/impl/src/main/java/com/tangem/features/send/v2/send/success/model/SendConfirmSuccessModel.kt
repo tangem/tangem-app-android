@@ -81,10 +81,10 @@ internal class SendConfirmSuccessModel @Inject constructor(
                             iconRes = R.drawable.ic_web_24,
                             onClick = ::onExploreClick,
                         ) to NavigationButton(
-                                textReference = resourceReference(R.string.common_share),
-                                iconRes = R.drawable.ic_share_24,
-                                onClick = ::onShareClick,
-                            )).takeIf { params.txUrl.isNotEmpty() },
+                            textReference = resourceReference(R.string.common_share),
+                            iconRes = R.drawable.ic_share_24,
+                            onClick = ::onShareClick,
+                        )).takeIf { params.txUrl.isNotEmpty() },
                     ),
                 ),
             )

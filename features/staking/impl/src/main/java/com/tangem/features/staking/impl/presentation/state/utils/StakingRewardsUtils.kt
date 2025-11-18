@@ -52,6 +52,22 @@ internal fun getRewardScheduleText(
     }
 }
 
+internal fun getRewardTypeShortText(rewardType: Yield.RewardType): TextReference {
+    return when (rewardType) {
+        Yield.RewardType.APR -> TextReference.Res(R.string.staking_details_apr)
+        Yield.RewardType.APY -> TextReference.Res(R.string.staking_details_apy)
+        else -> TextReference.EMPTY
+    }
+}
+
+internal fun getRewardTypeLongText(rewardType: Yield.RewardType): TextReference {
+    return when (rewardType) {
+        Yield.RewardType.APR -> TextReference.Res(R.string.staking_details_annual_percentage_rate)
+        Yield.RewardType.APY -> TextReference.Res(R.string.staking_details_annual_percentage_yield)
+        else -> TextReference.EMPTY
+    }
+}
+
 private fun getCustomRewardSchedule(networkId: String, decapitalize: Boolean = false): TextReference? {
     return when {
         isSolana(networkId) -> {

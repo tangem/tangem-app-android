@@ -23,7 +23,7 @@ internal class MarketsTokenItemConverter(
     private val appCurrency: AppCurrency,
 ) : Converter<TokenMarket, MarketsListItemUM> {
 
-    private val priceAndTimePointValuesConverter = PriceAndTimePointValuesConverter(needToFormatAxis = false)
+    private val priceAndTimePointValuesConverter = PriceAndTimePointValuesConverter(shouldFormatAxis = false)
 
     override fun convert(value: TokenMarket): MarketsListItemUM {
         return MarketsListItemUM(
@@ -41,6 +41,7 @@ internal class MarketsTokenItemConverter(
             stakingRate = value.stakingRate?.format { percent() }?.let {
                 resourceReference(R.string.markets_apy_placeholder, wrappedList(it))
             },
+            updateTimestamp = value.updateTimestamp,
         )
     }
 

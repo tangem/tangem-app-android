@@ -5,8 +5,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.decompose.ComponentContext
-import com.arkivanov.decompose.router.slot.childSlot
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
+import com.arkivanov.decompose.router.slot.childSlot
 import com.arkivanov.decompose.router.slot.dismiss
 import com.arkivanov.essenty.lifecycle.subscribe
 import com.tangem.core.decompose.context.AppComponentContext
@@ -15,14 +15,17 @@ import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.components.NavigationBar3ButtonsScrim
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
-import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.tokens.model.details.NavigationAction
 import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDetailsModel
+import com.tangem.feature.tokendetails.presentation.tokendetails.route.TokenDetailsBottomSheetConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.TokenDetailsScreen
 import com.tangem.features.markets.token.block.TokenMarketBlockComponent
 import com.tangem.features.tokendetails.TokenDetailsComponent
 import com.tangem.features.tokenreceive.TokenReceiveComponent
 import com.tangem.features.txhistory.component.TxHistoryComponent
+import com.tangem.features.yield.supply.api.YieldSupplyComponent
+import com.tangem.features.yield.supply.api.YieldSupplyDepositedWarningComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -34,6 +37,8 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
     tokenMarketBlockComponentFactory: TokenMarketBlockComponent.Factory,
     txHistoryComponentFactory: TxHistoryComponent.Factory,
     private val tokenReceiveComponentFactory: TokenReceiveComponent.Factory,
+    private val yieldSupplyWarningComponentFactory: YieldSupplyDepositedWarningComponent.Factory,
+    yieldSupplyComponentFactory: YieldSupplyComponent.Factory,
 ) : TokenDetailsComponent, AppComponentContext by appComponentContext {
 
     private val model: TokenDetailsModel = getOrCreateModel(params)
@@ -48,7 +53,7 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
 
     private val bottomSheetSlot = childSlot(
         source = model.bottomSheetNavigation,
-        serializer = TokenReceiveConfig.serializer(),
+        serializer = TokenDetailsBottomSheetConfig.serializer(),
         handleBackButton = false,
         childFactory = ::bottomSheetChild,
     )
@@ -67,6 +72,16 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
         )
     }
 
+    private val yieldSupplyComponent = yieldSupplyComponentFactory.create(
+        context = child("tokenYieldSupplyComponent"),
+        params = YieldSupplyComponent.Params(
+            userWalletId = params.userWalletId,
+            cryptoCurrency = params.currency,
+            handleNavigation = (params.navigationAction as? NavigationAction.YieldSupply)
+                ?.isActive,
+        ),
+    )
+
     @Composable
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
@@ -76,6 +91,7 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
             state = state,
             tokenMarketBlockComponent = tokenMarketBlockComponent,
             txHistoryComponent = txHistoryComponent,
+            yieldSupplyComponent = yieldSupplyComponent,
         )
         bottomSheet.child?.instance?.BottomSheet()
     }
@@ -87,15 +103,26 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
     }
 
     private fun bottomSheetChild(
-        config: TokenReceiveConfig,
+        route: TokenDetailsBottomSheetConfig,
         componentContext: ComponentContext,
-    ): ComposableBottomSheetComponent = tokenReceiveComponentFactory.create(
-        context = childByContext(componentContext),
-        params = TokenReceiveComponent.Params(
-            config = config,
-            onDismiss = model.bottomSheetNavigation::dismiss,
-        ),
-    )
+    ): ComposableBottomSheetComponent = when (route) {
+        is TokenDetailsBottomSheetConfig.Receive -> tokenReceiveComponentFactory.create(
+            context = childByContext(componentContext),
+            params = TokenReceiveComponent.Params(
+                config = route.tokenReceiveConfig,
+                onDismiss = model.bottomSheetNavigation::dismiss,
+            ),
+        )
+        is TokenDetailsBottomSheetConfig.YieldSupplyWarning -> yieldSupplyWarningComponentFactory.create(
+            context = childByContext(componentContext),
+            params = YieldSupplyDepositedWarningComponent.Params(
+                cryptoCurrency = route.cryptoCurrency,
+                onDismiss = model.bottomSheetNavigation::dismiss,
+                modelCallback = model,
+                tokenAction = route.tokenAction,
+            ),
+        )
+    }
 
     @AssistedFactory
     interface Factory : TokenDetailsComponent.Factory {

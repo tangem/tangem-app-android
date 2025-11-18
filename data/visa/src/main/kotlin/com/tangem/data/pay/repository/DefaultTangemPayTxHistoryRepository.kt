@@ -1,0 +1,91 @@
+package com.tangem.data.pay.repository
+
+import com.tangem.data.common.cache.CacheRegistry
+import com.tangem.data.visa.utils.TangemPayTxHistoryItemConverter
+import com.tangem.datasource.api.pay.TangemPayApi
+import com.tangem.datasource.local.visa.TangemPayTxHistoryItemsStore
+import com.tangem.domain.tangempay.model.TangemPayTxHistoryListBatchFlow
+import com.tangem.domain.tangempay.model.TangemPayTxHistoryListBatchingContext
+import com.tangem.domain.tangempay.model.TangemPayTxHistoryListConfig
+import com.tangem.domain.tangempay.repository.TangemPayTxHistoryRepository
+import com.tangem.domain.visa.model.TangemPayTxHistoryItem
+import com.tangem.pagination.BatchFetchResult
+import com.tangem.pagination.BatchListSource
+import com.tangem.pagination.fetcher.BatchFetcher
+import com.tangem.pagination.fetcher.CursorBatchFetcher
+import com.tangem.pagination.toBatchFlow
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import javax.inject.Inject
+
+private const val INITIAL_CURSOR = "initial_cursor_key"
+private const val TAG = "TangemPay: TangemPayTxHistoryRepository:"
+
+internal class DefaultTangemPayTxHistoryRepository @Inject constructor(
+    private val requestPerformer: TangemPayRequestPerformer,
+    private val visaApi: TangemPayApi,
+    private val cacheRegistry: CacheRegistry,
+    private val txHistoryItemsStore: TangemPayTxHistoryItemsStore,
+    private val dispatchers: CoroutineDispatcherProvider,
+) : TangemPayTxHistoryRepository {
+
+    override fun getTxHistoryBatchFlow(
+        batchSize: Int,
+        context: TangemPayTxHistoryListBatchingContext,
+    ): TangemPayTxHistoryListBatchFlow {
+        return BatchListSource(
+            fetchDispatcher = dispatchers.io,
+            context = context,
+            generateNewKey = { keys -> keys.lastOrNull()?.inc() ?: 0 },
+            batchFetcher = createFetcher(batchSize),
+        ).toBatchFlow()
+    }
+
+    private fun createFetcher(
+        batchSize: Int,
+    ): BatchFetcher<TangemPayTxHistoryListConfig, List<TangemPayTxHistoryItem>> {
+        return CursorBatchFetcher(
+            prefetchDistance = batchSize,
+            batchSize = batchSize,
+            subFetcher = { request, _, _ ->
+                val items = loadItems(config = request.params, cursor = request.cursor, limit = request.limit)
+                BatchFetchResult.Success(
+                    data = items,
+                    last = items.size < request.limit,
+                    empty = items.isEmpty(),
+                )
+            },
+            cursorFromItem = { item -> item.id }, // last item’s id becomes next cursor
+        )
+    }
+
+    private suspend fun loadItems(
+        config: TangemPayTxHistoryListConfig,
+        cursor: String?,
+        limit: Int,
+    ): List<TangemPayTxHistoryItem> {
+        cacheRegistry.invokeOnExpire(
+            key = getCacheKey(customerWalletAddress = config.customerWalletAddress, cursor = cursor),
+            skipCache = config.shouldRefresh,
+            block = { fetch(customerWalletAddress = config.customerWalletAddress, cursor = cursor, pageSize = limit) },
+        )
+
+        return txHistoryItemsStore.getSyncOrNull(
+            key = config.customerWalletAddress,
+            cursor = cursor ?: INITIAL_CURSOR,
+        ).orEmpty()
+    }
+
+    private fun getCacheKey(customerWalletAddress: String, cursor: String?): String {
+        return "tangem_pay_tx_history_${customerWalletAddress}_${cursor ?: INITIAL_CURSOR}"
+    }
+
+    private suspend fun fetch(customerWalletAddress: String, cursor: String?, pageSize: Int) {
+        requestPerformer.runWithErrorLogs(TAG) {
+            val result = requestPerformer.request { authHeader ->
+                visaApi.getTangemPayTxHistory(authHeader = authHeader, limit = pageSize, cursor = cursor)
+            }.result
+            val items = TangemPayTxHistoryItemConverter.convertList(result.transactions).filterNotNull()
+            txHistoryItemsStore.store(key = customerWalletAddress, cursor = cursor ?: INITIAL_CURSOR, value = items)
+        }.onLeft { error(it.toString()) }
+    }
+}

@@ -5,6 +5,7 @@ import arrow.core.getOrElse
 import arrow.core.raise.Raise
 import arrow.core.raise.catch
 import arrow.core.raise.either
+import arrow.core.raise.ensure
 import com.tangem.domain.account.repository.AccountsCRUDRepository
 import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.wallet.UserWalletId
@@ -28,7 +29,11 @@ class GetUnoccupiedAccountIndexUseCase(
     suspend operator fun invoke(userWalletId: UserWalletId): Either<Error, DerivationIndex> = either {
         val totalAccountsCount = getTotalAccountsCount(userWalletId = userWalletId)
 
-        DerivationIndex(totalAccountsCount + 1).getOrElse {
+        ensure(totalAccountsCount != 0) {
+            Error.DataOperationFailed("DerivationIndex cannot be zero because it is reserved for the main account")
+        }
+
+        DerivationIndex(value = totalAccountsCount).getOrElse {
             raise(Error.InvalidDerivationIndex(it))
         }
     }
@@ -60,7 +65,8 @@ class GetUnoccupiedAccountIndexUseCase(
 
         /** Error indicating that a data operation failed */
         data class DataOperationFailed(val cause: Throwable) : Error {
-            override fun toString(): String = "$tag: Data operation failed: ${cause.message ?: "Unknown error"}"
+
+            constructor(message: String) : this(cause = IllegalStateException(message))
         }
     }
 }

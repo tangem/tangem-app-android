@@ -2,6 +2,7 @@ package com.tangem.features.staking.impl.presentation.state.transformers
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.extensions.remove
+import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.common.ui.amountScreen.converters.AmountStateConverter
 import com.tangem.common.ui.amountScreen.models.AmountParameters
 import com.tangem.common.ui.amountScreen.models.AmountState
@@ -88,7 +89,6 @@ internal class SetInitialDataStateTransformer(
                 !amount.isNullOrZero() && sources.yieldBalanceSource.isActual() && sources.networkSource.isActual()
             },
             showBanner = !isAnyTokenStaked && yieldBalance == InnerYieldBalanceState.Empty,
-            aprRange = getAprRange(yield.preferredValidators),
             infoItems = getInfoItems(),
             onInfoClick = clickIntents::onInfoClick,
             yieldBalance = yieldBalance,
@@ -101,7 +101,7 @@ internal class SetInitialDataStateTransformer(
 
     private fun getInfoItems(): PersistentList<RoundedListWithDividersItemData> {
         return listOfNotNull(
-            createAnnualPercentageRateItem(),
+            createAnnualPercentageItem(),
             createAvailableItem(cryptoCurrencyStatus),
             createUnbondingPeriodItem(),
             createMinimumRequirementItem(cryptoCurrencyStatus),
@@ -111,15 +111,30 @@ internal class SetInitialDataStateTransformer(
         ).toPersistentList()
     }
 
-    private fun createAnnualPercentageRateItem(): RoundedListWithDividersItemData {
+    private fun createAnnualPercentageItem(): RoundedListWithDividersItemData {
         val validators = yield.preferredValidators
+        val rateRangeInfo = getPercentageRange(validators)
         return RoundedListWithDividersItemData(
             id = R.string.staking_details_annual_percentage_rate,
-            startText = TextReference.Res(R.string.staking_details_annual_percentage_rate),
-            endText = getAprRange(validators),
-            iconClick = { clickIntents.onInfoClick(InfoType.ANNUAL_PERCENTAGE_RATE) },
+            startText = getRateStartText(rateRangeInfo.first),
+            endText = rateRangeInfo.second,
+            iconClick = {
+                when (rateRangeInfo.first) {
+                    Yield.RewardType.APR -> clickIntents.onInfoClick(InfoType.ANNUAL_PERCENTAGE_RATE)
+                    Yield.RewardType.APY -> clickIntents.onInfoClick(InfoType.ANNUAL_PERCENTAGE_YIELD)
+                    Yield.RewardType.UNKNOWN -> {}
+                }
+            },
             isEndTextHighlighted = false,
         )
+    }
+
+    private fun getRateStartText(rewardType: Yield.RewardType): TextReference {
+        return when (rewardType) {
+            Yield.RewardType.APR -> TextReference.Res(R.string.staking_details_annual_percentage_rate)
+            Yield.RewardType.APY -> TextReference.Res(R.string.staking_details_annual_percentage_yield)
+            else -> TextReference.EMPTY
+        }
     }
 
     private fun createAvailableItem(cryptoCurrencyStatus: CryptoCurrencyStatus): RoundedListWithDividersItemData {
@@ -215,10 +230,12 @@ internal class SetInitialDataStateTransformer(
         )
         return AmountStateConverter(
             clickIntents = clickIntents,
-            cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
-            appCurrencyProvider = appCurrencyProvider,
+            cryptoCurrencyStatus = cryptoCurrencyStatus,
+            appCurrency = appCurrencyProvider(),
             iconStateConverter = iconStateConverter,
             maxEnterAmount = maxEnterAmount,
+            isBalanceHidden = false,
+            accountTitleUM = AccountTitleUM.Text(stringReference(userWalletProvider().name)),
         ).convert(
             AmountParameters(
                 title = stringReference(userWalletProvider().name),
@@ -227,26 +244,30 @@ internal class SetInitialDataStateTransformer(
         )
     }
 
-    private fun getAprRange(validators: List<Yield.Validator>): TextReference {
+    private fun getPercentageRange(validators: List<Yield.Validator>): Pair<Yield.RewardType, TextReference> {
         if (validators.isEmpty()) {
-            return stringReference(DASH_SIGN)
+            return Yield.RewardType.APR to stringReference(DASH_SIGN)
         }
-        val aprValues = validators
+        val rewardInfos = validators
             .filter { it.preferred }
             .takeIf { it.isNotEmpty() }
-            ?.mapNotNull { it.apr }
-            ?: validators.mapNotNull { it.apr }
+            ?.mapNotNull { it.rewardInfo }
+            ?: validators.mapNotNull { it.rewardInfo }
 
-        val minApr = aprValues.min()
-        val maxApr = aprValues.max()
+        val infoWithMinRate = rewardInfos.minBy { it.rate }
+        val infoWithMaxRate = rewardInfos.maxBy { it.rate }
 
-        val formattedMinApr = minApr.format { percent() }.remove("%")
-        val formattedMaxApr = maxApr.format { percent() }
+        val formattedMinRate = infoWithMinRate.rate.format { percent() }.remove("%")
+        val formattedMaxRate = infoWithMaxRate.rate.format { percent() }
 
-        if (maxApr - minApr < EQUALITY_THRESHOLD) {
-            return stringReference("$formattedMinApr%")
+        if (infoWithMaxRate.rate - infoWithMinRate.rate < EQUALITY_THRESHOLD) {
+            return infoWithMaxRate.type to stringReference("$formattedMinRate%")
         }
-        return resourceReference(R.string.common_range, wrappedList(formattedMinApr, formattedMaxApr))
+        return infoWithMaxRate.type to
+            resourceReference(
+                id = R.string.common_range,
+                formatArgs = wrappedList(formattedMinRate, formattedMaxRate),
+            )
     }
 
     private fun showMinimumRequirementInfo(blockchainId: String): Boolean {

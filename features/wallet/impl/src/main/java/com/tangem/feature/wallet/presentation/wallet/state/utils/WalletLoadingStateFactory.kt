@@ -54,6 +54,7 @@ internal class WalletLoadingStateFactory(
             bottomSheetConfig = null,
             tokensListState = WalletTokensListState.ContentState.Loading,
             nftState = WalletNFTItemUM.Hidden,
+            type = WalletState.MultiCurrency.WalletType.Hot,
         )
     }
 
@@ -66,6 +67,7 @@ internal class WalletLoadingStateFactory(
             bottomSheetConfig = null,
             tokensListState = WalletTokensListState.ContentState.Loading,
             nftState = WalletNFTItemUM.Hidden,
+            type = WalletState.MultiCurrency.WalletType.Cold,
         )
     }
 
