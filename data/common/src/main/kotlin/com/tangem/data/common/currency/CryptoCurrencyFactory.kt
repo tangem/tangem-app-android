@@ -1,5 +1,6 @@
 package com.tangem.data.common.currency
 
+import com.tangem.blockchain.blockchains.ethereum.Chain
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.blockchainsdk.utils.fromNetworkId
@@ -71,6 +72,17 @@ class CryptoCurrencyFactory(
             isCustom = isCustomToken(id, network),
             contractAddress = sdkToken.contractAddress,
         )
+    }
+
+    fun createCoin(chainId: Int, extraDerivationPath: String?, userWallet: UserWallet): CryptoCurrency.Coin? {
+        val blockchain: Blockchain? = Chain.entries.find { it.id == chainId }?.blockchain
+
+        return if (blockchain != null) {
+            createCoin(blockchain, extraDerivationPath, userWallet)
+        } else {
+            Timber.e("Unable to get blockchain from chainId == $chainId")
+            null
+        }
     }
 
     fun createCoin(

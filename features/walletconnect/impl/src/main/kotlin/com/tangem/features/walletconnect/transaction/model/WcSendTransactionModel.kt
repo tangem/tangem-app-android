@@ -16,6 +16,7 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUMV2
 import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUMV2.Icon.Type
@@ -55,6 +56,7 @@ import com.tangem.features.walletconnect.transaction.entity.send.WcSendTransacti
 import com.tangem.features.walletconnect.transaction.routes.WcTransactionRoutes
 import com.tangem.features.walletconnect.transaction.ui.blockaid.WcSendAndReceiveBlockAidUiConverter
 import com.tangem.features.walletconnect.utils.WcNotificationsFactory
+import com.tangem.utils.SupportedLanguages
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -74,11 +76,11 @@ internal class WcSendTransactionModel @Inject constructor(
     private val clipboardManager: ClipboardManager,
     private val useCaseFactory: WcRequestUseCaseFactory,
     private val converter: WcSendTransactionUMConverter,
-    private val blockAidUiConverter: WcSendAndReceiveBlockAidUiConverter,
     private val getFeeUseCase: GetFeeUseCase,
     private val getNetworkCoinUseCase: GetNetworkCoinStatusUseCase,
     private val notificationsFactory: WcNotificationsFactory,
     private val analytics: AnalyticsEventHandler,
+    private val urlOpener: UrlOpener,
 ) : Model(), WcCommonTransactionModel, FeeSelectorModelCallback {
 
     private val params = paramsContainer.require<WcTransactionModelParams>()
@@ -94,6 +96,7 @@ internal class WcSendTransactionModel @Inject constructor(
     private var signState: WcSignState<*> by Delegates.notNull()
     private var wcApproval: WcApproval? = null
     private var sign: () -> Unit = {}
+    private val blockAidUiConverter = WcSendAndReceiveBlockAidUiConverter()
     private val feeReloadState = MutableStateFlow(false)
     private val signatureReceivedAnalyticsSendState = MutableStateFlow(false)
     private val securityStatusState =
@@ -145,7 +148,7 @@ internal class WcSendTransactionModel @Inject constructor(
                             sign = {
                                 if (isMultipleSignRequired(useCase)) {
                                     analytics.send(SolanaLargeTransaction(useCase.rawSdkRequest.dAppMetaData.name))
-                                    openMultipleTransaction(useCase)
+                                    openMultipleTransaction()
                                 } else {
                                     useCase.sign()
                                 }
@@ -170,15 +173,13 @@ internal class WcSendTransactionModel @Inject constructor(
         }
     }
 
-    private fun openMultipleTransaction(useCase: WcSignUseCase<*>) {
-        stackNavigation.pushNew(
-            WcTransactionRoutes.MultipleTransactions(
-                onConfirm = {
-                    useCase.sign()
-                    stackNavigation.pushNew(WcTransactionRoutes.TransactionProcess)
-                },
-            ),
-        )
+    private fun openMultipleTransaction() {
+        stackNavigation.pushNew(WcTransactionRoutes.MultipleTransactions)
+    }
+
+    fun onMultiTransactionConfirm() {
+        useCase.sign()
+        stackNavigation.pushNew(WcTransactionRoutes.TransactionProcess)
     }
 
     /**
@@ -243,8 +244,9 @@ internal class WcSendTransactionModel @Inject constructor(
         val blockAidState = when (securityCheck) {
             is Lce.Content -> blockAidUiConverter.convert(
                 WcSendAndReceiveBlockAidUiConverter.Input(
-                    securityCheck.content.result,
-                    if (isApproval) wcApproval?.getAmount() else null,
+                    result = securityCheck.content.result,
+                    approvedAmount = if (isApproval) wcApproval?.getAmount() else null,
+                    onApproveLearnMoreClick = ::onApproveLearnMoreClick,
                 ),
             )
             is Lce.Error -> WcSendReceiveTransactionCheckResultsUM(isLoading = false)
@@ -289,6 +291,15 @@ internal class WcSendTransactionModel @Inject constructor(
 
     override fun popBack() {
         stackNavigation.pop()
+    }
+
+    private fun onApproveLearnMoreClick() {
+        val code = SupportedLanguages.getCurrentSupportedLanguageCode()
+            .takeIf { it == SupportedLanguages.RUSSIAN }
+            ?: SupportedLanguages.ENGLISH
+
+        val url = "https://tangem.com/$code/blog/post/give-revoke-permission/"
+        urlOpener.openUrl(url)
     }
 
     private fun isMultipleSignRequired(useCase: WcSignUseCase<*>): Boolean {
