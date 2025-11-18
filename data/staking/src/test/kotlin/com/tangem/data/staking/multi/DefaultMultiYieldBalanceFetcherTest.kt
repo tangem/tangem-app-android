@@ -4,8 +4,6 @@ import arrow.core.toOption
 import com.tangem.common.test.data.staking.MockYieldBalanceWrapperDTOFactory
 import com.tangem.common.test.data.staking.MockYieldDTOFactory
 import com.tangem.common.test.domain.wallet.MockUserWalletFactory
-import com.tangem.common.test.utils.assertEitherLeft
-import com.tangem.common.test.utils.assertEitherRight
 import com.tangem.data.staking.store.YieldsBalancesStore
 import com.tangem.data.staking.utils.YieldBalanceRequestBodyFactory
 import com.tangem.datasource.api.common.response.ApiResponse
@@ -17,6 +15,8 @@ import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.models.staking.StakingID
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
+import com.tangem.test.core.assertEitherLeft
+import com.tangem.test.core.assertEitherRight
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
