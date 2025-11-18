@@ -25,11 +25,16 @@ fun Resources.getStringSafe(@StringRes id: Int): String {
  */
 fun Resources.getStringSafe(@StringRes id: Int, vararg formatArgs: Any): String {
     return runCatching { getString(id, *formatArgs) }
-        .recoverCatching {
+        .recoverCatching { throwable ->
             // If something goes wrong, returns the resource without arguments
             val string = getString(id)
 
-            reportIssue(it, resources = this, id, *formatArgs)
+            reportIssue(
+                throwable = throwable,
+                resources = this,
+                id = id,
+                formatArgs = formatArgs,
+            )
 
             string
         }
@@ -60,8 +65,13 @@ fun Resources.getPluralStringSafe(@PluralsRes id: Int, count: Int, vararg format
 }
 
 private fun Result<String>.getOrResourceName(resources: Resources, id: Int, vararg formatArgs: Any): String {
-    return getOrElse {
-        reportIssue(it, resources, id, formatArgs)
+    return getOrElse { throwable ->
+        reportIssue(
+            throwable = throwable,
+            resources = resources,
+            id = id,
+            formatArgs = formatArgs,
+        )
 
         // If something still goes wrong, returns the resource name
         resources.getResourceEntryName(id)

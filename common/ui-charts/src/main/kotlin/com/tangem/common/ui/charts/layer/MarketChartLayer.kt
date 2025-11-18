@@ -64,7 +64,7 @@ internal fun rememberMarketChartLayer(
     val backgroundColorLineGradient = persistentListOf(backgroundLineColor, Color.Transparent)
     val backgroundSecondLineColorGradient = persistentListOf(backgroundSecondLineColor, Color.Transparent)
 
-    val markerSet = markerFraction != null
+    val isMarkerSet = markerFraction != null
 
     return rememberLayer(
         fractionValue = markerFraction ?: 0f,
@@ -75,17 +75,17 @@ internal fun rememberMarketChartLayer(
         } else {
             lineColor
         },
-        backLineColor = if (markerSet && !secondColorOnTheRightSide) {
+        backLineColor = if (isMarkerSet && !secondColorOnTheRightSide) {
             backgroundSecondLineColorGradient
         } else {
             backgroundColorLineGradient
         },
         lineColorRight = when {
-            markerSet && secondColorOnTheRightSide -> secondLineColor
+            isMarkerSet && secondColorOnTheRightSide -> secondLineColor
             else -> lineColor
         },
         backLineColorRight = when {
-            markerSet && secondColorOnTheRightSide -> backgroundSecondLineColorGradient
+            isMarkerSet && secondColorOnTheRightSide -> backgroundSecondLineColorGradient
             else -> backgroundColorLineGradient
         },
     )
@@ -148,7 +148,7 @@ private fun LayerChartPreview(
     val y = previewData.second.map { it.toFloat() }
     val x = List(y.size) { it.toFloat() }
     val model = CartesianChartModel(LineCartesianLayerModel.build { series(x, y) })
-    var lineColor by remember {
+    val lineColor by remember {
         mutableStateOf(Color.Blue)
     }
 

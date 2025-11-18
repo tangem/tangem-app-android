@@ -32,6 +32,6 @@ interface TxHistoryRepository {
         userWalletId: UserWalletId,
         currency: CryptoCurrency,
         pageSize: Int,
-        refresh: Boolean,
+        shouldRefresh: Boolean,
     ): List<TxInfo>
 }

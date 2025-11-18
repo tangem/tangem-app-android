@@ -8,7 +8,6 @@ import com.tangem.domain.models.TokensGroupType
 import com.tangem.domain.models.TokensSortType
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountName
-import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 
 internal fun createWalletAccountDTO(
@@ -72,13 +71,13 @@ internal fun createGetWalletAccountsResponse(
 }
 
 internal fun createAccountList(
-    userWallet: UserWallet,
+    userWalletId: UserWalletId,
     sortType: TokensSortType = TokensSortType.BALANCE,
     groupType: TokensGroupType = TokensGroupType.NETWORK,
 ): AccountList {
     return AccountList(
-        userWallet = userWallet,
-        accounts = setOf(createCryptoPortfolio(userWallet.walletId)),
+        userWalletId = userWalletId,
+        accounts = setOf(createCryptoPortfolio(userWalletId)),
         totalAccounts = 1,
         sortType = sortType,
         groupType = groupType,
