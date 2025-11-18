@@ -1384,9 +1384,11 @@
   <string name="tangempay_card_details_hide_text">Verstecken</string>
   <string name="tangempay_card_details_open_wallet_button">Google Wallet öffnen</string>
   <string name="tangempay_card_details_open_wallet_notification_subtitle">Richte Tangem Pay mit wenigen Klicks ein und bezahlen mit Google Pay.</string>
+  <string name="tangempay_card_details_open_wallet_notification_subtitle_apple">Richte Tangem Pay mit wenigen Klicks ein und bezahlen mit Apple Pay.</string>
   <string name="tangempay_card_details_open_wallet_notification_title">Karte zu Google Pay hinzufügen</string>
   <string name="tangempay_card_details_open_wallet_notification_title_apple">Karte zu Apple Pay hinzufügen</string>
   <string name="tangempay_card_details_open_wallet_step_1">Google Wallet öffnen</string>
+  <string name="tangempay_card_details_open_wallet_step_1_apple">Apple Wallet öffnen</string>
   <string name="tangempay_card_details_open_wallet_step_2">Tippe auf „Karte hinzufügen“.</string>
   <string name="tangempay_card_details_open_wallet_step_3">Gebe die Kartendaten manuell ein</string>
   <string name="tangempay_card_details_open_wallet_step_4">Verifiziere die Karte mit dem Einmalpasswort (OPT), das an Dein Gerät gesendet wird.</string>
