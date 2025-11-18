@@ -1,14 +1,12 @@
 package com.tangem.tests
 
 import com.tangem.common.BaseTestCase
-import com.tangem.common.constants.TestConstants.TOTAL_BALANCE
-import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
-import com.tangem.screens.*
 import com.tangem.scenarios.openMainScreen
 import com.tangem.scenarios.synchronizeAddresses
+import com.tangem.screens.*
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
@@ -23,7 +21,6 @@ class BuyTokenTest : BaseTestCase() {
     fun errorInProvidersLoadingTest() {
         val scenarioName = "payment_methods"
         val tokenTitle = "Bitcoin"
-        val balance = TOTAL_BALANCE
 
         setupHooks(
             additionalAfterSection = {
@@ -40,7 +37,7 @@ class BuyTokenTest : BaseTestCase() {
                 openMainScreen()
             }
             step("Synchronize addresses") {
-                synchronizeAddresses(balance)
+                synchronizeAddresses()
             }
             step("Click on 'Buy' button") {
                 onMainScreen { buyButton.clickWithAssertion() }
@@ -69,12 +66,11 @@ class BuyTokenTest : BaseTestCase() {
     fun validateCurrencySelectorTest() {
         setupHooks().run {
             val tokenTitle = "Polygon"
-            val balance = TOTAL_BALANCE
             val popularFiatsTitle = "Popular Fiats"
             val otherCurrenciesTitle = "Other currencies"
             val australianDollar = "AUD"
             val fiatAmount = "1"
-            val tokenAmount = "POL 488.24938338"
+            val tokenAmount = "~488.24938338 POL"
             val scenarioName = "payment_methods"
 
             step("Reset WireMock scenario '$scenarioName'") {
@@ -85,7 +81,7 @@ class BuyTokenTest : BaseTestCase() {
                 openMainScreen()
             }
             step("Synchronize addresses") {
-                synchronizeAddresses(balance)
+                synchronizeAddresses()
             }
             step("Click on 'Buy' button") {
                 onMainScreen { buyButton.clickWithAssertion() }
@@ -101,18 +97,6 @@ class BuyTokenTest : BaseTestCase() {
             }
             step("Write fiat amount = '$fiatAmount'") {
                 onBuyTokenDetailsScreen { fiatAmountTextField.performTextInput(fiatAmount) }
-            }
-            step("Assert 'Provider loading block' is displayed") {
-                onBuyTokenDetailsScreen {
-                    providerLoadingTitle.assertIsDisplayed()
-                    providerLoadingText.assertIsDisplayed()
-                }
-            }
-            step("Assert 'Provider block' is displayed") {
-                onBuyTokenDetailsScreen {
-                    providerTitle.assertIsDisplayed()
-                    providerText.assertIsDisplayed()
-                }
             }
             step("Assert token amount = '$tokenAmount'") {
                 onBuyTokenDetailsScreen {
@@ -159,10 +143,9 @@ class BuyTokenTest : BaseTestCase() {
     fun validateBuyTokenScreenTest() {
         setupHooks().run {
             val tokenTitle = "Polygon"
-            val balance = TOTAL_BALANCE
             val euro = "EUR"
             val fiatAmount = "1"
-            val tokenAmount = "POL 488.24938338"
+            val tokenAmount = "~488.24938338 POL"
             val scenarioName = "payment_methods"
 
             step("Reset WireMock scenario '$scenarioName'") {
@@ -173,7 +156,7 @@ class BuyTokenTest : BaseTestCase() {
                 openMainScreen()
             }
             step("Synchronize addresses") {
-                synchronizeAddresses(balance)
+                synchronizeAddresses()
             }
             step("Click on 'Buy' button") {
                 onMainScreen { buyButton.clickWithAssertion() }
@@ -199,26 +182,44 @@ class BuyTokenTest : BaseTestCase() {
             step("Assert fiat amount = '$fiatAmount'") {
                 onBuyTokenDetailsScreen { fiatAmountTextField.assertTextContains(euro + fiatAmount) }
             }
-            step("Assert 'Provider loading block' is displayed") {
-                onBuyTokenDetailsScreen {
-                    providerLoadingTitle.assertIsDisplayed()
-                    providerLoadingText.assertIsDisplayed()
-                }
-            }
-            step("Assert 'Provider block' is displayed") {
-                onBuyTokenDetailsScreen {
-                    providerTitle.assertIsDisplayed()
-                    providerText.assertIsDisplayed()
-                }
-            }
             step("Assert token amount = '$tokenAmount'") {
                 onBuyTokenDetailsScreen { tokenAmountField.assertTextContains(tokenAmount) }
             }
-            step("Assert 'ToS' block is displayed") {
-                onBuyTokenDetailsScreen { toSBlock.assertIsDisplayed()}
+            step("Click on 'Continue' button") {
+                onBuyTokenDetailsScreen { continueButton.clickWithAssertion() }
+            }
+            step("Assert 'Recommended' title is displayed") {
+                onBuyTokenDetailsScreen { recommendedTitle.clickWithAssertion() }
+            }
+            step("Assert 'Best rate' icon is displayed") {
+                onBuyTokenDetailsScreen { bestRateIcon.assertIsDisplayed() }
+            }
+            step("Assert 'Best rate' title is displayed") {
+                onBuyTokenDetailsScreen { bestRateTitle.assertIsDisplayed() }
+            }
+            step("Assert offer amount is displayed") {
+                onBuyTokenDetailsScreen { offerTokenAmount.assertIsDisplayed() }
             }
             step("Assert 'Buy' button is displayed") {
                 onBuyTokenDetailsScreen { buyButton.assertIsDisplayed()}
+            }
+            step("Assert timing icon is displayed") {
+                onBuyTokenDetailsScreen { timingIcon.assertIsDisplayed() }
+            }
+            step("Assert 'Instant' processing time text is displayed") {
+                onBuyTokenDetailsScreen { instantProcessingSpeedText.assertIsDisplayed() }
+            }
+            step("Assert provider name is displayed") {
+                onBuyTokenDetailsScreen { providerName.assertIsDisplayed() }
+            }
+            step("Assert 'Pay with' is displayed") {
+                onBuyTokenDetailsScreen { payWith.assertIsDisplayed() }
+            }
+            step("Assert payment method icon is displayed") {
+                onBuyTokenDetailsScreen { paymentMethodIcon.assertIsDisplayed() }
+            }
+            step("Assert 'All offers' button is displayed") {
+                onBuyTokenDetailsScreen { allOffersButton.assertIsDisplayed() }
             }
             step("Assert 'Close' button in top bar is displayed") {
                 onBuyTokenDetailsScreen { topBarCloseButton.assertIsDisplayed() }
@@ -232,7 +233,6 @@ class BuyTokenTest : BaseTestCase() {
     fun validateResidenceSettingsScreenTest() {
         setupHooks().run {
             val tokenTitle = "Polygon"
-            val balance = TOTAL_BALANCE
             val country = "Albania"
             val unavailableCountry = "Lebanon"
             val scenarioName = "payment_methods"
@@ -245,7 +245,7 @@ class BuyTokenTest : BaseTestCase() {
                 openMainScreen()
             }
             step("Synchronize addresses") {
-                synchronizeAddresses(balance)
+                synchronizeAddresses()
             }
             step("Click on 'Buy' button") {
                 onMainScreen { buyButton.clickWithAssertion() }
@@ -313,14 +313,10 @@ class BuyTokenTest : BaseTestCase() {
     fun validateProvidersScreenTest() {
         setupHooks().run {
             val tokenTitle = "Polygon"
-            val balance = TOTAL_BALANCE
-            val paymentMethod = "Card"
+            val paymentMethod = "Invoice Revolut Pay"
             val fiatAmount = "1"
             val providerNameMercuryo = "Mercuryo"
-            val providerNameSimplex = "Simplex"
-            val tokenAmount = "POL 488.24938338"
-            val bestRate = "Best rate"
-            val rate = "-0.00%"
+            val tokenAmount = "~488.24938338 POL"
             val scenarioName = "payment_methods"
 
             step("Reset WireMock scenario '$scenarioName'") {
@@ -331,7 +327,7 @@ class BuyTokenTest : BaseTestCase() {
                 openMainScreen()
             }
             step("Synchronize addresses") {
-                synchronizeAddresses(balance)
+                synchronizeAddresses()
             }
             step("Click on 'Buy' button") {
                 onMainScreen { buyButton.clickWithAssertion() }
@@ -348,58 +344,53 @@ class BuyTokenTest : BaseTestCase() {
             step("Write fiat amount = '$fiatAmount'") {
                 onBuyTokenDetailsScreen { fiatAmountTextField.performTextInput(fiatAmount) }
             }
+            step("Assert token amount = '$tokenAmount'") {
+                onBuyTokenDetailsScreen { tokenAmountField.assertTextContains(tokenAmount) }
+            }
+            step("Click on 'Continue' button") {
+                onBuyTokenDetailsScreen { continueButton.clickWithAssertion() }
+            }
             step("Assert 'Provider block' is displayed") {
-                onBuyTokenDetailsScreen {
-                    providerTitle.assertIsDisplayed()
-                    providerText.assertIsDisplayed()
-                }
+                onBuyTokenDetailsScreen { providerName.assertIsDisplayed() }
             }
-            step("Open 'Select Provider' bottom sheet") {
-                onBuyTokenDetailsScreen { providerTitle.performClick() }
+            step("Click on 'All offers' button") {
+                onBuyTokenDetailsScreen { allOffersButton.clickWithAssertion() }
             }
-            step("Assert available provider name is displayed") {
-                onSelectProviderBottomSheet {
-                    flakySafely(WAIT_UNTIL_TIMEOUT) {
-                        availableProviderItem.assertIsDisplayed()
-                    }
-                }
+            step("Click on '$paymentMethod' payment method") {
+                onSelectPaymentMethodBottomSheet { paymentMethodWithName(paymentMethod).clickWithAssertion() }
             }
-            step("Click on 'Expand payment methods' button") {
-                onSelectProviderBottomSheet { paymentMethodExpandButton.clickWithAssertion() }
-            }
-            step("Click on payment method: '$paymentMethod'") {
-                onSelectPaymentMethodBottomSheet { paymentMethodWithNameAndIcon(paymentMethod).clickWithAssertion() }
-            }
-            step("Assert 'Select Provider' bottom sheet title is displayed") {
+            step("Assert 'Provider' bottom sheet title is displayed") {
                 onSelectProviderBottomSheet { title.assertIsDisplayed() }
+            }
+            step("Assert 'Provider' bottom sheet subtitle is displayed") {
+                onSelectProviderBottomSheet { subtitle.assertIsDisplayed() }
+            }
+            step("Assert 'Best rate' icon is displayed") {
+                onSelectProviderBottomSheet { bestRateIcon.assertIsDisplayed() }
+            }
+            step("Assert 'Best rate' title is displayed") {
+                onSelectProviderBottomSheet { bestRateTitle.assertIsDisplayed() }
+            }
+            step("Assert offer token amount is displayed") {
+                onSelectProviderBottomSheet { offerTokenAmount.assertIsDisplayed() }
+            }
+            step("Assert 'Buy' button is displayed") {
+                onSelectProviderBottomSheet { buyButton.assertIsDisplayed() }
+            }
+            step("Assert timing icon is displayed") {
+                onSelectProviderBottomSheet { timingIcon.assertIsDisplayed() }
+            }
+            step("Assert 'Instant' processing time text is displayed") {
+                onSelectProviderBottomSheet { instantProcessingSpeedText.assertIsDisplayed() }
+            }
+            step("Assert 'Pay with' text is displayed") {
+                onSelectProviderBottomSheet { payWith.assertIsDisplayed() }
             }
             step("Assert payment method icon is displayed") {
                 onSelectProviderBottomSheet { paymentMethodIcon.assertIsDisplayed() }
             }
-            step("Assert payment method title is displayed") {
-                onSelectProviderBottomSheet { paymentMethodTitle.assertIsDisplayed() }
-            }
-            step("Assert payment method name is displayed") {
-                onSelectProviderBottomSheet { paymentMethodName.assertIsDisplayed() }
-            }
-            step("Assert provider with name: '$providerNameMercuryo' and rate: '$bestRate' is displayed") {
-                onSelectProviderBottomSheet {
-                    availableProviderWithName(providerNameMercuryo, tokenAmount, bestRate).assertIsDisplayed()
-                }
-            }
-            step("Assert provider with name: '$providerNameSimplex' and rate: '$rate' is displayed") {
-                onSelectProviderBottomSheet {
-                    availableProviderWithName(providerNameSimplex, tokenAmount, rate).assertIsDisplayed()
-                }
-            }
-            step("Assert 'More providers' icon is displayed") {
-                onSelectProviderBottomSheet { moreProvidersIcon.assertIsDisplayed() }
-            }
-            step("Assert 'More providers' text is displayed") {
-                onSelectProviderBottomSheet { moreProvidersText.assertIsDisplayed() }
-            }
-            step("Assert 'Best rate' label is displayed") {
-                onSelectProviderBottomSheet { bestRateLabel.assertIsDisplayed() }
+            step("Assert provider name: '$providerNameMercuryo'") {
+                onSelectProviderBottomSheet { providerName.assertTextContains(providerNameMercuryo) }
             }
         }
     }
@@ -410,12 +401,12 @@ class BuyTokenTest : BaseTestCase() {
     fun validatePaymentMethodScreenTest() {
         setupHooks().run {
             val tokenTitle = "Polygon"
-            val balance = TOTAL_BALANCE
             val card = "Card"
             val googlePay = "Google Pay"
             val invoiceRevolutPay = "Invoice Revolut Pay"
             val sepa = "Sepa"
             val fiatAmount = "1"
+            val tokenAmount = "~488.24938338 POL"
             val scenarioName = "payment_methods"
 
             step("Reset WireMock scenario '$scenarioName'") {
@@ -426,7 +417,7 @@ class BuyTokenTest : BaseTestCase() {
                 openMainScreen()
             }
             step("Synchronize addresses") {
-                synchronizeAddresses(balance)
+                synchronizeAddresses()
             }
             step("Click on 'Buy' button") {
                 onMainScreen { buyButton.clickWithAssertion() }
@@ -443,40 +434,39 @@ class BuyTokenTest : BaseTestCase() {
             step("Write fiat amount = '$fiatAmount'") {
                 onBuyTokenDetailsScreen { fiatAmountTextField.performTextInput(fiatAmount) }
             }
+            step("Assert token amount = '$tokenAmount'") {
+                onBuyTokenDetailsScreen { tokenAmountField.assertTextContains(tokenAmount) }
+            }
+            step("Click on 'Continue' button") {
+                onBuyTokenDetailsScreen { continueButton.clickWithAssertion() }
+            }
             step("Assert 'Provider block' is displayed") {
-                onBuyTokenDetailsScreen {
-                    providerTitle.assertIsDisplayed()
-                    providerText.assertIsDisplayed()
-                }
+                onBuyTokenDetailsScreen { providerName.assertIsDisplayed() }
             }
-            step("Open 'Select Provider' bottom sheet") {
-                onBuyTokenDetailsScreen { providerTitle.performClick() }
-            }
-            step("Click on 'Expand payment methods' button") {
-                onSelectProviderBottomSheet { paymentMethodExpandButton.clickWithAssertion() }
+            step("Click on 'All offers' button") {
+                onBuyTokenDetailsScreen { allOffersButton.clickWithAssertion() }
             }
             step("Assert 'Select Payment Method' bottom sheet title is displayed") {
                 onSelectPaymentMethodBottomSheet { title.assertIsDisplayed() }
             }
+            step("Assert 'Select Payment Method' bottom sheet subtitle is displayed") {
+                onSelectPaymentMethodBottomSheet { subtitle.assertIsDisplayed() }
+            }
+            step("Assert 'Select Payment Method' bottom sheet close button is displayed") {
+                onSelectPaymentMethodBottomSheet { closeButton.assertIsDisplayed() }
+            }
             step("Assert payment method: '$card' is displayed") {
-                onSelectPaymentMethodBottomSheet { paymentMethodWithNameAndIcon(card).assertIsDisplayed() }
+                onSelectPaymentMethodBottomSheet { paymentMethodWithName(card).assertIsDisplayed() }
             }
             step("Assert payment method: '$googlePay' is displayed") {
-                onSelectPaymentMethodBottomSheet { paymentMethodWithNameAndIcon(googlePay).assertIsDisplayed() }
+                onSelectPaymentMethodBottomSheet { paymentMethodWithName(googlePay).assertIsDisplayed() }
             }
             step("Assert payment method: '$invoiceRevolutPay' is displayed") {
-                onSelectPaymentMethodBottomSheet { paymentMethodWithNameAndIcon(invoiceRevolutPay).assertIsDisplayed() }
+                onSelectPaymentMethodBottomSheet { paymentMethodWithName(invoiceRevolutPay).assertIsDisplayed() }
             }
             step("Assert payment method: '$sepa' is displayed") {
-                onSelectPaymentMethodBottomSheet { paymentMethodWithNameAndIcon(sepa).assertIsDisplayed() }
-            }
-            step("Press 'Back' button") {
-                onSelectPaymentMethodBottomSheet { device.uiDevice.pressBack() }
-            }
-            step("Assert 'Select Provider' bottom sheet title is displayed") {
-                onSelectProviderBottomSheet { title.assertIsDisplayed() }
+                onSelectPaymentMethodBottomSheet { paymentMethodWithName(sepa).assertIsDisplayed() }
             }
         }
     }
-
 }

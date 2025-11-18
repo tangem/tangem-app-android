@@ -390,7 +390,7 @@ fun Token(
             textAlign = TextAlign.Center,
             modifier = Modifier
                 .defaultMinSize(minWidth = TangemTheme.dimens.size80)
-                .testTag(SwapTokenScreenTestTags.TOKEN_NAME),
+                .testTag(SwapTokenScreenTestTags.TOKEN_SYMBOL),
         )
     }
 }

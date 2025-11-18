@@ -80,7 +80,6 @@ internal object MockTokenLists {
                 sortedBy = TokensSortType.NONE,
                 totalFiatBalance = TotalFiatBalance.Loaded(
                     amount = tokens.sumOf { it.value.fiatAmount ?: BigDecimal.ZERO },
-                    isAllAmountsSummarized = true,
                     source = StatusSource.ACTUAL,
                 ),
             )
@@ -97,7 +96,6 @@ internal object MockTokenLists {
                     amount = groups
                         .flatMap { it.currencies as NonEmptyList<CryptoCurrencyStatus> }
                         .sumOf { it.value.fiatAmount ?: BigDecimal.ZERO },
-                    isAllAmountsSummarized = true,
                     source = StatusSource.ACTUAL,
                 ),
             )

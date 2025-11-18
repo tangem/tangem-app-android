@@ -9,8 +9,10 @@ import com.tangem.data.account.store.AccountsResponseStore
 import com.tangem.data.account.store.AccountsResponseStoreFactory
 import com.tangem.data.account.store.ArchivedAccountsStore
 import com.tangem.data.account.store.ArchivedAccountsStoreFactory
+import com.tangem.data.account.utils.toUserTokensResponse
 import com.tangem.data.common.account.WalletAccountsSaver
 import com.tangem.data.common.cache.etag.ETagsStore
+import com.tangem.data.common.currency.UserTokensSaver
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
@@ -24,9 +26,11 @@ import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.extensions.replaceBy
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 
 /**
 [REDACTED_AUTHOR]
@@ -38,6 +42,7 @@ internal class DefaultAccountsCRUDRepository(
     private val accountsResponseStoreFactory: AccountsResponseStoreFactory,
     private val archivedAccountsStoreFactory: ArchivedAccountsStoreFactory,
     private val userWalletsStore: UserWalletsStore,
+    private val userTokensSaver: UserTokensSaver,
     private val eTagsStore: ETagsStore,
     private val convertersContainer: AccountConverterFactoryContainer,
     private val dispatchers: CoroutineDispatcherProvider,
@@ -101,12 +106,44 @@ internal class DefaultAccountsCRUDRepository(
     }
 
     override suspend fun saveAccounts(accountList: AccountList) {
-        val userWalletId = accountList.userWallet.walletId
+        val converter = convertersContainer.createCryptoPortfolioConverter(userWalletId = accountList.userWalletId)
 
-        val converter = convertersContainer.getWalletAccountsResponseCF.create(userWallet = accountList.userWallet)
-        val accountsResponse = converter.convert(value = accountList)
+        val accountDTOs = converter.convertListBack(
+            input = accountList.accounts.filterIsInstance<Account.CryptoPortfolio>(),
+        )
 
-        walletAccountsSaver.pushAndStore(userWalletId = userWalletId, response = accountsResponse)
+        val syncedResponse = walletAccountsSaver.push(userWalletId = accountList.userWalletId, accounts = accountDTOs)
+        if (syncedResponse != null) {
+            walletAccountsSaver.store(userWalletId = accountList.userWalletId, response = syncedResponse)
+        }
+    }
+
+    override suspend fun saveAccount(account: Account.CryptoPortfolio) {
+        val store = getAccountsResponseStore(userWalletId = account.userWalletId)
+
+        val converter = convertersContainer.createCryptoPortfolioConverter(userWalletId = account.userWalletId)
+        val newAccountDTO = converter.convertBack(value = account)
+
+        store.updateData { response ->
+            response ?: return@updateData response
+
+            response.copy(
+                accounts = response.accounts.toMutableList().apply {
+                    replaceBy(newAccountDTO) { it.id == newAccountDTO.id }
+                },
+            )
+        }
+    }
+
+    override suspend fun syncTokens(userWalletId: UserWalletId) {
+        val response = getAccountsResponseSync(userWalletId = userWalletId)
+
+        if (response == null) {
+            Timber.e("Can't sync tokens. No accounts response found for wallet: $userWalletId")
+            return
+        }
+
+        userTokensSaver.push(userWalletId = userWalletId, response = response.toUserTokensResponse())
     }
 
     override suspend fun getTotalAccountsCountSync(userWalletId: UserWalletId): Option<Int> = option {
