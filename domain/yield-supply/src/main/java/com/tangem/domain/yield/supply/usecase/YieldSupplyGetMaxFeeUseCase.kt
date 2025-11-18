@@ -61,20 +61,18 @@ class YieldSupplyGetMaxFeeUseCase(
             .firstOrNull { it.yieldSupplyKey == token.yieldSupplyKey() }
         val marketToken = cachedMarketToken ?: yieldSupplyRepository.getTokenStatus(token)
         val maxFeeNative = marketToken.maxFeeNative
-        val maxFeeToken = maxFeeNative.multiply(nativeFiatRate)
+        val fiatMaxFee = maxFeeNative.multiply(nativeFiatRate)
 
-        val rateRatio = nativeFiatRate.divide(
+        val maxFeeToken = fiatMaxFee.divide(
             fiatRate,
             cryptoCurrencyStatus.currency.decimals,
             RoundingMode.HALF_UP,
         )
 
-        val tokenValue = rateRatio.multiply(maxFeeNative)
-
         YieldSupplyMaxFee(
             nativeMaxFee = maxFeeNative,
             tokenMaxFee = maxFeeToken,
-            fiatMaxFee = tokenValue.stripTrailingZeros(),
+            fiatMaxFee = fiatMaxFee.stripTrailingZeros(),
         )
     }
 }
