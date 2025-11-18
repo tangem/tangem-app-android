@@ -2,114 +2,102 @@ package com.tangem.domain.tokens
 
 import arrow.core.left
 import arrow.core.right
+import com.google.common.truth.Truth
 import com.tangem.domain.tokens.error.TokenListSortingError
 import com.tangem.domain.tokens.mock.MockTokenLists
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
-import junit.framework.TestCase.assertEquals
 import kotlinx.coroutines.test.runTest
-import org.junit.Test
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class ToggleTokenListGroupingTest {
+
+    private val useCase = ToggleTokenListGroupingUseCase(
+        dispatchers = TestingCoroutineDispatcherProvider(),
+    )
 
     @Test
     fun `when list is empty then error should be received`() = runTest {
         // Given
-        val expectedResult = TokenListSortingError.TokenListIsEmpty.left()
-
-        val useCase = getUseCase()
+        val expected = TokenListSortingError.TokenListIsEmpty.left()
 
         // When
-        val result = useCase(MockTokenLists.emptyUngroupedTokenList)
+        val actual = useCase(MockTokenLists.emptyUngroupedTokenList)
 
         // Then
-        assertEquals(expectedResult, result)
+        Truth.assertThat(actual).isEqualTo(expected)
     }
 
     @Test
     fun `when list is grouped and loading then error should be received`() = runTest {
         // Given
-        val expectedResult = TokenListSortingError.TokenListIsLoading.left()
-
-        val useCase = getUseCase()
+        val expected = TokenListSortingError.TokenListIsLoading.left()
 
         // When
-        val result = useCase(MockTokenLists.loadingGroupedTokenList)
+        val actual = useCase(MockTokenLists.loadingGroupedTokenList)
 
         // Then
-        assertEquals(expectedResult, result)
+        Truth.assertThat(actual).isEqualTo(expected)
     }
 
     @Test
     fun `when list is ungrouped and loading then error should be received`() = runTest {
         // Given
-        val expectedResult = TokenListSortingError.TokenListIsLoading.left()
-
-        val useCase = getUseCase()
+        val expected = TokenListSortingError.TokenListIsLoading.left()
 
         // When
-        val result = useCase(MockTokenLists.loadingUngroupedTokenList)
+        val actual = useCase(MockTokenLists.loadingUngroupedTokenList)
 
         // Then
-        assertEquals(expectedResult, result)
+        Truth.assertThat(actual).isEqualTo(expected)
     }
 
     @Test
     fun `when list is ungrouped and sorted then sorted grouped list should be received`() = runTest {
         // Given
-        val expectedResult = MockTokenLists.sortedGroupedTokenList.right()
-
-        val useCase = getUseCase()
+        val expected = MockTokenLists.sortedGroupedTokenList.right()
 
         // When
-        val result = useCase(MockTokenLists.sortedUngroupedTokenList)
+        val actual = useCase(MockTokenLists.sortedUngroupedTokenList)
 
         // Then
-        assertEquals(expectedResult, result)
+        Truth.assertThat(actual).isEqualTo(expected)
     }
 
     @Test
     fun `when list is ungrouped and unsorted then unsorted grouped list should be received`() = runTest {
         // Given
-        val expectedResult = MockTokenLists.unsortedGroupedTokenList.right()
-
-        val useCase = getUseCase()
+        val expected = MockTokenLists.unsortedGroupedTokenList.right()
 
         // When
-        val result = useCase(MockTokenLists.unsortedUngroupedTokenList)
+        val actual = useCase(MockTokenLists.unsortedUngroupedTokenList)
 
         // Then
-        assertEquals(expectedResult, result)
+        Truth.assertThat(actual).isEqualTo(expected)
     }
 
     @Test
     fun `when list is grouped and sorted then sorted ungrouped list should be received`() = runTest {
         // Given
-        val expectedResult = MockTokenLists.sortedUngroupedTokenList.right()
-
-        val useCase = getUseCase()
+        val expected = MockTokenLists.sortedUngroupedTokenList.right()
 
         // When
-        val result = useCase(MockTokenLists.sortedGroupedTokenList)
+        val actual = useCase(MockTokenLists.sortedGroupedTokenList)
 
         // Then
-        assertEquals(expectedResult, result)
+        Truth.assertThat(actual).isEqualTo(expected)
     }
 
     @Test
     fun `when list is grouped and unsorted then unsorted ungrouped list should be received`() = runTest {
         // Given
-        val expectedResult = MockTokenLists.unsortedUngroupedTokenList.right()
-
-        val useCase = getUseCase()
+        val expected = MockTokenLists.unsortedUngroupedTokenList.right()
 
         // When
-        val result = useCase(MockTokenLists.unsortedGroupedTokenList)
+        val actual = useCase(MockTokenLists.unsortedGroupedTokenList)
 
         // Then
-        assertEquals(expectedResult, result)
+        Truth.assertThat(actual).isEqualTo(expected)
     }
-
-    private fun getUseCase() = ToggleTokenListGroupingUseCase(
-        dispatchers = TestingCoroutineDispatcherProvider(),
-    )
 }

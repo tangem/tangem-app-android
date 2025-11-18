@@ -58,13 +58,17 @@ internal class ImportSeedPhraseUiStateBuilder(
             val text = st.words.text
             val wordsFromText = text.split(" ").filter { it.isNotBlank() }.map { it.trim() }
             val newWords = wordsFromText.dropLast(1) + word
-            val newWordsText = newWords.joinToString(" ")
-            st.copy(
-                words = TextFieldValue(
-                    text = newWordsText,
-                    selection = TextRange(newWordsText.length),
-                ),
+            val newWordsText = newWords.joinToString(" ").plus(" ")
+            val newWordsState = TextFieldValue(
+                text = newWordsText,
+                selection = TextRange(newWordsText.length),
             )
+            st.copy(
+                words = newWordsState,
+            ).also {
+                launchInterceptWords(wordsField = newWordsState)
+                suggestNextWord(newWordsState)
+            }
         }
     }
 
