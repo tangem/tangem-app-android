@@ -1,0 +1,57 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>BooleanPropertyNaming:WcAppInfoBS.kt$var connectionRequestExpanded by remember { mutableStateOf(false) }</ID>
+    <ID>BooleanPropertyNaming:WcConnectButtonProgressTransformer.kt$WcConnectButtonProgressTransformer$private val showProgress: Boolean</ID>
+    <ID>BooleanPropertyNaming:WcConnectionsContent.kt$var showDropdownMenu by rememberSaveable { mutableStateOf(false) }</ID>
+    <ID>BooleanPropertyNaming:WcNetworkInfoItem.kt$WcNetworkInfoItem.Checkable$val checked: Boolean</ID>
+    <ID>BooleanPropertyNaming:WcNetworkInfoItem.kt$WcNetworkInfoItem.Checkable$val enabled: Boolean = true</ID>
+    <ID>BooleanPropertyNaming:WcNetworkInfoItem.kt$WcNetworkInfoItem.Checked$val enabled: Boolean = true</ID>
+    <ID>BooleanPropertyNaming:WcPrimaryButtonConfig.kt$WcPrimaryButtonConfig$val enabled: Boolean</ID>
+    <ID>BooleanPropertyNaming:WcPrimaryButtonConfig.kt$WcPrimaryButtonConfig$val showProgress: Boolean</ID>
+    <ID>BooleanPropertyNaming:WcSelectNetworksCheckedTransformer.kt$WcSelectNetworksCheckedTransformer$val doneButtonEnabled = available.any { it.checked } || prevState.required.isNotEmpty()</ID>
+    <ID>BooleanPropertyNaming:WcSelectNetworksModel.kt$WcSelectNetworksModel$val doneButtonEnabled = params.missingRequiredNetworks.isEmpty() &amp;&amp; (params.requiredNetworks.isNotEmpty() || params.availableNetworks.isNotEmpty())</ID>
+    <ID>BooleanPropertyNaming:WcSelectNetworksModel.kt$WcSelectNetworksModel$val editEnabled = params.missingRequiredNetworks.isEmpty()</ID>
+    <ID>BooleanPropertyNaming:WcSelectNetworksUM.kt$WcSelectNetworksUM$val doneButtonEnabled: Boolean</ID>
+    <ID>BooleanPropertyNaming:WcSendTransactionUM.kt$WcSendTransactionItemUM$val sendEnabled: Boolean</ID>
+    <ID>CanBeNonNullable:WcNavigationUtils.kt$feeSelectorComponentFactory: FeeSelectorComponent.Factory? = null</ID>
+    <ID>MaxChainedCallsOnSameLine:WcConnectedAppInfoModel.kt$WcConnectedAppInfoModel$session.sdkModel.appMetaData.icons.firstOrNull().orEmpty()</ID>
+    <ID>MaxChainedCallsOnSameLine:WcTransactionAppInfoContentUMConverter.kt$WcTransactionAppInfoContentUMConverter$value.session.sdkModel.appMetaData.icons.firstOrNull().orEmpty()</ID>
+    <ID>MultilineLambdaItParameter:WcConnectedAppInfoModel.kt$WcConnectedAppInfoModel${ WcNetworkInfoItem.Required( id = it.rawId, icon = it.iconResId, name = it.name, symbol = it.currencySymbol, ) }</ID>
+    <ID>MultilineLambdaItParameter:WcConnectionsContent.kt${ ConnectionItem( modifier = Modifier .fillMaxWidth() .background( color = TangemTheme.colors.background.primary, shape = RoundedCornerShape(TangemTheme.dimens.radius14), ) .clip(RoundedCornerShape(TangemTheme.dimens.radius14)), connection = it, ) }</ID>
+    <ID>MultilineLambdaItParameter:WcSendAndReceiveBlockAidUiConverter.kt$WcSendAndReceiveBlockAidUiConverter${ spendAllowanceUMConverter.convert( WcSpendAllowanceUMConverter.Input( approvedAmount = it, onLearnMoreClick = value.onApproveLearnMoreClick, ), ) }</ID>
+    <ID>MultilineLambdaItParameter:WcSendAndReceiveBlockAidUiConverter.kt$WcSendAndReceiveBlockAidUiConverter${ when (it) { is AmountInfo.FungibleTokens -&gt; estimatedWalletChangeUMConverter.convert( WcEstimatedWalletChangeUMConverter.Input( amountInfo = it, iconRes = R.drawable.ic_receive_new_24, titleRes = R.string.common_receive, sign = StringsSigns.PLUS, ), ) is AmountInfo.NonFungibleTokens -&gt; estimatedWalletChangeUMConverter.convert( WcEstimatedWalletChangeUMConverter.Input( amountInfo = it, iconRes = R.drawable.ic_receive_new_24, titleRes = R.string.common_receive, ), ) } }</ID>
+    <ID>MultilineLambdaItParameter:WcSendAndReceiveBlockAidUiConverter.kt$WcSendAndReceiveBlockAidUiConverter${ when (it) { is AmountInfo.FungibleTokens -&gt; estimatedWalletChangeUMConverter.convert( WcEstimatedWalletChangeUMConverter.Input( amountInfo = it, iconRes = R.drawable.ic_send_new_24, titleRes = R.string.common_send, sign = StringsSigns.MINUS, ), ) is AmountInfo.NonFungibleTokens -&gt; estimatedWalletChangeUMConverter.convert( WcEstimatedWalletChangeUMConverter.Input( amountInfo = it, iconRes = R.drawable.ic_send_new_24, titleRes = R.string.common_send, ), ) } }</ID>
+    <ID>MultilineLambdaItParameter:WcSendTransactionModel.kt$WcSendTransactionModel${ it?.copy( feeSelectorUM = feeSelectorUM, transaction = it.transaction.copy( sendEnabled = feeSelectorUM is FeeSelectorUM.Content &amp;&amp; feeErrorNotification == null, feeErrorNotification = feeErrorNotification, ), ) }</ID>
+    <ID>MultilineLambdaItParameter:WcSwitchNetworkModel.kt$WcSwitchNetworkModel${ if (it.isExistInWcSession) { router.pop() } else { showErrorDialog(HandleMethodError.RequiredNetwork(it.network.name)) } }</ID>
+    <ID>NamedArguments:WcAddEthereumChainModalBottomSheetContent.kt$WcAddEthereumChainModalBottomSheetContent(state, {}, {}, {})</ID>
+    <ID>NamedArguments:WcAlertsFactory.kt$WcAlertsFactory$createMaliciousDAppAlert(alertType.description, alertType.onClick, alertType.iconType, alertType.iconBgType)</ID>
+    <ID>NamedArguments:WcPairModel.kt$WcPairModel$handlePairState( pairState, portfolios, selected, isAccountMode, )</ID>
+    <ID>NamedArguments:WcSendTransactionModel.kt$WcSendTransactionModel$buildUiState(securityCheck, useCase, signState, isApprovalMethod)</ID>
+    <ID>NestedScopeFunctions:WcSendAndReceiveBlockAidUiConverter.kt$WcSendAndReceiveBlockAidUiConverter$let { spendAllowanceUMConverter.convert( WcSpendAllowanceUMConverter.Input( approvedAmount = it, onLearnMoreClick = value.onApproveLearnMoreClick, ), ) }</ID>
+    <ID>NoNameShadowing:WcNavigationUtils.kt$model</ID>
+    <ID>NonBooleanPropertyPrefixedWithIs:WcConnectionsModel.kt$WcConnectionsModel$private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase</ID>
+    <ID>NonBooleanPropertyPrefixedWithIs:WcPairModel.kt$WcPairModel$private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase</ID>
+    <ID>NonBooleanPropertyPrefixedWithIs:WcPortfolioNameDelegate.kt$WcPortfolioNameDelegate$val isAccountMode = isAccountsModeEnabledUseCase.invoke() .stateIn(scope = scope, started = SharingStarted.Eagerly, initialValue = false)</ID>
+    <ID>NonBooleanPropertyPrefixedWithIs:WcRoutingModel.kt$WcRoutingModel$private val isSlotEmpty = MutableStateFlow(true)</ID>
+    <ID>NullCheckOnMutableProperty:WcCommonTransactionComponentDelegate.kt$WcCommonTransactionComponentDelegate$if (contentStack != null) { val content by contentStack!!.subscribeAsState() BackHandler(onBack = ::onChildBack) content.active.instance.BottomSheet() }</ID>
+    <ID>NullableBooleanCheck:WcPairModel.kt$WcPairModel$isAccountMode ?: false</ID>
+    <ID>NullableToStringCall:WcEstimatedWalletChangeUMConverter.kt$WcEstimatedWalletChangeUMConverter$${value.sign}</ID>
+    <ID>ReusedModifierInstance:DefaultWalletConnectEntryComponent.kt$DefaultWalletConnectEntryComponent$Content(modifier = modifier)</ID>
+    <ID>ReusedModifierInstance:WcAppInfoBS.kt$Box( modifier = modifier .padding(start = 48.dp) .border( width = 2.dp, color = TangemTheme.colors.background.action, shape = CircleShape, ) .padding(2.dp) .background(color = TangemTheme.colors.background.action) .size(20.dp) .clip(CircleShape) .background(color = TangemTheme.colors.icon.primary1.copy(alpha = 0.1F)), ) { Text( modifier = Modifier.align(Alignment.Center), text = "+$remainingCount", style = TangemTheme.typography.overline, color = TangemTheme.colors.text.secondary, ) }</ID>
+    <ID>ReusedModifierInstance:WcEstimatedWalletChangesLoadingItem.kt$Text( modifier = modifier .fillMaxWidth() .padding(start = 8.dp), text = stringResourceSafe(R.string.wc_common_loading), color = TangemTheme.colors.text.disabled, style = TangemTheme.typography.body2, )</ID>
+    <ID>ReusedModifierInstance:WcEstimatedWalletChangesNotificationItem.kt$Text( modifier = modifier .fillMaxWidth() .padding(start = 12.dp, end = 12.dp, bottom = 14.dp), text = description?.resolveReference() ?: stringResourceSafe(R.string.wc_estimated_wallet_changes_not_simulated), color = TangemTheme.colors.text.tertiary, style = TangemTheme.typography.body2, )</ID>
+    <ID>ReusedModifierInstance:WcSelectNetworksComponent.kt$HorizontalDivider( modifier = modifier.fillMaxWidth(), thickness = 1.dp, color = TangemTheme.colors.stroke.primary, )</ID>
+    <ID>UnnecessaryAbstractClass:WcCommonTransactionComponentDelegate.kt$WcCommonTransactionComponentDelegate$WcCommonTransactionComponentDelegate</ID>
+    <ID>UnnecessaryLet:WcSendTransactionModel.kt$WcSendTransactionModel$let { stackNavigation.pushNew(WcTransactionRoutes.CustomAllowance) }</ID>
+    <ID>UnsafeCallOnNullableType:WcAddNetworkComponent.kt$WcAddNetworkComponent$content!!</ID>
+    <ID>UnsafeCallOnNullableType:WcCommonTransactionComponentDelegate.kt$WcCommonTransactionComponentDelegate$contentStack!!</ID>
+    <ID>UnsafeCallOnNullableType:WcPairComponent.kt$WcPairComponent$model.portfolioFetcher!!</ID>
+    <ID>UnsafeCallOnNullableType:WcSignTransactionComponent.kt$WcSignTransactionComponent$content!!</ID>
+    <ID>UnsafeCallOnNullableType:WcTransactionRequestInfoComponent.kt$WcTransactionRequestInfoComponent$content!!</ID>
+    <ID>UseEmptyCounterpart:WcPairModel.kt$WcPairModel$setOf&lt;Network&gt;()</ID>
+    <ID>UseOrEmpty:WcSpendAllowanceUMConverter.kt$WcSpendAllowanceUMConverter$value.approvedAmount.amount?.currencySymbol ?: ""</ID>
+    <ID>UseOrEmpty:WcTransactionCheckErrorItem.kt$notification.text?.resolveReference() ?: ""</ID>
+  </CurrentIssues>
+</SmellBaseline>

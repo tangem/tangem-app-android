@@ -1,9 +1,9 @@
 package com.tangem.data.account.converter
 
 import com.google.common.truth.Truth
-import com.tangem.common.test.utils.ProvideTestModels
 import com.tangem.data.account.converter.CryptoPortfolioIconConverter.DataModel
 import com.tangem.domain.models.account.CryptoPortfolioIcon
+import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 

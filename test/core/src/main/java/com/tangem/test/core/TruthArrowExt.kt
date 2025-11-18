@@ -1,4 +1,4 @@
-package com.tangem.common.test.utils
+package com.tangem.test.core
 
 import arrow.core.Either
 import arrow.core.None
