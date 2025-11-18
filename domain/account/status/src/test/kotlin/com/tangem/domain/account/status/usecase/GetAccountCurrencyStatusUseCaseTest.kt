@@ -79,7 +79,7 @@ class GetAccountCurrencyStatusUseCaseTest {
             )
 
             val accountStatusList = mockk<AccountStatusList>(relaxed = true) {
-                every { this@mockk.accountStatuses } returns setOf(accountStatus)
+                every { this@mockk.accountStatuses } returns listOf(accountStatus)
             }
 
             coEvery { supplier.getSyncOrNull(supplierParams) } returns accountStatusList
@@ -117,7 +117,7 @@ class GetAccountCurrencyStatusUseCaseTest {
             )
 
             val accountStatusList = mockk<AccountStatusList>(relaxed = true) {
-                every { this@mockk.accountStatuses } returns setOf(mainAccountStatus, accountStatus, mockk())
+                every { this@mockk.accountStatuses } returns listOf(mainAccountStatus, accountStatus, mockk())
             }
 
             coEvery { supplier.getSyncOrNull(supplierParams) } returns accountStatusList
@@ -154,7 +154,7 @@ class GetAccountCurrencyStatusUseCaseTest {
             )
 
             val accountStatusList = mockk<AccountStatusList>(relaxed = true) {
-                every { this@mockk.accountStatuses } returns setOf(accountStatus)
+                every { this@mockk.accountStatuses } returns listOf(accountStatus)
             }
 
             coEvery { supplier.getSyncOrNull(supplierParams) } returns accountStatusList
@@ -198,7 +198,7 @@ class GetAccountCurrencyStatusUseCaseTest {
             )
 
             val accountStatusList = mockk<AccountStatusList>(relaxed = true) {
-                every { this@mockk.accountStatuses } returns setOf(accountStatus)
+                every { this@mockk.accountStatuses } returns listOf(accountStatus)
             }
 
             coEvery { supplier(supplierParams) } returns flowOf(accountStatusList)
@@ -237,7 +237,7 @@ class GetAccountCurrencyStatusUseCaseTest {
             )
 
             val accountStatusList = mockk<AccountStatusList>(relaxed = true) {
-                every { this@mockk.accountStatuses } returns setOf(mainAccountStatus, accountStatus, mockk())
+                every { this@mockk.accountStatuses } returns listOf(mainAccountStatus, accountStatus, mockk())
             }
 
             coEvery { supplier(supplierParams) } returns flowOf(accountStatusList)
@@ -271,7 +271,7 @@ class GetAccountCurrencyStatusUseCaseTest {
             )
 
             val accountStatusList = mockk<AccountStatusList>(relaxed = true) {
-                every { this@mockk.accountStatuses } returns setOf(accountStatus)
+                every { this@mockk.accountStatuses } returns listOf(accountStatus)
             }
 
             coEvery { supplier(supplierParams) } returns flowOf(accountStatusList)

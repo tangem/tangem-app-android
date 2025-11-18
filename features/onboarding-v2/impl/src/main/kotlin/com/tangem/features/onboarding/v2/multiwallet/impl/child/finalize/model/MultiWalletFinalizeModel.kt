@@ -31,6 +31,7 @@ import com.tangem.features.onboarding.v2.multiwallet.impl.child.finalize.MultiWa
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.finalize.ui.state.MultiWalletFinalizeUM
 import com.tangem.features.onboarding.v2.multiwallet.impl.common.ui.resetCardDialog
 import com.tangem.features.onboarding.v2.multiwallet.impl.model.OnboardingMultiWalletState.FinalizeStage.*
+import com.tangem.features.onboarding.v2.util.ResetCardsComponent
 import com.tangem.operations.backup.BackupService
 import com.tangem.sdk.api.BackupServiceHolder
 import com.tangem.sdk.api.TangemSdkManager
@@ -62,6 +63,7 @@ internal class MultiWalletFinalizeModel @Inject constructor(
     private val onboardingRepository: OnboardingRepository,
     private val walletsRepository: WalletsRepository,
     private val uiMessageSender: UiMessageSender,
+    private val backupValidator: BackupValidator,
 ) : Model() {
 
     private val params = paramsContainer.require<MultiWalletChildParams>()
@@ -76,6 +78,8 @@ internal class MultiWalletFinalizeModel @Inject constructor(
     val uiState = _uiState.asStateFlow()
     val onBackFlow = MutableSharedFlow<Unit>()
     val onEvent = MutableSharedFlow<MultiWalletFinalizeComponent.Event>()
+    val resetCardsModelCallbacks = ResetCardsModelCallbacks()
+    val startFullResetFlow = MutableSharedFlow<UserWallet.Cold>()
 
     init {
         modelScope.launch {
@@ -229,10 +233,23 @@ internal class MultiWalletFinalizeModel @Inject constructor(
         }
     }
 
+    @Suppress("LongMethod")
     private fun finishBackup() {
         modelScope.launch {
+            setLoading(true)
             val scanResponse = params.multiWalletState.value.currentScanResponse
             val userWalletCreated = createUserWallet(scanResponse)
+
+            // Validate wallet before saving
+            // If something went wrong - start full reset flow
+            if (walletHasBackupError || !backupValidator.isValidFull(scanResponse.card)) {
+                startFullResetFlow.emit(
+                    userWalletCreated.copy(
+                        scanResponse = scanResponse.updateScanResponseAfterBackup(),
+                    ),
+                )
+                return@launch
+            }
 
             val userWallet = when (params.parentParams.mode) {
                 OnboardingMultiWalletComponent.Mode.Onboarding,
@@ -287,7 +304,19 @@ internal class MultiWalletFinalizeModel @Inject constructor(
             }
 
             if (userWallet.scanResponse.cardTypesResolver.isWallet2() && userWallet.isImported) {
-                launch(NonCancellable) { walletsRepository.markWallet2WasCreated(userWallet.walletId) }
+                launch(NonCancellable) {
+                    runCatching {
+                        walletsRepository.markWallet2WasCreated(userWallet.walletId)
+                    }
+                }
+            }
+
+            if (userWallet.isMultiCurrency) {
+                launch(NonCancellable) {
+                    runCatching {
+                        walletsRepository.createWallet(userWallet.walletId)
+                    }
+                }
             }
 
             // user wallet is fully created and saved, remove scan response from preferences
@@ -358,5 +387,26 @@ internal class MultiWalletFinalizeModel @Inject constructor(
         val last4 = takeLast(n = 4).splitBySpace()
         val mask = "$space*$space*$space*$space"
         return mask + last4
+    }
+
+    private fun setLoading(isLoading: Boolean) {
+        _uiState.update { it.copy(isButtonLoading = isLoading) }
+    }
+
+    inner class ResetCardsModelCallbacks : ResetCardsComponent.ModelCallbacks {
+
+        override fun onCancel() {
+            modelScope.launch {
+                onEvent.emit(MultiWalletFinalizeComponent.Event.ExitFromFlow)
+            }
+        }
+
+        override fun onComplete() {
+            modelScope.launch {
+                onboardingRepository.clearUnfinishedFinalizeOnboarding()
+                backupServiceHolder.backupService.get()?.discardSavedBackup()
+                onEvent.emit(MultiWalletFinalizeComponent.Event.ExitFromFlow)
+            }
+        }
     }
 }
