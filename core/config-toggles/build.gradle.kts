@@ -49,12 +49,8 @@ dependencies {
     implementation(projects.core.datasource)
     implementation(projects.core.utils)
 
-    testImplementation(deps.test.coroutine)
-    testImplementation(deps.test.junit5)
+    testImplementation(projects.test.core)
     testRuntimeOnly(deps.test.junit5.engine)
-    testImplementation(deps.test.mockk)
-    testImplementation(deps.test.truth)
-    testImplementation(projects.common.test)
 }
 
 val generateFeatureToggles by tasks.registering {
