@@ -24,6 +24,7 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import timber.log.Timber
 import java.math.BigDecimal
+import kotlin.String
 
 internal class TokenDetailsNotificationConverter(
     private val userWalletId: UserWalletId,
