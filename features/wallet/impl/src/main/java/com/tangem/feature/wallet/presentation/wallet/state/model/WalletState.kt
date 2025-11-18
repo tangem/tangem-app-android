@@ -23,6 +23,7 @@ internal sealed interface WalletState : WalletStateHolder {
 
         abstract val tokensListState: WalletTokensListState
         abstract val nftState: WalletNFTItemUM
+        abstract val type: WalletType
 
         data class Content(
             override val pullToRefreshConfig: PullToRefreshConfig,
@@ -32,12 +33,14 @@ internal sealed interface WalletState : WalletStateHolder {
             override val bottomSheetConfig: TangemBottomSheetConfig?,
             override val tokensListState: WalletTokensListState,
             override val nftState: WalletNFTItemUM,
+            override val type: WalletType,
         ) : MultiCurrency()
 
         data class Locked(
             override val walletCardState: WalletCardState,
             override val buttons: PersistentList<WalletManageButton>,
             override val bottomSheetConfig: TangemBottomSheetConfig?,
+            override val type: WalletType,
             val onUnlockNotificationClick: () -> Unit,
         ) : MultiCurrency(),
             WalletStateHolder by LockedWalletStateHolder(
@@ -49,6 +52,11 @@ internal sealed interface WalletState : WalletStateHolder {
 
             override val tokensListState = WalletTokensListState.ContentState.Locked
             override val nftState: WalletNFTItemUM = WalletNFTItemUM.Hidden
+        }
+
+        enum class WalletType {
+            Hot,
+            Cold,
         }
     }
 

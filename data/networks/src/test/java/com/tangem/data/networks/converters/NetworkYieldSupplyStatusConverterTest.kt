@@ -2,82 +2,77 @@ package com.tangem.data.networks.converters
 
 import com.google.common.truth.Truth
 import com.tangem.datasource.local.network.entity.NetworkStatusDM
+import com.tangem.datasource.local.network.entity.NetworkStatusDM.CurrencyId
 import com.tangem.domain.models.currency.CryptoCurrency.ID
-import com.tangem.domain.models.currency.CryptoCurrency.ID.Body
-import com.tangem.domain.models.currency.CryptoCurrency.ID.Prefix
+import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.yield.supply.YieldSupplyStatus
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import java.math.BigDecimal
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class NetworkYieldSupplyStatusConverterTest {
+
+    private val rawNetworkId = "ETH"
+    private val derivationPath = Network.DerivationPath.Card(value = "m/44'/60'/0'/0/0")
+    private val derivationPathHashCode = "-1843072795"
+    private val converter = NetworkYieldSupplyStatusConverter(rawNetworkId, derivationPath)
+
+    private val domainStatus = YieldSupplyStatus(
+        isActive = true,
+        isInitialized = true,
+        isAllowedToSpend = true,
+        effectiveProtocolBalance = BigDecimal.ONE,
+    )
 
     @Test
     fun convert() {
         // Arrange
-        val value = mapOf(
-            "coin⟨ETH⟩ethereum" to NetworkStatusDM.YieldSupplyStatus(
-                isActive = false,
-                isInitialized = false,
-                isAllowedToSpend = false,
-            ),
-            "coin⟨ETH→12367123⟩ethereum" to null,
+        val value = listOf(
+            createDataStatus(id = CurrencyId.createCoinId("ethereum")),
+            createDataStatus(id = CurrencyId.createTokenId("usdt", "0x1")),
         )
 
         // Act
-        val actual = NetworkYieldSupplyStatusConverter.convert(value)
+        val actual = converter.convert(value)
 
         // Assert
         val expected = mapOf(
-            ID(
-                prefix = Prefix.COIN_PREFIX,
-                body = Body.NetworkId(rawId = "ETH"),
-                suffix = ID.Suffix.RawID(rawId = "ethereum"),
-            ) to YieldSupplyStatus(
-                isActive = false,
-                isInitialized = false,
-                isAllowedToSpend = false,
-            ),
-            ID(
-                prefix = Prefix.COIN_PREFIX,
-                body = Body.NetworkIdWithDerivationPath(rawId = "ETH", derivationPathHashCode = 12367123),
-                suffix = ID.Suffix.RawID(rawId = "ethereum"),
-            ) to null,
+            ID.fromValue("coin⟨ETH→$derivationPathHashCode⟩ethereum") to domainStatus,
+            ID.fromValue("token⟨ETH→$derivationPathHashCode⟩usdt⚓0x1") to domainStatus,
         )
 
-        Truth.assertThat(actual).isEqualTo(expected)
+        Truth.assertThat(actual).containsExactlyEntriesIn(expected)
     }
 
     @Test
     fun convertBack() {
         // Arrange
         val value = mapOf(
-            ID(
-                prefix = Prefix.COIN_PREFIX,
-                body = Body.NetworkId(rawId = "ETH"),
-                suffix = ID.Suffix.RawID(rawId = "ethereum"),
-            ) to YieldSupplyStatus(
-                isActive = false,
-                isInitialized = false,
-                isAllowedToSpend = false,
-            ),
-            ID(
-                prefix = Prefix.COIN_PREFIX,
-                body = Body.NetworkIdWithDerivationPath(rawId = "ETH", derivationPathHashCode = 12367123),
-                suffix = ID.Suffix.RawID(rawId = "ethereum"),
-            ) to null,
+            ID.fromValue("coin⟨ETH→$derivationPathHashCode⟩ethereum") to domainStatus,
+            ID.fromValue("token⟨ETH→$derivationPathHashCode⟩usdt⚓0x1") to domainStatus,
+            ID.fromValue("token⟨ETH→$derivationPathHashCode⟩usdc⚓0x1") to null,
         )
 
         // Act
-        val actual = NetworkYieldSupplyStatusConverter.convertBack(value)
+        val actual = converter.convertBack(value)
 
         // Assert
-        val expected = mapOf(
-            "coin⟨ETH⟩ethereum" to NetworkStatusDM.YieldSupplyStatus(
-                isActive = false,
-                isInitialized = false,
-                isAllowedToSpend = false,
-            ),
+        val expected = listOf(
+            createDataStatus(id = CurrencyId.createCoinId("ethereum")),
+            createDataStatus(id = CurrencyId.createTokenId("usdt", "0x1")),
         )
 
-        Truth.assertThat(actual).isEqualTo(expected)
+        Truth.assertThat(actual).containsExactlyElementsIn(expected)
+    }
+
+    private fun createDataStatus(id: CurrencyId): NetworkStatusDM.YieldSupplyStatus {
+        return NetworkStatusDM.YieldSupplyStatus(
+            id = id,
+            isActive = true,
+            isInitialized = true,
+            isAllowedToSpend = true,
+            effectiveProtocolBalance = BigDecimal.ONE,
+        )
     }
 }
