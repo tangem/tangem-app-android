@@ -71,7 +71,16 @@ internal class CreateWalletBackupModel @Inject constructor(
     }
 
     fun onManualBackupCompleted() {
-        router.pop()
+        if (params.setAccessCode) {
+            router.replaceCurrent(
+                route = AppRoute.UpdateAccessCode(
+                    userWalletId = params.userWalletId,
+                    isFirstSetup = true,
+                ),
+            )
+        } else {
+            router.pop()
+        }
     }
 
     inner class ManualBackupStartModelCallbacks : ManualBackupStartComponent.ModelCallbacks {

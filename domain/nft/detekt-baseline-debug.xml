@@ -1,0 +1,8 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>MultilineLambdaItParameter:FilterNFTAvailableNetworksUseCase.kt$FilterNFTAvailableNetworksUseCase${ it.name.contains(searchQuery, ignoreCase = true) || it.currencySymbol.contains(searchQuery, ignoreCase = true) }</ID>
+    <ID>UseEmptyCounterpart:NFTAnalyticsEvent.kt$NFTAnalyticsEvent$mapOf()</ID>
+  </CurrentIssues>
+</SmellBaseline>
