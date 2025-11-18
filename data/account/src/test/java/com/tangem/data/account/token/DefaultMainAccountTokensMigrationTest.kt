@@ -1,7 +1,5 @@
 package com.tangem.data.account.token
 
-import com.tangem.common.test.utils.assertEitherLeft
-import com.tangem.common.test.utils.assertEitherRight
 import com.tangem.data.account.converter.createGetWalletAccountsResponse
 import com.tangem.data.account.converter.createWalletAccountDTO
 import com.tangem.data.account.store.AccountsResponseStore
@@ -15,6 +13,8 @@ import com.tangem.datasource.local.accounts.AccountTokenMigrationStore
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.test.core.assertEitherLeft
+import com.tangem.test.core.assertEitherRight
 import io.mockk.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
