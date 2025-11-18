@@ -1,10 +1,10 @@
 package com.tangem.data.account.fetcher
 
-import com.tangem.common.test.utils.assertEitherLeft
-import com.tangem.common.test.utils.assertEitherRight
 import com.tangem.data.common.account.WalletAccountsFetcher
 import com.tangem.domain.account.fetcher.SingleAccountListFetcher
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.test.core.assertEitherLeft
+import com.tangem.test.core.assertEitherRight
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
