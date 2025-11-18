@@ -210,12 +210,12 @@
     "0x79be55f7": {
         "info": "yieldModule",
         "source": "https://github.com/tangem/tangem-yield-module-contracts/",
-        "name": "supply"
+        "name": "supplyEnter"
     },
     "0xc65e6dcf": {
         "info": "yieldModule",
         "source": "https://github.com/tangem/tangem-yield-module-contracts/",
-        "name": "supply"
+        "name": "supplyExit"
     },
     "0xebd4b81c": {
         "info": "yieldModule",
@@ -231,5 +231,10 @@
         "info": "yieldModule",
         "source": "https://github.com/tangem/tangem-yield-module-contracts/",
         "name": "transfer"
+    },
+    "0xb9de6a93": {
+        "info": "yieldModule",
+        "source": "https://github.com/tangem/tangem-yield-module-contracts/",
+        "name": "supplyTopUp"
     }
 }
