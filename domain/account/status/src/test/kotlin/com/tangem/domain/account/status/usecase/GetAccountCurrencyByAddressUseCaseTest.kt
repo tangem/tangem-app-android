@@ -1,8 +1,6 @@
 package com.tangem.domain.account.status.usecase
 
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
-import com.tangem.common.test.utils.assertNone
-import com.tangem.common.test.utils.assertSome
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.producer.SingleAccountListProducer
 import com.tangem.domain.account.repository.AccountsCRUDRepository
@@ -16,6 +14,8 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.networks.multi.MultiNetworkStatusProducer
 import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
+import com.tangem.test.core.assertNone
+import com.tangem.test.core.assertSome
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
