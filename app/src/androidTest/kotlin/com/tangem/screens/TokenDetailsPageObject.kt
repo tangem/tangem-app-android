@@ -5,6 +5,7 @@ import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import com.tangem.common.BaseTestCase
 import com.tangem.common.utils.LazyListItemNode
+import com.tangem.core.ui.test.BaseActionButtonsBlockTestTags
 import com.tangem.core.ui.test.BaseButtonTestTags
 import com.tangem.core.ui.test.NotificationTestTags
 import com.tangem.core.ui.test.TokenDetailsScreenTestTags
@@ -85,7 +86,7 @@ class TokenDetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvide
 
     private val horizontalActionChips = KLazyListNode(
         semanticsProvider = semanticsProvider,
-        viewBuilderAction = { hasTestTag(TokenDetailsScreenTestTags.HORIZONTAL_ACTION_CHIPS) },
+        viewBuilderAction = { hasTestTag(BaseActionButtonsBlockTestTags.HORIZONTAL_ACTION_CHIPS) },
         itemTypeBuilder = { itemType(::LazyListItemNode) },
         positionMatcher = { position ->
             SemanticsMatcher.expectValue(
@@ -97,25 +98,25 @@ class TokenDetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvide
 
     @OptIn(ExperimentalTestApi::class)
     val swapButton: LazyListItemNode = horizontalActionChips.childWith<LazyListItemNode> {
-        hasTestTag(TokenDetailsScreenTestTags.ACTION_BUTTON)
+        hasTestTag(BaseActionButtonsBlockTestTags.ACTION_BUTTON)
         hasText(getResourceString(R.string.common_swap))
     }
 
     @OptIn(ExperimentalTestApi::class)
     val sellButton: LazyListItemNode = horizontalActionChips.childWith<LazyListItemNode> {
-        hasTestTag(TokenDetailsScreenTestTags.ACTION_BUTTON)
+        hasTestTag(BaseActionButtonsBlockTestTags.ACTION_BUTTON)
         hasText(getResourceString(R.string.common_sell))
     }
 
     @OptIn(ExperimentalTestApi::class)
     val buyButton: LazyListItemNode = horizontalActionChips.childWith<LazyListItemNode> {
-        hasTestTag(TokenDetailsScreenTestTags.ACTION_BUTTON)
+        hasTestTag(BaseActionButtonsBlockTestTags.ACTION_BUTTON)
         hasText(getResourceString(R.string.common_buy))
     }
 
     @OptIn(ExperimentalTestApi::class)
     val sendButton: LazyListItemNode = horizontalActionChips.childWith<LazyListItemNode> {
-        hasTestTag(TokenDetailsScreenTestTags.ACTION_BUTTON)
+        hasTestTag(BaseActionButtonsBlockTestTags.ACTION_BUTTON)
         hasText(getResourceString(R.string.common_send))
     }
 
@@ -128,6 +129,18 @@ class TokenDetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvide
     fun networkFeeNotificationTitle(feeCurrencyName: String): KNode = child {
         hasTestTag(NotificationTestTags.TITLE)
         hasText(getResourceString(R.string.warning_send_blocked_funds_for_fee_title, feeCurrencyName))
+        useUnmergedTree = true
+    }
+
+    val topUpYourWalletNotificationTitle: KNode = child {
+        hasTestTag(NotificationTestTags.TITLE)
+        hasText(getResourceString(R.string.warning_no_account_title))
+        useUnmergedTree = true
+    }
+
+    val topUpYourWalletNotificationIcon: KNode = child {
+        hasAnySibling(withText(getResourceString(R.string.warning_no_account_title)))
+        hasTestTag(NotificationTestTags.ICON)
         useUnmergedTree = true
     }
 
@@ -146,6 +159,23 @@ class TokenDetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvide
                 currencyName,
                 feeCurrencyName,
                 feeCurrencySymbol
+            )
+        )
+        useUnmergedTree = true
+    }
+
+    fun topUpYourWalletNotificationMessage(
+        networkName: String,
+        amount: String,
+        currencySymbol: String,
+    ): KNode = child {
+        hasTestTag(NotificationTestTags.MESSAGE)
+        hasText(
+            getResourceString(
+                R.string.no_account_generic,
+                networkName,
+                amount,
+                currencySymbol,
             )
         )
         useUnmergedTree = true

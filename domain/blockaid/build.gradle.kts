@@ -1,13 +1,24 @@
 plugins {
-    alias(deps.plugins.kotlin.jvm)
+    alias(deps.plugins.android.library)
+    alias(deps.plugins.kotlin.android)
     id("configuration")
 }
 
+android {
+    namespace = "com.tangem.domain.blockaid"
+}
+
+
 dependencies {
-    /* Project - Domain */
+    /** Project - Domain */
+    implementation(projects.domain.models)
     implementation(projects.domain.core)
     implementation(projects.domain.blockaid.models)
 
-    /* Other */
+    /** Tangem SDK */
+    implementation(tangemDeps.blockchain)
+
+
+    /** Other */
     implementation(deps.moshi.adapters)
 }

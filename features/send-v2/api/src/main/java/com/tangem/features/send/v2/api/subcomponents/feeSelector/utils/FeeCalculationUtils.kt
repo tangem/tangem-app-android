@@ -21,9 +21,10 @@ object FeeCalculationUtils {
         isAmountSubtractAvailable: Boolean,
         cryptoCurrencyStatus: CryptoCurrencyStatus,
         amountValue: BigDecimal,
-        feeValue: BigDecimal,
+        feeValue: BigDecimal?,
         reduceAmountBy: BigDecimal,
     ): BigDecimal {
+        if (feeValue == null || feeValue.isZero()) return amountValue
         val balance = cryptoCurrencyStatus.value.amount ?: return amountValue
         val isFeeCoverage = checkFeeCoverage(
             isSubtractAvailable = isAmountSubtractAvailable,

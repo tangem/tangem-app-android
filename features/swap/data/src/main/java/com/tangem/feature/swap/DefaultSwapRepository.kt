@@ -203,8 +203,7 @@ internal class DefaultSwapRepository(
     override suspend fun getExchangeStatus(
         userWallet: UserWallet,
         txId: String,
-    ): Either<UnknownError,
-        ExchangeStatusModel,> {
+    ): Either<UnknownError, ExchangeStatusModel> {
         return withContext(coroutineDispatcher.io) {
             either {
                 catch(

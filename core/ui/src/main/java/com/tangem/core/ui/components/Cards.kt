@@ -68,9 +68,9 @@ fun CardWithIcon(
 internal fun IconWithTitleAndDescription(
     title: String,
     description: String?,
+    iconBackground: Color = TangemTheme.colors.background.secondary,
     icon: @Composable () -> Unit,
     additionalContent: @Composable () -> Unit = {},
-    iconBackground: Color = TangemTheme.colors.background.secondary,
 ) {
     Row(
         modifier = Modifier

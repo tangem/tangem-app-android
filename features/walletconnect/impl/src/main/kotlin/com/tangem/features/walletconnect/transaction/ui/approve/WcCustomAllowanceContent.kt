@@ -255,6 +255,7 @@ private class WcCustomAllowanceStateProvider : CollectionPreviewParameterProvide
             amountValue = BigDecimal("100"),
             tokenSymbol = "ETH",
             isUnlimited = false,
+            onLearnMoreClicked = {},
         ),
     ),
 )

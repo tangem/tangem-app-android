@@ -272,6 +272,7 @@ internal class NetworkStatusFactoryTest(private val model: Model) {
                             isActive = false,
                             isInitialized = false,
                             isAllowedToSpend = false,
+                            effectiveProtocolBalance = BigDecimal.ONE,
                         ),
                     ),
                 ),

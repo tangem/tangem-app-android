@@ -38,20 +38,20 @@ class UpdateCryptoPortfolioUseCase(
         accountName: AccountName? = null,
         icon: CryptoPortfolioIcon? = null,
     ): Either<Error, Account.CryptoPortfolio> = either {
-        ensure(accountName != null || icon != null) { Error.NothingToUpdate }
+        validate(accountName, icon)
 
         val accountList = getAccountList(userWalletId = accountId.userWalletId)
 
         val account = accountList.accounts
             .firstOrNull { it.accountId == accountId } as? Account.CryptoPortfolio
-            ?: raise(Error.CriticalTechError.AccountNotFound(accountId = accountId))
+            ?: raise(Error.DataOperationFailed(message = "Account not found: $accountId"))
 
         val updatedAccount = account
             .setName(name = accountName)
             .setIcon(icon = icon)
 
         val updatedAccounts = (accountList + updatedAccount).getOrElse {
-            raise(Error.CriticalTechError.AccountListRequirementsNotMet(it))
+            raise(Error.AccountListRequirementsNotMet(it))
         }
 
         saveAccounts(updatedAccounts)
@@ -59,12 +59,18 @@ class UpdateCryptoPortfolioUseCase(
         updatedAccount
     }
 
+    private fun Raise<Error>.validate(accountName: AccountName?, icon: CryptoPortfolioIcon?) {
+        ensure(accountName != null || icon != null) { Error.NothingToUpdate }
+    }
+
     private suspend fun Raise<Error>.getAccountList(userWalletId: UserWalletId): AccountList {
         return catch(
             block = { crudRepository.getAccountListSync(userWalletId = userWalletId) },
             catch = { raise(Error.DataOperationFailed(cause = it)) },
         )
-            .getOrElse { raise(Error.CriticalTechError.AccountsNotCreated(userWalletId = userWalletId)) }
+            .getOrElse {
+                raise(Error.DataOperationFailed(message = "Account list not found for wallet $userWalletId"))
+            }
     }
 
     private suspend fun Raise<Error>.saveAccounts(accountList: AccountList) {
@@ -92,39 +98,14 @@ class UpdateCryptoPortfolioUseCase(
             override fun toString(): String = "Nothing to update: both account name and icon are null"
         }
 
-        /** Error indicating that a data operation failed */
-        data class DataOperationFailed(val cause: Throwable) : Error {
-            override fun toString(): String = "Data operation failed: ${cause.message ?: "Unknown error"}"
+        data class AccountListRequirementsNotMet(val cause: AccountList.Error) : Error {
+            override fun toString(): String = "Account list requirements not met: $cause"
         }
 
-        /**
-         * Represents critical technical errors that can occur during the update operation.
-         * These errors are a consequence of an inconsistent state.
-         */
-        sealed interface CriticalTechError : Error {
+        /** Error indicating that a data operation failed */
+        data class DataOperationFailed(val cause: Throwable) : Error {
 
-            /**
-
-             *
-             * @property userWalletId the unique identifier of the user wallet
-             */
-            data class AccountsNotCreated(val userWalletId: UserWalletId) : CriticalTechError {
-                override fun toString(): String = "Accounts for $userWalletId are not created"
-            }
-
-            /** Error indicating that the account with [accountId] was not found */
-            data class AccountNotFound(val accountId: AccountId) : CriticalTechError {
-                override fun toString(): String = "Account with ID $accountId not found"
-            }
-
-            /**
-             * Error indicating that the account list requirements were not met.
-             *
-             * @property cause the underlying cause of the error
-             */
-            data class AccountListRequirementsNotMet(val cause: AccountList.Error) : CriticalTechError {
-                override fun toString(): String = "Account list requirements not met: $cause"
-            }
+            constructor(message: String) : this(cause = IllegalStateException(message))
         }
     }
 }

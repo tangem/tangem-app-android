@@ -11,7 +11,7 @@ interface VisaRepository {
 
     suspend fun getVisaCurrency(userWalletId: UserWalletId, isRefresh: Boolean = false): VisaCurrency
 
-    suspend fun getTxHistory(
+    fun getTxHistory(
         userWalletId: UserWalletId,
         pageSize: Int,
         isRefresh: Boolean = false,

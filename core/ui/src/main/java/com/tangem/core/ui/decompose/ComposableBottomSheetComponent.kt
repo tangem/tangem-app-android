@@ -10,13 +10,16 @@ interface ComposableBottomSheetComponent {
 
     @Composable
     fun BottomSheet()
-}
 
-fun getEmptyComposableBottomSheetComponent() = EmptyComposableBottomSheetComponent
+    companion object {
+        val EMPTY = EmptyComposableBottomSheetComponent
+    }
+}
 
 object EmptyComposableBottomSheetComponent : ComposableBottomSheetComponent {
     override fun dismiss() {}
 
     @Composable
-    override fun BottomSheet() {}
+    override fun BottomSheet() {
+    }
 }

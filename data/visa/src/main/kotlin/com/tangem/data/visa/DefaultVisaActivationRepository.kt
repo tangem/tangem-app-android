@@ -169,6 +169,7 @@ internal class DefaultVisaActivationRepository @AssistedInject constructor(
         return when (env) {
             ApiEnvironment.DEV,
             ApiEnvironment.DEV_2,
+            ApiEnvironment.DEV_3,
             ApiEnvironment.STAGE,
             ApiEnvironment.MOCK,
             -> rsaPublicKey.dev

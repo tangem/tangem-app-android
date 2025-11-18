@@ -9,12 +9,14 @@ import com.tangem.domain.tokens.model.remove.RemoveCurrencyError
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 
+@Deprecated("Use SaveCryptoCurrenciesUseCase")
 class RemoveCurrencyUseCase(
     private val currenciesRepository: CurrenciesRepository,
     private val walletManagersFacade: WalletManagersFacade,
     private val multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
 ) {
 
+    @Deprecated("Use SaveCryptoCurrenciesUseCase")
     suspend operator fun invoke(
         userWalletId: UserWalletId,
         currency: CryptoCurrency,

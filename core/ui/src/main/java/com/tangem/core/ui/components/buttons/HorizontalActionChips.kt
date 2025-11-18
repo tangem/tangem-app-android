@@ -22,7 +22,7 @@ import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.core.ui.test.TokenDetailsScreenTestTags
+import com.tangem.core.ui.test.BaseActionButtonsBlockTestTags
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -36,7 +36,7 @@ fun HorizontalActionChips(
     LazyRow(
         modifier = modifier
             .fillMaxWidth()
-            .testTag(TokenDetailsScreenTestTags.HORIZONTAL_ACTION_CHIPS),
+            .testTag(BaseActionButtonsBlockTestTags.HORIZONTAL_ACTION_CHIPS),
         horizontalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing8),
         verticalAlignment = Alignment.CenterVertically,
         contentPadding = contentPadding,
@@ -77,7 +77,7 @@ private class ActionButtonConfigProvider : CollectionPreviewParameterProvider<Ho
                     text = TextReference.Str(value = "Exchange"),
                     iconResId = R.drawable.ic_exchange_vertical_24,
                     onClick = {},
-                    showBadge = true,
+                    shouldShowBadge = true,
                 ),
                 ActionButtonConfig(
                     text = TextReference.Str(value = "Send"),

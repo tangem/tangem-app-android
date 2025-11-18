@@ -14,9 +14,9 @@ inline fun <reified T> AppPreferencesStore.getObject(key: Preferences.Key<String
         val adapter = moshi.adapter(T::class.java)
         emitAll(
             data.map { preferences ->
-                preferences[key]?.let {
+                preferences[key]?.let { value ->
                     try {
-                        adapter.fromJson(it)
+                        adapter.fromJson(value)
                     } catch (e: JsonDataException) {
                         null
                     }
@@ -37,9 +37,9 @@ inline fun <reified T> AppPreferencesStore.getObject(key: Preferences.Key<String
     return flow {
         val adapter = moshi.adapter(T::class.java)
         emitAll(
-            data.map {
+            data.map { prefs ->
                 try {
-                    it[key]?.let(adapter::fromJson) ?: default
+                    prefs[key]?.let(adapter::fromJson) ?: default
                 } catch (e: JsonDataException) {
                     default
                 }
@@ -59,9 +59,9 @@ suspend inline fun <reified T> AppPreferencesStore.getObjectSyncOrNull(key: Pref
         val adapter = moshi.adapter(T::class.java) // TODO: Support parameterized types
         data.firstOrNull()
             ?.get(key)
-            ?.let {
+            ?.let { value ->
                 try {
-                    adapter.fromJson(it)
+                    adapter.fromJson(value)
                 } catch (e: JsonDataException) {
                     null
                 }
@@ -76,9 +76,9 @@ suspend inline fun <reified T> AppPreferencesStore.getObjectSyncOrDefault(
     val adapter = moshi.adapter(T::class.java)
     data.firstOrNull()
         ?.get(key)
-        ?.let {
+        ?.let { value ->
             try {
-                adapter.fromJson(it)
+                adapter.fromJson(value)
             } catch (e: JsonDataException) {
                 default
             }
@@ -159,7 +159,7 @@ inline fun <reified V> AppPreferencesStore.getObjectMap(key: Preferences.Key<Str
         val adapter = moshi.adapter<Map<String, V>>(type)
 
         emitAll(
-            data.map { it[key]?.let(adapter::fromJson) ?: emptyMap() },
+            data.map { it[key]?.let(adapter::fromJson).orEmpty() },
         )
     }
 }
@@ -180,7 +180,7 @@ inline fun <reified T> AppPreferencesStore.getObjectSet(key: Preferences.Key<Str
         val adapter = moshi.adapter<Set<T>>(Types.newParameterizedType(Set::class.java, T::class.java))
         emitAll(
             data.map {
-                it[key]?.let(adapter::fromJson) ?: emptySet()
+                it[key]?.let(adapter::fromJson).orEmpty()
             },
         )
     }

@@ -34,6 +34,7 @@ data class MoonPayUserStatus(
     val stateCode: String,
 )
 
+@Suppress("BooleanPropertyNaming")
 @JsonClass(generateAdapter = true)
 data class MoonPayCurrencies(
     @Json(name = "type") val type: String,
