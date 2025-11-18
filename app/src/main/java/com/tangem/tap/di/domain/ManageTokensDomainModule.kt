@@ -1,6 +1,5 @@
 package com.tangem.tap.di.domain
 
-import com.tangem.domain.wallets.derivations.DerivationsRepository
 import com.tangem.domain.managetokens.*
 import com.tangem.domain.managetokens.repository.CustomTokensRepository
 import com.tangem.domain.managetokens.repository.ManageTokensRepository
@@ -10,11 +9,14 @@ import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.domain.wallets.derivations.DerivationsRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
 import javax.inject.Singleton
 
 @Module
@@ -74,6 +76,7 @@ internal object ManageTokensDomainModule {
         multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
         multiYieldBalanceFetcher: MultiYieldBalanceFetcher,
         stakingIdFactory: StakingIdFactory,
+        dispatchers: CoroutineDispatcherProvider,
     ): SaveManagedTokensUseCase {
         return SaveManagedTokensUseCase(
             customTokensRepository = customTokensRepository,
@@ -84,6 +87,7 @@ internal object ManageTokensDomainModule {
             multiQuoteStatusFetcher = multiQuoteStatusFetcher,
             multiYieldBalanceFetcher = multiYieldBalanceFetcher,
             stakingIdFactory = stakingIdFactory,
+            parallelUpdatingScope = CoroutineScope(SupervisorJob() + dispatchers.default),
         )
     }
 

@@ -148,8 +148,8 @@ private fun TangemTextField(
                         text = label,
                         style = TangemTheme.typography.caption2,
                         color = colors.labelColor(
-                            enabled = enabled,
-                            error = isError,
+                            isEnabled = enabled,
+                            isError = isError,
                             interactionSource = interactionSource,
                         ).value,
                     )
@@ -174,7 +174,7 @@ private fun TangemTextField(
                         null
                     },
                 )
-                if (iconRes != null) {
+                iconRes?.let { resId ->
                     IconButton(
                         modifier = Modifier.size(32.dp),
                         onClick = onClear,
@@ -182,7 +182,7 @@ private fun TangemTextField(
                     ) {
                         Icon(
                             modifier = Modifier.size(24.dp),
-                            painter = painterResource(id = iconRes!!),
+                            painter = painterResource(id = resId),
                             tint = colors.trailingIconColor(enabled = enabled, isError = isError).value,
                             contentDescription = "Clear input",
                         )
@@ -259,8 +259,8 @@ private fun TangemTextFieldWithIcon(
                         text = label,
                         style = TangemTheme.typography.caption2,
                         color = colors.labelColor(
-                            enabled = enabled,
-                            error = isError,
+                            isEnabled = enabled,
+                            isError = isError,
                             interactionSource = interactionSource,
                         ).value,
                     )
@@ -399,19 +399,19 @@ fun TextFieldColors.trailingIconColor(enabled: Boolean, isError: Boolean): State
 
 @Composable
 fun TextFieldColors.indicatorColor(
-    enabled: Boolean,
+    isEnabled: Boolean,
     isError: Boolean,
     interactionSource: InteractionSource,
 ): State<Color> {
-    val focused by interactionSource.collectIsFocusedAsState()
+    val isFocused by interactionSource.collectIsFocusedAsState()
 
     val targetValue = when {
-        !enabled -> disabledIndicatorColor
+        !isEnabled -> disabledIndicatorColor
         isError -> errorIndicatorColor
-        focused -> focusedIndicatorColor
+        isFocused -> focusedIndicatorColor
         else -> unfocusedIndicatorColor
     }
-    return if (enabled) {
+    return if (isEnabled) {
         animateColorAsState(
             targetValue = targetValue,
             animationSpec = tween(durationMillis = 120),
@@ -428,13 +428,17 @@ fun TextFieldColors.placeholderColor(enabled: Boolean): State<Color> {
 }
 
 @Composable
-fun TextFieldColors.labelColor(enabled: Boolean, error: Boolean, interactionSource: InteractionSource): State<Color> {
-    val focused by interactionSource.collectIsFocusedAsState()
+fun TextFieldColors.labelColor(
+    isEnabled: Boolean,
+    isError: Boolean,
+    interactionSource: InteractionSource,
+): State<Color> {
+    val isFocused by interactionSource.collectIsFocusedAsState()
 
     val targetValue = when {
-        !enabled -> disabledLabelColor
-        error -> errorLabelColor
-        focused -> focusedLabelColor
+        !isEnabled -> disabledLabelColor
+        isError -> errorLabelColor
+        isFocused -> focusedLabelColor
         else -> unfocusedLabelColor
     }
     return rememberUpdatedState(targetValue)

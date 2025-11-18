@@ -19,12 +19,14 @@ sealed class Basic(
         batch: String,
         signInType: SignInType,
         walletsCount: String,
+        isImported: Boolean,
         hasBackup: Boolean?,
     ) : Basic(
         event = "Signed in",
         params = buildMap {
             put(AnalyticsParam.CURRENCY, currency.value)
             put(AnalyticsParam.BATCH, batch)
+            put("Wallet Type", if (isImported) "Seed Phrase" else "Seedless")
             put("Sign in type", signInType.name)
             put("Wallets Count", walletsCount)
             if (hasBackup != null) {

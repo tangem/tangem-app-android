@@ -16,6 +16,8 @@ import com.tangem.core.navigation.finisher.AppFinisher
 import com.tangem.core.ui.UiDependencies
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.screen.ComposeActivity
+import com.tangem.feature.tester.presentation.accounts.ui.AccountsScreen
+import com.tangem.feature.tester.presentation.accounts.viewmodel.TesterAccountsViewModel
 import com.tangem.feature.tester.presentation.actions.TesterActionsScreen
 import com.tangem.feature.tester.presentation.actions.TesterActionsViewModel
 import com.tangem.feature.tester.presentation.environments.ui.EnvironmentTogglesScreen
@@ -62,7 +64,7 @@ internal class TesterActivity : ComposeActivity() {
         TesterNavHost()
     }
 
-    @Suppress("TopLevelComposableFunctions", "LongMethod")
+    @Suppress("TopLevelComposableFunctions", "LongMethod", "CyclomaticComplexMethod")
     @Composable
     private fun TesterNavHost() {
         val navController = rememberNavController().also { innerTesterRouter.setNavController(it) }
@@ -79,6 +81,7 @@ internal class TesterActivity : ComposeActivity() {
                             ButtonUM.BLOCKCHAIN_PROVIDERS,
                             ButtonUM.TESTER_ACTIONS,
                             ButtonUM.TEST_PUSHES,
+                            ButtonUM.ACCOUNTS,
                         ),
                         onButtonClick = {
                             val route = when (it) {
@@ -88,6 +91,7 @@ internal class TesterActivity : ComposeActivity() {
                                 ButtonUM.BLOCKCHAIN_PROVIDERS -> TesterScreen.BLOCKCHAIN_PROVIDERS
                                 ButtonUM.TESTER_ACTIONS -> TesterScreen.TESTER_ACTIONS
                                 ButtonUM.TEST_PUSHES -> TesterScreen.TEST_PUSHES
+                                ButtonUM.ACCOUNTS -> TesterScreen.ACCOUNTS
                             }
 
                             innerTesterRouter.open(route)
@@ -148,6 +152,15 @@ internal class TesterActivity : ComposeActivity() {
                 val state by viewModel.uiState.collectAsStateWithLifecycle()
 
                 TestPushScreen(state, viewModel)
+            }
+
+            composable(route = TesterScreen.ACCOUNTS.name) {
+                val viewModel = hiltViewModel<TesterAccountsViewModel>().apply {
+                    setupNavigation(innerTesterRouter)
+                }
+                val state by viewModel.uiState.collectAsStateWithLifecycle()
+
+                AccountsScreen(state)
             }
         }
     }

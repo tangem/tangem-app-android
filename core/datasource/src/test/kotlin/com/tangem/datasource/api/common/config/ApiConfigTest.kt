@@ -1,7 +1,12 @@
 package com.tangem.datasource.api.common.config
 
 import com.google.common.truth.Truth
+import com.tangem.datasource.api.common.AuthProvider
+import com.tangem.utils.ProviderSuspend
+import io.mockk.clearMocks
+import io.mockk.every
 import io.mockk.mockk
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import timber.log.Timber
@@ -11,6 +16,17 @@ import timber.log.Timber
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ApiConfigTest {
+
+    private val appAuthProvider = mockk<AuthProvider>()
+    private val apiKeyProvider = mockk<ProviderSuspend<String>>()
+
+    @BeforeEach
+    fun setup() {
+        clearMocks(
+            appAuthProvider,
+        )
+        every { appAuthProvider.getApiKey(any()) } returns apiKeyProvider
+    }
 
     @Test
     fun `all baseUrls ends with slash`() {
@@ -37,10 +53,18 @@ class ApiConfigTest {
                         appInfoProvider = mockk(),
                     )
                 }
+                ApiConfig.ID.YieldSupply -> {
+                    YieldSupply(
+                        environmentConfigStorage = mockk(),
+                        appVersionProvider = mockk(),
+                        authProvider = appAuthProvider,
+                        appInfoProvider = mockk(),
+                    )
+                }
                 ApiConfig.ID.TangemTech -> {
                     TangemTech(
                         appVersionProvider = mockk(),
-                        authProvider = mockk(),
+                        authProvider = appAuthProvider,
                         appInfoProvider = mockk(),
                     )
                 }

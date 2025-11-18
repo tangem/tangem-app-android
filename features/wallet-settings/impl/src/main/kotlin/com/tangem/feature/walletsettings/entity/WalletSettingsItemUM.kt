@@ -1,7 +1,7 @@
 package com.tangem.feature.walletsettings.entity
 
 import androidx.compose.runtime.Immutable
-import com.tangem.common.ui.account.CryptoPortfolioIconUM
+import com.tangem.common.ui.userwallet.state.UserWalletItemUM
 import com.tangem.common.ui.userwallet.state.UserWalletItemUM.ImageState
 import com.tangem.core.ui.components.block.model.BlockUM
 import com.tangem.core.ui.extensions.TextReference
@@ -65,18 +65,16 @@ internal sealed class WalletSettingsAccountsUM : WalletSettingsItemUM() {
     ) : WalletSettingsAccountsUM()
 
     data class Account(
-        override val id: String,
-        val accountName: TextReference,
-        val accountIconUM: CryptoPortfolioIconUM,
-        val tokensInfo: TextReference,
-        val networksInfo: TextReference,
-        val onClick: () -> Unit,
-    ) : WalletSettingsAccountsUM()
+        val state: UserWalletItemUM,
+    ) : WalletSettingsAccountsUM() {
+        override val id: String get() = state.id.stringValue
+    }
 
     data class Footer(
         override val id: String,
         val addAccount: AddAccountUM,
         val archivedAccounts: BlockUM,
+        val showDescription: Boolean,
         val description: TextReference,
     ) : WalletSettingsAccountsUM() {
 

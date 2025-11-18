@@ -70,7 +70,7 @@ data class Yield(
         val name: String,
         val image: String? = null,
         val website: String? = null,
-        val apr: SerializedBigDecimal? = null,
+        val rewardInfo: RewardInfo? = null,
         val commission: Double? = null,
         val stakedBalance: String? = null,
         val votingPower: Double? = null,
@@ -144,6 +144,12 @@ data class Yield(
         APR, // simple rate
         UNKNOWN,
     }
+
+    @Serializable
+    data class RewardInfo(
+        val rate: SerializedBigDecimal,
+        val type: RewardType,
+    )
 }
 
 @Serializable

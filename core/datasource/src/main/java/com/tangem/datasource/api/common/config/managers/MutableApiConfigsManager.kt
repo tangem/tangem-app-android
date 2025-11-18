@@ -20,7 +20,7 @@ abstract class MutableApiConfigsManager : ApiConfigsManager {
      * These listeners are notified whenever an environment change occurs.
      */
     protected val registerListeners: Set<ApiConfigEnvChangeListener>
-    field = mutableSetOf<ApiConfigEnvChangeListener>()
+        field = mutableSetOf<ApiConfigEnvChangeListener>()
 
     /** Change api environment [environment] by [id] */
     abstract suspend fun changeEnvironment(id: String, environment: ApiEnvironment)

@@ -5,12 +5,12 @@ import com.tangem.tap.features.details.ui.cardsettings.TextReference
 import com.tangem.wallet.R
 
 internal data class ResetCardScreenState(
-    val resetButtonEnabled: Boolean,
+    val isResetButtonEnabled: Boolean,
     val descriptionText: TextReference,
     val warningsToShow: List<WarningsToReset>,
-    val showResetPasswordButton: Boolean,
-    val acceptCondition1Checked: Boolean,
-    val acceptCondition2Checked: Boolean,
+    val isResetPasswordButtonShown: Boolean,
+    val isAcceptCondition1Checked: Boolean,
+    val isAcceptCondition2Checked: Boolean,
     val onAcceptCondition1ToggleClick: (Boolean) -> Unit,
     val onAcceptCondition2ToggleClick: (Boolean) -> Unit,
     val onResetButtonClick: () -> Unit,

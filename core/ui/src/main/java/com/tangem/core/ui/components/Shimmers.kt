@@ -169,17 +169,17 @@ private val TangemShimmerColors: List<Color>
 
         return buildList {
             if (isInDarkTheme) {
-                TangemColorPalette.Dark3.let(::add)
-                TangemColorPalette.Dark4.let(::add)
-                TangemColorPalette.Dark6.let(::add)
-                TangemColorPalette.Dark4.let(::add)
-                TangemColorPalette.Dark3.let(::add)
+                add(TangemColorPalette.Dark3)
+                add(TangemColorPalette.Dark4)
+                add(TangemColorPalette.Dark6)
+                add(TangemColorPalette.Dark4)
+                add(TangemColorPalette.Dark3)
             } else {
-                TangemColorPalette.Light2.let(::add)
-                TangemColorPalette.Light1.let(::add)
-                TangemColorPalette.White.let(::add)
-                TangemColorPalette.Light1.let(::add)
-                TangemColorPalette.Light2.let(::add)
+                add(TangemColorPalette.Light2)
+                add(TangemColorPalette.Light1)
+                add(TangemColorPalette.White)
+                add(TangemColorPalette.Light1)
+                add(TangemColorPalette.Light2)
             }
         }
     }

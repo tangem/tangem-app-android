@@ -70,7 +70,7 @@ internal class DefaultResetCardUseCase(
             null
         }
 
-        type?.let {
+        if (type != null) {
             tangemSdkManager.setUserCodeRequestPolicy(policy = UserCodeRequestPolicy.Always(type))
         }
     }

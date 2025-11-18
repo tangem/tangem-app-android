@@ -26,6 +26,11 @@ internal object EnvironmentConfigConverter : Converter<EnvironmentConfigModel, E
             devExpress = value.devExpress,
             stakeKitApiKey = value.stakeKitApiKey,
             blockAidApiKey = value.blockaidApiKey,
+            tangemApiKey = value.tangemApiKey,
+            tangemApiKeyDev = value.tangemApiKeyDev,
+            tangemApiKeyStage = value.tangemApiKeyStage,
+            yieldModuleApiKey = value.yieldModuleApiKey,
+            yieldModuleApiKeyDev = value.yieldModuleApiKeyDev,
         )
     }
 }

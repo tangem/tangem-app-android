@@ -63,7 +63,7 @@ internal class WalletActivationModel @Inject constructor(
             is WalletActivationRoute.ManualBackupCheck -> stackNavigation.pop()
             is WalletActivationRoute.ManualBackupCompleted -> Unit
             is WalletActivationRoute.SetAccessCode -> Unit
-            is WalletActivationRoute.ConfirmAccessCode -> Unit
+            is WalletActivationRoute.ConfirmAccessCode -> stackNavigation.pop()
             is WalletActivationRoute.PushNotifications -> Unit
             is WalletActivationRoute.SetupFinished -> Unit
         }
@@ -97,7 +97,7 @@ internal class WalletActivationModel @Inject constructor(
                     title = resourceReference(R.string.access_code_alert_skip_ok),
                     onClick = { navigateToPushNotificationsOrNext() },
                 ),
-                dismissOnFirstAction = true,
+                shouldDismissOnFirstAction = true,
             ),
         )
     }

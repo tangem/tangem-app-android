@@ -44,7 +44,6 @@ data class CryptoPortfolioIcon private constructor(
         Clock,
         Package,
         Gift,
-        ;
     }
 
     /**
@@ -64,7 +63,6 @@ data class CryptoPortfolioIcon private constructor(
         Pattypan,
         UFOGreen,
         VitalGreen,
-        ;
     }
 
     companion object {

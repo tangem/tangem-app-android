@@ -8,15 +8,16 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
-import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.swap.models.SwapDirection
 import com.tangem.features.send.v2.api.FeeSelectorBlockComponent
 import com.tangem.features.send.v2.api.SendNotificationsComponent
+import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.v2.api.entity.PredefinedValues
 import com.tangem.features.send.v2.api.params.FeeSelectorParams.*
 import com.tangem.features.send.v2.api.subcomponents.destination.SendDestinationBlockComponent
@@ -43,7 +44,6 @@ internal class SendWithSwapConfirmComponent @AssistedInject constructor(
     sendDestinationBlockComponent: SendDestinationBlockComponent.Factory,
     feeSelectorBlockComponentFactory: FeeSelectorBlockComponent.Factory,
     sendNotificationsComponentFactory: SendNotificationsComponent.Factory,
-    private val urlOpener: UrlOpener,
 ) : ComposableContentComponent, AppComponentContext by appComponentContext {
 
     private val model: SendWithSwapConfirmModel = getOrCreateModel(params = params)
@@ -62,6 +62,9 @@ internal class SendWithSwapConfirmComponent @AssistedInject constructor(
             isBalanceHidingFlow = params.isBalanceHidingFlow,
             swapDirection = params.swapDirection,
             filterProviderTypes = SEND_WITH_SWAP_PROVIDER_TYPES,
+            analyticsSendSource = params.analyticsSendSource,
+            accountFlow = params.accountFlow,
+            isAccountModeFlow = params.isAccountModeFlow,
         ),
         onResult = model::onAmountResult,
         onClick = model::showEditAmount,
@@ -72,6 +75,7 @@ internal class SendWithSwapConfirmComponent @AssistedInject constructor(
         params = SendDestinationComponentParams.DestinationBlockParams(
             state = model.uiState.value.destinationUM,
             analyticsCategoryName = params.analyticsCategoryName,
+            analyticsSendSource = params.analyticsSendSource,
             userWalletId = params.userWallet.walletId,
             blockClickEnableFlow = blockClickEnableFlow.asStateFlow(),
             cryptoCurrency = model.secondaryCurrency,
@@ -91,6 +95,7 @@ internal class SendWithSwapConfirmComponent @AssistedInject constructor(
             feeStateConfiguration = FeeStateConfiguration.ExcludeLow,
             feeDisplaySource = FeeDisplaySource.Screen,
             analyticsCategoryName = params.analyticsCategoryName,
+            analyticsSendSource = params.analyticsSendSource,
         ),
         onResult = model::onFeeResult,
     )
@@ -158,7 +163,6 @@ internal class SendWithSwapConfirmComponent @AssistedInject constructor(
             sendNotificationsUM = sendNotificationsUM,
             swapNotificationsComponent = swapNotificationsComponent,
             swapNotificationsUM = swapNotificationsUM,
-            onLinkClick = urlOpener::openUrl,
             modifier = modifier,
         )
     }
@@ -166,6 +170,7 @@ internal class SendWithSwapConfirmComponent @AssistedInject constructor(
     data class Params(
         val sendWithSwapUM: SendWithSwapUM,
         val analyticsCategoryName: String,
+        val analyticsSendSource: CommonSendAnalyticEvents.CommonSendSource,
         val userWallet: UserWallet,
         val appCurrency: AppCurrency,
         val currentRoute: Flow<SendWithSwapRoute>,
@@ -173,6 +178,8 @@ internal class SendWithSwapConfirmComponent @AssistedInject constructor(
         val isBalanceHidingFlow: StateFlow<Boolean>,
         val primaryCryptoCurrencyStatusFlow: StateFlow<CryptoCurrencyStatus>,
         val primaryFeePaidCurrencyStatusFlow: StateFlow<CryptoCurrencyStatus>,
+        val accountFlow: StateFlow<Account.CryptoPortfolio?>,
+        val isAccountModeFlow: StateFlow<Boolean>,
         val callback: ModelCallback,
     )
 
@@ -182,6 +189,6 @@ internal class SendWithSwapConfirmComponent @AssistedInject constructor(
     }
 
     interface ModelCallback {
-        fun onResult(sendWithSwapUM: SendWithSwapUM)
+        fun onResult(route: SendWithSwapRoute, sendWithSwapUM: SendWithSwapUM)
     }
 }
