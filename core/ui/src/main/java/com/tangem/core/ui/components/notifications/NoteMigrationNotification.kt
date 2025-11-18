@@ -52,9 +52,9 @@ fun NoteMigrationNotification(config: NotificationConfig, modifier: Modifier = M
             verticalArrangement = Arrangement.spacedBy(10.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            config.title?.let {
+            config.title?.let { title ->
                 Text(
-                    text = it.resolveReference(),
+                    text = title.resolveReference(),
                     color = TangemColorPalette.White,
                     style = TangemTheme.typography.h3,
                 )

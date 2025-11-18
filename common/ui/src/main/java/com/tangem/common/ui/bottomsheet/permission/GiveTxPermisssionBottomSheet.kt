@@ -17,7 +17,9 @@ import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withLink
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.IntSize
@@ -26,8 +28,8 @@ import com.tangem.common.ui.R
 import com.tangem.common.ui.bottomsheet.permission.state.*
 import com.tangem.core.ui.components.*
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
-import com.tangem.core.ui.components.bottomsheets.sheet.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
+import com.tangem.core.ui.components.bottomsheets.sheet.TangemBottomSheet
 import com.tangem.core.ui.components.containers.FooterContainer
 import com.tangem.core.ui.components.inputrow.InputRowDefault
 import com.tangem.core.ui.extensions.*
@@ -88,12 +90,12 @@ private fun GiveTxPermissionBottomSheetContent(content: GiveTxPermissionBottomSh
         PrimaryButtonIconEnd(
             text = stringResourceSafe(id = R.string.common_approve),
             iconResId = content.walletInteractionIcon,
-            showProgress = data.approveButton.loading,
+            showProgress = data.approveButton.isLoading,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = TangemTheme.dimens.spacing16),
             onClick = data.approveButton.onClick,
-            enabled = data.approveButton.enabled,
+            enabled = data.approveButton.isEnabled,
         )
 
         SpacerH12()
@@ -114,7 +116,22 @@ private fun GiveTxPermissionBottomSheetContent(content: GiveTxPermissionBottomSh
 @Composable
 private fun ApprovalBottomSheetInfo(data: GiveTxPermissionState.ReadyForRequest) {
     FooterContainer(
-        footer = resourceReference(R.string.give_permission_policy_type_footer),
+        footer = annotatedReference {
+            append(stringResourceSafe(R.string.swap_approve_description))
+            append(" ")
+            withLink(
+                link = LinkAnnotation.Clickable(
+                    tag = "APPROVE_TAG",
+                    linkInteractionListener = { data.onOpenLearnMoreAboutApproveClick() },
+                ),
+                block = {
+                    appendColored(
+                        text = stringResourceSafe(R.string.common_learn_more),
+                        color = TangemTheme.colors.text.accent,
+                    )
+                },
+            )
+        },
         modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing16),
     ) {
         AmountItem(
@@ -205,10 +222,8 @@ private fun AmountItem(
                 isExpanded = isExpandSelector,
                 onDismiss = { isExpandSelector = false },
                 onItemClick = { approveType ->
-                    onChangeApproveType.let {
-                        isExpandSelector = false
-                        onChangeApproveType.invoke(approveType)
-                    }
+                    isExpandSelector = false
+                    onChangeApproveType.invoke(approveType)
                 },
                 items = approveItems,
                 selectedType = approveType,
@@ -318,6 +333,7 @@ private val previewData = GiveTxPermissionBottomSheetConfig(
         subtitle = resourceReference(R.string.give_permission_staking_subtitle, wrappedList("1")),
         dialogText = resourceReference(R.string.give_permission_staking_footer),
         footerText = resourceReference(R.string.swap_give_permission_fee_footer),
+        onOpenLearnMoreAboutApproveClick = {},
     ),
     walletInteractionIcon = R.drawable.ic_tangem_24,
     onCancel = {},

@@ -152,10 +152,10 @@ inline fun <reified T : TangemBottomSheetConfigContent> BasicBottomSheet(
     sheetState: SheetState,
     containerColor: Color,
     addBottomInsets: Boolean,
+    modifier: Modifier = Modifier,
     noinline onBack: (() -> Unit)? = null,
     crossinline title: @Composable (BoxScope.(T) -> Unit),
     crossinline content: @Composable (ColumnScope.(T) -> Unit),
-    modifier: Modifier = Modifier,
 ) {
     val model = config.content as? T ?: return
 
@@ -163,11 +163,11 @@ inline fun <reified T : TangemBottomSheetConfigContent> BasicBottomSheet(
 
     val bsContent: @Composable ColumnScope.() -> Unit = {
         Column(
-            modifier = Modifier.let {
+            modifier = Modifier.let { modifier ->
                 if (addBottomInsets) {
-                    it.padding(bottom = bottomBarHeight)
+                    modifier.padding(bottom = bottomBarHeight)
                 } else {
-                    it
+                    modifier
                 }
             },
         ) {

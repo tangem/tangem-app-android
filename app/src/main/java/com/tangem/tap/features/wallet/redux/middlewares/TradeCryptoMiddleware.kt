@@ -50,8 +50,8 @@ object TradeCryptoMiddleware {
             fiatCurrencyName = action.appCurrencyCode,
             walletAddress = networkAddress,
             isDarkTheme = MutableAppThemeModeHolder.isDarkThemeActive,
-        )?.let {
-            store.dispatchOpenUrl(it)
+        )?.let { url ->
+            store.dispatchOpenUrl(url)
             Analytics.send(Token.Withdraw.ScreenOpened())
         }
     }

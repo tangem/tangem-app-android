@@ -3,10 +3,14 @@ package com.tangem.feature.wallet.presentation.router
 import androidx.compose.runtime.Stable
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.tangem.domain.models.TokenReceiveConfig
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.TangemPayDetailsConfig
+import com.tangem.domain.tokens.model.details.NavigationAction
+import com.tangem.domain.tokens.model.details.TokenAction
 import com.tangem.feature.wallet.navigation.WalletRoute
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletDialogConfig
 import kotlinx.coroutines.flow.SharedFlow
@@ -39,16 +43,17 @@ internal interface InnerWalletRouter {
     fun openUrl(url: String)
 
     /** Open token details screen */
-    fun openTokenDetails(userWalletId: UserWalletId, currencyStatus: CryptoCurrencyStatus)
+    fun openTokenDetails(
+        userWalletId: UserWalletId,
+        currencyStatus: CryptoCurrencyStatus,
+        navigationAction: NavigationAction? = null,
+    )
 
     /** Open stories screen */
     fun openStoriesScreen()
 
     /** Is wallet last screen */
     fun isWalletLastScreen(): Boolean
-
-    /** Open manage tokens screen */
-    fun openManageTokensScreen(userWalletId: UserWalletId)
 
     /** Open scan failed dialog */
     fun openScanFailedDialog(onTryAgain: () -> Unit)
@@ -57,4 +62,15 @@ internal interface InnerWalletRouter {
     fun openNFT(userWallet: UserWallet)
 
     fun openTokenReceiveBottomSheet(tokenReceiveConfig: TokenReceiveConfig)
+
+    fun openTangemPayOnboarding()
+
+    fun openTangemPayDetails(config: TangemPayDetailsConfig)
+
+    /** Open BS abput yield supply active and all money deposited in AAVE */
+    fun openYieldSupplyBottomSheet(
+        cryptoCurrency: CryptoCurrency,
+        tokenAction: TokenAction,
+        onWarningAcknowledged: (TokenAction) -> Unit,
+    )
 }

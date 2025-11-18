@@ -52,7 +52,9 @@ internal class StakingAnalyticSender(
                 source = when (value.currentStep) {
                     StakingStep.InitialInfo -> StakeScreenSource.Info
                     StakingStep.Amount -> StakeScreenSource.Amount
-                    StakingStep.Confirmation -> StakeScreenSource.Confirmation
+                    StakingStep.Success,
+                    StakingStep.Confirmation,
+                    -> StakeScreenSource.Confirmation
                     StakingStep.Validators,
                     StakingStep.RestakeValidator,
                     StakingStep.RewardsValidators,

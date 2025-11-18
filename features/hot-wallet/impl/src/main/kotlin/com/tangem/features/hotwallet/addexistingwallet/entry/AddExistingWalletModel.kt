@@ -15,7 +15,6 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.settings.ShouldAskPermissionUseCase
 import com.tangem.features.hotwallet.addexistingwallet.entry.routing.AddExistingWalletRoute
 import com.tangem.features.hotwallet.addexistingwallet.im.port.AddExistingWalletImportComponent
-import com.tangem.features.hotwallet.addexistingwallet.start.AddExistingWalletStartComponent
 import com.tangem.features.hotwallet.manualbackup.completed.ManualBackupCompletedComponent
 import com.tangem.features.hotwallet.accesscode.AccessCodeComponent
 import com.tangem.features.hotwallet.setupfinished.MobileWalletSetupFinishedComponent
@@ -36,7 +35,6 @@ internal class AddExistingWalletModel @Inject constructor(
 ) : Model() {
 
     val hotWalletStepperComponentModelCallback = HotWalletStepperComponentModelCallback()
-    val addExistingWalletStartModelCallbacks = AddExistingWalletStartModelCallbacks()
     val addExistingWalletImportModelCallbacks = AddExistingWalletImportModelCallbacks()
     val manualBackupCompletedComponentModelCallbacks = ManualBackupCompletedComponentModelCallbacks()
     val accessCodeModelCallbacks = AccessCodeModelCallbacks()
@@ -44,13 +42,12 @@ internal class AddExistingWalletModel @Inject constructor(
     val mobileWalletSetupFinishedComponentModelCallbacks = MobileWalletSetupFinishedComponentModelCallbacks()
 
     val stackNavigation = StackNavigation<AddExistingWalletRoute>()
-    val startRoute = AddExistingWalletRoute.Start
+    val startRoute = AddExistingWalletRoute.Import
     val currentRoute: MutableStateFlow<AddExistingWalletRoute> = MutableStateFlow(startRoute)
 
     fun onChildBack() {
         when (currentRoute.value) {
-            is AddExistingWalletRoute.Start -> router.pop()
-            is AddExistingWalletRoute.Import -> stackNavigation.pop()
+            is AddExistingWalletRoute.Import -> router.pop()
             is AddExistingWalletRoute.BackupCompleted -> Unit
             is AddExistingWalletRoute.SetAccessCode -> Unit
             is AddExistingWalletRoute.ConfirmAccessCode -> stackNavigation.pop()
@@ -87,7 +84,7 @@ internal class AddExistingWalletModel @Inject constructor(
                     title = resourceReference(R.string.access_code_alert_skip_ok),
                     onClick = { navigateToPushNotificationsOrNext() },
                 ),
-                dismissOnFirstAction = true,
+                shouldDismissOnFirstAction = true,
             ),
         )
     }
@@ -99,16 +96,6 @@ internal class AddExistingWalletModel @Inject constructor(
 
         override fun onSkipClick() {
             showSkipAccessCodeWarningDialog()
-        }
-    }
-
-    inner class AddExistingWalletStartModelCallbacks : AddExistingWalletStartComponent.ModelCallbacks {
-        override fun onBackClick() {
-            router.pop()
-        }
-
-        override fun onImportPhraseClick() {
-            stackNavigation.push(AddExistingWalletRoute.Import)
         }
     }
 

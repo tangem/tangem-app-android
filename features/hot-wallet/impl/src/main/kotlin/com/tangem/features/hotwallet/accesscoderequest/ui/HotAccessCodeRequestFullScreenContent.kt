@@ -37,104 +37,109 @@ import com.tangem.features.hotwallet.impl.R
 @Suppress("MagicNumber", "LongMethod")
 @Composable
 internal fun HotAccessCodeRequestFullScreenContent(state: HotAccessCodeRequestUM, modifier: Modifier = Modifier) {
-    AnimatedVisibility(
-        modifier = modifier,
-        visible = state.isShown,
-        enter = fadeIn(),
-        exit = fadeOut(),
-    ) {
-        Column(
-            Modifier
-                .fillMaxSize()
-                .background(TangemTheme.colors.background.primary),
-            horizontalAlignment = Alignment.CenterHorizontally,
+    Box(Modifier.fillMaxSize()) {
+        AnimatedVisibility(
+            modifier = modifier,
+            visible = state.isShown,
+            enter = fadeIn(),
+            exit = fadeOut(),
         ) {
-            TangemTopAppBar(
-                modifier = Modifier
-                    .statusBarsPadding(),
-                startButton = TopAppBarButtonUM.Back(state.onDismiss),
-            )
-
-            SpacerH(68.dp)
-
             Column(
                 Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp),
+                    .fillMaxSize()
+                    .background(TangemTheme.colors.background.primary),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Text(
-                    modifier = Modifier.animateEnterExit(
-                        enter = slideInVertically(
-                            tween(),
-                            initialOffsetY = { it + 200 },
-                        ) + fadeIn(tween()),
-                        exit = slideOutVertically(tween(300)) { it - 200 } + fadeOut(tween()),
-                    ),
-                    text = stringResourceSafe(R.string.access_code_check_title),
-                    style = TangemTheme.typography.h2,
-                    color = TangemTheme.colors.text.primary1,
+                TangemTopAppBar(
+                    modifier = Modifier.statusBarsPadding(),
+                    startButton = TopAppBarButtonUM.Back(state.onDismiss),
                 )
 
-                SpacerH24()
+                SpacerH(68.dp)
 
-                PinTextField(
-                    modifier = Modifier.animateEnterExit(
-                        enter = slideInVertically(
-                            tween(),
-                            initialOffsetY = { it + 200 },
-                        ) + fadeIn(tween()),
-                        exit = slideOutVertically(tween(300)) { it - 200 } + fadeOut(tween()),
-                    ),
-                    length = 6,
-                    isPasswordVisual = true,
-                    value = state.accessCode,
-                    pinTextColor = state.accessCodeColor,
-                    onValueChange = state.onAccessCodeChange,
-                )
+                Column(
+                    Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Text(
+                        modifier = Modifier.animateEnterExit(
+                            enter = slideInVertically(
+                                tween(),
+                                initialOffsetY = { it + 200 },
+                            ) + fadeIn(tween()),
+                            exit = slideOutVertically(tween(300)) { it - 200 } + fadeOut(tween()),
+                        ),
+                        text = stringResourceSafe(R.string.access_code_check_title),
+                        style = TangemTheme.typography.h2,
+                        color = TangemTheme.colors.text.primary1,
+                    )
 
-                SpacerH(20.dp)
+                    SpacerH24()
+
+                    PinTextField(
+                        modifier = Modifier.animateEnterExit(
+                            enter = slideInVertically(
+                                tween(),
+                                initialOffsetY = { it + 200 },
+                            ) + fadeIn(tween()),
+                            exit = slideOutVertically(tween(300)) { it - 200 } + fadeOut(tween()),
+                        ),
+                        length = 6,
+                        isPasswordVisual = true,
+                        value = state.accessCode,
+                        pinTextColor = state.accessCodeColor,
+                        onValueChange = state.onAccessCodeChange,
+                    )
+
+                    SpacerH(20.dp)
+
+                    AnimatedVisibility(
+                        modifier = Modifier.animateEnterExit(
+                            enter = slideInVertically(
+                                tween(),
+                                initialOffsetY = { it + 200 },
+                            ) + fadeIn(tween()),
+                            exit = slideOutVertically(tween(300)) { it - 200 } + fadeOut(tween()),
+                        ),
+                        visible = state.wrongAccessCodeText != null,
+                        enter = fadeIn(),
+                        exit = fadeOut(),
+                    ) {
+                        val wrongAccessCodeText =
+                            state.wrongAccessCodeText ?: return@AnimatedVisibility
+
+                        Text(
+                            text = wrongAccessCodeText.resolveReference(),
+                            textAlign = TextAlign.Center,
+                            style = TangemTheme.typography.caption2.copy(
+                                lineBreak = LineBreak.Heading,
+                            ),
+                            color = TangemTheme.colors.text.warning,
+                        )
+                    }
+                }
 
                 AnimatedVisibility(
-                    modifier = Modifier.animateEnterExit(
-                        enter = slideInVertically(
-                            tween(),
-                            initialOffsetY = { it + 200 },
-                        ) + fadeIn(tween()),
-                        exit = slideOutVertically(tween(300)) { it - 200 } + fadeOut(tween()),
-                    ),
-                    visible = state.wrongAccessCodeText != null,
+                    visible = state.useBiometricVisible,
                     enter = fadeIn(),
                     exit = fadeOut(),
                 ) {
-                    val wrongAccessCodeText =
-                        state.wrongAccessCodeText ?: return@AnimatedVisibility
-
-                    Text(
-                        text = wrongAccessCodeText.resolveReference(),
-                        textAlign = TextAlign.Center,
-                        style = TangemTheme.typography.caption2.copy(
-                            lineBreak = LineBreak.Heading,
+                    SecondaryButton(
+                        modifier = Modifier
+                            .padding(16.dp)
+                            .fillMaxWidth()
+                            .navigationBarsPadding()
+                            .imePadding(),
+                        text = stringResourceSafe(
+                            id = R.string.welcome_unlock,
+                            stringResourceSafe(R.string.common_biometrics),
                         ),
-                        color = TangemTheme.colors.text.warning,
+                        onClick = state.useBiometricClick,
                     )
                 }
-            }
-
-            if (state.useBiometricVisible) {
-                SecondaryButton(
-                    modifier = Modifier
-                        .padding(16.dp)
-                        .fillMaxWidth()
-                        .navigationBarsPadding()
-                        .imePadding(),
-                    text = stringResourceSafe(
-                        id = R.string.welcome_unlock,
-                        stringResourceSafe(R.string.common_biometrics),
-                    ),
-                    onClick = state.useBiometricClick,
-                )
             }
         }
     }

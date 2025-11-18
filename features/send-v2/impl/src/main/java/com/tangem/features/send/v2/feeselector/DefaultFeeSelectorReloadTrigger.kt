@@ -18,16 +18,16 @@ internal class DefaultFeeSelectorReloadTrigger @Inject constructor() :
     FeeSelectorCheckReloadListener {
 
     override val reloadTriggerFlow: SharedFlow<FeeSelectorData>
-    field = MutableSharedFlow()
+        field = MutableSharedFlow()
 
     override val loadingStateTriggerFlow: SharedFlow<Unit>
-    field = MutableSharedFlow()
+        field = MutableSharedFlow()
 
     override val checkReloadTriggerFlow: SharedFlow<Unit>
-    field = MutableSharedFlow()
+        field = MutableSharedFlow()
 
     override val checkReloadResultFlow: SharedFlow<Boolean>
-    field = MutableSharedFlow()
+        field = MutableSharedFlow()
 
     override suspend fun triggerUpdate(feeData: FeeSelectorData) {
         reloadTriggerFlow.emit(feeData)

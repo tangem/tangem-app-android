@@ -1,8 +1,8 @@
 package com.tangem.tap.di.data
 
 import com.tangem.datasource.local.userwallet.UserWalletsStore
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
-import com.tangem.domain.core.wallets.UserWalletsListRepository
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.tap.data.RuntimeUserWalletsStore
 import com.tangem.tap.data.UserWalletsStoreRepositoryProxy

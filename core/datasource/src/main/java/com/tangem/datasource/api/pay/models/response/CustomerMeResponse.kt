@@ -2,6 +2,7 @@ package com.tangem.datasource.api.pay.models.response
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
+import java.math.BigDecimal
 
 @JsonClass(generateAdapter = true)
 data class CustomerMeResponse(
@@ -16,6 +17,9 @@ data class CustomerMeResponse(
         @Json(name = "product_instance") val productInstance: ProductInstance?,
         @Json(name = "payment_account") val paymentAccount: PaymentAccount?,
         @Json(name = "kyc") val kyc: Kyc?,
+        @Json(name = "depositAddress") val depositAddress: String?,
+        @Json(name = "card") val card: Card?,
+        @Json(name = "balance") val balance: Balance?,
     )
 
     @JsonClass(generateAdapter = true)
@@ -44,5 +48,26 @@ data class CustomerMeResponse(
         @Json(name = "risk") val risk: String,
         @Json(name = "review_answer") val reviewAnswer: String,
         @Json(name = "created_at") val createdAt: String,
+    )
+
+    @JsonClass(generateAdapter = true)
+    data class Card(
+        @Json(name = "token") val token: String,
+        @Json(name = "expiration_month") val expirationMonth: Int,
+        @Json(name = "expiration_year") val expirationYear: Int,
+        @Json(name = "emboss_name") val embossName: String,
+        @Json(name = "card_type") val cardType: String,
+        @Json(name = "card_status") val cardStatus: String,
+        @Json(name = "card_number_end") val cardNumberEnd: String,
+    )
+
+    @JsonClass(generateAdapter = true)
+    data class Balance(
+        @Json(name = "currency") val currency: String,
+        @Json(name = "available_balance") val availableBalance: BigDecimal,
+        @Json(name = "credit_limit") val creditLimit: BigDecimal,
+        @Json(name = "pending_charges") val pendingCharges: BigDecimal,
+        @Json(name = "posted_charges") val postedCharges: BigDecimal,
+        @Json(name = "balance_due") val balanceDue: BigDecimal,
     )
 }

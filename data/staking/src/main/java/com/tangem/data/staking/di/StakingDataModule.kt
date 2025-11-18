@@ -10,6 +10,7 @@ import com.tangem.data.staking.DefaultStakingTransactionHashRepository
 import com.tangem.data.staking.converters.error.StakeKitErrorConverter
 import com.tangem.data.staking.store.YieldsBalancesStore
 import com.tangem.data.staking.toggles.DefaultStakingFeatureToggles
+import com.tangem.data.staking.utils.DefaultStakingCleaner
 import com.tangem.datasource.api.stakekit.StakeKitApi
 import com.tangem.datasource.api.stakekit.models.response.model.error.StakeKitErrorResponse
 import com.tangem.datasource.di.NetworkMoshi
@@ -21,6 +22,7 @@ import com.tangem.domain.staking.repositories.StakingErrorResolver
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.staking.repositories.StakingTransactionHashRepository
 import com.tangem.domain.staking.toggles.StakingFeatureToggles
+import com.tangem.domain.staking.utils.StakingCleaner
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -101,5 +103,17 @@ internal object StakingDataModule {
     @Singleton
     fun provideFeatureToggles(featureTogglesManager: FeatureTogglesManager): StakingFeatureToggles {
         return DefaultStakingFeatureToggles(featureTogglesManager)
+    }
+
+    @Provides
+    @Singleton
+    fun provideStakingCleaner(
+        yieldsBalancesStore: YieldsBalancesStore,
+        dispatchers: CoroutineDispatcherProvider,
+    ): StakingCleaner {
+        return DefaultStakingCleaner(
+            yieldsBalancesStore = yieldsBalancesStore,
+            dispatchers = dispatchers,
+        )
     }
 }

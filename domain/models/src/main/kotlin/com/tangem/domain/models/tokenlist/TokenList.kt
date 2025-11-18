@@ -70,7 +70,6 @@ sealed interface TokenList {
 
         override val totalFiatBalance: TotalFiatBalance = TotalFiatBalance.Loaded(
             amount = SerializedBigDecimal.ZERO,
-            isAllAmountsSummarized = true,
             source = StatusSource.ACTUAL,
         )
 

@@ -12,7 +12,7 @@ interface OnrampComponent : ComposableContentComponent {
         val userWalletId: UserWalletId,
         val cryptoCurrency: CryptoCurrency,
         val source: OnrampSource,
-        val launchSepa: Boolean = false,
+        val shouldLaunchSepa: Boolean = false,
     )
 
     interface Factory : ComponentFactory<Params, OnrampComponent>

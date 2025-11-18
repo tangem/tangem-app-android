@@ -7,9 +7,6 @@ import kotlinx.serialization.Serializable
 internal sealed class AddExistingWalletRoute : Route {
 
     @Serializable
-    object Start : AddExistingWalletRoute()
-
-    @Serializable
     object Import : AddExistingWalletRoute()
 
     @Serializable

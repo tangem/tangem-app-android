@@ -15,10 +15,11 @@ import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.features.staking.impl.R
+import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.features.staking.impl.presentation.model.StakingClickIntents
 import com.tangem.features.staking.impl.presentation.state.BalanceState
 import com.tangem.features.staking.impl.presentation.state.StakingStates
+import com.tangem.features.staking.impl.presentation.state.utils.getRewardTypeShortText
 import com.tangem.utils.extensions.orZero
 
 @Composable
@@ -64,11 +65,11 @@ internal fun StakingClaimRewardsValidatorContent(
 @Suppress("UnusedPrivateMember")
 @Composable
 private fun BalanceState.getAprTextColored() = combinedReference(
-    resourceReference(R.string.staking_details_apr),
+    getRewardTypeShortText(validator?.rewardInfo?.type ?: Yield.RewardType.UNKNOWN),
     annotatedReference {
         appendSpace()
         appendColored(
-            text = validator?.apr.orZero().format { percent() },
+            text = validator?.rewardInfo?.rate?.orZero().format { percent() },
             color = TangemTheme.colors.text.accent,
         )
     },
@@ -76,6 +77,6 @@ private fun BalanceState.getAprTextColored() = combinedReference(
 
 @Composable
 private fun BalanceState.getAprTextNeutral() = combinedReference(
-    resourceReference(R.string.staking_details_apr),
-    stringReference(" " + validator?.apr.orZero().format { percent() }),
+    getRewardTypeShortText(validator?.rewardInfo?.type ?: Yield.RewardType.UNKNOWN),
+    stringReference(" " + validator?.rewardInfo?.rate?.orZero().format { percent() }),
 )
