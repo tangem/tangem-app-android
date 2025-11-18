@@ -2,34 +2,42 @@ package com.tangem.features.yield.supply.impl.subcomponents.startearning.model
 
 import arrow.core.getOrElse
 import com.tangem.blockchain.common.TransactionSender
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.Basic
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
-import com.tangem.core.ui.extensions.combinedReference
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.core.ui.format.bigdecimal.crypto
-import com.tangem.core.ui.format.bigdecimal.fiat
-import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.tokens.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
+import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
-import com.tangem.domain.yield.supply.usecase.YieldSupplyEstimateEnterFeeUseCase
-import com.tangem.domain.yield.supply.usecase.YieldSupplyStartEarningUseCase
+import com.tangem.domain.yield.supply.YieldSupplyRepository
+import com.tangem.domain.yield.supply.models.YieldSupplyEnterStatus
+import com.tangem.domain.yield.supply.usecase.*
+import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
 import com.tangem.features.yield.supply.impl.R
+import com.tangem.features.yield.supply.impl.common.YieldSupplyAlertFactory
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyActionUM
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyFeeUM
+import com.tangem.features.yield.supply.impl.common.entity.transformer.YieldSupplyTransactionInProgressTransformer
+import com.tangem.features.yield.supply.impl.common.entity.transformer.YieldSupplyTransactionReadyTransformer
+import com.tangem.features.yield.supply.impl.subcomponents.notifications.YieldSupplyNotificationsComponent
+import com.tangem.features.yield.supply.impl.subcomponents.notifications.YieldSupplyNotificationsUpdateTrigger
+import com.tangem.features.yield.supply.impl.subcomponents.notifications.entity.YieldSupplyNotificationData
 import com.tangem.features.yield.supply.impl.subcomponents.startearning.YieldSupplyStartEarningComponent
-import com.tangem.utils.StringsSigns.DOT
+import com.tangem.features.yield.supply.impl.subcomponents.startearning.model.transformers.YieldSupplyStartEarningFeeContentTransformer
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.collections.immutable.toPersistentList
+import com.tangem.utils.extensions.orZero
+import com.tangem.utils.transformer.update
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -37,11 +45,12 @@ import java.math.BigDecimal
 import javax.inject.Inject
 import kotlin.properties.Delegates
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 @ModelScoped
 internal class YieldSupplyStartEarningModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     paramsContainer: ParamsContainer,
+    private val analytics: AnalyticsEventHandler,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val getSingleCryptoCurrencyStatusUseCase: GetSingleCryptoCurrencyStatusUseCase,
     private val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase,
@@ -49,105 +58,164 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
     private val yieldSupplyStartEarningUseCase: YieldSupplyStartEarningUseCase,
     private val yieldSupplyEstimateEnterFeeUseCase: YieldSupplyEstimateEnterFeeUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
-) : Model() {
+    private val yieldSupplyNotificationsUpdateTrigger: YieldSupplyNotificationsUpdateTrigger,
+    private val yieldSupplyAlertFactory: YieldSupplyAlertFactory,
+    private val yieldSupplyActivateUseCase: YieldSupplyActivateUseCase,
+    private val yieldSupplyMinAmountUseCase: YieldSupplyMinAmountUseCase,
+    private val yieldSupplyGetMaxFeeUseCase: YieldSupplyGetMaxFeeUseCase,
+    private val yieldSupplyGetCurrentFeeUseCase: YieldSupplyGetCurrentFeeUseCase,
+    private val yieldSupplyRepository: YieldSupplyRepository,
+) : Model(), YieldSupplyNotificationsComponent.ModelCallback {
 
     private val params: YieldSupplyStartEarningComponent.Params = paramsContainer.require()
 
     private val cryptoCurrency = params.cryptoCurrency
-    private var userWallet: UserWallet by Delegates.notNull()
+    private var minAmount: BigDecimal by Delegates.notNull()
+    var userWallet: UserWallet by Delegates.notNull()
 
-    private val cryptoCurrencyStatusFlow: StateFlow<CryptoCurrencyStatus>
-    field = MutableStateFlow(
-        CryptoCurrencyStatus(
-            currency = cryptoCurrency,
-            value = CryptoCurrencyStatus.Loading,
-        ),
-    )
-    private val feeCryptoCurrencyStatusFlow: StateFlow<CryptoCurrencyStatus>
-    field = MutableStateFlow(
-        CryptoCurrencyStatus(
-            currency = cryptoCurrency,
-            value = CryptoCurrencyStatus.Loading,
-        ),
-    )
+    val cryptoCurrencyStatusFlow: StateFlow<CryptoCurrencyStatus>
+        field = MutableStateFlow(
+            CryptoCurrencyStatus(
+                currency = cryptoCurrency,
+                value = CryptoCurrencyStatus.Loading,
+            ),
+        )
+    val feeCryptoCurrencyStatusFlow: StateFlow<CryptoCurrencyStatus>
+        field = MutableStateFlow(
+            CryptoCurrencyStatus(
+                currency = cryptoCurrency,
+                value = CryptoCurrencyStatus.Loading,
+            ),
+        )
 
     val uiState: StateFlow<YieldSupplyActionUM>
-    field: MutableStateFlow<YieldSupplyActionUM> = MutableStateFlow(
-        YieldSupplyActionUM(
-            title = resourceReference(R.string.yield_module_start_earning),
-            subtitle = resourceReference(
-                R.string.yield_module_start_earning_sheet_description,
-                wrappedList(cryptoCurrency.symbol),
+        field: MutableStateFlow<YieldSupplyActionUM> = MutableStateFlow(
+            YieldSupplyActionUM(
+                title = resourceReference(R.string.yield_module_start_earning),
+                subtitle = resourceReference(
+                    R.string.yield_module_start_earning_sheet_description,
+                    wrappedList(cryptoCurrency.symbol),
+                ),
+                footer = resourceReference(
+                    R.string.yield_module_start_earning_sheet_next_deposits_v2,
+                    wrappedList(cryptoCurrency.symbol),
+                ),
+                footerLink = resourceReference(R.string.yield_module_start_earning_sheet_fee_policy),
+                currencyIconState = CryptoCurrencyToIconStateConverter().convert(params.cryptoCurrency),
+                yieldSupplyFeeUM = YieldSupplyFeeUM.Loading,
+                isPrimaryButtonEnabled = false,
+                isTransactionSending = false,
             ),
-            footer = combinedReference(
-                resourceReference(R.string.yield_module_start_earning_sheet_next_deposits),
-                resourceReference(R.string.yield_module_start_earning_sheet_fee_policy),
-            ),
-            currencyIconState = CryptoCurrencyToIconStateConverter().convert(params.cryptoCurrency),
-            yieldSupplyFeeUM = YieldSupplyFeeUM.Loading,
-            isPrimaryButtonEnabled = false,
-        ),
-    )
+        )
 
     private val cryptoCurrencyStatus
         get() = cryptoCurrencyStatusFlow.value
     private var appCurrency = AppCurrency.Default
 
     init {
+        analytics.send(
+            YieldSupplyAnalytics.StartEarningScreen(
+                token = params.cryptoCurrency.symbol,
+                blockchain = params.cryptoCurrency.network.name,
+            ),
+        )
         modelScope.launch {
             appCurrency = getSelectedAppCurrencyUseCase.invokeSync().getOrElse { AppCurrency.Default }
             subscribeOnCurrencyStatusUpdates()
+            subscribeOnNotificationsErrors()
+        }
+    }
+
+    private suspend fun calculateMinAmount(userWallet: UserWallet, cryptoCurrencyStatus: CryptoCurrencyStatus) {
+        yieldSupplyMinAmountUseCase(userWallet, cryptoCurrencyStatus).onRight {
+            minAmount = it
+        }.onLeft {
+            minAmount = BigDecimal.ZERO
         }
     }
 
     private suspend fun onLoadFee() {
-        if (cryptoCurrencyStatus.value is CryptoCurrencyStatus.Loading) return
+        if (cryptoCurrencyStatus.value is CryptoCurrencyStatus.Loading || uiState.value.isTransactionSending) return
+
+        uiState.update {
+            it.copy(yieldSupplyFeeUM = YieldSupplyFeeUM.Loading)
+        }
+
+        val maxFee = yieldSupplyGetMaxFeeUseCase(userWallet, cryptoCurrencyStatus).getOrNull() ?: return
+        val estimatedFee = yieldSupplyGetCurrentFeeUseCase(userWallet, cryptoCurrencyStatus).getOrNull() ?: return
 
         val transactionListData = yieldSupplyStartEarningUseCase(
             userWalletId = userWallet.walletId,
             cryptoCurrencyStatus = cryptoCurrencyStatus,
-        ).getOrNull() ?: return
+            maxNetworkFee = maxFee.tokenMaxFee,
+        ).getOrNull()
 
-        val updatedTransactionList = yieldSupplyEstimateEnterFeeUseCase.invoke(
+        if (transactionListData == null) {
+            uiState.update {
+                it.copy(yieldSupplyFeeUM = YieldSupplyFeeUM.Error)
+            }
+            yieldSupplyNotificationsUpdateTrigger.triggerUpdate(
+                data = YieldSupplyNotificationData(
+                    feeValue = null,
+                    feeError = GetFeeError.UnknownError,
+                ),
+            )
+            return
+        }
+
+        yieldSupplyEstimateEnterFeeUseCase.invoke(
             userWallet = userWallet,
-            cryptoCurrency = cryptoCurrency,
+            cryptoCurrency = feeCryptoCurrencyStatusFlow.value.currency,
             transactionDataList = transactionListData,
-        ).getOrNull() ?: return
-
-        val feeSum = updatedTransactionList.sumOf {
-            it.fee?.amount?.value ?: BigDecimal.ZERO
-        }
-
-        val crypto = feeSum.format { crypto(feeCryptoCurrencyStatusFlow.value.currency) }
-        val fiatFeeValue = cryptoCurrencyStatus.value.fiatRate?.let { rate ->
-            feeSum.multiply(rate)
-        }
-
-        val fiat = fiatFeeValue.format { fiat(appCurrency.code, appCurrency.symbol) }
-
-        uiState.update {
-            if (cryptoCurrencyStatus.value is CryptoCurrencyStatus.Loading) {
-                it.copy(yieldSupplyFeeUM = YieldSupplyFeeUM.Loading)
-            } else {
-                it.copy(
-                    isPrimaryButtonEnabled = true, // todo yield supply check for notifications
-                    yieldSupplyFeeUM = YieldSupplyFeeUM.Content(
-                        transactionDataList = updatedTransactionList.toPersistentList(),
-                        feeValue = combinedReference(
-                            stringReference(crypto),
-                            stringReference(" $DOT "),
-                            stringReference(fiat),
-                        ),
+        ).fold(
+            ifLeft = { feeError ->
+                yieldSupplyNotificationsUpdateTrigger.triggerUpdate(
+                    data = YieldSupplyNotificationData(
+                        feeValue = null,
+                        feeError = feeError,
                     ),
                 )
-            }
-        }
+                uiState.update {
+                    it.copy(yieldSupplyFeeUM = YieldSupplyFeeUM.Error)
+                }
+            },
+            ifRight = { updatedTransactionList ->
+                val feeSum = updatedTransactionList.sumOf {
+                    it.fee?.amount?.value.orZero()
+                }
+
+                uiState.update(
+                    YieldSupplyStartEarningFeeContentTransformer(
+                        cryptoCurrencyStatus = cryptoCurrencyStatusFlow.value,
+                        feeCryptoCurrencyStatus = feeCryptoCurrencyStatusFlow.value,
+                        appCurrency = appCurrency,
+                        updatedTransactionList = updatedTransactionList,
+                        feeValue = feeSum,
+                        maxNetworkFee = maxFee,
+                        estimatedFeeValueInTokenCurrency = estimatedFee,
+                        minAmount = minAmount,
+                    ),
+                )
+                yieldSupplyNotificationsUpdateTrigger.triggerUpdate(
+                    data = YieldSupplyNotificationData(
+                        feeValue = feeSum,
+                        feeError = null,
+                    ),
+                )
+            },
+        )
     }
 
     fun onClick() {
         val yieldSupplyFeeUM = uiState.value.yieldSupplyFeeUM as? YieldSupplyFeeUM.Content ?: return
+        analytics.send(
+            YieldSupplyAnalytics.ButtonStartEarning(
+                token = params.cryptoCurrency.symbol,
+                blockchain = params.cryptoCurrency.network.name,
+            ),
+        )
 
-        uiState.update { it.copy(isPrimaryButtonEnabled = false) }
+        uiState.update(YieldSupplyTransactionInProgressTransformer)
         modelScope.launch(dispatchers.default) {
             sendTransactionUseCase.invoke(
                 txsData = yieldSupplyFeeUM.transactionDataList,
@@ -155,14 +223,73 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
                 network = cryptoCurrency.network,
                 sendMode = TransactionSender.MultipleTransactionSendMode.DEFAULT,
             ).fold(
-                ifLeft = {
-                    Timber.e(it.toString())
-                    uiState.update { it.copy(isPrimaryButtonEnabled = true) }
+                ifLeft = { error ->
+                    Timber.e(error.toString())
+                    uiState.update(YieldSupplyTransactionReadyTransformer)
+                    analytics.send(
+                        YieldSupplyAnalytics.EarnErrors(
+                            action = YieldSupplyAnalytics.Action.Start,
+                            errorDescription = error.getAnalyticsDescription(),
+                        ),
+                    )
+                    yieldSupplyAlertFactory.getSendTransactionErrorState(
+                        error = error,
+                        popBack = params.callback::onBackClick,
+                        onFailedTxEmailClick = { errorMessage ->
+                            modelScope.launch(dispatchers.default) {
+                                yieldSupplyAlertFactory.onFailedTxEmailClick(
+                                    userWallet = userWallet,
+                                    cryptoCurrency = cryptoCurrency,
+                                    errorMessage = errorMessage,
+                                )
+                            }
+                        },
+                    )
                 },
                 ifRight = {
-                    params.callback.onTransactionSent()
+                    onStartEarningTransactionSuccess(yieldSupplyFeeUM)
                 },
             )
+        }
+    }
+
+    private suspend fun onStartEarningTransactionSuccess(yieldSupplyFeeUM: YieldSupplyFeeUM.Content) {
+        yieldSupplyRepository.saveTokenProtocolStatus(
+            userWallet.walletId,
+            cryptoCurrency,
+            YieldSupplyEnterStatus.Enter,
+        )
+        val event = AnalyticsParam.TxSentFrom.Earning(
+            blockchain = cryptoCurrency.network.name,
+            token = cryptoCurrency.symbol,
+            feeType = AnalyticsParam.FeeType.Normal,
+        )
+        analytics.send(
+            YieldSupplyAnalytics.FundsEarned(
+                blockchain = cryptoCurrency.network.name,
+                token = cryptoCurrency.symbol,
+            ),
+        )
+        yieldSupplyFeeUM.transactionDataList.forEach {
+            analytics.send(
+                Basic.TransactionSent(
+                    sentFrom = event,
+                    memoType = Basic.TransactionSent.MemoType.Null,
+                ),
+            )
+        }
+
+        val address = cryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value
+        if (address != null) {
+            yieldSupplyActivateUseCase(
+                userWalletId = userWallet.walletId,
+                cryptoCurrency = cryptoCurrency,
+                address = address,
+            )
+        }
+
+        modelScope.launch {
+            params.callback.onTransactionSent()
         }
     }
 
@@ -175,10 +302,24 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
                 },
                 ifLeft = {
                     Timber.w(it.toString())
-                    // showAlertError() todo yield supply error alert
-                    return@launch
+                    showAlertError()
                 },
             )
+        }
+    }
+
+    private fun subscribeOnNotificationsErrors() {
+        yieldSupplyNotificationsUpdateTrigger.hasErrorFlow
+            .onEach { hasError ->
+                uiState.update {
+                    it.copy(isPrimaryButtonEnabled = !hasError)
+                }
+            }.launchIn(modelScope)
+    }
+
+    override fun onFeeReload() {
+        modelScope.launch {
+            onLoadFee()
         }
     }
 
@@ -199,13 +340,8 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
                     )
                 },
                 ifLeft = {
-                    // todo yield supply error
-                    // sendConfirmAlertFactory.getGenericErrorState(
-                    //     onFailedTxEmailClick = {
-                    //         onFailedTxEmailClick(it.toString())
-                    //     },
-                    //     popBack = router::pop,
-                    // )
+                    Timber.w(it.toString())
+                    showAlertError()
                 },
             )
         }.launchIn(modelScope)
@@ -216,7 +352,23 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
         feeCryptoCurrencyStatusFlow.update { feeCurrencyStatus }
 
         modelScope.launch {
+            calculateMinAmount(userWallet, currencyStatus)
             onLoadFee()
         }
+    }
+
+    private fun showAlertError() {
+        yieldSupplyAlertFactory.getGenericErrorState(
+            onFailedTxEmailClick = {
+                modelScope.launch(dispatchers.default) {
+                    yieldSupplyAlertFactory.onFailedTxEmailClick(
+                        userWallet,
+                        cryptoCurrency,
+                        null,
+                    )
+                }
+            },
+            popBack = params.callback::onBackClick,
+        )
     }
 }

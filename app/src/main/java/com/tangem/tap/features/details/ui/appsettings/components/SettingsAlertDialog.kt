@@ -22,7 +22,7 @@ internal fun SettingsAlertDialog(dialog: Dialog.Alert) {
         isDismissable = false,
         confirmButton = DialogButtonUM(
             title = dialog.confirmText.resolveReference(),
-            warning = true,
+            isWarning = true,
             onClick = dialog.onConfirm,
         ),
         dismissButton = DialogButtonUM(
@@ -47,8 +47,8 @@ private class AlertDialogProvider : CollectionPreviewParameterProvider<Dialog.Al
     collection = buildList {
         val dialogsFactory = AppSettingsDialogsFactory()
 
-        dialogsFactory.createDeleteSavedAccessCodesAlert({}, {}).let(::add)
-        dialogsFactory.createDeleteSavedWalletsAlert({}, {}).let(::add)
+        add(dialogsFactory.createDeleteSavedAccessCodesAlert({}, {}))
+        add(dialogsFactory.createDeleteSavedWalletsAlert({}, {}))
     },
 )
 // endregion Preview
