@@ -1,0 +1,8 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>PropertyUsedBeforeDeclaration:StoriesModel.kt$StoriesModel$_state</ID>
+    <ID>UseEmptyCounterpart:StoriesEvents.kt$StoriesEvents$mapOf()</ID>
+  </CurrentIssues>
+</SmellBaseline>
