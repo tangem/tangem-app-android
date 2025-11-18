@@ -1,0 +1,45 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>BooleanPropertyNaming:DefaultUserWalletsSyncDelegate.kt$DefaultUserWalletsSyncDelegate$private val useNewRepository: Boolean</ID>
+    <ID>BooleanPropertyNaming:DeleteWalletUseCase.kt$DeleteWalletUseCase$private val useNewRepository: Boolean</ID>
+    <ID>BooleanPropertyNaming:GenerateWalletNameUseCase.kt$GenerateWalletNameUseCase$private val useNewRepository: Boolean</ID>
+    <ID>BooleanPropertyNaming:GetSavedWalletsCountUseCase.kt$GetSavedWalletsCountUseCase$private val useNewRepository: Boolean</ID>
+    <ID>BooleanPropertyNaming:GetSelectedWalletSyncUseCase.kt$GetSelectedWalletSyncUseCase$private val useNewRepository: Boolean = false</ID>
+    <ID>BooleanPropertyNaming:GetSelectedWalletUseCase.kt$GetSelectedWalletUseCase$private val useNewRepository: Boolean = false</ID>
+    <ID>BooleanPropertyNaming:GetUserWalletUseCase.kt$GetUserWalletUseCase$private val useNewListRepository: Boolean</ID>
+    <ID>BooleanPropertyNaming:GetWalletNamesUseCase.kt$GetWalletNamesUseCase$private val useNewRepository: Boolean</ID>
+    <ID>BooleanPropertyNaming:GetWalletsUseCase.kt$GetWalletsUseCase$private val useNewListRepository: Boolean</ID>
+    <ID>BooleanPropertyNaming:HotWalletAccessCodeAttemptsRepository.kt$HotWalletAccessCodeAttemptsRepository.AttemptId$val auth: Boolean</ID>
+    <ID>BooleanPropertyNaming:HotWalletPasswordRequester.kt$HotWalletPasswordRequester.AttemptRequest$val authMode: Boolean</ID>
+    <ID>BooleanPropertyNaming:IsNeedToBackupUseCase.kt$IsNeedToBackupUseCase$private val useNewRepository: Boolean</ID>
+    <ID>BooleanPropertyNaming:IsWalletAlreadySavedUseCase.kt$IsWalletAlreadySavedUseCase$private val useNewRepository: Boolean</ID>
+    <ID>BooleanPropertyNaming:SaveWalletUseCase.kt$SaveWalletUseCase$private val useNewRepository: Boolean</ID>
+    <ID>BooleanPropertyNaming:SaveWalletUseCase.kt$SaveWalletUseCase$val newUserWallet = userWalletsListRepository.userWalletsSync().none { it.walletId == userWallet.walletId }</ID>
+    <ID>BooleanPropertyNaming:SelectWalletUseCase.kt$SelectWalletUseCase$private val useNewRepository: Boolean</ID>
+    <ID>BooleanPropertyNaming:UpdateWalletUseCase.kt$UpdateWalletUseCase$private val useNewRepository: Boolean</ID>
+    <ID>MaxChainedCallsOnSameLine:UserWalletExtensions.kt$wallets.orEmpty().first { it.curve == primaryCurve }.derivedKeys.keys.any { it == dp }</ID>
+    <ID>MultilineLambdaItParameter:ColdUserWalletBuilder.kt$ColdUserWalletBuilder${ UserWallet.Cold( walletId = it, name = generateWalletNameUseCase( card = card, productType = productType, isStartToCoin = cardTypesResolver.isStart2Coin(), ), cardsInWallet = backupCardsIds.plus(card.cardId), scanResponse = this, isMultiCurrency = cardTypesResolver.isMultiwalletAllowed(), hasBackupError = hasBackupError, ) }</ID>
+    <ID>MultilineLambdaItParameter:HotUserWalletBuilder.kt$HotUserWalletBuilder${ MobileWallet( publicKey = it.seedKey.publicKey, chainCode = it.seedKey.chainCode, curve = it.curve, derivedKeys = it.publicKeys, ) }</ID>
+    <ID>MultilineLambdaItParameter:HotUserWalletBuilder.kt$HotUserWalletBuilder${ val derivationPath = it.derivationPath(DerivationStyle.V3) ?: return@mapNotNull null if (it == Blockchain.Cardano) { val extendedDerivationPath = CardanoUtils.extendedDerivationPath(derivationPath) listOf(derivationPath, extendedDerivationPath) } else { listOf(derivationPath) } }</ID>
+    <ID>MultilineLambdaItParameter:SaveWalletUseCase.kt$SaveWalletUseCase${ return when (it) { is UserWalletsListError.WalletAlreadySaved -&gt; SaveWalletError.WalletAlreadySaved( it.messageResId, ) else -&gt; SaveWalletError.DataError(it.messageResId) }.left() }</ID>
+    <ID>MultilineLambdaItParameter:SelectWalletUseCase.kt$SelectWalletUseCase${ reduxStateHolder.onUserWalletSelected(it) it }</ID>
+    <ID>MultilineLambdaItParameter:UpdateWalletUseCase.kt$UpdateWalletUseCase${ when (it) { is SaveWalletError.DataError -&gt; DataError( IllegalStateException("Failed to update wallet: ${it.messageId}"), ) is SaveWalletError.WalletAlreadySaved -&gt; UpdateWalletError.NameAlreadyExists } }</ID>
+    <ID>NestedScopeFunctions:ColdUserWalletBuilder.kt$ColdUserWalletBuilder$let { UserWallet.Cold( walletId = it, name = generateWalletNameUseCase( card = card, productType = productType, isStartToCoin = cardTypesResolver.isStart2Coin(), ), cardsInWallet = backupCardsIds.plus(card.cardId), scanResponse = this, isMultiCurrency = cardTypesResolver.isMultiwalletAllowed(), hasBackupError = hasBackupError, ) }</ID>
+    <ID>NoNameShadowing:SaveWalletUseCase.kt$SaveWalletUseCase$userWallet</ID>
+    <ID>NonBooleanPropertyPrefixedWithIs:GetExtendedPublicKeyForCurrencyUseCase.kt$GetExtendedPublicKeyForCurrencyUseCase$val isHdKey = walletManager.wallet.publicKey.derivationType?.hdKey</ID>
+    <ID>NonBooleanPropertyPrefixedWithIs:UserWalletsListManagerExtensions.kt$/** * Indicates that the [UserWalletsListManager] is locked * * @return If [UserWalletsListManager] not implements [UserWalletsListManager.Lockable] returns [Flow] which * produces only one false value * * @see UserWalletsListManager.Lockable.isLocked * */ val UserWalletsListManager.isLocked: Flow&lt;Boolean&gt; get() = asLockable()?.lockedState ?: flowOf(false)</ID>
+    <ID>NullableToStringCall:GenerateBuyTangemCardLinkUseCase.kt$GenerateBuyTangemCardLinkUseCase$$id</ID>
+    <ID>NullableToStringCall:UpdateWalletUseCase.kt$UpdateWalletUseCase$${it.messageId}</ID>
+    <ID>ObjectExtendsThrowable:UserWalletsListError.kt$UserWalletsListError$AllKeysInvalidated : UserWalletsListError</ID>
+    <ID>ObjectExtendsThrowable:UserWalletsListError.kt$UserWalletsListError$BiometricsAuthenticationDisabled : UserWalletsListError</ID>
+    <ID>ObjectExtendsThrowable:UserWalletsListError.kt$UserWalletsListError$NoUserWalletSelected : UserWalletsListError</ID>
+    <ID>ObjectExtendsThrowable:UserWalletsListError.kt$UserWalletsListError$NotAllUserWalletsUnlocked : UserWalletsListError</ID>
+    <ID>ObjectExtendsThrowable:UserWalletsListError.kt$UserWalletsListError$WalletAlreadySaved : UserWalletsListError</ID>
+    <ID>RedundantSuspendModifier:GetHotWalletContextualUnlockUseCase.kt$GetHotWalletContextualUnlockUseCase$suspend</ID>
+    <ID>SuspendFunSwallowedCancellation:RenameWalletUseCase.kt$RenameWalletUseCase$runCatching</ID>
+    <ID>UnsafeCallOnNullableType:GetWalletsUseCase.kt$GetWalletsUseCase$userWalletsListRepository.userWallets.value!!</ID>
+    <ID>UnsafeCallOnNullableType:UserWalletIdBuilder.kt$UserWalletIdBuilder.Companion$UserWalletIdBuilder( publicKey = publicKey, ).build()!!</ID>
+  </CurrentIssues>
+</SmellBaseline>
