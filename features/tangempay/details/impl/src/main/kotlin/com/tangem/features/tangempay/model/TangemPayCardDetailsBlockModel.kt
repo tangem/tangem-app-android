@@ -22,11 +22,14 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import com.tangem.utils.transformer.update
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+
+private const val SHOW_DETAILS_TIME = 30_000L
 
 @Stable
 @ModelScoped
@@ -51,6 +54,7 @@ internal class TangemPayCardDetailsBlockModel @Inject constructor(
         field = MutableStateFlow(stateFactory.getInitialState())
 
     private val revealCardDetailsJobHolder = JobHolder()
+    private val showCardDetailsTimerJobHolder = JobHolder()
 
     init {
         modelScope.launch {
@@ -76,12 +80,20 @@ internal class TangemPayCardDetailsBlockModel @Inject constructor(
                             onClickHide = ::hideCardDetails,
                         ),
                     )
+                    launchShowDetailsTimer()
                 }
                 .onLeft {
                     uiState.update(transformer = DetailsHiddenStateTransformer(stateFactory))
                     showError()
                 }
         }.saveIn(revealCardDetailsJobHolder)
+    }
+
+    private fun launchShowDetailsTimer() {
+        modelScope.launch {
+            delay(SHOW_DETAILS_TIME)
+            hideCardDetails()
+        }.saveIn(showCardDetailsTimerJobHolder)
     }
 
     fun hideCardDetails() {
