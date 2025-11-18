@@ -18,6 +18,7 @@ data object Wallet2CardConfig : CardConfig {
      * Logic to determine primary curve for blockchain in TangemWallet 2.0
      * Order is important here
      */
+    @Suppress("NullableToStringCall")
     override fun primaryCurve(blockchain: Blockchain): EllipticCurve? {
         // order is important, new curve is preferred for wallet 2
         // TODO Comment old logic without direct mapping until tests and release
@@ -209,6 +210,11 @@ data object Wallet2CardConfig : CardConfig {
             Blockchain.PepecoinTestnet -> EllipticCurve.Secp256k1
             Blockchain.Hyperliquid -> EllipticCurve.Secp256k1
             Blockchain.HyperliquidTestnet -> EllipticCurve.Secp256k1
+            Blockchain.Quai -> EllipticCurve.Secp256k1
+            Blockchain.QuaiTestnet -> EllipticCurve.Secp256k1
+            // Blockchain.Linea -> EllipticCurve.Secp256k1
+            // Blockchain.LineaTestnet -> EllipticCurve.Secp256k1
+            // Blockchain.ArbitrumNova -> EllipticCurve.Secp256k1
         }
     }
 }
