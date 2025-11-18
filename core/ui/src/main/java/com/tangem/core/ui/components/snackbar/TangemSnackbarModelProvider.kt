@@ -5,7 +5,7 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarVisuals
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 
-internal data class TangemSnackbarModel(val snackbarData: SnackbarData, val actionOnNewLine: Boolean)
+internal data class TangemSnackbarModel(val snackbarData: SnackbarData, val hasActionOnNewLine: Boolean)
 
 internal class TangemSnackbarModelProvider : CollectionPreviewParameterProvider<TangemSnackbarModel>(
     listOf(
@@ -51,7 +51,7 @@ internal class TangemSnackbarModelProvider : CollectionPreviewParameterProvider<
         ): TangemSnackbarModel {
             return TangemSnackbarModel(
                 snackbarData = createSnackbarData(message, actionLabel),
-                actionOnNewLine = actionOnNewLine,
+                hasActionOnNewLine = actionOnNewLine,
             )
         }
 

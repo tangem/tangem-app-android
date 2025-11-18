@@ -101,7 +101,7 @@ class NetworkLogsSaveInterceptor(
 
     private fun logResponseMessage(response: Response, startNs: Long) {
         val responseHeaders = response.headers
-        val responseBody = response.body!!
+        val responseBody = requireNotNull(response.body)
         val contentLength = responseBody.contentLength()
 
         val message = if (!response.promisesBody()) {

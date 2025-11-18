@@ -29,5 +29,5 @@ fun TokensDataStateExpress.getGroupWithReverse(isReverseFromTo: Boolean): Curren
 data class CurrenciesGroup(
     val available: List<CryptoCurrencySwapInfo>,
     val unavailable: List<CryptoCurrencySwapInfo>,
-    val afterSearch: Boolean,
+    val isAfterSearch: Boolean,
 )

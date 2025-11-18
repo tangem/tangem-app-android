@@ -1,7 +1,7 @@
 package com.tangem.data.wallets.hot
 
 import com.tangem.common.core.TangemSdkError
-import com.tangem.domain.core.wallets.UserWalletsListRepository
+import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.hot.HotWalletAccessor
@@ -16,7 +16,6 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
-import kotlin.collections.set
 
 class DefaultHotWalletAccessor @Inject constructor(
     private val tangemHotSdk: TangemHotSdk,

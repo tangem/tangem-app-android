@@ -58,11 +58,14 @@ dependencies {
     implementation(projects.core.decompose)
     implementation(projects.core.datasource)
     implementation(projects.core.res)
+    implementation(projects.core.error)
 
     implementation(projects.libs.crypto)
     implementation(projects.libs.blockchainSdk)
 
     /** Domain modules */
+    implementation(projects.domain.account)
+    implementation(projects.domain.account.status)
     implementation(projects.domain.analytics)
     implementation(projects.domain.appCurrency)
     implementation(projects.domain.appCurrency.models)
@@ -96,6 +99,8 @@ dependencies {
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.notifications)
     implementation(projects.domain.transaction)
+    implementation(projects.domain.yieldSupply)
+    implementation(projects.domain.yieldSupply.models)
 
     /** Feature Apis */
     implementation(projects.features.details.api)
@@ -115,6 +120,8 @@ dependencies {
     implementation(projects.features.sendV2.api)
     implementation(projects.features.kyc.api)
     implementation(projects.features.tokenRecieve.api)
+    implementation(projects.features.yieldSupply.api)
+    implementation(projects.features.tangempay.details.api)
 
     /** Common modules */
     implementation(projects.common)

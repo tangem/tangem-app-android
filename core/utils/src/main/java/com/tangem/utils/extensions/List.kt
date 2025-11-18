@@ -73,3 +73,8 @@ fun <T> List<T>.filterIf(condition: Boolean, predicate: (T) -> Boolean): List<T>
         this
     }
 }
+
+inline fun <T> List<T>.indexOfFirstOrNull(predicate: (T) -> Boolean): Int? {
+    val index = indexOfFirst(predicate)
+    return if (index == -1) null else index
+}
