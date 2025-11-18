@@ -27,6 +27,7 @@ internal class MarketChartListItemPreviewDataProvider : CollectionPreviewParamet
             ),
             isUnder100kMarketCap = false,
             stakingRate = stringReference("APY 12.34%"),
+            updateTimestamp = 0,
         ),
         MarketsListItemUM(
             id = CryptoCurrency.RawID("1"),
@@ -41,6 +42,7 @@ internal class MarketChartListItemPreviewDataProvider : CollectionPreviewParamet
             chartData = null,
             isUnder100kMarketCap = false,
             stakingRate = stringReference("APY 12.34%"),
+            updateTimestamp = 0,
         ),
         MarketsListItemUM(
             id = CryptoCurrency.RawID("1"),
@@ -57,6 +59,7 @@ internal class MarketChartListItemPreviewDataProvider : CollectionPreviewParamet
             ),
             isUnder100kMarketCap = false,
             stakingRate = stringReference("APY 12.34%"),
+            updateTimestamp = 0,
         ),
         MarketsListItemUM(
             id = CryptoCurrency.RawID("1"),
@@ -73,6 +76,7 @@ internal class MarketChartListItemPreviewDataProvider : CollectionPreviewParamet
             ),
             isUnder100kMarketCap = false,
             stakingRate = stringReference("APY 12.34%"),
+            updateTimestamp = 0,
         ),
         MarketsListItemUM(
             id = CryptoCurrency.RawID("1"),
@@ -89,6 +93,7 @@ internal class MarketChartListItemPreviewDataProvider : CollectionPreviewParamet
             ),
             isUnder100kMarketCap = false,
             stakingRate = stringReference("APY 12.34%"),
+            updateTimestamp = 0,
         ),
         MarketsListItemUM(
             id = CryptoCurrency.RawID("1"),
@@ -105,6 +110,7 @@ internal class MarketChartListItemPreviewDataProvider : CollectionPreviewParamet
             ),
             isUnder100kMarketCap = false,
             stakingRate = stringReference("APY 12.34%"),
+            updateTimestamp = 0,
         ),
     ),
 )

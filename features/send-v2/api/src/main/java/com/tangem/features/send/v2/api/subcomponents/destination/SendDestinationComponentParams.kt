@@ -3,6 +3,7 @@ package com.tangem.features.send.v2.api.subcomponents.destination
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.v2.api.entity.PredefinedValues
 import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationUM
 import kotlinx.coroutines.flow.Flow
@@ -12,12 +13,14 @@ sealed class SendDestinationComponentParams {
 
     abstract val state: DestinationUM
     abstract val analyticsCategoryName: String
+    abstract val analyticsSendSource: CommonSendAnalyticEvents.CommonSendSource
     abstract val userWalletId: UserWalletId
     abstract val cryptoCurrency: CryptoCurrency
 
     data class DestinationParams(
         override val state: DestinationUM,
         override val analyticsCategoryName: String,
+        override val analyticsSendSource: CommonSendAnalyticEvents.CommonSendSource,
         override val cryptoCurrency: CryptoCurrency,
         override val userWalletId: UserWalletId,
         val title: TextReference,
@@ -29,6 +32,7 @@ sealed class SendDestinationComponentParams {
     data class DestinationBlockParams(
         override val state: DestinationUM,
         override val analyticsCategoryName: String,
+        override val analyticsSendSource: CommonSendAnalyticEvents.CommonSendSource,
         override val userWalletId: UserWalletId,
         override val cryptoCurrency: CryptoCurrency,
         val blockClickEnableFlow: StateFlow<Boolean>,

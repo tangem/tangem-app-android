@@ -33,4 +33,7 @@ interface YieldsBalancesStore {
 
     /** Store error by [userWalletId] and [stakingIds] */
     suspend fun storeError(userWalletId: UserWalletId, stakingIds: Set<StakingID>)
+
+    /** Clear balances of [stakingIds] by [userWalletId] */
+    suspend fun clear(userWalletId: UserWalletId, stakingIds: Set<StakingID>)
 }

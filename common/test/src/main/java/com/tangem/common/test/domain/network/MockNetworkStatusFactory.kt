@@ -21,19 +21,20 @@ object MockNetworkStatusFactory {
     ): NetworkStatus {
         return NetworkStatus(
             network = network,
-            value = NetworkStatus.Verified(
-                address = NetworkAddress.Single(
-                    defaultAddress = NetworkAddress.Address(
-                        value = "0x1",
-                        type = NetworkAddress.Address.Type.Primary,
+            value = transform(
+                NetworkStatus.Verified(
+                    address = NetworkAddress.Single(
+                        defaultAddress = NetworkAddress.Address(
+                            value = "0x1",
+                            type = NetworkAddress.Address.Type.Primary,
+                        ),
                     ),
+                    amounts = emptyMap(),
+                    pendingTransactions = emptyMap(),
+                    yieldSupplyStatuses = emptyMap(),
+                    source = source,
                 ),
-                amounts = mapOf(),
-                pendingTransactions = mapOf(),
-                yieldSupplyStatuses = mapOf(),
-                source = source,
-            )
-                .let(transform),
+            ),
         )
     }
 

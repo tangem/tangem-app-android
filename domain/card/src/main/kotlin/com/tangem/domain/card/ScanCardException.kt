@@ -2,14 +2,14 @@ package com.tangem.domain.card
 
 sealed class ScanCardException : Exception() {
 
-    data object UserCancelled : ScanCardException() {
+    class UserCancelled : ScanCardException() {
         @Suppress("UnusedPrivateMember")
-        private fun readResolve(): Any = UserCancelled
+        private fun readResolve(): Any = UserCancelled()
     }
 
-    data object WrongAccessCode : ScanCardException() {
+    class WrongAccessCode : ScanCardException() {
         @Suppress("UnusedPrivateMember")
-        private fun readResolve(): Any = WrongAccessCode
+        private fun readResolve(): Any = WrongAccessCode()
     }
 
     open class ChainException : ScanCardException()

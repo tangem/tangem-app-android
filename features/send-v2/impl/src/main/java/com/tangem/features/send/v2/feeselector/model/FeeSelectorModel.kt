@@ -29,6 +29,7 @@ import com.tangem.features.send.v2.api.subcomponents.feeSelector.FeeSelectorRelo
 import com.tangem.features.send.v2.api.subcomponents.feeSelector.analytics.CommonSendFeeAnalyticEvents
 import com.tangem.features.send.v2.api.subcomponents.feeSelector.analytics.CommonSendFeeAnalyticEvents.GasPriceInserter
 import com.tangem.features.send.v2.feeselector.model.transformers.*
+import com.tangem.utils.TangemBlogUrlBuilder
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.transformer.update
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -36,7 +37,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import java.util.Locale
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -62,7 +62,7 @@ internal class FeeSelectorModel @Inject constructor(
     val feeSelectorBottomSheet = SlotNavigation<Unit>()
 
     val uiState: StateFlow<FeeSelectorUM>
-    field = MutableStateFlow<FeeSelectorUM>(params.state)
+        field = MutableStateFlow<FeeSelectorUM>(params.state)
 
     init {
         initAppCurrency()
@@ -77,13 +77,7 @@ internal class FeeSelectorModel @Inject constructor(
     }
 
     fun onReadMoreClicked() {
-        val locale = if (Locale.getDefault().language == RU_LOCALE) RU_LOCALE else EN_LOCALE
-        val url = buildString {
-            append(FEE_READ_MORE_URL_FIRST_PART)
-            append(locale)
-            append(FEE_READ_MORE_URL_SECOND_PART)
-        }
-        urlOpener.openUrl(url)
+        urlOpener.openUrl(TangemBlogUrlBuilder.FEE_BLOG_LINK)
     }
 
     private fun initAppCurrency() {
@@ -156,6 +150,7 @@ internal class FeeSelectorModel @Inject constructor(
             CommonSendFeeAnalyticEvents.SelectedFee(
                 categoryName = params.analyticsCategoryName,
                 feeType = feeSelectorUM.toAnalyticType(),
+                source = params.analyticsSendSource,
             ),
         )
         val isCustomFeeEdited = feeSelectorUM.selectedFeeItem.fee.amount.value != feeSelectorUM.fees.normal.amount.value
@@ -182,7 +177,10 @@ internal class FeeSelectorModel @Inject constructor(
 
     fun showFeeSelector() {
         analyticsEventHandler.send(
-            CommonSendAnalyticEvents.FeeScreenOpened(categoryName = params.analyticsCategoryName),
+            CommonSendAnalyticEvents.FeeScreenOpened(
+                categoryName = params.analyticsCategoryName,
+                source = params.analyticsSendSource,
+            ),
         )
         analyticsEventHandler.send(
             CommonSendAnalyticEvents.ScreenReopened(
@@ -244,12 +242,5 @@ internal class FeeSelectorModel @Inject constructor(
                 },
             )
         }
-    }
-
-    private companion object {
-        const val RU_LOCALE = "ru"
-        const val EN_LOCALE = "en"
-        const val FEE_READ_MORE_URL_FIRST_PART = "https://tangem.com/"
-        const val FEE_READ_MORE_URL_SECOND_PART = "/blog/post/what-is-a-transaction-fee-and-why-do-we-need-it/"
     }
 }
