@@ -111,8 +111,6 @@ sealed class WalletScreenAnalyticsEvent {
 
         data object EditWalletTapped : MainScreen(event = "Button - Edit Wallet Tapped")
 
-        data object DeleteWalletTapped : MainScreen(event = "Button - Delete Wallet Tapped")
-
         data object NoticeSeedPhraseSupport : MainScreen(event = "Notice - Seed Phrase Support")
 
         data object NoticeSeedPhraseSupportSecond : MainScreen(event = "Notice - Seed Phrase Support2")

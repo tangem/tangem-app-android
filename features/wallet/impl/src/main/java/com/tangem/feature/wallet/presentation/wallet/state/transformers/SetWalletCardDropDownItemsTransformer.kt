@@ -67,11 +67,6 @@ internal class SetWalletCardDropDownItemsTransformer(
                     icon = R.drawable.ic_edit_24,
                     onClick = { clickIntents.onRenameBeforeConfirmationClick(userWalletId) },
                 ),
-                WalletDropDownItems(
-                    text = resourceReference(id = R.string.common_delete),
-                    icon = R.drawable.ic_trash_24,
-                    onClick = { clickIntents.onDeleteBeforeConfirmationClick(userWalletId) },
-                ),
             )
         } else {
             persistentListOf()

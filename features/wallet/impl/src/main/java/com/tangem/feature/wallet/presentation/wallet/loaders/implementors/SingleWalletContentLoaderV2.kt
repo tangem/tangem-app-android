@@ -8,7 +8,6 @@ import com.tangem.domain.onramp.GetOnrampTransactionsUseCase
 import com.tangem.domain.onramp.OnrampRemoveTransactionUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
-import com.tangem.domain.wallets.usecase.ShouldSaveUserWalletsUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.account.AccountDependencies
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.WalletWarningsAnalyticsSender
@@ -34,7 +33,6 @@ internal class SingleWalletContentLoaderV2 @AssistedInject constructor(
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getOnrampTransactionsUseCase: GetOnrampTransactionsUseCase,
     private val onrampRemoveTransactionUseCase: OnrampRemoveTransactionUseCase,
-    private val shouldSaveUserWalletsUseCase: ShouldSaveUserWalletsUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val walletWarningsAnalyticsSender: WalletWarningsAnalyticsSender,
     private val accountDependencies: AccountDependencies,
@@ -66,7 +64,6 @@ internal class SingleWalletContentLoaderV2 @AssistedInject constructor(
         ),
         WalletDropDownItemsSubscriber(
             stateHolder = stateHolder,
-            shouldSaveUserWalletsUseCase = shouldSaveUserWalletsUseCase,
             clickIntents = clickIntents,
         ),
         SingleWalletExpressStatusesSubscriberV2(

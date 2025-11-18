@@ -4,7 +4,6 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.promo.GetStoryContentUseCase
 import com.tangem.domain.staking.usecase.StakingApyFlowUseCase
-import com.tangem.domain.wallets.usecase.ShouldSaveUserWalletsUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyApyFlowUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.TokenListAnalyticsSender
@@ -29,7 +28,6 @@ internal class SingleWalletWithTokenContentLoader(
     private val getMultiWalletWarningsFactory: GetMultiWalletWarningsFactory,
     private val tokenListStore: MultiWalletTokenListStore,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
-    private val shouldSaveUserWalletsUseCase: ShouldSaveUserWalletsUseCase,
     private val getStoryContentUseCase: GetStoryContentUseCase,
     private val yieldSupplyApyFlowUseCase: YieldSupplyApyFlowUseCase,
     private val stakingApyFlowUseCase: StakingApyFlowUseCase,
@@ -63,7 +61,6 @@ internal class SingleWalletWithTokenContentLoader(
             ).let(::add)
             WalletDropDownItemsSubscriber(
                 stateHolder = stateHolder,
-                shouldSaveUserWalletsUseCase = shouldSaveUserWalletsUseCase,
                 clickIntents = clickIntents,
             ).let(::add)
         }

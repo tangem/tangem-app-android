@@ -1,7 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.loaders.implementors
 
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.wallets.usecase.ShouldSaveUserWalletsUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.WalletWarningsAnalyticsSender
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.WalletWarningsSingleEventSender
@@ -22,7 +21,6 @@ internal class SingleWalletWithTokenContentLoaderV2 @AssistedInject constructor(
     private val walletWarningsAnalyticsSender: WalletWarningsAnalyticsSender,
     private val walletWarningsSingleEventSender: WalletWarningsSingleEventSender,
     private val getMultiWalletWarningsFactory: GetMultiWalletWarningsFactory,
-    private val shouldSaveUserWalletsUseCase: ShouldSaveUserWalletsUseCase,
 ) : WalletContentLoader(id = userWallet.walletId) {
 
     override fun create(): List<WalletSubscriber> = listOf(
@@ -37,7 +35,6 @@ internal class SingleWalletWithTokenContentLoaderV2 @AssistedInject constructor(
         ),
         WalletDropDownItemsSubscriber(
             stateHolder = stateController,
-            shouldSaveUserWalletsUseCase = shouldSaveUserWalletsUseCase,
             clickIntents = clickIntents,
         ),
         checkWalletWithFundsSubscriberFactory.create(userWallet),
