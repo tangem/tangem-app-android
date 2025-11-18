@@ -1,4 +1,4 @@
-package com.tangem.common.test.utils
+package com.tangem.test.core
 
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
