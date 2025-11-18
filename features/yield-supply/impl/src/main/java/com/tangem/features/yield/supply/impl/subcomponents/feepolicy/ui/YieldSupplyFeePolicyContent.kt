@@ -171,7 +171,6 @@ private fun YieldSupplyFeePolicyContent_Preview() {
                 transactionDataList = persistentListOf(),
                 feeFiatValue = stringReference("$1.45"),
                 maxNetworkFeeFiatValue = stringReference("$8.50"),
-                tokenFeeFiatValue = stringReference("$1.45"),
                 minTopUpFiatValue = stringReference("$50"),
                 feeNoteValue = resourceReference(
                     id = R.string.yield_module_fee_policy_sheet_fee_note,
