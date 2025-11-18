@@ -1,0 +1,38 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>BooleanPropertyNaming:DefaultWalletsRepository.kt$DefaultWalletsRepository$val legacySaveWalletsInTheApp = appPreferencesStore.getSyncOrNull( key = PreferencesKeys.SAVE_USER_WALLETS_KEY, )</ID>
+    <ID>BooleanPropertyNaming:DefaultWalletsRepository.kt$DefaultWalletsRepository$val legacyShouldSaveAccessCode = appPreferencesStore.getSyncOrNull( key = PreferencesKeys.SHOULD_SAVE_ACCESS_CODES_KEY, )</ID>
+    <ID>BooleanPropertyNaming:DefaultWalletsRepository.kt$DefaultWalletsRepository$val requireAccessCode = appPreferencesStore.getSyncOrNull( key = PreferencesKeys.REQUIRE_ACCESS_CODE_KEY, )</ID>
+    <ID>BooleanPropertyNaming:DefaultWalletsRepository.kt$DefaultWalletsRepository$val useBiometricAuthentication = appPreferencesStore.getSyncOrNull( key = PreferencesKeys.USE_BIOMETRIC_AUTHENTICATION_KEY, )</ID>
+    <ID>MultilineLambdaItParameter:DefaultColdMapDerivationsRepository.kt$DefaultColdMapDerivationsRepository${ networkFactory.create( blockchain = Blockchain.fromNetworkId(it.value) ?: return@mapNotNull null, extraDerivationPath = null, userWallet = userWallet, ) }</ID>
+    <ID>MultilineLambdaItParameter:DefaultDerivationsRepository.kt$DefaultDerivationsRepository${ userWallet.update(it.first) it.second }</ID>
+    <ID>MultilineLambdaItParameter:DefaultHotMapDerivationsRepository.kt$DefaultHotMapDerivationsRepository${ networkFactory.create( blockchain = Blockchain.fromNetworkId(it.value) ?: return@mapNotNull null, extraDerivationPath = null, userWallet = userWallet, ) }</ID>
+    <ID>MultilineLambdaItParameter:DefaultHotWalletAccessCodeAttemptsRepository.kt$DefaultHotWalletAccessCodeAttemptsRepository${ AttemptsPersistentData( attempts = it[PreferencesKeys.getHotWalletUnlockAttemptsKey(id.attemptIdKey())] ?: 0, bootCount = it[PreferencesKeys.getHotWalletUnlockBootKey(id.attemptIdKey())] ?: 0, deadline = it[PreferencesKeys.getHotWalletUnlockDeadlineKey(id.attemptIdKey())] ?: 0L, ) }</ID>
+    <ID>MultilineLambdaItParameter:DefaultHotWalletAccessCodeAttemptsRepository.kt$DefaultHotWalletAccessCodeAttemptsRepository${ it.remove(PreferencesKeys.getHotWalletUnlockAttemptsKey(authAttemptId.attemptIdKey())) it.remove(PreferencesKeys.getHotWalletUnlockAttemptsKey(noAuthAttemptId.attemptIdKey())) it.remove(PreferencesKeys.getHotWalletUnlockBootKey(authAttemptId.attemptIdKey())) it.remove(PreferencesKeys.getHotWalletUnlockBootKey(noAuthAttemptId.attemptIdKey())) it.remove(PreferencesKeys.getHotWalletUnlockDeadlineKey(authAttemptId.attemptIdKey())) it.remove(PreferencesKeys.getHotWalletUnlockDeadlineKey(noAuthAttemptId.attemptIdKey())) }</ID>
+    <ID>MultilineLambdaItParameter:DefaultHotWalletAccessCodeAttemptsRepository.kt$DefaultHotWalletAccessCodeAttemptsRepository${ while (true) { emit(toState(id, it.attempts, it.deadline, it.bootCount)) val remaining = remainingSeconds(it.deadline, it.bootCount) if (remaining &lt;= 0) break delay(timeMillis = 1000) } }</ID>
+    <ID>MultilineLambdaItParameter:DefaultHotWalletAccessor.kt$DefaultHotWalletAccessor${ block(UnlockHotWallet(hotWalletId, it)).also { hotWalletPasswordRequester.successfulAuthentication() hotWalletPasswordRequester.dismiss() } }</ID>
+    <ID>MultilineLambdaItParameter:DefaultHotWalletAccessor.kt$DefaultHotWalletAccessor${ tangemHotSdk.getContextUnlock(it).also { unlockHotWallet -&gt; contextualUnlockHotWallet[hotWalletId] = unlockHotWallet } }</ID>
+    <ID>MultilineLambdaItParameter:DefaultWalletsRepository.kt$DefaultWalletsRepository${ if (it is HttpException &amp;&amp; it.code == HttpException.Code.NOT_FOUND) { Status.NOTIFIED } else { Status.NOT_NEEDED } }</ID>
+    <ID>MultilineLambdaItParameter:DefaultWalletsRepository.kt$DefaultWalletsRepository${ it.getOrDefault( key = userWalletId, defaultValue = SeedPhraseNotificationsStatus.NOT_NEEDED, ) }</ID>
+    <ID>MultilineLambdaItParameter:DefaultWalletsRepository.kt$DefaultWalletsRepository${ it.setObjectMap( key = PreferencesKeys.NOTIFICATIONS_ENABLED_STATES_KEY, value = it.getObjectMap&lt;Boolean&gt;(PreferencesKeys.NOTIFICATIONS_ENABLED_STATES_KEY) .plus(userWalletId.stringValue to isEnabled), ) }</ID>
+    <ID>MultilineLambdaItParameter:DefaultWalletsRepository.kt$DefaultWalletsRepository${ it.setObjectMap( key = PreferencesKeys.WALLETS_NFT_ENABLED_STATES_KEY, value = it.getObjectMap&lt;Boolean&gt;(PreferencesKeys.WALLETS_NFT_ENABLED_STATES_KEY) .plus(userWalletId.stringValue to false), ) }</ID>
+    <ID>MultilineLambdaItParameter:DefaultWalletsRepository.kt$DefaultWalletsRepository${ it.setObjectMap( key = PreferencesKeys.WALLETS_NFT_ENABLED_STATES_KEY, value = it.getObjectMap&lt;Boolean&gt;(PreferencesKeys.WALLETS_NFT_ENABLED_STATES_KEY) .plus(userWalletId.stringValue to true), ) }</ID>
+    <ID>MultilineLambdaItParameter:DefaultWalletsRepository.kt$DefaultWalletsRepository${ it.toMutableMap().apply { this[id] = value } }</ID>
+    <ID>MultilineLambdaItParameter:DefaultWalletsRepository.kt$DefaultWalletsRepository${ val added = it[PreferencesKeys.ADDED_WALLETS_WITH_RING_KEY].orEmpty() it[PreferencesKeys.ADDED_WALLETS_WITH_RING_KEY] = added + userWalletId.stringValue }</ID>
+    <ID>MultilineLambdaItParameter:TangemHotWalletSigner.kt$TangemHotWalletSigner${ Timber.e(it) return if (it is TangemSdkError) { CompletionResult.Failure(it) } else { CompletionResult.Failure(TangemSdkError.ExceptionError(it)) } }</ID>
+    <ID>MultilineLambdaItParameter:WalletIdBodyConverter.kt$WalletIdBodyConverter${ CardInfoBody( cardId = it.key, cardPublicKey = it.value, ) }</ID>
+    <ID>NamedArguments:DefaultHotWalletAccessCodeAttemptsRepository.kt$DefaultHotWalletAccessCodeAttemptsRepository$toState(id, count, deadline, boot)</ID>
+    <ID>NamedArguments:DefaultHotWalletAccessCodeAttemptsRepository.kt$DefaultHotWalletAccessCodeAttemptsRepository$toState(id, it.attempts, it.deadline, it.bootCount)</ID>
+    <ID>NoNameShadowing:DefaultWalletsRepository.kt$DefaultWalletsRepository$error</ID>
+    <ID>NoNameShadowing:DefaultWalletsRepository.kt$DefaultWalletsRepository${ UserWalletId(it.key) }</ID>
+    <ID>SuspendFunSwallowedCancellation:DefaultHotWalletAccessor.kt$DefaultHotWalletAccessor$runCatching</ID>
+    <ID>SuspendFunSwallowedCancellation:TangemHotWalletSigner.kt$TangemHotWalletSigner$runCatching</ID>
+    <ID>UnnecessaryLet:MissedDerivationsFinder.kt$MissedDerivationsFinder$let(::findByNetworks)</ID>
+    <ID>UnusedImports:DefaultDerivationsRepository.kt$import com.tangem.common.map</ID>
+    <ID>UseOrEmpty:DefaultColdMapDerivationsRepository.kt$DefaultColdMapDerivationsRepository$oldKeys[walletKey] ?: emptyMap()</ID>
+    <ID>UseOrEmpty:DefaultHotMapDerivationsRepository.kt$DefaultHotMapDerivationsRepository$oldKeys[walletKey] ?: emptyMap()</ID>
+    <ID>VarCouldBeVal:DefaultHotWalletAccessor.kt$DefaultHotWalletAccessor$private var contextualUnlockHotWallet: ConcurrentHashMap&lt;HotWalletId, UnlockHotWallet?&gt; = ConcurrentHashMap()</ID>
+  </CurrentIssues>
+</SmellBaseline>
