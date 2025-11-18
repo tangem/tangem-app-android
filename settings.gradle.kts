@@ -150,6 +150,7 @@ include(":app")
 include(":plugins:detekt-rules")
 
 include(":test:core")
+include(":test:mock")
 
 // region Core modules
 include(":core:analytics")
