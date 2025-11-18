@@ -19,6 +19,7 @@ import com.tangem.feature.wallet.presentation.common.WalletPreviewData.topBarCon
 import com.tangem.feature.wallet.presentation.wallet.state.model.*
 import com.tangem.utils.StringsSigns.DASH_SIGN
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toPersistentList
 
 internal object WalletScreenPreviewData {
     private val tokenItemState = TokenItemState.Content(
@@ -86,15 +87,17 @@ internal object WalletScreenPreviewData {
     private val portfolioContentState = WalletTokensListState.ContentState.PortfolioContent(
         items = persistentListOf(
             TokensListItemUM.Portfolio(
-                tokens = textContentTokensState.items.filterIsInstance<PortfolioTokensListItemUM>(),
+                tokens = textContentTokensState.items.filterIsInstance<PortfolioTokensListItemUM>().toPersistentList(),
                 isExpanded = false,
-                state = AccountItemPreviewData.accountItem
+                isCollapsable = true,
+                tokenItemUM = AccountItemPreviewData.accountItem
                     .copy(iconState = AccountItemPreviewData.accountLetterIcon),
             ),
             TokensListItemUM.Portfolio(
-                tokens = textContentTokensState.items.filterIsInstance<PortfolioTokensListItemUM>(),
+                tokens = textContentTokensState.items.filterIsInstance<PortfolioTokensListItemUM>().toPersistentList(),
                 isExpanded = true,
-                state = AccountItemPreviewData.accountItem,
+                isCollapsable = true,
+                tokenItemUM = AccountItemPreviewData.accountItem,
             ),
         ),
         organizeTokensButtonConfig = WalletTokensListState.OrganizeTokensButtonConfig(
@@ -159,6 +162,7 @@ internal object WalletScreenPreviewData {
                 isFlickering = false,
                 onItemClick = { },
             ),
+            type = WalletState.MultiCurrency.WalletType.Cold,
         )
     }
 

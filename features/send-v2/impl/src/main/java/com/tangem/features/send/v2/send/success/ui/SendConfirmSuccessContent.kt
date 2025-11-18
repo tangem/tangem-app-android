@@ -11,7 +11,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.amountScreen.ui.AmountBlock
 import com.tangem.common.ui.navigationButtons.NavigationButtonsBlockV2
-import com.tangem.core.ui.components.BottomFade
+import com.tangem.core.ui.components.Fade
+import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.transactions.TransactionDoneTitle
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
@@ -45,52 +46,68 @@ internal fun SendConfirmSuccessContent(sendUM: SendUM, destinationBlockComponent
         exit = slideOutVertically().plus(fadeOut()),
         label = "Animate success content",
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(TangemTheme.colors.background.tertiary),
-        ) {
-            Column(
+        Column {
+            Box(
                 modifier = Modifier
-                    .padding(horizontal = TangemTheme.dimens.spacing16)
-                    .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+                    .weight(1f)
+                    .background(TangemTheme.colors.background.tertiary),
             ) {
-                if (sendUM.confirmUM is ConfirmUM.Success) {
-                    TransactionDoneTitle(
-                        title = resourceReference(R.string.sent_transaction_sent_title),
-                        subtitle = resourceReference(
-                            R.string.send_date_format,
-                            wrappedList(
-                                sendUM.confirmUM.transactionDate.toTimeFormat(DateTimeFormatters.dateFormatter),
-                                sendUM.confirmUM.transactionDate.toTimeFormat(),
-                            ),
-                        ),
-                        modifier = Modifier.padding(vertical = 12.dp),
-                    )
-                }
-                AmountBlock(
-                    amountState = sendUM.amountUM,
-                    isClickDisabled = true,
-                    isEditingDisabled = true,
-                    onClick = {},
+                SuccessContent(
+                    sendUM = sendUM,
+                    destinationBlockComponent = destinationBlockComponent,
+                    modifier = Modifier.fillMaxHeight(),
                 )
-                destinationBlockComponent.Content(modifier = Modifier)
-                FeeBlock(feeSelectorUM = sendUM.feeSelectorUM)
-                Spacer(Modifier.height(128.dp))
+                Fade(
+                    modifier = Modifier.align(Alignment.BottomCenter),
+                    backgroundColor = TangemTheme.colors.background.tertiary,
+                )
             }
-            BottomFade(Modifier.align(Alignment.BottomCenter), TangemTheme.colors.background.tertiary)
             NavigationButtonsBlockV2(
                 navigationUM = sendUM.navigationUM,
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(
-                        start = 16.dp,
-                        end = 16.dp,
-                        bottom = 16.dp,
-                    ),
+                modifier = Modifier.padding(
+                    start = 16.dp,
+                    end = 16.dp,
+                    bottom = 16.dp,
+                ),
             )
         }
+    }
+}
+
+@Composable
+private fun SuccessContent(
+    sendUM: SendUM,
+    destinationBlockComponent: SendDestinationBlockComponent,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
+            .padding(horizontal = 16.dp)
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        if (sendUM.confirmUM is ConfirmUM.Success) {
+            TransactionDoneTitle(
+                title = resourceReference(R.string.sent_transaction_sent_title),
+                subtitle = resourceReference(
+                    R.string.send_date_format,
+                    wrappedList(
+                        sendUM.confirmUM.transactionDate.toTimeFormat(DateTimeFormatters.dateFormatter),
+                        sendUM.confirmUM.transactionDate.toTimeFormat(),
+                    ),
+                ),
+                modifier = Modifier.padding(vertical = 12.dp),
+            )
+        }
+        AmountBlock(
+            amountState = sendUM.amountUM,
+            isClickDisabled = true,
+            isEditingDisabled = true,
+            onClick = {},
+        )
+        destinationBlockComponent.Content(modifier = Modifier)
+        FeeBlock(feeSelectorUM = sendUM.feeSelectorUM)
+        SpacerH(16.dp)
     }
 }
 

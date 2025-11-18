@@ -99,11 +99,11 @@ fun StoriesProgressBar(
                         .clip(RoundedCornerShape(2.dp))
                         .background(TangemColorPalette.White)
                         .fillMaxHeight()
-                        .let {
+                        .let { modifier ->
                             when (index) {
-                                currentStep -> it.fillMaxWidth(progress.value)
-                                in 0..currentStep -> it.fillMaxWidth(fraction = 1f)
-                                else -> it
+                                currentStep -> modifier.fillMaxWidth(progress.value)
+                                in 0..currentStep -> modifier.fillMaxWidth(fraction = 1f)
+                                else -> modifier
                             }
                         },
                 )
