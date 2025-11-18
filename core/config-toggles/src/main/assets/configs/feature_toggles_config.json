@@ -24,24 +24,12 @@
         "version": "undefined"
     },
     {
-        "name": "SEND_VIA_SWAP_ENABLED",
-        "version": "5.28.0"
-    },
-    {
         "name": "SWAP_REDESIGN_ENABLED",
         "version": "undefined"
     },
     {
-        "name": "SEND_REDESIGN_ENABLED",
-        "version": "5.28.0"
-    },
-    {
         "name": "HOT_WALLET_ENABLED",
         "version": "undefined"
-    },
-    {
-        "name": "NFT_SEND_REDESIGN_ENABLED",
-        "version": "5.28.0"
     },
     {
         "name": "TANGEM_PAY_ENABLED",
@@ -53,7 +41,7 @@
     },
     {
         "name": "YIELD_SUPPLY_FEATURE_ENABLED",
-        "version": "undefined"
+        "version": "5.30.0"
     },
     {
         "name": "NEW_ONRAMP_MAIN_ENABLED",
