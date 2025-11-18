@@ -1,0 +1,17 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>CastNullableToNonNullableType:ApiResponseCallAdapterFactory.kt$ApiResponseCallAdapterFactory$as</ID>
+    <ID>MultilineLambdaItParameter:DefaultWalletManagersStore.kt$DefaultWalletManagersStore${ it.wallet.blockchain == walletManager.wallet.blockchain &amp;&amp; it.wallet.publicKey.derivationPath == walletManager.wallet.publicKey.derivationPath }</ID>
+    <ID>NestedScopeFunctions:PendingActionConverter.kt$PendingActionConverter$let { amount -&gt; PendingAction.PendingActionArgs.Amount( required = amount.required, minimum = amount.minimum, maximum = amount.maximum, ) }</ID>
+    <ID>NestedScopeFunctions:PendingActionConverter.kt$PendingActionConverter$let { duration -&gt; PendingAction.PendingActionArgs.Duration( required = duration.required, minimum = duration.minimum, maximum = duration.maximum, ) }</ID>
+    <ID>NestedScopeFunctions:PendingActionConverter.kt$PendingActionConverter$let { tronResource -&gt; PendingAction.PendingActionArgs.TronResource( required = tronResource.required, options = tronResource.options, ) }</ID>
+    <ID>NestedScopeFunctions:RetrofitApiBuilder.kt$RetrofitApiBuilder$let { withConnectTimeout(timeout = it.duration, unit = it.unit) }</ID>
+    <ID>NestedScopeFunctions:RetrofitApiBuilder.kt$RetrofitApiBuilder$let { withReadTimeout(timeout = it.duration, unit = it.unit) }</ID>
+    <ID>NestedScopeFunctions:RetrofitApiBuilder.kt$RetrofitApiBuilder$let { withWriteTimeout(timeout = it.duration, unit = it.unit) }</ID>
+    <ID>UnreachableCode:MockApiConfigsManager.kt$MockApiConfigsManager$apiConfigs + (apiConfig to environment)</ID>
+    <ID>UnreachableCode:MockApiConfigsManager.kt$MockApiConfigsManager$val apiConfig = apiConfigs.keys.firstOrNull { it.id.name == id } ?: error("Api config with id [$id] not found. Check that ApiConfig with id [$id] was provided into DI")</ID>
+    <ID>UnusedImports:NetworkModule.kt$import com.tangem.datasource.api.common.config.MoonPay</ID>
+  </CurrentIssues>
+</SmellBaseline>

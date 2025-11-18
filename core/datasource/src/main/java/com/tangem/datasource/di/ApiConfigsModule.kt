@@ -60,6 +60,10 @@ internal object ApiConfigsModule {
 
     @Provides
     @IntoSet
+    fun provideNewsConfig(authProvider: AuthProvider): ApiConfig = News(authProvider = authProvider)
+
+    @Provides
+    @IntoSet
     fun provideYieldSupplyConfig(
         environmentConfigStorage: EnvironmentConfigStorage,
         appVersionProvider: AppVersionProvider,

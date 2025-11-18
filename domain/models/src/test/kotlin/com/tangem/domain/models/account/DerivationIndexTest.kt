@@ -4,10 +4,10 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth
+import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.MethodSource
 
 /**
 [REDACTED_AUTHOR]
@@ -27,7 +27,7 @@ class DerivationIndexTest {
     }
 
     @ParameterizedTest
-    @MethodSource("provideTestModels")
+    @ProvideTestModels
     fun invoke(model: InvokeTestModel) {
         // Act
         val actual = DerivationIndex(model.index)

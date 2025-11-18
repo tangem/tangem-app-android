@@ -1,7 +1,7 @@
 package com.tangem.domain.account.status.utils
 
 import com.google.common.truth.Truth
-import com.tangem.common.test.utils.ProvideTestModels
+import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 

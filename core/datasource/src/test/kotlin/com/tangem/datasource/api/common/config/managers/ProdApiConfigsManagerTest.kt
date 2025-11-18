@@ -2,7 +2,6 @@ package com.tangem.datasource.api.common.config.managers
 
 import android.os.Build
 import com.google.common.truth.Truth
-import com.tangem.common.test.utils.ProvideTestModels
 import com.tangem.datasource.BuildConfig
 import com.tangem.datasource.api.common.AuthProvider
 import com.tangem.datasource.api.common.config.*
@@ -16,6 +15,7 @@ import com.tangem.datasource.api.common.config.managers.MockEnvironmentConfigSto
 import com.tangem.lib.auth.ExpressAuthProvider
 import com.tangem.lib.auth.P2PEthPoolAuthProvider
 import com.tangem.lib.auth.StakeKitAuthProvider
+import com.tangem.test.core.ProvideTestModels
 import com.tangem.utils.ProviderSuspend
 import com.tangem.utils.info.AppInfoProvider
 import com.tangem.utils.version.AppVersionProvider
@@ -114,6 +114,7 @@ internal class ProdApiConfigsManagerTest {
                 ApiConfig.ID.BlockAid -> BlockAid(configStorage = environmentConfigStorage)
                 ApiConfig.ID.MoonPay -> MoonPay()
                 ApiConfig.ID.P2PEthPool -> P2PEthPool(p2pAuthProvider = p2pEthPoolAuthProvider)
+                ApiConfig.ID.News -> News(authProvider = appAuthProvider)
             }
         }
     }
@@ -128,6 +129,7 @@ internal class ProdApiConfigsManagerTest {
             ApiConfig.ID.BlockAid -> createBlockAidSdkModel()
             ApiConfig.ID.MoonPay -> createMoonPayModel()
             ApiConfig.ID.P2PEthPool -> createP2PModel()
+            ApiConfig.ID.News -> createNewsModel()
         }
     }
 
@@ -290,6 +292,29 @@ internal class ProdApiConfigsManagerTest {
                     "Authorization" to ProviderSuspend { "Bearer $P2P_API_KEY" },
                     "accept" to ProviderSuspend { "application/json" },
                     "Content-Type" to ProviderSuspend { "application/json" },
+                ),
+            ),
+        )
+    }
+
+    private fun createNewsModel(): TestModel {
+        val (environment, baseUrl) = when (BuildConfig.BUILD_TYPE) {
+            MOCKED_BUILD_TYPE,
+            DEBUG_BUILD_TYPE,
+            -> ApiEnvironment.DEV to "[REDACTED_ENV_URL]"
+            INTERNAL_BUILD_TYPE,
+            EXTERNAL_BUILD_TYPE,
+            RELEASE_BUILD_TYPE,
+            -> ApiEnvironment.PROD to "https://tangem.com/"
+            else -> error("Unknown build type [${BuildConfig.BUILD_TYPE}]")
+        }
+        return TestModel(
+            id = ApiConfig.ID.News,
+            expected = ApiEnvironmentConfig(
+                environment = environment,
+                baseUrl = baseUrl,
+                headers = mapOf(
+                    "api-key" to ProviderSuspend { TANGEM_API_KEY },
                 ),
             ),
         )
