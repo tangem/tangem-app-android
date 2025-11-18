@@ -149,7 +149,6 @@ private class YieldSupplyActionContentPreviewProvider : PreviewParameterProvider
                 yieldSupplyFeeUM = YieldSupplyFeeUM.Content(
                     transactionDataList = persistentListOf(),
                     feeFiatValue = stringReference("$0.99"),
-                    tokenFeeFiatValue = stringReference("$1.45"),
                     maxNetworkFeeFiatValue = stringReference("$8.50"),
                     minTopUpFiatValue = stringReference("$50"),
                     feeNoteValue = TextReference.EMPTY,
