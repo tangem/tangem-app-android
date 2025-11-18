@@ -46,6 +46,7 @@ import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.StakingDetailsScreenTestTags
 import com.tangem.domain.models.staking.BalanceType
 import com.tangem.domain.models.staking.RewardBlockType
+import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.model.StakingClickIntents
 import com.tangem.features.staking.impl.presentation.state.BalanceState
@@ -53,6 +54,7 @@ import com.tangem.features.staking.impl.presentation.state.InnerYieldBalanceStat
 import com.tangem.features.staking.impl.presentation.state.StakingStates
 import com.tangem.features.staking.impl.presentation.state.previewdata.InitialStakingStatePreview
 import com.tangem.features.staking.impl.presentation.state.stub.StakingClickIntentsStub
+import com.tangem.features.staking.impl.presentation.state.utils.getRewardTypeShortText
 import com.tangem.utils.StringsSigns.DOT
 import com.tangem.utils.extensions.orZero
 
@@ -233,8 +235,12 @@ private fun StakingRewardBlock(
                 append(reward.rewardsCrypto.orMaskWithStars(isBalanceHidden))
             } to TangemTheme.colors.text.primary1
         }
-        RewardBlockType.RewardUnavailable -> {
+        RewardBlockType.RewardUnavailable.DefaultRewardUnavailable -> {
             resourceReference(R.string.staking_details_auto_claiming_rewards_daily_text) to
+                TangemTheme.colors.text.tertiary
+        }
+        RewardBlockType.RewardUnavailable.SolanaRewardUnavailable -> {
+            resourceReference(R.string.staking_solana_details_auto_claiming_rewards_daily_text) to
                 TangemTheme.colors.text.tertiary
         }
         RewardBlockType.NoRewards -> {
@@ -308,17 +314,14 @@ private fun StakeButtonBlock(buttonState: NavigationButtonsState) {
     }
 }
 
-/**
- * For FCA fixes remove coloring for now
- */
 @Suppress("UnusedPrivateMember")
 @Composable
 private fun BalanceState.getAprTextColored() = combinedReference(
-    resourceReference(R.string.staking_details_apr),
+    getRewardTypeShortText(validator?.rewardInfo?.type ?: Yield.RewardType.UNKNOWN),
     annotatedReference {
         appendSpace()
         appendColored(
-            text = validator?.apr.orZero().format { percent() },
+            text = validator?.rewardInfo?.rate?.orZero().format { percent() },
             color = TangemTheme.colors.text.accent,
         )
     },
@@ -326,8 +329,8 @@ private fun BalanceState.getAprTextColored() = combinedReference(
 
 @Composable
 private fun BalanceState.getAprTextNeutral() = combinedReference(
-    resourceReference(R.string.staking_details_apr),
-    stringReference(" " + validator?.apr.orZero().format { percent() }),
+    getRewardTypeShortText(validator?.rewardInfo?.type ?: Yield.RewardType.UNKNOWN),
+    stringReference(" " + validator?.rewardInfo?.rate?.orZero().format { percent() }),
 )
 
 @Composable

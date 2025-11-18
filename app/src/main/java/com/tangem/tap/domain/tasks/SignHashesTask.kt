@@ -42,7 +42,12 @@ class SignHashesTask(
                 is CompletionResult.Failure -> {
                     when {
                         response.error is TangemSdkError.WalletNotFound && pairWalletPublicKey != null -> {
-                            sign(session, pairWalletPublicKey, publicKey.derivationPath, callback)
+                            sign(
+                                session = session,
+                                publicKey = pairWalletPublicKey,
+                                derivationPath = publicKey.derivationPath,
+                                callback = callback,
+                            )
                         }
                         else -> callback(CompletionResult.Failure(response.error))
                     }

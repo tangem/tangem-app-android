@@ -5,14 +5,18 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -65,13 +69,23 @@ fun Label(state: LabelUM, modifier: Modifier = Modifier) {
             horizontalArrangement = Arrangement.spacedBy(4.dp),
             modifier = modifier
                 .padding(horizontal = 4.dp)
-                .background(
-                    color = backgroundColor,
-                    shape = TangemTheme.shapes.roundedCorners8,
+                .clip(TangemTheme.shapes.roundedCorners8)
+                .background(color = backgroundColor)
+                .then(
+                    if (state.onClick != null) {
+                        Modifier.clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = ripple(),
+                            onClick = state.onClick,
+                        )
+                    } else {
+                        Modifier
+                    },
                 )
                 .padding(horizontal = 8.dp, vertical = 4.dp),
         ) {
             Text(
+                modifier = Modifier.weight(1.0f, fill = false),
                 text = text.resolveReference(),
                 style = TangemTheme.typography.caption1,
                 color = textColor,
@@ -82,7 +96,13 @@ fun Label(state: LabelUM, modifier: Modifier = Modifier) {
                     imageVector = ImageVector.vectorResource(wrappedIcon),
                     tint = iconColor,
                     contentDescription = null,
-                    modifier = Modifier.size(16.dp),
+                    modifier = Modifier
+                        .size(16.dp)
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = ripple(bounded = false),
+                            onClick = { state.onIconClick?.invoke() },
+                        ),
                 )
             }
         }
@@ -118,7 +138,9 @@ private fun LabelPreview() {
             )
             Label(
                 state = LabelUM(
-                    text = TextReference.Str("Regular Label"),
+                    text = TextReference.Str(
+                        "Regular long long long long long long long long long long long long Label",
+                    ),
                     style = LabelStyle.REGULAR,
                     icon = R.drawable.ic_information_24,
                 ),
