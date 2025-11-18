@@ -3,10 +3,10 @@ package com.tangem.data.networks.converters
 import com.google.common.truth.Truth
 import com.tangem.datasource.local.network.entity.NetworkStatusDM
 import com.tangem.domain.models.network.Network
+import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.MethodSource
 
 /**
 [REDACTED_AUTHOR]
@@ -18,7 +18,7 @@ class NetworkDerivationPathConverterTest {
     inner class Convert {
 
         @ParameterizedTest
-        @MethodSource("provideTestModels")
+        @ProvideTestModels
         fun convert(model: ConvertModel) {
             // Act
             val actual = NetworkDerivationPathConverter.convert(value = model.value)
@@ -57,7 +57,7 @@ class NetworkDerivationPathConverterTest {
     inner class ConvertBack {
 
         @ParameterizedTest
-        @MethodSource("provideTestModels")
+        @ProvideTestModels
         fun convertBack(model: ConvertBackModel) {
             // Act
             val actual = NetworkDerivationPathConverter.convertBack(value = model.value)
