@@ -3,6 +3,7 @@ package com.tangem.common.ui.alerts
 import com.tangem.common.ui.alerts.models.AlertDemoModeUM
 import com.tangem.common.ui.alerts.models.AlertTransactionErrorUM
 import com.tangem.common.ui.alerts.models.AlertUM
+import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.transaction.error.SendTransactionError
@@ -42,6 +43,12 @@ class TransactionErrorAlertConverter(
                 code = "",
                 cause = value.ex?.localizedMessage,
                 onConfirmClick = { onFailedTxEmailClick(value.ex?.localizedMessage.orEmpty()) },
+            )
+            is SendTransactionError.CreateAccountUnderfunded -> AlertTransactionErrorUM(
+                code = "",
+                cause = null,
+                causeTextReference = resourceReference(R.string.no_account_polkadot, wrappedList(value.amount)),
+                onConfirmClick = popBackStack,
             )
             else -> null
         }

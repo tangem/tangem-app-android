@@ -7,7 +7,7 @@ import com.tangem.core.analytics.models.AnalyticsEvent
  */
 sealed class SignIn(
     event: String,
-    params: Map<String, String> = mapOf(),
+    params: Map<String, String> = emptyMap(),
 ) : AnalyticsEvent("Sign In", event, params) {
 
     class ScreenOpened : SignIn(event = "Sign In Screen Opened")
