@@ -29,10 +29,10 @@ fun Modifier.edgeFade(
     require(value = size > 0.dp) {
         "Size must be greater than '0'"
     }
-    val animatedSize = animationSpec?.let {
+    val animatedSize = animationSpec?.let { spec ->
         animateDpAsState(
             targetValue = if (isVisible) size else 0.dp,
-            animationSpec = it,
+            animationSpec = spec,
             label = "Edge fade width",
         )
     }
@@ -75,7 +75,7 @@ fun Modifier.bottomFade(
 )
 
 enum class FadePosition {
-    TOP, BOTTOM, LEFT, RIGHT;
+    TOP, BOTTOM, LEFT, RIGHT
 }
 
 @Stable

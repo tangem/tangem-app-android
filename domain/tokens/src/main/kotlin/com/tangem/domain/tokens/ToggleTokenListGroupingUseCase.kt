@@ -4,12 +4,10 @@ import arrow.core.Either
 import arrow.core.raise.Raise
 import arrow.core.raise.either
 import arrow.core.raise.ensure
-import arrow.core.raise.withError
 import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.tokens.error.TokenListSortingError
-import com.tangem.domain.tokens.error.mapper.mapToTokenListSortingError
-import com.tangem.domain.tokens.operations.TokenListSortingOperations
+import com.tangem.domain.tokens.operations.TokenListFactory
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
 
@@ -30,36 +28,24 @@ class ToggleTokenListGroupingUseCase(
     }
 
     private fun Raise<TokenListSortingError>.groupTokens(tokenList: TokenList.Ungrouped): TokenList.GroupedByNetwork {
-        ensure(tokenList.totalFiatBalance !is TotalFiatBalance.Loading) {
-            TokenListSortingError.TokenListIsLoading
-        }
+        validate(tokenList)
 
-        val sortingOperations = TokenListSortingOperations(tokenList)
-
-        return TokenList.GroupedByNetwork(
-            groups = withError(TokenListSortingOperations.Error::mapToTokenListSortingError) {
-                sortingOperations.getGroupedTokens().bind()
-            },
-            totalFiatBalance = tokenList.totalFiatBalance,
-            sortedBy = sortingOperations.getSortType(),
-        )
+        return TokenListFactory.createGroupedByNetwork(tokenList)
     }
 
-    private fun Raise<TokenListSortingError>.ungroupTokens(
-        tokenList: TokenList.GroupedByNetwork,
-    ): TokenList.Ungrouped {
+    private fun Raise<TokenListSortingError>.ungroupTokens(tokenList: TokenList.GroupedByNetwork): TokenList.Ungrouped {
+        validate(tokenList)
+
+        return TokenListFactory.createUngrouped(tokenList)
+    }
+
+    private fun Raise<TokenListSortingError>.validate(tokenList: TokenList) {
         ensure(tokenList.totalFiatBalance !is TotalFiatBalance.Loading) {
             TokenListSortingError.TokenListIsLoading
         }
 
-        val sortingOperations = TokenListSortingOperations(tokenList)
-
-        return TokenList.Ungrouped(
-            currencies = withError(TokenListSortingOperations.Error::mapToTokenListSortingError) {
-                sortingOperations.getTokens().bind()
-            },
-            totalFiatBalance = tokenList.totalFiatBalance,
-            sortedBy = sortingOperations.getSortType(),
-        )
+        ensure(tokenList.flattenCurrencies().isNotEmpty()) {
+            TokenListSortingError.TokenListIsEmpty
+        }
     }
 }

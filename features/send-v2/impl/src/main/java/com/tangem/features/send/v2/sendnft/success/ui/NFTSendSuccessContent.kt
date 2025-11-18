@@ -2,16 +2,16 @@ package com.tangem.features.send.v2.sendnft.success.ui
 
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.navigationButtons.NavigationButtonsBlockV2
-import com.tangem.core.ui.components.BottomFade
+import com.tangem.core.ui.components.Fade
+import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.transactions.TransactionDoneTitle
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
@@ -52,50 +52,65 @@ internal fun NFTSendSuccessContent(
         label = "Animate success content",
         modifier = modifier,
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(TangemTheme.colors.background.tertiary),
-        ) {
-            Column(
+        Column {
+            Box(
                 modifier = Modifier
-                    .padding(horizontal = TangemTheme.dimens.spacing16)
-                    .scrollable(
-                        state = rememberScrollState(),
-                        orientation = Orientation.Vertical,
-                    ),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+                    .weight(1f)
+                    .background(TangemTheme.colors.background.tertiary),
             ) {
-                if (nftSendUM.confirmUM is ConfirmUM.Success) {
-                    TransactionDoneTitle(
-                        title = resourceReference(R.string.sent_transaction_sent_title),
-                        subtitle = resourceReference(
-                            R.string.send_date_format,
-                            wrappedList(
-                                nftSendUM.confirmUM.transactionDate.toTimeFormat(DateTimeFormatters.dateFormatter),
-                                nftSendUM.confirmUM.transactionDate.toTimeFormat(),
-                            ),
-                        ),
-                        modifier = Modifier.padding(vertical = 12.dp),
-                    )
-                }
-                nftDetailsBlockComponent.Content(modifier = Modifier)
-                destinationBlockComponent.Content(modifier = Modifier)
-                FeeBlock(feeSelectorUM = nftSendUM.feeSelectorUM)
-                Spacer(Modifier.height(128.dp))
+                SuccessContent(
+                    nftSendUM = nftSendUM,
+                    nftDetailsBlockComponent = nftDetailsBlockComponent,
+                    destinationBlockComponent = destinationBlockComponent,
+                    modifier = Modifier.fillMaxHeight(),
+                )
+                Fade(
+                    modifier = Modifier.align(Alignment.BottomCenter),
+                    backgroundColor = TangemTheme.colors.background.tertiary,
+                )
             }
-            BottomFade(Modifier.align(Alignment.BottomCenter), TangemTheme.colors.background.tertiary)
             NavigationButtonsBlockV2(
                 navigationUM = nftSendUM.navigationUM,
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(
-                        start = 16.dp,
-                        end = 16.dp,
-                        bottom = 16.dp,
-                    ),
+                modifier = Modifier.padding(
+                    start = 16.dp,
+                    end = 16.dp,
+                    bottom = 16.dp,
+                ),
             )
         }
+    }
+}
+
+@Composable
+private fun SuccessContent(
+    nftSendUM: NFTSendUM,
+    destinationBlockComponent: SendDestinationBlockComponent,
+    nftDetailsBlockComponent: NFTDetailsBlockComponent,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
+            .padding(horizontal = 16.dp)
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        if (nftSendUM.confirmUM is ConfirmUM.Success) {
+            TransactionDoneTitle(
+                title = resourceReference(R.string.sent_transaction_sent_title),
+                subtitle = resourceReference(
+                    R.string.send_date_format,
+                    wrappedList(
+                        nftSendUM.confirmUM.transactionDate.toTimeFormat(DateTimeFormatters.dateFormatter),
+                        nftSendUM.confirmUM.transactionDate.toTimeFormat(),
+                    ),
+                ),
+                modifier = Modifier.padding(vertical = 12.dp),
+            )
+        }
+        nftDetailsBlockComponent.Content(modifier = Modifier)
+        destinationBlockComponent.Content(modifier = Modifier)
+        FeeBlock(feeSelectorUM = nftSendUM.feeSelectorUM)
+        SpacerH(16.dp)
     }
 }
 

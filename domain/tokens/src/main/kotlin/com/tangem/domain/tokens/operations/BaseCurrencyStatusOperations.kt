@@ -54,7 +54,7 @@ abstract class BaseCurrencyStatusOperations(
     private val stakingIdFactory: StakingIdFactory,
 ) {
 
-    protected val currencyStatusProxyCreator = CurrencyStatusProxyCreator()
+    private val currencyStatusProxyCreator = CurrencyStatusProxyCreator()
 
     abstract fun getCurrenciesStatuses(userWalletId: UserWalletId): LceFlow<TokenListError, List<CryptoCurrencyStatus>>
 

@@ -15,7 +15,7 @@ internal class ProdApiConfigsManager(
     private val apiConfigs: ApiConfigs,
 ) : ApiConfigsManager {
 
-    override val isInitialized: StateFlow<Boolean> = MutableStateFlow(value = true)
+    override val initializedState: StateFlow<Boolean> = MutableStateFlow(value = true)
 
     override fun initialize() = Unit
 

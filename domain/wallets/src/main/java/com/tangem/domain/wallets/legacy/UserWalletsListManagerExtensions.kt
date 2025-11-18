@@ -12,20 +12,20 @@ import kotlinx.coroutines.flow.flowOf
  * @return If [UserWalletsListManager] not implements [UserWalletsListManager.Lockable] returns [Flow] which
  * produces only one false value
  *
- * @see UserWalletsListManager.Lockable.isLockedSync
+ * @see UserWalletsListManager.Lockable.isLocked
  * */
 val UserWalletsListManager.isLocked: Flow<Boolean>
-    get() = asLockable()?.isLocked ?: flowOf(false)
+    get() = asLockable()?.lockedState ?: flowOf(false)
 
 /**
  * Indicates that the [UserWalletsListManager] is locked
  *
  * @return If [UserWalletsListManager] not implements [UserWalletsListManager.Lockable] returns false
  *
- * @see UserWalletsListManager.Lockable.isLockedSync
+ * @see UserWalletsListManager.Lockable.isLocked
  * */
 val UserWalletsListManager.isLockedSync: Boolean
-    get() = asLockable()?.isLockedSync == true
+    get() = asLockable()?.isLocked == true
 
 /**
  * Call [UserWalletsListManager.Lockable.unlock] if [UserWalletsListManager] implements [UserWalletsListManager.Lockable]

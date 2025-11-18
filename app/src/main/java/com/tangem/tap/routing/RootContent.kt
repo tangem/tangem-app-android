@@ -31,20 +31,21 @@ import com.tangem.core.ui.message.EventMessageEffect
 import com.tangem.core.ui.res.LocalRootBackgroundColor
 import com.tangem.core.ui.res.LocalSnackbarHostState
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.security.ProvideSecureFlagController
 import com.tangem.tap.routing.component.RoutingComponent
 import com.tangem.tap.routing.transitions.RoutingTransitionAnimationFactory
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "ReusedModifierInstance")
 @OptIn(ExperimentalDecomposeApi::class)
 @Composable
 internal fun RootContent(
     stack: Value<ChildStack<AppRoute, RoutingComponent.Child>>,
     backHandler: BackHandler,
     uiDependencies: UiDependencies,
-    wcContent: @Composable (modifier: Modifier) -> Unit,
-    hotAccessCodeContent: @Composable (modifier: Modifier) -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
+    wcContent: @Composable (modifier: Modifier) -> Unit,
+    hotAccessCodeContent: @Composable (modifier: Modifier) -> Unit,
 ) {
     val context = LocalContext.current
 
@@ -52,39 +53,41 @@ internal fun RootContent(
         activity = context as Activity,
         uiDependencies = uiDependencies,
     ) {
-        val snackbarHostState = LocalSnackbarHostState.current
+        ProvideSecureFlagController {
+            val snackbarHostState = LocalSnackbarHostState.current
 
-        Box(Modifier.background(LocalRootBackgroundColor.current.value)) {
-            Children(
-                modifier = modifier,
-                animation = childrenAnimation(backHandler = backHandler, onBack = onBack),
-                stack = stack,
-            ) { child ->
-                when (val instance = child.instance) {
-                    is RoutingComponent.Child.Initial -> Unit
-                    is RoutingComponent.Child.ComposableComponent -> {
-                        instance.component.Content(Modifier.fillMaxSize())
-                    }
-                    is RoutingComponent.Child.LegacyIntent -> {
-                        // TODO: Remove and use it's own router: [REDACTED_JIRA]
-                        LaunchedEffect(instance) {
-                            startActivity(context, instance.intent, Bundle.EMPTY)
+            Box(Modifier.background(LocalRootBackgroundColor.current.value)) {
+                Children(
+                    modifier = modifier,
+                    animation = childrenAnimation(backHandler = backHandler, onBack = onBack),
+                    stack = stack,
+                ) { child ->
+                    when (val instance = child.instance) {
+                        is RoutingComponent.Child.Initial -> Unit
+                        is RoutingComponent.Child.ComposableComponent -> {
+                            instance.component.Content(Modifier.fillMaxSize())
+                        }
+                        is RoutingComponent.Child.LegacyIntent -> {
+                            // TODO: Remove and use it's own router: [REDACTED_JIRA]
+                            LaunchedEffect(instance) {
+                                startActivity(context, instance.intent, Bundle.EMPTY)
+                            }
                         }
                     }
                 }
+
+                wcContent(Modifier.fillMaxSize())
+
+                hotAccessCodeContent(Modifier.fillMaxSize())
+
+                TangemSnackbarHost(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .navigationBarsPadding()
+                        .padding(all = 16.dp),
+                    hostState = snackbarHostState,
+                )
             }
-
-            wcContent(Modifier.fillMaxSize())
-
-            hotAccessCodeContent(Modifier.fillMaxSize())
-
-            TangemSnackbarHost(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .navigationBarsPadding()
-                    .padding(all = 16.dp),
-                hostState = snackbarHostState,
-            )
         }
         EventMessageEffect()
     }

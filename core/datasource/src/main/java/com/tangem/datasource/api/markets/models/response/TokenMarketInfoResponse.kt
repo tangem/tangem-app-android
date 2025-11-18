@@ -56,6 +56,7 @@ data class TokenMarketInfoResponse(
     )
 
     @JsonClass(generateAdapter = true)
+    @Suppress("BooleanPropertyNaming")
     data class Network(
         @Json(name = "network_id")
         val networkId: String,

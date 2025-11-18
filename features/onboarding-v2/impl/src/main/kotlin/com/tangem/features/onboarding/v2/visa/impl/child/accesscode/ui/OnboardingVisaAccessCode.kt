@@ -65,7 +65,7 @@ internal fun OnboardingVisaAccessCode(state: OnboardingVisaAccessCodeUM, modifie
                 },
                 onClick = state.onContinue,
                 iconRes = R.drawable.ic_tangem_24,
-                showProgress = state.buttonLoading,
+                shouldShowProgress = state.buttonLoading,
                 isIconVisible = state.step == OnboardingVisaAccessCodeUM.Step.ReEnter,
             ),
         )

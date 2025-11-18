@@ -2,41 +2,33 @@ package com.tangem.common.ui.amountScreen.preview
 
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import com.tangem.common.ui.R
+import com.tangem.common.ui.account.AccountNameUM
+import com.tangem.common.ui.account.AccountTitleUM
+import com.tangem.common.ui.account.toUM
 import com.tangem.common.ui.amountScreen.models.AmountFieldModel
-import com.tangem.common.ui.amountScreen.models.AmountSegmentedButtonsConfig
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.domain.tokens.model.Amount
 import com.tangem.domain.tokens.model.AmountType
 import com.tangem.utils.StringsSigns
-import kotlinx.collections.immutable.persistentListOf
 import java.math.BigDecimal
 
 object AmountStatePreviewData {
 
-    val emptyState = AmountState.Empty(isRedesignEnabled = true)
+    val emptyState = AmountState.Empty
 
     val amountState = AmountState.Data(
         isPrimaryButtonEnabled = false,
-        title = stringReference("Family Wallet"),
-        availableBalance = stringReference("2 130,81231238 USDT • 2 129,12 \$)"),
+        accountTitleUM = AccountTitleUM.Text(stringReference("Family Wallet")),
         availableBalanceCrypto = stringReference("2 130,81231238 USDT"),
         availableBalanceFiat = stringReference("1 232 129,12 \$"),
         tokenIconState = CurrencyIconState.Loading,
-        segmentedButtonConfig = persistentListOf(
-            AmountSegmentedButtonsConfig(
-                title = stringReference("USDT"),
-                iconState = CurrencyIconState.Locked,
-                isFiat = false,
-            ),
-            AmountSegmentedButtonsConfig(
-                title = stringReference("USD"),
-                isFiat = true,
-            ),
-        ),
         appCurrency = AppCurrency.Default,
         tokenName = stringReference("Tether"),
         amountTextField = AmountFieldModel(
@@ -65,12 +57,9 @@ object AmountStatePreviewData {
             isValuePasted = false,
             onValuePastedTriggerDismiss = {},
         ),
-        isSegmentedButtonsEnabled = true,
-        selectedButton = 0,
-        isRedesignEnabled = false,
     )
 
-    val amountWithValueState = amountState.copy(
+    private val amountWithValueState = amountState.copy(
         amountTextField = amountState.amountTextField.copy(
             value = "100.00",
             cryptoAmount = amountState.amountTextField.cryptoAmount.copy(
@@ -84,14 +73,8 @@ object AmountStatePreviewData {
     )
 
     val amountStateV2 = amountState.copy(
-        isRedesignEnabled = true,
-        availableBalance = stringReference("2 130,81231238 USDT • 2 129,12 \$)"),
         availableBalanceCrypto = stringReference("2 130,81231238 USDT"),
         availableBalanceFiat = stringReference(" ${StringsSigns.DOT} 1 232 129,12 $"),
-    )
-
-    val amountWithValueFiatState = amountWithValueState.copy(
-        amountTextField = amountWithValueState.amountTextField.copy(isFiatValue = false),
     )
 
     val amountStateV2WithoutRates = amountState.copy(
@@ -101,6 +84,17 @@ object AmountStatePreviewData {
             ),
         ),
     )
+
+    val amountStateV2Accounts = amountState.copy(
+        accountTitleUM = AccountTitleUM.Account(
+            name = AccountNameUM.DefaultMain.value,
+            icon = CryptoPortfolioIcon.ofDefaultCustomAccount().toUM(),
+            prefixText = resourceReference(R.string.common_from),
+        ),
+        availableBalanceCrypto = stringReference("2 130,81231238 USDT"),
+        availableBalanceFiat = stringReference(" ${StringsSigns.DOT} 1 232 129,12 $"),
+    )
+
     val amountErrorState = amountWithValueState.copy(
         amountTextField = amountWithValueState.amountTextField.copy(
             isError = true,

@@ -37,6 +37,7 @@ import com.tangem.features.walletconnect.connections.entity.VerifiedDAppState
 import com.tangem.features.walletconnect.connections.ui.WcAppInfoItem
 import com.tangem.features.walletconnect.impl.R
 import com.tangem.features.walletconnect.transaction.components.PreviewFeeSelectorBlockComponent
+import com.tangem.features.walletconnect.transaction.entity.approve.WcSpendAllowanceUM
 import com.tangem.features.walletconnect.transaction.entity.blockaid.BlockAidNotificationUM
 import com.tangem.features.walletconnect.transaction.entity.blockaid.WcEstimatedWalletChangeUM
 import com.tangem.features.walletconnect.transaction.entity.blockaid.WcEstimatedWalletChangesUM
@@ -51,6 +52,7 @@ import com.tangem.features.walletconnect.transaction.ui.common.WcSmallTitleItem
 import com.tangem.features.walletconnect.transaction.ui.common.WcTransactionRequestButtons
 import com.tangem.features.walletconnect.transaction.ui.common.WcTransactionRequestItem
 import kotlinx.collections.immutable.persistentListOf
+import java.math.BigDecimal
 
 @Suppress("LongParameterList", "LongMethod")
 @Composable
@@ -314,6 +316,35 @@ private class WcSendTransactionStateProvider : CollectionPreviewParameterProvide
                     onClick = {},
                 ),
             ),
+            transactionValidationResult = ValidationResult.SAFE,
+        ),
+        WcSendTransactionItemUM(
+            onDismiss = {},
+            onSend = {},
+            appInfo = WcTransactionAppInfoContentUM(
+                appName = "React App",
+                appIcon = "",
+                verifiedState = VerifiedDAppState.Verified {},
+                appSubtitle = "react-app.walletconnect.com",
+            ),
+            estimatedWalletChanges = WcSendReceiveTransactionCheckResultsUM(
+                isLoading = false,
+                spendAllowance = WcSpendAllowanceUM(
+                    amountValue = BigDecimal.ZERO,
+                    isUnlimited = false,
+                    amountText = stringReference("0.00 WPOL"),
+                    tokenSymbol = "",
+                    tokenImageUrl = "",
+                    networkIconRes = 0,
+                    onLearnMoreClicked = {},
+                ),
+            ),
+            walletName = "Tangem 2.0",
+            networkInfo = WcNetworkInfoUM(name = "Ethereum", iconRes = R.drawable.img_eth_22),
+            feeState = WcTransactionFeeState.None,
+            address = "0xdac17f958d2ee523a2206206994597c13d831ec7",
+            sendEnabled = true,
+            feeErrorNotification = null,
             transactionValidationResult = ValidationResult.SAFE,
         ),
     ),
