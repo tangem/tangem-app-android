@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.StateFlow
 interface ApiConfigsManager {
 
     /** Flag that determines whether the manager is initialized */
-    val isInitialized: StateFlow<Boolean>
+    val initializedState: StateFlow<Boolean>
 
     /** Initialize resources */
     fun initialize()

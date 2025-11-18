@@ -5,6 +5,7 @@ import arrow.core.some
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.producer.MultiAccountListProducer
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -35,10 +36,11 @@ internal class DefaultMultiAccountListProducer @AssistedInject constructor(
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun produce(): Flow<List<AccountList>> {
         return userWalletsStore.userWallets
+            .map { it.map(UserWallet::walletId) }
             .distinctUntilChanged()
-            .flatMapLatest { userWallets ->
+            .flatMapLatest { ids ->
                 combine(
-                    flows = userWallets.map(walletAccountListFlowFactory::create),
+                    flows = ids.map(walletAccountListFlowFactory::create),
                     transform = ::listOf,
                 )
             }

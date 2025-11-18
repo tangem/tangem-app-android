@@ -11,6 +11,9 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
+import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
+import com.tangem.domain.account.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.models.network.CryptoCurrencyAddress
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.isLocked
@@ -25,7 +28,6 @@ import com.tangem.domain.transaction.usecase.ValidateWalletAddressUseCase
 import com.tangem.domain.transaction.usecase.ValidateWalletMemoUseCase
 import com.tangem.domain.txhistory.usecase.GetFixedTxHistoryItemsUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
-import com.tangem.features.send.v2.api.SendFeatureToggles
 import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents.SendScreenSource
 import com.tangem.features.send.v2.api.entity.PredefinedValues
@@ -65,8 +67,10 @@ internal class SendDestinationModel @Inject constructor(
     private val isSelfSendAvailableUseCase: IsSelfSendAvailableUseCase,
     private val listenToQrScanningUseCase: ListenToQrScanningUseCase,
     private val parseQrCodeUseCase: ParseQrCodeUseCase,
+    private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
+    private val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
-    private val sendFeatureToggles: SendFeatureToggles,
+    private val accountsFeatureToggles: AccountsFeatureToggles,
 ) : Model(), SendDestinationClickIntents {
     private val params: SendDestinationComponentParams = paramsContainer.require()
 
@@ -92,7 +96,6 @@ internal class SendDestinationModel @Inject constructor(
             _uiState.update(
                 SendDestinationInitialStateTransformer(
                     cryptoCurrency = cryptoCurrency,
-                    isRedesignEnabled = sendFeatureToggles.isSendRedesignEnabled,
                     isInitialized = true,
                 ),
             )
@@ -145,7 +148,7 @@ internal class SendDestinationModel @Inject constructor(
         )
     }
 
-    fun saveResult() {
+    private fun saveResult() {
         val params = params as? SendDestinationComponentParams.DestinationParams ?: return
         params.callback.onDestinationResult(uiState.value)
     }
@@ -196,12 +199,17 @@ internal class SendDestinationModel @Inject constructor(
             ).getOrElse { flowOf(emptyList()) }.map {
                 waitForDelay(RECENT_LOAD_DELAY) { it }
             }.conflate(),
-        ) { destinationWalletList, txHistoryList ->
+            flow3 = isAccountsModeEnabledUseCase().distinctUntilChanged(),
+            flow4 = if (accountsFeatureToggles.isFeatureEnabled) {
+                getAccountCurrencyStatusUseCase(userWalletId, cryptoCurrency).distinctUntilChanged()
+            } else {
+                flowOf(null)
+            },
+        ) { destinationWalletList, txHistoryList, isAccountsMode, accountCurrencyStatus ->
             val isSelfSendAvailable = isSelfSendAvailableUseCase.invokeSync(
                 userWalletId = userWalletId,
                 network = cryptoCurrency.network,
             )
-
             _uiState.update(
                 SendDestinationRecentListTransformer(
                     cryptoCurrency = cryptoCurrency,
@@ -209,9 +217,11 @@ internal class SendDestinationModel @Inject constructor(
                     isSelfSendAvailable = isSelfSendAvailable,
                     destinationWalletList = destinationWalletList,
                     txHistoryList = txHistoryList,
+                    account = accountCurrencyStatus?.account,
+                    isAccountsMode = isAccountsMode,
                 ),
             )
-        }.launchIn(modelScope)
+        }.flowOn(dispatchers.default).launchIn(modelScope)
     }
 
     private suspend fun List<UserWallet>.toAvailableWallets(): List<DestinationWalletUM> {
@@ -223,7 +233,7 @@ internal class SendDestinationModel @Inject constructor(
                     async {
                         val addresses = if (!wallet.isMultiCurrency) {
                             getCryptoCurrencyUseCase(wallet.walletId).getOrNull()?.let {
-                                if (it.network.id == cryptoCurrencyNetwork.id) {
+                                if (it.network.rawId == cryptoCurrencyNetwork.rawId) {
                                     getNetworkAddressesUseCase.invokeSync(
                                         userWalletId = wallet.walletId,
                                         networkRawId = it.network.id.rawId,
@@ -275,7 +285,8 @@ internal class SendDestinationModel @Inject constructor(
                 analyticsEventHandler.send(
                     SendDestinationAnalyticEvents.AddressEntered(
                         categoryName = analyticsCategoryName,
-                        source = it,
+                        source = params.analyticsSendSource,
+                        method = it,
                         isValid = addressValidationResult.isRight(),
                     ),
                 )
@@ -300,12 +311,11 @@ internal class SendDestinationModel @Inject constructor(
             flow2 = params.currentRoute,
             transform = { state, route -> state to route },
         ).onEach { (state, route) ->
-            val isRedesignEnabled = sendFeatureToggles.isSendRedesignEnabled
             params.callback.onNavigationResult(
                 NavigationUM.Content(
                     title = params.title,
                     subtitle = null,
-                    backIconRes = if (route.isEditMode || isRedesignEnabled) {
+                    backIconRes = if (route.isEditMode) {
                         R.drawable.ic_back_24
                     } else {
                         R.drawable.ic_close_24
@@ -323,16 +333,6 @@ internal class SendDestinationModel @Inject constructor(
                             saveResult()
                         }
                         params.callback.onBackClick()
-                    },
-                    additionalIconRes = if (isRedesignEnabled) {
-                        null
-                    } else {
-                        R.drawable.ic_qrcode_scan_24
-                    },
-                    additionalIconClick = if (isRedesignEnabled) {
-                        null
-                    } else {
-                        ::onQrCodeScanClick
                     },
                     primaryButton = NavigationButton(
                         textReference = if (route.isEditMode) {
