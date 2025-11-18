@@ -13,6 +13,7 @@ data class TokenMarket(
     val tokenQuotesShort: TokenQuotesShort,
     val tokenCharts: Charts,
     val stakingRate: BigDecimal?,
+    val updateTimestamp: Long?,
     private val imageHost: String,
 ) {
 
