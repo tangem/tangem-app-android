@@ -17,6 +17,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.settings.CanUseBiometryUseCase
 import com.tangem.domain.wallets.repository.WalletsRepository
+import com.tangem.domain.wallets.usecase.NonBiometricUnlockWalletUseCase
 import com.tangem.features.wallet.utils.UserWalletsFetcher
 import com.tangem.features.welcome.impl.R
 import com.tangem.features.welcome.impl.ui.state.WelcomeUM
@@ -38,6 +39,7 @@ internal class WelcomeModel @Inject constructor(
     private val router: Router,
     private val uiMessageSender: UiMessageSender,
     private val userWalletsListRepository: UserWalletsListRepository,
+    private val nonBiometricUnlockWalletUseCase: NonBiometricUnlockWalletUseCase,
     private val canUseBiometryUseCase: CanUseBiometryUseCase,
     private val walletsRepository: WalletsRepository,
     userWalletsFetcherFactory: UserWalletsFetcher.Factory,
@@ -50,6 +52,7 @@ internal class WelcomeModel @Inject constructor(
         messageSender = uiMessageSender,
         onlyMultiCurrency = false,
         isAuthMode = true,
+        isClickableIfLocked = true,
         onWalletClick = { walletId ->
             modelScope.launch {
                 val userWallets = userWalletsListRepository.userWalletsSync()
@@ -109,7 +112,7 @@ internal class WelcomeModel @Inject constructor(
             val hotWalletLockedWithAccessCode = userWalletsListRepository.userWalletsSync()
                 .first { it.isLocked && it is UserWallet.Hot } as UserWallet.Hot
             uiState.value = WelcomeUM.Empty
-            unlockWallet(hotWalletLockedWithAccessCode.walletId, UserWalletsListRepository.UnlockMethod.AccessCode)
+            nonBiometricUnlockWallet(hotWalletLockedWithAccessCode.walletId)
         }
     }
 
@@ -161,15 +164,11 @@ internal class WelcomeModel @Inject constructor(
             return@launch
         }
 
-        val unlockMethod = when (userWallet) {
-            is UserWallet.Cold -> UserWalletsListRepository.UnlockMethod.Scan()
-            is UserWallet.Hot -> {
-                uiState.value = WelcomeUM.Empty
-                UserWalletsListRepository.UnlockMethod.AccessCode
-            }
+        if (userWallet is UserWallet.Hot) {
+            uiState.value = WelcomeUM.Empty
         }
 
-        unlockWallet(userWallet.walletId, unlockMethod)
+        nonBiometricUnlockWallet(userWallet.walletId)
         setSelectWalletState()
     }
 
@@ -177,8 +176,8 @@ internal class WelcomeModel @Inject constructor(
         return canUseBiometryUseCase() && walletsRepository.useBiometricAuthentication()
     }
 
-    suspend fun unlockWallet(userWalletId: UserWalletId, unlockMethod: UserWalletsListRepository.UnlockMethod) {
-        userWalletsListRepository.unlock(userWalletId, unlockMethod)
+    suspend fun nonBiometricUnlockWallet(userWalletId: UserWalletId) {
+        nonBiometricUnlockWalletUseCase(userWalletId)
             .onRight {
                 routedOut = true
                 userWalletsListRepository.select(userWalletId)
