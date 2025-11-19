@@ -1,4 +1,4 @@
-package com.tangem.domain.news.models
+package com.tangem.domain.models.news
 
 import kotlinx.serialization.Serializable
 
