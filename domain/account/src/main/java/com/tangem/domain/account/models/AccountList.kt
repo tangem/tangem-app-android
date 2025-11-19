@@ -88,6 +88,19 @@ data class AccountList private constructor(
     }
 
     /**
+     * Flattens the list of accounts to extract all crypto currencies contained within them.
+     *
+     * @return a list of all crypto currencies from all accounts
+     */
+    fun flattenCurrencies(): List<CryptoCurrency> {
+        return accounts.flatMap { account ->
+            when (account) {
+                is Account.CryptoPortfolio -> account.cryptoCurrencies
+            }
+        }
+    }
+
+    /**
      * Represents possible errors that can occur when creating an `AccountList`
      */
     @Serializable
