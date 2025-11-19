@@ -24,7 +24,7 @@ import kotlinx.coroutines.coroutineScope
  * This use case interacts with the underlying repositories to both add currencies and refresh
  * network statuses, particularly after the addition of new tokens.
  */
-@Deprecated("Use SaveCryptoCurrenciesUseCase")
+@Deprecated("Use ManageCryptoCurrenciesUseCase")
 @Suppress("LongParameterList")
 class AddCryptoCurrenciesUseCase(
     private val currenciesRepository: CurrenciesRepository,
