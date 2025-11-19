@@ -254,7 +254,6 @@ internal class YieldSupplyApproveModel @Inject constructor(
                             approvalTransitionData.copy(fee = transactionFee.normal),
                         ),
                         feeFiatValue = stringReference(fiatFee),
-                        tokenFeeFiatValue = TextReference.EMPTY,
                         maxNetworkFeeFiatValue = TextReference.EMPTY,
                         minTopUpFiatValue = TextReference.EMPTY,
                         feeNoteValue = TextReference.EMPTY,
