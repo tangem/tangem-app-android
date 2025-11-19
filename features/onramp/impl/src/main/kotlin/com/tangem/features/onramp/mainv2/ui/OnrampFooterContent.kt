@@ -14,16 +14,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.Keyboard
-import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.keyboardAsState
-import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.mainv2.entity.OnrampAmountButtonUM
+import com.tangem.features.onramp.mainv2.entity.OnrampOffersBlockUM
 import com.tangem.features.onramp.mainv2.entity.OnrampV2AmountButtonUMState
 import com.tangem.features.onramp.mainv2.entity.OnrampV2MainComponentUM
 
@@ -33,14 +30,12 @@ internal fun OnrampFooterContent(
     boxScope: BoxScope,
     modifier: Modifier = Modifier,
 ) {
-    val keyboardController = LocalSoftwareKeyboardController.current
-
     boxScope.apply {
         AnimatedVisibility(
             modifier = Modifier
                 .imePadding()
                 .align(Alignment.BottomCenter),
-            visible = state.offersBlockState.isBlockVisible.not(),
+            visible = state.offersBlockState is OnrampOffersBlockUM.Empty,
             enter = slideInVertically(
                 initialOffsetY = { it },
                 animationSpec = tween(durationMillis = 300),
@@ -55,17 +50,6 @@ internal fun OnrampFooterContent(
                 modifier = modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                PrimaryButton(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    text = stringResourceSafe(id = R.string.common_continue),
-                    onClick = {
-                        state.continueButtonConfig.onClick()
-                        keyboardController?.hide()
-                    },
-                    enabled = state.continueButtonConfig.enabled,
-                )
                 SpacerH(16.dp)
                 OnrampAmountButtons(state = state.onrampAmountButtonUMState)
             }

@@ -8,7 +8,10 @@ import com.tangem.datasource.local.token.UserTokensResponseStore
 import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.retryer.Retryer
+import com.tangem.utils.retryer.RetryerPool
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 
 class UserTokensSaver(
     private val tangemTechApi: TangemTechApi,
@@ -16,6 +19,7 @@ class UserTokensSaver(
     private val dispatchers: CoroutineDispatcherProvider,
     private val addressesEnricher: UserTokensResponseAddressesEnricher,
     private val accountsFeatureToggles: AccountsFeatureToggles,
+    private val pushTokensRetryerPool: RetryerPool,
 ) {
     private val userTokensBackwardCompatibility = UserTokensBackwardCompatibility()
 
@@ -58,6 +62,23 @@ class UserTokensSaver(
         }
     }
 
+    suspend fun pushWithRetryer(
+        userWalletId: UserWalletId,
+        response: UserTokensResponse,
+        useEnricher: Boolean = true,
+        onFailSend: () -> Unit = {},
+    ) {
+        push(
+            userWalletId = userWalletId,
+            response = response,
+            useEnricher = useEnricher,
+            onFailSend = {
+                pushTokensRetryerPool + createPushTokensRetryer(userWalletId, response)
+                onFailSend()
+            },
+        )
+    }
+
     private fun UserTokensResponse.applyCompatibility(): UserTokensResponse {
         return userTokensBackwardCompatibility.applyCompatibilityAndGetUpdated(userTokensResponse = this)
     }
@@ -85,5 +106,25 @@ class UserTokensSaver(
 
     private fun UserTokensResponse.enrichByAccountId(userWalletId: UserWalletId): UserTokensResponse {
         return UserTokensResponseAccountIdEnricher(userWalletId = userWalletId, response = this)
+    }
+
+    private fun createPushTokensRetryer(userWalletId: UserWalletId, response: UserTokensResponse): Retryer {
+        return Retryer(attempt = 3) { iteration ->
+            var isSuccess = true
+
+            push(
+                userWalletId = userWalletId,
+                response = response,
+                onFailSend = {
+                    Timber.e(
+                        "Retryer: Failed to push updated tokens on attempt ${iteration + 1} for $userWalletId",
+                    )
+
+                    isSuccess = false
+                },
+            )
+
+            isSuccess
+        }
     }
 }
