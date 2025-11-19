@@ -3,7 +3,9 @@ package com.tangem.screens
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import com.tangem.common.BaseTestCase
 import com.tangem.core.ui.test.BaseButtonTestTags
+import com.tangem.core.ui.test.FooterTestTags
 import com.tangem.core.ui.test.SendAddressScreenTestTags
+import com.tangem.core.ui.test.TopAppBarTestTags
 import com.tangem.features.send.v2.impl.R
 import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
@@ -21,6 +23,12 @@ class SendAddressPageObject(semanticsProvider: SemanticsNodeInteractionsProvider
         useUnmergedTree = true
     }
 
+    val topAppBarTitle: KNode = child {
+        hasTestTag(TopAppBarTestTags.TITLE)
+        hasText(getResourceString(CoreUiR.string.common_address))
+        useUnmergedTree = true
+    }
+
     val addressTextFieldTitle: KNode = child {
         hasTestTag(SendAddressScreenTestTags.ADDRESS_TEXT_FIELD_TITLE)
         useUnmergedTree = true
@@ -28,6 +36,19 @@ class SendAddressPageObject(semanticsProvider: SemanticsNodeInteractionsProvider
 
     val addressTextField: KNode = child {
         hasTestTag(SendAddressScreenTestTags.ADDRESS_TEXT_FIELD)
+        useUnmergedTree = true
+    }
+
+    val addressTextFieldHint: KNode = child {
+        hasParent(withTestTag(SendAddressScreenTestTags.ADDRESS_TEXT_FIELD))
+        useUnmergedTree = true
+    }
+
+    fun recipientNetworkCaution(network: String): KNode = child {
+        val expectedText = getResourceString(R.string.send_recipient_address_footer, network)
+            .replace("**", "")
+        hasText(expectedText, substring = true)
+        hasTestTag(FooterTestTags.FOOTER_TEXT)
         useUnmergedTree = true
     }
 
