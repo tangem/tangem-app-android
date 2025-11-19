@@ -35,17 +35,17 @@ internal class WalletNFTListSubscriberV2 @AssistedInject constructor(
             // if NFT is enabled for this wallet and there are currencies,
             // then start observing changes from store and apply transformer if need
             if (nftEnabled && currencies.isNotEmpty()) {
-                getNFTCollectionsUseCase(userWallet.walletId)
+                getNFTCollectionsUseCase.invokeForAccounts(userWallet.walletId)
                     .shareIn(
                         scope = coroutineScope,
                         started = SharingStarted.WhileSubscribed(),
                         replay = 1,
                     )
-                    .onEach {
+                    .onEach { walletNFTCollections ->
                         stateController.update(
                             SetNFTCollectionsTransformer(
                                 userWalletId = userWallet.walletId,
-                                nftCollections = it,
+                                nftCollections = walletNFTCollections.flattenCollections,
                                 onItemClick = { clickIntents.onNFTClick(userWallet) },
                             ),
                         )
