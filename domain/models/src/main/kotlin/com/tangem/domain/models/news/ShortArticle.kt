@@ -1,9 +1,9 @@
-package com.tangem.domain.news.models
+package com.tangem.domain.models.news
 
 import kotlinx.serialization.Serializable
 
 /**
- * Represents an detailed article via news.
+ * Represents an short article info in news.
  *
 [REDACTED_AUTHOR]
  * @param id - unique identifier of the article
@@ -15,22 +15,18 @@ import kotlinx.serialization.Serializable
  * @param relatedTokens - tokens, which were mentioned in article
  * @param title - article title
  * @param newsUrl - link for article to share
- * @param shortContent - short description
- * @param content - main text of the article
- * @param originalArticles - original articles, which were base to build detailed article.
+ * @param viewed - is article is viewed (store only runtime)
  */
 @Serializable
-data class DetailedArticle(
+data class ShortArticle(
     val id: Int,
     val createdAt: String,
     val score: Float,
     val locale: String,
-    val isTrending: Boolean,
     val categories: List<ArticleCategory>,
     val relatedTokens: List<RelatedToken>,
+    val isTrending: Boolean,
     val title: String,
     val newsUrl: String,
-    val shortContent: String,
-    val content: String,
-    val originalArticles: List<OriginalArticle>,
+    val viewed: Boolean,
 )
