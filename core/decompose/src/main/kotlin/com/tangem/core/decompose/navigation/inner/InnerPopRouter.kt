@@ -18,6 +18,10 @@ inline fun AppComponentContext.InnerPopRouter(
         router.push(route, onComplete)
     }
 
+    override fun replaceCurrent(route: Route, onComplete: (Boolean) -> Unit) {
+        router.replaceCurrent(route, onComplete)
+    }
+
     override fun replaceAll(vararg routes: Route, onComplete: (Boolean) -> Unit) {
         router.replaceAll(*routes, onComplete = onComplete)
     }

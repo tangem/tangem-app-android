@@ -9,19 +9,11 @@ import kotlinx.collections.immutable.ImmutableList
 @Immutable
 internal sealed interface OnrampOffersBlockUM {
 
-    val isBlockVisible: Boolean
+    data object Empty : OnrampOffersBlockUM
 
-    data object Empty : OnrampOffersBlockUM {
-        override val isBlockVisible: Boolean
-            get() = false
-    }
-
-    data class Loading(
-        override val isBlockVisible: Boolean,
-    ) : OnrampOffersBlockUM
+    data object Loading : OnrampOffersBlockUM
 
     data class Content(
-        override val isBlockVisible: Boolean,
         val recentOffer: OnrampOfferUM?,
         val recommended: ImmutableList<OnrampOfferUM>,
         val onrampAllOffersButtonConfig: OnrampAllOffersButtonConfig?,
@@ -32,7 +24,6 @@ internal data class OnrampOfferUM(
     val category: OnrampOfferCategoryUM,
     val advantages: OnrampOfferAdvantagesUM,
     val paymentMethod: OnrampPaymentMethod,
-    val providerId: String,
     val providerName: String,
     val rate: String,
     val diff: TextReference?,
@@ -43,8 +34,16 @@ internal enum class OnrampOfferCategoryUM {
     RecentlyUsed, Recommended
 }
 
-internal enum class OnrampOfferAdvantagesUM {
-    Default, BestRate, Fastest;
+internal sealed interface OnrampOfferAdvantagesUM {
+    data object Default : OnrampOfferAdvantagesUM
+    data object BestRate : OnrampOfferAdvantagesUM
+    data object GreatRate : OnrampOfferAdvantagesUM
+    data object Fastest : OnrampOfferAdvantagesUM
+
+    sealed interface Unavailable : OnrampOfferAdvantagesUM {
+        data object MinAmount : Unavailable
+        data object MaxAmount : Unavailable
+    }
 
     fun toAnalyticsEvent(
         cryptoCurrencySymbol: String,
@@ -52,7 +51,7 @@ internal enum class OnrampOfferAdvantagesUM {
         paymentMethodName: String,
     ): OnrampAnalyticsEvent? {
         return when (this) {
-            BestRate -> OnrampAnalyticsEvent.BestRateClicked(
+            GreatRate -> OnrampAnalyticsEvent.BestRateClicked(
                 tokenSymbol = cryptoCurrencySymbol,
                 providerName = providerName,
                 paymentMethod = paymentMethodName,
@@ -62,7 +61,10 @@ internal enum class OnrampOfferAdvantagesUM {
                 providerName = providerName,
                 paymentMethod = paymentMethodName,
             )
-            Default -> null
+            Default,
+            BestRate,
+            is Unavailable,
+            -> null
         }
     }
 }

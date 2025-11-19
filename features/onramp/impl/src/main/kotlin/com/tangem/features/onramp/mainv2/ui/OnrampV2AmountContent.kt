@@ -2,7 +2,6 @@ package com.tangem.features.onramp.mainv2.ui
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -22,12 +21,10 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.tangem.common.ui.amountScreen.models.AmountFieldModel
 import com.tangem.core.ui.components.SpacerH
-import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.fields.AmountTextField
 import com.tangem.core.ui.components.fields.visualtransformations.AmountVisualTransformation
 import com.tangem.core.ui.extensions.resolveReference
@@ -36,20 +33,12 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.test.BuyTokenDetailsScreenTestTags
 import com.tangem.core.ui.utils.rememberDecimalFormat
 import com.tangem.features.onramp.impl.R
-import com.tangem.features.onramp.mainv2.entity.OnrampNewAmountSecondaryFieldUM
 import com.tangem.features.onramp.mainv2.entity.OnrampNewCurrencyUM
+import com.tangem.features.onramp.mainv2.entity.OnrampSecondaryFieldErrorUM
 import com.tangem.features.onramp.mainv2.entity.OnrampV2MainComponentUM
 
 @Composable
 internal fun OnrampV2AmountContent(state: OnrampV2MainComponentUM.Content, modifier: Modifier = Modifier) {
-    val padding = remember(state.offersBlockState.isBlockVisible) {
-        if (state.offersBlockState.isBlockVisible) {
-            22.dp
-        } else {
-            46.dp
-        }
-    }
-
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -57,8 +46,8 @@ internal fun OnrampV2AmountContent(state: OnrampV2MainComponentUM.Content, modif
                 color = TangemTheme.colors.background.action,
                 shape = RoundedCornerShape(size = TangemTheme.dimens.radius16),
             )
-            .padding(vertical = padding)
-            .animateContentSize(animationSpec = tween(durationMillis = 300)),
+            .padding(vertical = 24.dp, horizontal = 16.dp)
+            .animateContentSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         OnrampHeaderTitle()
@@ -68,8 +57,12 @@ internal fun OnrampV2AmountContent(state: OnrampV2MainComponentUM.Content, modif
             currencyCode = state.amountBlockState.currencyUM.code,
         )
 
-        AnimatedVisibility(!state.offersBlockState.isBlockVisible) {
-            OnrampAmountSecondary(state = state.amountBlockState.secondaryFieldModel)
+        AnimatedVisibility(
+            visible = state.amountBlockState.secondaryFieldModel !is OnrampSecondaryFieldErrorUM.Empty,
+        ) {
+            if (state.amountBlockState.secondaryFieldModel is OnrampSecondaryFieldErrorUM.Error) {
+                OnrampAmountSecondary(state = state.amountBlockState.secondaryFieldModel)
+            }
         }
 
         SpacerH(20.dp)
@@ -99,7 +92,11 @@ private fun OnrampAmountField(amountField: AmountFieldModel, currencyCode: Strin
             symbol = currencyCode,
             currencyCode = currencyCode,
             decimalFormat = decimalFormat,
-            symbolColor = TangemTheme.colors.text.disabled,
+            symbolColor = if (amountField.fiatValue.isBlank()) {
+                TangemTheme.colors.text.disabled
+            } else {
+                TangemTheme.colors.text.primary1
+            },
         ),
         onValueChange = amountField.onValueChange,
         keyboardOptions = amountField.keyboardOptions,
@@ -130,7 +127,7 @@ private fun OnrampAmountField(amountField: AmountFieldModel, currencyCode: Strin
 }
 
 @Composable
-private fun OnrampAmountSecondary(state: OnrampNewAmountSecondaryFieldUM) {
+private fun OnrampAmountSecondary(state: OnrampSecondaryFieldErrorUM.Error) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -138,28 +135,15 @@ private fun OnrampAmountSecondary(state: OnrampNewAmountSecondaryFieldUM) {
                 top = TangemTheme.dimens.spacing8,
                 start = TangemTheme.dimens.spacing12,
                 end = TangemTheme.dimens.spacing12,
-            )
-            .testTag(BuyTokenDetailsScreenTestTags.TOKEN_AMOUNT),
+            ),
         contentAlignment = Alignment.Center,
     ) {
-        when (state) {
-            is OnrampNewAmountSecondaryFieldUM.Content -> Text(
-                text = state.amount.resolveReference(),
-                style = TangemTheme.typography.caption2.copy(textDirection = TextDirection.ContentOrLtr),
-                color = TangemTheme.colors.text.tertiary,
-                textAlign = TextAlign.Center,
-            )
-            is OnrampNewAmountSecondaryFieldUM.Error -> Text(
-                text = state.error.resolveReference(),
-                color = TangemTheme.colors.text.warning,
-                style = TangemTheme.typography.caption2,
-                textAlign = TextAlign.Center,
-            )
-            is OnrampNewAmountSecondaryFieldUM.Loading -> TextShimmer(
-                style = TangemTheme.typography.caption2,
-                modifier = Modifier.width(TangemTheme.dimens.size62),
-            )
-        }
+        Text(
+            text = state.error.resolveReference(),
+            color = TangemTheme.colors.text.warning,
+            style = TangemTheme.typography.caption2,
+            textAlign = TextAlign.Center,
+        )
     }
 }
 
