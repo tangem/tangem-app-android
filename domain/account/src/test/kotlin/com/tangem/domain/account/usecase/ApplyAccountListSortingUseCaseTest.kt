@@ -7,11 +7,9 @@ import com.google.common.truth.Truth
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.repository.AccountsCRUDRepository
 import com.tangem.domain.account.usecase.ApplyAccountListSortingUseCase.Error
-import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
-import com.tangem.domain.models.account.CryptoPortfolioIcon
-import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.test.mock.MockAccounts
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
@@ -71,8 +69,7 @@ class ApplyAccountListSortingUseCaseTest {
     @Test
     fun `invoke returns DataOperationFailed when getAccountList returns error`() = runTest {
         // Arrange
-        val accountList = createAccountList()
-        val accountIds = accountList.toAccountIds()
+        val accountIds = defaultAccountList.toAccountIds()
 
         val exception = Exception("Test error")
         coEvery { accountsCRUDRepository.getAccountListSync(userWalletId) } throws exception
@@ -91,7 +88,7 @@ class ApplyAccountListSortingUseCaseTest {
     @Test
     fun `invoke returns UnableToSortSingleAccount when saved accountList contain one account`() = runTest {
         // Arrange
-        val accountIds = createAccountList().toAccountIds()
+        val accountIds = defaultAccountList.toAccountIds()
 
         coEvery {
             accountsCRUDRepository.getAccountListSync(userWalletId)
@@ -115,7 +112,7 @@ class ApplyAccountListSortingUseCaseTest {
             userWalletId = UserWalletId("012"),
         )
 
-        val accountList = createAccountList()
+        val accountList = defaultAccountList
         val accountIds = listOf(accountList.mainAccount.accountId, unknownAccountId)
 
         coEvery { accountsCRUDRepository.getAccountListSync(userWalletId) } returns accountList.some()
@@ -134,7 +131,7 @@ class ApplyAccountListSortingUseCaseTest {
     @Test
     fun `invoke returns Right without accounts saving when nothing to change`() = runTest {
         // Arrange
-        val accountList = createAccountList()
+        val accountList = defaultAccountList
         val accountIds = accountList.toAccountIds()
 
         coEvery { accountsCRUDRepository.getAccountListSync(userWalletId) } returns accountList.some()
@@ -153,7 +150,7 @@ class ApplyAccountListSortingUseCaseTest {
     @Test
     fun `invoke returns Right`() = runTest {
         // Arrange
-        val accountList = createAccountList()
+        val accountList = defaultAccountList
         val accountIds = accountList.toAccountIds().reversed()
 
         val updatedAccountList = AccountList(
@@ -179,21 +176,12 @@ class ApplyAccountListSortingUseCaseTest {
         }
     }
 
-    private fun createAccountList(): AccountList {
-        val accountList = AccountList.empty(userWalletId)
-
-        val account1 = Account.CryptoPortfolio(
-            accountId = AccountId.forCryptoPortfolio(userWalletId, DerivationIndex(1).getOrNull()!!),
-            name = "Account 1",
-            icon = CryptoPortfolioIcon.ofDefaultCustomAccount(),
-            derivationIndex = 1,
-        )
-            .getOrNull()!!
-
-        return (accountList + account1).getOrNull()!!
-    }
-
     private fun AccountList.toAccountIds(): List<AccountId> {
         return this.accounts.map { it.accountId }
+    }
+
+    private companion object {
+
+        val defaultAccountList = MockAccounts.createAccountList(activeAccounts = 2)
     }
 }
