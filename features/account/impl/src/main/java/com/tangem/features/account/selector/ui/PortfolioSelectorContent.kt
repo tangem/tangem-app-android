@@ -161,76 +161,65 @@ internal object PortfolioSelectorPreviewData {
         get() = walletItem.copy(isEnabled = false)
 
     val firstList
-        get() = buildList {
+        get() = listOf(
             PortfolioSelectorItemUM.GroupTitle(
                 id = UUID.randomUUID().toString(),
                 name = stringReference("Tangem 2.0"),
-            ).let(::add)
-            accountItem
-                .let { PortfolioSelectorItemUM.Portfolio(it, false) }
-                .let(::add)
-            lockedAccountItem
-                .let { PortfolioSelectorItemUM.Portfolio(it, false) }
-                .let(::add)
+            ),
+            PortfolioSelectorItemUM.Portfolio(accountItem, false),
+            PortfolioSelectorItemUM.Portfolio(lockedAccountItem, false),
             PortfolioSelectorItemUM.GroupTitle(
                 id = UUID.randomUUID().toString(),
                 name = stringReference("Tangem White"),
-            ).let(::add)
-            accountItem.let { PortfolioSelectorItemUM.Portfolio(it, true) }
-                .let(::add)
-        }
+            ),
+            PortfolioSelectorItemUM.Portfolio(accountItem, true),
+        )
 
     val secondList
-        get() = firstList + buildList {
+        get() = firstList + listOf(
             PortfolioSelectorItemUM.GroupTitle(
                 id = UUID.randomUUID().toString(),
                 name = resourceReference(R.string.common_locked_wallets),
-            ).let(::add)
-            add(PortfolioSelectorItemUM.Portfolio(lockedWalletItem, false))
-            add(PortfolioSelectorItemUM.Portfolio(lockedWalletItem, false))
-        }
+            ),
+            PortfolioSelectorItemUM.Portfolio(lockedWalletItem, false),
+            PortfolioSelectorItemUM.Portfolio(lockedWalletItem, false),
+        )
 
     val walletList
-        get() = buildList {
-            add(PortfolioSelectorItemUM.Portfolio(walletItem, false))
-            add(PortfolioSelectorItemUM.Portfolio(walletItem, true))
-        }
+        get() = listOf(
+            PortfolioSelectorItemUM.Portfolio(walletItem, false),
+            PortfolioSelectorItemUM.Portfolio(walletItem, true),
+        )
 
     val lockedWalletList
-        get() = buildList {
-            add(PortfolioSelectorItemUM.Portfolio(walletItem, true))
-            val title = PortfolioSelectorItemUM.GroupTitle(
+        get() = listOf(
+            PortfolioSelectorItemUM.Portfolio(walletItem, true),
+            PortfolioSelectorItemUM.GroupTitle(
                 id = UUID.randomUUID().toString(),
                 name = resourceReference(R.string.common_locked_wallets),
-            )
-            add(title)
-            add(PortfolioSelectorItemUM.Portfolio(lockedWalletItem, false))
-            add(PortfolioSelectorItemUM.Portfolio(lockedWalletItem, false))
-        }
+            ),
+            PortfolioSelectorItemUM.Portfolio(lockedWalletItem, false),
+            PortfolioSelectorItemUM.Portfolio(lockedWalletItem, false),
+        )
 }
 
 internal class PortfolioSelectorPreviewStateProvider : CollectionPreviewParameterProvider<PortfolioSelectorUM>(
-    buildList {
-        val first = PortfolioSelectorUM(
+    listOf(
+        PortfolioSelectorUM(
             title = resourceReference(R.string.common_choose_account),
             items = firstList.toImmutableList(),
-        )
-        val second = PortfolioSelectorUM(
+        ),
+        PortfolioSelectorUM(
             title = resourceReference(R.string.common_choose_account),
             items = secondList.toImmutableList(),
-        )
-        val walletListUM = PortfolioSelectorUM(
+        ),
+        PortfolioSelectorUM(
             title = resourceReference(R.string.common_choose_wallet),
             items = walletList.toImmutableList(),
-        )
-        val lockedWalletListUM =
-            PortfolioSelectorUM(
-                title = resourceReference(R.string.common_choose_wallet),
-                items = lockedWalletList.toImmutableList(),
-            )
-        add(first)
-        add(second)
-        add(walletListUM)
-        add(lockedWalletListUM)
-    },
+        ),
+        PortfolioSelectorUM(
+            title = resourceReference(R.string.common_choose_wallet),
+            items = lockedWalletList.toImmutableList(),
+        ),
+    ),
 )
