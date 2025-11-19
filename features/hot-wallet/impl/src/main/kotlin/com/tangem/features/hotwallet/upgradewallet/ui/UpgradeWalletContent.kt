@@ -3,7 +3,9 @@ package com.tangem.features.hotwallet.upgradewallet.ui
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -16,6 +18,7 @@ import com.tangem.core.ui.components.PrimaryButtonIconEnd
 import com.tangem.core.ui.components.SecondaryButton
 import com.tangem.core.ui.components.appbar.TangemTopAppBar
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
+import com.tangem.core.ui.components.feature.FeatureBlock
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
@@ -102,44 +105,11 @@ internal fun UpgradeWalletContent(state: UpgradeWalletUM, modifier: Modifier = M
                 onClick = state.onBuyTangemWalletClick,
             )
             PrimaryButtonIconEnd(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                text = stringResourceSafe(R.string.hw_upgrade_scan_device),
-                onClick = state.onScanDeviceClick,
+                modifier = Modifier.fillMaxWidth(),
                 iconResId = R.drawable.ic_tangem_24,
-            )
-        }
-    }
-}
-
-@Composable
-private fun FeatureBlock(title: String, description: String, iconRes: Int, modifier: Modifier = Modifier) {
-    Row(
-        modifier = modifier,
-    ) {
-        Icon(
-            modifier = Modifier
-                .padding(horizontal = 12.dp),
-            painter = painterResource(iconRes),
-            contentDescription = null,
-            tint = TangemTheme.colors.icon.primary1,
-        )
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 8.dp),
-        ) {
-            Text(
-                text = title,
-                style = TangemTheme.typography.subtitle1,
-                color = TangemTheme.colors.text.primary1,
-            )
-            Text(
-                modifier = Modifier
-                    .padding(top = 4.dp),
-                text = description,
-                style = TangemTheme.typography.body2,
-                color = TangemTheme.colors.text.secondary,
+                text = stringResourceSafe(R.string.hw_upgrade_start_action),
+                onClick = state.onContinueClick,
+                showProgress = state.isLoading,
             )
         }
     }
@@ -148,13 +118,28 @@ private fun FeatureBlock(title: String, description: String, iconRes: Int, modif
 @Preview(showBackground = true, widthDp = 360)
 @Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun PreviewUpgradeWalletContent() {
+private fun PreviewUpgradeWalletContentBackup() {
     TangemThemePreview {
         UpgradeWalletContent(
             state = UpgradeWalletUM(
                 onBackClick = {},
                 onBuyTangemWalletClick = {},
-                onScanDeviceClick = {},
+                onContinueClick = {},
+            ),
+        )
+    }
+}
+
+@Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun PreviewUpgradeWalletContentScan() {
+    TangemThemePreview {
+        UpgradeWalletContent(
+            state = UpgradeWalletUM(
+                onBackClick = {},
+                onBuyTangemWalletClick = {},
+                onContinueClick = {},
             ),
         )
     }
