@@ -27,6 +27,7 @@ interface CurrenciesRepository {
      * @throws DataError.UserWalletError.WrongUserWallet If single-currency user wallet
      * ID provided.
      */
+    @Deprecated("Use ManageCryptoCurrenciesUseCase")
     suspend fun saveTokens(
         userWalletId: UserWalletId,
         currencies: List<CryptoCurrency>,
@@ -42,7 +43,7 @@ interface CurrenciesRepository {
      * @throws DataError.UserWalletError.WrongUserWallet If single-currency user wallet
      * ID provided.
      */
-    @Deprecated("Use SaveCryptoCurrenciesUseCase")
+    @Deprecated("Use ManageCryptoCurrenciesUseCase")
     suspend fun addCurrenciesCache(userWalletId: UserWalletId, currencies: List<CryptoCurrency>): List<CryptoCurrency>
 
     /**
@@ -53,7 +54,7 @@ interface CurrenciesRepository {
      * @throws DataError.UserWalletError.WrongUserWallet If multi-currency user wallet
      * ID provided.
      */
-    @Deprecated("Use SaveCryptoCurrenciesUseCase")
+    @Deprecated("Use ManageCryptoCurrenciesUseCase")
     suspend fun removeCurrency(userWalletId: UserWalletId, currency: CryptoCurrency)
 
     /**
@@ -64,7 +65,7 @@ interface CurrenciesRepository {
      * @throws DataError.UserWalletError.WrongUserWallet If single-currency user wallet
      * ID provided.
      */
-    @Deprecated("Use SaveCryptoCurrenciesUseCase")
+    @Deprecated("Use ManageCryptoCurrenciesUseCase")
     suspend fun removeCurrencies(userWalletId: UserWalletId, currencies: List<CryptoCurrency>)
 
     /**
@@ -76,6 +77,7 @@ interface CurrenciesRepository {
      * @param userWalletId The unique identifier of the user wallet.
      * @return A list of [CryptoCurrency].
      */
+    @Deprecated("Use MultiWalletCryptoCurrenciesSupplier")
     fun getWalletCurrenciesUpdates(userWalletId: UserWalletId): Flow<List<CryptoCurrency>>
 
     /**
@@ -122,18 +124,6 @@ interface CurrenciesRepository {
     ): CryptoCurrency
 
     /**
-     * Retrieves updates of the list of cryptocurrencies within a multi-currency wallet.
-     *
-     * Loads remote cryptocurrencies if they have expired.
-     *
-     * @param userWalletId The unique identifier of the user wallet.
-     * @return A [Flow] emitting the set of cryptocurrencies associated with the user wallet.
-     * @throws DataError.UserWalletError.WrongUserWallet If single-currency user wallet
-     * ID provided.
-     */
-    fun getMultiCurrencyWalletCurrenciesUpdates(userWalletId: UserWalletId): Flow<List<CryptoCurrency>>
-
-    /**
      * Retrieves the list of cryptocurrencies within a multi-currency wallet.
      *
      * Loads cryptocurrencies if they have expired or if [refresh] is `true`.
@@ -144,6 +134,7 @@ interface CurrenciesRepository {
      * @throws DataError.UserWalletError.WrongUserWallet If single-currency user wallet
      * ID provided.
      */
+    @Deprecated("Use MultiWalletCryptoCurrenciesSupplier")
     suspend fun getMultiCurrencyWalletCurrenciesSync(
         userWalletId: UserWalletId,
         refresh: Boolean = false,
@@ -170,6 +161,7 @@ interface CurrenciesRepository {
      * @throws DataError.UserWalletError.WrongUserWallet If single-currency user wallet
      * ID provided.
      */
+    @Deprecated("Use SingleAccountListSupplier instead")
     fun isTokensGrouped(userWalletId: UserWalletId): Flow<Boolean>
 
     /**
@@ -180,6 +172,7 @@ interface CurrenciesRepository {
      * @throws DataError.UserWalletError.WrongUserWallet If single-currency user wallet
      * ID provided.
      */
+    @Deprecated("Use SingleAccountListSupplier instead")
     fun isTokensSortedByBalance(userWalletId: UserWalletId): Flow<Boolean>
 
     /**
@@ -213,6 +206,7 @@ interface CurrenciesRepository {
     ): CryptoCurrency.Token
 
     /** Get crypto currencies by [currencyRawId] from all user wallets */
+    @Deprecated("Use MultiAccountListSupplier instead")
     fun getAllWalletsCryptoCurrencies(currencyRawId: CryptoCurrency.RawID): Flow<Map<UserWallet, List<CryptoCurrency>>>
 
     fun isNetworkFeeZero(userWalletId: UserWalletId, network: Network): Boolean
@@ -225,6 +219,7 @@ interface CurrenciesRepository {
      * @param userWalletId The unique identifier of the user wallet to sync tokens for.
      * @throws Exception if the sync request to the backend fails
      */
+    @Deprecated("Use AccountsCRUDRepository instead")
     @Throws
     suspend fun syncTokens(userWalletId: UserWalletId)
 
