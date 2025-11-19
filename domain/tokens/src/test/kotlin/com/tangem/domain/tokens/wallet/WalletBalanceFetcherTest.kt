@@ -385,7 +385,9 @@ internal class WalletBalanceFetcherTest {
 
         val currencies = cryptoCurrencyFactory.ethereumAndStellar.toSet()
         val stakingId = Either.Left(
-            StakingIdFactory.Error.UnableToGetAddress(integrationId = StakingIntegrationID.EthereumToken.Polygon),
+            StakingIdFactory.Error.UnableToGetAddress(
+                integrationId = StakingIntegrationID.StakeKit.EthereumToken.Polygon,
+            ),
         )
 
         every { currenciesRepository.getCardTypesResolver(userWalletId = userWalletId) } returns cardTypesResolver
@@ -425,7 +427,9 @@ internal class WalletBalanceFetcherTest {
 
         val currencies = cryptoCurrencyFactory.ethereumAndStellar.toSet()
         val ethereumStakingId = Either.Left(
-            StakingIdFactory.Error.UnableToGetAddress(integrationId = StakingIntegrationID.EthereumToken.Polygon),
+            StakingIdFactory.Error.UnableToGetAddress(
+                integrationId = StakingIntegrationID.StakeKit.EthereumToken.Polygon,
+            ),
         )
         val stellarStakingId = Either.Left(StakingIdFactory.Error.UnsupportedCurrency)
 
