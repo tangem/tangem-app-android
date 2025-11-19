@@ -4,6 +4,7 @@ import com.google.common.truth.Truth
 import com.tangem.domain.models.account.CryptoPortfolioIcon.Color
 import com.tangem.domain.models.account.CryptoPortfolioIcon.Icon
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.test.core.ProvideTestModels
 import io.mockk.every
 import io.mockk.mockkObject
 import io.mockk.unmockkObject
@@ -11,7 +12,6 @@ import io.mockk.verifyOrder
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.MethodSource
 import kotlin.random.Random
 
 /**
@@ -25,7 +25,7 @@ class CryptoPortfolioIconTest {
     inner class OfMainAccount {
 
         @ParameterizedTest
-        @MethodSource("provideTestModels")
+        @ProvideTestModels
         fun ofMainAccount(model: OfMainAccountModel) {
             // Act
             val actual = CryptoPortfolioIcon.ofMainAccount(userWalletId = model.userWalletId)
@@ -84,7 +84,7 @@ class CryptoPortfolioIconTest {
     inner class OfDefaultCustomAccount {
 
         @ParameterizedTest
-        @MethodSource("provideTestModels")
+        @ProvideTestModels
         fun ofCustomAccount(model: OfDefaultCustomAccountModel) {
             // Arrange
             val availableIcons = Icon.entries - setOf(Icon.Letter, Icon.Star)
@@ -139,7 +139,7 @@ class CryptoPortfolioIconTest {
     inner class OfCustomAccountWithTypeAndColor {
 
         @ParameterizedTest
-        @MethodSource("provideTestModels")
+        @ProvideTestModels
         fun ofCustomAccount(model: OfCustomAccountModel) {
             // Act
             val actual = CryptoPortfolioIcon.ofCustomAccount(value = model.icon, color = model.color)

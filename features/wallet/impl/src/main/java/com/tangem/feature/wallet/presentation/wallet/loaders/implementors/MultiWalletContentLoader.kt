@@ -12,7 +12,6 @@ import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.ShouldSaveUserWalletsUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyApyFlowUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
-import com.tangem.feature.wallet.presentation.account.AccountDependencies
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.TokenListAnalyticsSender
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.WalletWarningsAnalyticsSender
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.WalletWarningsSingleEventSender
@@ -23,6 +22,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.subscribers.*
 
 @Suppress("LongParameterList")
+@Deprecated("Use MultiWalletContentLoaderV2 instead")
 @ModelScoped
 internal class MultiWalletContentLoader(
     private val userWallet: UserWallet,
@@ -41,7 +41,6 @@ internal class MultiWalletContentLoader(
     private val getStoryContentUseCase: GetStoryContentUseCase,
     private val walletsRepository: WalletsRepository,
     private val currenciesRepository: CurrenciesRepository,
-    private val accountDependencies: AccountDependencies,
     private val yieldSupplyApyFlowUseCase: YieldSupplyApyFlowUseCase,
     private val stakingApyFlowUseCase: StakingApyFlowUseCase,
 ) : WalletContentLoader(id = userWallet.walletId) {
@@ -57,7 +56,6 @@ internal class MultiWalletContentLoader(
                 tokenListStore = tokenListStore,
                 getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
                 applyTokenListSortingUseCase = applyTokenListSortingUseCase,
-                accountDependencies = accountDependencies,
                 yieldSupplyApyFlowUseCase = yieldSupplyApyFlowUseCase,
                 stakingApyFlowUseCase = stakingApyFlowUseCase,
             ).let(::add)
