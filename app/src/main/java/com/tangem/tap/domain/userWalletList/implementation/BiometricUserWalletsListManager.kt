@@ -36,11 +36,6 @@ internal class BiometricUserWalletsListManager(
             .mapLatest { it.userWallets }
             .distinctUntilChanged()
 
-    override val savedWalletsCount: Flow<Int>
-        get() = state
-            .mapLatest { walletsCount }
-            .distinctUntilChanged()
-
     override val userWalletsSync: List<UserWallet>
         get() = state.value.userWallets
 
@@ -70,6 +65,11 @@ internal class BiometricUserWalletsListManager(
 
     override val walletsCount: Int
         get() = state.value.userWallets.size
+
+    override val savedWalletsCount: Flow<Int>
+        get() = state
+            .mapLatest { walletsCount }
+            .distinctUntilChanged()
 
     override suspend fun unlock(type: UnlockType): CompletionResult<UserWallet> {
         return unlockAndSetSelectedUserWallet(type)

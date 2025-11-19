@@ -34,6 +34,7 @@ import org.rekotlin.Action
 import org.rekotlin.Middleware
 import timber.log.Timber
 
+@Suppress("MemberNameEqualsClassName")
 class DetailsMiddleware {
     private val appSettingsMiddleware = AppSettingsMiddleware()
     val detailsMiddleware: Middleware<AppState> = { _, stateProvider ->
@@ -66,14 +67,8 @@ class DetailsMiddleware {
                     when (action.setting) {
                         AppSetting.SaveWallets -> toggleSaveWallets(state, enable = action.enable)
                         AppSetting.SaveAccessCode -> toggleSaveAccessCodes(state, enable = action.enable)
-                        AppSetting.RequireAccessCode -> toggleRequireAccessCode(
-                            state = state,
-                            enable = action.enable,
-                        )
-                        AppSetting.BiometricAuthentication -> toggleBiometricsAuthentication(
-                            state = state,
-                            enable = action.enable,
-                        )
+                        AppSetting.RequireAccessCode -> toggleRequireAccessCode(enable = action.enable)
+                        AppSetting.BiometricAuthentication -> toggleBiometricsAuthentication(enable = action.enable)
                     }
                 }
                 is DetailsAction.AppSettings.CheckBiometricsStatus -> {
@@ -100,7 +95,7 @@ class DetailsMiddleware {
             }
         }
 
-        private fun toggleBiometricsAuthentication(state: DetailsState, enable: Boolean) {
+        private fun toggleBiometricsAuthentication(enable: Boolean) {
             scope.launch {
                 val walletsRepository = store.inject(DaggerGraphState::walletsRepository)
 
@@ -110,16 +105,12 @@ class DetailsMiddleware {
                     return@launch
                 }
 
-                toggleRequireAccessCode(
-                    state = state,
-                    enable = true,
-                )
-
                 if (enable) {
                     setBiometricLockForAllWallets()
                 } else {
                     // Remove all biometric-related data
                     removeAllBiometricData()
+                    walletsRepository.setRequireAccessCode(value = true)
                 }
 
                 walletsRepository.setUseBiometricAuthentication(value = enable)
@@ -127,7 +118,7 @@ class DetailsMiddleware {
             }
         }
 
-        private fun toggleRequireAccessCode(state: DetailsState, enable: Boolean) {
+        private fun toggleRequireAccessCode(enable: Boolean) {
             scope.launch {
                 val walletsRepository = store.inject(DaggerGraphState::walletsRepository)
 
@@ -138,11 +129,8 @@ class DetailsMiddleware {
                 }
 
                 if (enable) {
-                    // Remove all biometric sign data
+                    // Remove all saved access codes
                     removeAllBiometricSingData()
-                    toggleSaveAccessCodes(state, enable = false)
-                } else {
-                    toggleSaveAccessCodes(state, enable = true)
                 }
 
                 walletsRepository.setRequireAccessCode(value = enable)
