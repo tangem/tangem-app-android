@@ -15,6 +15,7 @@ import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.core.lce.LceFlow
 import com.tangem.domain.demo.IsDemoCardUseCase
+import com.tangem.domain.hotwallet.GetAccessCodeSkippedUseCase
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.currency.CryptoCurrency
@@ -31,7 +32,6 @@ import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.wallets.models.SeedPhraseNotificationsStatus
 import com.tangem.domain.wallets.usecase.IsNeedToBackupUseCase
 import com.tangem.domain.wallets.usecase.SeedPhraseNotificationUseCase
-import com.tangem.domain.hotwallet.GetAccessCodeSkippedUseCase
 import com.tangem.feature.wallet.child.wallet.model.WalletActivationBannerType
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.impl.R
@@ -125,7 +125,12 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
 
                     addVisaPresalePromoNotification(clickIntents, shouldShowVisaPromo)
 
-                    addSepaPromoNotification(userWallet, clickIntents, shouldShowSepaBanner)
+                    addSepaPromoNotification(
+                        userWallet = userWallet,
+                        flattenCurrencies = flattenCurrencies,
+                        clickIntents = clickIntents,
+                        shouldShowSepaPromo = shouldShowSepaBanner,
+                    )
 
                     addInformationalNotifications(userWallet, cardTypesResolver, flattenCurrencies, clickIntents)
 
@@ -293,12 +298,20 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
 
     private suspend fun MutableList<WalletNotification>.addSepaPromoNotification(
         userWallet: UserWallet,
+        flattenCurrencies: Lce<TokenListError, List<CryptoCurrencyStatus>>,
         clickIntents: WalletClickIntents,
         shouldShowSepaPromo: Boolean,
     ) {
-        val currencies = getCryptoCurrenciesUseCase(userWalletId = userWallet.walletId).getOrElse {
-            Timber.e("Error on getting crypto currency list")
-            return
+        val currencies = if (accountDependencies.accountsFeatureToggles.isFeatureEnabled) {
+            flattenCurrencies.map { statuses -> statuses.map { it.currency } }.getOrNull() ?: run {
+                Timber.e("Error on getting crypto currency list")
+                return
+            }
+        } else {
+            getCryptoCurrenciesUseCase(userWalletId = userWallet.walletId).getOrElse {
+                Timber.e("Error on getting crypto currency list")
+                return
+            }
         }
 
         val bitcoinCurrency = currencies.find { isBitcoin(it.network.rawId) } ?: return
