@@ -61,9 +61,9 @@ object Analytics : GlobalAnalyticsEventHandler {
         return paramsInterceptors.remove(interceptorId)
     }
 
-    override fun setUserId(userWalletId: String) {
+    override fun setUserId(userId: String) {
         analyticsScope.launch {
-            val userIdHash = userWalletId.hexToBytes()
+            val userIdHash = userId.hexToBytes()
                 .calculateSha256()
                 .toHexString()
 
