@@ -19,7 +19,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.TangemPayState.
 import com.tangem.feature.wallet.presentation.wallet.ui.components.singlecurrency.TangemPayCardMainBlock
 
 @Composable
-internal fun TangemPayMainScreenBlock(state: TangemPayState, modifier: Modifier = Modifier) {
+internal fun TangemPayMainScreenBlock(state: TangemPayState, isBalanceHidden: Boolean, modifier: Modifier = Modifier) {
     when (state) {
         is Progress -> {
             Notification(
@@ -38,7 +38,7 @@ internal fun TangemPayMainScreenBlock(state: TangemPayState, modifier: Modifier 
                 ),
             )
         }
-        is TangemPayState.Card -> TangemPayCardMainBlock(state, modifier)
+        is TangemPayState.Card -> TangemPayCardMainBlock(state, isBalanceHidden, modifier)
         is TangemPayState.Empty -> Unit
     }
 }
@@ -56,6 +56,7 @@ private fun ResetCardScreenPreview() {
                     iconRes = R.drawable.ic_promo_kyc_36,
                     onButtonClick = {},
                 ),
+                isBalanceHidden = false,
             )
 
             TangemPayMainScreenBlock(
@@ -65,6 +66,7 @@ private fun ResetCardScreenPreview() {
                     iconRes = R.drawable.ic_tangem_pay_promo_card_36,
                     onButtonClick = {},
                 ),
+                isBalanceHidden = false,
             )
 
             TangemPayMainScreenBlock(
@@ -75,6 +77,7 @@ private fun ResetCardScreenPreview() {
                     onButtonClick = {},
                     showProgress = true,
                 ),
+                isBalanceHidden = false,
             )
 
             TangemPayMainScreenBlock(
@@ -83,6 +86,7 @@ private fun ResetCardScreenPreview() {
                     balanceText = TextReference.Str("$ 0.00"),
                     onClick = {},
                 ),
+                isBalanceHidden = false,
             )
         }
     }
