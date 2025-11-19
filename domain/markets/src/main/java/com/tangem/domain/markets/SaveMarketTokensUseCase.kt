@@ -25,7 +25,7 @@ import kotlinx.coroutines.withContext
  *
 [REDACTED_AUTHOR]
  */
-@Deprecated("Use SaveCryptoCurrenciesUseCase")
+@Deprecated("Use ManageCryptoCurrenciesUseCase")
 @Suppress("LongParameterList")
 class SaveMarketTokensUseCase(
     private val derivationsRepository: DerivationsRepository,
