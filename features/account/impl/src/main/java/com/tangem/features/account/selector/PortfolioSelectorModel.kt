@@ -53,7 +53,13 @@ internal class PortfolioSelectorModel @Inject constructor(
             flow4 = selectorController.isEnabled,
             flow5 = selectedAccountState,
             transform = { isAccountsMode, portfolioData, artworks, isEnabled, selectedAccount ->
-                val uiList = buildUiList(isAccountsMode, portfolioData, artworks, isEnabled, selectedAccount)
+                val uiList = buildUiList(
+                    isAccountsMode = isAccountsMode,
+                    portfolioData = portfolioData,
+                    artworks = artworks,
+                    isEnabled = isEnabled,
+                    selectedAccount = selectedAccount,
+                )
                 val title = when (isAccountsMode) {
                     true -> resourceReference(R.string.common_choose_account)
                     false -> resourceReference(R.string.common_choose_wallet)
@@ -75,8 +81,18 @@ internal class PortfolioSelectorModel @Inject constructor(
         isEnabled: (UserWallet, AccountStatus) -> Boolean,
         selectedAccount: AccountId?,
     ): List<PortfolioSelectorItemUM> = when (isAccountsMode) {
-        true -> buildAccountsList(portfolioData, artworks, isEnabled, selectedAccount)
-        false -> buildWalletList(portfolioData, artworks, isEnabled, selectedAccount)
+        true -> buildAccountsList(
+            portfolioData = portfolioData,
+            artworks = artworks,
+            isEnabled = isEnabled,
+            selectedAccount = selectedAccount,
+        )
+        false -> buildWalletList(
+            portfolioData = portfolioData,
+            artworks = artworks,
+            isEnabled = isEnabled,
+            selectedAccount = selectedAccount,
+        )
     }
 
     private fun buildWalletList(
