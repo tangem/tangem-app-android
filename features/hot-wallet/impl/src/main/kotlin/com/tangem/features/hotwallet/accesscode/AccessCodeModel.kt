@@ -81,7 +81,7 @@ internal class AccessCodeModel @Inject constructor(
                 accessCodeColor = when {
                     params.accessCodeToConfirm == null -> PinTextColor.Primary
                     value.length != uiState.value.accessCodeLength -> PinTextColor.Primary
-                    value == params.accessCodeToConfirm -> PinTextColor.Success
+                    value == params.accessCodeToConfirm -> PinTextColor.Primary
                     else -> PinTextColor.WrongCode
                 },
             )
