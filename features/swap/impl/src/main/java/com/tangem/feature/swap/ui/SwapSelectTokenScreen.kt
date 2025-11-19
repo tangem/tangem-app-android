@@ -14,32 +14,39 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SpacerH12
 import com.tangem.core.ui.components.SpacerW2
 import com.tangem.core.ui.components.appbar.ExpandableSearchView
 import com.tangem.core.ui.components.atoms.text.EllipsisText
 import com.tangem.core.ui.components.currency.icon.CurrencyIcon
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
+import com.tangem.core.ui.components.tokenlist.PortfolioListItem
+import com.tangem.core.ui.components.tokenlist.PortfolioTokensListItem
+import com.tangem.core.ui.components.tokenlist.TokenListItem
+import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
-import com.tangem.core.ui.extensions.orMaskWithStars
-import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.BuyTokenScreenTestTags
+import com.tangem.core.ui.utils.lazyListItemPosition
 import com.tangem.feature.swap.models.SwapSelectTokenStateHolder
 import com.tangem.feature.swap.models.TokenBalanceData
+import com.tangem.feature.swap.models.TokenListUMData
 import com.tangem.feature.swap.models.TokenToSelectState
 import com.tangem.feature.swap.presentation.R
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 
 @Composable
-fun SwapSelectTokenScreen(state: SwapSelectTokenStateHolder, onBack: () -> Unit) {
+internal fun SwapSelectTokenScreen(state: SwapSelectTokenStateHolder, onBack: () -> Unit) {
     BackHandler(onBack = onBack)
 
     Scaffold(
@@ -49,10 +56,12 @@ fun SwapSelectTokenScreen(state: SwapSelectTokenStateHolder, onBack: () -> Unit)
         content = { padding ->
             val modifier = Modifier.padding(padding)
             when {
-                state.availableTokens.isEmpty() && state.unavailableTokens.isEmpty() && state.afterSearch -> {
+                state.availableTokens.isEmpty() && state.unavailableTokens.isEmpty() &&
+                    state.tokensListData.tokensList.isEmpty() && state.afterSearch -> {
                     TokensNotFound(modifier)
                 }
-                state.availableTokens.isEmpty() && state.unavailableTokens.isEmpty() && !state.afterSearch -> {
+                state.availableTokens.isEmpty() && state.unavailableTokens.isEmpty() &&
+                    state.tokensListData.tokensList.isEmpty() && !state.afterSearch -> {
                     EmptyTokensList(modifier)
                 }
                 else -> {
@@ -133,6 +142,22 @@ private fun ListOfTokens(state: SwapSelectTokenStateHolder, modifier: Modifier =
             .imePadding(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
+        when (val list = state.tokensListData) {
+            is TokenListUMData.AccountList -> list.tokensList.forEach { item ->
+                portfolioTokensList(
+                    portfolio = item,
+                    isBalanceHidden = state.isBalanceHidden,
+                )
+            }
+            is TokenListUMData.TokenList -> {
+                tokensList(
+                    items = list.tokensList,
+                    isBalanceHidden = state.isBalanceHidden,
+                )
+            }
+            TokenListUMData.EmptyList -> Unit
+        }
+
         tokensToSelectItems(state.availableTokens, state.onTokenSelected)
 
         item { SpacerH12() }
@@ -140,6 +165,86 @@ private fun ListOfTokens(state: SwapSelectTokenStateHolder, modifier: Modifier =
         tokensToSelectItems(state.unavailableTokens, state.onTokenSelected)
 
         item { SpacerH12() }
+    }
+}
+
+private fun LazyListScope.tokensList(items: ImmutableList<TokensListItemUM>, isBalanceHidden: Boolean) {
+    itemsIndexed(
+        items = items,
+        key = { _, item -> item.id },
+        contentType = { _, item -> item::class.java },
+        itemContent = { index, item ->
+            TokenListItem(
+                state = item,
+                isBalanceHidden = isBalanceHidden,
+                modifier = Modifier
+                    .roundedShapeItemDecoration(
+                        currentIndex = index,
+                        lastIndex = items.lastIndex,
+                        backgroundColor = TangemTheme.colors.background.primary,
+                    )
+                    .testTag(BuyTokenScreenTestTags.LAZY_LIST_ITEM)
+                    .semantics { lazyListItemPosition = index },
+            )
+        },
+    )
+}
+
+internal fun LazyListScope.portfolioTokensList(portfolio: TokensListItemUM.Portfolio, isBalanceHidden: Boolean) {
+    val tokens = portfolio.tokens
+    val isExpanded = portfolio.isExpanded
+
+    portfolioItem(
+        portfolio = portfolio,
+        modifier = Modifier.padding(top = 8.dp),
+        isBalanceHidden = isBalanceHidden,
+    )
+    if (!isExpanded) return
+    itemsIndexed(
+        items = tokens,
+        key = { _, item -> item.id },
+        contentType = { _, item -> item::class.java },
+        itemContent = { tokenIndex, token ->
+            val indexWithHeader = tokenIndex.inc()
+            PortfolioTokensListItem(
+                state = token,
+                isBalanceHidden = isBalanceHidden,
+                modifier = Modifier
+                    .animateItem()
+                    .roundedShapeItemDecoration(
+                        currentIndex = indexWithHeader,
+                        lastIndex = tokens.lastIndex.inc(),
+                        backgroundColor = TangemTheme.colors.background.primary,
+                    )
+                    .conditional(tokenIndex == tokens.lastIndex) {
+                        Modifier.padding(bottom = 8.dp)
+                    },
+            )
+        },
+    )
+}
+
+private fun LazyListScope.portfolioItem(
+    portfolio: TokensListItemUM.Portfolio,
+    modifier: Modifier,
+    isBalanceHidden: Boolean,
+) {
+    item(
+        key = "account-${portfolio.id}",
+        contentType = "account",
+    ) {
+        PortfolioListItem(
+            state = portfolio,
+            isBalanceHidden = isBalanceHidden,
+            modifier = Modifier
+                .animateItem()
+                .roundedShapeItemDecoration(
+                    currentIndex = 0,
+                    lastIndex = portfolio.tokens.lastIndex.inc(),
+                    backgroundColor = TangemTheme.colors.background.primary,
+                )
+                .then(modifier),
+        )
     }
 }
 
@@ -311,7 +416,9 @@ private fun TokenScreenPreview() {
             state = SwapSelectTokenStateHolder(
                 availableTokens = listOf(title, token, token, token).toImmutableList(),
                 unavailableTokens = listOf(title, token, token, token).toImmutableList(),
+                tokensListData = TokenListUMData.EmptyList,
                 afterSearch = false,
+                isBalanceHidden = false,
                 onSearchEntered = {},
                 onTokenSelected = {},
             ),

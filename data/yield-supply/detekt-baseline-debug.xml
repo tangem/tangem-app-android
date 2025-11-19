@@ -1,0 +1,15 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>BooleanPropertyNaming:DefaultYieldSupplyTransactionRepository.kt$DefaultYieldSupplyTransactionRepository$val emptyContractAddress = existingYieldAddress == null || existingYieldAddress == EthereumUtils.ZERO_ADDRESS</ID>
+    <ID>MultilineLambdaItParameter:DefaultYieldSupplyRepository.kt$DefaultYieldSupplyRepository${ it.type == TxInfo.TransactionType.YieldSupply.Enter || it.type == TxInfo.TransactionType.Approve &amp;&amp; (it.interactionAddressType as? TxInfo.InteractionAddressType.Contract)?.address == yieldAddress }</ID>
+    <ID>NoNameShadowing:DefaultYieldSupplyTransactionRepository.kt$DefaultYieldSupplyTransactionRepository$maxNetworkFee</ID>
+    <ID>NullableBooleanCheck:DefaultYieldSupplyRepository.kt$DefaultYieldSupplyRepository$(walletManager as? YieldSupplyProvider)?.isSupported() ?: false</ID>
+    <ID>NullableBooleanCheck:DefaultYieldSupplyTransactionRepository.kt$DefaultYieldSupplyTransactionRepository$yieldSupplyStatus?.isActive ?: false</ID>
+    <ID>NullableBooleanCheck:DefaultYieldSupplyTransactionRepository.kt$DefaultYieldSupplyTransactionRepository$yieldSupplyStatus?.isAllowedToSpend ?: false</ID>
+    <ID>NullableBooleanCheck:DefaultYieldSupplyTransactionRepository.kt$DefaultYieldSupplyTransactionRepository$yieldSupplyStatus?.isInitialized ?: false</ID>
+    <ID>NullableBooleanCheck:YieldMarketTokenConverter.kt$YieldMarketTokenConverter$value.isActive ?: false</ID>
+    <ID>SuspendFunSwallowedCancellation:DefaultYieldSupplyTransactionRepository.kt$DefaultYieldSupplyTransactionRepository$runCatching</ID>
+  </CurrentIssues>
+</SmellBaseline>
