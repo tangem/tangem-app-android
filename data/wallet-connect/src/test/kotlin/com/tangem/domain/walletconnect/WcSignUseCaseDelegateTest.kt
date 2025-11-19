@@ -58,6 +58,7 @@ internal class WcSignUseCaseDelegateTest {
         session = WcSession(
             wallet = MockUserWalletFactory.create(),
             networks = setOf(),
+            account = null,
             securityStatus = CheckDAppResult.FAILED_TO_VERIFY,
             connectingTime = 0L,
             sdkModel = WcSdkSession(

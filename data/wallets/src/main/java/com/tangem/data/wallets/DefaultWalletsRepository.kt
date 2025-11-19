@@ -10,20 +10,14 @@ import com.tangem.datasource.api.common.response.ApiResponseError.HttpException
 import com.tangem.datasource.api.common.response.fold
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.tangemTech.TangemTechApi
-import com.tangem.datasource.api.tangemTech.models.MarkUserWalletWasCreatedBody
-import com.tangem.datasource.api.tangemTech.models.PromocodeActivationBody
-import com.tangem.datasource.api.tangemTech.models.SeedPhraseNotificationDTO
+import com.tangem.datasource.api.tangemTech.models.*
 import com.tangem.datasource.api.tangemTech.models.SeedPhraseNotificationDTO.Status
-import com.tangem.datasource.api.tangemTech.models.WalletBody
+import com.tangem.datasource.api.tangemTech.models.WalletIdBody.WalletType
 import com.tangem.datasource.local.datastore.RuntimeStateStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.PreferencesKeys.SEED_FIRST_NOTIFICATION_SHOW_TIME
-import com.tangem.datasource.local.preferences.utils.get
-import com.tangem.datasource.local.preferences.utils.getObjectMap
-import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
-import com.tangem.datasource.local.preferences.utils.getSyncOrNull
-import com.tangem.datasource.local.preferences.utils.store
+import com.tangem.datasource.local.preferences.utils.*
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
@@ -37,7 +31,6 @@ import com.tangem.utils.coroutines.runCatching
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlin.collections.mutableSetOf
 
 typealias SeedPhraseNotificationsStatuses = Map<UserWalletId, SeedPhraseNotificationsStatus>
 
@@ -52,7 +45,7 @@ internal class DefaultWalletsRepository(
 ) : WalletsRepository {
 
     private val upgradeWalletNotificationDisabled: MutableStateFlow<Set<UserWalletId>> =
-        MutableStateFlow(mutableSetOf<UserWalletId>())
+        MutableStateFlow(mutableSetOf())
 
     override suspend fun shouldSaveUserWalletsSync(): Boolean {
         return appPreferencesStore.getSyncOrDefault(key = PreferencesKeys.SAVE_USER_WALLETS_KEY, default = false)
@@ -260,6 +253,23 @@ internal class DefaultWalletsRepository(
         }
     }
 
+    override suspend fun createWallet(userWalletId: UserWalletId) {
+        withContext(dispatchers.io) {
+            val userWallet = userWalletsStore.getSyncStrict(key = userWalletId)
+
+            tangemTechApi.createWallet(
+                body = WalletIdBody(
+                    walletId = userWalletId.stringValue,
+                    name = userWallet.name,
+                    walletType = when (userWallet) {
+                        is UserWallet.Cold -> WalletType.COLD
+                        is UserWallet.Hot -> WalletType.HOT
+                    },
+                ),
+            )
+        }
+    }
+
     override suspend fun rejectSeedPhraseSecondNotification(userWalletId: UserWalletId) {
         runCatching(dispatchers.io) {
             tangemTechApi.updateSeedPhraseSecondNotificationStatus(
@@ -381,10 +391,16 @@ internal class DefaultWalletsRepository(
     override suspend fun associateWallets(applicationId: String, wallets: List<UserWallet>) =
         withContext(dispatchers.io) {
             val publicKeys = authProvider.getCardsPublicKeys()
-            val walletsBody = wallets.filterIsInstance<UserWallet.Cold>().map { userWallet ->
+            val walletsBody = wallets.map { userWallet ->
                 WalletIdBodyConverter.convert(
                     userWallet = userWallet,
-                    publicKeys = publicKeys.filterKeys { userWallet.cardsInWallet.contains(it) },
+                    publicKeys = if (userWallet is UserWallet.Cold) {
+                        publicKeys.filterKeys {
+                            userWallet.cardsInWallet.contains(it)
+                        }
+                    } else {
+                        emptyMap()
+                    },
                 )
             }
 
