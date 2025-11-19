@@ -17,6 +17,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -36,6 +37,7 @@ import com.tangem.core.ui.extensions.rememberHapticFeedback
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.SendAddressScreenTestTags
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.features.send.v2.impl.R
 import com.tangem.utils.StringsSigns
@@ -85,6 +87,7 @@ fun ListItemWithIcon(
     }
 }
 
+@Suppress("LongMethod")
 @Composable
 private fun ListItemWithIcon(
     title: String,
@@ -102,14 +105,16 @@ private fun ListItemWithIcon(
         modifier = modifier
             .fillMaxWidth()
             .clickable { hapticFeedback() }
-            .padding(horizontal = 12.dp),
+            .padding(horizontal = 12.dp)
+            .testTag(SendAddressScreenTestTags.RECENT_ADDRESS_ITEM),
     ) {
         IdentIcon(
             address = title,
             modifier = Modifier
                 .padding(vertical = 8.dp)
                 .size(40.dp)
-                .clip(RoundedCornerShape(20.dp)),
+                .clip(RoundedCornerShape(20.dp))
+                .testTag(SendAddressScreenTestTags.RECENT_ADDRESS_ICON),
         )
         Column(
             modifier = Modifier
@@ -123,7 +128,7 @@ private fun ListItemWithIcon(
                 color = TangemTheme.colors.text.primary1,
                 textAlign = TextAlign.Justify,
                 ellipsis = TextEllipsis.Middle,
-                modifier = Modifier,
+                modifier = Modifier.testTag(SendAddressScreenTestTags.RECENT_ADDRESS_TITLE),
             )
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (subtitleIconRes != null) {
@@ -135,7 +140,8 @@ private fun ListItemWithIcon(
                             .padding(end = 2.dp)
                             .size(16.dp)
                             .background(TangemTheme.colors.background.tertiary, CircleShape)
-                            .padding(2.dp),
+                            .padding(2.dp)
+                            .testTag(SendAddressScreenTestTags.RECENT_ADDRESS_TRANSACTION_ICON),
                     )
                 }
                 val (text, offset) = remember(subtitle, info) {
@@ -151,6 +157,7 @@ private fun ListItemWithIcon(
                     style = TangemTheme.typography.caption2,
                     color = TangemTheme.colors.text.tertiary,
                     ellipsis = TextEllipsis.OffsetEnd(offsetEnd = offset),
+                    modifier = Modifier.testTag(SendAddressScreenTestTags.RECENT_ADDRESS_TEXT),
                 )
                 if (accountTitleUM != null) {
                     AccountTitle(
