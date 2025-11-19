@@ -11,6 +11,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.*
 import androidx.compose.ui.text.style.TextAlign
@@ -35,6 +36,7 @@ import com.tangem.core.ui.format.bigdecimal.fee
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.FeeSelectorBlockTestTags
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.features.send.v2.api.entity.*
@@ -54,11 +56,14 @@ internal fun FeeSelectorBlockContent(
     Row(
         modifier = modifier
             .background(TangemTheme.colors.background.action)
-            .padding(12.dp),
+            .padding(12.dp)
+            .testTag(FeeSelectorBlockTestTags.SELECTOR_BLOCK),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
-            modifier = Modifier.size(24.dp),
+            modifier = Modifier
+                .size(24.dp)
+                .testTag(FeeSelectorBlockTestTags.ICON),
             painter = painterResource(R.drawable.ic_fee_new_24),
             contentDescription = null,
             tint = TangemTheme.colors.icon.accent,
@@ -85,7 +90,8 @@ private fun FeeSelectorStaticPart(onReadMoreClick: () -> Unit, modifier: Modifie
         Text(
             modifier = Modifier
                 .padding(start = TangemTheme.dimens.spacing4)
-                .weight(1f, fill = false),
+                .weight(1f, fill = false)
+                .testTag(FeeSelectorBlockTestTags.TITLE),
             text = stringResourceSafe(R.string.common_network_fee_title),
             style = TangemTheme.typography.body1,
             color = TangemTheme.colors.text.primary1,
@@ -123,7 +129,9 @@ private fun FeeSelectorStaticPart(onReadMoreClick: () -> Unit, modifier: Modifie
                 .clip(CircleShape),
             content = { contentModifier ->
                 Icon(
-                    modifier = contentModifier.size(TangemTheme.dimens.size16),
+                    modifier = contentModifier
+                        .size(TangemTheme.dimens.size16)
+                        .testTag(FeeSelectorBlockTestTags.TOOLTIP_ICON),
                     painter = painterResource(id = R.drawable.ic_token_info_24),
                     contentDescription = null,
                     tint = TangemTheme.colors.icon.informative,
@@ -174,11 +182,15 @@ private fun FeeContent(state: FeeSelectorUM.Content, modifier: Modifier = Modifi
             style = TangemTheme.typography.body1,
             color = TangemTheme.colors.text.tertiary,
             textAlign = TextAlign.End,
-            modifier = Modifier.padding(start = TangemTheme.dimens.spacing4),
+            modifier = Modifier
+                .padding(start = TangemTheme.dimens.spacing4)
+                .testTag(FeeSelectorBlockTestTags.FEE_AMOUNT),
         )
         if (!state.feeItems.isSingleItem()) {
             Icon(
-                modifier = Modifier.size(width = 18.dp, height = 24.dp),
+                modifier = Modifier
+                    .size(width = 18.dp, height = 24.dp)
+                    .testTag(FeeSelectorBlockTestTags.SELECT_FEE_ICON),
                 painter = painterResource(id = R.drawable.ic_select_18_24),
                 contentDescription = null,
                 tint = TangemTheme.colors.icon.informative,

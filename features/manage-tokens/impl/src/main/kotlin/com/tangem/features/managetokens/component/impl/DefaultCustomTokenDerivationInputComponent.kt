@@ -108,7 +108,7 @@ internal class DefaultCustomTokenDerivationInputComponent @AssistedInject constr
 
         val value = state.value.value.text
         val model = SelectedDerivationPath(
-            id = null,
+            id = params.selectedNetwork.id,
             value = Network.DerivationPath.Custom(value),
             name = value,
             isDefault = false,
