@@ -422,7 +422,7 @@ class CryptoCurrencyStatusFactoryTest {
             // Arrange
             val yieldBalance = YieldBalance.Data(
                 stakingId = StakingID(
-                    integrationId = StakingIntegrationID.Coin.Cardano.value,
+                    integrationId = StakingIntegrationID.StakeKit.Coin.Cardano.value,
                     address = networkAddress.defaultAddress.value,
                 ),
                 source = StatusSource.ACTUAL,
@@ -435,7 +435,7 @@ class CryptoCurrencyStatusFactoryTest {
                             every { this@mockk.token.coinGeckoId } returns "unknown"
                         },
                     ),
-                    integrationId = StakingIntegrationID.Coin.Cardano.value,
+                    integrationId = StakingIntegrationID.StakeKit.Coin.Cardano.value,
                 ),
             )
 
@@ -519,7 +519,7 @@ class CryptoCurrencyStatusFactoryTest {
             // Arrange
             val yieldBalance = YieldBalance.Data(
                 stakingId = StakingID(
-                    integrationId = StakingIntegrationID.Coin.Cardano.value,
+                    integrationId = StakingIntegrationID.StakeKit.Coin.Cardano.value,
                     address = networkAddress.defaultAddress.value,
                 ),
                 source = StatusSource.ACTUAL,
@@ -532,7 +532,7 @@ class CryptoCurrencyStatusFactoryTest {
                             every { this@mockk.token.coinGeckoId } returns "unknown"
                         },
                     ),
-                    integrationId = StakingIntegrationID.Coin.Cardano.value,
+                    integrationId = StakingIntegrationID.StakeKit.Coin.Cardano.value,
                 ),
             )
 
@@ -608,7 +608,7 @@ class CryptoCurrencyStatusFactoryTest {
             // Arrange
             val yieldBalance = YieldBalance.Data(
                 stakingId = StakingID(
-                    integrationId = StakingIntegrationID.Coin.Cardano.value,
+                    integrationId = StakingIntegrationID.StakeKit.Coin.Cardano.value,
                     address = networkAddress.defaultAddress.value,
                 ),
                 source = StatusSource.ACTUAL,
@@ -621,7 +621,7 @@ class CryptoCurrencyStatusFactoryTest {
                             every { this@mockk.token.coinGeckoId } returns "unknown"
                         },
                     ),
-                    integrationId = StakingIntegrationID.Coin.Cardano.value,
+                    integrationId = StakingIntegrationID.StakeKit.Coin.Cardano.value,
                 ),
             )
 
