@@ -4,6 +4,7 @@ import com.tangem.data.transaction.DefaultFeeRepository
 import com.tangem.data.transaction.DefaultTransactionRepository
 import com.tangem.data.transaction.DefaultWalletAddressServiceRepository
 import com.tangem.data.transaction.error.DefaultFeeErrorResolver
+import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.walletmanager.WalletManagersStore
 import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.transaction.FeeRepository
@@ -25,11 +26,13 @@ internal object TransactionDataModule {
     @Provides
     @Singleton
     fun providesTransactionRepository(
+        tangemTechApi: TangemTechApi,
         walletManagersFacade: WalletManagersFacade,
         walletManagersStore: WalletManagersStore,
         dispatchers: CoroutineDispatcherProvider,
     ): TransactionRepository {
         return DefaultTransactionRepository(
+            tangemTechApi = tangemTechApi,
             walletManagersFacade = walletManagersFacade,
             walletManagersStore = walletManagersStore,
             dispatchers = dispatchers,
