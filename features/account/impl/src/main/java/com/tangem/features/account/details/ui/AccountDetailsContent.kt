@@ -196,7 +196,7 @@ private val archiveModeAvailable
 private class PreviewStateProvider : CollectionPreviewParameterProvider<AccountDetailsUM>(
     buildList {
         val accountName = "Main"
-        var portfolioIcon = AccountIconPreviewData.randomAccountIcon()
+        val portfolioIcon = AccountIconPreviewData.randomAccountIcon()
         val first = AccountDetailsUM(
             onCloseClick = {},
             onAccountEditClick = {},
