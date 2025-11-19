@@ -46,9 +46,10 @@ internal class ArchivedAccountListModel @Inject constructor(
     private val params = paramsContainer.require<ArchivedAccountListComponent.Params>()
     private val onCloseClick = { router.pop() }
 
-    val uiState: StateFlow<AccountArchivedUM> get() = _uiState
-    private val _uiState: MutableStateFlow<AccountArchivedUM> = MutableStateFlow(getInitialState())
-    private var getArchivedAccountsJob = JobHolder()
+    val uiState: StateFlow<AccountArchivedUM>
+        field = MutableStateFlow(getInitialState())
+
+    private val getArchivedAccountsJob = JobHolder()
 
     init {
         getArchivedAccounts()
@@ -85,7 +86,9 @@ internal class ArchivedAccountListModel @Inject constructor(
                     },
                 )
 
-                newState?.let { _uiState.value = newState }
+                if (newState != null) {
+                    uiState.value = newState
+                }
             }
             .flowOn(dispatchers.default)
             .launchIn(modelScope)
@@ -93,11 +96,11 @@ internal class ArchivedAccountListModel @Inject constructor(
     }
 
     private fun recoverCryptoPortfolio(accountId: AccountId) = modelScope.launch {
-        _uiState.update { it.toggleProgress(accountId, isLoading = true) }
+        uiState.update { it.toggleProgress(accountId, isLoading = true) }
         val result = withContext(dispatchers.default) {
             recoverCryptoPortfolioUseCase(accountId)
         }
-        _uiState.update { it.toggleProgress(accountId, isLoading = false) }
+        uiState.update { it.toggleProgress(accountId, isLoading = false) }
         result
             .onLeft(::handleRecoverError)
             .onRight {
@@ -134,7 +137,7 @@ internal class ArchivedAccountListModel @Inject constructor(
         messageSender.showErrorDialog(universalError = featureError, onDismiss = router::pop)
     }
 
-    private fun logError(error: AccountFeatureError, params: Map<String, String> = mapOf()) {
+    private fun logError(error: AccountFeatureError, params: Map<String, String> = emptyMap()) {
         val exception = IllegalStateException(error.toString())
 
         Timber.e(exception)
