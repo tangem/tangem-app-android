@@ -1,0 +1,7 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>UseEmptyCounterpart:WcAnalyticEvents.kt$WcAnalyticEvents$mapOf()</ID>
+  </CurrentIssues>
+</SmellBaseline>
