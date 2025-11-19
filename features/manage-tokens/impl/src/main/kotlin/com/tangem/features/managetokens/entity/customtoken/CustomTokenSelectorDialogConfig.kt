@@ -9,5 +9,6 @@ internal sealed class CustomTokenSelectorDialogConfig {
     @Serializable
     data class CustomDerivationInput(
         val mode: AddCustomTokenMode,
+        val network: SelectedNetwork,
     ) : CustomTokenSelectorDialogConfig()
 }
