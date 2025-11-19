@@ -5,13 +5,17 @@ import com.tangem.datasource.api.common.blockaid.BlockAidApi
 import com.tangem.datasource.api.common.config.ApiConfig
 import com.tangem.datasource.api.common.config.ApiConfig.Companion.MOCKED_BUILD_TYPE
 import com.tangem.datasource.api.common.config.ApiConfigs
+import com.tangem.datasource.api.common.config.MoonPay
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.datasource.api.common.config.managers.DevApiConfigsManager
 import com.tangem.datasource.api.common.config.managers.MockApiConfigsManager
 import com.tangem.datasource.api.common.config.managers.ProdApiConfigsManager
 import com.tangem.datasource.api.express.TangemExpressApi
 import com.tangem.datasource.api.markets.TangemTechMarketsApi
+import com.tangem.datasource.api.moonpay.MoonPayApi
+import com.tangem.datasource.api.news.NewsApi
 import com.tangem.datasource.api.onramp.OnrampApi
+import com.tangem.datasource.api.ethpool.P2PEthPoolApi
 import com.tangem.datasource.api.pay.TangemPayApi
 import com.tangem.datasource.api.stakekit.StakeKitApi
 import com.tangem.datasource.api.tangemTech.TangemTechApi
@@ -73,6 +77,15 @@ internal object NetworkModule {
 
     @Provides
     @Singleton
+    fun provideP2PEthPoolApi(retrofitApiBuilder: RetrofitApiBuilder): P2PEthPoolApi {
+        return retrofitApiBuilder.build(
+            apiConfigId = ApiConfig.ID.P2PEthPool,
+            applyTimeoutAnnotations = false,
+        )
+    }
+
+    @Provides
+    @Singleton
     fun provideOnrampApi(retrofitApiBuilder: RetrofitApiBuilder): OnrampApi {
         return retrofitApiBuilder.build(
             apiConfigId = ApiConfig.ID.Express,
@@ -127,6 +140,24 @@ internal object NetworkModule {
     fun provideBlockAidApi(retrofitApiBuilder: RetrofitApiBuilder): BlockAidApi {
         return retrofitApiBuilder.build(
             apiConfigId = ApiConfig.ID.BlockAid,
+            applyTimeoutAnnotations = false,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideMoonPayApi(retrofitApiBuilder: RetrofitApiBuilder): MoonPayApi {
+        return retrofitApiBuilder.build(
+            apiConfigId = ApiConfig.ID.MoonPay,
+            applyTimeoutAnnotations = false,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideNewsApi(retrofitApiBuilder: RetrofitApiBuilder): NewsApi {
+        return retrofitApiBuilder.build(
+            apiConfigId = ApiConfig.ID.News,
             applyTimeoutAnnotations = false,
         )
     }
