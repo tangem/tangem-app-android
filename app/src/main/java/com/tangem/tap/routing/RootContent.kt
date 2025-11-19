@@ -6,6 +6,7 @@ import android.os.Bundle
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -83,6 +84,7 @@ internal fun RootContent(
                 TangemSnackbarHost(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
+                        .imePadding()
                         .navigationBarsPadding()
                         .padding(all = 16.dp),
                     hostState = snackbarHostState,
