@@ -268,7 +268,7 @@ internal class DefaultCurrenciesRepository(
         }
     }
 
-    override fun getMultiCurrencyWalletCurrenciesUpdates(userWalletId: UserWalletId): Flow<List<CryptoCurrency>> {
+    private fun getMultiCurrencyWalletCurrenciesUpdates(userWalletId: UserWalletId): Flow<List<CryptoCurrency>> {
         return channelFlow {
             val userWallet = userWalletsStore.getSyncStrict(userWalletId)
             ensureIsCorrectUserWallet(userWallet, isMultiCurrencyWalletExpected = true)
