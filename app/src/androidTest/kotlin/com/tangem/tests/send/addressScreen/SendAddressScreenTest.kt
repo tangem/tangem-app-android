@@ -178,7 +178,7 @@ class SendAddressScreenTest : BaseTestCase() {
         }
     }
 
-    @AllureId("4004")
+    @AllureId("4009")
     @DisplayName("Send (address screen): check ENS name")
     @Test
     fun sendEnsNameTest() {
@@ -577,6 +577,52 @@ class SendAddressScreenTest : BaseTestCase() {
             }
             step("Assert 'Next' button is enabled") {
                 onSendAddressScreen { nextButton.assertIsEnabled() }
+            }
+        }
+    }
+
+    @AllureId("4567")
+    @DisplayName("Send (address screen): check address field")
+    @Test
+    fun checkSendAddressScreenTest() {
+        val tokenName = "Ethereum"
+        val sendAmount = "1"
+        val hint = getResourceString(R.string.send_enter_address_field_ens)
+        val recipient = getResourceString(R.string.send_recipient)
+
+        setupHooks().run {
+            step("Open 'Main Screen'") {
+                openMainScreen()
+            }
+            step("Synchronize addresses") {
+                synchronizeAddresses()
+            }
+            step("Open 'Send Address' screen") {
+                openSendAddressScreen(tokenName, sendAmount)
+            }
+            step("Assert 'Address' screen title is displayed") {
+                onSendAddressScreen { topAppBarTitle.assertIsDisplayed() }
+            }
+            step("Assert address text field title is displayed") {
+                onSendAddressScreen { addressTextFieldTitle.assertTextContains(recipient) }
+            }
+            step("Assert address text field is displayed") {
+                onSendAddressScreen { addressTextField.assertIsDisplayed() }
+            }
+            step("Assert address text field hint contains text '$hint'") {
+                onSendAddressScreen { addressTextFieldHint.assertTextContains(hint) }
+            }
+            step("Assert 'QR' button is displayed") {
+                onSendAddressScreen { qrButton.assertIsDisplayed() }
+            }
+            step("Assert 'Paste' button is displayed") {
+                onSendAddressScreen { addressPasteButton.assertIsDisplayed() }
+            }
+            step("Assert recipient network caution is displayed for network '$tokenName'") {
+                onSendAddressScreen { recipientNetworkCaution(tokenName).assertIsDisplayed() }
+            }
+            step("Assert 'Next' button is disabled") {
+                onSendAddressScreen { nextButton.assertIsNotEnabled() }
             }
         }
     }
