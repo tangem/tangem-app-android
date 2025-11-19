@@ -36,6 +36,7 @@ internal class OnboardingChildFactory @Inject constructor(
                     withSeedPhraseFlow = route.withSeedPhraseFlow,
                     titleProvider = route.titleProvider,
                     onDone = route.onDone,
+                    onForceExit = route.onForceExit,
                     mode = route.mode,
                 ),
             )
