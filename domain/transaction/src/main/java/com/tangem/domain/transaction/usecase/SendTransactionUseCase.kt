@@ -3,6 +3,7 @@ package com.tangem.domain.transaction.usecase
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
+import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
 import com.tangem.blockchain.common.BlockchainSdkError
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.TransactionSender
@@ -10,21 +11,25 @@ import com.tangem.blockchain.common.TransactionSigner
 import com.tangem.blockchain.common.transaction.TransactionsSendResult
 import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.network.ResultChecker
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyEnterCallData
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplyExitCallData
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplySendCallData
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.simple
 import com.tangem.domain.card.common.TapWorkarounds.isStart2Coin
 import com.tangem.domain.card.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.card.models.TwinKey
 import com.tangem.domain.card.repository.CardSdkConfigRepository
-import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.demo.DemoTransactionSender
+import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.transaction.TransactionRepository
 import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.error.parseWrappedError
+import com.tangem.domain.transaction.models.EventTransactionTypeDto
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.domain.models.wallet.UserWallet
 
 class SendTransactionUseCase(
     private val demoConfig: DemoConfig,
@@ -100,7 +105,10 @@ class SendTransactionUseCase(
                 )
             }
             .fold(
-                ifRight = { result -> result.hashes.right() },
+                ifRight = { result ->
+                    processSentTransactionsHashes(txsData, result.hashes)
+                    result.hashes.right()
+                },
                 ifLeft = { it.left() },
             )
     }
@@ -112,6 +120,32 @@ class SendTransactionUseCase(
     ): Either<SendTransactionError, String> {
         return invoke(listOf(txData), userWallet, network, TransactionSender.MultipleTransactionSendMode.DEFAULT)
             .map { it.first() }
+    }
+
+    private suspend fun processSentTransactionsHashes(transactions: List<TransactionData>, hashes: List<String>) {
+        transactions.forEachIndexed { ind, tx ->
+            sendHashToBackendIfNeeded(tx, hashes[ind])
+        }
+    }
+
+    /**
+     * Sends tx hash to backend for specific transaction types
+     */
+    private suspend fun sendHashToBackendIfNeeded(transaction: TransactionData, txHash: String) {
+        (transaction as? TransactionData.Uncompiled)?.let {
+            val extras = it.extras
+            when (extras) {
+                is EthereumTransactionExtras -> {
+                    val txType = when (extras.callData) {
+                        is EthereumYieldSupplyEnterCallData -> EventTransactionTypeDto.DEPOSIT
+                        is EthereumYieldSupplySendCallData -> EventTransactionTypeDto.SEND
+                        is EthereumYieldSupplyExitCallData -> EventTransactionTypeDto.WITHDRAW
+                        else -> return
+                    }
+                    transactionRepository.sendTransactionHash(txHash, txType)
+                }
+            }
+        }
     }
 
     private suspend fun sendDemo(
