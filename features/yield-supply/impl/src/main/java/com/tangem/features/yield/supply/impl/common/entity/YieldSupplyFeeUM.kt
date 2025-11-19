@@ -15,7 +15,6 @@ internal sealed class YieldSupplyFeeUM {
         val feeFiatValue: TextReference,
         // TODO move to FeePolicyUM
         val estimatedFiatValue: TextReference,
-        val tokenFeeFiatValue: TextReference,
         val maxNetworkFeeFiatValue: TextReference,
         val minTopUpFiatValue: TextReference,
         val feeNoteValue: TextReference = TextReference.EMPTY,
