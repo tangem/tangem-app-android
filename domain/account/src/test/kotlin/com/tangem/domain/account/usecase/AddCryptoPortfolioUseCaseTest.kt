@@ -10,11 +10,8 @@ import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.repository.AccountsCRUDRepository
 import com.tangem.domain.account.tokens.MainAccountTokensMigration
 import com.tangem.domain.account.usecase.AddCryptoPortfolioUseCase.Error
-import com.tangem.domain.account.utils.createAccount
-import com.tangem.domain.account.utils.createAccounts
-import com.tangem.domain.models.account.Account
-import com.tangem.domain.models.account.CryptoPortfolioIcon
-import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.test.mock.MockAccounts
+import com.tangem.test.mock.MockAccounts.createAccount
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
@@ -42,7 +39,7 @@ class AddCryptoPortfolioUseCaseTest {
     @Test
     fun `invoke should add new crypto portfolio account to existing list`() = runTest {
         // Arrange
-        val newAccount = createNewAccount()
+        val newAccount = createAccount(derivationIndex = 1)
         val accountList = AccountList.empty(userWalletId)
         val updatedAccountList = (accountList + newAccount).getOrNull()!!
 
@@ -78,7 +75,7 @@ class AddCryptoPortfolioUseCaseTest {
     @Test
     fun `invoke should return error if fetch is failed`() = runTest {
         // Arrange
-        val newAccount = createNewAccount()
+        val newAccount = createAccount(derivationIndex = 1)
         val exception = Exception("Fetch error")
 
         coEvery {
@@ -113,7 +110,7 @@ class AddCryptoPortfolioUseCaseTest {
     @Test
     fun `invoke should return error if account list none exists`() = runTest {
         // Arrange
-        val newAccount = createNewAccount()
+        val newAccount = createAccount(derivationIndex = 1)
 
         coEvery {
             singleAccountListFetcher(SingleAccountListFetcher.Params(userWalletId))
@@ -147,13 +144,8 @@ class AddCryptoPortfolioUseCaseTest {
     @Test
     fun `invoke should return error if account list requirements not met`() = runTest {
         // Arrange
-        val accountList = AccountList(
-            userWalletId = userWalletId,
-            accounts = createAccounts(userWalletId = userWalletId, count = 20),
-            totalAccounts = 20,
-        ).getOrNull()!!
-
-        val newAccount = createNewAccount(derivationIndex = 21)
+        val accountList = MockAccounts.fullAccountList
+        val newAccount = createAccount(derivationIndex = 21)
 
         coEvery {
             singleAccountListFetcher(SingleAccountListFetcher.Params(userWalletId))
@@ -190,7 +182,7 @@ class AddCryptoPortfolioUseCaseTest {
     @Test
     fun `invoke should return error if getAccounts throws exception`() = runTest {
         // Arrange
-        val newAccount = createNewAccount()
+        val newAccount = createAccount(derivationIndex = 1)
         val exception = IllegalStateException("Test error")
 
         coEvery {
@@ -224,7 +216,7 @@ class AddCryptoPortfolioUseCaseTest {
     @Test
     fun `invoke should return error if saveAccounts throws exception`() = runTest {
         // Arrange
-        val newAccount = createNewAccount()
+        val newAccount = createAccount(derivationIndex = 1)
         val accountList = AccountList.empty(userWalletId)
         val updatedAccountList = (accountList + newAccount).getOrNull()!!
 
@@ -263,7 +255,7 @@ class AddCryptoPortfolioUseCaseTest {
     @Test
     fun `invoke should return new account if migrate returns error`() = runTest {
         // Arrange
-        val newAccount = createNewAccount()
+        val newAccount = createAccount(derivationIndex = 1)
         val accountList = AccountList.empty(userWalletId)
         val updatedAccountList = (accountList + newAccount).getOrNull()!!
 
@@ -299,15 +291,6 @@ class AddCryptoPortfolioUseCaseTest {
 
     private companion object {
 
-        val userWalletId = UserWalletId("011")
-
-        fun createNewAccount(derivationIndex: Int = 1): Account.CryptoPortfolio {
-            return createAccount(
-                userWalletId = userWalletId,
-                name = "New Account",
-                icon = CryptoPortfolioIcon.ofDefaultCustomAccount(),
-                derivationIndex = derivationIndex,
-            )
-        }
+        val userWalletId = MockAccounts.userWalletId
     }
 }
