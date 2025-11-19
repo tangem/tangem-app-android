@@ -11,6 +11,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.hotwallet.UpdateAccessCodeComponent
 import com.tangem.features.hotwallet.updateaccesscode.routing.UpdateAccessCodeRoute
 import com.tangem.features.hotwallet.accesscode.AccessCodeComponent
+import com.tangem.features.hotwallet.setupfinished.MobileWalletSetupFinishedComponent
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import javax.inject.Inject
@@ -27,11 +28,13 @@ internal class UpdateAccessCodeModel @Inject constructor(
     val stackNavigation = StackNavigation<UpdateAccessCodeRoute>()
     val startRoute: UpdateAccessCodeRoute = UpdateAccessCodeRoute.SetAccessCode(params.userWalletId)
     val currentRoute: MutableStateFlow<UpdateAccessCodeRoute> = MutableStateFlow(startRoute)
+    val mobileWalletSetupFinishedComponentModelCallbacks = MobileWalletSetupFinishedComponentModelCallbacks()
 
     fun onChildBack() {
         when (currentRoute.value) {
             is UpdateAccessCodeRoute.SetAccessCode -> router.pop()
             is UpdateAccessCodeRoute.ConfirmAccessCode -> stackNavigation.pop()
+            is UpdateAccessCodeRoute.SetupFinished -> Unit
         }
     }
 
@@ -40,6 +43,16 @@ internal class UpdateAccessCodeModel @Inject constructor(
     }
 
     override fun onAccessCodeUpdated(userWalletId: UserWalletId) {
-        router.pop()
+        if (params.isFirstSetup) {
+            stackNavigation.push(UpdateAccessCodeRoute.SetupFinished)
+        } else {
+            router.pop()
+        }
+    }
+
+    inner class MobileWalletSetupFinishedComponentModelCallbacks : MobileWalletSetupFinishedComponent.ModelCallbacks {
+        override fun onFinishClick() {
+            router.pop()
+        }
     }
 }

@@ -12,7 +12,6 @@ import com.tangem.data.onramp.converters.error.OnrampErrorConverter
 import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.express.TangemExpressApi
-import com.tangem.datasource.api.express.models.TangemExpressValues
 import com.tangem.datasource.api.express.models.response.ExchangeProvider
 import com.tangem.datasource.api.express.models.response.ExchangeProviderType
 import com.tangem.datasource.api.express.models.response.ExpressErrorResponse
@@ -38,6 +37,7 @@ import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObject
 import com.tangem.datasource.local.preferences.utils.getObjectSyncOrNull
 import com.tangem.datasource.local.preferences.utils.storeObject
+import com.tangem.domain.express.models.ExpressAsset
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
@@ -560,7 +560,7 @@ internal class DefaultOnrampRepository(
     }
 
     private fun CryptoCurrency.getContractAddress(): String = when (this) {
-        is CryptoCurrency.Coin -> TangemExpressValues.EMPTY_CONTRACT_ADDRESS_VALUE
+        is CryptoCurrency.Coin -> ExpressAsset.EMPTY_CONTRACT_ADDRESS_VALUE
         is CryptoCurrency.Token -> this.contractAddress
     }
 

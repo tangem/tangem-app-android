@@ -34,6 +34,7 @@ internal class AddExistingWalletChildFactory @Inject constructor(
                 params = ManualBackupCompletedComponent.Params(
                     userWalletId = route.userWalletId,
                     callbacks = model.manualBackupCompletedComponentModelCallbacks,
+                    isImportFlow = true,
                 ),
             )
             is AddExistingWalletRoute.SetAccessCode -> accessCodeComponentFactory.create(
