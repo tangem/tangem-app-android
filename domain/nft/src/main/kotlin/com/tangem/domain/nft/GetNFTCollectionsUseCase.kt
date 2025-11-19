@@ -20,6 +20,7 @@ class GetNFTCollectionsUseCase(
     private val accountsFeatureToggles: AccountsFeatureToggles,
 ) {
 
+    @Deprecated("Use invokeForAccounts instead")
     @OptIn(ExperimentalCoroutinesApi::class)
     operator fun invoke(userWalletId: UserWalletId): Flow<List<NFTCollections>> =
         if (accountsFeatureToggles.isFeatureEnabled) {
