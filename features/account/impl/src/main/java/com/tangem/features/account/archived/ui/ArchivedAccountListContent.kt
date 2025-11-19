@@ -170,15 +170,15 @@ private class PreviewStateProvider : CollectionPreviewParameterProvider<AccountA
         fun portfolioIcon() = AccountIconPreviewData.randomAccountIcon()
         val accountName = stringReference("Account name")
 
-        val firstList = List(10) {
+        val firstList = List(10) { id ->
             ArchivedAccountUM(
-                accountId = it.toString(),
+                accountId = id.toString(),
                 accountName = accountName,
                 accountIconUM = portfolioIcon(),
                 tokensInfo = stringReference("10 tokens"),
                 networksInfo = stringReference("2 networks"),
                 onClick = {},
-                isLoading = it % 2 == 0,
+                isLoading = id % 2 == 0,
             )
         }.toImmutableList()
         val first = AccountArchivedUM.Content(
