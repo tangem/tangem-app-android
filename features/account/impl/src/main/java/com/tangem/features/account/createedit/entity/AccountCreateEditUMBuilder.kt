@@ -77,7 +77,7 @@ internal class AccountCreateEditUMBuilder(
         }
         return AccountCreateEditUM.Button(
             isButtonEnabled = false,
-            showProgress = false,
+            shouldShowProgress = false,
             onConfirmClick = onConfirmClick,
             text = text,
         )
@@ -119,7 +119,7 @@ internal class AccountCreateEditUMBuilder(
         }
 
         fun AccountCreateEditUM.toggleProgress(showProgress: Boolean): AccountCreateEditUM {
-            return this.copy(buttonState = this.buttonState.copy(showProgress = showProgress))
+            return this.copy(buttonState = this.buttonState.copy(shouldShowProgress = showProgress))
         }
 
         fun AccountCreateEditUM.updateDerivationIndex(derivationIndex: Int): AccountCreateEditUM {
