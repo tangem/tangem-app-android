@@ -10,6 +10,7 @@ import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.utils.toTimeFormat
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.TxInfo
+import com.tangem.domain.models.network.TxInfo.TransactionType
 import com.tangem.features.txhistory.impl.R
 import com.tangem.features.txhistory.utils.TxHistoryUiActions
 import com.tangem.utils.StringsSigns
@@ -59,19 +60,22 @@ internal class TxHistoryItemToTransactionStateConverter(
         }
     }
 
+    @Suppress("CyclomaticComplexMethod")
     private fun TxInfo.extractTitle(): TextReference = when (val type = type) {
-        is TxInfo.TransactionType.Approve -> resourceReference(R.string.common_approval)
-        is TxInfo.TransactionType.Operation -> stringReference(type.name)
-        is TxInfo.TransactionType.Swap -> resourceReference(R.string.common_swap)
-        is TxInfo.TransactionType.Transfer -> resourceReference(R.string.common_transfer)
-        is TxInfo.TransactionType.YieldSupply -> resourceReference(R.string.yield_module_supply)
-        is TxInfo.TransactionType.Staking.Stake -> resourceReference(R.string.common_stake)
-        is TxInfo.TransactionType.Staking.Unstake -> resourceReference(R.string.common_unstake)
-        is TxInfo.TransactionType.Staking.Vote -> resourceReference(R.string.staking_vote)
-        is TxInfo.TransactionType.Staking.ClaimRewards -> resourceReference(R.string.common_claim_rewards)
-        is TxInfo.TransactionType.Staking.Withdraw -> resourceReference(R.string.staking_withdraw)
-        is TxInfo.TransactionType.Staking.Restake -> resourceReference(R.string.staking_restake)
-        is TxInfo.TransactionType.UnknownOperation -> resourceReference(R.string.transaction_history_operation)
+        is TransactionType.Approve -> resourceReference(R.string.common_approval)
+        is TransactionType.Operation -> stringReference(type.name)
+        is TransactionType.Swap -> resourceReference(R.string.common_swap)
+        is TransactionType.Transfer -> resourceReference(R.string.common_transfer)
+        is TransactionType.YieldSupply.Enter -> resourceReference(R.string.yield_module_transaction_enter)
+        is TransactionType.YieldSupply.Exit -> resourceReference(R.string.yield_module_transaction_exit)
+        is TransactionType.YieldSupply.Topup -> resourceReference(R.string.yield_module_transaction_topup)
+        is TransactionType.Staking.Stake -> resourceReference(R.string.common_stake)
+        is TransactionType.Staking.Unstake -> resourceReference(R.string.common_unstake)
+        is TransactionType.Staking.Vote -> resourceReference(R.string.staking_vote)
+        is TransactionType.Staking.ClaimRewards -> resourceReference(R.string.common_claim_rewards)
+        is TransactionType.Staking.Withdraw -> resourceReference(R.string.staking_withdraw)
+        is TransactionType.Staking.Restake -> resourceReference(R.string.staking_restake)
+        is TransactionType.UnknownOperation -> resourceReference(R.string.transaction_history_operation)
     }
 
     private fun TxInfo.extractSubtitle(): TextReference = when (val interactionAddress = interactionAddressType) {
