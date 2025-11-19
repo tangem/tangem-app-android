@@ -19,7 +19,7 @@ import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-@Deprecated("Use SaveCryptoCurrenciesUseCase")
+@Deprecated("Use ManageCryptoCurrenciesUseCase")
 @Suppress("LongParameterList")
 class SaveManagedTokensUseCase(
     private val customTokensRepository: CustomTokensRepository,
