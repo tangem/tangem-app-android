@@ -27,6 +27,7 @@ import com.tangem.tap.domain.userWalletList.utils.toUserWallets
 import com.tangem.tap.domain.userWalletList.utils.updateWith
 import com.tangem.utils.Provider
 import com.tangem.utils.ProviderSuspend
+import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.extensions.indexOfFirstOrNull
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
@@ -149,7 +150,7 @@ internal class DefaultUserWalletsListRepository(
         val encryptionKey = userWallet.encryptionKey
             ?: raise(SetLockError.UserWalletLocked)
 
-        runCatching {
+        runSuspendCatching {
             userWalletEncryptionKeysRepository.save(
                 encryptionKey = UserWalletEncryptionKey(
                     walletId = userWalletId,
@@ -232,7 +233,7 @@ internal class DefaultUserWalletsListRepository(
                 val encryptionKey = requestPasswordRecursive(
                     hotWalletId = userWallet.hotWalletId,
                     block = { password ->
-                        runCatching {
+                        runSuspendCatching {
                             userWalletEncryptionKeysRepository.getEncryptedWithPassword(userWalletId, password)
                         }.onFailure {
                             raise(UnlockWalletError.UnableToUnlock)
@@ -288,8 +289,7 @@ internal class DefaultUserWalletsListRepository(
 
     override suspend fun unlockAllWallets(): Either<UnlockWalletError, Unit> = either {
         val userWallets = userWalletsSync()
-        val userWalletIds = userWallets.map { it.walletId }.toSet()
-        val biometricKeys = runCatching {
+        val biometricKeys = runSuspendCatching {
             userWalletEncryptionKeysRepository.getAllBiometric()
         }.getOrElse {
             // TODO handle error properly [REDACTED_TASK_KEY]
@@ -309,8 +309,9 @@ internal class DefaultUserWalletsListRepository(
             removePasswordAttempts(it)
         }
 
-        // if we cant unlock all wallets
-        if (userWalletIds.all { it in unlockedWalletsIds }.not()) {
+        // if we cant unlock any of the locked wallets, return error
+        // (isLocked remains `true` here because we haven't updated the wallets yet)
+        if (unlockedWallets.any { it.isLocked }.not()) {
             raise(UnlockWalletError.UnableToUnlock)
         }
 
@@ -343,6 +344,12 @@ internal class DefaultUserWalletsListRepository(
         publicInformationRepository.clear()
         sensitiveInformationRepository.clear()
         userWalletEncryptionKeysRepository.clear()
+    }
+
+    override suspend fun hasSecuredWallets(): Boolean {
+        val userWallets = userWalletsSync()
+        val unsecuredWalletIds = userWalletEncryptionKeysRepository.getAllUnsecured().map { it.walletId }.toSet()
+        return userWallets.any { it.walletId !in unsecuredWalletIds }
     }
 
     private suspend fun requestPasswordRecursive(

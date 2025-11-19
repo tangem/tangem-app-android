@@ -6,12 +6,12 @@ import arrow.core.right
 import com.google.common.truth.Truth
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
-import com.tangem.common.test.utils.ProvideTestModels
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.staking.StakingID
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.staking.model.StakingIntegrationID
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.test.core.ProvideTestModels
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
