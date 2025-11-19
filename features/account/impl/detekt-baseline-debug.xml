@@ -1,0 +1,29 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>BooleanPropertyNaming:AccountCreateEditModel.kt$AccountCreateEditModel$val duplicateAccountNames = (error as? AddCryptoPortfolioUseCase.Error.AccountListRequirementsNotMet) ?.cause is AccountList.Error.DuplicateAccountNames</ID>
+    <ID>BooleanPropertyNaming:AccountCreateEditModel.kt$AccountCreateEditModel$val duplicateAccountNames = (error as? UpdateCryptoPortfolioUseCase.Error.AccountListRequirementsNotMet) ?.cause is AccountList.Error.DuplicateAccountNames</ID>
+    <ID>BooleanPropertyNaming:AccountCreateEditModel.kt$AccountCreateEditModel$val showConfirmDialog = uiState.value.buttonState.isButtonEnabled</ID>
+    <ID>BooleanPropertyNaming:AccountCreateEditUM.kt$AccountCreateEditUM.Button$val showProgress: Boolean</ID>
+    <ID>MultilineLambdaItParameter:AccountCreateEditContent.kt${ /* * If the user had the default main account name and enters the same name during renaming, * we should use the default value instead of custom to avoid breaking the name validation process. */ val newName = if (wasDefault &amp;&amp; it == defaultAccountName) { AccountNameUM.DefaultMain } else { AccountNameUM.Custom(raw = it) } account.onNameChange(newName) }</ID>
+    <ID>MultilineLambdaItParameter:ArchivedAccountListContent.kt$PreviewStateProvider${ ArchivedAccountUM( accountId = it.toString(), accountName = accountName, accountIconUM = portfolioIcon(), tokensInfo = stringReference("10 tokens"), networksInfo = stringReference("2 networks"), onClick = {}, isLoading = it % 2 == 0, ) }</ID>
+    <ID>NamedArguments:PortfolioSelectorModel.kt$PortfolioSelectorModel$buildAccountsList(portfolioData, artworks, isEnabled, selectedAccount)</ID>
+    <ID>NamedArguments:PortfolioSelectorModel.kt$PortfolioSelectorModel$buildUiList(isAccountsMode, portfolioData, artworks, isEnabled, selectedAccount)</ID>
+    <ID>NamedArguments:PortfolioSelectorModel.kt$PortfolioSelectorModel$buildWalletList(portfolioData, artworks, isEnabled, selectedAccount)</ID>
+    <ID>NonBooleanPropertyPrefixedWithIs:DefaultPortfolioSelectorController.kt$DefaultPortfolioSelectorController$override val isAccountMode: Flow&lt;Boolean&gt; by lazy { isAccountsModeEnabledUseCase() }</ID>
+    <ID>NonBooleanPropertyPrefixedWithIs:DefaultPortfolioSelectorController.kt$DefaultPortfolioSelectorController$override val isEnabled: MutableStateFlow&lt;(UserWallet, AccountStatus) -&gt; Boolean&gt; = MutableStateFlow { _, _ -&gt; true }</ID>
+    <ID>NonBooleanPropertyPrefixedWithIs:DefaultPortfolioSelectorController.kt$DefaultPortfolioSelectorController$private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase</ID>
+    <ID>NonBooleanPropertyPrefixedWithIs:PortfolioSelectorModel.kt$PortfolioSelectorModel$private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase</ID>
+    <ID>NullableBooleanCheck:AccountDetailsModel.kt$AccountDetailsModel$getUserWalletUseCase(account.accountId.userWalletId) .getOrNull()?.isMultiCurrency ?: false</ID>
+    <ID>PropertyUsedBeforeDeclaration:AccountDetailsModel.kt$AccountDetailsModel$_uiState</ID>
+    <ID>PropertyUsedBeforeDeclaration:ArchivedAccountListModel.kt$ArchivedAccountListModel$_uiState</ID>
+    <ID>UnnecessaryLet:ArchivedAccountListModel.kt$ArchivedAccountListModel$let { _uiState.value = newState }</ID>
+    <ID>UnnecessaryLet:PortfolioSelectorContent.kt$PortfolioSelectorPreviewData$let(::add)</ID>
+    <ID>UnusedImports:PortfolioSelectorBS.kt$import androidx.compose.foundation.background</ID>
+    <ID>UseEmptyCounterpart:AccountCreateEditModel.kt$AccountCreateEditModel$mapOf()</ID>
+    <ID>UseEmptyCounterpart:ArchivedAccountListModel.kt$ArchivedAccountListModel$mapOf()</ID>
+    <ID>VarCouldBeVal:AccountDetailsContent.kt$PreviewStateProvider$var portfolioIcon = AccountIconPreviewData.randomAccountIcon()</ID>
+    <ID>VarCouldBeVal:ArchivedAccountListModel.kt$ArchivedAccountListModel$private var getArchivedAccountsJob = JobHolder()</ID>
+  </CurrentIssues>
+</SmellBaseline>
