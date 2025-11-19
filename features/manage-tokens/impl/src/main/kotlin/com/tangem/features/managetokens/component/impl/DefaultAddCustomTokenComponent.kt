@@ -14,6 +14,7 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.network.Network
 import com.tangem.features.managetokens.analytics.CustomTokenAnalyticsEvent
 import com.tangem.features.managetokens.component.AddCustomTokenComponent
@@ -42,6 +43,8 @@ internal class DefaultAddCustomTokenComponent @AssistedInject constructor(
         step = AddCustomTokenConfig.Step.INITIAL_NETWORK_SELECTOR,
     )
 
+    private var addedToAccount: Account? = null
+
     private val navigation = StackNavigation<AddCustomTokenConfig>()
     private val contentStack = childStack(
         key = "add_custom_token_content_stack",
@@ -57,6 +60,7 @@ internal class DefaultAddCustomTokenComponent @AssistedInject constructor(
     }
 
     override fun dismiss() {
+        addedToAccount = null
         params.onDismiss()
     }
 
@@ -163,12 +167,13 @@ internal class DefaultAddCustomTokenComponent @AssistedInject constructor(
         showForm(network = network)
     }
 
-    private fun changeDerivationPath(derivationPath: SelectedDerivationPath) {
+    private fun changeDerivationPath(derivationPath: SelectedDerivationPath, account: Account?) {
         val event = CustomTokenAnalyticsEvent.DerivationSelected(
             derivationName = derivationPath.name,
             source = params.source,
         )
         analyticsEventHandler.send(event)
+        addedToAccount = account
 
         showForm(derivationPath = derivationPath)
     }
@@ -228,8 +233,8 @@ internal class DefaultAddCustomTokenComponent @AssistedInject constructor(
     }
 
     private fun dismissAndNotify() {
+        params.onCurrencyAdded(addedToAccount)
         dismiss()
-        params.onCurrencyAdded()
     }
 
     @AssistedFactory
