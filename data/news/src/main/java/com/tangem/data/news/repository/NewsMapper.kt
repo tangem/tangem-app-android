@@ -4,7 +4,11 @@ import com.tangem.datasource.api.news.models.response.NewsArticleDto
 import com.tangem.datasource.api.news.models.response.NewsDetailsResponse
 import com.tangem.datasource.api.news.models.response.NewsOriginalArticleDto
 import com.tangem.datasource.api.news.models.response.NewsRelatedTokenDto
-import com.tangem.domain.news.models.*
+import com.tangem.domain.models.news.ArticleCategory
+import com.tangem.domain.models.news.DetailedArticle
+import com.tangem.domain.models.news.OriginalArticle
+import com.tangem.domain.models.news.RelatedToken
+import com.tangem.domain.models.news.ShortArticle
 
 internal fun NewsDetailsResponse.toDomainDetailedArticle(): DetailedArticle {
     return DetailedArticle(
@@ -34,6 +38,7 @@ internal fun NewsArticleDto.toDomainShortArticle(): ShortArticle {
         isTrending = isTrending,
         title = title,
         newsUrl = newsUrl,
+        viewed = false,
     )
 }
 
