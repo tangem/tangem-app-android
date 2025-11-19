@@ -42,13 +42,14 @@ internal class AccountDetailsModel @Inject constructor(
 
     private val params = paramsContainer.require<AccountDetailsComponent.Params>()
 
-    val uiState: StateFlow<AccountDetailsUM> get() = _uiState
-    private val _uiState: MutableStateFlow<AccountDetailsUM> = MutableStateFlow(buildUI(params.account))
+    val uiState: StateFlow<AccountDetailsUM>
+        field = MutableStateFlow(buildUI(params.account))
+
     private val accountId = params.account.accountId
 
     init {
         singleAccountSupplier(SingleAccountProducer.Params(accountId))
-            .onEach { account -> _uiState.update { buildUI(account) } }
+            .onEach { account -> uiState.update { buildUI(account) } }
             .launchIn(modelScope)
     }
 
@@ -89,11 +90,11 @@ internal class AccountDetailsModel @Inject constructor(
     }
 
     private fun archiveCryptoPortfolio() = modelScope.launch {
-        _uiState.update { it.toggleProgress(true) }
+        uiState.update { it.toggleProgress(true) }
         archiveCryptoPortfolioUseCase(accountId)
             .onLeft { error ->
                 failedArchiveDialog(error)
-                _uiState.update { it.toggleProgress(false) }
+                uiState.update { it.toggleProgress(false) }
             }
             .onRight {
                 val message = resourceReference(R.string.account_archive_success_message)
@@ -136,8 +137,8 @@ internal class AccountDetailsModel @Inject constructor(
                 )
             }
         }
-        val isMultiCurrency = getUserWalletUseCase(account.accountId.userWalletId)
-            .getOrNull()?.isMultiCurrency ?: false
+        val isMultiCurrency = getUserWalletUseCase(account.accountId.userWalletId).getOrNull()
+            ?.isMultiCurrency == true
         return AccountDetailsUM(
             accountName = account.accountName.toUM().value,
             accountIcon = account.portfolioIcon.toUM(),
