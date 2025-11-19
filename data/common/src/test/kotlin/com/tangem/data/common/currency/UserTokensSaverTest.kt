@@ -30,6 +30,7 @@ class UserTokensSaverTest {
         dispatchers = TestingCoroutineDispatcherProvider(),
         addressesEnricher = enricher,
         accountsFeatureToggles = accountsFeatureToggles,
+        pushTokensRetryerPool = mockk(),
     )
 
     @BeforeEach
