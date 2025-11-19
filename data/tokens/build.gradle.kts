@@ -28,6 +28,7 @@ dependencies {
     implementation(projects.domain.card)
     implementation(projects.domain.core)
     implementation(projects.domain.demo)
+    implementation(projects.domain.express)
     implementation(projects.domain.legacy)
     implementation(projects.domain.models)
     implementation(projects.domain.staking)
@@ -71,11 +72,8 @@ dependencies {
     // endregion
 
     // region Tests
-    testImplementation(deps.test.coroutine)
-    testImplementation(deps.test.junit5)
     testRuntimeOnly(deps.test.junit5.engine)
-    testImplementation(deps.test.mockk)
-    testImplementation(deps.test.truth)
     testImplementation(projects.common.test)
+    testImplementation(projects.test.core)
     // endregion
 }
