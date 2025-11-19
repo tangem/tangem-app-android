@@ -17,6 +17,7 @@ import com.tangem.domain.wallets.models.UnlockWalletsError
  *
 [REDACTED_AUTHOR]
  */
+@Deprecated("Use NonBiometricUnlockWalletUseCase after migrating to new wallets repository")
 class UnlockWalletsUseCase(private val userWalletsListManager: UserWalletsListManager) {
 
     suspend operator fun invoke(type: UnlockType = UnlockType.ANY): Either<UnlockWalletsError, Unit> = either {
