@@ -41,7 +41,7 @@ class UserWalletItemUMConverter(
     override fun convert(value: UserWallet): UserWalletItemUM {
         return with(value) {
             UserWalletItemUM(
-                id = walletId,
+                id = walletId.stringValue,
                 name = stringReference(name),
                 information = getInfo(userWallet = this),
                 balance = getBalanceInfo(userWallet = this),
