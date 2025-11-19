@@ -16,6 +16,7 @@ interface OnboardingMultiWalletComponent : ComposableContentComponent, InnerNavi
         val withSeedPhraseFlow: Boolean,
         val mode: Mode,
         val onDone: (UserWallet.Cold) -> Unit,
+        val onForceExit: () -> Unit,
     )
 
     sealed class Mode {

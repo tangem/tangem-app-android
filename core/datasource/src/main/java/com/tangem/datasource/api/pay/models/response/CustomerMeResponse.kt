@@ -28,10 +28,49 @@ data class CustomerMeResponse(
         @Json(name = "cid") val cid: String,
         @Json(name = "card_id") val cardId: String,
         @Json(name = "card_wallet_address") val cardWalletAddress: String,
-        @Json(name = "status") val status: String,
+        @Json(name = "status") val status: Status,
         @Json(name = "updated_at") val updatedAt: String,
         @Json(name = "payment_account_id") val paymentAccountId: String,
-    )
+    ) {
+        @JsonClass(generateAdapter = false)
+        enum class Status {
+            @Json(name = "new")
+            NEW,
+
+            @Json(name = "ready_for_manufacturing")
+            READY_FOR_MANUFACTURING,
+
+            @Json(name = "manufacturing")
+            MANUFACTURING,
+
+            @Json(name = "sent_to_delivery")
+            SENT_TO_DELIVERY,
+
+            @Json(name = "delivered")
+            DELIVERED,
+
+            @Json(name = "activating")
+            ACTIVATING,
+
+            @Json(name = "active")
+            ACTIVE,
+
+            @Json(name = "blocked")
+            BLOCKED,
+
+            @Json(name = "deactivating")
+            DEACTIVATING,
+
+            @Json(name = "deactivated")
+            DEACTIVATED,
+
+            @Json(name = "canceled")
+            CANCELED,
+
+            @Json(name = "unknown")
+            UNKNOWN,
+        }
+    }
 
     @JsonClass(generateAdapter = true)
     data class PaymentAccount(
