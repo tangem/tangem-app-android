@@ -9,6 +9,7 @@ import com.tangem.blockchain.nft.models.NFTAsset
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.transaction.models.EventTransactionTypeDto
 import java.math.BigDecimal
 import java.math.BigInteger
 
@@ -123,4 +124,6 @@ interface TransactionRepository {
         userWalletId: UserWalletId,
         network: Network,
     ): com.tangem.blockchain.extensions.Result<List<ByteArray>>
+
+    suspend fun sendTransactionHash(hash: String, transactionType: EventTransactionTypeDto)
 }
