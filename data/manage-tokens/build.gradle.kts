@@ -15,6 +15,7 @@ android {
 dependencies {
 
     /** Project - Domain */
+    implementation(projects.domain.account)
     implementation(projects.domain.demo)
     implementation(projects.domain.models)
     implementation(projects.domain.manageTokens)

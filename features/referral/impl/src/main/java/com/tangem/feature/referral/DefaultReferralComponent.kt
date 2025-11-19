@@ -17,6 +17,7 @@ import com.tangem.features.account.PortfolioSelectorComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
+import kotlinx.serialization.builtins.serializer
 
 class DefaultReferralComponent @AssistedInject constructor(
     private val portfolioSelectorComponentFactory: PortfolioSelectorComponent.Factory,
@@ -27,7 +28,7 @@ class DefaultReferralComponent @AssistedInject constructor(
     private val model: ReferralModel = getOrCreateModel(params)
     private val bottomSheetSlot = childSlot(
         source = model.bottomSheetNavigation,
-        serializer = null,
+        serializer = Unit.serializer(),
         handleBackButton = false,
         childFactory = { configuration, context -> bottomSheetChild(context) },
     )
