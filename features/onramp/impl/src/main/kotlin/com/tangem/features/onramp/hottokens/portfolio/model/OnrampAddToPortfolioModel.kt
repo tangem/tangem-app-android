@@ -4,9 +4,9 @@ import arrow.core.getOrElse
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
-import com.tangem.domain.wallets.usecase.DerivePublicKeysUseCase
-import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
+import com.tangem.domain.wallets.usecase.DerivePublicKeysUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.onramp.hottokens.portfolio.OnrampAddToPortfolioComponent
 import com.tangem.features.onramp.hottokens.portfolio.entity.OnrampAddToPortfolioUM
@@ -72,7 +72,6 @@ internal class OnrampAddToPortfolioModel @Inject constructor(
     private fun onAddClick() {
         modelScope.launch {
             changeAddButtonProgressStatus(isProgress = true)
-
             derivePublicKeysUseCase(params.userWalletId, listOfNotNull(params.cryptoCurrency)).getOrElse {
                 Timber.e("Failed to derive public keys: $it")
 

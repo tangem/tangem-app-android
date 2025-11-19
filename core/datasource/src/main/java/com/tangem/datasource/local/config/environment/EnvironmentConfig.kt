@@ -16,6 +16,7 @@ data class EnvironmentConfig(
     val express: ExpressModel? = null,
     val devExpress: ExpressModel? = null,
     val stakeKitApiKey: String? = null,
+    // val p2pApiKey: P2PKeys? = null, TODO p2p after release 5.30
     val blockAidApiKey: String? = null,
     val tangemApiKey: String? = null,
     val tangemApiKeyDev: String? = null,

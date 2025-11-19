@@ -9,9 +9,13 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.DialogMessage
+import com.tangem.domain.managetokens.CreateCryptoCurrencyUseCase
+import com.tangem.domain.managetokens.FindTokenUseCase
+import com.tangem.domain.managetokens.ValidateTokenFormUseCase
 import com.tangem.domain.managetokens.model.exceptoin.CustomTokenFormValidationException
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.wallets.usecase.ColdWalletAndHasMissedDerivationsUseCase
 import com.tangem.features.managetokens.analytics.CustomTokenAnalyticsEvent
 import com.tangem.features.managetokens.component.CustomTokenFormComponent
 import com.tangem.features.managetokens.entity.customtoken.ClickableFieldUM
@@ -41,6 +45,10 @@ internal class CustomTokenFormModel @Inject constructor(
     private val messageSender: UiMessageSender,
     private val customTokenFormManager: CustomCurrencyFormBuilder,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val coldWalletAndHasMissedDerivationsUseCase: ColdWalletAndHasMissedDerivationsUseCase,
+    private val createCryptoCurrencyUseCase: CreateCryptoCurrencyUseCase,
+    private val findTokenUseCase: FindTokenUseCase,
+    private val validateTokenFormUseCase: ValidateTokenFormUseCase,
     paramsContainer: ParamsContainer,
     customTokenFormUseCasesFacadeFactory: CustomTokenFormUseCasesFacade.Factory,
 ) : Model() {
@@ -48,7 +56,13 @@ internal class CustomTokenFormModel @Inject constructor(
     private val params: CustomTokenFormComponent.Params = paramsContainer.require()
     private var createdCurrency: CryptoCurrency? = null
     private var useCasesFacade: CustomTokenFormUseCasesFacade = customTokenFormUseCasesFacadeFactory.create(params.mode)
-    private val customCurrencyValidator = CustomCurrencyValidator(useCasesFacade)
+    private val customCurrencyValidator = CustomCurrencyValidator(
+        userWalletId = params.mode.userWalletId,
+        useCasesFacade = useCasesFacade,
+        createCryptoCurrencyUseCase = createCryptoCurrencyUseCase,
+        findTokenUseCase = findTokenUseCase,
+        validateTokenFormUseCase = validateTokenFormUseCase,
+    )
 
     val state: MutableStateFlow<CustomTokenFormUM> = MutableStateFlow(
         value = getInitialState(),
@@ -164,8 +178,9 @@ internal class CustomTokenFormModel @Inject constructor(
         isAlreadyAdded: Boolean,
         isCustom: Boolean,
     ) = modelScope.launch {
-        val needColdWalletInteraction = useCasesFacade.needColdWalletInteraction(
-            network = mapOf(currency.network.backendId to getDerivationPath().value),
+        val needColdWalletInteraction = coldWalletAndHasMissedDerivationsUseCase.invoke(
+            userWalletId = params.mode.userWalletId,
+            networksWithDerivationPath = mapOf(currency.network.backendId to getDerivationPath().value),
         )
 
         state.update { state ->

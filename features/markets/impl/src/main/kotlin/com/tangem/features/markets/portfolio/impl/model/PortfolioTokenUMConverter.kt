@@ -27,6 +27,24 @@ internal class PortfolioTokenUMConverter(
     private val tokenActionsHandler: TokenActionsHandler,
 ) : Converter<PortfolioData.CryptoCurrencyData, PortfolioTokenUM> {
 
+    fun convertV2(
+        value: PortfolioData.CryptoCurrencyData,
+        isQuickActionsShown: Boolean,
+        onTokenItemClick: (UserWallet, CryptoCurrencyStatus) -> Unit,
+    ): PortfolioTokenUM {
+        val tokenItemStateConverter = TokenItemStateConverter(
+            appCurrency = appCurrency,
+            onItemClick = { _, status -> onTokenItemClick(value.userWallet, status) },
+        )
+        return PortfolioTokenUM(
+            tokenItemState = tokenItemStateConverter.convert(value = value.status),
+            walletId = value.userWallet.walletId,
+            isBalanceHidden = isBalanceHidden,
+            isQuickActionsShown = isQuickActionsShown,
+            quickActions = quickActions(cryptoData = value, tokenActionsHandler = tokenActionsHandler),
+        )
+    }
+
     override fun convert(value: PortfolioData.CryptoCurrencyData): PortfolioTokenUM {
         val tokenItemStateConverter = TokenItemStateConverter(
             appCurrency = appCurrency,
@@ -84,7 +102,7 @@ internal class PortfolioTokenUMConverter(
             )
         }
 
-        private fun toQuickActions(actions: List<TokenActionsState.ActionState>) = buildList {
+        fun toQuickActions(actions: List<TokenActionsState.ActionState>) = buildList {
             actions.forEach { action ->
                 if (action.unavailabilityReason == ScenarioUnavailabilityReason.None) {
                     when (action) {
