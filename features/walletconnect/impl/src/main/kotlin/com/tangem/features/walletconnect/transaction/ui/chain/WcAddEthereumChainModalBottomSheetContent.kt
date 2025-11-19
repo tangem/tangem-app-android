@@ -33,7 +33,9 @@ import com.tangem.features.walletconnect.transaction.entity.common.WcTransaction
 import com.tangem.features.walletconnect.transaction.ui.common.WcSimpleConfirmButtons
 import com.tangem.features.walletconnect.transaction.ui.common.WcSmallTitleItem
 import com.tangem.features.walletconnect.transaction.ui.common.WcTransactionRequestItem
-import com.tangem.features.walletconnect.transaction.ui.common.WcWalletItem
+import com.tangem.features.walletconnect.transaction.ui.common.WcPortfolioItem
+import com.tangem.features.walletconnect.transaction.ui.sign.accountPortfolioName
+import com.tangem.features.walletconnect.transaction.ui.sign.walletPortfolioName
 
 @Composable
 internal fun WcAddEthereumChainModalBottomSheetContent(
@@ -111,14 +113,16 @@ private fun WcAddEthereumChainItems(state: WcAddEthereumChainItemUM) {
             .fillMaxWidth()
             .animateContentSize(),
     ) {
-        DividerWithPadding(start = 0.dp, end = 0.dp)
-        WcWalletItem(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            walletName = state.walletName,
-        )
-        DividerWithPadding(start = 40.dp, end = 12.dp)
+        if (state.portfolioName != null) {
+            DividerWithPadding(start = 0.dp, end = 0.dp)
+            WcPortfolioItem(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp),
+                portfolioName = state.portfolioName,
+            )
+            DividerWithPadding(start = 40.dp, end = 12.dp)
+        }
     }
 }
 
@@ -163,7 +167,18 @@ private class WcAddEthereumChainStateProvider : CollectionPreviewParameterProvid
                 verifiedState = VerifiedDAppState.Verified {},
                 appSubtitle = "react-app.walletconnect.com",
             ),
-            walletName = "Tangem 2.0",
+            portfolioName = walletPortfolioName,
+        ),
+        WcAddEthereumChainItemUM(
+            onDismiss = {},
+            onSign = {},
+            appInfo = WcTransactionAppInfoContentUM(
+                appName = "React App",
+                appIcon = "",
+                verifiedState = VerifiedDAppState.Verified {},
+                appSubtitle = "react-app.walletconnect.com",
+            ),
+            portfolioName = accountPortfolioName,
         ),
     ),
 )

@@ -31,6 +31,19 @@ interface AppRouter {
     )
 
     /**
+     * Replaces a current route with a new one.
+     *
+     * @param route The route to replace a current one.
+     * @param onComplete The callback to be invoked when the operation is complete.
+     */
+    fun replaceCurrent(
+        route: AppRoute,
+        onComplete: (isSuccess: Boolean) -> Unit = { isSuccess ->
+            defaultCompletionHandler(isSuccess, errorMessage = "Unable to replace a current route with $route")
+        },
+    )
+
+    /**
      * Replaces ***all*** routes in the navigation stack with the specified [routes].
      *
      * @param routes The routes to replace the current stack with.

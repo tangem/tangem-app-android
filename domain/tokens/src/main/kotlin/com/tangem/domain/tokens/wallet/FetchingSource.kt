@@ -5,7 +5,7 @@ package com.tangem.domain.tokens.wallet
  *
 [REDACTED_AUTHOR]
  */
-internal enum class FetchingSource {
+enum class FetchingSource {
     NETWORK,
     QUOTE,
     STAKING,
