@@ -16,7 +16,6 @@ import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyFeeUM
 import com.tangem.utils.transformer.Transformer
 import kotlinx.collections.immutable.toPersistentList
 import java.math.BigDecimal
-import java.math.RoundingMode
 
 @Suppress("LongParameterList")
 internal class YieldSupplyStartEarningFeeContentTransformer(
@@ -25,7 +24,7 @@ internal class YieldSupplyStartEarningFeeContentTransformer(
     private val appCurrency: AppCurrency,
     private val updatedTransactionList: List<TransactionData.Uncompiled>,
     private val feeValue: BigDecimal,
-    private val estimatedFeeValue: BigDecimal,
+    private val estimatedFeeValueInTokenCurrency: BigDecimal,
     private val maxNetworkFee: YieldSupplyMaxFee,
     private val minAmount: BigDecimal,
 ) : Transformer<YieldSupplyActionUM> {
@@ -37,14 +36,10 @@ internal class YieldSupplyStartEarningFeeContentTransformer(
         val feeFiat = feeFiatRate?.let(feeValue::multiply)
         val feeFiatValueText = feeFiat.format { fiat(appCurrency.code, appCurrency.symbol) }
 
-        val estimatedFeeFiat = estimatedFeeValue
-        val estimatedFeeFiatValueText = estimatedFeeFiat.format { fiat(appCurrency.code, appCurrency.symbol) }
-
-        val tokenCryptoFee = tokenFiatRate?.let { rate ->
-            estimatedFeeFiat.divide(rate, cryptoCurrency.decimals, RoundingMode.HALF_UP)
-        }
-        val tokenCryptoFeeValueText = tokenCryptoFee.format { crypto(cryptoCurrency) }
-        val tokenFiatFeeValueText = estimatedFeeFiat.format { fiat(appCurrency.code, appCurrency.symbol) }
+        val estimatedFeeToken = estimatedFeeValueInTokenCurrency
+        val estimatedFeeTokenValueText = estimatedFeeToken.format { crypto(cryptoCurrency) }
+        val estimatedFiatFee = tokenFiatRate?.let(estimatedFeeToken::multiply)
+        val estimatedFeeFiatValueText = estimatedFiatFee.format { fiat(appCurrency.code, appCurrency.symbol) }
 
         val maxFeeCryptoValueText = maxNetworkFee.tokenMaxFee.format { crypto(cryptoCurrency) }
         val maxFiatFeeValueText = maxNetworkFee.fiatMaxFee.format { fiat(appCurrency.code, appCurrency.symbol) }
@@ -56,8 +51,8 @@ internal class YieldSupplyStartEarningFeeContentTransformer(
         val feeNoteValue = resourceReference(
             id = R.string.yield_module_fee_policy_sheet_fee_note,
             formatArgs = wrappedList(
-                tokenFiatFeeValueText,
-                tokenCryptoFeeValueText,
+                estimatedFeeFiatValueText,
+                estimatedFeeTokenValueText,
                 maxFiatFeeValueText,
                 maxFeeCryptoValueText,
             ),
@@ -78,7 +73,6 @@ internal class YieldSupplyStartEarningFeeContentTransformer(
                 yieldSupplyFeeUM = YieldSupplyFeeUM.Content(
                     transactionDataList = updatedTransactionList.toPersistentList(),
                     feeFiatValue = stringReference(feeFiatValueText),
-                    tokenFeeFiatValue = stringReference(tokenFiatFeeValueText),
                     maxNetworkFeeFiatValue = stringReference(maxFiatFeeValueText),
                     minTopUpFiatValue = stringReference(minAmountFiatText),
                     feeNoteValue = feeNoteValue,
