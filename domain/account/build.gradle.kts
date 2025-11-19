@@ -18,6 +18,9 @@ dependencies {
     implementation(deps.kotlin.coroutines)
     implementation(deps.kotlin.serialization)
 
+    // region Test libraries
     testImplementation(projects.test.core)
+    testImplementation(projects.test.mock)
     testRuntimeOnly(deps.test.junit5.engine)
+    // endregion
 }
