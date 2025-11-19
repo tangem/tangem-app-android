@@ -8,17 +8,22 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -27,12 +32,14 @@ import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameter
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import coil.compose.AsyncImage
+import com.tangem.common.ui.account.AccountTitle
 import com.tangem.core.ui.components.BottomFade
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.appbar.TopAppBarButton
 import com.tangem.core.ui.components.dropdownmenu.TangemDropdownItem
 import com.tangem.core.ui.components.dropdownmenu.TangemDropdownMenu
 import com.tangem.core.ui.components.snackbar.TangemSnackbarHost
+import com.tangem.core.ui.extensions.conditional
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -41,6 +48,8 @@ import com.tangem.features.walletconnect.connections.entity.*
 import com.tangem.features.walletconnect.connections.ui.preview.WcConnectionsPreviewData
 import com.tangem.features.walletconnect.impl.R
 import kotlinx.collections.immutable.ImmutableList
+
+private const val LOCKED_WALLET_ALPHA = 0.5f
 
 @Composable
 internal fun WcConnectionsContent(
@@ -88,15 +97,21 @@ internal fun WcConnectionsContent(
 }
 
 @Composable
-private fun Content(
-    connections: ImmutableList<WcConnectionsUM>,
-    onNewConnectionClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    if (connections.isEmpty()) {
-        EmptyConnectionsBlock(modifier = modifier, onNewConnectionClick = onNewConnectionClick)
-    } else {
-        ConnectionsBlock(modifier = modifier, connections = connections)
+private fun Content(connections: WcConnections, onNewConnectionClick: () -> Unit, modifier: Modifier = Modifier) {
+    when {
+        connections is WcConnections.Loading -> return
+        !connections.isNotEmpty() -> EmptyConnectionsBlock(
+            modifier = modifier,
+            onNewConnectionClick = onNewConnectionClick,
+        )
+        connections is WcConnections.AccountMode -> AccountModeContent(
+            modifier = modifier,
+            items = connections.items,
+        )
+        connections is WcConnections.WalletMode -> ConnectionsBlock(
+            modifier = modifier,
+            connections = connections.connections,
+        )
     }
 }
 
@@ -170,6 +185,59 @@ private fun ConnectionsBlock(connections: ImmutableList<WcConnectionsUM>, modifi
 }
 
 @Composable
+private fun AccountModeContent(items: ImmutableList<WcConnectionsItem>, modifier: Modifier = Modifier) {
+    Box(modifier = modifier) {
+        val bottomBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getBottom(this).toDp() }
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(
+                start = TangemTheme.dimens.spacing16,
+                end = TangemTheme.dimens.spacing16,
+                bottom = TangemTheme.dimens.spacing76 + bottomBarHeight,
+            ),
+        ) {
+            itemsIndexed(
+                items = items,
+                key = { _, item -> item.id },
+                itemContent = { index, item ->
+                    val previousItem = items.getOrNull(index.dec())
+
+                    val itemModifier = Modifier
+                        .fillMaxWidth()
+                        .getOffsetModifier(item, previousItem)
+                    when (item) {
+                        is WcConnectionsItem.WalletHeader -> WalletHeader(item, itemModifier)
+                        is WcConnectionsItem.PortfolioConnections -> PortfolioItem(
+                            modifier = itemModifier
+                                .background(
+                                    color = TangemTheme.colors.background.primary,
+                                    shape = RoundedCornerShape(TangemTheme.dimens.radius14),
+                                )
+                                .clip(RoundedCornerShape(TangemTheme.dimens.radius14)),
+                            connection = item,
+                        )
+                    }
+                },
+            )
+        }
+        BottomFade(modifier = Modifier.align(Alignment.BottomCenter))
+    }
+}
+
+private fun Modifier.getOffsetModifier(item: WcConnectionsItem, previousItem: WcConnectionsItem?): Modifier = when {
+    item is WcConnectionsItem.WalletHeader && previousItem == null -> padding(top = 8.dp)
+    item is WcConnectionsItem.WalletHeader && previousItem !is WcConnectionsItem.WalletHeader ->
+        padding(top = 16.dp)
+    item is WcConnectionsItem.WalletHeader && previousItem is WcConnectionsItem.WalletHeader ->
+        padding(top = 8.dp)
+    item is WcConnectionsItem.PortfolioConnections && previousItem is WcConnectionsItem.WalletHeader ->
+        padding(top = 8.dp)
+    item is WcConnectionsItem.PortfolioConnections && previousItem is WcConnectionsItem.PortfolioConnections ->
+        padding(top = 8.dp)
+    else -> this
+}
+
+@Composable
 private fun ConnectionItem(connection: WcConnectionsUM, modifier: Modifier = Modifier) {
     Column(modifier = modifier) {
         key("${connection.userWalletId}_${connection.walletName}") {
@@ -184,6 +252,69 @@ private fun ConnectionItem(connection: WcConnectionsUM, modifier: Modifier = Mod
         }
         connection.connectedApps.fastForEach { appInfo ->
             key("${connection.userWalletId}_${connection.walletName}_${appInfo.name}_${appInfo.iconUrl}") {
+                AppInfoItem(
+                    appInfo = appInfo,
+                    modifier = Modifier
+                        .clickable(onClick = appInfo.onClick)
+                        .padding(all = 12.dp),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun WalletHeader(connection: WcConnectionsItem.WalletHeader, modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier
+            .padding(horizontal = 8.dp, vertical = 2.dp)
+            .conditional(connection.isLocked) { alpha(LOCKED_WALLET_ALPHA) },
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
+    ) {
+        Text(
+            modifier = Modifier.weight(1f),
+            text = connection.walletName,
+            style = TangemTheme.typography.subtitle1,
+            color = TangemTheme.colors.text.primary1,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+
+        if (connection.isLocked) {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .background(
+                        color = TangemTheme.colors.button.secondary,
+                        shape = CircleShape,
+                    )
+                    .padding(4.dp),
+            ) {
+                Icon(
+                    modifier = Modifier.size(16.dp),
+                    tint = TangemTheme.colors.icon.informative,
+                    imageVector = ImageVector.vectorResource(id = R.drawable.ic_locked_24),
+                    contentDescription = null,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun PortfolioItem(connection: WcConnectionsItem.PortfolioConnections, modifier: Modifier = Modifier) {
+    Column(modifier = modifier) {
+        key(connection.id) {
+            AccountTitle(
+                textStyle = TangemTheme.typography.caption1,
+                textColor = TangemTheme.colors.text.primary1,
+                accountTitleUM = connection.portfolioTitle,
+                modifier = Modifier.padding(top = 12.dp, bottom = 4.dp, start = 12.dp, end = 12.dp),
+            )
+        }
+        connection.connectedApps.fastForEach { appInfo ->
+            key("${connection.id}_${appInfo.name}_${appInfo.iconUrl}") {
                 AppInfoItem(
                     appInfo = appInfo,
                     modifier = Modifier
@@ -331,7 +462,9 @@ private fun WcConnectionsContentPreview(
 
 private class WcConnectionsStateProvider : CollectionPreviewParameterProvider<WcConnectionsState>(
     listOf(
+        WcConnectionsPreviewData.loadingState,
         WcConnectionsPreviewData.stateWithEmptyConnections,
         WcConnectionsPreviewData.fullState,
+        WcConnectionsPreviewData.accountState,
     ),
 )
