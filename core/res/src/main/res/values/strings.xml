@@ -286,7 +286,7 @@
   <string name="common_import">Import</string>
   <string name="common_in_progress">In progress</string>
   <string name="common_later">Later</string>
-  <string name="common_learn_more">Learn more</string>
+  <string name="common_learn_more">Learn more</string>
   <string name="common_left">%1$s left</string>
   <string name="common_legacy_bitcoin_address">Legacy Bitcoin</string>
   <string name="common_locked">Locked</string>
@@ -1402,12 +1402,12 @@
   <string name="tangempay_card_details_hide_text">Hide</string>
   <string name="tangempay_card_details_open_wallet_button">Open Google Wallet</string>
   <string name="tangempay_card_details_open_wallet_notification_subtitle">Set up Tangem Pay in a few taps and start paying with Google Pay.</string>
+  <string name="tangempay_card_details_open_wallet_notification_subtitle_apple">Set up Tangem Pay in a few taps and start paying with Apple Pay.</string>
   <string name="tangempay_card_details_open_wallet_notification_title">Add your card to Google Pay</string>
   <string name="tangempay_card_details_open_wallet_notification_title_apple">Add your card to Apple Pay</string>
   <string name="tangempay_card_details_open_wallet_step_1">Open Google Wallet</string>
-  <string name="tangempay_card_details_open_wallet_step_1.5_apple">Tap “+” button on the top right</string>
-  <string name="tangempay_card_details_open_wallet_step_1_apple_open">Open</string>
-  <string name="tangempay_card_details_open_wallet_step_1_apple_wallet">Apple Wallet</string>
+  <string name="tangempay_card_details_open_wallet_step_1_5_apple">Tap “+” button on the top right</string>
+  <string name="tangempay_card_details_open_wallet_step_1_apple">Open Apple Wallet</string>
   <string name="tangempay_card_details_open_wallet_step_2">Tap “Add a card”</string>
   <string name="tangempay_card_details_open_wallet_step_2_apple">Tap “Debit or Credit Card”</string>
   <string name="tangempay_card_details_open_wallet_step_3">Enter the card details manually</string>
@@ -1518,7 +1518,7 @@
   <string name="user_push_notification_banner_subtitle">Enable push notifications to receive alerts when funds arrive in your wallet.</string>
   <string name="user_push_notification_banner_title">Don\'t Miss a Transaction</string>
   <string name="user_wallet_list_add_button">Add new wallet</string>
-  <string name="user_wallet_list_delete_hw_prompt">If you delete this wallet without a backup, you will permanently lose access to your funds</string>
+  <string name="user_wallet_list_delete_hw_prompt">If you delete this wallet without a backup, you will permanently lose access to your funds.</string>
   <string name="user_wallet_list_delete_prompt">Are you sure you want to forget this wallet?</string>
   <string name="user_wallet_list_error_unable_to_unlock">An error has occurred, please scan your card or ring to log in</string>
   <string name="user_wallet_list_error_wallet_already_saved">This wallet has already been saved, you can add another one</string>
@@ -1975,6 +1975,9 @@
   <string name="yield_module_token_details_earn_notification_earning_on_your_balance_title">Yield Mode</string>
   <string name="yield_module_token_details_earn_notification_processing">Enabling Yield Mode</string>
   <string name="yield_module_token_details_earn_notification_title">Yield Mode</string>
+  <string name="yield_module_transaction_enter">Yield mode on</string>
+  <string name="yield_module_transaction_exit">Yield mode off</string>
+  <string name="yield_module_transaction_topup">Yield mode top-up</string>
   <string name="yield_module_transfer_mode_automatic">Automatic</string>
   <string name="yield_module_unable_to_cover_fee_description">Add some %1$s %2$s to cover the network fee for transactions.</string>
   <string name="yield_module_unable_to_cover_fee_title">Unable to cover %s fee</string>
