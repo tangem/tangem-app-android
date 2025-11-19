@@ -1,7 +1,7 @@
 ==========================================
 Detekt Baseline Updater & Issue Counter
 ==========================================
-Date: 2025-11-18 15:11:30
+Date: 2025-11-19 15:21:36
 
 Updating detekt baseline for debug variant...
 
@@ -13,13 +13,13 @@ Counting issues in baseline files...
 ==========================================
 
 Summary:
-  Total Issues: 1798
+  Total Issues: 1778
   Modules with Issues: 91
   Average Issues per Module: 19
 
 Progress:
-  Fixed: 4 out of 1802 (0%)
-  Remaining: 1798
+  Fixed: 24 out of 1802 (1%)
+  Remaining: 1778
 
 ==========================================
 All Modules with Issues (sorted by count)
@@ -27,7 +27,7 @@ All Modules with Issues (sorted by count)
 
 Module                                                           Issues
 ────────────────────────────────────────────────────────────────
-features/wallet/impl                                                171
+features/wallet/impl                                                170
 features/markets/impl                                               155
 features/onboarding-v2/impl                                         137
 features/onramp/impl                                                 89
@@ -51,7 +51,6 @@ core/ui                                                              27
 common/ui                                                            26
 features/tangempay/details/impl                                      24
 data/visa                                                            24
-features/account/impl                                                23
 features/wallet-settings/impl                                        21
 data/nft                                                             20
 features/swap/data                                                   15
@@ -85,6 +84,7 @@ domain/legacy                                                         5
 data/transaction                                                      5
 features/referral/domain                                              4
 features/biometry/impl                                                4
+features/account/impl                                                 4
 features/account/api                                                  4
 data/promo                                                            4
 core/config-toggles                                                   4
