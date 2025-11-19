@@ -103,7 +103,7 @@ internal class ForgetWalletModel @Inject constructor(
                 }
 
             if (hasUserWallets) {
-                router.pop()
+                router.popTo(AppRoute.Details::class)
             } else {
                 router.replaceAll(AppRoute.Home())
             }
