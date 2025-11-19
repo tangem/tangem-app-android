@@ -2,13 +2,17 @@ package com.tangem.domain.account.status.usecase
 
 import arrow.core.Option
 import arrow.core.none
+import arrow.core.some
 import arrow.core.toOption
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.status.model.AccountCryptoCurrencyStatus
+import com.tangem.domain.account.status.model.AccountCryptoCurrencyStatuses
 import com.tangem.domain.account.status.producer.SingleAccountStatusListProducer
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.utils.AccountCryptoCurrencyStatusFinder
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import kotlinx.coroutines.flow.Flow
@@ -50,12 +54,42 @@ class GetAccountCurrencyStatusUseCase(
         currencyId: CryptoCurrency.ID,
         network: Network?,
     ): Option<AccountCryptoCurrencyStatus> {
-        val accountStatusList = singleAccountStatusListSupplier.getSyncOrNull(
-            params = SingleAccountStatusListProducer.Params(userWalletId),
-        ) ?: return none()
+        val accountStatusList = getAccountStatusListSync(userWalletId) ?: return none()
 
         return accountStatusList
             .toAccountCryptoCurrencyStatus(currencyId, network)
+            .toOption()
+    }
+
+    suspend fun invokeSync(
+        userWalletId: UserWalletId,
+        currencies: List<CryptoCurrency>,
+    ): Option<AccountCryptoCurrencyStatuses> {
+        if (currencies.isEmpty()) return emptyMap<Account.CryptoPortfolio, List<CryptoCurrencyStatus>>().some()
+
+        val accountStatusList = getAccountStatusListSync(userWalletId) ?: return none()
+
+        return AccountCryptoCurrencyStatusFinder(
+            accountStatusList = accountStatusList,
+            currencies = currencies,
+        )
+            .toOption()
+    }
+
+    suspend fun invokeSync(
+        userWalletId: UserWalletId,
+        networkId: Network.ID,
+        derivationPath: Network.DerivationPath,
+        contractAddress: String?,
+    ): Option<AccountCryptoCurrencyStatus> {
+        val accountStatusList = getAccountStatusListSync(userWalletId) ?: return none()
+
+        return AccountCryptoCurrencyStatusFinder(
+            accountStatusList = accountStatusList,
+            networkId = networkId,
+            derivationPath = derivationPath,
+            contractAddress = contractAddress,
+        )
             .toOption()
     }
 
@@ -89,6 +123,12 @@ class GetAccountCurrencyStatusUseCase(
             .mapNotNull { accountStatusList ->
                 accountStatusList.toAccountCryptoCurrencyStatus(currencyId, network)
             }
+    }
+
+    private suspend fun getAccountStatusListSync(userWalletId: UserWalletId): AccountStatusList? {
+        return singleAccountStatusListSupplier.getSyncOrNull(
+            params = SingleAccountStatusListProducer.Params(userWalletId),
+        )
     }
 
     private fun AccountStatusList.toAccountCryptoCurrencyStatus(

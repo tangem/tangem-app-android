@@ -15,9 +15,14 @@ tasks.withType<Test>().configureEach {
 
 dependencies {
 
+    // region Project - Common
+    implementation(projects.common.ui) // It's needed for getting AccountName.DefaultMain value
+    // endregion
+
     // region Project - Core
     implementation(projects.core.datasource)
     implementation(projects.core.configToggles)
+    implementation(projects.core.res)
     api(projects.core.utils)
     // endregion
 
@@ -27,6 +32,7 @@ dependencies {
     api(projects.domain.common)
     api(projects.domain.models)
     api(projects.domain.tokens)
+    api(projects.domain.wallets)
     // endregion
 
     // region Project - Data
@@ -61,11 +67,8 @@ dependencies {
     // endregion
 
     // region Test
-    testImplementation(deps.test.coroutine)
-    testImplementation(deps.test.junit5)
-    testRuntimeOnly(deps.test.junit5.engine)
-    testImplementation(deps.test.mockk)
-    testImplementation(deps.test.truth)
     testImplementation(projects.common.test)
+    testImplementation(projects.test.core)
+    testRuntimeOnly(deps.test.junit5.engine)
     // endregion
 }
