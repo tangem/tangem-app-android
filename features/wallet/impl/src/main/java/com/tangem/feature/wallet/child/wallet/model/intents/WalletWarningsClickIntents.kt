@@ -14,7 +14,6 @@ import com.tangem.core.ui.components.bottomsheets.message.*
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
-import com.tangem.core.ui.message.DialogMessage.Companion.invoke
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.core.ui.message.bottomSheetMessage
 import com.tangem.domain.card.SetCardWasScannedUseCase
@@ -125,6 +124,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val scanCardToUnlockWalletClickHandler: ScanCardToUnlockWalletClickHandler,
     private val unlockWalletsUseCase: UnlockWalletsUseCase,
+    private val nonBiometricUnlockWalletUseCase: NonBiometricUnlockWalletUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val dispatchers: CoroutineDispatcherProvider,
     private val shouldShowPromoWalletUseCase: ShouldShowPromoWalletUseCase,
@@ -200,14 +200,8 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
             modelScope.launch {
                 userWalletsListRepository.unlockAllWallets()
                     .onLeft {
-                        val selectedUserWallet = getSelectedUserWallet() ?: return@onLeft
-                        val selectedUserWalletId = selectedUserWallet.walletId
-                        val method = when (selectedUserWallet) {
-                            is UserWallet.Cold -> UserWalletsListRepository.UnlockMethod.Scan()
-                            is UserWallet.Hot -> UserWalletsListRepository.UnlockMethod.AccessCode
-                        }
-                        userWalletsListRepository
-                            .unlock(stateHolder.getSelectedWalletId(), method)
+                        val selectedUserWalletId = stateHolder.getSelectedWalletId()
+                        nonBiometricUnlockWalletUseCase(selectedUserWalletId)
                             .onLeft {
                                 when (it) {
                                     UnlockWalletError.AlreadyUnlocked -> Unit
