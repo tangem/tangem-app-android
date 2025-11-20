@@ -27,7 +27,7 @@ class UserTokensResponseAddressesEnricher @Inject constructor(
                 withTimeoutOrNull(
                     FETCH_TIMEOUT_SECONDS.seconds,
                     { multiNetworkStatusSupplier.invoke(MultiNetworkStatusProducer.Params(userWalletId)).first() },
-                ) ?: emptySet()
+                ).orEmpty()
             } else {
                 emptySet()
             }
