@@ -69,7 +69,9 @@ internal fun WalletBackupContent(state: WalletBackupUM, modifier: Modifier = Mod
                     .padding(top = 8.dp),
                 title = stringResourceSafe(R.string.hw_backup_hardware_title),
                 description = stringResourceSafe(R.string.hw_backup_hardware_description),
-                badge = null,
+                badge = {
+                    state.hardwareWalletOption?.let { Label(it) }
+                },
                 onClick = state.onHardwareWalletClick,
                 enabled = true,
                 backgroundColor = TangemTheme.colors.background.primary,
@@ -240,6 +242,10 @@ private fun WalletBackupContentPreview(@PreviewParameter(WalletBackupUMProvider:
 private class WalletBackupUMProvider : CollectionPreviewParameterProvider<WalletBackupUM>(
     collection = listOf(
         WalletBackupUM(
+            hardwareWalletOption = LabelUM(
+                text = resourceReference(R.string.common_recommended),
+                style = LabelStyle.ACCENT,
+            ),
             recoveryPhraseOption = LabelUM(
                 text = resourceReference(R.string.hw_backup_no_backup),
                 style = LabelStyle.WARNING,
@@ -257,6 +263,10 @@ private class WalletBackupUMProvider : CollectionPreviewParameterProvider<Wallet
             backedUp = false,
         ),
         WalletBackupUM(
+            hardwareWalletOption = LabelUM(
+                text = resourceReference(R.string.common_recommended),
+                style = LabelStyle.ACCENT,
+            ),
             recoveryPhraseOption = LabelUM(
                 text = resourceReference(R.string.hw_backup_no_backup),
                 style = LabelStyle.WARNING,
@@ -274,6 +284,10 @@ private class WalletBackupUMProvider : CollectionPreviewParameterProvider<Wallet
             backedUp = false,
         ),
         WalletBackupUM(
+            hardwareWalletOption = LabelUM(
+                text = resourceReference(R.string.common_recommended),
+                style = LabelStyle.ACCENT,
+            ),
             recoveryPhraseOption = LabelUM(
                 text = resourceReference(R.string.common_done),
                 style = LabelStyle.ACCENT,
