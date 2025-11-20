@@ -76,6 +76,16 @@ fun UserWallet.requireColdWallet(): UserWallet.Cold {
         ?: error("This user wallet is not a cold wallet")
 }
 
+@OptIn(ExperimentalContracts::class)
+fun UserWallet.requireHotWallet(): UserWallet.Hot {
+    contract {
+        returns() implies (this@requireHotWallet is UserWallet.Hot)
+    }
+
+    return this as? UserWallet.Hot
+        ?: error("This user wallet is not a hot wallet")
+}
+
 fun UserWallet.copy(name: String = this.name, walletId: UserWalletId = this.walletId): UserWallet = when (this) {
     is UserWallet.Cold -> this.copy(name = name, walletId = walletId)
     is UserWallet.Hot -> this.copy(name = name, walletId = walletId)
