@@ -28,9 +28,11 @@ internal class AvailableToAddDataConverter @Inject constructor(
         availableNetworks: Set<TokenMarketInfo.Network>,
         marketParams: TokenMarketParams,
     ): AvailableToAddData {
-        suspend fun AccountStatus.getAvailableToAddAccount(wallet: UserWallet): AvailableToAddAccount {
+        suspend fun AccountStatus.getAvailableToAddAccount(wallet: UserWallet): AvailableToAddAccount? {
             val currencies = availableNetworks
                 .mapNotNull { createCryptoCurrency(wallet, it, marketParams, this.account) }
+
+            if (currencies.isEmpty()) return null
 
             val addedNetworks = getAccountCurrencyStatusUseCase.invokeSync(wallet.walletId, currencies)
                 .fold(
@@ -52,12 +54,15 @@ internal class AvailableToAddDataConverter @Inject constructor(
         suspend fun getAvailableToAddWallet(
             entry: Map.Entry<UserWalletId, PortfolioFetcher.PortfolioBalance>,
         ): AvailableToAddWallet {
-            val (walletId, balance) = entry
+            val (_, balance) = entry
             val wallet = balance.userWallet
             val filteredNetworks = wallet.filteredAvailableNetworks(availableNetworks)
             val accounts = balance.accountsBalance.accountStatuses
             val availableToAddAccounts: Map<AccountId, AvailableToAddAccount> = accounts
-                .map { it.account.accountId to it.getAvailableToAddAccount(wallet) }
+                .mapNotNull { accountStatus ->
+                    val availableToAddAccount = accountStatus.getAvailableToAddAccount(wallet) ?: return@mapNotNull null
+                    accountStatus.account.accountId to availableToAddAccount
+                }
                 .filter { (_, account) -> account.availableToAddNetworks.isNotEmpty() }
                 .toMap()
             return AvailableToAddWallet(

@@ -3,8 +3,6 @@
   <ManuallySuppressedIssues/>
   <CurrentIssues>
     <ID>BooleanPropertyNaming:AccessCodeModel.kt$AccessCodeModel$var buttonClicked = false</ID>
-    <ID>BooleanPropertyNaming:AccessCodeUM.kt$AccessCodeUM$val buttonEnabled: Boolean</ID>
-    <ID>BooleanPropertyNaming:AccessCodeUM.kt$AccessCodeUM$val buttonInProgress: Boolean</ID>
     <ID>BooleanPropertyNaming:AddExistingWalletImportUM.kt$AddExistingWalletImportUM$val importWalletEnabled: Boolean</ID>
     <ID>BooleanPropertyNaming:AddExistingWalletImportUM.kt$AddExistingWalletImportUM$val importWalletProgress: Boolean</ID>
     <ID>BooleanPropertyNaming:AddExistingWalletImportUM.kt$AddExistingWalletImportUM$val readyToImport: Boolean</ID>
@@ -24,8 +22,6 @@
     <ID>BooleanPropertyNaming:WalletBackupUM.kt$WalletBackupUM$val backedUp: Boolean</ID>
     <ID>BooleanPropertyNaming:WalletHardwareBackupUM.kt$WalletHardwareBackupUM$val showPurchaseBlock: Boolean = false</ID>
     <ID>MaxChainedCallsOnSameLine:UpgradeWalletModel.kt$UpgradeWalletModel$it.card.wallets.map { it.curve }.toSet().isNotEmpty()</ID>
-    <ID>MultilineLambdaItParameter:AccessCodeModel.kt$AccessCodeModel${ Timber.e(it) uiState.update { it.copy(buttonInProgress = false) } }</ID>
-    <ID>MultilineLambdaItParameter:AccessCodeModel.kt$AccessCodeModel${ it.copy( accessCode = value, buttonEnabled = if (params.accessCodeToConfirm != null) { value == params.accessCodeToConfirm } else { value.length == uiState.value.accessCodeLength }, accessCodeColor = when { params.accessCodeToConfirm == null -&gt; PinTextColor.Primary value.length != uiState.value.accessCodeLength -&gt; PinTextColor.Primary value == params.accessCodeToConfirm -&gt; PinTextColor.Primary else -&gt; PinTextColor.WrongCode }, ) }</ID>
     <ID>MultilineLambdaItParameter:AddExistingWalletImportModel.kt$AddExistingWalletImportModel${ Timber.e(it) setImportProgress(false) }</ID>
     <ID>MultilineLambdaItParameter:AddExistingWalletImportModel.kt$AddExistingWalletImportModel${ setImportProgress(false) when (it) { is SaveWalletError.DataError -&gt; Timber.e(it.toString(), "Unable to save user wallet") is SaveWalletError.WalletAlreadySaved -&gt; { uiMessageSender.send( SnackbarMessage(resourceReference(R.string.hw_import_seed_phrase_already_imported)), ) } } }</ID>
     <ID>MultilineLambdaItParameter:CreateHardwareWalletModel.kt$CreateHardwareWalletModel${ delay(HIDE_PROGRESS_DELAY) setLoading(false) when (it) { is SaveWalletError.DataError -&gt; Timber.e(it.toString(), "Unable to save user wallet") is SaveWalletError.WalletAlreadySaved -&gt; { userWalletsListRepository.unlock( userWalletId = userWallet.walletId, unlockMethod = UserWalletsListRepository.UnlockMethod.Scan(scanResponse), ).onRight { router.replaceAll(AppRoute.Wallet) } } } }</ID>
@@ -56,7 +52,6 @@
     <ID>MultilineLambdaItParameter:UpgradeWalletModel.kt$UpgradeWalletModel${ // Check if user attempted to upgrade before but something went wrong and a full reset is required val userWallet = coldUserWalletBuilderFactory.create(it).build() val sameWalletButNotFinishedBackup by lazy { userWallet?.walletId == params.userWalletId &amp;&amp; BackupValidator.isValidFull(it.card).not() } val otherWalletAndAlreadyCreated by lazy { userWallet?.walletId != params.userWalletId &amp;&amp; it.card.wallets.map { it.curve }.toSet().isNotEmpty() } if (userWallet != null &amp;&amp; (sameWalletButNotFinishedBackup || otherWalletAndAlreadyCreated)) { startResetCardsFlow.emit(userWallet) return@doOnSuccess } delay(DELAY_SDK_DIALOG_CLOSE) tangemSdkManager.changeDisplayedCardIdNumbersCount(it) navigateToUpgradeFlow(it) }</ID>
     <ID>MultilineLambdaItParameter:ViewPhraseContent.kt${ EnumeratedTwoColumnGridItem( index = it + 1, mnemonic = "word${it + 1}", ) }</ID>
     <ID>MultilineLambdaItParameter:ViewPhraseModel.kt$ViewPhraseModel${ it.copy( words = words.mapIndexed { index, s -&gt; EnumeratedTwoColumnGridItem(index + 1, s) }.toImmutableList(), ) }</ID>
-    <ID>NoNameShadowing:AccessCodeModel.kt$AccessCodeModel${ it.copy(buttonInProgress = false) }</ID>
     <ID>NoNameShadowing:CreateMobileWalletModel.kt$CreateMobileWalletModel${ it.copy(createButtonLoading = false) }</ID>
     <ID>NoNameShadowing:ManualBackupCheckModel.kt$ManualBackupCheckModel${ it.copy(completeButtonProgress = false) }</ID>
     <ID>PropertyUsedBeforeDeclaration:AddExistingWalletImportModel.kt$AddExistingWalletImportModel$uiState</ID>
