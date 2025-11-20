@@ -62,7 +62,7 @@ internal class YieldSupplyActiveModel @Inject constructor(
                 providerTitle = resourceReference(R.string.yield_module_provider),
                 subtitle = resourceReference(
                     id = R.string.yield_module_earn_sheet_provider_description,
-                    formatArgs = wrappedList(cryptoCurrency.symbol, cryptoCurrency.symbol),
+                    formatArgs = wrappedList(cryptoCurrency.symbol, AAVEV3_PREFIX + cryptoCurrency.symbol),
                 ),
                 subtitleLink = resourceReference(R.string.common_read_more),
                 notifications = persistentListOf(),
