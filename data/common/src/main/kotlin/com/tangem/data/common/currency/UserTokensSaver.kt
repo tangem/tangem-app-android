@@ -91,11 +91,11 @@ class UserTokensSaver(
 
         return this
             .enrichByAddress(userWalletId = userWalletId)
-            .let {
+            .let { response ->
                 if (accountsFeatureToggles.isFeatureEnabled) {
-                    it.enrichByAccountId(userWalletId = userWalletId)
+                    response.enrichByAccountId(userWalletId = userWalletId)
                 } else {
-                    it
+                    response
                 }
             }
     }
