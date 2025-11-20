@@ -39,6 +39,7 @@ internal class TangemPayTxHistoryItemsConverter(
         val amount = amountPrefix + spend.amount.format {
             fiat(fiatCurrencyCode = spend.currency.currencyCode, fiatCurrencySymbol = spend.currency.symbol)
         }
+        val subtitle = spend.merchantCategory ?: spend.enrichedMerchantCategory
         return TangemPayTransactionState.Content.Spend(
             id = spend.id,
             onClick = { txHistoryUiActions.onTransactionClick(spend) },
@@ -50,7 +51,7 @@ internal class TangemPayTxHistoryItemsConverter(
                 }
             },
             title = stringReference(spend.enrichedMerchantName ?: spend.merchantName),
-            subtitle = stringReference(spend.enrichedMerchantCategory ?: spend.merchantCategory),
+            subtitle = subtitle?.let(::stringReference) ?: resourceReference(R.string.tangem_pay_other),
             time = DateTimeFormatters.formatDate(localDate, DateTimeFormatters.timeFormatter),
             icon = spend.enrichedMerchantIconUrl?.let(ImageReference::Url)
                 ?: ImageReference.Res(R.drawable.ic_category_24),
