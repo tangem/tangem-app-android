@@ -68,13 +68,11 @@ class CryptoCurrencyBalanceFetcher(
                 source to error
             }
 
-            check(errors.isEmpty()) {
+            if (errors.isNotEmpty()) {
                 val message = "Failed to fetch next sources for $userWalletId:\n" +
                     errors.joinToString(separator = "\n") { "${it.first.name} – ${it.second}" }
 
                 Timber.e(message)
-
-                message
             }
         }
     }

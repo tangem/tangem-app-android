@@ -89,7 +89,7 @@ internal class DefaultCardCryptoCurrencyFactory(
         }
 
         // single-currency wallet
-        return createPrimaryCurrencyForSingleCurrencyCard(userWallet).let(::listOf)
+        return listOf(createPrimaryCurrencyForSingleCurrencyCard(userWallet))
     }
 
     override suspend fun createCurrenciesForMultiCurrencyCard(
@@ -106,9 +106,9 @@ internal class DefaultCardCryptoCurrencyFactory(
 
         val blockchains = getDefaultWalletBlockchains(userWallet, demoConfig)
 
-        return blockchains.mapNotNull {
+        return blockchains.mapNotNull { blockchain ->
             cryptoCurrencyFactory.createCoin(
-                blockchain = it,
+                blockchain = blockchain,
                 extraDerivationPath = null,
                 userWallet = userWallet,
             )
