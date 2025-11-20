@@ -98,10 +98,10 @@ internal class WalletSettingsModel @Inject constructor(
         value = WalletSettingsUM(
             popBack = router::pop,
             items = persistentListOf(),
-            requestPushNotificationsPermission = false,
+            hasRequestPushNotificationsPermission = false,
             onPushNotificationPermissionGranted = ::onPushNotificationPermissionGranted,
             isWalletBackedUp = true,
-            walletUpgradeDismissed = false,
+            isWalletUpgradeDismissed = false,
             accountReorderUM = AccountReorderUM(
                 isDragEnabled = false,
                 onMove = ::onAccountReorder,
@@ -124,7 +124,7 @@ internal class WalletSettingsModel @Inject constructor(
                 .conflate(),
             flow3 = isUpgradeWalletNotificationEnabledUseCase(params.userWalletId),
             flow4 = walletCardItemDelegate.cardItemFlow(wallet),
-            flow5 = accountItemsDelegate.loadAccount(),
+            flow5 = accountItemsDelegate.loadAccount(wallet),
         ) { nftEnabled, notificationsEnabled, isUpgradeNotificationEnabled, cardItem, accountList ->
             val isWalletBackedUp = when (wallet) {
                 is UserWallet.Hot -> wallet.backedUp
@@ -182,7 +182,7 @@ internal class WalletSettingsModel @Inject constructor(
         isUpgradeNotificationEnabled: Boolean,
         accountList: List<WalletSettingsAccountsUM>,
     ): PersistentList<WalletSettingsItemUM> {
-        val accountsFeatureEnabled = accountsFeatureToggles.isFeatureEnabled
+        val isAccountsFeatureEnabled = accountsFeatureToggles.isFeatureEnabled
         val isMultiCurrency = when (userWallet) {
             is UserWallet.Cold -> userWallet.isMultiCurrency
             is UserWallet.Hot -> true
@@ -198,7 +198,7 @@ internal class WalletSettingsModel @Inject constructor(
                 is UserWallet.Cold -> userWallet.scanResponse.card.backupStatus == CardDTO.BackupStatus.NoBackup
                 is UserWallet.Hot -> false
             },
-            isManageTokensAvailable = if (accountsFeatureEnabled) {
+            isManageTokensAvailable = if (isAccountsFeatureEnabled) {
                 isMultiCurrency && accountList.count { it is WalletSettingsAccountsUM.Account } == 0
             } else {
                 isMultiCurrency
@@ -221,7 +221,7 @@ internal class WalletSettingsModel @Inject constructor(
                 router.push(
                     AppRoute.ManageTokens(
                         source = Source.SETTINGS,
-                        portfolioId = if (accountsFeatureEnabled) {
+                        portfolioId = if (isAccountsFeatureEnabled) {
                             PortfolioId(
                                 accountId = AccountId.forMainCryptoPortfolio(userWalletId = userWallet.walletId),
                             )
@@ -244,8 +244,8 @@ internal class WalletSettingsModel @Inject constructor(
     }
 
     private fun forgetWallet() = modelScope.launch {
-        val hasUserWallets = deleteWalletUseCase(params.userWalletId).getOrElse {
-            Timber.e("Unable to delete wallet: $it")
+        val hasUserWallets = deleteWalletUseCase(params.userWalletId).getOrElse { error ->
+            Timber.e("Unable to delete wallet: $error")
 
             messageSender.send(
                 message = SnackbarMessage(resourceReference(R.string.common_unknown_error)),
@@ -293,7 +293,7 @@ internal class WalletSettingsModel @Inject constructor(
             if (isChecked) {
                 state.update { value ->
                     value.copy(
-                        requestPushNotificationsPermission = true,
+                        hasRequestPushNotificationsPermission = true,
                     )
                 }
             } else {
@@ -315,7 +315,7 @@ internal class WalletSettingsModel @Inject constructor(
         analyticsEventHandler.send(PushNotificationAnalyticEvents.PermissionStatus(isGranted))
         state.update { value ->
             value.copy(
-                requestPushNotificationsPermission = false,
+                hasRequestPushNotificationsPermission = false,
             )
         }
         if (isGranted) {
@@ -449,8 +449,8 @@ internal class WalletSettingsModel @Inject constructor(
     }
 
     private fun onAccountDragStopped() {
-        val accountIds = state.value.items.mapNotNull {
-            val id = (it as? WalletSettingsAccountsUM.Account)?.state?.id
+        val accountIds = state.value.items.mapNotNull { itemUM ->
+            val id = (itemUM as? WalletSettingsAccountsUM.Account)?.state?.id
                 ?: return@mapNotNull null
 
             AccountId.forCryptoPortfolio(userWalletId = params.userWalletId, value = id).getOrNull()
