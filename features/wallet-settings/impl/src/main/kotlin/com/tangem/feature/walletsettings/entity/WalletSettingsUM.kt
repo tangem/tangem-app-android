@@ -7,11 +7,11 @@ import kotlinx.collections.immutable.PersistentList
 internal data class WalletSettingsUM(
     val popBack: () -> Unit,
     val items: PersistentList<WalletSettingsItemUM>,
-    val requestPushNotificationsPermission: Boolean = false,
+    val hasRequestPushNotificationsPermission: Boolean = false,
     val onPushNotificationPermissionGranted: (Boolean) -> Unit,
     val accountReorderUM: AccountReorderUM,
     val isWalletBackedUp: Boolean = true,
-    val walletUpgradeDismissed: Boolean = false,
+    val isWalletUpgradeDismissed: Boolean = false,
 )
 
 internal data class AccountReorderUM(
