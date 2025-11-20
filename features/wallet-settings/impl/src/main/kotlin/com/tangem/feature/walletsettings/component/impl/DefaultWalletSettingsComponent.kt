@@ -100,7 +100,7 @@ internal class DefaultWalletSettingsComponent @AssistedInject constructor(
             permission = PUSH_PERMISSION,
         )
 
-        if (state.requestPushNotificationsPermission) {
+        if (state.hasRequestPushNotificationsPermission) {
             LaunchedEffect(Unit) {
                 requestPushPermission()
             }
