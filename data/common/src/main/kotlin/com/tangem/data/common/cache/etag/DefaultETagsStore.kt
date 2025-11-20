@@ -18,9 +18,9 @@ internal class DefaultETagsStore(
 ) : ETagsStore {
 
     override suspend fun getSyncOrNull(userWalletId: UserWalletId, key: ETagsStore.Key): String? {
-        val key = getAccountsETagKey(userWalletId = userWalletId, key = key)
+        val storeKey = getAccountsETagKey(userWalletId = userWalletId, key = key)
 
-        return appPreferencesStore.getSyncOrNull(key = key)
+        return appPreferencesStore.getSyncOrNull(key = storeKey)
     }
 
     override suspend fun store(userWalletId: UserWalletId, key: ETagsStore.Key, value: String) {
@@ -29,14 +29,14 @@ internal class DefaultETagsStore(
             return
         }
 
-        val key = getAccountsETagKey(userWalletId = userWalletId, key = key)
+        val storeKey = getAccountsETagKey(userWalletId = userWalletId, key = key)
 
-        appPreferencesStore.store(key = key, value = value)
+        appPreferencesStore.store(key = storeKey, value = value)
     }
 
     override suspend fun clear(userWalletId: UserWalletId, key: ETagsStore.Key) {
-        val key = getAccountsETagKey(userWalletId = userWalletId, key = key)
-        appPreferencesStore.editData { it.remove(key) }
+        val storeKey = getAccountsETagKey(userWalletId = userWalletId, key = key)
+        appPreferencesStore.editData { it.remove(storeKey) }
     }
 
     private fun getAccountsETagKey(userWalletId: UserWalletId, key: ETagsStore.Key): Preferences.Key<String> {

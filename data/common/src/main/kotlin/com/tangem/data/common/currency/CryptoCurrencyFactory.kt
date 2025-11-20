@@ -86,7 +86,12 @@ class CryptoCurrencyFactory(
         val blockchain: Blockchain? = Chain.entries.find { it.id == chainId }?.blockchain
 
         return if (blockchain != null) {
-            createCoin(blockchain, extraDerivationPath, userWallet, accountIndex)
+            createCoin(
+                blockchain = blockchain,
+                extraDerivationPath = extraDerivationPath,
+                userWallet = userWallet,
+                accountIndex = accountIndex,
+            )
         } else {
             Timber.e("Unable to get blockchain from chainId == $chainId")
             null
