@@ -20,10 +20,12 @@ sealed class TangemPayTxHistoryItem {
         override val date: SerializedDateTime,
         override val amount: SerializedBigDecimal,
         override val currency: SerializedCurrency,
+        val localAmount: SerializedBigDecimal?,
+        val localCurrency: SerializedCurrency?,
         val enrichedMerchantName: String?,
         val merchantName: String,
         val enrichedMerchantCategory: String?,
-        val merchantCategory: String,
+        val merchantCategory: String?,
         val status: Status,
         val enrichedMerchantIconUrl: String?,
     ) : TangemPayTxHistoryItem()
