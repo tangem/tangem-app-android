@@ -21,12 +21,10 @@ import com.tangem.features.tangempay.model.transformers.DetailsRevealedStateTran
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
-import com.tangem.utils.transformer.update
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import com.tangem.utils.transformer.update as transformerUpdate
 
 @Stable
 @ModelScoped
@@ -53,6 +51,7 @@ internal class TangemPayCardDetailsBlockModel @Inject constructor(
     private val revealCardDetailsJobHolder = JobHolder()
 
     init {
+        subscribeToCardFrozenState()
         modelScope.launch {
             cardDetailsEventListener.event.collectLatest { event ->
                 when (event) {
@@ -63,22 +62,29 @@ internal class TangemPayCardDetailsBlockModel @Inject constructor(
         }
     }
 
+    private fun subscribeToCardFrozenState() {
+        cardDetailsRepository
+            .cardFrozenState(params.params.config.cardId)
+            .onEach { uiState.update { state -> state.copy(cardFrozenState = it) } }
+            .launchIn(modelScope)
+    }
+
     private fun revealCardDetails() {
         modelScope.launch {
-            uiState.update(
+            uiState.transformerUpdate(
                 transformer = DetailsRevealProgressStateTransformer(onClickHide = ::hideCardDetails),
             )
             cardDetailsRepository.revealCardDetails()
-                .onRight {
-                    uiState.update(
+                .onRight { cardDetails ->
+                    uiState.transformerUpdate(
                         transformer = DetailsRevealedStateTransformer(
-                            details = it,
+                            details = cardDetails,
                             onClickHide = ::hideCardDetails,
                         ),
                     )
                 }
                 .onLeft {
-                    uiState.update(transformer = DetailsHiddenStateTransformer(stateFactory))
+                    uiState.transformerUpdate(transformer = DetailsHiddenStateTransformer(stateFactory))
                     showError()
                 }
         }.saveIn(revealCardDetailsJobHolder)
@@ -87,7 +93,7 @@ internal class TangemPayCardDetailsBlockModel @Inject constructor(
     fun hideCardDetails() {
         modelScope.launch {
             revealCardDetailsJobHolder.cancel()
-            uiState.update(transformer = DetailsHiddenStateTransformer(stateFactory))
+            uiState.transformerUpdate(transformer = DetailsHiddenStateTransformer(stateFactory))
         }
     }
 
