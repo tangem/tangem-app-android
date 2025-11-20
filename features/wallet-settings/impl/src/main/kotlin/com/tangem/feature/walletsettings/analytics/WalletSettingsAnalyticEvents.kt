@@ -7,7 +7,7 @@ import com.tangem.core.analytics.models.AnalyticsParam.Key.STATUS
 internal sealed class WalletSettingsAnalyticEvents(
     category: String = "Settings / Wallet",
     event: String,
-    params: Map<String, String> = mapOf(),
+    params: Map<String, String> = emptyMap(),
 ) : AnalyticsEvent(category, event, params) {
 
     data class NftToggleSwitch(val enabled: AnalyticsParam.OnOffState) : WalletSettingsAnalyticEvents(

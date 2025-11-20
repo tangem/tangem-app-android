@@ -50,27 +50,26 @@ internal class RenameWalletModel @Inject constructor(
     private val initialName = params.currentName
     private val walletNames by lazy(getWalletNamesUseCase::invoke)
 
-    val state: StateFlow<RenameWalletUM> get() = _state
-
-    private val _state = MutableStateFlow(
-        value = RenameWalletUM(
-            walletNameValue = TextFieldValue(text = params.currentName),
-            onValueChange = ::onValueChange,
-            isConfirmEnabled = false,
-            onConfirmClick = ::onConfirmClick,
-            error = null,
-        ),
-    )
+    val state: StateFlow<RenameWalletUM>
+        field = MutableStateFlow(
+            value = RenameWalletUM(
+                walletNameValue = TextFieldValue(text = params.currentName),
+                onValueChange = ::onValueChange,
+                isConfirmEnabled = false,
+                onConfirmClick = ::onConfirmClick,
+                error = null,
+            ),
+        )
 
     fun dismiss() {
         params.onDismiss()
     }
 
     private fun onValueChange(value: TextFieldValue) {
-        _state.update {
+        state.update { currentState ->
             val newName = value.text
 
-            it.copy(
+            currentState.copy(
                 walletNameValue = value,
                 isConfirmEnabled = getConfirmButtonAvailability(newName),
                 error = getErrorOrNull(newName),
@@ -100,12 +99,12 @@ internal class RenameWalletModel @Inject constructor(
     private fun onConfirmClick() {
         modelScope.launch {
             withContext(NonCancellable) {
-                val newName = _state.value.walletNameValue
+                val newName = state.value.walletNameValue
 
                 renameWalletUseCase(userWalletId = params.userWalletId, name = newName.text)
-                    .onLeft {
-                        Timber.e("Unable to rename wallet: $it")
-                        showRenameWalletError(error = it, updatedName = newName.text)
+                    .onLeft { error ->
+                        Timber.e("Unable to rename wallet: $error")
+                        showRenameWalletError(error = error, updatedName = newName.text)
                     }
             }
         }
