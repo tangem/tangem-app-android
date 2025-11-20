@@ -6,6 +6,7 @@ import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.core.ui.format.bigdecimal.price
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
@@ -30,9 +31,10 @@ internal object TangemPayTxHistoryDetailsConverter :
             transactionTitle = transaction.extractTransactionTitle(),
             transactionSubtitle = transaction.extractTransactionSubtitle(),
             transactionAmount = transaction.extractAmount(),
-            transactionAmountColor = value.item.extractAmountColor(),
-            labelState = value.item.extractLabel(),
-            notification = value.item.extractNotification(),
+            transactionAmountColor = transaction.extractAmountColor(),
+            localTransactionText = transaction.extractLocalAmount(),
+            labelState = transaction.extractLabel(),
+            notification = transaction.extractNotification(),
             buttons = value.extractButtonsState(),
             dismiss = value.onDismiss,
         )
@@ -76,8 +78,11 @@ internal object TangemPayTxHistoryDetailsConverter :
         return when (this) {
             is TangemPayTxHistoryItem.Fee -> resourceReference(R.string.tangem_pay_fee_subtitle)
             is TangemPayTxHistoryItem.Payment -> resourceReference(R.string.common_transfer)
-            is TangemPayTxHistoryItem.Spend -> stringReference(this.enrichedMerchantCategory ?: this.merchantCategory)
             is TangemPayTxHistoryItem.Collateral -> resourceReference(R.string.common_transfer)
+            is TangemPayTxHistoryItem.Spend -> {
+                val subtitle = merchantCategory ?: enrichedMerchantCategory
+                subtitle?.let(::stringReference) ?: resourceReference(R.string.tangem_pay_other)
+            }
         }
     }
 
@@ -127,6 +132,29 @@ internal object TangemPayTxHistoryDetailsConverter :
             is TangemPayTxHistoryItem.Payment,
             -> themedColor { TangemTheme.colors.text.primary1 }
             is TangemPayTxHistoryItem.Collateral -> themedColor { TangemTheme.colors.text.accent }
+        }
+    }
+
+    private fun TangemPayTxHistoryItem.extractLocalAmount(): String? {
+        return when (this) {
+            is TangemPayTxHistoryItem.Collateral,
+            is TangemPayTxHistoryItem.Fee,
+            is TangemPayTxHistoryItem.Payment,
+            -> null
+            is TangemPayTxHistoryItem.Spend -> {
+                val localCurrency = this.localCurrency
+                val localAmount = this.localAmount
+                if (localCurrency != null && localAmount != null && localCurrency != currency) {
+                    localAmount.format {
+                        fiat(
+                            fiatCurrencyCode = localCurrency.currencyCode,
+                            fiatCurrencySymbol = localCurrency.symbol,
+                        ).price()
+                    }
+                } else {
+                    null
+                }
+            }
         }
     }
 
