@@ -54,9 +54,10 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
 
     override suspend fun fetch(userWalletId: UserWalletId): GetWalletAccountsResponse {
         val savedAccountsResponse = getAccountsResponseStore(userWalletId = userWalletId).getSyncOrNull()
-        val accountsResponse = fetchWalletAccounts(userWalletId, savedAccountsResponse)
+        val fetchResult = fetchWalletAccounts(userWalletId, savedAccountsResponse)
+        val accountsResponse = fetchResult.accountsResponse
 
-        return when {
+        val updatedResponse = when {
             accountsResponse.accounts.isEmpty() -> {
                 initializeAccounts(userWalletId, accountsResponse)
             }
@@ -65,6 +66,12 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
             }
             else -> accountsResponse
         }
+
+        if (fetchResult.error != null) {
+            throw fetchResult.error
+        }
+
+        return updatedResponse
     }
 
     override suspend fun getSaved(userWalletId: UserWalletId): GetWalletAccountsResponse? {
@@ -123,7 +130,7 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
     private suspend fun fetchWalletAccounts(
         userWalletId: UserWalletId,
         savedAccountsResponse: GetWalletAccountsResponse?,
-    ): GetWalletAccountsResponse {
+    ): FetchResult {
         return safeApiCall(
             call = {
                 val apiResponse = withContext(dispatchers.io) {
@@ -138,7 +145,7 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
                 val responseBody = apiResponse.bind()
                 store(userWalletId = userWalletId, response = responseBody)
 
-                responseBody
+                FetchResult(responseBody)
             },
             onError = { throwable ->
                 // pushWalletAccounts and storeWalletAccounts help to avoid cyclic dependency
@@ -211,4 +218,9 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
     private fun getAccountsResponseStore(userWalletId: UserWalletId): AccountsResponseStore {
         return accountsResponseStoreFactory.create(userWalletId = userWalletId)
     }
+
+    data class FetchResult(
+        val accountsResponse: GetWalletAccountsResponse,
+        val error: Throwable? = null,
+    )
 }
