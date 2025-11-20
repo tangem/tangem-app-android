@@ -163,6 +163,7 @@ internal class DefaultManageTokensRepository(
         )
     }
 
+    @Suppress("CyclomaticComplexMethod")
     private suspend fun createManagedCryptoCurrencyList(
         params: ManageTokensListConfig.Account,
         userWallet: UserWallet?,
@@ -172,11 +173,15 @@ internal class DefaultManageTokensRepository(
         updatedCoinsResponse: CoinsResponse,
     ): List<ManagedCryptoCurrency> {
         val response = params.userWalletId?.let { userWalletId ->
-            if (loadUserTokensFromRemote && userWallet != null) {
+            val shouldFetch = loadUserTokensFromRemote && userWallet != null
+
+            val fetchedResponse = if (shouldFetch) {
                 runCatching { walletAccountsFetcher.fetch(userWalletId = userWallet.walletId) }.getOrNull()
             } else {
-                walletAccountsFetcher.getSaved(userWalletId)
+                null
             }
+
+            fetchedResponse ?: walletAccountsFetcher.getSaved(userWalletId)
         }
 
         val accountId = when {
