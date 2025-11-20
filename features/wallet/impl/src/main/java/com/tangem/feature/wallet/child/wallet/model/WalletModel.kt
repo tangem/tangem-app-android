@@ -20,10 +20,12 @@ import com.tangem.domain.nft.ObserveAndClearNFTCacheIfNeedUseCase
 import com.tangem.domain.notifications.GetIsHuaweiDeviceWithoutGoogleServicesUseCase
 import com.tangem.domain.notifications.repository.NotificationsRepository
 import com.tangem.domain.pay.repository.OnboardingRepository
+import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
 import com.tangem.domain.pay.usecase.TangemPayIssueOrderUseCase
 import com.tangem.domain.pay.usecase.TangemPayMainScreenCustomerInfoUseCase
 import com.tangem.domain.settings.*
 import com.tangem.domain.tokens.RefreshMultiCurrencyWalletQuotesUseCase
+import com.tangem.domain.visa.model.TangemPayCardFrozenState
 import com.tangem.domain.wallets.usecase.*
 import com.tangem.domain.yield.supply.usecase.YieldSupplyApyUpdateUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
@@ -98,6 +100,7 @@ internal class WalletModel @Inject constructor(
     private val tangemPayOnboardingRepository: OnboardingRepository,
     private val yieldSupplyFeatureToggles: YieldSupplyFeatureToggles,
     private val accountsFeatureToggles: AccountsFeatureToggles,
+    private val cardDetailsRepository: TangemPayCardDetailsRepository,
     val screenLifecycleProvider: ScreenLifecycleProvider,
     val innerWalletRouter: InnerWalletRouter,
 ) : Model() {
@@ -376,9 +379,13 @@ internal class WalletModel @Inject constructor(
     private suspend fun refreshTangemPayInfo() {
         val info = tangemPayMainScreenCustomerInfoUseCase()
         if (info != null) {
+            val cardFrozenState =
+                info.info.productInstance?.cardId?.let { cardDetailsRepository.cardFrozenStateSync(it) }
+                    ?: TangemPayCardFrozenState.Unfrozen
             stateHolder.update(
                 transformer = TangemPayInitialStateTransformer(
                     value = info,
+                    cardFrozenState = cardFrozenState,
                     onClickIssue = ::issueOrder,
                     onClickKyc = innerWalletRouter::openTangemPayOnboarding,
                     openDetails = { config ->
