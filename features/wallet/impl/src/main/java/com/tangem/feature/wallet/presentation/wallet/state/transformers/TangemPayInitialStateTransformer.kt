@@ -9,6 +9,7 @@ import com.tangem.domain.pay.model.CustomerInfo.ProductInstance
 import com.tangem.domain.pay.model.MainScreenCustomerInfo
 import com.tangem.domain.pay.model.OrderStatus.CANCELED
 import com.tangem.domain.pay.model.OrderStatus.UNKNOWN
+import com.tangem.domain.visa.model.TangemPayCardFrozenState
 import com.tangem.feature.wallet.presentation.wallet.state.model.TangemPayState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletScreenState
 import com.tangem.feature.wallet.presentation.wallet.state.util.TangemPayStateCreator.createIssueAvailableState
@@ -24,6 +25,7 @@ private const val POLYGON_CHAIN_ID = 137
 
 internal class TangemPayInitialStateTransformer(
     private val value: MainScreenCustomerInfo? = null,
+    private val cardFrozenState: TangemPayCardFrozenState,
     private val onClickIssue: () -> Unit = {},
     private val onClickKyc: () -> Unit = {},
     private val openDetails: (config: TangemPayDetailsConfig) -> Unit = {},
@@ -54,10 +56,7 @@ internal class TangemPayInitialStateTransformer(
                 openDetails(
                     TangemPayDetailsConfig(
                         cardId = productInstance.cardId,
-                        isCardFrozen = when (productInstance.status) {
-                            ProductInstance.Status.ACTIVE -> false
-                            ProductInstance.Status.INACTIVE -> true
-                        },
+                        cardFrozenState = cardFrozenState,
                         customerWalletAddress = cardInfo.customerWalletAddress,
                         cardNumberEnd = cardInfo.lastFourDigits,
                         chainId = POLYGON_CHAIN_ID,

@@ -20,6 +20,7 @@ import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.pay.TangemPayTopUpData
 import com.tangem.domain.pay.model.TangemPayCardBalance
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
+import com.tangem.domain.visa.model.TangemPayCardFrozenState
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import com.tangem.features.tangempay.TangemPayConstants
 import com.tangem.features.tangempay.components.AddFundsListener
@@ -42,8 +43,10 @@ import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import com.tangem.utils.transformer.update
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -64,10 +67,12 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     private val params: TangemPayDetailsContainerComponent.Params = paramsContainer.require()
 
+    private val cardFrozenStateConverter = TangemPayCardFrozenStateConverter(onUnfreezeClick = ::onClickUnfreezeCard)
     private val stateFactory = TangemPayDetailsStateFactory(
         onBack = router::pop,
         intents = this,
-        isCardFrozen = params.config.isCardFrozen,
+        cardFrozenState = params.config.cardFrozenState,
+        converter = cardFrozenStateConverter,
     )
 
     val uiState: StateFlow<TangemPayDetailsUM>
@@ -85,6 +90,23 @@ internal class TangemPayDetailsModel @Inject constructor(
         handleBalanceHiding()
         fetchAddToWalletBanner()
         fetchBalance()
+        subscribeToCardFrozenState()
+    }
+
+    private fun subscribeToCardFrozenState() {
+        cardDetailsRepository
+            .cardFrozenState(params.config.cardId)
+            .onEach { state ->
+                uiState.update(
+                    TangemPayFreezeUnfreezeStateTransformer(
+                        cardFrozenState = state,
+                        onFreezeClick = ::onClickFreezeCard,
+                        onUnfreezeClick = ::onClickUnfreezeCard,
+                        converter = cardFrozenStateConverter,
+                    ),
+                )
+            }
+            .launchIn(modelScope)
     }
 
     override fun onClickChangePin() {
@@ -101,54 +123,64 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     private fun freezeCard() {
         modelScope.launch {
-            uiState.update(TangemPayFreezeUnfreezeProcessTransformer)
             cardDetailsRepository.freezeCard(cardId = params.config.cardId)
                 .onLeft {
                     uiMessageSender.send(SnackbarMessage(resourceReference(R.string.tangem_pay_freeze_card_failed)))
-                    uiState.update(
-                        TangemPayFreezeUnfreezeStateTransformer(
-                            frozen = false,
-                            onFreezeClick = ::onClickFreezeCard,
-                            onUnfreezeClick = ::onClickUnfreezeCard,
-                        ),
-                    )
                 }
-                .onRight {
-                    uiMessageSender.send(SnackbarMessage(resourceReference(R.string.tangem_pay_freeze_card_success)))
-                    uiState.update(
-                        TangemPayFreezeUnfreezeStateTransformer(
-                            frozen = true,
-                            onFreezeClick = ::onClickFreezeCard,
-                            onUnfreezeClick = ::onClickUnfreezeCard,
-                        ),
-                    )
+                .onRight { state ->
+                    when (state) {
+                        TangemPayCardFrozenState.Frozen -> {
+                            uiMessageSender.send(
+                                SnackbarMessage(resourceReference(R.string.tangem_pay_freeze_card_success)),
+                            )
+                            uiState.update(
+                                TangemPayFreezeUnfreezeStateTransformer(
+                                    cardFrozenState = state,
+                                    onFreezeClick = ::onClickFreezeCard,
+                                    onUnfreezeClick = ::onClickUnfreezeCard,
+                                    converter = cardFrozenStateConverter,
+                                ),
+                            )
+                        }
+                        TangemPayCardFrozenState.Unfrozen -> {
+                            uiMessageSender.send(
+                                SnackbarMessage(resourceReference(R.string.tangem_pay_freeze_card_failed)),
+                            )
+                        }
+                        TangemPayCardFrozenState.Pending -> Unit // TODO [REDACTED_JIRA]
+                    }
                 }
         }
     }
 
     private fun unfreezeCard() {
         modelScope.launch {
-            uiState.update(TangemPayFreezeUnfreezeProcessTransformer)
             cardDetailsRepository.unfreezeCard(cardId = params.config.cardId)
                 .onLeft {
                     uiMessageSender.send(SnackbarMessage(resourceReference(R.string.tangem_pay_unfreeze_card_failed)))
-                    uiState.update(
-                        TangemPayFreezeUnfreezeStateTransformer(
-                            frozen = true,
-                            onFreezeClick = ::onClickFreezeCard,
-                            onUnfreezeClick = ::onClickUnfreezeCard,
-                        ),
-                    )
                 }
-                .onRight {
-                    uiMessageSender.send(SnackbarMessage(resourceReference(R.string.tangem_pay_unfreeze_card_success)))
-                    uiState.update(
-                        TangemPayFreezeUnfreezeStateTransformer(
-                            frozen = false,
-                            onFreezeClick = ::onClickFreezeCard,
-                            onUnfreezeClick = ::onClickUnfreezeCard,
-                        ),
-                    )
+                .onRight { state ->
+                    when (state) {
+                        TangemPayCardFrozenState.Unfrozen -> {
+                            uiMessageSender.send(
+                                SnackbarMessage(resourceReference(R.string.tangem_pay_unfreeze_card_success)),
+                            )
+                            uiState.update(
+                                TangemPayFreezeUnfreezeStateTransformer(
+                                    cardFrozenState = state,
+                                    onFreezeClick = ::onClickFreezeCard,
+                                    onUnfreezeClick = ::onClickUnfreezeCard,
+                                    converter = cardFrozenStateConverter,
+                                ),
+                            )
+                        }
+                        TangemPayCardFrozenState.Frozen -> {
+                            uiMessageSender.send(
+                                SnackbarMessage(resourceReference(R.string.tangem_pay_unfreeze_card_failed)),
+                            )
+                        }
+                        TangemPayCardFrozenState.Pending -> Unit // TODO [REDACTED_JIRA]
+                    }
                 }
         }
     }
