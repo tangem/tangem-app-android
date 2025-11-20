@@ -8,6 +8,7 @@ import com.tangem.datasource.api.pay.TangemPayApi
 import com.tangem.datasource.api.pay.models.request.DeeplinkValidityRequest
 import com.tangem.datasource.api.pay.models.request.OrderRequest
 import com.tangem.datasource.api.pay.models.response.CustomerMeResponse
+import com.tangem.datasource.local.visa.TangemPayCardFrozenStateStore
 import com.tangem.datasource.local.visa.TangemPayStorage
 import com.tangem.domain.pay.datasource.TangemPayAuthDataSource
 import com.tangem.domain.pay.model.CustomerInfo
@@ -16,6 +17,7 @@ import com.tangem.domain.pay.model.CustomerInfo.ProductInstance
 import com.tangem.domain.pay.model.MainScreenCustomerInfo
 import com.tangem.domain.pay.model.OrderStatus
 import com.tangem.domain.pay.repository.OnboardingRepository
+import com.tangem.domain.visa.model.TangemPayCardFrozenState
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -24,6 +26,7 @@ private const val VALID_STATUS = "valid"
 private const val APPROVED_KYC_STATUS = "APPROVED"
 private const val TAG = "TangemPay: OnboardingRepository"
 
+@Suppress("LongParameterList")
 internal class DefaultOnboardingRepository @Inject constructor(
     private val dispatcherProvider: CoroutineDispatcherProvider,
     private val tangemPayApi: TangemPayApi,
@@ -31,6 +34,7 @@ internal class DefaultOnboardingRepository @Inject constructor(
     private val tangemPayStorage: TangemPayStorage,
     private val authDataSource: TangemPayAuthDataSource,
     private val tangemPayWalletsManager: TangemPayWalletsManager,
+    private val cardFrozenStateStore: TangemPayCardFrozenStateStore,
 ) : OnboardingRepository {
 
     override suspend fun validateDeeplink(link: String): Either<UniversalError, Boolean> {
@@ -122,7 +126,7 @@ internal class DefaultOnboardingRepository @Inject constructor(
         }
     }
 
-    private fun getCustomerInfo(response: CustomerMeResponse.Result?): CustomerInfo {
+    private suspend fun getCustomerInfo(response: CustomerMeResponse.Result?): CustomerInfo {
         val card = response?.card
         val balance = response?.balance
         val paymentAccount = response?.paymentAccount
@@ -138,6 +142,13 @@ internal class DefaultOnboardingRepository @Inject constructor(
             null
         }
         val productInstance = response?.productInstance?.let { instance ->
+            cardFrozenStateStore.store(
+                key = instance.cardId,
+                value = when (instance.status) {
+                    CustomerMeResponse.ProductInstance.Status.ACTIVE -> TangemPayCardFrozenState.Unfrozen
+                    else -> TangemPayCardFrozenState.Frozen
+                },
+            )
             ProductInstance(
                 id = instance.id,
                 cardId = instance.cardId,
