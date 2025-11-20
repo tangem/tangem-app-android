@@ -6,20 +6,25 @@ import com.tangem.core.ui.components.dropdownmenu.TangemDropdownMenuItem
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.themedColor
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.domain.visa.model.TangemPayCardFrozenState
 import com.tangem.features.tangempay.details.impl.R
+import com.tangem.features.tangempay.model.transformers.TangemPayCardFrozenStateConverter
 import com.tangem.features.tangempay.utils.TangemPayDetailIntents
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toPersistentList
 
 @Suppress("LongParameterList")
 internal class TangemPayDetailsStateFactory(
     private val onBack: () -> Unit,
     private val intents: TangemPayDetailIntents,
-    private val isCardFrozen: Boolean,
+    private val cardFrozenState: TangemPayCardFrozenState,
+    private val converter: TangemPayCardFrozenStateConverter,
 ) {
 
     fun getInitialState(): TangemPayDetailsUM {
-        val cardFrozenStateItem = if (isCardFrozen) {
-            TangemPayDetailsTopBarMenuItem(
+        val cardFrozenStateItem = when (cardFrozenState) {
+            is TangemPayCardFrozenState.Pending -> null
+            is TangemPayCardFrozenState.Frozen -> TangemPayDetailsTopBarMenuItem(
                 type = TangemPayDetailsTopBarMenuItemType.UnfreezeCard,
                 dropdownItem = TangemDropdownMenuItem(
                     title = resourceReference(R.string.tangempay_card_details_unfreeze_card),
@@ -27,8 +32,7 @@ internal class TangemPayDetailsStateFactory(
                     onClick = intents::onClickUnfreezeCard,
                 ),
             )
-        } else {
-            TangemPayDetailsTopBarMenuItem(
+            is TangemPayCardFrozenState.Unfrozen -> TangemPayDetailsTopBarMenuItem(
                 type = TangemPayDetailsTopBarMenuItemType.FreezeCard,
                 dropdownItem = TangemDropdownMenuItem(
                     title = resourceReference(R.string.tangempay_card_details_freeze_card),
@@ -41,7 +45,7 @@ internal class TangemPayDetailsStateFactory(
         return TangemPayDetailsUM(
             topBarConfig = TangemPayDetailsTopBarConfig(
                 onBackClick = onBack,
-                items = persistentListOf(
+                items = listOfNotNull(
                     TangemPayDetailsTopBarMenuItem(
                         type = TangemPayDetailsTopBarMenuItemType.ChangePin,
                         dropdownItem = TangemDropdownMenuItem(
@@ -59,7 +63,7 @@ internal class TangemPayDetailsStateFactory(
                         ),
                     ),
                     cardFrozenStateItem,
-                ),
+                ).toPersistentList(),
             ),
             pullToRefreshConfig = PullToRefreshConfig(
                 isRefreshing = false,
@@ -73,15 +77,11 @@ internal class TangemPayDetailsStateFactory(
                         onClick = intents::onClickAddFunds,
                     ),
                 ),
-                frozenState = if (isCardFrozen) {
-                    CardFrozenState.Frozen(intents::onClickUnfreezeCard)
-                } else {
-                    CardFrozenState.Unfrozen
-                },
             ),
             addToWalletBlockState = null,
             isBalanceHidden = false,
             addFundsEnabled = true,
+            cardFrozenState = converter.convert(cardFrozenState),
         )
     }
 }
