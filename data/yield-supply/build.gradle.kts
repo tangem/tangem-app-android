@@ -22,6 +22,7 @@ dependencies {
     /** Core */
     implementation(projects.core.datasource)
     implementation(projects.core.utils)
+    implementation(projects.core.analytics)
 
     /** Domain */
     implementation(projects.domain.yieldSupply)

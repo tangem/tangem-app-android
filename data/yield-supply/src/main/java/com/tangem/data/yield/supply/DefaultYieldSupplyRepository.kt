@@ -5,6 +5,8 @@ import com.tangem.blockchain.yieldsupply.YieldSupplyProvider
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.blockchainsdk.utils.toNetworkId
+import com.tangem.core.analytics.api.AnalyticsExceptionHandler
+import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
 import com.tangem.data.yield.supply.converters.YieldMarketTokenConverter
 import com.tangem.data.yield.supply.converters.YieldTokenChartConverter
 import com.tangem.datasource.api.common.response.getOrThrow
@@ -32,6 +34,7 @@ internal class DefaultYieldSupplyRepository(
     private val store: YieldMarketsStore,
     private val walletManagersFacade: WalletManagersFacade,
     private val dispatchers: CoroutineDispatcherProvider,
+    private val analyticsExceptionHandler: AnalyticsExceptionHandler,
 ) : YieldSupplyRepository {
 
     private val statusMap: MutableMap<String, YieldSupplyEnterStatus> = ConcurrentHashMap()
@@ -74,7 +77,15 @@ internal class DefaultYieldSupplyRepository(
                 userWalletId = userWalletId,
                 blockchain = cryptoCurrency.network.toBlockchain(),
                 derivationPath = cryptoCurrency.network.derivationPath.value,
-            ) ?: error("Wallet manager not found")
+            )
+            if (walletManager == null) {
+                analyticsExceptionHandler.sendException(
+                    ExceptionAnalyticsEvent(
+                        exception = IllegalStateException("Wallet manager not found"),
+                    ),
+                )
+                return@withContext false
+            }
 
             (walletManager as? YieldSupplyProvider)?.isSupported() ?: false
         }
