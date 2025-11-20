@@ -6,7 +6,7 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.features.tangempay.entity.TangemPayCardDetailsUM
 import com.tangem.features.tangempay.model.TangemPayCardDetailsBlockModel
-import com.tangem.features.tangempay.ui.CardDetailsItem
+import com.tangem.features.tangempay.ui.TangemPayCard
 import kotlinx.coroutines.flow.StateFlow
 
 internal class DefaultTangemPayCardDetailsBlockComponent(
@@ -19,6 +19,6 @@ internal class DefaultTangemPayCardDetailsBlockComponent(
 
     @Composable
     override fun CardDetailsBlockContent(state: TangemPayCardDetailsUM, modifier: Modifier) {
-        CardDetailsItem(state, modifier)
+        TangemPayCard(state, modifier)
     }
 }
