@@ -35,6 +35,8 @@ internal class TangemPayTxHistoryItemConverter(moshi: Moshi) :
             date = spend.authorizedAt.withLocalZone(),
             amount = spend.amount,
             currency = Currency.getInstance(spend.currency),
+            localAmount = spend.localAmount,
+            localCurrency = spend.localCurrency?.let(Currency::getInstance),
             enrichedMerchantName = spend.enrichedMerchantName,
             merchantName = spend.merchantName,
             enrichedMerchantCategory = spend.enrichedMerchantCategory,
