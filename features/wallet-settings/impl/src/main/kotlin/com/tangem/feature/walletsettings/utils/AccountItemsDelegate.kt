@@ -22,7 +22,9 @@ import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountStatus
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.wallets.extension.isAccountsSupported
 import com.tangem.feature.walletsettings.component.WalletSettingsComponent
 import com.tangem.feature.walletsettings.entity.WalletSettingsAccountsUM
 import com.tangem.feature.walletsettings.entity.WalletSettingsAccountsUM.Footer.AddAccountUM
@@ -48,8 +50,8 @@ internal class AccountItemsDelegate @Inject constructor(
 
     private val userWalletId = paramsContainer.require<WalletSettingsComponent.Params>().userWalletId
 
-    fun loadAccount(): Flow<List<WalletSettingsAccountsUM>> {
-        if (!accountsFeatureToggles.isFeatureEnabled) return flowOf(emptyList())
+    fun loadAccount(wallet: UserWallet): Flow<List<WalletSettingsAccountsUM>> {
+        if (!accountsFeatureToggles.isFeatureEnabled || !wallet.isAccountsSupported) return flowOf(emptyList())
 
         return combine(
             flow = singleAccountStatusListSupplier(userWalletId),
@@ -83,26 +85,29 @@ internal class AccountItemsDelegate @Inject constructor(
         }
 
         val accounts = accountStatusList.accountStatuses
-        WalletSettingsAccountsUM.Header(
+
+        val header = WalletSettingsAccountsUM.Header(
             id = "accounts_header",
             text = resourceReference(R.string.common_accounts),
-        ).let(::add)
+        )
+
+        add(header)
 
         if (isAccountsMode) {
             addAll(accounts.map(::mapAccount).applySortingOrder(order = accountsOrder))
         }
 
-        val addAccountEnabled = accounts.size < AccountList.MAX_ACCOUNTS_COUNT
-        val showDescription = accounts.size > 1
+        val isAddAccountEnabled = accounts.size < AccountList.MAX_ACCOUNTS_COUNT
+        val shouldShowDescription = accounts.size > 1
         val isArchivedAccountsEnabled = accountStatusList.accountStatuses.size != accountStatusList.totalAccounts
 
-        WalletSettingsAccountsUM.Footer(
+        val footer = WalletSettingsAccountsUM.Footer(
             id = "accounts_footer",
             addAccount = AddAccountUM(
                 title = resourceReference(R.string.account_form_title_create),
-                addAccountEnabled = addAccountEnabled,
+                isAddAccountEnabled = isAddAccountEnabled,
                 onAddAccountClick = {
-                    if (addAccountEnabled) openAddAccount(userWalletId) else canNotAddAccountDialog()
+                    if (isAddAccountEnabled) openAddAccount(userWalletId) else canNotAddAccountDialog()
                 },
             ),
             archivedAccounts = if (isArchivedAccountsEnabled) {
@@ -114,9 +119,11 @@ internal class AccountItemsDelegate @Inject constructor(
             } else {
                 null
             },
-            showDescription = showDescription,
+            shouldShowDescription = shouldShowDescription,
             description = resourceReference(R.string.account_reorder_description),
-        ).let(::add)
+        )
+
+        add(footer)
     }
 
     private fun List<WalletSettingsAccountsUM>.applySortingOrder(
