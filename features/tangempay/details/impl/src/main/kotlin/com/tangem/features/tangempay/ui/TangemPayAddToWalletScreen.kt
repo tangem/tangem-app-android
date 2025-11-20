@@ -28,6 +28,7 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.domain.visa.model.TangemPayCardFrozenState
 import com.tangem.features.tangempay.components.cardDetails.PreviewTangemPayCardDetailsBlockComponent
 import com.tangem.features.tangempay.components.cardDetails.TangemPayCardDetailsBlockComponent
 import com.tangem.features.tangempay.details.impl.R
@@ -64,8 +65,11 @@ internal fun TangemPayAddToWalletScreen(
             state = listState,
             contentPadding = PaddingValues(bottom = TangemTheme.dimens.spacing16 + bottomBarHeight),
         ) {
-            item(key = TangemPayCardDetailsUM::class.java) {
-                TangemPayCardDetailsBlockItem(component = cardDetailsBlockComponent, state = cardDetailsState)
+            item(TangemPayCardDetailsUM::class.java) {
+                cardDetailsBlockComponent.CardDetailsBlockContent(
+                    modifier = Modifier.padding(horizontal = 16.dp).padding(top = 8.dp),
+                    state = cardDetailsState,
+                )
             }
 
             item(key = TangemPayAddToWalletUM::class.java) {
@@ -185,6 +189,7 @@ private fun PreviewTangemPayAddToWalletScreen() {
                     onCopy = {},
                     onClick = {},
                     buttonText = TextReference.Res(R.string.tangempay_card_details_hide_text),
+                    cardFrozenState = TangemPayCardFrozenState.Unfrozen,
                 ),
             ),
         )
