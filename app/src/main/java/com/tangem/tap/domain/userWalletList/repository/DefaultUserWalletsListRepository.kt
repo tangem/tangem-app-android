@@ -18,6 +18,7 @@ import com.tangem.domain.wallets.R
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
 import com.tangem.domain.wallets.hot.HotWalletAccessCodeAttemptsRepository
 import com.tangem.domain.wallets.hot.HotWalletPasswordRequester
+import com.tangem.hot.sdk.TangemHotSdk
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.tap.domain.userWalletList.model.UserWalletEncryptionKey
@@ -28,6 +29,7 @@ import com.tangem.tap.domain.userWalletList.utils.updateWith
 import com.tangem.utils.Provider
 import com.tangem.utils.ProviderSuspend
 import com.tangem.utils.coroutines.runSuspendCatching
+import com.tangem.utils.extensions.addOrReplace
 import com.tangem.utils.extensions.indexOfFirstOrNull
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
@@ -45,6 +47,7 @@ internal class DefaultUserWalletsListRepository(
     private val savePersistentInformation: ProviderSuspend<Boolean>,
     private val appPreferencesStore: AppPreferencesStore,
     private val hotWalletAccessCodeAttemptsRepository: HotWalletAccessCodeAttemptsRepository,
+    private val tangemHotSdk: TangemHotSdk,
 ) : UserWalletsListRepository {
 
     override val userWallets = MutableStateFlow<List<UserWallet>?>(null)
@@ -120,14 +123,19 @@ internal class DefaultUserWalletsListRepository(
             }
         }
 
+        val oldUserWallet = userWalletsSync().find { it.walletId == userWallet.walletId }
+
+        if (oldUserWallet != null) {
+            checkForUpgradeAndDeleteHotWalletIfNeeded(
+                newUserWallet = userWallet,
+                oldUserWallet = oldUserWallet,
+            )
+        }
+
         // update the userWallets state and add if it doesn't exist
         updateWallets { currentWallets ->
             val wallets = currentWallets.orEmpty()
-            if (wallets.any { it.walletId == userWallet.walletId }) {
-                wallets.map { if (it.walletId == userWallet.walletId) userWallet else it }
-            } else {
-                wallets + userWallet
-            }
+            wallets.addOrReplace(userWallet) { it.walletId == userWallet.walletId }
         }
 
         // update the selectedUserWallet state if it is the only wallet
@@ -193,6 +201,8 @@ internal class DefaultUserWalletsListRepository(
             }
 
         userWalletEncryptionKeysRepository.delete(userWalletIds)
+
+        removeHotWalletsFromSDK(userWalletIds)
 
         userWallets.update { currentWallets ->
             val updatedWallets = currentWallets?.filter { userWalletIds.contains(it.walletId).not() }
@@ -288,7 +298,12 @@ internal class DefaultUserWalletsListRepository(
     }
 
     override suspend fun unlockAllWallets(): Either<UnlockWalletError, Unit> = either {
-        val userWallets = userWalletsSync()
+        val userWallets = userWalletsSync().filter { it.isLocked }
+
+        if (userWallets.isEmpty()) {
+            return@either
+        }
+
         val biometricKeys = runSuspendCatching {
             userWalletEncryptionKeysRepository.getAllBiometric()
         }.getOrElse {
@@ -350,6 +365,27 @@ internal class DefaultUserWalletsListRepository(
         val userWallets = userWalletsSync()
         val unsecuredWalletIds = userWalletEncryptionKeysRepository.getAllUnsecured().map { it.walletId }.toSet()
         return userWallets.any { it.walletId !in unsecuredWalletIds }
+    }
+
+    private suspend fun checkForUpgradeAndDeleteHotWalletIfNeeded(
+        newUserWallet: UserWallet,
+        oldUserWallet: UserWallet,
+    ) {
+        if (newUserWallet.walletId == oldUserWallet.walletId &&
+            oldUserWallet is UserWallet.Hot && newUserWallet is UserWallet.Cold
+        ) {
+            removeHotWalletsFromSDK(walletIds = listOf(oldUserWallet.walletId))
+        }
+    }
+
+    private suspend fun removeHotWalletsFromSDK(walletIds: List<UserWalletId>) {
+        val hotWalletsToDelete = userWalletsSync()
+            .filterIsInstance<UserWallet.Hot>()
+            .filter { walletIds.contains(it.walletId) }
+
+        hotWalletsToDelete.forEach {
+            tangemHotSdk.delete(it.hotWalletId)
+        }
     }
 
     private suspend fun requestPasswordRecursive(
