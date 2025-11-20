@@ -12,18 +12,19 @@ import com.tangem.datasource.api.pay.models.request.CardDetailsRequest
 import com.tangem.datasource.api.pay.models.request.FreezeUnfreezeCardRequest
 import com.tangem.datasource.api.pay.models.request.SetPinRequest
 import com.tangem.datasource.api.pay.models.response.FreezeUnfreezeCardResponse
+import com.tangem.datasource.local.visa.TangemPayCardFrozenStateStore
 import com.tangem.datasource.local.visa.TangemPayStorage
 import com.tangem.domain.pay.model.SetPinResult
 import com.tangem.domain.pay.model.TangemPayCardBalance
 import com.tangem.domain.pay.model.TangemPayCardDetails
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
-import com.tangem.domain.visa.error.VisaApiError
-import timber.log.Timber
+import com.tangem.domain.visa.model.TangemPayCardFrozenState
+import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 private const val TAG = "TangemPay: CardDetailsRepository"
 
-@Suppress("OptionalUnit")
+@Suppress("LongParameterList")
 internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
     private val tangemPayApi: TangemPayApi,
     private val requestHelper: TangemPayRequestPerformer,
@@ -31,6 +32,7 @@ internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
     private val apiConfigsManager: ApiConfigsManager,
     private val rainCryptoUtil: RainCryptoUtil,
     private val storage: TangemPayStorage,
+    private val cardFrozenStateStore: TangemPayCardFrozenStateStore,
 ) : TangemPayCardDetailsRepository {
 
     override suspend fun getCardBalance(): Either<UniversalError, TangemPayCardBalance> {
@@ -117,32 +119,56 @@ internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
         }
     }
 
-    override suspend fun freezeCard(cardId: String): Either<UniversalError, Unit> {
+    override suspend fun freezeCard(cardId: String): Either<UniversalError, TangemPayCardFrozenState> {
+        cardFrozenStateStore.store(cardId, TangemPayCardFrozenState.Pending)
         return requestHelper.makeSafeRequest {
             tangemPayApi.freezeCard(authHeader = it, body = FreezeUnfreezeCardRequest(cardId = cardId))
+        }.onLeft {
+            cardFrozenStateStore.store(cardId, TangemPayCardFrozenState.Unfrozen)
         }.map { response ->
-            val result = response.result
-            if (result != null && result.status == FreezeUnfreezeCardResponse.Status.COMPLETED) {
-                Either.Right(Unit)
-            } else {
-                Timber.e("Card freeze failed with status: ${response.result?.status}")
-                Either.Left(VisaApiError.UnknownWithoutCode)
+            val state = when (response.result?.status) {
+                FreezeUnfreezeCardResponse.Status.COMPLETED -> TangemPayCardFrozenState.Frozen
+                FreezeUnfreezeCardResponse.Status.NEW,
+                FreezeUnfreezeCardResponse.Status.PROCESSING,
+                -> TangemPayCardFrozenState.Pending
+                FreezeUnfreezeCardResponse.Status.CANCELED,
+                null,
+                -> TangemPayCardFrozenState.Unfrozen
             }
+            cardFrozenStateStore.store(cardId, state)
+
+            state
         }
     }
 
-    override suspend fun unfreezeCard(cardId: String): Either<UniversalError, Unit> {
+    override suspend fun unfreezeCard(cardId: String): Either<UniversalError, TangemPayCardFrozenState> {
+        cardFrozenStateStore.store(cardId, TangemPayCardFrozenState.Pending)
         return requestHelper.makeSafeRequest {
             tangemPayApi.unfreezeCard(authHeader = it, body = FreezeUnfreezeCardRequest(cardId = cardId))
+        }.onLeft {
+            cardFrozenStateStore.store(cardId, TangemPayCardFrozenState.Frozen)
         }.map { response ->
-            val result = response.result
-            if (result != null && result.status == FreezeUnfreezeCardResponse.Status.COMPLETED) {
-                Either.Right(Unit)
-            } else {
-                Timber.e("Card unfreeze failed with status: ${response.result?.status}")
-                Either.Left(VisaApiError.UnknownWithoutCode)
+            val state = when (response.result?.status) {
+                FreezeUnfreezeCardResponse.Status.COMPLETED -> TangemPayCardFrozenState.Unfrozen
+                FreezeUnfreezeCardResponse.Status.NEW,
+                FreezeUnfreezeCardResponse.Status.PROCESSING,
+                -> TangemPayCardFrozenState.Pending
+                FreezeUnfreezeCardResponse.Status.CANCELED,
+                null,
+                -> TangemPayCardFrozenState.Frozen
             }
+            cardFrozenStateStore.store(cardId, state)
+
+            state
         }
+    }
+
+    override fun cardFrozenState(cardId: String): Flow<TangemPayCardFrozenState> {
+        return cardFrozenStateStore.get(cardId)
+    }
+
+    override suspend fun cardFrozenStateSync(cardId: String): TangemPayCardFrozenState? {
+        return cardFrozenStateStore.getSyncOrNull(cardId)
     }
 
     private suspend fun getPublicKeyBase64(): String {
