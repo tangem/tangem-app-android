@@ -74,7 +74,7 @@ internal class PreviewWalletSettingsComponent : WalletSettingsComponent {
             accountsUM = previewAccounts(),
             cardItem = previewCardBlock(),
         ),
-        requestPushNotificationsPermission = false,
+        hasRequestPushNotificationsPermission = false,
         onPushNotificationPermissionGranted = {},
         accountReorderUM = AccountReorderUM(
             isDragEnabled = true,
@@ -83,17 +83,17 @@ internal class PreviewWalletSettingsComponent : WalletSettingsComponent {
         ),
     )
 
-    private fun previewAccounts() = buildList {
+    private fun previewAccounts() = listOf(
         WalletSettingsAccountsUM.Header(
             id = "accounts_header",
             text = resourceReference(R.string.common_accounts),
-        ).let(::add)
-        add(WalletSettingsAccountsUM.Account(accountItem))
+        ),
+        WalletSettingsAccountsUM.Account(accountItem),
         WalletSettingsAccountsUM.Footer(
             id = "accounts_footer",
             addAccount = AddAccountUM(
                 title = resourceReference(R.string.account_form_title_create),
-                addAccountEnabled = true,
+                isAddAccountEnabled = true,
                 onAddAccountClick = {},
             ),
             archivedAccounts = BlockUM(
@@ -101,10 +101,10 @@ internal class PreviewWalletSettingsComponent : WalletSettingsComponent {
                 iconRes = R.drawable.ic_archive_24,
                 onClick = {},
             ),
-            showDescription = true,
+            shouldShowDescription = true,
             description = resourceReference(R.string.account_reorder_description),
-        ).let(::add)
-    }
+        ),
+    )
 
     private fun previewCardBlock() = WalletSettingsItemUM.CardBlock(
         id = "wallet_name",
