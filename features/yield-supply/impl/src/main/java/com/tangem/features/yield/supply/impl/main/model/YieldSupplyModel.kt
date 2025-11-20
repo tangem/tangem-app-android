@@ -17,7 +17,8 @@ import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.models.currency.yieldSupplyNotAllAmountSupplied
+import com.tangem.domain.models.currency.hasNotSuppliedAmount
+import com.tangem.domain.models.currency.shouldShowNotSuppliedInfoIcon
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.yield.supply.YieldSupplyStatus
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
@@ -29,6 +30,7 @@ import com.tangem.domain.yield.supply.usecase.YieldSupplyActivateUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyDeactivateUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetTokenStatusUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyIsAvailableUseCase
+import com.tangem.domain.yield.supply.usecase.YieldSupplyMinAmountUseCase
 import com.tangem.features.yield.supply.api.YieldSupplyComponent
 import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
 import com.tangem.features.yield.supply.impl.R
@@ -64,6 +66,7 @@ internal class YieldSupplyModel @Inject constructor(
     private val yieldSupplyActivateUseCase: YieldSupplyActivateUseCase,
     private val yieldSupplyDeactivateUseCase: YieldSupplyDeactivateUseCase,
     private val yieldSupplyRepository: YieldSupplyRepository,
+    private val yieldSupplyMinAmountUseCase: YieldSupplyMinAmountUseCase,
 ) : Model(), YieldSupplyClickIntents {
 
     private val params = paramsContainer.require<YieldSupplyComponent.Params>()
@@ -303,7 +306,10 @@ internal class YieldSupplyModel @Inject constructor(
     private fun loadActiveState(cryptoCurrencyStatus: CryptoCurrencyStatus, yieldSupplyStatus: YieldSupplyStatus) {
         val cryptoCurrencyToken = cryptoCurrency as? CryptoCurrency.Token ?: return
         val showWarningIcon = !yieldSupplyStatus.isAllowedToSpend
-        val showInfoIcon = cryptoCurrencyStatus.yieldSupplyNotAllAmountSupplied()
+        val showInfoIconPrevState = when (uiState) {
+            is YieldSupplyUM.Content -> uiState.showInfoIcon
+            else -> false
+        }
         if (!yieldSupplyStatus.isAllowedToSpend) {
             analyticsEventsHandler.send(
                 YieldSupplyAnalytics.NoticeApproveNeeded(
@@ -331,10 +337,11 @@ internal class YieldSupplyModel @Inject constructor(
                             ),
                             onClick = ::onActiveClick,
                             showWarningIcon = showWarningIcon,
-                            showInfoIcon = showInfoIcon,
+                            showInfoIcon = showInfoIconPrevState,
                             apy = tokenStatus.apy.toString(),
                         )
                     }
+                    computeAndApplyShowInfoIcon(cryptoCurrencyStatus)
                 }.onLeft {
                     Timber.e(it)
                     uiState.update {
@@ -348,11 +355,33 @@ internal class YieldSupplyModel @Inject constructor(
                             rewardsApy = TextReference.EMPTY,
                             onClick = ::onActiveClick,
                             showWarningIcon = showWarningIcon,
-                            showInfoIcon = showInfoIcon,
+                            showInfoIcon = showInfoIconPrevState,
                             apy = "",
                         )
                     }
+                    computeAndApplyShowInfoIcon(cryptoCurrencyStatus)
                 }
+        }
+    }
+
+    private fun computeAndApplyShowInfoIcon(cryptoCurrencyStatus: CryptoCurrencyStatus) {
+        modelScope.launch(dispatchers.default) {
+            val showInfoIcon = if (cryptoCurrencyStatus.hasNotSuppliedAmount()) {
+                val minAmount = yieldSupplyMinAmountUseCase(userWallet, cryptoCurrencyStatus).getOrNull()
+                if (minAmount != null) {
+                    cryptoCurrencyStatus.shouldShowNotSuppliedInfoIcon(minAmount)
+                } else {
+                    false
+                }
+            } else {
+                false
+            }
+            uiState.update { state ->
+                when (state) {
+                    is YieldSupplyUM.Content -> state.copy(showInfoIcon = showInfoIcon)
+                    else -> state
+                }
+            }
         }
     }
 
