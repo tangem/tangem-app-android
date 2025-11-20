@@ -7,11 +7,12 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
@@ -35,10 +36,10 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
-import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.TokenDetailsTopBarTestTags
+import com.tangem.domain.visa.model.TangemPayCardFrozenState
 import com.tangem.features.tangempay.components.cardDetails.PreviewTangemPayCardDetailsBlockComponent
 import com.tangem.features.tangempay.components.cardDetails.TangemPayCardDetailsBlockComponent
 import com.tangem.features.tangempay.components.txHistory.PreviewTangemPayTxHistoryComponent
@@ -48,6 +49,7 @@ import com.tangem.features.tangempay.entity.*
 import com.tangem.utils.StringsSigns.DASH_SIGN
 import kotlinx.collections.immutable.persistentListOf
 
+@Suppress("LongMethod")
 @Composable
 internal fun TangemPayDetailsScreen(
     state: TangemPayDetailsUM,
@@ -77,12 +79,33 @@ internal fun TangemPayDetailsScreen(
                     bottom = TangemTheme.dimens.spacing16 + bottomBarHeight,
                 ),
             ) {
+                item(TangemPayCardDetailsUM::class.java) {
+                    cardDetailsBlockComponent.CardDetailsBlockContent(
+                        modifier = Modifier.padding(horizontal = 16.dp).padding(top = 8.dp),
+                        state = cardDetailsState,
+                    )
+                }
+                when (state.cardFrozenState) {
+                    is CardFrozenState.Frozen -> item(CardFrozenState.Frozen::class.java) {
+                        PrimaryButton(
+                            modifier = Modifier
+                                .animateItem()
+                                .padding(horizontal = 16.dp)
+                                .padding(top = 12.dp)
+                                .fillMaxWidth(),
+                            text = stringResourceSafe(R.string.tangempay_card_details_unfreeze_card),
+                            onClick = state.cardFrozenState.onUnfreeze,
+                        )
+                    }
+                    else -> Unit
+                }
                 item(
                     key = TangemPayDetailsBalanceBlockState::class.java,
                     content = {
                         TangemPayDetailsBalanceBlock(
                             modifier = modifier
                                 .padding(horizontal = TangemTheme.dimens.spacing16)
+                                .padding(top = 12.dp)
                                 .fillMaxWidth(),
                             state = state.balanceBlockState,
                             isBalanceHidden = state.isBalanceHidden,
@@ -101,23 +124,6 @@ internal fun TangemPayDetailsScreen(
                             )
                         },
                     )
-                }
-                item(TangemPayCardDetailsUM::class.java) {
-                    TangemPayCardDetailsBlockItem(component = cardDetailsBlockComponent, state = cardDetailsState)
-                }
-                when (val cardFrozenState = state.balanceBlockState.frozenState) {
-                    is CardFrozenState.Frozen -> item(CardFrozenState.Frozen::class.java) {
-                        PrimaryButton(
-                            modifier = Modifier
-                                .animateItem()
-                                .padding(horizontal = 16.dp)
-                                .padding(top = 12.dp)
-                                .fillMaxWidth(),
-                            text = stringResourceSafe(R.string.tangempay_card_details_unfreeze_card),
-                            onClick = cardFrozenState.onUnfreeze,
-                        )
-                    }
-                    else -> Unit
                 }
                 with(txHistoryComponent) { txHistoryContent(listState = listState, state = txHistoryState) }
             }
@@ -140,20 +146,12 @@ internal fun TangemPayDetailsBalanceBlock(
             )
             .padding(vertical = 12.dp),
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 12.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                text = stringResourceSafe(R.string.tangempay_title),
-                color = TangemTheme.colors.text.tertiary,
-                style = TangemTheme.typography.subtitle2,
-            )
-            TangemPayCardStatus(state = state.frozenState)
-        }
+        Text(
+            modifier = Modifier.padding(start = 12.dp),
+            text = stringResourceSafe(R.string.tangempay_title),
+            color = TangemTheme.colors.text.tertiary,
+            style = TangemTheme.typography.subtitle2,
+        )
         FiatBalance(
             modifier = Modifier.padding(start = 12.dp, top = 8.dp),
             state = state,
@@ -177,36 +175,6 @@ internal fun TangemPayDetailsBalanceBlock(
 }
 
 @Composable
-private fun TangemPayCardStatus(state: CardFrozenState, modifier: Modifier = Modifier) {
-    when (state) {
-        is CardFrozenState.Unfrozen -> Unit
-        is CardFrozenState.Pending -> CircularProgressIndicator(
-            modifier = modifier.size(18.dp),
-            trackColor = Color.Transparent,
-            color = TangemColorPalette.Azure,
-            strokeWidth = 2.dp,
-        )
-        is CardFrozenState.Frozen -> Row(
-            modifier = modifier,
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Icon(
-                painter = painterResource(id = R.drawable.ic_snow_24),
-                tint = TangemTheme.colors.text.disabled,
-                contentDescription = null,
-                modifier = Modifier.size(16.dp),
-            )
-            Text(
-                text = stringResourceSafe(R.string.tangem_pay_card_frozen),
-                color = TangemTheme.colors.text.disabled,
-                style = TangemTheme.typography.body2,
-            )
-        }
-    }
-}
-
-@Composable
 private fun FiatBalance(
     state: TangemPayDetailsBalanceBlockState,
     isBalanceHidden: Boolean,
@@ -224,28 +192,16 @@ private fun FiatBalance(
             text = state.fiatBalance.orMaskWithStars(isBalanceHidden),
             style = TangemTheme.typography.h2.applyBladeBrush(
                 isEnabled = state.isBalanceFlickering,
-                textColor = getTextColor(
-                    isCardFrozen = state.frozenState is CardFrozenState.Frozen,
-                    defaultColor = TangemTheme.colors.text.primary1,
-                ),
+                textColor = TangemTheme.colors.text.primary1,
             ),
         )
         is TangemPayDetailsBalanceBlockState.Error -> Text(
             modifier = modifier,
             text = DASH_SIGN.orMaskWithStars(isBalanceHidden),
             style = TangemTheme.typography.h2,
-            color = getTextColor(
-                isCardFrozen = state.frozenState is CardFrozenState.Frozen,
-                defaultColor = TangemTheme.colors.text.primary1,
-            ),
+            color = TangemTheme.colors.text.primary1,
         )
     }
-}
-
-@ReadOnlyComposable
-@Composable
-private fun getTextColor(isCardFrozen: Boolean, defaultColor: Color): Color {
-    return if (isCardFrozen) TangemTheme.colors.text.tertiary else defaultColor
 }
 
 @Suppress("UnusedPrivateMember")
@@ -351,6 +307,7 @@ private fun TangemPayDetailsScreenPreview(
                     onCopy = {},
                     onClick = {},
                     buttonText = TextReference.Res(R.string.tangempay_card_details_hide_text),
+                    cardFrozenState = TangemPayCardFrozenState.Unfrozen,
                 ),
             ),
         )
@@ -373,22 +330,20 @@ private class TangemPayDetailsUMProvider : CollectionPreviewParameterProvider<Ta
                 cryptoBalance = "1234.56 USDT",
                 fiatBalance = "$1234.56",
                 isBalanceFlickering = false,
-                frozenState = CardFrozenState.Frozen(onUnfreeze = {}),
             ),
             addToWalletBlockState = AddToWalletBlockState({}, {}),
             isBalanceHidden = false,
             addFundsEnabled = true,
+            cardFrozenState = CardFrozenState.Frozen(onUnfreeze = {}),
         ),
         TangemPayDetailsUM(
             topBarConfig = TangemPayDetailsTopBarConfig(onBackClick = {}, items = null),
             pullToRefreshConfig = PullToRefreshConfig(isRefreshing = false, onRefresh = {}),
-            balanceBlockState = TangemPayDetailsBalanceBlockState.Loading(
-                actionButtons = persistentListOf(),
-                frozenState = CardFrozenState.Pending,
-            ),
+            balanceBlockState = TangemPayDetailsBalanceBlockState.Loading(actionButtons = persistentListOf()),
             addToWalletBlockState = AddToWalletBlockState({}, {}),
             isBalanceHidden = false,
             addFundsEnabled = true,
+            cardFrozenState = CardFrozenState.Unfrozen,
         ),
     ),
 )
@@ -410,6 +365,7 @@ private fun TangemPayDetailsTxHistoryScreenPreview(
                     onCopy = {},
                     onClick = {},
                     buttonText = TextReference.Res(R.string.tangempay_card_details_hide_text),
+                    cardFrozenState = TangemPayCardFrozenState.Unfrozen,
                 ),
             ),
         )
