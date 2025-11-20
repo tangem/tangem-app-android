@@ -74,13 +74,13 @@ internal sealed class WalletSettingsAccountsUM : WalletSettingsItemUM() {
         override val id: String,
         val addAccount: AddAccountUM,
         val archivedAccounts: BlockUM?,
-        val showDescription: Boolean,
+        val shouldShowDescription: Boolean,
         val description: TextReference,
     ) : WalletSettingsAccountsUM() {
 
         data class AddAccountUM(
             val title: TextReference,
-            val addAccountEnabled: Boolean,
+            val isAddAccountEnabled: Boolean,
             val onAddAccountClick: () -> Unit,
         )
     }
