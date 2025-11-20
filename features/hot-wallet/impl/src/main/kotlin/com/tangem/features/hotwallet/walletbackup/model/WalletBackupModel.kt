@@ -41,6 +41,10 @@ internal class WalletBackupModel @Inject constructor(
         field = MutableStateFlow(
             WalletBackupUM(
                 onBackClick = { router.pop() },
+                hardwareWalletOption = LabelUM(
+                    text = resourceReference(R.string.common_recommended),
+                    style = LabelStyle.ACCENT,
+                ),
                 recoveryPhraseOption = LabelUM(
                     text = resourceReference(R.string.hw_backup_no_backup),
                     style = LabelStyle.WARNING,
