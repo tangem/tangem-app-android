@@ -1,5 +1,6 @@
 package com.tangem.data.account.fetcher
 
+import com.tangem.data.account.fetcher.DefaultWalletAccountsFetcher.FetchResult
 import com.tangem.data.account.utils.DefaultWalletAccountsResponseFactory
 import com.tangem.data.common.cache.etag.ETagsStore
 import com.tangem.data.common.currency.UserTokensResponseAccountIdEnricher
@@ -69,13 +70,15 @@ internal class FetchWalletAccountsErrorHandler @Inject constructor(
         savedAccountsResponse: GetWalletAccountsResponse?,
         pushWalletAccounts: suspend (UserWalletId, List<WalletAccountDTO>) -> GetWalletAccountsResponse?,
         storeWalletAccounts: suspend (UserWalletId, GetWalletAccountsResponse) -> Unit,
-    ): GetWalletAccountsResponse {
+    ): FetchResult {
         val isResponseUpToDate = error.isNetworkError(code = Code.NOT_MODIFIED)
         if (isResponseUpToDate) {
             Timber.e("ETag is up to date, no need to update accounts for wallet: $userWalletId")
-            return requireNotNull(savedAccountsResponse) {
+            val response = requireNotNull(savedAccountsResponse) {
                 "Saved accounts response is null for wallet: $userWalletId"
             }
+
+            return FetchResult(response)
         }
 
         val response = savedAccountsResponse ?: createDefaultResponse(userWalletId)
@@ -95,7 +98,7 @@ internal class FetchWalletAccountsErrorHandler @Inject constructor(
 
         storeWalletAccounts(userWalletId, response)
 
-        return response
+        return FetchResult(response, error)
     }
 
     private suspend fun createDefaultResponse(userWalletId: UserWalletId): GetWalletAccountsResponse {
