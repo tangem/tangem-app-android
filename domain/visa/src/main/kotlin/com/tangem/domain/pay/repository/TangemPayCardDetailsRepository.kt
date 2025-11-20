@@ -5,6 +5,8 @@ import com.tangem.core.error.UniversalError
 import com.tangem.domain.pay.model.SetPinResult
 import com.tangem.domain.pay.model.TangemPayCardBalance
 import com.tangem.domain.pay.model.TangemPayCardDetails
+import com.tangem.domain.visa.model.TangemPayCardFrozenState
+import kotlinx.coroutines.flow.Flow
 
 interface TangemPayCardDetailsRepository {
 
@@ -18,6 +20,8 @@ interface TangemPayCardDetailsRepository {
 
     suspend fun setAddToWalletAsDone(): Either<UniversalError, Unit>
 
-    suspend fun freezeCard(cardId: String): Either<UniversalError, Unit>
-    suspend fun unfreezeCard(cardId: String): Either<UniversalError, Unit>
+    suspend fun freezeCard(cardId: String): Either<UniversalError, TangemPayCardFrozenState>
+    suspend fun unfreezeCard(cardId: String): Either<UniversalError, TangemPayCardFrozenState>
+    fun cardFrozenState(cardId: String): Flow<TangemPayCardFrozenState>
+    suspend fun cardFrozenStateSync(cardId: String): TangemPayCardFrozenState?
 }
