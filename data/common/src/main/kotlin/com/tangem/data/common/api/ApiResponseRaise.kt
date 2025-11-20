@@ -66,8 +66,8 @@ suspend inline fun <T> safeApiCall(
     crossinline onError: suspend (ApiResponseError) -> T,
 ): T = recover(
     block = { call(ApiResponseRaise(raise = this)) },
-    recover = {
-        Timber.e(it, "Unable to perform safe API call")
-        onError(it)
+    recover = { error ->
+        Timber.e(error, "Unable to perform safe API call")
+        onError(error)
     },
 )
