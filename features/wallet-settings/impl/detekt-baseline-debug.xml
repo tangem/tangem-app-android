@@ -2,26 +2,8 @@
 <SmellBaseline>
   <ManuallySuppressedIssues/>
   <CurrentIssues>
-    <ID>BooleanPropertyNaming:AccountItemsDelegate.kt$AccountItemsDelegate$val addAccountEnabled = accounts.size &lt; AccountList.MAX_ACCOUNTS_COUNT</ID>
-    <ID>BooleanPropertyNaming:AccountItemsDelegate.kt$AccountItemsDelegate$val showDescription = accounts.size &gt; 1</ID>
-    <ID>BooleanPropertyNaming:WalletSettingsItemUM.kt$WalletSettingsAccountsUM.Footer$val showDescription: Boolean</ID>
-    <ID>BooleanPropertyNaming:WalletSettingsItemUM.kt$WalletSettingsAccountsUM.Footer.AddAccountUM$val addAccountEnabled: Boolean</ID>
-    <ID>BooleanPropertyNaming:WalletSettingsModel.kt$WalletSettingsModel$val accountsFeatureEnabled = accountsFeatureToggles.isFeatureEnabled</ID>
-    <ID>BooleanPropertyNaming:WalletSettingsUM.kt$WalletSettingsUM$val requestPushNotificationsPermission: Boolean = false</ID>
-    <ID>BooleanPropertyNaming:WalletSettingsUM.kt$WalletSettingsUM$val walletUpgradeDismissed: Boolean = false</ID>
-    <ID>MultilineLambdaItParameter:RenameWalletModel.kt$RenameWalletModel${ Timber.e("Unable to rename wallet: $it") showRenameWalletError(error = it, updatedName = newName.text) }</ID>
-    <ID>MultilineLambdaItParameter:RenameWalletModel.kt$RenameWalletModel${ val newName = value.text it.copy( walletNameValue = value, isConfirmEnabled = getConfirmButtonAvailability(newName), error = getErrorOrNull(newName), ) }</ID>
-    <ID>MultilineLambdaItParameter:WalletSettingsModel.kt$WalletSettingsModel${ Timber.e("Unable to delete wallet: $it") messageSender.send( message = SnackbarMessage(resourceReference(R.string.common_unknown_error)), ) return@launch }</ID>
-    <ID>MultilineLambdaItParameter:WalletSettingsModel.kt$WalletSettingsModel${ val id = (it as? WalletSettingsAccountsUM.Account)?.state?.id ?: return@mapNotNull null AccountId.forCryptoPortfolio(userWalletId = params.userWalletId, value = id).getOrNull() }</ID>
     <ID>NonBooleanPropertyPrefixedWithIs:AccountItemsDelegate.kt$AccountItemsDelegate$private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase</ID>
     <ID>NonBooleanPropertyPrefixedWithIs:WalletSettingsModel.kt$WalletSettingsModel$private val isDemoCardUseCase: IsDemoCardUseCase</ID>
     <ID>NonBooleanPropertyPrefixedWithIs:WalletSettingsModel.kt$WalletSettingsModel$private val isUpgradeWalletNotificationEnabledUseCase: IsUpgradeWalletNotificationEnabledUseCase</ID>
-    <ID>PropertyUsedBeforeDeclaration:NetworksAvailableForNotificationsModel.kt$NetworksAvailableForNotificationsModel$_state</ID>
-    <ID>PropertyUsedBeforeDeclaration:RenameWalletModel.kt$RenameWalletModel$_state</ID>
-    <ID>UnnecessaryLet:AccountItemsDelegate.kt$AccountItemsDelegate$let(::add)</ID>
-    <ID>UnnecessaryLet:ItemsBuilder.kt$ItemsBuilder$let(::add)</ID>
-    <ID>UnnecessaryLet:PreviewWalletSettingsComponent.kt$PreviewWalletSettingsComponent$let(::add)</ID>
-    <ID>UseEmptyCounterpart:Settings.kt$Settings$mapOf()</ID>
-    <ID>UseEmptyCounterpart:WalletSettingsAnalyticEvents.kt$WalletSettingsAnalyticEvents$mapOf()</ID>
   </CurrentIssues>
 </SmellBaseline>
