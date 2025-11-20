@@ -393,7 +393,7 @@ private fun AccountsFooter(model: WalletSettingsAccountsUM.Footer, modifier: Mod
                 }
             }
         }
-        if (!model.showDescription) return
+        if (!model.shouldShowDescription) return
         SpacerH8()
         Text(
             modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing12),
@@ -411,7 +411,7 @@ private fun AddAccountRow(model: WalletSettingsAccountsUM.Footer.AddAccountUM, m
     val iconTint: Color
     val backgroundColor: Color
     val textColor: Color
-    if (model.addAccountEnabled) {
+    if (model.isAddAccountEnabled) {
         iconTint = TangemTheme.colors.icon.accent
         backgroundColor = TangemTheme.colors.icon.accent.copy(alpha = 0.1f)
         textColor = TangemTheme.colors.text.accent

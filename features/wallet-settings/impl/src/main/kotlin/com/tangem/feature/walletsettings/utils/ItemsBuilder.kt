@@ -181,7 +181,7 @@ internal class ItemsBuilder @Inject constructor(
             val isHotWallet = userWallet is UserWallet.Hot
             if (isHotWallet) {
                 val hasBackup = userWallet.backedUp
-                BlockUM(
+                val backupBlock = BlockUM(
                     text = resourceReference(R.string.common_backup),
                     iconRes = R.drawable.ic_more_cards_24,
                     onClick = { router.push(AppRoute.WalletBackup(userWalletId)) },
@@ -195,39 +195,49 @@ internal class ItemsBuilder @Inject constructor(
                             ),
                         )
                     },
-                ).let(::add)
+                )
+
+                add(backupBlock)
             }
 
             if (isManageTokensAvailable) {
-                BlockUM(
+                val manageTokensBlock = BlockUM(
                     text = resourceReference(R.string.add_tokens_title),
                     iconRes = R.drawable.ic_tether_24,
                     onClick = onManageTokensClick,
-                ).let(::add)
+                )
+
+                add(manageTokensBlock)
             }
 
             if (isLinkMoreCardsAvailable) {
-                BlockUM(
+                val linkMoreCardsBlock = BlockUM(
                     text = resourceReference(R.string.details_row_title_create_backup),
                     iconRes = R.drawable.ic_more_cards_24,
                     onClick = onLinkMoreCardsClick,
-                ).let(::add)
+                )
+
+                add(linkMoreCardsBlock)
             }
 
             if (!isHotWallet) {
-                BlockUM(
+                val deviceSettingsBlock = BlockUM(
                     text = resourceReference(R.string.card_settings_title),
                     iconRes = R.drawable.ic_card_settings_24,
                     onClick = { router.push(AppRoute.CardSettings(userWalletId)) },
-                ).let(::add)
+                )
+
+                add(deviceSettingsBlock)
             }
 
             if (isReferralAvailable) {
-                BlockUM(
+                val referralBlock = BlockUM(
                     text = resourceReference(R.string.details_referral_title),
                     iconRes = R.drawable.ic_add_friends_24,
                     onClick = onReferralClick,
-                ).let(::add)
+                )
+
+                add(referralBlock)
             }
         }.toImmutableList(),
     )
