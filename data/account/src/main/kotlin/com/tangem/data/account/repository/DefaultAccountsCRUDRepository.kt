@@ -151,9 +151,9 @@ internal class DefaultAccountsCRUDRepository(
         )
 
         val syncedResponse = walletAccountsSaver.push(userWalletId = accountList.userWalletId, accounts = accountDTOs)
-        if (syncedResponse != null) {
-            walletAccountsSaver.store(userWalletId = accountList.userWalletId, response = syncedResponse)
-        }
+            ?: error("Failed to push accounts for wallet: ${accountList.userWalletId}")
+
+        walletAccountsSaver.store(userWalletId = accountList.userWalletId, response = syncedResponse)
     }
 
     override suspend fun saveAccount(account: Account.CryptoPortfolio) {
