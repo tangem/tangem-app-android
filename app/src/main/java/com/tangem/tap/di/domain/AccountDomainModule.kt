@@ -38,9 +38,13 @@ internal object AccountDomainModule {
     @Provides
     @Singleton
     fun provideUpdateCryptoPortfolioUseCase(
+        singleAccountListFetcher: SingleAccountListFetcher,
         accountsCRUDRepository: AccountsCRUDRepository,
     ): UpdateCryptoPortfolioUseCase {
-        return UpdateCryptoPortfolioUseCase(crudRepository = accountsCRUDRepository)
+        return UpdateCryptoPortfolioUseCase(
+            singleAccountListFetcher = singleAccountListFetcher,
+            crudRepository = accountsCRUDRepository,
+        )
     }
 
     @Provides
