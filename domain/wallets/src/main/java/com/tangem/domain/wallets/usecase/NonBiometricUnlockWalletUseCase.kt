@@ -9,6 +9,14 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.wallets.repository.WalletsRepository
 
+/**
+ * Use case for unlocking a wallet using non-biometric methods.
+ * If the wallet is already unlocked, it does nothing.
+ *
+ * **Does not** return [UnlockWalletError.AlreadyUnlocked] as an error, since the wallet is already unlocked.
+ *
+ * @see UnlockWalletUseCase
+ */
 class NonBiometricUnlockWalletUseCase(
     private val userWalletsListRepository: UserWalletsListRepository,
     private val walletsRepository: WalletsRepository,
