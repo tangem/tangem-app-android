@@ -32,6 +32,7 @@ import com.tangem.features.tangempay.entity.TangemPayTxHistoryDetailsUM
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
+@Suppress("LongMethod")
 @Composable
 internal fun TangemPayTxHistoryDetailsContent(state: TangemPayTxHistoryDetailsUM) {
     TangemModalBottomSheet<TangemBottomSheetConfigContent.Empty>(
@@ -80,6 +81,14 @@ internal fun TangemPayTxHistoryDetailsContent(state: TangemPayTxHistoryDetailsUM
                 style = TangemTheme.typography.head,
                 color = state.transactionAmountColor.resolveReference(),
             )
+            state.localTransactionText?.let { localTransaction ->
+                Text(
+                    modifier = Modifier.padding(top = 4.dp),
+                    text = localTransaction,
+                    style = TangemTheme.typography.body2,
+                    color = TangemTheme.colors.text.tertiary,
+                )
+            }
             state.labelState?.let { Label(state = state.labelState, modifier = Modifier.padding(top = 12.dp)) }
             SpacerH32()
             state.notification?.let {
@@ -155,6 +164,7 @@ private class TangemPayTxHistoryDetailsUMProvider : CollectionPreviewParameterPr
             transactionSubtitle = stringReference("Food and drinks"),
             transactionAmount = "-$5.86",
             transactionAmountColor = themedColor { TangemTheme.colors.text.primary1 },
+            localTransactionText = null,
             labelState = LabelUM(
                 text = resourceReference(R.string.tangem_pay_status_pending),
                 style = LabelStyle.REGULAR,
@@ -176,6 +186,7 @@ private class TangemPayTxHistoryDetailsUMProvider : CollectionPreviewParameterPr
             transactionSubtitle = stringReference("Food and drinks"),
             transactionAmount = "-$5.86",
             transactionAmountColor = themedColor { TangemTheme.colors.text.warning },
+            localTransactionText = null,
             labelState = LabelUM(
                 text = resourceReference(R.string.tangem_pay_status_declined),
                 style = LabelStyle.WARNING,
@@ -200,6 +211,7 @@ private class TangemPayTxHistoryDetailsUMProvider : CollectionPreviewParameterPr
             transactionSubtitle = stringReference("Food and drinks"),
             transactionAmount = "-$5.86",
             transactionAmountColor = themedColor { TangemTheme.colors.text.primary1 },
+            localTransactionText = "€ 5.36",
             labelState = LabelUM(
                 text = resourceReference(R.string.tangem_pay_status_completed),
                 style = LabelStyle.ACCENT,
@@ -220,6 +232,7 @@ private class TangemPayTxHistoryDetailsUMProvider : CollectionPreviewParameterPr
             transactionSubtitle = stringReference("Service fee"),
             transactionAmount = "-$5.86",
             transactionAmountColor = themedColor { TangemTheme.colors.text.primary1 },
+            localTransactionText = null,
             labelState = null,
             notification = NotificationConfig(
                 title = stringReference("This fee goes to cover the cost of handling your transfer."),
@@ -241,6 +254,7 @@ private class TangemPayTxHistoryDetailsUMProvider : CollectionPreviewParameterPr
             transactionSubtitle = stringReference("Transfers"),
             transactionAmount = "+$20",
             transactionAmountColor = themedColor { TangemTheme.colors.text.accent },
+            localTransactionText = null,
             labelState = null,
             notification = null,
             buttons = persistentListOf(
@@ -258,6 +272,7 @@ private class TangemPayTxHistoryDetailsUMProvider : CollectionPreviewParameterPr
             transactionSubtitle = stringReference("Transfers"),
             transactionAmount = "-$5.86",
             transactionAmountColor = themedColor { TangemTheme.colors.text.primary1 },
+            localTransactionText = null,
             labelState = null,
             notification = null,
             buttons = persistentListOf(

@@ -14,6 +14,7 @@ internal data class TangemPayTxHistoryDetailsUM(
     val transactionSubtitle: TextReference,
     val transactionAmount: String,
     val transactionAmountColor: ColorReference,
+    val localTransactionText: String?,
     val labelState: LabelUM?,
     val notification: NotificationConfig?,
     val buttons: ImmutableList<ButtonState>,
