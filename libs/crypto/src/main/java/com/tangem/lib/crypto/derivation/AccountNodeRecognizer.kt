@@ -25,17 +25,15 @@ class AccountNodeRecognizer(private val blockchain: Blockchain) {
         val nodesCount = derivationPath.nodes.size
 
         val index = when {
-            blockchain == Blockchain.Tezos -> {
-                UTXO_BLOCKCHAIN_NODE_INDEX.takeIf { nodesCount == 4 }
-            }
-            blockchain == Blockchain.Quai || blockchain.isUTXO -> {
-                UTXO_BLOCKCHAIN_NODE_INDEX.takeIf { nodesCount == 5 }
-            }
-            !blockchain.isUTXO -> {
-                (nodesCount - 1).takeIf { nodesCount == 3 || nodesCount == 5 }
-            }
-            else -> null
+            // region Ethereum-like blockchains
+            blockchain == Blockchain.Tezos -> ACCOUNT_NODE_INDEX
+            blockchain == Blockchain.Quai -> ACCOUNT_NODE_INDEX
+            blockchain.isEvm() -> ADDRESS_INDEX_NODE_INDEX
+            // endregion
+            blockchain.isUTXO -> ACCOUNT_NODE_INDEX
+            else -> ACCOUNT_NODE_INDEX
         }
+            .takeIf { nodesCount >= it }
 
         if (index == null) {
             Timber.e("Cannot determine account node index for ${blockchain.fullName}: ${derivationPath.rawPath}")
@@ -251,6 +249,7 @@ class AccountNodeRecognizer(private val blockchain: Blockchain) {
     }
 
     private companion object {
-        const val UTXO_BLOCKCHAIN_NODE_INDEX = 2
+        const val ACCOUNT_NODE_INDEX = 2
+        const val ADDRESS_INDEX_NODE_INDEX = 4
     }
 }
