@@ -3,7 +3,7 @@ package com.tangem.features.tangempay.components.cardDetails
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.tangem.features.tangempay.entity.TangemPayCardDetailsUM
-import com.tangem.features.tangempay.ui.CardDetailsItem
+import com.tangem.features.tangempay.ui.TangemPayCard
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -15,6 +15,6 @@ internal class PreviewTangemPayCardDetailsBlockComponent(
 
     @Composable
     override fun CardDetailsBlockContent(state: TangemPayCardDetailsUM, modifier: Modifier) {
-        CardDetailsItem(state, modifier)
+        TangemPayCard(state, modifier)
     }
 }
