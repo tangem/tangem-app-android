@@ -9,12 +9,10 @@
     <ID>BooleanPropertyNaming:TangemPayChangePinUM.kt$TangemPayChangePinUM$val submitButtonLoading: Boolean</ID>
     <ID>BooleanPropertyNaming:TangemPayDetailsScreen.kt$var showDropdownMenu by rememberSaveable { mutableStateOf(false) }</ID>
     <ID>BooleanPropertyNaming:TangemPayDetailsUM.kt$TangemPayDetailsUM$val addFundsEnabled: Boolean</ID>
-    <ID>BooleanPropertyNaming:TangemPayFreezeUnfreezeStateTransformer.kt$TangemPayFreezeUnfreezeStateTransformer$private val frozen: Boolean</ID>
     <ID>BooleanPropertyNaming:TangemPayTxHistoryListManager.kt$TangemPayTxHistoryListManager$val clearUiBatches = state.status is PaginationStatus.InitialLoading &amp;&amp; batchListState.status is PaginationStatus.Paginating</ID>
     <ID>CanBeNonNullable:TangemPayTxHistoryDetailsModel.kt$TangemPayTxHistoryDetailsModel$txHash: String?</ID>
     <ID>MaxChainedCallsOnSameLine:TangemPayTxHistoryUiManager.kt$TangemPayTxHistoryUiManager$prevBatch?.data?.lastOrNull()?.date?.millis?.toDateFormatWithTodayYesterday()</ID>
     <ID>MultilineLambdaItParameter:TangemPayAddFundsContent.kt${ key(it.title) { TangemPayTopUpItem(state = it) } }</ID>
-    <ID>MultilineLambdaItParameter:TangemPayCardDetailsBlockModel.kt$TangemPayCardDetailsBlockModel${ uiState.update( transformer = DetailsRevealedStateTransformer( details = it, onClickHide = ::hideCardDetails, ), ) }</ID>
     <ID>MultilineLambdaItParameter:TangemPayDetailsScreen.kt${ TangemDropdownItem( item = it.dropdownItem, dismissParent = { showDropdownMenu = false }, ) }</ID>
     <ID>MultilineLambdaItParameter:TangemPayTxHistoryUiManager.kt$TangemPayTxHistoryUiManager${ it.status !is PaginationStatus.None &amp;&amp; it.status !is PaginationStatus.InitialLoading &amp;&amp; it.status !is PaginationStatus.InitialLoadingError }</ID>
     <ID>NullCheckOnMutableProperty:GoogleWalletUtil.kt$GoogleWalletUtil$if (walletIntent != null) { walletIntent } else { try { context.packageManager.getLaunchIntentForPackage(WALLET_PACKAGE_NAME) ?.apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) } .also { walletIntent = it } } catch (exception: Exception) { Timber.tag(TAG).e(exception) null } }</ID>
