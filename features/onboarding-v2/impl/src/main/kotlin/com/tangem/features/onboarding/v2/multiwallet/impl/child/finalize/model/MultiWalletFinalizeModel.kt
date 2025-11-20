@@ -1,8 +1,10 @@
 package com.tangem.features.onboarding.v2.multiwallet.impl.child.finalize.model
 
 import androidx.compose.runtime.Stable
+import arrow.core.getOrElse
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
+import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -17,6 +19,7 @@ import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.scan.isRing
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.requireColdWallet
+import com.tangem.domain.models.wallet.requireHotWallet
 import com.tangem.domain.onboarding.repository.OnboardingRepository
 import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.wallets.repository.WalletsRepository
@@ -33,6 +36,7 @@ import com.tangem.features.onboarding.v2.multiwallet.impl.common.ui.resetCardDia
 import com.tangem.features.onboarding.v2.multiwallet.impl.model.OnboardingMultiWalletState.FinalizeStage.*
 import com.tangem.features.onboarding.v2.util.ResetCardsComponent
 import com.tangem.operations.backup.BackupService
+import com.tangem.operations.derivation.ExtendedPublicKeysMap
 import com.tangem.sdk.api.BackupServiceHolder
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.utils.StringsSigns
@@ -45,7 +49,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 @Stable
 @ModelScoped
 internal class MultiWalletFinalizeModel @Inject constructor(
@@ -255,7 +259,7 @@ internal class MultiWalletFinalizeModel @Inject constructor(
                 OnboardingMultiWalletComponent.Mode.Onboarding,
                 OnboardingMultiWalletComponent.Mode.ContinueFinalize,
                 -> {
-                    saveWalletUseCase(
+                    saveWalletUseCase.invoke(
                         userWallet = userWalletCreated.copy(
                             scanResponse = scanResponse.updateScanResponseAfterBackup(),
                         ),
@@ -271,7 +275,7 @@ internal class MultiWalletFinalizeModel @Inject constructor(
                         }
                         ?: userWalletCreated
 
-                    updateWalletUseCase(
+                    updateWalletUseCase.invoke(
                         userWalletId = userWallet.walletId,
                         update = {
                             it.requireColdWallet().copy(
@@ -283,14 +287,20 @@ internal class MultiWalletFinalizeModel @Inject constructor(
                     userWallet
                 }
                 is OnboardingMultiWalletComponent.Mode.UpgradeHotWallet -> {
-                    saveWalletUseCase(
-                        userWallet = userWalletCreated.copy(
-                            scanResponse = scanResponse.updateScanResponseAfterBackup(),
-                        ),
-                        canOverride = true,
-                    )
-                    // TODO [REDACTED_TASK_KEY] remove hot wallet after upgrade
-                    userWalletCreated
+                    updateWalletUseCase.invoke(
+                        userWalletId = userWalletCreated.walletId,
+                        update = { hotUserWallet ->
+                            val wallet = hotUserWallet.requireHotWallet()
+                            userWalletCreated.copy(
+                                name = wallet.name,
+                                scanResponse = scanResponse
+                                    .updateScanResponseAfterBackup()
+                                    .updateWithHotWallet(wallet),
+                            )
+                        },
+                    ).getOrElse {
+                        error("Failed to upgrade to cold wallet. Error: $it")
+                    }
                 }
             }.requireColdWallet()
 
@@ -348,6 +358,14 @@ internal class MultiWalletFinalizeModel @Inject constructor(
             isAccessCodeSet = true,
         )
         return copy(card = card)
+    }
+
+    private fun ScanResponse.updateWithHotWallet(hotWallet: UserWallet.Hot): ScanResponse {
+        return copy(
+            derivedKeys = derivedKeys + hotWallet.wallets?.associate {
+                ByteArrayKey(it.publicKey) to ExtendedPublicKeysMap(it.derivedKeys)
+            }.orEmpty(),
+        )
     }
 
     private fun handleActivationError() {
