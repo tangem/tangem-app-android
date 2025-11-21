@@ -75,7 +75,6 @@ internal class CreateWalletBackupModel @Inject constructor(
             router.replaceCurrent(
                 route = AppRoute.UpdateAccessCode(
                     userWalletId = params.userWalletId,
-                    isFirstSetup = true,
                 ),
             )
         } else {

@@ -365,7 +365,6 @@ internal class WalletSettingsModel @Inject constructor(
                 router.push(
                     route = AppRoute.UpdateAccessCode(
                         userWalletId = params.userWalletId,
-                        isFirstSetup = !authorizationRequired,
                     ),
                 )
             }
