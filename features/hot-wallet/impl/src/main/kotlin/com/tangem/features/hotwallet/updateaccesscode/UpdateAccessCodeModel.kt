@@ -43,11 +43,7 @@ internal class UpdateAccessCodeModel @Inject constructor(
     }
 
     override fun onAccessCodeUpdated(userWalletId: UserWalletId) {
-        if (params.isFirstSetup) {
-            stackNavigation.push(UpdateAccessCodeRoute.SetupFinished)
-        } else {
-            router.pop()
-        }
+        stackNavigation.push(UpdateAccessCodeRoute.SetupFinished)
     }
 
     inner class MobileWalletSetupFinishedComponentModelCallbacks : MobileWalletSetupFinishedComponent.ModelCallbacks {
