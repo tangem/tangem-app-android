@@ -2,44 +2,14 @@ package com.tangem.tap.network.exchangeServices
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
-import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.blockchainsdk.utils.toBlockchain
-import com.tangem.data.common.currency.CryptoCurrencyFactory
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.domain.model.Currency
-import com.tangem.tap.proxy.redux.DaggerGraphState
-import com.tangem.tap.store
-import com.tangem.utils.converter.TwoWayConverter
+import com.tangem.utils.converter.Converter
 
-internal class CryptoCurrencyConverter(
-    private val excludedBlockchains: ExcludedBlockchains,
-) : TwoWayConverter<Currency, CryptoCurrency> {
+internal object CryptoCurrencyConverter : Converter<CryptoCurrency, Currency> {
 
-    private val cryptoCurrencyFactory by lazy { CryptoCurrencyFactory(excludedBlockchains) }
-
-    override fun convert(value: Currency): CryptoCurrency {
-        return when (value) {
-            is Currency.Blockchain -> requireNotNull(
-                cryptoCurrencyFactory.createCoin(
-                    blockchain = value.blockchain,
-                    extraDerivationPath = value.derivationPath,
-                    userWallet = getSelectedWallet(),
-                ),
-            )
-            is Currency.Token -> requireNotNull(
-                cryptoCurrencyFactory.createToken(
-                    sdkToken = value.token,
-                    blockchain = value.blockchain,
-                    extraDerivationPath = value.derivationPath,
-                    userWallet = getSelectedWallet(),
-                ),
-            )
-        }
-    }
-
-    override fun convertBack(value: CryptoCurrency): Currency {
+    override fun convert(value: CryptoCurrency): Currency {
         val blockchain = value.network.toBlockchain()
         if (blockchain == Blockchain.Unknown) error("CryptoCurrencyConverter convertBack Unknown blockchain")
         return when (value) {
@@ -58,17 +28,6 @@ internal class CryptoCurrencyConverter(
                 blockchain = blockchain,
                 derivationPath = value.network.derivationPath.value,
             )
-        }
-    }
-
-    fun getSelectedWallet(): UserWallet {
-        val userWalletListManager = store.inject(DaggerGraphState::generalUserWalletsListManager)
-        val userWalletsListRepository = store.inject(DaggerGraphState::userWalletsListRepository)
-        val hotWalletFeatureToggles = store.inject(DaggerGraphState::hotWalletFeatureToggles)
-        return if (hotWalletFeatureToggles.isHotWalletEnabled) {
-            requireNotNull(userWalletsListRepository.selectedUserWallet.value)
-        } else {
-            requireNotNull(userWalletListManager.selectedUserWalletSync)
         }
     }
 }
