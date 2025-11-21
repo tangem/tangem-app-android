@@ -71,6 +71,9 @@ class ApiConfigTest {
                 ApiConfig.ID.StakeKit -> StakeKit(stakeKitAuthProvider = mockk())
                 ApiConfig.ID.TangemPay -> TangemPay(appVersionProvider = mockk())
                 ApiConfig.ID.BlockAid -> BlockAid(configStorage = mockk())
+                ApiConfig.ID.MoonPay -> MoonPay()
+                ApiConfig.ID.P2PEthPool -> P2PEthPool(p2pAuthProvider = mockk())
+                ApiConfig.ID.News -> News(authProvider = appAuthProvider)
             }
         }
     }

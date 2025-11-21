@@ -383,7 +383,12 @@ private fun MainButton(state: SwapStateHolder) {
 // region preview
 
 private val sendCard = SwapCardState.SwapCardData(
-    type = TransactionCardType.Inputtable({}, {}, TransactionCardType.InputError.Empty),
+    type = TransactionCardType.Inputtable(
+        onAmountChanged = {},
+        onFocusChanged = {},
+        inputError = TransactionCardType.InputError.Empty,
+        accountTitleUM = null,
+    ),
     amountTextFieldValue = TextFieldValue(),
     amountEquivalent = "1 000 000",
     tokenIconUrl = "",
@@ -456,6 +461,7 @@ private val state = SwapStateHolder(
             onClick = {},
         ),
     ),
+    changeCardsButtonState = ChangeCardsButtonState.ENABLED,
 )
 
 @Preview(widthDp = 360, showBackground = true)
