@@ -332,7 +332,7 @@ internal class DefaultUserWalletsListRepository(
 
         sensitiveInformationRepository.getAll(allKeys)
             .doOnSuccess { sensitiveInfo ->
-                updateWallets { userWallets.updateWith(sensitiveInfo) }
+                updateWallets { wallets -> wallets?.updateWith(sensitiveInfo) }
             }
             .doOnFailure { raise(UnlockWalletError.UnableToUnlock) }
     }
