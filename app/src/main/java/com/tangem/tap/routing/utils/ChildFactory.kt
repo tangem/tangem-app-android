@@ -572,7 +572,6 @@ internal class ChildFactory @Inject constructor(
                     context = context,
                     params = UpdateAccessCodeComponent.Params(
                         userWalletId = route.userWalletId,
-                        isFirstSetup = route.isFirstSetup,
                     ),
                     componentFactory = updateAccessCodeComponentFactory,
                 )
