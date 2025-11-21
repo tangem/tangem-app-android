@@ -1,0 +1,9 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>PropertyUsedBeforeDeclaration:DemoConfig.kt$DemoConfig$debugTestDemoCardIds</ID>
+    <ID>PropertyUsedBeforeDeclaration:DemoConfig.kt$DemoConfig$releaseDemoCardIds</ID>
+    <ID>PropertyUsedBeforeDeclaration:DemoConfig.kt$DemoConfig$testDemoCardIds</ID>
+  </CurrentIssues>
+</SmellBaseline>
