@@ -1,12 +1,12 @@
 package com.tangem.core.configtoggle.manager
 
 import com.google.common.truth.Truth
-import com.tangem.common.test.utils.ProvideTestModels
 import com.tangem.core.configtoggle.FeatureToggles
 import com.tangem.core.configtoggle.feature.impl.DevFeatureTogglesManager
 import com.tangem.core.configtoggle.manager.ProdFeatureTogglesManagerTest.IsFeatureEnabledModel
 import com.tangem.core.configtoggle.storage.LocalTogglesStorage
 import com.tangem.core.configtoggle.version.VersionProvider
+import com.tangem.test.core.ProvideTestModels
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.*
