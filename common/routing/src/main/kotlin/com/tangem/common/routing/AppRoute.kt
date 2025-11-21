@@ -371,7 +371,6 @@ sealed class AppRoute(val path: String) : Route {
     @Serializable
     data class UpdateAccessCode(
         val userWalletId: UserWalletId,
-        val isFirstSetup: Boolean,
     ) : AppRoute(path = "/update_access_code/${userWalletId.stringValue}")
 
     @Serializable
