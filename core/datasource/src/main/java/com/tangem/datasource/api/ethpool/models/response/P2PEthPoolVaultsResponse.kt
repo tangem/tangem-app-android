@@ -2,7 +2,6 @@ package com.tangem.datasource.api.ethpool.models.response
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
-import org.joda.time.DateTime
 
 /**
  * Response for GET /api/v1/staking/pool/{network}/vaults
@@ -56,5 +55,5 @@ data class P2PEthPoolVaultDTO(
     @Json(name = "tokenSymbol")
     val tokenSymbol: String?,
     @Json(name = "createdAt")
-    val createdAt: DateTime,
+    val createdAt: Long,
 )
