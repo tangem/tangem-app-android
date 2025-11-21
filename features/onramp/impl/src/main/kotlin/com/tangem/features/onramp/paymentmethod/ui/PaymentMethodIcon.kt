@@ -21,7 +21,7 @@ internal fun PaymentMethodIcon(imageUrl: String, modifier: Modifier = Modifier) 
             .size(TangemTheme.dimens.size40)
             .clip(TangemTheme.shapes.roundedCorners8)
             .background(TangemColorPalette.Light1)
-            .padding(TangemTheme.dimens.spacing6)
+            .padding(TangemTheme.dimens.spacing4)
             .testTag(SelectProviderBottomSheetTestTags.PAYMENT_METHOD_ICON),
         model = ImageRequest.Builder(context = LocalContext.current)
             .data(imageUrl)
