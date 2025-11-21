@@ -8,10 +8,10 @@ import com.google.common.truth.Truth
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.repository.AccountsCRUDRepository
 import com.tangem.domain.account.usecase.ArchiveCryptoPortfolioUseCase.Error
-import com.tangem.domain.account.utils.createAccount
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.test.mock.MockAccounts.createAccount
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
@@ -32,7 +32,7 @@ class ArchiveCryptoPortfolioUseCaseTest {
     @Test
     fun `invoke should archive existing crypto portfolio account`() = runTest {
         // Arrange
-        val account = createAccount(userWalletId)
+        val account = createAccount(derivationIndex = 1)
         val accountList = (AccountList.empty(userWalletId) + account).getOrNull()!!
         val accountId = account.accountId
 
@@ -122,7 +122,7 @@ class ArchiveCryptoPortfolioUseCaseTest {
     @Test
     fun `invoke should return error if saveAccounts throws exception`() = runTest {
         // Arrange
-        val account = createAccount(userWalletId)
+        val account = createAccount(derivationIndex = 1)
         val accountList = (AccountList.empty(userWalletId) + account).getOrNull()!!
         val accountId = account.accountId
 

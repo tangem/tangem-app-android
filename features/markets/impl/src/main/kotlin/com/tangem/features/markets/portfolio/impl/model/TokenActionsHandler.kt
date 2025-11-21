@@ -172,7 +172,7 @@ internal class TokenActionsHandler @AssistedInject constructor(
         router.push(
             AppRoute.Staking(
                 userWalletId = cryptoCurrencyData.userWallet.walletId,
-                cryptoCurrencyId = cryptoCurrencyData.status.currency.id,
+                cryptoCurrency = cryptoCurrencyData.status.currency,
                 yieldId = yield.id,
             ),
         )
