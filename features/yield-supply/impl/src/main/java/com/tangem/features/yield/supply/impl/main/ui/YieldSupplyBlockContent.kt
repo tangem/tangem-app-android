@@ -108,7 +108,7 @@ private fun SupplyContent(supplyUM: YieldSupplyUM.Content, modifier: Modifier = 
                 Text(
                     modifier = Modifier.weight(1.0f, fill = false),
                     text = supplyUM.title.resolveReference(),
-                    style = TangemTheme.typography.subtitle1,
+                    style = TangemTheme.typography.subtitle2,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     color = TangemTheme.colors.text.primary1,
@@ -119,12 +119,12 @@ private fun SupplyContent(supplyUM: YieldSupplyUM.Content, modifier: Modifier = 
                     ) {
                         Text(
                             text = StringsSigns.DOT,
-                            style = TangemTheme.typography.subtitle1,
+                            style = TangemTheme.typography.subtitle2,
                             color = TangemTheme.colors.text.tertiary,
                         )
                         Text(
                             text = supplyUM.rewardsApy.resolveReference(),
-                            style = TangemTheme.typography.subtitle1,
+                            style = TangemTheme.typography.subtitle2,
                             maxLines = 1,
                             color = TangemTheme.colors.text.accent,
                         )
