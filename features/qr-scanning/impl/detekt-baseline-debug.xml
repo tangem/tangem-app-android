@@ -1,0 +1,17 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>CanBeNonNullable:MLKitBarcodeAnalyzer.kt$MLKitBarcodeAnalyzer$onClose: (() -&gt; Unit)? = null</ID>
+    <ID>MultilineLambdaItParameter:DefaultQrScanningComponent.kt$DefaultQrScanningComponent${ val selectedImage = it ?: Uri.EMPTY if (selectedImage != Uri.EMPTY) { val mimeType = context.contentResolver.getType(selectedImage) if (mimeType.isImageMimeType()) { try { val image = InputImage.fromFilePath(context, selectedImage) analyzer.analyze(image) } catch (e: IOException) { Timber.e(e, "Unable to get image $selectedImage from gallery") } } } }</ID>
+    <ID>MultilineLambdaItParameter:QrScanningContent.kt${ TopAppBarButton( button = TopAppBarButtonUM.Icon( iconRes = if (it) R.drawable.ic_flash_on_24 else R.drawable.ic_flash_off_24, onClicked = { isFlash = !isFlash }, ), tint = TangemColorPalette.White, modifier = Modifier.testTag(QrCodeScreenTestTags.FLASHLIGHT_BUTTON), ) }</ID>
+    <ID>MultilineLambdaItParameter:QrScanningContent.kt${ textMeasurer.measure( text = it, style = style, constraints = Constraints.fixedWidth(squareSize.roundToInt()), ) }</ID>
+    <ID>NestedScopeFunctions:MLKitBarcodeAnalyzer.kt$MLKitBarcodeAnalyzer$let { onScanned.invoke(it) }</ID>
+    <ID>NestedScopeFunctions:QrScanningContent.kt$let { textMeasurer.measure( text = it, style = style, constraints = Constraints.fixedWidth(squareSize.roundToInt()), ) }</ID>
+    <ID>NoNameShadowing:QrScanningContent.kt${ textMeasurer.measure( text = it, style = style, constraints = Constraints.fixedWidth(squareSize.roundToInt()), ) }</ID>
+    <ID>NoNameShadowing:QrScanningModel.kt$QrScanningModel$qrCode</ID>
+    <ID>PropertyUsedBeforeDeclaration:QrScanningStateController.kt$QrScanningStateController$mutableUiState</ID>
+    <ID>UnnecessaryLet:QrScanningContent.kt$let { textMeasurer.measure( text = it, style = style, constraints = Constraints.fixedWidth(squareSize.roundToInt()), ) }</ID>
+    <ID>UnnecessaryLet:QrScanningContent.kt$let { val textLayoutResult = text.let { textMeasurer.measure( text = it, style = style, constraints = Constraints.fixedWidth(squareSize.roundToInt()), ) } drawText( textLayoutResult = textLayoutResult, color = whiteColor, topLeft = Offset( x = horizontalOffset, y = verticalOffset - textPadding - textLayoutResult.size.height, ), ) }</ID>
+  </CurrentIssues>
+</SmellBaseline>

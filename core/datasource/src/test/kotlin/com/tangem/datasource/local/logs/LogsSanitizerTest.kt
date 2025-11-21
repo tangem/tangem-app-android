@@ -1,9 +1,9 @@
 package com.tangem.datasource.local.logs
 
 import com.google.common.truth.Truth
+import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.MethodSource
 
 /**
 [REDACTED_AUTHOR]
@@ -12,7 +12,7 @@ import org.junit.jupiter.params.provider.MethodSource
 internal class LogsSanitizerTest {
 
     @ParameterizedTest
-    @MethodSource("provideTestModels")
+    @ProvideTestModels
     fun sanitize(model: TestModel) {
         // Act
         val actual = LogsSanitizer.sanitize(model.input)

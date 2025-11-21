@@ -54,8 +54,8 @@ private class CoilTimberLogger : Logger {
 
     override fun log(tag: String, priority: Int, message: String?, throwable: Throwable?) {
         with(Timber.tag(COIL_LOG_TAG)) {
-            throwable?.let { e -> e(e, message) }
-            message?.let { msg -> d(msg) }
+            if (throwable != null) e(throwable, message)
+            if (message != null) d(message)
         }
     }
 }

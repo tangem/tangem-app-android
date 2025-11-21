@@ -44,7 +44,7 @@ internal object TransactionDataModule {
     fun providesFeeRepository(walletManagersFacade: WalletManagersFacade): FeeRepository {
         return DefaultFeeRepository(
             walletManagersFacade,
-            demoConfig = DemoConfig(),
+            demoConfig = DemoConfig,
         )
     }
 
