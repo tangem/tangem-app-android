@@ -30,13 +30,19 @@ import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.error.parseWrappedError
 import com.tangem.domain.transaction.models.EventTransactionTypeDto
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
+@Suppress("LongParameterList")
 class SendTransactionUseCase(
     private val demoConfig: DemoConfig,
     private val cardSdkConfigRepository: CardSdkConfigRepository,
     private val transactionRepository: TransactionRepository,
     private val walletManagersFacade: WalletManagersFacade,
     private val singleNetworkStatusFetcher: SingleNetworkStatusFetcher,
+    private val parallelUpdatingScope: CoroutineScope,
     private val getHotWalletSigner: (UserWallet.Hot) -> TransactionSigner,
 ) {
     suspend operator fun invoke(
@@ -122,9 +128,13 @@ class SendTransactionUseCase(
             .map { it.first() }
     }
 
-    private suspend fun processSentTransactionsHashes(transactions: List<TransactionData>, hashes: List<String>) {
-        transactions.forEachIndexed { ind, tx ->
-            sendHashToBackendIfNeeded(tx, hashes[ind])
+    private fun processSentTransactionsHashes(transactions: List<TransactionData>, hashes: List<String>) {
+        parallelUpdatingScope.launch {
+            withContext(NonCancellable) {
+                transactions.forEachIndexed { ind, tx ->
+                    sendHashToBackendIfNeeded(tx, hashes[ind])
+                }
+            }
         }
     }
 
