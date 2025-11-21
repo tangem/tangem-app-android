@@ -28,7 +28,7 @@ internal enum class BuildType(
             BuildConfigField.LogEnabled(isEnabled = true),
             BuildConfigField.TesterMenuAvailability(isEnabled = true),
             BuildConfigField.MockDataSource(isEnabled = false),
-            BuildConfigField.ABTestsEnabled(isEnabled = false),
+            BuildConfigField.ABTestsEnabled(isEnabled = true),
         ),
     ),
 
@@ -70,7 +70,7 @@ internal enum class BuildType(
         appIdSuffix = "internal",
         versionSuffix = "internal",
         configFields = listOf(
-            BuildConfigField.Environment(value = "prod"),
+            BuildConfigField.Environment(value = "dev"),
             BuildConfigField.LogEnabled(isEnabled = true),
             BuildConfigField.TesterMenuAvailability(isEnabled = true),
             BuildConfigField.MockDataSource(isEnabled = false),
