@@ -137,6 +137,9 @@ interface TangemTechApi {
 
     @GET("v1/user-wallets/wallets/by-app/{app_id}")
     suspend fun getWallets(@Path("app_id") appId: String): ApiResponse<List<WalletResponse>>
+
+    @POST("v1/user-wallets/wallets")
+    suspend fun createWallet(@Body body: WalletIdBody): ApiResponse<Unit>
     // endregion
 
     // promo
