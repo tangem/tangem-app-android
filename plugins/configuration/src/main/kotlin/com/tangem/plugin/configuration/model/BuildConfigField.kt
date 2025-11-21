@@ -32,4 +32,10 @@ internal sealed class BuildConfigField(val type: String, val name: String, val v
         name = "MOCK_DATA_SOURCE",
         value = isEnabled.toString(),
     )
+
+    class ABTestsEnabled(isEnabled: Boolean) : BuildConfigField(
+        type = "Boolean",
+        name = "AB_TESTS_ENABLED",
+        value = isEnabled.toString(),
+    )
 }
