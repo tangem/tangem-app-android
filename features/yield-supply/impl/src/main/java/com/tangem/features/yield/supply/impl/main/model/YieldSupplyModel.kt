@@ -306,8 +306,9 @@ internal class YieldSupplyModel @Inject constructor(
     private fun loadActiveState(cryptoCurrencyStatus: CryptoCurrencyStatus, yieldSupplyStatus: YieldSupplyStatus) {
         val cryptoCurrencyToken = cryptoCurrency as? CryptoCurrency.Token ?: return
         val showWarningIcon = !yieldSupplyStatus.isAllowedToSpend
-        val showInfoIconPrevState = when (uiState) {
-            is YieldSupplyUM.Content -> uiState.showInfoIcon
+        val state = uiState.value
+        val isShowInfoIconPrevState = when (state) {
+            is YieldSupplyUM.Content -> state.showInfoIcon
             else -> false
         }
         if (!yieldSupplyStatus.isAllowedToSpend) {
@@ -337,13 +338,13 @@ internal class YieldSupplyModel @Inject constructor(
                             ),
                             onClick = ::onActiveClick,
                             showWarningIcon = showWarningIcon,
-                            showInfoIcon = showInfoIconPrevState,
+                            showInfoIcon = isShowInfoIconPrevState,
                             apy = tokenStatus.apy.toString(),
                         )
                     }
                     computeAndApplyShowInfoIcon(cryptoCurrencyStatus)
-                }.onLeft {
-                    Timber.e(it)
+                }.onLeft { t ->
+                    Timber.e(t)
                     uiState.update {
                         YieldSupplyUM.Content(
                             title = resourceReference(
@@ -355,7 +356,7 @@ internal class YieldSupplyModel @Inject constructor(
                             rewardsApy = TextReference.EMPTY,
                             onClick = ::onActiveClick,
                             showWarningIcon = showWarningIcon,
-                            showInfoIcon = showInfoIconPrevState,
+                            showInfoIcon = isShowInfoIconPrevState,
                             apy = "",
                         )
                     }
@@ -366,7 +367,7 @@ internal class YieldSupplyModel @Inject constructor(
 
     private fun computeAndApplyShowInfoIcon(cryptoCurrencyStatus: CryptoCurrencyStatus) {
         modelScope.launch(dispatchers.default) {
-            val showInfoIcon = if (cryptoCurrencyStatus.hasNotSuppliedAmount()) {
+            val isShowInfoIcon = if (cryptoCurrencyStatus.hasNotSuppliedAmount()) {
                 val minAmount = yieldSupplyMinAmountUseCase(userWallet, cryptoCurrencyStatus).getOrNull()
                 if (minAmount != null) {
                     cryptoCurrencyStatus.shouldShowNotSuppliedInfoIcon(minAmount)
@@ -378,7 +379,7 @@ internal class YieldSupplyModel @Inject constructor(
             }
             uiState.update { state ->
                 when (state) {
-                    is YieldSupplyUM.Content -> state.copy(showInfoIcon = showInfoIcon)
+                    is YieldSupplyUM.Content -> state.copy(showInfoIcon = isShowInfoIcon)
                     else -> state
                 }
             }
