@@ -38,6 +38,16 @@ class SendPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
         useUnmergedTree = true
     }
 
+    val equivalentInputAmount: KNode = child {
+        hasTestTag(SendScreenTestTags.EQUIVALENT_INPUT_AMOUNT)
+        useUnmergedTree = true
+    }
+
+    val exchangeIcon: KNode = child {
+        hasTestTag(SendScreenTestTags.EXCHANGE_ICON)
+        useUnmergedTree = true
+    }
+
     val tokenName: KNode = child {
         hasTestTag(SendScreenTestTags.TOKEN_NAME)
         useUnmergedTree = true
@@ -61,6 +71,12 @@ class SendPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
     val nextButton: KNode = child {
         hasTestTag(BaseButtonTestTags.TEXT)
         hasText(getResourceString(SendR.string.common_next))
+        useUnmergedTree = true
+    }
+
+    val continueButton: KNode = child {
+        hasTestTag(BaseButtonTestTags.TEXT)
+        hasText(getResourceString(SendR.string.common_continue))
         useUnmergedTree = true
     }
 
