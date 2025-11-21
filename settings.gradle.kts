@@ -149,11 +149,15 @@ enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 include(":app")
 include(":plugins:detekt-rules")
 
+include(":test:core")
+include(":test:mock")
+
 // region Core modules
 include(":core:analytics")
 include(":core:analytics:models")
 include(":core:datasource")
 include(":core:config-toggles")
+include(":core:ab-tests")
 include(":core:navigation")
 include(":core:res")
 include(":core:ui")
@@ -293,6 +297,9 @@ include(":features:token-recieve:impl")
 
 include(":features:yield-supply:api")
 include(":features:yield-supply:impl")
+
+include(":features:feed:api")
+include(":features:feed:impl")
 // endregion Feature modules
 
 // region Domain modules
@@ -344,6 +351,7 @@ include(":domain:promo")
 include(":domain:promo:models")
 include(":domain:nft")
 include(":domain:nft:models")
+include(":domain:hot-wallet")
 include(":domain:networks")
 include(":domain:quotes")
 include(":domain:blockaid")
@@ -358,6 +366,7 @@ include(":domain:wallet-manager")
 include(":domain:wallet-manager:models")
 include(":domain:yield-supply")
 include(":domain:yield-supply:models")
+include(":domain:news")
 // endregion Domain modules
 
 // region Data modules
@@ -384,6 +393,7 @@ include(":data:markets")
 include(":data:manage-tokens")
 include(":data:networks")
 include(":data:nft")
+include(":data:hot-wallet")
 include(":data:onramp")
 include(":data:quotes")
 include(":data:notifications")
@@ -392,4 +402,5 @@ include(":data:swap")
 include(":data:express")
 include(":data:wallet-manager")
 include(":data:yield-supply")
+include(":data:news")
 // endregion Data modules

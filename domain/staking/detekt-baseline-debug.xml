@@ -1,0 +1,15 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>CanBeNonNullable:StakingAnalyticsEvent.kt$StakingAnalyticsEvent$value: Any?</ID>
+    <ID>MultilineLambdaItParameter:FetchStakingYieldBalanceUseCase.kt$FetchStakingYieldBalanceUseCase${ when (it) { is StakingIdFactory.Error.UnableToGetAddress -&gt; raise(StakingError.DomainError("$it")) StakingIdFactory.Error.UnsupportedCurrency -&gt; Unit.right() } return@either }</ID>
+    <ID>MultilineLambdaItParameter:InvalidatePendingTransactionsUseCase.kt$InvalidatePendingTransactionsUseCase${ !it.isPending &amp;&amp; action.amount &lt; it.amount &amp;&amp; it.type == BalanceType.STAKED &amp;&amp; it.validatorAddress == action.validatorAddress }</ID>
+    <ID>NamedArguments:GetConstructedStakingTransactionUseCase.kt$GetConstructedStakingTransactionUseCase$constructTransaction(networkId, fee, amount, transactionId)</ID>
+    <ID>NullableToStringCall:StakingApyFlowUseCase.kt$StakingApyFlowUseCase$${yield.token.coinGeckoId}</ID>
+    <ID>UnnecessaryAbstractClass:MultiYieldBalanceSupplier.kt$MultiYieldBalanceSupplier$MultiYieldBalanceSupplier</ID>
+    <ID>UnnecessaryAbstractClass:SingleYieldBalanceSupplier.kt$SingleYieldBalanceSupplier$SingleYieldBalanceSupplier</ID>
+    <ID>UseEmptyCounterpart:StakingAnalyticsEvent.kt$StakingAnalyticsEvent$mapOf()</ID>
+    <ID>UseOrEmpty:InvalidatePendingTransactionsUseCase.kt$InvalidatePendingTransactionsUseCase$action.validatorAddress ?: action.validatorAddresses?.getOrNull(0) ?: ""</ID>
+  </CurrentIssues>
+</SmellBaseline>

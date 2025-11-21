@@ -1,6 +1,7 @@
 package com.tangem.features.nft.common
 
 import com.tangem.core.decompose.navigation.Route
+import com.tangem.domain.models.PortfolioId
 import com.tangem.domain.nft.models.NFTAsset
 import com.tangem.domain.nft.models.NFTCollection
 import com.tangem.domain.models.wallet.UserWalletId
@@ -15,7 +16,7 @@ internal sealed class NFTRoute : Route {
 
     @Serializable
     data class Receive(
-        val userWalletId: UserWalletId,
+        val portfolioId: PortfolioId,
     ) : NFTRoute()
 
     @Serializable

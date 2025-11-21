@@ -18,7 +18,7 @@ internal class DetailsBalanceTransformer(
     override fun transform(prevState: TangemPayDetailsUM): TangemPayDetailsUM {
         val balance = when (balance) {
             is Either.Left<UniversalError> -> {
-                TangemPayDetailsBalanceBlockState.Error(persistentListOf())
+                TangemPayDetailsBalanceBlockState.Error(actionButtons = persistentListOf())
             }
             is Either.Right<TangemPayCardBalance> -> {
                 TangemPayDetailsBalanceBlockState.Content(

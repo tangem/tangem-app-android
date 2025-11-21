@@ -27,6 +27,7 @@ import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.components.token.internal.*
 import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.components.token.state.TokenItemState.FiatAmountState
+import com.tangem.core.ui.components.token.state.TokenItemState.Subtitle2State
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.rememberHapticFeedback
 import com.tangem.core.ui.extensions.stringReference
@@ -691,7 +692,10 @@ object AccountItemPreviewData {
                 value = stringReference("24 tokens"),
                 isAvailable = false,
             ),
-            subtitle2State = null,
+            subtitle2State = Subtitle2State.PriceChangeContent(
+                priceChangePercent = "0,43 %",
+                type = PriceChangeType.UP,
+            ),
             onItemClick = {},
             onItemLongClick = {},
         )
