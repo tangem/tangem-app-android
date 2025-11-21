@@ -124,10 +124,10 @@ internal class AccountCreateEditModel @Inject constructor(
     }
 
     private fun handleAddAccountError(error: AddCryptoPortfolioUseCase.Error) {
-        val duplicateAccountNames = (error as? AddCryptoPortfolioUseCase.Error.AccountListRequirementsNotMet)
+        val isDuplicateAccountNamesError = (error as? AddCryptoPortfolioUseCase.Error.AccountListRequirementsNotMet)
             ?.cause is AccountList.Error.DuplicateAccountNames
         when {
-            duplicateAccountNames -> showAccountNameExist()
+            isDuplicateAccountNamesError -> showAccountNameExist()
             else -> {
                 showSomethingWrong()
                 logError(error = AccountFeatureError.CreateAccount.FailedToCreateAccount(cause = error))
@@ -159,10 +159,10 @@ internal class AccountCreateEditModel @Inject constructor(
     }
 
     private fun handleEditAccountError(error: UpdateCryptoPortfolioUseCase.Error) {
-        val duplicateAccountNames = (error as? UpdateCryptoPortfolioUseCase.Error.AccountListRequirementsNotMet)
+        val isDuplicateAccountNamesError = (error as? UpdateCryptoPortfolioUseCase.Error.AccountListRequirementsNotMet)
             ?.cause is AccountList.Error.DuplicateAccountNames
         when {
-            duplicateAccountNames -> showAccountNameExist()
+            isDuplicateAccountNamesError -> showAccountNameExist()
             else -> {
                 showSomethingWrong()
                 logError(error = AccountFeatureError.EditAccount.FailedToEditAccount(cause = error))
@@ -176,42 +176,53 @@ internal class AccountCreateEditModel @Inject constructor(
     }
 
     private fun onCloseClick() {
-        val showConfirmDialog = uiState.value.buttonState.isButtonEnabled
-        if (showConfirmDialog) unsaveChangeDialog() else router.pop()
+        val shouldShowConfirmDialog = uiState.value.buttonState.isButtonEnabled
+        if (shouldShowConfirmDialog) unsaveChangeDialog() else router.pop()
     }
 
     private fun onIconSelect(icon: CryptoPortfolioIcon.Icon) {
-        uiState.value = uiState.value
-            .updateIconSelect(icon)
-            .validateNewState()
+        uiState.update { currentState ->
+            currentState.updateIconSelect(icon)
+                .validateNewState()
+        }
     }
 
     private fun onColorSelect(color: CryptoPortfolioIcon.Color) {
-        uiState.value = uiState.value
-            .updateColorSelect(color)
-            .validateNewState()
+        uiState.update { currentState ->
+            currentState.updateColorSelect(color)
+                .validateNewState()
+        }
     }
 
     private fun onNameChange(name: AccountNameUM) {
-        uiState.value = uiState.value
-            .updateName(name)
-            .validateNewState()
+        val isNotEmptyCustomName = (name as? AccountNameUM.Custom)?.raw?.isNotEmpty() == true
+        if (!name.isValidName() && isNotEmptyCustomName) {
+            Timber.d("Invalid account name: $name")
+            return
+        }
+
+        uiState.update { currentState ->
+            currentState.updateName(name)
+                .validateNewState()
+        }
     }
 
     private fun AccountCreateEditUM.validateNewState(): AccountCreateEditUM {
-        val isValidName = this.account.name.toDomain().isRight()
+        val isValidName = this.account.name.isValidName()
         val isAvailableForConfirm = when (params) {
             is AccountCreateEditComponent.Params.Create -> isValidName
             is AccountCreateEditComponent.Params.Edit -> {
                 val oldName = params.account.accountName.toUM()
 
-                val isNewName = this.account.name != oldName
-                val isNewIcon = this.account.portfolioIcon != params.account.portfolioIcon
+                val isNewName = this.account.name.trim() != oldName
+                val isNewIcon = this.account.portfolioIcon != params.account.portfolioIcon.toUM()
                 isValidName && (isNewName || isNewIcon)
             }
         }
         return this.updateButton(isButtonEnabled = isAvailableForConfirm)
     }
+
+    private fun AccountNameUM.isValidName(): Boolean = this.toDomain().isRight()
 
     private fun getInitialState(): AccountCreateEditUM {
         return AccountCreateEditUM(
@@ -250,7 +261,7 @@ internal class AccountCreateEditModel @Inject constructor(
         }
     }
 
-    private fun logError(error: AccountFeatureError, params: Map<String, String> = mapOf()) {
+    private fun logError(error: AccountFeatureError, params: Map<String, String> = emptyMap()) {
         val exception = IllegalStateException(error.toString())
 
         Timber.e(exception)
@@ -275,4 +286,9 @@ internal class AccountCreateEditModel @Inject constructor(
         )
         messageSender.send(dialogMessage)
     }
+}
+
+private fun AccountNameUM.trim(): AccountNameUM = when (this) {
+    is AccountNameUM.Custom -> this.toDomain().getOrNull()?.toUM() ?: this
+    AccountNameUM.DefaultMain -> this
 }
