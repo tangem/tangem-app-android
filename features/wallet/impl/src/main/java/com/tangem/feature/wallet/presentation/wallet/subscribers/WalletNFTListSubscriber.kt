@@ -1,8 +1,8 @@
 package com.tangem.feature.wallet.presentation.wallet.subscribers
 
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.nft.GetNFTCollectionsUseCase
 import com.tangem.domain.tokens.repository.CurrenciesRepository
-import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
@@ -12,6 +12,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 
+@Deprecated("Use WalletNFTListSubscriberV2 instead")
 internal class WalletNFTListSubscriber(
     private val userWallet: UserWallet,
     private val stateHolder: WalletStateController,

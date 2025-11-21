@@ -15,6 +15,7 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.withContext
 
+@Deprecated("Use ApplyAccountListSortingUseCase")
 class ApplyTokenListSortingUseCase(
     private val currenciesRepository: CurrenciesRepository,
     private val multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,

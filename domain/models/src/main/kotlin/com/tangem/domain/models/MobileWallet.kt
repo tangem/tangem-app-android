@@ -36,7 +36,9 @@ data class MobileWallet(
         if (!publicKey.contentEquals(other.publicKey)) return false
         if (chainCode != null) {
             if (other.chainCode == null || !chainCode.contentEquals(other.chainCode)) return false
-        } else if (other.chainCode != null) return false
+        } else if (other.chainCode != null) {
+            return false
+        }
 
         if (curve != other.curve) return false
         if (derivedKeys != other.derivedKeys) return false

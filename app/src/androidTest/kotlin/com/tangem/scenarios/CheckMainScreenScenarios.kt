@@ -116,3 +116,27 @@ fun BaseTestCase.checkMultiCurrencyMainScreen(
         onMainScreen { organizeTokensButton().assertIsDisplayed() }
     }
 }
+
+fun BaseTestCase.assertActionButtonsForMultiCurrencyWallet(isEnabled: Boolean = true) {
+    if (isEnabled) {
+        step("Assert 'Buy' button is enabled") {
+            onMainScreen { buyButton.assertIsEnabled() }
+        }
+        step("Assert 'Swap' button is enabled") {
+            onMainScreen { swapButton.assertIsEnabled() }
+        }
+        step("Assert 'Sell' button is enabled") {
+            onMainScreen { sellButton.assertIsEnabled() }
+        }
+    } else {
+        step("Assert 'Buy' button is not enabled") {
+            onMainScreen { buyButton.assertIsNotEnabled() }
+        }
+        step("Assert 'Swap' button is not enabled") {
+            onMainScreen { swapButton.assertIsNotEnabled() }
+        }
+        step("Assert 'Sell' button is not enabled") {
+            onMainScreen { sellButton.assertIsNotEnabled() }
+        }
+    }
+}
