@@ -1,7 +1,6 @@
 package com.tangem.domain.staking.model.ethpool
 
 import com.tangem.domain.models.serialization.SerializedBigDecimal
-import org.joda.time.DateTime
 
 /**
  * P2P.org pooled staking vault information
@@ -21,5 +20,5 @@ data class P2PEthPoolVault(
     val isErc20: Boolean,
     val tokenName: String?,
     val tokenSymbol: String?,
-    val createdAt: DateTime,
+    val createdAt: Long,
 )
