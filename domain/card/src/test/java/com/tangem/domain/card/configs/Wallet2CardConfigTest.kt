@@ -168,9 +168,11 @@ class Wallet2CardConfigTest {
         Blockchain.HyperliquidTestnet to EllipticCurve.Secp256k1,
         Blockchain.Quai to EllipticCurve.Secp256k1,
         Blockchain.QuaiTestnet to EllipticCurve.Secp256k1,
-        // Blockchain.Linea to EllipticCurve.Secp256k1,
-        // Blockchain.LineaTestnet to EllipticCurve.Secp256k1,
-        // Blockchain.ArbitrumNova to EllipticCurve.Secp256k1,
+        Blockchain.Linea to EllipticCurve.Secp256k1,
+        Blockchain.LineaTestnet to EllipticCurve.Secp256k1,
+        Blockchain.ArbitrumNova to EllipticCurve.Secp256k1,
+        Blockchain.Plasma to EllipticCurve.Secp256k1,
+        Blockchain.PlasmaTestnet to EllipticCurve.Secp256k1,
     )
 
     @Test

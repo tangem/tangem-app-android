@@ -41,15 +41,25 @@ internal class TangemPayTxHistoryUiManager(
         val currentUiBatches = state.value.uiBatches
         val batches = if (clearUiBatches) mutableListOf() else currentUiBatches.toMutableList()
 
+        var previousLastDate: String? = null
+
         for ((key, data) in newCurrencyBatches) {
             // Find if batch with same key exists
             val existingBatchIndex = batches.indexOfFirst { it.key == key }
             val shouldUpdateExisting = existingBatchIndex != -1 &&
                 currentUiBatches[existingBatchIndex].data.transactionItemsSizeNotEqual(data)
 
+            // Get last date of previous batch's data
+            if (key > 0) {
+                val prevBatch = newCurrencyBatches.find { it.key == key - 1 }
+                previousLastDate = prevBatch?.data?.lastOrNull()?.date?.millis?.toDateFormatWithTodayYesterday()
+            } else {
+                previousLastDate = null
+            }
+
             // Case 1: Update existing batch if sizes differ
             if (shouldUpdateExisting) {
-                val items = generateUiItems(key, data)
+                val items = generateUiItems(key, data, previousLastDate)
                 batches[existingBatchIndex] = Batch(key = key, data = items)
                 continue
             }
@@ -60,7 +70,7 @@ internal class TangemPayTxHistoryUiManager(
             }
 
             // Case 3: Create new batch
-            val items = generateUiItems(key, data)
+            val items = generateUiItems(key, data, previousLastDate)
             batches.add(Batch(key = key, data = items))
         }
 
@@ -70,6 +80,7 @@ internal class TangemPayTxHistoryUiManager(
     private fun generateUiItems(
         key: Int,
         data: List<TangemPayTxHistoryItem>,
+        previousLastDate: String? = null,
     ): List<TangemPayTxHistoryUM.TangemPayTxHistoryItemUM> {
         val items = mutableListOf<TangemPayTxHistoryUM.TangemPayTxHistoryItemUM>()
 
@@ -84,12 +95,15 @@ internal class TangemPayTxHistoryUiManager(
             val firstItem = data.first()
             val firstDate = firstItem.date.millis.toDateFormatWithTodayYesterday()
 
-            items.add(
-                TangemPayTxHistoryUM.TangemPayTxHistoryItemUM.GroupTitle(
-                    title = firstDate,
-                    itemKey = UUID.randomUUID().toString(),
-                ),
-            )
+            // Only add group title if different from previous batch's last date
+            if (firstDate != previousLastDate) {
+                items.add(
+                    TangemPayTxHistoryUM.TangemPayTxHistoryItemUM.GroupTitle(
+                        title = firstDate,
+                        itemKey = UUID.randomUUID().toString(),
+                    ),
+                )
+            }
             items.add(
                 TangemPayTxHistoryUM.TangemPayTxHistoryItemUM.Transaction(txHistoryItemConverter.convert(firstItem)),
             )

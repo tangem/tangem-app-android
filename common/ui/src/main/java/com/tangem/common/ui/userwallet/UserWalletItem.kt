@@ -37,10 +37,12 @@ import com.tangem.core.ui.components.account.AccountIconSize
 import com.tangem.core.ui.components.block.BlockCard
 import com.tangem.core.ui.components.block.TangemBlockCardColors
 import com.tangem.core.ui.components.text.applyBladeBrush
-import com.tangem.core.ui.extensions.*
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.StringsSigns.DASH_SIGN
 import com.tangem.utils.StringsSigns.DOT
 import com.tangem.utils.StringsSigns.THREE_STARS
@@ -322,7 +324,7 @@ private class UserWalletItemUMPreviewProvider : PreviewParameterProvider<UserWal
     override val values: Sequence<UserWalletItemUM>
         get() = sequenceOf(
             UserWalletItemUM(
-                id = UserWalletId("user_wallet_0".encodeToByteArray()),
+                id = "user_wallet_0",
                 name = stringReference("Mobile Wallet"),
                 information = getInformation(cardCount = 1),
                 balance = UserWalletItemUM.Balance.Locked,
@@ -331,7 +333,7 @@ private class UserWalletItemUMPreviewProvider : PreviewParameterProvider<UserWal
                 onClick = {},
             ),
             UserWalletItemUM(
-                id = UserWalletId("user_wallet_1".encodeToByteArray()),
+                id = "user_wallet_1",
                 name = stringReference("My Wallet"),
                 information = getInformation(cardCount = 1),
                 balance = UserWalletItemUM.Balance.Locked,
@@ -339,7 +341,7 @@ private class UserWalletItemUMPreviewProvider : PreviewParameterProvider<UserWal
                 onClick = {},
             ),
             UserWalletItemUM(
-                id = UserWalletId("user_wallet_2".encodeToByteArray()),
+                id = "user_wallet_2",
                 name = stringReference("Old wallet"),
                 information = getInformation(cardCount = 2),
                 balance = UserWalletItemUM.Balance.Hidden,
@@ -348,7 +350,7 @@ private class UserWalletItemUMPreviewProvider : PreviewParameterProvider<UserWal
                 endIcon = UserWalletItemUM.EndIcon.Arrow,
             ),
             UserWalletItemUM(
-                id = UserWalletId("user_wallet_3".encodeToByteArray()),
+                id = "user_wallet_3",
                 name = stringReference("Multi Card"),
                 information = getInformation(cardCount = 3),
                 balance = UserWalletItemUM.Balance.Failed,
@@ -357,7 +359,7 @@ private class UserWalletItemUMPreviewProvider : PreviewParameterProvider<UserWal
                 onClick = {},
             ),
             UserWalletItemUM(
-                id = UserWalletId("user_wallet_3".encodeToByteArray()),
+                id = "user_wallet_3",
                 name = stringReference("Multi Card"),
                 information = getInformation(cardCount = 3),
                 balance = UserWalletItemUM.Balance.Loading,
@@ -366,7 +368,7 @@ private class UserWalletItemUMPreviewProvider : PreviewParameterProvider<UserWal
                 onClick = {},
             ),
             UserWalletItemUM(
-                id = UserWalletId("user_wallet_3".encodeToByteArray()),
+                id = "user_wallet_3",
                 name = stringReference("Multi Card"),
                 information = UserWalletItemUM.Information.Loading,
                 balance = UserWalletItemUM.Balance.Loading,
@@ -375,7 +377,7 @@ private class UserWalletItemUMPreviewProvider : PreviewParameterProvider<UserWal
                 onClick = {},
             ),
             UserWalletItemUM(
-                id = UserWalletId("user_wallet_3".encodeToByteArray()),
+                id = "user_wallet_3",
                 name = stringReference("Multi Card"),
                 information = getInformation(cardCount = 3),
                 balance = UserWalletItemUM.Balance.Loaded(
@@ -387,7 +389,7 @@ private class UserWalletItemUMPreviewProvider : PreviewParameterProvider<UserWal
                 onClick = {},
             ),
             UserWalletItemUM(
-                id = UserWalletId("user_wallet_3".encodeToByteArray()),
+                id = "user_wallet_3",
                 name = stringReference("Multi Card"),
                 information = getInformation(cardCount = 3),
                 balance = UserWalletItemUM.Balance.Loaded(
@@ -399,7 +401,7 @@ private class UserWalletItemUMPreviewProvider : PreviewParameterProvider<UserWal
                 onClick = {},
             ),
             UserWalletItemUM(
-                id = UserWalletId("user_wallet_3".encodeToByteArray()),
+                id = "user_wallet_3",
                 name = stringReference("Multi Card"),
                 information = UserWalletItemUM.Information.Loading,
                 balance = UserWalletItemUM.Balance.Loaded(
@@ -410,7 +412,7 @@ private class UserWalletItemUMPreviewProvider : PreviewParameterProvider<UserWal
                 onClick = {},
             ),
             UserWalletItemUM(
-                id = UserWalletId("user_wallet_3".encodeToByteArray()),
+                id = "user_wallet_3",
                 name = stringReference("Multi Card"),
                 information = UserWalletItemUM.Information.Failed,
                 balance = UserWalletItemUM.Balance.Loaded(
@@ -421,7 +423,7 @@ private class UserWalletItemUMPreviewProvider : PreviewParameterProvider<UserWal
                 onClick = {},
             ),
             UserWalletItemUM(
-                id = UserWalletId("user_wallet_3".encodeToByteArray()),
+                id = "user_wallet_3",
                 name = stringReference("Multi Card"),
                 information = UserWalletItemUM.Information.Failed,
                 balance = UserWalletItemUM.Balance.Loaded(
@@ -433,7 +435,7 @@ private class UserWalletItemUMPreviewProvider : PreviewParameterProvider<UserWal
                 onClick = {},
             ),
             UserWalletItemUM(
-                id = UserWalletId("user_wallet_3".encodeToByteArray()),
+                id = "user_wallet_3",
                 name = stringReference("Multi Card"),
                 information = getInformation(cardCount = 3),
                 balance = UserWalletItemUM.Balance.NotShowing,
@@ -442,7 +444,7 @@ private class UserWalletItemUMPreviewProvider : PreviewParameterProvider<UserWal
                 onClick = {},
             ),
             UserWalletItemUM(
-                id = UserWalletId("user_wallet_4".encodeToByteArray()),
+                id = "user_wallet_4",
                 name = stringReference("Main account"),
                 information = getInformation(cardCount = 3),
                 balance = UserWalletItemUM.Balance.NotShowing,
