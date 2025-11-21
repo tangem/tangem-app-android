@@ -33,7 +33,7 @@ class EnvironmentConfigModel(
     @Json(name = "hederaArkhiaKey") val hederaArkhiaKey: String?,
     @Json(name = "polygonScanApiKey") val polygonScanApiKey: String?,
     @Json(name = "stakeKitApiKey") val stakeKitApiKey: String?,
-    // @Json(name = "p2pApiKey") val p2pApiKey: P2PKeys?, TODO p2p after release 5.30
+    @Json(name = "p2pApiKey") val p2pApiKey: P2PKeys?,
     @Json(name = "bittensorDwellirKey") val bittensorDwellirApiKey: String?,
     @Json(name = "bittensorOnfinalityKey") val bittensorOnfinalityKey: String?,
     @Json(name = "koinosProApiKey") val koinosProApiKey: String?,
