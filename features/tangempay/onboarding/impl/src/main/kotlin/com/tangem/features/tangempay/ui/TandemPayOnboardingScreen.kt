@@ -3,8 +3,10 @@ package com.tangem.features.tangempay.ui
 import android.content.res.Configuration
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -13,6 +15,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -84,7 +88,19 @@ private fun TangemPayOnboardingContent(state: TangemPayOnboardingScreenState.Con
             Image(
                 painter = painterResource(id = R.drawable.img_tangem_pay_visa),
                 contentDescription = null,
-                modifier = Modifier.size(width = 200.dp, height = 130.dp),
+                modifier = Modifier
+                    .size(width = 204.dp, height = 130.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .border(
+                        width = 1.dp,
+                        brush = Brush.linearGradient(
+                            colors = listOf(
+                                TangemTheme.colors.text.constantWhite.copy(alpha = 0.1F),
+                                TangemTheme.colors.text.constantWhite.copy(alpha = 0f),
+                            ),
+                        ),
+                        shape = RoundedCornerShape(16.dp),
+                    ),
             )
 
             Text(
@@ -119,19 +135,19 @@ internal fun TangemPayOnboardingBlocks(modifier: Modifier = Modifier) {
         verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {
         TangemPayOnboardingBlock(
-            painterRes = R.drawable.ic_security_check_22,
+            painterRes = R.drawable.ic_security_check_24,
             titleRef = TextReference.Res(R.string.tangempay_onboarding_security_title),
             descriptionRef = TextReference.Res(R.string.tangempay_onboarding_security_description),
         )
 
         TangemPayOnboardingBlock(
-            painterRes = R.drawable.ic_shopping_basket_22,
+            painterRes = R.drawable.ic_shopping_basket_24,
             titleRef = TextReference.Res(R.string.tangempay_onboarding_purchases_title),
             descriptionRef = TextReference.Res(R.string.tangempay_onboarding_purchases_description),
         )
 
         TangemPayOnboardingBlock(
-            painterRes = R.drawable.ic_credit_card_add_22,
+            painterRes = R.drawable.ic_credit_card_add_24,
             titleRef = TextReference.Res(R.string.tangempay_onboarding_pay_title),
             descriptionRef = TextReference.Res(R.string.tangempay_onboarding_pay_description),
         )
