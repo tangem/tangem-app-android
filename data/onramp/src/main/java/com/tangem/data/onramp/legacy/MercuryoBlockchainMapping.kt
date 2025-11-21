@@ -162,5 +162,6 @@ public val Blockchain.mercuryoNetwork: String?
             Blockchain.Quai, Blockchain.QuaiTestnet -> null
             Blockchain.Linea, Blockchain.LineaTestnet -> null
             Blockchain.ArbitrumNova -> null
+            Blockchain.Plasma, Blockchain.PlasmaTestnet -> null
         }
     }
