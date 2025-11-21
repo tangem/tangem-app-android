@@ -33,6 +33,7 @@ class EnvironmentConfigModel(
     @Json(name = "hederaArkhiaKey") val hederaArkhiaKey: String?,
     @Json(name = "polygonScanApiKey") val polygonScanApiKey: String?,
     @Json(name = "stakeKitApiKey") val stakeKitApiKey: String?,
+    @Json(name = "p2pApiKey") val p2pApiKey: P2PKeys?,
     @Json(name = "bittensorDwellirKey") val bittensorDwellirApiKey: String?,
     @Json(name = "bittensorOnfinalityKey") val bittensorOnfinalityKey: String?,
     @Json(name = "koinosProApiKey") val koinosProApiKey: String?,
@@ -95,6 +96,12 @@ data class GetBlockAccessTokens(
 data class TonCenterKeys(
     @Json(name = "mainnet") val mainnet: String,
     @Json(name = "testnet") val testnet: String,
+)
+
+@JsonClass(generateAdapter = true)
+data class P2PKeys(
+    @Json(name = "mainnet") val mainnet: String,
+    @Json(name = "hoodi") val hoodi: String,
 )
 
 @JsonClass(generateAdapter = true)

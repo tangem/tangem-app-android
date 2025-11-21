@@ -34,10 +34,7 @@ internal class DefaultOnrampV2MainComponent @AssistedInject constructor(
     private val model: OnrampV2MainComponentModel = getOrCreateModel(params)
 
     init {
-        lifecycle.subscribe(
-            onStart = model::onStart,
-            onStop = model::onStop,
-        )
+        lifecycle.subscribe(onStop = model::onStop)
     }
 
     private val bottomSheetSlot = childSlot(
@@ -67,7 +64,10 @@ internal class DefaultOnrampV2MainComponent @AssistedInject constructor(
                 cryptoCurrency = params.cryptoCurrency,
                 country = config.country,
                 launchSepa = false,
-                onDismiss = { model.bottomSheetNavigation.dismiss() },
+                onDismiss = {
+                    model.bottomSheetNavigation.dismiss()
+                    model.handleOnrampAvailable()
+                },
             ),
         )
         is OnrampV2MainBottomSheetConfig.CurrenciesList -> selectCurrencyComponentFactory.create(
