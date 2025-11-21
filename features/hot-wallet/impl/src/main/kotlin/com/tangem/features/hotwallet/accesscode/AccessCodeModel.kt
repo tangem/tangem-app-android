@@ -27,6 +27,7 @@ import com.tangem.hot.sdk.model.HotAuth
 import com.tangem.hot.sdk.model.UnlockHotWallet
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -35,6 +36,9 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import timber.log.Timber
 import javax.inject.Inject
 import kotlin.coroutines.resume
+
+private const val SUCCESS_DISPLAY_DURATION_MS = 200L
+private const val ERROR_DISPLAY_DURATION_MS = 500L
 
 @Suppress("LongParameterList")
 @Stable
@@ -59,49 +63,93 @@ internal class AccessCodeModel @Inject constructor(
     internal val uiState: StateFlow<AccessCodeUM>
         field = MutableStateFlow(getInitialState())
 
+    internal fun onResume() {
+        uiState.update { currentState ->
+            currentState.copy(
+                onAccessCodeChange = ::onAccessCodeChange,
+            )
+        }
+    }
+
     private fun getInitialState() = AccessCodeUM(
         accessCode = "",
         accessCodeColor = PinTextColor.Primary,
         onAccessCodeChange = ::onAccessCodeChange,
         isConfirmMode = params.accessCodeToConfirm != null,
-        buttonEnabled = false,
-        buttonInProgress = false,
-        onButtonClick = ::onButtonClick,
     )
 
     private fun onAccessCodeChange(value: String) {
-        uiState.update {
-            it.copy(
+        val isConfirmMode = uiState.value.isConfirmMode
+        val accessCodeLength = uiState.value.accessCodeLength
+
+        if (value.length > accessCodeLength) return
+
+        uiState.update { currentState ->
+            currentState.copy(
                 accessCode = value,
-                buttonEnabled = if (params.accessCodeToConfirm != null) {
-                    value == params.accessCodeToConfirm
-                } else {
-                    value.length == uiState.value.accessCodeLength
-                },
-                accessCodeColor = when {
-                    params.accessCodeToConfirm == null -> PinTextColor.Primary
-                    value.length != uiState.value.accessCodeLength -> PinTextColor.Primary
-                    value == params.accessCodeToConfirm -> PinTextColor.Success
-                    else -> PinTextColor.WrongCode
-                },
+                accessCodeColor = PinTextColor.Primary,
             )
+        }
+
+        if (value.length == accessCodeLength) {
+            uiState.update { currentState ->
+                currentState.copy(
+                    onAccessCodeChange = {},
+                )
+            }
+
+            if (isConfirmMode) {
+                modelScope.launch {
+                    if (value == params.accessCodeToConfirm) {
+                        showSuccessAndProceed(params.accessCodeToConfirm)
+                    } else {
+                        showErrorAndReset()
+                    }
+                }
+            } else {
+                onNewCodeSet()
+            }
         }
     }
 
-    private fun onButtonClick() {
-        if (params.accessCodeToConfirm == null) {
-            params.callbacks.onNewAccessCodeInput(params.userWalletId, uiState.value.accessCode)
-        } else {
-            setCode(params.userWalletId, params.accessCodeToConfirm)
+    private fun onNewCodeSet() {
+        val accessCode = uiState.value.accessCode
+        uiState.update { currentState ->
+            currentState.copy(
+                accessCode = "",
+            )
+        }
+        params.callbacks.onNewAccessCodeInput(params.userWalletId, accessCode)
+    }
+
+    private suspend fun showSuccessAndProceed(accessCodeToConfirm: String) {
+        uiState.update { currentState ->
+            currentState.copy(
+                accessCodeColor = PinTextColor.Success,
+            )
+        }
+        delay(timeMillis = SUCCESS_DISPLAY_DURATION_MS)
+        setCode(params.userWalletId, accessCodeToConfirm)
+    }
+
+    private suspend fun showErrorAndReset() {
+        uiState.update { currentState ->
+            currentState.copy(
+                accessCodeColor = PinTextColor.WrongCode,
+            )
+        }
+        delay(timeMillis = ERROR_DISPLAY_DURATION_MS)
+        uiState.update { currentState ->
+            currentState.copy(
+                accessCode = "",
+                accessCodeColor = PinTextColor.Primary,
+                onAccessCodeChange = ::onAccessCodeChange,
+            )
         }
     }
 
     private fun setCode(userWalletId: UserWalletId, accessCode: String) {
         modelScope.launch {
-            uiState.update {
-                it.copy(buttonInProgress = true)
-            }
-
             runCatching {
                 val userWallet = getUserWalletUseCase(userWalletId)
                     .getOrElse { error("User wallet with id $userWalletId not found") }
@@ -150,10 +198,6 @@ internal class AccessCodeModel @Inject constructor(
                 params.callbacks.onAccessCodeUpdated(params.userWalletId)
             }.onFailure {
                 Timber.e(it)
-
-                uiState.update {
-                    it.copy(buttonInProgress = false)
-                }
             }
         }
     }

@@ -21,13 +21,8 @@ internal class DefaultTangemPayOnboardingComponent @AssistedInject constructor(
 
     @Composable
     override fun Content(modifier: Modifier) {
-        val state by model.screenState.collectAsStateWithLifecycle()
-        TandemPayOnboardingScreen(
-            modifier = modifier,
-            state = state,
-            onBackClick = model::back,
-            onOpenKycClick = model::openKyc,
-        )
+        val state by model.uiState.collectAsStateWithLifecycle()
+        TandemPayOnboardingScreen(modifier = modifier, state = state)
     }
 
     @AssistedFactory

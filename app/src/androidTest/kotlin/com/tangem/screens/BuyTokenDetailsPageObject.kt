@@ -61,18 +61,8 @@ class BuyTokenDetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProv
         useUnmergedTree = true
     }
 
-    val tokenAmountField: KNode = child {
-        hasParent(withTestTag(BuyTokenDetailsScreenTestTags.TOKEN_AMOUNT))
-        useUnmergedTree = true
-    }
-
     val recommendedTitle: KNode = child {
         hasText(getResourceString(OnrampImplR.string.onramp_recommended_title))
-    }
-
-    val bestRateIcon: KNode = child {
-        hasTestTag(OnrampOffersBlockTestTags.BEST_RATE_ICON)
-        useUnmergedTree = true
     }
 
     val bestRateTitle: KNode = child {

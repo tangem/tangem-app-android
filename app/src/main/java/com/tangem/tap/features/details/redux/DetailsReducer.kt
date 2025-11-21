@@ -111,6 +111,9 @@ private fun handlePrivacyAction(action: DetailsAction.AppSettings, state: Detail
                 isHidingEnabled = action.state.isHidingEnabled,
                 selectedAppCurrency = action.state.selectedAppCurrency,
                 selectedThemeMode = action.state.selectedThemeMode,
+                useBiometricAuthentication = action.state.useBiometricAuthentication,
+                requireAccessCode = action.state.requireAccessCode,
+                hasSecuredWallets = action.state.hasSecuredWallets,
             ),
         )
         is DetailsAction.AppSettings.EnrollBiometrics,

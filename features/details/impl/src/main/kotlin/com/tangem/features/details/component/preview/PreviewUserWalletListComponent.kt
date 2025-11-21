@@ -10,7 +10,6 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.details.component.UserWalletListComponent
 import com.tangem.features.details.entity.UserWalletListUM
 import com.tangem.features.details.impl.R
@@ -25,7 +24,7 @@ internal class PreviewUserWalletListComponent : UserWalletListComponent {
         UserWalletListUM(
             userWallets = persistentListOf(
                 UserWalletItemUM(
-                    id = UserWalletId("user_wallet_1".encodeToByteArray()),
+                    id = "user_wallet_1",
                     name = stringReference("My Wallet"),
                     information = getInformation(cardCount = 1),
                     balance = UserWalletItemUM.Balance.Loading,
@@ -33,7 +32,7 @@ internal class PreviewUserWalletListComponent : UserWalletListComponent {
                     onClick = {},
                 ),
                 UserWalletItemUM(
-                    id = UserWalletId("user_wallet_2".encodeToByteArray()),
+                    id = "user_wallet_2",
                     name = stringReference("Old wallet"),
                     information = getInformation(cardCount = 2),
                     balance = UserWalletItemUM.Balance.Loading,
@@ -41,7 +40,7 @@ internal class PreviewUserWalletListComponent : UserWalletListComponent {
                     onClick = {},
                 ),
                 UserWalletItemUM(
-                    id = UserWalletId("user_wallet_3".encodeToByteArray()),
+                    id = "user_wallet_3",
                     name = stringReference("Multi Card"),
                     information = getInformation(cardCount = 3),
                     balance = UserWalletItemUM.Balance.Loading,
