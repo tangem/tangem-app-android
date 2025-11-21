@@ -72,6 +72,7 @@ internal fun MultiWalletFinalize(state: MultiWalletFinalizeUM, modifier: Modifie
             text = stringResourceSafe(
                 if (state.isRing) R.string.onboarding_button_backup_ring else R.string.onboarding_button_backup_origin,
             ),
+            showProgress = state.isButtonLoading,
             iconResId = R.drawable.ic_tangem_24,
             onClick = state.onScanClick,
         )

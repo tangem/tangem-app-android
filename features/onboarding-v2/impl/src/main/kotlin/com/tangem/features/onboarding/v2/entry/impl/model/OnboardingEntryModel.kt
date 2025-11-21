@@ -95,6 +95,7 @@ internal class OnboardingEntryModel @Inject constructor(
                     withSeedPhraseFlow = scanResponse.productType != ProductType.Wallet,
                     titleProvider = titleProvider,
                     onDone = ::onMultiWalletOnboardingDone,
+                    onForceExit = ::popOrExitComponentScreen,
                     mode = multiWalletNavigationMode,
                 )
             }
@@ -127,8 +128,9 @@ internal class OnboardingEntryModel @Inject constructor(
     }
 
     private fun onMultiWalletOnboardingDone(userWallet: UserWallet.Cold) {
+        val mode = params.mode
         when {
-            params.mode == Mode.AddBackupWallet1 -> {
+            mode == Mode.AddBackupWallet1 -> {
                 stackNavigation.replaceAll(
                     OnboardingRoute.Done(
                         mode = OnboardingDoneComponent.Mode.WalletCreated,
@@ -136,7 +138,7 @@ internal class OnboardingEntryModel @Inject constructor(
                     ),
                 )
             }
-            userWallet.scanResponse.cardTypesResolver.isMultiwalletAllowed() -> {
+            userWallet.scanResponse.cardTypesResolver.isMultiwalletAllowed() && mode !is Mode.UpgradeHotWallet -> {
                 stackNavigation.replaceAll(OnboardingRoute.ManageTokens(userWallet))
             }
             else -> {
@@ -202,6 +204,14 @@ internal class OnboardingEntryModel @Inject constructor(
                 ),
             )
         }
+    }
+
+    private fun popOrExitComponentScreen() {
+        router.pop(onComplete = { success ->
+            if (!success) {
+                exitComponentScreen()
+            }
+        })
     }
 
     private fun exitComponentScreen() {
