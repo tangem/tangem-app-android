@@ -9,6 +9,12 @@ plugins {
 
 android {
     namespace = "com.tangem.features.feed.impl"
+    
+    packaging {
+        resources {
+            merges += "paymentrequest.proto"
+        }
+    }
 }
 
 dependencies {
