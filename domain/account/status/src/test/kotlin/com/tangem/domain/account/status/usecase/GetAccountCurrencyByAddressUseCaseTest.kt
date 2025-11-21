@@ -1,13 +1,11 @@
 package com.tangem.domain.account.status.usecase
 
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
-import com.tangem.common.test.utils.assertNone
-import com.tangem.common.test.utils.assertSome
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.producer.SingleAccountListProducer
+import com.tangem.domain.account.repository.AccountsCRUDRepository
 import com.tangem.domain.account.status.model.AccountCryptoCurrency
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
-import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.network.NetworkStatus
@@ -16,8 +14,9 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.networks.multi.MultiNetworkStatusProducer
 import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
+import com.tangem.test.core.assertNone
+import com.tangem.test.core.assertSome
 import io.mockk.*
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
@@ -29,19 +28,19 @@ import org.junit.jupiter.api.TestInstance
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class GetAccountCurrencyByAddressUseCaseTest {
 
-    private val userWalletsListRepository: UserWalletsListRepository = mockk()
+    private val accountsCRUDRepository: AccountsCRUDRepository = mockk()
     private val multiNetworkStatusSupplier: MultiNetworkStatusSupplier = mockk()
     private val singleAccountListSupplier: SingleAccountListSupplier = mockk()
 
     private val useCase = GetAccountCurrencyByAddressUseCase(
-        userWalletsListRepository = userWalletsListRepository,
+        accountsCRUDRepository = accountsCRUDRepository,
         multiNetworkStatusSupplier = multiNetworkStatusSupplier,
         singleAccountListSupplier = singleAccountListSupplier,
     )
 
     @AfterEach
     fun tearDown() {
-        clearMocks(userWalletsListRepository, multiNetworkStatusSupplier, singleAccountListSupplier)
+        clearMocks(accountsCRUDRepository, multiNetworkStatusSupplier, singleAccountListSupplier)
     }
 
     @Test
@@ -56,26 +55,27 @@ class GetAccountCurrencyByAddressUseCaseTest {
         assertNone(actual)
     }
 
-    @Test
-    fun `returns None if userWalletIds is null`() = runTest {
-        // Arrange
-        every { userWalletsListRepository.userWallets } returns MutableStateFlow(null)
-
-        // Act
-        val actual = useCase(validAddress)
-
-        // Assert
-        assertNone(actual)
-
-        coVerifySequence {
-            userWalletsListRepository.userWallets
-        }
-    }
+    // TODO: uncomment after migration on UserWalletsListRepository
+    // @Test
+    // fun `returns None if userWalletIds is null`() = runTest {
+    //     // Arrange
+    //     every { accountsCRUDRepository.getUserWalletsSync() } returns MutableStateFlow(null)
+    //
+    //     // Act
+    //     val actual = useCase(validAddress)
+    //
+    //     // Assert
+    //     assertNone(actual)
+    //
+    //     coVerifySequence {
+    //         accountsCRUDRepository.getUserWalletsSync()
+    //     }
+    // }
 
     @Test
     fun `returns None if userWalletIds is empty list`() = runTest {
         // Arrange
-        every { userWalletsListRepository.userWallets } returns MutableStateFlow(emptyList())
+        every { accountsCRUDRepository.getUserWalletsSync() } returns emptyList()
 
         // Act
         val actual = useCase(validAddress)
@@ -84,7 +84,7 @@ class GetAccountCurrencyByAddressUseCaseTest {
         assertNone(actual)
 
         coVerifySequence {
-            userWalletsListRepository.userWallets
+            accountsCRUDRepository.getUserWalletsSync()
         }
     }
 
@@ -95,7 +95,7 @@ class GetAccountCurrencyByAddressUseCaseTest {
             every { isMultiCurrency } returns false
         }
 
-        every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(singleWallet))
+        every { accountsCRUDRepository.getUserWalletsSync() } returns listOf(singleWallet)
 
         // Act
         val actual = useCase(validAddress)
@@ -104,14 +104,14 @@ class GetAccountCurrencyByAddressUseCaseTest {
         assertNone(actual)
 
         coVerifySequence {
-            userWalletsListRepository.userWallets
+            accountsCRUDRepository.getUserWalletsSync()
         }
     }
 
     @Test
     fun `returns None if multiNetworkStatusSupplier returns null`() = runTest {
         // Arrange
-        every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(multiUserWallet))
+        every { accountsCRUDRepository.getUserWalletsSync() } returns listOf(multiUserWallet)
         coEvery {
             multiNetworkStatusSupplier.getSyncOrNull(params = MultiNetworkStatusProducer.Params(userWalletId))
         } returns null
@@ -123,7 +123,7 @@ class GetAccountCurrencyByAddressUseCaseTest {
         assertNone(actual)
 
         coVerifySequence {
-            userWalletsListRepository.userWallets
+            accountsCRUDRepository.getUserWalletsSync()
             multiNetworkStatusSupplier.getSyncOrNull(params = MultiNetworkStatusProducer.Params(userWalletId))
         }
     }
@@ -131,7 +131,7 @@ class GetAccountCurrencyByAddressUseCaseTest {
     @Test
     fun `returns None if multiNetworkStatusSupplier returns empty list`() = runTest {
         // Arrange
-        every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(multiUserWallet))
+        every { accountsCRUDRepository.getUserWalletsSync() } returns listOf(multiUserWallet)
         coEvery {
             multiNetworkStatusSupplier.getSyncOrNull(params = MultiNetworkStatusProducer.Params(userWalletId))
         } returns emptySet()
@@ -143,7 +143,7 @@ class GetAccountCurrencyByAddressUseCaseTest {
         assertNone(actual)
 
         coVerifySequence {
-            userWalletsListRepository.userWallets
+            accountsCRUDRepository.getUserWalletsSync()
             multiNetworkStatusSupplier.getSyncOrNull(params = MultiNetworkStatusProducer.Params(userWalletId))
         }
     }
@@ -156,7 +156,7 @@ class GetAccountCurrencyByAddressUseCaseTest {
             value = NetworkStatus.Unreachable(address = null),
         )
 
-        every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(multiUserWallet))
+        every { accountsCRUDRepository.getUserWalletsSync() } returns listOf(multiUserWallet)
         coEvery {
             multiNetworkStatusSupplier.getSyncOrNull(params = MultiNetworkStatusProducer.Params(userWalletId))
         } returns setOf(networkStatus)
@@ -168,7 +168,7 @@ class GetAccountCurrencyByAddressUseCaseTest {
         assertNone(actual)
 
         coVerifySequence {
-            userWalletsListRepository.userWallets
+            accountsCRUDRepository.getUserWalletsSync()
             multiNetworkStatusSupplier.getSyncOrNull(params = MultiNetworkStatusProducer.Params(userWalletId))
         }
     }
@@ -183,7 +183,7 @@ class GetAccountCurrencyByAddressUseCaseTest {
             value = NetworkStatus.Unreachable(address = validNetworkAddress),
         )
 
-        every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(multiUserWallet))
+        every { accountsCRUDRepository.getUserWalletsSync() } returns listOf(multiUserWallet)
         coEvery {
             multiNetworkStatusSupplier.getSyncOrNull(params = MultiNetworkStatusProducer.Params(userWalletId))
         } returns setOf(networkStatus)
@@ -200,7 +200,7 @@ class GetAccountCurrencyByAddressUseCaseTest {
         assertNone(actual)
 
         coVerifySequence {
-            userWalletsListRepository.userWallets
+            accountsCRUDRepository.getUserWalletsSync()
             multiNetworkStatusSupplier.getSyncOrNull(params = MultiNetworkStatusProducer.Params(userWalletId))
             singleAccountListSupplier.getSyncOrNull(
                 params = SingleAccountListProducer.Params(userWalletId = userWalletId),
@@ -220,7 +220,7 @@ class GetAccountCurrencyByAddressUseCaseTest {
         )
         val accountList = AccountList.empty(userWalletId)
 
-        every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(multiUserWallet))
+        every { accountsCRUDRepository.getUserWalletsSync() } returns listOf(multiUserWallet)
         coEvery {
             multiNetworkStatusSupplier.getSyncOrNull(params = MultiNetworkStatusProducer.Params(userWalletId))
         } returns setOf(networkStatus)
@@ -237,7 +237,7 @@ class GetAccountCurrencyByAddressUseCaseTest {
         assertNone(actual)
 
         coVerifySequence {
-            userWalletsListRepository.userWallets
+            accountsCRUDRepository.getUserWalletsSync()
             multiNetworkStatusSupplier.getSyncOrNull(params = MultiNetworkStatusProducer.Params(userWalletId))
             singleAccountListSupplier.getSyncOrNull(
                 params = SingleAccountListProducer.Params(userWalletId = userWalletId),
@@ -255,7 +255,7 @@ class GetAccountCurrencyByAddressUseCaseTest {
         )
         val accountList = AccountList.empty(userWalletId = userWalletId, cryptoCurrencies = setOf(currency))
 
-        every { userWalletsListRepository.userWallets } returns MutableStateFlow(listOf(multiUserWallet))
+        every { accountsCRUDRepository.getUserWalletsSync() } returns listOf(multiUserWallet)
         coEvery {
             multiNetworkStatusSupplier.getSyncOrNull(params = MultiNetworkStatusProducer.Params(userWalletId))
         } returns setOf(networkStatus)
@@ -273,7 +273,7 @@ class GetAccountCurrencyByAddressUseCaseTest {
         assertSome(actual, expected)
 
         coVerifySequence {
-            userWalletsListRepository.userWallets
+            accountsCRUDRepository.getUserWalletsSync()
             multiNetworkStatusSupplier.getSyncOrNull(params = MultiNetworkStatusProducer.Params(userWalletId))
             singleAccountListSupplier.getSyncOrNull(
                 params = SingleAccountListProducer.Params(userWalletId = userWalletId),

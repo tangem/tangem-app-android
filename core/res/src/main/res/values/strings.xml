@@ -167,7 +167,7 @@
   <string name="card_reset_alert_finish_message">All Tangem devices have been reset. You can now continue upgrading your wallet.</string>
   <string name="card_reset_alert_finish_ok_button">Upgrade again</string>
   <string name="card_reset_alert_finish_title">Reset complete</string>
-  <string name="card_reset_alert_incomplete_message">You haven’t reset all your Tangem devices</string>
+  <string name="card_reset_alert_incomplete_message">We recommend completing the reset process for all Tangem devices in this wallet.</string>
   <string name="card_reset_alert_incomplete_title">You haven’t reset all your Tangem devices</string>
   <string name="card_settings_access_code_recovery_disabled_description">Disable this option if you don\'t want this card to be used to reset access codes on other cards or rings in this wallet. Please note that this will also prevent you from resetting the access code on this card.</string>
   <string name="card_settings_access_code_recovery_enabled_description">Allows you to use this card to reset access code on other cards in this wallet</string>
@@ -275,6 +275,7 @@
   <string name="common_forget">Forget</string>
   <string name="common_free">Free</string>
   <string name="common_from">From</string>
+  <string name="common_from_wallet_name">From %s</string>
   <string name="common_generate_addresses">Synchronize addresses</string>
   <string name="common_get_started">Get started</string>
   <string name="common_get_token">Get token</string>
@@ -300,12 +301,13 @@
     <item quantity="other">%d networks</item>
   </plurals>
   <string name="common_new_address">New address</string>
+  <string name="common_news">News</string>
   <string name="common_next">Next</string>
   <string name="common_nft">NFT</string>
   <string name="common_no">No</string>
   <string name="common_no_address">No address</string>
   <string name="common_not_added">Not Added</string>
-  <string name="common_not_now">Not Now</string>
+  <string name="common_not_now">Not now</string>
   <string name="common_now">Now</string>
   <string name="common_ok">OK</string>
   <string name="common_open_in_browser">Open in Browser</string>
@@ -357,6 +359,7 @@
   <string name="common_terms_and_conditions">terms and conditions</string>
   <string name="common_terms_of_use">Terms of Use</string>
   <string name="common_to">To</string>
+  <string name="common_to_wallet_name">To %s</string>
   <string name="common_today">Today</string>
   <plurals name="common_tokens_count">
     <item quantity="one">%d token</item>
@@ -519,6 +522,9 @@
   <string name="express_transaction_id">ID: %s</string>
   <string name="express_transaction_id_copied">Transaction ID copied</string>
   <string name="exсhange_token_description">Swap any asset in your portfolio for this token</string>
+  <string name="feed_market_and_news">Market &amp; News</string>
+  <string name="feed_tangem_ai">Tangem AI</string>
+  <string name="feed_trending_now">Trending Now</string>
   <string name="feedback_data_collection_message">The following information is optional. You can erase it if you don\'t want to share it.</string>
   <string name="feedback_preface_rate_negative">Tell us what functions you are missing, and we will try to help you.</string>
   <string name="feedback_preface_scan_failed">Please tell us what card or ring do you have</string>
@@ -605,7 +611,7 @@
   <string name="hw_remove_wallet_notification_title">Forget this wallet?</string>
   <string name="hw_remove_wallet_warning_access">I understand that if I haven\'t backed up my wallet before removing it, I may lose access to it.</string>
   <string name="hw_remove_wallet_warning_device">I understand that removing my wallet does not delete it—but simply removes it from my device.</string>
-  <string name="hw_upgrade_backup_description">No seed phrase is needed anymore — your Tangem card or ring becomes your secure backup.</string>
+  <string name="hw_upgrade_backup_description">No seed phrase is needed anymore. Your Tangem card or ring becomes your secure backup.</string>
   <string name="hw_upgrade_backup_title">Backup with Tangem</string>
   <string name="hw_upgrade_error_card_already_has_wallet">Can’t upgrade. A wallet already exists on this device.</string>
   <string name="hw_upgrade_error_card_key_import">Pick another device. This one can’t be used for the upgrade.</string>
@@ -772,6 +778,8 @@
   <string name="markets_token_details_volume">Volume</string>
   <string name="markets_tooltip_message">Pull this up or tap the search bar to add tokens directly from the market</string>
   <string name="markets_tooltip_title">Add tokens</string>
+  <string name="news_all_news">All news</string>
+  <string name="news_stay_in_the_loop">Stay in the loop</string>
   <string name="nfc_error_unavailable">NFC is not available on your device</string>
   <string name="nft_about_title">About NFT</string>
   <string name="nft_asset">NFT asset</string>
@@ -1070,7 +1078,7 @@
   <string name="send_alert_fee_too_low_text">You specified a commission below the recommended amount, which could cause a delay in your transaction. Continue?</string>
   <string name="send_alert_transaction_failed_text">Reason: %1$s\nCode: %2$s</string>
   <string name="send_alert_transaction_failed_title">The transaction is not completed</string>
-  <string name="send_amount_convert_to_another_token">Convert to another token</string>
+  <string name="send_amount_convert_to_another_token">Swap to another token or network</string>
   <string name="send_amount_label">Amount</string>
   <string name="send_amount_receive_token_subtitle">Will be sent to recipient</string>
   <string name="send_bitcoin_custom_fee_footer">You can set your transaction fee by adjusting the value in the Satoshi per vByte field.</string>
@@ -1651,7 +1659,7 @@
   <string name="wallet_create_scan_question">Using a Tangem Wallet already?</string>
   <string name="wallet_create_scan_title">Scan now</string>
   <string name="wallet_create_title">Pick a wallet setup method</string>
-  <string name="wallet_import_buy_question">Ready to get a Tangem Wallet?</string>
+  <string name="wallet_import_buy_question">Want to purchase Tangem Wallet?</string>
   <string name="wallet_import_buy_title">Buy now</string>
   <string name="wallet_import_google_drive_description">Recover existing wallet via Google Drive backup</string>
   <string name="wallet_import_google_drive_title">Import from Google Drive</string>
@@ -1673,7 +1681,7 @@
   <string name="wallet_promo_banner_button_title">Get now with 10% off</string>
   <string name="wallet_promo_banner_description">Access 13,000+ cryptocurrencies. Buy, sell, swap, and stake with a single tap.\nLink up to three cards for a backup.</string>
   <string name="wallet_promo_banner_title">Discover Tangem Wallet</string>
-  <string name="wallet_settings_access_code_description">This secret code protects your wallet and is used to log in and sign transactions.</string>
+  <string name="wallet_settings_access_code_description">This access code protects your wallet and is used to log in and sign transactions.</string>
   <string name="wallet_settings_access_code_title">Set/Change access code</string>
   <string name="wallet_settings_change_access_code_title">Change access code</string>
   <string name="wallet_settings_push_notifications_description">Stay notified on wallet incoming transactions and Tangem updates.</string>
@@ -1869,7 +1877,7 @@
   <string name="wc_uri_already_used_title">URI already used</string>
   <string name="wc_wallet_connect">WalletConnect</string>
   <string name="wc_warning_transaction">Suspicious transaction</string>
-  <string name="welcome_create_wallet_already_have">Already have Tangem?</string>
+  <string name="welcome_create_wallet_already_have">Already have Tangem Wallet?</string>
   <string name="welcome_create_wallet_feature_assets">Thousands of assets</string>
   <string name="welcome_create_wallet_feature_class">Best in class hardware wallet</string>
   <string name="welcome_create_wallet_feature_delivery">Fast delivery</string>
@@ -1878,7 +1886,7 @@
   <string name="welcome_create_wallet_feature_use">Simple to use</string>
   <string name="welcome_create_wallet_hardware_description">Create a hardware wallet with Tangem. Slim as a bank card, secure as a bank vault.</string>
   <string name="welcome_create_wallet_mobile_description">Create or import a software wallet</string>
-  <string name="welcome_create_wallet_mobile_description_full">Create or import a software wallet on your phone </string>
+  <string name="welcome_create_wallet_mobile_description_full">Create or import a software wallet on your phone.</string>
   <string name="welcome_create_wallet_mobile_title">Start with Mobile Wallet</string>
   <string name="welcome_create_wallet_other_method">Other method</string>
   <string name="welcome_create_wallet_use_hardware_description">Use Tangem Hardware Wallet</string>
@@ -1899,7 +1907,7 @@
   <string name="xtz_withdrawal_message_warning">To avoid paying an increased commission the next time you top up your wallet, reduce the amount by %s XTZ</string>
   <string name="yield_module_alert_description">When Yield Mode is active, all future top-ups to this address will be supplied to Aave. You can still manage your funds freely.</string>
   <string name="yield_module_alert_title">Your %s is supplied to Aave</string>
-  <string name="yield_module_amount_not_transfered_to_aave_title">Supplying %1$s %2$s to Aave is pending</string>
+  <string name="yield_module_amount_not_transfered_to_aave_title">Supplying %1$s %2$s to Aave</string>
   <string name="yield_module_approve_needed_notification_cta">Approve</string>
   <string name="yield_module_approve_needed_notification_description">Your token\'s approval has been revoked. Grant it again to resume the service\'s functionality.</string>
   <string name="yield_module_approve_needed_notification_title">Approve needed</string>
@@ -1975,9 +1983,9 @@
   <string name="yield_module_token_details_earn_notification_earning_on_your_balance_title">Yield Mode</string>
   <string name="yield_module_token_details_earn_notification_processing">Enabling Yield Mode</string>
   <string name="yield_module_token_details_earn_notification_title">Yield Mode</string>
-  <string name="yield_module_transaction_enter">Yield mode on</string>
-  <string name="yield_module_transaction_exit">Yield mode off</string>
-  <string name="yield_module_transaction_topup">Yield mode top-up</string>
+  <string name="yield_module_transaction_enter">Yield Mode on</string>
+  <string name="yield_module_transaction_exit">Yield Mode off</string>
+  <string name="yield_module_transaction_topup">Yield Mode top-up</string>
   <string name="yield_module_transfer_mode_automatic">Automatic</string>
   <string name="yield_module_unable_to_cover_fee_description">Add some %1$s %2$s to cover the network fee for transactions.</string>
   <string name="yield_module_unable_to_cover_fee_title">Unable to cover %s fee</string>
