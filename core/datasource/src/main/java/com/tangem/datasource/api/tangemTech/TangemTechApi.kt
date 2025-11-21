@@ -175,4 +175,13 @@ interface TangemTechApi {
         @Header("Cache-Control") cacheControl: String = "max-age=600",
     ): ApiResponse<PromoBannerResponse>
     // endregion
+
+    /**
+     * Stores transaction hash in cache to prevent duplicate push
+     * notifications for yield operations (deposit, withdraw, send).
+     * Used when yield operations generate intermediate transactions
+     * that should not trigger notifications.
+     */
+    @POST("v1/transaction-events")
+    suspend fun transactionEvents(@Body name: TransactionEventBody): ApiResponse<Unit>
 }
