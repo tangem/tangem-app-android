@@ -166,8 +166,32 @@ internal object WalletsDomainModule {
 
     @Provides
     @Singleton
-    fun providesUnlockWalletUseCase(userWalletsListManager: UserWalletsListManager): UnlockWalletsUseCase {
+    fun providesUnlockWalletsUseCase(userWalletsListManager: UserWalletsListManager): UnlockWalletsUseCase {
         return UnlockWalletsUseCase(userWalletsListManager = userWalletsListManager)
+    }
+
+    @Provides
+    @Singleton
+    fun providesUnlockWalletUseCase(
+        nonBiometricUnlockWalletUseCase: NonBiometricUnlockWalletUseCase,
+        userWalletsListRepository: UserWalletsListRepository,
+    ): UnlockWalletUseCase {
+        return UnlockWalletUseCase(
+            nonBiometricUnlockWalletUseCase = nonBiometricUnlockWalletUseCase,
+            userWalletsListRepository = userWalletsListRepository,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun providesNonBiometricUnlockWalletUseCase(
+        userWalletsListRepository: UserWalletsListRepository,
+        walletsRepository: WalletsRepository,
+    ): NonBiometricUnlockWalletUseCase {
+        return NonBiometricUnlockWalletUseCase(
+            userWalletsListRepository = userWalletsListRepository,
+            walletsRepository = walletsRepository,
+        )
     }
 
     @Provides
@@ -482,5 +506,13 @@ internal object WalletsDomainModule {
             shouldUseNewListRepository = hotWalletFeatureToggles.isHotWalletEnabled,
             dispatchers = dispatcherProvider,
         )
+    }
+
+    @Provides
+    @Singleton
+    fun provideHasSecuredWalletsUseCase(
+        userWalletsListRepository: UserWalletsListRepository,
+    ): HasSecuredWalletsUseCase {
+        return HasSecuredWalletsUseCase(userWalletsListRepository = userWalletsListRepository)
     }
 }
