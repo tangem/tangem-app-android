@@ -2,9 +2,6 @@ package com.tangem.domain.account.status.usecase
 
 import com.google.common.truth.Truth
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
-import com.tangem.common.test.utils.assertNone
-import com.tangem.common.test.utils.assertSome
-import com.tangem.common.test.utils.getEmittedValues
 import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.account.status.model.AccountCryptoCurrencyStatus
 import com.tangem.domain.account.status.producer.SingleAccountStatusListProducer
@@ -19,6 +16,9 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.test.core.assertNone
+import com.tangem.test.core.assertSome
+import com.tangem.test.core.getEmittedValues
 import io.mockk.*
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
@@ -79,7 +79,7 @@ class GetAccountCurrencyStatusUseCaseTest {
             )
 
             val accountStatusList = mockk<AccountStatusList>(relaxed = true) {
-                every { this@mockk.accountStatuses } returns setOf(accountStatus)
+                every { this@mockk.accountStatuses } returns listOf(accountStatus)
             }
 
             coEvery { supplier.getSyncOrNull(supplierParams) } returns accountStatusList
@@ -117,7 +117,7 @@ class GetAccountCurrencyStatusUseCaseTest {
             )
 
             val accountStatusList = mockk<AccountStatusList>(relaxed = true) {
-                every { this@mockk.accountStatuses } returns setOf(mainAccountStatus, accountStatus, mockk())
+                every { this@mockk.accountStatuses } returns listOf(mainAccountStatus, accountStatus, mockk())
             }
 
             coEvery { supplier.getSyncOrNull(supplierParams) } returns accountStatusList
@@ -154,7 +154,7 @@ class GetAccountCurrencyStatusUseCaseTest {
             )
 
             val accountStatusList = mockk<AccountStatusList>(relaxed = true) {
-                every { this@mockk.accountStatuses } returns setOf(accountStatus)
+                every { this@mockk.accountStatuses } returns listOf(accountStatus)
             }
 
             coEvery { supplier.getSyncOrNull(supplierParams) } returns accountStatusList
@@ -198,7 +198,7 @@ class GetAccountCurrencyStatusUseCaseTest {
             )
 
             val accountStatusList = mockk<AccountStatusList>(relaxed = true) {
-                every { this@mockk.accountStatuses } returns setOf(accountStatus)
+                every { this@mockk.accountStatuses } returns listOf(accountStatus)
             }
 
             coEvery { supplier(supplierParams) } returns flowOf(accountStatusList)
@@ -237,7 +237,7 @@ class GetAccountCurrencyStatusUseCaseTest {
             )
 
             val accountStatusList = mockk<AccountStatusList>(relaxed = true) {
-                every { this@mockk.accountStatuses } returns setOf(mainAccountStatus, accountStatus, mockk())
+                every { this@mockk.accountStatuses } returns listOf(mainAccountStatus, accountStatus, mockk())
             }
 
             coEvery { supplier(supplierParams) } returns flowOf(accountStatusList)
@@ -271,7 +271,7 @@ class GetAccountCurrencyStatusUseCaseTest {
             )
 
             val accountStatusList = mockk<AccountStatusList>(relaxed = true) {
-                every { this@mockk.accountStatuses } returns setOf(accountStatus)
+                every { this@mockk.accountStatuses } returns listOf(accountStatus)
             }
 
             coEvery { supplier(supplierParams) } returns flowOf(accountStatusList)
