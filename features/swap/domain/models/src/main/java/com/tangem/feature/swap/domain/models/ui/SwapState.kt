@@ -1,6 +1,7 @@
 package com.tangem.feature.swap.domain.models.ui
 
 import com.tangem.blockchain.common.transaction.Fee
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyCheck
 import com.tangem.feature.swap.domain.models.ExpressDataError
@@ -79,6 +80,7 @@ data class TokenSwapInfo(
     val tokenAmount: SwapAmount,
     val amountFiat: BigDecimal,
     val cryptoCurrencyStatus: CryptoCurrencyStatus,
+    val account: Account.CryptoPortfolio?,
 )
 
 data class RequestApproveStateData(
