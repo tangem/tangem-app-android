@@ -1436,8 +1436,8 @@
   <string name="tangempay_kyc_in_progress_notification_button">View Status</string>
   <string name="tangempay_kyc_in_progress_notification_title">KYC in progress for Tangem Pay</string>
   <string name="tangempay_onboarding_get_card_button_text">Get card</string>
-  <string name="tangempay_onboarding_pay_description">Spend your crypto anywhere</string>
-  <string name="tangempay_onboarding_pay_title">With digital card that works with Apple Pay and Google Pay</string>
+  <string name="tangempay_onboarding_pay_description">With digital card that works with Apple Pay and Google Pay</string>
+  <string name="tangempay_onboarding_pay_title">Spend your assets anywhere</string>
   <string name="tangempay_onboarding_purchases_description">There are no additional fees for purchases</string>
   <string name="tangempay_onboarding_purchases_title">Pay exactly what you see</string>
   <string name="tangempay_onboarding_security_description">A separate payment account will be created without disclosing your addresses and assets</string>
