@@ -5,6 +5,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -14,6 +15,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
@@ -52,14 +54,24 @@ internal fun TangemPayCard(state: TangemPayCardDetailsUM, modifier: Modifier = M
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .aspectRatio(204f / 130f) // size of img_tangem_pay_visa
+            .aspectRatio(328f / 212f) // size of img_tangem_pay_visa
             .graphicsLayer {
                 rotationY = rotateCardY
                 cameraDistance = zAxisDistance
             }
             .clip(RoundedCornerShape(16.dp))
             .clickable(onClick = state.onClick)
-            .background(Color(red = 18, green = 21, blue = 31)),
+            .background(Color(red = 18, green = 21, blue = 31))
+            .border(
+                width = 1.dp,
+                brush = Brush.linearGradient(
+                    colors = listOf(
+                        TangemTheme.colors.text.constantWhite.copy(alpha = 0.1F),
+                        TangemTheme.colors.text.constantWhite.copy(alpha = 0f),
+                    ),
+                ),
+                shape = RoundedCornerShape(16.dp),
+            ),
     ) {
         if (shouldShowDetails) {
             TangemPayCardDetailsShownBlock(
@@ -93,7 +105,7 @@ private fun TangemPayCardDetailsHiddenBlock(
 ) {
     Box(modifier = modifier.fillMaxSize()) {
         val imageResId = when (cardFrozenState) {
-            is TangemPayCardFrozenState.Frozen -> R.drawable.img_frozen_tangem_pay_visa
+            is TangemPayCardFrozenState.Frozen -> R.drawable.img_tangem_pay_visa_frozen
             else -> R.drawable.img_tangem_pay_visa
         }
         Image(
@@ -244,8 +256,12 @@ private fun CardDetailsTextContainer(title: String, text: String, onCopy: () -> 
 private fun TangemPayCardDetailsBlockV2Preview(
     @PreviewParameter(TangemPayCardDetailsUMProvider::class) state: TangemPayCardDetailsUM,
 ) {
-    TangemThemePreview {
-        Box(modifier = Modifier.fillMaxSize()) {
+    TangemThemePreview(isDark = true) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(TangemTheme.colors.background.primary),
+        ) {
             TangemPayCard(
                 state = state,
                 modifier = Modifier
