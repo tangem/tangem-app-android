@@ -36,9 +36,10 @@ import com.tangem.features.send.v2.api.SendComponent
 import com.tangem.features.send.v2.api.SendEntryPointComponent
 import com.tangem.features.staking.api.StakingComponent
 import com.tangem.features.swap.SwapComponent
-import com.tangem.features.tangempay.components.TangemPayDetailsComponent
+import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
 import com.tangem.features.tangempay.components.TangemPayOnboardingComponent
-import com.tangem.features.tangempay.components.TangemPayOnboardingComponent.Params.*
+import com.tangem.features.tangempay.components.TangemPayOnboardingComponent.Params.ContinueOnboarding
+import com.tangem.features.tangempay.components.TangemPayOnboardingComponent.Params.Deeplink
 import com.tangem.features.tokendetails.TokenDetailsComponent
 import com.tangem.features.wallet.WalletEntryComponent
 import com.tangem.features.walletconnect.components.WalletConnectEntryComponent
@@ -62,6 +63,7 @@ internal class ChildFactory @Inject constructor(
     private val detailsComponentFactory: DetailsComponent.Factory,
     private val walletSettingsComponentFactory: WalletSettingsComponent.Factory,
     private val walletBackupComponentFactory: WalletBackupComponent.Factory,
+    private val walletHardwareBackupComponentFactory: WalletHardwareBackupComponent.Factory,
     private val disclaimerComponentFactory: DisclaimerComponent.Factory,
     private val manageTokensComponentFactory: ManageTokensComponent.Factory,
     private val marketsTokenDetailsComponentFactory: MarketsTokenDetailsComponent.Factory,
@@ -100,6 +102,7 @@ internal class ChildFactory @Inject constructor(
     private val chooseManagedTokensComponentFactory: ChooseManagedTokensComponent.Factory,
     private val createWalletSelectionComponentFactory: CreateWalletSelectionComponent.Factory,
     private val createWalletStartComponentFactory: CreateWalletStartComponent.Factory,
+    private val createHardwareWalletComponentFactory: CreateHardwareWalletComponent.Factory,
     private val createMobileWalletComponentFactory: CreateMobileWalletComponent.Factory,
     private val upgradeWalletComponentFactory: UpgradeWalletComponent.Factory,
     private val addExistingWalletComponentFactory: AddExistingWalletComponent.Factory,
@@ -107,8 +110,9 @@ internal class ChildFactory @Inject constructor(
     private val createWalletBackupComponentFactory: CreateWalletBackupComponent.Factory,
     private val updateAccessCodeComponentFactory: UpdateAccessCodeComponent.Factory,
     private val viewPhraseComponentFactory: ViewPhraseComponent.Factory,
+    private val forgetWalletComponentFactory: ForgetWalletComponent.Factory,
     private val sendEntryPointComponentFactory: SendEntryPointComponent.Factory,
-    private val tangemPayDetailsComponentFactory: TangemPayDetailsComponent.Factory,
+    private val tangemPayDetailsContainerComponentFactory: TangemPayDetailsContainerComponent.Factory,
     private val tangemPayOnboardingComponentFactory: TangemPayOnboardingComponent.Factory,
     private val kycComponentFactory: KycComponent.Factory,
     private val yieldSupplyPromoComponentFactory: YieldSupplyPromoComponent.Factory,
@@ -138,7 +142,6 @@ internal class ChildFactory @Inject constructor(
             is AppRoute.ManageTokens -> {
                 val source = when (route.source) {
                     AppRoute.ManageTokens.Source.SETTINGS -> ManageTokensSource.SETTINGS
-                    AppRoute.ManageTokens.Source.ONBOARDING -> ManageTokensSource.ONBOARDING
                     AppRoute.ManageTokens.Source.STORIES -> ManageTokensSource.STORIES
                 }
 
@@ -185,6 +188,15 @@ internal class ChildFactory @Inject constructor(
                         userWalletId = route.userWalletId,
                     ),
                     componentFactory = walletBackupComponentFactory,
+                )
+            }
+            is AppRoute.WalletHardwareBackup -> {
+                createComponentChild(
+                    context = context,
+                    params = WalletHardwareBackupComponent.Params(
+                        userWalletId = route.userWalletId,
+                    ),
+                    componentFactory = walletHardwareBackupComponentFactory,
                 )
             }
             is AppRoute.MarketsTokenDetails -> {
@@ -294,7 +306,7 @@ internal class ChildFactory @Inject constructor(
                     context = context,
                     params = StakingComponent.Params(
                         userWalletId = route.userWalletId,
-                        cryptoCurrencyId = route.cryptoCurrencyId,
+                        cryptoCurrency = route.cryptoCurrency,
                         yieldId = route.yieldId,
                     ),
                     componentFactory = stakingComponentFactory,
@@ -309,6 +321,13 @@ internal class ChildFactory @Inject constructor(
                         userWalletId = route.userWalletId,
                         isInitialReverseOrder = route.isInitialReverseOrder,
                         screenSource = route.screenSource,
+                        tangemPayInput = route.tangemPayInput?.let { tangemPayInput ->
+                            SwapComponent.Params.TangemPayInput(
+                                cryptoAmount = tangemPayInput.cryptoAmount,
+                                fiatAmount = tangemPayInput.fiatAmount,
+                                depositAddress = tangemPayInput.depositAddress,
+                            )
+                        },
                     ),
                     componentFactory = swapComponentFactory,
                 )
@@ -497,6 +516,13 @@ internal class ChildFactory @Inject constructor(
                     componentFactory = createWalletSelectionComponentFactory,
                 )
             }
+            is AppRoute.CreateHardwareWallet -> {
+                createComponentChild(
+                    context = context,
+                    params = Unit,
+                    componentFactory = createHardwareWalletComponentFactory,
+                )
+            }
             is AppRoute.CreateMobileWallet -> {
                 createComponentChild(
                     context = context,
@@ -525,6 +551,7 @@ internal class ChildFactory @Inject constructor(
                     context = context,
                     params = WalletActivationComponent.Params(
                         userWalletId = route.userWalletId,
+                        isBackupExists = route.isBackupExists,
                     ),
                     componentFactory = walletActivationComponentFactory,
                 )
@@ -534,6 +561,8 @@ internal class ChildFactory @Inject constructor(
                     context = context,
                     params = CreateWalletBackupComponent.Params(
                         userWalletId = route.userWalletId,
+                        isUpgradeFlow = route.isUpgradeFlow,
+                        setAccessCode = route.setAccessCode,
                     ),
                     componentFactory = createWalletBackupComponentFactory,
                 )
@@ -554,6 +583,15 @@ internal class ChildFactory @Inject constructor(
                         userWalletId = route.userWalletId,
                     ),
                     componentFactory = viewPhraseComponentFactory,
+                )
+            }
+            is AppRoute.ForgetWallet -> {
+                createComponentChild(
+                    context = context,
+                    params = ForgetWalletComponent.Params(
+                        userWalletId = route.userWalletId,
+                    ),
+                    componentFactory = forgetWalletComponentFactory,
                 )
             }
             is AppRoute.SendEntryPoint -> {
@@ -605,8 +643,11 @@ internal class ChildFactory @Inject constructor(
             is AppRoute.TangemPayDetails -> {
                 createComponentChild(
                     context = context,
-                    params = TangemPayDetailsComponent.Params(config = route.config),
-                    componentFactory = tangemPayDetailsComponentFactory,
+                    params = TangemPayDetailsContainerComponent.Params(
+                        userWalletId = route.userWalletId,
+                        config = route.config,
+                    ),
+                    componentFactory = tangemPayDetailsContainerComponentFactory,
                 )
             }
             is AppRoute.TangemPayOnboarding -> {
