@@ -28,13 +28,13 @@ internal object ABTestsManagerModule {
         dispatchers: CoroutineDispatcherProvider,
     ): ABTestsManager {
         return if (BuildConfig.AB_TESTS_ENABLED) {
-            StubABTestsManager()
-        } else {
             AmplitudeABTestsManager(
                 application = application,
                 apiKeyProvider = Provider { environmentConfigStorage.getConfigSync().amplitudeApiKey },
                 scope = CoroutineScope(context = dispatchers.io + SupervisorJob()),
             )
+        } else {
+            StubABTestsManager()
         }
     }
 }
