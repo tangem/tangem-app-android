@@ -306,8 +306,9 @@ internal class YieldSupplyModel @Inject constructor(
     private fun loadActiveState(cryptoCurrencyStatus: CryptoCurrencyStatus, yieldSupplyStatus: YieldSupplyStatus) {
         val cryptoCurrencyToken = cryptoCurrency as? CryptoCurrency.Token ?: return
         val showWarningIcon = !yieldSupplyStatus.isAllowedToSpend
-        val showInfoIconPrevState = when (uiState) {
-            is YieldSupplyUM.Content -> uiState.showInfoIcon
+        val state = uiState.value
+        val isShowInfoIconPrevState = when (state) {
+            is YieldSupplyUM.Content -> state.showInfoIcon
             else -> false
         }
         if (!yieldSupplyStatus.isAllowedToSpend) {
@@ -337,7 +338,7 @@ internal class YieldSupplyModel @Inject constructor(
                             ),
                             onClick = ::onActiveClick,
                             showWarningIcon = showWarningIcon,
-                            showInfoIcon = showInfoIconPrevState,
+                            showInfoIcon = isShowInfoIconPrevState,
                             apy = tokenStatus.apy.toString(),
                         )
                     }
@@ -355,7 +356,7 @@ internal class YieldSupplyModel @Inject constructor(
                             rewardsApy = TextReference.EMPTY,
                             onClick = ::onActiveClick,
                             showWarningIcon = showWarningIcon,
-                            showInfoIcon = showInfoIconPrevState,
+                            showInfoIcon = isShowInfoIconPrevState,
                             apy = "",
                         )
                     }
