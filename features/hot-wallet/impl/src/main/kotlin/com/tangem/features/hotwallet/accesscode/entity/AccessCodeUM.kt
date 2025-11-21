@@ -8,9 +8,6 @@ internal data class AccessCodeUM(
     val accessCodeColor: PinTextColor,
     val onAccessCodeChange: (String) -> Unit,
     val isConfirmMode: Boolean,
-    val buttonEnabled: Boolean,
-    val buttonInProgress: Boolean,
-    val onButtonClick: () -> Unit,
 ) {
     val accessCodeLength: Int = ACCESS_CODE_LENGTH
 }
