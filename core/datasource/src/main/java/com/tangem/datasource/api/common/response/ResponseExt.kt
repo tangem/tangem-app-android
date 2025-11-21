@@ -15,11 +15,12 @@ internal fun <T : Any> Response<T>.toSafeApiResponse(analyticsErrorHandler: Anal
     val headers = headers().toMultimap()
     val body = body()
 
+    val code = ApiResponseError.HttpException.Code.entries
+        .firstOrNull { it.numericCode == code() }
+
     return if (isSuccessful && body != null) {
-        apiSuccess(data = body, headers = headers)
+        apiSuccess(data = body, code = code, headers = headers)
     } else {
-        val code = ApiResponseError.HttpException.Code.entries
-            .firstOrNull { it.numericCode == code() }
         val e = try {
             if (code == null) {
                 ApiResponseError.UnknownException(IllegalArgumentException("Unknown error status code: ${code()}"))

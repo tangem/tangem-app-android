@@ -1,0 +1,15 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>MultilineLambdaItParameter:DefaultMultiYieldBalanceFetcher.kt$DefaultMultiYieldBalanceFetcher${ Timber.e(it, "Unable to fetch yield balances $params") yieldsBalancesStore.storeError(userWalletId = params.userWalletId, stakingIds = stakingIds) }</ID>
+    <ID>MultilineLambdaItParameter:DefaultMultiYieldBalanceFetcher.kt$DefaultMultiYieldBalanceFetcher${ Timber.e(it, "Unable to fetch yield balances $userWalletId") yieldsBalancesStore.storeError(userWalletId = userWalletId, stakingIds = stakingIds) throw it }</ID>
+    <ID>MultilineLambdaItParameter:DefaultMultiYieldBalanceFetcher.kt$DefaultMultiYieldBalanceFetcher${ request.integrationId == it.integrationId &amp;&amp; request.addresses.address == it.addresses.address }</ID>
+    <ID>MultilineLambdaItParameter:DefaultMultiYieldBalanceFetcher.kt$DefaultMultiYieldBalanceFetcher${ stakingId.integrationId == it.integrationId &amp;&amp; stakingId.address == it.addresses.address }</ID>
+    <ID>MultilineLambdaItParameter:DefaultStakingRepository.kt$DefaultStakingRepository${ YieldConverter.convertListIgnoreErrors( input = it, onError = { Timber.e("Error converting one of the items in enabled yields: $it") }, ) }</ID>
+    <ID>NamedArguments:DefaultP2PEthPoolRepository.kt$DefaultP2PEthPoolRepository$getRewards(network.value, delegatorAddress, vaultAddress, period)</ID>
+    <ID>NoNameShadowing:DefaultStakingRepository.kt$DefaultStakingRepository${ Timber.e("Error converting one of the items in enabled yields: $it") }</ID>
+    <ID>NullableToStringCall:DefaultStakingRepository.kt$DefaultStakingRepository$${(response as? ApiResponse.Error)?.cause}</ID>
+    <ID>UseEmptyCounterpart:YieldBalanceRequestBodyFactory.kt$YieldBalanceRequestBodyFactory$listOf()</ID>
+  </CurrentIssues>
+</SmellBaseline>

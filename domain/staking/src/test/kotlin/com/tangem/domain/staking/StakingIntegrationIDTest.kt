@@ -2,10 +2,10 @@ package com.tangem.domain.staking
 
 import com.google.common.truth.Truth
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.common.test.utils.ProvideTestModels
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.staking.model.StakingApproval
 import com.tangem.domain.staking.model.StakingIntegrationID
+import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -28,23 +28,35 @@ class StakingIntegrationIDTest {
     }
 
     @Test
-    fun `all blockchains are unique`() {
+    fun `all Coin blockchains are unique`() {
         // Act
-        val actual = StakingIntegrationID.entries.distinctBy(StakingIntegrationID::blockchain)
+        val actual = StakingIntegrationID.StakeKit.Coin.entries
+            .distinctBy(StakingIntegrationID.StakeKit.Coin::blockchain)
 
         // Assert
-        val expected = StakingIntegrationID.entries.size
+        val expected = StakingIntegrationID.StakeKit.Coin.entries.size
+        Truth.assertThat(actual).hasSize(expected)
+    }
+
+    @Test
+    fun `all P2P blockchains are unique`() {
+        // Act
+        val actual = StakingIntegrationID.P2P.entries
+            .distinctBy(StakingIntegrationID.P2P::blockchain)
+
+        // Assert
+        val expected = StakingIntegrationID.P2P.entries.size
         Truth.assertThat(actual).hasSize(expected)
     }
 
     @Test
     fun `all sub blockchains are unique`() {
         // Act
-        val actual = StakingIntegrationID.EthereumToken.entries
-            .distinctBy(StakingIntegrationID.EthereumToken::subBlockchain)
+        val actual = StakingIntegrationID.StakeKit.EthereumToken.entries
+            .distinctBy(StakingIntegrationID.StakeKit.EthereumToken::subBlockchain)
 
         // Assert
-        val expected = StakingIntegrationID.EthereumToken.entries.size
+        val expected = StakingIntegrationID.StakeKit.EthereumToken.entries.size
         Truth.assertThat(actual).hasSize(expected)
     }
 
@@ -65,8 +77,8 @@ class StakingIntegrationIDTest {
     @Test
     fun `all EthereumToken IDs are ethereum based blockchains`() {
         // Act
-        val actual = StakingIntegrationID.EthereumToken.entries
-            .map(StakingIntegrationID.EthereumToken::subBlockchain)
+        val actual = StakingIntegrationID.StakeKit.EthereumToken.entries
+            .map(StakingIntegrationID.StakeKit.EthereumToken::subBlockchain)
             .all { it.isEvm() }
 
         // Assert
@@ -76,8 +88,8 @@ class StakingIntegrationIDTest {
     @Test
     fun `all Coin IDs do not need staking approval`() {
         // Act
-        val actual = StakingIntegrationID.Coin.entries
-            .map(StakingIntegrationID.Coin::approval)
+        val actual = StakingIntegrationID.StakeKit.Coin.entries
+            .map(StakingIntegrationID.StakeKit.Coin::approval)
             .none { it is StakingApproval.Needed }
 
         // Assert
@@ -87,8 +99,8 @@ class StakingIntegrationIDTest {
     @Test
     fun `all EthereumToken IDs need staking approval`() {
         // Act
-        val actual = StakingIntegrationID.EthereumToken.entries
-            .map(StakingIntegrationID.EthereumToken::approval)
+        val actual = StakingIntegrationID.StakeKit.EthereumToken.entries
+            .map(StakingIntegrationID.StakeKit.EthereumToken::approval)
             .all { it is StakingApproval.Needed }
 
         // Assert
@@ -116,31 +128,35 @@ class StakingIntegrationIDTest {
             ),
             CreateModel(
                 currencyId = createCurrencyId(blockchain = Blockchain.TON),
-                expected = StakingIntegrationID.Coin.Ton,
+                expected = StakingIntegrationID.StakeKit.Coin.Ton,
             ),
             CreateModel(
                 currencyId = createCurrencyId(blockchain = Blockchain.Solana),
-                expected = StakingIntegrationID.Coin.Solana,
+                expected = StakingIntegrationID.StakeKit.Coin.Solana,
             ),
             CreateModel(
                 currencyId = createCurrencyId(blockchain = Blockchain.Cosmos),
-                expected = StakingIntegrationID.Coin.Cosmos,
+                expected = StakingIntegrationID.StakeKit.Coin.Cosmos,
             ),
             CreateModel(
                 currencyId = createCurrencyId(blockchain = Blockchain.Tron),
-                expected = StakingIntegrationID.Coin.Tron,
+                expected = StakingIntegrationID.StakeKit.Coin.Tron,
             ),
             CreateModel(
                 currencyId = createCurrencyId(blockchain = Blockchain.BSC),
-                expected = StakingIntegrationID.Coin.BSC,
+                expected = StakingIntegrationID.StakeKit.Coin.BSC,
             ),
             CreateModel(
                 currencyId = createCurrencyId(blockchain = Blockchain.Cardano),
-                expected = StakingIntegrationID.Coin.Cardano,
+                expected = StakingIntegrationID.StakeKit.Coin.Cardano,
+            ),
+            CreateModel(
+                currencyId = createCurrencyId(blockchain = Blockchain.Ethereum),
+                expected = StakingIntegrationID.P2P.EthereumPooled,
             ),
             CreateModel(
                 currencyId = CryptoCurrency.ID.fromValue(value = "token⟨ETH⟩polygon-ecosystem-token⚓1234567890"),
-                expected = StakingIntegrationID.EthereumToken.Polygon,
+                expected = StakingIntegrationID.StakeKit.EthereumToken.Polygon,
             ),
             CreateModel(
                 currencyId = CryptoCurrency.ID.fromValue(value = "token⟨SOLANA⟩solana⚓1234567890"),
