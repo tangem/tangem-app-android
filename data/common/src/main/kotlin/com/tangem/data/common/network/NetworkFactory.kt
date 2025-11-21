@@ -373,6 +373,7 @@ class NetworkFactory @Inject constructor(
             Blockchain.Quai, Blockchain.QuaiTestnet,
             Blockchain.Linea, Blockchain.LineaTestnet,
             Blockchain.ArbitrumNova,
+            Blockchain.Plasma, Blockchain.PlasmaTestnet,
             -> Network.TransactionExtrasType.NONE
             // endregion
         }
