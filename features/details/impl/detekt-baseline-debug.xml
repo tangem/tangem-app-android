@@ -1,0 +1,16 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>HasPlatformType:DetailsModel.kt$DetailsModel.Companion$val APP_LANGUAGE = Locale.getDefault().language</ID>
+    <ID>HasPlatformType:DetailsModel.kt$DetailsModel.Companion$val SYSTEM_LANGUAGE = runCatching { Resources.getSystem().configuration.locales[0].language }.getOrElse { "" }</ID>
+    <ID>MultilineLambdaItParameter:DetailsModel.kt$DetailsModel${ Timber.w("Unable to check WalletConnect availability: $it") false }</ID>
+    <ID>MultilineLambdaItParameter:DetailsModel.kt$DetailsModel${ it.copy( selectFeedbackEmailTypeBSConfig = TangemBottomSheetConfig( isShown = true, onDismissRequest = { state.update { it.copy( selectFeedbackEmailTypeBSConfig = it.selectFeedbackEmailTypeBSConfig.copy(isShown = false), ) } }, content = SelectEmailFeedbackTypeBS( onOptionClick = { option -&gt; onEmailFeedbackTypeOptionSelected( selectedWalletMetaInfo = selectedWalletMetaInfo, option = option, ) state.update { it.copy( selectFeedbackEmailTypeBSConfig = it.selectFeedbackEmailTypeBSConfig.copy(isShown = false), ) } }, ), ), ) }</ID>
+    <ID>MultilineLambdaItParameter:DetailsModel.kt$DetailsModel${ it.copy( selectFeedbackEmailTypeBSConfig = it.selectFeedbackEmailTypeBSConfig.copy(isShown = false), ) }</ID>
+    <ID>MultilineLambdaItParameter:PreviewUserWalletListComponent.kt$PreviewUserWalletListComponent${ it.copy( balance = UserWalletItemUM.Balance.Loaded( value = "1.000 BTC", isFlickering = true, ), ) }</ID>
+    <ID>MultilineLambdaItParameter:UserWalletSaver.kt$UserWalletSaver${ val message = it.message if (!message.isNullOrEmpty()) { messageSender.send(SnackbarMessage(message)) } }</ID>
+    <ID>NonBooleanPropertyPrefixedWithIs:UserWalletListModel.kt$UserWalletListModel$private val isWalletSavingInProgress: MutableStateFlow&lt;Boolean&gt; = MutableStateFlow(value = false)</ID>
+    <ID>RedundantSuspendModifier:UserWalletSaver.kt$UserWalletSaver$suspend</ID>
+    <ID>UnnecessaryLet:ItemsBuilder.kt$ItemsBuilder$let(::add)</ID>
+  </CurrentIssues>
+</SmellBaseline>
