@@ -4,6 +4,7 @@ import com.tangem.features.onboarding.v2.common.ui.OnboardingDialogUM
 
 internal data class MultiWalletFinalizeUM(
     val step: Step = Step.Primary,
+    val isButtonLoading: Boolean = false,
     val isRing: Boolean = false,
     val scanPrimary: Boolean = true,
     val cardNumber: String = "",
