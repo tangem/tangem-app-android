@@ -7,7 +7,6 @@ import com.tangem.domain.models.wallet.UserWalletId
 interface UpdateAccessCodeComponent : ComposableContentComponent {
     data class Params(
         val userWalletId: UserWalletId,
-        val isFirstSetup: Boolean,
     )
     interface Factory : ComponentFactory<Params, UpdateAccessCodeComponent>
 }
