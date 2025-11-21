@@ -30,6 +30,7 @@ dependencies {
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.notifications.models)
+    implementation(projects.domain.demo.models)
     // endregion
 
     // region Tangem libraries
