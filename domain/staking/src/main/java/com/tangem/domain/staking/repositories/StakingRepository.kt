@@ -17,10 +17,11 @@ import com.tangem.domain.staking.model.stakekit.transaction.StakingGasEstimate
 import com.tangem.domain.staking.model.stakekit.transaction.StakingTransaction
 import kotlinx.coroutines.flow.Flow
 
+// TODO p2p make 3 repos: stakekit, p2p, common staking
 @Suppress("TooManyFunctions")
 interface StakingRepository {
 
-    suspend fun fetchEnabledYields()
+    suspend fun fetchYields()
 
     fun getEnabledYields(): Flow<List<Yield>>
 
