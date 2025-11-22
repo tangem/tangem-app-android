@@ -20,6 +20,7 @@ import com.tangem.feature.wallet.presentation.wallet.domain.MultiWalletTokenList
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletWithFundsChecker
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.subscribers.*
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 
 @Suppress("LongParameterList")
 @Deprecated("Use MultiWalletContentLoaderV2 instead")
@@ -43,6 +44,7 @@ internal class MultiWalletContentLoader(
     private val currenciesRepository: CurrenciesRepository,
     private val yieldSupplyApyFlowUseCase: YieldSupplyApyFlowUseCase,
     private val stakingApyFlowUseCase: StakingApyFlowUseCase,
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
 ) : WalletContentLoader(id = userWallet.walletId) {
 
     override fun create(): List<WalletSubscriber> {
@@ -88,6 +90,7 @@ internal class MultiWalletContentLoader(
                 stateHolder = stateHolder,
                 shouldSaveUserWalletsUseCase = shouldSaveUserWalletsUseCase,
                 clickIntents = clickIntents,
+                hotWalletFeatureToggles = hotWalletFeatureToggles,
             ).let(::add)
         }
     }
