@@ -2,7 +2,7 @@ package com.tangem.domain.tokens.model
 
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.staking.model.stakekit.Yield
+import com.tangem.domain.staking.model.StakingOption
 
 data class TokenActionsState(
     val walletId: UserWalletId,
@@ -24,7 +24,7 @@ data class TokenActionsState(
 
         data class Stake(
             override val unavailabilityReason: ScenarioUnavailabilityReason,
-            val yield: Yield?,
+            val option: StakingOption?,
         ) : ActionState()
 
         data class Swap(

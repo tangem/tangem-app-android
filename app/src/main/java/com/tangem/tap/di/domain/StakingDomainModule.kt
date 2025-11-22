@@ -1,6 +1,7 @@
 package com.tangem.tap.di.domain
 
 import com.tangem.domain.staking.*
+import com.tangem.domain.staking.repositories.P2PEthPoolRepository
 import com.tangem.domain.staking.repositories.StakingActionRepository
 import com.tangem.domain.staking.repositories.StakingErrorResolver
 import com.tangem.domain.staking.repositories.StakingRepository
@@ -16,6 +17,7 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
+@Suppress("TooManyFunctions")
 internal object StakingDomainModule {
 
     @Provides
@@ -88,6 +90,20 @@ internal object StakingDomainModule {
     ): FetchStakingTokensUseCase {
         return FetchStakingTokensUseCase(
             stakingRepository = stakingRepository,
+            stakingErrorResolver = stakingErrorResolver,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideFetchStakingOptionsUseCase(
+        stakingRepository: StakingRepository,
+        p2pRepository: P2PEthPoolRepository,
+        stakingErrorResolver: StakingErrorResolver,
+    ): FetchStakingOptionsUseCase {
+        return FetchStakingOptionsUseCase(
+            stakingRepository = stakingRepository,
+            p2pRepository = p2pRepository,
             stakingErrorResolver = stakingErrorResolver,
         )
     }

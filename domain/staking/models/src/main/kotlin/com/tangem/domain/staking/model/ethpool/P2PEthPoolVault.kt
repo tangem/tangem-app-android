@@ -1,11 +1,14 @@
 package com.tangem.domain.staking.model.ethpool
 
 import com.tangem.domain.models.serialization.SerializedBigDecimal
+import kotlinx.serialization.Serializable
 
 /**
  * P2P.org pooled staking vault information
  * Simplified version for vault list display
+ * Analogue of stakekit yield
  */
+@Serializable
 data class P2PEthPoolVault(
     val vaultAddress: String,
     val displayName: String,
