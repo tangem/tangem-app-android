@@ -20,6 +20,11 @@ class SendConfirmPageObject(semanticsProvider: SemanticsNodeInteractionsProvider
         useUnmergedTree = true
     }
 
+    val closeButton: KNode = child {
+        hasTestTag(TopAppBarTestTags.CLOSE_BUTTON)
+        useUnmergedTree = true
+    }
+
     val sendButton: KNode = child {
         hasTestTag(BaseButtonTestTags.BUTTON)
         hasAnyDescendant(withText(getResourceString(R.string.common_send)))
