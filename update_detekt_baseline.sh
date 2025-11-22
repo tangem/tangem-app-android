@@ -21,7 +21,21 @@ log "=========================================="
 log "Date: $(date '+%Y-%m-%d %H:%M:%S')"
 log ""
 
-log "Updating detekt baseline for debug variant..."
+log "Step 1: Running detekt to check for new issues..."
+log ""
+
+if ./gradlew detekt detektDebug detektGoogleDebug; then
+    log "✓ Detekt passed - no new issues found"
+    log ""
+else
+    log ""
+    log "✗ ERROR: Detekt found new issues!"
+    log "Please fix the issues before updating the baseline."
+    log "This prevents masking new errors in the baseline."
+    exit 1
+fi
+
+log "Step 2: Updating detekt baseline for debug variant..."
 log ""
 
 ./gradlew detektBaselineDebug
