@@ -28,6 +28,7 @@ import com.tangem.datasource.api.stakekit.models.response.EnabledYieldsResponse
 import com.tangem.datasource.api.stakekit.models.response.model.NetworkTypeDTO
 import com.tangem.datasource.api.stakekit.models.response.model.action.StakingActionStatusDTO
 import com.tangem.datasource.api.stakekit.models.response.model.transaction.tron.TronStakeKitTransaction
+import com.tangem.datasource.local.token.P2PEthPoolVaultsStore
 import com.tangem.datasource.local.token.StakingYieldsStore
 import com.tangem.datasource.local.token.converter.StakingNetworkTypeConverter
 import com.tangem.datasource.local.token.converter.YieldTokenConverter
@@ -42,6 +43,8 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingEntryInfo
 import com.tangem.domain.staking.model.StakingIntegrationID
+import com.tangem.domain.staking.model.StakingOption
+import com.tangem.domain.staking.model.ethpool.P2PEthPoolVault
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.staking.model.stakekit.action.StakingAction
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
@@ -56,9 +59,9 @@ import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.lib.crypto.BlockchainUtils.isCardano
 import com.tangem.lib.crypto.BlockchainUtils.isSolana
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import com.tangem.utils.extensions.orZero
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.channels.ProducerScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -67,6 +70,7 @@ import timber.log.Timber
 internal class DefaultStakingRepository(
     private val stakeKitApi: StakeKitApi,
     private val stakingYieldsStore: StakingYieldsStore,
+    private val p2pEthPoolVaultsStore: P2PEthPoolVaultsStore,
     private val stakingBalanceStoreV2: YieldsBalancesStore,
     private val dispatchers: CoroutineDispatcherProvider,
     private val walletManagersFacade: WalletManagersFacade,
@@ -92,7 +96,7 @@ internal class DefaultStakingRepository(
     private val networkTypeAdapter by lazy { moshi.adapter(NetworkTypeDTO::class.java) }
     private val stakingActionStatusAdapter by lazy { moshi.adapter(StakingActionStatusDTO::class.java) }
 
-    override suspend fun fetchEnabledYields() {
+    override suspend fun fetchYields() {
         withContext(dispatchers.io) {
             val yieldsResponses = getAvailableStakeKitIntegrationsIds().map {
                 async { it.getYieldRequest() }
@@ -190,12 +194,6 @@ internal class DefaultStakingRepository(
             val yield = getYield(cryptoCurrencyId, symbol)
 
             StakingEntryInfo(
-                rewardInfo = requireNotNull(
-                    yield
-                        .preferredValidators
-                        .maxByOrNull { it.rewardInfo?.rate.orZero() }?.rewardInfo,
-                ),
-                rewardSchedule = yield.metadata.rewardSchedule,
                 tokenSymbol = yield.token.symbol,
             )
         }
@@ -222,32 +220,16 @@ internal class DefaultStakingRepository(
                 return@channelFlow
             }
 
-            val isSupportedInMobileApp = StakingIntegrationID.create(currencyId = cryptoCurrency.id) != null
+            val stakingIntegration = StakingIntegrationID.create(currencyId = cryptoCurrency.id)
 
-            getEnabledYields()
-                .distinctUntilChanged()
-                .onEach { yields ->
-                    if (yields.isEmpty()) {
-                        send(StakingAvailability.TemporaryUnavailable)
-                        return@onEach
-                    }
-
-                    val prefetchedYield = findPrefetchedYield(
-                        yields = yields,
-                        currencyId = rawCurrencyId,
-                        symbol = cryptoCurrency.symbol,
-                    )
-                    when {
-                        prefetchedYield != null && isSupportedInMobileApp -> {
-                            send(StakingAvailability.Available(prefetchedYield))
-                        }
-                        prefetchedYield == null && isSupportedInMobileApp -> {
-                            send(StakingAvailability.TemporaryUnavailable)
-                        }
-                        else -> send(StakingAvailability.Unavailable)
-                    }
-                }
-                .launchIn(this)
+            when (stakingIntegration) {
+                is StakingIntegrationID.P2P -> subscribeToP2PStakingAvailability()
+                is StakingIntegrationID.StakeKit -> subscribeToStakeKitStakingAvailability(
+                    rawCurrencyId,
+                    cryptoCurrency,
+                )
+                null -> send(StakingAvailability.Unavailable)
+            }
         }
     }
 
@@ -268,27 +250,43 @@ internal class DefaultStakingRepository(
             return StakingAvailability.Unavailable
         }
 
-        val isSupportedInMobileApp = StakingIntegrationID.create(currencyId = cryptoCurrency.id) != null
+        val stakingIntegration = StakingIntegrationID.create(currencyId = cryptoCurrency.id)
+            ?: return StakingAvailability.Unavailable
 
-        val yields = getEnabledYieldsSync()
-        if (yields.isEmpty()) {
-            return StakingAvailability.TemporaryUnavailable
-        }
+        return when (stakingIntegration) {
+            is StakingIntegrationID.P2P -> {
+                val vaults = getP2PEthPoolVaultsSync()
+                if (vaults.isEmpty()) {
+                    return StakingAvailability.TemporaryUnavailable
+                }
 
-        val prefetchedYield = findPrefetchedYield(
-            yields = yields,
-            currencyId = rawCurrencyId,
-            symbol = cryptoCurrency.symbol,
-        )
+                val vault = findP2PEthPoolVault(
+                    vaults = vaults,
+                )
 
-        return when {
-            prefetchedYield != null && isSupportedInMobileApp -> {
-                StakingAvailability.Available(prefetchedYield)
+                if (vault != null) {
+                    StakingAvailability.Available(StakingOption.P2P(vault))
+                } else {
+                    StakingAvailability.TemporaryUnavailable
+                }
             }
-            prefetchedYield == null && isSupportedInMobileApp -> {
-                StakingAvailability.TemporaryUnavailable
+            is StakingIntegrationID.StakeKit -> {
+                val yields = getEnabledYieldsSync()
+                if (yields.isEmpty()) {
+                    return StakingAvailability.TemporaryUnavailable
+                }
+
+                val prefetchedYield = findPrefetchedYield(
+                    yields = yields,
+                    currencyId = rawCurrencyId,
+                    symbol = cryptoCurrency.symbol,
+                )
+
+                when {
+                    prefetchedYield != null -> StakingAvailability.Available(StakingOption.StakeKit(prefetchedYield))
+                    else -> StakingAvailability.TemporaryUnavailable
+                }
             }
-            else -> StakingAvailability.Unavailable
         }
     }
 
@@ -508,6 +506,65 @@ internal class DefaultStakingRepository(
                 onError = { Timber.e("Error converting one of the items in enabled yields: $it") },
             )
         }
+    }
+
+    private suspend fun getP2PEthPoolVaultsSync(): List<P2PEthPoolVault> {
+        return p2pEthPoolVaultsStore.getSync()
+    }
+
+    private fun getP2PEthPoolVaults(): Flow<List<P2PEthPoolVault>> {
+        return p2pEthPoolVaultsStore.get()
+    }
+
+    private fun findP2PEthPoolVault(vaults: List<P2PEthPoolVault>): P2PEthPoolVault? {
+        return vaults.firstOrNull { vault -> !vault.isPrivate }
+    }
+
+    private fun ProducerScope<StakingAvailability>.subscribeToP2PStakingAvailability() {
+        getP2PEthPoolVaults()
+            .distinctUntilChanged()
+            .onEach { vaults ->
+                if (vaults.isEmpty()) {
+                    send(StakingAvailability.TemporaryUnavailable)
+                    return@onEach
+                }
+
+                val vault = findP2PEthPoolVault(vaults = vaults)
+
+                if (vault != null) {
+                    send(StakingAvailability.Available(StakingOption.P2P(vault)))
+                } else {
+                    send(StakingAvailability.TemporaryUnavailable)
+                }
+            }
+            .launchIn(this)
+    }
+
+    private fun ProducerScope<StakingAvailability>.subscribeToStakeKitStakingAvailability(
+        rawCurrencyId: CryptoCurrency.RawID,
+        cryptoCurrency: CryptoCurrency,
+    ) {
+        getEnabledYields()
+            .distinctUntilChanged()
+            .onEach { yields ->
+                if (yields.isEmpty()) {
+                    send(StakingAvailability.TemporaryUnavailable)
+                    return@onEach
+                }
+
+                val prefetchedYield = findPrefetchedYield(
+                    yields = yields,
+                    currencyId = rawCurrencyId,
+                    symbol = cryptoCurrency.symbol,
+                )
+
+                if (prefetchedYield != null) {
+                    send(StakingAvailability.Available(StakingOption.StakeKit(prefetchedYield)))
+                } else {
+                    send(StakingAvailability.TemporaryUnavailable)
+                }
+            }
+            .launchIn(this)
     }
 
     private fun getTronResource(network: Network): TronResource? {
