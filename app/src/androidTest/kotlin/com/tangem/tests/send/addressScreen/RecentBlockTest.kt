@@ -21,7 +21,9 @@ import org.junit.Test
 @HiltAndroidTest
 class RecentBlockTest : BaseTestCase() {
     private val txHistoryScenarioName = "dogecoin_tx_history"
-    private val descriptionForWalletTransaction = "DOGE 0.0192, 11/10/2025, 1:46 PM"
+    private val recentTransactionAmount1 = "DOGE 0.0192"
+    private val recentTransactionAmount2 = "DOGE 0.10"
+    private val recentTransactionAmount3 = "DOGE 0.005"
 
     @AllureId("4005")
     @DisplayName("Send (address screen): check address history")
@@ -62,8 +64,16 @@ class RecentBlockTest : BaseTestCase() {
             step("Assert recipient address is displayed") {
                 onSendConfirmScreen { recipientAddress(DOGECOIN_ADDRESS).assertIsDisplayed() }
             }
-            step("Press system 'Back' button") {
-                device.uiDevice.pressBack()
+            step("Click on top bar 'Close' button") {
+                waitForIdle()
+                onSendConfirmScreen { closeButton.clickWithAssertion() }
+            }
+            step("Assert 'Send Address' screen is displayed") {
+                waitForIdle()
+                onSendAddressScreen { container.assertIsDisplayed() }
+            }
+            step("Assert address text field is displayed") {
+                onSendAddressScreen { addressTextField.assertIsDisplayed() }
             }
             step("Assert address text field contains correct recipient address") {
                 onSendAddressScreen { addressTextField.assertTextContains(DOGECOIN_ADDRESS) }
@@ -127,10 +137,26 @@ class RecentBlockTest : BaseTestCase() {
     @DisplayName("Send (address screen): check 'Recent' block, transaction history is empty")
     @Test
     fun recentBlockTransactionHistoryEmptyTest() {
-        val tokenName = "POL (ex-MATIC)"
+        val tokenName = "Dogecoin"
         val sendAmount = "1"
+        val txHistoryScenarioState = "Empty"
 
-        setupHooks().run {
+        setupHooks(
+            additionalAfterSection = {
+                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
+                resetWireMockScenarioState(QUOTES_API_SCENARIO)
+                resetWireMockScenarioState(txHistoryScenarioName)
+            }
+        ).run {
+            step("Set WireMock scenario: '$USER_TOKENS_API_SCENARIO' to state: '$tokenName'") {
+                setWireMockScenarioState(scenarioName = USER_TOKENS_API_SCENARIO, state = tokenName)
+            }
+            step("Set WireMock scenario: '$QUOTES_API_SCENARIO' to state: '$tokenName'") {
+                setWireMockScenarioState(scenarioName = QUOTES_API_SCENARIO, state = tokenName)
+            }
+            step("Set WireMock scenario: '$txHistoryScenarioName' to state: '$txHistoryScenarioState'") {
+                setWireMockScenarioState(scenarioName = txHistoryScenarioName, state = txHistoryScenarioState)
+            }
             step("Open 'Main Screen'") {
                 openMainScreen()
             }
@@ -201,7 +227,6 @@ class RecentBlockTest : BaseTestCase() {
         val txHistoryScenarioState = "11OutgoingTransactions"
         val recipientAddressBase = "DJ2TaZ5vvp3mBLugUpKjVM3pRBLi4uYaq"
         val shortenedRecipientAddress = "DJ2TaZ5vvp3mBLugU...Li4uYaq123456789b"
-        val descriptionForTransaction = "DOGE 0.10, 11/10/2025, 1:46 PM"
 
         setupHooks(
             additionalAfterSection = {
@@ -232,37 +257,38 @@ class RecentBlockTest : BaseTestCase() {
                 onSendAddressScreen { recentAddressesTitle.assertIsDisplayed() }
             }
             step("Check recent address item №1") {
-                checkRecentAddressItem(address = DOGECOIN_ADDRESS, description = descriptionForWalletTransaction)
+                checkRecentAddressItem(address = DOGECOIN_ADDRESS, description = recentTransactionAmount1)
             }
             step("Check recent address item №2") {
-                checkRecentAddressItem(address = shortenedRecipientAddress, description = descriptionForTransaction)
+                checkRecentAddressItem(address = shortenedRecipientAddress, description = recentTransactionAmount2)
             }
             step("Check recent address item №3") {
-                checkRecentAddressItem(address = recipientAddressBase + "k", description = descriptionForTransaction)
+                checkRecentAddressItem(address = recipientAddressBase + "k", description = recentTransactionAmount2)
             }
             step("Check recent address item №4") {
-                checkRecentAddressItem(address = recipientAddressBase + "c", description = descriptionForTransaction)
+                checkRecentAddressItem(address = recipientAddressBase + "c", description = recentTransactionAmount2)
             }
             step("Check recent address item №5") {
-                checkRecentAddressItem(address = recipientAddressBase + "d", description = descriptionForTransaction)
+                checkRecentAddressItem(address = recipientAddressBase + "d", description = recentTransactionAmount2)
             }
             step("Check recent address item №6") {
-                checkRecentAddressItem(address = recipientAddressBase + "e", description = descriptionForTransaction)
+                checkRecentAddressItem(address = recipientAddressBase + "e", description = recentTransactionAmount2)
             }
             step("Swipe up") {
-                swipeVertical(SwipeDirection.UP)
+                waitForIdle()
+                swipeVertical(SwipeDirection.UP, startHeightRatio = 0.6f)
             }
             step("Check recent address item №7") {
-                checkRecentAddressItem(address = recipientAddressBase + "f", description = descriptionForTransaction)
+                checkRecentAddressItem(address = recipientAddressBase + "f", description = recentTransactionAmount2)
             }
             step("Check recent address item №8") {
-                checkRecentAddressItem(address = recipientAddressBase + "g", description = descriptionForTransaction)
+                checkRecentAddressItem(address = recipientAddressBase + "g", description = recentTransactionAmount2)
             }
             step("Check recent address item №9") {
-                checkRecentAddressItem(address = recipientAddressBase + "o", description = descriptionForTransaction)
+                checkRecentAddressItem(address = recipientAddressBase + "o", description = recentTransactionAmount2)
             }
             step("Check recent address item №10") {
-                checkRecentAddressItem(address = recipientAddressBase + "p", description = descriptionForTransaction)
+                checkRecentAddressItem(address = recipientAddressBase + "p", description = recentTransactionAmount2)
             }
             step("Assert recent address item №11 is not displayed") {
                 onSendAddressScreen { recentAddressItem(recipientAddressBase + "a").assertIsNotDisplayed() }
@@ -283,7 +309,6 @@ class RecentBlockTest : BaseTestCase() {
         val tokenName = "Dogecoin"
         val sendAmount = "1"
         val txHistoryScenarioState = "2OutgoingTransactions"
-        val descriptionForWalletTransaction2 = "DOGE 0.0192, 11/09/2025, 3:18 PM"
 
         setupHooks(
             additionalAfterSection = {
@@ -313,11 +338,11 @@ class RecentBlockTest : BaseTestCase() {
             step("Assert 'Recent' title is displayed") {
                 onSendAddressScreen { recentAddressesTitle.assertIsDisplayed() }
             }
-            step("Check recent address item") {
-                checkRecentAddressItem(address = DOGECOIN_ADDRESS, description = descriptionForWalletTransaction)
+            step("Check recent address item №1") {
+                checkRecentAddressItem(address = DOGECOIN_ADDRESS, description = recentTransactionAmount1)
             }
-            step("Check recent address item") {
-                checkRecentAddressItem(address = DOGECOIN_ADDRESS, description = descriptionForWalletTransaction2)
+            step("Check recent address item №2") {
+                checkRecentAddressItem(address = DOGECOIN_ADDRESS, description = recentTransactionAmount3)
             }
             step("Click on recent address item") {
                 onSendAddressScreen { recentAddressItem(DOGECOIN_ADDRESS).performClick() }
