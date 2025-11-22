@@ -43,7 +43,7 @@ import com.tangem.domain.onramp.model.OnrampSource
 import com.tangem.domain.promo.GetStoryContentUseCase
 import com.tangem.domain.promo.models.StoryContentIds
 import com.tangem.domain.redux.ReduxStateHolder
-import com.tangem.domain.staking.model.stakekit.Yield
+import com.tangem.domain.staking.model.StakingOption
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
@@ -106,7 +106,7 @@ interface WalletCurrencyActionsClickIntents {
         event: AnalyticsEvent? = null,
     )
 
-    fun onStakeClick(userWalletId: UserWalletId, cryptoCurrencyStatus: CryptoCurrencyStatus, yield: Yield?)
+    fun onStakeClick(userWalletId: UserWalletId, cryptoCurrencyStatus: CryptoCurrencyStatus, option: StakingOption?)
 
     fun onCopyAddressLongClick(cryptoCurrencyStatus: CryptoCurrencyStatus): TextReference?
 
@@ -498,7 +498,11 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
         }
     }
 
-    override fun onStakeClick(userWalletId: UserWalletId, cryptoCurrencyStatus: CryptoCurrencyStatus, yield: Yield?) {
+    override fun onStakeClick(
+        userWalletId: UserWalletId,
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+        option: StakingOption?,
+    ) {
         stateHolder.update(CloseBottomSheetTransformer(userWalletId = userWalletId))
 
         modelScope.launch {
@@ -508,7 +512,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
                 AppRoute.Staking(
                     userWalletId = userWalletId,
                     cryptoCurrency = cryptoCurrency,
-                    yieldId = yield?.id ?: return@launch,
+                    yieldId = option?.integrationId ?: return@launch,
                 ),
             )
         }

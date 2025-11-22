@@ -17,7 +17,7 @@ class FetchStakingTokensUseCase(
     suspend operator fun invoke(): Either<StakingError, Unit> {
         return either {
             catch(
-                block = { stakingRepository.fetchEnabledYields() },
+                block = { stakingRepository.fetchYields() },
                 catch = { stakingErrorResolver.resolve(it) },
             )
         }
