@@ -36,7 +36,11 @@ class FeedbackTest : BaseTestCase() {
             step("Open 'Main Screen'") {
                 openMainScreen()
             }
+            step("Synchronize addresses") {
+                synchronizeAddresses()
+            }
             step("Click 'More' button on TopBar") {
+                waitForIdle()
                 onTopBar { moreButton.clickWithAssertion() }
             }
             step("Click 'Contact support' button") {
