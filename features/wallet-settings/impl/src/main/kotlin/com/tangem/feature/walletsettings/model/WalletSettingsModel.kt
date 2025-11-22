@@ -404,6 +404,7 @@ internal class WalletSettingsModel @Inject constructor(
                         AppRoute.CreateWalletBackup(
                             userWalletId = params.userWalletId,
                             isUpgradeFlow = isUpgradeFlow,
+                            setAccessCode = true,
                         ),
                     )
                     closeBs()
