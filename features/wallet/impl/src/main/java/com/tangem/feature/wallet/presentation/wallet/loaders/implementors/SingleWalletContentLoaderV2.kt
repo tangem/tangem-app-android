@@ -16,6 +16,7 @@ import com.tangem.feature.wallet.presentation.wallet.domain.GetSingleWalletWarni
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletWithFundsChecker
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.subscribers.*
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -40,6 +41,7 @@ internal class SingleWalletContentLoaderV2 @AssistedInject constructor(
     private val accountDependencies: AccountDependencies,
     private val walletWithFundsChecker: WalletWithFundsChecker,
     private val dispatchers: CoroutineDispatcherProvider,
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
 ) : WalletContentLoader(id = userWallet.walletId) {
 
     override fun create(): List<WalletSubscriber> = listOf(
@@ -68,6 +70,7 @@ internal class SingleWalletContentLoaderV2 @AssistedInject constructor(
             stateHolder = stateHolder,
             shouldSaveUserWalletsUseCase = shouldSaveUserWalletsUseCase,
             clickIntents = clickIntents,
+            hotWalletFeatureToggles = hotWalletFeatureToggles,
         ),
         SingleWalletExpressStatusesSubscriberV2(
             userWallet = userWallet,
