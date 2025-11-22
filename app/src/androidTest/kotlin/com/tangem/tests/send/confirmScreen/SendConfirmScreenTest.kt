@@ -5,6 +5,8 @@ import com.tangem.common.constants.TestConstants.ETHEREUM_RECIPIENT_ADDRESS
 import com.tangem.common.constants.TestConstants.POLKADOT_RECIPIENT_ADDRESS
 import com.tangem.common.constants.TestConstants.QUOTES_API_SCENARIO
 import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
+import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
+import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.*
 import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
@@ -290,10 +292,17 @@ class SendConfirmScreenTest : BaseTestCase() {
             }
             step("Click on 'Refresh' button") {
                 waitForIdle()
-                onSendConfirmScreen { refreshButton.clickWithAssertion() }
+                onSendConfirmScreen {
+                    flakySafely(WAIT_UNTIL_TIMEOUT) {
+                        refreshButton.clickWithAssertion()
+                        refreshButton.assertDoesNotExist()
+                    }
+                }
             }
             step("Check network fee block") {
-                checkNetworkFeeBlock(currentFeeAmount = currentFeeAmount, withFeeSelector = false)
+                flakySafely(WAIT_UNTIL_TIMEOUT_LONG) {
+                    checkNetworkFeeBlock(currentFeeAmount = currentFeeAmount, withFeeSelector = false)
+                }
             }
         }
     }
