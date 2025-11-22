@@ -17,6 +17,7 @@ import com.tangem.datasource.api.stakekit.StakeKitApi
 import com.tangem.datasource.api.stakekit.models.response.model.error.StakeKitErrorResponse
 import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.datasource.local.token.P2PEthPoolVaultsStore
 import com.tangem.datasource.local.token.StakingActionsStore
 import com.tangem.datasource.local.token.StakingYieldsStore
 import com.tangem.domain.staking.repositories.P2PEthPoolRepository
@@ -44,6 +45,7 @@ internal object StakingDataModule {
     fun provideStakingRepository(
         stakeKitApi: StakeKitApi,
         stakingYieldsStore: StakingYieldsStore,
+        p2pEthPoolVaultsStore: P2PEthPoolVaultsStore,
         yieldsBalancesStore: YieldsBalancesStore,
         dispatchers: CoroutineDispatcherProvider,
         walletManagersFacade: WalletManagersFacade,
@@ -54,6 +56,7 @@ internal object StakingDataModule {
         return DefaultStakingRepository(
             stakeKitApi = stakeKitApi,
             stakingYieldsStore = stakingYieldsStore,
+            p2pEthPoolVaultsStore = p2pEthPoolVaultsStore,
             stakingBalanceStoreV2 = yieldsBalancesStore,
             dispatchers = dispatchers,
             walletManagersFacade = walletManagersFacade,
@@ -67,10 +70,12 @@ internal object StakingDataModule {
     @Singleton
     fun provideP2PEthPoolRepository(
         p2pApi: P2PEthPoolApi,
+        p2pEthPoolVaultsStore: P2PEthPoolVaultsStore,
         dispatchers: CoroutineDispatcherProvider,
     ): P2PEthPoolRepository {
         return DefaultP2PEthPoolRepository(
             p2pApi = p2pApi,
+            p2pEthPoolVaultsStore = p2pEthPoolVaultsStore,
             dispatchers = dispatchers,
         )
     }
