@@ -132,18 +132,10 @@ fun BaseTestCase.checkDestinationTagBlock(hint: String) {
     }
 }
 
-fun BaseTestCase.checkRecentAddressItem(address: String, description: String) {
-    step("Assert recent address '$address' is displayed") {
+fun BaseTestCase.checkRecentAddressItem(address: String, description: String?) {
+    step("Assert recent address '$address' with description '$description' is displayed") {
         onSendAddressScreen {
-            recentAddressItem(address).assertIsDisplayed()
-        }
-    }
-    step("Assert recent address item description is '$description'") {
-        onSendAddressScreen {
-            recentAddressItemDescription(description).assertTextContains(
-                description,
-                substring = true
-            )
+            recentAddressItem(recipientAddress = address, description = description).assertIsDisplayed()
         }
     }
 }
