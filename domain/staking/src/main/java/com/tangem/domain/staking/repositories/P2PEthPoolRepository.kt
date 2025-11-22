@@ -4,10 +4,14 @@ import arrow.core.Either
 import com.tangem.domain.staking.model.ethpool.*
 import com.tangem.domain.staking.model.stakekit.StakingError
 
-/**
- * P2P staking repository interface
- */
 interface P2PEthPoolRepository {
+
+    /**
+     * Fetch and store available staking vaults
+     *
+     * @param network P2P network (MAINNET or TESTNET)
+     */
+    suspend fun fetchVaults(network: P2PEthPoolNetwork = P2PEthPoolNetwork.MAINNET)
 
     /**
      * Get list of available staking vaults
