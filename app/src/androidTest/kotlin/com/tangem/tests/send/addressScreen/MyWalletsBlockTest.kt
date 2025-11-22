@@ -85,8 +85,13 @@ class MyWalletsBlockTest : BaseTestCase() {
             step("Assert 'My wallets' title is not displayed") {
                 onSendAddressScreen { myWalletsTitle.assertIsNotDisplayed() }
             }
-            step("Assert recent address item is not displayed") {
-                onSendAddressScreen { recentAddressItem(ETHEREUM_ADDRESS).assertIsNotDisplayed() }
+            step("Assert 'My wallets' item is not displayed") {
+                onSendAddressScreen {
+                    recentAddressItem(
+                        recipientAddress = ETHEREUM_ADDRESS,
+                        isMyWallet = true
+                    ).assertIsNotDisplayed()
+                }
             }
         }
     }
