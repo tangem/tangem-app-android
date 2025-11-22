@@ -440,11 +440,12 @@ internal class TokenDetailsModel @Inject constructor(
         )
             .map { it.getOrElse { StakingAvailability.Unavailable } }
             .distinctUntilChanged()
-            .onEach {
-                val stakingEntryInfo = if (it is StakingAvailability.Available) {
+            .onEach { availability ->
+                val stakingEntryInfo = if (availability is StakingAvailability.Available) {
                     getStakingEntryInfoUseCase(
                         cryptoCurrencyId = cryptoCurrency.id,
                         symbol = cryptoCurrency.symbol,
+                        stakingOption = availability.option,
                     ).getOrNull()
                 } else {
                     null
@@ -454,7 +455,7 @@ internal class TokenDetailsModel @Inject constructor(
                     stateFactory.getStakingInfoState(
                         state = state,
                         stakingEntryInfo = stakingEntryInfo,
-                        stakingAvailability = it,
+                        stakingAvailability = availability,
                         cryptoCurrencyStatus = cryptoCurrencyStatus,
                     )
                 }

@@ -165,15 +165,15 @@ internal class TokenActionsHandler @AssistedInject constructor(
     }
 
     private fun onStakeClick(cryptoCurrencyData: PortfolioData.CryptoCurrencyData) {
-        val yield = cryptoCurrencyData.actions.firstOrNull { it is TokenActionsState.ActionState.Stake }
+        val option = cryptoCurrencyData.actions.firstOrNull { it is TokenActionsState.ActionState.Stake }
             ?.let { it as TokenActionsState.ActionState.Stake }
-            ?.yield ?: return
+            ?.option ?: return
 
         router.push(
             AppRoute.Staking(
                 userWalletId = cryptoCurrencyData.userWallet.walletId,
                 cryptoCurrency = cryptoCurrencyData.status.currency,
-                yieldId = yield.id,
+                yieldId = option.integrationId,
             ),
         )
     }
