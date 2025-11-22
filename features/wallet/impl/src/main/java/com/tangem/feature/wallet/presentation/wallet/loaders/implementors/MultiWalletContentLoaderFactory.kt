@@ -19,6 +19,7 @@ import com.tangem.feature.wallet.presentation.wallet.domain.GetMultiWalletWarnin
 import com.tangem.feature.wallet.presentation.wallet.domain.MultiWalletTokenListStore
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletWithFundsChecker
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -41,6 +42,7 @@ internal class MultiWalletContentLoaderFactory @Inject constructor(
     private val currenciesRepository: CurrenciesRepository,
     private val yieldSupplyApyFlowUseCase: YieldSupplyApyFlowUseCase,
     private val stakingApyFlowUseCase: StakingApyFlowUseCase,
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
 ) {
 
     fun create(userWallet: UserWallet, clickIntents: WalletClickIntents): WalletContentLoader {
@@ -63,6 +65,7 @@ internal class MultiWalletContentLoaderFactory @Inject constructor(
             currenciesRepository = currenciesRepository,
             yieldSupplyApyFlowUseCase = yieldSupplyApyFlowUseCase,
             stakingApyFlowUseCase = stakingApyFlowUseCase,
+            hotWalletFeatureToggles = hotWalletFeatureToggles,
         )
     }
 }
