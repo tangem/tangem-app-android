@@ -16,6 +16,7 @@ import com.tangem.feature.wallet.presentation.wallet.analytics.utils.WalletWarni
 import com.tangem.feature.wallet.presentation.wallet.domain.GetSingleWalletWarningsFactory
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.subscribers.*
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 
 @Suppress("LongParameterList")
 internal class SingleWalletContentLoader(
@@ -35,6 +36,7 @@ internal class SingleWalletContentLoader(
     private val shouldSaveUserWalletsUseCase: ShouldSaveUserWalletsUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val walletWarningsAnalyticsSender: WalletWarningsAnalyticsSender,
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
 ) : WalletContentLoader(id = userWallet.walletId) {
 
     override fun create(): List<WalletSubscriber> {
@@ -65,6 +67,7 @@ internal class SingleWalletContentLoader(
                 stateHolder = stateHolder,
                 shouldSaveUserWalletsUseCase = shouldSaveUserWalletsUseCase,
                 clickIntents = clickIntents,
+                hotWalletFeatureToggles = hotWalletFeatureToggles,
             ),
             SingleWalletExpressStatusesSubscriber(
                 userWallet = userWallet,
