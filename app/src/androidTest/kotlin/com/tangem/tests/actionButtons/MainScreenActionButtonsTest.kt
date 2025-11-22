@@ -23,6 +23,7 @@ import org.junit.Test
 @HiltAndroidTest
 class MainScreenActionButtonsTest : BaseTestCase() {
 
+    @ApiEnv(ApiEnvConfig(ApiConfig.ID.MoonPay, ApiEnvironment.PROD))
     @AllureId("79")
     @DisplayName("Action buttons (long tap): validate UI")
     @Test
