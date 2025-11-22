@@ -172,12 +172,12 @@ internal open class BaseActionsFactory(
         return if (stakingAvailability is StakingAvailability.Available) {
             ActionState.Stake(
                 unavailabilityReason = ScenarioUnavailabilityReason.None,
-                yield = stakingAvailability.yield,
+                option = stakingAvailability.option,
             )
         } else {
             ActionState.Stake(
                 unavailabilityReason = ScenarioUnavailabilityReason.StakingUnavailable(currency.name),
-                yield = null,
+                option = null,
             )
         }
     }

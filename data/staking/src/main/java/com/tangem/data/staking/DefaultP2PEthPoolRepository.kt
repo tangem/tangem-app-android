@@ -1,6 +1,7 @@
 package com.tangem.data.staking
 
 import arrow.core.Either
+import arrow.core.getOrElse
 import arrow.core.raise.either
 import arrow.core.raise.ensure
 import com.tangem.data.staking.converters.ethpool.*
@@ -10,17 +11,20 @@ import com.tangem.datasource.api.ethpool.models.request.P2PEthPoolBroadcastReque
 import com.tangem.datasource.api.ethpool.models.request.P2PEthPoolDepositRequest
 import com.tangem.datasource.api.ethpool.models.request.P2PEthPoolUnstakeRequest
 import com.tangem.datasource.api.ethpool.models.request.P2PEthPoolWithdrawRequest
+import com.tangem.datasource.local.token.P2PEthPoolVaultsStore
 import com.tangem.domain.staking.model.ethpool.*
 import com.tangem.domain.staking.repositories.P2PEthPoolRepository
 import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 
 /**
  * P2P staking repository implementation
  */
 internal class DefaultP2PEthPoolRepository(
     private val p2pApi: P2PEthPoolApi,
+    private val p2pEthPoolVaultsStore: P2PEthPoolVaultsStore,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : P2PEthPoolRepository {
 
@@ -29,6 +33,14 @@ internal class DefaultP2PEthPoolRepository(
     private val rewardConverter = P2PEthPoolRewardConverter
     private val broadcastResultConverter = P2PEthPoolBroadcastResultConverter
     private val errorConverter = P2PEthPoolErrorConverter
+
+    override suspend fun fetchVaults(network: P2PEthPoolNetwork) {
+        val vaults = getVaults(network).getOrElse { error ->
+            Timber.e("Error fetching P2P vaults: $error")
+            emptyList()
+        }
+        p2pEthPoolVaultsStore.store(vaults)
+    }
 
     override suspend fun getVaults(network: P2PEthPoolNetwork): Either<StakingError, List<P2PEthPoolVault>> = either {
         withContext(dispatchers.io) {
