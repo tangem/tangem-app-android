@@ -1,7 +1,0 @@
-<?xml version="1.0" ?>
-<SmellBaseline>
-  <ManuallySuppressedIssues/>
-  <CurrentIssues>
-    <ID>MultilineLambdaItParameter:ReferralConverter.kt$ExpectedAwardsConverter${ ExpectedAward( paymentDate = it.paymentDate.toDateTimeAtStartOfDay().millis.toDateFormat(), amount = "${it.amount} ${it.currency}", ) }</ID>
-  </CurrentIssues>
-</SmellBaseline>
