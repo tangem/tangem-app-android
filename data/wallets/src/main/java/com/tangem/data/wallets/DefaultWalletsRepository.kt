@@ -4,15 +4,17 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import com.tangem.data.wallets.converters.UserWalletRemoteInfoConverter
-import com.tangem.data.wallets.converters.WalletIdBodyConverter
 import com.tangem.datasource.api.common.AuthProvider
 import com.tangem.datasource.api.common.response.ApiResponseError.HttpException
 import com.tangem.datasource.api.common.response.fold
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.tangemTech.TangemTechApi
-import com.tangem.datasource.api.tangemTech.models.*
+import com.tangem.datasource.api.tangemTech.converters.WalletIdBodyConverter
+import com.tangem.datasource.api.tangemTech.models.PromocodeActivationBody
+import com.tangem.datasource.api.tangemTech.models.SeedPhraseNotificationDTO
 import com.tangem.datasource.api.tangemTech.models.SeedPhraseNotificationDTO.Status
-import com.tangem.datasource.api.tangemTech.models.WalletIdBody.WalletType
+import com.tangem.datasource.api.tangemTech.models.WalletBody
+import com.tangem.datasource.api.tangemTech.models.WalletType
 import com.tangem.datasource.local.datastore.RuntimeStateStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
@@ -62,25 +64,25 @@ internal class DefaultWalletsRepository(
     }
 
     override suspend fun useBiometricAuthentication(): Boolean {
-        val useBiometricAuthentication = appPreferencesStore.getSyncOrNull(
+        val shouldUseBiometricAuth = appPreferencesStore.getSyncOrNull(
             key = PreferencesKeys.USE_BIOMETRIC_AUTHENTICATION_KEY,
         )
 
-        if (useBiometricAuthentication != null) {
-            return useBiometricAuthentication
+        if (shouldUseBiometricAuth != null) {
+            return shouldUseBiometricAuth
         }
 
-        val legacySaveWalletsInTheApp = appPreferencesStore.getSyncOrNull(
+        val isLegacySaveWalletsInTheApp = appPreferencesStore.getSyncOrNull(
             key = PreferencesKeys.SAVE_USER_WALLETS_KEY,
         )
 
-        if (legacySaveWalletsInTheApp != null) {
+        if (isLegacySaveWalletsInTheApp != null) {
             // Migrate legacy setting to new one
             appPreferencesStore.store(
                 key = PreferencesKeys.USE_BIOMETRIC_AUTHENTICATION_KEY,
-                value = legacySaveWalletsInTheApp,
+                value = isLegacySaveWalletsInTheApp,
             )
-            return legacySaveWalletsInTheApp
+            return isLegacySaveWalletsInTheApp
         } else {
             // Default value for new users
             setUseBiometricAuthentication(false)
@@ -93,25 +95,25 @@ internal class DefaultWalletsRepository(
     }
 
     override suspend fun requireAccessCode(): Boolean {
-        val requireAccessCode = appPreferencesStore.getSyncOrNull(
+        val isRequireAccessCode = appPreferencesStore.getSyncOrNull(
             key = PreferencesKeys.REQUIRE_ACCESS_CODE_KEY,
         )
 
-        if (requireAccessCode != null) {
-            return requireAccessCode
+        if (isRequireAccessCode != null) {
+            return isRequireAccessCode
         }
 
-        val legacyShouldSaveAccessCode = appPreferencesStore.getSyncOrNull(
+        val isLegacyShouldSaveAccessCode = appPreferencesStore.getSyncOrNull(
             key = PreferencesKeys.SHOULD_SAVE_ACCESS_CODES_KEY,
         )
 
-        if (legacyShouldSaveAccessCode != null) {
+        if (isLegacyShouldSaveAccessCode != null) {
             // Migrate legacy setting to new one
             appPreferencesStore.store(
                 key = PreferencesKeys.REQUIRE_ACCESS_CODE_KEY,
-                value = legacyShouldSaveAccessCode.not(),
+                value = isLegacyShouldSaveAccessCode.not(),
             )
-            return legacyShouldSaveAccessCode.not()
+            return isLegacyShouldSaveAccessCode.not()
         } else {
             // Default value for new users
             setRequireAccessCode(true)
@@ -130,10 +132,10 @@ internal class DefaultWalletsRepository(
     }
 
     override suspend fun setHasWalletsWithRing(userWalletId: UserWalletId) {
-        appPreferencesStore.editData {
-            val added = it[PreferencesKeys.ADDED_WALLETS_WITH_RING_KEY].orEmpty()
+        appPreferencesStore.editData { mutablePreferences ->
+            val added = mutablePreferences[PreferencesKeys.ADDED_WALLETS_WITH_RING_KEY].orEmpty()
 
-            it[PreferencesKeys.ADDED_WALLETS_WITH_RING_KEY] = added + userWalletId.stringValue
+            mutablePreferences[PreferencesKeys.ADDED_WALLETS_WITH_RING_KEY] = added + userWalletId.stringValue
         }
     }
 
@@ -141,8 +143,8 @@ internal class DefaultWalletsRepository(
         return channelFlow {
             launch {
                 seedPhraseNotificationVisibilityStore.get()
-                    .map {
-                        it.getOrDefault(
+                    .map { map ->
+                        map.getOrDefault(
                             key = userWalletId,
                             defaultValue = SeedPhraseNotificationsStatus.NOT_NEEDED,
                         )
@@ -169,8 +171,8 @@ internal class DefaultWalletsRepository(
                 tangemTechApi.getSeedPhraseNotificationStatus(walletId = userWalletId.stringValue).getOrThrow()
             }.fold(
                 onSuccess = { it.status },
-                onFailure = {
-                    if (it is HttpException && it.code == HttpException.Code.NOT_FOUND) {
+                onFailure = { throwable ->
+                    if (throwable is HttpException && throwable.code == HttpException.Code.NOT_FOUND) {
                         Status.NOTIFIED
                     } else {
                         Status.NOT_NEEDED
@@ -245,27 +247,12 @@ internal class DefaultWalletsRepository(
         updateNotificationVisibility(id = userWalletId, value = SeedPhraseNotificationsStatus.NOT_NEEDED)
     }
 
-    override suspend fun markWallet2WasCreated(userWalletId: UserWalletId) {
-        runCatching(dispatchers.io) {
-            tangemTechApi.markUserWallerWasCreated(
-                body = MarkUserWalletWasCreatedBody(userWalletId = userWalletId.stringValue),
-            )
-        }
-    }
-
     override suspend fun createWallet(userWalletId: UserWalletId) {
-        withContext(dispatchers.io) {
+        runCatching(dispatchers.io) {
             val userWallet = userWalletsStore.getSyncStrict(key = userWalletId)
 
             tangemTechApi.createWallet(
-                body = WalletIdBody(
-                    walletId = userWalletId.stringValue,
-                    name = userWallet.name,
-                    walletType = when (userWallet) {
-                        is UserWallet.Cold -> WalletType.COLD
-                        is UserWallet.Hot -> WalletType.HOT
-                    },
-                ),
+                body = WalletIdBodyConverter.convert(userWallet = userWallet),
             )
         }
     }
@@ -293,8 +280,8 @@ internal class DefaultWalletsRepository(
     }
 
     private suspend fun updateNotificationVisibility(id: UserWalletId, value: SeedPhraseNotificationsStatus) {
-        return seedPhraseNotificationVisibilityStore.update {
-            it.toMutableMap().apply {
+        return seedPhraseNotificationVisibilityStore.update { map ->
+            map.toMutableMap().apply {
                 this[id] = value
             }
         }
@@ -306,23 +293,23 @@ internal class DefaultWalletsRepository(
 
     override fun nftEnabledStatuses(): Flow<Map<UserWalletId, Boolean>> = appPreferencesStore
         .getObjectMap<Boolean>(PreferencesKeys.WALLETS_NFT_ENABLED_STATES_KEY)
-        .map { it.mapKeys { UserWalletId(it.key) } }
+        .map { map -> map.mapKeys { UserWalletId(it.key) } }
 
     override suspend fun enableNFT(userWalletId: UserWalletId) {
-        appPreferencesStore.editData {
-            it.setObjectMap(
+        appPreferencesStore.editData { mutablePreferences ->
+            mutablePreferences.setObjectMap(
                 key = PreferencesKeys.WALLETS_NFT_ENABLED_STATES_KEY,
-                value = it.getObjectMap<Boolean>(PreferencesKeys.WALLETS_NFT_ENABLED_STATES_KEY)
+                value = mutablePreferences.getObjectMap<Boolean>(PreferencesKeys.WALLETS_NFT_ENABLED_STATES_KEY)
                     .plus(userWalletId.stringValue to true),
             )
         }
     }
 
     override suspend fun disableNFT(userWalletId: UserWalletId) {
-        appPreferencesStore.editData {
-            it.setObjectMap(
+        appPreferencesStore.editData { mutablePreferences ->
+            mutablePreferences.setObjectMap(
                 key = PreferencesKeys.WALLETS_NFT_ENABLED_STATES_KEY,
-                value = it.getObjectMap<Boolean>(PreferencesKeys.WALLETS_NFT_ENABLED_STATES_KEY)
+                value = mutablePreferences.getObjectMap<Boolean>(PreferencesKeys.WALLETS_NFT_ENABLED_STATES_KEY)
                     .plus(userWalletId.stringValue to false),
             )
         }
@@ -338,10 +325,10 @@ internal class DefaultWalletsRepository(
             .firstOrNull() == true
 
     override suspend fun setNotificationsEnabled(userWalletId: UserWalletId, isEnabled: Boolean) {
-        appPreferencesStore.editData {
-            it.setObjectMap(
+        appPreferencesStore.editData { mutablePreferences ->
+            mutablePreferences.setObjectMap(
                 key = PreferencesKeys.NOTIFICATIONS_ENABLED_STATES_KEY,
-                value = it.getObjectMap<Boolean>(PreferencesKeys.NOTIFICATIONS_ENABLED_STATES_KEY)
+                value = mutablePreferences.getObjectMap<Boolean>(PreferencesKeys.NOTIFICATIONS_ENABLED_STATES_KEY)
                     .plus(userWalletId.stringValue to isEnabled),
             )
         }
@@ -358,9 +345,11 @@ internal class DefaultWalletsRepository(
     }
 
     override suspend fun setWalletName(walletId: String, walletName: String) = withContext(dispatchers.io) {
+        val userWallet = userWalletsStore.getSyncOrNull(key = UserWalletId(walletId))
+
         tangemTechApi.updateWallet(
             walletId = walletId,
-            body = WalletBody(name = walletName),
+            body = WalletBody(name = walletName, type = WalletType.from(userWallet)),
         ).getOrThrow()
     }
 
@@ -419,18 +408,20 @@ internal class DefaultWalletsRepository(
                 promoCode = promoCode,
                 address = bitcoinAddress,
             ),
-        ).fold({
-            return@fold it.status.right()
-        }, { error ->
-            val error = when (error) {
-                is HttpException -> when (error.code) {
-                    HttpException.Code.NOT_FOUND -> ActivatePromoCodeError.InvalidPromoCode
-                    HttpException.Code.CONFLICT -> ActivatePromoCodeError.PromocodeAlreadyUsed
+        ).fold(
+            onSuccess = { it.status.right() },
+            onError = { apiResponseError ->
+                val error = when (apiResponseError) {
+                    is HttpException -> when (apiResponseError.code) {
+                        HttpException.Code.NOT_FOUND -> ActivatePromoCodeError.InvalidPromoCode
+                        HttpException.Code.CONFLICT -> ActivatePromoCodeError.PromocodeAlreadyUsed
+                        else -> ActivatePromoCodeError.ActivationFailed
+                    }
                     else -> ActivatePromoCodeError.ActivationFailed
                 }
-                else -> ActivatePromoCodeError.ActivationFailed
-            }
-            return@fold error.left()
-        })
+
+                error.left()
+            },
+        )
     }
 }
