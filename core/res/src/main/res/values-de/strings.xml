@@ -273,6 +273,7 @@
   <string name="common_forget">Entfernen</string>
   <string name="common_free">Kostenlos</string>
   <string name="common_from">Vom</string>
+  <string name="common_from_wallet_name">Von %s</string>
   <string name="common_generate_addresses">Adressen synchronisieren</string>
   <string name="common_get_started">Erste Schritte</string>
   <string name="common_get_token">Token erhalten</string>
@@ -1402,7 +1403,6 @@
   <string name="tangempay_card_details_swap_description">Tausche beliebige Vermögenswerte in Deinem Portfolio gegen eine Karte.</string>
   <string name="tangempay_card_details_title">Kartendetails</string>
   <string name="tangempay_card_details_unfreeze_card">Karte entsperren</string>
-  <string name="tangempay_issue_card_notification_title">Konto erstellen und Karte ausstellen</string>
   <string name="tangempay_kyc_card_ready_notification_title">Tangem Pay</string>
   <string name="tangempay_kyc_in_progress_notification_button">Status anzeigen</string>
   <string name="tangempay_kyc_in_progress_notification_title">KYC für Tangem Pay in Arbeit</string>
@@ -1951,6 +1951,9 @@
   <string name="yield_module_token_details_earn_notification_earning_on_your_balance_title">Ertragsmodus</string>
   <string name="yield_module_token_details_earn_notification_processing">Bearbeitung Deiner Einzahlung</string>
   <string name="yield_module_token_details_earn_notification_title">Ertragsmodus</string>
+  <string name="yield_module_transaction_enter">Ertragsmodus ein</string>
+  <string name="yield_module_transaction_exit">Ertragsmodus aus</string>
+  <string name="yield_module_transaction_topup">Aufstockung des Ertragsmodus</string>
   <string name="yield_module_transfer_mode_automatic">Automatisch</string>
   <string name="yield_module_unable_to_cover_fee_description">Einzahlung von %1$s %2$s zur Deckung der Netzwerkgebühr für Transaktionen</string>
   <string name="yield_module_unable_to_cover_fee_title">Die Gebühr %s kann nicht gedeckt werden</string>
