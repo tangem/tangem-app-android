@@ -107,7 +107,9 @@ internal class DefaultStakingRepository(
                     }
                 }
             }
-            stakingYieldsStore.store(yields)
+
+            val shouldRewriteCache = yieldsResponses.all { it is ApiResponse.Success }
+            stakingYieldsStore.store(yields, shouldRewriteCache)
         }
     }
 
@@ -488,6 +490,13 @@ internal class DefaultStakingRepository(
     }
 
     private fun findPrefetchedYield(yields: List<Yield>, currencyId: CryptoCurrency.RawID, symbol: String): Yield? {
+        if (!stakingFeatureToggles.isCardanoStakingEnabled && symbol.equals(
+                Blockchain.Cardano.currency,
+                ignoreCase = true,
+            )
+        ) {
+            return null
+        }
         return yields.find { yield ->
             yield.tokens.any { it.coinGeckoId == currencyId.value && it.symbol == symbol }
         }
