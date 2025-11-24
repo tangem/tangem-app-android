@@ -240,6 +240,8 @@ private fun Subtitle(state: TransactionState, modifier: Modifier = Modifier) {
                 textAlign = TextAlign.Start,
                 color = TangemTheme.colors.text.tertiary,
                 style = TangemTheme.typography.caption2,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
         }
         is TransactionState.Loading -> {
