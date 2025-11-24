@@ -1,8 +1,10 @@
 package com.tangem.domain.staking.repositories
 
 import arrow.core.Either
+import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.ethpool.*
 import com.tangem.domain.staking.model.stakekit.StakingError
+import kotlinx.coroutines.flow.Flow
 
 interface P2PEthPoolRepository {
 
@@ -113,4 +115,20 @@ interface P2PEthPoolRepository {
         vaultAddress: String,
         period: Int? = null,
     ): Either<StakingError, List<P2PEthPoolReward>>
+
+    /**
+     * Check P2P staking availability by finding public vault
+     *
+     * @return Flow of StakingAvailability - Available with StakingOption.P2P if public vault found,
+     *         TemporaryUnavailable if not found or vaults empty
+     */
+    fun getStakingAvailability(): Flow<StakingAvailability>
+
+    /**
+     * Check P2P staking availability synchronously
+     *
+     * @return StakingAvailability - Available with StakingOption.P2P if public vault found,
+     *         TemporaryUnavailable if not found or vaults empty
+     */
+    suspend fun getStakingAvailabilitySync(): StakingAvailability
 }
