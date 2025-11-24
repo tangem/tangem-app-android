@@ -2,6 +2,7 @@ package com.tangem.domain.core.flow
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * [Flow] supplier
@@ -16,8 +17,14 @@ interface FlowSupplier<Params : Any, Data : Any> {
     /** Supply [Flow] by [params] */
     operator fun invoke(params: Params): Flow<Data>
 
-    /** Get first [Data] by [params] or null if [Flow] is empty */
-    suspend fun getSyncOrNull(params: Params): Data? {
-        return invoke(params).firstOrNull()
+    /** Synchronously get first value or null from [Flow] within [timeMillis] */
+    suspend fun getSyncOrNull(params: Params, timeMillis: Long? = null): Data? {
+        val block = suspend { invoke(params).firstOrNull() }
+
+        return if (timeMillis == null) {
+            block()
+        } else {
+            withTimeoutOrNull(timeMillis) { block() }
+        }
     }
 }
