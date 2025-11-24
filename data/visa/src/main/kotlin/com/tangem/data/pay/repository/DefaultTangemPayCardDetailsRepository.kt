@@ -41,8 +41,8 @@ internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
                 tangemPayApi.getCardBalance(authHeader)
             }.result ?: error("Cannot get card balance")
             TangemPayCardBalance(
-                balance = result.availableBalance,
-                currencyCode = result.currency,
+                balance = result.fiat.availableBalance,
+                currencyCode = result.fiat.currency,
             )
         }
     }
