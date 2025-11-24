@@ -37,5 +37,6 @@ internal class ManualBackupCompletedComponent @AssistedInject constructor(
         val callbacks: ModelCallbacks,
         val isImportFlow: Boolean = false,
         val isUpgradeFlow: Boolean = false,
+        val isLastScreen: Boolean = false,
     )
 }
