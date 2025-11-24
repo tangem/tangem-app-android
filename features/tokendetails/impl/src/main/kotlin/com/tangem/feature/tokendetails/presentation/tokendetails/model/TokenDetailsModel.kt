@@ -1105,14 +1105,15 @@ internal class TokenDetailsModel @Inject constructor(
 
     private fun openStaking() {
         modelScope.launch {
-            val yield = getYieldUseCase.invoke(
+            getYieldUseCase.invoke(
                 cryptoCurrencyId = cryptoCurrency.id,
                 symbol = cryptoCurrency.symbol,
-            ).getOrElse {
-                error("Staking is unavailable for ${cryptoCurrency.name}")
+            ).onRight { yield ->
+                router.openStaking(userWalletId, cryptoCurrency, yield.id)
+            }.onLeft {
+                Timber.e("Staking is unavailable for ${cryptoCurrency.name}")
+                uiMessageSender.send(SnackbarMessage(resourceReference(R.string.staking_error_no_validators_title)))
             }
-
-            router.openStaking(userWalletId, cryptoCurrency, yield.id)
         }
     }
 
