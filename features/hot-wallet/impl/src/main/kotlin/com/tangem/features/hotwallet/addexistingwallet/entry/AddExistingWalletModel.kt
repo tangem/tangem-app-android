@@ -40,10 +40,10 @@ internal class AddExistingWalletModel @Inject constructor(
 
     val hotWalletStepperComponentModelCallback = HotWalletStepperComponentModelCallback()
     val addExistingWalletImportModelCallbacks = AddExistingWalletImportModelCallbacks()
-    val manualBackupCompletedComponentModelCallbacks = ManualBackupCompletedComponentModelCallbacks()
+    val manualBackupCompletedModelCallbacks = ManualBackupCompletedModelCallbacks()
     val accessCodeModelCallbacks = AccessCodeModelCallbacks()
     val pushNotificationsCallbacks = PushNotificationsCallbacks()
-    val mobileWalletSetupFinishedComponentModelCallbacks = MobileWalletSetupFinishedComponentModelCallbacks()
+    val mobileWalletSetupFinishedModelCallbacks = MobileWalletSetupFinishedModelCallbacks()
 
     val stackNavigation = StackNavigation<AddExistingWalletRoute>()
     val startRoute = AddExistingWalletRoute.Import
@@ -131,7 +131,7 @@ internal class AddExistingWalletModel @Inject constructor(
         }
     }
 
-    inner class ManualBackupCompletedComponentModelCallbacks : ManualBackupCompletedComponent.ModelCallbacks {
+    inner class ManualBackupCompletedModelCallbacks : ManualBackupCompletedComponent.ModelCallbacks {
         override fun onContinueClick(userWalletId: UserWalletId) {
             stackNavigation.replaceAll(AddExistingWalletRoute.SetAccessCode(userWalletId))
         }
@@ -163,7 +163,7 @@ internal class AddExistingWalletModel @Inject constructor(
         }
     }
 
-    inner class MobileWalletSetupFinishedComponentModelCallbacks :
+    inner class MobileWalletSetupFinishedModelCallbacks :
         MobileWalletSetupFinishedComponent.ModelCallbacks {
         override fun onFinishClick() {
             router.replaceAll(AppRoute.Wallet)
