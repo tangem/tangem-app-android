@@ -1,7 +1,7 @@
 ==========================================
 Detekt Baseline Updater & Issue Counter
 ==========================================
-Date: 2025-11-20 16:34:32
+Date: 2025-11-21 15:22:23
 
 Updating detekt baseline for debug variant...
 
@@ -13,13 +13,13 @@ Counting issues in baseline files...
 ==========================================
 
 Summary:
-  Total Issues: 1744
+  Total Issues: 1720
   Modules with Issues: 90
   Average Issues per Module: 19
 
 Progress:
-  Fixed: 58 out of 1802 (3%)
-  Remaining: 1744
+  Fixed: 82 out of 1802 (4%)
+  Remaining: 1720
 
 ==========================================
 All Modules with Issues (sorted by count)
@@ -29,11 +29,11 @@ Module                                                           Issues
 ────────────────────────────────────────────────────────────────
 features/wallet/impl                                                170
 features/markets/impl                                               155
-features/onboarding-v2/impl                                         137
+features/onboarding-v2/impl                                         131
 features/onramp/impl                                                 89
 features/send-v2/impl                                                80
 features/swap/impl                                                   73
-features/hot-wallet/impl                                             61
+features/hot-wallet/impl                                             58
 features/staking/impl                                                56
 data/wallet-connect                                                  55
 features/swap-v2/impl                                                53
@@ -42,7 +42,6 @@ features/tokendetails/impl                                           49
 features/manage-tokens/impl                                          45
 domain/wallets                                                       39
 features/nft/impl                                                    36
-data/wallets                                                         32
 features/tester/impl                                                 31
 features/yield-supply/impl                                           28
 domain/tokens                                                        28
@@ -52,6 +51,7 @@ common/ui                                                            26
 data/visa                                                            23
 features/tangempay/details/impl                                      22
 data/nft                                                             20
+data/wallets                                                         18
 features/swap/data                                                   15
 data/swap                                                            13
 domain/account/status                                                12
@@ -69,10 +69,10 @@ data/networks                                                         9
 features/welcome/impl                                                 8
 features/home/impl                                                    8
 domain/transaction                                                    8
-data/account                                                          8
 libs/tangem-sdk-api                                                   7
 data/txhistory                                                        7
 data/tokens                                                           7
+data/account                                                          7
 features/send-v2/api                                                  6
 domain/markets                                                        6
 data/wallet-manager                                                   6

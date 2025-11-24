@@ -1,12 +1,13 @@
-package com.tangem.data.wallets.converters
+package com.tangem.datasource.api.tangemTech.converters
 
 import com.google.common.truth.Truth.assertThat
 import com.tangem.datasource.api.tangemTech.models.CardInfoBody
 import com.tangem.datasource.api.tangemTech.models.WalletIdBody
+import com.tangem.datasource.api.tangemTech.models.WalletType
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import io.mockk.mockk
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class WalletIdBodyConverterTest {
 
@@ -36,6 +37,7 @@ class WalletIdBodyConverterTest {
             WalletIdBody(
                 walletId = walletId.stringValue,
                 name = walletName,
+                walletType = WalletType.COLD,
                 cards = listOf(
                     CardInfoBody(
                         cardId = "card1",
@@ -72,6 +74,7 @@ class WalletIdBodyConverterTest {
         assertThat(result).isEqualTo(
             WalletIdBody(
                 walletId = walletId.stringValue,
+                walletType = WalletType.COLD,
                 name = walletName,
                 cards = emptyList(),
             ),
