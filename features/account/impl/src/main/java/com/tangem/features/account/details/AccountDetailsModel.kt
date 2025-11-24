@@ -13,8 +13,8 @@ import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.ToastMessage
 import com.tangem.domain.account.producer.SingleAccountProducer
+import com.tangem.domain.account.status.usecase.ArchiveCryptoPortfolioUseCase
 import com.tangem.domain.account.supplier.SingleAccountSupplier
-import com.tangem.domain.account.usecase.ArchiveCryptoPortfolioUseCase
 import com.tangem.domain.models.PortfolioId
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.wallet.isMultiCurrency
@@ -104,13 +104,14 @@ internal class AccountDetailsModel @Inject constructor(
     }
 
     private fun failedArchiveDialog(error: ArchiveCryptoPortfolioUseCase.Error) {
-        // todo account referral case
         val titleRes = when (error) {
             is ArchiveCryptoPortfolioUseCase.Error.CriticalTechError.AccountListRequirementsNotMet,
             is ArchiveCryptoPortfolioUseCase.Error.CriticalTechError.AccountNotFound,
             is ArchiveCryptoPortfolioUseCase.Error.CriticalTechError.AccountsNotCreated,
             is ArchiveCryptoPortfolioUseCase.Error.DataOperationFailed,
             -> R.string.common_something_went_wrong
+            is ArchiveCryptoPortfolioUseCase.Error.ActiveReferralStatus,
+            -> R.string.account_could_not_archive_referral_program_title
         }
         val messageRes = when (error) {
             is ArchiveCryptoPortfolioUseCase.Error.CriticalTechError.AccountListRequirementsNotMet,
@@ -118,6 +119,8 @@ internal class AccountDetailsModel @Inject constructor(
             is ArchiveCryptoPortfolioUseCase.Error.CriticalTechError.AccountsNotCreated,
             is ArchiveCryptoPortfolioUseCase.Error.DataOperationFailed,
             -> R.string.account_could_not_archive
+            is ArchiveCryptoPortfolioUseCase.Error.ActiveReferralStatus,
+            -> R.string.account_could_not_archive_referral_program_message
         }
 
         val dialogMessage = DialogMessage(
