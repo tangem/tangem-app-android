@@ -6,7 +6,7 @@ import arrow.core.raise.either
 import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.domain.staking.repositories.P2PEthPoolRepository
 import com.tangem.domain.staking.repositories.StakingErrorResolver
-import com.tangem.domain.staking.repositories.StakingRepository
+import com.tangem.domain.staking.repositories.StakeKitRepository
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 
@@ -15,7 +15,7 @@ import kotlinx.coroutines.launch
  * Fetches both StakeKit yields and P2P vaults
  */
 class FetchStakingOptionsUseCase(
-    private val stakingRepository: StakingRepository,
+    private val stakeKitRepository: StakeKitRepository,
     private val p2pRepository: P2PEthPoolRepository,
     private val stakingErrorResolver: StakingErrorResolver,
 ) {
@@ -24,7 +24,7 @@ class FetchStakingOptionsUseCase(
             catch(
                 block = {
                     coroutineScope {
-                        launch { stakingRepository.fetchYields() }
+                        launch { stakeKitRepository.fetchYields() }
                         launch { p2pRepository.fetchVaults() }
                     }
                 },
