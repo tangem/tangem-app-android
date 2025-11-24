@@ -1431,7 +1431,8 @@
   <string name="tangempay_card_details_swap_description">Swap any asset in your portfolio for card</string>
   <string name="tangempay_card_details_title">Card details</string>
   <string name="tangempay_card_details_unfreeze_card">Unfreeze Card</string>
-  <string name="tangempay_issue_card_notification_title">Create account and issue a card</string>
+  <string name="tangempay_issue_card_notification_description">It usually takes up to 15 minutes</string>
+  <string name="tangempay_issue_card_notification_title">Setting up your Tangem Card</string>
   <string name="tangempay_kyc_card_ready_notification_title">Tangem Pay</string>
   <string name="tangempay_kyc_in_progress_notification_button">View Status</string>
   <string name="tangempay_kyc_in_progress_notification_title">KYC in progress for Tangem Pay</string>
