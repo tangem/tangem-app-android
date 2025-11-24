@@ -1985,9 +1985,12 @@
   <string name="yield_module_token_details_earn_notification_earning_on_your_balance_title">Yield Mode</string>
   <string name="yield_module_token_details_earn_notification_processing">Enabling Yield Mode</string>
   <string name="yield_module_token_details_earn_notification_title">Yield Mode</string>
-  <string name="yield_module_transaction_enter">Yield Mode on</string>
-  <string name="yield_module_transaction_exit">Yield Mode off</string>
-  <string name="yield_module_transaction_topup">Yield Mode top-up</string>
+  <string name="yield_module_transaction_enter">Yield Mode enabled</string>
+  <string name="yield_module_transaction_enter_subtitle">%1$s supplied to Aave</string>
+  <string name="yield_module_transaction_exit">Yield Mode disabled</string>
+  <string name="yield_module_transaction_exit_subtitle">%1$s withdrawn from Aave</string>
+  <string name="yield_module_transaction_topup">Supply to Aave</string>
+  <string name="yield_module_transaction_topup_subtitle">%1$s supplied to Aave</string>
   <string name="yield_module_transfer_mode_automatic">Automatic</string>
   <string name="yield_module_unable_to_cover_fee_description">Add some %1$s %2$s to cover the network fee for transactions.</string>
   <string name="yield_module_unable_to_cover_fee_title">Unable to cover %s fee</string>
