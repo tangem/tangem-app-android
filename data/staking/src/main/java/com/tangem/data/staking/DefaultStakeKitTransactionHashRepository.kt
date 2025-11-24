@@ -6,16 +6,16 @@ import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObjectListSync
 import com.tangem.domain.staking.model.UnsubmittedTransactionMetadata
-import com.tangem.domain.staking.repositories.StakingTransactionHashRepository
+import com.tangem.domain.staking.repositories.StakeKitTransactionHashRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 
-internal class DefaultStakingTransactionHashRepository(
+internal class DefaultStakeKitTransactionHashRepository(
     private val stakeKitApi: StakeKitApi,
     private val appPreferencesStore: AppPreferencesStore,
     private val dispatchers: CoroutineDispatcherProvider,
-) : StakingTransactionHashRepository {
+) : StakeKitTransactionHashRepository {
 
     override suspend fun submitHash(transactionId: String, transactionHash: String) {
         withContext(dispatchers.io) {

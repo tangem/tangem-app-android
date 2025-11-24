@@ -1,7 +1,7 @@
 package com.tangem.domain.staking.usecase
 
 import com.tangem.domain.staking.model.stakekit.Yield
-import com.tangem.domain.staking.repositories.StakingRepository
+import com.tangem.domain.staking.repositories.StakeKitRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -12,10 +12,10 @@ import kotlinx.coroutines.flow.map
  * - key: currency staking key (network.backendId + "_" + symbol)
  * - value: validators
  */
-class StakingApyFlowUseCase(private val stakingRepository: StakingRepository) {
+class StakingApyFlowUseCase(private val stakeKitRepository: StakeKitRepository) {
 
     operator fun invoke(): Flow<Map<String, List<Yield.Validator>>> {
-        return stakingRepository.getEnabledYields()
+        return stakeKitRepository.getEnabledYields()
             .map { yields ->
                 yields.associate { yield ->
                     val key = "${yield.token.coinGeckoId}_${yield.token.symbol}"
