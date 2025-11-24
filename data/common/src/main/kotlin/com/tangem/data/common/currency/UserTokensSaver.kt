@@ -4,7 +4,9 @@ import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.common.tokens.UserTokensBackwardCompatibility
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
+import com.tangem.datasource.api.tangemTech.models.WalletType
 import com.tangem.datasource.local.token.UserTokensResponseStore
+import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -13,8 +15,10 @@ import com.tangem.utils.retryer.RetryerPool
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 
+@Suppress("LongParameterList")
 class UserTokensSaver(
     private val tangemTechApi: TangemTechApi,
+    private val userWalletsStore: UserWalletsStore,
     private val userTokensResponseStore: UserTokensResponseStore,
     private val dispatchers: CoroutineDispatcherProvider,
     private val addressesEnricher: UserTokensResponseAddressesEnricher,
@@ -48,7 +52,12 @@ class UserTokensSaver(
         onFailSend: () -> Unit = {},
     ) {
         withContext(dispatchers.default) {
-            val enrichedResponse = response.enrichIf(userWalletId = userWalletId, condition = useEnricher)
+            val userWallet = userWalletsStore.getSyncOrNull(key = userWalletId)
+
+            val enrichedResponse = response.enrichIf(userWalletId = userWalletId, condition = useEnricher).copy(
+                walletName = userWallet?.name,
+                walletType = WalletType.from(userWallet),
+            )
 
             safeApiCall(
                 call = {
