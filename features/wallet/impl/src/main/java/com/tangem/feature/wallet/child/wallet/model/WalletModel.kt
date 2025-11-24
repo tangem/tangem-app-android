@@ -23,7 +23,6 @@ import com.tangem.domain.pay.model.MainScreenCustomerInfo
 import com.tangem.domain.pay.model.OrderStatus
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
-import com.tangem.domain.pay.usecase.TangemPayIssueOrderUseCase
 import com.tangem.domain.pay.usecase.TangemPayMainScreenCustomerInfoUseCase
 import com.tangem.domain.settings.*
 import com.tangem.domain.tokens.RefreshMultiCurrencyWalletQuotesUseCase
@@ -96,7 +95,6 @@ internal class WalletModel @Inject constructor(
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val tangemPayMainScreenCustomerInfoUseCase: TangemPayMainScreenCustomerInfoUseCase,
-    private val tangemPayIssueOrderUseCase: TangemPayIssueOrderUseCase,
     private val tangemPayFeatureToggles: TangemPayFeatureToggles,
     private val yieldSupplyApyUpdateUseCase: YieldSupplyApyUpdateUseCase,
     private val tangemPayOnboardingRepository: OnboardingRepository,
@@ -398,7 +396,6 @@ internal class WalletModel @Inject constructor(
             transformer = TangemPayInitialStateTransformer(
                 value = info,
                 cardFrozenState = cardFrozenState,
-                onClickIssue = ::issueOrder,
                 onClickKyc = innerWalletRouter::openTangemPayOnboarding,
                 openDetails = { config ->
                     innerWalletRouter.openTangemPayDetails(
@@ -408,15 +405,6 @@ internal class WalletModel @Inject constructor(
                 },
             ),
         )
-    }
-
-    private fun issueOrder() {
-        modelScope.launch {
-            stateHolder.update(TangemPayIssueProgressStateTransformer())
-            tangemPayIssueOrderUseCase().onLeft {
-                stateHolder.update(TangemPayIssueAvailableStateTransformer(onClickIssue = ::issueOrder))
-            }
-        }
     }
 
     private fun needToRefreshTimer() {
