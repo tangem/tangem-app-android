@@ -42,6 +42,7 @@ internal class CreateWalletBackupChildFactory @Inject constructor() {
                 userWalletId = model.params.userWalletId,
                 callbacks = model.manualBackupCompletedModelCallbacks,
                 isUpgradeFlow = route.isUpgradeFlow,
+                isLastScreen = route.isLastScreen,
             ),
         )
     }
