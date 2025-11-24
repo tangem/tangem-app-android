@@ -3,16 +3,18 @@ package com.tangem.domain.account.status.usecase
 import arrow.core.Either
 import arrow.core.raise.Raise
 import arrow.core.raise.catch
-import com.tangem.domain.account.producer.SingleAccountListProducer
 import com.tangem.domain.account.repository.AccountsCRUDRepository
+import com.tangem.domain.account.status.producer.SingleAccountStatusListProducer
+import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.utils.CryptoCurrencyBalanceFetcher
-import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.core.utils.eitherOn
 import com.tangem.domain.express.ExpressServiceFetcher
 import com.tangem.domain.express.models.ExpressAsset
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
+import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.networks.utils.NetworksCleaner
@@ -27,7 +29,7 @@ import timber.log.Timber
 /**
  * Use case for saving crypto currencies to a specific account.
  *
- * @property singleAccountListSupplier Supplier to get account details.
+ * @property singleAccountStatusListSupplier Supplier for fetching the status of a single account.
  * @property accountsCRUDRepository Repository for performing CRUD operations on accounts.
  * @property currenciesRepository Repository for managing currencies.
  * @property derivationsRepository Repository for deriving public keys.
@@ -43,7 +45,7 @@ import timber.log.Timber
  */
 @Suppress("LongParameterList")
 class ManageCryptoCurrenciesUseCase(
-    private val singleAccountListSupplier: SingleAccountListSupplier,
+    private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
     private val accountsCRUDRepository: AccountsCRUDRepository,
     private val currenciesRepository: CurrenciesRepository,
     private val derivationsRepository: DerivationsRepository,
@@ -76,12 +78,13 @@ class ManageCryptoCurrenciesUseCase(
 
         val userWalletId = accountId.userWalletId
         withContext(NonCancellable) {
-            val account = getAccount(accountId = accountId)
+            val accountStatus = getAccountStatus(accountId = accountId)
 
-            val modifiedCurrencyList = account.cryptoCurrencies.modify(add = add, remove = remove)
+            val modifiedCurrencyList = accountStatus.tokenList.flattenCurrencies()
+                .modify(add = add, remove = remove)
 
             saveAccount(
-                account = account.copy(cryptoCurrencies = modifiedCurrencyList.total.toSet()),
+                account = accountStatus.account.copy(cryptoCurrencies = modifiedCurrencyList.total.toSet()),
             )
 
             val isDerivingFailed = derivePublicKeys(
@@ -117,10 +120,10 @@ class ManageCryptoCurrenciesUseCase(
         val userWalletId = accountId.userWalletId
 
         withContext(NonCancellable) {
-            val account = getAccount(accountId = accountId)
+            val accountStatus = getAccountStatus(accountId = accountId)
 
-            val foundToken = account.cryptoCurrencies
-                .filterIsInstance<CryptoCurrency.Token>()
+            val foundToken = accountStatus.tokenList.flattenCurrencies()
+                .mapNotNull { it.currency as? CryptoCurrency.Token }
                 .firstOrNull {
                     it.network.backendId == networkId &&
                         !it.isCustom &&
@@ -131,9 +134,10 @@ class ManageCryptoCurrenciesUseCase(
 
             val tokenToAdd = findToken(userWalletId, contractAddress, networkId)
 
-            val modifiedCurrencyList = account.cryptoCurrencies.modify(add = listOf(tokenToAdd))
+            val modifiedCurrencyList = accountStatus.tokenList.flattenCurrencies()
+                .modify(add = listOf(tokenToAdd))
 
-            saveAccount(account = account.copy(cryptoCurrencies = modifiedCurrencyList.total.toSet()))
+            saveAccount(account = accountStatus.account.copy(cryptoCurrencies = modifiedCurrencyList.total.toSet()))
 
             parallelUpdatingScope.launch {
                 cryptoCurrencyBalanceFetcher(userWalletId = userWalletId, currencies = listOf(tokenToAdd))
@@ -144,26 +148,31 @@ class ManageCryptoCurrenciesUseCase(
         }
     }
 
-    private suspend fun Raise<Throwable>.getAccount(accountId: AccountId): Account.CryptoPortfolio {
-        val accountList = singleAccountListSupplier.getSyncOrNull(
-            params = SingleAccountListProducer.Params(userWalletId = accountId.userWalletId),
+    private suspend fun Raise<Throwable>.getAccountStatus(accountId: AccountId): AccountStatus.CryptoPortfolio {
+        val accountStatusList = singleAccountStatusListSupplier.getSyncOrNull(
+            params = SingleAccountStatusListProducer.Params(userWalletId = accountId.userWalletId),
         ) ?: raise(IllegalStateException("No accounts for wallet ${accountId.userWalletId}"))
 
-        return accountList.accounts.firstOrNull { it.accountId == accountId } as? Account.CryptoPortfolio
+        return accountStatusList.accountStatuses
+            .firstOrNull { it.accountId == accountId } as? AccountStatus.CryptoPortfolio
             ?: raise(IllegalStateException("No account with id $accountId"))
     }
 
-    private fun Set<CryptoCurrency>.modify(
+    private fun List<CryptoCurrencyStatus>.modify(
         add: List<CryptoCurrency>,
         remove: List<CryptoCurrency> = emptyList(),
     ): ModifiedCurrencyList {
-        val mutableCurrencies = this.toMutableList()
+        val mutableCurrencies = this.map(CryptoCurrencyStatus::currency).toMutableList()
         val added = mutableListOf<CryptoCurrency>()
         val removed = mutableListOf<CryptoCurrency>()
 
-        val existingCurrenciesById = mutableCurrencies.associateBy(::TempID)
+        val existingCurrenciesById = this.associateBy(::TempID)
 
-        add.groupByNetwork { !existingCurrenciesById.containsKey(it) }
+        add.groupByNetwork { tempID ->
+            val found = existingCurrenciesById[tempID] ?: return@groupByNetwork true
+
+            found.value is CryptoCurrencyStatus.MissedDerivation
+        }
             .forEach { (network, currenciesById) ->
                 val coinTempId = TempID(network)
 
@@ -204,20 +213,6 @@ class ManageCryptoCurrenciesUseCase(
         return ModifiedCurrencyList(added = added, removed = removed, total = mutableCurrencies)
     }
 
-    private suspend fun Raise<Throwable>.saveAccount(account: Account.CryptoPortfolio) {
-        catch(
-            block = { accountsCRUDRepository.saveAccount(account) },
-            catch = ::raise,
-        )
-    }
-
-    private suspend fun derivePublicKeys(
-        userWalletId: UserWalletId,
-        currencies: List<CryptoCurrency>,
-    ): Either<Throwable, Unit> = Either.catch {
-        derivationsRepository.derivePublicKeys(userWalletId = userWalletId, currencies = currencies)
-    }
-
     private fun List<CryptoCurrency>.groupByNetwork(
         valuePredicate: (TempID) -> Boolean,
     ): LinkedHashMap<Network, MutableMap<TempID, CryptoCurrency>> {
@@ -230,11 +225,25 @@ class ManageCryptoCurrenciesUseCase(
             val id = TempID(currency)
 
             if (valuePredicate(id)) {
-                mutableMap.put(id, currency)
+                mutableMap[id] = currency
             }
         }
 
         return destination
+    }
+
+    private suspend fun Raise<Throwable>.saveAccount(account: Account.CryptoPortfolio) {
+        catch(
+            block = { accountsCRUDRepository.saveAccount(account) },
+            catch = ::raise,
+        )
+    }
+
+    private suspend fun derivePublicKeys(
+        userWalletId: UserWalletId,
+        currencies: List<CryptoCurrency>,
+    ): Either<Throwable, Unit> = Either.catch {
+        derivationsRepository.derivePublicKeys(userWalletId = userWalletId, currencies = currencies)
     }
 
     private suspend fun Raise<Throwable>.findToken(
@@ -306,6 +315,12 @@ class ManageCryptoCurrenciesUseCase(
             networkId = currency.network.backendId,
             derivationPath = currency.network.derivationPath,
             contractAddress = (currency as? CryptoCurrency.Token)?.contractAddress,
+        )
+
+        constructor(status: CryptoCurrencyStatus) : this(
+            networkId = status.currency.network.backendId,
+            derivationPath = status.currency.network.derivationPath,
+            contractAddress = (status.currency as? CryptoCurrency.Token)?.contractAddress,
         )
     }
 
