@@ -515,4 +515,10 @@ internal object WalletsDomainModule {
     ): HasSecuredWalletsUseCase {
         return HasSecuredWalletsUseCase(userWalletsListRepository = userWalletsListRepository)
     }
+
+    @Provides
+    @Singleton
+    fun provideSyncWalletWithRemoteUseCase(walletsRepository: WalletsRepository): SyncWalletWithRemoteUseCase {
+        return SyncWalletWithRemoteUseCase(walletsRepository = walletsRepository)
+    }
 }
