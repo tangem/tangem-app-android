@@ -5,7 +5,7 @@ import com.tangem.domain.staking.model.stakekit.action.StakingAction
 import com.tangem.domain.models.wallet.UserWalletId
 import kotlinx.coroutines.flow.Flow
 
-interface StakingActionRepository {
+interface StakeKitActionRepository {
 
     suspend fun store(userWalletId: UserWalletId, cryptoCurrencyId: CryptoCurrency.ID, actions: List<StakingAction>)
 
