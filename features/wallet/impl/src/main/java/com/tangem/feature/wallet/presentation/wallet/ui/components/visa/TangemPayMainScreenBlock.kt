@@ -28,7 +28,7 @@ internal fun TangemPayMainScreenBlock(state: TangemPayState, isBalanceHidden: Bo
                 config = NotificationConfig(
                     title = state.title,
                     iconSize = 36.dp,
-                    subtitle = TextReference.EMPTY,
+                    subtitle = state.description,
                     iconResId = state.iconRes,
                     buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
                         text = state.buttonText,
@@ -52,6 +52,7 @@ private fun ResetCardScreenPreview() {
             TangemPayMainScreenBlock(
                 Progress(
                     title = TextReference.Res(R.string.tangempay_kyc_in_progress_notification_title),
+                    description = TextReference.EMPTY,
                     buttonText = TextReference.Res(R.string.tangempay_kyc_in_progress_notification_button),
                     iconRes = R.drawable.ic_promo_kyc_36,
                     onButtonClick = {},
@@ -62,6 +63,7 @@ private fun ResetCardScreenPreview() {
             TangemPayMainScreenBlock(
                 Progress(
                     title = TextReference.Res(R.string.tangempay_issue_card_notification_title),
+                    description = TextReference.EMPTY,
                     buttonText = TextReference.Res(R.string.common_continue),
                     iconRes = R.drawable.ic_tangem_pay_promo_card_36,
                     onButtonClick = {},
@@ -72,6 +74,7 @@ private fun ResetCardScreenPreview() {
             TangemPayMainScreenBlock(
                 Progress(
                     title = TextReference.Res(R.string.tangempay_issue_card_notification_title),
+                    description = TextReference.Res(R.string.tangempay_issue_card_notification_description),
                     buttonText = TextReference.EMPTY,
                     iconRes = R.drawable.ic_tangem_pay_promo_card_36,
                     onButtonClick = {},
