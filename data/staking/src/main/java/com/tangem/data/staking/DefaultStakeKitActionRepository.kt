@@ -4,15 +4,15 @@ import com.tangem.datasource.local.token.StakingActionsStore
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.staking.model.stakekit.action.StakingAction
-import com.tangem.domain.staking.repositories.StakingActionRepository
+import com.tangem.domain.staking.repositories.StakeKitActionRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 
-internal class DefaultStakingActionRepository(
+internal class DefaultStakeKitActionRepository(
     private val stakingActionsStore: StakingActionsStore,
     private val dispatchers: CoroutineDispatcherProvider,
-) : StakingActionRepository {
+) : StakeKitActionRepository {
 
     override suspend fun store(
         userWalletId: UserWalletId,
