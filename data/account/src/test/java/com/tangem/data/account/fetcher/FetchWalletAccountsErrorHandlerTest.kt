@@ -12,6 +12,7 @@ import com.tangem.datasource.api.common.response.ETAG_HEADER
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.api.tangemTech.models.WalletIdBody
+import com.tangem.datasource.api.tangemTech.models.WalletType
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
 import com.tangem.datasource.api.tangemTech.models.account.toUserTokensResponse
@@ -124,7 +125,7 @@ class FetchWalletAccountsErrorHandlerTest {
                 WalletIdBody(
                     walletId = userWalletId.stringValue,
                     name = walletName,
-                    walletType = WalletIdBody.WalletType.COLD,
+                    walletType = WalletType.COLD,
                 ),
             )
         } returns apiResponse
@@ -146,7 +147,7 @@ class FetchWalletAccountsErrorHandlerTest {
                 WalletIdBody(
                     walletId = userWalletId.stringValue,
                     name = walletName,
-                    walletType = WalletIdBody.WalletType.COLD,
+                    walletType = WalletType.COLD,
                 ),
             )
             eTagsStore.store(userWalletId, ETagsStore.Key.WalletAccounts, eTagValue)
