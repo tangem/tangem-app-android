@@ -4,10 +4,11 @@ import com.squareup.moshi.Moshi
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.data.staking.DefaultP2PEthPoolRepository
-import com.tangem.data.staking.DefaultStakingActionRepository
+import com.tangem.data.staking.DefaultStakeKitActionRepository
 import com.tangem.data.staking.DefaultStakingErrorResolver
+import com.tangem.data.staking.DefaultStakeKitRepository
 import com.tangem.data.staking.DefaultStakingRepository
-import com.tangem.data.staking.DefaultStakingTransactionHashRepository
+import com.tangem.data.staking.DefaultStakeKitTransactionHashRepository
 import com.tangem.data.staking.converters.error.StakeKitErrorConverter
 import com.tangem.data.staking.store.YieldsBalancesStore
 import com.tangem.data.staking.toggles.DefaultStakingFeatureToggles
@@ -21,10 +22,11 @@ import com.tangem.datasource.local.token.P2PEthPoolVaultsStore
 import com.tangem.datasource.local.token.StakingActionsStore
 import com.tangem.datasource.local.token.StakingYieldsStore
 import com.tangem.domain.staking.repositories.P2PEthPoolRepository
-import com.tangem.domain.staking.repositories.StakingActionRepository
+import com.tangem.domain.staking.repositories.StakeKitActionRepository
 import com.tangem.domain.staking.repositories.StakingErrorResolver
+import com.tangem.domain.staking.repositories.StakeKitRepository
 import com.tangem.domain.staking.repositories.StakingRepository
-import com.tangem.domain.staking.repositories.StakingTransactionHashRepository
+import com.tangem.domain.staking.repositories.StakeKitTransactionHashRepository
 import com.tangem.domain.staking.toggles.StakingFeatureToggles
 import com.tangem.domain.staking.utils.StakingCleaner
 import com.tangem.domain.walletmanager.WalletManagersFacade
@@ -42,27 +44,41 @@ internal object StakingDataModule {
 
     @Provides
     @Singleton
-    fun provideStakingRepository(
+    fun provideStakeKitRepository(
         stakeKitApi: StakeKitApi,
         stakingYieldsStore: StakingYieldsStore,
-        p2pEthPoolVaultsStore: P2PEthPoolVaultsStore,
-        yieldsBalancesStore: YieldsBalancesStore,
         dispatchers: CoroutineDispatcherProvider,
         walletManagersFacade: WalletManagersFacade,
-        getUserWalletUseCase: GetUserWalletUseCase,
         stakingFeatureToggles: StakingFeatureToggles,
         @NetworkMoshi moshi: Moshi,
-    ): StakingRepository {
-        return DefaultStakingRepository(
+    ): StakeKitRepository {
+        return DefaultStakeKitRepository(
             stakeKitApi = stakeKitApi,
             stakingYieldsStore = stakingYieldsStore,
-            p2pEthPoolVaultsStore = p2pEthPoolVaultsStore,
-            stakingBalanceStoreV2 = yieldsBalancesStore,
             dispatchers = dispatchers,
             walletManagersFacade = walletManagersFacade,
-            getUserWalletUseCase = getUserWalletUseCase,
             stakingFeatureToggles = stakingFeatureToggles,
             moshi = moshi,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideStakingRepository(
+        stakeKitRepository: StakeKitRepository,
+        p2pEthPoolRepository: P2PEthPoolRepository,
+        yieldsBalancesStore: YieldsBalancesStore,
+        dispatchers: CoroutineDispatcherProvider,
+        getUserWalletUseCase: GetUserWalletUseCase,
+        stakingFeatureToggles: StakingFeatureToggles,
+    ): StakingRepository {
+        return DefaultStakingRepository(
+            stakeKitRepository = stakeKitRepository,
+            p2pEthPoolRepository = p2pEthPoolRepository,
+            stakingBalanceStoreV2 = yieldsBalancesStore,
+            dispatchers = dispatchers,
+            getUserWalletUseCase = getUserWalletUseCase,
+            stakingFeatureToggles = stakingFeatureToggles,
         )
     }
 
@@ -86,8 +102,8 @@ internal object StakingDataModule {
         stakeKitApi: StakeKitApi,
         appPreferencesStore: AppPreferencesStore,
         dispatchers: CoroutineDispatcherProvider,
-    ): StakingTransactionHashRepository {
-        return DefaultStakingTransactionHashRepository(
+    ): StakeKitTransactionHashRepository {
+        return DefaultStakeKitTransactionHashRepository(
             stakeKitApi = stakeKitApi,
             appPreferencesStore = appPreferencesStore,
             dispatchers = dispatchers,
@@ -99,8 +115,8 @@ internal object StakingDataModule {
     fun provideStakingActionRepository(
         stakingActionsStore: StakingActionsStore,
         dispatchers: CoroutineDispatcherProvider,
-    ): StakingActionRepository {
-        return DefaultStakingActionRepository(
+    ): StakeKitActionRepository {
+        return DefaultStakeKitActionRepository(
             stakingActionsStore = stakingActionsStore,
             dispatchers = dispatchers,
         )
