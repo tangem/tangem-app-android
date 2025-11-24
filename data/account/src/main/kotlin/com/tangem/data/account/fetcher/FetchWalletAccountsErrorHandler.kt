@@ -11,15 +11,13 @@ import com.tangem.datasource.api.common.response.ApiResponseError.HttpException.
 import com.tangem.datasource.api.common.response.ETAG_HEADER
 import com.tangem.datasource.api.common.response.isNetworkError
 import com.tangem.datasource.api.tangemTech.TangemTechApi
+import com.tangem.datasource.api.tangemTech.converters.WalletIdBodyConverter
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
-import com.tangem.datasource.api.tangemTech.models.WalletIdBody
-import com.tangem.datasource.api.tangemTech.models.WalletIdBody.WalletType
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
 import com.tangem.datasource.api.tangemTech.models.account.toUserTokensResponse
 import com.tangem.datasource.local.token.UserTokensResponseStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
-import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
@@ -110,9 +108,9 @@ internal class FetchWalletAccountsErrorHandler @Inject constructor(
 
     private suspend fun getFromLegacyStore(userWalletId: UserWalletId): UserTokensResponse? {
         return userTokensResponseStore.getSyncOrNull(userWalletId)
-            ?.let {
-                it.copy(
-                    tokens = UserTokensResponseAccountIdEnricher(userWalletId = userWalletId, tokens = it.tokens),
+            ?.let { response ->
+                response.copy(
+                    tokens = UserTokensResponseAccountIdEnricher(userWalletId = userWalletId, tokens = response.tokens),
                 )
             }
             .also { userTokensResponseStore.clear(userWalletId) }
@@ -129,14 +127,7 @@ internal class FetchWalletAccountsErrorHandler @Inject constructor(
 
         val creationResponse = withContext(dispatchers.io) {
             tangemTechApi.createWallet(
-                body = WalletIdBody(
-                    walletId = userWalletId.stringValue,
-                    name = userWallet.name,
-                    walletType = when (userWallet) {
-                        is UserWallet.Cold -> WalletType.COLD
-                        is UserWallet.Hot -> WalletType.HOT
-                    },
-                ),
+                body = WalletIdBodyConverter.convert(userWallet),
             )
         }
 
