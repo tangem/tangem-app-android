@@ -68,6 +68,7 @@ internal object DataCommonModule {
     @Singleton
     fun provideUserTokensSaver(
         tangemTechApi: TangemTechApi,
+        userWalletsStore: UserWalletsStore,
         userTokensResponseStore: UserTokensResponseStore,
         dispatchers: CoroutineDispatcherProvider,
         addressesEnricher: UserTokensResponseAddressesEnricher,
@@ -75,6 +76,7 @@ internal object DataCommonModule {
     ): UserTokensSaver {
         return UserTokensSaver(
             tangemTechApi = tangemTechApi,
+            userWalletsStore = userWalletsStore,
             userTokensResponseStore = userTokensResponseStore,
             dispatchers = dispatchers,
             addressesEnricher = addressesEnricher,
