@@ -38,7 +38,7 @@ features/staking/impl                                                56
 data/wallet-connect                                                  55
 features/swap-v2/impl                                                53
 features/walletconnect/impl                                          51
-features/tokendetails/impl                                           50
+features/tokendetails/impl                                           49
 features/manage-tokens/impl                                          45
 domain/wallets                                                       39
 features/nft/impl                                                    36
@@ -65,7 +65,6 @@ features/details/impl                                                10
 data/markets                                                         10
 domain/staking                                                        9
 data/yield-supply                                                     9
-data/staking                                                          9
 data/networks                                                         9
 features/welcome/impl                                                 8
 features/home/impl                                                    8
