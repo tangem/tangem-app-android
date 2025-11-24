@@ -66,7 +66,7 @@ internal fun ManualBackupCompletedContent(state: ManualBackupCompletedUM, modifi
         Spacer(modifier = Modifier.weight(2f))
         PrimaryButton(
             modifier = Modifier.fillMaxWidth(),
-            text = stringResourceSafe(R.string.common_continue),
+            text = state.continueButtonText.resolveReference(),
             onClick = state.onContinueClick,
         )
     }
@@ -81,6 +81,7 @@ private fun PreviewManualBackupCompletedContentBackup() {
             state = ManualBackupCompletedUM(
                 isLoading = false,
                 title = resourceReference(R.string.backup_complete_title),
+                continueButtonText = resourceReference(R.string.common_finish),
                 description = resourceReference(R.string.backup_complete_description),
                 onContinueClick = { },
             ),
@@ -97,6 +98,7 @@ private fun PreviewManualBackupCompletedContentImport() {
             state = ManualBackupCompletedUM(
                 isLoading = false,
                 title = resourceReference(R.string.wallet_import_success_title),
+                continueButtonText = resourceReference(R.string.common_continue),
                 description = resourceReference(R.string.backup_complete_description),
                 onContinueClick = { },
             ),
