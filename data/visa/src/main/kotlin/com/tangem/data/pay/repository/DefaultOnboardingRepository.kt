@@ -19,6 +19,7 @@ import com.tangem.domain.pay.model.OrderStatus
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.visa.model.TangemPayCardFrozenState
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
@@ -88,8 +89,9 @@ internal class DefaultOnboardingRepository @Inject constructor(
             val customerWalletAddress = requestHelper.getCustomerWalletAddress()
 
             when (val orderId = tangemPayStorage.getOrderId(customerWalletAddress)) {
-                // If order id wasn't saved -> get customer info
+                // If order id wasn't saved -> start order creation and get customer info
                 null -> {
+                    createOrder()
                     MainScreenCustomerInfo(
                         info = getCustomerInfoWithPersistedToken(),
                         orderStatus = OrderStatus.UNKNOWN,
@@ -98,6 +100,10 @@ internal class DefaultOnboardingRepository @Inject constructor(
                 // If order id was saved -> check its status
                 else -> {
                     val orderStatus = getOrderStatus(orderId)
+                    if (orderStatus == OrderStatus.CANCELED) {
+                        // If order was cancelled -> start order creation
+                        createOrder()
+                    }
                     val customerInfo = when (orderStatus) {
                         // Kyc is passed and user waits for order creation -> no need to get customer info
                         OrderStatus.NEW,
@@ -122,14 +128,16 @@ internal class DefaultOnboardingRepository @Inject constructor(
         return lastFetchedCustomerInfo
     }
 
-    override suspend fun createOrder(): Either<UniversalError, Unit> = withContext(dispatcherProvider.io) {
-        requestHelper.runWithErrorLogs(TAG) {
-            val walletAddress = requestHelper.getCustomerWalletAddress()
-            val result = requestHelper.request { authHeader ->
-                tangemPayApi.createOrder(authHeader, body = OrderRequest(walletAddress))
-            }.result ?: error("Create order result is null")
+    private suspend fun createOrder() = withContext(dispatcherProvider.io) {
+        launch {
+            requestHelper.runWithErrorLogs(TAG) {
+                val walletAddress = requestHelper.getCustomerWalletAddress()
+                val result = requestHelper.request { authHeader ->
+                    tangemPayApi.createOrder(authHeader, body = OrderRequest(walletAddress))
+                }.result ?: error("Create order result is null")
 
-            tangemPayStorage.storeOrderId(result.data.customerWalletAddress, result.id)
+                tangemPayStorage.storeOrderId(result.data.customerWalletAddress, result.id)
+            }
         }
     }
 
@@ -140,8 +148,8 @@ internal class DefaultOnboardingRepository @Inject constructor(
         val cardInfo = if (paymentAccount != null && card != null && balance != null) {
             CardInfo(
                 lastFourDigits = card.cardNumberEnd,
-                balance = balance.availableBalance,
-                currencyCode = balance.currency,
+                balance = balance.fiat.availableBalance,
+                currencyCode = balance.fiat.currency,
                 customerWalletAddress = paymentAccount.customerWalletAddress,
                 depositAddress = response.depositAddress,
             )
