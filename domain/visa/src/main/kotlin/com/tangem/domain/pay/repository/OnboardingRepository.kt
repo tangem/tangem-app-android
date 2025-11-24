@@ -15,8 +15,6 @@ interface OnboardingRepository {
 
     suspend fun getCustomerInfo(): Either<UniversalError, CustomerInfo>
 
-    suspend fun createOrder(): Either<UniversalError, Unit>
-
     /**
      * Returns only if the user already authorised at least once
      */
