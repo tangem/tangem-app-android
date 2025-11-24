@@ -91,7 +91,7 @@ internal object AccountStatusUseCaseModule {
     @Provides
     @Singleton
     fun provideManageCryptoCurrenciesUseCase(
-        singleAccountListSupplier: SingleAccountListSupplier,
+        singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
         accountsCRUDRepository: AccountsCRUDRepository,
         currenciesRepository: CurrenciesRepository,
         derivationsRepository: DerivationsRepository,
@@ -103,7 +103,7 @@ internal object AccountStatusUseCaseModule {
         dispatchers: CoroutineDispatcherProvider,
     ): ManageCryptoCurrenciesUseCase {
         return ManageCryptoCurrenciesUseCase(
-            singleAccountListSupplier = singleAccountListSupplier,
+            singleAccountStatusListSupplier = singleAccountStatusListSupplier,
             accountsCRUDRepository = accountsCRUDRepository,
             currenciesRepository = currenciesRepository,
             derivationsRepository = derivationsRepository,
