@@ -17,5 +17,6 @@ internal sealed interface CreateWalletBackupRoute {
     @Serializable
     data class BackupCompleted(
         val isUpgradeFlow: Boolean,
+        val isLastScreen: Boolean,
     ) : CreateWalletBackupRoute
 }
