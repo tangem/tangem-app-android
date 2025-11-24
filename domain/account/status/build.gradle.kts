@@ -23,6 +23,7 @@ dependencies {
     api(projects.domain.quotes)
     api(projects.domain.models)
     api(projects.domain.networks)
+    api(projects.domain.referral)
     api(projects.domain.staking)
     api(projects.domain.tokens)
     api(projects.domain.wallets)
@@ -42,7 +43,7 @@ dependencies {
     // end
 
     testRuntimeOnly(deps.test.junit5.engine)
-    testImplementation(tangemDeps.blockchain)
     testImplementation(projects.common.test)
     testImplementation(projects.test.core)
+    testImplementation(projects.test.mock)
 }
