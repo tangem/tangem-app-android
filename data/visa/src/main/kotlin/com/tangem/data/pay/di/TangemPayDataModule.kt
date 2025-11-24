@@ -1,17 +1,16 @@
 package com.tangem.data.pay.di
 
 import com.tangem.data.pay.DefaultTangemPayTopUpDataFactory
-import com.tangem.data.pay.repository.DefaultTangemPayCardDetailsRepository
 import com.tangem.data.pay.repository.DefaultKycRepository
-import com.tangem.data.pay.repository.DefaultTangemPayTxHistoryRepository
 import com.tangem.data.pay.repository.DefaultOnboardingRepository
+import com.tangem.data.pay.repository.DefaultTangemPayCardDetailsRepository
+import com.tangem.data.pay.repository.DefaultTangemPayTxHistoryRepository
 import com.tangem.data.pay.usecase.DefaultGetTangemPayCurrencyStatusUseCase
 import com.tangem.domain.pay.TangemPayTopUpDataFactory
-import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
 import com.tangem.domain.pay.repository.KycRepository
 import com.tangem.domain.pay.repository.OnboardingRepository
+import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
 import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
-import com.tangem.domain.pay.usecase.TangemPayIssueOrderUseCase
 import com.tangem.domain.pay.usecase.TangemPayMainScreenCustomerInfoUseCase
 import com.tangem.domain.tangempay.GetTangemPayCurrencyStatusUseCase
 import com.tangem.domain.tangempay.repository.TangemPayTxHistoryRepository
@@ -67,12 +66,6 @@ internal interface TangemPayDataModule {
             repository: OnboardingRepository,
         ): ProduceTangemPayInitialDataUseCase {
             return ProduceTangemPayInitialDataUseCase(repository = repository)
-        }
-
-        @Provides
-        @Singleton
-        fun provideTangemPayIssueOrderUseCase(repository: OnboardingRepository): TangemPayIssueOrderUseCase {
-            return TangemPayIssueOrderUseCase(repository = repository)
         }
     }
 }
