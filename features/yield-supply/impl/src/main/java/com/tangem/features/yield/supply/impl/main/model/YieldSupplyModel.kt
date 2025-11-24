@@ -110,7 +110,18 @@ internal class YieldSupplyModel @Inject constructor(
                     bottomSheetNavigation.activate(Unit)
                 }
             } else {
-                onStartEarningClick()
+                uiState
+                    .filterIsInstance<YieldSupplyUM.Available>()
+                    .take(1)
+                    .onEach { state ->
+                        appRouter.push(
+                            YieldSupplyPromo(
+                                userWalletId = params.userWalletId,
+                                cryptoCurrency = params.cryptoCurrency,
+                                apy = state.apy,
+                            ),
+                        )
+                    }.launchIn(modelScope)
             }
         }
     }
