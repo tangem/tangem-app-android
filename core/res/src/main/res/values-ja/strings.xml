@@ -164,7 +164,7 @@
   <string name="card_reset_alert_finish_message">すべてのTangemデバイスがリセットされました。ウォレットのアップグレードを続行できます。</string>
   <string name="card_reset_alert_finish_ok_button">もう一度アップグレードしてください</string>
   <string name="card_reset_alert_finish_title">リセット完了</string>
-  <string name="card_reset_alert_incomplete_message">すべてのTangemデバイスをリセットしていません</string>
+  <string name="card_reset_alert_incomplete_message">このウォレット内のすべてのTangemデバイスで、リセット処理を完了することを推奨します。</string>
   <string name="card_reset_alert_incomplete_title">すべてのTangemデバイスをリセットしていません</string>
   <string name="card_settings_access_code_recovery_disabled_description">このカードを使用して、このウォレット内の他のカードまたはリングのアクセスコードをリセットしたくない場合は、このオプションを無効にしてください。これにより、このカードのアクセスコードもリセットできなくなりますのでご注意ください。</string>
   <string name="card_settings_access_code_recovery_enabled_description">このカードを使用して、このウォレット内の他のカードのアクセスコードをリセットできます。</string>
@@ -270,6 +270,7 @@
   <string name="common_forget">忘れる</string>
   <string name="common_free">無料</string>
   <string name="common_from">送信元</string>
+  <string name="common_from_wallet_name">%sから</string>
   <string name="common_generate_addresses">アドレスを同期する</string>
   <string name="common_get_started">はじめる</string>
   <string name="common_get_token">トークンを取得</string>
@@ -294,6 +295,7 @@
     <item quantity="other">%dネットワーク</item>
   </plurals>
   <string name="common_new_address">新しいアドレス</string>
+  <string name="common_news">ニュース</string>
   <string name="common_next">次</string>
   <string name="common_nft">NFT</string>
   <string name="common_no">いいえ</string>
@@ -511,6 +513,9 @@
   <string name="express_transaction_id">ID: %s</string>
   <string name="express_transaction_id_copied">取引IDをコピーしました</string>
   <string name="exсhange_token_description">ポートフォリオ内のアセットをこのトークンと交換する</string>
+  <string name="feed_market_and_news">マーケット＆ニュース</string>
+  <string name="feed_tangem_ai">Tangem AI</string>
+  <string name="feed_trending_now">いま話題</string>
   <string name="feedback_data_collection_message">以下の情報はオプションです。共有したくない場合は消去できます。</string>
   <string name="feedback_preface_rate_negative">どのような機能が不足しているかを教えください。解決できるよう尽力致します。</string>
   <string name="feedback_preface_scan_failed">お持ちのカードまたはリングについて教えてください</string>
@@ -594,7 +599,7 @@
   <string name="hw_remove_wallet_notification_title">このウォレットを削除しますか？</string>
   <string name="hw_remove_wallet_warning_access">ウォレットの削除前にバックアップをしていなければ、アクセスを失う可能性があることを理解しています。</string>
   <string name="hw_remove_wallet_warning_device">ウォレットを削除しても中身自体が消えるわけではなく、単にこのデバイスから表示が消えるだけであることを理解しています。</string>
-  <string name="hw_upgrade_backup_description">もはやシードフレーズは不要——Tangemカードやリングがそのままあなたの安全なバックアップになります。</string>
+  <string name="hw_upgrade_backup_description">もはや、シードフレーズは不要。Tangemカードやリングが、そのまま安全なバックアップになります。</string>
   <string name="hw_upgrade_backup_title">Tangemでバックアップ</string>
   <string name="hw_upgrade_error_card_already_has_wallet">アップグレードできません。このデバイスにはすでにウォレットが存在します。</string>
   <string name="hw_upgrade_error_card_key_import">別のデバイスを選択してください。このデバイスはアップグレードに使用できません。</string>
@@ -758,6 +763,8 @@
   <string name="markets_token_details_volume">取引量</string>
   <string name="markets_tooltip_message">これをドラッグするか、検索窓をタップして、マーケットから直接トークンを追加します</string>
   <string name="markets_tooltip_title">トークンを追加</string>
+  <string name="news_all_news">すべてのニュース</string>
+  <string name="news_stay_in_the_loop">最新情報を入手</string>
   <string name="nfc_error_unavailable">お使いのデバイスではNFCが使用できません</string>
   <string name="nft_about_title">NFTについて</string>
   <string name="nft_asset">NFTアセット</string>
@@ -1048,7 +1055,7 @@
   <string name="send_alert_fee_too_low_text">推奨手数料を下回る手数料が指定されたため、取引に遅れが生じる可能性があります。続行しますか？</string>
   <string name="send_alert_transaction_failed_text">理由: %1$s \nコード: %2$s</string>
   <string name="send_alert_transaction_failed_title">取引は完了していません</string>
-  <string name="send_amount_convert_to_another_token">別のトークンに変換する</string>
+  <string name="send_amount_convert_to_another_token">別のトークンまたはネットワークにスワップする</string>
   <string name="send_amount_label">金額</string>
   <string name="send_amount_receive_token_subtitle">受取人に送信されます</string>
   <string name="send_bitcoin_custom_fee_footer">取引手数料は、vByteフィールドのSatoshiの値を調整して設定できます。</string>
@@ -1399,13 +1406,14 @@
   <string name="tangempay_card_details_swap_description">ポートフォリオ内のあらゆる資産をカードと交換</string>
   <string name="tangempay_card_details_title">カードの詳細</string>
   <string name="tangempay_card_details_unfreeze_card">カードの一時停止を解除</string>
-  <string name="tangempay_issue_card_notification_title">アカウントを作成してカードを発行</string>
+  <string name="tangempay_issue_card_notification_description">通常は最大で15分ほどかかります</string>
+  <string name="tangempay_issue_card_notification_title">Tangemカードのセットアップ</string>
   <string name="tangempay_kyc_card_ready_notification_title">Tangem Pay</string>
   <string name="tangempay_kyc_in_progress_notification_button">ステータスを表示</string>
   <string name="tangempay_kyc_in_progress_notification_title">Tangem PayのKYC手続き進行中</string>
   <string name="tangempay_onboarding_get_card_button_text">カードをGET</string>
-  <string name="tangempay_onboarding_pay_description">どこでも暗号資産を使える</string>
-  <string name="tangempay_onboarding_pay_title">Apple PayとGoogle Payに対応したデジタルカード付き</string>
+  <string name="tangempay_onboarding_pay_description">Apple PayとGoogle Payに対応したデジタルカード付き</string>
+  <string name="tangempay_onboarding_pay_title">どこでも暗号資産を使える</string>
   <string name="tangempay_onboarding_purchases_description">購入時に追加手数料はかかりません。</string>
   <string name="tangempay_onboarding_purchases_title">余計な費用なしで、表示金額のみを支払う</string>
   <string name="tangempay_onboarding_security_description">あなたの住所や資産を開示することなく、個別の支払い用アカウントが作成されます。</string>
@@ -1580,7 +1588,7 @@
   <string name="wallet_create_scan_question">すでにTangemウォレットを使っていますか？</string>
   <string name="wallet_create_scan_title">今すぐスキャン</string>
   <string name="wallet_create_title">ウォレットの設定方法を選択する</string>
-  <string name="wallet_import_buy_question">Tangemウォレットを手に入れる準備はできた？</string>
+  <string name="wallet_import_buy_question">Tangemウォレットを購入しますか？</string>
   <string name="wallet_import_buy_title">今すぐ購入</string>
   <string name="wallet_import_google_drive_description">Googleドライブのバックアップから既存のウォレットを復元する</string>
   <string name="wallet_import_google_drive_title">Googleドライブからインポート</string>
@@ -1602,7 +1610,7 @@
   <string name="wallet_promo_banner_button_title">今すぐ10 % オフで購入</string>
   <string name="wallet_promo_banner_description">1.3万種類以上の暗号資産にアクセス。ワンタップで買付、売却、スワップ、ステーキングが可能です。\nバックアップ用に最大3枚のカードを連携できます。</string>
   <string name="wallet_promo_banner_title">Tangemウォレットを見る</string>
-  <string name="wallet_settings_access_code_description">このシークレットコードはウォレットを保護し、ログインや取引の署名に使用されます。</string>
+  <string name="wallet_settings_access_code_description">このアクセスコードはウォレットを保護し、ログインや取引の署名に使用されます。</string>
   <string name="wallet_settings_access_code_title">アクセスコードの設定・変更</string>
   <string name="wallet_settings_change_access_code_title">アクセスコードを変更する</string>
   <string name="wallet_settings_push_notifications_description">ウォレットの受信取引とTangemの更新について通知を受け取る。</string>
@@ -1796,7 +1804,7 @@
   <string name="wc_uri_already_used_title">URIはすでに使用されています</string>
   <string name="wc_wallet_connect">WalletConnect</string>
   <string name="wc_warning_transaction">不審な取引</string>
-  <string name="welcome_create_wallet_already_have">すでにTangemをお持ちですか？</string>
+  <string name="welcome_create_wallet_already_have">すでにTangemウォレットをお持ちですか？</string>
   <string name="welcome_create_wallet_feature_assets">数千種類の資産</string>
   <string name="welcome_create_wallet_feature_class">業界最高水準のハードウェアウォレット</string>
   <string name="welcome_create_wallet_feature_delivery">迅速な配送</string>
@@ -1805,7 +1813,7 @@
   <string name="welcome_create_wallet_feature_use">シンプルな操作</string>
   <string name="welcome_create_wallet_hardware_description">Tangemでハードウェアウォレットを作成しましょう。銀行のカードのようにスリムで、金庫のように安全です。</string>
   <string name="welcome_create_wallet_mobile_description">ソフトウェアウォレットを作成またはインポート</string>
-  <string name="welcome_create_wallet_mobile_description_full">スマートフォン上にソフトウェアウォレットを作成するか、インポートしてください。</string>
+  <string name="welcome_create_wallet_mobile_description_full">スマートフォン上にソフトウェアウォレットを作成またはインポートする。</string>
   <string name="welcome_create_wallet_mobile_title">モバイルウォレットから始める</string>
   <string name="welcome_create_wallet_other_method">その他の方法</string>
   <string name="welcome_create_wallet_use_hardware_description">Tangemハードウェアウォレットを使用する</string>
@@ -1826,7 +1834,7 @@
   <string name="xtz_withdrawal_message_warning">次回ウォレットにチャージするときに手数料の増加を避けるには、金額を%s XTZ減らしてください。</string>
   <string name="yield_module_alert_description">利息モードが有効な場合、このアドレスへの今後の入金はすべてAaveに提供されます。資金は引き続き自由に管理できます。</string>
   <string name="yield_module_alert_title">%sはAaveに供給されています</string>
-  <string name="yield_module_amount_not_transfered_to_aave_title">Aaveへの%1$s %2$sの供給は保留中です</string>
+  <string name="yield_module_amount_not_transfered_to_aave_title">%1$s %2$sをAaveへ供給中</string>
   <string name="yield_module_approve_needed_notification_cta">承認</string>
   <string name="yield_module_approve_needed_notification_description">トークンの承認が取り消されました。サービスの機能を再開するには、再度トークンの承認を行ってください。</string>
   <string name="yield_module_approve_needed_notification_title">承認が必要</string>
@@ -1902,6 +1910,9 @@
   <string name="yield_module_token_details_earn_notification_earning_on_your_balance_title">利息モード</string>
   <string name="yield_module_token_details_earn_notification_processing">利息モードの有効化</string>
   <string name="yield_module_token_details_earn_notification_title">利息モード</string>
+  <string name="yield_module_transaction_enter">利息モード オン</string>
+  <string name="yield_module_transaction_exit">利息モード オフ</string>
+  <string name="yield_module_transaction_topup">利息モードへの追加入金</string>
   <string name="yield_module_transfer_mode_automatic">自動</string>
   <string name="yield_module_unable_to_cover_fee_description">取引のネットワーク手数料をカバーするために、 %1$s %2$sを追加してください。</string>
   <string name="yield_module_unable_to_cover_fee_title">%s手数料を支払えません</string>
