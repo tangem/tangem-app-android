@@ -13,8 +13,10 @@ data class UserTokensResponse(
     @Json(name = "version") val version: Int = 0,
     @Json(name = "group") val group: GroupType,
     @Json(name = "sort") val sort: SortType,
-    @Json(name = "notifyStatus") val notifyStatus: Boolean? = null,
     @Json(name = "tokens") val tokens: List<Token> = emptyList(),
+    @Json(name = "notifyStatus") val notifyStatus: Boolean? = null,
+    @Json(name = "name") val walletName: String? = null,
+    @Json(name = "type") val walletType: WalletType? = null,
 ) {
 
     @JsonClass(generateAdapter = true)
