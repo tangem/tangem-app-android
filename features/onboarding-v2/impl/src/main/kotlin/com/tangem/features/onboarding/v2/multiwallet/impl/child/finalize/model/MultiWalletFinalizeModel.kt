@@ -9,7 +9,6 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
-import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
@@ -25,6 +24,7 @@ import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
+import com.tangem.domain.wallets.usecase.SyncWalletWithRemoteUseCase
 import com.tangem.domain.wallets.usecase.UpdateWalletUseCase
 import com.tangem.features.onboarding.v2.common.ui.CantLeaveBackupDialog
 import com.tangem.features.onboarding.v2.impl.R
@@ -63,6 +63,7 @@ internal class MultiWalletFinalizeModel @Inject constructor(
     private val saveWalletUseCase: SaveWalletUseCase,
     private val getUserWalletsUseCase: GetWalletsUseCase,
     private val updateWalletUseCase: UpdateWalletUseCase,
+    private val syncWalletWithRemoteUseCase: SyncWalletWithRemoteUseCase,
     private val cardRepository: CardRepository,
     private val onboardingRepository: OnboardingRepository,
     private val walletsRepository: WalletsRepository,
@@ -76,7 +77,7 @@ internal class MultiWalletFinalizeModel @Inject constructor(
 
     private val backupCardIds = backupServiceHolder.backupService.get()?.backupCardIds.orEmpty()
 
-    private var walletHasBackupError = false
+    private var hasWalletBackupError = false
     private var hasRing = false
 
     val uiState = _uiState.asStateFlow()
@@ -182,9 +183,9 @@ internal class MultiWalletFinalizeModel @Inject constructor(
                     _uiState.update { st ->
                         st.copy(
                             step = MultiWalletFinalizeUM.Step.BackupDevice1,
-                            isRing = backupService.backupCardsBatchIds.getOrNull(0)?.let { isRing(it) } == true,
+                            isRing = backupService.backupCardsBatchIds.getOrNull(0)?.let(::isRing) == true,
                             scanPrimary = false,
-                            cardNumber = backupService.backupCardIds.firstOrNull()?.lastMasked() ?: "",
+                            cardNumber = backupService.backupCardIds.firstOrNull()?.lastMasked().orEmpty(),
                         )
                     }
                 }
@@ -207,7 +208,7 @@ internal class MultiWalletFinalizeModel @Inject constructor(
                 is CompletionResult.Success -> {
                     val backupValidator = BackupValidator()
                     if (backupValidator.isValidBackupStatus(CardDTO(result.data)).not()) {
-                        walletHasBackupError = true
+                        hasWalletBackupError = true
                     }
 
                     if (backupService.currentState == BackupService.State.Finished) {
@@ -220,7 +221,7 @@ internal class MultiWalletFinalizeModel @Inject constructor(
                                 isRing = backupService.backupCardsBatchIds
                                     .getOrNull(cardIndex + 1)?.let { isRing(it) } == true,
                                 cardNumber = backupService.backupCardIds.getOrNull(cardIndex + 1)
-                                    ?.lastMasked() ?: "",
+                                    ?.lastMasked().orEmpty(),
                             )
                         }
                     }
@@ -246,7 +247,7 @@ internal class MultiWalletFinalizeModel @Inject constructor(
 
             // Validate wallet before saving
             // If something went wrong - start full reset flow
-            if (walletHasBackupError || !backupValidator.isValidFull(scanResponse.card)) {
+            if (hasWalletBackupError || !backupValidator.isValidFull(scanResponse.card)) {
                 startFullResetFlow.emit(
                     userWalletCreated.copy(
                         scanResponse = scanResponse.updateScanResponseAfterBackup(),
@@ -269,16 +270,16 @@ internal class MultiWalletFinalizeModel @Inject constructor(
                 }
                 OnboardingMultiWalletComponent.Mode.AddBackup -> {
                     val userWallet = getUserWalletsUseCase.invokeSync()
-                        .firstOrNull {
-                            it is UserWallet.Cold &&
-                                it.scanResponse.primaryCard?.cardId == scanResponse.primaryCard?.cardId
+                        .firstOrNull { userWallet ->
+                            userWallet is UserWallet.Cold &&
+                                userWallet.scanResponse.primaryCard?.cardId == scanResponse.primaryCard?.cardId
                         }
                         ?: userWalletCreated
 
                     updateWalletUseCase.invoke(
                         userWalletId = userWallet.walletId,
-                        update = {
-                            it.requireColdWallet().copy(
+                        update = { wallet ->
+                            wallet.requireColdWallet().copy(
                                 scanResponse = scanResponse.updateScanResponseAfterBackup(),
                             )
                         },
@@ -313,20 +314,8 @@ internal class MultiWalletFinalizeModel @Inject constructor(
                 it.copy(resultUserWallet = userWallet)
             }
 
-            if (userWallet.scanResponse.cardTypesResolver.isWallet2() && userWallet.isImported) {
-                launch(NonCancellable) {
-                    runCatching {
-                        walletsRepository.markWallet2WasCreated(userWallet.walletId)
-                    }
-                }
-            }
-
-            if (userWallet.isMultiCurrency) {
-                launch(NonCancellable) {
-                    runCatching {
-                        walletsRepository.createWallet(userWallet.walletId)
-                    }
-                }
+            launch(NonCancellable) {
+                syncWalletWithRemoteUseCase(userWalletId = userWallet.walletId)
             }
 
             // user wallet is fully created and saved, remove scan response from preferences
@@ -343,7 +332,7 @@ internal class MultiWalletFinalizeModel @Inject constructor(
         return requireNotNull(
             value = coldUserWalletBuilderFactory.create(scanResponse = scanResponse)
                 .backupCardsIds(backupCardIds.toSet())
-                .hasBackupError(walletHasBackupError)
+                .hasBackupError(hasWalletBackupError)
                 .build(),
             lazyMessage = { "User wallet not created" },
         )
