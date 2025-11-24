@@ -7,12 +7,9 @@ import com.tangem.domain.pay.TangemPayDetailsConfig
 import com.tangem.domain.pay.model.CustomerInfo.CardInfo
 import com.tangem.domain.pay.model.CustomerInfo.ProductInstance
 import com.tangem.domain.pay.model.MainScreenCustomerInfo
-import com.tangem.domain.pay.model.OrderStatus.CANCELED
-import com.tangem.domain.pay.model.OrderStatus.UNKNOWN
 import com.tangem.domain.visa.model.TangemPayCardFrozenState
 import com.tangem.feature.wallet.presentation.wallet.state.model.TangemPayState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletScreenState
-import com.tangem.feature.wallet.presentation.wallet.state.util.TangemPayStateCreator.createIssueAvailableState
 import com.tangem.feature.wallet.presentation.wallet.state.util.TangemPayStateCreator.createIssueProgressState
 import com.tangem.feature.wallet.presentation.wallet.state.util.TangemPayStateCreator.createKycInProgressState
 import java.util.Currency
@@ -26,7 +23,6 @@ private const val POLYGON_CHAIN_ID = 137
 internal class TangemPayInitialStateTransformer(
     private val value: MainScreenCustomerInfo? = null,
     private val cardFrozenState: TangemPayCardFrozenState,
-    private val onClickIssue: () -> Unit = {},
     private val onClickKyc: () -> Unit = {},
     private val openDetails: (config: TangemPayDetailsConfig) -> Unit = {},
 ) : WalletScreenStateTransformer {
@@ -43,7 +39,6 @@ internal class TangemPayInitialStateTransformer(
             value == null -> TangemPayState.Empty
             !value.info.isKycApproved -> createKycInProgressState(onClickKyc)
             cardInfo != null && productInstance != null -> getCardInfoState(cardInfo, productInstance)
-            value.orderStatus == UNKNOWN || value.orderStatus == CANCELED -> createIssueAvailableState(onClickIssue)
             else -> createIssueProgressState()
         }
     }
