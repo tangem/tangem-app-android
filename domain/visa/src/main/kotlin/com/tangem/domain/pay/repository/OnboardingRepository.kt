@@ -21,4 +21,6 @@ interface OnboardingRepository {
      * Returns only if the user already authorised at least once
      */
     suspend fun getMainScreenCustomerInfo(): Either<UniversalError, MainScreenCustomerInfo>
+
+    fun getSavedCustomerInfo(): CustomerInfo?
 }
