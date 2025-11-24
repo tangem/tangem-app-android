@@ -67,7 +67,12 @@ internal class CreateWalletBackupModel @Inject constructor(
     }
 
     fun onManualBackupChecked() {
-        stackNavigation.push(CreateWalletBackupRoute.BackupCompleted(isUpgradeFlow = params.isUpgradeFlow))
+        stackNavigation.push(
+            configuration = CreateWalletBackupRoute.BackupCompleted(
+                isUpgradeFlow = params.isUpgradeFlow,
+                isLastScreen = !params.setAccessCode,
+            ),
+        )
     }
 
     fun onManualBackupCompleted() {
