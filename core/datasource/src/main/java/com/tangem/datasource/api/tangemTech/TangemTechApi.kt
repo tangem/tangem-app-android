@@ -50,9 +50,6 @@ interface TangemTechApi {
         @Body userTokens: UserTokensResponse,
     ): ApiResponse<Unit>
 
-    @POST("v1/user-tokens")
-    suspend fun markUserWallerWasCreated(@Body body: MarkUserWalletWasCreatedBody): ApiResponse<Unit>
-
     /** Returns referral status by [walletId] */
     @GET("v1/referral/{walletId}")
     suspend fun getReferralStatus(@Path("walletId") walletId: String): ApiResponse<ReferralResponse>
