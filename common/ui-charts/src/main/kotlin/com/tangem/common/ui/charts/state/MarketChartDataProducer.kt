@@ -6,6 +6,7 @@ import com.patrykandpatrick.vico.core.cartesian.data.LineCartesianLayerModel
 import com.tangem.common.ui.charts.state.converter.PointValuesConverter
 import com.tangem.common.ui.charts.state.converter.PriceAndTimePointValuesConverter
 import com.tangem.common.ui.charts.state.formatter.FormatterWrapWithCache
+import com.tangem.utils.coroutines.runSuspendCatching
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.sync.Mutex
@@ -126,7 +127,7 @@ class MarketChartDataProducer private constructor(
 
             currentCoroutineContext().ensureActive()
 
-            runCatching {
+            runSuspendCatching {
                 modelProducer.runTransaction {
                     add(LineCartesianLayerModel.Partial(series = listOf(entriesLocal)))
                 }
