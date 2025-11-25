@@ -1,7 +1,0 @@
-<?xml version="1.0" ?>
-<SmellBaseline>
-  <ManuallySuppressedIssues/>
-  <CurrentIssues>
-    <ID>MultilineLambdaItParameter:DefaultHotWalletRepository.kt$DefaultHotWalletRepository${ it.setObjectMap( key = PreferencesKeys.ACCESS_CODE_SKIPPED_STATES_KEY, value = it.getObjectMap&lt;Boolean&gt;(PreferencesKeys.ACCESS_CODE_SKIPPED_STATES_KEY) .plus(userWalletId.stringValue to skipped), ) }</ID>
-  </CurrentIssues>
-</SmellBaseline>
