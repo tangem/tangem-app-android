@@ -5,7 +5,6 @@ import com.google.common.truth.Truth
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.models.AccountStatusList
-import com.tangem.domain.account.producer.SingleAccountListProducer
 import com.tangem.domain.account.repository.AccountsCRUDRepository
 import com.tangem.domain.account.status.utils.CryptoCurrencyStatusesFlowFactory
 import com.tangem.domain.account.supplier.SingleAccountListSupplier
@@ -20,9 +19,11 @@ import com.tangem.domain.models.quote.PriceChange
 import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.networks.repository.NetworksRepository
 import com.tangem.test.core.getEmittedValues
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
@@ -40,6 +41,7 @@ class DefaultSingleAccountStatusListProducerTest {
 
     private val accountsCRUDRepository: AccountsCRUDRepository = mockk()
     private val singleAccountListSupplier: SingleAccountListSupplier = mockk()
+    private val networksRepository: NetworksRepository = mockk()
     private val cryptoCurrencyStatusesFlowFactory: CryptoCurrencyStatusesFlowFactory = mockk()
 
     private val userWalletId = UserWalletId("011")
@@ -51,13 +53,19 @@ class DefaultSingleAccountStatusListProducerTest {
         params = SingleAccountStatusListProducer.Params(userWalletId),
         accountsCRUDRepository = accountsCRUDRepository,
         singleAccountListSupplier = singleAccountListSupplier,
+        networksRepository = networksRepository,
         cryptoCurrencyStatusesFlowFactory = cryptoCurrencyStatusesFlowFactory,
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
 
     @AfterEach
     fun tearDown() {
-        clearMocks(accountsCRUDRepository, singleAccountListSupplier, cryptoCurrencyStatusesFlowFactory)
+        clearMocks(
+            accountsCRUDRepository,
+            singleAccountListSupplier,
+            networksRepository,
+            cryptoCurrencyStatusesFlowFactory,
+        )
     }
 
     @Test
@@ -65,9 +73,8 @@ class DefaultSingleAccountStatusListProducerTest {
         // Arrange
         val accountList = AccountList.empty(userWalletId = userWalletId)
 
-        every {
-            singleAccountListSupplier(params = SingleAccountListProducer.Params(userWalletId))
-        } returns flowOf(accountList)
+        every { singleAccountListSupplier(userWalletId) } returns flowOf(accountList)
+        coEvery { networksRepository.hasCachedStatuses(userWalletId) } returns true
 
         // Act
         val actual = producer.produce().let(::getEmittedValues)
@@ -89,8 +96,14 @@ class DefaultSingleAccountStatusListProducerTest {
         )
         Truth.assertThat(actual).containsExactly(expected)
 
-        coVerify(ordering = Ordering.SEQUENCE) {
-            singleAccountListSupplier(params = SingleAccountListProducer.Params(userWalletId))
+        coVerifySequence {
+            singleAccountListSupplier(userWalletId)
+            networksRepository.hasCachedStatuses(userWalletId)
+        }
+
+        coVerify(inverse = true) {
+            accountsCRUDRepository.getUserWallet(userWalletId = any())
+            cryptoCurrencyStatusesFlowFactory.create(userWallet = any(), currency = any())
         }
     }
 
@@ -102,9 +115,8 @@ class DefaultSingleAccountStatusListProducerTest {
 
         val accountListFlow = MutableStateFlow(value = accountList)
 
-        every {
-            singleAccountListSupplier(params = SingleAccountListProducer.Params(userWalletId))
-        } returns accountListFlow
+        every { singleAccountListSupplier(userWalletId) } returns accountListFlow
+        coEvery { networksRepository.hasCachedStatuses(userWalletId) } returns true
 
         // Act (first emission)
         val actual1 = producer.produce().let(::getEmittedValues)
@@ -147,9 +159,17 @@ class DefaultSingleAccountStatusListProducerTest {
         )
         Truth.assertThat(actual2).containsExactly(expected2)
 
-        coVerify(ordering = Ordering.SEQUENCE) {
-            singleAccountListSupplier(params = SingleAccountListProducer.Params(userWalletId))
-            singleAccountListSupplier(params = SingleAccountListProducer.Params(userWalletId))
+        coVerifySequence {
+            singleAccountListSupplier(userWalletId)
+            networksRepository.hasCachedStatuses(userWalletId)
+            networksRepository.hasCachedStatuses(userWalletId)
+            singleAccountListSupplier(userWalletId)
+            networksRepository.hasCachedStatuses(userWalletId)
+        }
+
+        coVerify(inverse = true) {
+            accountsCRUDRepository.getUserWallet(userWalletId = any())
+            cryptoCurrencyStatusesFlowFactory.create(userWallet = any(), currency = any())
         }
     }
 
@@ -159,9 +179,8 @@ class DefaultSingleAccountStatusListProducerTest {
         val accountList = AccountList.empty(userWalletId)
         val accountListFlow = MutableStateFlow(value = accountList)
 
-        every {
-            singleAccountListSupplier(params = SingleAccountListProducer.Params(userWalletId))
-        } returns accountListFlow
+        every { singleAccountListSupplier(userWalletId) } returns accountListFlow
+        coEvery { networksRepository.hasCachedStatuses(userWalletId) } returns true
 
         val expected = AccountStatusList(
             userWalletId = userWalletId,
@@ -191,9 +210,16 @@ class DefaultSingleAccountStatusListProducerTest {
         // Assert (second emission)
         Truth.assertThat(actual2).containsExactly(expected)
 
-        coVerify(ordering = Ordering.SEQUENCE) {
-            singleAccountListSupplier(params = SingleAccountListProducer.Params(userWalletId))
-            singleAccountListSupplier(params = SingleAccountListProducer.Params(userWalletId))
+        coVerifySequence {
+            singleAccountListSupplier(userWalletId)
+            networksRepository.hasCachedStatuses(userWalletId)
+            singleAccountListSupplier(userWalletId)
+            networksRepository.hasCachedStatuses(userWalletId)
+        }
+
+        coVerify(inverse = true) {
+            accountsCRUDRepository.getUserWallet(userWalletId = any())
+            cryptoCurrencyStatusesFlowFactory.create(userWallet = any(), currency = any())
         }
     }
 
@@ -208,9 +234,8 @@ class DefaultSingleAccountStatusListProducerTest {
 
         coEvery { accountsCRUDRepository.getUserWallet(userWalletId = userWalletId) } returns userWallet
 
-        every {
-            singleAccountListSupplier(params = SingleAccountListProducer.Params(userWalletId))
-        } returns flowOf(accountList)
+        every { singleAccountListSupplier(userWalletId) } returns flowOf(accountList)
+        coEvery { networksRepository.hasCachedStatuses(userWalletId) } returns true
 
         val ethereumStatus = CryptoCurrencyStatus(
             currency = cryptoCurrencyFactory.ethereum,
@@ -229,7 +254,9 @@ class DefaultSingleAccountStatusListProducerTest {
         } returns flowOf(stellarStatus)
 
         // Act
-        val actual = producer.produce().let(::getEmittedValues)
+        val flow = producer.produce()
+        delay(1000)
+        val actual = flow.let(::getEmittedValues)
 
         // Assert
         val expected = AccountStatusList(
@@ -252,8 +279,12 @@ class DefaultSingleAccountStatusListProducerTest {
         )
         Truth.assertThat(actual).containsExactly(expected)
 
-        coVerify(ordering = Ordering.SEQUENCE) {
-            singleAccountListSupplier(params = SingleAccountListProducer.Params(userWalletId))
+        coVerifySequence {
+            singleAccountListSupplier(userWalletId)
+            accountsCRUDRepository.getUserWallet(userWalletId = userWalletId)
+            cryptoCurrencyStatusesFlowFactory.create(userWallet = userWallet, currency = cryptoCurrencyFactory.ethereum)
+            cryptoCurrencyStatusesFlowFactory.create(userWallet = userWallet, currency = cryptoCurrencyFactory.stellar)
+            networksRepository.hasCachedStatuses(userWalletId)
         }
     }
 }
