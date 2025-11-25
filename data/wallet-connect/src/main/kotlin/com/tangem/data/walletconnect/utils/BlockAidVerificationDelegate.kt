@@ -6,6 +6,7 @@ import com.tangem.domain.blockaid.BlockAidVerifier
 import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.core.lce.LceFlow
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.walletconnect.model.WcBitcoinMethod
 import com.tangem.domain.walletconnect.model.WcEthMethod
 import com.tangem.domain.walletconnect.model.WcMethod
 import com.tangem.domain.walletconnect.model.WcSession
@@ -43,6 +44,11 @@ internal class BlockAidVerificationDelegate @Inject constructor(
         val methodName = when (method) {
             is WcEthMethod -> rawSdkRequest.request.method
             is WcSolanaMethod -> method.trimmedPrefixMethodName
+            is WcBitcoinMethod -> {
+                // BlockAid doesn't support Bitcoin yet
+                emit(Lce.Content(failedResult))
+                return@flow
+            }
             is WcMethod.Unsupported -> {
                 emit(Lce.Content(failedResult))
                 return@flow

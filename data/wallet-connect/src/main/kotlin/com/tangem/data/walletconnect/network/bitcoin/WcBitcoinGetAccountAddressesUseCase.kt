@@ -1,0 +1,110 @@
+package com.tangem.data.walletconnect.network.bitcoin
+
+import arrow.core.Either
+import arrow.core.left
+import arrow.core.right
+import com.tangem.blockchain.blockchains.bitcoin.BitcoinWalletManager
+import com.tangem.blockchain.blockchains.bitcoin.walletconnect.models.GetAccountAddressesRequest
+import com.tangem.blockchain.extensions.Result as SdkResult
+import com.tangem.data.walletconnect.respond.WcRespondService
+import com.tangem.data.walletconnect.sign.WcMethodUseCaseContext
+import com.tangem.domain.models.network.Network
+import com.tangem.domain.walletconnect.model.HandleMethodError
+import com.tangem.domain.walletconnect.model.WcBitcoinMethod
+import com.tangem.domain.walletconnect.model.WcSession
+import com.tangem.domain.walletconnect.model.sdkcopy.WcSdkSessionRequest
+import com.tangem.domain.walletconnect.usecase.method.WcGetAddressesUseCase
+import com.tangem.domain.walletconnect.usecase.method.WcNetworkDerivationState
+import com.tangem.domain.walletmanager.WalletManagersFacade
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
+
+/**
+ * Use case for Bitcoin getAccountAddresses WalletConnect method.
+ *
+ * Returns wallet addresses filtered by intention (payment/ordinal).
+ * This is a non-signing operation.
+ */
+internal class WcBitcoinGetAccountAddressesUseCase @AssistedInject constructor(
+    @Assisted val context: WcMethodUseCaseContext,
+    @Assisted override val method: WcBitcoinMethod.GetAccountAddresses,
+    private val walletManagersFacade: WalletManagersFacade,
+    private val respondService: WcRespondService,
+) : WcGetAddressesUseCase {
+
+    override val session: WcSession
+        get() = context.session
+    override val rawSdkRequest: WcSdkSessionRequest
+        get() = context.rawSdkRequest
+    override val network: Network
+        get() = context.network
+    override val derivationState: WcNetworkDerivationState = when {
+        context.networkDerivationsCount > 1 -> WcNetworkDerivationState.Multiple(walletAddress = context.accountAddress)
+        else -> WcNetworkDerivationState.Single
+    }
+
+    override suspend fun invoke(): Either<HandleMethodError, WcGetAddressesUseCase.GetAddressesResult> {
+        val walletManager = walletManagersFacade.getOrCreateWalletManager(wallet.walletId, network)
+        if (walletManager !is BitcoinWalletManager) {
+            return HandleMethodError.UnknownError("Invalid wallet manager type").left()
+        }
+
+        val request = GetAccountAddressesRequest(
+            account = method.account,
+            intentions = method.intentions,
+        )
+
+        return when (val result = walletManager.walletConnectHandler.getAccountAddresses(request)) {
+            is SdkResult.Success -> {
+                // Send response back to dApp
+                val response = buildJsonResponse(result.data)
+                respondService.respond(rawSdkRequest, response)
+
+                // Return result for UI
+                WcGetAddressesUseCase.GetAddressesResult(
+                    addresses = result.data.addresses.map { addr ->
+                        WcGetAddressesUseCase.AddressInfo(
+                            address = addr.address,
+                            publicKey = addr.publicKey,
+                            path = addr.path,
+                            intention = addr.intention,
+                        )
+                    },
+                ).right()
+            }
+            is SdkResult.Failure -> {
+                HandleMethodError.UnknownError(result.error.customMessage).left()
+            }
+        }
+    }
+
+    override fun reject() {
+        respondService.rejectRequestNonBlock(rawSdkRequest)
+    }
+
+    private fun buildJsonResponse(
+        data: com.tangem.blockchain.blockchains.bitcoin.walletconnect.models.GetAccountAddressesResponse,
+    ): String {
+        // Build JSON array manually - return array directly without object wrapper
+        val addressesJson = data.addresses.joinToString(",") { addr ->
+            buildString {
+                append("{")
+                append("\"address\":\"${addr.address}\"")
+                addr.publicKey?.let { append(",\"publicKey\":\"$it\"") }
+                addr.path?.let { append(",\"path\":\"$it\"") }
+                addr.intention?.let { append(",\"intention\":\"$it\"") }
+                append("}")
+            }
+        }
+        return "[$addressesJson]"
+    }
+
+    @AssistedFactory
+    interface Factory {
+        fun create(
+            context: WcMethodUseCaseContext,
+            method: WcBitcoinMethod.GetAccountAddresses,
+        ): WcBitcoinGetAccountAddressesUseCase
+    }
+}
