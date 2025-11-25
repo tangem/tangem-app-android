@@ -124,6 +124,10 @@ internal class DefaultNetworksStatusesStore(
         }
     }
 
+    override suspend fun contains(userWalletId: UserWalletId): Boolean {
+        return runtimeStore.getSyncOrDefault(emptyMap()).containsKey(userWalletId.stringValue)
+    }
+
     private suspend fun updateInRuntime(
         userWalletId: UserWalletId,
         networks: Set<Network>,
