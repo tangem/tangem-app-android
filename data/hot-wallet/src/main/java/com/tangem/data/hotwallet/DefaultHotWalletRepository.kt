@@ -17,10 +17,10 @@ internal class DefaultHotWalletRepository(
         .map { it[userWalletId.stringValue] == true }
 
     override suspend fun setAccessCodeSkipped(userWalletId: UserWalletId, skipped: Boolean) {
-        appPreferencesStore.editData {
-            it.setObjectMap(
+        appPreferencesStore.editData { mutablePreferences ->
+            mutablePreferences.setObjectMap(
                 key = PreferencesKeys.ACCESS_CODE_SKIPPED_STATES_KEY,
-                value = it.getObjectMap<Boolean>(PreferencesKeys.ACCESS_CODE_SKIPPED_STATES_KEY)
+                value = mutablePreferences.getObjectMap<Boolean>(PreferencesKeys.ACCESS_CODE_SKIPPED_STATES_KEY)
                     .plus(userWalletId.stringValue to skipped),
             )
         }
