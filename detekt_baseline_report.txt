@@ -1,9 +1,13 @@
 ==========================================
 Detekt Baseline Updater & Issue Counter
 ==========================================
-Date: 2025-11-21 15:22:23
+Date: 2025-11-24 18:35:00
 
-Updating detekt baseline for debug variant...
+Step 1: Running detekt to check for new issues...
+
+✓ Detekt passed - no new issues found
+
+Step 2: Updating detekt baseline for debug variant...
 
 
 Baseline updated successfully!
@@ -13,13 +17,13 @@ Counting issues in baseline files...
 ==========================================
 
 Summary:
-  Total Issues: 1720
-  Modules with Issues: 90
-  Average Issues per Module: 19
+  Total Issues: 1700
+  Modules with Issues: 83
+  Average Issues per Module: 20
 
 Progress:
-  Fixed: 82 out of 1802 (4%)
-  Remaining: 1720
+  Fixed: 102 out of 1802 (5%)
+  Remaining: 1700
 
 ==========================================
 All Modules with Issues (sorted by count)
@@ -27,7 +31,7 @@ All Modules with Issues (sorted by count)
 
 Module                                                           Issues
 ────────────────────────────────────────────────────────────────
-features/wallet/impl                                                170
+features/wallet/impl                                                169
 features/markets/impl                                               155
 features/onboarding-v2/impl                                         131
 features/onramp/impl                                                 89
@@ -43,10 +47,10 @@ features/manage-tokens/impl                                          45
 domain/wallets                                                       39
 features/nft/impl                                                    36
 features/tester/impl                                                 31
-features/yield-supply/impl                                           28
 domain/tokens                                                        28
 features/swap/domain                                                 27
 core/ui                                                              27
+features/yield-supply/impl                                           26
 common/ui                                                            26
 data/visa                                                            23
 features/tangempay/details/impl                                      22
@@ -54,9 +58,9 @@ data/nft                                                             20
 data/wallets                                                         18
 features/swap/data                                                   15
 data/swap                                                            13
-domain/account/status                                                12
 features/token-recieve/impl                                          11
 features/qr-scanning/impl                                            11
+domain/account/status                                                11
 data/onramp                                                          11
 data/manage-tokens                                                   11
 core/datasource                                                      11
@@ -104,16 +108,10 @@ domain/nft                                                            2
 data/express                                                          2
 core/ab-tests                                                         2
 common/test                                                           2
-features/referral/data                                                1
 features/manage-tokens/api                                            1
 features/kyc/impl                                                     1
 features/hot-wallet/api                                               1
 features/disclaimer/impl                                              1
 domain/wallet-connect                                                 1
 domain/visa                                                           1
-data/settings                                                         1
-data/quotes                                                           1
-data/hot-wallet                                                       1
-data/balance-hiding                                                   1
-common/ui-charts                                                      1
 ────────────────────────────────────────────────────────────────
