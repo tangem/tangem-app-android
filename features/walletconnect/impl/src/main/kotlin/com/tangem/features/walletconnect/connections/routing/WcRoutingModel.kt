@@ -7,6 +7,7 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.data.card.sdk.CardSdkProvider
 import com.tangem.domain.walletconnect.WcPairService
 import com.tangem.domain.walletconnect.WcRequestService
+import com.tangem.domain.walletconnect.model.WcBitcoinMethodName
 import com.tangem.domain.walletconnect.model.WcEthMethodName
 import com.tangem.domain.walletconnect.model.WcMethodName
 import com.tangem.domain.walletconnect.model.WcSolanaMethodName
@@ -32,6 +33,7 @@ internal class WcRoutingModel @Inject constructor(
     }
 
     fun onSlotEmpty() {
+        timber.log.Timber.d("WC Queue: onSlotEmpty() called")
         isSlotEmpty.update { true }
     }
 
@@ -53,7 +55,13 @@ internal class WcRoutingModel @Inject constructor(
                     WcEthMethodName.SendTransaction,
                     WcSolanaMethodName.SignTransaction,
                     WcSolanaMethodName.SendAllTransaction,
+                    WcBitcoinMethodName.SendTransfer,
+                    WcBitcoinMethodName.SignPsbt,
                     -> WcInnerRoute.Send(rawRequest)
+                    WcBitcoinMethodName.SignMessage,
+                    -> WcInnerRoute.SignMessage(rawRequest)
+                    WcBitcoinMethodName.GetAccountAddresses,
+                    -> WcInnerRoute.GetAddresses(rawRequest)
                     is WcMethodName.Unsupported,
                     -> WcInnerRoute.UnsupportedMethodAlert
                 }
@@ -64,7 +72,9 @@ internal class WcRoutingModel @Inject constructor(
 
         merge(requestFlow, pairFlow)
             .onEach { configuration ->
+                timber.log.Timber.d("WC Queue: Received configuration $configuration, waiting for queue ready")
                 awaitQueueReady()
+                timber.log.Timber.d("WC Queue: Queue ready, pushing configuration")
                 isSlotEmpty.update { false }
                 innerRouter.push(configuration)
             }
@@ -76,7 +86,9 @@ internal class WcRoutingModel @Inject constructor(
         permittedAppRoute,
         cardSdkProvider.sdk.uiVisibility(),
     ) { isSlotEmpty, permittedAppRoute, isCardSdkVisible ->
-        isSlotEmpty && permittedAppRoute && !isCardSdkVisible
+        val ready = isSlotEmpty && permittedAppRoute && !isCardSdkVisible
+        timber.log.Timber.d("WC Queue: isSlotEmpty=$isSlotEmpty, permittedAppRoute=$permittedAppRoute, isCardSdkVisible=$isCardSdkVisible, ready=$ready")
+        ready
     }.first { it }
 
     fun onAppRouteChange(appRoute: AppRoute) {

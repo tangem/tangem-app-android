@@ -1,0 +1,108 @@
+package com.tangem.data.walletconnect.network.bitcoin
+
+import arrow.core.left
+import com.tangem.blockchain.blockchains.bitcoin.BitcoinWalletManager
+import com.tangem.blockchain.blockchains.bitcoin.walletconnect.models.SignInput
+import com.tangem.blockchain.blockchains.bitcoin.walletconnect.models.SignPsbtRequest
+import com.tangem.blockchain.common.TransactionData
+import com.tangem.blockchain.extensions.Result as SdkResult
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.data.walletconnect.respond.WcRespondService
+import com.tangem.data.walletconnect.sign.BaseWcSignUseCase
+import com.tangem.data.walletconnect.sign.SignCollector
+import com.tangem.data.walletconnect.sign.SignStateConverter.toResult
+import com.tangem.data.walletconnect.sign.WcMethodUseCaseContext
+import com.tangem.domain.core.lce.LceFlow
+import com.tangem.domain.walletconnect.WcTransactionSignerProvider
+import com.tangem.domain.walletconnect.model.HandleMethodError
+import com.tangem.domain.walletconnect.model.WcBitcoinMethod
+import com.tangem.domain.walletconnect.usecase.method.BlockAidTransactionCheck
+import com.tangem.domain.walletconnect.usecase.method.WcSignState
+import com.tangem.domain.walletconnect.usecase.method.WcTransactionUseCase
+import com.tangem.domain.walletmanager.WalletManagersFacade
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
+
+/**
+ * Use case for Bitcoin signPsbt WalletConnect method.
+ *
+ * Signs a Partially Signed Bitcoin Transaction (BIP-174 PSBT) with optional broadcast.
+ */
+@Suppress("LongParameterList")
+internal class WcBitcoinSignPsbtUseCase @AssistedInject constructor(
+    @Assisted override val context: WcMethodUseCaseContext,
+    @Assisted override val method: WcBitcoinMethod.SignPsbt,
+    private val walletManagersFacade: WalletManagersFacade,
+    private val signerProvider: WcTransactionSignerProvider,
+    override val respondService: WcRespondService,
+    override val analytics: AnalyticsEventHandler,
+) : BaseWcSignUseCase<Nothing, TransactionData>(),
+    WcTransactionUseCase {
+
+    // BlockAid doesn't support Bitcoin PSBT signing yet
+    override val securityStatus: LceFlow<Throwable, BlockAidTransactionCheck.Result> = emptyFlow()
+
+    override suspend fun SignCollector<TransactionData>.onSign(state: WcSignState<TransactionData>) {
+        val walletManager = walletManagersFacade.getOrCreateWalletManager(wallet.walletId, network)
+        if (walletManager !is BitcoinWalletManager) {
+            emit(state.toResult(HandleMethodError.UnknownError("Invalid wallet manager type").left()))
+            return
+        }
+
+        val signer = createTransactionSigner()
+        val request = SignPsbtRequest(
+            psbt = method.psbt,
+            signInputs = method.signInputs.map { input ->
+                SignInput(
+                    address = input.address,
+                    index = input.index,
+                    sighashTypes = input.sighashTypes,
+                )
+            },
+            broadcast = method.broadcast,
+        )
+
+        when (val result = walletManager.walletConnectHandler.signPsbt(request, signer)) {
+            is SdkResult.Success -> {
+                val response = buildJsonResponse(result.data)
+                val wcRespondResult = respondService.respond(rawSdkRequest, response)
+                emit(state.toResult(wcRespondResult))
+            }
+            is SdkResult.Failure -> {
+                emit(state.toResult(HandleMethodError.UnknownError(result.error.customMessage).left()))
+            }
+        }
+    }
+
+    override fun invoke(): Flow<WcSignState<TransactionData>> {
+        // Create a compiled transaction data with PSBT bytes for display purposes
+        val transactionData = TransactionData.Compiled(
+            value = TransactionData.Compiled.Data.RawString(method.psbt),
+        )
+        return delegate.invoke(transactionData)
+    }
+
+    private fun createTransactionSigner() = signerProvider.createSigner(wallet)
+
+    private fun buildJsonResponse(
+        data: com.tangem.blockchain.blockchains.bitcoin.walletconnect.models.SignPsbtResponse,
+    ): String {
+        return buildString {
+            append("{")
+            append("\"psbt\":\"${data.psbt}\"")
+            data.txid?.let { append(",\"txid\":\"$it\"") }
+            append("}")
+        }
+    }
+
+    @AssistedFactory
+    interface Factory {
+        fun create(
+            context: WcMethodUseCaseContext,
+            method: WcBitcoinMethod.SignPsbt,
+        ): WcBitcoinSignPsbtUseCase
+    }
+}

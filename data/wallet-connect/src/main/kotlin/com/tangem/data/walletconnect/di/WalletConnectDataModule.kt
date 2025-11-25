@@ -6,6 +6,7 @@ import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.data.walletconnect.DefaultWalletConnectRepository
 import com.tangem.data.walletconnect.initialize.DefaultWcInitializeUseCase
+import com.tangem.data.walletconnect.network.bitcoin.WcBitcoinNetwork
 import com.tangem.data.walletconnect.network.ethereum.WcEthNetwork
 import com.tangem.data.walletconnect.network.solana.WcSolanaNetwork
 import com.tangem.data.walletconnect.pair.*
@@ -169,6 +170,22 @@ internal object WalletConnectDataModule {
 
     @Provides
     @Singleton
+    fun wcBitcoinNetwork(
+        @SdkMoshi moshi: Moshi,
+        wcNetworksConverter: WcNetworksConverter,
+        sessionsManager: WcSessionsManager,
+        factories: WcBitcoinNetwork.Factories,
+        walletManagersFacade: WalletManagersFacade,
+    ): WcBitcoinNetwork = WcBitcoinNetwork(
+        moshi = moshi,
+        sessionsManager = sessionsManager,
+        factories = factories,
+        networksConverter = wcNetworksConverter,
+        walletManagersFacade = walletManagersFacade,
+    )
+
+    @Provides
+    @Singleton
     fun caipNamespaceDelegate(
         namespaceConverters: Set<@JvmSuppressWildcards WcNamespaceConverter>,
         walletManagersFacade: WalletManagersFacade,
@@ -209,10 +226,15 @@ internal object WalletConnectDataModule {
 
     @Provides
     @Singleton
-    fun diHelperBox(ethNetwork: WcEthNetwork, solanaNetwork: WcSolanaNetwork) = DiHelperBox(
+    fun diHelperBox(
+        ethNetwork: WcEthNetwork,
+        solanaNetwork: WcSolanaNetwork,
+        bitcoinNetwork: WcBitcoinNetwork,
+    ) = DiHelperBox(
         handlers = setOf(
             ethNetwork,
             solanaNetwork,
+            bitcoinNetwork,
         ),
     )
 
@@ -221,9 +243,11 @@ internal object WalletConnectDataModule {
     fun namespaceConverters(
         ethNamespaceConverter: WcEthNetwork.NamespaceConverter,
         solanaNamespaceConverter: WcSolanaNetwork.NamespaceConverter,
+        bitcoinNamespaceConverter: WcBitcoinNetwork.NamespaceConverter,
     ): Set<@JvmSuppressWildcards WcNamespaceConverter> = setOf(
         ethNamespaceConverter,
         solanaNamespaceConverter,
+        bitcoinNamespaceConverter,
     )
 
     @Provides
@@ -248,6 +272,14 @@ internal object WalletConnectDataModule {
         excludedBlockchains: ExcludedBlockchains,
     ): WcSolanaNetwork.NamespaceConverter {
         return WcSolanaNetwork.NamespaceConverter(excludedBlockchains)
+    }
+
+    @Provides
+    @Singleton
+    fun wcBitcoinNetworkNamespaceConverter(
+        excludedBlockchains: ExcludedBlockchains,
+    ): WcBitcoinNetwork.NamespaceConverter {
+        return WcBitcoinNetwork.NamespaceConverter(excludedBlockchains)
     }
 
     @Provides
