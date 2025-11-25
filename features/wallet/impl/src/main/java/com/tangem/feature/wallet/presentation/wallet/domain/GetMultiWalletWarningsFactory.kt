@@ -45,6 +45,7 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import timber.log.Timber
 import javax.inject.Inject
@@ -95,13 +96,16 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
         return combine(
             // todo account just use it, after delete accountsFeatureToggles
             // accountStatusListFlow,
-            isReadyToShowRateAppUseCase(),
-            isNeedToBackupUseCase(userWallet.walletId),
-            seedPhraseNotificationUseCase(userWalletId = userWallet.walletId),
-            shouldShowPromoWalletUseCase(userWalletId = userWallet.walletId, promoId = PromoId.VisaPresale),
-            shouldShowPromoWalletUseCase(userWalletId = userWallet.walletId, promoId = PromoId.Sepa),
-            notificationsRepository.getShouldShowNotification(NotificationId.EnablePushesReminderNotification.key),
-            getAccessCodeSkippedUseCase(userWallet.walletId),
+            isReadyToShowRateAppUseCase().distinctUntilChanged(),
+            isNeedToBackupUseCase(userWallet.walletId).distinctUntilChanged(),
+            seedPhraseNotificationUseCase(userWalletId = userWallet.walletId).distinctUntilChanged(),
+            shouldShowPromoWalletUseCase(userWalletId = userWallet.walletId, promoId = PromoId.VisaPresale)
+                .distinctUntilChanged(),
+            shouldShowPromoWalletUseCase(userWalletId = userWallet.walletId, promoId = PromoId.Sepa)
+                .distinctUntilChanged(),
+            notificationsRepository.getShouldShowNotification(NotificationId.EnablePushesReminderNotification.key)
+                .distinctUntilChanged(),
+            getAccessCodeSkippedUseCase(userWallet.walletId).distinctUntilChanged(),
         ) { array -> array }
             .combine(tokenListFlow()) { array, any: Any -> arrayOf(any).plus(elements = array) }
             .map { array ->
