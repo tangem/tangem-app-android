@@ -5,12 +5,10 @@
     <ID>BooleanPropertyNaming:YieldSupplyApyComponent.kt$YieldSupplyApyComponent$val state by loadingState.collectAsState()</ID>
     <ID>BooleanPropertyNaming:YieldSupplyModel.kt$YieldSupplyModel$private val handleNavigation = params.handleNavigation</ID>
     <ID>BooleanPropertyNaming:YieldSupplyModel.kt$YieldSupplyModel$val processing = uiState.value is YieldSupplyUM.Processing</ID>
-    <ID>BooleanPropertyNaming:YieldSupplyModel.kt$YieldSupplyModel$val showInfoIcon = cryptoCurrencyStatus.yieldSupplyNotAllAmountSupplied()</ID>
     <ID>BooleanPropertyNaming:YieldSupplyModel.kt$YieldSupplyModel$val showWarningIcon = !yieldSupplyStatus.isAllowedToSpend</ID>
     <ID>BooleanPropertyNaming:YieldSupplyUM.kt$YieldSupplyUM.Content$val showInfoIcon: Boolean</ID>
     <ID>BooleanPropertyNaming:YieldSupplyUM.kt$YieldSupplyUM.Content$val showWarningIcon: Boolean</ID>
     <ID>MultilineLambdaItParameter:YieldSupplyApproveModel.kt$YieldSupplyApproveModel${ Timber.e(it) return }</ID>
-    <ID>MultilineLambdaItParameter:YieldSupplyModel.kt$YieldSupplyModel${ Timber.e(it) uiState.update { YieldSupplyUM.Content( title = resourceReference( R.string.yield_module_token_details_earn_notification_earning_on_your_balance_title, ), subtitle = resourceReference( R.string.yield_module_token_details_earn_notification_earning_on_your_balance_subtitle, ), rewardsApy = TextReference.EMPTY, onClick = ::onActiveClick, showWarningIcon = showWarningIcon, showInfoIcon = showInfoIcon, apy = "", ) } }</ID>
     <ID>MultilineLambdaItParameter:YieldSupplyModel.kt$YieldSupplyModel${ Timber.e(it) uiState.update { YieldSupplyUM.Initial } }</ID>
     <ID>MultilineLambdaItParameter:YieldSupplyModel.kt$YieldSupplyModel${ Timber.w(it.toString()) return@launch }</ID>
     <ID>MultilineLambdaItParameter:YieldSupplyStartEarningModel.kt$YieldSupplyStartEarningModel${ Timber.w(it.toString()) showAlertError() }</ID>
