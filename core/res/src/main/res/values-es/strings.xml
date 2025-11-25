@@ -1568,8 +1568,11 @@
   <string name="yield_module_token_details_earn_notification_processing">Procesando su depósito</string>
   <string name="yield_module_token_details_earn_notification_title">Modo Rendimiento</string>
   <string name="yield_module_transaction_enter">Modo Rendimiento activado</string>
+  <string name="yield_module_transaction_enter_subtitle">%1$s suministrado a Aave</string>
   <string name="yield_module_transaction_exit">Modo Rendimiento desactivado</string>
-  <string name="yield_module_transaction_topup">Recarga del modo Rendimiento</string>
+  <string name="yield_module_transaction_exit_subtitle">%1$s retirado de Aave</string>
+  <string name="yield_module_transaction_topup">Suministrar a Aave</string>
+  <string name="yield_module_transaction_topup_subtitle">%1$s suministrado a Aave</string>
   <string name="yield_module_transfer_mode_automatic">Automático</string>
   <string name="yield_module_unable_to_cover_fee_description">Deposite algo de %1$s %2$s para cubrir la tarifa de red para las transacciones</string>
   <string name="yield_module_unable_to_cover_fee_title">No se puede cubrir la tarifa %s</string>
