@@ -1911,9 +1911,12 @@
   <string name="yield_module_token_details_earn_notification_earning_on_your_balance_title">利息モード</string>
   <string name="yield_module_token_details_earn_notification_processing">利息モードの有効化</string>
   <string name="yield_module_token_details_earn_notification_title">利息モード</string>
-  <string name="yield_module_transaction_enter">利息モード オン</string>
-  <string name="yield_module_transaction_exit">利息モード オフ</string>
-  <string name="yield_module_transaction_topup">利息モードへの追加入金</string>
+  <string name="yield_module_transaction_enter">利息モードが有効になりました</string>
+  <string name="yield_module_transaction_enter_subtitle">%1$sがAaveに供給されました</string>
+  <string name="yield_module_transaction_exit">利息モードが無効になりました</string>
+  <string name="yield_module_transaction_exit_subtitle">%1$sがAaveから引き出されました</string>
+  <string name="yield_module_transaction_topup">Aaveへの供給</string>
+  <string name="yield_module_transaction_topup_subtitle">%1$sがAaveに供給されました</string>
   <string name="yield_module_transfer_mode_automatic">自動</string>
   <string name="yield_module_unable_to_cover_fee_description">取引のネットワーク手数料をカバーするために、 %1$s %2$sを追加してください。</string>
   <string name="yield_module_unable_to_cover_fee_title">%s手数料を支払えません</string>
