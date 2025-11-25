@@ -1,7 +1,0 @@
-<?xml version="1.0" ?>
-<SmellBaseline>
-  <ManuallySuppressedIssues/>
-  <CurrentIssues>
-    <ID>MultilineLambdaItParameter:DefaultMultiQuoteStatusFetcher.kt$DefaultMultiQuoteStatusFetcher${ Timber.e(it) quotesStatusesStore.setSourceAsOnlyCache(currenciesIds = params.currenciesIds) }</ID>
-  </CurrentIssues>
-</SmellBaseline>
