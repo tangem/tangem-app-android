@@ -15,6 +15,7 @@ interface UserWalletsFetcher {
             messageSender: UiMessageSender,
             onlyMultiCurrency: Boolean,
             isAuthMode: Boolean,
+            isClickableIfLocked: Boolean,
             onWalletClick: (UserWalletId) -> Unit,
         ): UserWalletsFetcher
     }

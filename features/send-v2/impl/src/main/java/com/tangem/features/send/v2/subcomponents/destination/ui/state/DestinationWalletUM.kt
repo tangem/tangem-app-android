@@ -1,6 +1,7 @@
 package com.tangem.features.send.v2.subcomponents.destination.ui.state
 
 import androidx.compose.runtime.Immutable
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 
@@ -11,6 +12,7 @@ import com.tangem.domain.models.wallet.UserWalletId
  * @property userWalletId wallet id
  * @property address blockchain address
  * @property cryptoCurrency selected crypto currency
+ * @property account associated account (if in accounts mode)
  */
 @Immutable
 data class DestinationWalletUM(
@@ -18,4 +20,5 @@ data class DestinationWalletUM(
     val userWalletId: UserWalletId,
     val address: String,
     val cryptoCurrency: CryptoCurrency,
+    val account: Account.CryptoPortfolio? = null,
 )
