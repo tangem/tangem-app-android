@@ -12,8 +12,18 @@ data class TokensDataStateExpress(
 ) {
     companion object {
         val EMPTY = TokensDataStateExpress(
-            fromGroup = CurrenciesGroup(emptyList(), emptyList(), emptyList(), false),
-            toGroup = CurrenciesGroup(emptyList(), emptyList(), emptyList(), false),
+            fromGroup = CurrenciesGroup(
+                available = emptyList(),
+                unavailable = emptyList(),
+                accountCurrencyList = emptyList(),
+                isAfterSearch = false,
+            ),
+            toGroup = CurrenciesGroup(
+                available = emptyList(),
+                unavailable = emptyList(),
+                accountCurrencyList = emptyList(),
+                isAfterSearch = false,
+            ),
             allProviders = emptyList(),
         )
     }
