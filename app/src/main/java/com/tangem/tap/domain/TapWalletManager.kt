@@ -2,11 +2,11 @@ package com.tangem.tap.domain
 
 import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.Wallet
-import com.tangem.core.analytics.Analytics
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.tap.common.extensions.setContext
+import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.common.redux.global.GlobalAction
+import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
 import com.tangem.utils.coroutines.AppCoroutineDispatcherProvider
@@ -30,11 +30,12 @@ class TapWalletManager(
         // ensuring that only one job is active at any given time.
         loadUserWalletDataJob = CoroutineScope(dispatchers.io)
             .launch { loadUserWalletData(userWallet) }
-            .also { it.join() }
+            .apply { join() }
     }
 
     private suspend fun loadUserWalletData(userWallet: UserWallet) {
-        Analytics.setContext(userWallet)
+        val trackingContextProxy = store.inject(DaggerGraphState::trackingContextProxy)
+        trackingContextProxy.setContext(userWallet)
 
         if (userWallet is UserWallet.Cold) {
             val scanResponse = userWallet.scanResponse
