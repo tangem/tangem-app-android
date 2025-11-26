@@ -16,8 +16,8 @@ class FilterNFTAvailableNetworksUseCase(
             )
         }
 
-    private fun List<Network>.filter(searchQuery: String) = filter {
-        it.name.contains(searchQuery, ignoreCase = true) ||
-            it.currencySymbol.contains(searchQuery, ignoreCase = true)
+    private fun List<Network>.filter(searchQuery: String) = filter { network ->
+        network.name.contains(searchQuery, ignoreCase = true) ||
+            network.currencySymbol.contains(searchQuery, ignoreCase = true)
     }
 }
