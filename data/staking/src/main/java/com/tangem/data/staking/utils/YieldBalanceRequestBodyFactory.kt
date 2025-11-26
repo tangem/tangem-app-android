@@ -14,7 +14,7 @@ internal object YieldBalanceRequestBodyFactory {
         return YieldBalanceRequestBody(
             addresses = YieldBalanceRequestBodyAddressFactory.create(stakingID),
             args = YieldBalanceRequestBody.YieldBalanceRequestArgs(
-                validatorAddresses = listOf(), // todo add validators [REDACTED_JIRA]
+                validatorAddresses = emptyList(), // todo add validators [REDACTED_JIRA]
             ),
             integrationId = stakingID.integrationId,
         )

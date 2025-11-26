@@ -28,6 +28,7 @@ internal enum class BuildType(
             BuildConfigField.LogEnabled(isEnabled = true),
             BuildConfigField.TesterMenuAvailability(isEnabled = true),
             BuildConfigField.MockDataSource(isEnabled = false),
+            BuildConfigField.ABTestsEnabled(isEnabled = false),
         ),
     ),
 
@@ -49,6 +50,7 @@ internal enum class BuildType(
             BuildConfigField.LogEnabled(isEnabled = true),
             BuildConfigField.TesterMenuAvailability(isEnabled = true),
             BuildConfigField.MockDataSource(isEnabled = true),
+            BuildConfigField.ABTestsEnabled(isEnabled = false),
         ),
     ),
 
@@ -72,11 +74,12 @@ internal enum class BuildType(
             BuildConfigField.LogEnabled(isEnabled = true),
             BuildConfigField.TesterMenuAvailability(isEnabled = true),
             BuildConfigField.MockDataSource(isEnabled = false),
+            BuildConfigField.ABTestsEnabled(isEnabled = true),
         ),
     ),
 
     /**
-     * Build type for QA and business
+     * Build type for support with possible bugfixes for certain cases
      *
      * Features:
      * - Env: prod
@@ -92,6 +95,7 @@ internal enum class BuildType(
             BuildConfigField.LogEnabled(isEnabled = false),
             BuildConfigField.TesterMenuAvailability(isEnabled = false),
             BuildConfigField.MockDataSource(isEnabled = false),
+            BuildConfigField.ABTestsEnabled(isEnabled = false),
         ),
     ),
 
@@ -110,6 +114,7 @@ internal enum class BuildType(
             BuildConfigField.LogEnabled(isEnabled = false),
             BuildConfigField.TesterMenuAvailability(isEnabled = false),
             BuildConfigField.MockDataSource(isEnabled = false),
+            BuildConfigField.ABTestsEnabled(isEnabled = true),
         ),
     ),
 }

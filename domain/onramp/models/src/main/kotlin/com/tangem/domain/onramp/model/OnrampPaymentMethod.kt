@@ -18,22 +18,44 @@ enum class PaymentMethodType(val id: String?) {
     OTHER(id = null),
     ;
 
+    /**
+     * Get priority regardless of real speed. By business logic.
+     */
     @Suppress("MagicNumber")
-    fun getPriority(isGooglePayEnabled: Boolean): Int = if (isGooglePayEnabled) {
+    fun getPriorityForMethod(isGooglePayEnabled: Boolean): Int = if (isGooglePayEnabled) {
         when (this) {
             GOOGLE_PAY -> 0
             CARD -> 1
-            SEPA -> 2
-            REVOLUT_PAY -> 3
+            REVOLUT_PAY -> 2
+            SEPA -> 3
             OTHER -> 4
         }
     } else {
         when (this) {
-            CARD -> 0
-            GOOGLE_PAY -> 1
+            CARD -> 2
+            REVOLUT_PAY -> 1
             SEPA -> 2
-            REVOLUT_PAY -> 3
+            OTHER -> 3
+            GOOGLE_PAY -> 4
+        }
+    }
+
+    @Suppress("MagicNumber")
+    fun getPriorityBySpeed(isGooglePayEnabled: Boolean): Int = if (isGooglePayEnabled) {
+        when (this) {
+            GOOGLE_PAY -> 0
+            REVOLUT_PAY -> 1
+            CARD -> 2
+            SEPA -> 3
             OTHER -> 4
+        }
+    } else {
+        when (this) {
+            REVOLUT_PAY -> 0
+            CARD -> 1
+            SEPA -> 2
+            OTHER -> 3
+            GOOGLE_PAY -> 4
         }
     }
 
@@ -41,8 +63,8 @@ enum class PaymentMethodType(val id: String?) {
      * BE AWARE. HARDCODED. Returns the speed of transaction for payment method type.
      */
     fun getProcessingSpeed(): PaymentSpeed = when (this) {
-        REVOLUT_PAY,
         GOOGLE_PAY,
+        REVOLUT_PAY,
         -> PaymentSpeed.Instant
         CARD -> PaymentSpeed.FewMin
         SEPA -> PaymentSpeed.FewDays
