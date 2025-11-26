@@ -104,7 +104,7 @@ internal class DefaultExpressServiceFetcher @Inject constructor(
 
         initializationStatuses.update { statuses ->
             statuses.toMutableMap().apply {
-                put(key = userWalletId, value = default)
+                this[userWalletId] = default
             }
         }
 
