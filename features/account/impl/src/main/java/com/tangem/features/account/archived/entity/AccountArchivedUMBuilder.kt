@@ -6,6 +6,7 @@ import com.tangem.core.ui.extensions.pluralReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.account.models.ArchivedAccount
 import com.tangem.domain.account.usecase.ArchivedAccountList
+import com.tangem.domain.models.account.AccountId
 import kotlinx.collections.immutable.toImmutableList
 import timber.log.Timber
 import javax.inject.Inject
@@ -15,19 +16,20 @@ internal class AccountArchivedUMBuilder @Inject constructor() {
     fun mapContent(
         accounts: ArchivedAccountList,
         onCloseClick: () -> Unit,
-        confirmRecoverDialog: (account: ArchivedAccount) -> Unit,
+        onRecoverClick: (account: ArchivedAccount) -> Unit,
     ) = AccountArchivedUM.Content(
         onCloseClick = onCloseClick,
         accounts = accounts
-            .map { account -> account.mapArchivedAccountUM(confirmRecoverDialog) }
+            .map { account -> account.mapArchivedAccountUM(onRecoverClick) }
             .toImmutableList(),
     )
 
-    fun ArchivedAccount.mapArchivedAccountUM(confirmRecoverDialog: (account: ArchivedAccount) -> Unit) =
+    private fun ArchivedAccount.mapArchivedAccountUM(onRecoverClick: (account: ArchivedAccount) -> Unit) =
         ArchivedAccountUM(
             accountId = accountId.value,
             accountName = name.toUM().value,
             accountIconUM = icon.toUM(),
+            isLoading = false,
             tokensInfo = pluralReference(
                 R.plurals.common_tokens_count,
                 count = tokensCount,
@@ -38,7 +40,7 @@ internal class AccountArchivedUMBuilder @Inject constructor() {
                 count = networksCount,
                 formatArgs = wrappedList(networksCount),
             ),
-            onClick = { confirmRecoverDialog(this) },
+            onClick = { onRecoverClick(this) },
         )
 
     fun mapError(
@@ -51,5 +53,26 @@ internal class AccountArchivedUMBuilder @Inject constructor() {
             onCloseClick = onCloseClick,
             onRetryClick = { getArchivedAccounts() },
         )
+    }
+
+    companion object {
+
+        fun AccountArchivedUM.toggleProgress(accountId: AccountId, isLoading: Boolean): AccountArchivedUM {
+            return when (this) {
+                is AccountArchivedUM.Error,
+                is AccountArchivedUM.Loading,
+                -> this
+
+                is AccountArchivedUM.Content -> copy(
+                    accounts = accounts.map { accountUM ->
+                        if (accountUM.accountId == accountId.value) {
+                            accountUM.copy(isLoading = isLoading)
+                        } else {
+                            accountUM
+                        }
+                    }.toImmutableList(),
+                )
+            }
+        }
     }
 }

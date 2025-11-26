@@ -1,0 +1,134 @@
+package com.tangem.domain.staking.repositories
+
+import arrow.core.Either
+import com.tangem.domain.staking.model.StakingAvailability
+import com.tangem.domain.staking.model.ethpool.*
+import com.tangem.domain.staking.model.stakekit.StakingError
+import kotlinx.coroutines.flow.Flow
+
+interface P2PEthPoolRepository {
+
+    /**
+     * Fetch and store available staking vaults
+     *
+     * @param network P2P network (MAINNET or TESTNET)
+     */
+    suspend fun fetchVaults(network: P2PEthPoolNetwork = P2PEthPoolNetwork.MAINNET)
+
+    /**
+     * Get list of available staking vaults
+     *
+     * @param network P2P network (MAINNET or TESTNET)
+     * @return Either error or list of vaults with APY, capacity, fees
+     */
+    suspend fun getVaults(
+        network: P2PEthPoolNetwork = P2PEthPoolNetwork.MAINNET,
+    ): Either<StakingError, List<P2PEthPoolVault>>
+
+    /**
+     * Create unsigned transaction for depositing ETH into a vault
+     *
+     * @param network P2P network (MAINNET or TESTNET)
+     * @param delegatorAddress User's wallet address
+     * @param vaultAddress Vault contract address
+     * @param amount Amount of ETH to deposit
+     * @return Either error or unsigned transaction ready to sign
+     */
+    suspend fun createDepositTransaction(
+        network: P2PEthPoolNetwork,
+        delegatorAddress: String,
+        vaultAddress: String,
+        amount: String,
+    ): Either<StakingError, P2PEthPoolUnsignedTx>
+
+    /**
+     * Create unsigned transaction to initiate unstaking
+     *
+     * Unstaking adds funds to exit queue. After ~1-4 days, use [createWithdrawTransaction]
+     * to withdraw the funds.
+     *
+     * @param network P2P network (MAINNET or TESTNET)
+     * @param stakerPublicKey Staker's public key (note: API doc may have Bitcoin terminology)
+     * @param stakeTransactionHash Original stake transaction hash
+     * @return Either error or unsigned transaction
+     */
+    suspend fun createUnstakeTransaction(
+        network: P2PEthPoolNetwork,
+        stakerPublicKey: String,
+        stakeTransactionHash: String,
+    ): Either<StakingError, P2PEthPoolUnsignedTx>
+
+    /**
+     * Create unsigned transaction to withdraw funds from exit queue
+     *
+     * Only works when funds are available (after exit queue wait period).
+     *
+     * @param network P2P network (MAINNET or TESTNET)
+     * @param stakerAddress User's wallet address
+     * @return Either error or unsigned transaction with withdrawal tickets
+     */
+    suspend fun createWithdrawTransaction(
+        network: P2PEthPoolNetwork,
+        stakerAddress: String,
+    ): Either<StakingError, P2PEthPoolUnsignedTx>
+
+    /**
+     * Broadcast signed transaction to blockchain
+     *
+     * @param network P2P network (MAINNET or TESTNET)
+     * @param signedTransaction Signed transaction in hex format (with 0x prefix)
+     * @return Either error or broadcast result with transaction hash
+     */
+    suspend fun broadcastTransaction(
+        network: P2PEthPoolNetwork,
+        signedTransaction: String,
+    ): Either<StakingError, P2PEthPoolBroadcastResult>
+
+    /**
+     * Get account staking information for specific vault
+     *
+     * Returns current stake, rewards, exit queue status, and available amounts
+     *
+     * @param network P2P network (MAINNET or TESTNET)
+     * @param delegatorAddress User's wallet address
+     * @param vaultAddress Vault contract address
+     * @return Either error or account info
+     */
+    suspend fun getAccountInfo(
+        network: P2PEthPoolNetwork,
+        delegatorAddress: String,
+        vaultAddress: String,
+    ): Either<StakingError, P2PEthPoolAccount>
+
+    /**
+     * Get rewards history for account and vault
+     *
+     * @param network P2P network (MAINNET or TESTNET)
+     * @param delegatorAddress User's wallet address
+     * @param vaultAddress Vault contract address
+     * @param period Optional period filter in days (30, 60, or 90)
+     * @return Either error or list of reward entries
+     */
+    suspend fun getRewards(
+        network: P2PEthPoolNetwork,
+        delegatorAddress: String,
+        vaultAddress: String,
+        period: Int? = null,
+    ): Either<StakingError, List<P2PEthPoolReward>>
+
+    /**
+     * Check P2P staking availability by finding public vault
+     *
+     * @return Flow of StakingAvailability - Available with StakingOption.P2P if public vault found,
+     *         TemporaryUnavailable if not found or vaults empty
+     */
+    fun getStakingAvailability(): Flow<StakingAvailability>
+
+    /**
+     * Check P2P staking availability synchronously
+     *
+     * @return StakingAvailability - Available with StakingOption.P2P if public vault found,
+     *         TemporaryUnavailable if not found or vaults empty
+     */
+    suspend fun getStakingAvailabilitySync(): StakingAvailability
+}

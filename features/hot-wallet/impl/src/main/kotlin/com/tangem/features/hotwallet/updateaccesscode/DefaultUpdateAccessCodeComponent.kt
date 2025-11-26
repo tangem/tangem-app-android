@@ -6,6 +6,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.stack.childStack
+import com.arkivanov.decompose.value.ObserveLifecycleMode
+import com.arkivanov.decompose.value.subscribe
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
@@ -14,6 +16,7 @@ import com.tangem.features.hotwallet.updateaccesscode.routing.UpdateAccessCodeCh
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.launch
 
 internal class DefaultUpdateAccessCodeComponent @AssistedInject constructor(
     @Assisted private val appComponentContext: AppComponentContext,
@@ -37,6 +40,17 @@ internal class DefaultUpdateAccessCodeComponent @AssistedInject constructor(
             )
         },
     )
+
+    init {
+        innerStack.subscribe(
+            lifecycle = lifecycle,
+            mode = ObserveLifecycleMode.CREATE_DESTROY,
+        ) { stack ->
+            componentScope.launch {
+                model.currentRoute.emit(stack.active.configuration)
+            }
+        }
+    }
 
     @Composable
     override fun Content(modifier: Modifier) {
