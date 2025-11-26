@@ -65,7 +65,7 @@ internal class UnreachableActionsFactory(
                         showBadge = false,
                     ),
                     ActionState.Sell(unavailabilityReason = ScenarioUnavailabilityReason.Unreachable),
-                    ActionState.Stake(unavailabilityReason = ScenarioUnavailabilityReason.Unreachable, yield = null),
+                    ActionState.Stake(unavailabilityReason = ScenarioUnavailabilityReason.Unreachable, option = null),
                 ).disabled()
                 // endregion
 
