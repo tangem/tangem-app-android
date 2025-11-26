@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.buttons.HorizontalActionChips
 import com.tangem.core.ui.components.buttons.segmentedbutton.SegmentedButtons
+import com.tangem.core.ui.components.text.TextAnimatedCounter
 import com.tangem.core.ui.components.text.applyBladeBrush
 import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.resolveReference
@@ -121,14 +122,29 @@ private fun FiatBalance(
                 height = TangemTheme.dimens.size32,
             ),
         )
-        is TokenDetailsBalanceBlockState.Content -> Text(
-            modifier = modifier,
-            text = state.displayFiatBalance.orMaskWithStars(isBalanceHidden),
-            style = TangemTheme.typography.h2.applyBladeBrush(
-                isEnabled = state.isBalanceFlickering,
-                textColor = TangemTheme.colors.text.primary1,
-            ),
-        )
+        is TokenDetailsBalanceBlockState.Content -> if (state.displayYeildSupplyCryptoBalance != null &&
+            !isBalanceHidden
+        ) {
+            TextAnimatedCounter(
+                modifier = modifier,
+                text = state.displayYeildSupplyCryptoBalance,
+                style = TangemTheme.typography.h2.applyBladeBrush(
+                    isEnabled = state.isBalanceFlickering,
+                    textColor = TangemTheme.colors.text.primary1,
+                ),
+            )
+        } else {
+            Text(
+                modifier = modifier,
+                text = (state.displayYeildSupplyCryptoBalance ?: state.displayFiatBalance).orMaskWithStars(
+                    isBalanceHidden,
+                ),
+                style = TangemTheme.typography.h2.applyBladeBrush(
+                    isEnabled = state.isBalanceFlickering,
+                    textColor = TangemTheme.colors.text.primary1,
+                ),
+            )
+        }
         is TokenDetailsBalanceBlockState.Error -> Text(
             modifier = modifier,
             text = DASH_SIGN.orMaskWithStars(isBalanceHidden),
