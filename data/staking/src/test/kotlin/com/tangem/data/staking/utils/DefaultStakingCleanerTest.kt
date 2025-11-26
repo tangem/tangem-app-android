@@ -23,7 +23,7 @@ class DefaultStakingCleanerTest {
     )
     private val userWalletId = UserWalletId("011")
     private val stakingIds = setOf(
-        StakingID(integrationId = StakingIntegrationID.Coin.Cardano.value, address = "0x1"),
+        StakingID(integrationId = StakingIntegrationID.StakeKit.Coin.Cardano.value, address = "0x1"),
     )
 
     @BeforeEach
