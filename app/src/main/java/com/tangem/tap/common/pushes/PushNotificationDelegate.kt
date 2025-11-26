@@ -54,8 +54,8 @@ class PushNotificationDelegate(private val context: Context) {
             .setContentIntent(pendingIntent)
             .setVibrate(vibratePattern)
             .apply {
-                imageUrl?.let { uri ->
-                    val bitmap = getBitmapImageFromUrl(uri)
+                if (imageUrl != null) {
+                    val bitmap = getBitmapImageFromUrl(imageUrl)
                     setStyle(
                         NotificationCompat
                             .BigPictureStyle()
@@ -64,7 +64,10 @@ class PushNotificationDelegate(private val context: Context) {
                 }
             }
 
-        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val service = context.getSystemService(Context.NOTIFICATION_SERVICE)
+        val notificationManager = requireNotNull(service as? NotificationManager) {
+            "NotificationManager not available"
+        }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val notificationChannel = NotificationChannel(

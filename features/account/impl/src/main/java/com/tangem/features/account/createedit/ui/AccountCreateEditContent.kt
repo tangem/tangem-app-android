@@ -80,7 +80,7 @@ internal fun AccountCreateEditContent(state: AccountCreateEditUM, modifier: Modi
                 color = TangemTheme.colors.text.tertiary,
             )
         }
-        if (state.buttonState.showProgress) {
+        if (state.buttonState.shouldShowProgress) {
             focusManager.clearFocus()
             keyboardController?.hide()
         }
@@ -89,7 +89,7 @@ internal fun AccountCreateEditContent(state: AccountCreateEditUM, modifier: Modi
                 .fillMaxWidth()
                 .padding(16.dp),
             enabled = state.buttonState.isButtonEnabled,
-            showProgress = state.buttonState.showProgress,
+            showProgress = state.buttonState.shouldShowProgress,
             text = state.buttonState.text.resolveReference(),
             onClick = state.buttonState.onConfirmClick,
         )
@@ -129,15 +129,15 @@ private fun AccountSummary(account: Account) {
             placeholder = account.inputPlaceholder,
             value = account.name.value.resolveReference(),
             singleLine = true,
-            onValueChange = {
+            onValueChange = { value ->
                 /*
                  * If the user had the default main account name and enters the same name during renaming,
                  * we should use the default value instead of custom to avoid breaking the name validation process.
                  */
-                val newName = if (wasDefault && it == defaultAccountName) {
+                val newName = if (wasDefault && value == defaultAccountName) {
                     AccountNameUM.DefaultMain
                 } else {
-                    AccountNameUM.Custom(raw = it)
+                    AccountNameUM.Custom(raw = value)
                 }
 
                 account.onNameChange(newName)
@@ -321,7 +321,7 @@ private class PreviewStateProvider : CollectionPreviewParameterProvider<AccountC
             ),
             buttonState = AccountCreateEditUM.Button(
                 isButtonEnabled = false,
-                showProgress = false,
+                shouldShowProgress = false,
                 onConfirmClick = {},
                 text = stringReference("Add account"),
             ),
@@ -355,7 +355,7 @@ private class PreviewStateProvider : CollectionPreviewParameterProvider<AccountC
             ),
             buttonState = AccountCreateEditUM.Button(
                 isButtonEnabled = false,
-                showProgress = false,
+                shouldShowProgress = false,
                 onConfirmClick = {},
                 text = stringReference("Save"),
             ),

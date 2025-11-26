@@ -14,6 +14,7 @@ import timber.log.Timber
  *
 [REDACTED_AUTHOR]
  */
+@Suppress("NullableToStringCall")
 internal class DisclaimerWebViewClient(
     private val onLoadingFinished: () -> Unit,
 ) : AccompanistWebViewClient() {

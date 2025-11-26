@@ -1,0 +1,9 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>BooleanPropertyNaming:DefaultFeedbackRepository.kt$DefaultFeedbackRepository$private val useNewUserWalletsRepository: Boolean</ID>
+    <ID>MultilineLambdaItParameter:DefaultFeedbackRepository.kt$DefaultFeedbackRepository${ it.toMutableMap().apply { put(userWallet.walletId, error) } }</ID>
+    <ID>UseOrEmpty:BlockchainInfoConverter.kt$BlockchainInfoConverter$value.wallet.publicKey.derivationPath?.rawPath ?: ""</ID>
+  </CurrentIssues>
+</SmellBaseline>

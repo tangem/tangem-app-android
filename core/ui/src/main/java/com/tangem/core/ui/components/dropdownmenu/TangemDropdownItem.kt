@@ -12,6 +12,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.themedColor
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.PopUpMenuTestTags
@@ -28,7 +29,7 @@ fun TangemDropdownItem(item: TangemDropdownMenuItem, dismissParent: () -> Unit, 
             .padding(vertical = TangemTheme.dimens.spacing8, horizontal = TangemTheme.dimens.spacing16)
             .testTag(PopUpMenuTestTags.BUTTON),
         text = item.title.resolveReference(),
-        style = TangemTheme.typography.button.copy(color = item.textColorProvider()),
+        style = TangemTheme.typography.button.copy(color = item.textColor.resolveReference()),
     )
 }
 
@@ -42,7 +43,7 @@ private fun Preview_TokenDetailsAppBarDropdownItem() {
             dismissParent = {},
             item = TangemDropdownMenuItem(
                 title = TextReference.Res(id = R.string.token_details_hide_token),
-                textColorProvider = { TangemTheme.colors.text.warning },
+                textColor = themedColor { TangemTheme.colors.text.warning },
                 onClick = { },
             ),
         )

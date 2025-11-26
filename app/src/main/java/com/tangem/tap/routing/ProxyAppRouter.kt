@@ -40,6 +40,12 @@ internal class ProxyAppRouter(
         }
     }
 
+    override fun replaceCurrent(route: AppRoute, onComplete: (Boolean) -> Unit) {
+        safeNavigate(onComplete, message = "Replace a current route with $route") {
+            innerRouter.replaceCurrent(route, onComplete)
+        }
+    }
+
     override fun replaceAll(vararg routes: AppRoute, onComplete: (isSuccess: Boolean) -> Unit) {
         safeNavigate(onComplete, message = "Replace all routes with $routes") {
             runCatching {
