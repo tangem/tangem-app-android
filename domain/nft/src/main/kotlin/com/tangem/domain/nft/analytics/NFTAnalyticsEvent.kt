@@ -2,16 +2,15 @@ package com.tangem.domain.nft.analytics
 
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam.Key.BLOCKCHAIN
-import com.tangem.core.analytics.models.AnalyticsParam.Key.STANDARD
 import com.tangem.core.analytics.models.AnalyticsParam.Key.COLLECTIONS
 import com.tangem.core.analytics.models.AnalyticsParam.Key.NFT
 import com.tangem.core.analytics.models.AnalyticsParam.Key.NO_COLLECTION
+import com.tangem.core.analytics.models.AnalyticsParam.Key.STANDARD
 import com.tangem.core.analytics.models.AnalyticsParam.Key.STATE
-import kotlin.collections.buildMap
 
 sealed class NFTAnalyticsEvent(
     event: String,
-    params: Map<String, String> = mapOf(),
+    params: Map<String, String> = emptyMap(),
 ) : AnalyticsEvent(
     category = "NFT",
     event = event,
