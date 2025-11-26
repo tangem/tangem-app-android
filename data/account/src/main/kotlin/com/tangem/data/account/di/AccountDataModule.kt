@@ -1,5 +1,6 @@
 package com.tangem.data.account.di
 
+import android.content.Context
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.data.account.converter.AccountConverterFactoryContainer
 import com.tangem.data.account.featuretoggle.DefaultAccountsFeatureToggles
@@ -10,9 +11,10 @@ import com.tangem.data.account.store.ArchivedAccountsStoreFactory
 import com.tangem.data.account.tokens.DefaultMainAccountTokensMigration
 import com.tangem.data.common.account.WalletAccountsFetcher
 import com.tangem.data.common.account.WalletAccountsSaver
-import com.tangem.data.common.cache.etag.ETagsStore
 import com.tangem.data.common.currency.UserTokensSaver
 import com.tangem.datasource.api.tangemTech.TangemTechApi
+import com.tangem.datasource.local.accounts.AccountTokenMigrationStore
+import com.tangem.datasource.local.datastore.RuntimeStateStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.account.repository.AccountsCRUDRepository
@@ -21,6 +23,7 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
@@ -42,8 +45,8 @@ internal object AccountDataModule {
         accountsResponseStoreFactory: AccountsResponseStoreFactory,
         userWalletsStore: UserWalletsStore,
         userTokensSaver: UserTokensSaver,
-        eTagsStore: ETagsStore,
         accountConverterFactoryContainer: AccountConverterFactoryContainer,
+        @ApplicationContext context: Context,
         dispatchers: CoroutineDispatcherProvider,
     ): AccountsCRUDRepository {
         return DefaultAccountsCRUDRepository(
@@ -53,8 +56,9 @@ internal object AccountDataModule {
             archivedAccountsStoreFactory = ArchivedAccountsStoreFactory,
             userWalletsStore = userWalletsStore,
             userTokensSaver = userTokensSaver,
-            eTagsStore = eTagsStore,
+            archivedAccountsETagStore = RuntimeStateStore(emptyMap()),
             convertersContainer = accountConverterFactoryContainer,
+            resources = context.resources,
             dispatchers = dispatchers,
         )
     }
@@ -72,9 +76,11 @@ internal object AccountDataModule {
     fun provideMainAccountTokensMigration(
         accountsResponseStoreFactory: AccountsResponseStoreFactory,
         userTokensSaver: UserTokensSaver,
+        accountTokenMigrationStore: AccountTokenMigrationStore,
     ): MainAccountTokensMigration {
         return DefaultMainAccountTokensMigration(
             accountsResponseStoreFactory = accountsResponseStoreFactory,
+            accountTokenMigrationStore = accountTokenMigrationStore,
             userTokensSaver = userTokensSaver,
         )
     }

@@ -1,0 +1,10 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>NonBooleanPropertyPrefixedWithIs:DefaultPortfolioSelectorController.kt$DefaultPortfolioSelectorController$override val isAccountMode: Flow&lt;Boolean&gt; by lazy { isAccountsModeEnabledUseCase() }</ID>
+    <ID>NonBooleanPropertyPrefixedWithIs:DefaultPortfolioSelectorController.kt$DefaultPortfolioSelectorController$override val isEnabled: MutableStateFlow&lt;(UserWallet, AccountStatus) -&gt; Boolean&gt; = MutableStateFlow { _, _ -&gt; true }</ID>
+    <ID>NonBooleanPropertyPrefixedWithIs:DefaultPortfolioSelectorController.kt$DefaultPortfolioSelectorController$private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase</ID>
+    <ID>NonBooleanPropertyPrefixedWithIs:PortfolioSelectorModel.kt$PortfolioSelectorModel$private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase</ID>
+  </CurrentIssues>
+</SmellBaseline>
