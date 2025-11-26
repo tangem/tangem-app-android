@@ -29,6 +29,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.dp
+import com.tangem.common.ui.account.PortfolioSelectRow
+import com.tangem.common.ui.account.PortfolioSelectRowPreviewData
+import com.tangem.common.ui.account.PortfolioSelectUM
 import com.tangem.core.ui.components.*
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
@@ -36,10 +39,7 @@ import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetTi
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetWithFooter
 import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.components.notifications.NotificationConfig
-import com.tangem.core.ui.extensions.clickableSingle
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringResourceSafe
-import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -87,7 +87,7 @@ internal fun WcAppInfoModalBottomSheet(state: WcAppInfoUM, onBack: () -> Unit, o
 private fun WcAppInfoModalBottomSheet(state: WcAppInfoUM, modifier: Modifier = Modifier) {
     when (state) {
         is WcAppInfoUM.Content -> WcAppInfoModalBottomSheetContent(state, modifier)
-        is WcAppInfoUM.Loading -> WcAppInfoModalBottomSheetLoading(modifier)
+        is WcAppInfoUM.Loading -> WcAppInfoModalBottomSheetLoading(state, modifier)
     }
 }
 
@@ -273,15 +273,19 @@ private fun WcAppInfoSecondBlock(state: WcAppInfoUM.Content, modifier: Modifier 
         val itemsModifier = Modifier
             .fillMaxWidth()
             .padding(TangemTheme.dimens.spacing12)
-        WalletRowItem(
-            modifier = if (state.onWalletClick != null) {
-                Modifier.clickableSingle(onClick = state.onWalletClick)
-            } else {
-                Modifier
-            }.then(itemsModifier),
-            walletName = state.walletName,
-            showEndIcon = state.onWalletClick != null,
-        )
+        if (state.portfolioSelectRow != null) {
+            PortfolioRowItem(portfolioSelectRow = state.portfolioSelectRow)
+        } else {
+            WalletRowItem(
+                modifier = if (state.onWalletClick != null) {
+                    Modifier.clickableSingle(onClick = state.onWalletClick)
+                } else {
+                    Modifier
+                }.then(itemsModifier),
+                walletName = state.walletName,
+                showEndIcon = state.onWalletClick != null,
+            )
+        }
         HorizontalDivider(thickness = 1.dp, color = TangemTheme.colors.stroke.primary)
         SelectNetworksBlock(
             modifier = Modifier
@@ -319,6 +323,21 @@ private fun WcAppInfoSecondBlock(state: WcAppInfoUM.Content, modifier: Modifier 
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun PortfolioRowItem(portfolioSelectRow: PortfolioSelectUM, modifier: Modifier = Modifier) {
+    PortfolioSelectRow(modifier = modifier, state = portfolioSelectRow) {
+        Icon(
+            modifier = Modifier
+                .size(24.dp)
+                .testTag(WalletConnectBottomSheetTestTags.WALLET_ICON),
+            painter = painterResource(R.drawable.ic_wallet_new_24),
+            contentDescription = null,
+            tint = TangemTheme.colors.icon.accent,
+        )
+        SpacerW4()
     }
 }
 
@@ -494,7 +513,7 @@ private fun WcAppInfoButtons(
 
 // region Loading state
 @Composable
-private fun WcAppInfoModalBottomSheetLoading(modifier: Modifier = Modifier) {
+private fun WcAppInfoModalBottomSheetLoading(state: WcAppInfoUM.Loading, modifier: Modifier = Modifier) {
     Column(modifier = modifier) {
         val blocksModifier = Modifier
             .clip(RoundedCornerShape(TangemTheme.dimens.radius14))
@@ -502,6 +521,7 @@ private fun WcAppInfoModalBottomSheetLoading(modifier: Modifier = Modifier) {
             .fillMaxWidth()
         WcAppInfoFirstLoadingBlock(blocksModifier)
         WcAppInfoSecondLoadingBlock(
+            portfolioName = state.portfolioName,
             modifier = Modifier
                 .padding(top = 14.dp)
                 .then(blocksModifier),
@@ -535,7 +555,7 @@ private fun WcAppInfoFirstLoadingBlock(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun WcAppInfoSecondLoadingBlock(modifier: Modifier = Modifier) {
+private fun WcAppInfoSecondLoadingBlock(portfolioName: TextReference, modifier: Modifier = Modifier) {
     Column(modifier) {
         Row(modifier = Modifier.padding(all = 12.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(
@@ -546,9 +566,9 @@ private fun WcAppInfoSecondLoadingBlock(modifier: Modifier = Modifier) {
             )
             Text(
                 modifier = Modifier
-                    .padding(start = 8.dp)
+                    .padding(start = 4.dp)
                     .weight(1f),
-                text = stringResourceSafe(R.string.wc_common_wallet),
+                text = portfolioName.resolveReference(),
                 style = TangemTheme.typography.body1,
                 color = TangemTheme.colors.text.primary1,
             )
@@ -564,7 +584,7 @@ private fun WcAppInfoSecondLoadingBlock(modifier: Modifier = Modifier) {
             )
             Text(
                 modifier = Modifier
-                    .padding(start = 8.dp)
+                    .padding(start = 4.dp)
                     .weight(1f),
                 text = stringResourceSafe(R.string.wc_common_networks),
                 style = TangemTheme.typography.body1,
@@ -642,7 +662,11 @@ private fun WcAppInfoBottomSheetPreview(@PreviewParameter(WcAppInfoStateProvider
 
 private class WcAppInfoStateProvider : CollectionPreviewParameterProvider<WcAppInfoUM>(
     collection = listOf(
-        WcAppInfoUM.Loading(onDismiss = {}, WcPrimaryButtonConfig(showProgress = false, enabled = false, onClick = {})),
+        WcAppInfoUM.Loading(
+            onDismiss = {},
+            portfolioName = stringReference("Wallet"),
+            connectButtonConfig = WcPrimaryButtonConfig(showProgress = false, enabled = false, onClick = {}),
+        ),
         WcAppInfoUM.Content(
             appName = "React App",
             appIcon = "",
@@ -651,6 +675,7 @@ private class WcAppInfoStateProvider : CollectionPreviewParameterProvider<WcAppI
             notification = WcAppInfoSecurityNotification.SecurityRisk,
             walletName = "Tangem 2.0 Tangem 2.0 Tangem 2.0 Tangem 2.0",
             onWalletClick = null,
+            portfolioSelectRow = null,
             networksInfo = WcNetworksInfo.ContainsAllRequiredNetworks(
                 items = persistentListOf(
                     WcNetworkInfoItem.Required(
@@ -695,6 +720,21 @@ private class WcAppInfoStateProvider : CollectionPreviewParameterProvider<WcAppI
             verifiedDAppState = VerifiedDAppState.Unknown,
             appSubtitle = "react-app.walletconnect.com",
             notification = WcAppInfoSecurityNotification.UnknownDomain,
+            portfolioSelectRow = null,
+            walletName = "Tangem 2.0 Tangem 2.0 Tangem 2.0 Tangem 2.0",
+            onWalletClick = {},
+            networksInfo = WcNetworksInfo.MissingRequiredNetworkInfo(networks = "Solana"),
+            onNetworksClick = {},
+            onDismiss = {},
+            connectButtonConfig = WcPrimaryButtonConfig(showProgress = false, enabled = true, onClick = {}),
+        ),
+        WcAppInfoUM.Content(
+            appName = "React App",
+            appIcon = "",
+            verifiedDAppState = VerifiedDAppState.Unknown,
+            appSubtitle = "react-app.walletconnect.com",
+            notification = WcAppInfoSecurityNotification.UnknownDomain,
+            portfolioSelectRow = PortfolioSelectRowPreviewData.account,
             walletName = "Tangem 2.0 Tangem 2.0 Tangem 2.0 Tangem 2.0",
             onWalletClick = {},
             networksInfo = WcNetworksInfo.MissingRequiredNetworkInfo(networks = "Solana"),
