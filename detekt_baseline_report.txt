@@ -1,7 +1,7 @@
 ==========================================
 Detekt Baseline Updater & Issue Counter
 ==========================================
-Date: 2025-11-25 17:21:16
+Date: 2025-11-26 11:32:37
 
 Step 1: Running detekt to check for new issues...
 
@@ -17,13 +17,13 @@ Counting issues in baseline files...
 ==========================================
 
 Summary:
-  Total Issues: 1694
-  Modules with Issues: 78
-  Average Issues per Module: 21
+  Total Issues: 1685
+  Modules with Issues: 73
+  Average Issues per Module: 23
 
 Progress:
-  Fixed: 108 out of 1802 (5%)
-  Remaining: 1694
+  Fixed: 117 out of 1802 (6%)
+  Remaining: 1685
 
 ==========================================
 All Modules with Issues (sorted by count)
@@ -104,9 +104,4 @@ features/stories/impl                                                 2
 features/create-wallet-selection/impl                                 2
 domain/yield-supply                                                   2
 domain/swap                                                           2
-domain/nft                                                            2
-data/express                                                          2
-core/ab-tests                                                         2
-common/test                                                           2
-features/kyc/impl                                                     1
 ────────────────────────────────────────────────────────────────

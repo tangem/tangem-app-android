@@ -80,8 +80,8 @@ internal class AmplitudeABTestsManager(
             allVariants.entries.forEachIndexed { index, (key, variant) ->
                 Timber.d("[${index + 1}/${allVariants.size}] Key: $key")
                 Timber.d("  → Value: ${variant.value ?: "null"}")
-                Timber.d("  → Payload: ${variant.payload}")
-                Timber.d("  → Key: ${variant.key}")
+                Timber.d("  → Payload: ${variant.payload ?: "null"}")
+                Timber.d("  → Key: ${variant.key ?: "null"}")
                 Timber.d("-".repeat(SEPARATOR_LENGTH))
             }
         }
