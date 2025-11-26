@@ -35,6 +35,7 @@ import com.tangem.domain.card.common.TapWorkarounds.isWallet2
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.staking.NetworkType
+import com.tangem.domain.models.staking.StakingID
 import com.tangem.domain.models.staking.YieldBalance
 import com.tangem.domain.models.staking.action.StakingActionType
 import com.tangem.domain.models.wallet.UserWallet
@@ -107,7 +108,9 @@ internal class DefaultStakingRepository(
                     }
                 }
             }
-            stakingYieldsStore.store(yields)
+
+            val shouldRewriteCache = yieldsResponses.all { it is ApiResponse.Success }
+            stakingYieldsStore.store(yields, shouldRewriteCache)
         }
     }
 
@@ -172,9 +175,11 @@ internal class DefaultStakingRepository(
     }
 
     private fun getAvailableIntegrationsIds(): List<StakingIntegrationID> {
-        return StakingIntegrationID.entries.filterNot {
-            it.blockchain == Blockchain.Cardano && !stakingFeatureToggles.isCardanoStakingEnabled
-        }
+        return StakingIntegrationID.entries
+        // load all integrations for now and filter in use cases if needed
+        // .filterNot {
+        // it.blockchain == Blockchain.Cardano && !stakingFeatureToggles.isCardanoStakingEnabled
+        // }
     }
 
     private fun NetworkTypeDTO.extractJsonName(): String {
@@ -206,7 +211,7 @@ internal class DefaultStakingRepository(
         cryptoCurrency: CryptoCurrency,
     ): Flow<StakingAvailability> {
         return channelFlow {
-            if (!checkFeatureToggleEnabled(cryptoCurrency.network.id)) {
+            if (!checkFeatureToggleEnabled(userWalletId, cryptoCurrency)) {
                 send(StakingAvailability.Unavailable)
                 return@channelFlow
             }
@@ -255,7 +260,7 @@ internal class DefaultStakingRepository(
         userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency,
     ): StakingAvailability {
-        if (!checkFeatureToggleEnabled(cryptoCurrency.network.id)) {
+        if (!checkFeatureToggleEnabled(userWalletId, cryptoCurrency)) {
             return StakingAvailability.Unavailable
         }
 
@@ -292,10 +297,25 @@ internal class DefaultStakingRepository(
         }
     }
 
-    private fun checkFeatureToggleEnabled(networkId: Network.ID): Boolean {
-        return when (networkId.toBlockchain()) {
+    private suspend fun checkFeatureToggleEnabled(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): Boolean {
+        return when (cryptoCurrency.network.id.toBlockchain()) {
             Blockchain.TON -> stakingFeatureToggles.isTonStakingEnabled
-            Blockchain.Cardano -> stakingFeatureToggles.isCardanoStakingEnabled
+            Blockchain.Cardano -> {
+                val address = walletManagersFacade.getDefaultAddress(userWalletId, cryptoCurrency.network).orEmpty()
+                val balance = stakingBalanceStoreV2.getSyncOrNull(
+                    userWalletId = userWalletId,
+                    stakingId = StakingID(
+                        integrationId = StakingIntegrationID.create(currencyId = cryptoCurrency.id)?.value
+                            ?: return false,
+                        address = address,
+                    ),
+                )
+                if (balance != null && balance is YieldBalance.Data && balance.balance.items.isNotEmpty()) {
+                    return true
+                } else {
+                    stakingFeatureToggles.isCardanoStakingEnabled
+                }
+            }
             else -> true
         }
     }
