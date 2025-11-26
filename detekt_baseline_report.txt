@@ -1,7 +1,7 @@
 ==========================================
 Detekt Baseline Updater & Issue Counter
 ==========================================
-Date: 2025-11-24 18:35:00
+Date: 2025-11-25 17:21:16
 
 Step 1: Running detekt to check for new issues...
 
@@ -17,13 +17,13 @@ Counting issues in baseline files...
 ==========================================
 
 Summary:
-  Total Issues: 1700
-  Modules with Issues: 83
-  Average Issues per Module: 20
+  Total Issues: 1694
+  Modules with Issues: 78
+  Average Issues per Module: 21
 
 Progress:
-  Fixed: 102 out of 1802 (5%)
-  Remaining: 1700
+  Fixed: 108 out of 1802 (5%)
+  Remaining: 1694
 
 ==========================================
 All Modules with Issues (sorted by count)
@@ -37,7 +37,7 @@ features/onboarding-v2/impl                                         131
 features/onramp/impl                                                 89
 features/send-v2/impl                                                80
 features/swap/impl                                                   73
-features/hot-wallet/impl                                             58
+features/hot-wallet/impl                                             57
 features/staking/impl                                                56
 data/wallet-connect                                                  55
 features/swap-v2/impl                                                53
@@ -108,10 +108,5 @@ domain/nft                                                            2
 data/express                                                          2
 core/ab-tests                                                         2
 common/test                                                           2
-features/manage-tokens/api                                            1
 features/kyc/impl                                                     1
-features/hot-wallet/api                                               1
-features/disclaimer/impl                                              1
-domain/wallet-connect                                                 1
-domain/visa                                                           1
 ────────────────────────────────────────────────────────────────
