@@ -9,10 +9,15 @@ internal data class AccountsUM(
     val onBackClick: () -> Unit,
     val walletSelector: WalletSelector,
     val accountListBottomSheetConfig: AccountListBottomSheetConfig,
-    val onAccountsClick: () -> Boolean,
-    val onFetchAccountsClick: () -> Unit,
-    val onClearETagClick: () -> Unit,
+    val buttons: ImmutableList<Button>,
 ) {
+
+    data class Button(
+        val title: String,
+        val isInProgress: Boolean = false,
+        val isEnabled: Boolean = true,
+        val onClick: (title: String) -> Unit,
+    )
 
     data class WalletSelector(
         val selected: UserWallet?,
@@ -21,6 +26,8 @@ internal data class AccountsUM(
     ) : TangemBottomSheetConfigContent
 
     data class AccountListBottomSheetConfig(
+        val isAccountsShown: Boolean,
         val accounts: ImmutableList<Account.CryptoPortfolio>,
+        val onDismiss: () -> Unit,
     ) : TangemBottomSheetConfigContent
 }

@@ -1445,9 +1445,14 @@
   <string name="tangempay_onboarding_security_description">A separate payment account will be created without disclosing your addresses and assets</string>
   <string name="tangempay_onboarding_security_title">Unrivaled privacy</string>
   <string name="tangempay_onboarding_title">Get your free Tangem Pay Card in minutes</string>
+  <string name="tangempay_payment_account">Payment account</string>
+  <string name="tangempay_payment_account_sync_needed">Payment account sync needed</string>
   <string name="tangempay_service_unavailable_description">We’re fixing a technical issue. Please try again later.</string>
   <string name="tangempay_service_unavailable_title">Service temporarily unavailable</string>
+  <string name="tangempay_service_unreachable_try_later">The service is currently unreachable. Please try again later.</string>
+  <string name="tangempay_temporarily_unavailable">Tangem Pay is temporarily unavailable</string>
   <string name="tangempay_title">Tangem Pay</string>
+  <string name="tangempay_use_tangem_device_to_restore_payment_account">Use your card or ring to restore access to your payment account</string>
   <string name="this_is_my_wallet_title">This is my wallet</string>
   <string name="toast_balances_hidden">Balances hidden</string>
   <string name="toast_balances_shown">Balances shown</string>

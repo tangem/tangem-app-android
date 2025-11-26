@@ -47,6 +47,7 @@ import com.tangem.features.walletconnect.connections.routing.WcInnerRoute
 import com.tangem.features.walletconnect.impl.R
 import com.tangem.features.walletconnect.transaction.components.common.WcTransactionModelParams
 import com.tangem.features.walletconnect.transaction.converter.WcHandleMethodErrorConverter
+import com.tangem.features.walletconnect.transaction.converter.WcPortfolioNameDelegate
 import com.tangem.features.walletconnect.transaction.converter.WcSendTransactionUMConverter
 import com.tangem.features.walletconnect.transaction.entity.blockaid.WcSendReceiveTransactionCheckResultsUM
 import com.tangem.features.walletconnect.transaction.entity.common.WcCommonTransactionModel
@@ -69,6 +70,7 @@ import kotlin.properties.Delegates
 @ModelScoped
 internal class WcSendTransactionModel @Inject constructor(
     paramsContainer: ParamsContainer,
+    portfolioNameDelegateFactory: WcPortfolioNameDelegate.Factory,
     override val messageSender: UiMessageSender,
     override val dispatchers: CoroutineDispatcherProvider,
     private val feeSelectorReloadTrigger: FeeSelectorReloadTrigger,
@@ -90,6 +92,7 @@ internal class WcSendTransactionModel @Inject constructor(
 
     val stackNavigation = StackNavigation<WcTransactionRoutes>()
 
+    private val portfolioNameDelegate = portfolioNameDelegateFactory.create(modelScope)
     internal var cryptoCurrencyStatus: CryptoCurrencyStatus by Delegates.notNull()
     internal var feeStateConfiguration: FeeStateConfiguration = FeeStateConfiguration.None
     private var useCase: WcSignUseCase<*> by Delegates.notNull()
@@ -276,6 +279,7 @@ internal class WcSendTransactionModel @Inject constructor(
                 cryptoCurrencyStatus = cryptoCurrencyStatus,
                 onFeeReload = ::triggerFeeReload,
                 securityCheck = securityCheck.getOrNull(),
+                portfolioName = portfolioNameDelegate.createAccountTitleUM(useCase.session),
             ),
         )
         transactionUM = transactionUM?.copy(

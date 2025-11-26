@@ -22,6 +22,7 @@ data class AppSettingsState(
     val requireAccessCode: Boolean = false,
     val useBiometricAuthentication: Boolean = false,
     val needEnrollBiometrics: Boolean = false,
+    val hasSecuredWallets: Boolean = false,
     val isHidingEnabled: Boolean = false,
     val isInProgress: Boolean = false,
     val selectedAppCurrency: AppCurrency = AppCurrency.Default,
