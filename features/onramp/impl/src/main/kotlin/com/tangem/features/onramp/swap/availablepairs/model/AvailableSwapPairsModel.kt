@@ -101,9 +101,12 @@ internal class AvailableSwapPairsModel @Inject constructor(
     private fun getAccountListUseCaseFlow(): SharedFlow<List<AccountStatus>> {
         return singleAccountStatusListSupplier(SingleAccountStatusListProducer.Params(params.userWalletId))
             .distinctUntilChanged()
-            .map { accountStatusList ->
-                accountStatusList.accountStatuses.toList()
-            }.flowOn(dispatchers.default)
+            .mapNotNull { accountStatusList ->
+                accountStatusList.accountStatuses.filter {
+                    it is AccountStatus.CryptoPortfolio && it.tokenList !is TokenList.Empty
+                }
+            }
+            .flowOn(dispatchers.default)
             .shareIn(scope = modelScope, started = SharingStarted.Eagerly, replay = 1)
     }
 
@@ -255,13 +258,22 @@ internal class AvailableSwapPairsModel @Inject constructor(
     ): TokenListUMTransformer {
         val (appCurrency, isBalanceHidden) = appCurrencyAndBalanceHiding
 
-        val filterByQueryAccountList = accountList.associate { accountStatus ->
-            when (accountStatus) {
-                is AccountStatus.CryptoPortfolio -> accountStatus.account to accountStatus.tokenList.flattenCurrencies()
-                    .filter { it.currency != selectedStatus?.currency }
-                    .filterByQuery(query = query)
+        val filterByQueryAccountList = accountList
+            .associate { accountStatus ->
+                when (accountStatus) {
+                    is AccountStatus.CryptoPortfolio -> {
+                        val statuses = accountStatus.tokenList.flattenCurrencies()
+                            .filterNot { status ->
+                                status.currency.network.backendId == selectedStatus?.currency?.network?.backendId &&
+                                    status.currency.id.contractAddress == selectedStatus.currency.id.contractAddress
+                            }
+                            .filterByQuery(query = query)
+
+                        accountStatus.account to statuses
+                    }
+                }
             }
-        }
+            .filterValues { it.isNotEmpty() }
 
         if (availablePairs.isEmpty()) {
             return SetNoAvailablePairsTransformerV2(
