@@ -1851,9 +1851,12 @@
   <string name="yield_module_token_details_earn_notification_earning_on_your_balance_title">Режим доходности</string>
   <string name="yield_module_token_details_earn_notification_processing">Включение режима доходности</string>
   <string name="yield_module_token_details_earn_notification_title">Режим доходности</string>
-  <string name="yield_module_transaction_enter">Доход включен</string>
-  <string name="yield_module_transaction_exit">Доход выключен</string>
-  <string name="yield_module_transaction_topup">Доход - пополнение</string>
+  <string name="yield_module_transaction_enter">Режим доходности включен</string>
+  <string name="yield_module_transaction_enter_subtitle">%1$s отправлено в Aave</string>
+  <string name="yield_module_transaction_exit">Режим доходности выключен</string>
+  <string name="yield_module_transaction_exit_subtitle">%1$s выведено из Aave</string>
+  <string name="yield_module_transaction_topup">Перевод средств в Aave</string>
+  <string name="yield_module_transaction_topup_subtitle">%1$s отправлено в Aave</string>
   <string name="yield_module_transfer_mode_automatic">Автоматически</string>
   <string name="yield_module_unable_to_cover_fee_description">Внесите немного %1$s %2$s, чтобы покрыть комиссию сети за транзакции.</string>
   <string name="yield_module_unable_to_cover_fee_title">Невозможно покрыть комиссию в %s</string>
