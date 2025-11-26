@@ -45,7 +45,6 @@ internal fun PortfolioItem(state: PortfolioTokenUM, lastInList: Boolean, modifie
         TokenItem(
             state = tokenItemState,
             isBalanceHidden = state.isBalanceHidden,
-            modifier = Modifier.background(color = TangemTheme.colors.background.action),
             itemPaddingValues = PaddingValues(
                 start = TangemTheme.dimens.spacing10,
                 end = TangemTheme.dimens.spacing12,
@@ -54,7 +53,6 @@ internal fun PortfolioItem(state: PortfolioTokenUM, lastInList: Boolean, modifie
 
         PortfolioQuickActions(
             modifier = Modifier
-                .background(color = TangemTheme.colors.background.action)
                 .padding(
                     bottom = if (lastInList) {
                         TangemTheme.dimens.spacing12
@@ -82,6 +80,7 @@ private fun Preview(@PreviewParameter(PortfolioTokenUMProvider::class) tokenUM: 
         }
 
         PortfolioItem(
+            modifier = Modifier.background(color = TangemTheme.colors.background.action),
             state = tokenUM.copy(
                 tokenItemState = when (tokenUM.tokenItemState) {
                     is TokenItemState.Content -> tokenUM.tokenItemState.copy(onItemClick = { onItemClick() })

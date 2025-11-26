@@ -135,6 +135,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                     onDirect = { secondaryCurrencyStatus },
                     onReverse = { primaryCurrencyStatus },
                 ),
+                fromAccount = params.accountFlow.value,
                 quote = amountUM?.selectedQuote,
                 rateType = amountUM?.swapRateType,
             )
