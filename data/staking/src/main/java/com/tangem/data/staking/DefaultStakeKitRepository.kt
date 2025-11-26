@@ -45,7 +45,6 @@ import com.tangem.domain.staking.model.stakekit.transaction.ActionParams
 import com.tangem.domain.staking.model.stakekit.transaction.StakingGasEstimate
 import com.tangem.domain.staking.model.stakekit.transaction.StakingTransaction
 import com.tangem.domain.staking.repositories.StakeKitRepository
-import com.tangem.domain.staking.toggles.StakingFeatureToggles
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.async
@@ -60,7 +59,6 @@ internal class DefaultStakeKitRepository(
     private val stakingYieldsStore: StakingYieldsStore,
     private val dispatchers: CoroutineDispatcherProvider,
     private val walletManagersFacade: WalletManagersFacade,
-    private val stakingFeatureToggles: StakingFeatureToggles,
     moshi: Moshi,
 ) : StakeKitRepository {
 
@@ -96,7 +94,8 @@ internal class DefaultStakeKitRepository(
                     }
                 }
             }
-            stakingYieldsStore.store(yields)
+            val shouldRewriteCache = yieldsResponses.all { it is ApiResponse.Success }
+            stakingYieldsStore.store(yields, shouldRewriteCache)
         }
     }
 
@@ -161,9 +160,11 @@ internal class DefaultStakeKitRepository(
     }
 
     private fun getAvailableStakeKitIntegrationsIds(): List<StakingIntegrationID.StakeKit> {
-        return StakingIntegrationID.StakeKit.entries.filterNot {
-            it.blockchain == Blockchain.Cardano && !stakingFeatureToggles.isCardanoStakingEnabled
-        }
+        return StakingIntegrationID.StakeKit.entries
+        // load all integrations for now and filter in use cases if needed
+        // .filterNot {
+        // it.blockchain == Blockchain.Cardano && !stakingFeatureToggles.isCardanoStakingEnabled
+        // }
     }
 
     private fun NetworkTypeDTO.extractJsonName(): String {
