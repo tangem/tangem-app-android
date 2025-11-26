@@ -8,8 +8,8 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.domain.staking.repositories.StakingErrorResolver
-import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.staking.repositories.StakingRepository
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 
