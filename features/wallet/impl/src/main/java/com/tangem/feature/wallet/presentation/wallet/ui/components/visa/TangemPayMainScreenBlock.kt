@@ -19,7 +19,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.TangemPayState.
 import com.tangem.feature.wallet.presentation.wallet.ui.components.singlecurrency.TangemPayCardMainBlock
 
 @Composable
-internal fun TangemPayMainScreenBlock(state: TangemPayState, modifier: Modifier = Modifier) {
+internal fun TangemPayMainScreenBlock(state: TangemPayState, isBalanceHidden: Boolean, modifier: Modifier = Modifier) {
     when (state) {
         is Progress -> {
             Notification(
@@ -28,7 +28,7 @@ internal fun TangemPayMainScreenBlock(state: TangemPayState, modifier: Modifier 
                 config = NotificationConfig(
                     title = state.title,
                     iconSize = 36.dp,
-                    subtitle = TextReference.EMPTY,
+                    subtitle = state.description,
                     iconResId = state.iconRes,
                     buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
                         text = state.buttonText,
@@ -38,7 +38,7 @@ internal fun TangemPayMainScreenBlock(state: TangemPayState, modifier: Modifier 
                 ),
             )
         }
-        is TangemPayState.Card -> TangemPayCardMainBlock(state, modifier)
+        is TangemPayState.Card -> TangemPayCardMainBlock(state, isBalanceHidden, modifier)
         is TangemPayState.Empty -> Unit
     }
 }
@@ -52,29 +52,35 @@ private fun ResetCardScreenPreview() {
             TangemPayMainScreenBlock(
                 Progress(
                     title = TextReference.Res(R.string.tangempay_kyc_in_progress_notification_title),
+                    description = TextReference.EMPTY,
                     buttonText = TextReference.Res(R.string.tangempay_kyc_in_progress_notification_button),
                     iconRes = R.drawable.ic_promo_kyc_36,
                     onButtonClick = {},
                 ),
+                isBalanceHidden = false,
             )
 
             TangemPayMainScreenBlock(
                 Progress(
                     title = TextReference.Res(R.string.tangempay_issue_card_notification_title),
+                    description = TextReference.EMPTY,
                     buttonText = TextReference.Res(R.string.common_continue),
                     iconRes = R.drawable.ic_tangem_pay_promo_card_36,
                     onButtonClick = {},
                 ),
+                isBalanceHidden = false,
             )
 
             TangemPayMainScreenBlock(
                 Progress(
                     title = TextReference.Res(R.string.tangempay_issue_card_notification_title),
+                    description = TextReference.Res(R.string.tangempay_issue_card_notification_description),
                     buttonText = TextReference.EMPTY,
                     iconRes = R.drawable.ic_tangem_pay_promo_card_36,
                     onButtonClick = {},
                     showProgress = true,
                 ),
+                isBalanceHidden = false,
             )
 
             TangemPayMainScreenBlock(
@@ -83,6 +89,7 @@ private fun ResetCardScreenPreview() {
                     balanceText = TextReference.Str("$ 0.00"),
                     onClick = {},
                 ),
+                isBalanceHidden = false,
             )
         }
     }
