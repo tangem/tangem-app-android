@@ -11,5 +11,5 @@ interface StakingYieldsStore {
 
     suspend fun getSyncWithTimeout(): List<YieldDTO>?
 
-    suspend fun store(items: List<YieldDTO>)
+    suspend fun store(items: List<YieldDTO>, force: Boolean = false)
 }
