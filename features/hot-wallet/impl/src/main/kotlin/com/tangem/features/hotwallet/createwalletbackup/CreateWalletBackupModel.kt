@@ -70,13 +70,13 @@ internal class CreateWalletBackupModel @Inject constructor(
         stackNavigation.push(
             configuration = CreateWalletBackupRoute.BackupCompleted(
                 isUpgradeFlow = params.isUpgradeFlow,
-                isLastScreen = !params.setAccessCode,
+                isLastScreen = !params.shouldSetAccessCode,
             ),
         )
     }
 
     fun onManualBackupCompleted() {
-        if (params.setAccessCode) {
+        if (params.shouldSetAccessCode) {
             router.replaceCurrent(
                 route = AppRoute.UpdateAccessCode(
                     userWalletId = params.userWalletId,
