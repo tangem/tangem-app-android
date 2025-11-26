@@ -3,12 +3,7 @@ package com.tangem.data.staking.di
 import com.squareup.moshi.Moshi
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
-import com.tangem.data.staking.DefaultP2PEthPoolRepository
-import com.tangem.data.staking.DefaultStakeKitActionRepository
-import com.tangem.data.staking.DefaultStakingErrorResolver
-import com.tangem.data.staking.DefaultStakeKitRepository
-import com.tangem.data.staking.DefaultStakingRepository
-import com.tangem.data.staking.DefaultStakeKitTransactionHashRepository
+import com.tangem.data.staking.*
 import com.tangem.data.staking.converters.error.StakeKitErrorConverter
 import com.tangem.data.staking.store.YieldsBalancesStore
 import com.tangem.data.staking.toggles.DefaultStakingFeatureToggles
@@ -21,12 +16,7 @@ import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.token.P2PEthPoolVaultsStore
 import com.tangem.datasource.local.token.StakingActionsStore
 import com.tangem.datasource.local.token.StakingYieldsStore
-import com.tangem.domain.staking.repositories.P2PEthPoolRepository
-import com.tangem.domain.staking.repositories.StakeKitActionRepository
-import com.tangem.domain.staking.repositories.StakingErrorResolver
-import com.tangem.domain.staking.repositories.StakeKitRepository
-import com.tangem.domain.staking.repositories.StakingRepository
-import com.tangem.domain.staking.repositories.StakeKitTransactionHashRepository
+import com.tangem.domain.staking.repositories.*
 import com.tangem.domain.staking.toggles.StakingFeatureToggles
 import com.tangem.domain.staking.utils.StakingCleaner
 import com.tangem.domain.walletmanager.WalletManagersFacade
@@ -49,7 +39,6 @@ internal object StakingDataModule {
         stakingYieldsStore: StakingYieldsStore,
         dispatchers: CoroutineDispatcherProvider,
         walletManagersFacade: WalletManagersFacade,
-        stakingFeatureToggles: StakingFeatureToggles,
         @NetworkMoshi moshi: Moshi,
     ): StakeKitRepository {
         return DefaultStakeKitRepository(
@@ -57,7 +46,6 @@ internal object StakingDataModule {
             stakingYieldsStore = stakingYieldsStore,
             dispatchers = dispatchers,
             walletManagersFacade = walletManagersFacade,
-            stakingFeatureToggles = stakingFeatureToggles,
             moshi = moshi,
         )
     }
@@ -71,6 +59,7 @@ internal object StakingDataModule {
         dispatchers: CoroutineDispatcherProvider,
         getUserWalletUseCase: GetUserWalletUseCase,
         stakingFeatureToggles: StakingFeatureToggles,
+        walletManagersFacade: WalletManagersFacade,
     ): StakingRepository {
         return DefaultStakingRepository(
             stakeKitRepository = stakeKitRepository,
@@ -78,6 +67,7 @@ internal object StakingDataModule {
             stakingBalanceStoreV2 = yieldsBalancesStore,
             dispatchers = dispatchers,
             getUserWalletUseCase = getUserWalletUseCase,
+            walletManagersFacade = walletManagersFacade,
             stakingFeatureToggles = stakingFeatureToggles,
         )
     }
