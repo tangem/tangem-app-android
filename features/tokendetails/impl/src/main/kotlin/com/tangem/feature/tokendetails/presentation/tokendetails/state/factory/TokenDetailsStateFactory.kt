@@ -28,6 +28,7 @@ import com.tangem.domain.wallets.usecase.NetworkHasDerivationUseCase
 import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDetailsClickIntents
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenBalanceSegmentedButtonConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsAppBarMenuConfig
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsBalanceBlockState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsDialogConfig
 import com.tangem.features.tokendetails.impl.R
@@ -311,6 +312,19 @@ internal class TokenDetailsStateFactory(
         buttonConfig: TokenBalanceSegmentedButtonConfig,
     ): TokenDetailsState {
         return balanceSelectStateConverter.convert(buttonConfig)
+    }
+
+    fun getStateWithUpdatedYieldSupplyDisplayBalance(displayBalance: String?): TokenDetailsState {
+        val state = currentStateProvider()
+        val balanceState = state.tokenBalanceBlockState
+        return state.copy(
+            tokenBalanceBlockState = when (balanceState) {
+                is TokenDetailsBalanceBlockState.Content ->
+                    balanceState.copy(displayYeildSupplyCryptoBalance = displayBalance)
+                is TokenDetailsBalanceBlockState.Error -> balanceState
+                is TokenDetailsBalanceBlockState.Loading -> balanceState
+            },
+        )
     }
 
     fun getStateWithConfirmHideExpressStatus(): TokenDetailsState {
