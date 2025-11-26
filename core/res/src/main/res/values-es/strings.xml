@@ -194,6 +194,7 @@
   <string name="common_fee_selector_option_slow">Lento</string>
   <string name="common_fee_selector_title">Velocidad y tarifa</string>
   <string name="common_finish">Finalizar</string>
+  <string name="common_from_wallet_name">De %s</string>
   <string name="common_generate_addresses">Sincronizar direcciones</string>
   <string name="common_get_started">Comenzar</string>
   <string name="common_go_to_provider">Ir al proveedor</string>
@@ -204,6 +205,7 @@
   <string name="common_import">Importe</string>
   <string name="common_in_progress">En progreso</string>
   <string name="common_later">Más tarde</string>
+  <string name="common_learn_more">Más información</string>
   <string name="common_left">%1$s quedan</string>
   <string name="common_locked">Bloqueado</string>
   <string name="common_main_network">Red principal</string>
@@ -1565,6 +1567,12 @@
   <string name="yield_module_token_details_earn_notification_earning_on_your_balance_title">Modo de rendimiento</string>
   <string name="yield_module_token_details_earn_notification_processing">Procesando su depósito</string>
   <string name="yield_module_token_details_earn_notification_title">Modo Rendimiento</string>
+  <string name="yield_module_transaction_enter">Modo Rendimiento activado</string>
+  <string name="yield_module_transaction_enter_subtitle">%1$s suministrado a Aave</string>
+  <string name="yield_module_transaction_exit">Modo Rendimiento desactivado</string>
+  <string name="yield_module_transaction_exit_subtitle">%1$s retirado de Aave</string>
+  <string name="yield_module_transaction_topup">Suministrar a Aave</string>
+  <string name="yield_module_transaction_topup_subtitle">%1$s suministrado a Aave</string>
   <string name="yield_module_transfer_mode_automatic">Automático</string>
   <string name="yield_module_unable_to_cover_fee_description">Deposite algo de %1$s %2$s para cubrir la tarifa de red para las transacciones</string>
   <string name="yield_module_unable_to_cover_fee_title">No se puede cubrir la tarifa %s</string>
