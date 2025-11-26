@@ -12,6 +12,7 @@ import com.tangem.data.walletconnect.sign.BaseWcSignUseCase
 import com.tangem.data.walletconnect.sign.SignCollector
 import com.tangem.data.walletconnect.sign.SignStateConverter.toResult
 import com.tangem.data.walletconnect.sign.WcMethodUseCaseContext
+import com.tangem.data.walletconnect.utils.BlockAidVerificationDelegate
 import com.tangem.domain.core.lce.LceFlow
 import com.tangem.domain.walletconnect.WcTransactionSignerProvider
 import com.tangem.domain.walletconnect.model.HandleMethodError
@@ -24,7 +25,7 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.map
 
 /**
  * Use case for Bitcoin signPsbt WalletConnect method.
@@ -39,13 +40,29 @@ internal class WcBitcoinSignPsbtUseCase @AssistedInject constructor(
     private val signerProvider: WcTransactionSignerProvider,
     override val respondService: WcRespondService,
     override val analytics: AnalyticsEventHandler,
+    blockAidDelegate: BlockAidVerificationDelegate,
 ) : BaseWcSignUseCase<Nothing, TransactionData>(),
     WcTransactionUseCase {
 
-    // BlockAid doesn't support Bitcoin PSBT signing yet
-    override val securityStatus: LceFlow<Throwable, BlockAidTransactionCheck.Result> = emptyFlow()
+    override val securityStatus: LceFlow<Throwable, BlockAidTransactionCheck.Result> =
+        blockAidDelegate.getSecurityStatus(
+            network = network,
+            method = method,
+            rawSdkRequest = rawSdkRequest,
+            session = session,
+            accountAddress = context.accountAddress,
+        ).map { lce ->
+            lce.map { result -> BlockAidTransactionCheck.Result.Plain(result) }
+        }
 
     override suspend fun SignCollector<TransactionData>.onSign(state: WcSignState<TransactionData>) {
+        // Update wallet manager to refresh UTXO data before processing Bitcoin transaction
+        walletManagersFacade.update(
+            userWalletId = wallet.walletId,
+            network = network,
+            extraTokens = emptySet(),
+        )
+
         val walletManager = walletManagersFacade.getOrCreateWalletManager(wallet.walletId, network)
         if (walletManager !is BitcoinWalletManager) {
             emit(state.toResult(HandleMethodError.UnknownError("Invalid wallet manager type").left()))

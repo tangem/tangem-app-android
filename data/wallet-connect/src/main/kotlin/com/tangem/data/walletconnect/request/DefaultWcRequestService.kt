@@ -3,6 +3,7 @@ package com.tangem.data.walletconnect.request
 import com.reown.walletkit.client.Wallet
 import com.tangem.common.extensions.calculateSha256
 import com.tangem.common.extensions.toHexString
+import com.tangem.data.walletconnect.BuildConfig
 import com.tangem.data.walletconnect.respond.WcRespondService
 import com.tangem.data.walletconnect.utils.WC_TAG
 import com.tangem.data.walletconnect.utils.WcSdkObserver
@@ -48,10 +49,17 @@ internal class DefaultWcRequestService(
             respondService.rejectRequestNonBlock(sr)
             if (name.raw.startsWith("wallet_")) return
         }
-        _wcRequest.trySend(name to sr)
+        val sendResult = _wcRequest.trySend(name to sr)
+        Timber.tag(WC_TAG).d("Channel send result: $sendResult for request ${sr.request.id}")
     }
 
     private fun filterDuplicateRequest(request: WcSdkSessionRequest): Boolean {
+        // Skip duplicate filtering in debug builds
+        if (BuildConfig.DEBUG) {
+            Timber.tag(WC_TAG).d("DEBUG: Skipping duplicate filter for request ${request.request.id}")
+            return true
+        }
+
         val hash = request.request.params.calculateSha256().toHexString()
         val now = DateTime.now().millis
         val expiredMillis = now - expireDuration.millis
@@ -61,12 +69,19 @@ internal class DefaultWcRequestService(
 
         val noHaveCached = cachedRequest.none { (_, hashParams) -> hash == hashParams }
         if (!noHaveCached) {
-            Timber.tag(WC_TAG).i("filter request $request")
+            Timber.tag(WC_TAG).i("RELEASE: Filtering duplicate request $request")
+        } else {
+            Timber.tag(WC_TAG).d("RELEASE: Allowing request ${request.request.id}")
         }
         return noHaveCached
     }
 
     private fun saveRequest(request: WcSdkSessionRequest) {
+        // Skip caching in debug builds since filtering is disabled
+        if (BuildConfig.DEBUG) {
+            return
+        }
+
         val hash = request.request.params.calculateSha256().toHexString()
         val now = DateTime.now().millis
         cachedRequest.update { it + (now to hash) }

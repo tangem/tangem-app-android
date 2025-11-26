@@ -2,6 +2,7 @@ package com.tangem.features.walletconnect.transaction.converter
 
 import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.walletconnect.model.WcBitcoinMethod
 import com.tangem.domain.walletconnect.model.WcEthMethod
 import com.tangem.domain.walletconnect.model.WcSolanaMethod
 import com.tangem.domain.walletconnect.usecase.method.BlockAidTransactionCheck
@@ -38,6 +39,9 @@ internal class WcSendTransactionUMConverter @Inject constructor(
             is WcEthMethod.SignTransaction,
             is WcSolanaMethod.SignAllTransaction,
             is WcSolanaMethod.SignTransaction,
+            is WcBitcoinMethod.SendTransfer,
+            is WcBitcoinMethod.SignPsbt,
+            is WcBitcoinMethod.SignMessage,
             -> WcSendTransactionUM(
                 transaction = WcSendTransactionItemUM(
                     onDismiss = value.actions.onDismiss,
