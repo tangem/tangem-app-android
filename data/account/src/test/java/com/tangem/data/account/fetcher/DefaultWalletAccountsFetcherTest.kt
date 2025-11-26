@@ -3,6 +3,7 @@ package com.tangem.data.account.fetcher
 import com.google.common.truth.Truth
 import com.tangem.data.account.converter.createGetWalletAccountsResponse
 import com.tangem.data.account.converter.createWalletAccountDTO
+import com.tangem.data.account.fetcher.DefaultWalletAccountsFetcher.FetchResult
 import com.tangem.data.account.store.AccountsResponseStore
 import com.tangem.data.account.store.AccountsResponseStoreFactory
 import com.tangem.data.account.utils.DefaultWalletAccountsResponseFactory
@@ -199,7 +200,7 @@ class DefaultWalletAccountsFetcherTest {
         @Test
         fun `fetch should call error handler when getWalletAccounts returns error`() = runTest {
             // Arrange
-            val savedAccountsResponse = null
+            val savedAccountsResponse = createGetWalletAccountsResponse(userWalletId)
             val apiError = ApiResponse.Error(ApiResponseError.NetworkException())
 
             accountsResponseStoreFlow.value = savedAccountsResponse
@@ -212,11 +213,11 @@ class DefaultWalletAccountsFetcherTest {
                 fetchWalletAccountsErrorHandler.handle(
                     error = apiError.cause,
                     userWalletId = userWalletId,
-                    savedAccountsResponse = null,
+                    savedAccountsResponse = savedAccountsResponse,
                     pushWalletAccounts = any(),
                     storeWalletAccounts = any(),
                 )
-            } returns savedAccountsResponse
+            } returns FetchResult(savedAccountsResponse)
 
             // Act
             fetcher.fetch(userWalletId)
@@ -231,7 +232,7 @@ class DefaultWalletAccountsFetcherTest {
                 fetchWalletAccountsErrorHandler.handle(
                     error = apiError.cause,
                     userWalletId = userWalletId,
-                    savedAccountsResponse = null,
+                    savedAccountsResponse = savedAccountsResponse,
                     pushWalletAccounts = any(),
                     storeWalletAccounts = any(),
                 )

@@ -1,0 +1,55 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>BooleanPropertyNaming:ExchangeUM.kt$ExchangeUM$val showProviderLink: Boolean</ID>
+    <ID>BooleanPropertyNaming:TokenDetailsActionButton.kt$TokenDetailsActionButton.Buy$val dimContent: Boolean</ID>
+    <ID>BooleanPropertyNaming:TokenDetailsActionButton.kt$TokenDetailsActionButton.Sell$val dimContent: Boolean</ID>
+    <ID>BooleanPropertyNaming:TokenDetailsActionButton.kt$TokenDetailsActionButton.Send$val dimContent: Boolean</ID>
+    <ID>BooleanPropertyNaming:TokenDetailsActionButton.kt$TokenDetailsActionButton.Swap$val dimContent: Boolean</ID>
+    <ID>BooleanPropertyNaming:TokenDetailsActionButton.kt$TokenDetailsActionButton.Swap$val showBadge: Boolean</ID>
+    <ID>BooleanPropertyNaming:TokenDetailsDialogConfig.kt$TokenDetailsDialogConfig.DialogContentConfig.ButtonConfig$val warning: Boolean = false</ID>
+    <ID>BooleanPropertyNaming:TokenDetailsNotification.kt$TokenDetailsNotification.NetworkFeeWithBuyButton$val mergeFeeNetworkName: Boolean = false</ID>
+    <ID>BooleanPropertyNaming:TokenDetailsSwapTransactionsStateConverter.kt$TokenDetailsSwapTransactionsStateConverter$val showProviderLink = getShowProviderLink(notification, statusModel)</ID>
+    <ID>BooleanPropertyNaming:TokenDetailsSwapTransactionsStateConverter.kt$TokenDetailsSwapTransactionsStateConverter$val showProviderLink = getShowProviderLink(notification, transaction.status)</ID>
+    <ID>BooleanPropertyNaming:TokenDetailsTopAppBar.kt$var showDropdownMenu by rememberSaveable { mutableStateOf(false) }</ID>
+    <ID>MultilineLambdaItParameter:DefaultTokenDetailsDeepLinkHandler.kt$DefaultTokenDetailsDeepLinkHandler${ val isNetwork = it.network.backendId.equals(networkId, ignoreCase = true) val isCurrency = it.id.rawCurrencyId?.value?.equals(tokenId, ignoreCase = true) == true val isDefaultDerivation = it.network.derivationPath is Network.DerivationPath.Card val isCustomDerivation = derivationPath?.equals(it.network.derivationPath.value) == true val isCorrectDerivation = isDefaultDerivation || isCustomDerivation isNetwork &amp;&amp; isCurrency &amp;&amp; isCorrectDerivation }</ID>
+    <ID>MultilineLambdaItParameter:ExpressStatusFactory.kt$ExpressStatusFactory${ when (it) { is ExpressTransactionStateUM.OnrampUM -&gt; it.activeStatus.isHidden else -&gt; false } }</ID>
+    <ID>MultilineLambdaItParameter:OnrampStatusFactory.kt$OnrampStatusFactory${ Timber.e("Couldn't update onramp status. $it") onrampTx }</ID>
+    <ID>MultilineLambdaItParameter:TokenDetailsModel.kt$TokenDetailsModel${ Timber.e(it.cause?.localizedMessage.orEmpty()) "" }</ID>
+    <ID>MultilineLambdaItParameter:TokenDetailsModel.kt$TokenDetailsModel${ analyticsEventsHandler.send( TokenReceiveAnalyticsEvent.ButtonShareAddress(cryptoCurrency.symbol), ) shareManager.shareText(text = it) }</ID>
+    <ID>MultilineLambdaItParameter:TokenDetailsModel.kt$TokenDetailsModel${ analyticsEventsHandler.send(TokenReceiveAnalyticsEvent.ButtonCopyAddress(cryptoCurrency.symbol)) clipboardManager.setText(text = it, isSensitive = true) }</ID>
+    <ID>MultilineLambdaItParameter:TokenDetailsModel.kt$TokenDetailsModel${ analyticsExceptionHandler.sendException( event = ExceptionAnalyticsEvent( exception = it, params = mapOf( "blockchainId" to cryptoCurrency.network.id.rawId.value, "networkId" to cryptoCurrency.network.backendId, ), ), ) Timber.e( /* t = */ it, /* message = */ "Unable to get wallet manager for user wallet %s and network %s", /* ...args = */ userWalletId, cryptoCurrency.network, ) false }</ID>
+    <ID>MultilineLambdaItParameter:TokenDetailsModel.kt$TokenDetailsModel${ internalUiState.value = stateFactory.getStateWithErrorDialog(stringReference(it)) Timber.e(it) }</ID>
+    <ID>MultilineLambdaItParameter:TokenDetailsModel.kt$TokenDetailsModel${ internalUiState.value = stateFactory.getStateWithUpdatedHidden( isBalanceHidden = it.isBalanceHidden, ) }</ID>
+    <ID>MultilineLambdaItParameter:TokenDetailsModel.kt$TokenDetailsModel${ sendButtonsEvents(it.states) internalUiState.value = stateFactory.getManageButtonsState(actions = it.states) }</ID>
+    <ID>MultilineLambdaItParameter:TokenDetailsModel.kt$TokenDetailsModel${ val updatedState = stateFactory.getStateWithNotifications(it) notificationsAnalyticsSender.send(internalUiState.value, updatedState.notifications) internalUiState.value = updatedState }</ID>
+    <ID>MultilineLambdaItParameter:TokenDetailsOnrampTransactionStateConverter.kt$TokenDetailsOnrampTransactionStateConverter${ analyticsEventHandler.send(TokenOnrampAnalyticsEvent.GoToProvider) clickIntents.onGoToProviderClick(it) }</ID>
+    <ID>MultilineLambdaItParameter:TokenDetailsScreen.kt${ Notification( modifier = itemModifier.animateItem(), config = it.config, iconTint = when (it) { is TokenDetailsNotification.Informational -&gt; TangemTheme.colors.icon.accent is TokenDetailsNotification.UsedOutdatedData -&gt; TangemTheme.colors.text.attention else -&gt; null }, ) }</ID>
+    <ID>MultilineLambdaItParameter:TokenDetailsTopAppBar.kt${ TangemDropdownItem( item = it, dismissParent = { showDropdownMenu = false }, ) }</ID>
+    <ID>MultilineLambdaItParameter:TokenStakingBlock.kt${ when (it) { is StakingBlockUM.TemporaryUnavailable -&gt; StakingTemporaryUnavailableBlock() is StakingBlockUM.Loading -&gt; StakingLoading() is StakingBlockUM.Staked -&gt; StakingBalanceBlock( state = it, isBalanceHidden = isBalanceHidden, ) is StakingBlockUM.StakeAvailable -&gt; StakingAvailableContent( state = it, ) } }</ID>
+    <ID>NamedArguments:TokenDetailsLoadedBalanceConverter.kt$TokenDetailsLoadedBalanceConverter$formatFiatAmount( status.value, stakingFiatAmount, currentState.selectedBalanceType, appCurrencyProvider(), )</ID>
+    <ID>NamedArguments:TokenDetailsSwapTransactionsStateConverter.kt$TokenDetailsSwapTransactionsStateConverter$createStateInfo( transaction, toCryptoCurrency, fromCryptoCurrency, toFiatAmount, fromFiatAmount, )</ID>
+    <ID>NestedScopeFunctions:TokenDetailsBalanceSelectStateConverter.kt$TokenDetailsBalanceSelectStateConverter$let { cryptoCurrencyStatus.value.fiatRate?.multiply(it) }</ID>
+    <ID>NonBooleanPropertyPrefixedWithIs:TokenDetailsModel.kt$TokenDetailsModel$private val isDemoCardUseCase: IsDemoCardUseCase</ID>
+    <ID>NullableBooleanCheck:TokenDetailsSwapTransactionsStateConverter.kt$TokenDetailsSwapTransactionsStateConverter$transaction.status?.hasLongTime ?: false</ID>
+    <ID>NullableToStringCall:DefaultTokenDetailsDeepLinkHandler.kt$DefaultTokenDetailsDeepLinkHandler$$networkId</ID>
+    <ID>NullableToStringCall:DefaultTokenDetailsDeepLinkHandler.kt$DefaultTokenDetailsDeepLinkHandler$$tokenId</ID>
+    <ID>NullableToStringCall:TokenDetailsStakingInfoConverter.kt$TokenDetailsStakingInfoConverter$$stakingCryptoAmount</ID>
+    <ID>NullableToStringCall:TokenDetailsStakingInfoConverter.kt$TokenDetailsStakingInfoConverter$$stakingEntryInfo</ID>
+    <ID>NullableToStringCall:TokenDetailsStakingInfoConverter.kt$TokenDetailsStakingInfoConverter$$yieldBalance</ID>
+    <ID>PropertyUsedBeforeDeclaration:ExpressStatusBottomSheetStateProvider.kt$ExpressStatusBottomSheetStateProvider$network</ID>
+    <ID>PropertyUsedBeforeDeclaration:ExpressStatusBottomSheetStateProvider.kt$ExpressStatusBottomSheetStateProvider$token</ID>
+    <ID>PropertyUsedBeforeDeclaration:TokenDetailsModel.kt$TokenDetailsModel$uiState</ID>
+    <ID>SuspendFunSwallowedCancellation:ExchangeStatusFactory.kt$ExchangeStatusFactory$runCatching</ID>
+    <ID>SuspendFunSwallowedCancellation:TokenDetailsModel.kt$TokenDetailsModel$runCatching</ID>
+    <ID>UnnecessaryLet:TokenDetailsModel.kt$TokenDetailsModel$let { internalUiState.value = stateFactory.getStateWithErrorDialog(message) }</ID>
+    <ID>UnnecessaryLet:TokenDetailsSkeletonStateConverter.kt$TokenDetailsSkeletonStateConverter$let(::add)</ID>
+    <ID>UnnecessaryLet:TokenDetailsStateFactory.kt$TokenDetailsStateFactory$let(::add)</ID>
+    <ID>UseEmptyCounterpart:TokenDetailsAnalyticsEvent.kt$TokenDetailsAnalyticsEvent$mapOf()</ID>
+    <ID>UseEmptyCounterpart:TokenDetailsAnalyticsEvent.kt$TokenDetailsAnalyticsEvent.Notice$mapOf()</ID>
+    <ID>UseOrEmpty:ExchangeStatusFactory.kt$ExchangeStatusFactory$savedTransactions ?.flatMap { setOf(it.fromCryptoCurrency.id, it.toCryptoCurrency.id) } ?.toSet() ?.getQuotesOrEmpty() ?: emptySet()</ID>
+    <ID>UseOrEmpty:TokenDetailsStakingInfoConverter.kt$TokenDetailsStakingInfoConverter$yieldBalance?.balance?.items ?: emptyList()</ID>
+    <ID>VarCouldBeVal:TokenDetailsModel.kt$TokenDetailsModel$private var expressTxStatusTaskScheduler = SingleTaskScheduler&lt;PersistentList&lt;ExpressTransactionStateUM&gt;&gt;()</ID>
+  </CurrentIssues>
+</SmellBaseline>
