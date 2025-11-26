@@ -142,8 +142,8 @@ class SendTransactionUseCase(
      * Sends tx hash to backend for specific transaction types
      */
     private suspend fun sendHashToBackendIfNeeded(transaction: TransactionData, txHash: String) {
-        (transaction as? TransactionData.Uncompiled)?.let {
-            val extras = it.extras
+        (transaction as? TransactionData.Uncompiled)?.let { tx ->
+            val extras = tx.extras
             when (extras) {
                 is EthereumTransactionExtras -> {
                     val txType = when (extras.callData) {
