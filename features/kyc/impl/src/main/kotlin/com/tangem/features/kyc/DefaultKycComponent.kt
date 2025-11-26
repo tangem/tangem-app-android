@@ -27,7 +27,7 @@ class DefaultKycComponent @AssistedInject constructor(
     init {
         componentScope.launch {
             model.uiState.drop(1).collectLatest { startInfo ->
-                startInfo?.let { launchSdk(startInfo) }
+                if (startInfo != null) launchSdk(startInfo)
                 router.pop()
             }
         }
