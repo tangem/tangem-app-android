@@ -217,7 +217,9 @@ data class CardDTO(
             if (signature != null) {
                 if (other.signature == null) return false
                 if (!signature.contentEquals(other.signature)) return false
-            } else if (other.signature != null) return false
+            } else if (other.signature != null) {
+                return false
+            }
 
             return true
         }

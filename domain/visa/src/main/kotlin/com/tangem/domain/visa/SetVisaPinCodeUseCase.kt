@@ -9,6 +9,7 @@ import com.tangem.domain.visa.error.VisaActivationError
 import com.tangem.domain.visa.model.VisaCardId
 import com.tangem.domain.visa.model.VisaEncryptedPinCode
 import com.tangem.domain.visa.repository.VisaActivationRepository
+import com.tangem.utils.coroutines.runSuspendCatching
 import java.security.Key
 import java.security.KeyFactory
 import java.security.PublicKey
@@ -27,7 +28,7 @@ class SetVisaPinCodeUseCase(private val visaActivationRepositoryFactory: VisaAct
         visaCardId: VisaCardId,
         activationOrderId: String,
         pinCode: String,
-    ): Either<UniversalError, Unit> = runCatching {
+    ): Either<UniversalError, Unit> = runSuspendCatching {
         val visaActivationRepository = visaActivationRepositoryFactory.create(visaCardId)
         val rsaPublicKey = visaActivationRepository.getPinCodeRsaEncryptionPublicKey()
         val formattedPin = "24$pinCode${"f".repeat(n = 8)}FF"
