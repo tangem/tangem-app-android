@@ -172,6 +172,7 @@
   <string name="common_fee_selector_option_slow">Lent</string>
   <string name="common_fee_selector_title">Vitesse et frais</string>
   <string name="common_finish">Terminer</string>
+  <string name="common_from_wallet_name">De %s</string>
   <string name="common_generate_addresses">Synchroniser les adresses</string>
   <string name="common_get_started">Commencer</string>
   <string name="common_go_to_provider">Aller au fournisseur</string>
@@ -182,6 +183,7 @@
   <string name="common_import">Importez</string>
   <string name="common_in_progress">En cours</string>
   <string name="common_later">Plus tard</string>
+  <string name="common_learn_more">En savoir plus</string>
   <string name="common_left">Il reste %1$s</string>
   <string name="common_locked">Verrouillé</string>
   <string name="common_main_network">Réseau principal</string>
@@ -1452,6 +1454,7 @@
   <string name="wc_transaction_request_title">Demande de transaction</string>
   <string name="wc_unlimited_amount">Montant illimité</string>
   <string name="wc_wallet_connect">WalletConnect</string>
+  <string name="welcome_create_wallet_use_hardware_title">En savoir plus</string>
   <string name="welcome_interrupted_backup_alert_discard">Ignorer</string>
   <string name="welcome_interrupted_backup_alert_message">Vous avez une sauvegarde interrompue. Voulez-vous la reprendre ?</string>
   <string name="welcome_interrupted_backup_alert_resume">Oui, reprendre</string>
@@ -1543,6 +1546,12 @@
   <string name="yield_module_token_details_earn_notification_earning_on_your_balance_title">Mode Rendement</string>
   <string name="yield_module_token_details_earn_notification_processing">Traitement de votre dépôt</string>
   <string name="yield_module_token_details_earn_notification_title">Mode Rendement</string>
+  <string name="yield_module_transaction_enter">Mode rendement activé</string>
+  <string name="yield_module_transaction_enter_subtitle">%1$s fourni à Aave</string>
+  <string name="yield_module_transaction_exit">Mode rendement désactivé</string>
+  <string name="yield_module_transaction_exit_subtitle">%1$s retiré d\'Aave</string>
+  <string name="yield_module_transaction_topup">Approvisionnement à Aave</string>
+  <string name="yield_module_transaction_topup_subtitle">%1$s fourni à Aave</string>
   <string name="yield_module_transfer_mode_automatic">Automatique</string>
   <string name="yield_module_unable_to_cover_fee_description">Déposez %1$s %2$s pour couvrir les frais de réseau liés aux transactions.</string>
   <string name="yield_module_unable_to_cover_fee_title">Impossible de couvrir les frais %s</string>
