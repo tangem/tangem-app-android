@@ -1,5 +1,8 @@
 package com.tangem.tap.di.domain
 
+import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
+import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
+import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.networks.single.SingleNetworkStatusSupplier
 import com.tangem.domain.nft.*
 import com.tangem.domain.nft.repository.NFTRepository
@@ -24,9 +27,13 @@ internal object NFTDomainModule {
     fun providesGetNFTCollectionsUseCase(
         currenciesRepository: CurrenciesRepository,
         nftRepository: NFTRepository,
+        singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
+        accountsFeatureToggles: AccountsFeatureToggles,
     ): GetNFTCollectionsUseCase = GetNFTCollectionsUseCase(
         currenciesRepository = currenciesRepository,
         nftRepository = nftRepository,
+        singleAccountStatusListSupplier = singleAccountStatusListSupplier,
+        accountsFeatureToggles = accountsFeatureToggles,
     )
 
     @Provides
@@ -60,10 +67,12 @@ internal object NFTDomainModule {
     @Singleton
     fun providesGetNFTAvailableNetworksUseCase(
         nftRepository: NFTRepository,
+        singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
         currenciesRepository: CurrenciesRepository,
     ): GetNFTNetworksUseCase = GetNFTNetworksUseCase(
         currenciesRepository = currenciesRepository,
         nftRepository = nftRepository,
+        singleAccountStatusListSupplier = singleAccountStatusListSupplier,
     )
 
     @Provides
@@ -138,8 +147,15 @@ internal object NFTDomainModule {
     fun provideClearNFTCacheUseCase(
         nftRepository: NFTRepository,
         currenciesRepository: CurrenciesRepository,
+        accountsFeatureToggles: AccountsFeatureToggles,
+        singleAccountListSupplier: SingleAccountListSupplier,
     ): ObserveAndClearNFTCacheIfNeedUseCase {
-        return ObserveAndClearNFTCacheIfNeedUseCase(nftRepository, currenciesRepository)
+        return ObserveAndClearNFTCacheIfNeedUseCase(
+            nftRepository = nftRepository,
+            currenciesRepository = currenciesRepository,
+            accountsFeatureToggles = accountsFeatureToggles,
+            singleAccountListSupplier = singleAccountListSupplier,
+        )
     }
 
     @Provides
