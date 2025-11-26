@@ -1,8 +1,8 @@
 package com.tangem.domain.yield.supply.usecase
 
-import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.anyDecimals
 import com.tangem.core.ui.format.bigdecimal.fiat
+import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -23,10 +23,14 @@ class YieldSupplyGetRewardsBalanceUseCase(
 ) {
 
     operator fun invoke(status: CryptoCurrencyStatus, appCurrency: AppCurrency): Flow<String> = flow {
-        val amount: BigDecimal? = status.value.amount?.let { amt ->
-            status.value.fiatRate?.let { rate -> amt.multiply(rate) }
+        val cryptoAmount = status.value.amount
+        val fiatRate = status.value.fiatRate
+
+        val amount = if (cryptoAmount != null && fiatRate != null) {
+            cryptoAmount.multiply(fiatRate)
+        } else {
+            return@flow
         }
-        if (amount == null) return@flow
 
         val tokenAddress = (status.currency as? CryptoCurrency.Token)?.contractAddress ?: return@flow
         val apy = try {

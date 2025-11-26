@@ -1,8 +1,0 @@
-<?xml version="1.0" ?>
-<SmellBaseline>
-  <ManuallySuppressedIssues/>
-  <CurrentIssues>
-    <ID>NamedArguments:TokensDataStateExpress.kt$TokensDataStateExpress.Companion$CurrenciesGroup(emptyList(), emptyList(), emptyList(), false)</ID>
-    <ID>NullableBooleanCheck:ExchangeStatus.kt$ExchangeStatusModel$createdAt?.isBefore(DateTime.now().minusMinutes(FIFTEEN_MINUTES)) ?: false</ID>
-  </CurrentIssues>
-</SmellBaseline>
