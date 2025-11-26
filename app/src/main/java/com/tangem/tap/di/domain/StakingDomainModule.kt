@@ -6,6 +6,7 @@ import com.tangem.domain.staking.repositories.StakingErrorResolver
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.staking.repositories.StakingTransactionHashRepository
 import com.tangem.domain.staking.single.SingleYieldBalanceFetcher
+import com.tangem.domain.staking.toggles.StakingFeatureToggles
 import com.tangem.domain.staking.usecase.StakingApyFlowUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import dagger.Module
@@ -220,7 +221,10 @@ internal object StakingDomainModule {
 
     @Provides
     @Singleton
-    fun provideStakingApyFlowUseCase(stakingRepository: StakingRepository): StakingApyFlowUseCase {
-        return StakingApyFlowUseCase(stakingRepository)
+    fun provideStakingApyFlowUseCase(
+        stakingRepository: StakingRepository,
+        stakingFeatureToggles: StakingFeatureToggles,
+    ): StakingApyFlowUseCase {
+        return StakingApyFlowUseCase(stakingRepository, stakingFeatureToggles)
     }
 }
