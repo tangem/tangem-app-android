@@ -71,7 +71,7 @@ internal fun AnimatedContentScope.WelcomeSelectWallet(state: WelcomeUM.SelectWal
                             .fillMaxWidth(),
                         state = walletState,
                         blockColors = TangemBlockCardColors.copy(
-                            containerColor = TangemTheme.colors.field.primary,
+                            containerColor = TangemTheme.colors.background.primary,
                         ),
                     )
                 }
@@ -165,7 +165,7 @@ private fun AnimatedContentScope.TitleText(modifier: Modifier = Modifier) {
             color = TangemTheme.colors.text.primary1,
         )
 
-        SpacerH16()
+        SpacerH8()
 
         Text(
             modifier = Modifier.animateEnterExit(
