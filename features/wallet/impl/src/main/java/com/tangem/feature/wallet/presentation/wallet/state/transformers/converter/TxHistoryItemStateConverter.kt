@@ -10,7 +10,8 @@ import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.utils.toTimeFormat
 import com.tangem.domain.models.network.TxInfo
-import com.tangem.domain.models.network.TxInfo.*
+import com.tangem.domain.models.network.TxInfo.TransactionStatus
+import com.tangem.domain.models.network.TxInfo.TransactionType
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.impl.R
 import com.tangem.utils.StringsSigns.MINUS
@@ -85,35 +86,55 @@ internal class TxHistoryItemStateConverter(
         is TransactionType.UnknownOperation -> resourceReference(R.string.transaction_history_operation)
     }
 
-    private fun TxInfo.extractSubtitle(): TextReference = when (val interactionAddress = interactionAddressType) {
-        is InteractionAddressType.Contract -> resourceReference(
-            id = R.string.transaction_history_contract_address,
-            formatArgs = wrappedList(interactionAddress.address.toBriefAddressFormat()),
-        )
-        is InteractionAddressType.Multiple -> resourceReference(
-            id = if (isOutgoing) {
-                R.string.transaction_history_transaction_to_address
-            } else {
-                R.string.transaction_history_transaction_from_address
-            },
-            formatArgs = wrappedList(resourceReference(R.string.transaction_history_multiple_addresses)),
-        )
-        is InteractionAddressType.User -> resourceReference(
-            id = if (isOutgoing) {
-                R.string.transaction_history_transaction_to_address
-            } else {
-                R.string.transaction_history_transaction_from_address
-            },
-            formatArgs = wrappedList(interactionAddress.address.toBriefAddressFormat()),
-        )
-        is InteractionAddressType.Validator -> resourceReference(
-            id = R.string.transaction_history_transaction_validator,
-            formatArgs = wrappedList(interactionAddress.address.toBriefAddressFormat()),
-        )
-        null -> {
-            TextReference.EMPTY
+    private fun TxInfo.extractSubtitle(): TextReference {
+        return when (this.type) {
+            is TransactionType.YieldSupply.Enter -> {
+                val amount = amount.format { crypto(symbol = symbol, decimals = decimals) }
+                resourceReference(R.string.yield_module_transaction_enter_subtitle, wrappedList(amount))
+            }
+            is TransactionType.YieldSupply.Topup,
+            -> {
+                val amount = amount.format { crypto(symbol = symbol, decimals = decimals) }
+                resourceReference(R.string.yield_module_transaction_topup_subtitle, wrappedList(amount))
+            }
+            is TransactionType.YieldSupply.Exit -> {
+                val amount = amount.format { crypto(symbol = symbol, decimals = decimals) }
+                resourceReference(R.string.yield_module_transaction_exit_subtitle, wrappedList(amount))
+            }
+            else -> extractSubtitleByAddressType()
         }
     }
+
+    private fun TxInfo.extractSubtitleByAddressType(): TextReference =
+        when (val interactionAddress = interactionAddressType) {
+            is TxInfo.InteractionAddressType.Contract -> resourceReference(
+                id = R.string.transaction_history_contract_address,
+                formatArgs = wrappedList(interactionAddress.address.toBriefAddressFormat()),
+            )
+            is TxInfo.InteractionAddressType.Multiple -> resourceReference(
+                id = if (isOutgoing) {
+                    R.string.transaction_history_transaction_to_address
+                } else {
+                    R.string.transaction_history_transaction_from_address
+                },
+                formatArgs = wrappedList(resourceReference(R.string.transaction_history_multiple_addresses)),
+            )
+            is TxInfo.InteractionAddressType.User -> resourceReference(
+                id = if (isOutgoing) {
+                    R.string.transaction_history_transaction_to_address
+                } else {
+                    R.string.transaction_history_transaction_from_address
+                },
+                formatArgs = wrappedList(interactionAddress.address.toBriefAddressFormat()),
+            )
+            is TxInfo.InteractionAddressType.Validator -> resourceReference(
+                id = R.string.transaction_history_transaction_validator,
+                formatArgs = wrappedList(interactionAddress.address.toBriefAddressFormat()),
+            )
+            null -> {
+                TextReference.EMPTY
+            }
+        }
 
     private fun TxInfo.extractDirection() =
         if (isOutgoing) TransactionState.Content.Direction.OUTGOING else TransactionState.Content.Direction.INCOMING
@@ -124,10 +145,14 @@ internal class TxHistoryItemStateConverter(
         TransactionStatus.Unconfirmed -> TransactionState.Content.Status.Unconfirmed
     }
 
+    @Suppress("ComplexCondition")
     private fun TxInfo.getAmount(): String {
         if (type is TransactionType.Staking.Vote ||
             type == TransactionType.Staking.ClaimRewards ||
-            type == TransactionType.Staking.Withdraw
+            type == TransactionType.Staking.Withdraw ||
+            type == TransactionType.YieldSupply.Enter ||
+            type == TransactionType.YieldSupply.Exit ||
+            type == TransactionType.YieldSupply.Topup
         ) {
             return ""
         }
