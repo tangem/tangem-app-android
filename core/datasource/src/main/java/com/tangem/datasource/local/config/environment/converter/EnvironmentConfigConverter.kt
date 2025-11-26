@@ -25,6 +25,7 @@ internal object EnvironmentConfigConverter : Converter<EnvironmentConfigModel, E
             express = value.express,
             devExpress = value.devExpress,
             stakeKitApiKey = value.stakeKitApiKey,
+            p2pApiKey = value.p2pApiKey,
             blockAidApiKey = value.blockaidApiKey,
             tangemApiKey = value.tangemApiKey,
             tangemApiKeyDev = value.tangemApiKeyDev,

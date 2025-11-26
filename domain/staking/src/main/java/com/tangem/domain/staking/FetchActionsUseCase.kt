@@ -5,17 +5,17 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.staking.NetworkType
 import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.domain.staking.model.stakekit.action.StakingActionStatus
-import com.tangem.domain.staking.repositories.StakingActionRepository
+import com.tangem.domain.staking.repositories.StakeKitActionRepository
 import com.tangem.domain.staking.repositories.StakingErrorResolver
-import com.tangem.domain.staking.repositories.StakingRepository
+import com.tangem.domain.staking.repositories.StakeKitRepository
 import com.tangem.domain.models.wallet.UserWalletId
 
 /**
  * Use case for getting pending actions list.
  */
 class FetchActionsUseCase(
-    private val stakingRepository: StakingRepository,
-    private val stakingActionRepository: StakingActionRepository,
+    private val stakeKitRepository: StakeKitRepository,
+    private val stakeKitActionRepository: StakeKitActionRepository,
     private val stakingErrorResolver: StakingErrorResolver,
 ) {
 
@@ -27,14 +27,14 @@ class FetchActionsUseCase(
     ): Either<StakingError, Unit> {
         return Either
             .catch {
-                val actions = stakingRepository.getActions(
+                val actions = stakeKitRepository.getActions(
                     userWalletId = userWalletId,
                     cryptoCurrency = cryptoCurrency,
                     networkType = networkType,
                     stakingActionStatus = stakingActionStatus,
                 )
 
-                stakingActionRepository.store(userWalletId, cryptoCurrency.id, actions)
+                stakeKitActionRepository.store(userWalletId, cryptoCurrency.id, actions)
             }
             .mapLeft { stakingErrorResolver.resolve(it) }
     }

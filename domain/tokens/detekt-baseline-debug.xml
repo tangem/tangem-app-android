@@ -1,0 +1,34 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>BooleanPropertyNaming:TokenActionsState.kt$TokenActionsState.ActionState.Swap$val showBadge: Boolean</ID>
+    <ID>CanBeNonNullable:BaseActionsFactory.kt$BaseActionsFactory$requirementsDeferred: Deferred&lt;AssetRequirementsCondition?&gt;?</ID>
+    <ID>CanBeNonNullable:CommonActionsFactory.kt$CommonActionsFactory$swapUnavailableReasonDeferred: Deferred&lt;ScenarioUnavailabilityReason&gt;?</ID>
+    <ID>ExplicitCollectionElementAccessMethod:GetWalletTotalBalanceUseCase.kt$GetWalletTotalBalanceUseCase$walletBalanceCache.put(userWalletId, content)</ID>
+    <ID>MultilineLambdaItParameter:AddCryptoCurrenciesUseCase.kt$AddCryptoCurrenciesUseCase${ it.network.backendId == networkId &amp;&amp; !it.isCustom &amp;&amp; it.contractAddress.equals(contractAddress, true) }</ID>
+    <ID>MultilineLambdaItParameter:AddCryptoCurrenciesUseCase.kt$AddCryptoCurrenciesUseCase${ when (it) { is StakingIdFactory.Error.UnableToGetAddress -&gt; raise(IllegalStateException("$it")) StakingIdFactory.Error.UnsupportedCurrency -&gt; Unit.right() } return@either }</ID>
+    <ID>MultilineLambdaItParameter:BaseCurrencyStatusOperations.kt$BaseCurrencyStatusOperations${ singleQuoteStatusSupplier(params = SingleQuoteStatusProducer.Params(rawCurrencyId = it)) .firstOrNull() }</ID>
+    <ID>MultilineLambdaItParameter:BaseCurrencyStatusOperations.kt$BaseCurrencyStatusOperations${ val exception = IllegalStateException("$it") Error.DataError(exception) }</ID>
+    <ID>MultilineLambdaItParameter:FetchCurrencyStatusUseCase.kt$FetchCurrencyStatusUseCase${ when (it) { is StakingIdFactory.Error.UnableToGetAddress -&gt; raise(IllegalStateException("$it")) StakingIdFactory.Error.UnsupportedCurrency -&gt; Unit.right() } return@either }</ID>
+    <ID>MultilineLambdaItParameter:GetBalanceNotEnoughForFeeWarningUseCase.kt$GetBalanceNotEnoughForFeeWarningUseCase${ it is CryptoCurrency.Token &amp;&amp; it.contractAddress.equals(feePaidToken.contractAddress, ignoreCase = true) &amp;&amp; it.network.derivationPath == tokenStatus.currency.network.derivationPath }</ID>
+    <ID>MultilineLambdaItParameter:GetCryptoCurrencyActionsUseCase.kt$GetCryptoCurrencyActionsUseCase${ TokenActionsState( walletId = userWallet.walletId, cryptoCurrencyStatus = cryptoCurrencyStatus, states = it.toList(), ) }</ID>
+    <ID>MultilineLambdaItParameter:GetCryptoCurrencyActionsUseCase.kt$GetCryptoCurrencyActionsUseCase${ outdatedDataActionsFactory.create( userWallet = userWallet, cryptoCurrencyStatus = cryptoCurrencyStatus, stakingAvailability = it, ) }</ID>
+    <ID>MultilineLambdaItParameter:GetCurrencyWarningsUseCase.kt$GetCurrencyWarningsUseCase${ if (isNeedToCreateAccountWithoutReserve(networkId = currencyStatus.currency.network.rawId)) { CryptoCurrencyWarning.TopUpWithoutReserve } else { CryptoCurrencyWarning.SomeNetworksNoAccount( amountToCreateAccount = it.amountToCreateAccount, amountCurrency = currencyStatus.currency, ) } }</ID>
+    <ID>MultilineLambdaItParameter:GetCurrencyWarningsUseCase.kt$GetCurrencyWarningsUseCase${ it is CryptoCurrency.Token &amp;&amp; it.contractAddress.equals(feePaidToken.contractAddress, ignoreCase = true) &amp;&amp; it.network.derivationPath == tokenStatus.currency.network.derivationPath }</ID>
+    <ID>MultilineLambdaItParameter:GetWalletTotalBalanceUseCase.kt$GetWalletTotalBalanceUseCase${ Timber.e("failed to load balances with error: $it") TotalFiatBalance.Failed }</ID>
+    <ID>MultilineLambdaItParameter:PriceChangeCalculator.kt$PriceChangeCalculator${ val weight = it.value.fiatAmount.orZero().divide(balance, 2, RoundingMode.HALF_UP) val priceChange = it.value.priceChange.orZero() weight * priceChange }</ID>
+    <ID>MultilineLambdaItParameter:WalletBalanceFetcher.kt$WalletBalanceFetcher${ val stakingId = stakingIdFactory.create(userWalletId = userWalletId, cryptoCurrency = it) if (stakingId.isLeft { it is StakingIdFactory.Error.UnableToGetAddress }) { Timber.e("Unable to get staking ID for user wallet $userWalletId and currency ${it.id}") } stakingId }</ID>
+    <ID>NamedArguments:ApplyTokenListSortingUseCase.kt$ApplyTokenListSortingUseCase$saveTokens(userWalletId, currencies, isGrouped, isSortedByBalance)</ID>
+    <ID>NamedArguments:CryptoCurrencyStatusFactory.kt$CryptoCurrencyStatusFactory$createStatus(currency, status, quoteStatus, maybeYieldBalance)</ID>
+    <ID>NamedArguments:GetCurrencyWarningsUseCase.kt$GetCurrencyWarningsUseCase$combine( getCoinRelatedWarnings( userWalletId = userWalletId, networkId = currency.network.id, currencyId = currency.id, derivationPath = derivationPath, isSingleWalletWithTokens = isSingleWalletWithTokens, ), flowOf(currencyChecksRepository.getRentInfoWarning(userWalletId, currencyStatus)), flowOf(currencyChecksRepository.getExistentialDeposit(userWalletId, currency.network)), flowOf(currencyChecksRepository.getFeeResourceAmount(userWalletId, currency.network)), ) { coinRelatedWarnings, maybeRentWarning, maybeEdWarning, maybeFeeResource -&gt; setOfNotNull( maybeRentWarning, maybeEdWarning?.let { getExistentialDepositWarning(currency, it) }, maybeFeeResource?.let { getFeeResourceWarning(it) }, * coinRelatedWarnings.toTypedArray(), getNetworkUnavailableWarning(currencyStatus), getNetworkNoAccountWarning(currencyStatus), getBeaconChainShutdownWarning(rawId = currency.network.id.rawId), getAssetRequirementsWarning(userWalletId = userWalletId, currency = currency), getMigrationFromMaticToPolWarning(currency), ) }</ID>
+    <ID>NoNameShadowing:WalletBalanceFetcher.kt$WalletBalanceFetcher${ it is StakingIdFactory.Error.UnableToGetAddress }</ID>
+    <ID>NullableBooleanCheck:GetCurrencyCheckUseCase.kt$GetCurrencyCheckUseCase$recipientAddress?.let { currencyChecksRepository.checkIfAccountFunded( userWalletId, network, recipientAddress, ) } ?: false</ID>
+    <ID>SuspendFunWithFlowReturnType:BaseCurrencyStatusOperations.kt$BaseCurrencyStatusOperations$suspend</ID>
+    <ID>SuspendFunWithFlowReturnType:GetCurrencyWarningsUseCase.kt$GetCurrencyWarningsUseCase$suspend</ID>
+    <ID>SuspendFunWithFlowReturnType:GetNetworkCoinStatusUseCase.kt$GetNetworkCoinStatusUseCase$suspend</ID>
+    <ID>SuspendFunWithFlowReturnType:GetSingleCryptoCurrencyStatusUseCase.kt$GetSingleCryptoCurrencyStatusUseCase$suspend</ID>
+    <ID>UnnecessaryAbstractClass:MultiWalletCryptoCurrenciesSupplier.kt$MultiWalletCryptoCurrenciesSupplier$MultiWalletCryptoCurrenciesSupplier</ID>
+    <ID>UnsafeCallOnNullableType:CommonActionsFactory.kt$CommonActionsFactory$swapUnavailableReasonDeferred!!</ID>
+  </CurrentIssues>
+</SmellBaseline>
