@@ -16,4 +16,7 @@ internal sealed class UpdateAccessCodeRoute : Route {
         val userWalletId: UserWalletId,
         val accessCode: String,
     ) : UpdateAccessCodeRoute()
+
+    @Serializable
+    data object SetupFinished : UpdateAccessCodeRoute()
 }
