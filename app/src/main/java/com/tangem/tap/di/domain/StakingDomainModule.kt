@@ -8,6 +8,7 @@ import com.tangem.domain.staking.repositories.StakeKitRepository
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.staking.repositories.StakeKitTransactionHashRepository
 import com.tangem.domain.staking.single.SingleYieldBalanceFetcher
+import com.tangem.domain.staking.toggles.StakingFeatureToggles
 import com.tangem.domain.staking.usecase.StakingApyFlowUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import dagger.Module
@@ -237,7 +238,10 @@ internal object StakingDomainModule {
 
     @Provides
     @Singleton
-    fun provideStakingApyFlowUseCase(stakeKitRepository: StakeKitRepository): StakingApyFlowUseCase {
-        return StakingApyFlowUseCase(stakeKitRepository)
+    fun provideStakingApyFlowUseCase(
+        stakeKitRepository: StakeKitRepository,
+        stakingFeatureToggles: StakingFeatureToggles,
+    ): StakingApyFlowUseCase {
+        return StakingApyFlowUseCase(stakeKitRepository, stakingFeatureToggles)
     }
 }
