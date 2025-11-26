@@ -1,0 +1,10 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>DoubleMutabilityForCollection:DevExcludedBlockchainsManager.kt$DevExcludedBlockchainsManager$private var blockchainTogglesMap: MutableMap&lt;String, Boolean&gt; by Delegates.notNull()</ID>
+    <ID>DoubleMutabilityForCollection:DevFeatureTogglesManager.kt$DevFeatureTogglesManager$private var featureTogglesMap: MutableMap&lt;String, Boolean&gt; by Delegates.notNull()</ID>
+    <ID>Indentation:ExcludedBlockchainToggles.kt$ExcludedBlockchainToggles$ </ID>
+    <ID>Indentation:FeatureToggles.kt$FeatureToggles$ </ID>
+  </CurrentIssues>
+</SmellBaseline>
