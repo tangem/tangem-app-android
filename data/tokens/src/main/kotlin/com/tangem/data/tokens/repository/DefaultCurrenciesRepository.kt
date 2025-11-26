@@ -14,6 +14,7 @@ import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.local.token.UserTokensResponseStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
+import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.card.CardTypesResolver
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.core.error.DataError
@@ -24,6 +25,8 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.*
+import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesProducer
+import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
 import com.tangem.domain.tokens.model.FeePaidCurrency
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
@@ -45,6 +48,8 @@ internal class DefaultCurrenciesRepository(
     private val userTokensSaver: UserTokensSaver,
     private val userTokensResponseStore: UserTokensResponseStore,
     private val responseCryptoCurrenciesFactory: ResponseCryptoCurrenciesFactory,
+    private val accountsFeatureToggles: AccountsFeatureToggles,
+    private val multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
     excludedBlockchains: ExcludedBlockchains,
 ) : CurrenciesRepository {
 
@@ -302,6 +307,35 @@ internal class DefaultCurrenciesRepository(
     }
 
     override suspend fun getNetworkCoin(
+        userWalletId: UserWalletId,
+        networkId: Network.ID,
+        derivationPath: Network.DerivationPath,
+    ): CryptoCurrency.Coin {
+        return if (accountsFeatureToggles.isFeatureEnabled) {
+            getNetworkCoinNew(userWalletId, networkId, derivationPath)
+        } else {
+            getNetworkCoinLegacy(userWalletId, networkId, derivationPath)
+        }
+    }
+
+    private suspend fun getNetworkCoinNew(
+        userWalletId: UserWalletId,
+        networkId: Network.ID,
+        derivationPath: Network.DerivationPath,
+    ): CryptoCurrency.Coin = withContext(dispatchers.default) {
+        multiWalletCryptoCurrenciesSupplier.getSyncOrNull(
+            params = MultiWalletCryptoCurrenciesProducer.Params(userWalletId = userWalletId),
+        )
+            .orEmpty()
+            .find { currency ->
+                currency is CryptoCurrency.Coin &&
+                    currency.network.id.rawId == networkId.rawId &&
+                    currency.network.derivationPath == derivationPath
+            } as? CryptoCurrency.Coin
+            ?: error("Unable to find coin for network ID: $networkId")
+    }
+
+    private suspend fun getNetworkCoinLegacy(
         userWalletId: UserWalletId,
         networkId: Network.ID,
         derivationPath: Network.DerivationPath,
