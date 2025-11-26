@@ -103,7 +103,7 @@ private fun ArchiveAccountRow(state: AccountDetailsUM.ArchiveMode.Available) {
                 modifier = Modifier.size(TangemTheme.dimens.size24),
             )
             Text(
-                text = stringResourceSafe(R.string.account_details_archive),
+                text = stringResourceSafe(R.string.account_details_archiving),
                 color = TangemTheme.colors.text.disabled,
                 style = TangemTheme.typography.subtitle1,
             )
