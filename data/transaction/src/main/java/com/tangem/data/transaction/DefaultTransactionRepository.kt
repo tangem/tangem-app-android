@@ -20,13 +20,19 @@ import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.nft.models.NFTAsset
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.blockchainsdk.utils.toBlockchain
+import com.tangem.datasource.api.common.response.fold
+import com.tangem.datasource.api.tangemTech.TangemTechApi
+import com.tangem.datasource.api.tangemTech.models.OperationType
+import com.tangem.datasource.api.tangemTech.models.TransactionEventBody
 import com.tangem.datasource.local.walletmanager.WalletManagersStore
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.transaction.TransactionRepository
+import com.tangem.domain.transaction.models.EventTransactionTypeDto
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.runCatching
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.math.BigDecimal
@@ -34,6 +40,7 @@ import java.math.BigInteger
 
 @Suppress("LargeClass")
 internal class DefaultTransactionRepository(
+    private val tangemTechApi: TangemTechApi,
     private val walletManagersFacade: WalletManagersFacade,
     private val walletManagersStore: WalletManagersStore,
     private val dispatchers: CoroutineDispatcherProvider,
@@ -413,6 +420,31 @@ internal class DefaultTransactionRepository(
     ) = withContext(dispatchers.io) {
         val preparer = getPreparer(network, userWalletId)
         preparer.prepareAndSignMultiple(transactionData, signer)
+    }
+
+    override suspend fun sendTransactionHash(hash: String, transactionType: EventTransactionTypeDto) {
+        runCatching(dispatchers.io) {
+            val operationType = when (transactionType) {
+                EventTransactionTypeDto.DEPOSIT -> OperationType.YIELD_DEPOSIT
+                EventTransactionTypeDto.WITHDRAW -> OperationType.YIELD_WITHDRAW
+                EventTransactionTypeDto.SEND -> OperationType.YIELD_SEND
+            }
+            val body = TransactionEventBody(
+                operationType = operationType,
+                transactionId = hash,
+            )
+            val response = tangemTechApi.transactionEvents(body)
+            response.fold(
+                onSuccess = {
+                    Timber.d("Successfully sent yield supply transaction hash: $hash")
+                },
+                onError = { error ->
+                    Timber.e(error, "Failed to send yield supply transaction hash: $hash")
+                },
+            )
+        }.onFailure { error ->
+            Timber.e(error, "Failed to send yield supply transaction hash: $hash")
+        }
     }
 
     private suspend fun getPreparer(network: Network, userWalletId: UserWalletId): TransactionPreparer {
