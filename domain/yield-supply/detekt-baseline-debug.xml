@@ -1,8 +1,0 @@
-<?xml version="1.0" ?>
-<SmellBaseline>
-  <ManuallySuppressedIssues/>
-  <CurrentIssues>
-    <ID>NestedScopeFunctions:YieldSupplyGetRewardsBalanceUseCase.kt$YieldSupplyGetRewardsBalanceUseCase$let { rate -&gt; amt.multiply(rate) }</ID>
-    <ID>UnnecessaryNotNullCheck:YieldSupplyGetProtocolBalanceUseCase.kt$YieldSupplyGetProtocolBalanceUseCase$requireNotNull(cryptoCurrency as CryptoCurrency.Token)</ID>
-  </CurrentIssues>
-</SmellBaseline>
