@@ -96,7 +96,12 @@ internal fun CreateMobileWalletContent(state: CreateMobileWalletUM, modifier: Mo
         PrimaryButton(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(
+                    start = 16.dp,
+                    top = 8.dp,
+                    end = 16.dp,
+                    bottom = 16.dp,
+                ),
             text = stringResourceSafe(R.string.onboarding_create_wallet_button_create_wallet),
             showProgress = state.createButtonLoading,
             onClick = state.onCreateClick,
