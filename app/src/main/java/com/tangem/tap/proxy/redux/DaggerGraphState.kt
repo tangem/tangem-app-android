@@ -3,6 +3,7 @@ package com.tangem.tap.proxy.redux
 import com.tangem.blockchainsdk.BlockchainSDKFactory
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.common.routing.AppRouter
+import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.settings.SettingsManager
 import com.tangem.core.navigation.share.ShareManager
@@ -79,4 +80,5 @@ data class DaggerGraphState(
     val userWalletsListRepository: UserWalletsListRepository? = null,
     val hotWalletFeatureToggles: HotWalletFeatureToggles? = null,
     val tangemHotSdk: TangemHotSdk? = null,
+    val trackingContextProxy: TrackingContextProxy? = null,
 ) : StateType
