@@ -33,4 +33,13 @@ sealed class TransactionParams {
     data class Solana(
         val transactions: List<String>,
     ) : TransactionParams()
+
+    /**
+     * Parameters for Bitcoin transactions
+     *
+     * @property params JSON-encoded transaction parameters
+     */
+    data class Bitcoin(
+        val params: String,
+    ) : TransactionParams()
 }

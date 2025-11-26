@@ -44,11 +44,7 @@ internal class BlockAidVerificationDelegate @Inject constructor(
         val methodName = when (method) {
             is WcEthMethod -> rawSdkRequest.request.method
             is WcSolanaMethod -> method.trimmedPrefixMethodName
-            is WcBitcoinMethod -> {
-                // BlockAid doesn't support Bitcoin yet
-                emit(Lce.Content(failedResult))
-                return@flow
-            }
+            is WcBitcoinMethod -> rawSdkRequest.request.method
             is WcMethod.Unsupported -> {
                 emit(Lce.Content(failedResult))
                 return@flow
@@ -61,6 +57,20 @@ internal class BlockAidVerificationDelegate @Inject constructor(
             is WcSolanaMethod.SignMessage -> {
                 // BlockAid doesn't support solana_signMessage
                 emit(Lce.Content(failedResult))
+                return@flow
+            }
+            is WcBitcoinMethod.SendTransfer,
+            is WcBitcoinMethod.SignPsbt,
+            is WcBitcoinMethod.SignMessage,
+            is WcBitcoinMethod.GetAccountAddresses,
+            -> {
+                // BlockAid doesn't support Bitcoin transaction validation yet
+                // Consider Bitcoin transactions as safe and skip verification
+                val approvedResult = CheckTransactionResult(
+                    validation = ValidationResult.SAFE,
+                    simulation = SimulationResult.FailedToSimulate,
+                )
+                emit(Lce.Content(approvedResult))
                 return@flow
             }
             else -> {

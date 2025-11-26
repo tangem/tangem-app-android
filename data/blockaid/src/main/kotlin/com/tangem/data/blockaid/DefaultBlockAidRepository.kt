@@ -33,6 +33,7 @@ internal class DefaultBlockAidRepository(
         return when (data.params) {
             is TransactionParams.Evm -> scanEvmTransaction(data = data)
             is TransactionParams.Solana -> scanSolanaTransaction(data = data)
+            is TransactionParams.Bitcoin -> scanBitcoinTransaction(data = data)
         }
     }
 
@@ -58,6 +59,16 @@ internal class DefaultBlockAidRepository(
             val response = api.scanSolanaMessage(mapper.mapToSolanaRequest(data))
             mapper.mapToDomain(response)
         }
+
+    private suspend fun scanBitcoinTransaction(data: TransactionData): CheckTransactionResult {
+        // TODO: BlockAid API doesn't support Bitcoin transaction scanning yet
+        // When support is added, implement: api.scanBitcoinTransaction(mapper.mapToBitcoinRequest(data))
+        return CheckTransactionResult(
+            validation = com.domain.blockaid.models.transaction.ValidationResult.FAILED_TO_VALIDATE,
+            description = "Bitcoin transaction validation is not yet supported by BlockAid",
+            simulation = com.domain.blockaid.models.transaction.SimulationResult.FailedToSimulate,
+        )
+    }
 
     private suspend fun scanEvmTransactionBulk(
         blockchain: Blockchain,
