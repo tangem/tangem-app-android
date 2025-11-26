@@ -1,8 +1,0 @@
-<?xml version="1.0" ?>
-<SmellBaseline>
-  <ManuallySuppressedIssues/>
-  <CurrentIssues>
-    <ID>NullableToStringCall:AmplitudeABTestsManager.kt$AmplitudeABTestsManager$${variant.key}</ID>
-    <ID>NullableToStringCall:AmplitudeABTestsManager.kt$AmplitudeABTestsManager$${variant.payload}</ID>
-  </CurrentIssues>
-</SmellBaseline>
