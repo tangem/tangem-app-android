@@ -4,6 +4,7 @@ import com.tangem.core.decompose.factory.ComponentFactory
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
+import java.math.BigDecimal
 
 interface SwapComponent : ComposableContentComponent {
 
@@ -13,7 +14,14 @@ interface SwapComponent : ComposableContentComponent {
         val userWalletId: UserWalletId,
         val isInitialReverseOrder: Boolean = false,
         val screenSource: String,
-    )
+        val tangemPayInput: TangemPayInput? = null,
+    ) {
+        data class TangemPayInput(
+            val cryptoAmount: BigDecimal,
+            val fiatAmount: BigDecimal,
+            val depositAddress: String,
+        )
+    }
 
     interface Factory : ComponentFactory<Params, SwapComponent>
 }
