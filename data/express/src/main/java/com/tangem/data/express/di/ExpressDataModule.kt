@@ -2,6 +2,7 @@ package com.tangem.data.express.di
 
 import com.squareup.moshi.Moshi
 import com.tangem.data.express.DefaultExpressRepository
+import com.tangem.data.express.DefaultExpressServiceFetcher
 import com.tangem.data.express.converter.ExpressErrorConverter
 import com.tangem.data.express.error.DefaultExpressErrorResolver
 import com.tangem.datasource.api.express.TangemExpressApi
@@ -10,6 +11,7 @@ import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.domain.express.ExpressErrorResolver
 import com.tangem.domain.express.ExpressRepository
+import com.tangem.domain.express.ExpressServiceFetcher
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
@@ -42,5 +44,11 @@ internal object ExpressDataModule {
             appPreferencesStore = appPreferencesStore,
             dispatchers = dispatchers,
         )
+    }
+
+    @Provides
+    @Singleton
+    fun provideExpressServiceFetcher(impl: DefaultExpressServiceFetcher): ExpressServiceFetcher {
+        return impl
     }
 }

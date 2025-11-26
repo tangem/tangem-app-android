@@ -15,8 +15,14 @@ data class CustomerInfo(
 
     data class ProductInstance(
         val id: String,
-        val status: String,
-    )
+        val cardId: String,
+        val status: Status,
+    ) {
+        enum class Status {
+            ACTIVE,
+            INACTIVE,
+        }
+    }
 
     data class CardInfo(
         val lastFourDigits: String,
