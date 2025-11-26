@@ -55,7 +55,7 @@ internal class WalletActivationStepperStateManager @Inject constructor() {
                 steps = STEPS_COUNT,
                 title = resourceReference(R.string.access_code_navtitle),
                 showBackButton = true,
-                showSkipButton = false,
+                showSkipButton = true,
                 showFeedbackButton = false,
             )
             is WalletActivationRoute.PushNotifications -> HotWalletStepperComponent.StepperUM(
