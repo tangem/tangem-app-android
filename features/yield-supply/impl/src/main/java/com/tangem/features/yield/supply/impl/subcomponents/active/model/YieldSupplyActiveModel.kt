@@ -1,12 +1,10 @@
 package com.tangem.features.yield.supply.impl.subcomponents.active.model
 
 import arrow.core.getOrElse
-import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
-import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
@@ -16,7 +14,6 @@ import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetProtocolBalanceUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetTokenStatusUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyMinAmountUseCase
@@ -31,13 +28,10 @@ import com.tangem.features.yield.supply.impl.subcomponents.active.model.transfor
 import com.tangem.utils.StringsSigns.DASH_SIGN
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.transformer.update
-import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import java.math.BigDecimal
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -68,7 +62,7 @@ internal class YieldSupplyActiveModel @Inject constructor(
                 providerTitle = resourceReference(R.string.yield_module_provider),
                 subtitle = resourceReference(
                     id = R.string.yield_module_earn_sheet_provider_description,
-                    formatArgs = wrappedList(cryptoCurrency.symbol, cryptoCurrency.symbol),
+                    formatArgs = wrappedList(cryptoCurrency.symbol, AAVEV3_PREFIX + cryptoCurrency.symbol),
                 ),
                 subtitleLink = resourceReference(R.string.common_read_more),
                 notifications = persistentListOf(),
@@ -121,7 +115,6 @@ internal class YieldSupplyActiveModel @Inject constructor(
 
             uiState.update {
                 it.copy(
-                    notifications = getNotifications(cryptoCurrencyStatus),
                     availableBalance = stringReference(
                         protocolBalance.format {
                             crypto(
@@ -156,54 +149,6 @@ internal class YieldSupplyActiveModel @Inject constructor(
         }
     }
 
-    private fun getNotifications(cryptoCurrencyStatus: CryptoCurrencyStatus): ImmutableList<NotificationUM> {
-        val approvalNotification = if (cryptoCurrencyStatus.value.yieldSupplyStatus?.isAllowedToSpend != true) {
-            NotificationUM.Error(
-                title = resourceReference(R.string.yield_module_approve_needed_notification_title),
-                subtitle = resourceReference(R.string.yield_module_approve_needed_notification_description),
-                iconResId = R.drawable.ic_alert_triangle_20,
-                buttonState = NotificationConfig.ButtonsState.PrimaryButtonConfig(
-                    text = resourceReference(R.string.yield_module_approve_needed_notification_cta),
-                    onClick = params.callback::onApprove,
-                ),
-            )
-        } else {
-            null
-        }
-        val notSuppliedNotification = getNotSuppliedNotification(cryptoCurrencyStatus)
-        return listOfNotNull(
-            approvalNotification,
-            notSuppliedNotification,
-        ).toPersistentList()
-    }
-
-    private fun getNotSuppliedNotification(cryptoCurrencyStatus: CryptoCurrencyStatus): NotificationUM? {
-        val value = cryptoCurrencyStatus.value
-        val isActive = value.yieldSupplyStatus?.isActive == true
-        val effectiveProtocolBalance = value.yieldSupplyStatus?.effectiveProtocolBalance ?: null
-        val amount = value.amount
-
-        if (!isActive || effectiveProtocolBalance == null || amount == null) return null
-
-        val notDepositedAmount = amount.minus(effectiveProtocolBalance)
-        return if (notDepositedAmount > BigDecimal.ZERO) {
-            val formattedAmount =
-                notDepositedAmount.format { crypto(symbol = "", decimals = cryptoCurrencyStatus.currency.decimals) }
-            analyticsHandler.send(
-                YieldSupplyAnalytics.NoticeAmountNotDeposited(
-                    token = cryptoCurrency.symbol,
-                    blockchain = cryptoCurrency.network.name,
-                ),
-            )
-            NotificationUM.Info.YieldSupplyNotAllAmountSupplied(
-                formattedAmount = formattedAmount,
-                symbol = cryptoCurrency.symbol,
-            )
-        } else {
-            null
-        }
-    }
-
     private fun loadMinAmount() {
         modelScope.launch(dispatchers.default) {
             yieldSupplyMinAmountUseCase(
@@ -215,6 +160,8 @@ internal class YieldSupplyActiveModel @Inject constructor(
                         cryptoCurrencyStatus = cryptoCurrencyStatusFlow.value,
                         appCurrency = appCurrency,
                         minAmount = minAmount,
+                        analyticsHandler = analyticsHandler,
+                        onApprove = params.callback::onApprove,
                     ),
                 )
             }.onLeft {
