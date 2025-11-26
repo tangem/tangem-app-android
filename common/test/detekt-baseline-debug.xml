@@ -1,8 +1,0 @@
-<?xml version="1.0" ?>
-<SmellBaseline>
-  <ManuallySuppressedIssues/>
-  <CurrentIssues>
-    <ID>CastNullableToNonNullableType:MockScanResponseFactory.kt$MockScanResponseFactory$as</ID>
-    <ID>MultilineLambdaItParameter:MockScanResponseFactory.kt$MockScanResponseFactory${ CardDTO.Wallet( CardWallet( publicKey = it.name.toByteArray(), // IMPORTANT: public key must equal to curve name chainCode = null, curve = it, settings = createSettings(), totalSignedHashes = null, remainingSignatures = null, index = 0, isImported = true, hasBackup = true, derivedKeys = emptyMap(), ), ) }</ID>
-  </CurrentIssues>
-</SmellBaseline>
