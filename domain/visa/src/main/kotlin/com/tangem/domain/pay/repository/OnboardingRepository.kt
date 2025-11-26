@@ -9,12 +9,16 @@ interface OnboardingRepository {
 
     suspend fun validateDeeplink(link: String): Either<UniversalError, Boolean>
 
-    suspend fun getCustomerInfo(): Either<UniversalError, CustomerInfo>
+    suspend fun isTangemPayInitialDataProduced(): Boolean
 
-    suspend fun createOrder(): Either<UniversalError, Unit>
+    suspend fun produceInitialData()
+
+    suspend fun getCustomerInfo(): Either<UniversalError, CustomerInfo>
 
     /**
      * Returns only if the user already authorised at least once
      */
     suspend fun getMainScreenCustomerInfo(): Either<UniversalError, MainScreenCustomerInfo>
+
+    fun getSavedCustomerInfo(): CustomerInfo?
 }
