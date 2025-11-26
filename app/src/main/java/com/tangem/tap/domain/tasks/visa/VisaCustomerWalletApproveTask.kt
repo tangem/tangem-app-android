@@ -16,7 +16,6 @@ import com.tangem.common.extensions.toHexString
 import com.tangem.core.error.ext.tangemError
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
-import com.tangem.domain.wallets.derivations.derivationStyleProvider
 import com.tangem.domain.card.common.visa.VisaUtilities
 import com.tangem.domain.card.common.visa.VisaWalletPublicKeyUtility
 import com.tangem.domain.card.common.visa.VisaWalletPublicKeyUtility.findKeyWithoutDerivation
@@ -59,21 +58,7 @@ class VisaCustomerWalletApproveTask(
         session: CardSession,
         callback: CompletionCallback<VisaSignedDataByCustomerWallet>,
     ) {
-        val cardDTO = CardDTO(card)
-
-        val derivationStyle = cardDTO.derivationStyleProvider.getDerivationStyle() ?: run {
-            proceedApproveWithLegacyCard(
-                card = card,
-                session = session,
-                callback = callback,
-            )
-            return
-        }
-
-        val derivationPath = VisaUtilities.visaDefaultDerivationPath(derivationStyle) ?: run {
-            callback(CompletionResult.Failure(VisaActivationError.FailedToCreateAddress.tangemError))
-            return
-        }
+        val derivationPath = VisaUtilities.customDerivationPath
 
         val wallet = card.wallets.firstOrNull { it.curve == EllipticCurve.Secp256k1 } ?: run {
             callback(CompletionResult.Failure(VisaActivationError.MissingWallet.tangemError))

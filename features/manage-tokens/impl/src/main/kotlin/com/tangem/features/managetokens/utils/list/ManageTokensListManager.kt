@@ -90,8 +90,9 @@ internal class ManageTokensListManager @AssistedInject constructor(
      */
     suspend fun launchPagination(isCollapsed: Boolean) = coroutineScope {
         val loadUserTokensFromRemote = when (mode) {
-            is ManageTokensMode.Wallet -> source == ManageTokensSource.ONBOARDING
+            is ManageTokensMode.Wallet,
             is ManageTokensMode.Account,
+            -> source == ManageTokensSource.ONBOARDING
             ManageTokensMode.None,
             -> false
         }
