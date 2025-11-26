@@ -75,7 +75,7 @@ internal class CreateWalletSelectionModel @Inject constructor(
                     ),
                 ),
                 onBuyClick = ::onBuyClick,
-                showAlreadyHaveWallet = true,
+                shouldShowAlreadyHaveWallet = true,
             ),
         )
 
@@ -88,7 +88,7 @@ internal class CreateWalletSelectionModel @Inject constructor(
     private fun showAlreadyHaveWalletWithDelay() {
         modelScope.launch {
             delay(SHOW_ALREADY_HAVE_WALLET_DELAY)
-            uiState.update { it.copy(showAlreadyHaveWallet = true) }
+            uiState.update { it.copy(shouldShowAlreadyHaveWallet = true) }
         }
     }
 
