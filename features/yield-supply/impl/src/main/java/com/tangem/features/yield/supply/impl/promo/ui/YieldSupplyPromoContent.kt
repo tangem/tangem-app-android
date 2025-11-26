@@ -110,6 +110,7 @@ private fun ColumnScope.Content(yieldSupplyPromoUM: YieldSupplyPromoUM, clickInt
                         style = LabelStyle.REGULAR,
                         icon = R.drawable.ic_information_24,
                         onClick = clickIntents::onApyInfoClick,
+                        onIconClick = clickIntents::onApyInfoClick,
                     ),
                 )
                 SpacerH32()

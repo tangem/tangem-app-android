@@ -1,5 +1,6 @@
 package com.tangem.data.yield.supply.di
 
+import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.data.yield.supply.DefaultYieldSupplyRepository
 import com.tangem.data.yield.supply.DefaultYieldSupplyErrorResolver
 import com.tangem.data.yield.supply.DefaultYieldSupplyTransactionRepository
@@ -39,12 +40,14 @@ internal object YieldSupplyDataModule {
         store: YieldMarketsStore,
         walletManagersFacade: WalletManagersFacade,
         dispatchers: CoroutineDispatcherProvider,
+        analyticsExceptionHandler: AnalyticsExceptionHandler,
     ): YieldSupplyRepository {
         return DefaultYieldSupplyRepository(
             yieldSupplyApi = yieldSupplyApi,
             store = store,
             dispatchers = dispatchers,
             walletManagersFacade = walletManagersFacade,
+            analyticsExceptionHandler = analyticsExceptionHandler,
         )
     }
 
