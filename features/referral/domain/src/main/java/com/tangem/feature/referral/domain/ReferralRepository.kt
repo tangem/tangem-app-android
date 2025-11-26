@@ -1,5 +1,6 @@
 package com.tangem.feature.referral.domain
 
+import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.feature.referral.domain.models.ReferralData
@@ -16,5 +17,10 @@ interface ReferralRepository {
     /** Starts user referral program */
     suspend fun startReferral(walletId: String, networkId: String, tokenId: String, address: String): ReferralData
 
-    suspend fun getCryptoCurrency(userWalletId: UserWalletId, tokenData: TokenData): CryptoCurrency?
+    /** Returns [CryptoCurrency] by [tokenData] for specific [userWalletId] and optional [accountIndex] */
+    suspend fun getCryptoCurrency(
+        userWalletId: UserWalletId,
+        tokenData: TokenData,
+        accountIndex: DerivationIndex?,
+    ): CryptoCurrency?
 }
