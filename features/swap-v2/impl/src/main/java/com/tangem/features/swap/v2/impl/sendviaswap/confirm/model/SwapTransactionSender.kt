@@ -6,6 +6,7 @@ import com.tangem.domain.express.models.ExpressError
 import com.tangem.domain.express.models.ExpressOperationType
 import com.tangem.domain.express.models.ExpressProvider
 import com.tangem.domain.express.models.ExpressProviderType
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.swap.models.SwapDataModel
@@ -64,7 +65,7 @@ internal class SwapTransactionSender @AssistedInject constructor(
         }
     }
 
-    suspend fun onCexTransaction(
+    private suspend fun onCexTransaction(
         confirmData: ConfirmData,
         isAmountSubtractAvailable: Boolean,
         onSendSuccess: (String, Long, SwapDataModel) -> Unit,
@@ -74,6 +75,7 @@ internal class SwapTransactionSender @AssistedInject constructor(
     ) {
         val fromStatus = confirmData.fromCryptoCurrencyStatus ?: return
         val toStatus = confirmData.toCryptoCurrencyStatus ?: return
+        val fromAccount = confirmData.fromAccount
         val provider = confirmData.quote?.provider ?: return
         val rateType = confirmData.rateType ?: return
         val amountValue = confirmData.enteredAmount ?: return
@@ -102,6 +104,7 @@ internal class SwapTransactionSender @AssistedInject constructor(
         createAndSendCexTransaction(
             fromAmount = fromAmount,
             fromStatus = fromStatus,
+            fromAccount = fromAccount,
             toStatus = toStatus,
             fee = confirmData.fee,
             provider = provider,
@@ -116,6 +119,7 @@ internal class SwapTransactionSender @AssistedInject constructor(
         fromAmount: BigDecimal,
         fromStatus: CryptoCurrencyStatus,
         toStatus: CryptoCurrencyStatus,
+        fromAccount: Account.CryptoPortfolio?,
         fee: Fee,
         provider: ExpressProvider,
         swapData: SwapDataModel,
@@ -160,6 +164,8 @@ internal class SwapTransactionSender @AssistedInject constructor(
                     userWallet = userWallet,
                     fromCryptoCurrencyStatus = fromStatus,
                     toCryptoCurrencyStatus = toStatus,
+                    fromAccount = fromAccount,
+                    toAccount = null,
                     swapDataTransactionModel = swapTransaction,
                     provider = provider,
                     txHash = txHash,
