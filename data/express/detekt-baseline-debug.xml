@@ -1,0 +1,8 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>IgnoredReturnValue:DefaultExpressServiceFetcher.kt$DefaultExpressServiceFetcher$put(key = userWalletId, value = default)</ID>
+    <ID>MultilineLambdaItParameter:DefaultExpressRepository.kt$DefaultExpressRepository${ Timber.w(it, "Unable to fetch express providers") throw it }</ID>
+  </CurrentIssues>
+</SmellBaseline>

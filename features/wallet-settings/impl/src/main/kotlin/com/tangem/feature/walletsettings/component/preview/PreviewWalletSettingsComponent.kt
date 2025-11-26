@@ -5,7 +5,6 @@ import androidx.compose.ui.Modifier
 import com.tangem.common.ui.account.AccountIconPreviewData
 import com.tangem.common.ui.userwallet.state.UserWalletItemUM
 import com.tangem.common.ui.userwallet.state.UserWalletItemUM.ImageState
-import com.tangem.core.analytics.DummyAnalyticsEventHandler
 import com.tangem.core.decompose.navigation.DummyRouter
 import com.tangem.core.ui.components.block.model.BlockUM
 import com.tangem.core.ui.extensions.resourceReference
@@ -13,6 +12,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.feature.walletsettings.component.WalletSettingsComponent
+import com.tangem.feature.walletsettings.entity.AccountReorderUM
 import com.tangem.feature.walletsettings.entity.WalletSettingsAccountsUM
 import com.tangem.feature.walletsettings.entity.WalletSettingsAccountsUM.Footer.AddAccountUM
 import com.tangem.feature.walletsettings.entity.WalletSettingsItemUM
@@ -29,7 +29,7 @@ internal class PreviewWalletSettingsComponent : WalletSettingsComponent {
 
     private val accountItem: UserWalletItemUM
         get() = UserWalletItemUM(
-            id = UserWalletId(UUID.randomUUID().toString().encodeToByteArray()),
+            id = UUID.randomUUID().toString(),
             name = accountName,
             information = UserWalletItemUM.Information.Loaded(stringReference("12 tokens")),
             balance = UserWalletItemUM.Balance.Loaded("$726.04", false),
@@ -45,7 +45,6 @@ internal class PreviewWalletSettingsComponent : WalletSettingsComponent {
         popBack = {},
         items = ItemsBuilder(
             router = DummyRouter(),
-            analyticsEventHandler = DummyAnalyticsEventHandler(),
         ).buildItems(
             userWallet = UserWallet.Hot(
                 walletId = UserWalletId("011"),
@@ -62,9 +61,9 @@ internal class PreviewWalletSettingsComponent : WalletSettingsComponent {
             forgetWallet = {},
             onLinkMoreCardsClick = {},
             onReferralClick = {},
+            onManageTokensClick = {},
             isManageTokensAvailable = true,
             isNotificationsEnabled = true,
-            isNotificationsFeatureEnabled = true,
             onCheckedNotificationsChanged = {},
             onNotificationsDescriptionClick = {},
             isNotificationsPermissionGranted = false,
@@ -75,21 +74,26 @@ internal class PreviewWalletSettingsComponent : WalletSettingsComponent {
             accountsUM = previewAccounts(),
             cardItem = previewCardBlock(),
         ),
-        requestPushNotificationsPermission = false,
+        hasRequestPushNotificationsPermission = false,
         onPushNotificationPermissionGranted = {},
+        accountReorderUM = AccountReorderUM(
+            isDragEnabled = true,
+            onMove = { _, _ -> },
+            onDragStopped = {},
+        ),
     )
 
-    private fun previewAccounts() = buildList {
+    private fun previewAccounts() = listOf(
         WalletSettingsAccountsUM.Header(
             id = "accounts_header",
             text = resourceReference(R.string.common_accounts),
-        ).let(::add)
-        add(WalletSettingsAccountsUM.Account(accountItem))
+        ),
+        WalletSettingsAccountsUM.Account(accountItem),
         WalletSettingsAccountsUM.Footer(
             id = "accounts_footer",
             addAccount = AddAccountUM(
                 title = resourceReference(R.string.account_form_title_create),
-                addAccountEnabled = true,
+                isAddAccountEnabled = true,
                 onAddAccountClick = {},
             ),
             archivedAccounts = BlockUM(
@@ -97,10 +101,10 @@ internal class PreviewWalletSettingsComponent : WalletSettingsComponent {
                 iconRes = R.drawable.ic_archive_24,
                 onClick = {},
             ),
-            showDescription = true,
+            shouldShowDescription = true,
             description = resourceReference(R.string.account_reorder_description),
-        ).let(::add)
-    }
+        ),
+    )
 
     private fun previewCardBlock() = WalletSettingsItemUM.CardBlock(
         id = "wallet_name",
