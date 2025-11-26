@@ -27,12 +27,11 @@ internal class StoriesModel @Inject constructor(
     private val shouldShowStoriesUseCase: ShouldShowStoriesUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
-    val state: StateFlow<SwapStoriesUM> get() = _state
+
+    val state: StateFlow<SwapStoriesUM>
+        field = MutableStateFlow<SwapStoriesUM>(value = SwapStoriesUM.Empty)
 
     private val params = paramsContainer.require<StoriesComponent.Params>()
-    private val _state: MutableStateFlow<SwapStoriesUM> = MutableStateFlow(
-        value = SwapStoriesUM.Empty,
-    )
 
     init {
         initStories()
@@ -59,7 +58,7 @@ internal class StoriesModel @Inject constructor(
                     if (swapStory == null) {
                         openScreen(hideStories = false) // Fallback to target screen
                     } else {
-                        _state.update {
+                        state.update {
                             SwapStoriesFactory.createStoriesState(
                                 swapStory = swapStory,
                                 onStoriesClose = { watchCount ->
