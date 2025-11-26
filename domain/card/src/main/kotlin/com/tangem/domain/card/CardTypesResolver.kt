@@ -12,6 +12,7 @@ interface CardTypesResolver {
 
     fun isShibaWallet(): Boolean
 
+    // 4.12
     fun isWhiteWallet(): Boolean
 
     fun isWallet2(): Boolean
