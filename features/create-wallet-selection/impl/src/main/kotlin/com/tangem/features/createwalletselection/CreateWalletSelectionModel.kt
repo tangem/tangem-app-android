@@ -75,13 +75,16 @@ internal class CreateWalletSelectionModel @Inject constructor(
                     ),
                 ),
                 onBuyClick = ::onBuyClick,
+                showAlreadyHaveWallet = true,
             ),
         )
 
     init {
-        showAlreadyHaveWalletWithDelay()
+        // temporarily disabled by timer and enabled by default
+        // showAlreadyHaveWalletWithDelay()
     }
 
+    @Suppress("UnusedPrivateMember")
     private fun showAlreadyHaveWalletWithDelay() {
         modelScope.launch {
             delay(SHOW_ALREADY_HAVE_WALLET_DELAY)
