@@ -1,7 +1,10 @@
 package com.tangem.features.account.createedit.ui
 
 import android.content.res.Configuration
-import androidx.compose.foundation.*
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -59,7 +62,6 @@ internal fun AccountCreateEditContent(
         modifier = modifier
             .background(color = TangemTheme.colors.background.secondary)
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
             .imePadding()
             .systemBarsPadding(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -184,7 +186,6 @@ private fun AccountColor(colorsState: AccountCreateEditUM.Colors) {
             columns = columns,
             contentPadding = contentPadding,
             horizontalArrangement = Arrangement.spacedBy(4.dp),
-            userScrollEnabled = false,
         ) {
             items(colorsState.list) { color ->
                 val isSelected = color == colorsState.selected
