@@ -1,0 +1,137 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>BooleanPropertyNaming:MultiWalletAccessCodeComponent.kt$MultiWalletAccessCodeComponent$val showBs by showBs.collectAsStateWithLifecycle()</ID>
+    <ID>BooleanPropertyNaming:MultiWalletAccessCodeUM.kt$MultiWalletAccessCodeUM$val atLeast4CharError: Boolean = false</ID>
+    <ID>BooleanPropertyNaming:MultiWalletAccessCodeUM.kt$MultiWalletAccessCodeUM$val codesNotMatchError: Boolean = false</ID>
+    <ID>BooleanPropertyNaming:MultiWalletBackupUM.kt$MultiWalletBackupUM$val addBackupButtonEnabled: Boolean = true</ID>
+    <ID>BooleanPropertyNaming:MultiWalletBackupUM.kt$MultiWalletBackupUM$val addBackupButtonLoading: Boolean = false</ID>
+    <ID>BooleanPropertyNaming:MultiWalletBackupUM.kt$MultiWalletBackupUM$val finalizeButtonEnabled: Boolean = false</ID>
+    <ID>BooleanPropertyNaming:MultiWalletBackupUM.kt$MultiWalletBackupUMDialog$val warningCancelColor: Boolean = false</ID>
+    <ID>BooleanPropertyNaming:MultiWalletCreateWalletModel.kt$MultiWalletCreateWalletModel$val cardDoesNotSupportBackup = result.data.card.settings.isBackupAllowed.not()</ID>
+    <ID>BooleanPropertyNaming:MultiWalletCreateWalletUM.kt$MultiWalletCreateWalletUM$val showOtherOptionsButton: Boolean</ID>
+    <ID>BooleanPropertyNaming:MultiWalletFinalizeUM.kt$MultiWalletFinalizeUM$val scanPrimary: Boolean = true</ID>
+    <ID>BooleanPropertyNaming:MultiWalletSeedPhraseUM.kt$MultiWalletSeedPhraseUM.GeneratedWordsCheck$val createWalletButtonEnabled: Boolean = false</ID>
+    <ID>BooleanPropertyNaming:MultiWalletSeedPhraseUM.kt$MultiWalletSeedPhraseUM.GeneratedWordsCheck$val createWalletButtonProgress: Boolean = false</ID>
+    <ID>BooleanPropertyNaming:MultiWalletSeedPhraseUM.kt$MultiWalletSeedPhraseUM.GeneratedWordsCheck.WordField$val error: Boolean</ID>
+    <ID>BooleanPropertyNaming:MultiWalletSeedPhraseUM.kt$MultiWalletSeedPhraseUM.Import$val createWalletEnabled: Boolean = false</ID>
+    <ID>BooleanPropertyNaming:MultiWalletSeedPhraseUM.kt$MultiWalletSeedPhraseUM.Import$val createWalletProgress: Boolean = false</ID>
+    <ID>BooleanPropertyNaming:MultiWalletUpgradeWalletModel.kt$MultiWalletUpgradeWalletModel$val cardDoesNotSupportBackup = result.data.card.settings.isBackupAllowed.not()</ID>
+    <ID>BooleanPropertyNaming:OnboardingDialogUM.kt$OnboardingDialogUM$val dismissWarningColor: Boolean = false</ID>
+    <ID>BooleanPropertyNaming:OnboardingDone.kt$var showConfetti by remember { mutableStateOf(false) }</ID>
+    <ID>BooleanPropertyNaming:OnboardingMultiWalletComponent.kt$OnboardingMultiWalletComponent.Params$val withSeedPhraseFlow: Boolean</ID>
+    <ID>BooleanPropertyNaming:OnboardingNoteCreateWalletUM.kt$OnboardingNoteCreateWalletUM$val createWalletInProgress: Boolean = false</ID>
+    <ID>BooleanPropertyNaming:OnboardingRoute.kt$OnboardingRoute.MultiWallet$val withSeedPhraseFlow: Boolean</ID>
+    <ID>BooleanPropertyNaming:OnboardingStepperComponent.kt$OnboardingStepperComponent.StepperState$val showProgress: Boolean</ID>
+    <ID>BooleanPropertyNaming:OnboardingTwin.kt$var toggle by remember { mutableStateOf(false) }</ID>
+    <ID>BooleanPropertyNaming:OnboardingTwinModel.kt$OnboardingTwinModel$val twinningInProgress = state is OnboardingTwinUM.ScanCard &amp;&amp; (state.step == OnboardingTwinUM.ScanCard.Step.Second || state.step == OnboardingTwinUM.ScanCard.Step.Third)</ID>
+    <ID>BooleanPropertyNaming:OnboardingTwinUM.kt$OnboardingTwinUM.ResetWarning$val acceptToggle: Boolean = false</ID>
+    <ID>BooleanPropertyNaming:OnboardingVisaAccessCodeUM.kt$OnboardingVisaAccessCodeUM$val accessCodeHidden: Boolean = true</ID>
+    <ID>BooleanPropertyNaming:OnboardingVisaAccessCodeUM.kt$OnboardingVisaAccessCodeUM$val atLeastMinCharsError: Boolean = false</ID>
+    <ID>BooleanPropertyNaming:OnboardingVisaAccessCodeUM.kt$OnboardingVisaAccessCodeUM$val buttonLoading: Boolean = false</ID>
+    <ID>BooleanPropertyNaming:OnboardingVisaAccessCodeUM.kt$OnboardingVisaAccessCodeUM$val codesNotMatchError: Boolean = false</ID>
+    <ID>BooleanPropertyNaming:OnboardingVisaApproveUM.kt$OnboardingVisaApproveUM$val approveButtonLoading: Boolean = false</ID>
+    <ID>BooleanPropertyNaming:OnboardingVisaPinCodeUM.kt$OnboardingVisaPinCodeUM$val submitButtonEnabled: Boolean = true</ID>
+    <ID>BooleanPropertyNaming:OnboardingVisaPinCodeUM.kt$OnboardingVisaPinCodeUM$val submitButtonLoading: Boolean = false</ID>
+    <ID>BooleanPropertyNaming:OnboardingVisaRoute.kt$OnboardingVisaRoute.PinCode$val pinCodeValidationError: Boolean</ID>
+    <ID>BooleanPropertyNaming:OnboardingVisaRoute.kt$OnboardingVisaRoute.TangemWalletApproveOption$val allowNavigateBack: Boolean</ID>
+    <ID>BooleanPropertyNaming:OnboardingVisaWelcomeUM.kt$OnboardingVisaWelcomeUM$val continueButtonLoading: Boolean = false</ID>
+    <ID>BooleanPropertyNaming:SeedPhraseCheckUiStateBuilder.kt$SeedPhraseCheckUiStateBuilder$val allFieldsCorrect = newState.allFieldsCorrect()</ID>
+    <ID>BooleanPropertyNaming:SeedPhraseCheckUiStateBuilder.kt$SeedPhraseCheckUiStateBuilder$val correct = checkWordField(word = newText.text, shownIndex = shownIndex)</ID>
+    <ID>BooleanPropertyNaming:SeedPhraseState.kt$SeedPhraseState$val readyToImport: Boolean</ID>
+    <ID>BooleanPropertyNaming:Wallet1ChooseOptionModel.kt$Wallet1ChooseOptionModel$private var skipClicked = false</ID>
+    <ID>BooleanPropertyNaming:WalletArtwork.kt$WalletArtworksState.Leapfrog$val threeCards: Boolean = true</ID>
+    <ID>BooleanPropertyNaming:WalletArtwork.kt$WalletArtworksState.Stack$val threeCards: Boolean = true</ID>
+    <ID>CanBeNonNullable:DefaultOnboardingTwinComponent.kt$DefaultOnboardingTwinComponent.TwinInnerNavigationState$override val stackMaxSize: Int? = 5</ID>
+    <ID>MaxChainedCallsOnSameLine:MultiWalletCreateWalletModel.kt$MultiWalletCreateWalletModel$result.data.card.settings.isBackupAllowed.not()</ID>
+    <ID>MaxChainedCallsOnSameLine:MultiWalletUpgradeWalletModel.kt$MultiWalletUpgradeWalletModel$result.data.card.settings.isBackupAllowed.not()</ID>
+    <ID>MaxChainedCallsOnSameLine:OnboardingTwinModel.kt$OnboardingTwinModel$params.scanResponse.card.issuer.publicKey.toHexString()</ID>
+    <ID>MaxChainedCallsOnSameLine:OnboardingVisaAccessCodeModel.kt$OnboardingVisaAccessCodeModel$result.data.signedActivationData.dataToSign.request.activationOrderInfo.customerWalletAddress</ID>
+    <ID>MaxChainedCallsOnSameLine:OnboardingVisaAccessCodeModel.kt$OnboardingVisaAccessCodeModel$result.data.signedActivationData.dataToSign.request.activationOrderInfo.orderId</ID>
+    <ID>MaxChainedCallsOnSameLine:OnboardingVisaAccessCodeModel.kt$OnboardingVisaAccessCodeModel$result.data.signedActivationData.dataToSign.request.cardWalletAddress</ID>
+    <ID>MaxChainedCallsOnSameLine:Wallet1ChooseOptionModel.kt$Wallet1ChooseOptionModel$params.multiWalletState.value.currentScanResponse.card.canSkipBackup</ID>
+    <ID>MultilineLambdaItParameter:DefaultOnboardingEntryComponent.kt$DefaultOnboardingEntryComponent${ it.copy( currentStep = state.stackSize, steps = state.stackMaxSize ?: 0, title = model.titleProvider.currentTitle.value, showProgress = state.stackMaxSize != null, ) }</ID>
+    <ID>MultilineLambdaItParameter:DefaultOnboardingEntryComponent.kt$DefaultOnboardingEntryComponent${ it.copy( currentStep = when (stack.active.configuration) { is OnboardingRoute.ManageTokens -&gt; 7 is OnboardingRoute.AskBiometry -&gt; 8 is OnboardingRoute.Done -&gt; 9 else -&gt; error("Unsupported route") }, steps = 9, title = when (stack.active.configuration) { is OnboardingRoute.ManageTokens -&gt; resourceReference(R.string.main_manage_tokens) is OnboardingRoute.AskBiometry -&gt; resourceReference(R.string.onboarding_navbar_save_wallet) is OnboardingRoute.Done -&gt; resourceReference(R.string.onboarding_done_header) else -&gt; error("Unsupported route") }, showProgress = true, ) }</ID>
+    <ID>MultilineLambdaItParameter:DefaultOnboardingVisaComponent.kt$DefaultOnboardingVisaComponent${ model.stackNavigation.replaceAll( OnboardingVisaRoute.PinCode(activationOrderInfo = it, pinCodeValidationError = false), ) }</ID>
+    <ID>MultilineLambdaItParameter:DefaultOnboardingVisaComponent.kt$DefaultOnboardingVisaComponent${ val activationReadyEvent = (it as? OnboardingVisaWelcomeComponent.DoneEvent.WelcomeBackDone)?.activationReadyEvent if (activationReadyEvent != null) { model.navigateFromActivationScreen(activationReadyEvent) } }</ID>
+    <ID>MultilineLambdaItParameter:GenerateSeedPhraseUiStateBuilder.kt$GenerateSeedPhraseUiStateBuilder${ switchType( newType = it, generatedWords12 = words12, generatedWords24 = words24, ) }</ID>
+    <ID>MultilineLambdaItParameter:ImportSeedPhraseUiStateBuilder.kt$ImportSeedPhraseUiStateBuilder${ it.copy( createWalletEnabled = false, wordsErrorText = null, ) }</ID>
+    <ID>MultilineLambdaItParameter:ImportSeedPhraseUiStateBuilder.kt$ImportSeedPhraseUiStateBuilder${ it.copy( invalidWords = emptyList&lt;String&gt;().toImmutableList(), wordsErrorText = null, createWalletEnabled = true, ) }</ID>
+    <ID>MultilineLambdaItParameter:ImportSeedPhraseUiStateBuilder.kt$ImportSeedPhraseUiStateBuilder${ it.copy( invalidWords = invalidWords.toImmutableList(), wordsErrorText = resourceReference(R.string.onboarding_seed_mnemonic_wrong_words), createWalletEnabled = false, ) }</ID>
+    <ID>MultilineLambdaItParameter:ImportSeedPhraseUiStateBuilder.kt$ImportSeedPhraseUiStateBuilder${ it.copy( wordsErrorText = resourceReference(R.string.onboarding_seed_mnemonic_invalid_checksum), createWalletEnabled = false, ) }</ID>
+    <ID>MultilineLambdaItParameter:ImportSeedPhraseUiStateBuilder.kt$ImportSeedPhraseUiStateBuilder${ launchInterceptWords(wordsField = it) suggestNextWord(it) updateUiState { state -&gt; state.copy(words = it) } }</ID>
+    <ID>MultilineLambdaItParameter:ImportSeedPhraseUiStateBuilder.kt$ImportSeedPhraseUiStateBuilder${ passphrase = it.text updateUiState { state -&gt; state.copy(passPhrase = it) } }</ID>
+    <ID>MultilineLambdaItParameter:InvalidWordsColorTransformation.kt$InvalidWordsColorTransformation${ if (it == WORD_SEPARATOR) { append(WHITE_SPACE) } else if (wordsToBrush.contains(it)) { append(it.annotate()) } else { append(it) } }</ID>
+    <ID>MultilineLambdaItParameter:MultiWalletAccessCodeModel.kt$MultiWalletAccessCodeModel${ it.copy( accessCodeFirst = textFieldValue, atLeast4CharError = false, ) }</ID>
+    <ID>MultilineLambdaItParameter:MultiWalletAccessCodeModel.kt$MultiWalletAccessCodeModel${ it.copy( accessCodeSecond = textFieldValue, codesNotMatchError = false, ) }</ID>
+    <ID>MultilineLambdaItParameter:MultiWalletAccessCodeModel.kt$MultiWalletAccessCodeModel${ it.copy( step = MultiWalletAccessCodeUM.Step.AccessCode, accessCodeSecond = TextFieldValue(""), ) }</ID>
+    <ID>MultilineLambdaItParameter:MultiWalletAccessCodeModel.kt$MultiWalletAccessCodeModel${ it.copy( step = MultiWalletAccessCodeUM.Step.ConfirmAccessCode, atLeast4CharError = false, ) }</ID>
+    <ID>MultilineLambdaItParameter:MultiWalletAccessCodeModel.kt$MultiWalletAccessCodeModel${ it.copy( step = MultiWalletAccessCodeUM.Step.Intro, accessCodeFirst = TextFieldValue(""), accessCodeSecond = TextFieldValue(""), ) }</ID>
+    <ID>MultilineLambdaItParameter:MultiWalletBackupComponent.kt$MultiWalletBackupComponent${ it.copy( stackSize = 5, stackMaxSize = 9, ) }</ID>
+    <ID>MultilineLambdaItParameter:MultiWalletBackupModel.kt$MultiWalletBackupModel${ it.copy( card2 = if (state.value.numberOfBackupCards == 1) backupCardInfo else it.card2, card3 = if (state.value.numberOfBackupCards == 2) backupCardInfo else it.card3, ) }</ID>
+    <ID>MultilineLambdaItParameter:MultiWalletBackupModel.kt$MultiWalletBackupModel${ it.copy( dialog = onlyOneBackupDeviceDialog( onDismiss = { _uiState.update { it.copy(dialog = null) } }, onConfirm = { onFinalizeClick(fromDialog = true) }, ), ) }</ID>
+    <ID>MultilineLambdaItParameter:MultiWalletBackupModel.kt$MultiWalletBackupModel${ it.copy( numberOfBackupCards = it.numberOfBackupCards + 1, ) }</ID>
+    <ID>MultilineLambdaItParameter:MultiWalletCreateWalletComponent.kt$MultiWalletCreateWalletComponent${ it.copy( stackSize = 2, stackMaxSize = 9, ) }</ID>
+    <ID>MultilineLambdaItParameter:MultiWalletCreateWalletModel.kt$MultiWalletCreateWalletModel${ it.copy( currentScanResponse = it.currentScanResponse.copy( card = result.data.card, derivedKeys = result.data.derivedKeys, primaryCard = result.data.primaryCard, ), ) }</ID>
+    <ID>MultilineLambdaItParameter:MultiWalletFinalizeComponent.kt$MultiWalletFinalizeComponent${ it.copy( stackSize = 7, stackMaxSize = 9, ) }</ID>
+    <ID>MultilineLambdaItParameter:MultiWalletScanPrimaryComponent.kt$MultiWalletScanPrimaryComponent${ it.copy( stackSize = 4, stackMaxSize = 9, ) }</ID>
+    <ID>MultilineLambdaItParameter:MultiWalletScanPrimaryModel.kt$MultiWalletScanPrimaryModel${ it.copy( currentScanResponse = scanResponse.copy( primaryCard = result.data, ), ) }</ID>
+    <ID>MultilineLambdaItParameter:MultiWalletSeedPhraseComponent.kt$MultiWalletSeedPhraseComponent${ // change stepper state based on the stack of the current step @Suppress("MagicNumber") params.innerNavigation.update { st -&gt; st.copy( stackSize = 3 + it.order, stackMaxSize = 11, ) } val title = when (it) { is MultiWalletSeedPhraseUM.Import -&gt; R.string.onboarding_seed_intro_button_import is MultiWalletSeedPhraseUM.GenerateSeedPhrase, is MultiWalletSeedPhraseUM.GeneratedWordsCheck, is MultiWalletSeedPhraseUM.Start, -&gt; R.string.onboarding_create_wallet_header } params.parentParams.titleProvider.changeTitle(text = resourceReference(title)) }</ID>
+    <ID>MultilineLambdaItParameter:MultiWalletSeedPhraseModel.kt$MultiWalletSeedPhraseModel${ if (it !is T) return@update it block(it) }</ID>
+    <ID>MultilineLambdaItParameter:MultiWalletSeedPhraseModel.kt$MultiWalletSeedPhraseModel${ it.copy( generatedWords12 = words12, generatedWords24 = words24, ) }</ID>
+    <ID>MultilineLambdaItParameter:MultiWalletSeedPhraseWords.kt${ EnumeratedTwoColumnGridItem( index = it + 1, mnemonic = "word1", ) }</ID>
+    <ID>MultilineLambdaItParameter:MultiWalletSeedPhraseWords.kt${ Text( text = pluralStringResourceSafe( id = R.plurals.onboarding_seed_generate_words_count, count = it.length, it.length, ), modifier = Modifier .padding(vertical = TangemTheme.dimens.spacing10) .fillMaxWidth(), style = TangemTheme.typography.subtitle2, color = TangemTheme.colors.text.primary1, textAlign = TextAlign.Center, ) }</ID>
+    <ID>MultilineLambdaItParameter:MultiWalletSeedPhraseWords.kt${ when { state.option == GeneratedWordsType.Words12 &amp;&amp; it == GeneratedWordsType.Words24 -&gt; { state.onOptionChange(it) } state.option == GeneratedWordsType.Words24 &amp;&amp; it == GeneratedWordsType.Words12 -&gt; { state.onOptionChange(it) } } }</ID>
+    <ID>MultilineLambdaItParameter:MultiWalletUpgradeWalletComponent.kt$MultiWalletUpgradeWalletComponent${ it.copy( stackSize = 2, stackMaxSize = 9, ) }</ID>
+    <ID>MultilineLambdaItParameter:MultiWalletUpgradeWalletModel.kt$MultiWalletUpgradeWalletModel${ it.copy( currentScanResponse = it.currentScanResponse.copy( card = result.data.card, derivedKeys = result.data.derivedKeys, primaryCard = result.data.primaryCard, ), ) }</ID>
+    <ID>MultilineLambdaItParameter:OnboardingTwinModel.kt$OnboardingTwinModel${ Timber.e("Unable to save user wallet: $it") setLoading(false) return@coroutineScope }</ID>
+    <ID>MultilineLambdaItParameter:OnboardingTwinModel.kt$OnboardingTwinModel${ Timber.e("Unable to save user wallet: $it") setLoading(false) return@launch }</ID>
+    <ID>MultilineLambdaItParameter:OnboardingTwinModel.kt$OnboardingTwinModel${ it.copy( isLoading = false, artworkStep = it.artworkStep.next(), step = OnboardingTwinUM.ScanCard.Step.Second, onScanClick = { createSecondWallet(firstPublicKey = result.data.wallet.publicKey.toHexString()) }, ) }</ID>
+    <ID>MultilineLambdaItParameter:OnboardingTwinModel.kt$OnboardingTwinModel${ it.copy( isLoading = false, artworkStep = it.artworkStep.next(), step = OnboardingTwinUM.ScanCard.Step.Third, onScanClick = { createThirdWallet( secondCardPublicKey = result.data.wallet.publicKey, ) }, ) }</ID>
+    <ID>MultilineLambdaItParameter:OnboardingVisaAccessCodeModel.kt$OnboardingVisaAccessCodeModel${ it.copy( accessCodeFirst = textFieldValue, accessCodeSecond = TextFieldValue(), atLeastMinCharsError = false, ) }</ID>
+    <ID>MultilineLambdaItParameter:OnboardingVisaAccessCodeModel.kt$OnboardingVisaAccessCodeModel${ it.copy( accessCodeSecond = textFieldValue, codesNotMatchError = false, ) }</ID>
+    <ID>MultilineLambdaItParameter:OnboardingVisaAccessCodeModel.kt$OnboardingVisaAccessCodeModel${ onError(it) return@launch }</ID>
+    <ID>MultilineLambdaItParameter:OnboardingVisaApproveModel.kt$OnboardingVisaApproveModel${ onError(it) return@launch }</ID>
+    <ID>MultilineLambdaItParameter:OnboardingVisaInProgressModel.kt$OnboardingVisaInProgressModel${ if (it.isUnknown()) { uiMessageSender.send(unexpectedErrorAlertBS) } else { uiMessageSender.showErrorDialog(it) } analyticsEventHandler.send(VisaAnalyticsEvent.ErrorOnboarding(it)) delay(timeMillis = 2000) runShortPolling() return@launch }</ID>
+    <ID>MultilineLambdaItParameter:OnboardingVisaInProgressModel.kt$OnboardingVisaInProgressModel${ uiMessageSender.showErrorDialog(it) return }</ID>
+    <ID>MultilineLambdaItParameter:OnboardingVisaModel.kt$OnboardingVisaModel${ val derivedKey = it.derivedKeys[VisaUtilities.visaDefaultDerivationPath] ?: return@any false VisaWalletPublicKeyUtility.validateExtendedPublicKey( targetAddress = targetAddress, extendedPublicKey = derivedKey, ).onLeft { return@any VisaWalletPublicKeyUtility.findKeyWithoutDerivation( targetAddress = targetAddress, card = wallet.scanResponse.card, ).isRight() }.isRight() }</ID>
+    <ID>MultilineLambdaItParameter:OnboardingVisaOtherWalletModel.kt$OnboardingVisaOtherWalletModel${ if (it is VisaActivationRemoteState.AwaitingPinCode) { onDone.emit(it.activationOrderInfo) return@launch } }</ID>
+    <ID>MultilineLambdaItParameter:OnboardingVisaOtherWalletModel.kt$OnboardingVisaOtherWalletModel${ uiMessageSender.showErrorDialog(it) analyticsEventHandler.send(VisaAnalyticsEvent.ErrorOnboarding(it)) delay(timeMillis = 60_000) }</ID>
+    <ID>MultilineLambdaItParameter:OnboardingVisaPinCodeModel.kt$OnboardingVisaPinCodeModel${ it.copy( pinCode = pin, submitButtonEnabled = PinCodeValidation.validate(pin), error = if (isError) { analyticsEventHandler.send(OnboardingVisaAnalyticsEvent.ErrorPinValidation) resourceReference(R.string.visa_onboarding_pin_validation_error_message) } else { null }, ) }</ID>
+    <ID>MultilineLambdaItParameter:OnboardingVisaWelcomeModel.kt$OnboardingVisaWelcomeModel${ onError(it) return@launch }</ID>
+    <ID>MultilineLambdaItParameter:SeedPhraseCheckUiStateBuilder.kt$SeedPhraseCheckUiStateBuilder${ checkWordField( word = it.word.text, shownIndex = it.index, ) }</ID>
+    <ID>MultilineLambdaItParameter:TwinWalletArtwork.kt${ animationState = it val maxTime = maxOf( transition1.totalDurationNanos, transition2.totalDurationNanos, ) delay(TimeUnit.NANOSECONDS.toMillis(maxTime)) }</ID>
+    <ID>MultilineLambdaItParameter:Wallet1ChooseOptionComponent.kt$Wallet1ChooseOptionComponent${ it.copy( stackSize = 3, stackMaxSize = 9, ) }</ID>
+    <ID>MultilineLambdaItParameter:WalletArtwork.kt${ animationState = it val maxTime = maxOf( transition1.totalDurationNanos, transition2.totalDurationNanos, transition3.totalDurationNanos, ) delay(TimeUnit.NANOSECONDS.toMillis(maxTime)) }</ID>
+    <ID>NoNameShadowing:MultiWalletCreateWalletModel.kt$MultiWalletCreateWalletModel${ it.copy(resultUserWallet = userWallet) }</ID>
+    <ID>NoNameShadowing:MultiWalletUpgradeWalletModel.kt$MultiWalletUpgradeWalletModel${ it.copy(resultUserWallet = userWallet) }</ID>
+    <ID>NoNameShadowing:Wallet1ChooseOptionModel.kt$Wallet1ChooseOptionModel${ it.copy(resultUserWallet = userWallet) }</ID>
+    <ID>NonBooleanPropertyPrefixedWithIs:MultiWalletSeedPhraseModel.kt$MultiWalletSeedPhraseModel$private val isWalletAlreadySavedUseCase: IsWalletAlreadySavedUseCase</ID>
+    <ID>PropertyUsedBeforeDeclaration:MultiWalletCreateWalletModel.kt$MultiWalletCreateWalletModel$onDone</ID>
+    <ID>RedundantSuspendModifier:MultiWalletCreateWalletModel.kt$MultiWalletCreateWalletModel$suspend</ID>
+    <ID>RedundantSuspendModifier:OnboardingNoteCreateWalletModel.kt$OnboardingNoteCreateWalletModel$suspend</ID>
+    <ID>ReusedModifierInstance:DefaultOnboardingNoteComponent.kt$DefaultOnboardingNoteComponent$Content(modifier)</ID>
+    <ID>ReusedModifierInstance:DefaultOnboardingVisaComponent.kt$DefaultOnboardingVisaComponent$Content(modifier)</ID>
+    <ID>ReusedModifierInstance:MultiWalletAccessCodeEnter.kt$OutlineTextField( modifier = modifier .focusRequester(focusRequester) .fillMaxWidth(), value = if (reEnterAccessCodeState) { state.accessCodeSecond } else { state.accessCodeFirst }, onValueChange = if (reEnterAccessCodeState) { state.onAccessCodeSecondChange } else { state.onAccessCodeFirstChange }, label = stringResourceSafe(id = R.string.onboarding_wallet_info_title_third), isError = state.codesNotMatchError, visualTransformation = PasswordVisualTransformation(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password), caption = when { state.codesNotMatchError &amp;&amp; reEnterAccessCodeState -&gt; stringResourceSafe(R.string.onboarding_access_codes_doesnt_match) else -&gt; null }, )</ID>
+    <ID>ReusedModifierInstance:MultiWalletSeedPhraseImport.kt$OutlineTextFieldWithIcon( modifier = modifier .padding(horizontal = 16.dp) .fillMaxWidth(), value = state.passPhrase, onValueChange = state.passPhraseChange, iconResId = R.drawable.ic_information_24, iconColor = TangemTheme.colors.icon.informative, label = stringResourceSafe(id = R.string.common_passphrase), placeholder = stringResourceSafe(id = R.string.send_optional_field), onIconClick = state.onPassphraseInfoClick, keyboardOptions = KeyboardOptions( autoCorrectEnabled = false, keyboardType = KeyboardType.Password, ), )</ID>
+    <ID>ReusedModifierInstance:OnboardingEntry.kt$Content(modifier = modifier)</ID>
+    <ID>ReusedModifierInstance:OnboardingStepper.kt$TangemTopAppBar( startButton = TopAppBarButtonUM.Back(onBackClick), endButton = TopAppBarButtonUM.Icon(iconRes = R.drawable.ic_chat_24, onClicked = onSupportButtonClick) .takeIf { state.steps != state.currentStep }, title = if (state.steps == state.currentStep) { resourceReference(R.string.common_done) } else { state.title }, containerColor = TangemTheme.colors.background.primary, modifier = modifier, )</ID>
+    <ID>ReusedModifierInstance:OnboardingVisaAccessCode.kt$OutlineTextFieldWithIcon( modifier = modifier .padding(horizontal = 16.dp) .focusRequester(focusRequester) .fillMaxWidth(), iconResId = if (state.accessCodeHidden) { R.drawable.ic_eye_outline_24 } else { R.drawable.ic_eye_off_outline_24 }, iconColor = TangemTheme.colors.icon.primary1, onIconClick = state.onAccessCodeHideClick, value = if (reEnterAccessCodeState) { state.accessCodeSecond } else { state.accessCodeFirst }, onValueChange = if (reEnterAccessCodeState) { state.onAccessCodeSecondChange } else { state.onAccessCodeFirstChange }, label = stringResourceSafe(id = R.string.onboarding_wallet_info_title_third), isError = state.codesNotMatchError || state.atLeastMinCharsError, visualTransformation = if (state.accessCodeHidden) { PasswordVisualTransformation() } else { VisualTransformation.None }, caption = when { state.codesNotMatchError &amp;&amp; reEnterAccessCodeState -&gt; stringResourceSafe(R.string.onboarding_access_codes_doesnt_match) state.atLeastMinCharsError &amp;&amp; !reEnterAccessCodeState -&gt; stringResourceSafe(R.string.onboarding_access_code_too_short) else -&gt; null }, )</ID>
+    <ID>ReusedModifierInstance:OnboardingVisaPinCode.kt$PinCode( modifier = modifier, value = state.pinCode, onValueChange = state.onPinCodeChange, focusRequester = focusRequester, )</ID>
+    <ID>ReusedModifierInstance:OnboardingVisaWelcome.kt$Image( painter = painterResource(R.drawable.img_card_visa), contentDescription = null, modifier = modifier .align(Alignment.Center) .onSizeChanged { cardHeightPx = it.height } .widthIn(max = 512.dp) .fillMaxWidth(), )</ID>
+    <ID>UnreachableCode:OnboardingNoteCreateWalletModel.kt$OnboardingNoteCreateWalletModel$params.childParams.commonState.value.scanResponse ?: return@launch</ID>
+    <ID>UnsafeCallOnNullableType:MultiWalletBackupModel.kt$MultiWalletBackupModel$backupServiceHolder.backupService.get()!!</ID>
+    <ID>UnsafeCallOnNullableType:OnboardingEntryModel.kt$OnboardingEntryModel$userWalletsListManager.asLockable()?.isLocked!!</ID>
+    <ID>UseEmptyCounterpart:OnboardingEntryEvent.kt$OnboardingEntryEvent$mapOf()</ID>
+    <ID>UseEmptyCounterpart:OnboardingEvent.kt$OnboardingEvent$mapOf()</ID>
+    <ID>UseEmptyCounterpart:OnboardingEvent.kt$OnboardingEvent.Backup$mapOf()</ID>
+    <ID>UseEmptyCounterpart:OnboardingEvent.kt$OnboardingEvent.CreateWallet$mapOf()</ID>
+    <ID>UseEmptyCounterpart:OnboardingEvent.kt$OnboardingEvent.Topup$mapOf()</ID>
+    <ID>UseEmptyCounterpart:OnboardingEvent.kt$OnboardingEvent.Twins$mapOf()</ID>
+    <ID>UseEmptyCounterpart:OnboardingVisaAnalyticsEvent.kt$OnboardingVisaAnalyticsEvent$mapOf()</ID>
+    <ID>UseEmptyCounterpart:VisaAnalyticsEvent.kt$VisaAnalyticsEvent$mapOf()</ID>
+    <ID>UseEmptyCounterpart:WalletArtwork.kt$listOf()</ID>
+    <ID>UseOrEmpty:OnboardingVisaPinCode.kt$value.getOrNull(index)?.toString() ?: ""</ID>
+  </CurrentIssues>
+</SmellBaseline>

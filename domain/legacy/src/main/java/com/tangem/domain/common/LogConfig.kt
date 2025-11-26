@@ -10,11 +10,6 @@ object LogConfig {
 }
 
 object NetworkLogConfig {
-    const val mercuryoService: Boolean = false
-    const val moonPayService: Boolean = false
-    const val utorgService: Boolean = false
-    val tangemTechService: Boolean = BuildConfig.LOG_ENABLED
-    val paymentologyApiService: Boolean = BuildConfig.LOG_ENABLED
     val blockchainSdkNetwork: Boolean = BuildConfig.LOG_ENABLED
 }
 
