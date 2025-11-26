@@ -15,7 +15,7 @@ data class OnrampOffer(
 )
 
 enum class OnrampOfferAdvantages {
-    Default, BestRate, Fastest,
+    Default, BestRate, Fastest, GreatRate,
 }
 
 enum class OnrampOfferCategory {

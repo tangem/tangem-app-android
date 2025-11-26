@@ -1,8 +1,8 @@
 package com.tangem.feature.wallet.presentation.wallet.loaders.implementors
 
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
-import com.tangem.domain.promo.GetStoryContentUseCase
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.promo.GetStoryContentUseCase
 import com.tangem.domain.staking.usecase.StakingApyFlowUseCase
 import com.tangem.domain.wallets.usecase.ShouldSaveUserWalletsUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyApyFlowUseCase
@@ -15,8 +15,9 @@ import com.tangem.feature.wallet.presentation.wallet.domain.MultiWalletTokenList
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletWithFundsChecker
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.subscribers.*
-import com.tangem.feature.wallet.presentation.account.AccountDependencies
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 
+@Deprecated("Use SingleWalletWithTokenContentLoaderV2 instead")
 @Suppress("LongParameterList")
 internal class SingleWalletWithTokenContentLoader(
     private val userWallet: UserWallet.Cold,
@@ -31,9 +32,9 @@ internal class SingleWalletWithTokenContentLoader(
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val shouldSaveUserWalletsUseCase: ShouldSaveUserWalletsUseCase,
     private val getStoryContentUseCase: GetStoryContentUseCase,
-    private val accountDependencies: AccountDependencies,
     private val yieldSupplyApyFlowUseCase: YieldSupplyApyFlowUseCase,
     private val stakingApyFlowUseCase: StakingApyFlowUseCase,
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
 ) : WalletContentLoader(id = userWallet.walletId) {
 
     override fun create(): List<WalletSubscriber> {
@@ -46,7 +47,6 @@ internal class SingleWalletWithTokenContentLoader(
                 walletWithFundsChecker = walletWithFundsChecker,
                 tokenListStore = tokenListStore,
                 getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
-                accountDependencies = accountDependencies,
                 yieldSupplyApyFlowUseCase = yieldSupplyApyFlowUseCase,
                 stakingApyFlowUseCase = stakingApyFlowUseCase,
             ).let(::add)
@@ -67,6 +67,7 @@ internal class SingleWalletWithTokenContentLoader(
                 stateHolder = stateHolder,
                 shouldSaveUserWalletsUseCase = shouldSaveUserWalletsUseCase,
                 clickIntents = clickIntents,
+                hotWalletFeatureToggles = hotWalletFeatureToggles,
             ).let(::add)
         }
     }

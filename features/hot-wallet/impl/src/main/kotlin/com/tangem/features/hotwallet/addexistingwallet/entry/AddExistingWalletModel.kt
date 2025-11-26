@@ -2,6 +2,7 @@ package com.tangem.features.hotwallet.addexistingwallet.entry
 
 import com.arkivanov.decompose.router.stack.*
 import com.tangem.common.routing.AppRoute
+import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.core.decompose.di.GlobalUiMessageSender
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -13,6 +14,7 @@ import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.settings.ShouldAskPermissionUseCase
+import com.tangem.domain.hotwallet.SetAccessCodeSkippedUseCase
 import com.tangem.features.hotwallet.addexistingwallet.entry.routing.AddExistingWalletRoute
 import com.tangem.features.hotwallet.addexistingwallet.im.port.AddExistingWalletImportComponent
 import com.tangem.features.hotwallet.manualbackup.completed.ManualBackupCompletedComponent
@@ -32,18 +34,29 @@ internal class AddExistingWalletModel @Inject constructor(
     private val router: Router,
     private val shouldAskPermissionUseCase: ShouldAskPermissionUseCase,
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
+    private val trackingContextProxy: TrackingContextProxy,
+    private val setAccessCodeSkippedUseCase: SetAccessCodeSkippedUseCase,
 ) : Model() {
 
     val hotWalletStepperComponentModelCallback = HotWalletStepperComponentModelCallback()
     val addExistingWalletImportModelCallbacks = AddExistingWalletImportModelCallbacks()
-    val manualBackupCompletedComponentModelCallbacks = ManualBackupCompletedComponentModelCallbacks()
+    val manualBackupCompletedModelCallbacks = ManualBackupCompletedModelCallbacks()
     val accessCodeModelCallbacks = AccessCodeModelCallbacks()
     val pushNotificationsCallbacks = PushNotificationsCallbacks()
-    val mobileWalletSetupFinishedComponentModelCallbacks = MobileWalletSetupFinishedComponentModelCallbacks()
+    val mobileWalletSetupFinishedModelCallbacks = MobileWalletSetupFinishedModelCallbacks()
 
     val stackNavigation = StackNavigation<AddExistingWalletRoute>()
     val startRoute = AddExistingWalletRoute.Import
     val currentRoute: MutableStateFlow<AddExistingWalletRoute> = MutableStateFlow(startRoute)
+
+    init {
+        trackingContextProxy.addHotWalletContext()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        trackingContextProxy.removeContext()
+    }
 
     fun onChildBack() {
         when (currentRoute.value) {
@@ -72,6 +85,12 @@ internal class AddExistingWalletModel @Inject constructor(
     }
 
     private fun showSkipAccessCodeWarningDialog() {
+        val userWalletId = when (val route = currentRoute.value) {
+            is AddExistingWalletRoute.SetAccessCode -> route.userWalletId
+            is AddExistingWalletRoute.ConfirmAccessCode -> route.userWalletId
+            else -> null
+        }
+
         uiMessageSender.send(
             DialogMessage(
                 message = resourceReference(R.string.access_code_alert_skip_description),
@@ -82,7 +101,14 @@ internal class AddExistingWalletModel @Inject constructor(
                 ),
                 secondAction = EventMessageAction(
                     title = resourceReference(R.string.access_code_alert_skip_ok),
-                    onClick = { navigateToPushNotificationsOrNext() },
+                    onClick = {
+                        if (userWalletId != null) {
+                            modelScope.launch {
+                                setAccessCodeSkippedUseCase(userWalletId, true)
+                            }
+                        }
+                        navigateToPushNotificationsOrNext()
+                    },
                 ),
                 shouldDismissOnFirstAction = true,
             ),
@@ -105,10 +131,12 @@ internal class AddExistingWalletModel @Inject constructor(
         }
     }
 
-    inner class ManualBackupCompletedComponentModelCallbacks : ManualBackupCompletedComponent.ModelCallbacks {
+    inner class ManualBackupCompletedModelCallbacks : ManualBackupCompletedComponent.ModelCallbacks {
         override fun onContinueClick(userWalletId: UserWalletId) {
             stackNavigation.replaceAll(AddExistingWalletRoute.SetAccessCode(userWalletId))
         }
+
+        override fun onUpgradeClick(userWalletId: UserWalletId) = Unit
     }
 
     inner class AccessCodeModelCallbacks : AccessCodeComponent.ModelCallbacks {
@@ -135,9 +163,9 @@ internal class AddExistingWalletModel @Inject constructor(
         }
     }
 
-    inner class MobileWalletSetupFinishedComponentModelCallbacks :
+    inner class MobileWalletSetupFinishedModelCallbacks :
         MobileWalletSetupFinishedComponent.ModelCallbacks {
-        override fun onContinueClick() {
+        override fun onFinishClick() {
             router.replaceAll(AppRoute.Wallet)
         }
     }

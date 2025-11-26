@@ -1,11 +1,17 @@
 package com.tangem.feature.wallet.presentation.wallet.domain
 
 import arrow.core.Either
+import arrow.core.right
 import com.tangem.core.decompose.di.ModelScoped
+import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
+import com.tangem.domain.account.status.producer.SingleAccountStatusProducer
+import com.tangem.domain.account.status.supplier.SingleAccountStatusSupplier
 import com.tangem.domain.card.CardTypesResolver
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.account.AccountId
+import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.settings.IsReadyToShowRateAppUseCase
@@ -22,8 +28,11 @@ import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
 @ModelScoped
+@Suppress("LongParameterList")
 internal class GetSingleWalletWarningsFactory @Inject constructor(
+    private val accountsFeatureToggles: AccountsFeatureToggles,
     private val getSingleCryptoCurrencyStatusUseCase: GetSingleCryptoCurrencyStatusUseCase,
+    private val singleAccountStatusSupplier: SingleAccountStatusSupplier,
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val isReadyToShowRateAppUseCase: IsReadyToShowRateAppUseCase,
     private val isNeedToBackupUseCase: IsNeedToBackupUseCase,
@@ -40,7 +49,7 @@ internal class GetSingleWalletWarningsFactory @Inject constructor(
         val cardTypesResolver = userWallet.scanResponse.cardTypesResolver
 
         return combine(
-            flow = getSingleCryptoCurrencyStatusUseCase.invokeSingleWallet(userWallet.walletId),
+            flow = getPrimaryCurrencyStatusFlow(userWallet),
             flow2 = isReadyToShowRateAppUseCase().conflate(),
             flow3 = isNeedToBackupUseCase(userWallet.walletId).conflate(),
             flow4 = getWalletsUseCase().conflate(),
@@ -215,6 +224,29 @@ internal class GetSingleWalletWarningsFactory @Inject constructor(
 
             element
         }
+    }
+
+    private fun getPrimaryCurrencyStatusFlow(
+        userWallet: UserWallet,
+    ): Flow<Either<CurrencyStatusError, CryptoCurrencyStatus>> {
+        return if (accountsFeatureToggles.isFeatureEnabled) {
+            getAccountStatusFlow(userWallet).mapNotNull { accountStatus ->
+                accountStatus.flattenCurrencies().firstOrNull()
+            }
+                .distinctUntilChanged()
+                .conflate()
+                .map { it.right() }
+        } else {
+            getSingleCryptoCurrencyStatusUseCase.invokeSingleWallet(userWallet.walletId)
+        }
+    }
+
+    private fun getAccountStatusFlow(userWallet: UserWallet): Flow<AccountStatus> {
+        val accountId = AccountId.forMainCryptoPortfolio(userWalletId = userWallet.walletId)
+
+        return singleAccountStatusSupplier(SingleAccountStatusProducer.Params(accountId))
+            .distinctUntilChanged()
+            .conflate()
     }
 
     private companion object {
