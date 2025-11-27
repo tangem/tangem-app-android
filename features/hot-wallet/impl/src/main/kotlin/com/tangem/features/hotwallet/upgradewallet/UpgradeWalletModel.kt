@@ -18,6 +18,7 @@ import com.tangem.core.ui.extensions.toWrappedList
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.domain.card.BackupValidator
+import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
@@ -98,26 +99,12 @@ internal class UpgradeWalletModel @Inject constructor(
 
             tangemSdkManager
                 .scanProduct()
-                .doOnSuccess {
-                    // Check if user attempted to upgrade before but something went wrong and a full reset is required
-                    val userWallet = coldUserWalletBuilderFactory.create(it).build()
-                    val sameWalletButNotFinishedBackup by lazy {
-                        userWallet?.walletId == params.userWalletId &&
-                            BackupValidator.isValidFull(it.card).not()
+                .doOnSuccess { scanResponse ->
+                    checkIsWalletSuitableToBeUsedAsUpgrade(scanResponse = scanResponse) {
+                        delay(DELAY_SDK_DIALOG_CLOSE)
+                        tangemSdkManager.changeDisplayedCardIdNumbersCount(scanResponse)
+                        navigateToUpgradeFlow(scanResponse)
                     }
-                    val otherWalletAndAlreadyCreated by lazy {
-                        userWallet?.walletId != params.userWalletId &&
-                            it.card.wallets.map { it.curve }.toSet().isNotEmpty()
-                    }
-
-                    if (userWallet != null && (sameWalletButNotFinishedBackup || otherWalletAndAlreadyCreated)) {
-                        startResetCardsFlow.emit(userWallet)
-                        return@doOnSuccess
-                    }
-
-                    delay(DELAY_SDK_DIALOG_CLOSE)
-                    tangemSdkManager.changeDisplayedCardIdNumbersCount(it)
-                    navigateToUpgradeFlow(it)
                 }
                 .doOnFailure {
                     showCardVerificationFailedDialog(it)
@@ -130,6 +117,35 @@ internal class UpgradeWalletModel @Inject constructor(
 
     private fun setLoading(isLoading: Boolean) {
         uiState.update { it.copy(isLoading = isLoading) }
+    }
+
+    private suspend fun checkIsWalletSuitableToBeUsedAsUpgrade(
+        scanResponse: ScanResponse,
+        onSuccess: suspend () -> Unit,
+    ) {
+        // Check if user attempted to upgrade before but something went wrong and a full reset is required
+        val userWallet = coldUserWalletBuilderFactory.create(scanResponse).build()
+        val isSameWalletButNotFinishedBackup = userWallet?.walletId == params.userWalletId &&
+            BackupValidator.isValidFull(scanResponse.card).not()
+
+        if (userWallet != null && isSameWalletButNotFinishedBackup) {
+            startResetCardsFlow.emit(userWallet)
+            return
+        }
+
+        // Check for the correct card type
+        when {
+            scanResponse.card.wallets.isNotEmpty() -> uiMessageSender.send(
+                DialogMessage(resourceReference(R.string.hw_upgrade_error_card_already_has_wallet)),
+            )
+            scanResponse.cardTypesResolver.isWallet2().not() -> uiMessageSender.send(
+                DialogMessage(resourceReference(R.string.hw_upgrade_error_wallet2_card_required)),
+            )
+            scanResponse.card.settings.isKeysImportAllowed.not() -> uiMessageSender.send(
+                DialogMessage(resourceReference(R.string.hw_upgrade_error_card_key_import)),
+            )
+            else -> onSuccess()
+        }
     }
 
     private fun showCardVerificationFailedDialog(error: TangemError) {
