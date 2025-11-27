@@ -24,6 +24,9 @@ import com.tangem.tap.features.details.ui.common.DetailsMainButton
 import com.tangem.tap.features.details.ui.common.SettingsScreensScaffold
 import com.tangem.wallet.R
 
+private const val CARD_PLACEHOLDER_SECONDARY_ROTATION = -15f
+private const val CARD_PLACEHOLDER_PRIMARY_ROTATION = -1f
+
 @Composable
 internal fun CardSettingsScreen(state: CardSettingsScreenState, modifier: Modifier = Modifier) {
     val isCardReadingNeeded = state.cardDetails == null
@@ -42,74 +45,85 @@ internal fun CardSettingsScreen(state: CardSettingsScreenState, modifier: Modifi
     )
 }
 
-@Suppress("MagicNumber")
 @Composable
 private fun CardSettingsReadCard(onScanCardClick: () -> Unit) {
     Column(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState()),
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = TangemTheme.dimens.spacing40)
-                .testTag(DeviceSettingsScreenTestTags.IMAGE_BLOCK),
-        ) {
-            Image(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(
-                        start = TangemTheme.dimens.spacing80,
-                        end = TangemTheme.dimens.spacing80,
-                        top = TangemTheme.dimens.spacing70,
-                    )
-                    .rotate(-15f),
-                painter = painterResource(id = R.drawable.card_placeholder_secondary),
-                contentDescription = null,
-                contentScale = ContentScale.FillWidth,
-            )
-            Image(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(
-                        start = TangemTheme.dimens.spacing60,
-                        end = TangemTheme.dimens.spacing60,
-                    )
-                    .rotate(-1f),
-                painter = painterResource(id = R.drawable.card_placeholder_black),
-                contentDescription = null,
-                contentScale = ContentScale.FillWidth,
-            )
-        }
+        CardPlaceholderImages()
         Spacer(modifier = Modifier.weight(1f))
-        Column(
+        ScanCardContent(onScanCardClick = onScanCardClick)
+    }
+}
+
+@Composable
+private fun CardPlaceholderImages() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = TangemTheme.dimens.spacing40)
+            .testTag(DeviceSettingsScreenTestTags.IMAGE_BLOCK),
+    ) {
+        Image(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(
-                    start = TangemTheme.dimens.spacing16,
-                    end = TangemTheme.dimens.spacing16,
-                    bottom = TangemTheme.dimens.spacing32,
-                ),
-        ) {
-            Text(
-                text = stringResourceSafe(id = R.string.scan_card_settings_title),
-                color = TangemTheme.colors.text.primary1,
-                style = TangemTheme.typography.h3,
-            )
-            Spacer(modifier = Modifier.size(TangemTheme.dimens.size20))
-            Text(
-                text = stringResourceSafe(id = R.string.scan_card_settings_message),
-                color = TangemTheme.colors.text.secondary,
-                style = TangemTheme.typography.body1,
-                modifier = Modifier
-                    .verticalScroll(rememberScrollState())
-                    .weight(weight = 1f, fill = false),
-            )
-            Spacer(modifier = Modifier.size(TangemTheme.dimens.size32))
-            DetailsMainButton(
-                title = stringResourceSafe(id = R.string.scan_card_settings_button),
-                onClick = onScanCardClick,
-            )
-        }
+                    start = TangemTheme.dimens.spacing80,
+                    end = TangemTheme.dimens.spacing80,
+                    top = TangemTheme.dimens.spacing70,
+                )
+                .rotate(CARD_PLACEHOLDER_SECONDARY_ROTATION),
+            painter = painterResource(id = R.drawable.card_placeholder_secondary),
+            contentDescription = null,
+            contentScale = ContentScale.FillWidth,
+        )
+        Image(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    start = TangemTheme.dimens.spacing60,
+                    end = TangemTheme.dimens.spacing60,
+                )
+                .rotate(CARD_PLACEHOLDER_PRIMARY_ROTATION),
+            painter = painterResource(id = R.drawable.card_placeholder_black),
+            contentDescription = null,
+            contentScale = ContentScale.FillWidth,
+        )
+    }
+}
+
+@Composable
+private fun ScanCardContent(onScanCardClick: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(
+                start = TangemTheme.dimens.spacing16,
+                end = TangemTheme.dimens.spacing16,
+                bottom = TangemTheme.dimens.spacing32,
+            ),
+    ) {
+        Text(
+            text = stringResourceSafe(id = R.string.scan_card_settings_title),
+            color = TangemTheme.colors.text.primary1,
+            style = TangemTheme.typography.h3,
+        )
+        Spacer(modifier = Modifier.size(TangemTheme.dimens.size20))
+        Text(
+            text = stringResourceSafe(id = R.string.scan_card_settings_message),
+            color = TangemTheme.colors.text.secondary,
+            style = TangemTheme.typography.body1,
+            modifier = Modifier
+                .verticalScroll(rememberScrollState())
+                .weight(weight = 1f, fill = false),
+        )
+        Spacer(modifier = Modifier.size(TangemTheme.dimens.size32))
+        DetailsMainButton(
+            title = stringResourceSafe(id = R.string.scan_card_settings_button),
+            onClick = onScanCardClick,
+        )
     }
 }
 
