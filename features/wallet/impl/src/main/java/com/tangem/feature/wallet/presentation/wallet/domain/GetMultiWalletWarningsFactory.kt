@@ -97,6 +97,7 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
             seedPhraseNotificationUseCase(userWalletId = userWallet.walletId),
             shouldShowPromoWalletUseCase(userWalletId = userWallet.walletId, promoId = PromoId.VisaPresale),
             shouldShowPromoWalletUseCase(userWalletId = userWallet.walletId, promoId = PromoId.Sepa),
+            shouldShowPromoWalletUseCase(userWalletId = userWallet.walletId, promoId = PromoId.BlackFriday),
             notificationsRepository.getShouldShowNotification(NotificationId.EnablePushesReminderNotification.key),
         ) { array -> array }
             .combine(tokenListFlow()) { array, any: Any -> arrayOf(any).plus(elements = array) }
@@ -109,7 +110,8 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
                 val seedPhraseIssueStatus = array[3] as SeedPhraseNotificationsStatus
                 val shouldShowVisaPromo = array[4] as Boolean
                 val shouldShowSepaBanner = array[5] as Boolean
-                val shouldShowEnablePushesReminderNotification = array[6] as Boolean
+                val shouldShowBlackFridayPromo = array[6] as Boolean
+                val shouldShowEnablePushesReminderNotification = array[7] as Boolean
 
                 buildList {
                     addUsedOutdatedDataNotification(totalFiatBalance)
@@ -117,6 +119,8 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
                     addCriticalNotifications(userWallet, seedPhraseIssueStatus, clickIntents)
 
                     addFinishWalletActivationNotification(userWallet, totalFiatBalance, clickIntents)
+
+                    addBlackFridayPromoNotification(clickIntents, shouldShowBlackFridayPromo)
 
                     addVisaPresalePromoNotification(clickIntents, shouldShowVisaPromo)
 
@@ -281,6 +285,19 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
             element = WalletNotification.VisaPresalePromo(
                 onCloseClick = { clickIntents.onClosePromoClick(promoId = PromoId.VisaPresale) },
                 onClick = { clickIntents.onPromoClick(promoId = PromoId.VisaPresale) },
+            ),
+            condition = shouldShowPromo,
+        )
+    }
+
+    private fun MutableList<WalletNotification>.addBlackFridayPromoNotification(
+        clickIntents: WalletClickIntents,
+        shouldShowPromo: Boolean,
+    ) {
+        addIf(
+            element = WalletNotification.BlackFridayPromo(
+                onCloseClick = { clickIntents.onClosePromoClick(promoId = PromoId.BlackFriday) },
+                onClick = { clickIntents.onPromoClick(promoId = PromoId.BlackFriday) },
             ),
             condition = shouldShowPromo,
         )
