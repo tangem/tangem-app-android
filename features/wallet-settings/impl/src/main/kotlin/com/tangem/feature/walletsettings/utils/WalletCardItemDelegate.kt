@@ -9,6 +9,7 @@ import com.tangem.domain.wallets.usecase.ShouldSaveUserWalletsSyncUseCase
 import com.tangem.feature.walletsettings.entity.DialogConfig
 import com.tangem.feature.walletsettings.entity.WalletSettingsItemUM
 import com.tangem.feature.walletsettings.impl.R
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.wallet.utils.UserWalletImageFetcher
 import com.tangem.operations.attestation.ArtworkSize
 import dagger.assisted.Assisted
@@ -17,16 +18,22 @@ import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 
 internal class WalletCardItemDelegate @AssistedInject constructor(
     private val getShouldSaveUserWalletsSyncUseCase: ShouldSaveUserWalletsSyncUseCase,
     private val walletImageFetcher: UserWalletImageFetcher,
     @Assisted private val dialogNavigation: SlotNavigation<DialogConfig>,
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
 ) {
 
     fun cardItemFlow(wallet: UserWallet): Flow<WalletSettingsItemUM.CardBlock> = combine(
         flow = walletImageFetcher.walletImage(wallet, ArtworkSize.SMALL),
-        flow2 = flow { emit(getShouldSaveUserWalletsSyncUseCase()) },
+        flow2 = if (!hotWalletFeatureToggles.isHotWalletEnabled) {
+            flow { emit(getShouldSaveUserWalletsSyncUseCase()) }
+        } else {
+            flowOf(true)
+        },
         transform = { imageState, isRenameAvailable ->
             val walletName = wallet.name
             WalletSettingsItemUM.CardBlock(
