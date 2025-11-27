@@ -1,4 +1,4 @@
-package com.tangem.features.yield.supply.impl.subcomponents.active.ui
+package com.tangem.features.yield.supply.impl.active.ui
 
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedContent
@@ -6,7 +6,9 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -26,6 +28,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.notifications.NotificationUM
+import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.SpacerH4
 import com.tangem.core.ui.components.SpacerH8
 import com.tangem.core.ui.components.SpacerWMax
@@ -37,7 +40,7 @@ import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.yield.supply.impl.R
-import com.tangem.features.yield.supply.impl.subcomponents.active.entity.YieldSupplyActiveContentUM
+import com.tangem.features.yield.supply.impl.active.entity.YieldSupplyActiveContentUM
 import kotlinx.collections.immutable.persistentListOf
 
 @Composable
@@ -50,10 +53,12 @@ internal fun YieldSupplyActiveContent(
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(14.dp),
-        modifier = modifier.padding(
-            vertical = 8.dp,
-            horizontal = 16.dp,
-        ),
+        modifier = modifier
+            .verticalScroll(rememberScrollState())
+            .padding(
+                vertical = 8.dp,
+                horizontal = 16.dp,
+            ),
     ) {
         Column(
             verticalArrangement = Arrangement.spacedBy(4.dp),
@@ -90,6 +95,10 @@ internal fun YieldSupplyActiveContent(
             onReadMoreClick = onReadMoreClick,
         )
 
+        YieldSupplyActiveTopUp(
+            state = state,
+        )
+
         AnimatedVisibility(state.feeDescription != null) {
             Text(
                 modifier = Modifier.padding(horizontal = 12.dp),
@@ -107,6 +116,8 @@ internal fun YieldSupplyActiveContent(
                 color = TangemTheme.colors.text.tertiary,
             )
         }
+
+        SpacerH(16.dp)
     }
 }
 
@@ -199,18 +210,26 @@ private fun YieldSupplyActiveMyFunds(
             color = TangemTheme.colors.stroke.primary,
         )
         InfoRow(
-            title = resourceReference(R.string.yield_module_earn_sheet_transfers_title),
-            info = resourceReference(R.string.yield_module_transfer_mode_automatic),
-            isBalanceHidden = false,
-        )
-        HorizontalDivider(
-            thickness = 0.5.dp,
-            color = TangemTheme.colors.stroke.primary,
-        )
-        InfoRow(
             title = resourceReference(R.string.yield_module_earn_sheet_available_title),
             info = state.availableBalance,
             isBalanceHidden = isBalanceHidden,
+        )
+    }
+}
+
+@Composable
+private fun YieldSupplyActiveTopUp(state: YieldSupplyActiveContentUM) {
+    Column(
+        modifier = Modifier
+            .clip(RoundedCornerShape(16.dp))
+            .background(TangemTheme.colors.background.action)
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp),
+    ) {
+        InfoRow(
+            title = resourceReference(R.string.yield_module_earn_sheet_transfers_title),
+            info = resourceReference(R.string.yield_module_transfer_mode_automatic),
+            isBalanceHidden = false,
         )
         HorizontalDivider(
             thickness = 0.5.dp,
