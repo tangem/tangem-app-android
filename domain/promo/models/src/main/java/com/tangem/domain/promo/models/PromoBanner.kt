@@ -29,4 +29,5 @@ enum class PromoId {
     Referral,
     Sepa,
     VisaPresale,
+    BlackFriday,
 }
