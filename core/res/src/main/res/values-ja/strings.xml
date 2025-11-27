@@ -1420,9 +1420,14 @@
   <string name="tangempay_onboarding_security_description">あなたの住所や資産を開示することなく、個別の支払い用アカウントが作成されます。</string>
   <string name="tangempay_onboarding_security_title">他に類を見ないプライバシー</string>
   <string name="tangempay_onboarding_title">無料のTangem Payカードを数分でゲットしましょう</string>
+  <string name="tangempay_payment_account">支払いアカウント</string>
+  <string name="tangempay_payment_account_sync_needed">支払いアカウントの同期が必要です</string>
   <string name="tangempay_service_unavailable_description">技術的な問題を修正しています。後でもう一度お試しください。</string>
   <string name="tangempay_service_unavailable_title">サービスは一時的に利用できません</string>
+  <string name="tangempay_service_unreachable_try_later">現在サービスに接続できません。後ほどもう一度お試しください。</string>
+  <string name="tangempay_temporarily_unavailable">Tangem Payは一時的に利用できません</string>
   <string name="tangempay_title">Tangem Pay</string>
+  <string name="tangempay_use_tangem_device_to_restore_payment_account">カードまたはリングを使用して、支払いアカウントへのアクセスを復元してください。</string>
   <string name="this_is_my_wallet_title">これは私のウォレットです</string>
   <string name="toast_balances_hidden">残高非表示</string>
   <string name="toast_balances_shown">残高表示</string>
