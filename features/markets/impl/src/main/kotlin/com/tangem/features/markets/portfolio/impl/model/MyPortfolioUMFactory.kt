@@ -99,6 +99,7 @@ internal class MyPortfolioUMFactory(
 
         val alreadyAddedNetworks = portfolioData.walletsWithCurrencies
             .filterAvailableNetworks(availableNetworks)[selectedWallet]
+            ?.filter { !it.status.currency.isCustom }
             ?.map { it.status.currency.network.backendId }
             ?.toSet()
 
