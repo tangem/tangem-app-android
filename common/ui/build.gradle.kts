@@ -41,6 +41,7 @@ dependencies {
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.onramp.models)
     implementation(projects.domain.promo.models)
+    implementation(projects.domain.common)
 
     implementation(tangemDeps.card.core)
     implementation(tangemDeps.blockchain) {
