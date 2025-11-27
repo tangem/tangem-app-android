@@ -47,6 +47,7 @@ internal class DefaultOnrampComponent @AssistedInject constructor(
         childFactory = ::screenChild,
     )
 
+    @Suppress("ReusedModifierInstance")
     @Composable
     override fun Content(modifier: Modifier) {
         val childStack by contentStack.subscribeAsState()
@@ -78,10 +79,10 @@ internal class DefaultOnrampComponent @AssistedInject constructor(
                         cryptoCurrency = params.cryptoCurrency,
                         openSettings = { navigation.push(OnrampChild.Settings) },
                         source = params.source,
-                        openRedirectPage = {
+                        openRedirectPage = { quote ->
                             navigation.push(
                                 OnrampChild.RedirectPage(
-                                    quote = it,
+                                    quote = quote,
                                     cryptoCurrency = params.cryptoCurrency,
                                 ),
                             )
@@ -96,15 +97,15 @@ internal class DefaultOnrampComponent @AssistedInject constructor(
                         cryptoCurrency = params.cryptoCurrency,
                         openSettings = { navigation.push(OnrampChild.Settings) },
                         source = params.source,
-                        openRedirectPage = {
+                        openRedirectPage = { onrampProviderWithQuoteData ->
                             navigation.push(
                                 OnrampChild.RedirectPage(
-                                    quote = it,
+                                    quote = onrampProviderWithQuoteData,
                                     cryptoCurrency = params.cryptoCurrency,
                                 ),
                             )
                         },
-                        launchSepa = params.shouldLaunchSepa,
+                        isLaunchSepa = params.shouldLaunchSepa,
                     ),
                 )
             }
