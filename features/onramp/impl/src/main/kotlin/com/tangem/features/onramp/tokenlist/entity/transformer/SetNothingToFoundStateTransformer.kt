@@ -8,7 +8,6 @@ import com.tangem.features.onramp.tokenlist.entity.TokenListUM
 import com.tangem.features.onramp.tokenlist.entity.TokenListUMData
 import com.tangem.features.onramp.tokenlist.entity.TokenListUMTransformer
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.toImmutableList
 
 internal class SetNothingToFoundStateTransformer(
     private val isBalanceHidden: Boolean,
@@ -17,17 +16,15 @@ internal class SetNothingToFoundStateTransformer(
 
     override fun transform(prevState: TokenListUM): TokenListUM {
         return prevState.copy(
-            availableItems = buildList {
+            availableItems = persistentListOf(
                 createGroupTitle(
                     textReference = resourceReference(id = R.string.exchange_tokens_available_tokens_header),
-                )
-                    .let(::add)
-
+                ),
                 TokensListItemUM.Text(
                     id = emptySearchMessageReference.hashCode(),
                     text = emptySearchMessageReference,
-                ).let(::add)
-            }.toImmutableList(),
+                ),
+            ),
             unavailableItems = persistentListOf(),
             tokensListData = TokenListUMData.EmptyList,
             isBalanceHidden = isBalanceHidden,
