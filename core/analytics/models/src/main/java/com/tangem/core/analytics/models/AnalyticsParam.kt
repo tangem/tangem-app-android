@@ -85,6 +85,10 @@ sealed class AnalyticsParam {
         data object Markets : ScreensSources("Markets")
         data object HotWallet : ScreensSources("Hot Wallet")
         data object TangemPay : ScreensSources("Tangem Pay")
+        data object WalletSettings : ScreensSources("Wallet Settings")
+        data object Upgrade : ScreensSources("Upgrade")
+        data object HardwareWallet : ScreensSources("Hardware Wallet")
+        data object ImportWallet : ScreensSources("Import Wallet")
     }
 
     sealed class TxSentFrom(val value: String) {
@@ -201,6 +205,17 @@ sealed class AnalyticsParam {
 
     enum class EnsStatus(val value: String) {
         EMPTY("Empty"), FULL("Full")
+    }
+
+    enum class ProductType(val value: String) {
+        Note("Note"),
+        Twins("Twins"),
+        Wallet("Wallet"),
+        Start2Coin("Start2Coin"),
+        Wallet2("Wallet 2.0"),
+        Ring("Ring"),
+        Visa("VISA"),
+        MobileWallet("Mobile Wallet"),
     }
 
     companion object Key {
