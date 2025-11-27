@@ -83,8 +83,8 @@ internal class HotCryptoModel @Inject constructor(
         onBufferOverflow = BufferOverflow.DROP_OLDEST,
     )
 
-    val state: StateFlow<HotCryptoUM> get() = _state
-    private val _state = MutableStateFlow(value = HotCryptoUM(items = persistentListOf()))
+    val state: StateFlow<HotCryptoUM>
+        field = MutableStateFlow(value = HotCryptoUM(items = persistentListOf()))
 
     private val params: HotCryptoComponent.Params = paramsContainer.require()
 
@@ -116,7 +116,7 @@ internal class HotCryptoModel @Inject constructor(
                     .map(TokensListItemUM::Token)
             },
         )
-            .onEach { items -> _state.update { HotCryptoUM(items = it.buildItems(items)) } }
+            .onEach { items -> state.update { HotCryptoUM(items = it.buildItems(items)) } }
             .flowOn(dispatchers.default)
             .launchIn(modelScope)
     }
@@ -131,7 +131,7 @@ internal class HotCryptoModel @Inject constructor(
                 .map(TokensListItemUM::Token)
         }
             .onEach { items ->
-                _state.update { HotCryptoUM(items = it.buildItems(items)) }
+                state.update { HotCryptoUM(items = it.buildItems(items)) }
             }
             .launchIn(modelScope)
     }
@@ -176,7 +176,7 @@ internal class HotCryptoModel @Inject constructor(
                     cryptoCurrency = currency.cryptoCurrency,
                     userWallet = userWallet,
                     account = account,
-                    availableMorePortfolio = false,
+                    isMorePortfolioAvailable = false,
                 )
                 hotCryptoToAddDataFlow.emit(tokenToAdd)
                 bottomSheetNavigationV2.replaceAll(OnrampAddTokenRoute.AddToken)
@@ -192,7 +192,7 @@ internal class HotCryptoModel @Inject constructor(
                             cryptoCurrency = currency.cryptoCurrency,
                             userWallet = userWallet,
                             account = selectedAccount,
-                            availableMorePortfolio = true,
+                            isMorePortfolioAvailable = true,
                         )
                     }
                     .shareIn(this, started = SharingStarted.Eagerly)
@@ -218,8 +218,8 @@ internal class HotCryptoModel @Inject constructor(
             closeNavigationFlow()
             channel.close()
         }
-            .catch {
-                Timber.e(it)
+            .catch { throwable ->
+                Timber.e(throwable)
                 closeNavigationFlow()
             }
             .launchIn(modelScope)
@@ -232,9 +232,9 @@ internal class HotCryptoModel @Inject constructor(
                 userWalletId = params.userWalletId,
                 cryptoCurrencyId = id,
             )
-                .onRight {
+                .onRight { status ->
                     bottomSheetNavigation.dismiss()
-                    params.onTokenClick(it)
+                    params.onTokenClick(status)
                 }
                 .onLeft { Timber.d("Unable to get CryptoCurrencyStatus[$id]: $it") }
         }
@@ -246,8 +246,8 @@ internal class HotCryptoModel @Inject constructor(
             val isNotAddedHotCrypto = hotCryptoPortfolioData.wallet.accounts
                 .find { it.account.accountId == accountStatus.accountId }
                 ?.addedHotCrypto
-                ?.none { it.currency.id.rawCurrencyId == hotCrypto.cryptoCurrency.id.rawCurrencyId }
-                ?: false
+                ?.none { it.currency.id.rawCurrencyId == hotCrypto.cryptoCurrency.id.rawCurrencyId } == true
+
             return@isEnabled isNotAddedHotCrypto
         }
     }
