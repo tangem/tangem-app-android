@@ -1,10 +1,15 @@
-package com.tangem.features.yield.supply.impl.subcomponents.active.model
+package com.tangem.features.yield.supply.impl.active.model
 
 import arrow.core.getOrElse
+import com.arkivanov.decompose.router.slot.SlotNavigation
+import com.arkivanov.decompose.router.slot.activate
+import com.arkivanov.decompose.router.slot.dismiss
+import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
@@ -14,18 +19,21 @@ import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.yield.supply.usecase.YieldSupplyGetProtocolBalanceUseCase
-import com.tangem.domain.yield.supply.usecase.YieldSupplyGetTokenStatusUseCase
-import com.tangem.domain.yield.supply.usecase.YieldSupplyMinAmountUseCase
-import com.tangem.domain.yield.supply.usecase.YieldSupplyGetCurrentFeeUseCase
-import com.tangem.domain.yield.supply.usecase.YieldSupplyGetMaxFeeUseCase
+import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.domain.yield.supply.usecase.*
+import com.tangem.features.yield.supply.api.YieldSupplyActiveComponent
 import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
 import com.tangem.features.yield.supply.impl.R
-import com.tangem.features.yield.supply.impl.subcomponents.active.YieldSupplyActiveComponent
-import com.tangem.features.yield.supply.impl.subcomponents.active.entity.YieldSupplyActiveContentUM
-import com.tangem.features.yield.supply.impl.subcomponents.active.model.transformers.YieldSupplyActiveMinAmountTransformer
-import com.tangem.features.yield.supply.impl.subcomponents.active.model.transformers.YieldSupplyActiveFeeContentTransformer
+import com.tangem.features.yield.supply.impl.active.entity.YieldSupplyActiveContentUM
+import com.tangem.features.yield.supply.impl.active.model.transformers.YieldSupplyActiveFeeContentTransformer
+import com.tangem.features.yield.supply.impl.active.model.transformers.YieldSupplyActiveMinAmountTransformer
+import com.tangem.features.yield.supply.impl.subcomponents.approve.YieldSupplyApproveComponent
+import com.tangem.features.yield.supply.impl.subcomponents.stopearning.YieldSupplyStopEarningComponent
 import com.tangem.utils.StringsSigns.DASH_SIGN
+import com.tangem.utils.TangemBlogUrlBuilder
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.transformer.update
 import kotlinx.collections.immutable.persistentListOf
@@ -34,7 +42,7 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 @ModelScoped
 internal class YieldSupplyActiveModel @Inject constructor(
     paramsContainer: ParamsContainer,
@@ -46,11 +54,31 @@ internal class YieldSupplyActiveModel @Inject constructor(
     private val yieldSupplyGetCurrentFeeUseCase: YieldSupplyGetCurrentFeeUseCase,
     private val yieldSupplyGetMaxFeeUseCase: YieldSupplyGetMaxFeeUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
-) : Model() {
+    private val getUserWalletUseCase: GetUserWalletUseCase,
+    private val getSingleCryptoCurrencyStatusUseCase: GetSingleCryptoCurrencyStatusUseCase,
+    private val urlOpener: UrlOpener,
+    private val appRouter: AppRouter,
+) : Model(), YieldSupplyStopEarningComponent.ModelCallback,
+    YieldSupplyApproveComponent.ModelCallback {
 
     private val params: YieldSupplyActiveComponent.Params = paramsContainer.require()
 
-    private val cryptoCurrencyStatusFlow = params.cryptoCurrencyStatusFlow
+    val slotNavigation = SlotNavigation<YieldSupplyActiveRoute>()
+
+    lateinit var userWallet: UserWallet
+
+    val cryptoCurrencyStatusFlow = MutableStateFlow(
+        CryptoCurrencyStatus(
+            value = CryptoCurrencyStatus.Loading,
+            currency = params.cryptoCurrency,
+        ),
+    )
+
+    val balanceHiddenFlow = MutableStateFlow(false)
+    val transactionInProgressFlow: StateFlow<Boolean>
+        field = MutableStateFlow(false)
+
+    private val userWalletId = params.userWalletId
     private val cryptoCurrency = cryptoCurrencyStatusFlow.value.currency
     private var appCurrency = AppCurrency.Default
 
@@ -81,12 +109,12 @@ internal class YieldSupplyActiveModel @Inject constructor(
                 blockchain = cryptoCurrency.network.name,
             ),
         )
-        subscribeOnCurrencyUpdates()
+        subscribeOnCurrencyStatusUpdates()
 
         modelScope.launch(dispatchers.default) {
             appCurrency = getSelectedAppCurrencyUseCase.invokeSync().getOrElse { AppCurrency.Default }
             val protocolBalance = yieldSupplyGetProtocolBalanceUseCase(
-                userWalletId = params.userWallet.walletId,
+                userWalletId = userWalletId,
                 cryptoCurrency = cryptoCurrency,
             ).getOrNull()
 
@@ -101,32 +129,90 @@ internal class YieldSupplyActiveModel @Inject constructor(
         }
     }
 
-    private fun subscribeOnCurrencyUpdates() {
-        cryptoCurrencyStatusFlow.onEach { cryptoCurrencyStatus ->
-            val protocolBalance = cryptoCurrencyStatus.value.yieldSupplyStatus?.effectiveProtocolBalance
-                ?: yieldSupplyGetProtocolBalanceUseCase(
-                    userWalletId = params.userWallet.walletId,
-                    cryptoCurrency = cryptoCurrency,
-                ).getOrNull()
+    override fun onDismissClick() {
+        if (!transactionInProgressFlow.value) {
+            slotNavigation.dismiss()
+        }
+    }
 
-            loadApy()
-            loadMinAmount()
-            loadFees()
+    override fun onTransactionProgress(inProgress: Boolean) {
+        transactionInProgressFlow.update { inProgress }
+    }
 
-            uiState.update {
-                it.copy(
-                    availableBalance = stringReference(
-                        protocolBalance.format {
-                            crypto(
-                                symbol = AAVEV3_PREFIX + cryptoCurrency.symbol,
-                                decimals = cryptoCurrency.decimals,
-                            )
-                        },
-                    ),
-                )
-            }
-        }.flowOn(dispatchers.default)
-            .launchIn(modelScope)
+    override fun onStopEarningTransactionSent() {
+        transactionInProgressFlow.update { false }
+        appRouter.pop()
+    }
+
+    override fun onTransactionSent() {
+        transactionInProgressFlow.update { false }
+        appRouter.pop()
+    }
+
+    fun onApprove() {
+        slotNavigation.activate(YieldSupplyActiveRoute.Approve)
+    }
+
+    fun onStopEarning() {
+        slotNavigation.activate(YieldSupplyActiveRoute.Exit)
+    }
+
+    fun onReadMoreClick() {
+        urlOpener.openUrl(TangemBlogUrlBuilder.YIELD_SUPPLY_HOW_IT_WORKS_URL)
+    }
+
+    private fun subscribeOnCurrencyStatusUpdates() {
+        modelScope.launch {
+            getUserWalletUseCase(params.userWalletId).fold(
+                ifRight = { wallet ->
+                    userWallet = wallet
+
+                    getSingleCryptoCurrencyStatusUseCase.invokeMultiWallet(
+                        userWalletId = params.userWalletId,
+                        currencyId = cryptoCurrency.id,
+                        isSingleWalletWithTokens = false,
+                    ).onEach { maybeCryptoCurrency ->
+                        maybeCryptoCurrency.fold(
+                            ifRight = { cryptoCurrencyStatus ->
+                                cryptoCurrencyStatusFlow.update { cryptoCurrencyStatus }
+
+                                val protocolBalance =
+                                    cryptoCurrencyStatus.value.yieldSupplyStatus?.effectiveProtocolBalance
+                                        ?: yieldSupplyGetProtocolBalanceUseCase(
+                                            userWalletId = userWalletId,
+                                            cryptoCurrency = cryptoCurrency,
+                                        ).getOrNull()
+
+                                loadApy()
+                                loadMinAmount()
+                                loadFees()
+
+                                uiState.update {
+                                    it.copy(
+                                        availableBalance = stringReference(
+                                            protocolBalance.format {
+                                                crypto(
+                                                    symbol = AAVEV3_PREFIX + cryptoCurrency.symbol,
+                                                    decimals = cryptoCurrency.decimals,
+                                                )
+                                            },
+                                        ),
+                                    )
+                                }
+                            },
+                            ifLeft = {
+                                Timber.w(it.toString())
+                            },
+                        )
+                    }.flowOn(dispatchers.default)
+                        .launchIn(modelScope)
+                },
+                ifLeft = { error ->
+                    Timber.w(error.toString())
+                    return@launch
+                },
+            )
+        }
     }
 
     private fun loadApy() {
@@ -152,7 +238,7 @@ internal class YieldSupplyActiveModel @Inject constructor(
     private fun loadMinAmount() {
         modelScope.launch(dispatchers.default) {
             yieldSupplyMinAmountUseCase(
-                params.userWallet,
+                userWalletId,
                 cryptoCurrencyStatusFlow.value,
             ).onRight { minAmount ->
                 uiState.update(
@@ -161,7 +247,7 @@ internal class YieldSupplyActiveModel @Inject constructor(
                         appCurrency = appCurrency,
                         minAmount = minAmount,
                         analyticsHandler = analyticsHandler,
-                        onApprove = params.callback::onApprove,
+                        onApprove = ::onApprove,
                     ),
                 )
             }.onLeft {
@@ -180,12 +266,12 @@ internal class YieldSupplyActiveModel @Inject constructor(
             val cryptoStatus = cryptoCurrencyStatusFlow.value
 
             val currentFee = yieldSupplyGetCurrentFeeUseCase(
-                userWallet = params.userWallet,
+                userWalletId = userWalletId,
                 cryptoCurrencyStatus = cryptoStatus,
             ).getOrNull()
 
             val maxFee = yieldSupplyGetMaxFeeUseCase(
-                userWallet = params.userWallet,
+                userWalletId = userWalletId,
                 cryptoCurrencyStatus = cryptoStatus,
             ).getOrNull()
 
