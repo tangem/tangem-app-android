@@ -43,6 +43,7 @@ import com.tangem.features.tangempay.components.TangemPayOnboardingComponent.Par
 import com.tangem.features.tokendetails.TokenDetailsComponent
 import com.tangem.features.wallet.WalletEntryComponent
 import com.tangem.features.walletconnect.components.WalletConnectEntryComponent
+import com.tangem.features.yield.supply.api.YieldSupplyActiveComponent
 import com.tangem.features.yield.supply.api.YieldSupplyPromoComponent
 import com.tangem.tap.features.details.ui.appcurrency.api.AppCurrencySelectorComponent
 import com.tangem.tap.features.details.ui.appsettings.api.AppSettingsComponent
@@ -116,6 +117,7 @@ internal class ChildFactory @Inject constructor(
     private val tangemPayOnboardingComponentFactory: TangemPayOnboardingComponent.Factory,
     private val kycComponentFactory: KycComponent.Factory,
     private val yieldSupplyPromoComponentFactory: YieldSupplyPromoComponent.Factory,
+    private val yieldSupplyActiveComponentFactory: YieldSupplyActiveComponent.Factory,
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
 ) {
 
@@ -679,6 +681,16 @@ internal class ChildFactory @Inject constructor(
                         apy = route.apy,
                     ),
                     componentFactory = yieldSupplyPromoComponentFactory,
+                )
+            }
+            is AppRoute.YieldSupplyActive -> {
+                createComponentChild(
+                    context = context,
+                    params = YieldSupplyActiveComponent.Params(
+                        userWalletId = route.userWalletId,
+                        cryptoCurrency = route.cryptoCurrency,
+                    ),
+                    componentFactory = yieldSupplyActiveComponentFactory,
                 )
             }
         }
