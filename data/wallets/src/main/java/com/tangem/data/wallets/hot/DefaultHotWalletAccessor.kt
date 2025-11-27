@@ -165,10 +165,12 @@ class DefaultHotWalletAccessor @Inject constructor(
         block(auth)
     }.getOrElse { exception ->
         if (auth is HotAuth.Biometry && exception.isBiometryError()) {
+            val shouldRetryBiometry = exception is TangemSdkError.AuthenticationCanceled
+
             // fallback to password if biometry fails
             val passAuth = requestPassword(
                 hotWalletId = hotWalletId,
-                hasBiometry = true,
+                hasBiometry = shouldRetryBiometry,
             )
 
             return@getOrElse runCatchingWrongPassInternal(
