@@ -6,6 +6,7 @@ import com.tangem.common.doOnFailure
 import com.tangem.common.doOnResult
 import com.tangem.common.doOnSuccess
 import com.tangem.common.routing.AppRoute
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -25,6 +26,7 @@ import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.settings.repositories.SettingsRepository
+import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.wallets.usecase.ClearHotWalletContextualUnlockUseCase
 import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
@@ -58,6 +60,7 @@ internal class UpgradeWalletModel @Inject constructor(
     private val tangemSdkManager: TangemSdkManager,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val coldUserWalletBuilderFactory: ColdUserWalletBuilder.Factory,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
     private val params = paramsContainer.require<UpgradeWalletComponent.Params>()
 
@@ -73,6 +76,10 @@ internal class UpgradeWalletModel @Inject constructor(
             ),
         )
 
+    init {
+        analyticsEventHandler.send(WalletSettingsAnalyticEvents.HardwareUpgradeScreenOpened)
+    }
+
     override fun onDestroy() {
         clearHotWalletContextualUnlockUseCase.invoke(params.userWalletId)
         super.onDestroy()
@@ -85,6 +92,7 @@ internal class UpgradeWalletModel @Inject constructor(
     }
 
     private fun onContinueClick() {
+        analyticsEventHandler.send(WalletSettingsAnalyticEvents.ButtonStartUpgrade)
         scanCard()
     }
 
@@ -150,8 +158,6 @@ internal class UpgradeWalletModel @Inject constructor(
 
     private fun showCardVerificationFailedDialog(error: TangemError) {
         if (error !is TangemSdkError.CardVerificationFailed) return
-
-        // TODO [REDACTED_TASK_KEY] track error
 
         val resource = error.localizedDescriptionRes()
         val resId = resource.resId ?: R.string.common_unknown_error
