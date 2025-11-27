@@ -69,8 +69,8 @@ internal class OnrampAddTokenModel @Inject constructor(
         val cryptoCurrency = tokenToAdd.cryptoCurrency
         val accountId = tokenToAdd.account.accountId
         manageCryptoCurrenciesUseCase(accountId = accountId, add = cryptoCurrency)
-            .onLeft {
-                processError(error = it)
+            .onLeft { throwable ->
+                processError(error = throwable)
                 uiState.value = um.toggleProgress(false)
                 return@launch
             }
