@@ -72,7 +72,7 @@ internal class OnrampStateFactory(
         val contentState = state as? OnrampMainComponentUM.Content ?: return state
 
         return contentState.copy(
-            buyButtonConfig = contentState.buyButtonConfig.copy(enabled = false),
+            buyButtonConfig = contentState.buyButtonConfig.copy(isEnabled = false),
             amountBlockState = contentState.amountBlockState.copy(
                 amountFieldModel = contentState.amountBlockState.amountFieldModel.copy(isError = true),
                 secondaryFieldModel = OnrampAmountSecondaryFieldUM.Error(
@@ -92,7 +92,7 @@ internal class OnrampStateFactory(
         return when (state) {
             is OnrampMainComponentUM.Content -> state.copy(
                 topBarConfig = state.topBarConfig.copy(endButtonUM = endButton),
-                buyButtonConfig = state.buyButtonConfig.copy(enabled = false),
+                buyButtonConfig = state.buyButtonConfig.copy(isEnabled = false),
                 amountBlockState = state.amountBlockState.copy(
                     secondaryFieldModel = OnrampAmountSecondaryFieldUM.Content(TextReference.EMPTY),
                 ),
