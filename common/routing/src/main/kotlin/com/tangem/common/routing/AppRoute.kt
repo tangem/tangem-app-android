@@ -364,6 +364,8 @@ sealed class AppRoute(val path: String) : Route {
     @Serializable
     data class CreateWalletBackup(
         val userWalletId: UserWalletId,
+        val analyticsSource: String,
+        val analyticsAction: String,
         val isUpgradeFlow: Boolean = false,
         val setAccessCode: Boolean = false,
     ) : AppRoute(path = "/create_wallet_backup/${userWalletId.stringValue}")
@@ -371,6 +373,7 @@ sealed class AppRoute(val path: String) : Route {
     @Serializable
     data class UpdateAccessCode(
         val userWalletId: UserWalletId,
+        val source: String,
     ) : AppRoute(path = "/update_access_code/${userWalletId.stringValue}")
 
     @Serializable
