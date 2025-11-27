@@ -2,9 +2,11 @@ package com.tangem.tap.domain.userWalletList.repository
 
 import arrow.core.Either
 import arrow.core.left
+import arrow.core.raise.Raise
 import arrow.core.raise.either
 import arrow.core.right
 import com.tangem.common.*
+import com.tangem.common.core.TangemSdkError
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
@@ -237,7 +239,7 @@ internal class DefaultUserWalletsListRepository(
             }
             UserWalletsListRepository.UnlockMethod.AccessCode -> {
                 if (userWallet !is UserWallet.Hot) {
-                    raise(UnlockWalletError.UnableToUnlock)
+                    raise(UnlockWalletError.UnableToUnlock.Empty)
                 }
 
                 val encryptionKey = requestPasswordRecursive(
@@ -245,8 +247,8 @@ internal class DefaultUserWalletsListRepository(
                     block = { password ->
                         runSuspendCatching {
                             userWalletEncryptionKeysRepository.getEncryptedWithPassword(userWalletId, password)
-                        }.onFailure {
-                            raise(UnlockWalletError.UnableToUnlock)
+                        }.onFailure { error ->
+                            raise(UnlockWalletError.UnableToUnlock.RawException(error))
                         }.getOrNull()
                     },
                     biometryFallback = {
@@ -262,13 +264,11 @@ internal class DefaultUserWalletsListRepository(
 
                 sensitiveInformationRepository.getAll(listOf(encryptionKey))
                     .doOnSuccess { sensitiveInfo -> updateWallets { it?.updateWith(sensitiveInfo) } }
-                    .doOnFailure { error ->
-                        raise(UnlockWalletError.UnableToUnlock)
-                    }
+                    .doOnFailure { error -> raise(UnlockWalletError.UnableToUnlock.RawException(error)) }
             }
             is UserWalletsListRepository.UnlockMethod.Scan -> {
                 if (userWallet !is UserWallet.Cold) {
-                    raise(UnlockWalletError.UnableToUnlock)
+                    raise(UnlockWalletError.UnableToUnlock.Empty)
                 }
 
                 val scanResponse = unlockMethod.scanResponse ?: run {
@@ -287,12 +287,12 @@ internal class DefaultUserWalletsListRepository(
 
                 val encryptionKey = UserWalletEncryptionKey(
                     walletId = userWallet.walletId,
-                    encryptionKey = scanResponse.encryptionKey ?: raise(UnlockWalletError.UnableToUnlock),
+                    encryptionKey = scanResponse.encryptionKey ?: raise(UnlockWalletError.UnableToUnlock.Empty),
                 )
 
                 sensitiveInformationRepository.getAll(listOf(encryptionKey))
                     .doOnSuccess { sensitiveInfo -> updateWallets { it?.updateWith(sensitiveInfo) } }
-                    .doOnFailure { error -> raise(UnlockWalletError.UnableToUnlock) }
+                    .doOnFailure { error -> raise(UnlockWalletError.UnableToUnlock.RawException(error)) }
             }
         }
     }
@@ -306,9 +306,8 @@ internal class DefaultUserWalletsListRepository(
 
         val biometricKeys = runSuspendCatching {
             userWalletEncryptionKeysRepository.getAllBiometric()
-        }.getOrElse {
-            // TODO handle error properly [REDACTED_TASK_KEY]
-            raise(UnlockWalletError.UserCancelled)
+        }.getOrElse { exception ->
+            catchBiometricException(exception)
         }
 
         val unsecuredKeys = userWalletEncryptionKeysRepository.getAllUnsecured()
@@ -327,14 +326,14 @@ internal class DefaultUserWalletsListRepository(
         // if we cant unlock any of the locked wallets, return error
         // (isLocked remains `true` here because we haven't updated the wallets yet)
         if (unlockedWallets.any { it.isLocked }.not()) {
-            raise(UnlockWalletError.UnableToUnlock)
+            raise(UnlockWalletError.UnableToUnlock.Empty)
         }
 
         sensitiveInformationRepository.getAll(allKeys)
             .doOnSuccess { sensitiveInfo ->
                 updateWallets { wallets -> wallets?.updateWith(sensitiveInfo) }
             }
-            .doOnFailure { raise(UnlockWalletError.UnableToUnlock) }
+            .doOnFailure { error -> raise(UnlockWalletError.UnableToUnlock.RawException(error)) }
     }
 
     override suspend fun lockAllWallets(): Either<LockWalletsError, Unit> = either {
@@ -458,6 +457,27 @@ internal class DefaultUserWalletsListRepository(
             }
             updated
         }
+    }
+
+    private fun Raise<UnlockWalletError>.catchBiometricException(ex: Throwable): Nothing {
+        val reason = when (ex) {
+            is TangemSdkError.AuthenticationLockout ->
+                UnlockWalletError.UnableToUnlock.Reason.BiometricsAuthenticationLockout(isPermanent = false)
+            is TangemSdkError.AuthenticationPermanentLockout ->
+                UnlockWalletError.UnableToUnlock.Reason.BiometricsAuthenticationLockout(isPermanent = true)
+            is TangemSdkError.KeystoreInvalidated ->
+                UnlockWalletError.UnableToUnlock.Reason.AllKeysInvalidated
+            is TangemSdkError.AuthenticationUnavailable ->
+                UnlockWalletError.UnableToUnlock.Reason.BiometricsAuthenticationDisabled
+
+            is TangemSdkError.AuthenticationCanceled,
+            is TangemSdkError.AuthenticationAlreadyInProgress,
+            -> raise(UnlockWalletError.UserCancelled)
+
+            else -> raise(UnlockWalletError.UnableToUnlock.RawException(ex))
+        }
+
+        raise(UnlockWalletError.UnableToUnlock.WithReason(reason))
     }
 
     /**
