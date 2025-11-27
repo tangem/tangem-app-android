@@ -14,17 +14,17 @@ import com.tangem.core.ui.components.fields.InputManager
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.domain.demo.IsDemoCardUseCase
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.onramp.*
 import com.tangem.domain.onramp.analytics.OnrampAnalyticsEvent
 import com.tangem.domain.onramp.model.OnrampAvailability
+import com.tangem.domain.onramp.model.OnrampCurrency
 import com.tangem.domain.onramp.model.OnrampProviderWithQuote
 import com.tangem.domain.onramp.model.OnrampQuote
 import com.tangem.domain.onramp.model.error.OnrampError
 import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
 import com.tangem.domain.settings.usercountry.models.UserCountry
 import com.tangem.domain.settings.usercountry.models.needApplyFCARestrictions
-import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.onramp.model.OnrampCurrency
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.onramp.main.OnrampMainComponent
 import com.tangem.features.onramp.main.entity.*
@@ -38,6 +38,7 @@ import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.PeriodicTask
 import com.tangem.utils.coroutines.SingleTaskScheduler
+import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.isNullOrZero
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -69,35 +70,40 @@ internal class OnrampMainComponentModel @Inject constructor(
 
     private val params: OnrampMainComponent.Params = paramsContainer.require()
 
-    private var shouldForceChooseSepa = params.launchSepa
+    private var shouldForceChooseSepa = params.isLaunchSepa
     private var currencyToRestore: OnrampCurrency? = null
 
     val userWallet = getWalletsUseCase.invokeSync().first { it.walletId == params.userWalletId }
 
+    val bottomSheetNavigation: SlotNavigation<OnrampMainBottomSheetConfig> = SlotNavigation()
+
+    private val lastUpdateState = mutableStateOf<OnrampLastUpdate?>(null)
+    private var userCountry: UserCountry? = null
+
+    @Suppress("PropertyUsedBeforeDeclaration")
     private val stateFactory = OnrampStateFactory(
-        currentStateProvider = Provider { _state.value },
+        currentStateProvider = Provider { state.value },
         cryptoCurrency = params.cryptoCurrency,
         onrampIntents = this,
     )
+
+    val state: StateFlow<OnrampMainComponentUM>
+        field = MutableStateFlow<OnrampMainComponentUM>(
+            value = stateFactory.getInitialState(
+                currency = params.cryptoCurrency.name,
+                onClose = ::onCloseClick,
+            ),
+        )
+
     private val amountStateFactory = OnrampAmountStateFactory(
-        currentStateProvider = Provider { _state.value },
+        currentStateProvider = Provider { state.value },
         analyticsEventHandler = analyticsEventHandler,
         onrampIntents = this,
         cryptoCurrency = params.cryptoCurrency,
         needApplyFCARestrictions = Provider { userCountry.needApplyFCARestrictions() },
     )
-    private val _state: MutableStateFlow<OnrampMainComponentUM> = MutableStateFlow(
-        value = stateFactory.getInitialState(
-            currency = params.cryptoCurrency.name,
-            onClose = ::onCloseClick,
-        ),
-    )
-    private val quotesTaskScheduler = SingleTaskScheduler<Unit>()
-    val state: StateFlow<OnrampMainComponentUM> get() = _state.asStateFlow()
-    val bottomSheetNavigation: SlotNavigation<OnrampMainBottomSheetConfig> = SlotNavigation()
 
-    private val lastUpdateState = mutableStateOf<OnrampLastUpdate?>(null)
-    private var userCountry: UserCountry? = null
+    private val quotesTaskScheduler = SingleTaskScheduler<Unit>()
 
     init {
         userCountry = getUserCountryUseCase.invokeSync().getOrNull()
@@ -106,7 +112,7 @@ internal class OnrampMainComponentModel @Inject constructor(
         modelScope.launch {
             clearOnrampCacheUseCase()
 
-            if (params.launchSepa) {
+            if (params.isLaunchSepa) {
                 currencyToRestore = onrampGetDefaultCurrencyUseCase.invoke().getOrNull()
                 onrampSaveDefaultCurrencyUseCase.invoke(EUR_CURRENCY)
             }
@@ -132,7 +138,7 @@ internal class OnrampMainComponentModel @Inject constructor(
     }
 
     fun onProviderSelected(result: SelectProviderResult, isBestRate: Boolean) {
-        _state.update { amountStateFactory.getAmountSecondaryUpdatedState(result, isBestRate) }
+        state.update { amountStateFactory.getAmountSecondaryUpdatedState(result, isBestRate) }
 
         if (result.paymentMethod.id != SEPA_METHOD_ID) {
             shouldForceChooseSepa = false
@@ -164,9 +170,9 @@ internal class OnrampMainComponentModel @Inject constructor(
                     ifRight = { country ->
                         if (country == null) return@onEach
 
-                        val wasInitialLoading = _state.value is OnrampMainComponentUM.InitialLoading
-                        _state.update {
-                            if (it is OnrampMainComponentUM.InitialLoading) {
+                        val wasInitialLoading = state.value is OnrampMainComponentUM.InitialLoading
+                        state.update { prevState ->
+                            if (prevState is OnrampMainComponentUM.InitialLoading) {
                                 stateFactory.getReadyState(country.defaultCurrency)
                             } else {
                                 amountStateFactory.getUpdatedCurrencyState(country.defaultCurrency)
@@ -175,7 +181,7 @@ internal class OnrampMainComponentModel @Inject constructor(
 
                         updatePairsAndQuotes()
 
-                        if (wasInitialLoading && params.launchSepa) {
+                        if (wasInitialLoading && params.isLaunchSepa) {
                             onAmountValueChanged(value = PREDEFINED_SEPA_AMOUNT, isValuePasted = true)
                         }
                     },
@@ -188,20 +194,25 @@ internal class OnrampMainComponentModel @Inject constructor(
         amountInputManager.query
             .filter(String::isNotEmpty)
             .collectLatest { _ ->
-                _state.update { amountStateFactory.getAmountSecondaryLoadingState() }
+                state.update { amountStateFactory.getAmountSecondaryLoadingState() }
                 startLoadingQuotes()
             }
     }
 
     private suspend fun updatePairsAndQuotes() {
-        val state = state.value as? OnrampMainComponentUM.Content
+        state.update { prevState ->
+            val contentState = state.value as? OnrampMainComponentUM.Content ?: return@update prevState
 
-        if (!state?.amountBlockState?.amountFieldModel?.fiatValue.isNullOrEmpty()) {
-            _state.update { amountStateFactory.getAmountSecondaryLoadingState() }
+            if (contentState.amountBlockState.amountFieldModel.fiatValue.isNotEmpty()) {
+                amountStateFactory.getAmountSecondaryLoadingState()
+            } else {
+                prevState
+            }
         }
+
         fetchPairsUseCase.invoke(userWallet, params.cryptoCurrency).fold(
             ifLeft = ::handleOnrampError,
-            ifRight = { _state.update { amountStateFactory.getAmountSecondaryResetState() } },
+            ifRight = { state.update { amountStateFactory.getAmountSecondaryResetState() } },
         )
         startLoadingQuotes()
     }
@@ -209,7 +220,7 @@ internal class OnrampMainComponentModel @Inject constructor(
     private fun handleOnrampError(onrampError: OnrampError) {
         Timber.e(onrampError.toString())
         sendOnrampErrorAnalytic(onrampError)
-        _state.update { stateFactory.getOnrampErrorState(onrampError) }
+        state.update { stateFactory.getOnrampErrorState(onrampError) }
     }
 
     private fun startLoadingQuotes() {
@@ -221,12 +232,15 @@ internal class OnrampMainComponentModel @Inject constructor(
         return PeriodicTask(
             delay = UPDATE_DELAY,
             task = {
-                runCatching {
-                    val content = state.value as? OnrampMainComponentUM.Content ?: return@runCatching
-                    if (content.amountBlockState.amountFieldModel.fiatAmount.value.isNullOrZero()) return@runCatching
+                runSuspendCatching {
+                    val content = state.value as? OnrampMainComponentUM.Content ?: return@runSuspendCatching
+                    val amountBlockState = content.amountBlockState
+                    if (amountBlockState.amountFieldModel.fiatAmount.value.isNullOrZero()) {
+                        return@runSuspendCatching
+                    }
                     fetchQuotesUseCase.invoke(
                         userWallet = userWallet,
-                        amount = content.amountBlockState.amountFieldModel.fiatAmount,
+                        amount = amountBlockState.amountFieldModel.fiatAmount,
                         cryptoCurrency = params.cryptoCurrency,
                     ).onLeft(::handleOnrampError)
                 }
@@ -249,7 +263,7 @@ internal class OnrampMainComponentModel @Inject constructor(
     }
 
     override fun onAmountValueChanged(value: String, isValuePasted: Boolean) {
-        _state.update { amountStateFactory.getOnAmountValueChange(value, isValuePasted) }
+        state.update { amountStateFactory.getOnAmountValueChange(value, isValuePasted) }
         modelScope.launch { amountInputManager.update(value) }
     }
 
@@ -290,7 +304,7 @@ internal class OnrampMainComponentModel @Inject constructor(
     }
 
     override fun onRefresh() {
-        _state.update {
+        state.update {
             stateFactory.getInitialState(
                 currency = params.cryptoCurrency.name,
                 onClose = router::pop,
@@ -310,7 +324,7 @@ internal class OnrampMainComponentModel @Inject constructor(
         quotesTaskScheduler.cancelTask()
 
         modelScope.launch {
-            if (params.launchSepa) {
+            if (params.isLaunchSepa) {
                 currencyToRestore?.let { onrampSaveDefaultCurrencyUseCase.invoke(it) }
             }
         }
@@ -329,11 +343,11 @@ internal class OnrampMainComponentModel @Inject constructor(
         val quote = selectOrUpdateQuote(quotes)
 
         if (quote == null) {
-            _state.update { stateFactory.getErrorState(onRefresh = ::onRetryQuotes) }
+            state.update { stateFactory.getErrorState(onRefresh = ::onRetryQuotes) }
             lastUpdateState.value = null
             return
         }
-        _state.update { amountStateFactory.getAmountSecondaryUpdatedState(quote = quote) }
+        state.update { amountStateFactory.getAmountSecondaryUpdatedState(quote = quote) }
     }
 
     /**
@@ -346,7 +360,7 @@ internal class OnrampMainComponentModel @Inject constructor(
     private fun selectOrUpdateQuote(quotes: List<OnrampQuote>): OnrampQuote? {
         val quoteToCheck = quotes.firstOrNull { it !is OnrampQuote.Error }
 
-        val bestSepaQuote = if (params.launchSepa && shouldForceChooseSepa) {
+        val bestSepaQuote = if (params.isLaunchSepa && shouldForceChooseSepa) {
             quotes.filterIsInstance<OnrampQuote.Data>()
                 .filter { it.paymentMethod.id == SEPA_METHOD_ID }
                 .maxByOrNull { it.toAmount.value }
@@ -362,9 +376,9 @@ internal class OnrampMainComponentModel @Inject constructor(
             val providerState = state?.providerBlockState as? OnrampProviderBlockUM.Content
 
             // Get current selected quote to update
-            val lastSelectedQuote = quotes.firstOrNull {
-                it.provider.id == providerState?.providerId &&
-                    it.paymentMethod.id == providerState.paymentMethod.id
+            val lastSelectedQuote = quotes.firstOrNull { quote ->
+                quote.provider.id == providerState?.providerId &&
+                    quote.paymentMethod.id == providerState.paymentMethod.id
             }
 
             // Check if selected updated quote is not error
@@ -392,18 +406,20 @@ internal class OnrampMainComponentModel @Inject constructor(
             shouldForceChooseSepa = false
         }
 
-        _state.update {
+        state.update {
             amountStateFactory.getUpdatedProviderState(selectedQuote = quote, quotes = quotes)
         }
     }
 
     private fun onRetryQuotes() {
-        _state.update {
-            (it as? OnrampMainComponentUM.Content)?.copy(
+        state.update { prevState ->
+            (prevState as? OnrampMainComponentUM.Content)?.copy(
                 errorNotification = null,
                 providerBlockState = OnrampProviderBlockUM.Loading,
-                amountBlockState = it.amountBlockState.copy(secondaryFieldModel = OnrampAmountSecondaryFieldUM.Loading),
-            ) ?: it
+                amountBlockState = prevState.amountBlockState.copy(
+                    secondaryFieldModel = OnrampAmountSecondaryFieldUM.Loading,
+                ),
+            ) ?: prevState
         }
         startLoadingQuotes()
     }

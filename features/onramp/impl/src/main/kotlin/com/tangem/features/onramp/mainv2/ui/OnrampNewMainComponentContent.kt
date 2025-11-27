@@ -60,10 +60,7 @@ internal fun OnrampNewMainComponentContent(state: OnrampV2MainComponentUM, modif
         }
 
         if (state is OnrampV2MainComponentUM.Content) {
-            OnrampFooterContent(
-                state = state,
-                boxScope = this,
-            )
+            OnrampFooterContent(state = state)
         }
     }
 }
