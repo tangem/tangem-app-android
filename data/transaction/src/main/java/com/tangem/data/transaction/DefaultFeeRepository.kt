@@ -16,6 +16,7 @@ import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.transaction.FeeRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import java.math.BigDecimal
@@ -31,11 +32,11 @@ internal class DefaultFeeRepository(
     }
 
     override suspend fun getEthereumFeeWithoutGas(
-        userWallet: UserWallet,
+        userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency,
     ): Fee.Ethereum {
         val walletManager = walletManagersFacade.getOrCreateWalletManager(
-            userWalletId = userWallet.walletId,
+            userWalletId = userWalletId,
             network = cryptoCurrency.network,
         )
 

@@ -1,4 +1,4 @@
-package com.tangem.features.yield.supply.impl.subcomponents.active.entity
+package com.tangem.features.yield.supply.impl.active.entity
 
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.extensions.TextReference
