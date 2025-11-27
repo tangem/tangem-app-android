@@ -6,7 +6,6 @@ import com.tangem.features.onramp.tokenlist.entity.TokenListUM
 import com.tangem.features.onramp.tokenlist.entity.TokenListUMData
 import com.tangem.features.onramp.tokenlist.entity.TokenListUMTransformer
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.toImmutableList
 
 internal class SetNothingToFoundStateTransformerV2(
     private val isBalanceHidden: Boolean,
@@ -17,12 +16,14 @@ internal class SetNothingToFoundStateTransformerV2(
         return prevState.copy(
             availableItems = persistentListOf(),
             unavailableItems = persistentListOf(),
-            tokensListData = TokenListUMData.TokenList(tokensList = buildList {
-                TokensListItemUM.Text(
-                    id = emptySearchMessageReference.hashCode(),
-                    text = emptySearchMessageReference,
-                ).let(::add)
-            }.toImmutableList()),
+            tokensListData = TokenListUMData.TokenList(
+                tokensList = persistentListOf(
+                    TokensListItemUM.Text(
+                        id = emptySearchMessageReference.hashCode(),
+                        text = emptySearchMessageReference,
+                    ),
+                ),
+            ),
             isBalanceHidden = isBalanceHidden,
         )
     }

@@ -18,37 +18,36 @@ import javax.inject.Inject
  */
 internal class TokenListUMController @Inject constructor() {
 
-    val state: StateFlow<TokenListUM> get() = _state
-
-    private val _state: MutableStateFlow<TokenListUM> = MutableStateFlow(
-        value = TokenListUM(
-            searchBarUM = SearchBarUM(
-                placeholderText = resourceReference(id = R.string.common_search),
-                query = "",
-                onQueryChange = {},
-                isActive = false,
-                onActiveChange = {},
+    val state: StateFlow<TokenListUM>
+        field = MutableStateFlow(
+            value = TokenListUM(
+                searchBarUM = SearchBarUM(
+                    placeholderText = resourceReference(id = R.string.common_search),
+                    query = "",
+                    onQueryChange = {},
+                    isActive = false,
+                    onActiveChange = {},
+                ),
+                availableItems = persistentListOf(),
+                unavailableItems = persistentListOf(),
+                tokensListData = TokenListUMData.EmptyList,
+                isBalanceHidden = false,
             ),
-            availableItems = persistentListOf(),
-            unavailableItems = persistentListOf(),
-            tokensListData = TokenListUMData.EmptyList,
-            isBalanceHidden = false,
-        ),
-    )
+        )
 
     fun update(transform: (TokenListUM) -> TokenListUM) {
         Timber.d("Applying non-name transformation")
-        _state.update(transform)
+        state.update(transform)
     }
 
     fun update(transformer: TokenListUMTransformer) {
-        Timber.d("Applying ${transformer::class.simpleName}")
-        _state.update(transformer::transform)
+        Timber.d("Applying ${transformer::class.simpleName ?: "unknown"}")
+        state.update(transformer::transform)
     }
 
     fun update(transformer: SearchBarUMTransformer) {
-        Timber.d("Applying ${transformer::class.simpleName}")
-        _state.update { prevState ->
+        Timber.d("Applying ${transformer::class.simpleName ?: "unknown"}")
+        state.update { prevState ->
             prevState.copy(
                 searchBarUM = transformer.transform(prevState.searchBarUM),
             )

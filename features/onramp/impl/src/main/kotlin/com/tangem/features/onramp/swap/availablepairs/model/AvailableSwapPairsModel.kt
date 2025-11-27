@@ -44,6 +44,7 @@ import com.tangem.features.onramp.utils.UpdateSearchBarActiveStateTransformer
 import com.tangem.features.onramp.utils.UpdateSearchBarCallbacksTransformer
 import com.tangem.features.onramp.utils.UpdateSearchQueryTransformer
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.runSuspendCatching
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -68,7 +69,7 @@ internal class AvailableSwapPairsModel @Inject constructor(
 
     val state: StateFlow<TokenListUM> = tokenListUMController.state
 
-    private var params: AvailableSwapPairsComponent.Params = paramsContainer.require()
+    private val params: AvailableSwapPairsComponent.Params = paramsContainer.require()
     private val userWallet = getWalletsUseCase.invokeSync().first { it.walletId == params.userWalletId }
 
     private val tokenListFlow = getTokenListUseCaseFlow()
@@ -140,9 +141,9 @@ internal class AvailableSwapPairsModel @Inject constructor(
                         availablePairs = pairs,
                     )
                 },
-                ifError = {
+                ifError = { throwable ->
                     handleErrorState(
-                        cause = it,
+                        cause = throwable,
                         networkInfo = params.selectedStatus.value?.toLeastTokenInfo(),
                         currencies = currencies,
                     )
@@ -184,9 +185,9 @@ internal class AvailableSwapPairsModel @Inject constructor(
                         isAccountsMode = isAccountsMode,
                     )
                 },
-                ifError = {
+                ifError = { throwable ->
                     handleErrorStateV2(
-                        cause = it,
+                        cause = throwable,
                         networkInfo = params.selectedStatus.value?.toLeastTokenInfo(),
                         accountList = accountList,
                     )
@@ -218,7 +219,7 @@ internal class AvailableSwapPairsModel @Inject constructor(
                 isBalanceHidden = isBalanceHidden,
                 unavailableTokensHeaderReference = resourceReference(
                     id = R.string.tokens_list_unavailable_to_swap_header,
-                    wrappedList(selectedStatus?.currency?.name?.capitalize() ?: ""),
+                    wrappedList(selectedStatus?.currency?.name?.capitalize().orEmpty()),
                 ),
             )
         }
@@ -242,7 +243,7 @@ internal class AvailableSwapPairsModel @Inject constructor(
                 isBalanceHidden = isBalanceHidden,
                 unavailableTokensHeaderReference = resourceReference(
                     id = R.string.tokens_list_unavailable_to_swap_header,
-                    wrappedList(selectedStatus?.currency?.name?.capitalize() ?: ""),
+                    wrappedList(selectedStatus?.currency?.name?.capitalize().orEmpty()),
                 ),
             )
         }
@@ -369,7 +370,7 @@ internal class AvailableSwapPairsModel @Inject constructor(
     }
 
     private suspend fun updateAvailablePairs(networkInfo: LeastTokenInfo, statuses: List<CryptoCurrencyStatus>) {
-        runCatching {
+        runSuspendCatching {
             availablePairsByNetworkFlow.update(networkInfo = networkInfo, state = lceLoading())
 
             getAvailablePairsUseCase(
@@ -390,9 +391,9 @@ internal class AvailableSwapPairsModel @Inject constructor(
         networkInfo: LeastTokenInfo,
         state: AvailablePairsState,
     ) {
-        update {
-            it.toMutableMap().apply {
-                put(networkInfo, state)
+        update { map ->
+            map.toMutableMap().apply {
+                this[networkInfo] = state
             }
         }
     }
@@ -433,9 +434,9 @@ internal class AvailableSwapPairsModel @Inject constructor(
     }
 
     private fun List<CryptoCurrencyStatus>.filterByQuery(query: String): List<CryptoCurrencyStatus> {
-        return filter {
-            it.currency.name.contains(other = query, ignoreCase = true) ||
-                it.currency.symbol.contains(other = query, ignoreCase = true)
+        return filter { status ->
+            status.currency.name.contains(other = query, ignoreCase = true) ||
+                status.currency.symbol.contains(other = query, ignoreCase = true)
         }
     }
 

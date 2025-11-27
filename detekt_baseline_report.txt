@@ -1,7 +1,7 @@
 ==========================================
 Detekt Baseline Updater & Issue Counter
 ==========================================
-Date: 2025-11-26 17:43:14
+Date: 2025-11-27 14:13:20
 
 Step 1: Running detekt to check for new issues...
 
@@ -17,13 +17,13 @@ Counting issues in baseline files...
 ==========================================
 
 Summary:
-  Total Issues: 1675
+  Total Issues: 1593
   Modules with Issues: 68
-  Average Issues per Module: 24
+  Average Issues per Module: 23
 
 Progress:
-  Fixed: 127 out of 1802 (7%)
-  Remaining: 1675
+  Fixed: 209 out of 1802 (11%)
+  Remaining: 1593
 
 ==========================================
 All Modules with Issues (sorted by count)
@@ -34,7 +34,6 @@ Module                                                           Issues
 features/wallet/impl                                                169
 features/markets/impl                                               155
 features/onboarding-v2/impl                                         131
-features/onramp/impl                                                 89
 features/send-v2/impl                                                80
 features/swap/impl                                                   73
 features/hot-wallet/impl                                             57
@@ -74,6 +73,7 @@ features/welcome/impl                                                 8
 features/home/impl                                                    8
 domain/transaction                                                    8
 libs/tangem-sdk-api                                                   7
+features/onramp/impl                                                  7
 data/txhistory                                                        7
 data/tokens                                                           7
 data/account                                                          7
