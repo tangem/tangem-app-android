@@ -12,7 +12,6 @@ import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
 import com.tangem.domain.account.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
-import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.features.onramp.component.SwapSelectTokensComponent
 import com.tangem.features.onramp.swap.entity.SwapSelectTokensController
@@ -43,15 +42,14 @@ internal class SwapSelectTokensModel @Inject constructor(
 
     val state: StateFlow<SwapSelectTokensUM> = controller.state
 
-    val fromCurrencyStatus: StateFlow<CryptoCurrencyStatus?> get() = _fromCurrencyStatus
+    val fromCurrencyStatus: StateFlow<CryptoCurrencyStatus?>
+        field = MutableStateFlow<CryptoCurrencyStatus?>(value = null)
 
-    private val _fromCurrencyStatus = MutableStateFlow<CryptoCurrencyStatus?>(value = null)
     private val _toCurrencyStatus = MutableStateFlow<CryptoCurrencyStatus?>(value = null)
 
     private val params = paramsContainer.require<SwapSelectTokensComponent.Params>()
 
     private var isAccountsMode: Boolean = false
-    private var account: Account.CryptoPortfolio? = null
 
     init {
         controller.update { it.copy(onBackClick = ::onBackClick) }
@@ -71,7 +69,7 @@ internal class SwapSelectTokensModel @Inject constructor(
             event = MainScreenAnalyticsEvent.SwapTokenClicked(currencySymbol = status.currency.symbol),
         )
 
-        _fromCurrencyStatus.value = status
+        fromCurrencyStatus.value = status
 
         modelScope.launch {
             controller.update(
@@ -173,7 +171,7 @@ internal class SwapSelectTokensModel @Inject constructor(
     }
 
     private fun onRemoveFromTokenClick() {
-        val currencySymbol = requireNotNull(_fromCurrencyStatus.value?.currency?.symbol) {
+        val currencySymbol = requireNotNull(fromCurrencyStatus.value?.currency?.symbol) {
             "Token was not selected"
         }
 
@@ -185,7 +183,7 @@ internal class SwapSelectTokensModel @Inject constructor(
     }
 
     private fun removeSelectedFromToken() {
-        _fromCurrencyStatus.value = null
+        fromCurrencyStatus.value = null
 
         controller.update(transformer = RemoveSelectedFromTokenTransformer)
     }
