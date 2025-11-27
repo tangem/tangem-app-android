@@ -1,8 +1,8 @@
-package com.tangem.feature.walletsettings.analytics
+package com.tangem.domain.wallets.analytics
 
 import com.tangem.core.analytics.models.AnalyticsEvent
 
-internal sealed class Settings(
+sealed class Settings(
     category: String = "Settings",
     event: String,
     params: Map<String, String> = emptyMap(),
