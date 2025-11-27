@@ -6,7 +6,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -57,7 +60,7 @@ internal class DefaultHotCryptoComponent @AssistedInject constructor(
             portfolioSelectorComponentFactory.create(
                 context = child("portfolioSelectorComponent"),
                 params = PortfolioSelectorComponent.Params(
-                    portfolioFetcher = model.portfolioFetcher!!,
+                    portfolioFetcher = requireNotNull(model.portfolioFetcher),
                     controller = model.portfolioSelectorController,
                 ),
             )
@@ -146,13 +149,13 @@ internal class DefaultHotCryptoComponent @AssistedInject constructor(
                         end = 16.dp,
                         bottom = 16.dp,
                     )
-                    val scrollableContent = when (stack.active.configuration) {
+                    val isScrollableContent = when (stack.active.configuration) {
                         OnrampAddTokenRoute.PortfolioSelector -> false
                         OnrampAddTokenRoute.AddToken,
                         OnrampAddTokenRoute.Empty,
                         -> true
                     }
-                    if (scrollableContent) {
+                    if (isScrollableContent) {
                         Column(
                             modifier = paddingModifier.verticalScroll(rememberScrollState()),
                         ) {
@@ -218,8 +221,8 @@ internal class DefaultHotCryptoComponent @AssistedInject constructor(
     }
 
     private fun contentChild(config: OnrampAddTokenRoute): ComposableContentComponent = when (config) {
-        OnrampAddTokenRoute.AddToken -> addTokenComponent!!
-        OnrampAddTokenRoute.PortfolioSelector -> portfolioSelectorComponent!!
+        OnrampAddTokenRoute.AddToken -> requireNotNull(addTokenComponent)
+        OnrampAddTokenRoute.PortfolioSelector -> requireNotNull(portfolioSelectorComponent)
         OnrampAddTokenRoute.Empty -> ComposableContentComponent.EMPTY
     }
 
