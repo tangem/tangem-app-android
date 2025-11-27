@@ -79,12 +79,12 @@ internal fun OnrampOffersContent(state: OnrampOffersBlockUM) {
                     }
                 }
 
-                state.onrampAllOffersButtonConfig?.let {
+                if (state.onrampAllOffersButtonConfig != null) {
                     SpacerH(12.dp)
                     SecondaryButton(
                         modifier = Modifier.fillMaxWidth(),
-                        text = it.title.resolveReference(),
-                        onClick = it.onClick,
+                        text = state.onrampAllOffersButtonConfig.title.resolveReference(),
+                        onClick = state.onrampAllOffersButtonConfig.onClick,
                     )
                 }
             }
@@ -212,7 +212,8 @@ private fun RateBlock(rate: String, diff: TextReference?, isOfferUnavailable: Bo
             color = if (isOfferUnavailable) TangemTheme.colors.text.tertiary else TangemTheme.colors.text.primary1,
             modifier = Modifier.testTag(OnrampOffersBlockTestTags.OFFER_TOKEN_AMOUNT),
         )
-        diff?.let {
+
+        if (diff != null) {
             Text(
                 modifier = Modifier
                     .background(
@@ -220,7 +221,7 @@ private fun RateBlock(rate: String, diff: TextReference?, isOfferUnavailable: Bo
                         shape = RoundedCornerShape(4.dp),
                     )
                     .padding(horizontal = 4.dp),
-                text = it.resolveReference(),
+                text = diff.resolveReference(),
                 style = TangemTheme.typography.caption1,
                 color = TangemTheme.colors.text.warning,
             )
