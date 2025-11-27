@@ -6,7 +6,6 @@ import com.tangem.utils.transformer.Transformer
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
 internal class CountryListUMController(
@@ -14,16 +13,17 @@ internal class CountryListUMController(
     loadingItems: ImmutableList<CountryItemState.Loading>,
 ) {
 
-    val state: StateFlow<CountryListUM> get() = _state.asStateFlow()
-    private val _state: MutableStateFlow<CountryListUM> =
-        MutableStateFlow(value = CountryListUM.Loading(searchBarUM = searchBarUM, items = loadingItems))
+    val state: StateFlow<CountryListUM>
+        field = MutableStateFlow<CountryListUM>(
+            value = CountryListUM.Loading(searchBarUM = searchBarUM, items = loadingItems),
+        )
 
     fun update(transformer: Transformer<CountryListUM>) {
-        _state.update(transformer::transform)
+        state.update(transformer::transform)
     }
 
     fun update(transformer: SearchBarUMTransformer) {
-        _state.update { prevState ->
+        state.update { prevState ->
             val searchBarUM = transformer.transform(prevState.searchBarUM)
             prevState.copySealed(searchBarUM)
         }
