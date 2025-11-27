@@ -1,4 +1,4 @@
-package com.tangem.features.yield.supply.impl.subcomponents.active.model.transformers
+package com.tangem.features.yield.supply.impl.active.model.transformers
 
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.ui.extensions.resourceReference
@@ -13,7 +13,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.yield.supply.models.YieldSupplyMaxFee
 import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
 import com.tangem.features.yield.supply.impl.R
-import com.tangem.features.yield.supply.impl.subcomponents.active.entity.YieldSupplyActiveContentUM
+import com.tangem.features.yield.supply.impl.active.entity.YieldSupplyActiveContentUM
 import com.tangem.utils.transformer.Transformer
 import java.math.BigDecimal
 
