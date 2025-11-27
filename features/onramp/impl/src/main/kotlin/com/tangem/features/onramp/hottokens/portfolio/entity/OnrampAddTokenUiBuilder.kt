@@ -56,7 +56,7 @@ internal class OnrampAddTokenUiBuilder @Inject constructor(
             icon = accountIcon,
             name = portfolioName,
             isAccountMode = isAccountMode,
-            isMultiChoice = tokenToAdd.availableMorePortfolio,
+            isMultiChoice = tokenToAdd.isMorePortfolioAvailable,
             onClick = { params.callbacks.onChangePortfolioClick() },
         )
     }
@@ -76,7 +76,7 @@ internal class OnrampAddTokenUiBuilder @Inject constructor(
         val networkUM = createNetwork(tokenToAdd)
         val portfolioUM = createPortfolio(tokenToAdd)
         val currency = tokenToAdd.cryptoCurrency
-        val tokenToAdd = TokenItemState.Content(
+        val tokenItemState = TokenItemState.Content(
             id = currency.id.value,
             iconState = CryptoCurrencyToIconStateConverter().convert(currency),
             titleState = TokenItemState.TitleState.Content(stringReference(currency.name)),
@@ -87,7 +87,7 @@ internal class OnrampAddTokenUiBuilder @Inject constructor(
             onItemLongClick = null,
         )
         return AddTokenUM(
-            tokenToAdd = tokenToAdd,
+            tokenToAdd = tokenItemState,
             network = networkUM,
             portfolio = portfolioUM,
             button = button,
