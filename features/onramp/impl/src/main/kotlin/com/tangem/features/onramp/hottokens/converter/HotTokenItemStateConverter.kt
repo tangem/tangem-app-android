@@ -34,7 +34,7 @@ internal class HotTokenItemStateConverter(
             subtitleState = value.quoteStatus.getCryptoPriceState(appCurrency),
             fiatAmountState = null,
             subtitle2State = null,
-            onItemClick = onItemClick.let { onItemClick -> { onItemClick(it, value) } },
+            onItemClick = { onItemClick(it, value) },
             onItemLongClick = null,
         )
     }
