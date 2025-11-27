@@ -5,7 +5,6 @@ import androidx.compose.ui.Modifier
 import com.tangem.common.ui.account.AccountIconPreviewData
 import com.tangem.common.ui.userwallet.state.UserWalletItemUM
 import com.tangem.common.ui.userwallet.state.UserWalletItemUM.ImageState
-import com.tangem.core.decompose.navigation.DummyRouter
 import com.tangem.core.ui.components.block.model.BlockUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
@@ -43,9 +42,7 @@ internal class PreviewWalletSettingsComponent : WalletSettingsComponent {
 
     private val previewState = WalletSettingsUM(
         popBack = {},
-        items = ItemsBuilder(
-            router = DummyRouter(),
-        ).buildItems(
+        items = ItemsBuilder().buildItems(
             userWallet = UserWallet.Hot(
                 walletId = UserWalletId("011"),
                 name = "My Wallet",
@@ -71,6 +68,8 @@ internal class PreviewWalletSettingsComponent : WalletSettingsComponent {
             walletUpgradeDismissed = false,
             onUpgradeWalletClick = {},
             onDismissUpgradeWalletClick = {},
+            onBackupClick = {},
+            onCardSettingsClick = {},
             accountsUM = previewAccounts(),
             cardItem = previewCardBlock(),
         ),
