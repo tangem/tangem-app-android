@@ -23,6 +23,7 @@ import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.error.SaveWalletError
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.settings.repositories.SettingsRepository
+import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
@@ -63,6 +64,10 @@ internal class CreateHardwareWalletModel @Inject constructor(
                 onScanDeviceClick = ::onScanDeviceClick,
             ),
         )
+
+    init {
+        analyticsEventHandler.send(WalletSettingsAnalyticEvents.CreateWalletScreenOpened)
+    }
 
     override fun onDestroy() {
         super.onDestroy()
