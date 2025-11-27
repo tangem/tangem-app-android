@@ -1,15 +1,12 @@
 package com.tangem.features.welcome.impl.model
 
 import com.tangem.common.routing.AppRoute
+import com.tangem.common.ui.userwallet.handle
 import com.tangem.common.ui.userwallet.state.UserWalletItemUM
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
-import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.message.DialogMessage
-import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.error.UnlockWalletError
 import com.tangem.domain.models.wallet.UserWallet
@@ -19,9 +16,7 @@ import com.tangem.domain.settings.CanUseBiometryUseCase
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.NonBiometricUnlockWalletUseCase
 import com.tangem.features.wallet.utils.UserWalletsFetcher
-import com.tangem.features.welcome.impl.R
 import com.tangem.features.welcome.impl.ui.state.WelcomeUM
-import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
@@ -29,7 +24,6 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -150,10 +144,10 @@ internal class WelcomeModel @Inject constructor(
     }
 
     private suspend fun onlyOneHotWalletWithAccessCode(): Boolean {
-        val userWalletsWithLock = userWalletsListRepository.userWalletsSync()
-        if (userWalletsWithLock.size != 1) return false
-        val wallet = userWalletsWithLock.first()
-        return wallet is UserWallet.Hot && wallet.hotWalletId.authType != HotWalletId.AuthType.NoPassword
+        val userWallets = userWalletsListRepository.userWalletsSync()
+        if (userWallets.size != 1) return false
+        val wallet = userWallets.first()
+        return wallet is UserWallet.Hot && wallet.isLocked
     }
 
     private fun onUserWalletClick(userWallet: UserWallet) = modelScope.launch {
@@ -189,32 +183,15 @@ internal class WelcomeModel @Inject constructor(
     }
 
     suspend fun UnlockWalletError.handle(specificWalletId: UserWalletId?, onUserCancelled: suspend () -> Unit = { }) {
-        when (this) {
-            UnlockWalletError.AlreadyUnlocked -> {
+        handle(
+            onAlreadyUnlocked = {
                 // this should not happen, as we check for locked state before this
                 specificWalletId?.let { userWalletsListRepository.select(it) }
                 router.replaceAll(AppRoute.Wallet)
-            }
-            UnlockWalletError.ScannedCardWalletNotMatched -> {
-                uiMessageSender.send(
-                    message = DialogMessage(
-                        title = resourceReference(R.string.common_warning),
-                        message = resourceReference(R.string.error_wrong_wallet_tapped),
-                    ),
-                )
-            }
-            UnlockWalletError.UnableToUnlock -> {
-                // TODO Unable to unlock the wallet"
-            }
-            UnlockWalletError.UserCancelled -> onUserCancelled()
-            UnlockWalletError.UserWalletNotFound -> {
-                // This should never happen in this flow, as we always check for the wallet existence before unlocking
-                Timber.e("User wallet not found for unlock: $specificWalletId")
-                uiMessageSender.send(
-                    SnackbarMessage(TextReference.Res(R.string.generic_error)),
-                )
-            }
-        }
+            },
+            onUserCancelled = { onUserCancelled() },
+            showMessage = uiMessageSender::send,
+        )
     }
 
     private fun updateSelectState(block: (WelcomeUM.SelectWallet) -> WelcomeUM.SelectWallet) {
