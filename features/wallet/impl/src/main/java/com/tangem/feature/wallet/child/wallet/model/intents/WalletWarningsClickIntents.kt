@@ -5,20 +5,17 @@ import com.tangem.common.TangemBlogUrlBuilder
 import com.tangem.common.routing.AppRoute.*
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.notifications.NotificationId
+import com.tangem.common.ui.userwallet.handle
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.components.bottomsheets.message.*
-import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.message.DialogMessage
-import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.core.ui.message.bottomSheetMessage
 import com.tangem.domain.card.SetCardWasScannedUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
-import com.tangem.domain.common.wallets.error.UnlockWalletError
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
@@ -202,32 +199,12 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
                     .onLeft {
                         val selectedUserWalletId = stateHolder.getSelectedWalletId()
                         nonBiometricUnlockWalletUseCase(selectedUserWalletId)
-                            .onLeft {
-                                when (it) {
-                                    UnlockWalletError.AlreadyUnlocked -> Unit
-                                    UnlockWalletError.ScannedCardWalletNotMatched -> {
-                                        uiMessageSender.send(
-                                            message = DialogMessage(
-                                                title = resourceReference(R.string.common_warning),
-                                                message = resourceReference(R.string.error_wrong_wallet_tapped),
-                                            ),
-                                        )
-                                    }
-                                    UnlockWalletError.UnableToUnlock -> {
-                                        Timber.e("Unable to unlock wallet with id: $selectedUserWalletId")
-                                        uiMessageSender.send(
-                                            SnackbarMessage(TextReference.Res(R.string.generic_error)),
-                                        )
-                                    }
-                                    UnlockWalletError.UserCancelled -> Unit
-                                    UnlockWalletError.UserWalletNotFound -> {
-                                        // This should never happen in this flow
-                                        Timber.e("User wallet not found for unlock: $selectedUserWalletId")
-                                        uiMessageSender.send(
-                                            SnackbarMessage(TextReference.Res(R.string.generic_error)),
-                                        )
-                                    }
-                                }
+                            .onLeft { error ->
+                                error.handle(
+                                    onAlreadyUnlocked = {},
+                                    onUserCancelled = {},
+                                    showMessage = uiMessageSender::send,
+                                )
                             }
                     }
             }
