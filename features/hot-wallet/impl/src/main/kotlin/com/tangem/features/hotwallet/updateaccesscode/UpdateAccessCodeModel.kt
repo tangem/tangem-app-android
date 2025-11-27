@@ -11,6 +11,8 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.hotwallet.UpdateAccessCodeComponent
 import com.tangem.features.hotwallet.updateaccesscode.routing.UpdateAccessCodeRoute
 import com.tangem.features.hotwallet.accesscode.AccessCodeComponent
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import com.tangem.features.hotwallet.setupfinished.MobileWalletSetupFinishedComponent
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,6 +23,7 @@ internal class UpdateAccessCodeModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
     paramsContainer: ParamsContainer,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model(), AccessCodeComponent.ModelCallbacks {
 
     private val params = paramsContainer.require<UpdateAccessCodeComponent.Params>()
@@ -29,6 +32,10 @@ internal class UpdateAccessCodeModel @Inject constructor(
     val startRoute: UpdateAccessCodeRoute = UpdateAccessCodeRoute.SetAccessCode(params.userWalletId)
     val currentRoute: MutableStateFlow<UpdateAccessCodeRoute> = MutableStateFlow(startRoute)
     val mobileWalletSetupFinishedComponentModelCallbacks = MobileWalletSetupFinishedComponentModelCallbacks()
+
+    init {
+        analyticsEventHandler.send(WalletSettingsAnalyticEvents.AccessCodeScreenOpened(source = params.source))
+    }
 
     fun onChildBack() {
         when (currentRoute.value) {
@@ -39,6 +46,7 @@ internal class UpdateAccessCodeModel @Inject constructor(
     }
 
     override fun onNewAccessCodeInput(userWalletId: UserWalletId, accessCode: String) {
+        analyticsEventHandler.send(WalletSettingsAnalyticEvents.ReEnterAccessCodeScreen(source = params.source))
         stackNavigation.push(UpdateAccessCodeRoute.ConfirmAccessCode(userWalletId, accessCode))
     }
 
