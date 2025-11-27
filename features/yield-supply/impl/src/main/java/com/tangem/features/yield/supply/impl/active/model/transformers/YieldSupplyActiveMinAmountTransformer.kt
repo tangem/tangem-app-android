@@ -1,4 +1,4 @@
-package com.tangem.features.yield.supply.impl.subcomponents.active.model.transformers
+package com.tangem.features.yield.supply.impl.active.model.transformers
 
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -15,7 +15,7 @@ import com.tangem.domain.models.currency.notSuppliedAmountOrNull
 import com.tangem.domain.models.currency.shouldShowNotSuppliedInfoIcon
 import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
 import com.tangem.features.yield.supply.impl.R
-import com.tangem.features.yield.supply.impl.subcomponents.active.entity.YieldSupplyActiveContentUM
+import com.tangem.features.yield.supply.impl.active.entity.YieldSupplyActiveContentUM
 import com.tangem.utils.transformer.Transformer
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toPersistentList
