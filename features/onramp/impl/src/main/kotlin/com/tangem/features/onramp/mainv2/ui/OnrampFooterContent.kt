@@ -25,34 +25,28 @@ import com.tangem.features.onramp.mainv2.entity.OnrampV2AmountButtonUMState
 import com.tangem.features.onramp.mainv2.entity.OnrampV2MainComponentUM
 
 @Composable
-internal fun OnrampFooterContent(
-    state: OnrampV2MainComponentUM.Content,
-    boxScope: BoxScope,
-    modifier: Modifier = Modifier,
-) {
-    boxScope.apply {
-        AnimatedVisibility(
-            modifier = Modifier
-                .imePadding()
-                .align(Alignment.BottomCenter),
-            visible = state.offersBlockState is OnrampOffersBlockUM.Empty,
-            enter = slideInVertically(
-                initialOffsetY = { it },
-                animationSpec = tween(durationMillis = 300),
-            ),
-            exit = slideOutVertically(
-                targetOffsetY = { it },
-                animationSpec = tween(durationMillis = 300),
-            ),
-            label = "Footer block animation",
+internal fun BoxScope.OnrampFooterContent(state: OnrampV2MainComponentUM.Content, modifier: Modifier = Modifier) {
+    AnimatedVisibility(
+        modifier = modifier
+            .imePadding()
+            .align(Alignment.BottomCenter),
+        visible = state.offersBlockState is OnrampOffersBlockUM.Empty,
+        enter = slideInVertically(
+            initialOffsetY = { it },
+            animationSpec = tween(durationMillis = 300),
+        ),
+        exit = slideOutVertically(
+            targetOffsetY = { it },
+            animationSpec = tween(durationMillis = 300),
+        ),
+        label = "Footer block animation",
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Column(
-                modifier = modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                SpacerH(16.dp)
-                OnrampAmountButtons(state = state.onrampAmountButtonUMState)
-            }
+            SpacerH(16.dp)
+            OnrampAmountButtons(state = state.onrampAmountButtonUMState)
         }
     }
 }
