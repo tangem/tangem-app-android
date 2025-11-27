@@ -56,6 +56,11 @@ internal class DefaultPromoRepository(
 
                     isActive && shouldShow
                 }
+                PromoId.BlackFriday -> {
+                    val isActive = getBlackFridayPromoBanner()?.isActive ?: false
+
+                    isActive && shouldShow
+                }
             }
         }
     }
@@ -65,6 +70,7 @@ internal class DefaultPromoRepository(
             PromoId.Referral -> flowOf(false)
             PromoId.Sepa -> flowOf(false)
             PromoId.VisaPresale -> flowOf(false)
+            PromoId.BlackFriday -> flowOf(false)
         }
     }
 
@@ -148,9 +154,18 @@ internal class DefaultPromoRepository(
         }.getOrNull()
     }
 
+    private suspend fun getBlackFridayPromoBanner(): PromoBanner? {
+        return runCatching(dispatchers.io) {
+            promoBannerConverter.convert(
+                tangemApi.getPromoBanner(BLACK_FRIDAY_NAME).getOrThrow(),
+            )
+        }.getOrNull()
+    }
+
     private companion object {
         const val SEPA_NAME = "sepa"
         const val VISA_NAME = "visa-waitlist"
+        const val BLACK_FRIDAY_NAME = "black-friday"
         const val STORIES_LOAD_DELAY = 1000L
     }
 }
