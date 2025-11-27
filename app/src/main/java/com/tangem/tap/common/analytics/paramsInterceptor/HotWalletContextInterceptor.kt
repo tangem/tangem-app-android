@@ -13,7 +13,7 @@ class HotWalletContextInterceptor(
     override fun canBeAppliedTo(event: AnalyticsEvent): Boolean = true
 
     override fun intercept(params: MutableMap<String, String>) {
-        params[AnalyticsParam.PRODUCT_TYPE] = "Mobile Wallet"
+        params[AnalyticsParam.PRODUCT_TYPE] = AnalyticsParam.ProductType.MobileWallet.value
     }
 
     companion object {
