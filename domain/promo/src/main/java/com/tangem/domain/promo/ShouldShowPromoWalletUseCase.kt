@@ -31,6 +31,7 @@ class ShouldShowPromoWalletUseCase(
         return when (promoId) {
             PromoId.Referral,
             PromoId.VisaPresale,
+            PromoId.BlackFriday,
             -> true
             PromoId.Sepa -> {
                 val walletFirstUsageDate = settingsRepository.getWalletFirstUsageDate()
