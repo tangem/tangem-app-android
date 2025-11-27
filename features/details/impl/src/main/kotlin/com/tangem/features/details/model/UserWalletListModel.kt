@@ -1,6 +1,7 @@
 package com.tangem.features.details.model
 
 import com.tangem.common.routing.AppRoute
+import com.tangem.common.ui.userwallet.handle
 import com.tangem.common.ui.userwallet.state.UserWalletItemUM
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -98,11 +99,14 @@ internal class UserWalletListModel @Inject constructor(
         if (hotWalletFeatureToggles.isHotWalletEnabled) {
             modelScope.launch {
                 unlockWalletUseCase(userWalletId)
-                    .onRight {
-                        router.push(AppRoute.WalletSettings(userWalletId))
-                    }
+                    .onRight { router.push(AppRoute.WalletSettings(userWalletId)) }
                     .onLeft { error ->
                         Timber.e("Failed to unlock wallet $userWalletId: $error")
+                        error.handle(
+                            onUserCancelled = {},
+                            onAlreadyUnlocked = { router.push(AppRoute.WalletSettings(userWalletId)) },
+                            showMessage = messageSender::send,
+                        )
                     }
             }
         } else {
