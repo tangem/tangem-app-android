@@ -44,7 +44,7 @@ internal class OnrampAddTokenComponent @AssistedInject constructor(
         val cryptoCurrency: CryptoCurrency,
         val userWallet: UserWallet,
         val account: AccountStatus,
-        val availableMorePortfolio: Boolean,
+        val isMorePortfolioAvailable: Boolean,
     )
 
     interface Callbacks {
