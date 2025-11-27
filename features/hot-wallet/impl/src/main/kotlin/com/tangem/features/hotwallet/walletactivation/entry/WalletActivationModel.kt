@@ -4,6 +4,8 @@ import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.push
 import com.arkivanov.decompose.router.stack.replaceAll
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.core.decompose.di.GlobalUiMessageSender
 import com.tangem.core.decompose.di.ModelScoped
@@ -18,6 +20,7 @@ import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.settings.ShouldAskPermissionUseCase
 import com.tangem.domain.hotwallet.SetAccessCodeSkippedUseCase
+import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import com.tangem.features.hotwallet.manualbackup.check.ManualBackupCheckComponent
 import com.tangem.features.hotwallet.manualbackup.completed.ManualBackupCompletedComponent
 import com.tangem.features.hotwallet.manualbackup.phrase.ManualBackupPhraseComponent
@@ -41,9 +44,10 @@ internal class WalletActivationModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
     private val shouldAskPermissionUseCase: ShouldAskPermissionUseCase,
+    private val setAccessCodeSkippedUseCase: SetAccessCodeSkippedUseCase,
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
     private val trackingContextProxy: TrackingContextProxy,
-    private val setAccessCodeSkippedUseCase: SetAccessCodeSkippedUseCase,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
 
     val params = paramsContainer.require<WalletActivationComponent.Params>()
@@ -66,8 +70,19 @@ internal class WalletActivationModel @Inject constructor(
     }
     val currentRoute: MutableStateFlow<WalletActivationRoute> = MutableStateFlow(startRoute)
 
+    private val source = AnalyticsParam.ScreensSources.Main
+    private val action = WalletSettingsAnalyticEvents.RecoveryPhraseScreenAction.Backup
+
     init {
         trackingContextProxy.addHotWalletContext()
+        if (startRoute is WalletActivationRoute.ManualBackupStart) {
+            analyticsEventHandler.send(
+                event = WalletSettingsAnalyticEvents.RecoveryPhraseScreenInfo(
+                    source = source.value,
+                    action = action.value,
+                ),
+            )
+        }
     }
 
     override fun onDestroy() {
@@ -143,13 +158,23 @@ internal class WalletActivationModel @Inject constructor(
     inner class ManualBackupStartModelCallbacks : ManualBackupStartComponent.ModelCallbacks {
         override fun onContinueClick() {
             stackNavigation.push(WalletActivationRoute.ManualBackupPhrase)
+            analyticsEventHandler.send(
+                event = WalletSettingsAnalyticEvents.RecoveryPhraseScreen(
+                    source = source.value,
+                    action = action.value,
+                ),
+            )
         }
     }
 
     inner class ManualBackupPhraseModelCallbacks : ManualBackupPhraseComponent.ModelCallbacks {
         override fun onContinueClick() {
-            stackNavigation.push(
-                WalletActivationRoute.ManualBackupCheck,
+            stackNavigation.push(WalletActivationRoute.ManualBackupCheck)
+            analyticsEventHandler.send(
+                event = WalletSettingsAnalyticEvents.RecoveryPhraseCheck(
+                    source = source.value,
+                    action = action.value,
+                ),
             )
         }
     }
@@ -157,6 +182,12 @@ internal class WalletActivationModel @Inject constructor(
     inner class ManualBackupCheckModelCallbacks : ManualBackupCheckComponent.ModelCallbacks {
         override fun onCompleteClick() {
             stackNavigation.push(WalletActivationRoute.ManualBackupCompleted)
+            analyticsEventHandler.send(
+                event = WalletSettingsAnalyticEvents.BackupCompleteScreen(
+                    source = source.value,
+                    action = action.value,
+                ),
+            )
         }
     }
 

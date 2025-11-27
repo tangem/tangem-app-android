@@ -1,6 +1,8 @@
 package com.tangem.features.hotwallet.walletbackup.model
 
 import com.tangem.common.routing.AppRoute
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -11,6 +13,7 @@ import com.tangem.core.ui.components.label.entity.LabelStyle
 import com.tangem.core.ui.components.label.entity.LabelUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.UnlockHotWalletContextualUseCase
@@ -27,12 +30,13 @@ import javax.inject.Inject
 @ModelScoped
 internal class WalletBackupModel @Inject constructor(
     paramsContainer: ParamsContainer,
+    override val dispatchers: CoroutineDispatcherProvider,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val unlockHotWalletContextualUseCase: UnlockHotWalletContextualUseCase,
-    override val dispatchers: CoroutineDispatcherProvider,
     private val generateBuyTangemCardLinkUseCase: GenerateBuyTangemCardLinkUseCase,
     private val urlOpener: UrlOpener,
     private val router: Router,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
 
     private val params: WalletBackupComponent.Params = paramsContainer.require()
@@ -63,6 +67,7 @@ internal class WalletBackupModel @Inject constructor(
         )
 
     init {
+        analyticsEventHandler.send(WalletSettingsAnalyticEvents.BackupScreenOpened(isManualBackupEnabled = true))
         getUserWalletUseCase.invokeFlow(params.userWalletId)
             .onEach { either ->
                 either.fold(
@@ -112,6 +117,7 @@ internal class WalletBackupModel @Inject constructor(
     }
 
     private fun onRecoveryPhraseClick() {
+        analyticsEventHandler.send(WalletSettingsAnalyticEvents.ButtonRecoveryPhrase)
         if (uiState.value.backedUp) {
             getUserWalletUseCase.invoke(params.userWalletId)
                 .fold(
@@ -132,6 +138,8 @@ internal class WalletBackupModel @Inject constructor(
             router.push(
                 AppRoute.CreateWalletBackup(
                     userWalletId = params.userWalletId,
+                    analyticsSource = AnalyticsParam.ScreensSources.Backup.value,
+                    analyticsAction = WalletSettingsAnalyticEvents.RecoveryPhraseScreenAction.Backup.value,
                 ),
             )
         }
@@ -152,6 +160,7 @@ internal class WalletBackupModel @Inject constructor(
     }
 
     private fun onHardwareWalletClick() {
+        analyticsEventHandler.send(WalletSettingsAnalyticEvents.ButtonHardwareUpdate)
         router.push(AppRoute.WalletHardwareBackup(params.userWalletId))
     }
 }
