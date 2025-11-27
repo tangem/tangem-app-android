@@ -58,5 +58,6 @@ sealed class PromoAnalyticsEvent(
     enum class Program(val programName: String) {
         Empty("Empty"),
         Sepa("Sepa"),
+        BlackFriday("Black Friday"),
     }
 }
