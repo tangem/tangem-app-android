@@ -5,6 +5,9 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
+import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.message.DialogMessage
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
 import com.tangem.domain.apptheme.model.AppThemeMode
@@ -34,6 +37,7 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import com.tangem.utils.extensions.addIf
+import com.tangem.wallet.R
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.*
@@ -56,6 +60,7 @@ internal class AppSettingsModel @Inject constructor(
     private val settingsRepository: SettingsRepository,
     private val appSettingsItemsAnalyticsSender: AppSettingsItemsAnalyticsSender,
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
+    private val uiMessageSender: UiMessageSender,
 ) : Model(), StoreSubscriber<DetailsState> {
 
     private val itemsFactory = AppSettingsItemsFactory()
@@ -124,6 +129,7 @@ internal class AppSettingsModel @Inject constructor(
                         isChecked = state.useBiometricAuthentication,
                         isEnabled = canUseBiometrics,
                         onCheckedChange = ::onBiometricAuthenticationToggled,
+                        onDisabledClick = ::onBiometricAuthenticationDisabledClicked,
                     ),
                 )
 
@@ -222,6 +228,10 @@ internal class AppSettingsModel @Inject constructor(
                 )
             }
         }
+    }
+
+    private fun onBiometricAuthenticationDisabledClicked() {
+        uiMessageSender.send(DialogMessage(message = resourceReference(R.string.app_settings_access_code_warning)))
     }
 
     private fun onRequireAccessCodeToggled(isChecked: Boolean) {
