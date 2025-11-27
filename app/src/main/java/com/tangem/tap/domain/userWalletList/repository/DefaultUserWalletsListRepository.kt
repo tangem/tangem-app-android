@@ -375,6 +375,13 @@ internal class DefaultUserWalletsListRepository(
             oldUserWallet is UserWallet.Hot && newUserWallet is UserWallet.Cold
         ) {
             removeHotWalletsFromSDK(walletIds = listOf(oldUserWallet.walletId))
+            // When upgrading from Hot to Cold, if biometric lock is available, set it
+            if (hasBiometry()) {
+                setLock(newUserWallet.walletId, LockMethod.Biometric, changeUnsecured = true)
+            }
+            // Remove any encryption keys related to the old hot wallet
+            userWalletEncryptionKeysRepository.removeEncryptedWithPasswordKey(oldUserWallet.walletId)
+            userWalletEncryptionKeysRepository.removeUnsecuredKey(oldUserWallet.walletId)
         }
     }
 
