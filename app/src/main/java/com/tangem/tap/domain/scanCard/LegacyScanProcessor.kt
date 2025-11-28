@@ -12,6 +12,7 @@ import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
 import com.tangem.core.analytics.models.event.OnboardingAnalyticsEvent
+import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.core.decompose.di.GlobalUiMessageSender
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.R
@@ -47,6 +48,7 @@ import javax.inject.Singleton
 internal class LegacyScanProcessor @Inject constructor(
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val trackingContextProxy: TrackingContextProxy,
 ) {
 
     suspend fun scan(
@@ -118,16 +120,14 @@ internal class LegacyScanProcessor @Inject constructor(
             }
     }
 
-    private fun sendAnalytics(analyticsEvent: AnalyticsEvent?, scanResponse: ScanResponse) {
-        analyticsEvent?.let { event ->
-            // this workaround needed to send CardWasScannedEvent without adding a context
-            val interceptor = CardContextInterceptor(scanResponse)
-            val params = event.params.toMutableMap()
-            interceptor.intercept(params)
-            event.params = params.toMap()
+    private fun sendAnalytics(analyticsEvent: AnalyticsEvent, scanResponse: ScanResponse) {
+        // this workaround needed to send CardWasScannedEvent without adding a context
+        val interceptor = CardContextInterceptor(scanResponse)
+        val params = analyticsEvent.params.toMutableMap()
+        interceptor.intercept(params)
+        analyticsEvent.params = params.toMap()
 
-            Analytics.send(event)
-        }
+        Analytics.send(analyticsEvent)
     }
 
     // TODO: [REDACTED_JIRA]
@@ -211,7 +211,7 @@ internal class LegacyScanProcessor @Inject constructor(
             },
         ) {
             if (OnboardingHelper.isOnboardingCase(scanResponse)) {
-                Analytics.addContext(scanResponse)
+                trackingContextProxy.addContext(scanResponse)
                 onWalletNotCreated()
                 navigateTo(
                     AppRoute.Onboarding(
@@ -220,7 +220,7 @@ internal class LegacyScanProcessor @Inject constructor(
                     ),
                 ) { onProgressStateChange(it) }
             } else {
-                Analytics.setContext(scanResponse)
+                trackingContextProxy.setContext(scanResponse)
 
                 val wasTwinsOnboardingShown =
                     store.inject(DaggerGraphState::wasTwinsOnboardingShownUseCase).invokeSync()

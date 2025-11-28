@@ -1,0 +1,9 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>BooleanPropertyNaming:TxHistoryListManager.kt$TxHistoryListManager$val clearUiBatches = state.status is PaginationStatus.InitialLoading &amp;&amp; batchListState.status is PaginationStatus.Paginating</ID>
+    <ID>MultilineLambdaItParameter:TxHistoryUiManager.kt$TxHistoryUiManager${ it.status !is PaginationStatus.None &amp;&amp; it.status !is PaginationStatus.InitialLoading &amp;&amp; it.status !is PaginationStatus.InitialLoadingError }</ID>
+    <ID>UseEmptyCounterpart:TxHistoryListState.kt$TxHistoryListState$listOf()</ID>
+  </CurrentIssues>
+</SmellBaseline>
