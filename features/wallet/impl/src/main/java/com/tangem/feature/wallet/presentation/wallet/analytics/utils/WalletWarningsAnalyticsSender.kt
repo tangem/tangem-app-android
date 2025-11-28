@@ -57,6 +57,10 @@ internal class WalletWarningsAnalyticsSender @Inject constructor(
                 source = AnalyticsParam.ScreensSources.Main,
                 program = Program.Sepa,
             )
+            is WalletNotification.BlackFridayPromo -> NoticePromotionBanner(
+                source = AnalyticsParam.ScreensSources.Main,
+                program = Program.BlackFriday,
+            )
             is WalletNotification.ReferralPromo -> MainScreen.ReferralPromo
             is WalletNotification.VisaPresalePromo -> VisaWaitlistPromo
             is WalletNotification.UnlockWallets -> null // See [SelectedWalletAnalyticsSender]
