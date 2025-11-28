@@ -1386,7 +1386,7 @@
   <string name="wc_alert_unknown_error_description">Code d\'erreur : %s. Si le problème persiste, n\'hésitez pas à contacter notre service d\'assistance.</string>
   <string name="wc_alert_unknown_error_description_no_error_code">Si le problème persiste, n’hésitez pas à contacter notre support.</string>
   <string name="wc_alert_unknown_error_title">Nous avons rencontré une erreur inconnue.</string>
-  <string name="wc_alert_unsupported_dapps_description">Le portefeuille Tangem ne prend actuellement pas en charge %ss</string>
+  <string name="wc_alert_unsupported_dapps_description">Le portefeuille Tangem ne prend actuellement pas en charge %s</string>
   <string name="wc_alert_unsupported_dapps_title">dApp non prise en charge</string>
   <string name="wc_alert_unsupported_method_description">Code d\'erreur : 8 005. Si le problème persiste, n\'hésitez pas à contacter notre support.</string>
   <string name="wc_alert_unsupported_method_title">Nous avons rencontré une erreur inconnue</string>
