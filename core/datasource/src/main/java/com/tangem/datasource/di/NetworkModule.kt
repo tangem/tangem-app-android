@@ -17,6 +17,7 @@ import com.tangem.datasource.api.news.NewsApi
 import com.tangem.datasource.api.onramp.OnrampApi
 import com.tangem.datasource.api.ethpool.P2PEthPoolApi
 import com.tangem.datasource.api.pay.TangemPayApi
+import com.tangem.datasource.api.pay.TangemPayAuthApi
 import com.tangem.datasource.api.stakekit.StakeKitApi
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.YieldSupplyApi
@@ -131,6 +132,15 @@ internal object NetworkModule {
     fun provideTangemVisaApi(retrofitApiBuilder: RetrofitApiBuilder): TangemPayApi {
         return retrofitApiBuilder.build(
             apiConfigId = ApiConfig.ID.TangemPay,
+            applyTimeoutAnnotations = false,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideTangemPayAuthApi(retrofitApiBuilder: RetrofitApiBuilder): TangemPayAuthApi {
+        return retrofitApiBuilder.build(
+            apiConfigId = ApiConfig.ID.TangemPayAuth,
             applyTimeoutAnnotations = false,
         )
     }
