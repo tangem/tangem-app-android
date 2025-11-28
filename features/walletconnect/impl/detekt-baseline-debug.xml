@@ -31,10 +31,6 @@
     <ID>NamedArguments:WcSendTransactionModel.kt$WcSendTransactionModel$buildUiState(securityCheck, useCase, signState, isApprovalMethod)</ID>
     <ID>NestedScopeFunctions:WcSendAndReceiveBlockAidUiConverter.kt$WcSendAndReceiveBlockAidUiConverter$let { spendAllowanceUMConverter.convert( WcSpendAllowanceUMConverter.Input( approvedAmount = it, onLearnMoreClick = value.onApproveLearnMoreClick, ), ) }</ID>
     <ID>NoNameShadowing:WcNavigationUtils.kt$model</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:WcConnectionsModel.kt$WcConnectionsModel$private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:WcPairModel.kt$WcPairModel$private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:WcPortfolioNameDelegate.kt$WcPortfolioNameDelegate$val isAccountMode = isAccountsModeEnabledUseCase.invoke() .stateIn(scope = scope, started = SharingStarted.Eagerly, initialValue = false)</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:WcRoutingModel.kt$WcRoutingModel$private val isSlotEmpty = MutableStateFlow(true)</ID>
     <ID>NullCheckOnMutableProperty:WcCommonTransactionComponentDelegate.kt$WcCommonTransactionComponentDelegate$if (contentStack != null) { val content by contentStack!!.subscribeAsState() BackHandler(onBack = ::onChildBack) content.active.instance.BottomSheet() }</ID>
     <ID>NullableBooleanCheck:WcPairModel.kt$WcPairModel$isAccountMode ?: false</ID>
     <ID>NullableToStringCall:WcEstimatedWalletChangeUMConverter.kt$WcEstimatedWalletChangeUMConverter$${value.sign}</ID>
