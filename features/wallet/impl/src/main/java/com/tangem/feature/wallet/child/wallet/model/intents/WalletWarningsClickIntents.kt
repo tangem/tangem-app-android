@@ -335,6 +335,11 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
                     action = PromotionBannerClicked.BannerAction.Closed,
                 )
                 PromoId.VisaPresale -> PromoAnalyticsEvent.VisaWaitlistPromoDismiss
+                PromoId.BlackFriday -> PromotionBannerClicked(
+                    source = AnalyticsParam.ScreensSources.Main,
+                    program = Program.BlackFriday,
+                    action = PromotionBannerClicked.BannerAction.Closed,
+                )
             },
 
         )
@@ -371,6 +376,16 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
             PromoId.VisaPresale -> {
                 analyticsEventHandler.send(PromoAnalyticsEvent.VisaWaitlistPromoJoin)
                 urlOpener.openUrl(VISA_PROMO_LINK)
+            }
+            PromoId.BlackFriday -> {
+                analyticsEventHandler.send(
+                    PromotionBannerClicked(
+                        source = AnalyticsParam.ScreensSources.Main,
+                        program = Program.BlackFriday,
+                        action = PromotionBannerClicked.BannerAction.Clicked,
+                    ),
+                )
+                urlOpener.openUrl(BLACK_FRIDAY_PROMO_LINK)
             }
         }
     }
@@ -587,5 +602,10 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
         const val VISA_PROMO_LINK = "https://tangem.com/en/cardwaitlist/?utm_source=tangem-app-banner" +
             "&utm_medium=banner" +
             "&utm_campaign=tangempaywaitlist"
+        const val BLACK_FRIDAY_PROMO_LINK = "https://tangem.com/en/pricing/" +
+            "?promocode=BF2025" +
+            "&utm_source=tangem-app-banner" +
+            "&utm_medium=banner" +
+            "&utm_campaign=BlackFriday2025"
     }
 }
