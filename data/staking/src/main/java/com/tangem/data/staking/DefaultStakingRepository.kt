@@ -119,7 +119,12 @@ internal class DefaultStakingRepository(
     private suspend fun checkFeatureToggleEnabled(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): Boolean {
         return when (cryptoCurrency.network.id.toBlockchain()) {
             Blockchain.TON -> stakingFeatureToggles.isTonStakingEnabled
-            Blockchain.Ethereum -> stakingFeatureToggles.isEthStakingEnabled
+            Blockchain.Ethereum -> {
+                when (cryptoCurrency) {
+                    is CryptoCurrency.Coin -> stakingFeatureToggles.isEthStakingEnabled
+                    is CryptoCurrency.Token -> true
+                }
+            }
             Blockchain.Cardano -> {
                 val address = walletManagersFacade.getDefaultAddress(userWalletId, cryptoCurrency.network).orEmpty()
                 val balance = stakingBalanceStoreV2.getSyncOrNull(
