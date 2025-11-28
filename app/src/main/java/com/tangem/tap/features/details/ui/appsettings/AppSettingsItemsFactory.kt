@@ -38,6 +38,7 @@ internal class AppSettingsItemsFactory {
         isChecked: Boolean,
         isEnabled: Boolean,
         onCheckedChange: (Boolean) -> Unit,
+        onDisabledClick: () -> Unit,
     ): Item.Switch {
         return Item.Switch(
             id = ID_USE_BIOMETRICS_SWITCH,
@@ -49,6 +50,7 @@ internal class AppSettingsItemsFactory {
             isEnabled = isEnabled,
             isChecked = isChecked,
             onCheckedChange = onCheckedChange,
+            onDisabledClick = onDisabledClick,
         )
     }
 

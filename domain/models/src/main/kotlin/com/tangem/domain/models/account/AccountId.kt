@@ -40,6 +40,10 @@ data class AccountId private constructor(
         private val sha256Digest: MessageDigest by lazy { MessageDigest.getInstance("SHA-256") }
         private val hexRegex = Regex("^[a-fA-F0-9]{64}$")
 
+        fun forMainCryptoPortfolio(userWalletId: UserWalletId): AccountId {
+            return forCryptoPortfolio(userWalletId = userWalletId, derivationIndex = DerivationIndex.Main)
+        }
+
         /**
          * Creates a unique account identifier for a crypto portfolio
          *
