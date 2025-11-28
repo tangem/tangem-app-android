@@ -46,7 +46,7 @@ internal class TangemPayTxHistoryModel @Inject constructor(
     }
 
     private fun launchPagination() {
-        modelScope.launch { listManager.launchPagination() }
+        modelScope.launch { listManager.launchPagination(params.userWalletId) }
     }
 
     private fun subscribeToUiItemChanges() {
