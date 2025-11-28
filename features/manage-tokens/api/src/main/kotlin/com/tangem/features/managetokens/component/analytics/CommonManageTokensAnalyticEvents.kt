@@ -26,8 +26,8 @@ sealed class CommonManageTokensAnalyticEvents(
         event = "Token Searched",
         params = buildMap {
             put(CHOSEN_TOKEN, if (isTokenChosen) "Yes" else "No")
-            if (token != null) { put(TOKEN_PARAM, token) }
-            if (blockchain != null) { put(BLOCKCHAIN, blockchain) }
+            if (token != null) put(TOKEN_PARAM, token)
+            if (blockchain != null) put(BLOCKCHAIN, blockchain)
         },
     )
 }
