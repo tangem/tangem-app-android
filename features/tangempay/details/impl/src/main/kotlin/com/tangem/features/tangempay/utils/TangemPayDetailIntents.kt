@@ -5,6 +5,7 @@ import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfi
 internal interface TangemPayDetailIntents {
     fun onRefreshSwipe(refreshState: ShowRefreshState)
     fun onClickAddFunds()
+    fun onClickWithdraw()
     fun onClickChangePin()
     fun onClickFreezeCard()
     fun onClickUnfreezeCard()
