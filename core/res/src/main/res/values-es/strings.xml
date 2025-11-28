@@ -652,6 +652,8 @@
   <string name="no_account_polkadot">La cuenta de destino no está activa. Envíe %s o más para activar la cuenta.</string>
   <string name="no_account_send_to_create">Para crear una cuenta, envíe fondos a esta dirección</string>
   <string name="no_trustline_xlm_asset">La cuenta de destino no tiene una Trustline (línea de confianza) para el activo que se envía.</string>
+  <string name="notification_black_friday_text">Obtén $10 en BTC con cada billetera \n ¡Date prisa!</string>
+  <string name="notification_black_friday_title">Black Friday: hasta 30% DESCUENTO</string>
   <string name="notification_referral_promo_button">Únase ahora</string>
   <string name="notification_referral_promo_text">Comparta su código y gane 5 USDT por venta. Su amigo obtiene un 10% de descuento.</string>
   <string name="notification_referral_promo_title">¡Obtenga RECOMPENSAS por cada amigo!</string>
