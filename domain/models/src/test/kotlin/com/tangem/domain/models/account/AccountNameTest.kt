@@ -3,9 +3,9 @@ package com.tangem.domain.models.account
 import arrow.core.Either
 import arrow.core.left
 import com.google.common.truth.Truth
+import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.MethodSource
 
 /**
 [REDACTED_AUTHOR]
@@ -14,7 +14,7 @@ import org.junit.jupiter.params.provider.MethodSource
 class AccountNameTest {
 
     @ParameterizedTest
-    @MethodSource("provideTestModels")
+    @ProvideTestModels
     fun invoke(model: InvokeTestModel) {
         // Act
         val actual = AccountName(value = model.value)

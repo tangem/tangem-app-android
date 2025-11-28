@@ -2,6 +2,7 @@ package com.tangem.features.managetokens.component
 
 import com.tangem.core.decompose.factory.ComponentFactory
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.domain.models.account.Account
 import com.tangem.features.managetokens.entity.customtoken.SelectedDerivationPath
 import com.tangem.features.managetokens.entity.customtoken.SelectedNetwork
 
@@ -19,7 +20,7 @@ internal interface CustomTokenSelectorComponent : ComposableContentComponent {
             val mode: AddCustomTokenMode,
             val selectedNetwork: SelectedNetwork,
             val selectedDerivationPath: SelectedDerivationPath?,
-            val onDerivationPathSelected: (SelectedDerivationPath) -> Unit,
+            val onDerivationPathSelected: (SelectedDerivationPath, Account?) -> Unit,
         ) : Params()
     }
 

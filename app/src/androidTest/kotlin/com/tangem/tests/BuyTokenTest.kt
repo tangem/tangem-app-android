@@ -70,7 +70,7 @@ class BuyTokenTest : BaseTestCase() {
             val otherCurrenciesTitle = "Other currencies"
             val australianDollar = "AUD"
             val fiatAmount = "1"
-            val tokenAmount = "~488.24938338 POL"
+            val tokenAmount = "POL 488.24938338"
             val scenarioName = "payment_methods"
 
             step("Reset WireMock scenario '$scenarioName'") {
@@ -98,10 +98,8 @@ class BuyTokenTest : BaseTestCase() {
             step("Write fiat amount = '$fiatAmount'") {
                 onBuyTokenDetailsScreen { fiatAmountTextField.performTextInput(fiatAmount) }
             }
-            step("Assert token amount = '$tokenAmount'") {
-                onBuyTokenDetailsScreen {
-                    tokenAmountField.assertTextContains(tokenAmount)
-                }
+            step("Assert offer token amount = '$tokenAmount'") {
+                onBuyTokenDetailsScreen { offerTokenAmount.assertTextContains(tokenAmount) }
             }
             step("Fiat currency icon is displayed") {
                 onBuyTokenDetailsScreen { fiatCurrencyIcon.assertIsDisplayed() }
@@ -129,10 +127,8 @@ class BuyTokenTest : BaseTestCase() {
                     fiatAmountTextField.assertTextContains(australianDollar + fiatAmount)
                 }
             }
-            step("Assert token amount = '$tokenAmount'") {
-                onBuyTokenDetailsScreen {
-                    tokenAmountField.assertTextContains(tokenAmount)
-                }
+            step("Assert offer token amount = '$tokenAmount'") {
+                onBuyTokenDetailsScreen { offerTokenAmount.assertTextContains(tokenAmount) }
             }
         }
     }
@@ -145,7 +141,7 @@ class BuyTokenTest : BaseTestCase() {
             val tokenTitle = "Polygon"
             val euro = "EUR"
             val fiatAmount = "1"
-            val tokenAmount = "~488.24938338 POL"
+            val tokenAmount = "POL 488.24938338"
             val scenarioName = "payment_methods"
 
             step("Reset WireMock scenario '$scenarioName'") {
@@ -182,17 +178,11 @@ class BuyTokenTest : BaseTestCase() {
             step("Assert fiat amount = '$fiatAmount'") {
                 onBuyTokenDetailsScreen { fiatAmountTextField.assertTextContains(euro + fiatAmount) }
             }
-            step("Assert token amount = '$tokenAmount'") {
-                onBuyTokenDetailsScreen { tokenAmountField.assertTextContains(tokenAmount) }
-            }
-            step("Click on 'Continue' button") {
-                onBuyTokenDetailsScreen { continueButton.clickWithAssertion() }
+            step("Assert offer token amount = '$tokenAmount'") {
+                onBuyTokenDetailsScreen { offerTokenAmount.assertTextContains(tokenAmount) }
             }
             step("Assert 'Recommended' title is displayed") {
                 onBuyTokenDetailsScreen { recommendedTitle.clickWithAssertion() }
-            }
-            step("Assert 'Best rate' icon is displayed") {
-                onBuyTokenDetailsScreen { bestRateIcon.assertIsDisplayed() }
             }
             step("Assert 'Best rate' title is displayed") {
                 onBuyTokenDetailsScreen { bestRateTitle.assertIsDisplayed() }
@@ -316,7 +306,7 @@ class BuyTokenTest : BaseTestCase() {
             val paymentMethod = "Invoice Revolut Pay"
             val fiatAmount = "1"
             val providerNameMercuryo = "Mercuryo"
-            val tokenAmount = "~488.24938338 POL"
+            val tokenAmount = "POL 488.24938338"
             val scenarioName = "payment_methods"
 
             step("Reset WireMock scenario '$scenarioName'") {
@@ -344,11 +334,8 @@ class BuyTokenTest : BaseTestCase() {
             step("Write fiat amount = '$fiatAmount'") {
                 onBuyTokenDetailsScreen { fiatAmountTextField.performTextInput(fiatAmount) }
             }
-            step("Assert token amount = '$tokenAmount'") {
-                onBuyTokenDetailsScreen { tokenAmountField.assertTextContains(tokenAmount) }
-            }
-            step("Click on 'Continue' button") {
-                onBuyTokenDetailsScreen { continueButton.clickWithAssertion() }
+            step("Assert offer token amount = '$tokenAmount'") {
+                onBuyTokenDetailsScreen { offerTokenAmount.assertTextContains(tokenAmount) }
             }
             step("Assert 'Provider block' is displayed") {
                 onBuyTokenDetailsScreen { providerName.assertIsDisplayed() }
@@ -364,9 +351,6 @@ class BuyTokenTest : BaseTestCase() {
             }
             step("Assert 'Provider' bottom sheet subtitle is displayed") {
                 onSelectProviderBottomSheet { subtitle.assertIsDisplayed() }
-            }
-            step("Assert 'Best rate' icon is displayed") {
-                onSelectProviderBottomSheet { bestRateIcon.assertIsDisplayed() }
             }
             step("Assert 'Best rate' title is displayed") {
                 onSelectProviderBottomSheet { bestRateTitle.assertIsDisplayed() }
@@ -406,7 +390,7 @@ class BuyTokenTest : BaseTestCase() {
             val invoiceRevolutPay = "Invoice Revolut Pay"
             val sepa = "Sepa"
             val fiatAmount = "1"
-            val tokenAmount = "~488.24938338 POL"
+            val tokenAmount = "POL 488.24938338"
             val scenarioName = "payment_methods"
 
             step("Reset WireMock scenario '$scenarioName'") {
@@ -434,11 +418,8 @@ class BuyTokenTest : BaseTestCase() {
             step("Write fiat amount = '$fiatAmount'") {
                 onBuyTokenDetailsScreen { fiatAmountTextField.performTextInput(fiatAmount) }
             }
-            step("Assert token amount = '$tokenAmount'") {
-                onBuyTokenDetailsScreen { tokenAmountField.assertTextContains(tokenAmount) }
-            }
-            step("Click on 'Continue' button") {
-                onBuyTokenDetailsScreen { continueButton.clickWithAssertion() }
+            step("Assert offer token amount = '$tokenAmount'") {
+                onBuyTokenDetailsScreen { offerTokenAmount.assertTextContains(tokenAmount) }
             }
             step("Assert 'Provider block' is displayed") {
                 onBuyTokenDetailsScreen { providerName.assertIsDisplayed() }
