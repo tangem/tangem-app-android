@@ -18,7 +18,9 @@ import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.pay.TangemPayTopUpData
+import com.tangem.domain.pay.TangemPaySwapDataFactory
 import com.tangem.domain.pay.model.TangemPayCardBalance
+import com.tangem.domain.pay.repository.CustomerOrderRepository
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
 import com.tangem.domain.visa.model.TangemPayCardFrozenState
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
@@ -64,6 +66,8 @@ internal class TangemPayDetailsModel @Inject constructor(
     private val uiMessageSender: UiMessageSender,
     private val cardDetailsEventListener: CardDetailsEventListener,
     private val txHistoryUpdateListener: TangemPayTxHistoryUpdateListener,
+    private val tangemPaySwapDataFactory: TangemPaySwapDataFactory,
+    private val orderRepository: CustomerOrderRepository,
 ) : Model(), TangemPayTxHistoryUiActions, TangemPayDetailIntents, AddFundsListener {
 
     private val params: TangemPayDetailsContainerComponent.Params = paramsContainer.require()
@@ -199,19 +203,60 @@ internal class TangemPayDetailsModel @Inject constructor(
     }
 
     override fun onClickAddFunds() {
-        if (params.config.depositAddress == null || balance == null) {
+        val currentBalance = balance
+        val depositAddress = params.config.depositAddress
+        if (currentBalance == null || depositAddress == null) {
             showBottomSheetError(TangemPayDetailsErrorType.Receive)
         } else {
             bottomSheetNavigation.activate(
                 TangemPayDetailsNavigation.AddFunds(
                     walletId = params.userWalletId,
-                    fiatBalance = requireNotNull(balance).balance,
-                    // Using the fiat balance as crypto balance. This will be changed when back returns crypto balance
-                    cryptoBalance = requireNotNull(balance).balance,
-                    depositAddress = requireNotNull(params.config.depositAddress),
+                    fiatBalance = currentBalance.fiatBalance,
+                    cryptoBalance = currentBalance.cryptoBalance,
+                    depositAddress = depositAddress,
                     chainId = params.config.chainId,
                 ),
             )
+        }
+    }
+
+    override fun onClickWithdraw() {
+        val currentBalance = balance
+        val depositAddress = params.config.depositAddress
+        if (currentBalance == null || depositAddress == null) {
+            showBottomSheetError(TangemPayDetailsErrorType.Withdraw)
+        } else {
+            modelScope.launch {
+                val hasActiveWithdrawal = orderRepository.hasWithdrawOrder(userWalletId = params.userWalletId)
+                if (hasActiveWithdrawal) {
+                    showBottomSheetError(TangemPayDetailsErrorType.WithdrawInProgress)
+                } else {
+                    val data = tangemPaySwapDataFactory.create(
+                        depositAddress = depositAddress,
+                        chainId = params.config.chainId,
+                        cryptoBalance = currentBalance.cryptoBalance,
+                        fiatBalance = currentBalance.fiatBalance,
+                    ).getOrNull()
+                    if (data != null) {
+                        router.push(
+                            AppRoute.Swap(
+                                currencyFrom = data.currency,
+                                userWalletId = data.walletId,
+                                isInitialReverseOrder = false,
+                                screenSource = AnalyticsParam.ScreensSources.TangemPay.value,
+                                tangemPayInput = AppRoute.Swap.TangemPayInput(
+                                    cryptoAmount = data.cryptoBalance,
+                                    fiatAmount = data.fiatBalance,
+                                    depositAddress = data.depositAddress,
+                                    isWithdrawal = true,
+                                ),
+                            ),
+                        )
+                    } else {
+                        showBottomSheetError(TangemPayDetailsErrorType.Withdraw)
+                    }
+                }
+            }
         }
     }
 
@@ -294,6 +339,7 @@ internal class TangemPayDetailsModel @Inject constructor(
                     cryptoAmount = data.cryptoBalance,
                     fiatAmount = data.fiatBalance,
                     depositAddress = data.depositAddress,
+                    isWithdrawal = false,
                 ),
             ),
         )
