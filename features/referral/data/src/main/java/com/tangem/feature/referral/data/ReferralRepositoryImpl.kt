@@ -9,8 +9,10 @@ import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.StartReferralBody
 import com.tangem.datasource.local.userwallet.UserWalletsStore
+import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.referral.ReferralStatus
 import com.tangem.feature.referral.converters.ReferralConverter
 import com.tangem.feature.referral.domain.ReferralRepository
 import com.tangem.feature.referral.domain.models.ReferralData
@@ -20,14 +22,15 @@ import kotlinx.coroutines.withContext
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 
-@Suppress("LongParameterList")
+typealias ExternalReferralRepository = com.tangem.domain.referral.ReferralRepository
+
 internal class ReferralRepositoryImpl @Inject constructor(
     private val referralApi: TangemTechApi,
     private val referralConverter: ReferralConverter,
     private val coroutineDispatcher: CoroutineDispatcherProvider,
     private val userWalletsStore: UserWalletsStore,
     excludedBlockchains: ExcludedBlockchains,
-) : ReferralRepository {
+) : ReferralRepository, ExternalReferralRepository {
 
     private val cryptoCurrencyFactory = CryptoCurrencyFactory(excludedBlockchains)
 
@@ -45,6 +48,21 @@ internal class ReferralRepositoryImpl @Inject constructor(
             referralStatus[walletId] = referralData
             referralData
         }
+    }
+
+    override suspend fun getReferralStatus(userWalletId: String): ReferralStatus {
+        val data = getReferralData(userWalletId)
+
+        return ReferralStatus(
+            isActive = data is ReferralData.ParticipantData,
+            token = data.tokens.firstOrNull()?.let { tokenData ->
+                ReferralStatus.Token(
+                    networkId = tokenData.networkId,
+                    contractAddress = tokenData.contractAddress,
+                )
+            },
+            address = (data as? ReferralData.ParticipantData)?.referral?.address,
+        )
     }
 
     override suspend fun isReferralParticipant(userWalletId: UserWalletId): Boolean {
@@ -74,7 +92,11 @@ internal class ReferralRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getCryptoCurrency(userWalletId: UserWalletId, tokenData: TokenData): CryptoCurrency? {
+    override suspend fun getCryptoCurrency(
+        userWalletId: UserWalletId,
+        tokenData: TokenData,
+        accountIndex: DerivationIndex?,
+    ): CryptoCurrency? {
         val userWallet = withContext(coroutineDispatcher.io) {
             userWalletsStore.getSyncOrNull(userWalletId) ?: error("Wallet $userWalletId not found")
         }
@@ -97,12 +119,14 @@ internal class ReferralRepositoryImpl @Inject constructor(
                 blockchain = blockchain,
                 extraDerivationPath = null,
                 userWallet = userWallet,
+                accountIndex = accountIndex,
             )
         } else {
             cryptoCurrencyFactory.createCoin(
                 blockchain = blockchain,
                 extraDerivationPath = null,
                 userWallet = userWallet,
+                accountIndex = accountIndex,
             )
         }
     }

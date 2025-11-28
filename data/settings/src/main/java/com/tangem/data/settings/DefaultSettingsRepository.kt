@@ -13,6 +13,7 @@ import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.settings.usercountry.models.GB_COUNTRY
 import com.tangem.domain.settings.usercountry.models.UserCountry
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.runSuspendCatching
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -153,7 +154,7 @@ internal class DefaultSettingsRepository(
         }
 
         withContext(dispatchers.io) {
-            val country = runCatching { tangemTechApi.getUserCountryCode() }
+            val country = runSuspendCatching { tangemTechApi.getUserCountryCode() }
                 .fold(
                     onSuccess = GeoResponse::code,
                     onFailure = { Locale.getDefault().country },

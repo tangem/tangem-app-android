@@ -2,7 +2,6 @@ package com.tangem.data.networks.converters
 
 import com.google.common.truth.Truth
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
-import com.tangem.common.test.utils.ProvideTestModels
 import com.tangem.datasource.local.network.entity.NetworkStatusDM
 import com.tangem.datasource.local.network.entity.NetworkStatusDM.*
 import com.tangem.domain.models.StatusSource
@@ -14,6 +13,7 @@ import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.models.network.NetworkStatus.Amount
 import com.tangem.domain.models.yield.supply.YieldSupplyStatus
+import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
