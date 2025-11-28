@@ -61,7 +61,8 @@ interface SwapInteractor {
      * @param currencyToSend [Currency]
      * @param currencyToGet [Currency]
      * @param amountToSwap amount to swap
-     * @param fee for tx
+     * @param fee for tx (can be null only for tangem pay withdrawal)
+
      * @return [SwapTransactionState]
      */
     @Suppress("LongParameterList")
@@ -75,8 +76,9 @@ interface SwapInteractor {
         toAccount: Account.CryptoPortfolio?,
         amountToSwap: String,
         includeFeeInAmount: IncludeFeeInAmount,
-        fee: TxFee,
+        fee: TxFee?,
         expressOperationType: ExpressOperationType,
+        isTangemPayWithdrawal: Boolean,
     ): SwapTransactionState
 
     // suspend fun updateQuotesStateWithSelectedFee(
@@ -114,6 +116,21 @@ interface SwapInteractor {
     ): AccountSwapCurrency?
 
     fun getNativeToken(networkId: String): CryptoCurrency
+
+    @Suppress("LongParameterList")
+    suspend fun storeSwapTransaction(
+        currencyToSend: CryptoCurrencyStatus,
+        currencyToGet: CryptoCurrencyStatus,
+        fromAccount: Account.CryptoPortfolio?,
+        toAccount: Account.CryptoPortfolio?,
+        amount: SwapAmount,
+        swapProvider: SwapProvider,
+        swapDataModel: SwapDataModel,
+        timestamp: Long,
+        txExternalUrl: String? = null,
+        txExternalId: String? = null,
+        averageDuration: Int? = null,
+    )
 
     interface Factory {
         fun create(selectedWalletId: UserWalletId): SwapInteractor
