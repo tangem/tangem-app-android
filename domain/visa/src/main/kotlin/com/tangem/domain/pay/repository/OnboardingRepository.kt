@@ -4,7 +4,6 @@ import arrow.core.Either
 import com.tangem.core.error.UniversalError
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.model.CustomerInfo
-import com.tangem.domain.pay.model.OrderStatus
 import com.tangem.domain.visa.error.VisaApiError
 import kotlinx.coroutines.Job
 
@@ -21,8 +20,10 @@ interface OnboardingRepository {
     suspend fun createOrder(userWalletId: UserWalletId): Job
 
     suspend fun clearOrderId(userWalletId: UserWalletId)
+
     suspend fun getOrderId(userWalletId: UserWalletId): String?
-    suspend fun getOrderStatus(userWalletId: UserWalletId, orderId: String): Either<VisaApiError, OrderStatus>
+
     suspend fun checkCustomerWallet(userWalletId: UserWalletId): Either<VisaApiError, Boolean>
+
     fun getSavedCustomerInfo(userWalletId: UserWalletId): CustomerInfo?
 }

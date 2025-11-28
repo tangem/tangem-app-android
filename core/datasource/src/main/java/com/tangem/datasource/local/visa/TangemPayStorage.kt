@@ -24,5 +24,11 @@ interface TangemPayStorage {
     suspend fun storeCheckCustomerWalletResult(userWalletId: UserWalletId)
     suspend fun checkCustomerWalletResult(userWalletId: UserWalletId): Boolean?
 
+    suspend fun storeWithdrawOrder(userWalletId: UserWalletId, orderId: String)
+
+    suspend fun getWithdrawOrderId(userWalletId: UserWalletId): String?
+
+    suspend fun deleteWithdrawOrder(userWalletId: UserWalletId)
+
     suspend fun clearAll(userWalletId: UserWalletId, customerWalletAddress: String)
 }
