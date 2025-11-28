@@ -37,7 +37,7 @@
     },
     {
         "name": "TANGEM_PAY_ENABLED",
-        "version": "undefined"
+        "version": "5.31.0"
     },
     {
         "name": "NEW_TOKEN_RECEIVE_ENABLED",
