@@ -2,11 +2,12 @@ package com.tangem.feature.wallet.presentation.wallet.state.transformers
 
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.feature.wallet.child.wallet.model.intents.WalletCardClickIntents
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletDropDownItems
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletScreenState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
-import com.tangem.feature.wallet.child.wallet.model.intents.WalletCardClickIntents
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -14,6 +15,7 @@ import kotlinx.collections.immutable.toImmutableList
 internal class SetWalletCardDropDownItemsTransformer(
     private val dropdownEnabled: Boolean,
     private val clickIntents: WalletCardClickIntents,
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
 ) : WalletScreenStateTransformer {
     override fun transform(prevState: WalletScreenState): WalletScreenState {
         return prevState.copy(wallets = prevState.wallets.map(::transformWalletState).toImmutableList())
@@ -61,18 +63,24 @@ internal class SetWalletCardDropDownItemsTransformer(
 
     private fun constructDropDownItems(userWalletId: UserWalletId): ImmutableList<WalletDropDownItems> {
         return if (dropdownEnabled) {
-            persistentListOf(
-                WalletDropDownItems(
-                    text = resourceReference(id = R.string.common_rename),
-                    icon = R.drawable.ic_edit_24,
-                    onClick = { clickIntents.onRenameBeforeConfirmationClick(userWalletId) },
-                ),
-                WalletDropDownItems(
-                    text = resourceReference(id = R.string.common_delete),
-                    icon = R.drawable.ic_trash_24,
-                    onClick = { clickIntents.onDeleteBeforeConfirmationClick(userWalletId) },
-                ),
-            )
+            buildList {
+                add(
+                    WalletDropDownItems(
+                        text = resourceReference(id = R.string.common_rename),
+                        icon = R.drawable.ic_edit_24,
+                        onClick = { clickIntents.onRenameBeforeConfirmationClick(userWalletId) },
+                    ),
+                )
+                if (!hotWalletFeatureToggles.isHotWalletEnabled) {
+                    add(
+                        WalletDropDownItems(
+                            text = resourceReference(id = R.string.common_delete),
+                            icon = R.drawable.ic_trash_24,
+                            onClick = { clickIntents.onDeleteBeforeConfirmationClick(userWalletId) },
+                        ),
+                    )
+                }
+            }.toImmutableList()
         } else {
             persistentListOf()
         }
