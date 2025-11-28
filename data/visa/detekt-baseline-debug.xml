@@ -17,7 +17,6 @@
     <ID>NullableToStringCall:TangemPayRequestPerformer.kt$TangemPayRequestPerformer$${error.message}</ID>
     <ID>RedundantSuspendModifier:DefaultVisaRepository.kt$DefaultVisaRepository$suspend</ID>
     <ID>SuspendFunSwallowedCancellation:DefaultVisaRepository.kt$DefaultVisaRepository$runCatching</ID>
-    <ID>SuspendFunSwallowedCancellation:TangemPayRequestPerformer.kt$TangemPayRequestPerformer$runCatching</ID>
     <ID>SuspendFunSwallowedCancellation:VisaApiRequestMaker.kt$VisaApiRequestMaker$runCatching</ID>
     <ID>UnreachableCode:VisaApiRequestMaker.kt$VisaApiRequestMaker$if (status is VisaCardActivationStatus.RefreshTokenExpired) { throw RefreshTokenExpiredException() }</ID>
     <ID>UnreachableCode:VisaApiRequestMaker.kt$VisaApiRequestMaker$return (status as? VisaCardActivationStatus.Activated)?.visaAuthTokens ?: error("Visa card is not activated")</ID>
