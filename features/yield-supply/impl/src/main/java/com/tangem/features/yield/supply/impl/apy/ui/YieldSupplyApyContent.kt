@@ -7,12 +7,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -32,6 +34,7 @@ import com.tangem.core.ui.components.SpacerH16
 import com.tangem.core.ui.components.SpacerH2
 import com.tangem.core.ui.components.SpacerH24
 import com.tangem.core.ui.components.SpacerH8
+import com.tangem.core.ui.components.SpacerW12
 import com.tangem.core.ui.components.SpacerW4
 import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
@@ -39,6 +42,9 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheet
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetTitle
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -47,6 +53,7 @@ import com.tangem.features.yield.supply.impl.R
 @Suppress("LongMethod")
 @Composable
 internal fun YieldSupplyApyContent(
+    apy: TextReference,
     isLoading: Boolean,
     onBackClick: () -> Unit,
     chartComponent: ComposableContentComponent,
@@ -114,6 +121,7 @@ internal fun YieldSupplyApyContent(
                 SpacerH24()
 
                 ApyChart(
+                    apy = apy,
                     isChartLoading = isLoading,
                     chartComponent = chartComponent,
                     modifier = Modifier
@@ -137,6 +145,7 @@ internal fun YieldSupplyApyContent(
 
 @Composable
 private fun ApyChart(
+    apy: TextReference,
     isChartLoading: Boolean,
     chartComponent: ComposableContentComponent,
     modifier: Modifier = Modifier,
@@ -171,6 +180,38 @@ private fun ApyChart(
         }
         SpacerH12()
         chartComponent.Content(Modifier)
+        SpacerH12()
+        Box(
+            modifier = Modifier
+                .background(TangemTheme.colors.stroke.primary)
+                .fillMaxWidth()
+                .height(1.dp),
+        )
+        SpacerH12()
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                modifier = Modifier.weight(1.0f),
+                text = stringResourceSafe(R.string.yield_module_earn_sheet_current_apy_title),
+                style = TangemTheme.typography.body1,
+                color = TangemTheme.colors.text.primary1,
+            )
+            SpacerW12()
+            Icon(
+                painter = painterResource(R.drawable.ic_arrow_up_8),
+                tint = TangemTheme.colors.text.accent,
+                contentDescription = null,
+                modifier = Modifier
+                    .padding(end = 6.dp)
+                    .size(8.dp),
+            )
+            Text(
+                text = apy.resolveReference(),
+                style = TangemTheme.typography.body1,
+                color = TangemTheme.colors.text.accent,
+            )
+        }
     }
 }
 
@@ -191,6 +232,7 @@ private fun AccentDot(modifier: Modifier = Modifier) {
 private fun YieldSupplyApyContentContentPreview() {
     TangemThemePreview {
         YieldSupplyApyContent(
+            apy = stringReference("5.1%"),
             isLoading = false,
             onBackClick = {},
             chartComponent = ComposableContentComponent.EMPTY,
