@@ -2,14 +2,23 @@ package com.tangem.tests
 
 import com.tangem.common.BaseTestCase
 import com.tangem.common.constants.TestConstants.CARDANO_ADDRESS
+import com.tangem.common.constants.TestConstants.USER_TOKENS_API_SCENARIO
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.extensions.pullToRefresh
+import com.tangem.common.ui.R
 import com.tangem.common.utils.resetWireMockScenarioState
 import com.tangem.common.utils.setWireMockScenarioState
+import com.tangem.scenarios.checkSendWarning
 import com.tangem.scenarios.openMainScreen
+import com.tangem.scenarios.openSendScreen
 import com.tangem.scenarios.synchronizeAddresses
-import com.tangem.screens.*
+import com.tangem.screens.onMainScreen
+import com.tangem.screens.onSendAddressScreen
+import com.tangem.screens.onSendConfirmScreen
+import com.tangem.screens.onSendScreen
+import com.tangem.screens.onTokenDetailsScreen
 import dagger.hilt.android.testing.HiltAndroidTest
+import io.github.kakaocup.kakao.common.utilities.getResourceString
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
 import org.junit.Test
@@ -26,28 +35,18 @@ class BlockchainTest : BaseTestCase() {
         val validSendAmount = "10"
         val minAmount = "ADA 1.00"
         val address = CARDANO_ADDRESS
-        val scenarioName = "user_tokens_api"
-        val scenarioState = "Cardano"
+
+        val invalidAmountTitle = getResourceString(R.string.send_notification_invalid_amount_title)
+        val invalidAmountMessage =
+            getResourceString(R.string.send_notification_invalid_minimum_amount_text, minAmount, minAmount)
 
         setupHooks(
             additionalAfterSection = {
-                resetWireMockScenarioState(scenarioName)
+                resetWireMockScenarioState(USER_TOKENS_API_SCENARIO)
             }
         ).run {
-            step("Set WireMock scenario: '$scenarioName' to state: '$scenarioState'") {
-                setWireMockScenarioState(scenarioName = scenarioName, state = scenarioState)
-            }
-            step("Open 'Main Screen'") {
-                openMainScreen()
-            }
-            step("Synchronize addresses") {
-                synchronizeAddresses()
-            }
-            step("Click on token with name: '$tokenName'") {
-                onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
-            }
-            step("Click on 'Send' button") {
-                onTokenDetailsScreen { sendButton.performClick() }
+            step("Open 'Send Screen' with token: $tokenName") {
+                openSendScreen(tokenName)
             }
             step("Type '$errorSendAmount' in input text field") {
                 onSendScreen {
@@ -64,47 +63,30 @@ class BlockchainTest : BaseTestCase() {
             step("Click on 'Next' button") {
                 onSendAddressScreen { nextButton.clickWithAssertion() }
             }
-            step("Assert 'Invalid amount' error title is displayed") {
-                onSendConfirmScreen { minimumSendAmountErrorTitle.assertIsDisplayed() }
+            step("Assert 'Invalid amount warning' is displayed") {
+                checkSendWarning(
+                    title = invalidAmountTitle,
+                    message = invalidAmountMessage,
+                )
             }
-            step("Assert 'Invalid amount' error icon is displayed") {
-                onSendConfirmScreen { minimumSendAmountErrorIcon(minAmount).assertIsDisplayed() }
-            }
-            step("Assert 'Invalid amount' error message is displayed") {
-                onSendConfirmScreen { minimumSendAmountErrorMessage(minAmount).assertIsDisplayed() }
-            }
-            step("Press system 'Back' button") {
-                device.uiDevice.pressBack()
-            }
-            step("Assert address text field is displayed") {
-                onSendAddressScreen { addressTextField.assertIsDisplayed() }
-            }
-            step("Press system 'Back' button") {
-                device.uiDevice.pressBack()
+            step("Click on 'Amount' field") {
+                onSendConfirmScreen { primaryAmount.clickWithAssertion() }
             }
             step("Type '$validSendAmount' in input text field") {
                 onSendScreen {
                     amountInputTextField.performClick()
-                    amountInputTextField.performTextReplacement(errorSendAmount)
+                    amountInputTextField.performTextReplacement(validSendAmount)
                 }
             }
-            step("Click on 'Next' button") {
-                onSendScreen { nextButton.clickWithAssertion() }
+            step("Click on 'Continue' button") {
+                onSendScreen { continueButton.clickWithAssertion() }
             }
-            step("Assert address text field is displayed") {
-                onSendAddressScreen { addressTextField.assertIsDisplayed() }
-            }
-            step("Click on 'Next' button") {
-                onSendAddressScreen { nextButton.clickWithAssertion() }
-            }
-            step("Assert 'Invalid amount' error title is not displayed") {
-                onSendConfirmScreen { minimumSendAmountErrorTitle.assertIsNotDisplayed() }
-            }
-            step("Assert 'Invalid amount' error icon is not displayed") {
-                onSendConfirmScreen { minimumSendAmountErrorIcon(minAmount).assertIsNotDisplayed() }
-            }
-            step("Assert 'Invalid amount' error message is not displayed") {
-                onSendConfirmScreen { minimumSendAmountErrorMessage(minAmount).assertIsNotDisplayed() }
+            step("Assert 'Invalid amount warning' is not displayed") {
+                checkSendWarning(
+                    title = invalidAmountTitle,
+                    message = invalidAmountMessage,
+                    isDisplayed = false
+                )
             }
         }
     }
@@ -136,10 +118,16 @@ class BlockchainTest : BaseTestCase() {
                 setWireMockScenarioState(scenarioName = userTokensScenarioName, state = userTokensScenarioState)
             }
             step("Set WireMock scenario: '$rippleAccountInfoScenarioName' to state: '$rippleAccountInfoErrorState'") {
-                setWireMockScenarioState(scenarioName = rippleAccountInfoScenarioName, state = rippleAccountInfoErrorState)
+                setWireMockScenarioState(
+                    scenarioName = rippleAccountInfoScenarioName,
+                    state = rippleAccountInfoErrorState
+                )
             }
             step("Set WireMock scenario: '$rippleAccountLinesScenarioName' to state: '$rippleAccountLinesErrorState'") {
-                setWireMockScenarioState(scenarioName = rippleAccountLinesScenarioName, state = rippleAccountLinesErrorState)
+                setWireMockScenarioState(
+                    scenarioName = rippleAccountLinesScenarioName,
+                    state = rippleAccountLinesErrorState
+                )
             }
             step("Open 'Main Screen'") {
                 openMainScreen()
@@ -169,10 +157,16 @@ class BlockchainTest : BaseTestCase() {
                 setWireMockScenarioState(scenarioName = userTokensScenarioName, state = userTokensScenarioState)
             }
             step("Set WireMock scenario: '$rippleAccountInfoScenarioName' to state: '$rippleAccountInfoStartedState'") {
-                setWireMockScenarioState(scenarioName = rippleAccountInfoScenarioName, state = rippleAccountInfoStartedState)
+                setWireMockScenarioState(
+                    scenarioName = rippleAccountInfoScenarioName,
+                    state = rippleAccountInfoStartedState
+                )
             }
             step("Set WireMock scenario: '$rippleAccountLinesScenarioName' to state: '$rippleAccountLinesStartedState'") {
-                setWireMockScenarioState(scenarioName = rippleAccountLinesScenarioName, state = rippleAccountLinesStartedState)
+                setWireMockScenarioState(
+                    scenarioName = rippleAccountLinesScenarioName,
+                    state = rippleAccountLinesStartedState
+                )
             }
             step("Pull to refresh") {
                 pullToRefresh()
