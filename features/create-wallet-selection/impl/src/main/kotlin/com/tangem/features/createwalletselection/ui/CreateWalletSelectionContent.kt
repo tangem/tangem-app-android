@@ -6,7 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -104,7 +104,7 @@ internal fun CreateWalletSelectionContent(state: CreateWalletSelectionUM, modifi
                 )
             }
         }
-        AnimatedVisibility(state.showAlreadyHaveWallet) {
+        AnimatedVisibility(state.shouldShowAlreadyHaveWallet) {
             AlreadyHaveTangemWalletBlock(
                 onBuyClick = state.onBuyClick,
                 isScanInProgress = state.isScanInProgress,
@@ -161,9 +161,9 @@ private fun WalletBlock(
                 thickness = 0.5.dp,
                 color = TangemTheme.colors.stroke.primary,
             )
-            features.forEach {
+            features.forEach { feature ->
                 Feature(
-                    feature = it,
+                    feature = feature,
                     modifier = Modifier
                         .padding(top = 12.dp),
                 )

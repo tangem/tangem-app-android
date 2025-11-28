@@ -1,8 +1,8 @@
 package com.tangem.data.account.converter
 
 import com.google.common.truth.Truth
-import com.tangem.common.test.utils.ProvideTestModels
 import com.tangem.domain.models.account.AccountName
+import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest

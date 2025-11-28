@@ -13,10 +13,14 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.components.dropdownmenu.TangemDropdownMenuItem
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.themedColor
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
+import com.tangem.domain.account.supplier.MultiAccountListSupplier
+import com.tangem.domain.account.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.qrscanning.models.QrResultSource
 import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.domain.qrscanning.usecases.ListenToQrScanningUseCase
@@ -27,14 +31,16 @@ import com.tangem.domain.walletconnect.model.WcSession
 import com.tangem.domain.walletconnect.usecase.WcSessionsUseCase
 import com.tangem.domain.walletconnect.usecase.disconnect.WcDisconnectUseCase
 import com.tangem.features.walletconnect.connections.components.WcConnectionsComponent
+import com.tangem.features.walletconnect.connections.entity.WcConnections
 import com.tangem.features.walletconnect.connections.entity.WcConnectionsState
 import com.tangem.features.walletconnect.connections.entity.WcConnectionsTopAppBarConfig
+import com.tangem.features.walletconnect.connections.model.transformers.WcSessionsAccountModeTransformer
 import com.tangem.features.walletconnect.connections.model.transformers.WcSessionsTransformer
 import com.tangem.features.walletconnect.connections.routes.WcConnectionsBottomSheetConfig
 import com.tangem.features.walletconnect.impl.R
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.transformer.Transformer
 import com.tangem.utils.transformer.update
-import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -47,6 +53,9 @@ internal class WcConnectionsModel @Inject constructor(
     private val listenToQrScanningUseCase: ListenToQrScanningUseCase,
     private val wcSessionsUseCase: WcSessionsUseCase,
     private val wcDisconnectUseCase: WcDisconnectUseCase,
+    private val multiAccountListSupplier: MultiAccountListSupplier,
+    private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
+    accountsFeatureToggles: AccountsFeatureToggles,
     private val wcPairService: WcPairService,
     override val dispatchers: CoroutineDispatcherProvider,
     analytics: AnalyticsEventHandler,
@@ -61,7 +70,11 @@ internal class WcConnectionsModel @Inject constructor(
     init {
         analytics.send(WcAnalyticEvents.ScreenOpened)
         listenQrUpdates()
-        listenWcSessions()
+        if (accountsFeatureToggles.isFeatureEnabled) {
+            listenWcSessions()
+        } else {
+            listenWcSessionsOld()
+        }
     }
 
     private fun listenQrUpdates() {
@@ -85,7 +98,7 @@ internal class WcConnectionsModel @Inject constructor(
             .launchIn(modelScope)
     }
 
-    private fun listenWcSessions() {
+    private fun listenWcSessionsOld() {
         wcSessionsUseCase.invoke()
             .conflate()
             .distinctUntilChanged()
@@ -97,6 +110,31 @@ internal class WcConnectionsModel @Inject constructor(
                     ),
                 )
             }
+            .launchIn(modelScope)
+    }
+
+    private fun listenWcSessions() {
+        combine(
+            flow = wcSessionsUseCase.invoke().distinctUntilChanged(),
+            flow2 = isAccountsModeEnabledUseCase(),
+            flow3 = multiAccountListSupplier(Unit),
+            transform = { sessionsMap, isAccountMode, accountList ->
+                val transformer: Transformer<WcConnectionsState> =
+                    if (isAccountMode) {
+                        WcSessionsAccountModeTransformer(
+                            sessionsMap = sessionsMap,
+                            accountList = accountList,
+                            openAppInfoModal = ::openAppInfoModal,
+                        )
+                    } else {
+                        WcSessionsTransformer(
+                            sessionsMap = sessionsMap,
+                            openAppInfoModal = ::openAppInfoModal,
+                        )
+                    }
+                uiState.update(transformer)
+            },
+        )
             .launchIn(modelScope)
     }
 
@@ -139,11 +177,11 @@ internal class WcConnectionsModel @Inject constructor(
                 ),
                 disconnectAllItem = TangemDropdownMenuItem(
                     title = resourceReference(R.string.wc_disconnect_all),
-                    textColorProvider = { TangemTheme.colors.text.warning },
+                    textColor = themedColor { TangemTheme.colors.text.warning },
                     onClick = ::showDisconnectAllDialog,
                 ),
             ),
-            connections = persistentListOf(),
+            connections = WcConnections.Loading,
             onNewConnectionClick = ::openQrScanScreen,
         )
     }
