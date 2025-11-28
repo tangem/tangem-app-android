@@ -6,12 +6,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -70,6 +68,7 @@ internal fun AccountCreateEditContent(
 
         Column(
             modifier = Modifier
+                .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp)
                 .weight(1f),
         ) {
@@ -171,6 +170,7 @@ private fun AccountSummary(account: Account, isCreateMode: Boolean) {
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Suppress("LongMethod", "MagicNumber")
 @Composable
 private fun AccountColor(colorsState: AccountCreateEditUM.Colors) {
@@ -180,14 +180,15 @@ private fun AccountColor(colorsState: AccountCreateEditUM.Colors) {
             .fillMaxWidth()
             .background(TangemTheme.colors.background.action),
     ) {
-        val columns = GridCells.Fixed(6)
         val contentPadding = PaddingValues(horizontal = 8.dp, vertical = 12.dp)
-        LazyVerticalGrid(
-            columns = columns,
-            contentPadding = contentPadding,
+        FlowRow(
+            maxItemsInEachRow = 6,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(contentPadding),
             horizontalArrangement = Arrangement.spacedBy(4.dp),
         ) {
-            items(colorsState.list) { color ->
+            colorsState.list.forEach { color ->
                 val isSelected = color == colorsState.selected
                 Box(
                     contentAlignment = Alignment.Center,
@@ -221,6 +222,7 @@ private fun AccountColor(colorsState: AccountCreateEditUM.Colors) {
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Suppress("LongMethod", "MagicNumber")
 @Composable
 private fun AccountIcons(iconsState: AccountCreateEditUM.Icons) {
@@ -231,11 +233,11 @@ private fun AccountIcons(iconsState: AccountCreateEditUM.Icons) {
             .background(TangemTheme.colors.background.action)
             .padding(8.dp),
     ) {
-        val columns = GridCells.Fixed(6)
-        LazyVerticalGrid(
-            columns = columns,
+        FlowRow(
+            maxItemsInEachRow = 6,
+            modifier = Modifier.fillMaxWidth(),
         ) {
-            itemsIndexed(iconsState.list) { index, icon ->
+            iconsState.list.forEachIndexed { index, icon ->
                 val isSelected = icon == iconsState.selected
                 Box(
                     contentAlignment = Alignment.Center,
