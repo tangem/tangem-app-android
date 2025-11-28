@@ -32,6 +32,7 @@ internal object EnvironmentConfigConverter : Converter<EnvironmentConfigModel, E
             tangemApiKeyStage = value.tangemApiKeyStage,
             yieldModuleApiKey = value.yieldModuleApiKey,
             yieldModuleApiKeyDev = value.yieldModuleApiKeyDev,
+            bffStaticToken = value.bffStaticToken,
         )
     }
 }
