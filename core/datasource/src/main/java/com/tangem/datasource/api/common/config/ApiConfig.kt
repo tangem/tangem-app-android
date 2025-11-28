@@ -26,6 +26,7 @@ sealed class ApiConfig {
         StakeKit,
         P2PEthPool,
         TangemPay,
+        TangemPayAuth,
         BlockAid,
         YieldSupply,
         MoonPay,
@@ -39,6 +40,7 @@ sealed class ApiConfig {
             is StakeKit -> ID.StakeKit
             is P2PEthPool -> ID.P2PEthPool
             is TangemPay -> ID.TangemPay
+            is TangemPayAuth -> ID.TangemPayAuth
             is BlockAid -> ID.BlockAid
             is YieldSupply -> ID.YieldSupply
             is MoonPay -> ID.MoonPay

@@ -74,6 +74,7 @@ class ApiConfigTest {
                 ApiConfig.ID.MoonPay -> MoonPay()
                 ApiConfig.ID.P2PEthPool -> P2PEthPool(p2pAuthProvider = mockk())
                 ApiConfig.ID.News -> News(authProvider = appAuthProvider)
+                ApiConfig.ID.TangemPayAuth -> TangemPayAuth(appVersionProvider = mockk())
             }
         }
     }
