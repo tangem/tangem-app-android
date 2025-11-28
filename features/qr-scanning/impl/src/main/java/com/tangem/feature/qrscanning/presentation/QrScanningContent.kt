@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
@@ -32,6 +33,7 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.test.QrCodeScreenTestTags
 import com.tangem.feature.qrscanning.impl.R
 import com.tangem.feature.qrscanning.inner.MLKitBarcodeAnalyzer
 import java.util.concurrent.ExecutorService
@@ -87,6 +89,7 @@ internal fun QrScanningContent(
                             },
                         ),
                         tint = TangemColorPalette.White,
+                        modifier = Modifier.testTag(QrCodeScreenTestTags.FLASHLIGHT_BUTTON),
                     )
                 }
 
@@ -96,6 +99,7 @@ internal fun QrScanningContent(
                         onClicked = uiState.onGalleryClick,
                     ),
                     tint = TangemColorPalette.White,
+                    modifier = Modifier.testTag(QrCodeScreenTestTags.GALLERY_BUTTON),
                 )
             },
         )

@@ -35,9 +35,9 @@ internal class DefaultExpressRepository(
                 ).getOrThrow().map(ExpressProviderConverter()::convert)
                     .filterIf(filterProviderTypes.isNotEmpty()) { it.type in filterProviderTypes }
             },
-            onError = {
-                Timber.w(it, "Unable to fetch express providers")
-                throw it
+            onError = { error ->
+                Timber.w(error, "Unable to fetch express providers")
+                throw error
             },
         )
     }
