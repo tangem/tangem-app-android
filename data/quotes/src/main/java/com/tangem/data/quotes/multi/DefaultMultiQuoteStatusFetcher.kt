@@ -66,8 +66,8 @@ internal class DefaultMultiQuoteStatusFetcher @Inject constructor(
 
         quotesStatusesStore.store(values = updatedResponse.quotes)
     }
-        .onLeft {
-            Timber.e(it)
+        .onLeft { throwable ->
+            Timber.e(throwable)
             quotesStatusesStore.setSourceAsOnlyCache(currenciesIds = params.currenciesIds)
         }
 

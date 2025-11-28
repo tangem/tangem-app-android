@@ -154,7 +154,7 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
                     )
                     yieldSupplyAlertFactory.getSendTransactionErrorState(
                         error = error,
-                        popBack = params.callback::onBackClick,
+                        popBack = params.callback::onDismissClick,
                         onFailedTxEmailClick = { errorMessage ->
                             modelScope.launch(dispatchers.default) {
                                 yieldSupplyAlertFactory.onFailedTxEmailClick(
@@ -203,7 +203,7 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
         }
 
         modelScope.launch {
-            params.callback.onTransactionSent()
+            params.callback.onStopEarningTransactionSent()
         }
     }
 

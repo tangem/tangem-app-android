@@ -2,6 +2,7 @@ package com.tangem.common.ui.account
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import com.tangem.common.ui.R
 import com.tangem.core.ui.components.account.AccountCharIcon
 import com.tangem.core.ui.components.account.AccountIconSize
 import com.tangem.core.ui.components.account.AccountResIcon
@@ -36,6 +37,14 @@ fun AccountIcon(
 ) {
     val letter = name.resolveReference().firstOrNull()
     when {
+        icon.value == CryptoPortfolioIcon.Icon.Letter && letter == null -> {
+            AccountResIcon(
+                resId = R.drawable.ic_tangem_24,
+                color = icon.color.getUiColor(),
+                size = size,
+                modifier = modifier,
+            )
+        }
         icon.value == CryptoPortfolioIcon.Icon.Letter -> AccountCharIcon(
             char = letter ?: 'N',
             color = icon.color.getUiColor(),

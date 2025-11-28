@@ -1,12 +1,12 @@
 package com.tangem.domain.account.status.producer
 
 import com.google.common.truth.Truth
-import com.tangem.common.test.utils.getEmittedValues
 import com.tangem.domain.account.models.AccountStatusList
+import com.tangem.domain.account.repository.AccountsCRUDRepository
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
-import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.test.core.getEmittedValues
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,7 +20,7 @@ import org.junit.jupiter.api.TestInstance
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class DefaultMultiAccountStatusListProducerTest {
 
-    private val userWalletsListRepository: UserWalletsListRepository = mockk()
+    private val accountsCRUDRepository: AccountsCRUDRepository = mockk()
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier = mockk()
     private val dispatchers = TestingCoroutineDispatcherProvider()
 
@@ -36,14 +36,14 @@ class DefaultMultiAccountStatusListProducerTest {
 
     private val producer = DefaultMultiAccountStatusListProducer(
         params = Unit,
-        userWalletsListRepository = userWalletsListRepository,
+        accountsCRUDRepository = accountsCRUDRepository,
         singleAccountStatusListSupplier = singleAccountStatusListSupplier,
         dispatchers = dispatchers,
     )
 
     @AfterEach
     fun tearDown() {
-        clearMocks(userWalletsListRepository, singleAccountStatusListSupplier)
+        clearMocks(accountsCRUDRepository, singleAccountStatusListSupplier)
     }
 
     @Test
@@ -52,7 +52,7 @@ class DefaultMultiAccountStatusListProducerTest {
         val wallets = listOf(userWallet1, userWallet2)
         val walletsFlow = MutableStateFlow(wallets)
 
-        every { userWalletsListRepository.userWallets } returns walletsFlow
+        every { accountsCRUDRepository.getUserWallets() } returns walletsFlow
         val accountStatusList1 = mockk<AccountStatusList>()
         val accountStatusList2 = mockk<AccountStatusList>()
 
@@ -76,7 +76,7 @@ class DefaultMultiAccountStatusListProducerTest {
         Truth.assertThat(actual).containsExactly(expected)
 
         coVerify(ordering = Ordering.SEQUENCE) {
-            userWalletsListRepository.userWallets
+            accountsCRUDRepository.getUserWallets()
             singleAccountStatusListSupplier(
                 params = SingleAccountStatusListProducer.Params(userWalletId1),
             )
@@ -90,7 +90,7 @@ class DefaultMultiAccountStatusListProducerTest {
     fun `produce returns empty flow if userWallets is empty list`() = runTest {
         // Arrange
         val walletsFlow = MutableStateFlow<List<UserWallet>>(emptyList())
-        every { userWalletsListRepository.userWallets } returns walletsFlow
+        every { accountsCRUDRepository.getUserWallets() } returns walletsFlow
 
         // Act
         val actual = producer.produce().let(::getEmittedValues)
@@ -99,26 +99,27 @@ class DefaultMultiAccountStatusListProducerTest {
         Truth.assertThat(actual).isEmpty()
 
         coVerify(ordering = Ordering.SEQUENCE) {
-            userWalletsListRepository.userWallets
+            accountsCRUDRepository.getUserWallets()
         }
     }
 
-    @Test
-    fun `produce returns empty flow if userWallets is null`() = runTest {
-        // Arrange
-        val walletsFlow = MutableStateFlow<List<UserWallet>?>(null)
-        every { userWalletsListRepository.userWallets } returns walletsFlow
-
-        // Act
-        val actual = producer.produce().let(::getEmittedValues)
-
-        // Assert
-        Truth.assertThat(actual).isEmpty()
-
-        coVerify(ordering = Ordering.SEQUENCE) {
-            userWalletsListRepository.userWallets
-        }
-    }
+    // TODO: uncomment after migration on UserWalletsListRepository
+    // @Test
+    // fun `produce returns empty flow if userWallets is null`() = runTest {
+    //     // Arrange
+    //     val walletsFlow = MutableStateFlow<List<UserWallet>?>(null)
+    //     every { accountsCRUDRepository.getUserWallets() } returns walletsFlow
+    //
+    //     // Act
+    //     val actual = producer.produce().let(::getEmittedValues)
+    //
+    //     // Assert
+    //     Truth.assertThat(actual).isEmpty()
+    //
+    //     coVerify(ordering = Ordering.SEQUENCE) {
+    //         accountsCRUDRepository.getUserWallets()
+    //     }
+    // }
 
     @Test
     fun `flow will updated if userWallets are updated`() = runTest {
@@ -127,7 +128,7 @@ class DefaultMultiAccountStatusListProducerTest {
         val userWallet3 = mockk<UserWallet> { every { walletId } returns userWalletId3 }
 
         val walletsFlow = MutableStateFlow(listOf(userWallet1, userWallet2))
-        every { userWalletsListRepository.userWallets } returns walletsFlow
+        every { accountsCRUDRepository.getUserWallets() } returns walletsFlow
 
         val accountStatusList1 = mockk<AccountStatusList>()
         val accountStatusList2 = mockk<AccountStatusList>()
@@ -167,7 +168,7 @@ class DefaultMultiAccountStatusListProducerTest {
         Truth.assertThat(actual2).containsExactly(expected2)
 
         coVerify(ordering = Ordering.SEQUENCE) {
-            userWalletsListRepository.userWallets
+            accountsCRUDRepository.getUserWallets()
             singleAccountStatusListSupplier(
                 params = SingleAccountStatusListProducer.Params(userWalletId1),
             )
@@ -183,7 +184,7 @@ class DefaultMultiAccountStatusListProducerTest {
             singleAccountStatusListSupplier(
                 params = SingleAccountStatusListProducer.Params(userWalletId3),
             )
-            userWalletsListRepository.userWallets
+            accountsCRUDRepository.getUserWallets()
             singleAccountStatusListSupplier(
                 params = SingleAccountStatusListProducer.Params(userWalletId1),
             )

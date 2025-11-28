@@ -100,7 +100,10 @@ internal class WelcomeMiddleware {
         val currency = ParamCardCurrencyConverter().convert(
             value = scanResponse.cardTypesResolver,
         )
-        Analytics.addContext(scanResponse)
+
+        val trackingContextProxy = store.inject(DaggerGraphState::trackingContextProxy)
+        trackingContextProxy.addContext(scanResponse)
+
         if (currency != null) {
             val userWalletsListManager = store.inject(DaggerGraphState::generalUserWalletsListManager)
 
