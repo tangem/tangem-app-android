@@ -15,6 +15,9 @@ import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObjectList
 import com.tangem.datasource.local.preferences.utils.getObjectListSync
 import com.tangem.datasource.local.preferences.utils.getObjectMap
+import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
+import com.tangem.domain.account.supplier.MultiAccountListSupplier
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
@@ -27,6 +30,7 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.addOrReplace
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 
 internal class DefaultSwapTransactionRepository(
@@ -34,6 +38,8 @@ internal class DefaultSwapTransactionRepository(
     private val responseCryptoCurrenciesFactory: ResponseCryptoCurrenciesFactory,
     private val networkFactory: NetworkFactory,
     private val dispatchers: CoroutineDispatcherProvider,
+    private val multiAccountListSupplier: MultiAccountListSupplier,
+    private val accountsFeatureToggles: AccountsFeatureToggles,
 ) : SwapTransactionRepository {
 
     private val listConverter by lazy(LazyThreadSafetyMode.NONE) {
@@ -54,13 +60,15 @@ internal class DefaultSwapTransactionRepository(
         userWalletId: UserWalletId,
         fromCryptoCurrency: CryptoCurrency,
         toCryptoCurrency: CryptoCurrency,
+        fromAccount: Account.CryptoPortfolio?,
+        toAccount: Account.CryptoPortfolio?,
         transaction: SwapTransactionModel,
     ) {
         transaction.status?.let {
             storeTransactionState(
                 txId = transaction.txId,
                 status = it,
-                accountWithCurrency = null,
+                accountWithCurrency = fromAccount?.accountId to fromCryptoCurrency,
             )
         }
         appPreferencesStore.editData { mutablePreferences ->
@@ -87,12 +95,16 @@ internal class DefaultSwapTransactionRepository(
                     userWalletId = userWalletId,
                     fromCryptoCurrency = fromCryptoCurrency,
                     toCryptoCurrency = toCryptoCurrency,
+                    fromAccount = fromAccount,
+                    toAccount = toAccount,
                     transactions = tokenTransactions,
                 ) ?: listOf(
                     listConverter.default(
                         userWalletId = userWalletId,
                         fromCryptoCurrency = fromCryptoCurrency,
                         toCryptoCurrency = toCryptoCurrency,
+                        fromAccount = fromAccount,
+                        toAccount = toAccount,
                         tokenTransactions = listOf(converter.convert(transaction)),
                     ),
                 ),
@@ -110,7 +122,12 @@ internal class DefaultSwapTransactionRepository(
         flow2 = appPreferencesStore.getObjectMap<SwapStatusDTO>(
             key = PreferencesKeys.SWAP_TRANSACTIONS_STATUSES_KEY,
         ),
-    ) { savedTransactions, txStatuses ->
+        flow3 = if (accountsFeatureToggles.isFeatureEnabled) {
+            multiAccountListSupplier()
+        } else {
+            flowOf(emptyList())
+        },
+    ) { savedTransactions, txStatuses, multiAccountList ->
         val currencyTxs = savedTransactions
             ?.filter {
                 it.userWalletId == userWallet.walletId.stringValue &&
@@ -123,6 +140,7 @@ internal class DefaultSwapTransactionRepository(
         currencyTxs?.mapNotNull {
             listConverter.convertBack(
                 value = it,
+                multiAccountList = multiAccountList,
                 userWallet = userWallet,
                 txStatuses = txStatuses,
             )
@@ -221,10 +239,13 @@ internal class DefaultSwapTransactionRepository(
             fromCryptoCurrencyId == fromCurrencyId.value
     }
 
+    @Suppress("LongParameterList")
     private fun List<SwapTransactionListDTO>.updateList(
         userWalletId: UserWalletId,
         fromCryptoCurrency: CryptoCurrency,
         toCryptoCurrency: CryptoCurrency,
+        fromAccount: Account.CryptoPortfolio?,
+        toAccount: Account.CryptoPortfolio?,
         transactions: List<SwapTransactionDTO>,
     ): List<SwapTransactionListDTO> {
         return addOrReplace(
@@ -232,6 +253,8 @@ internal class DefaultSwapTransactionRepository(
                 userWalletId = userWalletId,
                 fromCryptoCurrency = fromCryptoCurrency,
                 toCryptoCurrency = toCryptoCurrency,
+                fromAccount = fromAccount,
+                toAccount = toAccount,
                 tokenTransactions = transactions,
             ),
             predicate = {
