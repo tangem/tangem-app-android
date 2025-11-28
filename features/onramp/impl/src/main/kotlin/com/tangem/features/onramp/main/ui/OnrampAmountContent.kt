@@ -104,8 +104,7 @@ private fun OnrampAmountSecondary(state: OnrampAmountSecondaryFieldUM) {
                 top = TangemTheme.dimens.spacing8,
                 start = TangemTheme.dimens.spacing12,
                 end = TangemTheme.dimens.spacing12,
-            )
-            .testTag(BuyTokenDetailsScreenTestTags.TOKEN_AMOUNT),
+            ),
         contentAlignment = Alignment.Center,
     ) {
         when (state) {

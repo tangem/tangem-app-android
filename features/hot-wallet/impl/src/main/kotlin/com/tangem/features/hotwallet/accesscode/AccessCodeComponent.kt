@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.arkivanov.essenty.lifecycle.doOnResume
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
@@ -20,6 +21,12 @@ internal class AccessCodeComponent @AssistedInject constructor(
 ) : ComposableContentComponent, AppComponentContext by context {
 
     private val model: AccessCodeModel = getOrCreateModel(params)
+
+    init {
+        lifecycle.doOnResume {
+            model.onResume()
+        }
+    }
 
     @Composable
     override fun Content(modifier: Modifier) {

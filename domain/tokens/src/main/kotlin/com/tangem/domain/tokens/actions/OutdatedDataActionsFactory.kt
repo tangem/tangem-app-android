@@ -96,7 +96,7 @@ internal class OutdatedDataActionsFactory(
             } else {
                 val stakingAction = ActionState.Stake(
                     unavailabilityReason = ScenarioUnavailabilityReason.UsedOutdatedData,
-                    yield = null,
+                    option = null,
                 )
 
                 stakingAction.disabled()

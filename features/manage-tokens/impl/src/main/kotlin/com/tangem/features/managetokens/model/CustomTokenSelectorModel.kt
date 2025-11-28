@@ -18,6 +18,7 @@ import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.managetokens.GetSupportedNetworksUseCase
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.features.managetokens.component.AddCustomTokenMode
@@ -126,7 +127,7 @@ internal class CustomTokenSelectorModel @Inject constructor(
                         isDefault = true,
                     )
 
-                    selector.onDerivationPathSelected(model)
+                    selector.onDerivationPathSelected(model, null)
                 },
             )
         }
@@ -151,7 +152,7 @@ internal class CustomTokenSelectorModel @Inject constructor(
                             isDefault = false,
                         )
 
-                        selector.onDerivationPathSelected(model)
+                        selector.onDerivationPathSelected(model, null)
                     },
                 )
             }
@@ -171,7 +172,10 @@ internal class CustomTokenSelectorModel @Inject constructor(
     private fun showCustomDerivationInput() {
         val config = when (params) {
             is NetworkSelector -> return
-            is DerivationPathSelector -> CustomTokenSelectorDialogConfig.CustomDerivationInput(params.mode)
+            is DerivationPathSelector -> CustomTokenSelectorDialogConfig.CustomDerivationInput(
+                params.mode,
+                params.selectedNetwork,
+            )
         }
 
         dialogNavigation.activate(config)
@@ -183,14 +187,14 @@ internal class CustomTokenSelectorModel @Inject constructor(
             is DerivationPathSelector -> if (accountsFeatureToggles.isFeatureEnabled) {
                 params.checkAccountDerivation(value)
             } else {
-                params.onDerivationPathSelected(value)
+                params.onDerivationPathSelected(value, null)
             }
         }
     }
 
     private fun DerivationPathSelector.checkAccountDerivation(derivationPath: SelectedDerivationPath) =
         modelScope.launch {
-            val accountName = derivationPath.id
+            val account = derivationPath.id
                 ?.let { Blockchain.fromId(it.rawId.value) }?.let(::AccountNodeRecognizer)
                 ?.let { recognizer -> derivationPath.value.value?.let { recognizer.recognize(it) } }
                 ?.let { accountNode ->
@@ -199,24 +203,27 @@ internal class CustomTokenSelectorModel @Inject constructor(
 
                     val accounts = singleAccountStatusListSupplier(mode.userWalletId)
                         .first().accountStatuses
-                    val account = accounts.find {
+
+                    val accountStatus = accounts.find {
                         when (it) {
                             is AccountStatus.CryptoPortfolio -> it.sameNodeAndNotMain()
                         }
                     }
-                    val accountName = when (account) {
-                        is AccountStatus.CryptoPortfolio -> account.account.accountName.toUM()
-                        null -> null
-                    }
-                    accountName
+
+                    accountStatus?.account
                 }
 
+            val accountName = when (account) {
+                is Account.CryptoPortfolio -> account.accountName
+                null -> null
+            }
+
             if (accountName == null) {
-                onDerivationPathSelected(derivationPath)
+                onDerivationPathSelected(derivationPath, null)
             } else {
                 showAccountNameExist(
-                    accountName = accountName.value,
-                    onClick = { onDerivationPathSelected(derivationPath) },
+                    accountName = accountName.toUM().value,
+                    onClick = { onDerivationPathSelected(derivationPath, account) },
                 )
             }
         }

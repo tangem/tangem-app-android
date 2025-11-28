@@ -4,7 +4,6 @@ import com.tangem.data.account.store.AccountsResponseStore
 import com.tangem.data.account.store.AccountsResponseStoreFactory
 import com.tangem.data.account.utils.DefaultWalletAccountsResponseFactory
 import com.tangem.data.account.utils.assignTokens
-import com.tangem.data.account.utils.toUserTokensResponse
 import com.tangem.data.common.account.WalletAccountsFetcher
 import com.tangem.data.common.account.WalletAccountsSaver
 import com.tangem.data.common.api.safeApiCall
@@ -19,6 +18,8 @@ import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.SaveWalletAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
+import com.tangem.datasource.api.tangemTech.models.account.toUserTokensResponse
+import com.tangem.datasource.api.tangemTech.models.orDefault
 import com.tangem.datasource.utils.getSyncOrNull
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -51,16 +52,30 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
     private val dispatchers: CoroutineDispatcherProvider,
 ) : WalletAccountsFetcher, WalletAccountsSaver {
 
-    override suspend fun fetch(userWalletId: UserWalletId) {
+    override suspend fun fetch(userWalletId: UserWalletId): GetWalletAccountsResponse {
         val savedAccountsResponse = getAccountsResponseStore(userWalletId = userWalletId).getSyncOrNull()
-        val accountsResponse = fetchWalletAccounts(userWalletId, savedAccountsResponse)
-            ?: return
+        val fetchResult = fetchWalletAccounts(userWalletId, savedAccountsResponse)
+        val accountsResponse = fetchResult.accountsResponse
 
-        if (accountsResponse.accounts.isEmpty()) {
-            initializeAccounts(userWalletId, accountsResponse)
-        } else if (accountsResponse.unassignedTokens.isNotEmpty()) {
-            assignTokens(userWalletId, accountsResponse)
+        val updatedResponse = when {
+            accountsResponse.accounts.isEmpty() -> {
+                initializeAccounts(userWalletId, accountsResponse)
+            }
+            accountsResponse.unassignedTokens.isNotEmpty() -> {
+                assignTokens(userWalletId, accountsResponse)
+            }
+            else -> accountsResponse
         }
+
+        if (fetchResult.error != null) {
+            throw fetchResult.error
+        }
+
+        return updatedResponse
+    }
+
+    override suspend fun getSaved(userWalletId: UserWalletId): GetWalletAccountsResponse? {
+        return getAccountsResponseStore(userWalletId = userWalletId).getSyncOrNull()
     }
 
     override suspend fun store(userWalletId: UserWalletId, response: GetWalletAccountsResponse) {
@@ -115,7 +130,7 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
     private suspend fun fetchWalletAccounts(
         userWalletId: UserWalletId,
         savedAccountsResponse: GetWalletAccountsResponse?,
-    ): GetWalletAccountsResponse? {
+    ): FetchResult {
         return safeApiCall(
             call = {
                 val apiResponse = withContext(dispatchers.io) {
@@ -130,7 +145,7 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
                 val responseBody = apiResponse.bind()
                 store(userWalletId = userWalletId, response = responseBody)
 
-                responseBody
+                FetchResult(responseBody)
             },
             onError = { throwable ->
                 // pushWalletAccounts and storeWalletAccounts help to avoid cyclic dependency
@@ -145,33 +160,47 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
         )
     }
 
-    private suspend fun initializeAccounts(userWalletId: UserWalletId, accountsResponse: GetWalletAccountsResponse) {
+    private suspend fun initializeAccounts(
+        userWalletId: UserWalletId,
+        accountsResponse: GetWalletAccountsResponse,
+    ): GetWalletAccountsResponse {
+        val hasSavedTokens = accountsResponse.unassignedTokens.isNotEmpty()
+
         val response = defaultWalletAccountsResponseFactory.create(
             userWalletId = userWalletId,
-            userTokensResponse = UserTokensResponse(
-                group = accountsResponse.wallet.group,
-                sort = accountsResponse.wallet.sort,
-                tokens = accountsResponse.unassignedTokens,
-            ),
+            userTokensResponse = if (hasSavedTokens) {
+                UserTokensResponse(
+                    group = accountsResponse.wallet.group.orDefault(),
+                    sort = accountsResponse.wallet.sort.orDefault(),
+                    tokens = accountsResponse.unassignedTokens,
+                )
+            } else {
+                null
+            },
         )
 
-        userTokensSaver.push(userWalletId = userWalletId, response = response.toUserTokensResponse())
-        val syncedResponse = push(userWalletId = userWalletId, accounts = response.accounts)
+        store(userWalletId = userWalletId, response = response)
 
-        if (syncedResponse != null) {
-            store(userWalletId = userWalletId, response = syncedResponse)
-        }
+        push(userWalletId = userWalletId, accounts = response.accounts)
+        userTokensSaver.push(userWalletId = userWalletId, response = response.toUserTokensResponse())
+
+        return response
     }
 
-    private suspend fun assignTokens(userWalletId: UserWalletId, accountsResponse: GetWalletAccountsResponse) {
+    private suspend fun assignTokens(
+        userWalletId: UserWalletId,
+        accountsResponse: GetWalletAccountsResponse,
+    ): GetWalletAccountsResponse {
         val accountsResponseWithTokens = accountsResponse.assignTokens(userWalletId)
 
         store(userWalletId = userWalletId, response = accountsResponseWithTokens)
 
-        userTokensSaver.push(
+        userTokensSaver.pushWithRetryer(
             userWalletId = userWalletId,
             response = accountsResponseWithTokens.toUserTokensResponse(),
         )
+
+        return accountsResponseWithTokens
     }
 
     private suspend fun getETag(userWalletId: UserWalletId): String? {
@@ -189,4 +218,9 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
     private fun getAccountsResponseStore(userWalletId: UserWalletId): AccountsResponseStore {
         return accountsResponseStoreFactory.create(userWalletId = userWalletId)
     }
+
+    data class FetchResult(
+        val accountsResponse: GetWalletAccountsResponse,
+        val error: Throwable? = null,
+    )
 }
