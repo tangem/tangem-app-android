@@ -35,7 +35,7 @@ internal class DetailsBalanceTransformer(
 
     private fun getBalanceText(balance: TangemPayCardBalance): String {
         val currency = Currency.getInstance(balance.currencyCode)
-        return balance.balance.format {
+        return balance.fiatBalance.format {
             fiat(fiatCurrencyCode = currency.currencyCode, fiatCurrencySymbol = currency.symbol)
         }
     }
