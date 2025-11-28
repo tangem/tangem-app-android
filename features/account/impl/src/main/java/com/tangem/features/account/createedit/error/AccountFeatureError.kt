@@ -1,9 +1,9 @@
 package com.tangem.features.account.createedit.error
 
 import com.tangem.core.error.UniversalError
+import com.tangem.domain.account.status.usecase.RecoverCryptoPortfolioUseCase
 import com.tangem.domain.account.usecase.AddCryptoPortfolioUseCase
 import com.tangem.domain.account.usecase.GetUnoccupiedAccountIndexUseCase
-import com.tangem.domain.account.usecase.RecoverCryptoPortfolioUseCase
 import com.tangem.domain.account.usecase.UpdateCryptoPortfolioUseCase
 
 sealed interface AccountFeatureError : UniversalError {
