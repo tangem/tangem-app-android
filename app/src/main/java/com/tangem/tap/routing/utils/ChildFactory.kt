@@ -668,7 +668,7 @@ internal class ChildFactory @Inject constructor(
             is AppRoute.Kyc -> {
                 createComponentChild(
                     context = context,
-                    params = KycComponent.Params,
+                    params = KycComponent.Params(route.userWalletId),
                     componentFactory = kycComponentFactory,
                 )
             }
