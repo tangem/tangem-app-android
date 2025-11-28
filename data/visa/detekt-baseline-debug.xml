@@ -1,0 +1,29 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>MaxChainedCallsOnSameLine:DefaultVisaRepository.kt$DefaultVisaRepository$userWallet.requireColdWallet().scanResponse.card.wallets.firstOrNull { it.curve == EllipticCurve.Secp256k1 }</ID>
+    <ID>MultilineLambdaItParameter:DefaultVisaActivationRepository.kt$DefaultVisaActivationRepository${ VisaDataToSignByCardWallet( request = request, hashToSign = it.result.hash, ) }</ID>
+    <ID>MultilineLambdaItParameter:DefaultVisaActivationRepository.kt$DefaultVisaActivationRepository${ VisaDataToSignByCustomerWallet( request = request, hashToSign = it.result.hash, ) }</ID>
+    <ID>MultilineLambdaItParameter:VisaApiRequestMaker.kt$VisaApiRequestMaker${ if (it is ApiResponseError.HttpException &amp;&amp; it.code == ApiResponseError.HttpException.Code.UNAUTHORIZED ) { userWalletsStore.update(userWalletId) { userWallet -&gt; userWallet.requireColdWallet().copy( scanResponse = userWallet.scanResponse.copy( // visaCardActivationStatus = VisaCardActivationStatus.RefreshTokenExpired, ), ) } } throw RefreshTokenExpiredException() }</ID>
+    <ID>MultilineLambdaItParameter:VisaTxDetailsFactory.kt$VisaTxDetailsFactory${ when (val txUrl = walletBlockchain.getExploreTxUrl(it)) { is TxExploreState.Url -&gt; txUrl.url is TxExploreState.Unsupported -&gt; "" } }</ID>
+    <ID>MultilineLambdaItParameter:VisaTxHistoryPagingSource.kt$VisaTxHistoryPagingSource${ it.toMutableMap().apply { this[cardPublicKey] = this[cardPublicKey].orEmpty() + response.transactions } }</ID>
+    <ID>MultilineLambdaItParameter:VisaTxHistoryPagingSource.kt$VisaTxHistoryPagingSource${ it.toMutableMap().apply { this[offset] = response.transactions.map(VisaTxHistoryItemConverter::convert) } }</ID>
+    <ID>NamedArguments:DefaultVisaRepository.kt$DefaultVisaRepository$parZip( dispatchers.io, { contractInfoProvider.getContractInfo( walletAddress = address, paymentAccountAddress = paymentAccountAddress, ) }, { getFiatRate() }, { contractInfo, fiatRate -&gt; fetchedCurrencies.update { value -&gt; value.apply { put(address, visaCurrencyFactory.create(userWallet, contractInfo, fiatRate)) } } }, )</ID>
+    <ID>NoNameShadowing:DefaultVisaActivationRepository.kt$DefaultVisaActivationRepository$responseError</ID>
+    <ID>NullCheckOnMutableProperty:VisaLibLoader.kt$VisaLibLoader$if (config != null) return@withLock requireNotNull(config)</ID>
+    <ID>NullCheckOnMutableProperty:VisaLibLoader.kt$VisaLibLoader$if (provider != null) return@withLock requireNotNull(provider)</ID>
+    <ID>NullableToStringCall:DefaultOnboardingRepository.kt$DefaultOnboardingRepository$${error.message}</ID>
+    <ID>NullableToStringCall:TangemPayRequestPerformer.kt$TangemPayRequestPerformer$${error.message}</ID>
+    <ID>RedundantSuspendModifier:DefaultVisaRepository.kt$DefaultVisaRepository$suspend</ID>
+    <ID>SuspendFunSwallowedCancellation:DefaultVisaRepository.kt$DefaultVisaRepository$runCatching</ID>
+    <ID>SuspendFunSwallowedCancellation:TangemPayRequestPerformer.kt$TangemPayRequestPerformer$runCatching</ID>
+    <ID>SuspendFunSwallowedCancellation:VisaApiRequestMaker.kt$VisaApiRequestMaker$runCatching</ID>
+    <ID>UnreachableCode:VisaApiRequestMaker.kt$VisaApiRequestMaker$if (status is VisaCardActivationStatus.RefreshTokenExpired) { throw RefreshTokenExpiredException() }</ID>
+    <ID>UnreachableCode:VisaApiRequestMaker.kt$VisaApiRequestMaker$return (status as? VisaCardActivationStatus.Activated)?.visaAuthTokens ?: error("Visa card is not activated")</ID>
+    <ID>UnreachableCode:VisaApiRequestMaker.kt$VisaApiRequestMaker$val status: VisaCardActivationStatus = TODO("Fix visaCardActivationStatus retrieval")</ID>
+    <ID>UnsafeCallOnNullableType:DefaultVisaActivationRepository.kt$DefaultVisaActivationRepository$responseError.errorBody!!</ID>
+    <ID>UnsafeCallOnNullableType:DefaultVisaAuthRemoteDataSource.kt$DefaultVisaAuthRemoteDataSource$responseError.errorBody!!</ID>
+    <ID>UnsafeCallOnNullableType:VisaActivationStatusConverterWithState.kt$VisaActivationStatusConverterWithState$result.activationOrder!!</ID>
+  </CurrentIssues>
+</SmellBaseline>

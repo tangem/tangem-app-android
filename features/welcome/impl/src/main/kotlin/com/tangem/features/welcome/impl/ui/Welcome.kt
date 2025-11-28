@@ -14,7 +14,6 @@ import com.tangem.common.ui.userwallet.state.UserWalletItemUM
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.welcome.impl.ui.state.WelcomeUM
 import kotlinx.collections.immutable.persistentListOf
 
@@ -23,7 +22,7 @@ internal fun Welcome(state: WelcomeUM, modifier: Modifier = Modifier) {
     Box(
         modifier
             .fillMaxSize()
-            .background(TangemTheme.colors.background.primary),
+            .background(TangemTheme.colors.background.secondary),
     ) {
         AnimatedContent(
             targetState = state,
@@ -48,7 +47,7 @@ private fun Preview() {
         val state = WelcomeUM.SelectWallet(
             wallets = persistentListOf(
                 UserWalletItemUM(
-                    id = UserWalletId("user_wallet_3".encodeToByteArray()),
+                    id = "user_wallet_3",
                     name = stringReference("Multi Card"),
                     information = UserWalletItemUM.Information.Loading,
                     balance = UserWalletItemUM.Balance.Loaded(
@@ -59,7 +58,7 @@ private fun Preview() {
                     onClick = {},
                 ),
                 UserWalletItemUM(
-                    id = UserWalletId("user_wallet_3".encodeToByteArray()),
+                    id = "user_wallet_3",
                     name = stringReference("Multi Card"),
                     information = UserWalletItemUM.Information.Failed,
                     imageState = UserWalletItemUM.ImageState.MobileWallet,
