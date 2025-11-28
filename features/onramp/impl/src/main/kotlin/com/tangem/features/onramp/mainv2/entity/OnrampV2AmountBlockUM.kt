@@ -8,7 +8,7 @@ import kotlinx.collections.immutable.ImmutableList
 internal data class OnrampNewAmountBlockUM(
     val currencyUM: OnrampNewCurrencyUM,
     val amountFieldModel: AmountFieldModel,
-    val secondaryFieldModel: OnrampNewAmountSecondaryFieldUM,
+    val secondaryFieldModel: OnrampSecondaryFieldErrorUM,
 )
 
 internal data class OnrampNewCurrencyUM(
@@ -20,10 +20,9 @@ internal data class OnrampNewCurrencyUM(
 )
 
 @Immutable
-internal sealed interface OnrampNewAmountSecondaryFieldUM {
-    data object Loading : OnrampNewAmountSecondaryFieldUM
-    data class Content(val amount: TextReference) : OnrampNewAmountSecondaryFieldUM
-    data class Error(val error: TextReference) : OnrampNewAmountSecondaryFieldUM
+internal sealed interface OnrampSecondaryFieldErrorUM {
+    data object Empty : OnrampSecondaryFieldErrorUM
+    data class Error(val error: TextReference) : OnrampSecondaryFieldErrorUM
 }
 
 internal sealed interface OnrampV2AmountButtonUMState {
