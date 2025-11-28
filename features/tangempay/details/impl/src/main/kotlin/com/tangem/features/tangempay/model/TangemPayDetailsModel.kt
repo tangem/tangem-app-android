@@ -48,6 +48,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -123,7 +124,13 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     private fun freezeCard() {
         modelScope.launch {
-            cardDetailsRepository.freezeCard(cardId = params.config.cardId)
+            val result = try {
+                cardDetailsRepository.freezeCard(userWalletId = params.userWalletId, cardId = params.config.cardId)
+            } catch (e: Exception) {
+                Timber.e(e)
+                return@launch
+            }
+            result
                 .onLeft {
                     uiMessageSender.send(SnackbarMessage(resourceReference(R.string.tangem_pay_freeze_card_failed)))
                 }
@@ -155,7 +162,13 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     private fun unfreezeCard() {
         modelScope.launch {
-            cardDetailsRepository.unfreezeCard(cardId = params.config.cardId)
+            val result = try {
+                cardDetailsRepository.unfreezeCard(userWalletId = params.userWalletId, cardId = params.config.cardId)
+            } catch (e: Exception) {
+                Timber.e(e)
+                return@launch
+            }
+            result
                 .onLeft {
                     uiMessageSender.send(SnackbarMessage(resourceReference(R.string.tangem_pay_unfreeze_card_failed)))
                 }
@@ -204,7 +217,12 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     private fun fetchBalance(): Job {
         return modelScope.launch {
-            val result = cardDetailsRepository.getCardBalance().onRight { balance = it }
+            val result = try {
+                cardDetailsRepository.getCardBalance(params.userWalletId).onRight { balance = it }
+            } catch (e: Exception) {
+                Timber.e(e)
+                return@launch
+            }
             uiState.update(DetailsBalanceTransformer(balance = result))
         }.saveIn(fetchBalanceJobHolder)
     }
@@ -217,7 +235,12 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     private fun fetchAddToWalletBanner() {
         modelScope.launch {
-            val isDone = cardDetailsRepository.isAddToWalletDone().getOrNull() ?: false
+            val isDone = try {
+                cardDetailsRepository.isAddToWalletDone(params.userWalletId).getOrNull() == true
+            } catch (e: Exception) {
+                Timber.e(e)
+                return@launch
+            }
             uiState.update(
                 transformer = DetailsAddToWalletBannerTransformer(
                     onClickBanner = ::onClickAddToWalletBlock,
@@ -244,7 +267,11 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     private fun onClickCloseAddToWalletBlock() {
         modelScope.launch {
-            cardDetailsRepository.setAddToWalletAsDone()
+            try {
+                cardDetailsRepository.setAddToWalletAsDone(params.userWalletId)
+            } catch (e: Exception) {
+                Timber.e(e)
+            }
             uiState.update(
                 transformer = DetailsAddToWalletBannerTransformer(
                     onClickBanner = ::onClickAddToWalletBlock,
