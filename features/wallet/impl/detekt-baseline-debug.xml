@@ -20,7 +20,6 @@
     <ID>BooleanPropertyNaming:WalletManageButton.kt$WalletManageButton$/** Whether to dim content */ abstract val dimContent: Boolean</ID>
     <ID>BooleanPropertyNaming:WalletManageButton.kt$WalletManageButton.Swap$val showBadge: Boolean = false</ID>
     <ID>BooleanPropertyNaming:WalletModel.kt$WalletModel$private var needToRefreshWallet = false</ID>
-    <ID>BooleanPropertyNaming:WalletModel.kt$WalletModel$val initialDataProduced = tangemPayOnboardingRepository.isTangemPayInitialDataProduced()</ID>
     <ID>BooleanPropertyNaming:WalletNameMigrationUseCase.kt$WalletNameMigrationUseCase$private val useNewListRepository: Boolean</ID>
     <ID>BooleanPropertyNaming:WalletScreen.kt$val portfolioContent = state is WalletState.MultiCurrency.Content &amp;&amp; state.tokensListState is WalletTokensListState.ContentState.PortfolioContent</ID>
     <ID>BooleanPropertyNaming:WalletScreen.kt$val showMarketsHint by remember { derivedStateOf { // Show hint only when there are items in the list // and when there a no items to scroll listState.layoutInfo.totalItemsCount &gt; 0 &amp;&amp; !listState.canScrollBackward &amp;&amp; !listState.canScrollForward || listState.canScrollBackward &amp;&amp; !listState.canScrollForward } }</ID>
@@ -87,7 +86,6 @@
     <ID>MultilineLambdaItParameter:WalletScreen.kt${ nftCollections( modifier = itemModifier, state = it.nftState, ) }</ID>
     <ID>MultilineLambdaItParameter:WalletWarningsClickIntents.kt$WalletWarningsClickIntentsImplementor${ Timber.e( """ Unable to get user wallet |- ID: $userWalletId |- Exception: $it """.trimIndent(), ) null }</ID>
     <ID>MultilineLambdaItParameter:WalletWarningsClickIntents.kt$WalletWarningsClickIntentsImplementor${ router.openOnboardingScreen( scanResponse = it.scanResponse, continueBackup = true, ) }</ID>
-    <ID>MultilineLambdaItParameter:WalletWarningsClickIntents.kt$WalletWarningsClickIntentsImplementor${ when (it) { UnlockWalletError.AlreadyUnlocked -&gt; Unit UnlockWalletError.ScannedCardWalletNotMatched -&gt; { uiMessageSender.send( message = DialogMessage( title = resourceReference(R.string.common_warning), message = resourceReference(R.string.error_wrong_wallet_tapped), ), ) } UnlockWalletError.UnableToUnlock -&gt; { Timber.e("Unable to unlock wallet with id: $selectedUserWalletId") uiMessageSender.send( SnackbarMessage(TextReference.Res(R.string.generic_error)), ) } UnlockWalletError.UserCancelled -&gt; Unit UnlockWalletError.UserWalletNotFound -&gt; { // This should never happen in this flow Timber.e("User wallet not found for unlock: $selectedUserWalletId") uiMessageSender.send( SnackbarMessage(TextReference.Res(R.string.generic_error)), ) } } }</ID>
     <ID>MultilineLambdaItParameter:WalletWithFundsChecker.kt$WalletWithFundsChecker${ val amount = it.value.amount ?: return@any false !amount.isZero() }</ID>
     <ID>MultilineLambdaItParameter:WalletsUpdateActionResolver.kt$WalletsUpdateActionResolver${ if (it.warnings.any { it is WalletNotification.FinishWalletActivation }) { it.walletCardState.id } else { null } }</ID>
     <ID>NamedArguments:BasicAccountListSubscriber.kt$BasicAccountListSubscriber$updateContent(convertParams, appCurrency, yieldSupplyApyMap, stakingApyMap)</ID>
@@ -114,23 +112,7 @@
     <ID>NoNameShadowing:WalletCurrencyActionsClickIntents.kt$WalletCurrencyActionsClickIntentsImplementor${ it is TokensListItemUM.Token }</ID>
     <ID>NoNameShadowing:WalletNFTItem.kt$modifier</ID>
     <ID>NoNameShadowing:WalletScreen.kt${ it.organizeTokensButtonConfig?.let { config -&gt; organizeTokensButton( modifier = itemModifier, isEnabled = config.isEnabled, onClick = config.onClick, ) } }</ID>
-    <ID>NoNameShadowing:WalletWarningsClickIntents.kt$WalletWarningsClickIntentsImplementor${ when (it) { UnlockWalletError.AlreadyUnlocked -&gt; Unit UnlockWalletError.ScannedCardWalletNotMatched -&gt; { uiMessageSender.send( message = DialogMessage( title = resourceReference(R.string.common_warning), message = resourceReference(R.string.error_wrong_wallet_tapped), ), ) } UnlockWalletError.UnableToUnlock -&gt; { Timber.e("Unable to unlock wallet with id: $selectedUserWalletId") uiMessageSender.send( SnackbarMessage(TextReference.Res(R.string.generic_error)), ) } UnlockWalletError.UserCancelled -&gt; Unit UnlockWalletError.UserWalletNotFound -&gt; { // This should never happen in this flow Timber.e("User wallet not found for unlock: $selectedUserWalletId") uiMessageSender.send( SnackbarMessage(TextReference.Res(R.string.generic_error)), ) } } }</ID>
     <ID>NoNameShadowing:WalletsUpdateActionResolver.kt$WalletsUpdateActionResolver${ it is WalletNotification.FinishWalletActivation }</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:AccountDependencies.kt$AccountDependencies$val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:ExpandedAccountsHolder.kt$ExpandedAccountsHolder$private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:GetMultiWalletWarningsFactory.kt$GetMultiWalletWarningsFactory$private val isDemoCardUseCase: IsDemoCardUseCase</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:GetMultiWalletWarningsFactory.kt$GetMultiWalletWarningsFactory$private val isNeedToBackupUseCase: IsNeedToBackupUseCase</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:GetMultiWalletWarningsFactory.kt$GetMultiWalletWarningsFactory$private val isReadyToShowRateAppUseCase: IsReadyToShowRateAppUseCase</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:GetSingleWalletWarningsFactory.kt$GetSingleWalletWarningsFactory$private val isDemoCardUseCase: IsDemoCardUseCase</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:GetSingleWalletWarningsFactory.kt$GetSingleWalletWarningsFactory$private val isNeedToBackupUseCase: IsNeedToBackupUseCase</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:GetSingleWalletWarningsFactory.kt$GetSingleWalletWarningsFactory$private val isReadyToShowRateAppUseCase: IsReadyToShowRateAppUseCase</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:OrganizeTokensModel.kt$OrganizeTokensModel$private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:ScreenLifecycleProvider.kt$ScreenLifecycleProvider$val isBackgroundState: StateFlow&lt;Boolean&gt; = _isBackgroundState</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:WalletCurrencyActionsClickIntents.kt$WalletCurrencyActionsClickIntentsImplementor$private val isCryptoCurrencyCoinCouldHide: IsCryptoCurrencyCoinCouldHideUseCase</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:WalletCurrencyActionsClickIntents.kt$WalletCurrencyActionsClickIntentsImplementor$private val isDemoCardUseCase: IsDemoCardUseCase</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:WalletModel.kt$WalletModel$private val isWalletsScrollPreviewEnabled: IsWalletsScrollPreviewEnabled</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:WalletScreen.kt$val isAutoScroll = remember { mutableStateOf(value = false) }</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:WalletScreen.kt$val isNavBarVisible = remember { mutableStateOf(true) }</ID>
     <ID>NullableToStringCall:DefaultPromoDeeplinkHandler.kt$DefaultPromoDeeplinkHandler$$bitcoinCurrency</ID>
     <ID>NullableToStringCall:DefaultPromoDeeplinkHandler.kt$DefaultPromoDeeplinkHandler$$bitcoinStatus</ID>
     <ID>NullableToStringCall:DefaultPromoDeeplinkHandler.kt$DefaultPromoDeeplinkHandler$${cryptoCurrencies?.size}</ID>
