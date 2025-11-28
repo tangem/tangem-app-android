@@ -83,7 +83,7 @@ fun InputRowImageInfo(
             subtitle = subtitle,
             caption = caption,
             imageUrl = imageUrl,
-            iconRes = iconRes,
+            iconResVector = iconRes,
             iconTint = iconTint,
             subtitleColor = subtitleColor,
             captionColor = captionColor,
