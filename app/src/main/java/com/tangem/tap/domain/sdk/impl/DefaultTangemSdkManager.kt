@@ -11,6 +11,7 @@ import com.tangem.common.authentication.AuthenticationManager
 import com.tangem.common.authentication.keystore.KeystoreManager
 import com.tangem.common.core.*
 import com.tangem.common.extensions.ByteArrayKey
+import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.services.secure.SecureStorage
 import com.tangem.common.usersCode.UserCodeRepository
 import com.tangem.core.analytics.Analytics
@@ -45,6 +46,7 @@ import com.tangem.tap.domain.tasks.product.ResetBackupCardTask
 import com.tangem.tap.domain.tasks.product.ResetToFactorySettingsTask
 import com.tangem.tap.domain.tasks.product.ScanProductTask
 import com.tangem.tap.domain.tasks.visa.TangemPayGenerateAddressAndSignChallengeTask
+import com.tangem.tap.domain.tasks.visa.TangemPaySignWithdrawalHashTask
 import com.tangem.tap.domain.tasks.visa.VisaCardActivationTask
 import com.tangem.tap.domain.tasks.visa.VisaCustomerWalletApproveTask
 import com.tangem.tap.domain.twins.CreateFirstTwinWalletTask
@@ -524,6 +526,15 @@ internal class DefaultTangemSdkManager(
         }
     }
 
+    override suspend fun getWithdrawalSignature(cardId: String, hash: String): CompletionResult<String> {
+        return coroutineScope {
+            runTaskAsyncReturnOnMain(
+                runnable = TangemPaySignWithdrawalHashTask(cardId = cardId, hash = hash.hexToBytes()),
+                cardId = cardId,
+                initialMessage = Message(resources.getStringSafe(R.string.initial_message_tap_header)),
+            )
+        }
+    }
     // endregion
 
     companion object {
