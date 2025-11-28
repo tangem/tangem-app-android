@@ -1,5 +1,6 @@
 package com.tangem.features.account.createedit.entity
 
+import androidx.compose.runtime.Immutable
 import com.tangem.common.ui.account.AccountNameUM
 import com.tangem.common.ui.account.CryptoPortfolioIconUM
 import com.tangem.core.ui.extensions.TextReference
@@ -23,6 +24,7 @@ internal data class AccountCreateEditUM(
         val onNameChange: (AccountNameUM) -> Unit,
     )
 
+    @Immutable
     sealed interface DerivationInfo {
         val text: TextReference
         val index: Int?
@@ -49,7 +51,7 @@ internal data class AccountCreateEditUM(
 
     data class Button(
         val isButtonEnabled: Boolean,
-        val showProgress: Boolean,
+        val shouldShowProgress: Boolean,
         val onConfirmClick: () -> Unit,
         val text: TextReference,
     )

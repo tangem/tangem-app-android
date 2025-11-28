@@ -1,47 +1,46 @@
 package com.tangem.data.pay.repository
 
 import arrow.core.Either
+import arrow.core.left
+import arrow.core.raise.catch
+import arrow.core.right
 import com.squareup.moshi.Moshi
-import com.tangem.blockchain.common.Blockchain
-import com.tangem.core.error.UniversalError
-import com.tangem.data.common.network.NetworkFactory
+import com.squareup.wire.Instant
 import com.tangem.data.pay.util.TangemPayErrorConverter
-import com.tangem.data.pay.util.TangemPayWalletsManager
 import com.tangem.datasource.api.common.response.ApiResponse
-import com.tangem.datasource.api.common.response.ApiResponseError
-import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.di.NetworkMoshi
+import com.tangem.datasource.local.config.environment.EnvironmentConfigStorage
 import com.tangem.datasource.local.visa.TangemPayStorage
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.datasource.TangemPayAuthDataSource
-import com.tangem.domain.visa.model.VisaAuthTokens
-import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.domain.wallets.derivations.derivationStyleProvider
+import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.domain.visa.model.TangemPayAuthTokens
+import com.tangem.domain.visa.model.getAuthHeader
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import timber.log.Timber
 import javax.inject.Inject
 
-@Suppress("LongParameterList")
 internal class TangemPayRequestPerformer @Inject constructor(
     @NetworkMoshi moshi: Moshi,
+    private val environmentConfigStorage: EnvironmentConfigStorage,
     private val dispatchers: CoroutineDispatcherProvider,
     private val tangemPayStorage: TangemPayStorage,
     private val authDataSource: TangemPayAuthDataSource,
-    private val tangemPayWalletsManager: TangemPayWalletsManager,
-    private val walletManagersFacade: WalletManagersFacade,
-    private val networkFactory: NetworkFactory,
 ) {
 
-    private var customerWalletAddress: String? = null
+    private val customerWalletAddress = MutableStateFlow<String?>(null)
 
     private val refreshTokensMutex = Mutex()
-    private var refreshTokensJob: Deferred<VisaAuthTokens>? = null
+    private var refreshTokensJob: Deferred<TangemPayAuthTokens>? = null
 
     private val errorConverter = TangemPayErrorConverter(moshi)
 
-    suspend fun <T : Any> runWithErrorLogs(tag: String, requestBlock: suspend () -> T): Either<UniversalError, T> {
+    @Deprecated("Do not use this method")
+    suspend fun <T : Any> runWithErrorLogs(tag: String, requestBlock: suspend () -> T): Either<VisaApiError, T> {
         return try {
             val result = requestBlock()
             Either.Right(result)
@@ -58,52 +57,82 @@ internal class TangemPayRequestPerformer @Inject constructor(
         }
     }
 
-    suspend fun <T : Any> request(requestBlock: suspend (header: String) -> ApiResponse<T>): T =
-        withContext(dispatchers.io) {
-            performRequest(
-                requestBlock = requestBlock,
-                getTokens = ::getAccessTokens,
-                refreshTokens = ::refreshAuthTokens,
-            )
-        }
-
-    suspend fun <T : Any> requestWithPersistedToken(requestBlock: suspend (header: String) -> ApiResponse<T>): T =
-        withContext(dispatchers.io) {
-            performRequest(
-                requestBlock = requestBlock,
-                getTokens = { getAccessTokensIfSaved() ?: error("Cannot get saved access tokens") },
-                refreshTokens = ::refreshAuthTokens,
-            )
-        }
-
-    private suspend fun <T : Any> performRequest(
+    suspend fun <T : Any> makeSafeRequest(
+        userWalletId: UserWalletId,
         requestBlock: suspend (header: String) -> ApiResponse<T>,
-        getTokens: (suspend () -> VisaAuthTokens),
-        refreshTokens: (suspend () -> VisaAuthTokens)? = null,
-    ): T = runCatching {
-        requestBlock("Bearer ${getTokens().accessToken}").getOrThrow()
-    }.getOrElse { error ->
-        val unauthorizedCode = ApiResponseError.HttpException.Code.UNAUTHORIZED
-        if (error is ApiResponseError.HttpException && refreshTokens != null && error.code == unauthorizedCode) {
-            refreshOrJoin(refreshTokens)
-            performRequest(requestBlock, refreshTokens = null, getTokens = getTokens)
-        } else {
-            throw error
-        }
+    ): Either<VisaApiError, T> {
+        return performRequest(userWalletId, requestBlock)
     }
 
-    private suspend fun refreshOrJoin(refreshTokens: suspend () -> VisaAuthTokens): VisaAuthTokens {
-        val jobToAwait: Deferred<VisaAuthTokens> =
-            refreshTokensMutex.withLock {
-                val current = refreshTokensJob
-                if (current == null || current.isCompleted) {
-                    coroutineScope {
-                        async { refreshTokens() }.also { refreshTokensJob = it }
-                    }
-                } else {
-                    current
+    @Deprecated("Use perform request instead", replaceWith = ReplaceWith("performRequest"))
+    suspend fun <T : Any> request(
+        userWalletId: UserWalletId,
+        requestBlock: suspend (header: String) ->
+        ApiResponse<T>,
+    ): T = withContext(dispatchers.io) {
+        performRequest(userWalletId, requestBlock = requestBlock)
+            // to keep behaviour as previous
+            .fold(
+                ifRight = { it },
+                ifLeft = { error -> error("Cannot perform request: $error") },
+            )
+    }
+
+    suspend fun <T : Any> performWithStaticToken(
+        requestBlock: suspend (header: String) -> ApiResponse<T>,
+    ): Either<VisaApiError, T> = withContext(dispatchers.io) {
+        catch(
+            block = {
+                val staticToken =
+                    environmentConfigStorage.getConfigSync().bffStaticToken ?: error("BFF static token is null")
+                when (val apiResponse = requestBlock(staticToken)) {
+                    is ApiResponse.Error -> errorConverter.convert(apiResponse.cause).left()
+                    is ApiResponse.Success<T> -> apiResponse.data.right()
                 }
+            },
+            catch = { errorConverter.convert(it).left() },
+        )
+    }
+
+    suspend fun <T : Any> performRequest(
+        userWalletId: UserWalletId,
+        requestBlock: suspend (header: String) -> ApiResponse<T>,
+    ): Either<VisaApiError, T> = withContext(dispatchers.io) {
+        catch(
+            block = {
+                val tokens = getAccessTokens(userWalletId)
+                val now = Instant.now()
+                val accessExpiresAt = Instant.ofEpochSecond(tokens.expiresAt)
+                val refreshExpiresAt = Instant.ofEpochSecond(tokens.refreshExpiresAt)
+                val apiResponse: ApiResponse<T> = if (accessExpiresAt.isAfter(now)) {
+                    requestBlock(tokens.getAuthHeader())
+                } else if (accessExpiresAt.isBefore(now) && refreshExpiresAt.isAfter(now)) {
+                    val newTokens = refreshOrJoin(refreshTokens = { refreshAuthTokens(userWalletId) })
+                    requestBlock(newTokens.getAuthHeader())
+                } else {
+                    return@catch VisaApiError.RefreshTokenExpired.left()
+                }
+
+                when (apiResponse) {
+                    is ApiResponse.Error -> errorConverter.convert(apiResponse.cause).left()
+                    is ApiResponse.Success<T> -> apiResponse.data.right()
+                }
+            },
+            catch = { errorConverter.convert(it).left() },
+        ).onLeft { visaApiError -> Timber.tag("TangemPayRequestPerformer").e(visaApiError.toString()) }
+    }
+
+    private suspend fun refreshOrJoin(refreshTokens: suspend () -> TangemPayAuthTokens): TangemPayAuthTokens {
+        val jobToAwait: Deferred<TangemPayAuthTokens> = refreshTokensMutex.withLock {
+            val current = refreshTokensJob
+            if (current == null || current.isCompleted) {
+                coroutineScope {
+                    async { refreshTokens() }.also { refreshTokensJob = it }
+                }
+            } else {
+                current
             }
+        }
         val result = try {
             jobToAwait.await()
         } finally {
@@ -116,52 +145,34 @@ internal class TangemPayRequestPerformer @Inject constructor(
         return result
     }
 
-    suspend fun getCustomerWalletAddress(): String = customerWalletAddress ?: fetchAuthInputData().address
+    suspend fun getCustomerWalletAddress(userWalletId: UserWalletId): String {
+        val existingAddress = customerWalletAddress.value
+        if (existingAddress != null) {
+            return existingAddress
+        }
+        val storedAddress = tangemPayStorage.getCustomerWalletAddress(
+            userWalletId = userWalletId,
+        ) ?: error("Can not find customer address")
 
-    private suspend fun getAccessTokens(): VisaAuthTokens {
-        return getAccessTokensIfSaved() ?: fetchTokens()
+        customerWalletAddress.value = storedAddress
+        return storedAddress
     }
 
-    private suspend fun getAccessTokensIfSaved(): VisaAuthTokens? {
-        return tangemPayStorage.getAuthTokens(getCustomerWalletAddress())
-    }
-
-    private suspend fun fetchAuthInputData(): AuthInputData {
-        val wallet = tangemPayWalletsManager.getDefaultWalletForTangemPay()
-
-        val network = networkFactory.create(
-            blockchain = Blockchain.Polygon,
-            extraDerivationPath = null,
-            derivationStyleProvider = wallet.derivationStyleProvider,
-            canHandleTokens = true,
-        ) ?: error("Cannot create network")
-
-        val address = walletManagersFacade.getDefaultAddress(wallet.walletId, network)
-            ?: error("Cannot get polygon address")
-
-        customerWalletAddress = address
-
-        return AuthInputData(address, wallet.cardId)
-    }
-
-    private suspend fun fetchTokens(): VisaAuthTokens {
-        val inputData = fetchAuthInputData()
-        val tokens = authDataSource.generateNewAuthTokens(inputData.address, inputData.cardId)
-            .getOrNull() ?: error("Cannot fetch tokens")
-        tangemPayStorage.storeAuthTokens(inputData.address, tokens)
+    private suspend fun getAccessTokens(userWalletId: UserWalletId): TangemPayAuthTokens {
+        val walletAddress = getCustomerWalletAddress(userWalletId)
+        val tokens = tangemPayStorage.getAuthTokens(walletAddress) ?: error("Auth tokens are not stored")
         return tokens
     }
 
-    private suspend fun refreshAuthTokens(): VisaAuthTokens {
-        val customerWalletAddress = getCustomerWalletAddress()
-        val refreshToken = getAccessTokens().refreshToken.value
-        val tokens = authDataSource.refreshAuthTokens(refreshToken).getOrNull() ?: error("Cannot refresh tokens")
+    private suspend fun refreshAuthTokens(userWalletId: UserWalletId): TangemPayAuthTokens {
+        val customerWalletAddress = getCustomerWalletAddress(userWalletId)
+        val refreshToken = getAccessTokens(userWalletId).refreshToken
+        val tokens = authDataSource.refreshAuthTokens(refreshToken)
+            .fold(
+                ifLeft = { error -> error("Cannot refresh tokens: ${error.message}") },
+                ifRight = { it },
+            )
         tangemPayStorage.storeAuthTokens(customerWalletAddress, tokens)
         return tokens
     }
 }
-
-internal data class AuthInputData(
-    val address: String,
-    val cardId: String,
-)

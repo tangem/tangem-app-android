@@ -19,10 +19,7 @@ import com.tangem.domain.promo.models.StoryContent
 import com.tangem.feature.referral.domain.ReferralRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runCatching
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.mapLatest
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 
@@ -41,28 +38,30 @@ internal class DefaultPromoRepository(
         return appPreferencesStore.get(
             key = PreferencesKeys.getShouldShowPromoKey(promoId = promoId.name),
             default = true,
-        ).map { shouldShow ->
-            when (promoId) {
-                PromoId.Referral -> runCatching {
-                    !referralRepository.isReferralParticipant(userWalletId) && shouldShow
-                }.getOrDefault(false)
-                PromoId.Sepa -> {
-                    val isActive = getSepaPromoBanner()?.isActive ?: false
+        )
+            .distinctUntilChanged()
+            .map { shouldShow ->
+                when (promoId) {
+                    PromoId.Referral -> runCatching {
+                        !referralRepository.isReferralParticipant(userWalletId) && shouldShow
+                    }.getOrDefault(false)
+                    PromoId.Sepa -> {
+                        val isActive = getSepaPromoBanner()?.isActive == true
 
-                    isActive && shouldShow
-                }
-                PromoId.VisaPresale -> {
-                    val isActive = getVisaPromoBanner()?.isActive ?: false
+                        isActive && shouldShow
+                    }
+                    PromoId.VisaPresale -> {
+                        val isActive = getVisaPromoBanner()?.isActive == true
 
-                    isActive && shouldShow
-                }
-                PromoId.BlackFriday -> {
-                    val isActive = getBlackFridayPromoBanner()?.isActive ?: false
+                        isActive && shouldShow
+                    }
+                    PromoId.BlackFriday -> {
+                        val isActive = getBlackFridayPromoBanner()?.isActive == true
 
-                    isActive && shouldShow
+                        isActive && shouldShow
+                    }
                 }
             }
-        }
     }
 
     override fun isReadyToShowTokenPromo(promoId: PromoId): Flow<Boolean> {

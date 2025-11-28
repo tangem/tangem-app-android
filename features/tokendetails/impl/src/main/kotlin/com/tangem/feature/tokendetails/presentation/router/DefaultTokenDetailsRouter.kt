@@ -41,7 +41,7 @@ internal class DefaultTokenDetailsRouter @Inject constructor(
         router.push(
             AppRoute.Staking(
                 userWalletId = userWalletId,
-                cryptoCurrencyId = cryptoCurrency.id,
+                cryptoCurrency = cryptoCurrency,
                 yieldId = yieldId,
             ),
         )

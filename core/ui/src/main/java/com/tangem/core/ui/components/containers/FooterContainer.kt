@@ -8,10 +8,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveAnnotatedReference
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.test.FooterTestTags
 
 /**
  * Container for footer info below the text field
@@ -37,7 +39,8 @@ fun FooterContainer(
                 style = TangemTheme.typography.caption2,
                 color = TangemTheme.colors.text.tertiary,
                 modifier = Modifier
-                    .padding(paddingValues),
+                    .padding(paddingValues)
+                    .testTag(FooterTestTags.FOOTER_TEXT),
             )
         }
     }
