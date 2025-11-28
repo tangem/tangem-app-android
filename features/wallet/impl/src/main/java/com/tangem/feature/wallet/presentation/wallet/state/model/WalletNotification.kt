@@ -350,6 +350,23 @@ sealed class WalletNotification(val config: NotificationConfig) {
         ),
     )
 
+    data class BlackFridayPromo(
+        val onCloseClick: () -> Unit,
+        val onClick: () -> Unit,
+    ) : WalletNotification(
+        config = NotificationConfig(
+            title = resourceReference(R.string.notification_black_friday_title),
+            subtitle = resourceReference(R.string.notification_black_friday_text),
+            iconResId = R.drawable.img_black_friday_promo,
+            onCloseClick = onCloseClick,
+            buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
+                text = resourceReference(R.string.common_claim),
+                onClick = onClick,
+            ),
+            iconSize = 54.dp,
+        ),
+    )
+
     data class PushNotifications(
         val onCloseClick: () -> Unit,
         val onEnabledClick: () -> Unit,
