@@ -1,0 +1,10 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>MultilineLambdaItParameter:ReferralInteractorImpl.kt$ReferralInteractorImpl${ Timber.e("Failed to derive public keys: $it") throw it.mapToDomainError() }</ID>
+    <ID>ObjectExtendsThrowable:ReferralError.kt$ReferralError$SdkError : ReferralError</ID>
+    <ID>ObjectExtendsThrowable:ReferralError.kt$ReferralError$UserCancelledException : ReferralError</ID>
+    <ID>UselessCallOnNotNull:ReferralInteractorImpl.kt$ReferralInteractorImpl$listOfNotNull(cryptoCurrency)</ID>
+  </CurrentIssues>
+</SmellBaseline>

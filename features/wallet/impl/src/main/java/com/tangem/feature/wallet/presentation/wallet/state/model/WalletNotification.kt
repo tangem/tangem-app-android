@@ -143,6 +143,24 @@ sealed class WalletNotification(val config: NotificationConfig) {
             title = resourceReference(R.string.yield_module_main_view_approve_notification_title),
             subtitle = resourceReference(R.string.yield_module_main_view_approve_notification_description),
         )
+
+        data object TangemPayUnreachable : Warning(
+            title = resourceReference(id = R.string.tangempay_temporarily_unavailable),
+            subtitle = resourceReference(id = R.string.tangempay_service_unreachable_try_later),
+        )
+
+        data class TangemPayRefreshNeeded(
+            @DrawableRes val tangemIcon: Int?,
+            val onRefreshClick: () -> Unit,
+        ) : Warning(
+            title = resourceReference(id = R.string.tangempay_payment_account_sync_needed),
+            subtitle = resourceReference(id = R.string.tangempay_use_tangem_device_to_restore_payment_account),
+            buttonsState = ButtonsState.PrimaryButtonConfig(
+                text = resourceReference(id = R.string.home_button_scan),
+                iconResId = tangemIcon,
+                onClick = onRefreshClick,
+            ),
+        )
     }
 
     sealed class Informational(
