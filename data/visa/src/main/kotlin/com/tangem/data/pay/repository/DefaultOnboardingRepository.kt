@@ -14,7 +14,6 @@ import com.tangem.domain.pay.datasource.TangemPayAuthDataSource
 import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.domain.pay.model.CustomerInfo.CardInfo
 import com.tangem.domain.pay.model.CustomerInfo.ProductInstance
-import com.tangem.domain.pay.model.OrderStatus
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.domain.visa.model.TangemPayCardFrozenState
@@ -167,23 +166,6 @@ internal class DefaultOnboardingRepository @Inject constructor(
             cardInfo = cardInfo,
         ).also {
             lastFetchedCustomerInfoMap[userWalletId] = it
-        }
-    }
-
-    override suspend fun getOrderStatus(
-        userWalletId: UserWalletId,
-        orderId: String,
-    ): Either<VisaApiError, OrderStatus> {
-        return requestHelper.performRequest(userWalletId) { authHeader ->
-            tangemPayApi.getOrder(authHeader = authHeader, orderId = orderId)
-        }.map { response ->
-            when (response.result?.status) {
-                null -> OrderStatus.UNKNOWN
-                OrderStatus.NEW.apiName -> OrderStatus.NEW
-                OrderStatus.PROCESSING.apiName -> OrderStatus.PROCESSING
-                OrderStatus.COMPLETED.apiName -> OrderStatus.COMPLETED
-                else -> OrderStatus.CANCELED
-            }
         }
     }
 
