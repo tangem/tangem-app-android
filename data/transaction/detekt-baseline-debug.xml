@@ -1,0 +1,11 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>CastNullableToNonNullableType:DefaultTransactionRepository.kt$DefaultTransactionRepository$as</ID>
+    <ID>NoNameShadowing:DefaultTransactionRepository.kt$DefaultTransactionRepository$amount</ID>
+    <ID>NoNameShadowing:DefaultTransactionRepository.kt$DefaultTransactionRepository$destination</ID>
+    <ID>NullableBooleanCheck:DefaultWalletAddressServiceRepository.kt$DefaultWalletAddressServiceRepository$(walletManager as? NearWalletManager)?.validateAddress(address) ?: false</ID>
+    <ID>NullableToStringCall:DefaultTransactionRepository.kt$DefaultTransactionRepository$${walletManager?.wallet?.blockchain}</ID>
+  </CurrentIssues>
+</SmellBaseline>
