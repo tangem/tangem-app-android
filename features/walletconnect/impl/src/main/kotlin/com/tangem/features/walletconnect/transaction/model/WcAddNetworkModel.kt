@@ -17,6 +17,7 @@ import com.tangem.domain.walletconnect.usecase.method.WcAddNetworkUseCase
 import com.tangem.features.walletconnect.transaction.components.common.WcTransactionModelParams
 import com.tangem.features.walletconnect.transaction.converter.WcAddEthereumChainUMConverter
 import com.tangem.features.walletconnect.transaction.converter.WcHandleMethodErrorConverter
+import com.tangem.features.walletconnect.transaction.converter.WcPortfolioNameDelegate
 import com.tangem.features.walletconnect.transaction.entity.chain.WcAddEthereumChainUM
 import com.tangem.features.walletconnect.transaction.entity.common.WcCommonTransactionModel
 import com.tangem.features.walletconnect.transaction.entity.common.WcTransactionActionsUM
@@ -34,6 +35,7 @@ import kotlin.properties.Delegates
 @ModelScoped
 internal class WcAddNetworkModel @Inject constructor(
     paramsContainer: ParamsContainer,
+    portfolioNameDelegateFactory: WcPortfolioNameDelegate.Factory,
     override val messageSender: UiMessageSender,
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
@@ -48,6 +50,7 @@ internal class WcAddNetworkModel @Inject constructor(
 
     val stackNavigation = StackNavigation<WcTransactionRoutes>()
 
+    private val portfolioNameDelegate = portfolioNameDelegateFactory.create(modelScope)
     private val params = paramsContainer.require<WcTransactionModelParams>()
     private var useCase by Delegates.notNull<WcAddNetworkUseCase>()
     private val signatureReceivedAnalyticsSendState = MutableStateFlow(false)
@@ -71,6 +74,7 @@ internal class WcAddNetworkModel @Inject constructor(
         _uiState.value = wcAddEthereumChainUMConverter.convert(
             WcAddEthereumChainUMConverter.Input(
                 useCase = useCase,
+                portfolioName = portfolioNameDelegate.createAccountTitleUM(useCase.session),
                 actions = WcTransactionActionsUM(
                     onShowVerifiedAlert = ::showVerifiedAlert,
                     onDismiss = { cancel(useCase) },

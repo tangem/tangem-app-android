@@ -11,8 +11,6 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.combinedReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.format.bigdecimal.crypto
-import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.onramp.model.OnrampCurrency
 import com.tangem.domain.onramp.model.error.OnrampError
@@ -50,11 +48,6 @@ internal class OnrampV2StateFactory(
                     isEnabled = false,
                 ),
             ),
-            continueButtonConfig = ContinueButtonUM(
-                text = resourceReference(R.string.common_continue),
-                onClick = {},
-                enabled = false,
-            ),
         )
     }
 
@@ -70,11 +63,6 @@ internal class OnrampV2StateFactory(
 
         return OnrampV2MainComponentUM.Content(
             topBarConfig = state.topBarConfig.copy(endButtonUM = endButton),
-            continueButtonConfig = ContinueButtonUM(
-                text = resourceReference(R.string.common_continue),
-                onClick = onrampIntents::onContinueClick,
-                enabled = false,
-            ),
             amountBlockState = initialAmountBlockState,
             offersBlockState = OnrampOffersBlockUM.Empty,
             errorNotification = null,
@@ -83,7 +71,6 @@ internal class OnrampV2StateFactory(
                 currencySymbol = currency.unit,
                 onAmountValueChanged = onrampIntents::onAmountValueChanged,
             ),
-            onrampProviderState = OnrampV2ProvidersUM.Empty,
         )
     }
 
@@ -103,23 +90,6 @@ internal class OnrampV2StateFactory(
         }
     }
 
-    private fun getNoPairsErrorState(): OnrampV2MainComponentUM {
-        val state = currentStateProvider()
-        val contentState = state as? OnrampV2MainComponentUM.Content ?: return state
-
-        return contentState.copy(
-            continueButtonConfig = contentState.continueButtonConfig.copy(enabled = false),
-            amountBlockState = contentState.amountBlockState.copy(
-                amountFieldModel = contentState.amountBlockState.amountFieldModel.copy(isError = true),
-                secondaryFieldModel = OnrampNewAmountSecondaryFieldUM.Error(
-                    error = resourceReference(R.string.onramp_no_available_providers),
-                ),
-            ),
-            onrampAmountButtonUMState = OnrampV2AmountButtonUMState.None,
-            offersBlockState = OnrampOffersBlockUM.Empty,
-        )
-    }
-
     fun getErrorState(errorCode: String? = null, onRefresh: () -> Unit): OnrampV2MainComponentUM {
         val state = currentStateProvider()
         val endButton = when (val button = state.topBarConfig.endButtonUM) {
@@ -130,23 +100,15 @@ internal class OnrampV2StateFactory(
         return when (state) {
             is OnrampV2MainComponentUM.Content -> state.copy(
                 topBarConfig = state.topBarConfig.copy(endButtonUM = endButton),
-                continueButtonConfig = state.continueButtonConfig.copy(enabled = false),
-                amountBlockState = state.amountBlockState.copy(
-                    secondaryFieldModel = OnrampNewAmountSecondaryFieldUM.Content(
-                        stringReference(
-                            BigDecimal.ZERO.format {
-                                crypto(cryptoCurrency = cryptoCurrency, ignoreSymbolPosition = true)
-                            },
-                        ),
-                    ),
-                ),
                 offersBlockState = OnrampOffersBlockUM.Empty,
                 errorNotification = NotificationUM.Warning.OnrampErrorNotification(
                     errorCode = errorCode,
                     onRefresh = onRefresh,
                 ),
                 onrampAmountButtonUMState = OnrampV2AmountButtonUMState.None,
-                onrampProviderState = OnrampV2ProvidersUM.Empty,
+                amountBlockState = state.amountBlockState.copy(
+                    secondaryFieldModel = OnrampSecondaryFieldErrorUM.Empty,
+                ),
             )
             is OnrampV2MainComponentUM.InitialLoading -> state.copy(
                 errorNotification = NotificationUM.Warning.OnrampErrorNotification(
@@ -155,6 +117,22 @@ internal class OnrampV2StateFactory(
                 ),
             )
         }
+    }
+
+    private fun getNoPairsErrorState(): OnrampV2MainComponentUM {
+        val state = currentStateProvider()
+        val contentState = state as? OnrampV2MainComponentUM.Content ?: return state
+
+        return contentState.copy(
+            amountBlockState = contentState.amountBlockState.copy(
+                amountFieldModel = contentState.amountBlockState.amountFieldModel.copy(isError = true),
+                secondaryFieldModel = OnrampSecondaryFieldErrorUM.Error(
+                    error = resourceReference(R.string.onramp_no_available_providers),
+                ),
+            ),
+            onrampAmountButtonUMState = OnrampV2AmountButtonUMState.None,
+            offersBlockState = OnrampOffersBlockUM.Empty,
+        )
     }
 
     private fun getInitialAmountBlockState(currency: OnrampCurrency): OnrampNewAmountBlockUM {
@@ -185,13 +163,7 @@ internal class OnrampV2StateFactory(
                 isValuePasted = false,
                 onValuePastedTriggerDismiss = {},
             ),
-            secondaryFieldModel = OnrampNewAmountSecondaryFieldUM.Content(
-                stringReference(
-                    BigDecimal.ZERO.format {
-                        crypto(cryptoCurrency = cryptoCurrency, ignoreSymbolPosition = true)
-                    },
-                ),
-            ),
+            secondaryFieldModel = OnrampSecondaryFieldErrorUM.Empty,
         )
     }
 
