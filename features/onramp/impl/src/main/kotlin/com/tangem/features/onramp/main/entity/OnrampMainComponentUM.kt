@@ -38,7 +38,7 @@ internal sealed interface OnrampMainComponentUM {
         override val buyButtonConfig: BuyButtonConfig = BuyButtonConfig(
             text = resourceReference(R.string.common_buy),
             onClick = {},
-            enabled = false,
+            isEnabled = false,
         )
     }
 
@@ -54,5 +54,5 @@ internal sealed interface OnrampMainComponentUM {
 internal data class BuyButtonConfig(
     val text: TextReference,
     val onClick: () -> Unit,
-    val enabled: Boolean,
+    val isEnabled: Boolean,
 )

@@ -83,14 +83,14 @@ internal class OnrampRedirectModel @Inject constructor(
                 isDarkTheme = isDarkTheme,
             )
                 .onLeft(::handleError)
-                .onRight {
-                    latestOnrampTransaction = it
+                .onRight { transaction ->
+                    latestOnrampTransaction = transaction
 
                     // Workaround to open Unlimit provider in external browser instead of chrome custom tabs
                     if (params.onrampProviderWithQuote.provider.id.equals(UNLIMIT_PROVIDER_ID, ignoreCase = true)) {
-                        urlOpener.openUrlExternalBrowser(it.redirectUrl)
+                        urlOpener.openUrlExternalBrowser(transaction.redirectUrl)
                     } else {
-                        urlOpener.openUrl(it.redirectUrl)
+                        urlOpener.openUrl(transaction.redirectUrl)
                     }
                 }
         }
