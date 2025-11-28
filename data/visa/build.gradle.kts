@@ -23,6 +23,7 @@ dependencies {
     implementation(projects.domain.visa)
     implementation(projects.domain.card)
     implementation(projects.domain.wallets)
+    implementation(projects.domain.legacy)
     implementation(projects.domain.models)
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.appCurrency.models)
@@ -31,6 +32,7 @@ dependencies {
     implementation(projects.domain.networks)
     implementation(projects.domain.walletManager)
     implementation(projects.domain.quotes)
+    implementation(projects.domain.common)
 
     /** Feature API - remove after removing [HotWalletFeatureToggles] */
     implementation(projects.features.hotWallet.api)

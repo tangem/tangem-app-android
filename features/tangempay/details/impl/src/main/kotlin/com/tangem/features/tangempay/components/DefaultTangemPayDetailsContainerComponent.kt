@@ -63,6 +63,7 @@ class DefaultTangemPayDetailsContainerComponent @AssistedInject constructor(
         )
         TangemPayDetailsInnerRoute.ChangePIN -> TangemPayChangePinComponent(
             appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
+            params = params,
         )
         TangemPayDetailsInnerRoute.ChangePINSuccess -> TangemPayChangePinSuccessComponent(
             appComponentContext = childByContext(componentContext = componentContext, router = innerRouter),
