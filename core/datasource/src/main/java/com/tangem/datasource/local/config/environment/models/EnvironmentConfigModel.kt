@@ -49,6 +49,7 @@ class EnvironmentConfigModel(
     @Json(name = "yieldModuleApiKeyDev") val yieldModuleApiKeyDev: String?,
     @Json(name = "blinkApiKey") val blinkApiKey: String?,
     @Json(name = "tatumApiKey") val tatumApiKey: String?,
+    @Json(name = "bffStaticToken") val bffStaticToken: String?,
 )
 
 @JsonClass(generateAdapter = true)
