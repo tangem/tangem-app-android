@@ -3,11 +3,16 @@ package com.tangem.features.hotwallet.createwalletbackup
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.push
+import com.tangem.common.routing.AppRoute
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.navigation.popTo
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import com.tangem.features.hotwallet.CreateWalletBackupComponent
 import com.tangem.features.hotwallet.createwalletbackup.routing.CreateWalletBackupRoute
 import com.tangem.features.hotwallet.manualbackup.check.ManualBackupCheckComponent
@@ -23,6 +28,8 @@ internal class CreateWalletBackupModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
+    private val trackingContextProxy: TrackingContextProxy,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
 
     val params = paramsContainer.require<CreateWalletBackupComponent.Params>()
@@ -36,6 +43,21 @@ internal class CreateWalletBackupModel @Inject constructor(
     val startRoute = CreateWalletBackupRoute.RecoveryPhraseStart
     val currentRoute: MutableStateFlow<CreateWalletBackupRoute> = MutableStateFlow(startRoute)
 
+    init {
+        trackingContextProxy.addHotWalletContext()
+        analyticsEventHandler.send(
+            event = WalletSettingsAnalyticEvents.RecoveryPhraseScreenInfo(
+                source = params.analyticsSource,
+                action = params.analyticsAction,
+            ),
+        )
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        trackingContextProxy.removeContext()
+    }
+
     fun onBack() {
         when (currentRoute.value) {
             is CreateWalletBackupRoute.RecoveryPhraseStart -> router.pop()
@@ -46,19 +68,51 @@ internal class CreateWalletBackupModel @Inject constructor(
     }
 
     fun onManualBackupStarted() {
+        analyticsEventHandler.send(
+            event = WalletSettingsAnalyticEvents.RecoveryPhraseScreen(
+                source = params.analyticsSource,
+                action = params.analyticsAction,
+            ),
+        )
         stackNavigation.push(CreateWalletBackupRoute.RecoveryPhrase)
     }
 
     fun onManualBackupPhraseShown() {
+        analyticsEventHandler.send(
+            event = WalletSettingsAnalyticEvents.RecoveryPhraseCheck(
+                source = params.analyticsSource,
+                action = params.analyticsAction,
+            ),
+        )
         stackNavigation.push(CreateWalletBackupRoute.ConfirmBackup)
     }
 
     fun onManualBackupChecked() {
-        stackNavigation.push(CreateWalletBackupRoute.BackupCompleted)
+        analyticsEventHandler.send(
+            event = WalletSettingsAnalyticEvents.BackupCompleteScreen(
+                source = params.analyticsSource,
+                action = params.analyticsAction,
+            ),
+        )
+        stackNavigation.push(
+            configuration = CreateWalletBackupRoute.BackupCompleted(
+                isUpgradeFlow = params.isUpgradeFlow,
+                isLastScreen = !params.shouldSetAccessCode,
+            ),
+        )
     }
 
     fun onManualBackupCompleted() {
-        router.pop()
+        if (params.shouldSetAccessCode) {
+            router.replaceCurrent(
+                route = AppRoute.UpdateAccessCode(
+                    userWalletId = params.userWalletId,
+                    source = params.analyticsSource,
+                ),
+            )
+        } else {
+            router.pop()
+        }
     }
 
     inner class ManualBackupStartModelCallbacks : ManualBackupStartComponent.ModelCallbacks {
@@ -82,6 +136,15 @@ internal class CreateWalletBackupModel @Inject constructor(
     inner class ManualBackupCompletedModelCallbacks : ManualBackupCompletedComponent.ModelCallbacks {
         override fun onContinueClick(userWalletId: UserWalletId) {
             onManualBackupCompleted()
+        }
+
+        override fun onUpgradeClick(userWalletId: UserWalletId) {
+            router.popTo<AppRoute.WalletSettings>()
+            router.push(
+                AppRoute.UpgradeWallet(
+                    userWalletId = userWalletId,
+                ),
+            )
         }
     }
 }

@@ -1,0 +1,12 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>BooleanPropertyNaming:FilterAvailableNetworksForWalletUseCase.kt$FilterAvailableNetworksForWalletUseCase$private val useNewRepository: Boolean</ID>
+    <ID>BooleanPropertyNaming:GetStakingNotificationMaxApyUseCase.kt$GetStakingNotificationMaxApyUseCase$val showStakingNotification = if (!hideClicked &amp;&amp; walletFirstUsageDate != 0L) { currentDate - walletFirstUsageDate &gt; TWO_WEEKS_IN_MILLIS } else { false }</ID>
+    <ID>MultilineLambdaItParameter:FilterAvailableNetworksForWalletUseCase.kt$FilterAvailableNetworksForWalletUseCase${ val blockchain = Blockchain.fromNetworkId(it.networkId) supportedBlockchains.contains(blockchain) }</ID>
+    <ID>MultilineLambdaItParameter:SaveMarketTokensUseCase.kt$SaveMarketTokensUseCase${ marketsTokenRepository.createCryptoCurrency( userWalletId = userWalletId, token = tokenMarketParams, network = it, ) }</ID>
+    <ID>SuspendFunWithFlowReturnType:GetStakingNotificationMaxApyUseCase.kt$GetStakingNotificationMaxApyUseCase$suspend</ID>
+    <ID>SuspendFunWithFlowReturnType:MarketsTokenRepository.kt$MarketsTokenRepository$suspend</ID>
+  </CurrentIssues>
+</SmellBaseline>

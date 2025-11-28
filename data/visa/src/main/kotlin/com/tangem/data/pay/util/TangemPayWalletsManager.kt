@@ -8,7 +8,8 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 
-internal class TangemPayWalletsManager @Inject constructor(
+// TODO remove after implement wallet selector in pay
+class TangemPayWalletsManager @Inject constructor(
     private val manager: UserWalletsListManager,
     private val repository: UserWalletsListRepository,
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,

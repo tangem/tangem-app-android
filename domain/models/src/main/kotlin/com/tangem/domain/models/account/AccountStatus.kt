@@ -17,6 +17,10 @@ sealed interface AccountStatus {
     /** The account associated with this status */
     val account: Account
 
+    /** Unique identifier of the account */
+    val accountId: AccountId
+        get() = account.accountId
+
     /**
      * Represents the status of a crypto portfolio account
      *
@@ -33,5 +37,9 @@ sealed interface AccountStatus {
 
     fun flattenCurrencies(): List<CryptoCurrencyStatus> = when (this) {
         is CryptoPortfolio -> tokenList.flattenCurrencies()
+    }
+
+    fun getCryptoTokenList(): TokenList = when (this) {
+        is CryptoPortfolio -> tokenList
     }
 }

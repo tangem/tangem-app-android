@@ -7,10 +7,10 @@ import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.domain.staking.model.stakekit.transaction.StakingTransaction
 import com.tangem.domain.staking.repositories.StakingErrorResolver
-import com.tangem.domain.staking.repositories.StakingRepository
+import com.tangem.domain.staking.repositories.StakeKitRepository
 
 class GetConstructedStakingTransactionUseCase(
-    private val stakingRepository: StakingRepository,
+    private val stakeKitRepository: StakeKitRepository,
     private val stakingErrorResolver: StakingErrorResolver,
 ) {
 
@@ -20,7 +20,7 @@ class GetConstructedStakingTransactionUseCase(
         amount: Amount,
         transactionId: String,
     ): Either<StakingError, Pair<StakingTransaction, TransactionData.Compiled>> = Either.catch {
-        stakingRepository.constructTransaction(networkId, fee, amount, transactionId)
+        stakeKitRepository.constructTransaction(networkId, fee, amount, transactionId)
     }.mapLeft {
         stakingErrorResolver.resolve(it)
     }

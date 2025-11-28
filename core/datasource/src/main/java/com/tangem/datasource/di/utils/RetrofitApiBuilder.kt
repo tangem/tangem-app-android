@@ -197,6 +197,7 @@ internal class RetrofitApiBuilder @Inject constructor(
 
         val excludedApiForLogging: Set<ApiConfig.ID> = setOf(
             // ApiConfig.ID.StakeKit,
+            ApiConfig.ID.MoonPay,
         )
     }
 }
