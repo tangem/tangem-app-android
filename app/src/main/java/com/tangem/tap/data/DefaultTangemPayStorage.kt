@@ -9,7 +9,7 @@ import com.tangem.datasource.local.preferences.utils.getSyncOrNull
 import com.tangem.datasource.local.preferences.utils.store
 import com.tangem.datasource.local.visa.TangemPayStorage
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.visa.model.VisaAuthTokens
+import com.tangem.domain.visa.model.TangemPayAuthTokens
 import com.tangem.sdk.storage.AndroidSecureStorageV2
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -36,7 +36,7 @@ internal class DefaultTangemPayStorage @Inject constructor(
         )
     }
 
-    private val tokensAdapter by lazy { moshi.adapter(VisaAuthTokens::class.java) }
+    private val tokensAdapter by lazy { moshi.adapter(TangemPayAuthTokens::class.java) }
 
     override suspend fun storeCustomerWalletAddress(userWalletId: UserWalletId, customerWalletAddress: String) {
         withContext(dispatcherProvider.io) {
@@ -50,7 +50,7 @@ internal class DefaultTangemPayStorage @Inject constructor(
         }
     }
 
-    override suspend fun storeAuthTokens(customerWalletAddress: String, tokens: VisaAuthTokens) =
+    override suspend fun storeAuthTokens(customerWalletAddress: String, tokens: TangemPayAuthTokens) =
         withContext(dispatcherProvider.io) {
             val json = tokensAdapter.toJson(tokens)
 
@@ -60,7 +60,7 @@ internal class DefaultTangemPayStorage @Inject constructor(
             )
         }
 
-    override suspend fun getAuthTokens(customerWalletAddress: String): VisaAuthTokens? =
+    override suspend fun getAuthTokens(customerWalletAddress: String): TangemPayAuthTokens? =
         withContext(dispatcherProvider.io) {
             secureStorage.get(createKey(customerWalletAddress))
                 ?.decodeToString(throwOnInvalidSequence = true)
@@ -96,6 +96,14 @@ internal class DefaultTangemPayStorage @Inject constructor(
 
     override suspend fun clearOrderId(customerWalletAddress: String) = withContext(dispatcherProvider.io) {
         secureStorage.delete(createOrderIdKey(customerWalletAddress))
+    }
+
+    override suspend fun storeCheckCustomerWalletResult(userWalletId: UserWalletId) {
+        appPreferencesStore.store(PreferencesKeys.getTangemPayCheckCustomerByWalletId(userWalletId), true)
+    }
+
+    override suspend fun checkCustomerWalletResult(userWalletId: UserWalletId): Boolean? {
+        return appPreferencesStore.getSyncOrNull(PreferencesKeys.getTangemPayCheckCustomerByWalletId(userWalletId))
     }
 
     override suspend fun clearAll(userWalletId: UserWalletId, customerWalletAddress: String) =
