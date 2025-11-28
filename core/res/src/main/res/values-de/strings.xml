@@ -54,7 +54,7 @@
   <string name="account_unsaved_dialog_message_create">Bist Du sicher, dass Du das neue Konto verwerfen willst?</string>
   <string name="account_unsaved_dialog_message_edit">Bist Du sicher, dass Du die Bearbeitungen verwerfen willst?</string>
   <string name="account_unsaved_dialog_title">Nicht gespeicherte Änderungen</string>
-  <string name="accounts_migration_alert_message">Einige benutzerdefinierte Token wurden von „%1$s\" Zu \"%2$sda ihre Herleitung zu diesem Konto gehört.</string>
+  <string name="accounts_migration_alert_message">Einige benutzerdefinierte Token wurden von “%1$s” Zu “%2$s” da ihre Herleitung zu diesem Konto gehört.</string>
   <string name="accounts_migration_alert_title">Einige benutzerdefinierte Token wurden verschoben.</string>
   <string name="action_buttons_buy_empty_search_message">Du kannst Deinen Token nicht finden? Gehe zum Bereich „Markt“ auf der Hauptseite und fügen diesen zum kaufen im Portfolio hinzu.</string>
   <string name="action_buttons_sell_empty_search_message">Du kannst Deinen Token nicht finden? Gehe zum Bereich „Markt“ auf der Hauptseite und fügen diesen zum verkaufen im Portfolio hinzu.</string>
