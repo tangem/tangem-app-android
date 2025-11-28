@@ -82,6 +82,12 @@ internal object ApiConfigsModule {
 
     @Provides
     @IntoSet
+    fun provideTangemPayAuthConfig(appVersionProvider: AppVersionProvider): ApiConfig = TangemPayAuth(
+        appVersionProvider,
+    )
+
+    @Provides
+    @IntoSet
     fun provideBlockAidConfig(environmentConfigStorage: EnvironmentConfigStorage): ApiConfig {
         return BlockAid(environmentConfigStorage)
     }
