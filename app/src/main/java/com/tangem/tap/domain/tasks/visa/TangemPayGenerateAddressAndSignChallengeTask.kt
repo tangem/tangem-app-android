@@ -17,6 +17,7 @@ import com.tangem.domain.visa.model.TangemPayInitialCredentials
 import com.tangem.domain.visa.model.VisaDataToSignByCustomerWallet
 import com.tangem.domain.visa.model.VisaSignedDataByCustomerWallet
 import com.tangem.domain.visa.model.sign
+import com.tangem.domain.wallets.builder.UserWalletIdBuilder
 import com.tangem.operations.derivation.DeriveWalletPublicKeyTask
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.assisted.Assisted
@@ -44,14 +45,17 @@ class TangemPayGenerateAddressAndSignChallengeTask @AssistedInject constructor(
         val wallet = card.wallets.firstOrNull { it.curve == EllipticCurve.Secp256k1 }
             ?: return CompletionResult.Failure(VisaActivationError.MissingWallet.tangemError)
 
-        val derivationResult = runDerivationTask(session, wallet)
-        val address = when (derivationResult) {
+        val address = when (val derivationResult = runDerivationTask(session, wallet)) {
             is CompletionResult.Failure<*> -> return CompletionResult.Failure(derivationResult.error)
             is CompletionResult.Success<ExtendedPublicKey> -> generateAddressFromExtendedKey(derivationResult.data)
         }
 
+        val userWalletId = UserWalletIdBuilder.walletPublicKey(wallet.publicKey)
         val challenge = withContext(dispatchersProvider.io) {
-            visaAuthRemoteDataSource.getCustomerWalletAuthChallenge(address)
+            visaAuthRemoteDataSource.getCustomerWalletAuthChallenge(
+                customerWalletAddress = address,
+                customerWalletId = userWalletId.stringValue,
+            )
         }.getOrElse { return CompletionResult.Failure(it.tangemError) }
 
         val dataToSign = VisaDataToSignByCustomerWallet(hashToSign = challenge.challenge)

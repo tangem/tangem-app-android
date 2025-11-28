@@ -14,9 +14,10 @@ import com.tangem.features.tangempay.ui.TangemPayChangePinScreen
 
 internal class TangemPayChangePinComponent(
     private val appComponentContext: AppComponentContext,
+    params: TangemPayDetailsContainerComponent.Params,
 ) : AppComponentContext by appComponentContext, ComposableContentComponent {
 
-    private val model: TangemPayChangePinModel = getOrCreateModel()
+    private val model: TangemPayChangePinModel = getOrCreateModel(params)
 
     @Composable
     override fun Content(modifier: Modifier) {
