@@ -709,6 +709,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         return result
     }
 
+    @Suppress("NullableToStringCall")
     override suspend fun onSwap(
         swapProvider: SwapProvider,
         swapData: SwapDataModel?,
@@ -718,8 +719,9 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         toAccount: Account.CryptoPortfolio?,
         amountToSwap: String,
         includeFeeInAmount: IncludeFeeInAmount,
-        fee: TxFee,
+        fee: TxFee?,
         expressOperationType: ExpressOperationType,
+        isTangemPayWithdrawal: Boolean,
     ): SwapTransactionState {
         Timber.i(
             """
@@ -757,6 +759,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                     txFee = fee,
                     swapProvider = swapProvider,
                     expressOperationType = expressOperationType,
+                    isTangemPayWithdrawal = isTangemPayWithdrawal,
                 )
             }
             ExchangeProviderType.DEX, ExchangeProviderType.DEX_BRIDGE -> {
@@ -773,6 +776,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                         amountToSwap = amountToSwap,
                     )
                 } else {
+                    if (fee == null) return SwapTransactionState.Error.UnknownError
                     onSwapDex(
                         provider = swapProvider,
                         networkId = currencyToSend.currency.network.backendId,
@@ -978,16 +982,17 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         ).getOrNull() ?: error("failed to create extras")
     }
 
-    @Suppress("LongMethod")
+    @Suppress("LongMethod", "CanBeNonNullable")
     private suspend fun onSwapCex(
         currencyToSend: CryptoCurrencyStatus,
         currencyToGet: CryptoCurrencyStatus,
         fromAccount: Account.CryptoPortfolio?,
         toAccount: Account.CryptoPortfolio?,
         amount: SwapAmount,
-        txFee: TxFee,
+        txFee: TxFee?,
         swapProvider: SwapProvider,
         expressOperationType: ExpressOperationType,
+        isTangemPayWithdrawal: Boolean,
     ): SwapTransactionState {
         val exchangeData = repository.getExchangeData(
             userWallet = userWallet,
@@ -1010,6 +1015,33 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         val exchangeDataCex =
             exchangeData.transaction as? ExpressTransactionModel.CEX ?: return SwapTransactionState.Error.UnknownError
 
+        if (isTangemPayWithdrawal) {
+            return SwapTransactionState.TangemPayWithdrawalData(
+                cryptoAmount = amount.value,
+                cryptoCurrencyId = requireNotNull(currencyToSend.currency.id.rawCurrencyId),
+                cexAddress = exchangeDataCex.txTo,
+                fromAmount = amount.toStringWithRightOffset(),
+                fromAmountValue = amount.value,
+                toAmount = amountFormatter.formatSwapAmountToUI(
+                    exchangeData.toTokenAmount,
+                    currencyToGet.currency.symbol,
+                ),
+                toAmountValue = exchangeData.toTokenAmount.value,
+                storeData = SwapTransactionState.TangemPayWithdrawalData.StoreTransactionData(
+                    currencyToSend = currencyToSend,
+                    currencyToGet = currencyToGet,
+                    fromAccount = fromAccount,
+                    toAccount = toAccount,
+                    amount = amount,
+                    swapProvider = swapProvider,
+                    swapDataModel = exchangeData,
+                    txExternalUrl = "",
+                    txExternalId = exchangeDataCex.externalTxId,
+                    averageDuration = null,
+                ),
+            )
+        }
+
         val userWallet = userWallet
         if (userWallet is UserWallet.Cold && isDemoCardUseCase(userWallet.scanResponse.card.cardId)) {
             return SwapTransactionState.Error.UnknownError
@@ -1017,7 +1049,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
 
         val txData = createTransferTransactionUseCase(
             amount = amount.value.convertToSdkAmount(currencyToSend),
-            fee = txFee.fee,
+            fee = requireNotNull(txFee).fee,
             memo = exchangeDataCex.txExtraId,
             destination = exchangeDataCex.txTo,
             userWalletId = userWalletId,
@@ -1087,7 +1119,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         )
     }
 
-    private suspend fun storeSwapTransaction(
+    override suspend fun storeSwapTransaction(
         currencyToSend: CryptoCurrencyStatus,
         currencyToGet: CryptoCurrencyStatus,
         fromAccount: Account.CryptoPortfolio?,
@@ -1096,9 +1128,9 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         swapProvider: SwapProvider,
         swapDataModel: SwapDataModel,
         timestamp: Long,
-        txExternalUrl: String? = null,
-        txExternalId: String? = null,
-        averageDuration: Int? = null,
+        txExternalUrl: String?,
+        txExternalId: String?,
+        averageDuration: Int?,
     ) {
         swapTransactionRepository.storeTransaction(
             userWalletId = userWalletId,

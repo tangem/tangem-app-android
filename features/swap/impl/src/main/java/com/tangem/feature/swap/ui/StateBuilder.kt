@@ -277,6 +277,7 @@ internal class StateBuilder(
         selectedFeeType: FeeType,
         isReverseSwapPossible: Boolean,
         needApplyFCARestrictions: Boolean,
+        hideFee: Boolean,
     ): SwapStateHolder {
         if (uiStateHolder.sendCardData !is SwapCardState.SwapCardData) return uiStateHolder
         if (uiStateHolder.receiveCardData !is SwapCardState.SwapCardData) return uiStateHolder
@@ -286,8 +287,9 @@ internal class StateBuilder(
             feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
             selectedFeeType = selectedFeeType,
             providerName = swapProvider.name,
+            hideFee = hideFee,
         )
-        val feeState = createFeeState(quoteModel.txFee, selectedFeeType)
+        val feeState = if (hideFee) FeeItemState.Empty else createFeeState(quoteModel.txFee, selectedFeeType)
         val fromCurrencyStatus = quoteModel.fromTokenInfo.cryptoCurrencyStatus
         val toCurrencyStatus = quoteModel.toTokenInfo.cryptoCurrencyStatus
         val isInsufficientFunds = isInsufficientFundsCondition(quoteModel)
@@ -849,6 +851,45 @@ internal class StateBuilder(
                 toTokenIconState = iconStateConverter.convert(toCryptoCurrency),
                 onExploreButtonClick = onExploreClick,
                 onStatusButtonClick = onStatusClick,
+            ),
+        )
+    }
+
+    fun createTangemPayWithdrawalSuccessState(
+        uiState: SwapStateHolder,
+        swapTransactionState: SwapTransactionState.TangemPayWithdrawalData,
+        dataState: SwapProcessDataState,
+    ): SwapStateHolder {
+        val fromCryptoCurrency = requireNotNull(dataState.fromCryptoCurrency)
+        val toCryptoCurrency = requireNotNull(dataState.toCryptoCurrency)
+        val fromAmount = swapTransactionState.fromAmountValue ?: BigDecimal.ZERO
+        val toAmount = swapTransactionState.toAmountValue ?: BigDecimal.ZERO
+        val providerState = uiState.providerState as ProviderState.Content
+
+        val fromFiatAmount = getFormattedFiatAmount(fromCryptoCurrency.value.fiatRate?.multiply(fromAmount))
+        val toFiatAmount = getFormattedFiatAmount(toCryptoCurrency.value.fiatRate?.multiply(toAmount))
+
+        val shouldShowStatus = providerState.type == ExchangeProviderType.CEX.providerName
+        return uiState.copy(
+            successState = SwapSuccessStateHolder(
+                timestamp = System.currentTimeMillis(),
+                txUrl = "",
+                providerName = stringReference(providerState.name),
+                providerType = stringReference(providerState.type),
+                showStatusButton = shouldShowStatus,
+                providerIcon = providerState.iconUrl,
+                rate = providerState.subtitle,
+                fee = TextReference.EMPTY,
+                fromTitle = getFromCardAccountTitle(fromAccount = dataState.fromAccount),
+                toTitle = getToCardAccountTitle(toAccount = dataState.toAccount),
+                fromTokenAmount = stringReference(swapTransactionState.fromAmount.orEmpty()),
+                toTokenAmount = stringReference(swapTransactionState.toAmount.orEmpty()),
+                fromTokenFiatAmount = stringReference(fromFiatAmount),
+                toTokenFiatAmount = stringReference(toFiatAmount),
+                fromTokenIconState = iconStateConverter.convert(fromCryptoCurrency),
+                toTokenIconState = iconStateConverter.convert(toCryptoCurrency),
+                onExploreButtonClick = {},
+                onStatusButtonClick = {},
             ),
         )
     }
