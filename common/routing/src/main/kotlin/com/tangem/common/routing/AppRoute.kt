@@ -438,7 +438,7 @@ sealed class AppRoute(val path: String) : Route {
     }
 
     @Serializable
-    data object Kyc : AppRoute(path = "/kyc")
+    data class Kyc(val userWalletId: UserWalletId) : AppRoute(path = "/kyc")
 
     @Serializable
     data class YieldSupplyPromo(

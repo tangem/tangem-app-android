@@ -26,11 +26,6 @@ interface TangemPayApi {
         @Body request: GenerateNoneByCardWalletRequest,
     ): ApiResponse<GenerateNonceResponse>
 
-    @POST("v1/auth/challenge")
-    suspend fun generateNonceByCustomerWallet(
-        @Body request: GenerateNonceByCustomerWalletRequest,
-    ): ApiResponse<GenerateNonceResponse>
-
     @POST("v1/auth/token")
     suspend fun getAccessTokenByCardId(@Body request: GetAccessTokenByCardIdRequest): ApiResponse<JWTResponse>
 
@@ -123,6 +118,12 @@ interface TangemPayApi {
 
     @GET("v1/customer/me")
     suspend fun getCustomerMe(@Header("Authorization") authHeader: String): ApiResponse<CustomerMeResponse>
+
+    @GET("v1/customer/wallets/{customer_wallet_id}")
+    suspend fun checkCustomerWalletId(
+        @Header("X-API-KEY") authHeader: String,
+        @Path("customer_wallet_id") customerWalletId: String,
+    ): ApiResponse<CheckCustomerWalletResponse>
 
     @POST("v1/deeplink/validate")
     suspend fun validateDeeplink(@Body body: DeeplinkValidityRequest): ApiResponse<DeeplinkValidityResponse>
