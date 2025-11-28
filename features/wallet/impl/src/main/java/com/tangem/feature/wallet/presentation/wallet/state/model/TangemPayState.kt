@@ -11,6 +11,7 @@ internal sealed class TangemPayState {
 
     data class Progress(
         val title: TextReference,
+        val description: TextReference,
         val buttonText: TextReference,
         @DrawableRes val iconRes: Int,
         val onButtonClick: () -> Unit,
@@ -22,4 +23,10 @@ internal sealed class TangemPayState {
         val balanceText: TextReference,
         val onClick: () -> Unit,
     ) : TangemPayState()
+
+    data class RefreshNeeded(
+        val notification: WalletNotification,
+    ) : TangemPayState()
+
+    data class TemporaryUnavailable(val notification: WalletNotification) : TangemPayState()
 }
