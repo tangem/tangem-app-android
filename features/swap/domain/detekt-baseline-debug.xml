@@ -25,7 +25,6 @@
     <ID>NamedArguments:SwapInteractorImpl.kt$SwapInteractorImpl$tryGetFromCacheV2(userWallet, initialCryptoCurrency, state, isReverseFromTo)</ID>
     <ID>NoNameShadowing:SwapInteractorImpl.kt$SwapInteractorImpl$account</ID>
     <ID>NoNameShadowing:SwapInteractorImpl.kt$SwapInteractorImpl${ it.isAvailable }</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:SwapInteractorImpl.kt$SwapInteractorImpl$private val isDemoCardUseCase: IsDemoCardUseCase</ID>
     <ID>NullableToStringCall:SwapInteractorImpl.kt$SwapInteractorImpl$$swapData</ID>
     <ID>NullableToStringCall:SwapInteractorImpl.kt$SwapInteractorImpl$${e.message}</ID>
     <ID>SuspendFunSwallowedCancellation:SwapInteractorImpl.kt$SwapInteractorImpl$runCatching</ID>
