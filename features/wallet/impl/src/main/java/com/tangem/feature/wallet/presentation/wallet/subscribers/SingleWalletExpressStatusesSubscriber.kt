@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.*
 import timber.log.Timber
 
 @Suppress("LongParameterList")
+@Deprecated("Use SingleWalletExpressStatusesSubscriberV2 instead")
 internal class SingleWalletExpressStatusesSubscriber(
     private val userWallet: UserWallet,
     private val stateHolder: WalletStateController,

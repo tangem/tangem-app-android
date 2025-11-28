@@ -20,6 +20,10 @@
         "version": "undefined"
     },
     {
+        "name": "STAKING_ETH_ENABLED",
+        "version": "undefined"
+    },
+    {
         "name": "USEDESK_ENABLED",
         "version": "undefined"
     },
@@ -33,7 +37,7 @@
     },
     {
         "name": "TANGEM_PAY_ENABLED",
-        "version": "undefined"
+        "version": "5.31.0"
     },
     {
         "name": "NEW_TOKEN_RECEIVE_ENABLED",
@@ -49,6 +53,10 @@
     },
     {
         "name": "ACCOUNTS_FEATURE_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "FEED_ENABLED",
         "version": "undefined"
     }
 ]

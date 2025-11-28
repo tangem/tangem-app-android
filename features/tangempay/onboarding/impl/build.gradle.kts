@@ -16,6 +16,8 @@ dependencies {
     implementation(projects.core.decompose)
     implementation(projects.core.ui)
     implementation(projects.core.error)
+    implementation(projects.core.navigation)
+    implementation(deps.arrow.core)
     implementation(deps.arrow.core)
 
     /** Common */
@@ -30,6 +32,9 @@ dependencies {
     /** Domain */
     implementation(projects.domain.visa)
 
+    /** Data **/
+    implementation(projects.data.visa)
+
     /** Compose */
     implementation(deps.compose.foundation)
     implementation(deps.compose.material3)
@@ -39,4 +44,7 @@ dependencies {
     /** DI */
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
+
+    /** Other */
+    implementation(deps.timber)
 }
