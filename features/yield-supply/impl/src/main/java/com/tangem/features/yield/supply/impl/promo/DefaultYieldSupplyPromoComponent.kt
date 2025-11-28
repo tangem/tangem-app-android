@@ -56,6 +56,7 @@ internal class DefaultYieldSupplyPromoComponent @AssistedInject constructor(
             appComponentContext = childByContext(componentContext),
             params = YieldSupplyApyComponent.Params(
                 cryptoCurrency = params.currency,
+                apy = params.apy,
                 onBackClick = {
                     model.bottomSheetNavigation.dismiss()
                 },
