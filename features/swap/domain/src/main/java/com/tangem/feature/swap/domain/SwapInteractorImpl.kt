@@ -16,12 +16,16 @@ import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
+import com.tangem.domain.account.status.producer.SingleAccountStatusListProducer
+import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.extenstions.unwrap
 import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.express.models.ExpressOperationType
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
@@ -87,6 +91,8 @@ internal class SwapInteractorImpl @AssistedInject constructor(
     private val getAssetRequirementsUseCase: GetAssetRequirementsUseCase,
     private val amountFormatter: AmountFormatter,
     private val rampStateManager: RampStateManager,
+    private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
+    private val accountsFeatureToggles: AccountsFeatureToggles,
     @Assisted private val userWalletId: UserWalletId,
 ) : SwapInteractor {
 
@@ -102,7 +108,16 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         }
 
     override suspend fun getTokensDataState(currency: CryptoCurrency): TokensDataStateExpress {
-        val walletCurrencyStatuses = getMultiCryptoCurrencyStatusUseCase.invokeMultiWalletSync(userWalletId)
+        return if (accountsFeatureToggles.isFeatureEnabled) {
+            getAccountCurrencyTokensDataState(currency)
+        } else {
+            getCurrencyTokensDataState(currency)
+        }
+    }
+
+    private suspend fun getCurrencyTokensDataState(currency: CryptoCurrency): TokensDataStateExpress {
+        val walletCurrencyStatuses = getMultiCryptoCurrencyStatusUseCase
+            .invokeMultiWalletSync(userWalletId)
             .getOrElse { emptyList() }
 
         val walletCurrencyStatusesExceptInitial = walletCurrencyStatuses
@@ -146,6 +161,65 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         )
     }
 
+    private suspend fun getAccountCurrencyTokensDataState(currency: CryptoCurrency): TokensDataStateExpress {
+        val walletAccountCurrencyStatuses = singleAccountStatusListSupplier.getSyncOrNull(
+            SingleAccountStatusListProducer.Params(userWalletId),
+        )?.accountStatuses.orEmpty()
+
+        val walletAccountCurrencyStatusesExceptInitial = walletAccountCurrencyStatuses
+            .mapNotNull { accountStatus ->
+                val filteredCurrencies = accountStatus.flattenCurrencies().filter {
+                    val currencyFilter = it.currency.network.backendId != currency.network.backendId ||
+                        it.currency.getContractAddress() != currency.getContractAddress()
+
+                    val statusFilter =
+                        it.value is CryptoCurrencyStatus.Loaded || it.value is CryptoCurrencyStatus.NoAccount
+                    val notCustomTokenFilter = !it.currency.isCustom
+
+                    statusFilter && currencyFilter && notCustomTokenFilter
+                }
+
+                if (filteredCurrencies.isNotEmpty()) {
+                    accountStatus.account to filteredCurrencies
+                } else {
+                    null
+                }
+            }.toMap()
+
+        if (walletAccountCurrencyStatusesExceptInitial.isEmpty()) {
+            return TokensDataStateExpress.EMPTY
+        }
+
+        val pairsLeast = getPairs(
+            userWallet = userWallet,
+            initialCurrency = LeastTokenInfo(
+                contractAddress = (currency as? CryptoCurrency.Token)?.contractAddress ?: "0",
+                network = currency.network.backendId,
+            ),
+            currenciesList = walletAccountCurrencyStatusesExceptInitial.flatMap { accountStatus ->
+                accountStatus.value.map { it.currency }
+            },
+        )
+
+        return TokensDataStateExpress(
+            fromGroup = getToCurrenciesGroupV2(
+                currency = currency,
+                leastPairs = pairsLeast.pairs,
+                cryptoCurrenciesList = walletAccountCurrencyStatusesExceptInitial,
+                tokenInfoForFilter = { it.to },
+                tokenInfoForAvailable = { it.from },
+            ),
+            toGroup = getToCurrenciesGroupV2(
+                currency = currency,
+                leastPairs = pairsLeast.pairs,
+                cryptoCurrenciesList = walletAccountCurrencyStatusesExceptInitial,
+                tokenInfoForFilter = { it.from },
+                tokenInfoForAvailable = { it.to },
+            ),
+            allProviders = pairsLeast.allProviders,
+        )
+    }
+
     private suspend fun getToCurrenciesGroup(
         currency: CryptoCurrency,
         leastPairs: List<SwapPairLeast>,
@@ -174,6 +248,49 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         return CurrenciesGroup(
             available = availableCryptoCurrencies,
             unavailable = unavailableCryptoCurrencies.map { CryptoCurrencySwapInfo(it, emptyList()) },
+            accountCurrencyList = emptyList(),
+            isAfterSearch = false,
+        )
+    }
+
+    private suspend fun getToCurrenciesGroupV2(
+        currency: CryptoCurrency,
+        leastPairs: List<SwapPairLeast>,
+        cryptoCurrenciesList: Map<Account, List<CryptoCurrencyStatus>>,
+        tokenInfoForFilter: (SwapPairLeast) -> LeastTokenInfo,
+        tokenInfoForAvailable: (SwapPairLeast) -> LeastTokenInfo,
+    ): CurrenciesGroup {
+        val filteredPairs = leastPairs.filter {
+            tokenInfoForFilter(it).contractAddress == currency.getContractAddress() &&
+                tokenInfoForFilter(it).network == currency.network.backendId
+        }
+
+        val accountCurrencyList = cryptoCurrenciesList.mapNotNull { (account, currencyStatusList) ->
+            val account = account as? Account.CryptoPortfolio ?: return@mapNotNull null
+
+            AccountSwapAvailability(
+                account = account,
+                currencyList = currencyStatusList.map { currencyStatus ->
+                    val providers = findProvidersForPair(
+                        cryptoCurrencyStatuses = currencyStatus,
+                        swapPairsLeastList = filteredPairs,
+                        tokenInfoForAvailable = tokenInfoForAvailable,
+                    )
+                    val isUnavailable = providers.isNullOrEmpty()
+                    AccountSwapCurrency(
+                        isAvailable = !isUnavailable,
+                        account = account,
+                        cryptoCurrencyStatus = currencyStatus,
+                        providers = providers.orEmpty(),
+                    )
+                },
+            )
+        }
+
+        return CurrenciesGroup(
+            available = emptyList(),
+            unavailable = emptyList(),
+            accountCurrencyList = accountCurrencyList,
             isAfterSearch = false,
         )
     }
@@ -257,7 +374,9 @@ internal class SwapInteractorImpl @AssistedInject constructor(
 
     override suspend fun findBestQuote(
         fromToken: CryptoCurrencyStatus,
+        fromAccount: Account.CryptoPortfolio?,
         toToken: CryptoCurrencyStatus,
+        toAccount: Account.CryptoPortfolio?,
         providers: List<SwapProvider>,
         amountToSwap: String,
         reduceBalanceBy: BigDecimal,
@@ -288,7 +407,9 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                         manageDexSolana(
                             networkId = networkId,
                             fromToken = fromToken,
+                            fromAccount = fromAccount,
                             toToken = toToken,
+                            toAccount = toAccount,
                             provider = provider,
                             selectedFee = selectedFee,
                             amount = amount,
@@ -299,7 +420,9 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                         manageDex(
                             networkId = networkId,
                             fromToken = fromToken,
+                            fromAccount = fromAccount,
                             toToken = toToken,
+                            toAccount = toAccount,
                             provider = provider,
                             selectedFee = selectedFee,
                             amount = amount,
@@ -312,7 +435,9 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                     manageCex(
                         networkId = networkId,
                         fromToken = fromToken,
+                        fromAccount = fromAccount,
                         toToken = toToken,
+                        toAccount = toAccount,
                         provider = provider,
                         amount = amount,
                         reduceBalanceBy = reduceBalanceBy,
@@ -327,7 +452,9 @@ internal class SwapInteractorImpl @AssistedInject constructor(
     private suspend fun manageDex(
         networkId: String,
         fromToken: CryptoCurrencyStatus,
+        fromAccount: Account.CryptoPortfolio?,
         toToken: CryptoCurrencyStatus,
+        toAccount: Account.CryptoPortfolio?,
         provider: SwapProvider,
         selectedFee: FeeType,
         amount: SwapAmount,
@@ -338,6 +465,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             return provider to produceDexSwapDataError(
                 error = ExpressDataError.DexActiveSupplyError,
                 fromToken = fromToken,
+                fromAccount = fromAccount,
                 amount = amount,
             )
         }
@@ -374,7 +502,9 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                 provider = provider,
                 networkId = networkId,
                 fromToken = fromToken,
+                fromAccount = fromAccount,
                 toToken = toToken,
+                toAccount = toAccount,
                 amount = amount,
                 selectedFee = selectedFee,
                 expressOperationType = expressOperationType,
@@ -385,7 +515,9 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                 quoteDataModel = maybeQuotes,
                 amount = amount,
                 fromToken = fromToken,
+                fromAccount = fromAccount,
                 toToken = toToken,
+                toAccount = toAccount,
                 networkId = networkId,
                 isAllowedToSpend = isAllowedToSpend,
                 isBalanceWithoutFeeEnough = isBalanceWithoutFeeEnough,
@@ -400,7 +532,9 @@ internal class SwapInteractorImpl @AssistedInject constructor(
     private suspend fun manageDexSolana(
         networkId: String,
         fromToken: CryptoCurrencyStatus,
+        fromAccount: Account.CryptoPortfolio?,
         toToken: CryptoCurrencyStatus,
+        toAccount: Account.CryptoPortfolio?,
         provider: SwapProvider,
         selectedFee: FeeType,
         amount: SwapAmount,
@@ -425,7 +559,9 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                 provider = provider,
                 networkId = networkId,
                 fromToken = fromToken,
+                fromAccount = fromAccount,
                 toToken = toToken,
+                toAccount = toAccount,
                 amount = amount,
                 selectedFee = selectedFee,
                 expressOperationType = expressOperationType,
@@ -436,7 +572,9 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                 quoteDataModel = maybeQuotes,
                 amount = amount,
                 fromToken = fromToken,
+                fromAccount = fromAccount,
                 toToken = toToken,
+                toAccount = toAccount,
                 networkId = networkId,
                 isAllowedToSpend = true,
                 isBalanceWithoutFeeEnough = false,
@@ -451,7 +589,9 @@ internal class SwapInteractorImpl @AssistedInject constructor(
     private suspend fun manageCex(
         networkId: String,
         fromToken: CryptoCurrencyStatus,
+        fromAccount: Account.CryptoPortfolio?,
         toToken: CryptoCurrencyStatus,
+        toAccount: Account.CryptoPortfolio?,
         provider: SwapProvider,
         amount: SwapAmount,
         reduceBalanceBy: BigDecimal,
@@ -463,7 +603,9 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             amount = amount,
             reduceBalanceBy = reduceBalanceBy,
             fromTokenStatus = fromToken,
+            fromAccount = fromAccount,
             toTokenStatus = toToken,
+            toAccount = toAccount,
             isAllowedToSpend = true,
             isBalanceWithoutFeeEnough = isBalanceWithoutFeeEnough,
             provider = provider,
@@ -572,6 +714,8 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         swapData: SwapDataModel?,
         currencyToSend: CryptoCurrencyStatus,
         currencyToGet: CryptoCurrencyStatus,
+        fromAccount: Account.CryptoPortfolio?,
+        toAccount: Account.CryptoPortfolio?,
         amountToSwap: String,
         includeFeeInAmount: IncludeFeeInAmount,
         fee: TxFee,
@@ -607,6 +751,8 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                 onSwapCex(
                     currencyToSend = currencyToSend,
                     currencyToGet = currencyToGet,
+                    fromAccount = fromAccount,
+                    toAccount = toAccount,
                     amount = amountToSwapWithFee,
                     txFee = fee,
                     swapProvider = swapProvider,
@@ -622,6 +768,8 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                         swapData = requireNotNull(swapData),
                         currencyToSendStatus = currencyToSend,
                         currencyToGetStatus = currencyToGet,
+                        fromAccount = fromAccount,
+                        toAccount = toAccount,
                         amountToSwap = amountToSwap,
                     )
                 } else {
@@ -631,6 +779,8 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                         swapData = requireNotNull(swapData),
                         currencyToSendStatus = currencyToSend,
                         currencyToGetStatus = currencyToGet,
+                        fromAccount = fromAccount,
+                        toAccount = toAccount,
                         txFee = fee,
                         amountToSwap = amountToSwap,
                     )
@@ -686,6 +836,8 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         swapData: SwapDataModel,
         currencyToSendStatus: CryptoCurrencyStatus,
         currencyToGetStatus: CryptoCurrencyStatus,
+        fromAccount: Account.CryptoPortfolio?,
+        toAccount: Account.CryptoPortfolio?,
         amountToSwap: String,
         txFee: TxFee,
     ): SwapTransactionState {
@@ -714,6 +866,8 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             swapData = swapData,
             currencyToSendStatus = currencyToSendStatus,
             currencyToGetStatus = currencyToGetStatus,
+            fromAccount = fromAccount,
+            toAccount = toAccount,
             amount = amount,
             derivationPath = derivationPath,
             txData = txData,
@@ -727,6 +881,8 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         swapData: SwapDataModel,
         currencyToSendStatus: CryptoCurrencyStatus,
         currencyToGetStatus: CryptoCurrencyStatus,
+        fromAccount: Account.CryptoPortfolio?,
+        toAccount: Account.CryptoPortfolio?,
         amountToSwap: String,
     ): SwapTransactionState {
         val dexTransaction = swapData.transaction as? ExpressTransactionModel.DEX
@@ -743,6 +899,8 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             swapData = swapData,
             currencyToSendStatus = currencyToSendStatus,
             currencyToGetStatus = currencyToGetStatus,
+            fromAccount = fromAccount,
+            toAccount = toAccount,
             amount = amount,
             derivationPath = derivationPath,
             txData = compiledTransaction,
@@ -756,6 +914,8 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         swapData: SwapDataModel,
         currencyToSendStatus: CryptoCurrencyStatus,
         currencyToGetStatus: CryptoCurrencyStatus,
+        fromAccount: Account.CryptoPortfolio?,
+        toAccount: Account.CryptoPortfolio?,
         amount: SwapAmount,
         derivationPath: String?,
         txData: TransactionData,
@@ -782,6 +942,8 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                     storeSwapTransaction(
                         currencyToSend = currencyToSendStatus,
                         currencyToGet = currencyToGetStatus,
+                        fromAccount = fromAccount,
+                        toAccount = toAccount,
                         amount = amount,
                         swapProvider = provider,
                         swapDataModel = swapData,
@@ -820,6 +982,8 @@ internal class SwapInteractorImpl @AssistedInject constructor(
     private suspend fun onSwapCex(
         currencyToSend: CryptoCurrencyStatus,
         currencyToGet: CryptoCurrencyStatus,
+        fromAccount: Account.CryptoPortfolio?,
+        toAccount: Account.CryptoPortfolio?,
         amount: SwapAmount,
         txFee: TxFee,
         swapProvider: SwapProvider,
@@ -891,6 +1055,8 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                 storeSwapTransaction(
                     currencyToSend = currencyToSend,
                     currencyToGet = currencyToGet,
+                    fromAccount = fromAccount,
+                    toAccount = toAccount,
                     amount = amount,
                     swapProvider = swapProvider,
                     swapDataModel = exchangeData,
@@ -924,6 +1090,8 @@ internal class SwapInteractorImpl @AssistedInject constructor(
     private suspend fun storeSwapTransaction(
         currencyToSend: CryptoCurrencyStatus,
         currencyToGet: CryptoCurrencyStatus,
+        fromAccount: Account.CryptoPortfolio?,
+        toAccount: Account.CryptoPortfolio?,
         amount: SwapAmount,
         swapProvider: SwapProvider,
         swapDataModel: SwapDataModel,
@@ -936,6 +1104,8 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             userWalletId = userWalletId,
             fromCryptoCurrency = currencyToSend.currency,
             toCryptoCurrency = currencyToGet.currency,
+            fromAccount = fromAccount,
+            toAccount = toAccount,
             transaction = SavedSwapTransactionModel(
                 txId = swapDataModel.transaction.txId,
                 provider = swapProvider,
@@ -974,6 +1144,17 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         return initialToCurrencyResolver.tryGetFromCache(userWallet, initialCryptoCurrency, state, isReverseFromTo)
             ?: initialToCurrencyResolver.tryGetWithMaxAmount(state, isReverseFromTo)
             ?: group.available.firstOrNull()?.currencyStatus
+    }
+
+    override suspend fun getInitialCurrencyToSwapV2(
+        initialCryptoCurrency: CryptoCurrency,
+        state: TokensDataStateExpress,
+        isReverseFromTo: Boolean,
+    ): AccountSwapCurrency? {
+        val group = state.getGroupWithReverse(isReverseFromTo)
+        return initialToCurrencyResolver.tryGetFromCacheV2(userWallet, initialCryptoCurrency, state, isReverseFromTo)
+            ?: initialToCurrencyResolver.tryGetWithMaxAmountV2(state, isReverseFromTo)
+            ?: group.accountCurrencyList.firstNotNullOfOrNull { it.currencyList.firstOrNull { it.isAvailable } }
     }
 
     override fun getNativeToken(networkId: String): CryptoCurrency {
@@ -1020,7 +1201,9 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         amount: SwapAmount,
         reduceBalanceBy: BigDecimal,
         fromTokenStatus: CryptoCurrencyStatus,
+        fromAccount: Account.CryptoPortfolio?,
         toTokenStatus: CryptoCurrencyStatus,
+        toAccount: Account.CryptoPortfolio?,
         provider: SwapProvider,
         isAllowedToSpend: Boolean,
         isBalanceWithoutFeeEnough: Boolean,
@@ -1073,7 +1256,9 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                 quoteDataModel = quotes,
                 amount = amount,
                 fromToken = fromTokenStatus,
+                fromAccount = fromAccount,
                 toToken = toTokenStatus,
+                toAccount = toAccount,
                 networkId = networkId,
                 isAllowedToSpend = isAllowedToSpend,
                 isBalanceWithoutFeeEnough = isBalanceWithoutFeeEnough,
@@ -1091,7 +1276,9 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         quoteDataModel: Either<ExpressDataError, QuoteModel>,
         amount: SwapAmount,
         fromToken: CryptoCurrencyStatus,
+        fromAccount: Account.CryptoPortfolio?,
         toToken: CryptoCurrencyStatus,
+        toAccount: Account.CryptoPortfolio?,
         networkId: String,
         isAllowedToSpend: Boolean,
         isBalanceWithoutFeeEnough: Boolean,
@@ -1105,7 +1292,9 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                 val swapState = updateBalances(
                     networkId = networkId,
                     fromTokenStatus = fromToken,
+                    fromAccount = fromAccount,
                     toTokenStatus = toToken,
+                    toAccount = toAccount,
                     fromTokenAmount = amount,
                     toTokenAmount = quoteModel.toTokenAmount,
                     swapData = null,
@@ -1133,6 +1322,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                         val state = updatePermissionState(
                             networkId = networkId,
                             fromTokenStatus = fromToken,
+                            fromAccount = fromAccount,
                             swapAmount = amount,
                             quotesLoadedState = swapState,
                             isAllowedToSpend = isAllowedToSpend,
@@ -1174,6 +1364,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             ifLeft = { error ->
                 createSwapErrorWith(
                     fromToken = fromToken,
+                    fromAccount = fromAccount,
                     amount = amount,
                     includeFeeInAmount = includeFeeInAmount,
                     expressDataError = error,
@@ -1184,6 +1375,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
 
     private suspend fun createSwapErrorWith(
         fromToken: CryptoCurrencyStatus,
+        fromAccount: Account.CryptoPortfolio?,
         amount: SwapAmount,
         includeFeeInAmount: IncludeFeeInAmount,
         expressDataError: ExpressDataError,
@@ -1194,6 +1386,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             amountFiat = rates[fromToken.currency.id]?.multiply(amount.value)
                 ?: BigDecimal.ZERO,
             cryptoCurrencyStatus = fromToken,
+            account = fromAccount,
         )
         return SwapState.SwapError(fromTokenSwapInfo, expressDataError, includeFeeInAmount)
     }
@@ -1307,7 +1500,9 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         provider: SwapProvider,
         networkId: String,
         fromToken: CryptoCurrencyStatus,
+        fromAccount: Account.CryptoPortfolio?,
         toToken: CryptoCurrencyStatus,
+        toAccount: Account.CryptoPortfolio?,
         amount: SwapAmount,
         selectedFee: FeeType,
         expressOperationType: ExpressOperationType,
@@ -1345,6 +1540,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                         return produceDexSwapDataError(
                             error = ExpressDataError.TooLargeSolanaTransactionError,
                             fromToken = fromToken,
+                            fromAccount = fromAccount,
                             amount = amount,
                         )
                     }
@@ -1384,7 +1580,9 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                 val swapState = updateBalances(
                     networkId = networkId,
                     fromTokenStatus = fromToken,
+                    fromAccount = fromAccount,
                     toTokenStatus = toToken,
+                    toAccount = toAccount,
                     fromTokenAmount = amount,
                     toTokenAmount = swapData.toTokenAmount,
                     swapData = swapData,
@@ -1413,6 +1611,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                 produceDexSwapDataError(
                     error = error,
                     fromToken = fromToken,
+                    fromAccount = fromAccount,
                     amount = amount,
                 )
             },
@@ -1422,6 +1621,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
     private suspend fun produceDexSwapDataError(
         error: ExpressDataError,
         fromToken: CryptoCurrencyStatus,
+        fromAccount: Account.CryptoPortfolio?,
         amount: SwapAmount,
     ): SwapState.SwapError {
         val rates = getQuotes(fromToken.currency.id)
@@ -1430,6 +1630,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             amountFiat = rates[fromToken.currency.id]?.multiply(amount.value)
                 ?: BigDecimal.ZERO,
             cryptoCurrencyStatus = fromToken,
+            account = fromAccount,
         )
         return SwapState.SwapError(
             fromTokenSwapInfo,
@@ -1498,7 +1699,9 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         provider: SwapProvider,
         networkId: String,
         fromTokenStatus: CryptoCurrencyStatus,
+        fromAccount: Account.CryptoPortfolio?,
         toTokenStatus: CryptoCurrencyStatus,
+        toAccount: Account.CryptoPortfolio?,
         fromTokenAmount: SwapAmount,
         toTokenAmount: SwapAmount,
         swapData: SwapDataModel?,
@@ -1511,6 +1714,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         return SwapState.QuotesLoadedState(
             fromTokenInfo = TokenSwapInfo(
                 tokenAmount = fromTokenAmount,
+                account = fromAccount,
                 cryptoCurrencyStatus = fromTokenStatus,
                 amountFiat = rates[fromToken.id]?.multiply(fromTokenAmount.value)
                     ?: BigDecimal.ZERO,
@@ -1518,6 +1722,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             toTokenInfo = TokenSwapInfo(
                 tokenAmount = toTokenAmount,
                 cryptoCurrencyStatus = toTokenStatus,
+                account = toAccount,
                 amountFiat = rates[toToken.id]?.multiply(toTokenAmount.value)
                     ?: BigDecimal.ZERO,
             ),
@@ -1564,6 +1769,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
     private suspend fun updatePermissionState(
         networkId: String,
         fromTokenStatus: CryptoCurrencyStatus,
+        fromAccount: Account.CryptoPortfolio?,
         swapAmount: SwapAmount,
         quotesLoadedState: SwapState.QuotesLoadedState,
         spenderAddress: String?,
@@ -1620,6 +1826,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             // it's impossible next steps without fee
             return createSwapErrorWith(
                 fromToken = fromTokenStatus,
+                fromAccount = fromAccount,
                 amount = swapAmount,
                 includeFeeInAmount = IncludeFeeInAmount.Excluded,
                 expressDataError = ExpressDataError.UnknownError,

@@ -3,11 +3,11 @@ package com.tangem.data.quotes.converter
 import com.google.common.truth.Truth
 import com.tangem.common.test.data.quote.MockQuoteResponseFactory
 import com.tangem.common.test.data.quote.toDomain
-import com.tangem.common.test.utils.ProvideTestModels
 import com.tangem.datasource.api.tangemTech.models.QuotesResponse
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.quote.QuoteStatus
+import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import java.math.BigDecimal
