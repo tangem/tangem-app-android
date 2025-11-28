@@ -41,6 +41,7 @@ internal class TangemPayDetailsComponent(
     private val txHistoryComponent = DefaultTangemPayTxHistoryComponent(
         appComponentContext = child("txHistoryComponent"),
         params = DefaultTangemPayTxHistoryComponent.Params(
+            userWalletId = params.userWalletId,
             customerWalletAddress = params.config.customerWalletAddress,
             uiActions = model,
         ),
