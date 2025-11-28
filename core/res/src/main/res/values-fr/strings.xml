@@ -625,6 +625,8 @@
   <string name="no_account_polkadot">Le compte de destination est inactif. Envoyez %s ou plus pour activer le compte.</string>
   <string name="no_account_send_to_create">Pour créer un compte, envoyez des fonds à cette adresse</string>
   <string name="no_trustline_xlm_asset">Le compte destinataire n\'a pas de Trustline pour l\'actif envoyé qu\'il tente d\'envoyer.</string>
+  <string name="notification_black_friday_text">Obtenez 10 $ en BTC avec chaque wallet\nDépêchez-vous !</string>
+  <string name="notification_black_friday_title">Black Friday : jusqu\'à 30% de réduction</string>
   <string name="notification_referral_promo_button">Rejoignez maintenant</string>
   <string name="notification_referral_promo_text">Partagez votre code et gagnez 5 USDT par vente. Votre ami bénéficie de 10 % de réduction.</string>
   <string name="notification_referral_promo_title">Recevez des RÉCOMPENSES pour chaque ami !</string>

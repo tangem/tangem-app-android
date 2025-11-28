@@ -103,6 +103,8 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
                 .distinctUntilChanged(),
             shouldShowPromoWalletUseCase(userWalletId = userWallet.walletId, promoId = PromoId.Sepa)
                 .distinctUntilChanged(),
+            shouldShowPromoWalletUseCase(userWalletId = userWallet.walletId, promoId = PromoId.BlackFriday)
+                .distinctUntilChanged(),
             notificationsRepository.getShouldShowNotification(NotificationId.EnablePushesReminderNotification.key)
                 .distinctUntilChanged(),
             getAccessCodeSkippedUseCase(userWallet.walletId).distinctUntilChanged(),
@@ -117,15 +119,23 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
                 val seedPhraseIssueStatus = array[3] as SeedPhraseNotificationsStatus
                 val shouldShowVisaPromo = array[4] as Boolean
                 val shouldShowSepaBanner = array[5] as Boolean
-                val shouldShowEnablePushesReminderNotification = array[6] as Boolean
-                val accessCodeSkipped = array[7] as Boolean
+                val shouldShowBlackFridayPromo = array[6] as Boolean
+                val shouldShowEnablePushesReminderNotification = array[7] as Boolean
+                val shouldAccessCodeSkipped = array[8] as Boolean
 
                 buildList {
                     addUsedOutdatedDataNotification(totalFiatBalance)
 
                     addCriticalNotifications(userWallet, seedPhraseIssueStatus, clickIntents)
 
-                    addFinishWalletActivationNotification(userWallet, totalFiatBalance, clickIntents, accessCodeSkipped)
+                    addFinishWalletActivationNotification(
+                        userWallet = userWallet,
+                        totalFiatBalance = totalFiatBalance,
+                        clickIntents = clickIntents,
+                        shouldAccessCodeSkipped = shouldAccessCodeSkipped,
+                    )
+
+                    addBlackFridayPromoNotification(clickIntents, shouldShowBlackFridayPromo)
 
                     addVisaPresalePromoNotification(clickIntents, shouldShowVisaPromo)
 
@@ -300,6 +310,19 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
         )
     }
 
+    private fun MutableList<WalletNotification>.addBlackFridayPromoNotification(
+        clickIntents: WalletClickIntents,
+        shouldShowPromo: Boolean,
+    ) {
+        addIf(
+            element = WalletNotification.BlackFridayPromo(
+                onCloseClick = { clickIntents.onClosePromoClick(promoId = PromoId.BlackFriday) },
+                onClick = { clickIntents.onPromoClick(promoId = PromoId.BlackFriday) },
+            ),
+            condition = shouldShowPromo,
+        )
+    }
+
     private suspend fun MutableList<WalletNotification>.addSepaPromoNotification(
         userWallet: UserWallet,
         flattenCurrencies: Lce<TokenListError, List<CryptoCurrencyStatus>>,
@@ -427,13 +450,13 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
         userWallet: UserWallet,
         totalFiatBalance: Lce<TokenListError, TotalFiatBalance>,
         clickIntents: WalletClickIntents,
-        accessCodeSkipped: Boolean,
+        shouldAccessCodeSkipped: Boolean,
     ) {
         if (userWallet !is UserWallet.Hot) return
 
         val isBackupExists = userWallet.backedUp
         val isAccessCodeRequired = userWallet.hotWalletId.authType == HotWalletId.AuthType.NoPassword &&
-            !accessCodeSkipped
+            !shouldAccessCodeSkipped
         val shouldShowFinishActivation = !isBackupExists || isAccessCodeRequired
 
         val type = totalFiatBalance.fold(
