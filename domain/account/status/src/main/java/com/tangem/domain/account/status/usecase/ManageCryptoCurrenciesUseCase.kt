@@ -87,10 +87,7 @@ class ManageCryptoCurrenciesUseCase(
                 account = accountStatus.account.copy(cryptoCurrencies = modifiedCurrencyList.total.toSet()),
             )
 
-            val isDerivingFailed = derivePublicKeys(
-                userWalletId = userWalletId,
-                currencies = modifiedCurrencyList.added,
-            ).isLeft()
+            derivePublicKeys(userWalletId = userWalletId, currencies = modifiedCurrencyList.added)
 
             parallelUpdatingScope.launch {
                 /*
@@ -99,11 +96,11 @@ class ManageCryptoCurrenciesUseCase(
                  */
                 val isOnlyRemoval = modifiedCurrencyList.added.isEmpty() && modifiedCurrencyList.removed.isNotEmpty()
 
-                if (isDerivingFailed || isOnlyRemoval) {
+                if (isOnlyRemoval) {
                     launch { accountsCRUDRepository.syncTokens(userWalletId) }
+                    clearMetadata(userWalletId = userWalletId, currencies = modifiedCurrencyList.removed)
+                    return@launch
                 }
-
-                if (isDerivingFailed) return@launch
 
                 cryptoCurrencyBalanceFetcher(userWalletId = userWalletId, currencies = modifiedCurrencyList.added)
                 refreshExpress(userWalletId = userWalletId, currencies = modifiedCurrencyList.total)
