@@ -16,7 +16,7 @@ import com.tangem.domain.models.ReceiveAddressModel.NameService
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.pay.TangemPayTopUpData
-import com.tangem.domain.pay.TangemPayTopUpDataFactory
+import com.tangem.domain.pay.TangemPaySwapDataFactory
 import timber.log.Timber
 import java.math.BigDecimal
 import javax.inject.Inject
@@ -30,11 +30,11 @@ private const val TOKEN_NAME = "USDC"
 private const val TOKEN_CONTRACT_ADDRESS = "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359"
 private const val TOKEN_DECIMALS = 6
 
-internal class DefaultTangemPayTopUpDataFactory @Inject constructor(
+internal class DefaultTangemPaySwapDataFactory @Inject constructor(
     @NetworkMoshi moshi: Moshi,
     private val tangemPayWalletsManager: TangemPayWalletsManager,
     excludedBlockchains: ExcludedBlockchains,
-) : TangemPayTopUpDataFactory {
+) : TangemPaySwapDataFactory {
 
     private val cryptoCurrencyFactory by lazy(mode = LazyThreadSafetyMode.NONE) {
         CryptoCurrencyFactory(excludedBlockchains)
