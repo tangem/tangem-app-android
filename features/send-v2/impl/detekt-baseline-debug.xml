@@ -1,0 +1,86 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>BooleanPropertyNaming:ConfirmUM.kt$ConfirmUM.Content$val showTapHelp: Boolean</ID>
+    <ID>BooleanPropertyNaming:FeeSelectorAlertFactory.kt$FeeSelectorAlertFactory$val showFeeTooHigh = checkAndShowFeeTooHigh(feeSelectorUM, onConfirmClick)</ID>
+    <ID>BooleanPropertyNaming:FeeSelectorAlertFactory.kt$FeeSelectorAlertFactory$val showFeeTooLow = checkAndShowFeeTooLow(feeSelectorUM, onConfirmClick)</ID>
+    <ID>BooleanPropertyNaming:FeeSelectorModalBottomSheet.kt$val lastItem = index == state.feeItems.size - 1</ID>
+    <ID>BooleanPropertyNaming:FeeSelectorModalBottomSheet.kt$val showDivider = index != customFeeFields.size - 1 || nonce is FeeNonce.Nonce</ID>
+    <ID>BooleanPropertyNaming:NFTSendAnalyticEvents.kt$NFTSendAnalyticEvents.TransactionScreenOpened$val nonceNotEmpty: Boolean</ID>
+    <ID>BooleanPropertyNaming:NFTSendSuccessContent.kt$var visible by remember { mutableStateOf(false) }</ID>
+    <ID>BooleanPropertyNaming:SendAnalyticEvents.kt$SendAnalyticEvents.TransactionScreenOpened$val nonceNotEmpty: Boolean</ID>
+    <ID>BooleanPropertyNaming:SendAnalyticHelper.kt$SendAnalyticHelper$val blockchainAddressForEns = (sendUM.destinationUM as? DestinationUM.Content)?.addressTextField?.isAddressEns</ID>
+    <ID>BooleanPropertyNaming:SendConfirmSuccessContent.kt$var visible by remember { mutableStateOf(false) }</ID>
+    <ID>BooleanPropertyNaming:SendEntryPointModel.kt$SendEntryPointModel$val showSendViaSwapNotification = shouldShowNotificationUseCase( NotificationId.SendViaSwapTokenSelectorNotification.key, )</ID>
+    <ID>BooleanPropertyNaming:SendRecipientHistoryListConverter.kt$SendRecipientHistoryListConverter$val notZero = !item.amount.isZero()</ID>
+    <ID>BooleanPropertyNaming:TapHelp.kt$var wrappedIsDisplay by remember { mutableStateOf(false) }</ID>
+    <ID>CanBeNonNullable:SendDestinationContent.kt$memoField: DestinationTextFieldUM.RecipientMemo?</ID>
+    <ID>CanBeNonNullable:SendDestinationModel.kt$SendDestinationModel$type: EnterAddressSource?</ID>
+    <ID>MaxChainedCallsOnSameLine:FeeSelectorBlockContent.kt$state.selectedFeeItem.fee.amount.value.format { crypto( symbol = state.selectedFeeItem.fee.amount.currencySymbol, decimals = state.selectedFeeItem.fee.amount.decimals, ).fee(canBeLower = state.feeExtraInfo.isFeeApproximate) }</ID>
+    <ID>MultilineLambdaItParameter:DefaultSellRedirectDeepLinkHandler.kt$DefaultSellRedirectDeepLinkHandler${ Timber.e("Error on getting cryptoCurrency: $it") return@launch }</ID>
+    <ID>MultilineLambdaItParameter:FeeSelectorCustomFieldConverter.kt$FeeSelectorCustomFieldConverter${ when (it) { is Fee.Kaspa -&gt; kaspaCustomFeeConverter.tryAutoFixValue( minimumFee = it, customValues = customValues, ) else -&gt; customValues } }</ID>
+    <ID>MultilineLambdaItParameter:FeeSelectorModel.kt$FeeSelectorModel${ feeSelectorAlertFactory.getFeeUpdatedAlert( newFee = it, feeSelectorUM = uiState.value, proceedAction = { modelScope.launch { feeSelectorCheckReloadTrigger.callbackCheckResult(true) } }, stopAction = { modelScope.launch { feeSelectorCheckReloadTrigger.callbackCheckResult(false) } }, ) }</ID>
+    <ID>MultilineLambdaItParameter:KaspaCustomFeeConverter.kt$KaspaCustomFeeConverter${ val valueDecimal = it.value.parseToBigDecimal(it.decimals) // krc-20 transaction will be failed if custom fee value is less than minimum, // so we set value to minimum in this case if (valueDecimal &lt; minimumFee.amount.value) { val fixedValue = minimumFeeAmountValue.parseBigDecimal(it.decimals) set( FEE_AMOUNT_INDEX, it.copy( value = fixedValue, label = getFiatReference( rate = currencyStatus.fiatRate, value = valueDecimal, appCurrency = appCurrency, ), ), ) } }</ID>
+    <ID>MultilineLambdaItParameter:NFTSendConfirmModel.kt$NFTSendConfirmModel${ it.copy( confirmUM = NFTSendConfirmInitialStateTransformer( isShowTapHelp = isShowTapHelp, walletName = stringReference(userWallet.name), ).transform(uiState.value.confirmUM), ) }</ID>
+    <ID>MultilineLambdaItParameter:NFTSendConfirmModel.kt$NFTSendConfirmModel${ it.copy( confirmUM = NFTSendConfirmationNotificationsTransformerV2( feeSelectorUM = uiState.value.feeSelectorUM, analyticsEventHandler = analyticsEventHandler, cryptoCurrency = cryptoCurrencyStatus.currency, appCurrency = params.appCurrency, analyticsCategoryName = analyticsCategoryName, ).transform(uiState.value.confirmUM), ) }</ID>
+    <ID>MultilineLambdaItParameter:NFTSendConfirmModel.kt$NFTSendConfirmModel${ val confirmUM = it.confirmUM as? ConfirmUM.Content it.copy(confirmUM = confirmUM?.copy(showTapHelp = showTapHelp) ?: it.confirmUM) }</ID>
+    <ID>MultilineLambdaItParameter:NFTSendConfirmModel.kt$NFTSendConfirmModel${ val isFeeNotNull = it.feeSelectorUM is FeeSelectorUMRedesigned.Content it.copy( confirmUM = (it.confirmUM as? ConfirmUM.Content)?.copy( isPrimaryButtonEnabled = !hasError &amp;&amp; isFeeNotNull, ) ?: it.confirmUM, ) }</ID>
+    <ID>MultilineLambdaItParameter:RecentListUtils.kt${ add( DestinationRecipientListUM( id = "$tag$it", isLoading = false, isVisible = false, ), ) }</ID>
+    <ID>MultilineLambdaItParameter:RecentListUtils.kt${ add( DestinationRecipientListUM( id = "$tag$it", isLoading = true, ), ) }</ID>
+    <ID>MultilineLambdaItParameter:SendAmountModel.kt$SendAmountModel${ (it as? AmountState.Data)?.copy( isPrimaryButtonEnabled = false, ) ?: it }</ID>
+    <ID>MultilineLambdaItParameter:SendAmountModel.kt$SendAmountModel${ EnterAmountBoundary( amount = it, fiatRate = cryptoCurrencyStatus.value.fiatRate.orZero(), ) }</ID>
+    <ID>MultilineLambdaItParameter:SendConfirmModel.kt$SendConfirmModel${ it.copy( confirmUM = SendConfirmInitialStateTransformer( isShowTapHelp = isShowTapHelp, walletName = stringReference(userWallet.name), ).transform(uiState.value.confirmUM), confirmData = confirmData, ) }</ID>
+    <ID>MultilineLambdaItParameter:SendConfirmModel.kt$SendConfirmModel${ it.copy( confirmUM = SendConfirmationNotificationsTransformerV2( feeSelectorUM = uiState.value.feeSelectorUM, amountUM = uiState.value.amountUM, analyticsEventHandler = analyticsEventHandler, cryptoCurrency = cryptoCurrencyStatus.currency, appCurrency = appCurrency, analyticsCategoryName = params.analyticsCategoryName, ).transform(uiState.value.confirmUM), ) }</ID>
+    <ID>MultilineLambdaItParameter:SendConfirmModel.kt$SendConfirmModel${ val confirmUM = it.confirmUM as? ConfirmUM.Content it.copy(confirmUM = confirmUM?.copy(showTapHelp = showTapHelp) ?: it.confirmUM) }</ID>
+    <ID>MultilineLambdaItParameter:SendConfirmModel.kt$SendConfirmModel${ val feeUM = it.feeSelectorUM as? FeeSelectorUMRedesigned.Content it.copy( confirmUM = (it.confirmUM as? ConfirmUM.Content)?.copy( isPrimaryButtonEnabled = !hasError &amp;&amp; feeUM != null, ) ?: it.confirmUM, ) }</ID>
+    <ID>MultilineLambdaItParameter:SendDestinationContent.kt${ if (it) { content() } else { Box(modifier = Modifier.fillMaxWidth()) } }</ID>
+    <ID>MultilineLambdaItParameter:SendDestinationModel.kt$SendDestinationModel${ analyticsEventHandler.send( SendDestinationAnalyticEvents.AddressEntered( categoryName = analyticsCategoryName, source = params.analyticsSendSource, method = it, isValid = addressValidationResult.isRight(), ), ) }</ID>
+    <ID>MultilineLambdaItParameter:SendDestinationModel.kt$SendDestinationModel${ if (it.network.rawId == cryptoCurrencyNetwork.rawId) { getNetworkAddressesUseCase.invokeSync( userWalletId = wallet.walletId, networkRawId = it.network.id.rawId, ) } else { null } }</ID>
+    <ID>MultilineLambdaItParameter:SendDestinationValidationResultTransformer.kt$SendDestinationValidationResultTransformer${ when (it) { is AddressValidation.Error.DataError, AddressValidation.Error.InvalidAddress, -&gt; R.string.send_recipient_address_error AddressValidation.Error.AddressInWallet -&gt; R.string.send_error_address_same_as_wallet } }</ID>
+    <ID>MultilineLambdaItParameter:SendModel.kt$SendModel${ Timber.w(it.toString()) showAlertError() return@launch }</ID>
+    <ID>MultilineLambdaItParameter:SendModel.kt$SendModel${ it.copy( destinationUM = SendDestinationInitialStateTransformer( cryptoCurrency = cryptoCurrency, ).transform(DestinationUM.Empty()), feeSelectorUM = FeeSelectorUM.Loading, confirmUM = ConfirmUM.Empty, confirmData = null, navigationUM = NavigationUM.Empty, ) }</ID>
+    <ID>MultilineLambdaItParameter:SendRecipientWalletListConverter.kt$SendRecipientWalletListConverter${ val isCoin = it.cryptoCurrency is CryptoCurrency.Coin val isNotSameAddress = it.address != senderAddress val isNotBlankAddress = it.address.isNotBlank() isNotBlankAddress &amp;&amp; isCoin &amp;&amp; (isNotSameAddress || isSelfSendAvailable) }</ID>
+    <ID>NamedArguments:EthereumCustomFeeConverter.kt$EthereumCustomFeeConverter$onValueChange(feeValue, customValues, index, value)</ID>
+    <ID>NamedArguments:FeeSelectorCustomValueChangedTransformer.kt$FeeSelectorCustomValueChangedTransformer$onValueChange(state, customFee.customValues, index, value)</ID>
+    <ID>NestedScopeFunctions:KaspaCustomFeeConverter.kt$KaspaCustomFeeConverter$let { val valueDecimal = it.value.parseToBigDecimal(it.decimals) // krc-20 transaction will be failed if custom fee value is less than minimum, // so we set value to minimum in this case if (valueDecimal &lt; minimumFee.amount.value) { val fixedValue = minimumFeeAmountValue.parseBigDecimal(it.decimals) set( FEE_AMOUNT_INDEX, it.copy( value = fixedValue, label = getFiatReference( rate = currencyStatus.fiatRate, value = valueDecimal, appCurrency = appCurrency, ), ), ) } }</ID>
+    <ID>NoNameShadowing:FeeSelectorAlertFactory.kt$FeeSelectorAlertFactory$newFee</ID>
+    <ID>NoNameShadowing:SendContent.kt$navigationUM</ID>
+    <ID>NonBooleanPropertyPrefixedWithIs:FeeSelectorModel.kt$FeeSelectorModel$private val isFeeApproximateUseCase: IsFeeApproximateUseCase</ID>
+    <ID>NonBooleanPropertyPrefixedWithIs:NFTSendConfirmComponent.kt$NFTSendConfirmComponent.Params$val isBalanceHidingFlow: StateFlow&lt;Boolean&gt;</ID>
+    <ID>NonBooleanPropertyPrefixedWithIs:NFTSendConfirmModel.kt$NFTSendConfirmModel$private val isSendTapHelpEnabledUseCase: IsSendTapHelpEnabledUseCase</ID>
+    <ID>NonBooleanPropertyPrefixedWithIs:NFTSendModel.kt$NFTSendModel$private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase</ID>
+    <ID>NonBooleanPropertyPrefixedWithIs:NFTSendModel.kt$NFTSendModel$val isBalanceHiddenFlow: StateFlow&lt;Boolean&gt; field = MutableStateFlow(false)</ID>
+    <ID>NonBooleanPropertyPrefixedWithIs:NotificationsModel.kt$NotificationsModel$private val isAmountSubtractAvailableUseCase: IsAmountSubtractAvailableUseCase</ID>
+    <ID>NonBooleanPropertyPrefixedWithIs:SendAmountComponentParams.kt$SendAmountComponentParams$abstract val isAccountModeFlow: StateFlow&lt;Boolean&gt;</ID>
+    <ID>NonBooleanPropertyPrefixedWithIs:SendAmountComponentParams.kt$SendAmountComponentParams$abstract val isBalanceHidingFlow: StateFlow&lt;Boolean&gt;</ID>
+    <ID>NonBooleanPropertyPrefixedWithIs:SendAmountComponentParams.kt$SendAmountComponentParams.AmountBlockParams$override val isAccountModeFlow: StateFlow&lt;Boolean&gt;</ID>
+    <ID>NonBooleanPropertyPrefixedWithIs:SendAmountComponentParams.kt$SendAmountComponentParams.AmountBlockParams$override val isBalanceHidingFlow: StateFlow&lt;Boolean&gt;</ID>
+    <ID>NonBooleanPropertyPrefixedWithIs:SendAmountComponentParams.kt$SendAmountComponentParams.AmountParams$override val isAccountModeFlow: StateFlow&lt;Boolean&gt;</ID>
+    <ID>NonBooleanPropertyPrefixedWithIs:SendAmountComponentParams.kt$SendAmountComponentParams.AmountParams$override val isBalanceHidingFlow: StateFlow&lt;Boolean&gt;</ID>
+    <ID>NonBooleanPropertyPrefixedWithIs:SendAmountModel.kt$SendAmountModel$val isSendWithSwapAvailable: StateFlow&lt;Boolean&gt; field = MutableStateFlow(false)</ID>
+    <ID>NonBooleanPropertyPrefixedWithIs:SendConfirmComponent.kt$SendConfirmComponent.Params$val isAccountModeFlow: StateFlow&lt;Boolean&gt;</ID>
+    <ID>NonBooleanPropertyPrefixedWithIs:SendConfirmComponent.kt$SendConfirmComponent.Params$val isBalanceHidingFlow: StateFlow&lt;Boolean&gt;</ID>
+    <ID>NonBooleanPropertyPrefixedWithIs:SendConfirmModel.kt$SendConfirmModel$private val isAmountSubtractAvailableUseCase: IsAmountSubtractAvailableUseCase</ID>
+    <ID>NonBooleanPropertyPrefixedWithIs:SendConfirmModel.kt$SendConfirmModel$private val isSendTapHelpEnabledUseCase: IsSendTapHelpEnabledUseCase</ID>
+    <ID>NonBooleanPropertyPrefixedWithIs:SendConfirmModel.kt$SendConfirmModel$val isBalanceHiddenFlow: StateFlow&lt;Boolean&gt; field = MutableStateFlow(false)</ID>
+    <ID>NonBooleanPropertyPrefixedWithIs:SendDestinationModel.kt$SendDestinationModel$private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase</ID>
+    <ID>NonBooleanPropertyPrefixedWithIs:SendDestinationModel.kt$SendDestinationModel$private val isSelfSendAvailableUseCase: IsSelfSendAvailableUseCase</ID>
+    <ID>NonBooleanPropertyPrefixedWithIs:SendModel.kt$SendModel$private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase</ID>
+    <ID>NonBooleanPropertyPrefixedWithIs:SendModel.kt$SendModel$val isAccountModeFlow: StateFlow&lt;Boolean&gt; field = MutableStateFlow(false)</ID>
+    <ID>NonBooleanPropertyPrefixedWithIs:SendModel.kt$SendModel$val isBalanceHiddenFlow: StateFlow&lt;Boolean&gt; field = MutableStateFlow(false)</ID>
+    <ID>NullCheckOnMutableProperty:SendAmountModel.kt$SendAmountModel$if (uiState.value is AmountState.Empty &amp;&amp; userWallet != null) { val isOnlyOneWallet = getWalletsUseCase.invokeSync().size == 1 val walletTitle = if (isOnlyOneWallet) { resourceReference(R.string.send_from_title) } else { resourceReference( R.string.send_from_wallet_name, WrappedList(listOf(userWallet?.name.orEmpty())), // TODO AND-11440 ) } _uiState.update { AmountStateConverter( clickIntents = this, appCurrency = appCurrency, cryptoCurrencyStatus = cryptoCurrencyStatus, maxEnterAmount = maxAmountBoundary, iconStateConverter = CryptoCurrencyToIconStateConverter(), isBalanceHidden = params.isBalanceHidingFlow.value, accountTitleUM = AmountAccountConverter( isAccountsMode = isAccountsMode, walletTitle = walletTitle, prefixText = resourceReference(R.string.common_from), ).convert(account), ).convert( AmountParameters( title = walletTitle, value = "", ), ) } }</ID>
+    <ID>NullableToStringCall:BitcoinCustomFeeConverter.kt$BitcoinCustomFeeConverter$toSatoshiPerByte( amount = feeValue, decimals = value.amount.decimals, txSize = value.txSize, ).toString()</ID>
+    <ID>NullableToStringCall:NFTSendConfirmModel.kt$NFTSendConfirmModel$params.nftAsset.amount.toString()</ID>
+    <ID>ReusedModifierInstance:DefaultSendEntryPointComponent.kt$DefaultSendEntryPointComponent$Content(modifier.fillMaxSize())</ID>
+    <ID>UnnecessaryLet:EthereumCustomFeeConverter.kt$EthereumCustomFeeConverter$let(::add)</ID>
+    <ID>UnnecessaryLet:EthereumCustomFeeConverter.kt$EthereumCustomFeeConverter$let(::addAll)</ID>
+    <ID>UnnecessaryLet:SendAmountModel.kt$SendAmountModel$let { onCurrencyChangeClick(isEnterInFiat) }</ID>
+    <ID>UseEmptyCounterpart:NFTSendAnalyticEvents.kt$NFTSendAnalyticEvents$mapOf()</ID>
+    <ID>UseEmptyCounterpart:NotificationsAnalyticEvents.kt$NotificationsAnalyticEvents$mapOf()</ID>
+    <ID>UseEmptyCounterpart:SendAnalyticEvents.kt$SendAnalyticEvents$mapOf()</ID>
+    <ID>UseEmptyCounterpart:SendDestinationAnalyticEvents.kt$SendDestinationAnalyticEvents$mapOf()</ID>
+    <ID>VarCouldBeVal:SendDestinationModel.kt$SendDestinationModel$private var validationJobHolder = JobHolder()</ID>
+    <ID>VarCouldBeVal:SendModel.kt$SendModel$private var balanceHidingJobHolder = JobHolder()</ID>
+  </CurrentIssues>
+</SmellBaseline>
