@@ -6,10 +6,11 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
-import com.tangem.features.tangempay.TangemPayConstants
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.data.pay.util.TangemPayWalletsManager
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
+import com.tangem.features.tangempay.TangemPayConstants
 import com.tangem.features.tangempay.components.TangemPayOnboardingComponent
 import com.tangem.features.tangempay.model.transformers.TangemPayOnboardingButtonLoadingTransformer
 import com.tangem.features.tangempay.ui.TangemPayOnboardingScreenState
@@ -17,13 +18,14 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
-import com.tangem.utils.transformer.update as transformerUpdate
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
+import com.tangem.utils.transformer.update as transformerUpdate
 
 @Stable
 @ModelScoped
+@Suppress("LongParameterList")
 internal class TangemPayOnboardingModel @Inject constructor(
     paramsContainer: ParamsContainer,
     private val router: Router,
@@ -31,6 +33,7 @@ internal class TangemPayOnboardingModel @Inject constructor(
     private val repository: OnboardingRepository,
     private val produceInitialDataUseCase: ProduceTangemPayInitialDataUseCase,
     private val urlOpener: UrlOpener,
+    private val tangemPayWalletsManager: TangemPayWalletsManager,
 ) : Model() {
 
     private val params = paramsContainer.require<TangemPayOnboardingComponent.Params>()
@@ -66,7 +69,11 @@ internal class TangemPayOnboardingModel @Inject constructor(
     }
 
     private suspend fun checkCustomerInfo() {
-        repository.getCustomerInfo()
+        // TODO implement selector
+        repository.getCustomerInfo(
+            userWalletId = tangemPayWalletsManager.getDefaultWalletForTangemPayBlocking().walletId,
+        )
+            // selector
             .onRight { customerInfo ->
                 when {
                     !customerInfo.isKycApproved -> {
@@ -88,32 +95,42 @@ internal class TangemPayOnboardingModel @Inject constructor(
     private fun onGetCardClick() {
         uiState.transformerUpdate(TangemPayOnboardingButtonLoadingTransformer(isLoading = true))
         modelScope.launch {
-            val result = produceInitialDataUseCase()
+            // TODO implement selector
+            val userWalletId = tangemPayWalletsManager.getDefaultWalletForTangemPayBlocking().walletId
+            val result = produceInitialDataUseCase(userWalletId)
             if (result.isLeft()) {
                 Timber.e("Error producing initial data: ${result.leftOrNull()?.message}")
                 uiState.transformerUpdate(TangemPayOnboardingButtonLoadingTransformer(isLoading = false))
                 return@launch
             }
 
-            repository.getCustomerInfo()
-                .fold(
-                    ifLeft = {
-                        Timber.e("Error getCustomerInfo: ${it.errorCode}")
-                        uiState.transformerUpdate(TangemPayOnboardingButtonLoadingTransformer(isLoading = false))
-                    },
-                    ifRight = { customerInfo ->
-                        if (customerInfo.isKycApproved) {
-                            back()
-                        } else {
-                            openKyc()
-                        }
-                    },
-                )
+            // TODO implement selector
+            repository.getCustomerInfo(
+                userWalletId = userWalletId,
+            ).fold(
+                ifLeft = {
+                    Timber.e("Error getCustomerInfo: ${it.errorCode}")
+                    uiState.transformerUpdate(TangemPayOnboardingButtonLoadingTransformer(isLoading = false))
+                },
+                ifRight = { customerInfo ->
+                    if (customerInfo.isKycApproved) {
+                        back()
+                    } else {
+                        openKyc()
+                    }
+                },
+            )
         }
     }
 
     private fun openKyc() {
-        router.replaceAll(AppRoute.Wallet, AppRoute.Kyc)
+        // TODO implement selector
+        router.replaceAll(
+            AppRoute.Wallet,
+            AppRoute.Kyc(
+                userWalletId = tangemPayWalletsManager.getDefaultWalletForTangemPayBlocking().walletId,
+            ),
+        )
     }
 
     private fun back() {
