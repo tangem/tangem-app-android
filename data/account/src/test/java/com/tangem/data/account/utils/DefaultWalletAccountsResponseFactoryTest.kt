@@ -3,14 +3,14 @@ package com.tangem.data.account.utils
 import com.google.common.truth.Truth
 import com.tangem.data.account.converter.CryptoPortfolioConverter
 import com.tangem.data.account.converter.createWalletAccountDTO
-import com.tangem.data.common.currency.CardCryptoCurrencyFactory
+import com.tangem.data.account.utils.GetWalletAccountsResponseExtTest.Companion.createUserToken
 import com.tangem.data.common.currency.UserTokensResponseFactory
+import com.tangem.data.common.network.NetworkFactory
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
+import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.account.models.AccountList
-import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.account.Account
-import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import io.mockk.*
@@ -23,17 +23,17 @@ import org.junit.jupiter.api.TestInstance
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class DefaultWalletAccountsResponseFactoryTest {
 
-    private val userWalletsListRepository = mockk<UserWalletsListRepository>()
+    private val userWalletsStore = mockk<UserWalletsStore>()
     private val cryptoPortfolioCF = mockk<CryptoPortfolioConverter.Factory>()
     private val cryptoPortfolioConverter = mockk<CryptoPortfolioConverter>()
     private val userTokensResponseFactory = mockk<UserTokensResponseFactory>()
-    private val cardCryptoCurrencyFactory = mockk<CardCryptoCurrencyFactory>()
+    private val networkFactory = mockk<NetworkFactory>()
 
     private val factory = DefaultWalletAccountsResponseFactory(
-        userWalletsListRepository = userWalletsListRepository,
+        userWalletsStore = userWalletsStore,
         cryptoPortfolioCF = cryptoPortfolioCF,
         userTokensResponseFactory = userTokensResponseFactory,
-        cardCryptoCurrencyFactory = cardCryptoCurrencyFactory,
+        networkFactory = networkFactory,
     )
 
     private val userWalletId = UserWalletId("011")
@@ -46,11 +46,11 @@ class DefaultWalletAccountsResponseFactoryTest {
     @AfterEach
     fun tearDownEach() {
         clearMocks(
-            userWalletsListRepository,
+            userWalletsStore,
             cryptoPortfolioCF,
             cryptoPortfolioConverter,
             userTokensResponseFactory,
-            cardCryptoCurrencyFactory,
+            networkFactory,
         )
     }
 
@@ -63,12 +63,12 @@ class DefaultWalletAccountsResponseFactoryTest {
             tokens = emptyList(),
         )
 
-        coEvery { userWalletsListRepository.userWalletsSync() } returns emptyList()
+        coEvery { userWalletsStore.getSyncOrNull(userWalletId) } returns null
         every {
-            userTokensResponseFactory.createUserTokensResponse(
-                currencies = emptyList(),
-                isGroupedByNetwork = false,
-                isSortedByBalance = false,
+            userTokensResponseFactory.createDefaultResponse(
+                userWallet = null,
+                networkFactory = networkFactory,
+                accountId = null,
             )
         } returns userTokensResponse
 
@@ -88,11 +88,11 @@ class DefaultWalletAccountsResponseFactoryTest {
         Truth.assertThat(actual).isEqualTo(expected)
 
         coVerifyOrder {
-            userWalletsListRepository.userWalletsSync()
-            userTokensResponseFactory.createUserTokensResponse(
-                currencies = emptyList(),
-                isGroupedByNetwork = false,
-                isSortedByBalance = false,
+            userWalletsStore.getSyncOrNull(userWalletId)
+            userTokensResponseFactory.createDefaultResponse(
+                userWallet = null,
+                networkFactory = networkFactory,
+                accountId = null,
             )
         }
     }
@@ -104,26 +104,24 @@ class DefaultWalletAccountsResponseFactoryTest {
             every { walletId } returns userWalletId
         }
 
-        val defaultCoins = listOf(mockk<CryptoCurrency.Coin>())
-        coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(userWallet)
-        every { cardCryptoCurrencyFactory.createDefaultCoinsForMultiCurrencyWallet(userWallet) } returns defaultCoins
-
-        val defaultResponse = UserTokensResponse(
-            group = UserTokensResponse.GroupType.NETWORK,
-            sort = UserTokensResponse.SortType.BALANCE,
-            tokens = listOf(mockk(relaxed = true)),
-        )
-
-        every {
-            userTokensResponseFactory.createUserTokensResponse(
-                currencies = defaultCoins,
-                isGroupedByNetwork = false,
-                isSortedByBalance = false,
-            )
-        } returns defaultResponse
+        coEvery { userWalletsStore.getSyncOrNull(userWalletId) } returns userWallet
 
         val accounts = AccountList.empty(userWallet.walletId).accounts
             .filterIsInstance<Account.CryptoPortfolio>()
+
+        val token = createUserToken(accountIndex = 0)
+        val defaultResponse = UserTokensResponse(
+            group = UserTokensResponse.GroupType.NETWORK,
+            sort = UserTokensResponse.SortType.BALANCE,
+            tokens = listOf(token),
+        )
+        every {
+            userTokensResponseFactory.createDefaultResponse(
+                userWallet = userWallet,
+                networkFactory = networkFactory,
+                accountId = accounts.first().accountId,
+            )
+        } returns defaultResponse
 
         val accountsDTO = createWalletAccountDTO(userWalletId)
         every { cryptoPortfolioConverter.convertListBack(accounts) } returns listOf(accountsDTO)
@@ -138,20 +136,19 @@ class DefaultWalletAccountsResponseFactoryTest {
                 sort = defaultResponse.sort,
                 totalAccounts = 1,
             ),
-            accounts = listOf(accountsDTO),
+            accounts = listOf(accountsDTO.copy(tokens = listOf(token))),
             unassignedTokens = emptyList(),
         )
 
         Truth.assertThat(actual).isEqualTo(expected)
 
         coVerifyOrder {
-            userWalletsListRepository.userWalletsSync()
+            userWalletsStore.getSyncOrNull(userWalletId)
             cryptoPortfolioConverter.convertListBack(accounts)
-            cardCryptoCurrencyFactory.createDefaultCoinsForMultiCurrencyWallet(userWallet)
-            userTokensResponseFactory.createUserTokensResponse(
-                currencies = defaultCoins,
-                isGroupedByNetwork = false,
-                isSortedByBalance = false,
+            userTokensResponseFactory.createDefaultResponse(
+                userWallet = userWallet,
+                networkFactory = networkFactory,
+                accountId = accounts.first().accountId,
             )
         }
     }
@@ -162,22 +159,26 @@ class DefaultWalletAccountsResponseFactoryTest {
         val userWallet = mockk<UserWallet>(relaxed = true) {
             every { walletId } returns userWalletId
         }
-        coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(userWallet)
-        every { cardCryptoCurrencyFactory.createDefaultCoinsForMultiCurrencyWallet(userWallet) } returns emptyList()
+
+        val accounts = AccountList.empty(userWallet.walletId).accounts
+            .filterIsInstance<Account.CryptoPortfolio>()
+
+        coEvery { userWalletsStore.getSyncOrNull(userWalletId) } returns userWallet
+
         val defaultResponse = UserTokensResponse(
             group = UserTokensResponse.GroupType.NETWORK,
             sort = UserTokensResponse.SortType.BALANCE,
             tokens = emptyList(),
         )
+
         every {
-            userTokensResponseFactory.createUserTokensResponse(
-                currencies = emptyList(),
-                isGroupedByNetwork = false,
-                isSortedByBalance = false,
+            userTokensResponseFactory.createDefaultResponse(
+                userWallet = userWallet,
+                networkFactory = networkFactory,
+                accountId = accounts.first().accountId,
             )
         } returns defaultResponse
-        val accounts = AccountList.empty(userWallet.walletId).accounts
-            .filterIsInstance<Account.CryptoPortfolio>()
+
         every { cryptoPortfolioConverter.convertListBack(accounts) } returns emptyList()
 
         // Act
@@ -202,24 +203,20 @@ class DefaultWalletAccountsResponseFactoryTest {
         val userWallet = mockk<UserWallet>(relaxed = true) {
             every { walletId } returns userWalletId
         }
-        val assignedTokens = listOf(mockk<CryptoCurrency.Token>(), mockk<CryptoCurrency.Token>())
-        coEvery { userWalletsListRepository.userWalletsSync() } returns listOf(userWallet)
+        coEvery { userWalletsStore.getSyncOrNull(userWalletId) } returns userWallet
+
         val userTokensResponse = UserTokensResponse(
             group = UserTokensResponse.GroupType.NETWORK,
             sort = UserTokensResponse.SortType.BALANCE,
-            tokens = listOf(mockk(relaxed = true)),
+            tokens = listOf(
+                createUserToken(accountIndex = 0),
+                createUserToken(accountIndex = 1),
+            ),
         )
-        every {
-            userTokensResponseFactory.createUserTokensResponse(
-                currencies = assignedTokens,
-                isGroupedByNetwork = false,
-                isSortedByBalance = false,
-            )
-        } returns userTokensResponse
 
         val accounts = AccountList.empty(userWallet.walletId).accounts
             .filterIsInstance<Account.CryptoPortfolio>()
-        val accountsDTO = createWalletAccountDTO(userWalletId)
+        val accountsDTO = createWalletAccountDTO(userWalletId = userWalletId)
         every { cryptoPortfolioConverter.convertListBack(accounts) } returns listOf(accountsDTO)
 
         // Act
@@ -232,7 +229,7 @@ class DefaultWalletAccountsResponseFactoryTest {
                 sort = userTokensResponse.sort,
                 totalAccounts = 1,
             ),
-            accounts = listOf(accountsDTO),
+            accounts = listOf(accountsDTO.copy(tokens = userTokensResponse.tokens)),
             unassignedTokens = emptyList(),
         )
         Truth.assertThat(actual).isEqualTo(expected)

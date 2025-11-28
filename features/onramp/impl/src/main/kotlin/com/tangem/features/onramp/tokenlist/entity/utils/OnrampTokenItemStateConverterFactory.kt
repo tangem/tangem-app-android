@@ -22,11 +22,11 @@ internal object OnrampTokenItemStateConverterFactory {
     ): TokenItemStateConverter {
         return TokenItemStateConverter(
             appCurrency = appCurrency,
-            subtitleStateProvider = {
+            subtitleStateProvider = { status ->
                 createSubtitleState(
-                    status = it,
+                    status = status,
                     isAvailable = true,
-                    text = stringReference(value = it.currency.symbol),
+                    text = stringReference(value = status.currency.symbol),
                 )
             },
             subtitle2StateProvider = ::createSubtitle2State,
@@ -41,16 +41,16 @@ internal object OnrampTokenItemStateConverterFactory {
         return TokenItemStateConverter(
             appCurrency = appCurrency,
             iconStateProvider = { CryptoCurrencyToIconStateConverter(isAvailable = false).convert(it) },
-            titleStateProvider = {
+            titleStateProvider = { status ->
                 TokenItemState.TitleState.Content(
-                    text = stringReference(value = it.currency.name),
+                    text = stringReference(value = status.currency.name),
                     isAvailable = false,
                 )
             },
-            subtitleStateProvider = {
+            subtitleStateProvider = { status ->
                 createSubtitleState(
-                    status = it,
-                    text = stringReference(value = it.currency.symbol),
+                    status = status,
+                    text = stringReference(value = status.currency.symbol),
                     isAvailable = false,
                 )
             },
@@ -68,15 +68,15 @@ internal object OnrampTokenItemStateConverterFactory {
         return TokenItemStateConverter(
             appCurrency = appCurrency,
             iconStateProvider = { CryptoCurrencyToIconStateConverter(isAvailable = false).convert(it) },
-            titleStateProvider = {
+            titleStateProvider = { status ->
                 TokenItemState.TitleState.Content(
-                    text = stringReference(value = it.currency.name),
+                    text = stringReference(value = status.currency.name),
                     isAvailable = false,
                 )
             },
-            subtitleStateProvider = {
+            subtitleStateProvider = { status ->
                 createSubtitleState(
-                    status = it,
+                    status = status,
                     isAvailable = false,
                     text = unavailableErrorText,
                 )

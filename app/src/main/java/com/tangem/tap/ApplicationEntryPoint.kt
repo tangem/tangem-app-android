@@ -5,7 +5,9 @@ import com.tangem.TangemSdkLogger
 import com.tangem.blockchainsdk.BlockchainSDKFactory
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.common.routing.AppRouter
+import com.tangem.core.abtests.manager.ABTestsManager
 import com.tangem.core.analytics.filter.OneTimeEventFilter
+import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.core.configtoggle.blockchain.ExcludedBlockchainsManager
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.core.decompose.di.GlobalUiMessageSender
@@ -151,4 +153,8 @@ interface ApplicationEntryPoint {
     fun getHotWalletFeatureToggles(): HotWalletFeatureToggles
 
     fun getWcInitializeUseCase(): WcInitializeUseCase
+
+    fun getTrackingContextProxy(): TrackingContextProxy
+
+    fun getABTestsManager(): ABTestsManager
 }
