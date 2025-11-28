@@ -6,6 +6,7 @@ import com.tangem.core.ui.components.tokenlist.state.PortfolioTokensListItemUM
 import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.models.PortfolioId
@@ -21,7 +22,6 @@ import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListState
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListState.OrganizeTokensButtonConfig
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.TokenConverterParams
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.PersistentList
@@ -87,8 +87,6 @@ internal class TokenListStateConverter(
 
     private fun convertAccountList(params: TokenConverterParams.Account): WalletTokensListState {
         val accountList = params.accountList
-        // todo account null for firs iteration?
-        val organizeTokensButtonConfig: OrganizeTokensButtonConfig? = null
 
         fun AccountStatus.CryptoPortfolio.map(): TokensListItemUM.Portfolio {
             val tokenList: TokenList = this.tokenList
@@ -105,6 +103,7 @@ internal class TokenListStateConverter(
                 appCurrency = appCurrency,
                 account = account,
                 onItemClick = onItemClick,
+                priceChangeLce = this.priceChangeLce,
             )
             val accountItem = converter.convert(tokenList.totalFiatBalance)
             val tokenConverter = tokenStatusConverter(account.accountId)
@@ -132,7 +131,7 @@ internal class TokenListStateConverter(
             }
         return WalletTokensListState.ContentState.PortfolioContent(
             items = accountItems.toPersistentList(),
-            organizeTokensButtonConfig = organizeTokensButtonConfig,
+            organizeTokensButtonConfig = getOrganizeTokensButtonStateV2(accountList = accountList),
         )
     }
 
@@ -190,6 +189,17 @@ internal class TokenListStateConverter(
         return if (currenciesSize > 1 && !isSingleCurrencyWalletWithToken()) {
             WalletOrganizeTokensButtonConfig(
                 isEnabled = tokenList.totalFiatBalance !is TotalFiatBalance.Loading,
+                onClick = clickIntents::onOrganizeTokensClick,
+            )
+        } else {
+            null
+        }
+    }
+
+    private fun getOrganizeTokensButtonStateV2(accountList: AccountStatusList): WalletOrganizeTokensButtonConfig? {
+        return if (accountList.flattenCurrencies().size > 1 && !isSingleCurrencyWalletWithToken()) {
+            WalletOrganizeTokensButtonConfig(
+                isEnabled = accountList.totalFiatBalance !is TotalFiatBalance.Loading,
                 onClick = clickIntents::onOrganizeTokensClick,
             )
         } else {
