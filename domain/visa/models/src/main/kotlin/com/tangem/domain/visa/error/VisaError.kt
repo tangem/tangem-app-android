@@ -61,6 +61,7 @@ sealed class VisaApiError(
     fun isUnknown() = this is UnknownWithoutCode || this is Unknown
 
     data object RefreshTokenExpired : VisaApiError(104004001)
+    data object NotPaeraCustomer : VisaApiError(104004002)
 
     companion object {
         fun fromBackendError(backendErrorCode: Int): VisaApiError {
