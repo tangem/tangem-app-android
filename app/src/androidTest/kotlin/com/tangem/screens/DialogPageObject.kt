@@ -17,6 +17,14 @@ class DialogPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
         hasTestTag(BaseDialogTestTags.CONTAINER)
     }
 
+    val title: KNode = child {
+        hasTestTag(BaseDialogTestTags.TITLE)
+    }
+
+    val text: KNode = child {
+        hasTestTag(BaseDialogTestTags.TEXT)
+    }
+
     val cancelButton: KNode = child {
         hasTestTag(BaseButtonTestTags.BUTTON)
         hasText(getResourceString(R.string.common_cancel))

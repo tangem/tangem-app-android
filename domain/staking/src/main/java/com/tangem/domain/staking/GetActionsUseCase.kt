@@ -7,7 +7,7 @@ import com.tangem.domain.core.utils.EitherFlow
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.domain.staking.model.stakekit.action.StakingAction
-import com.tangem.domain.staking.repositories.StakingActionRepository
+import com.tangem.domain.staking.repositories.StakeKitActionRepository
 import com.tangem.domain.staking.repositories.StakingErrorResolver
 import com.tangem.domain.models.wallet.UserWalletId
 import kotlinx.coroutines.flow.catch
@@ -17,7 +17,7 @@ import kotlinx.coroutines.flow.map
  * Use case for getting pending actions list.
  */
 class GetActionsUseCase(
-    private val stakingActionRepository: StakingActionRepository,
+    private val stakeKitActionRepository: StakeKitActionRepository,
     private val stakingErrorResolver: StakingErrorResolver,
 ) {
 
@@ -25,7 +25,7 @@ class GetActionsUseCase(
         userWalletId: UserWalletId,
         cryptoCurrencyId: CryptoCurrency.ID,
     ): EitherFlow<StakingError, List<StakingAction>> {
-        return stakingActionRepository.get(
+        return stakeKitActionRepository.get(
             userWalletId = userWalletId,
             cryptoCurrencyId = cryptoCurrencyId,
         ).map<List<StakingAction>, Either<StakingError, List<StakingAction>>> { it.right() }

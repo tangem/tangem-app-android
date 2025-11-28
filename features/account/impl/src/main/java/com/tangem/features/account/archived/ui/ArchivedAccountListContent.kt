@@ -126,7 +126,7 @@ private fun ArchivedAccountRow(item: ArchivedAccountUM, modifier: Modifier = Mod
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .clickable(onClick = item.onClick)
+            .clickable(enabled = !item.isLoading, onClick = item.onClick)
             .padding(all = TangemTheme.dimens.spacing12),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
@@ -148,6 +148,7 @@ private fun ArchivedAccountRow(item: ArchivedAccountUM, modifier: Modifier = Mod
         SecondarySmallButton(
             config = SmallButtonConfig(
                 text = resourceReference(R.string.account_archived_recover),
+                isLoading = item.isLoading,
                 onClick = item.onClick,
             ),
         )
@@ -169,15 +170,15 @@ private class PreviewStateProvider : CollectionPreviewParameterProvider<AccountA
         fun portfolioIcon() = AccountIconPreviewData.randomAccountIcon()
         val accountName = stringReference("Account name")
 
-        val firstList = List(10) {
+        val firstList = List(10) { id ->
             ArchivedAccountUM(
-                accountId = it.toString(),
+                accountId = id.toString(),
                 accountName = accountName,
                 accountIconUM = portfolioIcon(),
                 tokensInfo = stringReference("10 tokens"),
                 networksInfo = stringReference("2 networks"),
                 onClick = {},
-
+                isLoading = id % 2 == 0,
             )
         }.toImmutableList()
         val first = AccountArchivedUM.Content(

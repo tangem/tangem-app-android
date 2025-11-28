@@ -5,15 +5,13 @@ import com.squareup.moshi.Moshi
 import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.pay.TangemPayApi
+import com.tangem.datasource.api.pay.TangemPayAuthApi
 import com.tangem.datasource.api.pay.models.request.*
 import com.tangem.datasource.api.pay.models.response.VisaErrorResponseJsonAdapter
 import com.tangem.datasource.di.NetworkMoshi
-import com.tangem.domain.visa.error.VisaApiError
-import com.tangem.domain.visa.model.VisaAuthChallenge
-import com.tangem.domain.visa.model.VisaAuthSession
-import com.tangem.domain.visa.model.VisaAuthSignedChallenge
-import com.tangem.domain.visa.model.VisaAuthTokens
 import com.tangem.domain.visa.datasource.VisaAuthRemoteDataSource
+import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.domain.visa.model.*
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -21,6 +19,7 @@ import javax.inject.Inject
 internal class DefaultVisaAuthRemoteDataSource @Inject constructor(
     @NetworkMoshi private val moshi: Moshi,
     private val visaAuthApi: TangemPayApi,
+    private val tangemPayAuthApi: TangemPayAuthApi,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : VisaAuthRemoteDataSource {
 
@@ -66,15 +65,19 @@ internal class DefaultVisaAuthRemoteDataSource @Inject constructor(
 
     override suspend fun getCustomerWalletAuthChallenge(
         customerWalletAddress: String,
+        customerWalletId: String,
     ): Either<VisaApiError, VisaAuthChallenge.Wallet> = withContext(dispatchers.io) {
         request {
-            visaAuthApi.generateNonceByCustomerWallet(
-                GenerateNonceByCustomerWalletRequest(customerWalletAddress = customerWalletAddress),
+            tangemPayAuthApi.generateNonceByCustomerWallet(
+                request = GenerateNonceByCustomerWalletRequest(
+                    customerWalletAddress = customerWalletAddress,
+                    customerWalletId = customerWalletId,
+                ),
             ).getOrThrow()
         }.map { response ->
             VisaAuthChallenge.Wallet(
-                challenge = response.result.nonce,
-                session = VisaAuthSession(response.result.sessionId),
+                challenge = response.nonce,
+                session = VisaAuthSession(response.sessionId),
             )
         }
     }
@@ -83,37 +86,42 @@ internal class DefaultVisaAuthRemoteDataSource @Inject constructor(
         sessionId: String,
         signature: String,
         nonce: String,
-    ): Either<VisaApiError, VisaAuthTokens> = withContext(dispatchers.io) {
+    ): Either<VisaApiError, TangemPayAuthTokens> = withContext(dispatchers.io) {
         request {
-            visaAuthApi.getTokenByCustomerWallet(
-                GetTokenByCustomerWalletRequest(
+            tangemPayAuthApi.getTokenByCustomerWallet(
+                request = GetTokenByCustomerWalletRequest(
+                    authType = "customer_wallet",
                     sessionId = sessionId,
                     signature = signature,
                     messageFormat = "Tangem Pay wants to sign in with your account. Nonce: $nonce",
                 ),
             ).getOrThrow()
         }.map { response ->
-            VisaAuthTokens(
-                response.result.accessToken,
-                VisaAuthTokens.RefreshToken(
-                    response.result.refreshToken,
-                    VisaAuthTokens.RefreshToken.Type.CardWallet,
-                ),
+            TangemPayAuthTokens(
+                accessToken = response.accessToken,
+                expiresAt = response.expiresAt,
+                refreshToken = response.refreshToken,
+                refreshExpiresAt = response.refreshExpiresAt,
             )
         }
     }
 
     override suspend fun refreshCustomerWalletAuthTokens(
-        refreshToken: VisaAuthTokens.RefreshToken,
-    ): Either<VisaApiError, VisaAuthTokens> = withContext(dispatchers.io) {
+        refreshToken: String,
+    ): Either<VisaApiError, TangemPayAuthTokens> = withContext(dispatchers.io) {
         request {
-            visaAuthApi.refreshCustomerWalletAccessToken(
-                RefreshCustomerWalletAccessTokenRequest(refreshToken = refreshToken.value),
+            tangemPayAuthApi.refreshCustomerWalletAccessToken(
+                request = RefreshCustomerWalletAccessTokenRequest(
+                    authType = "customer_wallet",
+                    refreshToken = refreshToken,
+                ),
             ).getOrThrow()
         }.map { response ->
-            VisaAuthTokens(
-                accessToken = response.result.accessToken,
-                refreshToken = refreshToken.copy(value = response.result.refreshToken),
+            TangemPayAuthTokens(
+                accessToken = response.accessToken,
+                expiresAt = response.expiresAt,
+                refreshToken = response.refreshToken,
+                refreshExpiresAt = response.refreshExpiresAt,
             )
         }
     }

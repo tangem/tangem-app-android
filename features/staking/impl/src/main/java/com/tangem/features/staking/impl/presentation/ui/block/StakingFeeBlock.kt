@@ -48,6 +48,7 @@ internal fun StakingFeeBlock(feeState: FeeState) {
             text = stringResourceSafe(R.string.common_network_fee_title),
             style = TangemTheme.typography.subtitle2,
             color = TangemTheme.colors.text.tertiary,
+            modifier = Modifier.padding(bottom = TangemTheme.dimens.spacing4),
         )
 
         Box(modifier = Modifier.padding(top = TangemTheme.dimens.spacing8)) {

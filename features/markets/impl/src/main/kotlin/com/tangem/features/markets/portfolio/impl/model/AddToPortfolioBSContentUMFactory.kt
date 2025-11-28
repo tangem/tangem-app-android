@@ -81,15 +81,11 @@ internal class AddToPortfolioBSContentUMFactory(
                         userWalletId = selectedWallet.walletId,
                     ),
                     onContinueButtonClick = {
-                        val alreadyAddedNetworkIds = portfolioData.walletsWithCurrencies[selectedWallet].orEmpty()
-                            .map { it.status.currency.network.backendId }
-                            .toSet()
-
                         onContinueClick(
                             selectedWallet.walletId,
                             portfolioUIData.addToPortfolioData.getAddedNetworks(
                                 userWalletId = selectedWallet.walletId,
-                                alreadyAddedNetworkIds = alreadyAddedNetworkIds,
+                                alreadyAddedNetworkIds = alreadyAddedNetworks,
                             ),
                         )
                     },
