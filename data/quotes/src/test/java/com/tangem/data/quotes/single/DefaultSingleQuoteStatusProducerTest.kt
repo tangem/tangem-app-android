@@ -1,12 +1,12 @@
 package com.tangem.data.quotes.single
 
 import com.google.common.truth.Truth
-import com.tangem.common.test.utils.getEmittedValues
 import com.tangem.data.quotes.store.QuotesStatusesStore
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.domain.quotes.single.SingleQuoteStatusProducer
+import com.tangem.test.core.getEmittedValues
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.every
 import io.mockk.mockk

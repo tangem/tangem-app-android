@@ -51,7 +51,9 @@ internal class DragAndDropAdapter(
         return when (draggingItem) {
             is DraggableItem.GroupHeader -> checkCanMoveHeaderOver(dragOver, dragOverItem, items.lastIndex)
             is DraggableItem.Token -> checkCanMoveTokenOver(draggingItem, dragOverItem)
-            is DraggableItem.Placeholder -> false
+            is DraggableItem.Placeholder,
+            is DraggableItem.Portfolio,
+            -> false
         }
     }
 
@@ -61,7 +63,9 @@ internal class DragAndDropAdapter(
 
         updateListState(DragOperation.Type.Start) {
             when (item) {
-                is DraggableItem.Placeholder -> items
+                is DraggableItem.Placeholder,
+                is DraggableItem.Portfolio,
+                -> items
                 is DraggableItem.GroupHeader -> draggableGroupsOperations.collapseGroup(items, item)
                 is DraggableItem.Token -> when (this) {
                     is OrganizeTokensListState.GroupedByNetwork -> items.divideMovingItem(item)
@@ -81,7 +85,9 @@ internal class DragAndDropAdapter(
             when (draggingItem) {
                 is DraggableItem.GroupHeader -> draggableGroupsOperations.expandGroups(items)
                 is DraggableItem.Token -> items.uniteItems()
-                is DraggableItem.Placeholder -> items
+                is DraggableItem.Placeholder,
+                is DraggableItem.Portfolio,
+                -> items
             }
         }
 
@@ -144,7 +150,9 @@ internal class DragAndDropAdapter(
         return when (moveOverItem) {
             is DraggableItem.GroupHeader -> false // Token item can not be moved to group item
             is DraggableItem.Token -> item.groupId == moveOverItem.groupId // Token item can not be moved over its group
-            is DraggableItem.Placeholder -> false
+            is DraggableItem.Portfolio,
+            is DraggableItem.Placeholder,
+            -> false
         }
     }
 

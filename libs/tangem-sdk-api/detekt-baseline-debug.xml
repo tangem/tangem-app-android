@@ -1,0 +1,13 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>BooleanPropertyNaming:TangemSdkManager.kt$TangemSdkManager$val needEnrollBiometrics: Boolean</ID>
+    <ID>ObjectExtendsThrowable:TapErrors.kt$TapError$NoInternetConnection : TapError</ID>
+    <ID>ObjectExtendsThrowable:TapErrors.kt$TapError$UnknownError : TapError</ID>
+    <ID>ObjectExtendsThrowable:TapErrors.kt$TapError.WalletManager$BlockchainIsUnreachableTryLater : TapError</ID>
+    <ID>ObjectExtendsThrowable:TapErrors.kt$TapSdkError$CardForDifferentApp : TapSdkError</ID>
+    <ID>ObjectExtendsThrowable:TapErrors.kt$TapSdkError$CardNotSupportedByRelease : TapSdkError</ID>
+    <ID>UseEmptyCounterpart:CreateProductWalletTaskResponse.kt$CreateProductWalletTaskResponse$mapOf()</ID>
+  </CurrentIssues>
+</SmellBaseline>

@@ -28,6 +28,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.SelectPaymentMethodBottomSheetTestTags
 import com.tangem.domain.onramp.model.OnrampPaymentMethod
+import com.tangem.domain.onramp.model.PaymentMethodStatus
 import com.tangem.domain.onramp.model.PaymentMethodType
 import com.tangem.features.onramp.alloffers.entity.AllOffersPaymentMethodUM
 import com.tangem.features.onramp.alloffers.entity.OnrampPaymentMethodConfig
@@ -89,18 +90,56 @@ private fun PaymentMethod(methodUM: AllOffersPaymentMethodUM, modifier: Modifier
         SpacerW(12.dp)
 
         Column {
-            PaymentMethodInfoBlock(
-                paymentMethodName = methodUM.methodConfig.method.name,
-                rate = methodUM.rate,
-                diff = methodUM.diff,
-                isBestRate = methodUM.isBestRate,
-            )
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                ProvidersCountBlockInfo(providersCount = methodUM.providersCount)
-                SpacerW(8.dp)
-                TimingBlockInfo(speed = methodUM.methodConfig.method.type.getProcessingSpeed())
+            when (methodUM.paymentMethodStatus) {
+                PaymentMethodStatus.Available -> {
+                    PaymentMethodInfoBlock(
+                        paymentMethodName = methodUM.methodConfig.method.name,
+                        rate = methodUM.rate,
+                        diff = methodUM.diff,
+                        isBestRate = methodUM.isBestRate,
+                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        ProvidersCountBlockInfo(providersCount = methodUM.providersCount)
+                        SpacerW(8.dp)
+                        TimingBlockInfo(speed = methodUM.methodConfig.method.type.getProcessingSpeed())
+                    }
+                }
+                is PaymentMethodStatus.Unavailable -> {
+                    UnavailablePaymentMethodInfoBlock(
+                        paymentMethodName = methodUM.methodConfig.method.name,
+                        errorAmount = methodUM.rate,
+                        unavailableStatus = methodUM.paymentMethodStatus,
+                    )
+                }
             }
         }
+    }
+}
+
+@Composable
+private fun UnavailablePaymentMethodInfoBlock(
+    paymentMethodName: String,
+    errorAmount: String,
+    unavailableStatus: PaymentMethodStatus.Unavailable,
+) {
+    Column(modifier = Modifier.padding(bottom = 14.dp)) {
+        Text(
+            text = paymentMethodName,
+            style = TangemTheme.typography.subtitle2,
+            color = TangemTheme.colors.text.tertiary,
+            modifier = Modifier.testTag(SelectPaymentMethodBottomSheetTestTags.PAYMENT_METHOD_NAME),
+        )
+        SpacerH(2.dp)
+        val messageResId = when (unavailableStatus) {
+            is PaymentMethodStatus.Unavailable.MinAmount -> R.string.onramp_provider_min_amount
+            is PaymentMethodStatus.Unavailable.MaxAmount -> R.string.onramp_provider_max_amount
+        }
+        Text(
+            text = stringResourceSafe(messageResId, errorAmount),
+            style = TangemTheme.typography.caption2,
+            color = TangemTheme.colors.text.tertiary,
+            modifier = Modifier.testTag(SelectPaymentMethodBottomSheetTestTags.UP_TO_TEXT),
+        )
     }
 }
 
@@ -234,7 +273,6 @@ private fun PaymentMethodsContentPreview() {
                     imageUrl = "https://s3.eu-central-1.amazonaws.com/tangem.api/express/PaymentMethods/visa-mc.png",
                     type = PaymentMethodType.CARD,
                 ),
-                providerId = "providerId1",
                 providerName = "Simplex",
                 rate = "0,0245334 BTC",
                 diff = null,
@@ -249,7 +287,6 @@ private fun PaymentMethodsContentPreview() {
                     imageUrl = "https://s3.eu-central-1.amazonaws.com/tangem.api/express/PaymentMethods/visa-mc.png",
                     type = PaymentMethodType.CARD,
                 ),
-                providerId = "providerId2",
                 providerName = "Simplex",
                 rate = "0,00145334 BTC",
                 diff = stringReference("–0.07%"),
@@ -269,6 +306,7 @@ private fun PaymentMethodsContentPreview() {
         rate = "0,0245334 BTC",
         providersCount = 2,
         isBestRate = true,
+        paymentMethodStatus = PaymentMethodStatus.Available,
     )
     TangemThemePreview {
         PaymentMethodsContent(persistentListOf(method))
