@@ -14,9 +14,10 @@ import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.domain.markets.TokenMarketInfo
-import com.tangem.domain.models.TokenReceiveConfig
+import com.tangem.features.markets.portfolio.add.api.AddToPortfolioComponent
 import com.tangem.features.markets.portfolio.api.MarketsPortfolioComponent
 import com.tangem.features.markets.portfolio.impl.model.MarketsPortfolioModel
+import com.tangem.features.markets.portfolio.impl.model.MarketsPortfolioRoute
 import com.tangem.features.markets.portfolio.impl.ui.MyPortfolio
 import com.tangem.features.tokenreceive.TokenReceiveComponent
 import dagger.assisted.Assisted
@@ -28,19 +29,25 @@ internal class DefaultMarketsPortfolioComponent @AssistedInject constructor(
     @Assisted context: AppComponentContext,
     @Assisted private val params: MarketsPortfolioComponent.Params,
     private val tokenReceiveComponentFactory: TokenReceiveComponent.Factory,
+    private val addToPortfolioComponentFactory: AddToPortfolioComponent.Factory,
 ) : AppComponentContext by context, MarketsPortfolioComponent {
 
     private val model: MarketsPortfolioModel = getOrCreateModel(params)
 
     private val bottomSheetSlot = childSlot(
         source = model.bottomSheetNavigation,
-        serializer = TokenReceiveConfig.serializer(),
+        serializer = MarketsPortfolioRoute.serializer(),
         handleBackButton = false,
         childFactory = ::bottomSheetChild,
     )
 
-    override fun setTokenNetworks(networks: List<TokenMarketInfo.Network>) = model.setTokenNetworks(networks)
-    override fun setNoNetworksAvailable() = model.setNoNetworksAvailable()
+    override fun setTokenNetworks(networks: List<TokenMarketInfo.Network>) {
+        model.setTokenNetworks(networks)
+    }
+
+    override fun setNoNetworksAvailable() {
+        model.setNoNetworksAvailable()
+    }
 
     @Composable
     override fun Content(modifier: Modifier) {
@@ -52,15 +59,24 @@ internal class DefaultMarketsPortfolioComponent @AssistedInject constructor(
     }
 
     private fun bottomSheetChild(
-        config: TokenReceiveConfig,
+        config: MarketsPortfolioRoute,
         componentContext: ComponentContext,
-    ): ComposableBottomSheetComponent = tokenReceiveComponentFactory.create(
-        context = childByContext(componentContext),
-        params = TokenReceiveComponent.Params(
-            config = config,
-            onDismiss = model.bottomSheetNavigation::dismiss,
-        ),
-    )
+    ): ComposableBottomSheetComponent = when (config) {
+        MarketsPortfolioRoute.AddToPortfolio -> addToPortfolioComponentFactory.create(
+            context = childByContext(componentContext),
+            params = AddToPortfolioComponent.Params(
+                addToPortfolioManager = model.newAddToPortfolioManager!!,
+                callback = model.addToPortfolioCallback,
+            ),
+        )
+        is MarketsPortfolioRoute.TokenReceive -> tokenReceiveComponentFactory.create(
+            context = childByContext(componentContext),
+            params = TokenReceiveComponent.Params(
+                config = config.config,
+                onDismiss = model.bottomSheetNavigation::dismiss,
+            ),
+        )
+    }
 
     @AssistedFactory
     interface Factory : MarketsPortfolioComponent.Factory {

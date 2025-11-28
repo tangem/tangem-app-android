@@ -37,7 +37,7 @@ internal fun OnrampButtonComponent(state: OnrampMainComponentUM) {
             modifier = Modifier.fillMaxWidth(),
             text = stringResourceSafe(id = R.string.common_buy),
             onClick = state.buyButtonConfig.onClick,
-            enabled = state.buyButtonConfig.enabled,
+            enabled = state.buyButtonConfig.isEnabled,
         )
     }
 }
@@ -78,19 +78,23 @@ private fun OnrampTosText(provider: OnrampProviderBlockUM.Content?) {
                     textAlign = TextAlign.Center,
                 ),
                 onClick = { offset ->
-                    clickableAnnotation.getStringAnnotations(
+                    val tosAnnotations = clickableAnnotation.getStringAnnotations(
                         tag = TERMS_OF_USE_KEY,
                         start = offset,
                         end = offset,
-                    ).firstOrNull()?.let {
+                    )
+
+                    if (tosAnnotations.any()) {
                         state.onLinkClick(termsOfUseLink)
                     }
 
-                    clickableAnnotation.getStringAnnotations(
+                    val privacyPolicyAnnotations = clickableAnnotation.getStringAnnotations(
                         tag = PRIVACY_POLICY_KEY,
                         start = offset,
                         end = offset,
-                    ).firstOrNull()?.let {
+                    )
+
+                    if (privacyPolicyAnnotations.any()) {
                         state.onLinkClick(privacyPolicyLink)
                     }
                 },

@@ -8,10 +8,13 @@ import com.squareup.moshi.Moshi
 import com.tangem.datasource.api.stakekit.models.response.model.YieldBalanceWrapperDTO
 import com.tangem.datasource.api.stakekit.models.response.model.YieldDTO
 import com.tangem.datasource.local.datastore.RuntimeDataStore
+import com.tangem.datasource.local.token.DefaultP2PEthPoolVaultsStore
 import com.tangem.datasource.local.token.DefaultStakingActionsStore
 import com.tangem.datasource.local.token.DefaultStakingYieldsStore
+import com.tangem.datasource.local.token.P2PEthPoolVaultsStore
 import com.tangem.datasource.local.token.StakingActionsStore
 import com.tangem.datasource.local.token.StakingYieldsStore
+import com.tangem.domain.staking.model.ethpool.P2PEthPoolVault
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
 import com.tangem.datasource.utils.listTypes
 import com.tangem.datasource.utils.mapWithStringKeyTypes
@@ -72,5 +75,25 @@ internal object StakingStoreModule {
     @Singleton
     fun provideStakingActionsStore(): StakingActionsStore {
         return DefaultStakingActionsStore(dataStore = RuntimeDataStore())
+    }
+
+    @Provides
+    @Singleton
+    fun provideP2PEthPoolVaultsStore(
+        @NetworkMoshi moshi: Moshi,
+        @ApplicationContext context: Context,
+        dispatchers: CoroutineDispatcherProvider,
+    ): P2PEthPoolVaultsStore {
+        return DefaultP2PEthPoolVaultsStore(
+            dataStore = DataStoreFactory.create(
+                serializer = MoshiDataStoreSerializer(
+                    moshi = moshi,
+                    types = listTypes<P2PEthPoolVault>(),
+                    defaultValue = emptyList(),
+                ),
+                produceFile = { context.dataStoreFile(fileName = "p2p_eth_pool_vaults") },
+                scope = CoroutineScope(context = dispatchers.io + SupervisorJob()),
+            ),
+        )
     }
 }

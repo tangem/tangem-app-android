@@ -32,6 +32,7 @@ class UserWalletItemUMConverter(
     private val balance: TotalFiatBalance? = null,
     private val isBalanceHidden: Boolean = false,
     private val isAuthMode: Boolean = false,
+    private val isClickableIfLocked: Boolean = false,
     private val endIcon: UserWalletItemUM.EndIcon = UserWalletItemUM.EndIcon.None,
     artwork: UserWalletItemUM.ImageState? = null,
 ) : Converter<UserWallet, UserWalletItemUM> {
@@ -41,7 +42,7 @@ class UserWalletItemUMConverter(
     override fun convert(value: UserWallet): UserWalletItemUM {
         return with(value) {
             UserWalletItemUM(
-                id = walletId,
+                id = walletId.stringValue,
                 name = stringReference(name),
                 information = getInfo(userWallet = this),
                 balance = getBalanceInfo(userWallet = this),
@@ -54,7 +55,7 @@ class UserWalletItemUMConverter(
     }
 
     private fun isEnabled(userWallet: UserWallet): Boolean {
-        return isAuthMode || userWallet.isLocked.not()
+        return isAuthMode || isClickableIfLocked || userWallet.isLocked.not()
     }
 
     private fun getInfo(userWallet: UserWallet): UserWalletItemUM.Information.Loaded {

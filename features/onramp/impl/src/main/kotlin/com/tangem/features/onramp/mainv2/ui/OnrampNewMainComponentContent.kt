@@ -60,10 +60,7 @@ internal fun OnrampNewMainComponentContent(state: OnrampV2MainComponentUM, modif
         }
 
         if (state is OnrampV2MainComponentUM.Content) {
-            OnrampFooterContent(
-                state = state,
-                boxScope = this,
-            )
+            OnrampFooterContent(state = state)
         }
     }
 }
@@ -73,7 +70,8 @@ private fun InitialLoading(state: OnrampV2MainComponentUM.InitialLoading, modifi
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .wrapContentHeight(),
+            .wrapContentHeight()
+            .padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
     ) {
         OnrampAmountContentLoading()
