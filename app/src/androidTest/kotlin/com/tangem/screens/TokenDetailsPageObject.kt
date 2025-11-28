@@ -97,25 +97,31 @@ class TokenDetailsPageObject(semanticsProvider: SemanticsNodeInteractionsProvide
     )
 
     @OptIn(ExperimentalTestApi::class)
-    val swapButton: LazyListItemNode = horizontalActionChips.childWith<LazyListItemNode> {
+    fun receiveButton(): LazyListItemNode = horizontalActionChips.childWith<LazyListItemNode> {
+        hasTestTag(BaseActionButtonsBlockTestTags.ACTION_BUTTON)
+        hasText(getResourceString(R.string.common_receive))
+    }
+
+    @OptIn(ExperimentalTestApi::class)
+    fun swapButton(): LazyListItemNode = horizontalActionChips.childWith<LazyListItemNode> {
         hasTestTag(BaseActionButtonsBlockTestTags.ACTION_BUTTON)
         hasText(getResourceString(R.string.common_swap))
     }
 
     @OptIn(ExperimentalTestApi::class)
-    val sellButton: LazyListItemNode = horizontalActionChips.childWith<LazyListItemNode> {
+    fun sellButton(): LazyListItemNode = horizontalActionChips.childWith<LazyListItemNode> {
         hasTestTag(BaseActionButtonsBlockTestTags.ACTION_BUTTON)
         hasText(getResourceString(R.string.common_sell))
     }
 
     @OptIn(ExperimentalTestApi::class)
-    val buyButton: LazyListItemNode = horizontalActionChips.childWith<LazyListItemNode> {
+    fun buyButton(): LazyListItemNode = horizontalActionChips.childWith<LazyListItemNode> {
         hasTestTag(BaseActionButtonsBlockTestTags.ACTION_BUTTON)
         hasText(getResourceString(R.string.common_buy))
     }
 
     @OptIn(ExperimentalTestApi::class)
-    val sendButton: LazyListItemNode = horizontalActionChips.childWith<LazyListItemNode> {
+    fun sendButton(): LazyListItemNode = horizontalActionChips.childWith<LazyListItemNode> {
         hasTestTag(BaseActionButtonsBlockTestTags.ACTION_BUTTON)
         hasText(getResourceString(R.string.common_send))
     }

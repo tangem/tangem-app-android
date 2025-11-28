@@ -1,5 +1,6 @@
 package com.tangem.features.tangempay.utils
 
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tangempay.model.TangemPayTxHistoryListBatchingContext
 import com.tangem.domain.tangempay.model.TangemPayTxHistoryListConfig
 import com.tangem.domain.tangempay.repository.TangemPayTxHistoryRepository
@@ -36,8 +37,9 @@ internal class TangemPayTxHistoryListManager(
     val emptyStatus: Flow<Boolean> = state.map { it.isEmpty }.distinctUntilChanged()
     val paginationStatus: Flow<PaginationStatus<*>> = state.map { it.status }.distinctUntilChanged()
 
-    suspend fun launchPagination() = coroutineScope {
+    suspend fun launchPagination(userWalletId: UserWalletId) = coroutineScope {
         val batchFlow = repository.getTxHistoryBatchFlow(
+            userWalletId = userWalletId,
             context = TangemPayTxHistoryListBatchingContext(actionsFlow = actionsFlow, coroutineScope = this),
             batchSize = 50,
         )
