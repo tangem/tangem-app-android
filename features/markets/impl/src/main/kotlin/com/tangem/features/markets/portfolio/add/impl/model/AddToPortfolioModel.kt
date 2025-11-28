@@ -242,11 +242,11 @@ internal class AddToPortfolioModel @Inject constructor(
                 }
             }.collect()
         }
-        return timeFlow.map {
+        return timeFlow.map { actionsState ->
             PortfolioData.CryptoCurrencyData(
                 userWallet = selectedPortfolio.userWallet,
-                status = addedToken,
-                actions = it.states,
+                status = actionsState.cryptoCurrencyStatus,
+                actions = actionsState.states,
             )
         }
     }
