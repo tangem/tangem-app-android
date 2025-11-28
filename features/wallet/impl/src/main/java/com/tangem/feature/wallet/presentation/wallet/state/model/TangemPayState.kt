@@ -23,4 +23,10 @@ internal sealed class TangemPayState {
         val balanceText: TextReference,
         val onClick: () -> Unit,
     ) : TangemPayState()
+
+    data class RefreshNeeded(
+        val notification: WalletNotification,
+    ) : TangemPayState()
+
+    data class TemporaryUnavailable(val notification: WalletNotification) : TangemPayState()
 }
