@@ -7,9 +7,9 @@ sealed class PromoAnalyticsEvent(
     event: String,
     params: Map<String, String> = mapOf(),
 ) : AnalyticsEvent(category = "Promotion", event = event, params = params) {
-    class NoticePromotionBanner(
-        source: AnalyticsParam.ScreensSources,
-        program: Program,
+    data class NoticePromotionBanner(
+        private val source: AnalyticsParam.ScreensSources,
+        private val program: Program,
     ) : PromoAnalyticsEvent(
         event = "Notice - Promotion Banner",
         params = mapOf(
@@ -18,10 +18,10 @@ sealed class PromoAnalyticsEvent(
         ),
     )
 
-    class PromotionBannerClicked(
-        source: AnalyticsParam.ScreensSources,
-        program: Program,
-        action: BannerAction,
+    data class PromotionBannerClicked(
+        private val source: AnalyticsParam.ScreensSources,
+        private val program: Program,
+        private val action: BannerAction,
     ) : PromoAnalyticsEvent(
         event = "Promo Banner Clicked",
         params = mapOf(
