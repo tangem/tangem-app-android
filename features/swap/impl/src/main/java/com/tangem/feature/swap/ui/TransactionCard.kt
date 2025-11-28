@@ -34,14 +34,20 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
+import com.tangem.common.ui.account.AccountNameUM
+import com.tangem.common.ui.account.AccountTitle
+import com.tangem.common.ui.account.AccountTitleUM
+import com.tangem.common.ui.account.toUM
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.*
-import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.SwapTokenScreenTestTags
 import com.tangem.core.ui.utils.ImageBackgroundContrastChecker
+import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.feature.swap.domain.models.ui.PriceImpact
 import com.tangem.feature.swap.models.TransactionCardType
 import kotlinx.coroutines.launch
@@ -193,14 +199,22 @@ private fun Header(type: TransactionCardType, balance: String, modifier: Modifie
         } else {
             TangemTheme.colors.text.warning
         }
-        Text(
-            text = type.header.resolveReference(),
-            color = titleColor,
-            maxLines = 1,
-            style = TangemTheme.typography.subtitle2,
-            modifier = Modifier
-                .align(Alignment.CenterVertically),
-        )
+        AnimatedContent(
+            targetState = type.accountTitleUM,
+            label = "",
+        ) { currentAccountTitle ->
+            if (currentAccountTitle != null) {
+                AccountTitle(
+                    accountTitleUM = currentAccountTitle,
+                    textColor = titleColor,
+                )
+            } else {
+                TextShimmer(
+                    text = stringResourceSafe(R.string.swapping_to_title),
+                    style = TangemTheme.typography.subtitle2,
+                )
+            }
+        }
         SpacerW16()
         if (balance.isNotBlank()) {
             AnimatedContent(targetState = balance, label = "") {
@@ -559,7 +573,12 @@ private fun Preview_TransactionCardWithoutPriceImpact_InDarkTheme() {
 @Composable
 private fun TransactionCardPreview() {
     TransactionCard(
-        type = TransactionCardType.Inputtable({}, {}, TransactionCardType.InputError.Empty),
+        type = TransactionCardType.Inputtable(
+            onAmountChanged = {},
+            onFocusChanged = {},
+            inputError = TransactionCardType.InputError.Empty,
+            accountTitleUM = null,
+        ),
         amountEquivalent = "1 000 000",
         tokenIconUrl = "",
         tokenCurrency = "DAI",
@@ -575,7 +594,14 @@ private fun TransactionCardPreview() {
 @Suppress("MagicNumber")
 private fun TransactionCardPreviewWithPriceImpact() {
     TransactionCard(
-        type = TransactionCardType.ReadOnly(showWarning = true),
+        type = TransactionCardType.ReadOnly(
+            showWarning = true,
+            accountTitleUM = AccountTitleUM.Account(
+                prefixText = resourceReference(R.string.common_from),
+                name = AccountNameUM.DefaultMain.value,
+                icon = CryptoPortfolioIcon.ofDefaultCustomAccount().toUM(),
+            ),
+        ),
         amountEquivalent = "1 000 000",
         tokenIconUrl = "",
         tokenCurrency = "DAI",
@@ -591,7 +617,13 @@ private fun TransactionCardPreviewWithPriceImpact() {
 @Suppress("MagicNumber")
 private fun TransactionCardPreviewWithoutPriceImpact() {
     TransactionCard(
-        type = TransactionCardType.ReadOnly(),
+        type = TransactionCardType.ReadOnly(
+            accountTitleUM = AccountTitleUM.Account(
+                prefixText = resourceReference(R.string.common_from),
+                name = AccountNameUM.DefaultMain.value,
+                icon = CryptoPortfolioIcon.ofDefaultCustomAccount().toUM(),
+            ),
+        ),
         amountEquivalent = "1 000 000",
         tokenIconUrl = "",
         tokenCurrency = "DAI",

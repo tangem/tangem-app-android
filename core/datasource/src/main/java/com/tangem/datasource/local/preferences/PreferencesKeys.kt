@@ -13,6 +13,7 @@ import com.tangem.datasource.local.preferences.PreferencesKeys.USED_CARDS_INFO_K
 import com.tangem.datasource.local.preferences.PreferencesKeys.USER_WAS_INTERACT_WITH_RATING_KEY
 import com.tangem.datasource.local.preferences.PreferencesKeys.WAS_APPLICATION_STOPPED_KEY
 import com.tangem.datasource.local.preferences.PreferencesKeys.WAS_TWINS_ONBOARDING_SHOWN
+import com.tangem.domain.models.wallet.UserWalletId
 
 /**
  * All preferences keys that DataStore<Preferences> is stored.
@@ -121,6 +122,8 @@ object PreferencesKeys {
 
     val YIELD_SUPPLY_WARNINGS_STATES_KEY by lazy { stringPreferencesKey(name = "yieldSupplyWarningsStates") }
 
+    val ACCESS_CODE_SKIPPED_STATES_KEY by lazy { stringPreferencesKey(name = "accessCodeSkippedStates") }
+
     // region Notifications
     val NOTIFICATIONS_APPLICATION_ID_KEY by lazy { stringPreferencesKey(name = "notificationsApplicationId") }
 
@@ -170,6 +173,12 @@ object PreferencesKeys {
 
     fun getHotWalletUnlockDeadlineKey(attemptId: String) =
         longPreferencesKey(name = "hotWalletUnlockDeadline_$attemptId")
+
+    fun getTangemPayAddToWalletKey(customerWalletAddress: String) =
+        booleanPreferencesKey("tangem_pay_add_to_wallet_done_key_$customerWalletAddress")
+
+    fun getTangemPayCheckCustomerByWalletId(userWalletId: UserWalletId) =
+        booleanPreferencesKey("tangem_pay_check_customer_by_wallet_id_$userWalletId")
 
     // endregion
 }

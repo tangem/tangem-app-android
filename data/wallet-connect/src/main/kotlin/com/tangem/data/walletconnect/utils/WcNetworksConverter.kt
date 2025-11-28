@@ -3,6 +3,13 @@ package com.tangem.data.walletconnect.utils
 import com.reown.walletkit.client.Wallet
 import com.tangem.data.common.currency.isCustomCoin
 import com.tangem.data.walletconnect.model.CAIP10
+import com.tangem.domain.account.producer.SingleAccountProducer
+import com.tangem.domain.account.status.producer.SingleAccountStatusListProducer
+import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
+import com.tangem.domain.account.supplier.SingleAccountSupplier
+import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.account.AccountId
+import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
@@ -18,6 +25,8 @@ import javax.inject.Inject
 internal class WcNetworksConverter @Inject constructor(
     private val namespaceConverters: Set<WcNamespaceConverter>,
     private val walletManagersFacade: WalletManagersFacade,
+    private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
+    private val singleAccountSupplier: SingleAccountSupplier,
     private val multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
 ) {
 
@@ -67,8 +76,13 @@ internal class WcNetworksConverter @Inject constructor(
         return allCoinNetwork
     }
 
-    suspend fun findWalletNetworks(wallet: UserWallet, sdkSession: Wallet.Model.Session): Set<Network> {
-        val walletNetworks = getWalletNetworks(wallet.walletId)
+    suspend fun findWalletNetworks(
+        wallet: UserWallet,
+        account: Account?,
+        sdkSession: Wallet.Model.Session,
+    ): Set<Network> {
+        val portfolioNetworks = account?.let { getAccountNetworks(it.accountId) }
+            ?: getWalletNetworks(wallet.walletId)
         val existNetworks = sdkSession.namespaces.values
             .map { it.accounts }.flatten().toSet()
             .mapNotNull { CAIP10.fromRaw(it) }
@@ -76,7 +90,7 @@ internal class WcNetworksConverter @Inject constructor(
                 val blockchain = namespaceConverters
                     .firstNotNullOfOrNull { it.toBlockchain(caip10.chainId) }
                     ?: return@mapNotNullTo null
-                walletNetworks
+                portfolioNetworks
                     // find all derivation
                     .filter { it.rawId == blockchain.id }
                     // find equal address
@@ -89,18 +103,38 @@ internal class WcNetworksConverter @Inject constructor(
         return existNetworks
     }
 
+    suspend fun getAccount(accountId: AccountId): Account? {
+        return singleAccountSupplier.getSyncOrNull(SingleAccountProducer.Params(accountId))
+    }
+
     suspend fun convertNetworksForApprove(sessionForApprove: WcSessionApprove): List<Network> {
-        val walletNetworks = getWalletNetworks(sessionForApprove.wallet.walletId)
+        val portfolioNetworks = sessionForApprove.account?.let { getAccountNetworks(it.accountId) }
+            ?: getWalletNetworks(sessionForApprove.wallet.walletId)
         return sessionForApprove.network
-            .map { network -> walletNetworks.filter { walletNetwork -> walletNetwork.rawId == network.rawId } }
+            .map { network -> portfolioNetworks.filter { walletNetwork -> walletNetwork.rawId == network.rawId } }
             .flatten()
     }
 
-    private suspend fun getWalletNetworks(userWalletId: UserWalletId): List<Network> {
+    suspend fun getWalletNetworks(userWalletId: UserWalletId): List<Network> {
         return multiWalletCryptoCurrenciesSupplier.getSyncOrNull(
             params = MultiWalletCryptoCurrenciesProducer.Params(userWalletId = userWalletId),
         )
             .orEmpty()
             .filterIsInstance<CryptoCurrency.Coin>().map(CryptoCurrency.Coin::network)
+    }
+
+    private suspend fun getAccountStatus(accountId: AccountId): AccountStatus? {
+        return singleAccountStatusListSupplier.getSyncOrNull(
+            SingleAccountStatusListProducer.Params(accountId.userWalletId),
+        )?.accountStatuses?.find { it.account.accountId == accountId }
+    }
+
+    suspend fun getAccountNetworks(accountId: AccountId): List<Network> {
+        return getAccountStatus(accountId)
+            ?.flattenCurrencies()
+            ?.map { it.currency }
+            ?.filterIsInstance<CryptoCurrency.Coin>()
+            ?.map(CryptoCurrency.Coin::network)
+            ?: emptyList()
     }
 }
