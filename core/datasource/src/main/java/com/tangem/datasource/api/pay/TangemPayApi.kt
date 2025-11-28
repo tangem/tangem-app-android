@@ -7,6 +7,7 @@ import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.POST
+import retrofit2.http.PUT
 import retrofit2.http.Path
 import retrofit2.http.Query
 
@@ -23,11 +24,6 @@ interface TangemPayApi {
     @POST("v1/auth/challenge")
     suspend fun generateNonceByCardWallet(
         @Body request: GenerateNoneByCardWalletRequest,
-    ): ApiResponse<GenerateNonceResponse>
-
-    @POST("v1/auth/challenge")
-    suspend fun generateNonceByCustomerWallet(
-        @Body request: GenerateNonceByCustomerWalletRequest,
     ): ApiResponse<GenerateNonceResponse>
 
     @POST("v1/auth/token")
@@ -123,6 +119,12 @@ interface TangemPayApi {
     @GET("v1/customer/me")
     suspend fun getCustomerMe(@Header("Authorization") authHeader: String): ApiResponse<CustomerMeResponse>
 
+    @GET("v1/customer/wallets/{customer_wallet_id}")
+    suspend fun checkCustomerWalletId(
+        @Header("X-API-KEY") authHeader: String,
+        @Path("customer_wallet_id") customerWalletId: String,
+    ): ApiResponse<CheckCustomerWalletResponse>
+
     @POST("v1/deeplink/validate")
     suspend fun validateDeeplink(@Body body: DeeplinkValidityRequest): ApiResponse<DeeplinkValidityResponse>
 
@@ -146,4 +148,22 @@ interface TangemPayApi {
         @Header("Authorization") authHeader: String,
         @Body body: CardDetailsRequest,
     ): ApiResponse<CardDetailsResponse>
+
+    @PUT("v1/customer/card/pin")
+    suspend fun setPin(
+        @Header("Authorization") authHeader: String,
+        @Body body: SetPinRequest,
+    ): ApiResponse<SetPinResponse>
+
+    @POST("v1/customer/card/freeze")
+    suspend fun freezeCard(
+        @Header("Authorization") authHeader: String,
+        @Body body: FreezeUnfreezeCardRequest,
+    ): ApiResponse<FreezeUnfreezeCardResponse>
+
+    @POST("v1/customer/card/unfreeze")
+    suspend fun unfreezeCard(
+        @Header("Authorization") authHeader: String,
+        @Body body: FreezeUnfreezeCardRequest,
+    ): ApiResponse<FreezeUnfreezeCardResponse>
 }

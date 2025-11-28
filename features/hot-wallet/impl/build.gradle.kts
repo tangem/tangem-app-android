@@ -14,6 +14,7 @@ android {
 dependencies {
     /** Api */
     implementation(projects.features.hotWallet.api)
+    implementation(projects.features.onboardingV2.api)
     implementation(projects.features.pushNotifications.api)
 
     /** Core modules */
@@ -36,6 +37,7 @@ dependencies {
     implementation(projects.domain.settings)
     implementation(projects.domain.feedback)
     implementation(projects.domain.feedback.models)
+    implementation(projects.domain.hotWallet)
 
     /** Common */
     implementation(projects.common.ui)
