@@ -32,6 +32,9 @@ dependencies {
     /** Domain */
     implementation(projects.domain.visa)
 
+    /** Data **/
+    implementation(projects.data.visa)
+
     /** Compose */
     implementation(deps.compose.foundation)
     implementation(deps.compose.material3)

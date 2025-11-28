@@ -78,7 +78,7 @@ internal class TangemPayCardDetailsBlockModel @Inject constructor(
             uiState.transformerUpdate(
                 transformer = DetailsRevealProgressStateTransformer(onClickHide = ::hideCardDetails),
             )
-            cardDetailsRepository.revealCardDetails()
+            cardDetailsRepository.revealCardDetails(params.params.userWalletId)
                 .onRight { cardDetails ->
                     uiState.transformerUpdate(
                         transformer = DetailsRevealedStateTransformer(

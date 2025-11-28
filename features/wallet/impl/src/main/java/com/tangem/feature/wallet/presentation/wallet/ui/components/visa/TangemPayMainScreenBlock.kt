@@ -11,6 +11,7 @@ import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.R
 import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.components.notifications.NotificationConfig
+import com.tangem.core.ui.components.notifications.NotificationConfig.ButtonsState.*
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -30,7 +31,7 @@ internal fun TangemPayMainScreenBlock(state: TangemPayState, isBalanceHidden: Bo
                     iconSize = 36.dp,
                     subtitle = state.description,
                     iconResId = state.iconRes,
-                    buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
+                    buttonsState = SecondaryButtonConfig(
                         text = state.buttonText,
                         onClick = state.onButtonClick,
                         shouldShowProgress = state.showProgress,
@@ -40,13 +41,15 @@ internal fun TangemPayMainScreenBlock(state: TangemPayState, isBalanceHidden: Bo
         }
         is TangemPayState.Card -> TangemPayCardMainBlock(state, isBalanceHidden, modifier)
         is TangemPayState.Empty -> Unit
+        is TangemPayState.RefreshNeeded -> TangemPayRefreshBlock(state, modifier)
+        is TangemPayState.TemporaryUnavailable -> TangemPayUnavailableBlock(state, modifier)
     }
 }
 
 @Preview(showBackground = true)
 @Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun ResetCardScreenPreview() {
+private fun TangemPayMainScreenBlockPreview() {
     TangemThemePreview {
         Column(verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8)) {
             TangemPayMainScreenBlock(
