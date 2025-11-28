@@ -27,4 +27,13 @@ internal class DefaultTangemPayAuthDataSource @Inject constructor(
             .mapLeft { IllegalStateException("TangemPay token refresh failed. Error code: ${it.errorCode}") }
             .bind()
     }
+
+    override suspend fun getWithdrawalSignature(cardId: String, hash: String): Either<Throwable, String> {
+        return when (val signResult = tangemSdkManager.getWithdrawalSignature(cardId, hash)) {
+            is CompletionResult.Failure<*> -> Either.Left(
+                IllegalStateException("TangemPay sign hash failed: ${signResult.error}"),
+            )
+            is CompletionResult.Success<String> -> Either.Right(signResult.data)
+        }
+    }
 }

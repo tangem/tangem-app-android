@@ -73,8 +73,13 @@ internal class TangemPayDetailsStateFactory(
                 actionButtons = persistentListOf(
                     ActionButtonConfig(
                         text = resourceReference(id = R.string.tangempay_card_details_add_funds),
-                        iconResId = R.drawable.ic_arrow_down_24,
+                        iconResId = R.drawable.ic_plus_24,
                         onClick = intents::onClickAddFunds,
+                    ),
+                    ActionButtonConfig(
+                        text = resourceReference(id = R.string.tangempay_card_details_withdraw),
+                        iconResId = R.drawable.ic_arrow_up_24,
+                        onClick = intents::onClickWithdraw,
                     ),
                 ),
             ),

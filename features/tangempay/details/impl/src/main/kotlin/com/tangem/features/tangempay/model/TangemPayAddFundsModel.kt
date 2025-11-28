@@ -4,7 +4,7 @@ import androidx.compose.runtime.Stable
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
-import com.tangem.domain.pay.TangemPayTopUpDataFactory
+import com.tangem.domain.pay.TangemPaySwapDataFactory
 import com.tangem.features.tangempay.components.TangemPayAddFundsComponent
 import com.tangem.features.tangempay.entity.TangemPayAddFundsUM
 import com.tangem.features.tangempay.model.transformers.TangemPayAddFundsUMConverter
@@ -16,7 +16,7 @@ import javax.inject.Inject
 internal class TangemPayAddFundsModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
-    private val tangemPayTopUpDataFactory: TangemPayTopUpDataFactory,
+    private val tangemPaySwapDataFactory: TangemPaySwapDataFactory,
 ) : Model() {
 
     private val params = paramsContainer.require<TangemPayAddFundsComponent.Params>()
@@ -24,7 +24,7 @@ internal class TangemPayAddFundsModel @Inject constructor(
     val uiState: TangemPayAddFundsUM = getInitialState()
 
     private fun getInitialState(): TangemPayAddFundsUM {
-        val data = tangemPayTopUpDataFactory.create(
+        val data = tangemPaySwapDataFactory.create(
             depositAddress = params.depositAddress,
             chainId = params.chainId,
             cryptoBalance = params.cryptoBalance,
