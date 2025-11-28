@@ -115,6 +115,7 @@ internal class ProdApiConfigsManagerTest {
                 ApiConfig.ID.MoonPay -> MoonPay()
                 ApiConfig.ID.P2PEthPool -> P2PEthPool(p2pAuthProvider = p2pEthPoolAuthProvider)
                 ApiConfig.ID.News -> News(authProvider = appAuthProvider)
+                ApiConfig.ID.TangemPayAuth -> TangemPayAuth(appVersionProvider = appVersionProvider)
             }
         }
     }
@@ -130,6 +131,7 @@ internal class ProdApiConfigsManagerTest {
             ApiConfig.ID.MoonPay -> createMoonPayModel()
             ApiConfig.ID.P2PEthPool -> createP2PModel()
             ApiConfig.ID.News -> createNewsModel()
+            ApiConfig.ID.TangemPayAuth -> createTangemPayAuthModel()
         }
     }
 
@@ -249,6 +251,20 @@ internal class ProdApiConfigsManagerTest {
             expected = ApiEnvironmentConfig(
                 environment = ApiEnvironment.DEV,
                 baseUrl = "https://api.dev.us.paera.com/bff/",
+                headers = mapOf(
+                    "version" to ProviderSuspend { VERSION_NAME },
+                    "platform" to ProviderSuspend { "Android" },
+                ),
+            ),
+        )
+    }
+
+    private fun createTangemPayAuthModel(): TestModel {
+        return TestModel(
+            id = ApiConfig.ID.TangemPayAuth,
+            expected = ApiEnvironmentConfig(
+                environment = ApiEnvironment.DEV,
+                baseUrl = "https://api.dev.us.paera.com/",
                 headers = mapOf(
                     "version" to ProviderSuspend { VERSION_NAME },
                     "platform" to ProviderSuspend { "Android" },
