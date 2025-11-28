@@ -8,6 +8,10 @@ interface CreateWalletBackupComponent : ComposableContentComponent {
 
     data class Params(
         val userWalletId: UserWalletId,
+        val isUpgradeFlow: Boolean,
+        val shouldSetAccessCode: Boolean,
+        val analyticsSource: String,
+        val analyticsAction: String,
     )
 
     interface Factory : ComponentFactory<Params, CreateWalletBackupComponent>
