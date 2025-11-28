@@ -7,7 +7,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import java.math.BigDecimal
 
-interface TangemPayTopUpDataFactory {
+interface TangemPaySwapDataFactory {
 
     fun create(
         depositAddress: String,

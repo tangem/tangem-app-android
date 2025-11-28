@@ -32,6 +32,7 @@
   <string name="account_details_archive_description">You are archiving this account, but you can always get it back.</string>
   <string name="account_details_archiving">Archiving...</string>
   <string name="account_details_title">Account</string>
+  <string name="account_edit_failure_dialog_title">Can’t edit the account</string>
   <string name="account_edit_success_message">Account saved</string>
   <string name="account_for_rewards">Account for rewards</string>
   <string name="account_form_account_index">Account #%s — used for address derivation.</string>
@@ -444,7 +445,7 @@
   <string name="disclaimer_error_loading">Check your internet connection or switch to a different network</string>
   <string name="disclaimer_title">Terms of service</string>
   <string name="domain_receive_assets_default_address">Default Address</string>
-  <string name="domain_receive_assets_legacy_address">Legacy Address</string>
+  <string name="domain_receive_assets_legacy_address">Legacy %s Address</string>
   <string name="domain_receive_assets_navigation_title">Receive assets</string>
   <string name="domain_receive_assets_network_name_address">%s address</string>
   <string name="domain_receive_assets_onboarding_description">Sending assets in other networks will result in permanent loss.</string>
@@ -1441,9 +1442,21 @@
   <string name="tangempay_card_details_swap_description">Swap any asset in your portfolio for card</string>
   <string name="tangempay_card_details_title">Card details</string>
   <string name="tangempay_card_details_unfreeze_card">Unfreeze Card</string>
+  <string name="tangempay_card_details_withdraw">Withdraw</string>
+  <string name="tangempay_card_details_withdraw_error_title">Withdraw unavailable now</string>
+  <string name="tangempay_card_details_withdraw_in_progress_description">You can\'t initiate swap or new withdrawal till the current one is finished</string>
+  <string name="tangempay_card_details_withdraw_in_progress_title">Withdrawal in progress</string>
+  <string name="tangempay_failed_to_issue_card">Failed to issue card</string>
+  <string name="tangempay_failed_to_issue_card_retry_description">A technical error has occurred, please try again by clicking the button below.</string>
+  <string name="tangempay_failed_to_issue_card_support_description">A technical error has occurred, please contact support.</string>
   <string name="tangempay_issue_card_notification_description">It usually takes up to 15 minutes</string>
   <string name="tangempay_issue_card_notification_title">Setting up your Tangem Card</string>
+  <string name="tangempay_issuing_your_card">Issuing your card</string>
+  <string name="tangempay_issuing_your_card_description">We’re getting your card ready. This may take a little time.</string>
   <string name="tangempay_kyc_card_ready_notification_title">Tangem Pay</string>
+  <string name="tangempay_kyc_failed_description">We could not verify your profile. If you have any questions, please contact support.</string>
+  <string name="tangempay_kyc_failed_title">Unfortunately, we couldn\'t verify your identity </string>
+  <string name="tangempay_kyc_in_progress">KYC in progress</string>
   <string name="tangempay_kyc_in_progress_notification_button">View Status</string>
   <string name="tangempay_kyc_in_progress_notification_title">KYC in progress for Tangem Pay</string>
   <string name="tangempay_onboarding_get_card_button_text">Get card</string>
@@ -1459,6 +1472,7 @@
   <string name="tangempay_service_unavailable_description">We’re fixing a technical issue. Please try again later.</string>
   <string name="tangempay_service_unavailable_title">Service temporarily unavailable</string>
   <string name="tangempay_service_unreachable_try_later">The service is currently unreachable. Please try again later.</string>
+  <string name="tangempay_sync_needed">Sync needed</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay is temporarily unavailable</string>
   <string name="tangempay_title">Tangem Pay</string>
   <string name="tangempay_use_tangem_device_to_restore_payment_account">Use your card or ring to restore access to your payment account</string>
