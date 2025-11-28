@@ -160,5 +160,7 @@ interface TangemSdkManager {
     ): CompletionResult<VisaSignedDataByCustomerWallet>
 
     suspend fun tangemPayProduceInitialCredentials(cardId: String): CompletionResult<TangemPayInitialCredentials>
+
+    suspend fun getWithdrawalSignature(cardId: String, hash: String): CompletionResult<String>
     // endregion
 }
