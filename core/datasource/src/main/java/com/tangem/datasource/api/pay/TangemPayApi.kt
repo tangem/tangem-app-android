@@ -166,4 +166,16 @@ interface TangemPayApi {
         @Header("Authorization") authHeader: String,
         @Body body: FreezeUnfreezeCardRequest,
     ): ApiResponse<FreezeUnfreezeCardResponse>
+
+    @POST("v1/customer/card/withdraw/data")
+    suspend fun getWithdrawData(
+        @Header("Authorization") authHeader: String,
+        @Body body: WithdrawDataRequest,
+    ): ApiResponse<WithdrawDataResponse>
+
+    @POST("v1/customer/card/withdraw")
+    suspend fun withdraw(
+        @Header("Authorization") authHeader: String,
+        @Body body: WithdrawRequest,
+    ): ApiResponse<WithdrawResponse>
 }

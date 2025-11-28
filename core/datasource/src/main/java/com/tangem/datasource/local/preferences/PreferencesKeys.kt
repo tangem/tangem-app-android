@@ -145,6 +145,8 @@ object PreferencesKeys {
         intPreferencesKey(name = "tronNetworkFeeNotificationShowCount")
     }
 
+    val TANGEM_PAY_WITHDRAW_ORDERS_KEY by lazy { stringPreferencesKey(name = "tangemPayWithdrawOrders") }
+
     fun getShouldShowNotificationKey(key: String) = booleanPreferencesKey("showShowNotificationUM_$key")
     // endregion
 

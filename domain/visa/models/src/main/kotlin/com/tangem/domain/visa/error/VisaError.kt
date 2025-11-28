@@ -62,6 +62,9 @@ sealed class VisaApiError(
 
     data object RefreshTokenExpired : VisaApiError(104004001)
     data object NotPaeraCustomer : VisaApiError(104004002)
+    data object WithdrawalDataError : VisaApiError(104004003)
+    data object SignWithdrawError : VisaApiError(104004004)
+    data object WithdrawError : VisaApiError(104004005)
 
     companion object {
         fun fromBackendError(backendErrorCode: Int): VisaApiError {
