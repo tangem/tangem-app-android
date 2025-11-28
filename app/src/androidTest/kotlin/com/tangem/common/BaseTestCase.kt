@@ -63,7 +63,6 @@ abstract class BaseTestCase : TestCase(
     private val apiEnvironmentRule = ApiEnvironmentRule()
     private val permissionRule = GrantPermissionRule.grant(
         Manifest.permission.POST_NOTIFICATIONS,
-        Manifest.permission.CAMERA,
     )
 
     /**

@@ -1,5 +1,6 @@
 package com.tangem.features.walletconnect.transaction.converter
 
+import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.domain.walletconnect.usecase.method.WcMessageSignUseCase
 import com.tangem.domain.walletconnect.usecase.method.WcMethodContext
@@ -29,7 +30,7 @@ internal class WcSignTypedDataUMConverter @Inject constructor(
                     onShowVerifiedAlert = value.actions.onShowVerifiedAlert,
                 ),
             ),
-            walletName = value.context.session.wallet.name.takeIf { value.context.session.showWalletInfo },
+            portfolioName = value.portfolioName,
             networkInfo = networkInfoUMConverter.convert(value.context.network),
             address = WcAddressConverter.convert(value.context.derivationState),
             isLoading = value.signState.domainStep == WcSignStep.Signing,
@@ -52,5 +53,6 @@ internal class WcSignTypedDataUMConverter @Inject constructor(
         val signState: WcSignState<*>,
         val signModel: WcMessageSignUseCase.SignModel,
         val actions: WcTransactionActionsUM,
+        val portfolioName: AccountTitleUM?,
     )
 }

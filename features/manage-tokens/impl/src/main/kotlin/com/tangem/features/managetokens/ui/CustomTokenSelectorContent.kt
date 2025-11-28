@@ -288,7 +288,7 @@ private class CustomTokenNetworkSelectorComponentPreviewProvider :
                         name = "",
                         isDefault = false,
                     ),
-                    onDerivationPathSelected = {},
+                    onDerivationPathSelected = { _, _ -> },
                 ),
             ),
             PreviewCustomTokenSelectorComponent(

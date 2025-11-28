@@ -1,5 +1,6 @@
 package com.tangem.domain.swap
 
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
@@ -20,12 +21,17 @@ interface SwapTransactionRepository {
      * @param userWalletId selected user wallet id
      * @param fromCryptoCurrency currency swap from
      * @param toCryptoCurrency currency swap to
+     * @param fromAccount account swap from
+     * @param toAccount account swap to
      * @param transaction swap transaction
      */
+    @Suppress("LongParameterList")
     suspend fun storeTransaction(
         userWalletId: UserWalletId,
         fromCryptoCurrency: CryptoCurrency,
         toCryptoCurrency: CryptoCurrency,
+        fromAccount: Account.CryptoPortfolio?,
+        toAccount: Account.CryptoPortfolio?,
         transaction: SwapTransactionModel,
     )
 

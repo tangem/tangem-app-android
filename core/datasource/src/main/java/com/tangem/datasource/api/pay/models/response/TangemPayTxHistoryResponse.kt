@@ -37,7 +37,7 @@ data class TangemPayTxHistoryResponse(
         @Json(name = "memo") val memo: String? = null,
         @Json(name = "receipt") val receipt: Boolean,
         @Json(name = "merchant_name") val merchantName: String,
-        @Json(name = "merchant_category") val merchantCategory: String,
+        @Json(name = "merchant_category") val merchantCategory: String?,
         @Json(name = "merchant_category_code") val merchantCategoryCode: String,
         @Json(name = "merchant_id") val merchantId: String? = null,
         @Json(name = "enriched_merchant_icon") val enrichedMerchantIcon: String? = null,
