@@ -27,6 +27,7 @@ dependencies {
     implementation(deps.spongecastle.core)
 
     /** Libs - Other */
+    implementation(deps.timber)
     implementation(deps.jodatime)
     implementation(deps.androidx.paging.runtime)
     implementation(deps.moshi)
