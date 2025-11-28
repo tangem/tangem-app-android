@@ -20,6 +20,7 @@ interface SwapComponent : ComposableContentComponent {
             val cryptoAmount: BigDecimal,
             val fiatAmount: BigDecimal,
             val depositAddress: String,
+            val isWithdrawal: Boolean,
         )
     }
 
