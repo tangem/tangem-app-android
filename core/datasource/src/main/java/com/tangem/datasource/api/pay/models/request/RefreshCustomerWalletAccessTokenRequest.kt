@@ -5,6 +5,6 @@ import com.squareup.moshi.JsonClass
 
 @JsonClass(generateAdapter = true)
 data class RefreshCustomerWalletAccessTokenRequest(
-    @Json(name = "auth_type") val authType: String = "customer_wallet",
+    @Json(name = "auth_type") val authType: String,
     @Json(name = "refresh_token") val refreshToken: String,
 )
