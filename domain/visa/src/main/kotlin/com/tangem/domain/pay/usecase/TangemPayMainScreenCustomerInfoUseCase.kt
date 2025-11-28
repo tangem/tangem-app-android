@@ -9,6 +9,7 @@ import com.tangem.domain.pay.model.CustomerInfo
 import com.tangem.domain.pay.model.MainScreenCustomerInfo
 import com.tangem.domain.pay.model.OrderStatus
 import com.tangem.domain.pay.model.TangemPayCustomerInfoError
+import com.tangem.domain.pay.repository.CustomerOrderRepository
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.visa.error.VisaApiError
 import timber.log.Timber
@@ -21,6 +22,7 @@ private const val TAG = "TangemPayMainScreenCustomerInfoUseCase"
  */
 class TangemPayMainScreenCustomerInfoUseCase(
     private val repository: OnboardingRepository,
+    private val customerOrderRepository: CustomerOrderRepository,
 ) {
 
     suspend operator fun invoke(
@@ -74,7 +76,7 @@ class TangemPayMainScreenCustomerInfoUseCase(
         userWalletId: UserWalletId,
         orderId: String,
     ): Either<TangemPayCustomerInfoError, MainScreenCustomerInfo> {
-        return repository.getOrderStatus(userWalletId, orderId = orderId)
+        return customerOrderRepository.getOrderStatus(userWalletId, orderId = orderId)
             .fold(
                 ifLeft = { error ->
                     error.mapErrorForCustomer().left()
