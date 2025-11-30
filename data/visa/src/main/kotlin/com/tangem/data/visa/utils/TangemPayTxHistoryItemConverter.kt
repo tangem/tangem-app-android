@@ -40,6 +40,7 @@ internal class TangemPayTxHistoryItemConverter(moshi: Moshi) :
             enrichedMerchantName = spend.enrichedMerchantName,
             merchantName = spend.merchantName,
             enrichedMerchantCategory = spend.enrichedMerchantCategory,
+            merchantCategoryCode = spend.merchantCategoryCode,
             merchantCategory = spend.merchantCategory,
             status = TangemPayTxHistoryItemStatusConverter.convert(spend.status),
             enrichedMerchantIconUrl = spend.enrichedMerchantIcon,
