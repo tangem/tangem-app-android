@@ -23,6 +23,8 @@ internal object TangemPayTxHistoryDetailsConverter :
     Converter<TangemPayTxHistoryDetailsConverter.Input, TangemPayTxHistoryDetailsUM> {
     private val dateFormatter = DateTimeFormatters.getBestFormatterBySkeleton("dd MMMM")
 
+    private val paySpendSubtitleConverter = PaySpendSubtitleConverter
+
     override fun convert(value: Input): TangemPayTxHistoryDetailsUM {
         val transaction = value.item
         return TangemPayTxHistoryDetailsUM(
@@ -79,10 +81,7 @@ internal object TangemPayTxHistoryDetailsConverter :
             is TangemPayTxHistoryItem.Fee -> resourceReference(R.string.tangem_pay_fee_subtitle)
             is TangemPayTxHistoryItem.Payment -> resourceReference(R.string.common_transfer)
             is TangemPayTxHistoryItem.Collateral -> resourceReference(R.string.common_transfer)
-            is TangemPayTxHistoryItem.Spend -> {
-                val subtitle = merchantCategory ?: enrichedMerchantCategory
-                subtitle?.let(::stringReference) ?: resourceReference(R.string.tangem_pay_other)
-            }
+            is TangemPayTxHistoryItem.Spend -> paySpendSubtitleConverter.convert(this)
         }
     }
 
