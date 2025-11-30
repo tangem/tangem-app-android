@@ -20,6 +20,9 @@ import org.joda.time.DateTimeZone
 internal class TangemPayTxHistoryItemsConverter(
     private val txHistoryUiActions: TangemPayTxHistoryUiActions,
 ) : Converter<TangemPayTxHistoryItem, TangemPayTransactionState.Content> {
+
+    private val paySpendSubtitleConverter = PaySpendSubtitleConverter
+
     override fun convert(value: TangemPayTxHistoryItem): TangemPayTransactionState.Content {
         return when (value) {
             is TangemPayTxHistoryItem.Spend -> convertSpend(spend = value)
@@ -39,7 +42,6 @@ internal class TangemPayTxHistoryItemsConverter(
         val amount = amountPrefix + spend.amount.format {
             fiat(fiatCurrencyCode = spend.currency.currencyCode, fiatCurrencySymbol = spend.currency.symbol)
         }
-        val subtitle = spend.merchantCategory ?: spend.enrichedMerchantCategory
         return TangemPayTransactionState.Content.Spend(
             id = spend.id,
             onClick = { txHistoryUiActions.onTransactionClick(spend) },
@@ -51,7 +53,7 @@ internal class TangemPayTxHistoryItemsConverter(
                 }
             },
             title = stringReference(spend.enrichedMerchantName ?: spend.merchantName),
-            subtitle = subtitle?.let(::stringReference) ?: resourceReference(R.string.tangem_pay_other),
+            subtitle = paySpendSubtitleConverter.convert(spend),
             time = DateTimeFormatters.formatDate(localDate, DateTimeFormatters.timeFormatter),
             icon = spend.enrichedMerchantIconUrl?.let(ImageReference::Url)
                 ?: ImageReference.Res(R.drawable.ic_category_24),
