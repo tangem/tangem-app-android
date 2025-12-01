@@ -138,7 +138,6 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     private val userWalletsListRepository: UserWalletsListRepository,
     private val setShouldShowNotificationUseCase: SetShouldShowNotificationUseCase,
     private val notificationsRepository: NotificationsRepository,
-    private val messageSender: UiMessageSender,
     private val setNotificationsEnabledUseCase: SetNotificationsEnabledUseCase,
     private val getWalletsListForEnablingUseCase: GetWalletsForAutomaticallyPushEnablingUseCase,
     private val uiMessageSender: UiMessageSender,
@@ -492,7 +491,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
                         }
                     }
                 }
-                messageSender.send(message)
+                uiMessageSender.send(message)
             }
         }
     }
