@@ -44,6 +44,7 @@
   <string name="account_form_placeholder_new_account">New account</string>
   <string name="account_form_title_create">Add account</string>
   <string name="account_form_title_edit">Edit account</string>
+  <string name="account_generic_error_dialog_message">Please try again later. If it keeps happening, get in touch with support and we’ll help you resolve it.</string>
   <string name="account_label_tokens_info">%1$s in %2$s</string>
   <string name="account_main_account_title">Main account</string>
   <string name="account_recover_limit_dialog_description">You have already exceeded the limit of %1$s active accounts. Archive one to recover</string>
@@ -1986,6 +1987,7 @@
   <string name="yield_module_promo_screen_self_custodial_title">Decentralized and self-custodial</string>
   <string name="yield_module_promo_screen_terms_disclaimer">By using this service, you agree with provider\n%1$s and %2$s</string>
   <string name="yield_module_promo_screen_title">Connect to Aave</string>
+  <string name="yield_module_promo_screen_title_v2">Enable %1$s%% APY on your balance</string>
   <string name="yield_module_promo_screen_variable_rate_info">Aave %1$s%% • Variable Interest Rate</string>
   <string name="yield_module_provider">Aave</string>
   <string name="yield_module_rate_info_sheet_chart_average">Avg %s</string>
