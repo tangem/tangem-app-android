@@ -18,6 +18,7 @@ internal data class TangemPayDetailsUM(
 
 internal data class TangemPayCardDetailsUM(
     val number: String,
+    val numberShort: String,
     val expiry: String,
     val cvv: String,
     val buttonText: TextReference = TextReference.EMPTY,
