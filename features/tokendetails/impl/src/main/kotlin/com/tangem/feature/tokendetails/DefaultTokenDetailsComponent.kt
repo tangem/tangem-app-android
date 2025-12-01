@@ -77,7 +77,7 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
         params = YieldSupplyComponent.Params(
             userWalletId = params.userWalletId,
             cryptoCurrency = params.currency,
-            handleNavigation = (params.navigationAction as? NavigationAction.YieldSupply)
+            shouldHandleNavigation = (params.navigationAction as? NavigationAction.YieldSupply)
                 ?.isActive,
         ),
     )
