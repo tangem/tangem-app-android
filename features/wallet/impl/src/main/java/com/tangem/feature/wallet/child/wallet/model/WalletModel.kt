@@ -426,6 +426,8 @@ internal class WalletModel @Inject constructor(
                 value = data,
                 cardFrozenState = cardFrozenState,
                 onClickKyc = innerWalletRouter::openTangemPayOnboarding,
+                onIssuingCard = clickIntents::onIssuingCardClicked,
+                onIssuingFailed = clickIntents::onIssuingFailedClicked,
                 openDetails = { config ->
                     innerWalletRouter.openTangemPayDetails(
                         userWalletId = userWalletId,

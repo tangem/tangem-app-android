@@ -73,6 +73,7 @@ class SendFeedbackEmailUseCase(
             is FeedbackEmailType.TransactionSendingProblem,
             is FeedbackEmailType.Visa.Activation,
             is FeedbackEmailType.Visa.DirectUserRequest,
+            is FeedbackEmailType.Visa.FailedIssueCard,
             -> {
                 append(resources.getStringSafe(R.string.feedback_data_collection_message))
                 skipLine()
