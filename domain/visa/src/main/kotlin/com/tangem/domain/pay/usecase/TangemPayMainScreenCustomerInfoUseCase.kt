@@ -64,7 +64,7 @@ class TangemPayMainScreenCustomerInfoUseCase(
         return repository.getCustomerInfo(userWalletId)
             .mapLeft { error -> error.mapErrorForCustomer() }
             .map { customerInfo ->
-                if (customerInfo.cardInfo == null) {
+                if (customerInfo.cardInfo == null && customerInfo.isKycApproved) {
                     // If order id wasn't saved -> start order creation and get customer info
                     repository.createOrder(userWalletId)
                 }
