@@ -119,13 +119,6 @@ internal class WalletModel @Inject constructor(
     init {
         analyticsEventsHandler.send(WalletScreenAnalyticsEvent.MainScreen.ScreenOpened)
 
-        screenLifecycleProvider.isBackgroundState
-            .onEach { isBackground ->
-                if (isBackground.not()) {
-                    suggestToEnableBiometrics()
-                }
-            }.launchIn(modelScope)
-
         suggestToOpenMarkets()
 
         maybeMigrateNames()
@@ -141,6 +134,12 @@ internal class WalletModel @Inject constructor(
         enableNotificationsIfNeeded()
 
         clickIntents.initialize(innerWalletRouter, modelScope)
+    }
+
+    fun onResume() {
+        modelScope.launch(dispatchers.main) {
+            suggestToEnableBiometrics()
+        }
     }
 
     private fun updateYieldSupplyApy() {
@@ -198,7 +197,6 @@ internal class WalletModel @Inject constructor(
     private suspend fun shouldShowAskBiometryBottomSheet(): Boolean {
         return if (hotWalletFeatureToggles.isHotWalletEnabled) {
             userWalletsListRepository.userWalletsSync().any { it is UserWallet.Cold } &&
-                innerWalletRouter.isWalletLastScreen() &&
                 shouldShowAskBiometryUseCase() &&
                 canUseBiometryUseCase()
         } else {
