@@ -26,6 +26,9 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import timber.log.Timber
+
+private const val WC_TAG = "WcBitcoinSignPsbt"
 
 /**
  * Use case for Bitcoin signPsbt WalletConnect method.
@@ -57,6 +60,7 @@ internal class WcBitcoinSignPsbtUseCase @AssistedInject constructor(
 
     override suspend fun SignCollector<TransactionData>.onSign(state: WcSignState<TransactionData>) {
         // Update wallet manager to refresh UTXO data before processing Bitcoin transaction
+        Timber.tag(WC_TAG).i("Updating wallet manager...")
         walletManagersFacade.update(
             userWalletId = wallet.walletId,
             network = network,
@@ -64,12 +68,17 @@ internal class WcBitcoinSignPsbtUseCase @AssistedInject constructor(
         )
 
         val walletManager = walletManagersFacade.getOrCreateWalletManager(wallet.walletId, network)
+        Timber.tag(WC_TAG).i("Wallet manager type: ${walletManager?.javaClass?.simpleName}")
+
         if (walletManager !is BitcoinWalletManager) {
+            Timber.tag("Wallet Connect").e("ERROR: Invalid wallet manager type")
             emit(state.toResult(HandleMethodError.UnknownError("Invalid wallet manager type").left()))
             return
         }
 
+        Timber.tag(WC_TAG).i("Creating transaction signer...")
         val signer = createTransactionSigner()
+
         val request = SignPsbtRequest(
             psbt = method.psbt,
             signInputs = method.signInputs.map { input ->
@@ -81,9 +90,24 @@ internal class WcBitcoinSignPsbtUseCase @AssistedInject constructor(
             },
             broadcast = method.broadcast,
         )
-
         when (val result = walletManager.walletConnectHandler.signPsbt(request, signer)) {
             is SdkResult.Success -> {
+                Timber.tag(WC_TAG).i("✓ BTC SignPsbt SUCCESS")
+                Timber.tag(WC_TAG).i("Response PSBT length: ${result.data.psbt.length}")
+                Timber.tag(WC_TAG).d("Response PSBT first 100 chars: ${result.data.psbt.take(100)}")
+                Timber.tag(WC_TAG).i("PSBT changed: ${result.data.psbt != method.psbt}")
+
+                try {
+                    val psbtBytes = java.util.Base64.getDecoder().decode(result.data.psbt)
+                    Timber.tag(WC_TAG).i("PSBT decoded successfully, size: ${psbtBytes.size} bytes")
+                } catch (e: Exception) {
+                    Timber.tag("Wallet Connect").e("✗ Failed to decode PSBT as base64: ${e.message}")
+                }
+
+                result.data.txid?.let {
+                    Timber.tag(WC_TAG).i("Transaction ID: $it")
+                }
+
                 val response = buildJsonResponse(result.data)
                 val wcRespondResult = respondService.respond(rawSdkRequest, response)
                 emit(state.toResult(wcRespondResult))

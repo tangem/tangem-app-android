@@ -37,7 +37,6 @@ internal class WcGetAddressesComponent(
                 modifier = modifier,
             )
         } else {
-            // Loading state while use case is being created
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center,

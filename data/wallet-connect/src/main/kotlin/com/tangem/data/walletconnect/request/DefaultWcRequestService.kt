@@ -50,16 +50,17 @@ internal class DefaultWcRequestService(
             if (name.raw.startsWith("wallet_")) return
         }
         val sendResult = _wcRequest.trySend(name to sr)
-        Timber.tag(WC_TAG).d("Channel send result: $sendResult for request ${sr.request.id}")
+        if (sendResult.isFailure) {
+            Timber.tag(WC_TAG).e(
+                "CRITICAL: Failed to send request to channel! Request ${sr.request.id} (${sr.request.method}) " +
+                    "was LOST. Result: $sendResult",
+            )
+        } else {
+            Timber.tag(WC_TAG).d("Channel send SUCCESS for request ${sr.request.id} (${sr.request.method})")
+        }
     }
 
     private fun filterDuplicateRequest(request: WcSdkSessionRequest): Boolean {
-        // Skip duplicate filtering in debug builds
-        if (BuildConfig.DEBUG) {
-            Timber.tag(WC_TAG).d("DEBUG: Skipping duplicate filter for request ${request.request.id}")
-            return true
-        }
-
         val hash = request.request.params.calculateSha256().toHexString()
         val now = DateTime.now().millis
         val expiredMillis = now - expireDuration.millis
