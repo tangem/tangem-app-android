@@ -57,6 +57,8 @@ sealed interface FeedbackEmailType {
     }
 
     sealed class Visa : FeedbackEmailType {
+        data class FailedIssueCard(override val walletMetaInfo: WalletMetaInfo) : Visa()
+
         data class DirectUserRequest(override val walletMetaInfo: WalletMetaInfo) : Visa()
 
         data class Activation(override val walletMetaInfo: WalletMetaInfo) : Visa()

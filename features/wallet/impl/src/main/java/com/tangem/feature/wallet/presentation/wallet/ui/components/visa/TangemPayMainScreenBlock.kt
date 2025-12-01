@@ -3,15 +3,10 @@ package com.tangem.feature.wallet.presentation.wallet.ui.components.visa
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.R
-import com.tangem.core.ui.components.notifications.Notification
-import com.tangem.core.ui.components.notifications.NotificationConfig
-import com.tangem.core.ui.components.notifications.NotificationConfig.ButtonsState.*
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -22,27 +17,12 @@ import com.tangem.feature.wallet.presentation.wallet.ui.components.singlecurrenc
 @Composable
 internal fun TangemPayMainScreenBlock(state: TangemPayState, isBalanceHidden: Boolean, modifier: Modifier = Modifier) {
     when (state) {
-        is Progress -> {
-            Notification(
-                modifier = modifier
-                    .fillMaxWidth(),
-                config = NotificationConfig(
-                    title = state.title,
-                    iconSize = 36.dp,
-                    subtitle = state.description,
-                    iconResId = state.iconRes,
-                    buttonsState = SecondaryButtonConfig(
-                        text = state.buttonText,
-                        onClick = state.onButtonClick,
-                        shouldShowProgress = state.showProgress,
-                    ),
-                ),
-            )
-        }
+        is Progress -> TangemPayProgressState(state)
         is TangemPayState.Card -> TangemPayCardMainBlock(state, isBalanceHidden, modifier)
         is TangemPayState.Empty -> Unit
         is TangemPayState.RefreshNeeded -> TangemPayRefreshBlock(state, modifier)
         is TangemPayState.TemporaryUnavailable -> TangemPayUnavailableBlock(state, modifier)
+        is TangemPayState.FailedIssue -> TangemPayFailedIssueState(state)
     }
 }
 
@@ -90,6 +70,7 @@ private fun TangemPayMainScreenBlockPreview() {
                 TangemPayState.Card(
                     lastFourDigits = TextReference.Str("*1234"),
                     balanceText = TextReference.Str("$ 0.00"),
+                    balanceSymbol = TextReference.Str("USDC"),
                     onClick = {},
                 ),
                 isBalanceHidden = false,
