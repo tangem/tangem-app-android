@@ -183,7 +183,8 @@ private fun PreviewTangemPayAddToWalletScreen() {
             ),
             cardDetailsBlockComponent = PreviewTangemPayCardDetailsBlockComponent(
                 TangemPayCardDetailsUM(
-                    number = "•••• •••• •••• 1245",
+                    number = "",
+                    numberShort = "*1245",
                     expiry = "••/••",
                     cvv = "•••",
                     onCopy = {},
