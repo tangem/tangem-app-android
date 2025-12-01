@@ -7,6 +7,7 @@ import com.tangem.domain.onramp.FetchHotCryptoUseCase
 import com.tangem.domain.settings.NeverToShowWalletsScrollPreview
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.domain.wallets.usecase.SelectWalletUseCase
+import com.tangem.domain.yield.supply.usecase.YieldSupplyApyUpdateUseCase
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
 import com.tangem.feature.wallet.presentation.wallet.domain.OnrampStatusFactory
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletContentFetcher
@@ -40,6 +41,7 @@ internal class WalletClickIntents @Inject constructor(
     private val fetchHotCryptoUseCase: FetchHotCryptoUseCase,
     private val onrampStatusFactory: OnrampStatusFactory,
     private val tangemPayIntents: TangemPayClickIntentsImplementor,
+    private val yieldSupplyApyUpdateUseCase: YieldSupplyApyUpdateUseCase,
 ) : BaseWalletClickIntents(),
     WalletCardClickIntents by walletCardClickIntentsImplementor,
     WalletWarningsClickIntents by warningsClickIntentsImplementer,
@@ -126,6 +128,7 @@ internal class WalletClickIntents @Inject constructor(
                 async { rampStateManager.fetchSellServiceData() }.let(::add)
                 async { fetchHotCryptoUseCase() }.let(::add)
                 async { tangemPayIntents.onPullToRefresh() }.let(::add)
+                async { yieldSupplyApyUpdateUseCase() }.let(::add)
             }
                 .awaitAll()
 
