@@ -830,6 +830,8 @@
   <string name="no_account_polkadot">Das Zielkonto ist nicht aktiv. Sende %s oder mehr, um das Konto zu aktivieren.</string>
   <string name="no_account_send_to_create">Senden Sie Geld an diese Andresse um ein Konto zu erstellen</string>
   <string name="no_trustline_xlm_asset">Das Zielkonto verfügt nicht über eine Vertrauensstellung für das gesendete Asset.</string>
+  <string name="notification_black_friday_text">Sicher Dir 10 $ in BTC mit jeder Wallet greif schnell zu!</string>
+  <string name="notification_black_friday_title">Black Friday: bis zu 30% Nachlass</string>
   <string name="notification_referral_promo_button">Jetzt beitreten</string>
   <string name="notification_referral_promo_text">Teile Deinen Code – verdiene 5 USDT pro Verkauf. Deine Freunde erhalten 10 % Rabatt.</string>
   <string name="notification_referral_promo_title">Erhalte BELOHNUNGEN für jeden Freund!</string>
