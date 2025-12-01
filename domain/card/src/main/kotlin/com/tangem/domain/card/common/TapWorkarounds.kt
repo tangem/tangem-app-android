@@ -38,6 +38,7 @@ object TapWorkarounds {
     val CardDTO.hasOldStyleDerivation: Boolean
         get() = batchId == "AC01" || batchId == "AC02" || batchId == "CB95"
 
+    @Suppress("PropertyUsedBeforeDeclaration")
     val CardDTO.isExcluded: Boolean
         get() {
             val isBatchExcluded = excludedBatches.contains(batchId)
