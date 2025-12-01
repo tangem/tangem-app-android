@@ -19,6 +19,7 @@ internal class EmailMessageBodyResolver(
 ) {
 
     /** Resolve email message body by [type] */
+    @Suppress("CyclomaticComplexMethod")
     suspend fun resolve(type: FeedbackEmailType): String = with(FeedbackDataBuilder()) {
         when (type) {
             is FeedbackEmailType.DirectUserRequest -> addUserRequestBody(type.walletMetaInfo)
@@ -33,6 +34,7 @@ internal class EmailMessageBodyResolver(
             -> addPhoneInfoBody()
             is FeedbackEmailType.Visa.Activation -> addUserRequestBody(type.walletMetaInfo)
             is FeedbackEmailType.Visa.DirectUserRequest -> addUserRequestBody(type.walletMetaInfo)
+            is FeedbackEmailType.Visa.FailedIssueCard -> addUserRequestBody(type.walletMetaInfo)
             is FeedbackEmailType.Visa.Dispute -> addVisaRequestBody(type.walletMetaInfo, type.visaTxDetails)
             is FeedbackEmailType.Visa.DisputeV2 -> addTangemPayRequestBody(type.walletMetaInfo, type.item)
         }
