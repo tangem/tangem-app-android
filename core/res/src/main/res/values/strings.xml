@@ -1868,6 +1868,8 @@
   <string name="wc_specify_networks_subtitle">At least one network is required for dApp connection</string>
   <string name="wc_specify_networks_title">Specify selected networks</string>
   <string name="wc_successfully_signed">Successfully signed</string>
+  <string name="wc_get_addresses_title">Share Addresses</string>
+  <string name="wc_get_addresses_addresses_title">Addresses to share</string>
   <string name="wc_transaction_flow_title" translatable="false">WalletConnect</string>
   <string name="wc_transaction_info_to_title">To</string>
   <string name="wc_transaction_request">Transaction request</string>

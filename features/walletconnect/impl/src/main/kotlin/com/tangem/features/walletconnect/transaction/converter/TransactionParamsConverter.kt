@@ -58,7 +58,16 @@ internal class TransactionParamsConverter @Inject constructor() : Converter<Stri
                 }
             }
         }
-        loop(JSONArray(value))
+        try {
+            when (value.trimStart().firstOrNull()) {
+                '[' -> loop(JSONArray(value))
+                '{' -> loop(JSONObject(value))
+                else -> loop(JSONArray(value)) // default to array for backward compatibility
+            }
+        } catch (e: Exception) {
+            timber.log.Timber.tag("Wallet Connect").e("Failed to parse transaction params: ${e.message}")
+        }
+
         return result
     }
 

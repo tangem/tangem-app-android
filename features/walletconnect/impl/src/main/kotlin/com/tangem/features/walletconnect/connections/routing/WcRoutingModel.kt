@@ -13,7 +13,10 @@ import com.tangem.domain.walletconnect.model.WcMethodName
 import com.tangem.domain.walletconnect.model.WcSolanaMethodName
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.*
+import timber.log.Timber
 import javax.inject.Inject
+
+private const val WC_TAG = "Wallet Connect"
 
 @ModelScoped
 internal class WcRoutingModel @Inject constructor(
@@ -33,7 +36,7 @@ internal class WcRoutingModel @Inject constructor(
     }
 
     fun onSlotEmpty() {
-        timber.log.Timber.d("WC Queue: onSlotEmpty() called")
+        Timber.d("WC Queue: onSlotEmpty() called")
         isSlotEmpty.update { true }
     }
 
@@ -46,24 +49,41 @@ internal class WcRoutingModel @Inject constructor(
                     WcEthMethodName.SignTypeData,
                     WcEthMethodName.SignTypeDataV4,
                     WcSolanaMethodName.SignMessage,
-                    -> WcInnerRoute.SignMessage(rawRequest)
+                    WcBitcoinMethodName.SignMessage,
+                    -> {
+                        Timber.tag(WC_TAG).i("📱 UI ROUTING: → SignMessage route")
+                        WcInnerRoute.SignMessage(rawRequest)
+                    }
                     WcEthMethodName.AddEthereumChain,
-                    -> WcInnerRoute.AddNetwork(rawRequest)
+                    -> {
+                        Timber.tag(WC_TAG).i("📱 UI ROUTING: → AddNetwork route")
+                        WcInnerRoute.AddNetwork(rawRequest)
+                    }
                     WcEthMethodName.SwitchEthereumChain,
-                    -> WcInnerRoute.SwitchNetwork(rawRequest)
+                    -> {
+                        Timber.tag(WC_TAG).i("📱 UI ROUTING: → SwitchNetwork route")
+                        WcInnerRoute.SwitchNetwork(rawRequest)
+                    }
                     WcEthMethodName.SignTransaction,
                     WcEthMethodName.SendTransaction,
                     WcSolanaMethodName.SignTransaction,
                     WcSolanaMethodName.SendAllTransaction,
                     WcBitcoinMethodName.SendTransfer,
                     WcBitcoinMethodName.SignPsbt,
-                    -> WcInnerRoute.Send(rawRequest)
-                    WcBitcoinMethodName.SignMessage,
-                    -> WcInnerRoute.SignMessage(rawRequest)
+                    -> {
+                        Timber.tag(WC_TAG).i("📱 UI ROUTING: → Send route")
+                        WcInnerRoute.Send(rawRequest)
+                    }
                     WcBitcoinMethodName.GetAccountAddresses,
-                    -> WcInnerRoute.GetAddresses(rawRequest)
+                    -> {
+                        Timber.tag(WC_TAG).i("📱 UI ROUTING: → GetAddresses route")
+                        WcInnerRoute.GetAddresses(rawRequest)
+                    }
                     is WcMethodName.Unsupported,
-                    -> WcInnerRoute.UnsupportedMethodAlert
+                    -> {
+                        Timber.tag("Wallet Connect").w("📱 UI ROUTING: → Unsupported method alert")
+                        WcInnerRoute.UnsupportedMethodAlert
+                    }
                 }
             }
 
@@ -72,9 +92,9 @@ internal class WcRoutingModel @Inject constructor(
 
         merge(requestFlow, pairFlow)
             .onEach { configuration ->
-                timber.log.Timber.d("WC Queue: Received configuration $configuration, waiting for queue ready")
+                Timber.d("WC Queue: Received configuration $configuration, waiting for queue ready")
                 awaitQueueReady()
-                timber.log.Timber.d("WC Queue: Queue ready, pushing configuration")
+                Timber.d("WC Queue: Queue ready, pushing configuration")
                 isSlotEmpty.update { false }
                 innerRouter.push(configuration)
             }
@@ -87,7 +107,7 @@ internal class WcRoutingModel @Inject constructor(
         cardSdkProvider.sdk.uiVisibility(),
     ) { isSlotEmpty, permittedAppRoute, isCardSdkVisible ->
         val ready = isSlotEmpty && permittedAppRoute && !isCardSdkVisible
-        timber.log.Timber.d("WC Queue: isSlotEmpty=$isSlotEmpty, permittedAppRoute=$permittedAppRoute, isCardSdkVisible=$isCardSdkVisible, ready=$ready")
+        Timber.d("WC Queue: isSlotEmpty=$isSlotEmpty, permittedAppRoute=$permittedAppRoute, isCardSdkVisible=$isCardSdkVisible, ready=$ready")
         ready
     }.first { it }
 
