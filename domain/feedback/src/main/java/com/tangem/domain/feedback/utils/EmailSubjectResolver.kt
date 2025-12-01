@@ -39,6 +39,7 @@ internal class EmailSubjectResolver(private val resources: Resources) {
             FeedbackEmailType.CardAttestationFailed -> "Card attestation failed"
             is FeedbackEmailType.Visa.Activation -> "[Visa] [Activation] {auto-filled subject}"
             is FeedbackEmailType.Visa.DirectUserRequest -> "[Visa] {auto-filled subject}"
+            is FeedbackEmailType.Visa.FailedIssueCard -> "[Visa] {auto-filled subject}"
             is FeedbackEmailType.Visa.Dispute,
             is FeedbackEmailType.Visa.DisputeV2,
             -> "[Visa] [DISPUTE] {auto-filled subject}"

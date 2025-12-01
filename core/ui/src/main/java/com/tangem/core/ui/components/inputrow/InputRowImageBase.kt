@@ -61,6 +61,7 @@ fun InputRowImageBase(
     iconTint: Color = TangemTheme.colors.icon.informative,
     isGrayscaleImage: Boolean = false,
     @DrawableRes iconEndRes: Int? = null,
+    endIconTint: Color = TangemTheme.colors.icon.informative,
     onImageError: (@Composable () -> Unit)? = null,
     subtitleExtraContent: (@Composable RowScope.() -> Unit)? = null,
     extraContent: (@Composable RowScope.() -> Unit)? = null,
@@ -127,12 +128,12 @@ fun InputRowImageBase(
         } else {
             SpacerWMax()
         }
-        InputRowEndIcon(iconEndRes)
+        InputRowEndIcon(iconEndRes, endIconTint)
     }
 }
 
 @Composable
-private fun RowScope.InputRowEndIcon(iconRes: Int?) {
+private fun RowScope.InputRowEndIcon(iconRes: Int?, tint: Color = TangemTheme.colors.icon.informative) {
     AnimatedVisibility(
         visible = iconRes != null,
         label = "End icon visibility animation",
@@ -140,7 +141,7 @@ private fun RowScope.InputRowEndIcon(iconRes: Int?) {
         val icon = remember(this) { requireNotNull(iconRes) }
         Icon(
             painter = rememberVectorPainter(image = ImageVector.vectorResource(id = icon)),
-            tint = TangemTheme.colors.icon.informative,
+            tint = tint,
             contentDescription = null,
             modifier = Modifier.padding(start = TangemTheme.dimens.spacing6),
         )
