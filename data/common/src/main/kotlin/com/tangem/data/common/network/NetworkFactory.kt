@@ -74,6 +74,7 @@ class NetworkFactory @Inject constructor(
                 blockchain = blockchain,
                 excludedBlockchains = excludedBlockchains,
             ),
+            shouldCheckChia = false,
         )
     }
 
@@ -128,9 +129,10 @@ class NetworkFactory @Inject constructor(
         derivationPath: Network.DerivationPath,
         canHandleTokens: Boolean,
         accountIndex: DerivationIndex? = null,
+        shouldCheckChia: Boolean = true,
     ): Network? {
         if (!blockchain.isBlockchainSupported()) return null
-        if (blockchain == Blockchain.Chia && accountIndex != DerivationIndex.Main) return null
+        if (shouldCheckChia && blockchain == Blockchain.Chia && accountIndex != DerivationIndex.Main) return null
 
         return runCatching {
             Network(
