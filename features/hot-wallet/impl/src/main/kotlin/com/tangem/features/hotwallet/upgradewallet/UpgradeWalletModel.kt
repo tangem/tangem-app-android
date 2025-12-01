@@ -18,7 +18,6 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.toWrappedList
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
-import com.tangem.domain.card.BackupValidator
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
@@ -131,12 +130,9 @@ internal class UpgradeWalletModel @Inject constructor(
         scanResponse: ScanResponse,
         onSuccess: suspend () -> Unit,
     ) {
-        // Check if user attempted to upgrade before but something went wrong and a full reset is required
         val userWallet = coldUserWalletBuilderFactory.create(scanResponse).build()
-        val isSameWalletButNotFinishedBackup = userWallet?.walletId == params.userWalletId &&
-            BackupValidator.isValidFull(scanResponse.card).not()
 
-        if (userWallet != null && isSameWalletButNotFinishedBackup) {
+        if (userWallet?.walletId == params.userWalletId) {
             startResetCardsFlow.emit(userWallet)
             return
         }
