@@ -25,6 +25,7 @@ sealed class TangemPayTxHistoryItem {
         val enrichedMerchantName: String?,
         val merchantName: String,
         val enrichedMerchantCategory: String?,
+        val merchantCategoryCode: String?,
         val merchantCategory: String?,
         val status: Status,
         val enrichedMerchantIconUrl: String?,
