@@ -48,14 +48,13 @@ internal class OnrampOperationModel @Inject constructor(
     private val messageSender: UiMessageSender,
     private val rampStateManager: RampStateManager,
 ) : Model() {
-
-    val state: StateFlow<OnrampOperationUM>
-        field = MutableStateFlow(value = getInitialState())
-
     private val params: Params = paramsContainer.require()
 
     private val selectedUserWallet = getWalletsUseCase.invokeSync()
         .first { it.walletId == params.userWalletId }
+
+    val state: StateFlow<OnrampOperationUM>
+        field = MutableStateFlow(value = getInitialState())
 
     init {
         analyticsEventHandler.send(
