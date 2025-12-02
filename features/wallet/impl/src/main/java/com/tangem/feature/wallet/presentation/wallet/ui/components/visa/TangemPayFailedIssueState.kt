@@ -13,18 +13,18 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.presentation.wallet.state.model.TangemPayState
 
 @Composable
-internal fun TangemPayFailedIssueState(state: TangemPayState.FailedIssue) {
+internal fun TangemPayFailedIssueState(state: TangemPayState.FailedIssue, modifier: Modifier = Modifier) {
     BlockCard(
-        modifier = Modifier
+        modifier = modifier
             .clip(RoundedCornerShape(size = TangemTheme.dimens.radius14))
-            .background(TangemTheme.colors.background.primary),
+            .background(TangemTheme.colors.background.primary)
+            .clickable(onClick = state.onButtonClick),
     ) {
         InputRowImageBase(
             modifier = Modifier
                 .padding(
                     all = TangemTheme.dimens.spacing12,
-                )
-                .clickable(onClick = { state.onButtonClick }),
+                ),
             subtitle = state.title,
             caption = state.description,
             subtitleColor = TangemTheme.colors.text.primary1,
