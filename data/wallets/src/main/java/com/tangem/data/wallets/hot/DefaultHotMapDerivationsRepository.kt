@@ -7,6 +7,7 @@ import com.tangem.common.extensions.toMapKey
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.data.common.network.NetworkFactory
 import com.tangem.data.wallets.derivations.MissedDerivationsFinder
+import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
@@ -21,6 +22,7 @@ import timber.log.Timber
 import javax.inject.Inject
 
 internal class DefaultHotMapDerivationsRepository @Inject constructor(
+    private val userWalletsStore: UserWalletsStore,
     private val networkFactory: NetworkFactory,
     private val hotWalletAccessor: HotWalletAccessor,
     private val dispatchers: CoroutineDispatcherProvider,
@@ -82,10 +84,15 @@ internal class DefaultHotMapDerivationsRepository @Inject constructor(
             hotWalletId = userWallet.hotWalletId,
             request = request,
         )
+
+        // Get the updated user wallet from the store to ensure we have the latest data
+        // in case it was modified during the derive operation
+        val updatedUserWallet = userWalletsStore.getSyncStrict(userWallet.walletId) as UserWallet.Hot
+
         val newKeys =
             result.responses.associate { ByteArrayKey(it.seedKey.publicKey) to ExtendedPublicKeysMap(it.publicKeys) }
 
-        return userWallet.updateWithNewKeys(newKeys) to newKeys
+        return updatedUserWallet.updateWithNewKeys(newKeys) to newKeys
     }
 
     override suspend fun hasMissedDerivations(
