@@ -7,7 +7,6 @@ import com.tangem.common.ui.notifications.NotificationId
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.ui.components.notifications.NotificationConfig.ButtonsState
-import com.tangem.core.ui.components.notifications.NotificationConfig.IconTint
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.account.status.producer.SingleAccountStatusListProducer
 import com.tangem.domain.card.CardTypesResolver
@@ -465,22 +464,17 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
             ifError = { WalletActivationBannerType.Attention },
         )
 
-        val tint = when (type) {
-            WalletActivationBannerType.Attention -> IconTint.Attention
-            WalletActivationBannerType.Warning -> IconTint.Warning
-        }
-
         addIf(
             element = WalletNotification.FinishWalletActivation(
-                iconTint = tint,
+                type = type,
                 buttonsState = when (type) {
                     WalletActivationBannerType.Warning -> ButtonsState.PrimaryButtonConfig(
                         text = resourceReference(R.string.hw_activation_need_finish),
-                        onClick = { clickIntents.onFinishWalletActivationClick(type, isBackupExists) },
+                        onClick = { clickIntents.onFinishWalletActivationClick(isBackupExists) },
                     )
                     else -> ButtonsState.SecondaryButtonConfig(
                         text = resourceReference(R.string.hw_activation_need_finish),
-                        onClick = { clickIntents.onFinishWalletActivationClick(type, isBackupExists) },
+                        onClick = { clickIntents.onFinishWalletActivationClick(isBackupExists) },
                     )
                 },
             ),
