@@ -5,6 +5,7 @@ import arrow.core.some
 import com.tangem.data.common.currency.ResponseCryptoCurrenciesFactory
 import com.tangem.datasource.local.token.UserTokensResponseStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
+import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesProducer
@@ -39,7 +40,7 @@ internal class DefaultMultiWalletCryptoCurrenciesProducer @AssistedInject constr
         val userWallet = userWalletsStore.getSyncStrict(key = params.userWalletId)
 
         if (!userWallet.isMultiCurrency) {
-            error("${this::class.simpleName} supports only multi-currency wallet")
+            error("${this::class.simpleName ?: this::class.toString()} supports only multi-currency wallet")
         }
 
         return userTokensResponseStore.get(userWalletId = params.userWalletId)
@@ -50,6 +51,7 @@ internal class DefaultMultiWalletCryptoCurrenciesProducer @AssistedInject constr
                 responseCryptoCurrenciesFactory.createCurrencies(
                     response = response,
                     userWallet = userWallet,
+                    accountIndex = DerivationIndex.Main,
                 ).toSet()
             }
             .onEmpty { emit(emptySet()) }
