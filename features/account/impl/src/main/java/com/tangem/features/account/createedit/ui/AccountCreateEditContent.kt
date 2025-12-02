@@ -30,6 +30,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastForEach
+import androidx.compose.ui.util.fastForEachIndexed
 import com.tangem.common.ui.R
 import com.tangem.common.ui.account.*
 import com.tangem.core.ui.components.PrimaryButton
@@ -188,7 +190,7 @@ private fun AccountColor(colorsState: AccountCreateEditUM.Colors) {
                 .padding(contentPadding),
             horizontalArrangement = Arrangement.spacedBy(4.dp),
         ) {
-            colorsState.list.forEach { color ->
+            colorsState.list.fastForEach { color ->
                 val isSelected = color == colorsState.selected
                 Box(
                     contentAlignment = Alignment.Center,
@@ -237,7 +239,7 @@ private fun AccountIcons(iconsState: AccountCreateEditUM.Icons) {
             maxItemsInEachRow = 6,
             modifier = Modifier.fillMaxWidth(),
         ) {
-            iconsState.list.forEachIndexed { index, icon ->
+            iconsState.list.fastForEachIndexed { index, icon ->
                 val isSelected = icon == iconsState.selected
                 Box(
                     contentAlignment = Alignment.Center,
