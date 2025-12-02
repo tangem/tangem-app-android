@@ -1,6 +1,9 @@
 package com.tangem.data.walletconnect.network.bitcoin
 
 import arrow.core.left
+import com.squareup.moshi.Json
+import com.squareup.moshi.JsonClass
+import com.squareup.moshi.Moshi
 import com.tangem.blockchain.blockchains.bitcoin.BitcoinWalletManager
 import com.tangem.blockchain.blockchains.bitcoin.walletconnect.models.SignInput
 import com.tangem.blockchain.blockchains.bitcoin.walletconnect.models.SignPsbtRequest
@@ -13,6 +16,7 @@ import com.tangem.data.walletconnect.sign.SignCollector
 import com.tangem.data.walletconnect.sign.SignStateConverter.toResult
 import com.tangem.data.walletconnect.sign.WcMethodUseCaseContext
 import com.tangem.data.walletconnect.utils.BlockAidVerificationDelegate
+import com.tangem.datasource.di.SdkMoshi
 import com.tangem.domain.core.lce.LceFlow
 import com.tangem.domain.walletconnect.WcTransactionSignerProvider
 import com.tangem.domain.walletconnect.model.HandleMethodError
@@ -32,6 +36,12 @@ import kotlinx.coroutines.flow.map
  *
  * Signs a Partially Signed Bitcoin Transaction (BIP-174 PSBT) with optional broadcast.
  */
+@JsonClass(generateAdapter = true)
+internal data class SignPsbtResponse(
+    @Json(name = "psbt") val psbt: String,
+    @Json(name = "txid") val txid: String? = null,
+)
+
 @Suppress("LongParameterList")
 internal class WcBitcoinSignPsbtUseCase @AssistedInject constructor(
     @Assisted override val context: WcMethodUseCaseContext,
@@ -41,6 +51,7 @@ internal class WcBitcoinSignPsbtUseCase @AssistedInject constructor(
     override val respondService: WcRespondService,
     override val analytics: AnalyticsEventHandler,
     blockAidDelegate: BlockAidVerificationDelegate,
+    @SdkMoshi private val moshi: Moshi,
 ) : BaseWcSignUseCase<Nothing, TransactionData>(),
     WcTransactionUseCase {
 
@@ -103,11 +114,12 @@ internal class WcBitcoinSignPsbtUseCase @AssistedInject constructor(
 
     private fun buildJsonResponse(
         data: com.tangem.blockchain.blockchains.bitcoin.walletconnect.models.SignPsbtResponse,
-    ): String = buildString {
-        append("{")
-        append("\"psbt\":\"${data.psbt}\"")
-        data.txid?.let { append(",\"txid\":\"$it\"") }
-        append("}")
+    ): String {
+        val response = SignPsbtResponse(
+            psbt = data.psbt,
+            txid = data.txid,
+        )
+        return moshi.adapter(SignPsbtResponse::class.java).toJson(response)
     }
 
     @AssistedFactory

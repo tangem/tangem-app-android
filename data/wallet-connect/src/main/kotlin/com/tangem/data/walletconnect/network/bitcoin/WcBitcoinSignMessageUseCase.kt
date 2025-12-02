@@ -1,6 +1,9 @@
 package com.tangem.data.walletconnect.network.bitcoin
 
 import arrow.core.left
+import com.squareup.moshi.Json
+import com.squareup.moshi.JsonClass
+import com.squareup.moshi.Moshi
 import com.tangem.blockchain.blockchains.bitcoin.BitcoinWalletManager
 import com.tangem.blockchain.blockchains.bitcoin.walletconnect.models.SignMessageRequest
 import com.tangem.blockchain.extensions.Result as SdkResult
@@ -10,6 +13,7 @@ import com.tangem.data.walletconnect.sign.BaseWcSignUseCase
 import com.tangem.data.walletconnect.sign.SignCollector
 import com.tangem.data.walletconnect.sign.SignStateConverter.toResult
 import com.tangem.data.walletconnect.sign.WcMethodUseCaseContext
+import com.tangem.datasource.di.SdkMoshi
 import com.domain.blockaid.models.transaction.CheckTransactionResult
 import com.domain.blockaid.models.transaction.SimulationResult
 import com.domain.blockaid.models.transaction.ValidationResult
@@ -32,6 +36,13 @@ import kotlinx.coroutines.flow.flowOf
  *
  * Signs an arbitrary message using Bitcoin message signing format (BIP-137 ECDSA).
  */
+@JsonClass(generateAdapter = true)
+internal data class SignMessageResponse(
+    @Json(name = "address") val address: String,
+    @Json(name = "signature") val signature: String,
+    @Json(name = "messageHash") val messageHash: String? = null,
+)
+
 @Suppress("LongParameterList")
 internal class WcBitcoinSignMessageUseCase @AssistedInject constructor(
     @Assisted override val context: WcMethodUseCaseContext,
@@ -40,6 +51,7 @@ internal class WcBitcoinSignMessageUseCase @AssistedInject constructor(
     private val signerProvider: WcTransactionSignerProvider,
     override val respondService: WcRespondService,
     override val analytics: AnalyticsEventHandler,
+    @SdkMoshi private val moshi: Moshi,
 ) : BaseWcSignUseCase<Nothing, WcMessageSignUseCase.SignModel>(),
     WcMessageSignUseCase {
 
@@ -88,12 +100,13 @@ internal class WcBitcoinSignMessageUseCase @AssistedInject constructor(
 
     private fun buildJsonResponse(
         data: com.tangem.blockchain.blockchains.bitcoin.walletconnect.models.SignMessageResponse,
-    ): String = buildString {
-        append("{")
-        append("\"address\":\"${data.address}\",")
-        append("\"signature\":\"${data.signature}\"")
-        data.messageHash?.let { append(",\"messageHash\":\"$it\"") }
-        append("}")
+    ): String {
+        val response = SignMessageResponse(
+            address = data.address,
+            signature = data.signature,
+            messageHash = data.messageHash,
+        )
+        return moshi.adapter(SignMessageResponse::class.java).toJson(response)
     }
 
     @AssistedFactory
