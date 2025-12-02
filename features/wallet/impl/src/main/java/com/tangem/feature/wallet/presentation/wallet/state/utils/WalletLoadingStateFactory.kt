@@ -55,6 +55,7 @@ internal class WalletLoadingStateFactory(
             tokensListState = WalletTokensListState.ContentState.Loading,
             nftState = WalletNFTItemUM.Hidden,
             type = WalletState.MultiCurrency.WalletType.Hot,
+            tangemPayState = TangemPayState.Empty,
         )
     }
 
@@ -68,6 +69,7 @@ internal class WalletLoadingStateFactory(
             tokensListState = WalletTokensListState.ContentState.Loading,
             nftState = WalletNFTItemUM.Hidden,
             type = WalletState.MultiCurrency.WalletType.Cold,
+            tangemPayState = TangemPayState.Empty,
         )
     }
 
