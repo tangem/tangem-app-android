@@ -218,10 +218,18 @@ private fun WalletContent(
 
             notifications(configs = selectedWallet.warnings, modifier = itemModifier)
 
-            item(
-                key = "TangemPayMainScreenBlock",
-                contentType = state.tangemPayState::class.java,
-            ) { TangemPayMainScreenBlock(state.tangemPayState, isBalanceHidden = state.isHidingMode, itemModifier) }
+            if (selectedWallet is WalletState.MultiCurrency) {
+                item(
+                    key = "TangemPayMainScreenBlock",
+                    contentType = selectedWallet.tangemPayState::class.java,
+                ) {
+                    TangemPayMainScreenBlock(
+                        selectedWallet.tangemPayState,
+                        isBalanceHidden = state.isHidingMode,
+                        itemModifier,
+                    )
+                }
+            }
 
             (selectedWallet as? WalletState.SingleCurrency)?.let { walletState ->
                 walletState.marketPriceBlockState?.let { marketPriceBlockState ->
