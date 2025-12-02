@@ -1987,8 +1987,9 @@
   <string name="yield_module_promo_screen_self_custodial_title">Decentralized and self-custodial</string>
   <string name="yield_module_promo_screen_terms_disclaimer">By using this service, you agree with provider\n%1$s and %2$s</string>
   <string name="yield_module_promo_screen_title">Connect to Aave</string>
-  <string name="yield_module_promo_screen_title_v2">Enable %1$s%% APY on your balance</string>
+  <string name="yield_module_promo_screen_title_v2">Enable %1$s%% APY\non your balance</string>
   <string name="yield_module_promo_screen_variable_rate_info">Aave %1$s%% • Variable Interest Rate</string>
+  <string name="yield_module_promo_screen_variable_rate_info_v2">Variable Interest Rate</string>
   <string name="yield_module_provider">Aave</string>
   <string name="yield_module_rate_info_sheet_chart_average">Avg %s</string>
   <string name="yield_module_rate_info_sheet_chart_title">Last year\'s returns</string>
