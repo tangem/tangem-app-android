@@ -21,6 +21,7 @@ import com.tangem.domain.core.error.DataError
 import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.express.ExpressServiceFetcher
 import com.tangem.domain.express.models.ExpressAsset
+import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
@@ -31,6 +32,7 @@ import com.tangem.domain.tokens.model.FeePaidCurrency
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.runSuspendCatching
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import timber.log.Timber
@@ -301,8 +303,9 @@ internal class DefaultCurrenciesRepository(
         )
 
         responseCryptoCurrenciesFactory.createCurrencies(
-            storedTokens,
+            response = storedTokens,
             userWallet = userWallet,
+            accountIndex = DerivationIndex.Main,
         )
     }
 
@@ -357,15 +360,16 @@ internal class DefaultCurrenciesRepository(
             val coinId = blockchain.toCoinId()
 
             val storedCoin = storedTokens.tokens
-                .find {
-                    it.networkId == blockchainNetworkId &&
-                        compareIdWithMigrations(it, coinId) &&
-                        it.derivationPath == derivationPath.value
+                .find { token ->
+                    token.networkId == blockchainNetworkId &&
+                        compareIdWithMigrations(token, coinId) &&
+                        token.derivationPath == derivationPath.value
                 } ?: error("Coin in this network $networkId not found")
 
             val coin = responseCryptoCurrenciesFactory.createCurrency(
                 responseToken = storedCoin,
                 userWallet = userWallet,
+                accountIndex = DerivationIndex.Main,
             )
 
             coin as? CryptoCurrency.Coin ?: error("Unable to create currency")
@@ -525,6 +529,7 @@ internal class DefaultCurrenciesRepository(
         }
     }
 
+    @Suppress("SuspendFunWithFlowReturnType")
     private suspend fun getCurrenciesForWallet(
         userWallet: UserWallet,
         currencyRawId: CryptoCurrency.RawID,
@@ -539,6 +544,7 @@ internal class DefaultCurrenciesRepository(
                     responseCryptoCurrenciesFactory.createCurrencies(
                         response = storedTokens.copy(tokens = filterResponse),
                         userWallet = userWallet,
+                        accountIndex = DerivationIndex.Main,
                     )
                 }
             }
@@ -570,7 +576,7 @@ internal class DefaultCurrenciesRepository(
     }
 
     override suspend fun syncTokens(userWalletId: UserWalletId) {
-        runCatching {
+        runSuspendCatching {
             val savedCurrencies = requireNotNull(
                 value = getSavedUserTokensResponseSync(key = userWalletId),
                 lazyMessage = { "Saved tokens empty. Can not perform add currencies action" },
@@ -591,6 +597,7 @@ internal class DefaultCurrenciesRepository(
             responseCryptoCurrenciesFactory.createCurrencies(
                 response = storedTokens,
                 userWallet = userWallet,
+                accountIndex = DerivationIndex.Main,
             )
         }
     }
