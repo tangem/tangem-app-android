@@ -51,17 +51,14 @@ internal class WcRoutingModel @Inject constructor(
                     WcSolanaMethodName.SignMessage,
                     WcBitcoinMethodName.SignMessage,
                     -> {
-                        Timber.tag(WC_TAG).i("📱 UI ROUTING: → SignMessage route")
                         WcInnerRoute.SignMessage(rawRequest)
                     }
                     WcEthMethodName.AddEthereumChain,
                     -> {
-                        Timber.tag(WC_TAG).i("📱 UI ROUTING: → AddNetwork route")
                         WcInnerRoute.AddNetwork(rawRequest)
                     }
                     WcEthMethodName.SwitchEthereumChain,
                     -> {
-                        Timber.tag(WC_TAG).i("📱 UI ROUTING: → SwitchNetwork route")
                         WcInnerRoute.SwitchNetwork(rawRequest)
                     }
                     WcEthMethodName.SignTransaction,
@@ -71,17 +68,14 @@ internal class WcRoutingModel @Inject constructor(
                     WcBitcoinMethodName.SendTransfer,
                     WcBitcoinMethodName.SignPsbt,
                     -> {
-                        Timber.tag(WC_TAG).i("📱 UI ROUTING: → Send route")
                         WcInnerRoute.Send(rawRequest)
                     }
                     WcBitcoinMethodName.GetAccountAddresses,
                     -> {
-                        Timber.tag(WC_TAG).i("📱 UI ROUTING: → GetAddresses route")
                         WcInnerRoute.GetAddresses(rawRequest)
                     }
                     is WcMethodName.Unsupported,
                     -> {
-                        Timber.tag("Wallet Connect").w("📱 UI ROUTING: → Unsupported method alert")
                         WcInnerRoute.UnsupportedMethodAlert
                     }
                 }
