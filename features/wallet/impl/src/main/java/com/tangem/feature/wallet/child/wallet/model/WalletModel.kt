@@ -465,6 +465,7 @@ internal class WalletModel @Inject constructor(
         when (action) {
             is WalletsUpdateActionResolver.Action.InitializeWallets -> initializeWallets(action)
             is WalletsUpdateActionResolver.Action.ReinitializeWallet -> reinitializeWallet(action)
+            is WalletsUpdateActionResolver.Action.ReinitializeWallets -> reinitializeWallets(action)
             is WalletsUpdateActionResolver.Action.AddWallet -> addWallet(action)
             is WalletsUpdateActionResolver.Action.DeleteWallet -> deleteWallet(action)
             is WalletsUpdateActionResolver.Action.UnlockWallet -> unlockWallet(action)
@@ -567,6 +568,32 @@ internal class WalletModel @Inject constructor(
                 walletImageResolver = walletImageResolver,
             ),
         )
+    }
+
+    private fun reinitializeWallets(action: WalletsUpdateActionResolver.Action.ReinitializeWallets) {
+        action.wallets.forEach { userWallet ->
+            walletScreenContentLoader.cancel(userWallet.walletId)
+            tokenListStore.remove(userWallet.walletId)
+
+            walletScreenContentLoader.load(
+                userWallet = userWallet,
+                clickIntents = clickIntents,
+                coroutineScope = modelScope,
+            )
+
+            modelScope.launch(dispatchers.main) {
+                fetchWalletContent(userWallet = userWallet)
+            }
+
+            stateHolder.update(
+                ReinitializeWalletTransformer(
+                    prevWalletId = userWallet.walletId,
+                    newUserWallet = userWallet,
+                    clickIntents = clickIntents,
+                    walletImageResolver = walletImageResolver,
+                ),
+            )
+        }
     }
 
     private suspend fun addWallet(action: WalletsUpdateActionResolver.Action.AddWallet) {
