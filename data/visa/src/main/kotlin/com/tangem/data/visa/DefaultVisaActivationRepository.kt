@@ -171,6 +171,7 @@ internal class DefaultVisaActivationRepository @AssistedInject constructor(
             ApiEnvironment.DEV_2,
             ApiEnvironment.DEV_3,
             ApiEnvironment.STAGE,
+            ApiEnvironment.STAGE_2,
             ApiEnvironment.MOCK,
             -> rsaPublicKey.dev
             ApiEnvironment.PROD -> rsaPublicKey.prod
