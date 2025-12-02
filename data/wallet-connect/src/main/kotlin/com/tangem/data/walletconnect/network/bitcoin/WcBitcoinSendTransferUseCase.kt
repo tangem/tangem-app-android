@@ -68,7 +68,7 @@ internal class WcBitcoinSendTransferUseCase @AssistedInject constructor(
             return
         }
 
-        val signer = createTransactionSigner()
+        val signer = signerProvider.createSigner(wallet)
         val request = SendTransferRequest(
             account = method.account,
             recipientAddress = method.recipientAddress,
@@ -90,7 +90,6 @@ internal class WcBitcoinSendTransferUseCase @AssistedInject constructor(
     }
 
     override fun invoke(): Flow<WcSignState<TransactionData>> {
-        // Create transaction data for display purposes
         val displayInfo = "Send ${method.amount} satoshis to ${method.recipientAddress}"
         val transactionData = TransactionData.Compiled(
             value = TransactionData.Compiled.Data.RawString(displayInfo),
@@ -98,13 +97,9 @@ internal class WcBitcoinSendTransferUseCase @AssistedInject constructor(
         return delegate.invoke(transactionData)
     }
 
-    private fun createTransactionSigner() = signerProvider.createSigner(wallet)
-
     private fun buildJsonResponse(
         data: com.tangem.blockchain.blockchains.bitcoin.walletconnect.models.SendTransferResponse,
-    ): String {
-        return "{\"txid\":\"${data.txid}\"}"
-    }
+    ): String = "{\"txid\":\"${data.txid}\"}"
 
     @AssistedFactory
     interface Factory {

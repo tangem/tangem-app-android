@@ -12,7 +12,6 @@ import com.tangem.data.walletconnect.model.NamespaceKey
 import com.tangem.data.walletconnect.request.WcRequestToUseCaseConverter
 import com.tangem.data.walletconnect.request.WcRequestToUseCaseConverter.Companion.fromJson
 import com.tangem.data.walletconnect.sign.WcMethodUseCaseContext
-import com.tangem.data.walletconnect.utils.WC_TAG
 import com.tangem.data.walletconnect.utils.WcNamespaceConverter
 import com.tangem.data.walletconnect.utils.WcNetworksConverter
 import com.tangem.domain.walletconnect.model.HandleMethodError
@@ -23,7 +22,6 @@ import com.tangem.domain.walletconnect.repository.WcSessionsManager
 import com.tangem.domain.walletconnect.usecase.method.WcMethodUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import jakarta.inject.Inject
-import timber.log.Timber
 
 /**
  * WalletConnect request handler for Bitcoin blockchain.
@@ -48,52 +46,17 @@ internal class WcBitcoinNetwork(
     @Suppress("CyclomaticComplexMethod")
     override suspend fun toUseCase(request: WcSdkSessionRequest): Either<HandleMethodError, WcMethodUseCase> {
         fun error(message: String) = HandleMethodError.UnknownError(message).left()
-        val name = toWcMethodName(request) ?: return error("Unknown method name").also {
-            Timber.tag(WC_TAG).e("ERROR: Unknown BTC method name ══")
-        }
-        Timber.tag(WC_TAG).i("Method name: $name")
 
+        val name = toWcMethodName(request) ?: return error("Unknown method name")
         val method: WcBitcoinMethod = name.toMethod(request)
-            .getOrElse {
-                Timber.tag(WC_TAG).e("ERROR: Failed to parse method: ${it.message} ══")
-                return error(it.message.orEmpty())
-            }
-            ?: return error("Failed to parse $name").also {
-                Timber.tag(WC_TAG).e("ERROR: Method parsing returned null ══")
-            }
-
-        Timber.tag(WC_TAG).i("Parsed method: ${method.javaClass.simpleName}")
-        when (method) {
-            is WcBitcoinMethod.SignMessage -> {
-                Timber.tag(WC_TAG).i("SignMessage detected")
-                Timber.tag(WC_TAG).i("  Account: ${method.account}")
-                Timber.tag(WC_TAG).i("  Address: ${method.address}")
-                Timber.tag(WC_TAG).i("  Protocol: ${method.protocol}")
-                Timber.tag(WC_TAG).d("  Message: ${method.message.take(50)}...")
-            }
-            is WcBitcoinMethod.SignPsbt -> {
-                Timber.tag(WC_TAG).i("→ SignPsbt detected")
-                Timber.tag(WC_TAG).i("  Sign inputs count: ${method.signInputs.size}")
-            }
-            is WcBitcoinMethod.SendTransfer -> {
-                Timber.tag(WC_TAG).i("→ SendTransfer detected")
-                Timber.tag(WC_TAG).i("  Amount: ${method.amount}")
-            }
-            is WcBitcoinMethod.GetAccountAddresses -> {
-                Timber.tag(WC_TAG).i("GetAccountAddresses detected")
-            }
-        }
+            .getOrElse { return error(it.message.orEmpty()) }
+            ?: return error("Failed to parse $name")
 
         val session = sessionsManager.findSessionByTopic(request.topic)
-            ?: return HandleMethodError.UnknownSession.left().also {
-                Timber.tag(WC_TAG).e("ERROR: Session not found for topic ══")
-            }
+            ?: return HandleMethodError.UnknownSession.left()
 
-        Timber.tag(WC_TAG).i("Session found: ${session.sdkModel.appMetaData?.name}")
         val wallet = session.wallet
-        Timber.tag(WC_TAG).i("Wallet: ${wallet.name}")
         val chainId = request.chainId.orEmpty()
-        Timber.tag(WC_TAG).i("Chain ID: $chainId")
 
         suspend fun anyExistNetwork() = networksConverter.mainOrAnyWalletNetworkForRequest(chainId, wallet)
         suspend fun anyAddress() = anyExistNetwork()
@@ -106,16 +69,11 @@ internal class WcBitcoinNetwork(
             is WcBitcoinMethod.SignPsbt -> method.signInputs.firstOrNull()?.address ?: anyAddress()
             is WcBitcoinMethod.SignMessage -> method.address ?: method.account
         }
-        Timber.tag(WC_TAG).i("Account address: $accountAddress")
 
         val walletNetwork = networksConverter
             .findWalletNetworkForRequest(request, session, accountAddress)
             ?: anyExistNetwork()
-            ?: return error("Failed to find walletNetwork for accountAddress $accountAddress").also {
-                Timber.tag(WC_TAG).e("ERROR: Wallet network not found")
-            }
-
-        Timber.tag(WC_TAG).i("Wallet network: ${walletNetwork.name}")
+            ?: return error("Failed to find walletNetwork for accountAddress $accountAddress")
 
         val context = WcMethodUseCaseContext(
             session = session,
@@ -125,14 +83,12 @@ internal class WcBitcoinNetwork(
             networkDerivationsCount = networksConverter.filterWalletNetworkForRequest(chainId, wallet).size,
         )
 
-        Timber.tag(WC_TAG).i("Creating use case...")
         val useCase = when (method) {
             is WcBitcoinMethod.SendTransfer -> factories.sendTransfer.create(context, method)
             is WcBitcoinMethod.GetAccountAddresses -> factories.getAccountAddresses.create(context, method)
             is WcBitcoinMethod.SignPsbt -> factories.signPsbt.create(context, method)
             is WcBitcoinMethod.SignMessage -> factories.signMessage.create(context, method)
         }
-        Timber.tag(WC_TAG).i("Use case created: ${useCase.javaClass.simpleName}")
         return useCase.right()
     }
 
