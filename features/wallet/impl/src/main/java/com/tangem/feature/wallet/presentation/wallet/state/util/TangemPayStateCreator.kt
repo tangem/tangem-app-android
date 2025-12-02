@@ -9,7 +9,7 @@ internal object TangemPayStateCreator {
 
     fun createKycInProgressState(onClickKyc: () -> Unit): TangemPayState = Progress(
         title = TextReference.Res(R.string.tangempay_payment_account),
-        description = TextReference.Res(R.string.tangempay_kyc_in_progress_notification_title),
+        description = TextReference.Res(R.string.tangempay_kyc_in_progress),
         buttonText = TextReference.Res(R.string.tangempay_kyc_in_progress_notification_button),
         iconRes = R.drawable.ic_promo_kyc_36,
         onButtonClick = onClickKyc,
