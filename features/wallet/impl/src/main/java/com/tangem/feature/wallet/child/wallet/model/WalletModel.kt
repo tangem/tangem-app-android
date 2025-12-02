@@ -363,6 +363,8 @@ internal class WalletModel @Inject constructor(
             }.distinctUntilChanged(),
             transform = ::Pair,
         ).onEach { (inBackground, userWalletId) ->
+            if (inBackground) return@onEach
+
             val savedCustomerInfo =
                 tangemPayOnboardingRepository.getSavedCustomerInfo(userWalletId)
 
@@ -372,12 +374,10 @@ internal class WalletModel @Inject constructor(
             if (isShouldLaunchPeriodicUpdate) {
                 updateTangemPayJobHolder.cancel()
                 modelScope.launch {
-                    if (!inBackground) {
+                    tangemPayMainInfoManager.refreshTangemPayInfo(userWalletId)
+                    while (isActive) {
+                        delay(TANGEM_PAY_UPDATE_INTERVAL)
                         tangemPayMainInfoManager.refreshTangemPayInfo(userWalletId)
-                        while (isActive) {
-                            delay(TANGEM_PAY_UPDATE_INTERVAL)
-                            tangemPayMainInfoManager.refreshTangemPayInfo(userWalletId)
-                        }
                     }
                 }.saveIn(updateTangemPayJobHolder)
             } else {
