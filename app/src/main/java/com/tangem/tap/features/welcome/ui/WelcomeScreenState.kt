@@ -1,6 +1,6 @@
 package com.tangem.tap.features.welcome.ui
 
-import com.tangem.tap.features.details.ui.cardsettings.TextReference
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.tap.features.welcome.ui.model.WarningModel
 
 internal data class WelcomeScreenState(
