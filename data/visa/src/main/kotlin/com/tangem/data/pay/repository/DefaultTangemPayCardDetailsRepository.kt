@@ -211,6 +211,7 @@ internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
             if (pollingJobs.containsKey(orderId)) return
             val pollingJob = pollingScope.launch {
                 try {
+                    var retryCount = 0
                     while (isActive && pollingJobs.containsKey(orderId)) {
                         delay(duration = 5.seconds)
 
@@ -235,7 +236,14 @@ internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
 
                                 cardFrozenStateStore.store(cardId, finalState)
                             }
+                        }.onLeft { error ->
+                            Timber.e("error ${error.errorCode}")
+                            // stop retrying after 3 errors
+                            if (retryCount > MAX_POLLING_RETRIES) {
+                                pollingJobs.remove(key = orderId)
+                            }
                         }
+                        retryCount++
                     }
                 } catch (e: Exception) {
                     Timber.e(e)
@@ -267,5 +275,9 @@ internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
             -> visaLibLoader.getOrCreateConfig().rainRSAPublicKey.dev
             ApiEnvironment.PROD -> visaLibLoader.getOrCreateConfig().rainRSAPublicKey.prod
         }
+    }
+
+    private companion object {
+        const val MAX_POLLING_RETRIES = 3
     }
 }
