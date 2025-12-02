@@ -4,6 +4,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.pay.TangemPayDetailsConfig
 import com.tangem.domain.pay.model.CustomerInfo.CardInfo
 import com.tangem.domain.pay.model.CustomerInfo.ProductInstance
@@ -11,7 +12,7 @@ import com.tangem.domain.pay.model.MainScreenCustomerInfo
 import com.tangem.domain.pay.model.OrderStatus
 import com.tangem.domain.visa.model.TangemPayCardFrozenState
 import com.tangem.feature.wallet.presentation.wallet.state.model.TangemPayState
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletScreenState
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.util.TangemPayStateCreator.createCancelledState
 import com.tangem.feature.wallet.presentation.wallet.state.util.TangemPayStateCreator.createIssueProgressState
 import com.tangem.feature.wallet.presentation.wallet.state.util.TangemPayStateCreator.createKycInProgressState
@@ -23,18 +24,23 @@ import java.util.Currency
  */
 private const val POLYGON_CHAIN_ID = 137
 
-internal class TangemPayInitialStateTransformer(
+internal class TangemPayUpdateInfoStateTransformer(
+    userWalletId: UserWalletId,
     private val value: MainScreenCustomerInfo? = null,
     private val cardFrozenState: TangemPayCardFrozenState,
     private val onClickKyc: () -> Unit = {},
     private val onIssuingCard: () -> Unit = {},
     private val onIssuingFailed: () -> Unit = {},
     private val openDetails: (config: TangemPayDetailsConfig) -> Unit = {},
-) : WalletScreenStateTransformer {
+) : WalletStateTransformer(userWalletId = userWalletId) {
 
-    override fun transform(prevState: WalletScreenState): WalletScreenState {
+    override fun transform(prevState: WalletState): WalletState {
         val tangemPayState = createInitialState()
-        return prevState.copy(tangemPayState = tangemPayState)
+        return if (prevState is WalletState.MultiCurrency.Content) {
+            prevState.copy(tangemPayState = tangemPayState)
+        } else {
+            prevState
+        }
     }
 
     private fun createInitialState(): TangemPayState {
