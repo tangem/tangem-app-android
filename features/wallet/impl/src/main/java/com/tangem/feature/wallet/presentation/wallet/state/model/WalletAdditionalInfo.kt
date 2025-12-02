@@ -7,4 +7,5 @@ import com.tangem.core.ui.extensions.TextReference
 data class WalletAdditionalInfo(
     val hideable: Boolean,
     val content: TextReference,
+    val isHotBackedUp: Boolean = false,
 )
