@@ -115,7 +115,8 @@ internal class DefaultOnboardingRepository @Inject constructor(
                     tangemPayApi.createOrder(authHeader, body = OrderRequest(walletAddress))
                 }.result ?: error("Create order result is null")
 
-                tangemPayStorage.storeOrderId(result.data.customerWalletAddress, result.id)
+                val customerWalletAddress = requireNotNull(result.data.customerWalletAddress)
+                tangemPayStorage.storeOrderId(customerWalletAddress, result.id)
             }
         }
     }
