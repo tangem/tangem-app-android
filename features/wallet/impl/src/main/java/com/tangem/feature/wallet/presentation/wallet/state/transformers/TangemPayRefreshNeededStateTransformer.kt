@@ -1,21 +1,27 @@
 package com.tangem.feature.wallet.presentation.wallet.state.transformers
 
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.model.TangemPayState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotification.Warning.TangemPayRefreshNeeded
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletScreenState
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 
 internal class TangemPayRefreshNeededStateTransformer(
+    userWalletId: UserWalletId,
     private val onRefreshClick: () -> Unit,
-) : WalletScreenStateTransformer {
+) : WalletStateTransformer(userWalletId = userWalletId) {
 
-    override fun transform(prevState: WalletScreenState): WalletScreenState {
+    override fun transform(prevState: WalletState): WalletState {
         val tangemPayState = TangemPayState.RefreshNeeded(
             notification = TangemPayRefreshNeeded(
                 tangemIcon = R.drawable.ic_tangem_24,
                 onRefreshClick = onRefreshClick,
             ),
         )
-        return prevState.copy(tangemPayState = tangemPayState)
+        return if (prevState is WalletState.MultiCurrency.Content) {
+            prevState.copy(tangemPayState = tangemPayState)
+        } else {
+            prevState
+        }
     }
 }

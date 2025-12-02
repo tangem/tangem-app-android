@@ -398,18 +398,22 @@ internal class WalletModel @Inject constructor(
                         TangemPayCustomerInfoError.RefreshNeededError -> {
                             stateHolder.update(
                                 transformer = TangemPayRefreshNeededStateTransformer(
+                                    userWalletId = userWalletId,
                                     onRefreshClick = { clickIntents.onRefreshPayToken(userWalletId) },
                                 ),
                             )
                         }
                         TangemPayCustomerInfoError.UnavailableError -> {
                             stateHolder.update(
-                                transformer = TangemPayUnavailableStateTransformer,
+                                transformer = TangemPayUnavailableStateTransformer(userWalletId),
                             )
                         }
                         else -> {
-                            // do not draw TangemPay block
+                            // hide TangemPay block
                             Timber.e("Failed when loading main screen TangemPay info: $tangemPayError")
+                            stateHolder.update(
+                                transformer = TangemPayHiddenStateTransformer(userWalletId),
+                            )
                         }
                     }
                 }.onRight { data -> updateTangemPay(data, userWalletId) }
@@ -422,7 +426,8 @@ internal class WalletModel @Inject constructor(
             data.info.productInstance?.cardId?.let { cardDetailsRepository.cardFrozenStateSync(it) }
                 ?: TangemPayCardFrozenState.Unfrozen
         stateHolder.update(
-            transformer = TangemPayInitialStateTransformer(
+            transformer = TangemPayUpdateInfoStateTransformer(
+                userWalletId = userWalletId,
                 value = data,
                 cardFrozenState = cardFrozenState,
                 onClickKyc = innerWalletRouter::openTangemPayOnboarding,
