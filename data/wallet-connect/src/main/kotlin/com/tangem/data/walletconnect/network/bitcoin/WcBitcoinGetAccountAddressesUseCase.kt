@@ -3,11 +3,15 @@ package com.tangem.data.walletconnect.network.bitcoin
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
+import com.squareup.moshi.Json
+import com.squareup.moshi.JsonClass
+import com.squareup.moshi.Moshi
 import com.tangem.blockchain.blockchains.bitcoin.BitcoinWalletManager
 import com.tangem.blockchain.blockchains.bitcoin.walletconnect.models.GetAccountAddressesRequest
 import com.tangem.blockchain.extensions.Result as SdkResult
 import com.tangem.data.walletconnect.respond.WcRespondService
 import com.tangem.data.walletconnect.sign.WcMethodUseCaseContext
+import com.tangem.datasource.di.SdkMoshi
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.walletconnect.model.HandleMethodError
 import com.tangem.domain.walletconnect.model.WcBitcoinMethod
@@ -26,11 +30,20 @@ import dagger.assisted.AssistedInject
  * Returns wallet addresses filtered by intention (payment/ordinal).
  * This is a non-signing operation.
  */
+@JsonClass(generateAdapter = true)
+internal data class AddressInfo(
+    @Json(name = "address") val address: String,
+    @Json(name = "publicKey") val publicKey: String? = null,
+    @Json(name = "path") val path: String? = null,
+    @Json(name = "intention") val intention: String? = null,
+)
+
 internal class WcBitcoinGetAccountAddressesUseCase @AssistedInject constructor(
     @Assisted val context: WcMethodUseCaseContext,
     @Assisted override val method: WcBitcoinMethod.GetAccountAddresses,
     private val walletManagersFacade: WalletManagersFacade,
     private val respondService: WcRespondService,
+    @SdkMoshi private val moshi: Moshi,
 ) : WcGetAddressesUseCase {
 
     override val session: WcSession
@@ -86,18 +99,17 @@ internal class WcBitcoinGetAccountAddressesUseCase @AssistedInject constructor(
     private fun buildJsonResponse(
         data: com.tangem.blockchain.blockchains.bitcoin.walletconnect.models.GetAccountAddressesResponse,
     ): String {
-        // Build JSON array manually - return array directly without object wrapper
-        val addressesJson = data.addresses.joinToString(",") { addr ->
-            buildString {
-                append("{")
-                append("\"address\":\"${addr.address}\"")
-                addr.publicKey?.let { append(",\"publicKey\":\"$it\"") }
-                addr.path?.let { append(",\"path\":\"$it\"") }
-                addr.intention?.let { append(",\"intention\":\"$it\"") }
-                append("}")
-            }
+        val addresses = data.addresses.map { addr ->
+            AddressInfo(
+                address = addr.address,
+                publicKey = addr.publicKey,
+                path = addr.path,
+                intention = addr.intention,
+            )
         }
-        return "[$addressesJson]"
+        return moshi.adapter<List<AddressInfo>>(
+            com.squareup.moshi.Types.newParameterizedType(List::class.java, AddressInfo::class.java),
+        ).toJson(addresses)
     }
 
     @AssistedFactory
