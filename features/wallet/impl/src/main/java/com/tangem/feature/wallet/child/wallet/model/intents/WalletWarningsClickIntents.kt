@@ -11,9 +11,7 @@ import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
-import com.tangem.core.ui.components.bottomsheets.message.*
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.message.bottomSheetMessage
 import com.tangem.domain.card.SetCardWasScannedUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
@@ -40,7 +38,6 @@ import com.tangem.domain.tokens.model.analytics.PromoAnalyticsEvent.PromotionBan
 import com.tangem.domain.wallets.legacy.UserWalletsListManager.Lockable.UnlockType
 import com.tangem.domain.wallets.models.UnlockWalletsError
 import com.tangem.domain.wallets.usecase.*
-import com.tangem.feature.wallet.child.wallet.model.WalletActivationBannerType
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent.Basic
@@ -106,7 +103,7 @@ internal interface WalletWarningsClickIntents {
 
     fun onDenyPermissions()
 
-    fun onFinishWalletActivationClick(bannerType: WalletActivationBannerType, isBackupExists: Boolean)
+    fun onFinishWalletActivationClick(isBackupExists: Boolean)
 }
 
 @Suppress("LargeClass", "LongParameterList", "TooManyFunctions")
@@ -138,7 +135,6 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     private val userWalletsListRepository: UserWalletsListRepository,
     private val setShouldShowNotificationUseCase: SetShouldShowNotificationUseCase,
     private val notificationsRepository: NotificationsRepository,
-    private val messageSender: UiMessageSender,
     private val setNotificationsEnabledUseCase: SetNotificationsEnabledUseCase,
     private val getWalletsListForEnablingUseCase: GetWalletsForAutomaticallyPushEnablingUseCase,
     private val uiMessageSender: UiMessageSender,
@@ -461,40 +457,9 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
         }
     }
 
-    override fun onFinishWalletActivationClick(bannerType: WalletActivationBannerType, isBackupExists: Boolean) {
-        when (bannerType) {
-            WalletActivationBannerType.Attention -> {
-                val userWallet = getSelectedUserWallet() ?: return
-                appRouter.push(WalletActivation(userWallet.walletId, isBackupExists))
-            }
-            WalletActivationBannerType.Warning -> {
-                val message = bottomSheetMessage {
-                    infoBlock {
-                        icon(R.drawable.img_knight_shield_32) {
-                            type = MessageBottomSheetUMV2.Icon.Type.Warning
-                            backgroundType = MessageBottomSheetUMV2.Icon.BackgroundType.SameAsTint
-                        }
-                        title = resourceReference(R.string.hw_activation_need_title)
-                        body = resourceReference(R.string.hw_activation_need_description)
-                    }
-                    secondaryButton {
-                        text = resourceReference(R.string.common_later)
-                        onClick {
-                            closeBs()
-                        }
-                    }
-                    primaryButton {
-                        text = resourceReference(R.string.hw_activation_need_backup)
-                        onClick {
-                            val userWallet = getSelectedUserWallet() ?: return@onClick
-                            appRouter.push(WalletActivation(userWallet.walletId, isBackupExists))
-                            closeBs()
-                        }
-                    }
-                }
-                messageSender.send(message)
-            }
-        }
+    override fun onFinishWalletActivationClick(isBackupExists: Boolean) {
+        val userWalletId = stateHolder.getSelectedWalletId()
+        appRouter.push(WalletActivation(userWalletId, isBackupExists))
     }
 
     override fun onAllowPermissions() {
