@@ -17,12 +17,12 @@ import com.tangem.feature.wallet.presentation.wallet.ui.components.singlecurrenc
 @Composable
 internal fun TangemPayMainScreenBlock(state: TangemPayState, isBalanceHidden: Boolean, modifier: Modifier = Modifier) {
     when (state) {
-        is Progress -> TangemPayProgressState(state)
+        is Progress -> TangemPayProgressState(state, modifier)
         is TangemPayState.Card -> TangemPayCardMainBlock(state, isBalanceHidden, modifier)
         is TangemPayState.Empty -> Unit
         is TangemPayState.RefreshNeeded -> TangemPayRefreshBlock(state, modifier)
         is TangemPayState.TemporaryUnavailable -> TangemPayUnavailableBlock(state, modifier)
-        is TangemPayState.FailedIssue -> TangemPayFailedIssueState(state)
+        is TangemPayState.FailedIssue -> TangemPayFailedIssueState(state, modifier)
     }
 }
 
