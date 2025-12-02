@@ -1,7 +1,7 @@
 ==========================================
 Detekt Baseline Updater & Issue Counter
 ==========================================
-Date: 2025-12-01 16:30:16
+Date: 2025-12-02 13:19:49
 
 Step 1: Running detekt to check for new issues...
 
@@ -17,13 +17,13 @@ Counting issues in baseline files...
 ==========================================
 
 Summary:
-  Total Issues: 1453
+  Total Issues: 1435
   Modules with Issues: 62
   Average Issues per Module: 23
 
 Progress:
-  Fixed: 349 out of 1802 (19%)
-  Remaining: 1453
+  Fixed: 367 out of 1802 (20%)
+  Remaining: 1435
 
 ==========================================
 All Modules with Issues (sorted by count)
@@ -54,14 +54,13 @@ data/visa                                                            22
 features/yield-supply/impl                                           21
 features/tangempay/details/impl                                      21
 data/nft                                                             20
-data/wallets                                                         18
 features/swap/data                                                   15
+data/wallets                                                         14
 data/swap                                                            13
 features/token-recieve/impl                                          11
 features/qr-scanning/impl                                            11
 domain/account/status                                                11
 data/onramp                                                          11
-data/manage-tokens                                                   11
 core/datasource                                                      11
 data/markets                                                         10
 features/details/impl                                                 9
@@ -72,22 +71,23 @@ features/referral/impl                                                8
 domain/transaction                                                    8
 libs/tangem-sdk-api                                                   7
 data/txhistory                                                        7
-data/tokens                                                           7
-data/account                                                          7
 features/welcome/impl                                                 6
-domain/markets                                                        6
 data/wallet-manager                                                   6
 libs/visa                                                             5
 features/send-v2/api                                                  5
 features/home/impl                                                    5
+domain/markets                                                        5
 domain/legacy                                                         5
 data/transaction                                                      5
+data/account                                                          5
 features/referral/domain                                              4
 features/biometry/impl                                                4
+data/tokens                                                           4
 features/txhistory/impl                                               3
 features/tangempay/onboarding/impl                                    3
 features/create-wallet-start/impl                                     3
 domain/manage-tokens                                                  3
+data/manage-tokens                                                    3
 common/routing                                                        3
 features/account/api                                                  2
 data/promo                                                            2
