@@ -28,7 +28,6 @@ import com.tangem.hot.sdk.model.HotAuth
 import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -152,11 +151,6 @@ internal class AccessCodeModel @Inject constructor(
 
             tryToAskForBiometry()
 
-            userWalletsListRepository.saveWithoutLock(
-                userWallet.copy(backedUp = true),
-                canOverride = true,
-            )
-
             userWalletsListRepository.setLock(
                 userWallet.walletId,
                 UserWalletsListRepository.LockMethod.AccessCode(accessCode.toCharArray()),
@@ -179,29 +173,24 @@ internal class AccessCodeModel @Inject constructor(
                     hotWalletAccessor.unlockContextual(userWallet.hotWalletId)
                 }
 
-            launch(NonCancellable) {
-                var updatedHotWalletId = tangemHotSdk.changeAuth(
+            var updatedHotWalletId = tangemHotSdk.changeAuth(
+                unlockHotWallet = unlockHotWallet,
+                auth = HotAuth.Password(accessCode.toCharArray()),
+            )
+
+            if (walletsRepository.requireAccessCode().not()) {
+                updatedHotWalletId = tangemHotSdk.changeAuth(
                     unlockHotWallet = unlockHotWallet,
-                    auth = HotAuth.Password(accessCode.toCharArray()),
+                    auth = HotAuth.Biometry,
                 )
-
-                if (walletsRepository.requireAccessCode().not()) {
-                    updatedHotWalletId = tangemHotSdk.changeAuth(
-                        unlockHotWallet = unlockHotWallet,
-                        auth = HotAuth.Biometry,
-                    )
-                }
-
-                userWalletsListRepository.saveWithoutLock(
-                    userWallet.copy(
-                        hotWalletId = updatedHotWalletId,
-                        backedUp = true,
-                    ),
-                    canOverride = true,
-                )
-
-                clearHotWalletContextualUnlockUseCase.invoke(params.userWalletId)
             }
+
+            userWalletsListRepository.saveWithoutLock(
+                userWallet.copy(hotWalletId = updatedHotWalletId),
+                canOverride = true,
+            )
+
+            clearHotWalletContextualUnlockUseCase.invoke(params.userWalletId)
 
             params.callbacks.onAccessCodeUpdated(params.userWalletId)
         }
