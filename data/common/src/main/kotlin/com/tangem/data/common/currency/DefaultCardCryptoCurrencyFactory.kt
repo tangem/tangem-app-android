@@ -144,6 +144,9 @@ internal class DefaultCardCryptoCurrencyFactory(
                 ?: return emptyMap()
 
             response.accounts.flatMapTo(hashSetOf()) { accountDTO ->
+                val accountIndex = DerivationIndex(accountDTO.derivationIndex).getOrNull()
+                    ?: return@flatMapTo emptySet()
+
                 responseCryptoCurrenciesFactory.createCurrencies(
                     tokens = accountDTO.tokens.orEmpty().filter { token ->
                         networks.any {
@@ -151,7 +154,7 @@ internal class DefaultCardCryptoCurrencyFactory(
                         }
                     },
                     userWallet = userWallet,
-                    accountIndex = DerivationIndex(accountDTO.derivationIndex).getOrNull(),
+                    accountIndex = accountIndex,
                 )
             }
         } else {
@@ -163,6 +166,7 @@ internal class DefaultCardCryptoCurrencyFactory(
                     networks.any { it.backendId == token.networkId && it.derivationPath.value == token.derivationPath }
                 },
                 userWallet = userWallet,
+                accountIndex = DerivationIndex.Main,
             )
         }
             .groupBy(CryptoCurrency::network)
@@ -181,10 +185,13 @@ internal class DefaultCardCryptoCurrencyFactory(
                 ?: return emptyMap()
 
             response.accounts.flatMapTo(hashSetOf()) { accountDTO ->
+                val accountIndex = DerivationIndex(accountDTO.derivationIndex).getOrNull()
+                    ?: return@flatMapTo emptySet()
+
                 responseCryptoCurrenciesFactory.createCurrencies(
                     tokens = accountDTO.tokens.orEmpty().filter { token -> token.networkId in networkIds },
                     userWallet = userWallet,
-                    accountIndex = DerivationIndex(accountDTO.derivationIndex).getOrNull(),
+                    accountIndex = accountIndex,
                 )
             }
         } else {
@@ -194,6 +201,7 @@ internal class DefaultCardCryptoCurrencyFactory(
             responseCryptoCurrenciesFactory.createCurrencies(
                 tokens = response.tokens.filter { token -> token.networkId in networkIds },
                 userWallet = userWallet,
+                accountIndex = DerivationIndex.Main,
             )
         }
             .groupBy { it.network.id.rawId }
