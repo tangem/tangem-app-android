@@ -49,9 +49,10 @@ internal class TokenListStateConverter(
             clickIntents.onTokenItemLongClick(selectedWallet.walletId, currencyStatus)
         }
 
-    private val onApyLabelClick: (currencyStatus: CryptoCurrencyStatus) -> Unit = { currencyStatus ->
-        clickIntents.onApyLabelClick(selectedWallet.walletId, currencyStatus)
-    }
+    private val onApyLabelClick: (currencyStatus: CryptoCurrencyStatus, apy: String) -> Unit =
+        { currencyStatus, apy ->
+            clickIntents.onApyLabelClick(selectedWallet.walletId, currencyStatus, apy)
+        }
 
     private fun tokenStatusConverter(accountId: AccountId? = null) = TokenItemStateConverter(
         appCurrency = appCurrency,
@@ -59,7 +60,7 @@ internal class TokenListStateConverter(
         stakingApyMap = stakingApyMap,
         onItemClick = { _, status -> onTokenClick(accountId, status) },
         onItemLongClick = { _, status -> onTokenLongClick(accountId, status) },
-        onApyLabelClick = { status -> onApyLabelClick(status) },
+        onApyLabelClick = { status, apy -> onApyLabelClick(status, apy) },
     )
 
     override fun convert(value: WalletTokensListState): WalletTokensListState {
