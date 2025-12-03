@@ -290,6 +290,7 @@ sealed class WalletNotification(val config: NotificationConfig) {
     data class FinishWalletActivation(
         val type: WalletActivationBannerType,
         val buttonsState: ButtonsState,
+        val isBackupExists: Boolean,
     ) : WalletNotification(
         config = NotificationConfig(
             title = resourceReference(R.string.hw_activation_need_title),
