@@ -6,8 +6,6 @@
     <ID>CanBeNonNullable:BaseActionsFactory.kt$BaseActionsFactory$requirementsDeferred: Deferred&lt;AssetRequirementsCondition?&gt;?</ID>
     <ID>CanBeNonNullable:CommonActionsFactory.kt$CommonActionsFactory$swapUnavailableReasonDeferred: Deferred&lt;ScenarioUnavailabilityReason&gt;?</ID>
     <ID>ExplicitCollectionElementAccessMethod:GetWalletTotalBalanceUseCase.kt$GetWalletTotalBalanceUseCase$walletBalanceCache.put(userWalletId, content)</ID>
-    <ID>MultilineLambdaItParameter:AddCryptoCurrenciesUseCase.kt$AddCryptoCurrenciesUseCase${ it.network.backendId == networkId &amp;&amp; !it.isCustom &amp;&amp; it.contractAddress.equals(contractAddress, true) }</ID>
-    <ID>MultilineLambdaItParameter:AddCryptoCurrenciesUseCase.kt$AddCryptoCurrenciesUseCase${ when (it) { is StakingIdFactory.Error.UnableToGetAddress -&gt; raise(IllegalStateException("$it")) StakingIdFactory.Error.UnsupportedCurrency -&gt; Unit.right() } return@either }</ID>
     <ID>MultilineLambdaItParameter:BaseCurrencyStatusOperations.kt$BaseCurrencyStatusOperations${ singleQuoteStatusSupplier(params = SingleQuoteStatusProducer.Params(rawCurrencyId = it)) .firstOrNull() }</ID>
     <ID>MultilineLambdaItParameter:BaseCurrencyStatusOperations.kt$BaseCurrencyStatusOperations${ val exception = IllegalStateException("$it") Error.DataError(exception) }</ID>
     <ID>MultilineLambdaItParameter:FetchCurrencyStatusUseCase.kt$FetchCurrencyStatusUseCase${ when (it) { is StakingIdFactory.Error.UnableToGetAddress -&gt; raise(IllegalStateException("$it")) StakingIdFactory.Error.UnsupportedCurrency -&gt; Unit.right() } return@either }</ID>
