@@ -20,7 +20,10 @@ import com.tangem.domain.staking.single.SingleYieldBalanceSupplier
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.operations.BaseCurrencyStatusOperations
 import com.tangem.domain.tokens.operations.CachedCurrenciesStatusesOperations
-import com.tangem.domain.tokens.repository.*
+import com.tangem.domain.tokens.repository.CurrenciesRepository
+import com.tangem.domain.tokens.repository.CurrencyChecksRepository
+import com.tangem.domain.tokens.repository.TokenReceiveWarningsViewedRepository
+import com.tangem.domain.tokens.repository.YieldSupplyWarningsViewedRepository
 import com.tangem.domain.tokens.wallet.WalletBalanceFetcher
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.tap.domain.tokens.DefaultTokensFeatureToggles
@@ -40,6 +43,7 @@ internal object TokensDomainModule {
     @Singleton
     fun provideAddCryptoCurrenciesUseCase(
         currenciesRepository: CurrenciesRepository,
+        walletManagersFacade: WalletManagersFacade,
         multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
         multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
         singleYieldBalanceFetcher: SingleYieldBalanceFetcher,
@@ -48,6 +52,7 @@ internal object TokensDomainModule {
     ): AddCryptoCurrenciesUseCase {
         return AddCryptoCurrenciesUseCase(
             currenciesRepository = currenciesRepository,
+            walletManagersFacade = walletManagersFacade,
             multiNetworkStatusFetcher = multiNetworkStatusFetcher,
             multiQuoteStatusFetcher = multiQuoteStatusFetcher,
             singleYieldBalanceFetcher = singleYieldBalanceFetcher,
