@@ -276,7 +276,10 @@ class RecentBlockTest : BaseTestCase() {
             }
             step("Swipe up") {
                 waitForIdle()
-                swipeVertical(SwipeDirection.UP, startHeightRatio = 0.6f)
+                onSendAddressScreen {
+                    swipeVertical(SwipeDirection.UP, startHeightRatio = 0.6f)
+                    swipeVertical(SwipeDirection.UP, startHeightRatio = 0.6f)
+                }
             }
             step("Check recent address item №7") {
                 checkRecentAddressItem(address = recipientAddressBase + "f", description = recentTransactionAmount2)
