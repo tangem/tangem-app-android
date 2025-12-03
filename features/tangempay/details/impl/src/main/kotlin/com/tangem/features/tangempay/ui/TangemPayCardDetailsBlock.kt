@@ -6,7 +6,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -63,7 +62,6 @@ internal fun TangemPayCard(state: TangemPayCardDetailsUM, modifier: Modifier = M
                 cameraDistance = zAxisDistance
             }
             .clip(RoundedCornerShape(16.dp))
-            .clickable(onClick = state.onClick)
             .background(Color(red = 18, green = 21, blue = 31))
             .border(
                 width = 1.dp,
