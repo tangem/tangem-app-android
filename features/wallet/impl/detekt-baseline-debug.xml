@@ -85,7 +85,6 @@
     <ID>MultilineLambdaItParameter:WalletWarningsClickIntents.kt$WalletWarningsClickIntentsImplementor${ Timber.e( """ Unable to get user wallet |- ID: $userWalletId |- Exception: $it """.trimIndent(), ) null }</ID>
     <ID>MultilineLambdaItParameter:WalletWarningsClickIntents.kt$WalletWarningsClickIntentsImplementor${ router.openOnboardingScreen( scanResponse = it.scanResponse, continueBackup = true, ) }</ID>
     <ID>MultilineLambdaItParameter:WalletWithFundsChecker.kt$WalletWithFundsChecker${ val amount = it.value.amount ?: return@any false !amount.isZero() }</ID>
-    <ID>MultilineLambdaItParameter:WalletsUpdateActionResolver.kt$WalletsUpdateActionResolver${ if (it.warnings.any { it is WalletNotification.FinishWalletActivation }) { it.walletCardState.id } else { null } }</ID>
     <ID>NamedArguments:BasicAccountListSubscriber.kt$BasicAccountListSubscriber$updateContent(convertParams, appCurrency, yieldSupplyApyMap, stakingApyMap)</ID>
     <ID>NamedArguments:GetMultiWalletWarningsFactory.kt$GetMultiWalletWarningsFactory$addInformationalNotifications(userWallet, cardTypesResolver, flattenCurrencies, clickIntents)</ID>
     <ID>NamedArguments:GetMultiWalletWarningsFactory.kt$GetMultiWalletWarningsFactory$addWarningNotifications(cardTypesResolver, flattenCurrencies, isNeedToBackup, clickIntents)</ID>
@@ -109,7 +108,6 @@
     <ID>NoNameShadowing:WalletCurrencyActionsClickIntents.kt$WalletCurrencyActionsClickIntentsImplementor${ it is TokensListItemUM.Token }</ID>
     <ID>NoNameShadowing:WalletNFTItem.kt$modifier</ID>
     <ID>NoNameShadowing:WalletScreen.kt${ it.organizeTokensButtonConfig?.let { config -&gt; organizeTokensButton( modifier = itemModifier, isEnabled = config.isEnabled, onClick = config.onClick, ) } }</ID>
-    <ID>NoNameShadowing:WalletsUpdateActionResolver.kt$WalletsUpdateActionResolver${ it is WalletNotification.FinishWalletActivation }</ID>
     <ID>NullableToStringCall:DefaultPromoDeeplinkHandler.kt$DefaultPromoDeeplinkHandler$$bitcoinCurrency</ID>
     <ID>NullableToStringCall:DefaultPromoDeeplinkHandler.kt$DefaultPromoDeeplinkHandler$$bitcoinStatus</ID>
     <ID>NullableToStringCall:DefaultPromoDeeplinkHandler.kt$DefaultPromoDeeplinkHandler$${cryptoCurrencies?.size}</ID>
