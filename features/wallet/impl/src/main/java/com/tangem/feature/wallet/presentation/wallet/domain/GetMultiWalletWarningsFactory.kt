@@ -477,6 +477,7 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
                         onClick = { clickIntents.onFinishWalletActivationClick(isBackupExists) },
                     )
                 },
+                isBackupExists = isBackupExists,
             ),
             condition = shouldShowFinishActivation,
         )
