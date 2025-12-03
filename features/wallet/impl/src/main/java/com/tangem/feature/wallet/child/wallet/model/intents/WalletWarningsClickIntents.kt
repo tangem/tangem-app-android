@@ -458,6 +458,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     }
 
     override fun onFinishWalletActivationClick(isBackupExists: Boolean) {
+        analyticsEventHandler.send(MainScreen.ButtonFinalizeActivation)
         val userWalletId = stateHolder.getSelectedWalletId()
         appRouter.push(WalletActivation(userWalletId, isBackupExists))
     }
