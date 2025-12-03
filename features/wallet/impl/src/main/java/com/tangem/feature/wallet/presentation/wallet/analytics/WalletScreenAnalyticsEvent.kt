@@ -51,7 +51,30 @@ sealed class WalletScreenAnalyticsEvent {
         params: Map<String, String> = mapOf(),
     ) : AnalyticsEvent(category = "Main Screen", event = event, params = params) {
 
-        data object ScreenOpened : MainScreen(event = "Screen opened")
+        data object ScreenOpenedLegacy : MainScreen(
+            event = "Screen opened",
+        )
+
+        data class ScreenOpened(
+            private val hasMobileWallet: Boolean,
+        ) : MainScreen(
+            event = "Screen opened",
+            params = mapOf("Mobile Wallet" to if (hasMobileWallet) "Yes" else "No"),
+        )
+
+        data class NoticeFinishActivation(private val activationState: ActivationState) : MainScreen(
+            event = "Notice - Finish Activation",
+            params = mapOf("Activation State" to activationState.value),
+        ) {
+            enum class ActivationState(val value: String) {
+                NotStarted("Not Started"),
+                Unfinished("Unfinished"),
+            }
+        }
+
+        data object ButtonFinalizeActivation : MainScreen(
+            event = "Button - Finalize Activation",
+        )
 
         class WalletSelected(val isImported: Boolean) : MainScreen(
             event = "Wallet Selected",
