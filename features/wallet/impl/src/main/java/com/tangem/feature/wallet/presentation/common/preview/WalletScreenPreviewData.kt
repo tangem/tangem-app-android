@@ -172,6 +172,7 @@ internal object WalletScreenPreviewData {
                         text = resourceReference(R.string.hw_activation_need_finish),
                         onClick = { },
                     ),
+                    isBackupExists = false,
                 ),
             ),
             bottomSheetConfig = null,
