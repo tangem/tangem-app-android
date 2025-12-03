@@ -4,9 +4,11 @@ import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
+import com.squareup.sqldelight.internal.AtomicBoolean
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
+import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
@@ -100,6 +102,7 @@ internal class WalletModel @Inject constructor(
     private val accountsFeatureToggles: AccountsFeatureToggles,
     private val cardDetailsRepository: TangemPayCardDetailsRepository,
     private val tangemPayMainInfoManager: TangemPayMainInfoManager,
+    private val trackingContextProxy: TrackingContextProxy,
     val screenLifecycleProvider: ScreenLifecycleProvider,
     val innerWalletRouter: InnerWalletRouter,
 ) : Model() {
@@ -115,9 +118,12 @@ internal class WalletModel @Inject constructor(
     private val updateTangemPayJobHolder = JobHolder()
 
     private var expressTxStatusTaskScheduler = SingleTaskScheduler<Unit>()
+    private val hasMainScreenOpenedEventSent = AtomicBoolean(false)
 
     init {
-        analyticsEventsHandler.send(WalletScreenAnalyticsEvent.MainScreen.ScreenOpened)
+        if (!hotWalletFeatureToggles.isHotWalletEnabled) {
+            analyticsEventsHandler.send(WalletScreenAnalyticsEvent.MainScreen.ScreenOpenedLegacy)
+        }
 
         suggestToOpenMarkets()
 
@@ -274,11 +280,25 @@ internal class WalletModel @Inject constructor(
     // It's okay here because we need to be able to observe the selected wallet changes
     @Suppress("DEPRECATION")
     private fun subscribeOnSelectedWalletFlow() {
-        getSelectedWalletUseCase().onRight {
-            it
+        getSelectedWalletUseCase().onRight { walletFlow ->
+            walletFlow
                 .conflate()
                 .distinctUntilChanged()
                 .onEach { selectedWallet ->
+                    trackingContextProxy.setContext(selectedWallet)
+
+                    if (hotWalletFeatureToggles.isHotWalletEnabled && !hasMainScreenOpenedEventSent.get()) {
+                        // send it here because we need context to be set
+                        modelScope.launch {
+                            val hasMobileWallet = userWalletsListRepository.userWalletsSync()
+                                .any { it is UserWallet.Hot }
+                            analyticsEventsHandler.send(
+                                WalletScreenAnalyticsEvent.MainScreen.ScreenOpened(hasMobileWallet),
+                            )
+                            hasMainScreenOpenedEventSent.set(true)
+                        }
+                    }
+
                     if (selectedWallet.isMultiCurrency) {
                         selectedWalletAnalyticsSender.send(selectedWallet)
                     }
