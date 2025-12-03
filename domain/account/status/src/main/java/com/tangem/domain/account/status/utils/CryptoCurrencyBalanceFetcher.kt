@@ -1,8 +1,6 @@
 package com.tangem.domain.account.status.utils
 
 import arrow.core.Either
-import arrow.core.raise.either
-import com.tangem.domain.account.repository.AccountsCRUDRepository
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
@@ -19,7 +17,6 @@ import timber.log.Timber
  * Utility class responsible for fetching and refreshing the balances of various crypto currencies
  * associated with a user's wallet.
  *
- * @property accountsCRUDRepository Repository for managing account data.
  * @property multiNetworkStatusFetcher Fetcher for updating network statuses.
  * @property multiQuoteStatusFetcher Fetcher for updating quote statuses.
  * @property multiYieldBalanceFetcher Fetcher for updating yield balances.
@@ -29,7 +26,6 @@ import timber.log.Timber
 [REDACTED_AUTHOR]
  */
 class CryptoCurrencyBalanceFetcher(
-    private val accountsCRUDRepository: AccountsCRUDRepository,
     private val multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
     private val multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
     private val multiYieldBalanceFetcher: MultiYieldBalanceFetcher,
@@ -80,22 +76,13 @@ class CryptoCurrencyBalanceFetcher(
     private suspend fun refreshNetworks(
         userWalletId: UserWalletId,
         currencies: List<CryptoCurrency>,
-    ): Either<Throwable, Unit> = either {
-        val either = multiNetworkStatusFetcher(
+    ): Either<Throwable, Unit> {
+        return multiNetworkStatusFetcher(
             params = MultiNetworkStatusFetcher.Params(
                 userWalletId = userWalletId,
                 networks = currencies.mapTo(hashSetOf(), CryptoCurrency::network),
             ),
         )
-
-        arrow.core.raise.catch(
-            block = { accountsCRUDRepository.syncTokens(userWalletId) },
-            catch = {
-                Timber.e(it, "Failed to sync tokens for wallet: $userWalletId")
-            },
-        )
-
-        return either
     }
 
     private suspend fun refreshYieldBalances(
