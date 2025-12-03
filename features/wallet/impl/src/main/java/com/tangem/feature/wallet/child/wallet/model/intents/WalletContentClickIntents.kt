@@ -20,6 +20,7 @@ import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.domain.tokens.model.details.NavigationAction
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.domain.yield.supply.usecase.YieldSupplyEnterStatusUseCase
 import com.tangem.feature.wallet.presentation.account.AccountDependencies
 import com.tangem.feature.wallet.presentation.wallet.domain.OnrampStatusFactory
 import com.tangem.feature.wallet.presentation.wallet.domain.unwrap
@@ -49,7 +50,7 @@ internal interface WalletContentClickIntents {
 
     fun onTokenItemLongClick(userWalletId: UserWalletId, cryptoCurrencyStatus: CryptoCurrencyStatus)
 
-    fun onApyLabelClick(userWalletId: UserWalletId, currencyStatus: CryptoCurrencyStatus)
+    fun onApyLabelClick(userWalletId: UserWalletId, currencyStatus: CryptoCurrencyStatus, apy: String)
 
     fun onAccountExpandClick(account: Account)
 
@@ -87,6 +88,7 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
     private val accountDependencies: AccountDependencies,
+    private val yieldSupplyEnterStatusUseCase: YieldSupplyEnterStatusUseCase,
 ) : BaseWalletClickIntents(), WalletContentClickIntents {
 
     override fun onDetailsClick() {
@@ -160,12 +162,65 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
         }
     }
 
-    override fun onApyLabelClick(userWalletId: UserWalletId, currencyStatus: CryptoCurrencyStatus) {
+    override fun onApyLabelClick(userWalletId: UserWalletId, currencyStatus: CryptoCurrencyStatus, apy: String) {
         val navigationAction = if (currencyStatus.currency is CryptoCurrency.Token) {
             NavigationAction.YieldSupply(currencyStatus.value.yieldSupplyStatus?.isActive == true)
         } else {
             NavigationAction.Staking
         }
+
+        sendApyLabelClickAnalytics(navigationAction, currencyStatus)
+
+        when (navigationAction) {
+            is NavigationAction.Staking -> router.openTokenDetails(userWalletId, currencyStatus, navigationAction)
+            is NavigationAction.YieldSupply -> openYieldSupply(
+                userWalletId = userWalletId,
+                cryptoCurrencyStatus = currencyStatus,
+                navigationAction = navigationAction,
+                apy = apy,
+            )
+        }
+    }
+
+    override fun onAccountExpandClick(account: Account) {
+        val userWalletId = stateHolder.getSelectedWalletId()
+        accountDependencies.expandedAccountsHolder.expandAccount(userWalletId, account.accountId)
+    }
+
+    override fun onAccountCollapseClick(account: Account) {
+        val userWalletId = stateHolder.getSelectedWalletId()
+        accountDependencies.expandedAccountsHolder.collapseAccount(userWalletId, account.accountId)
+    }
+
+    private fun openYieldSupply(
+        userWalletId: UserWalletId,
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+        navigationAction: NavigationAction.YieldSupply,
+        apy: String,
+    ) {
+        modelScope.launch {
+            val tokenEnterStatus = yieldSupplyEnterStatusUseCase(userWalletId, cryptoCurrencyStatus).getOrNull()
+            when {
+                tokenEnterStatus != null -> router.openTokenDetails(
+                    userWalletId = userWalletId,
+                    currencyStatus = cryptoCurrencyStatus,
+                    navigationAction = navigationAction,
+                )
+                navigationAction.isActive -> router.openYieldSupplyActiveScreen(
+                    userWalletId = userWalletId,
+                    cryptoCurrency = cryptoCurrencyStatus.currency,
+                    apy = apy,
+                )
+                else -> router.openYieldSupplyPromoScreen(
+                    userWalletId = userWalletId,
+                    cryptoCurrency = cryptoCurrencyStatus.currency,
+                    apy = apy,
+                )
+            }
+        }
+    }
+
+    private fun sendApyLabelClickAnalytics(navigationAction: NavigationAction, currencyStatus: CryptoCurrencyStatus) {
         val event = when (navigationAction) {
             is NavigationAction.YieldSupply -> {
                 MainScreenAnalyticsEvent.ApyClicked(
@@ -193,17 +248,6 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
             }
         }
         analyticsEventHandler.send(event)
-        router.openTokenDetails(userWalletId, currencyStatus, navigationAction)
-    }
-
-    override fun onAccountExpandClick(account: Account) {
-        val userWalletId = stateHolder.getSelectedWalletId()
-        accountDependencies.expandedAccountsHolder.expandAccount(userWalletId, account.accountId)
-    }
-
-    override fun onAccountCollapseClick(account: Account) {
-        val userWalletId = stateHolder.getSelectedWalletId()
-        accountDependencies.expandedAccountsHolder.collapseAccount(userWalletId, account.accountId)
     }
 
     private fun showActionsBottomSheet(tokenActionsState: TokenActionsState, userWallet: UserWallet) {
