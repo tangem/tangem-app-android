@@ -26,6 +26,7 @@ dependencies {
     api(projects.domain.referral)
     api(projects.domain.staking)
     api(projects.domain.tokens)
+    api(projects.domain.walletManager)
     api(projects.domain.wallets)
 
     implementation(projects.libs.blockchainSdk)

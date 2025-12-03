@@ -61,6 +61,8 @@ class SaveManagedTokensUseCase(
 
             parallelUpdatingScope.launch {
                 withContext(NonCancellable) {
+                    syncTokens(userWalletId = userWalletId, addedCurrencies = savedCurrencies)
+
                     launch {
                         refreshUpdatedNetworks(
                             userWalletId = userWalletId,
@@ -96,6 +98,26 @@ class SaveManagedTokensUseCase(
         )
     }
 
+    private suspend fun syncTokens(userWalletId: UserWalletId, addedCurrencies: List<CryptoCurrency>) {
+        createWalletManagers(userWalletId = userWalletId, currencies = addedCurrencies)
+        currenciesRepository.syncTokens(userWalletId)
+    }
+
+    /**
+     * Creates wallet managers for the given [currencies] if they do not already exist.
+     * The method will generate addresses for new networks to ensure the stability of the "Push notifications" feature.
+     *
+     * @param userWalletId The ID of the user's wallet.
+     * @param currencies The list of cryptocurrencies for which to create wallet managers.
+     */
+    private suspend fun createWalletManagers(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) {
+        val networks = currencies.mapTo(hashSetOf(), CryptoCurrency::network)
+
+        for (network in networks) {
+            walletManagersFacade.getOrCreateWalletManager(userWalletId = userWalletId, network = network)
+        }
+    }
+
     private suspend fun refreshUpdatedNetworks(userWalletId: UserWalletId, addedCurrencies: List<CryptoCurrency>) {
         multiNetworkStatusFetcher(
             MultiNetworkStatusFetcher.Params(
@@ -103,8 +125,6 @@ class SaveManagedTokensUseCase(
                 networks = addedCurrencies.map(CryptoCurrency::network).toSet(),
             ),
         )
-
-        currenciesRepository.syncTokens(userWalletId)
     }
 
     private suspend fun refreshUpdatedYieldBalances(
