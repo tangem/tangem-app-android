@@ -21,8 +21,10 @@ import com.tangem.domain.networks.utils.NetworksCleaner
 import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.utils.StakingCleaner
 import com.tangem.domain.tokens.repository.CurrenciesRepository
+import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.derivations.DerivationsRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.runSuspendCatching
 import kotlinx.coroutines.*
 import timber.log.Timber
 
@@ -49,6 +51,7 @@ class ManageCryptoCurrenciesUseCase(
     private val accountsCRUDRepository: AccountsCRUDRepository,
     private val currenciesRepository: CurrenciesRepository,
     private val derivationsRepository: DerivationsRepository,
+    private val walletManagersFacade: WalletManagersFacade,
     private val cryptoCurrencyBalanceFetcher: CryptoCurrencyBalanceFetcher,
     private val stakingIdFactory: StakingIdFactory,
     private val networksCleaner: NetworksCleaner,
@@ -83,6 +86,11 @@ class ManageCryptoCurrenciesUseCase(
             val modifiedCurrencyList = accountStatus.tokenList.flattenCurrencies()
                 .modify(add = add, remove = remove)
 
+            if (!modifiedCurrencyList.hasChanges) {
+                Timber.d("No changes in currencies, skipping")
+                return@withContext
+            }
+
             saveAccount(
                 account = accountStatus.account.copy(cryptoCurrencies = modifiedCurrencyList.total.toSet()),
             )
@@ -90,17 +98,7 @@ class ManageCryptoCurrenciesUseCase(
             derivePublicKeys(userWalletId = userWalletId, currencies = modifiedCurrencyList.added)
 
             parallelUpdatingScope.launch {
-                /*
-                 * If only removal of currencies happened, we need to sync tokens. Otherwise, tokens will be synced
-                 * when balances are refreshed for added currencies.
-                 */
-                val isOnlyRemoval = modifiedCurrencyList.added.isEmpty() && modifiedCurrencyList.removed.isNotEmpty()
-
-                if (isOnlyRemoval) {
-                    launch { accountsCRUDRepository.syncTokens(userWalletId) }
-                    clearMetadata(userWalletId = userWalletId, currencies = modifiedCurrencyList.removed)
-                    return@launch
-                }
+                syncTokens(userWalletId, modifiedCurrencyList)
 
                 cryptoCurrencyBalanceFetcher(userWalletId = userWalletId, currencies = modifiedCurrencyList.added)
                 refreshExpress(userWalletId = userWalletId, currencies = modifiedCurrencyList.total)
@@ -121,10 +119,10 @@ class ManageCryptoCurrenciesUseCase(
 
             val foundToken = accountStatus.tokenList.flattenCurrencies()
                 .mapNotNull { it.currency as? CryptoCurrency.Token }
-                .firstOrNull {
-                    it.network.backendId == networkId &&
-                        !it.isCustom &&
-                        it.contractAddress.equals(contractAddress, true)
+                .firstOrNull { token ->
+                    token.network.backendId == networkId &&
+                        !token.isCustom &&
+                        token.contractAddress.equals(contractAddress, true)
                 }
 
             if (foundToken != null) return@withContext foundToken
@@ -137,6 +135,8 @@ class ManageCryptoCurrenciesUseCase(
             saveAccount(account = accountStatus.account.copy(cryptoCurrencies = modifiedCurrencyList.total.toSet()))
 
             parallelUpdatingScope.launch {
+                syncTokens(userWalletId, modifiedCurrencyList)
+
                 cryptoCurrencyBalanceFetcher(userWalletId = userWalletId, currencies = listOf(tokenToAdd))
                 refreshExpress(userWalletId = userWalletId, currencies = modifiedCurrencyList.total)
             }
@@ -260,15 +260,40 @@ class ManageCryptoCurrenciesUseCase(
         )
     }
 
+    private suspend fun syncTokens(userWalletId: UserWalletId, modifiedCurrencyList: ModifiedCurrencyList) {
+        createWalletManagers(userWalletId = userWalletId, currencies = modifiedCurrencyList.added)
+
+        runSuspendCatching { accountsCRUDRepository.syncTokens(userWalletId) }
+            .onFailure { Timber.e(it, "Failed to sync tokens for wallet $userWalletId") }
+    }
+
+    /**
+     * Creates wallet managers for the given [currencies] if they do not already exist.
+     * The method will generate addresses for new networks to ensure the stability of the "Push notifications" feature.
+     *
+     * @param userWalletId The ID of the user's wallet.
+     * @param currencies The list of cryptocurrencies for which to create wallet managers.
+     */
+    private suspend fun createWalletManagers(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) {
+        val networks = currencies.mapTo(hashSetOf(), CryptoCurrency::network)
+
+        for (network in networks) {
+            runSuspendCatching {
+                walletManagersFacade.getOrCreateWalletManager(userWalletId = userWalletId, network = network)
+            }
+                .onFailure { Timber.e(it, "Failed to create wallet manager for network ${network.id}") }
+        }
+    }
+
     private suspend fun refreshExpress(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) {
         if (currencies.isEmpty()) return
 
         coroutineScope {
             launch {
-                val assetIds = currencies.mapTo(hashSetOf()) {
+                val assetIds = currencies.mapTo(hashSetOf()) { currency ->
                     ExpressAsset.ID(
-                        networkId = it.network.backendId,
-                        contractAddress = (it as? CryptoCurrency.Token)?.contractAddress,
+                        networkId = currency.network.backendId,
+                        contractAddress = (currency as? CryptoCurrency.Token)?.contractAddress,
                     )
                 }
 
@@ -325,5 +350,8 @@ class ManageCryptoCurrenciesUseCase(
         val added: List<CryptoCurrency>,
         val removed: List<CryptoCurrency>,
         val total: List<CryptoCurrency>,
-    )
+    ) {
+
+        val hasChanges get() = added.isNotEmpty() || removed.isNotEmpty()
+    }
 }
