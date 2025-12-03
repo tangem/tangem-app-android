@@ -11,6 +11,7 @@ import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
 import com.tangem.domain.tokens.repository.CurrenciesRepository
+import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.derivations.DerivationsRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.NonCancellable
@@ -31,6 +32,7 @@ import kotlinx.coroutines.withContext
 class SaveMarketTokensUseCase(
     private val derivationsRepository: DerivationsRepository,
     private val marketsTokenRepository: MarketsTokenRepository,
+    private val walletManagersFacade: WalletManagersFacade,
     private val currenciesRepository: CurrenciesRepository,
     private val multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
     private val multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
@@ -80,11 +82,33 @@ class SaveMarketTokensUseCase(
 
             parallelUpdatingScope.launch {
                 withContext(NonCancellable) {
+                    syncTokens(userWalletId, savedCurrencies)
+
                     launch { refreshUpdatedNetworks(userWalletId, savedCurrencies) }
                     launch { refreshUpdatedYieldBalances(userWalletId, savedCurrencies) }
                     launch { refreshUpdatedQuotes(savedCurrencies) }
                 }
             }
+        }
+    }
+
+    private suspend fun syncTokens(userWalletId: UserWalletId, addedCurrencies: List<CryptoCurrency>) {
+        createWalletManagers(userWalletId = userWalletId, currencies = addedCurrencies)
+        currenciesRepository.syncTokens(userWalletId)
+    }
+
+    /**
+     * Creates wallet managers for the given [currencies] if they do not already exist.
+     * The method will generate addresses for new networks to ensure the stability of the "Push notifications" feature.
+     *
+     * @param userWalletId The ID of the user's wallet.
+     * @param currencies The list of cryptocurrencies for which to create wallet managers.
+     */
+    private suspend fun createWalletManagers(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) {
+        val networks = currencies.mapTo(hashSetOf(), CryptoCurrency::network)
+
+        for (network in networks) {
+            walletManagersFacade.getOrCreateWalletManager(userWalletId = userWalletId, network = network)
         }
     }
 
@@ -95,7 +119,6 @@ class SaveMarketTokensUseCase(
                 networks = addedCurrencies.map(CryptoCurrency::network).toSet(),
             ),
         )
-        currenciesRepository.syncTokens(userWalletId)
     }
 
     private suspend fun refreshUpdatedYieldBalances(
