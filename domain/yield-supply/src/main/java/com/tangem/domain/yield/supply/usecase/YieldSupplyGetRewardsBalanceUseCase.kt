@@ -26,6 +26,10 @@ class YieldSupplyGetRewardsBalanceUseCase(
         val cryptoAmount = status.value.amount
         val fiatRate = status.value.fiatRate
 
+        if (cryptoAmount?.compareTo(BigDecimal.ZERO) == 0) {
+            return@flow
+        }
+
         val amount = if (cryptoAmount != null && fiatRate != null) {
             cryptoAmount.multiply(fiatRate)
         } else {
@@ -95,7 +99,7 @@ class YieldSupplyGetRewardsBalanceUseCase(
         private const val SCALE = 18
 
         private const val MIN_DECIMALS = 3
-        private const val MAX_DECIMALS = 8
+        private const val MAX_DECIMALS = 12
 
         private val LN_10 = ln(10.0)
         private const val EPSILON = 1e-18
