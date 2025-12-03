@@ -11,7 +11,6 @@
     <ID>MultilineLambdaItParameter:TangemHotWalletSigner.kt$TangemHotWalletSigner${ Timber.e(it) return if (it is TangemSdkError) { CompletionResult.Failure(it) } else { CompletionResult.Failure(TangemSdkError.ExceptionError(it)) } }</ID>
     <ID>NamedArguments:DefaultHotWalletAccessCodeAttemptsRepository.kt$DefaultHotWalletAccessCodeAttemptsRepository$toState(id, count, deadline, boot)</ID>
     <ID>NamedArguments:DefaultHotWalletAccessCodeAttemptsRepository.kt$DefaultHotWalletAccessCodeAttemptsRepository$toState(id, it.attempts, it.deadline, it.bootCount)</ID>
-    <ID>SuspendFunSwallowedCancellation:DefaultHotWalletAccessor.kt$DefaultHotWalletAccessor$runCatching</ID>
     <ID>SuspendFunSwallowedCancellation:TangemHotWalletSigner.kt$TangemHotWalletSigner$runCatching</ID>
     <ID>UnnecessaryLet:MissedDerivationsFinder.kt$MissedDerivationsFinder$let(::findByNetworks)</ID>
     <ID>UseOrEmpty:DefaultColdMapDerivationsRepository.kt$DefaultColdMapDerivationsRepository$oldKeys[walletKey] ?: emptyMap()</ID>
