@@ -370,6 +370,6 @@ internal class TangemPayDetailsModel @Inject constructor(
     }
 
     private fun showBottomSheetError(type: TangemPayDetailsErrorType) {
-        uiMessageSender.send(message = TangemPayMessagesFactory.createErrorMessage(type = type))
+        uiMessageSender.send(message = TangemPayMessagesFactory.createErrorMessage(errorType = type))
     }
 }
