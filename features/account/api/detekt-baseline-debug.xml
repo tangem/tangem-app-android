@@ -1,8 +1,0 @@
-<?xml version="1.0" ?>
-<SmellBaseline>
-  <ManuallySuppressedIssues/>
-  <CurrentIssues>
-    <ID>BooleanPropertyNaming:PortfolioFetcher.kt$PortfolioFetcher.Mode.All$val onlyMultiCurrency: Boolean</ID>
-    <ID>UseSumOfInsteadOfFlatMapSize:PortfolioFetcher.kt$PortfolioFetcher.Data$flatten()</ID>
-  </CurrentIssues>
-</SmellBaseline>
