@@ -10,8 +10,8 @@ import com.tangem.features.tangempay.entity.TangemPayDetailsErrorType
 
 internal object TangemPayMessagesFactory {
 
-    fun createErrorMessage(type: TangemPayDetailsErrorType): BottomSheetMessageV2 {
-        return when (type) {
+    fun createErrorMessage(errorType: TangemPayDetailsErrorType): BottomSheetMessageV2 {
+        return when (errorType) {
             TangemPayDetailsErrorType.Receive -> bottomSheetMessage {
                 infoBlock {
                     icon(R.drawable.img_attention_20) {
@@ -41,6 +41,7 @@ internal object TangemPayMessagesFactory {
             TangemPayDetailsErrorType.WithdrawInProgress -> bottomSheetMessage {
                 infoBlock {
                     icon(R.drawable.ic_clock_24) {
+                        type = MessageBottomSheetUMV2.Icon.Type.Informative
                         backgroundType = MessageBottomSheetUMV2.Icon.BackgroundType.Informative
                     }
                     title = TextReference.Res(R.string.tangempay_card_details_withdraw_in_progress_title)
