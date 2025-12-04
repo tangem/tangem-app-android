@@ -1,7 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.ui.components.visa
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
@@ -17,8 +16,8 @@ internal fun TangemPayFailedIssueState(state: TangemPayState.FailedIssue, modifi
     BlockCard(
         modifier = modifier
             .clip(RoundedCornerShape(size = TangemTheme.dimens.radius14))
-            .background(TangemTheme.colors.background.primary)
-            .clickable(onClick = state.onButtonClick),
+            .background(TangemTheme.colors.background.primary),
+        onClick = state.onButtonClick,
     ) {
         InputRowImageBase(
             modifier = Modifier
