@@ -139,7 +139,7 @@ internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
         cardId: String,
     ): Either<UniversalError, TangemPayCardFrozenState> {
         cardFrozenStateStore.store(cardId, TangemPayCardFrozenState.Pending)
-        return requestHelper.makeSafeRequest(userWalletId) {
+        return requestHelper.performRequest(userWalletId) {
             tangemPayApi.freezeCard(authHeader = it, body = FreezeUnfreezeCardRequest(cardId = cardId))
         }.onLeft {
             cardFrozenStateStore.store(cardId, TangemPayCardFrozenState.Unfrozen)
@@ -172,7 +172,7 @@ internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
         cardId: String,
     ): Either<UniversalError, TangemPayCardFrozenState> {
         cardFrozenStateStore.store(cardId, TangemPayCardFrozenState.Pending)
-        return requestHelper.makeSafeRequest(userWalletId) {
+        return requestHelper.performRequest(userWalletId) {
             tangemPayApi.unfreezeCard(authHeader = it, body = FreezeUnfreezeCardRequest(cardId = cardId))
         }.onLeft {
             cardFrozenStateStore.store(cardId, TangemPayCardFrozenState.Frozen)
@@ -215,7 +215,7 @@ internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
                     while (isActive && pollingJobs.containsKey(orderId)) {
                         delay(duration = 5.seconds)
 
-                        val orderStatus = requestHelper.makeSafeRequest(userWalletId) { authHeader ->
+                        val orderStatus = requestHelper.performRequest(userWalletId) { authHeader ->
                             tangemPayApi.getOrder(authHeader, orderId)
                         }
 
