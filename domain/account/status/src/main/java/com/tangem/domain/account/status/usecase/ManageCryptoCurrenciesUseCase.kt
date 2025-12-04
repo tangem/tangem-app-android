@@ -7,6 +7,7 @@ import com.tangem.domain.account.repository.AccountsCRUDRepository
 import com.tangem.domain.account.status.producer.SingleAccountStatusListProducer
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.utils.CryptoCurrencyBalanceFetcher
+import com.tangem.domain.account.status.utils.CryptoCurrencyMetadataCleaner
 import com.tangem.domain.core.utils.eitherOn
 import com.tangem.domain.express.ExpressServiceFetcher
 import com.tangem.domain.express.models.ExpressAsset
@@ -17,9 +18,6 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.networks.utils.NetworksCleaner
-import com.tangem.domain.staking.StakingIdFactory
-import com.tangem.domain.staking.utils.StakingCleaner
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.derivations.DerivationsRepository
@@ -36,9 +34,7 @@ import timber.log.Timber
  * @property currenciesRepository Repository for managing currencies.
  * @property derivationsRepository Repository for deriving public keys.
  * @property cryptoCurrencyBalanceFetcher Fetcher for updating crypto currency balances.
- * @property stakingIdFactory Factory for creating staking IDs.
- * @property networksCleaner Cleaner for removing obsolete network data.
- * @property stakingCleaner Cleaner for removing obsolete staking data.
+ * @property cryptoCurrencyMetadataCleaner Cleaner for removing metadata of deleted currencies.
  * @property expressServiceFetcher Fetcher for updating express service data.
  * @property parallelUpdatingScope Coroutine scope for parallel updates.
  * @property dispatchers Coroutine dispatchers for managing threading.
@@ -53,9 +49,7 @@ class ManageCryptoCurrenciesUseCase(
     private val derivationsRepository: DerivationsRepository,
     private val walletManagersFacade: WalletManagersFacade,
     private val cryptoCurrencyBalanceFetcher: CryptoCurrencyBalanceFetcher,
-    private val stakingIdFactory: StakingIdFactory,
-    private val networksCleaner: NetworksCleaner,
-    private val stakingCleaner: StakingCleaner,
+    private val cryptoCurrencyMetadataCleaner: CryptoCurrencyMetadataCleaner,
     private val expressServiceFetcher: ExpressServiceFetcher,
     private val parallelUpdatingScope: CoroutineScope,
     private val dispatchers: CoroutineDispatcherProvider,
@@ -306,19 +300,10 @@ class ManageCryptoCurrenciesUseCase(
         if (currencies.isEmpty()) return
 
         coroutineScope {
-            listOf(
-                launch { networksCleaner(userWalletId = userWalletId, currencies = currencies) },
-                launch { clearStaking(userWalletId = userWalletId, currencies = currencies) },
-            )
+            launch {
+                cryptoCurrencyMetadataCleaner(userWalletId = userWalletId, currencies = currencies)
+            }
         }
-    }
-
-    private suspend fun clearStaking(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) {
-        val stakingIds = currencies.mapNotNullTo(hashSetOf()) {
-            stakingIdFactory.create(userWalletId = userWalletId, cryptoCurrency = it).getOrNull()
-        }
-
-        stakingCleaner(userWalletId = userWalletId, stakingIds = stakingIds)
     }
 
     private data class TempID(
