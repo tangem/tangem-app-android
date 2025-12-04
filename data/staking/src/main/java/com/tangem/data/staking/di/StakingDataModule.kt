@@ -16,6 +16,7 @@ import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.token.P2PEthPoolVaultsStore
 import com.tangem.datasource.local.token.StakingActionsStore
 import com.tangem.datasource.local.token.StakingYieldsStore
+import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.repositories.*
 import com.tangem.domain.staking.toggles.StakingFeatureToggles
 import com.tangem.domain.staking.utils.StakingCleaner
@@ -136,10 +137,12 @@ internal object StakingDataModule {
     @Provides
     @Singleton
     fun provideStakingCleaner(
+        stakingIdFactory: StakingIdFactory,
         stakingBalancesStore: StakingBalancesStore,
         dispatchers: CoroutineDispatcherProvider,
     ): StakingCleaner {
         return DefaultStakingCleaner(
+            stakingIdFactory = stakingIdFactory,
             stakingBalancesStore = stakingBalancesStore,
             dispatchers = dispatchers,
         )
