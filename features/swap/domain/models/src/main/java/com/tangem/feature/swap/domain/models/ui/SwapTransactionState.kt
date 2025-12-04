@@ -55,5 +55,7 @@ sealed class SwapTransactionState {
         data class ExpressError(val error: ExpressDataError) : Error()
 
         data object UnknownError : Error()
+
+        data class TangemPayWithdrawalError(val txId: String) : Error()
     }
 }

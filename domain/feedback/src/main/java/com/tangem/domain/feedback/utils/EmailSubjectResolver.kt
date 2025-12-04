@@ -43,6 +43,8 @@ internal class EmailSubjectResolver(private val resources: Resources) {
             is FeedbackEmailType.Visa.Dispute,
             is FeedbackEmailType.Visa.DisputeV2,
             -> "[Visa] [DISPUTE] {auto-filled subject}"
+            is FeedbackEmailType.Visa.Withdrawal,
+            -> "[Visa] [WITHDRAWAL] {auto-filled subject}"
         }
     }
 }
