@@ -28,6 +28,9 @@ internal class SwapTransactionErrorStateConverter(
                 )
             }
             SwapTransactionState.Error.UnknownError -> SwapAlertUM.GenericError(onDismiss)
+            is SwapTransactionState.Error.TangemPayWithdrawalError -> SwapAlertUM.GenericError(
+                onConfirmClick = { onSupportClick(value.txId) },
+            )
         }
     }
 }
