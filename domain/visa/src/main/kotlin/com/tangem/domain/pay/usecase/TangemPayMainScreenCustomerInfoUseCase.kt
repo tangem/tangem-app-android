@@ -125,10 +125,10 @@ class TangemPayMainScreenCustomerInfoUseCase(
     }
 
     private fun VisaApiError.mapErrorForCustomer(): TangemPayCustomerInfoError {
-        return if (this !is VisaApiError.NotPaeraCustomer) {
-            TangemPayCustomerInfoError.UnavailableError
-        } else {
-            TangemPayCustomerInfoError.UnknownError
+        return when (this) {
+            is VisaApiError.RefreshTokenExpired -> TangemPayCustomerInfoError.RefreshNeededError
+            is VisaApiError.NotPaeraCustomer -> TangemPayCustomerInfoError.UnknownError
+            else -> TangemPayCustomerInfoError.UnavailableError
         }
     }
 }
