@@ -118,7 +118,7 @@ internal class WcPairModel @Inject constructor(
     init {
         if (accountsFeatureToggles.isFeatureEnabled) {
             portfolioFetcher = portfolioFetcherFactory.create(
-                mode = PortfolioFetcher.Mode.All(onlyMultiCurrency = true),
+                mode = PortfolioFetcher.Mode.All(isOnlyMultiCurrency = true),
                 scope = modelScope,
             )
             modelScope.launch {
