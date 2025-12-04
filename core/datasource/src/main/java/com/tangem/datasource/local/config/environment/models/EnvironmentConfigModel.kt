@@ -14,6 +14,8 @@ class EnvironmentConfigModel(
     @Json(name = "blockchairAuthorizationToken") val blockchairAuthorizationToken: String?,
     @Json(name = "quiknodeSubdomain") val quiknodeSubdomain: String,
     @Json(name = "quiknodeApiKey") val quiknodeApiKey: String,
+    @Json(name = "quiknodePlasmaSubdomain") val quiknodePlasmaSubdomain: String,
+    @Json(name = "quiknodePlasmaApiKey") val quiknodePlasmaApiKey: String,
     @Json(name = "bscQuiknodeSubdomain") val bscQuiknodeSubdomain: String,
     @Json(name = "bscQuiknodeApiKey") val bscQuiknodeApiKey: String,
     @Json(name = "nowNodesApiKey") val nowNodesApiKey: String,
