@@ -12,6 +12,7 @@ class ValidateTokenFormUseCase(
     private val repository: CustomTokensRepository,
 ) {
 
+    @Suppress("NamedArguments")
     suspend operator fun invoke(
         networkId: Network.ID,
         formValues: AddCustomTokenForm.Raw,
