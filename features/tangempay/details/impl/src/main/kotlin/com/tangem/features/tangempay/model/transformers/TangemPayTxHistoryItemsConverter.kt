@@ -96,18 +96,18 @@ internal class TangemPayTxHistoryItemsConverter(
     private fun convertCollateral(
         collateral: TangemPayTxHistoryItem.Collateral,
     ): TangemPayTransactionState.Content.Collateral {
-        val amountPrefix = if (collateral.amount.isZero()) "" else StringsSigns.PLUS
-        val amount = amountPrefix + collateral.amount.format {
+        val amountPrefix = if (collateral.amount.isZero()) "" else StringsSigns.MINUS
+        val amount = amountPrefix + collateral.amount.abs().format {
             fiat(fiatCurrencyCode = collateral.currency.currencyCode, fiatCurrencySymbol = collateral.currency.symbol)
         }
         return TangemPayTransactionState.Content.Collateral(
             id = collateral.id,
             onClick = { txHistoryUiActions.onTransactionClick(collateral) },
             amount = amount,
-            amountColor = themedColor { TangemTheme.colors.text.accent },
-            title = resourceReference(R.string.tangem_pay_deposit),
+            amountColor = themedColor { TangemTheme.colors.text.primary1 },
+            title = resourceReference(R.string.tangem_pay_withdrawal),
             subtitle = resourceReference(R.string.common_transfer),
-            icon = ImageReference.Res(R.drawable.ic_arrow_down_24),
+            icon = ImageReference.Res(R.drawable.ic_arrow_up_24),
             time = DateTimeFormatters.formatDate(collateral.date, DateTimeFormatters.timeFormatter),
         )
     }
