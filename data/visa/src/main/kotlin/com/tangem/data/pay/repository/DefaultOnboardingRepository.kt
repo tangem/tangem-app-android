@@ -71,7 +71,7 @@ internal class DefaultOnboardingRepository @Inject constructor(
                     ifRight = { it },
                 )
             // should storeCheckCustomerWalletResult because we already know this
-            tangemPayStorage.storeCheckCustomerWalletResult(userWalletId)
+            tangemPayStorage.storeCheckCustomerWalletResult(userWalletId, true)
             tangemPayStorage.storeCustomerWalletAddress(
                 userWalletId = userWalletId,
                 customerWalletAddress = initialCredentials.customerWalletAddress,
@@ -172,8 +172,8 @@ internal class DefaultOnboardingRepository @Inject constructor(
 
     override suspend fun checkCustomerWallet(userWalletId: UserWalletId): Either<VisaApiError, Boolean> {
         val hasTangemPay = tangemPayStorage.checkCustomerWalletResult(userWalletId)
-        if (hasTangemPay == true) {
-            return Either.Right(true)
+        if (hasTangemPay != null) {
+            return Either.Right(hasTangemPay)
         }
 
         return requestHelper.performWithStaticToken { staticToken ->
@@ -183,12 +183,14 @@ internal class DefaultOnboardingRepository @Inject constructor(
             )
         }.map { response ->
             val id = response.id
-            if (!id.isNullOrEmpty()) {
-                tangemPayStorage.storeCheckCustomerWalletResult(userWalletId = userWalletId)
-                true
-            } else {
-                false
+            val isPaeraCustomer = !id.isNullOrEmpty()
+            tangemPayStorage.storeCheckCustomerWalletResult(userWalletId = userWalletId, isPaeraCustomer)
+            isPaeraCustomer
+        }.mapLeft { error ->
+            if (error is VisaApiError.NotPaeraCustomer) {
+                tangemPayStorage.storeCheckCustomerWalletResult(userWalletId = userWalletId, false)
             }
+            error
         }
     }
 }
