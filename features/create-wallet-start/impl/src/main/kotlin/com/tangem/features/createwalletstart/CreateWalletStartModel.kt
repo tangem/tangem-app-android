@@ -84,7 +84,7 @@ internal class CreateWalletStartModel @Inject constructor(
                         ),
                     ),
                     imageResId = R.drawable.img_hardware_wallet,
-                    showScanSecondaryButton = true,
+                    shouldShowScanSecondaryButton = true,
                     onPrimaryButtonClick = ::onBuyClick,
                     primaryButtonText = resourceReference(R.string.details_buy_wallet),
                     otherMethodTitle = resourceReference(R.string.welcome_create_wallet_mobile_title),
@@ -112,7 +112,7 @@ internal class CreateWalletStartModel @Inject constructor(
                         ),
                     ),
                     imageResId = R.drawable.img_mobile_wallet,
-                    showScanSecondaryButton = false,
+                    shouldShowScanSecondaryButton = false,
                     onPrimaryButtonClick = ::onStartWithMobileWalletClick,
                     primaryButtonText = resourceReference(R.string.welcome_create_wallet_mobile_title),
                     otherMethodTitle = resourceReference(R.string.welcome_create_wallet_use_hardware_title),
@@ -182,11 +182,11 @@ internal class CreateWalletStartModel @Inject constructor(
         }
 
         saveWalletUseCase(userWallet = userWallet).fold(
-            ifLeft = {
+            ifLeft = { error ->
                 delay(HIDE_PROGRESS_DELAY)
                 setLoading(false)
-                when (it) {
-                    is SaveWalletError.DataError -> Timber.e(it.toString(), "Unable to save user wallet")
+                when (error) {
+                    is SaveWalletError.DataError -> Timber.e(error.toString(), "Unable to save user wallet")
                     is SaveWalletError.WalletAlreadySaved -> {
                         userWalletsListRepository.unlock(
                             userWalletId = userWallet.walletId,
