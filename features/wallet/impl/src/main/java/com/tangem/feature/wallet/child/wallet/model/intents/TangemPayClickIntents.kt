@@ -3,9 +3,9 @@ package com.tangem.feature.wallet.child.wallet.model.intents
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.res.R
-import com.tangem.core.ui.components.bottomsheets.message.MessageBottomSheetUMV2
+import com.tangem.core.ui.components.bottomsheets.message.*
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.message.BottomSheetMessageV2
+import com.tangem.core.ui.message.bottomSheetMessage
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
@@ -17,7 +17,6 @@ import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.feature.wallet.child.wallet.model.TangemPayMainInfoManager
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.features.tangempay.TangemPayFeatureToggles
-import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -66,54 +65,42 @@ internal class TangemPayClickIntentsImplementor @Inject constructor(
     }
 
     override fun onIssuingCardClicked() {
-        val icon = MessageBottomSheetUMV2.Icon(
-            res = com.tangem.core.ui.R.drawable.ic_clock_24,
-            backgroundType = MessageBottomSheetUMV2.Icon.BackgroundType.Informative,
-        )
+        val issuingBottomSheet = bottomSheetMessage {
+            infoBlock {
+                icon(com.tangem.core.ui.R.drawable.ic_clock_24) {
+                    backgroundType = MessageBottomSheetUMV2.Icon.BackgroundType.Informative
+                }
+                title = resourceReference(R.string.tangempay_issuing_your_card)
+                body = resourceReference(R.string.tangempay_issuing_your_card_description)
+            }
+            secondaryButton {
+                text = resourceReference(R.string.common_got_it)
+                onClick { closeBs() }
+            }
+        }
 
-        val info = MessageBottomSheetUMV2.InfoBlock(
-            title = resourceReference(R.string.tangempay_issuing_your_card),
-            body = resourceReference(R.string.tangempay_issuing_your_card_description),
-        )
-
-        val button = MessageBottomSheetUMV2.Button(
-            text = resourceReference(R.string.common_got_it),
-            onClick = { closeBs() },
-        )
-
-        val issuingBottomSheet = BottomSheetMessageV2(
-            messageBottomSheetUMV2 = MessageBottomSheetUMV2(
-                elements = persistentListOf(icon, info, button),
-            ),
-        )
         uiMessageSender.send(issuingBottomSheet)
     }
 
     override fun onIssuingFailedClicked() {
-        val icon = MessageBottomSheetUMV2.Icon(
-            res = com.tangem.core.ui.R.drawable.ic_alert_24,
-            backgroundType = MessageBottomSheetUMV2.Icon.BackgroundType.Warning,
-            type = MessageBottomSheetUMV2.Icon.Type.Warning,
-        )
+        val issuingBottomSheet = bottomSheetMessage {
+            infoBlock {
+                icon(com.tangem.core.ui.R.drawable.ic_alert_24) {
+                    type = MessageBottomSheetUMV2.Icon.Type.Warning
+                    backgroundType = MessageBottomSheetUMV2.Icon.BackgroundType.Warning
+                }
+                title = resourceReference(R.string.tangempay_failed_to_issue_card)
+                body = resourceReference(R.string.tangempay_failed_to_issue_card_support_description)
+            }
+            secondaryButton {
+                text = resourceReference(R.string.details_row_title_contact_to_support)
+                onClick {
+                    onPaySupportClick()
+                    closeBs()
+                }
+            }
+        }
 
-        val info = MessageBottomSheetUMV2.InfoBlock(
-            title = resourceReference(R.string.tangempay_failed_to_issue_card),
-            body = resourceReference(R.string.tangempay_failed_to_issue_card_support_description),
-        )
-
-        val button = MessageBottomSheetUMV2.Button(
-            text = resourceReference(R.string.details_row_title_contact_to_support),
-            onClick = {
-                onPaySupportClick()
-                closeBs()
-            },
-        )
-
-        val issuingBottomSheet = BottomSheetMessageV2(
-            messageBottomSheetUMV2 = MessageBottomSheetUMV2(
-                elements = persistentListOf(icon, info, button),
-            ),
-        )
         uiMessageSender.send(issuingBottomSheet)
     }
 
