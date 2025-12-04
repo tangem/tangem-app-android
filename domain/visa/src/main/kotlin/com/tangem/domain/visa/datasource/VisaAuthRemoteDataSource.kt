@@ -30,8 +30,6 @@ interface VisaAuthRemoteDataSource {
         nonce: String,
     ): Either<VisaApiError, TangemPayAuthTokens>
 
-    suspend fun refreshCustomerWalletAuthTokens(refreshToken: String): Either<VisaApiError, TangemPayAuthTokens>
-
     suspend fun getAccessTokens(signedChallenge: VisaAuthSignedChallenge): Either<VisaApiError, VisaAuthTokens>
 
     suspend fun refreshAccessTokens(refreshToken: VisaAuthTokens.RefreshToken): Either<VisaApiError, VisaAuthTokens>
