@@ -10,5 +10,4 @@ data class TangemPayDetailsConfig(
     val customerWalletAddress: String,
     val cardNumberEnd: String,
     val chainId: Int,
-    val depositAddress: String?,
 )
