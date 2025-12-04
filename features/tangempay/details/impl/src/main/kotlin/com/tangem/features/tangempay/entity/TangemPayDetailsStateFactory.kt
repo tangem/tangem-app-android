@@ -75,11 +75,13 @@ internal class TangemPayDetailsStateFactory(
                         text = resourceReference(id = R.string.tangempay_card_details_add_funds),
                         iconResId = R.drawable.ic_plus_24,
                         onClick = intents::onClickAddFunds,
+                        isEnabled = cardFrozenState == TangemPayCardFrozenState.Unfrozen,
                     ),
                     ActionButtonConfig(
                         text = resourceReference(id = R.string.tangempay_card_details_withdraw),
                         iconResId = R.drawable.ic_arrow_up_24,
                         onClick = intents::onClickWithdraw,
+                        isEnabled = cardFrozenState == TangemPayCardFrozenState.Unfrozen,
                     ),
                 ),
             ),

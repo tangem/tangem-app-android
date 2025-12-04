@@ -7,4 +7,5 @@ data class TangemDropdownMenuItem(
     val title: TextReference,
     val textColor: ColorReference,
     val onClick: () -> Unit,
+    val isEnabled: Boolean = true,
 )
