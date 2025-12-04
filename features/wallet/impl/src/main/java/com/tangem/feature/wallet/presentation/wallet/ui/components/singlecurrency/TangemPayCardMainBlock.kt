@@ -49,7 +49,7 @@ internal fun TangemPayCardMainBlock(
                 verticalArrangement = Arrangement.Center,
             ) {
                 Text(
-                    text = stringResourceSafe(R.string.tangempay_kyc_card_ready_notification_title),
+                    text = stringResourceSafe(R.string.tangempay_payment_account),
                     style = TangemTheme.typography.subtitle2,
                     color = TangemTheme.colors.text.primary1,
                 )
