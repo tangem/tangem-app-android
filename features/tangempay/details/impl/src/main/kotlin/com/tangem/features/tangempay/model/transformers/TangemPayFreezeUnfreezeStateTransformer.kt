@@ -27,13 +27,10 @@ internal class TangemPayFreezeUnfreezeStateTransformer(
     }
 
     override fun transform(prevState: TangemPayDetailsUM): TangemPayDetailsUM {
-        val dropdownMenuItems = when (cardFrozenState) {
-            TangemPayCardFrozenState.Frozen,
-            TangemPayCardFrozenState.Unfrozen,
-            -> createUpdatedMenuItems(prevState.topBarConfig.items)
-            TangemPayCardFrozenState.Pending -> prevState.topBarConfig.items
+        val filteredItems = prevState.topBarConfig.items?.filterNot {
+            it.type == FreezeCard || it.type == UnfreezeCard
         }
-
+        val dropdownMenuItems = createUpdatedMenuItems(filteredItems?.toPersistentList())
         return prevState.copy(
             topBarConfig = prevState.topBarConfig.copy(items = dropdownMenuItems),
             cardFrozenState = converter.convert(cardFrozenState),
@@ -44,12 +41,11 @@ internal class TangemPayFreezeUnfreezeStateTransformer(
         items: ImmutableList<TangemPayDetailsTopBarMenuItem>?,
     ): ImmutableList<TangemPayDetailsTopBarMenuItem>? {
         return items
-            ?.filterNot { it.type == UnfreezeCard || it.type == FreezeCard }
-            ?.plus(createMenuItemToAdd())
+            ?.plus(createMenuItemToAdd(cardFrozenState))
             ?.toPersistentList()
     }
 
-    private fun createMenuItemToAdd(): TangemPayDetailsTopBarMenuItem {
+    private fun createMenuItemToAdd(cardFrozenState: TangemPayCardFrozenState): TangemPayDetailsTopBarMenuItem {
         return TangemPayDetailsTopBarMenuItem(
             type = if (isCardFrozen) UnfreezeCard else FreezeCard,
             dropdownItem = TangemDropdownMenuItem(
@@ -62,6 +58,7 @@ internal class TangemPayFreezeUnfreezeStateTransformer(
                 ),
                 textColor = themedColor { TangemTheme.colors.text.primary1 },
                 onClick = if (isCardFrozen) onUnfreezeClick else onFreezeClick,
+                isEnabled = cardFrozenState != TangemPayCardFrozenState.Pending,
             ),
         )
     }
