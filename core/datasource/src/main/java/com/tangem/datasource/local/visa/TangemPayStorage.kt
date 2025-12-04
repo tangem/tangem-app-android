@@ -21,7 +21,7 @@ interface TangemPayStorage {
     suspend fun getAddToWalletDone(customerWalletAddress: String): Boolean
 
     suspend fun storeAddToWalletDone(customerWalletAddress: String, isDone: Boolean)
-    suspend fun storeCheckCustomerWalletResult(userWalletId: UserWalletId)
+    suspend fun storeCheckCustomerWalletResult(userWalletId: UserWalletId, isPaeraCustomer: Boolean)
     suspend fun checkCustomerWalletResult(userWalletId: UserWalletId): Boolean?
 
     suspend fun storeWithdrawOrder(userWalletId: UserWalletId, orderId: String)
