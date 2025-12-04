@@ -68,7 +68,6 @@ internal class TangemPayUpdateInfoStateTransformer(
                         customerWalletAddress = cardInfo.customerWalletAddress,
                         cardNumberEnd = cardInfo.lastFourDigits,
                         chainId = POLYGON_CHAIN_ID,
-                        depositAddress = cardInfo.depositAddress,
                     ),
                 )
             },
