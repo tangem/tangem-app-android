@@ -809,6 +809,7 @@ internal class SwapModel @Inject constructor(
                 makeDefaultAlert()
             }
             .onRight {
+                val txUrl = swapTransactionState.storeData.txExternalUrl
                 swapInteractor.storeSwapTransaction(
                     currencyToSend = swapTransactionState.storeData.currencyToSend,
                     currencyToGet = swapTransactionState.storeData.currencyToGet,
@@ -817,7 +818,7 @@ internal class SwapModel @Inject constructor(
                     amount = swapTransactionState.storeData.amount,
                     swapProvider = swapTransactionState.storeData.swapProvider,
                     swapDataModel = swapTransactionState.storeData.swapDataModel,
-                    txExternalUrl = "",
+                    txExternalUrl = txUrl,
                     timestamp = System.currentTimeMillis(),
                     txExternalId = swapTransactionState.storeData.txExternalId,
                     averageDuration = null,
@@ -826,6 +827,8 @@ internal class SwapModel @Inject constructor(
                     uiState = uiState,
                     swapTransactionState = swapTransactionState,
                     dataState = dataState,
+                    txUrl = txUrl.orEmpty(),
+                    onExploreClick = { if (txUrl != null) urlOpener.openUrl(txUrl) },
                 )
                 swapRouter.openScreen(SwapNavScreen.Success)
             }
