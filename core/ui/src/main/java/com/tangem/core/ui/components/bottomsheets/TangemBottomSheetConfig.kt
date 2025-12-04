@@ -10,7 +10,7 @@ package com.tangem.core.ui.components.bottomsheets
 data class TangemBottomSheetConfig(
     val isShown: Boolean,
     val onDismissRequest: () -> Unit,
-    val dismissOnClickOutside: () -> Boolean = { true },
+    val dismissOnClickOutside: (() -> Boolean)? = null,
     val content: TangemBottomSheetConfigContent,
 ) {
 
