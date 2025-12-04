@@ -10,6 +10,7 @@ import com.tangem.feature.wallet.presentation.wallet.domain.GetMultiWalletWarnin
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.subscribers.*
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -28,9 +29,11 @@ internal class MultiWalletContentLoaderV2 @AssistedInject constructor(
     private val getStoryContentUseCase: GetStoryContentUseCase,
     private val checkWalletWithFundsSubscriberFactory: CheckWalletWithFundsSubscriber.Factory,
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
+    private val tangemPayFeatureToggles: TangemPayFeatureToggles,
+    private val tangemPayMainSubscriberFactory: TangemPayMainSubscriber.Factory,
 ) : WalletContentLoader(id = userWallet.walletId) {
 
-    override fun create(): List<WalletSubscriber> = listOf(
+    override fun create(): List<WalletSubscriber> = listOfNotNull(
         accountListSubscriberFactory.create(userWallet = userWallet),
         walletNFTListSubscriberV2Factory.create(userWallet = userWallet),
         checkWalletWithFundsSubscriberFactory.create(userWallet = userWallet),
@@ -53,6 +56,12 @@ internal class MultiWalletContentLoaderV2 @AssistedInject constructor(
             clickIntents = clickIntents,
             hotWalletFeatureToggles = hotWalletFeatureToggles,
         ),
+
+        if (tangemPayFeatureToggles.isTangemPayEnabled) {
+            tangemPayMainSubscriberFactory.create(userWallet)
+        } else {
+            null
+        },
     )
 
     @AssistedFactory
