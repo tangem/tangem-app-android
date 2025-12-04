@@ -25,6 +25,7 @@ internal fun YieldSupplyActiveTitle(onCloseClick: () -> Unit) {
         Icon(
             imageVector = ImageVector.vectorResource(R.drawable.ic_close_24),
             contentDescription = null,
+            tint = TangemTheme.colors.icon.primary1,
             modifier = Modifier
                 .padding(16.dp)
                 .clickable(
