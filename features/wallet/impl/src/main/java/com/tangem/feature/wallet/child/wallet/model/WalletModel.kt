@@ -19,13 +19,9 @@ import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.nft.ObserveAndClearNFTCacheIfNeedUseCase
 import com.tangem.domain.notifications.GetIsHuaweiDeviceWithoutGoogleServicesUseCase
 import com.tangem.domain.notifications.repository.NotificationsRepository
-import com.tangem.domain.pay.model.MainScreenCustomerInfo
-import com.tangem.domain.pay.model.TangemPayCustomerInfoError
 import com.tangem.domain.pay.repository.OnboardingRepository
-import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
 import com.tangem.domain.settings.*
 import com.tangem.domain.tokens.RefreshMultiCurrencyWalletQuotesUseCase
-import com.tangem.domain.visa.model.TangemPayCardFrozenState
 import com.tangem.domain.wallets.usecase.*
 import com.tangem.domain.yield.supply.usecase.YieldSupplyApyUpdateUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
@@ -98,7 +94,6 @@ internal class WalletModel @Inject constructor(
     private val tangemPayOnboardingRepository: OnboardingRepository,
     private val yieldSupplyFeatureToggles: YieldSupplyFeatureToggles,
     private val accountsFeatureToggles: AccountsFeatureToggles,
-    private val cardDetailsRepository: TangemPayCardDetailsRepository,
     private val tangemPayMainInfoManager: TangemPayMainInfoManager,
     val screenLifecycleProvider: ScreenLifecycleProvider,
     val innerWalletRouter: InnerWalletRouter,
@@ -137,7 +132,6 @@ internal class WalletModel @Inject constructor(
         subscribeToScreenBackgroundState()
         subscribeOnPushNotificationsPermission()
         subscribeTangemPayOnWalletState()
-        subscribeOnTangemPayInfoUpdates()
         enableNotificationsIfNeeded()
 
         clickIntents.initialize(innerWalletRouter, modelScope)
@@ -385,62 +379,6 @@ internal class WalletModel @Inject constructor(
                 tangemPayMainInfoManager.refreshTangemPayInfo(userWalletId)
             }
         }.launchIn(modelScope)
-    }
-
-    private fun subscribeOnTangemPayInfoUpdates() {
-        if (!tangemPayFeatureToggles.isTangemPayEnabled) return
-        tangemPayMainInfoManager.mainScreenCustomerInfo
-            .filterNotNull()
-            .distinctUntilChanged()
-            .onEach { (userWalletId, mainInfoData) ->
-                mainInfoData.onLeft { tangemPayError ->
-                    when (tangemPayError) {
-                        TangemPayCustomerInfoError.RefreshNeededError -> {
-                            stateHolder.update(
-                                transformer = TangemPayRefreshNeededStateTransformer(
-                                    userWalletId = userWalletId,
-                                    onRefreshClick = { clickIntents.onRefreshPayToken(userWalletId) },
-                                ),
-                            )
-                        }
-                        TangemPayCustomerInfoError.UnavailableError -> {
-                            stateHolder.update(
-                                transformer = TangemPayUnavailableStateTransformer(userWalletId),
-                            )
-                        }
-                        else -> {
-                            // hide TangemPay block
-                            Timber.e("Failed when loading main screen TangemPay info: $tangemPayError")
-                            stateHolder.update(
-                                transformer = TangemPayHiddenStateTransformer(userWalletId),
-                            )
-                        }
-                    }
-                }.onRight { data -> updateTangemPay(data, userWalletId) }
-            }
-            .launchIn(modelScope)
-    }
-
-    private suspend fun updateTangemPay(data: MainScreenCustomerInfo, userWalletId: UserWalletId) {
-        val cardFrozenState =
-            data.info.productInstance?.cardId?.let { cardDetailsRepository.cardFrozenStateSync(it) }
-                ?: TangemPayCardFrozenState.Unfrozen
-        stateHolder.update(
-            transformer = TangemPayUpdateInfoStateTransformer(
-                userWalletId = userWalletId,
-                value = data,
-                cardFrozenState = cardFrozenState,
-                onClickKyc = innerWalletRouter::openTangemPayOnboarding,
-                onIssuingCard = clickIntents::onIssuingCardClicked,
-                onIssuingFailed = clickIntents::onIssuingFailedClicked,
-                openDetails = { config ->
-                    innerWalletRouter.openTangemPayDetails(
-                        userWalletId = userWalletId,
-                        config = config,
-                    )
-                },
-            ),
-        )
     }
 
     private fun needToRefreshTimer() {
