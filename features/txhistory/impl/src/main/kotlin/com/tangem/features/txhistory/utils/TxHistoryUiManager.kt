@@ -22,10 +22,10 @@ internal class TxHistoryUiManager(
     @OptIn(ExperimentalCoroutinesApi::class)
     val items: Flow<ImmutableList<TxHistoryUM.TxHistoryItemUM>> = state
         // filter initial states, since we dont emit loading items as UI items
-        .filter {
-            it.status !is PaginationStatus.None &&
-                it.status !is PaginationStatus.InitialLoading &&
-                it.status !is PaginationStatus.InitialLoadingError
+        .filter { state ->
+            state.status !is PaginationStatus.None &&
+                state.status !is PaginationStatus.InitialLoading &&
+                state.status !is PaginationStatus.InitialLoadingError
         }
         .mapLatest { state ->
             state.uiBatches.asSequence()
@@ -36,10 +36,10 @@ internal class TxHistoryUiManager(
 
     fun createOrUpdateUiBatches(
         newCurrencyBatches: List<Batch<Int, PaginationWrapper<TxInfo>>>,
-        clearUiBatches: Boolean,
+        shouldClearUiBatches: Boolean,
     ): List<Batch<Int, List<TxHistoryUM.TxHistoryItemUM>>> {
         val currentUiBatches = state.value.uiBatches
-        val batches = if (clearUiBatches) mutableListOf() else currentUiBatches.toMutableList()
+        val batches = if (shouldClearUiBatches) mutableListOf() else currentUiBatches.toMutableList()
 
         for ((key, data) in newCurrencyBatches) {
             // Find if batch with same key exists

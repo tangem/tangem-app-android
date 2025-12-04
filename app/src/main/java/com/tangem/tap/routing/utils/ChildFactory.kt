@@ -565,7 +565,7 @@ internal class ChildFactory @Inject constructor(
                     params = CreateWalletBackupComponent.Params(
                         userWalletId = route.userWalletId,
                         isUpgradeFlow = route.isUpgradeFlow,
-                        shouldSetAccessCode = route.setAccessCode,
+                        shouldSetAccessCode = route.shouldSetAccessCode,
                         analyticsSource = route.analyticsSource,
                         analyticsAction = route.analyticsAction,
                     ),
