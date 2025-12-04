@@ -120,10 +120,10 @@ internal fun CreateWalletStartContent(state: CreateWalletStartUM, modifier: Modi
                         horizontalArrangement = Arrangement.Center,
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        state.featureItems.forEach {
+                        state.featureItems.forEach { item ->
                             FeatureItem(
-                                iconResId = it.iconResId,
-                                text = it.text,
+                                iconResId = item.iconResId,
+                                text = item.text,
                             )
                         }
                     }
@@ -143,7 +143,7 @@ internal fun CreateWalletStartContent(state: CreateWalletStartUM, modifier: Modi
                     )
                 },
                 bottomContent = {
-                    if (state.showScanSecondaryButton) {
+                    if (state.shouldShowScanSecondaryButton) {
                         SecondaryButtonIconEnd(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -232,7 +232,7 @@ internal fun CreateWalletStartContent(state: CreateWalletStartUM, modifier: Modi
                 minImageHeight = 160.dp,
             )
         }
-        if (!state.showScanSecondaryButton) {
+        if (!state.shouldShowScanSecondaryButton) {
             FlowRow(
                 modifier = Modifier
                     .wrapContentWidth()
@@ -425,7 +425,7 @@ private class CreateWalletStartStateProvider : CollectionPreviewParameterProvide
                 ),
             ),
             imageResId = R.drawable.img_hardware_wallet,
-            showScanSecondaryButton = true,
+            shouldShowScanSecondaryButton = true,
             onPrimaryButtonClick = { },
             primaryButtonText = resourceReference(R.string.details_buy_wallet),
             otherMethodTitle = resourceReference(R.string.welcome_create_wallet_mobile_title),
@@ -455,7 +455,7 @@ private class CreateWalletStartStateProvider : CollectionPreviewParameterProvide
                 ),
             ),
             imageResId = R.drawable.img_mobile_wallet,
-            showScanSecondaryButton = false,
+            shouldShowScanSecondaryButton = false,
             onPrimaryButtonClick = { },
             primaryButtonText = resourceReference(R.string.welcome_create_wallet_mobile_title),
             otherMethodTitle = resourceReference(R.string.welcome_create_wallet_use_hardware_title),
