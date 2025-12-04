@@ -72,7 +72,7 @@ internal class DefaultYieldSupplyActiveComponent @AssistedInject constructor(
 
         Column(
             modifier = Modifier
-                .background(TangemTheme.colors.background.secondary)
+                .background(TangemTheme.colors.background.tertiary)
                 .fillMaxSize()
                 .systemBarsPadding(),
         ) {
