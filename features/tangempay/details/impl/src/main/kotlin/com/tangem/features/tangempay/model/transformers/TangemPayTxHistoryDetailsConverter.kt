@@ -51,7 +51,7 @@ internal object TangemPayTxHistoryDetailsConverter :
 
     private fun TangemPayTxHistoryItem.extractIcon(): ImageReference {
         return when (this) {
-            is TangemPayTxHistoryItem.Collateral -> ImageReference.Res(R.drawable.ic_arrow_down_24)
+            is TangemPayTxHistoryItem.Collateral -> ImageReference.Res(R.drawable.ic_arrow_up_24)
             is TangemPayTxHistoryItem.Fee -> ImageReference.Res(R.drawable.ic_percent_24)
             is TangemPayTxHistoryItem.Payment -> ImageReference.Res(R.drawable.ic_arrow_up_24)
             is TangemPayTxHistoryItem.Spend -> {
@@ -69,7 +69,7 @@ internal object TangemPayTxHistoryDetailsConverter :
         return when (this) {
             is TangemPayTxHistoryItem.Spend -> stringReference(this.enrichedMerchantName ?: this.merchantName)
             is TangemPayTxHistoryItem.Payment -> resourceReference(R.string.tangem_pay_withdrawal)
-            is TangemPayTxHistoryItem.Collateral -> resourceReference(R.string.tangem_pay_deposit)
+            is TangemPayTxHistoryItem.Collateral -> resourceReference(R.string.tangem_pay_withdrawal)
             is TangemPayTxHistoryItem.Fee -> {
                 this.description?.let(::stringReference) ?: resourceReference(R.string.tangem_pay_fee_title)
             }
@@ -113,13 +113,14 @@ internal object TangemPayTxHistoryDetailsConverter :
                 amountPrefix + amount
             }
             is TangemPayTxHistoryItem.Collateral -> {
-                val amount = this.amount.format {
+                val amountPrefix = if (this.amount.isZero()) "" else StringsSigns.MINUS
+                val amount = this.amount.abs().format {
                     fiat(
                         fiatCurrencyCode = this@extractAmount.currency.currencyCode,
                         fiatCurrencySymbol = this@extractAmount.currency.symbol,
                     )
                 }
-                StringsSigns.PLUS + amount
+                amountPrefix + amount
             }
         }
     }
@@ -130,7 +131,7 @@ internal object TangemPayTxHistoryDetailsConverter :
             is TangemPayTxHistoryItem.Spend,
             is TangemPayTxHistoryItem.Payment,
             -> themedColor { TangemTheme.colors.text.primary1 }
-            is TangemPayTxHistoryItem.Collateral -> themedColor { TangemTheme.colors.text.accent }
+            is TangemPayTxHistoryItem.Collateral -> themedColor { TangemTheme.colors.text.primary1 }
         }
     }
 
