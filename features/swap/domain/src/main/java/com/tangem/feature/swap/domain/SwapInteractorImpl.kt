@@ -1020,7 +1020,10 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                 cryptoAmount = amount.value,
                 cryptoCurrencyId = requireNotNull(currencyToSend.currency.id.rawCurrencyId),
                 cexAddress = exchangeDataCex.txTo,
-                fromAmount = amount.toStringWithRightOffset(),
+                fromAmount = amountFormatter.formatSwapAmountToUI(
+                    amount,
+                    currencyToSend.currency.symbol,
+                ),
                 fromAmountValue = amount.value,
                 toAmount = amountFormatter.formatSwapAmountToUI(
                     exchangeData.toTokenAmount,
@@ -1035,7 +1038,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                     amount = amount,
                     swapProvider = swapProvider,
                     swapDataModel = exchangeData,
-                    txExternalUrl = "",
+                    txExternalUrl = exchangeDataCex.externalTxUrl,
                     txExternalId = exchangeDataCex.externalTxId,
                     averageDuration = null,
                 ),
