@@ -204,7 +204,7 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     override fun onClickAddFunds() {
         val currentBalance = balance
-        val depositAddress = params.config.depositAddress
+        val depositAddress = currentBalance?.depositAddress
         if (currentBalance == null || depositAddress == null) {
             showBottomSheetError(TangemPayDetailsErrorType.Receive)
         } else {
@@ -222,7 +222,7 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     override fun onClickWithdraw() {
         val currentBalance = balance
-        val depositAddress = params.config.depositAddress
+        val depositAddress = currentBalance?.depositAddress
         if (currentBalance == null || depositAddress == null) {
             showBottomSheetError(TangemPayDetailsErrorType.Withdraw)
         } else {
