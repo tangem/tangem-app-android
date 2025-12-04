@@ -11,7 +11,9 @@ import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.WithdrawalResult
 import com.tangem.domain.pay.datasource.TangemPayAuthDataSource
+import com.tangem.domain.pay.model.WithdrawalSignatureResult
 import com.tangem.domain.pay.repository.TangemPaySwapRepository
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
@@ -39,7 +41,7 @@ internal class DefaultTangemPaySwapRepository @Inject constructor(
         receiverAddress: String,
         cryptoAmount: BigDecimal,
         cryptoCurrencyId: CryptoCurrency.RawID,
-    ): Either<UniversalError, Unit> {
+    ): Either<UniversalError, WithdrawalResult> {
         val amountInCents = getAmountInCents(cryptoAmount, cryptoCurrencyId)
         if (amountInCents.isNullOrEmpty()) return Either.Left(VisaApiError.WithdrawalDataError)
         return requestHelper.makeSafeRequest(userWalletId) { authHeader ->
@@ -48,25 +50,35 @@ internal class DefaultTangemPaySwapRepository @Inject constructor(
         }.map { data ->
             val result = data.result
             if (result == null) return Either.Left(VisaApiError.WithdrawalDataError)
-            val signature = authDataSource.getWithdrawalSignature(cardId = getCardId(userWalletId), hash = result.hash)
-                .getOrNull()
-            if (signature == null) return Either.Left(VisaApiError.SignWithdrawError)
+            val signatureResult = authDataSource.getWithdrawalSignature(
+                cardId = getCardId(userWalletId),
+                hash = result.hash,
+            ).getOrNull()
 
-            requestHelper.makeSafeRequest(userWalletId) { authHeader ->
-                val request = WithdrawRequest(
-                    amountInCents = amountInCents,
-                    recipientAddress = receiverAddress,
-                    adminSalt = result.salt,
-                    senderAddress = result.senderAddress,
-                    adminSignature = signature,
-                )
-                tangemPayApi.withdraw(authHeader = authHeader, body = request)
-            }
-                .mapLeft { return Either.Left(VisaApiError.WithdrawError) }
-                .map { response ->
-                    val orderId = response.result?.orderId
-                    if (orderId != null) tangemPayStorage.storeWithdrawOrder(userWalletId, orderId)
+            return when (signatureResult) {
+                is WithdrawalSignatureResult.Cancelled -> {
+                    Either.Right(WithdrawalResult.Cancelled)
                 }
+                is WithdrawalSignatureResult.Success -> {
+                    requestHelper.makeSafeRequest(userWalletId) { authHeader ->
+                        val request = WithdrawRequest(
+                            amountInCents = amountInCents,
+                            recipientAddress = receiverAddress,
+                            adminSalt = result.salt,
+                            senderAddress = result.senderAddress,
+                            adminSignature = signatureResult.signature,
+                        )
+                        tangemPayApi.withdraw(authHeader = authHeader, body = request)
+                    }
+                        .mapLeft { return Either.Left(VisaApiError.WithdrawError) }
+                        .map { response ->
+                            val orderId = response.result?.orderId
+                            if (orderId != null) tangemPayStorage.storeWithdrawOrder(userWalletId, orderId)
+                            WithdrawalResult.Success
+                        }
+                }
+                null -> return Either.Left(VisaApiError.SignWithdrawError)
+            }
         }
     }
 
