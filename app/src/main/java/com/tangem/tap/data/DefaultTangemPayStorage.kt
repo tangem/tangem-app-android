@@ -100,8 +100,8 @@ internal class DefaultTangemPayStorage @Inject constructor(
         secureStorage.delete(createOrderIdKey(customerWalletAddress))
     }
 
-    override suspend fun storeCheckCustomerWalletResult(userWalletId: UserWalletId) {
-        appPreferencesStore.store(PreferencesKeys.getTangemPayCheckCustomerByWalletId(userWalletId), true)
+    override suspend fun storeCheckCustomerWalletResult(userWalletId: UserWalletId, isPaeraCustomer: Boolean) {
+        appPreferencesStore.store(PreferencesKeys.getTangemPayCheckCustomerByWalletId(userWalletId), isPaeraCustomer)
     }
 
     override suspend fun checkCustomerWalletResult(userWalletId: UserWalletId): Boolean? {
