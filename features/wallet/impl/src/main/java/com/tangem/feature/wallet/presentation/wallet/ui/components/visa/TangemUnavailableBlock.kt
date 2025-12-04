@@ -43,6 +43,7 @@ internal fun TangemPayUnavailableBlock(state: TangemPayState.TemporaryUnavailabl
             modifier = Modifier
                 .clip(RoundedCornerShape(size = TangemTheme.dimens.radius14))
                 .background(TangemTheme.colors.background.primary),
+            enabled = false,
         ) {
             InputRowImageBase(
                 modifier = Modifier.padding(
