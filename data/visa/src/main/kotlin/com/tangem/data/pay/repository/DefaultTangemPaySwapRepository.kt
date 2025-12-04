@@ -44,7 +44,7 @@ internal class DefaultTangemPaySwapRepository @Inject constructor(
     ): Either<UniversalError, WithdrawalResult> {
         val amountInCents = getAmountInCents(cryptoAmount, cryptoCurrencyId)
         if (amountInCents.isNullOrEmpty()) return Either.Left(VisaApiError.WithdrawalDataError)
-        return requestHelper.makeSafeRequest(userWalletId) { authHeader ->
+        return requestHelper.performRequest(userWalletId) { authHeader ->
             val request = WithdrawDataRequest(amountInCents = amountInCents, recipientAddress = receiverAddress)
             tangemPayApi.getWithdrawData(authHeader = authHeader, body = request)
         }.map { data ->
@@ -60,7 +60,7 @@ internal class DefaultTangemPaySwapRepository @Inject constructor(
                     Either.Right(WithdrawalResult.Cancelled)
                 }
                 is WithdrawalSignatureResult.Success -> {
-                    requestHelper.makeSafeRequest(userWalletId) { authHeader ->
+                    requestHelper.performRequest(userWalletId) { authHeader ->
                         val request = WithdrawRequest(
                             amountInCents = amountInCents,
                             recipientAddress = receiverAddress,
