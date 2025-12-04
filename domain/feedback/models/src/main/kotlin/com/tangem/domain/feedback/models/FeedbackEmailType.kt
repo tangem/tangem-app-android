@@ -72,5 +72,11 @@ sealed interface FeedbackEmailType {
             val item: TangemPayTxHistoryItem,
             override val walletMetaInfo: WalletMetaInfo,
         ) : Visa()
+
+        data class Withdrawal(
+            override val walletMetaInfo: WalletMetaInfo,
+            val providerName: String,
+            val txId: String,
+        ) : Visa()
     }
 }
