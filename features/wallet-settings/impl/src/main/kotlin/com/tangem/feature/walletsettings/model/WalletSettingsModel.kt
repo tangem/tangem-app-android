@@ -438,7 +438,7 @@ internal class WalletSettingsModel @Inject constructor(
                         AppRoute.CreateWalletBackup(
                             userWalletId = params.userWalletId,
                             isUpgradeFlow = isUpgradeFlow,
-                            setAccessCode = true,
+                            shouldSetAccessCode = true,
                             analyticsSource = AnalyticsParam.ScreensSources.WalletSettings.value,
                             analyticsAction = if (isUpgradeFlow) {
                                 RecoveryPhraseScreenAction.Backup.value
