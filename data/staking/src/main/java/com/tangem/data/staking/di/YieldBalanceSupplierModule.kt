@@ -1,15 +1,20 @@
 package com.tangem.data.staking.di
 
 import androidx.datastore.core.DataStore
+import com.tangem.data.staking.store.DefaultP2PBalancesStore
 import com.tangem.data.staking.store.DefaultYieldsBalancesStore
+import com.tangem.data.staking.store.P2PBalancesStore
 import com.tangem.data.staking.store.YieldsBalancesStore
+import com.tangem.datasource.api.ethpool.models.response.P2PEthPoolAccountResponse
 import com.tangem.datasource.api.stakekit.models.response.model.YieldBalanceWrapperDTO
 import com.tangem.datasource.local.datastore.RuntimeSharedStore
+import com.tangem.datasource.local.token.P2PEthPoolVaultsStore
 import com.tangem.domain.staking.multi.MultiYieldBalanceProducer
 import com.tangem.domain.staking.multi.MultiYieldBalanceSupplier
 import com.tangem.domain.staking.single.SingleYieldBalanceProducer
 import com.tangem.domain.staking.single.SingleYieldBalanceSupplier
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.runSuspendCatching
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -29,6 +34,21 @@ internal object YieldBalanceSupplierModule {
         return DefaultYieldsBalancesStore(
             runtimeStore = RuntimeSharedStore(),
             persistenceStore = persistenceStore,
+            dispatchers = dispatchers,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideP2PBalancesStore(
+        persistenceStore: DataStore<Map<String, Set<P2PEthPoolAccountResponse>>>,
+        p2pVaultsStore: P2PEthPoolVaultsStore,
+        dispatchers: CoroutineDispatcherProvider,
+    ): P2PBalancesStore {
+        return DefaultP2PBalancesStore(
+            runtimeStore = RuntimeSharedStore(),
+            persistenceStore = persistenceStore,
+            vaultsProvider = { runSuspendCatching { p2pVaultsStore.getSync() }.getOrNull().orEmpty() },
             dispatchers = dispatchers,
         )
     }
