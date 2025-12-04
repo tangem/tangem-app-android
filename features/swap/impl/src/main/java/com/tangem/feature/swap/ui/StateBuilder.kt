@@ -859,6 +859,8 @@ internal class StateBuilder(
         uiState: SwapStateHolder,
         swapTransactionState: SwapTransactionState.TangemPayWithdrawalData,
         dataState: SwapProcessDataState,
+        txUrl: String,
+        onExploreClick: () -> Unit,
     ): SwapStateHolder {
         val fromCryptoCurrency = requireNotNull(dataState.fromCryptoCurrency)
         val toCryptoCurrency = requireNotNull(dataState.toCryptoCurrency)
@@ -869,14 +871,13 @@ internal class StateBuilder(
         val fromFiatAmount = getFormattedFiatAmount(fromCryptoCurrency.value.fiatRate?.multiply(fromAmount))
         val toFiatAmount = getFormattedFiatAmount(toCryptoCurrency.value.fiatRate?.multiply(toAmount))
 
-        val shouldShowStatus = providerState.type == ExchangeProviderType.CEX.providerName
         return uiState.copy(
             successState = SwapSuccessStateHolder(
                 timestamp = System.currentTimeMillis(),
-                txUrl = "",
+                txUrl = txUrl,
                 providerName = stringReference(providerState.name),
                 providerType = stringReference(providerState.type),
-                showStatusButton = shouldShowStatus,
+                showStatusButton = false,
                 providerIcon = providerState.iconUrl,
                 rate = providerState.subtitle,
                 fee = TextReference.EMPTY,
@@ -888,7 +889,7 @@ internal class StateBuilder(
                 toTokenFiatAmount = stringReference(toFiatAmount),
                 fromTokenIconState = iconStateConverter.convert(fromCryptoCurrency),
                 toTokenIconState = iconStateConverter.convert(toCryptoCurrency),
-                onExploreButtonClick = {},
+                onExploreButtonClick = onExploreClick,
                 onStatusButtonClick = {},
             ),
         )
