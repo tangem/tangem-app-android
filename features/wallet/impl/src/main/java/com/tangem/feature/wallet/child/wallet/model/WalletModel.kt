@@ -18,7 +18,6 @@ import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.*
-import com.tangem.domain.nft.ObserveAndClearNFTCacheIfNeedUseCase
 import com.tangem.domain.notifications.GetIsHuaweiDeviceWithoutGoogleServicesUseCase
 import com.tangem.domain.notifications.repository.NotificationsRepository
 import com.tangem.domain.pay.repository.OnboardingRepository
@@ -84,7 +83,6 @@ internal class WalletModel @Inject constructor(
     private val onrampStatusFactory: OnrampStatusFactory,
     private val analyticsEventsHandler: AnalyticsEventHandler,
     private val walletContentFetcher: WalletContentFetcher,
-    private val observeAndClearNFTCacheIfNeedUseCase: ObserveAndClearNFTCacheIfNeedUseCase,
     private val walletDeepLinkActionListener: WalletDeepLinkActionListener,
     private val notificationsRepository: NotificationsRepository,
     private val getWalletsListForEnablingUseCase: GetWalletsForAutomaticallyPushEnablingUseCase,
@@ -114,7 +112,6 @@ internal class WalletModel @Inject constructor(
 
     private val walletsUpdateJobHolder = JobHolder()
     private val refreshWalletJobHolder = JobHolder()
-    private val clearNFTCacheJobHolder = JobHolder()
     private val updateTangemPayJobHolder = JobHolder()
 
     private var needToRefreshWallet = false
@@ -334,7 +331,6 @@ internal class WalletModel @Inject constructor(
                     }
 
                     subscribeOnExpressTransactionsUpdates(selectedWallet)
-                    observeAndClearNFTCacheIfNeedUseCase(selectedWallet)
                 }
                 .flowOn(dispatchers.main)
                 .launchIn(modelScope)
@@ -388,13 +384,6 @@ internal class WalletModel @Inject constructor(
                 ),
             )
         }
-    }
-
-    private fun observeAndClearNFTCacheIfNeedUseCase(selectedWallet: UserWallet) {
-        observeAndClearNFTCacheIfNeedUseCase
-            .invoke(selectedWallet.walletId)
-            .launchIn(modelScope)
-            .saveIn(clearNFTCacheJobHolder)
     }
 
     private fun subscribeTangemPayOnWalletState() {
