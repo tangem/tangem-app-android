@@ -106,26 +106,6 @@ internal class DefaultVisaAuthRemoteDataSource @Inject constructor(
         }
     }
 
-    override suspend fun refreshCustomerWalletAuthTokens(
-        refreshToken: String,
-    ): Either<VisaApiError, TangemPayAuthTokens> = withContext(dispatchers.io) {
-        request {
-            tangemPayAuthApi.refreshCustomerWalletAccessToken(
-                request = RefreshCustomerWalletAccessTokenRequest(
-                    authType = "customer_wallet",
-                    refreshToken = refreshToken,
-                ),
-            ).getOrThrow()
-        }.map { response ->
-            TangemPayAuthTokens(
-                accessToken = response.accessToken,
-                expiresAt = response.expiresAt,
-                refreshToken = response.refreshToken,
-                refreshExpiresAt = response.refreshExpiresAt,
-            )
-        }
-    }
-
     override suspend fun getAccessTokens(
         signedChallenge: VisaAuthSignedChallenge,
     ): Either<VisaApiError, VisaAuthTokens> = withContext(dispatchers.io) {
