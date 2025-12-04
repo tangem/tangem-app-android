@@ -20,16 +20,27 @@ import com.tangem.core.ui.test.PopUpMenuTestTags
 @Suppress("ComposableEventParameterNaming")
 @Composable
 fun TangemDropdownItem(item: TangemDropdownMenuItem, dismissParent: () -> Unit, modifier: Modifier = Modifier) {
+    val textColor = if (item.isEnabled) {
+        item.textColor.resolveReference()
+    } else {
+        TangemTheme.colors.text.tertiary
+    }
     Text(
         modifier = modifier
-            .clickable {
-                dismissParent()
-                item.onClick()
-            }
+            .then(
+                if (item.isEnabled) {
+                    Modifier.clickable {
+                        dismissParent()
+                        item.onClick()
+                    }
+                } else {
+                    Modifier
+                },
+            )
             .padding(vertical = TangemTheme.dimens.spacing8, horizontal = TangemTheme.dimens.spacing16)
             .testTag(PopUpMenuTestTags.BUTTON),
         text = item.title.resolveReference(),
-        style = TangemTheme.typography.button.copy(color = item.textColor.resolveReference()),
+        style = TangemTheme.typography.button.copy(color = textColor),
     )
 }
 
