@@ -7,6 +7,6 @@ data class TangemPayCardBalance(
     val currencyCode: String,
     val cryptoBalance: BigDecimal,
     val chainId: Int,
-    val depositAddress: String,
+    val depositAddress: String?,
     val contractAddress: String,
 )
