@@ -5,20 +5,28 @@ import com.tangem.domain.managetokens.model.ManagedCryptoCurrency.SourceNetwork
 import com.tangem.domain.models.network.Network
 import com.tangem.features.managetokens.entity.item.CurrencyItemUM.Basic.NetworksUM
 import com.tangem.features.managetokens.entity.item.CurrencyNetworkUM
+import com.tangem.features.managetokens.utils.list.CurrencyUpdates
 import com.tangem.features.managetokens.utils.ui.getIconRes
 import kotlinx.collections.immutable.toImmutableList
 
 internal fun ManagedCryptoCurrency.Token.toUiNetworksModel(
     isExpanded: Boolean,
     isItemsEditable: Boolean,
+    updates: CurrencyUpdates,
     onSelectedStateChange: (SourceNetwork, Boolean) -> Unit,
     onLongTap: (SourceNetwork) -> Unit,
 ): NetworksUM {
     return if (isExpanded) {
         NetworksUM.Expanded(
-            networks = availableNetworks.map {
-                it.toCurrencyNetworkModel(
-                    isSelected = it.network in addedIn,
+            networks = availableNetworks.map { sourceNetwork ->
+                val isSelectedByDefault = sourceNetwork.network in addedIn
+                val isSelected = when (sourceNetwork.network) {
+                    in updates.toAdd[this].orEmpty() -> true
+                    in updates.toRemove[this].orEmpty() -> false
+                    else -> isSelectedByDefault
+                }
+                sourceNetwork.toCurrencyNetworkModel(
+                    isSelected = isSelected,
                     isEditable = isItemsEditable,
                     onSelectedStateChange = onSelectedStateChange,
                     onLongTap = onLongTap,
