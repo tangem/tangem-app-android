@@ -21,7 +21,7 @@ internal class TangemPayAddFundsUMConverter(
                 items = persistentListOf(),
                 dismiss = listener::onDismissAddFunds,
                 errorMessage = TangemPayMessagesFactory.createErrorMessage(
-                    type = TangemPayDetailsErrorType.Receive,
+                    errorType = TangemPayDetailsErrorType.Receive,
                 ).messageBottomSheetUMV2,
             )
         } else {
