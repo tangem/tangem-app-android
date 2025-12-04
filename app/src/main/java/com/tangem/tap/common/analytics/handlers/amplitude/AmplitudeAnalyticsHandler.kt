@@ -29,7 +29,7 @@ class AmplitudeAnalyticsHandler(
     class Builder : AnalyticsHandlerBuilder {
         override fun build(data: AnalyticsHandlerBuilder.Data): AnalyticsHandler {
             return AmplitudeAnalyticsHandler(
-                client = if (data.logConfig.amplitude) {
+                client = if (data.logConfig.isAmplitudeLogEnabled) {
                     AmplitudeLogClient(data.jsonConverter)
                 } else {
                     AmplitudeClient(data.application, data.config.amplitudeApiKey)
