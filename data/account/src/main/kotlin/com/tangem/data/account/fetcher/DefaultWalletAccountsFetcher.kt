@@ -115,7 +115,7 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
 
                 saveETag(userWalletId, apiResponse)
 
-                apiResponse.bind()
+                apiResponse.bind().enrichByAccountId()
             },
             onError = { error ->
                 if (error.isNetworkError(code = Code.PRECONDITION_FAILED)) {
@@ -142,10 +142,11 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
 
                 saveETag(userWalletId, apiResponse)
 
-                val responseBody = apiResponse.bind()
-                store(userWalletId = userWalletId, response = responseBody)
+                val response = apiResponse.bind().enrichByAccountId()
 
-                FetchResult(responseBody)
+                store(userWalletId = userWalletId, response = response)
+
+                FetchResult(response)
             },
             onError = { throwable ->
                 // pushWalletAccounts and storeWalletAccounts help to avoid cyclic dependency
@@ -213,6 +214,18 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
         if (eTag != null) {
             eTagsStore.store(userWalletId = userWalletId, key = ETagsStore.Key.WalletAccounts, value = eTag)
         }
+    }
+
+    private fun GetWalletAccountsResponse.enrichByAccountId(): GetWalletAccountsResponse {
+        return copy(
+            accounts = accounts.map { accountDTO ->
+                accountDTO.copy(
+                    tokens = accountDTO.tokens?.map { token ->
+                        token.copy(accountId = accountDTO.id)
+                    },
+                )
+            },
+        )
     }
 
     private fun getAccountsResponseStore(userWalletId: UserWalletId): AccountsResponseStore {
