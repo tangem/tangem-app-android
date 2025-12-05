@@ -17,8 +17,8 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.ResetCardScreenTestTags
-import com.tangem.tap.features.details.ui.cardsettings.TextReference
-import com.tangem.tap.features.details.ui.cardsettings.resolveReference
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.tap.features.details.ui.common.DetailsMainButton
 import com.tangem.tap.features.details.ui.common.SettingsScreensScaffold
 import com.tangem.wallet.R
@@ -198,7 +198,7 @@ private fun ResetButton(enabled: Boolean, onResetButtonClick: () -> Unit) {
 }
 
 @Composable
-private fun CommonResetDialog(dialog: ResetCardScreenState.Dialog) {
+private fun CommonResetDialog(dialog: ResetCardDialog) {
     BasicDialog(
         title = stringResourceSafe(dialog.titleResId),
         message = stringResourceSafe(dialog.messageResId),

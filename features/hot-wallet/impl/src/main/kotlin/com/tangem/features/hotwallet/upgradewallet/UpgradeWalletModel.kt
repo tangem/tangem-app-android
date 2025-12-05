@@ -7,6 +7,8 @@ import com.tangem.common.doOnResult
 import com.tangem.common.doOnSuccess
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.Basic
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -18,7 +20,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.toWrappedList
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
-import com.tangem.domain.card.BackupValidator
+import com.tangem.domain.card.analytics.IntroductionProcess
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
@@ -86,12 +88,14 @@ internal class UpgradeWalletModel @Inject constructor(
     }
 
     private fun onBuyTangemWalletClick() {
+        analyticsEventHandler.send(Basic.ButtonBuy(source = AnalyticsParam.ScreensSources.Upgrade))
         modelScope.launch {
             generateBuyTangemCardLinkUseCase.invoke().let { urlOpener.openUrl(it) }
         }
     }
 
     private fun onContinueClick() {
+        analyticsEventHandler.send(IntroductionProcess.ButtonScanCard(AnalyticsParam.ScreensSources.Upgrade))
         analyticsEventHandler.send(WalletSettingsAnalyticEvents.ButtonStartUpgrade)
         scanCard()
     }
@@ -131,12 +135,9 @@ internal class UpgradeWalletModel @Inject constructor(
         scanResponse: ScanResponse,
         onSuccess: suspend () -> Unit,
     ) {
-        // Check if user attempted to upgrade before but something went wrong and a full reset is required
         val userWallet = coldUserWalletBuilderFactory.create(scanResponse).build()
-        val isSameWalletButNotFinishedBackup = userWallet?.walletId == params.userWalletId &&
-            BackupValidator.isValidFull(scanResponse.card).not()
 
-        if (userWallet != null && isSameWalletButNotFinishedBackup) {
+        if (userWallet?.walletId == params.userWalletId) {
             startResetCardsFlow.emit(userWallet)
             return
         }
