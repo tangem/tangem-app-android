@@ -302,6 +302,7 @@ private fun TangemPayDetailsScreenPreview(
             cardDetailsBlockComponent = PreviewTangemPayCardDetailsBlockComponent(
                 TangemPayCardDetailsUM(
                     number = "•••• •••• •••• 1245",
+                    numberShort = "*1245",
                     expiry = "••/••",
                     cvv = "•••",
                     onCopy = {},
@@ -360,6 +361,7 @@ private fun TangemPayDetailsTxHistoryScreenPreview(
             cardDetailsBlockComponent = PreviewTangemPayCardDetailsBlockComponent(
                 TangemPayCardDetailsUM(
                     number = "•••• •••• •••• 1245",
+                    numberShort = "*1245",
                     expiry = "••/••",
                     cvv = "•••",
                     onCopy = {},
