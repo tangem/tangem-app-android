@@ -28,6 +28,7 @@ data class AccountList private constructor(
     val userWalletId: UserWalletId,
     val accounts: List<Account>,
     val totalAccounts: Int,
+    val totalArchivedAccounts: Int,
     val sortType: TokensSortType,
     val groupType: TokensGroupType,
 ) {
@@ -60,6 +61,7 @@ data class AccountList private constructor(
             userWalletId = this.userWalletId,
             accounts = accounts,
             totalAccounts = this.totalAccounts + if (isNewAccount) 1 else 0,
+            totalArchivedAccounts = this.totalArchivedAccounts,
             sortType = this.sortType,
             groupType = this.groupType,
         )
@@ -82,6 +84,7 @@ data class AccountList private constructor(
             userWalletId = this.userWalletId,
             accounts = accounts,
             totalAccounts = this.totalAccounts - if (isExistingAccount) 1 else 0,
+            totalArchivedAccounts = this.totalArchivedAccounts,
             sortType = this.sortType,
             groupType = this.groupType,
         )
@@ -152,6 +155,7 @@ data class AccountList private constructor(
     companion object {
 
         const val MAX_ACCOUNTS_COUNT = 20
+        const val MAX_ARCHIVED_ACCOUNTS_COUNT = 1000
         private const val MAX_MAIN_ACCOUNTS_COUNT = 1
 
         /**
@@ -166,6 +170,7 @@ data class AccountList private constructor(
             userWalletId: UserWalletId,
             accounts: List<Account>,
             totalAccounts: Int,
+            totalArchivedAccounts: Int,
             sortType: TokensSortType = TokensSortType.NONE,
             groupType: TokensGroupType = TokensGroupType.NONE,
         ): Either<Error, AccountList> = either {
@@ -200,6 +205,7 @@ data class AccountList private constructor(
                 userWalletId = userWalletId,
                 accounts = accounts,
                 totalAccounts = totalAccounts,
+                totalArchivedAccounts = totalArchivedAccounts,
                 sortType = sortType,
                 groupType = groupType,
             )
@@ -225,6 +231,7 @@ data class AccountList private constructor(
                     ),
                 ),
                 totalAccounts = 1,
+                totalArchivedAccounts = 0,
                 sortType = sortType,
                 groupType = groupType,
             )
