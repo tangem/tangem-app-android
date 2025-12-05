@@ -44,6 +44,7 @@ dependencies {
 
     /** Libs */
     implementation(projects.libs.blockchainSdk)
+    implementation(projects.libs.crypto)
 
     /** Other */
     implementation(deps.androidx.datastore)

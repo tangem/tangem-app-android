@@ -5,12 +5,17 @@ import arrow.core.left
 import arrow.core.right
 import arrow.core.toOption
 import com.tangem.data.common.api.safeApiCall
+import com.tangem.data.staking.store.P2PBalancesStore
 import com.tangem.data.staking.store.YieldsBalancesStore
 import com.tangem.data.staking.utils.YieldBalanceRequestBodyFactory
+import com.tangem.datasource.api.common.response.ApiResponse
+import com.tangem.datasource.api.ethpool.P2PEthPoolApi
+import com.tangem.datasource.api.ethpool.models.response.P2PEthPoolAccountResponse
 import com.tangem.datasource.api.stakekit.StakeKitApi
 import com.tangem.datasource.api.stakekit.models.request.YieldBalanceRequestBody
 import com.tangem.datasource.api.stakekit.models.response.model.YieldBalanceWrapperDTO
 import com.tangem.datasource.api.stakekit.models.response.model.YieldDTO
+import com.tangem.datasource.local.token.P2PEthPoolVaultsStore
 import com.tangem.datasource.local.token.StakingYieldsStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.core.utils.catchOn
@@ -18,30 +23,43 @@ import com.tangem.domain.models.staking.StakingID
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isMultiCurrency
+import com.tangem.domain.staking.model.StakingIntegrationID
+import com.tangem.domain.staking.model.ethpool.P2PEthPoolNetwork
 import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.runSuspendCatching
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
 /**
  * Default implementation of [MultiYieldBalanceFetcher]
  *
- * @property userWalletsStore    user wallets store
- * @property stakingYieldsStore  staking yields store
- * @property yieldsBalancesStore yields balances store
- * @property stakeKitApi         stake kit API
- * @property dispatchers         dispatchers
+ * Supports both StakeKit and P2P staking providers.
+ *
+ * @property userWalletsStore      user wallets store
+ * @property stakingYieldsStore    staking yields store
+ * @property yieldsBalancesStore   yields balances store (StakeKit)
+ * @property p2pBalancesStore      P2P balances store
+ * @property stakeKitApi           stake kit API
+ * @property p2pApi                P2P ETH Pool API
+ * @property p2pVaultsStore        P2P vaults store
+ * @property dispatchers           dispatchers
  *
 [REDACTED_AUTHOR]
  */
+@Suppress("LongParameterList")
 internal class DefaultMultiYieldBalanceFetcher @Inject constructor(
     private val userWalletsStore: UserWalletsStore,
     private val stakingYieldsStore: StakingYieldsStore,
     private val yieldsBalancesStore: YieldsBalancesStore,
+    private val p2pBalancesStore: P2PBalancesStore,
     private val stakeKitApi: StakeKitApi,
+    private val p2pApi: P2PEthPoolApi,
+    private val p2pVaultsStore: P2PEthPoolVaultsStore,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : MultiYieldBalanceFetcher {
 
@@ -57,23 +75,148 @@ internal class DefaultMultiYieldBalanceFetcher @Inject constructor(
             return it.left()
         }
 
-        Timber.i("Staking IDs to fetch:\n${stakingIds.joinToString("\n")}")
+        val (stakeKitIds, p2pIds) = stakingIds.partition { stakingId ->
+            val stakingIntegrationID = StakingIntegrationID.entries.find {
+                it.value == stakingId.integrationId
+            }
+            stakingIntegrationID is StakingIntegrationID.StakeKit
+        }
+
+        Timber.i(
+            """
+                Staking IDs to fetch:
+                 - StakeKit: ${stakeKitIds.joinToString()}
+                 - P2P: ${p2pIds.joinToString()}
+            """.trimIndent(),
+        )
 
         return Either.catchOn(dispatchers.default) {
-            yieldsBalancesStore.refresh(userWalletId = params.userWalletId, stakingIds = stakingIds)
+            coroutineScope {
+                if (stakeKitIds.isNotEmpty()) {
+                    launch { fetchStakeKitBalances(params.userWalletId, stakeKitIds.toSet()) }
+                }
 
-            val availableStakingIds = getAvailableStakingIds(
-                userWalletId = params.userWalletId,
-                stakingIds = stakingIds,
-            )
-
-            fetch(userWalletId = params.userWalletId, stakingIds = availableStakingIds)
+                if (p2pIds.isNotEmpty()) {
+                    launch { fetchP2PBalances(params.userWalletId, p2pIds.toSet()) }
+                }
+            }
         }
             .onLeft { throwable ->
                 Timber.e(throwable, "Unable to fetch yield balances $params")
 
-                yieldsBalancesStore.storeError(userWalletId = params.userWalletId, stakingIds = stakingIds)
+                if (stakeKitIds.isNotEmpty()) {
+                    yieldsBalancesStore.storeError(userWalletId = params.userWalletId, stakingIds = stakeKitIds.toSet())
+                }
+                if (p2pIds.isNotEmpty()) {
+                    p2pBalancesStore.storeError(userWalletId = params.userWalletId, stakingIds = p2pIds.toSet())
+                }
             }
+    }
+
+    private suspend fun fetchStakeKitBalances(userWalletId: UserWalletId, stakingIds: Set<StakingID>) {
+        yieldsBalancesStore.refresh(userWalletId = userWalletId, stakingIds = stakingIds)
+
+        val availableStakingIds = getAvailableStakingIds(
+            userWalletId = userWalletId,
+            stakingIds = stakingIds,
+        )
+
+        fetchFromStakeKit(userWalletId = userWalletId, stakingIds = availableStakingIds)
+    }
+
+    private suspend fun fetchP2PBalances(userWalletId: UserWalletId, stakingIds: Set<StakingID>) {
+        p2pBalancesStore.refresh(userWalletId = userWalletId, stakingIds = stakingIds)
+
+        val vaults = runSuspendCatching { p2pVaultsStore.getSync() }.getOrNull().orEmpty()
+        if (vaults.isEmpty()) {
+            Timber.w("No P2P vaults available for $userWalletId")
+            p2pBalancesStore.storeError(userWalletId = userWalletId, stakingIds = stakingIds)
+            return
+        }
+
+        fetchFromP2P(userWalletId = userWalletId, stakingIds = stakingIds, vaults = vaults)
+    }
+
+    private suspend fun fetchFromP2P(
+        userWalletId: UserWalletId,
+        stakingIds: Set<StakingID>,
+        vaults: List<com.tangem.domain.staking.model.ethpool.P2PEthPoolVault>,
+    ) {
+        safeApiCall(
+            call = {
+                val addresses = stakingIds.map { it.address }.toSet()
+
+                val responses = mutableSetOf<P2PEthPoolAccountResponse>()
+
+                for (vault in vaults) {
+                    for (address in addresses) {
+                        runSuspendCatching {
+                            val response = p2pApi.getAccountInfo(
+                                network = P2PEthPoolNetwork.MAINNET.value,
+                                delegatorAddress = address,
+                                vaultAddress = vault.vaultAddress,
+                            )
+
+                            when (response) {
+                                is ApiResponse.Success -> {
+                                    val data = response.data
+                                    if (data.error != null) {
+                                        Timber.w(
+                                            "P2P API returned error for vault ${vault.vaultAddress}, " +
+                                                "address $address: ${data.error ?: "error"}",
+                                        )
+                                    } else {
+                                        val result = requireNotNull(data.result) {
+                                            "Result is null in successful response"
+                                        }
+                                        responses.add(result)
+                                    }
+                                }
+                                is ApiResponse.Error -> {
+                                    Timber.w(
+                                        response.cause,
+                                        "Failed to fetch P2P balance for vault ${vault.vaultAddress}, " +
+                                            "address $address",
+                                    )
+                                }
+                            }
+                        }.onFailure { error ->
+                            Timber.w(
+                                error,
+                                "Failed to fetch P2P balance for vault ${vault.vaultAddress}, address $address",
+                            )
+                        }
+                    }
+                }
+
+                Timber.i("Successfully fetched ${responses.size} P2P balances for $userWalletId")
+
+                if (responses.isNotEmpty()) {
+                    p2pBalancesStore.storeActual(userWalletId = userWalletId, values = responses)
+
+                    val missingStakingIds = stakingIds.filter { stakingId ->
+                        responses.none { response ->
+                            response.delegatorAddress.equals(stakingId.address, ignoreCase = true)
+                        }
+                    }
+
+                    if (missingStakingIds.isNotEmpty()) {
+                        Timber.i("Missing responses for ${missingStakingIds.size} staking IDs: $missingStakingIds")
+                        p2pBalancesStore.storeError(userWalletId = userWalletId, stakingIds = missingStakingIds.toSet())
+                    }
+                } else {
+                    Timber.i("No P2P responses received for $userWalletId")
+                    p2pBalancesStore.storeError(userWalletId = userWalletId, stakingIds = stakingIds)
+                }
+            },
+            onError = { throwable ->
+                Timber.e(throwable, "Unable to fetch P2P balances $userWalletId")
+
+                p2pBalancesStore.storeError(userWalletId = userWalletId, stakingIds = stakingIds)
+
+                throw throwable
+            },
+        )
     }
 
     private inline fun checkIsSupportedByWalletOrElse(userWalletId: UserWalletId, ifNotSupported: (Throwable) -> Unit) {
@@ -139,7 +282,7 @@ internal class DefaultMultiYieldBalanceFetcher @Inject constructor(
         return yieldsIds
     }
 
-    private suspend fun fetch(userWalletId: UserWalletId, stakingIds: Set<StakingID>) {
+    private suspend fun fetchFromStakeKit(userWalletId: UserWalletId, stakingIds: Set<StakingID>) {
         safeApiCall(
             call = {
                 val requests = stakingIds.map(YieldBalanceRequestBodyFactory::create)

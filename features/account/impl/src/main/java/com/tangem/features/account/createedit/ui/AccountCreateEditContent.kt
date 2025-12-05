@@ -1,15 +1,10 @@
 package com.tangem.features.account.createedit.ui
 
 import android.content.res.Configuration
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -30,6 +25,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastForEach
+import androidx.compose.ui.util.fastForEachIndexed
 import com.tangem.common.ui.R
 import com.tangem.common.ui.account.*
 import com.tangem.core.ui.components.PrimaryButton
@@ -186,9 +183,9 @@ private fun AccountColor(colorsState: AccountCreateEditUM.Colors) {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(contentPadding),
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally),
         ) {
-            colorsState.list.forEach { color ->
+            colorsState.list.fastForEach { color ->
                 val isSelected = color == colorsState.selected
                 Box(
                     contentAlignment = Alignment.Center,
@@ -236,8 +233,9 @@ private fun AccountIcons(iconsState: AccountCreateEditUM.Icons) {
         FlowRow(
             maxItemsInEachRow = 6,
             modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center,
         ) {
-            iconsState.list.forEachIndexed { index, icon ->
+            iconsState.list.fastForEachIndexed { index, icon ->
                 val isSelected = icon == iconsState.selected
                 Box(
                     contentAlignment = Alignment.Center,

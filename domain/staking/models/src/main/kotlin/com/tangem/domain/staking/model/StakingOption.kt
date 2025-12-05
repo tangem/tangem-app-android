@@ -41,7 +41,7 @@ sealed interface StakingOption {
      */
     data class P2P(val vault: P2PEthPoolVault) : StakingOption {
         override val integrationId: String =
-            "p2p-ethereum-pooled:${vault.vaultAddress}"
+            "p2p-ethereum-pooled"
         override val apy: SerializedBigDecimal = vault.apy
         override val token: YieldToken = createEthToken()
         override val isAvailable: Boolean = !vault.isPrivate

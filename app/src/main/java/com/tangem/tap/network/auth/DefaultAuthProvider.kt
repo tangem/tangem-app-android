@@ -51,7 +51,9 @@ internal class DefaultAuthProvider(
                 ApiEnvironment.DEV_2,
                 ApiEnvironment.DEV_3,
                 -> environmentConfigStorage.getConfigSync().tangemApiKeyDev
-                ApiEnvironment.STAGE -> environmentConfigStorage.getConfigSync().tangemApiKeyStage
+                ApiEnvironment.STAGE_2,
+                ApiEnvironment.STAGE,
+                -> environmentConfigStorage.getConfigSync().tangemApiKeyStage
                 ApiEnvironment.PROD -> environmentConfigStorage.getConfigSync().tangemApiKey
             } ?: error("No tangem tech api config provided")
         }
