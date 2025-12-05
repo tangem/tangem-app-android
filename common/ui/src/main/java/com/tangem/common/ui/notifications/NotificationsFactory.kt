@@ -476,6 +476,7 @@ object NotificationsFactory {
         rentExemptionAmount: BigDecimal,
         cryptoCurrency: CryptoCurrency,
     ) {
+        if (cryptoCurrency !is CryptoCurrency.Coin) return
         add(
             NotificationUM.Solana.RentExemptionDestination(
                 rentExemptionAmount = rentExemptionAmount,
