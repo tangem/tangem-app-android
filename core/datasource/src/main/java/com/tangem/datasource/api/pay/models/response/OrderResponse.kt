@@ -24,7 +24,7 @@ data class OrderResponse(
         data class Data(
             @Json(name = "type") val type: String?,
             @Json(name = "specification_name") val specificationName: String?,
-            @Json(name = "customer_wallet_address") val customerWalletAddress: String,
+            @Json(name = "customer_wallet_address") val customerWalletAddress: String?,
             @Json(name = "emboss_name") val embossName: String?,
             @Json(name = "product_instance_id") val productInstanceId: String?,
             @Json(name = "payment_account_id") val paymentAccountId: String?,
