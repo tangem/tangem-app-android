@@ -23,6 +23,7 @@ dependencies {
     api(projects.domain.quotes)
     api(projects.domain.models)
     api(projects.domain.networks)
+    api(projects.domain.nft)
     api(projects.domain.referral)
     api(projects.domain.staking)
     api(projects.domain.tokens)
