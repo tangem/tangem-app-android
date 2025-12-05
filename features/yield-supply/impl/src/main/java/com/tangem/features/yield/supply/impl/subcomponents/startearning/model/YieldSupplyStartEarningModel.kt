@@ -142,8 +142,13 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
             it.copy(yieldSupplyFeeUM = YieldSupplyFeeUM.Loading)
         }
 
-        val maxFee = yieldSupplyGetMaxFeeUseCase(userWalletId, cryptoCurrencyStatus).getOrNull() ?: return
-        val estimatedFee = yieldSupplyGetCurrentFeeUseCase(userWalletId, cryptoCurrencyStatus).getOrNull() ?: return
+        val maxFee = yieldSupplyGetMaxFeeUseCase(userWalletId, cryptoCurrencyStatus).getOrNull()
+        val estimatedFee = yieldSupplyGetCurrentFeeUseCase(userWalletId, cryptoCurrencyStatus).getOrNull()
+
+        if (estimatedFee == null || maxFee == null) {
+            showFeeUnknownError()
+            return
+        }
 
         val transactionListData = yieldSupplyStartEarningUseCase(
             userWalletId = userWalletId,
@@ -152,15 +157,7 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
         ).getOrNull()
 
         if (transactionListData == null) {
-            uiState.update {
-                it.copy(yieldSupplyFeeUM = YieldSupplyFeeUM.Error)
-            }
-            yieldSupplyNotificationsUpdateTrigger.triggerUpdate(
-                data = YieldSupplyNotificationData(
-                    feeValue = null,
-                    feeError = GetFeeError.UnknownError,
-                ),
-            )
+            showFeeUnknownError()
             return
         }
 
@@ -370,6 +367,18 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
                 }
             },
             popBack = params.callback::onBackClick,
+        )
+    }
+
+    private suspend fun showFeeUnknownError() {
+        uiState.update {
+            it.copy(yieldSupplyFeeUM = YieldSupplyFeeUM.Error)
+        }
+        yieldSupplyNotificationsUpdateTrigger.triggerUpdate(
+            data = YieldSupplyNotificationData(
+                feeValue = null,
+                feeError = GetFeeError.UnknownError,
+            ),
         )
     }
 }
