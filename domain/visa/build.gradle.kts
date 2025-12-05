@@ -14,6 +14,7 @@ dependencies {
     api(projects.core.pagination)
     implementation(projects.core.utils)
     implementation(projects.core.error)
+    implementation(projects.core.analytics.models)
 
     /** Project - Domain */
     api(projects.domain.models)
