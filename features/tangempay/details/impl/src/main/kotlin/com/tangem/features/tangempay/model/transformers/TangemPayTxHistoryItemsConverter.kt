@@ -14,12 +14,16 @@ import com.tangem.features.tangempay.entity.TangemPayTransactionState
 import com.tangem.features.tangempay.utils.TangemPayTxHistoryUiActions
 import com.tangem.utils.StringsSigns
 import com.tangem.utils.converter.Converter
+import com.tangem.utils.extensions.isPositive
 import com.tangem.utils.extensions.isZero
 import org.joda.time.DateTimeZone
 
 internal class TangemPayTxHistoryItemsConverter(
     private val txHistoryUiActions: TangemPayTxHistoryUiActions,
 ) : Converter<TangemPayTxHistoryItem, TangemPayTransactionState.Content> {
+
+    private val paySpendSubtitleConverter = PaySpendSubtitleConverter
+
     override fun convert(value: TangemPayTxHistoryItem): TangemPayTransactionState.Content {
         return when (value) {
             is TangemPayTxHistoryItem.Spend -> convertSpend(spend = value)
@@ -39,7 +43,6 @@ internal class TangemPayTxHistoryItemsConverter(
         val amount = amountPrefix + spend.amount.format {
             fiat(fiatCurrencyCode = spend.currency.currencyCode, fiatCurrencySymbol = spend.currency.symbol)
         }
-        val subtitle = spend.merchantCategory ?: spend.enrichedMerchantCategory
         return TangemPayTransactionState.Content.Spend(
             id = spend.id,
             onClick = { txHistoryUiActions.onTransactionClick(spend) },
@@ -51,7 +54,7 @@ internal class TangemPayTxHistoryItemsConverter(
                 }
             },
             title = stringReference(spend.enrichedMerchantName ?: spend.merchantName),
-            subtitle = subtitle?.let(::stringReference) ?: resourceReference(R.string.tangem_pay_other),
+            subtitle = paySpendSubtitleConverter.convert(spend),
             time = DateTimeFormatters.formatDate(localDate, DateTimeFormatters.timeFormatter),
             icon = spend.enrichedMerchantIconUrl?.let(ImageReference::Url)
                 ?: ImageReference.Res(R.drawable.ic_category_24),
@@ -94,18 +97,31 @@ internal class TangemPayTxHistoryItemsConverter(
     private fun convertCollateral(
         collateral: TangemPayTxHistoryItem.Collateral,
     ): TangemPayTransactionState.Content.Collateral {
-        val amountPrefix = if (collateral.amount.isZero()) "" else StringsSigns.PLUS
-        val amount = amountPrefix + collateral.amount.format {
+        val amountPrefix = when {
+            collateral.amount.isZero() -> ""
+            collateral.amount.isPositive() -> StringsSigns.PLUS
+            else -> StringsSigns.MINUS
+        }
+        val amount = amountPrefix + collateral.amount.abs().format {
             fiat(fiatCurrencyCode = collateral.currency.currencyCode, fiatCurrencySymbol = collateral.currency.symbol)
         }
         return TangemPayTransactionState.Content.Collateral(
             id = collateral.id,
             onClick = { txHistoryUiActions.onTransactionClick(collateral) },
             amount = amount,
-            amountColor = themedColor { TangemTheme.colors.text.accent },
-            title = resourceReference(R.string.tangem_pay_deposit),
+            amountColor = when (collateral.type) {
+                TangemPayTxHistoryItem.Type.Deposit -> themedColor { TangemTheme.colors.text.accent }
+                TangemPayTxHistoryItem.Type.Withdrawal -> themedColor { TangemTheme.colors.text.primary1 }
+            },
+            title = when (collateral.type) {
+                TangemPayTxHistoryItem.Type.Deposit -> resourceReference(R.string.tangem_pay_deposit)
+                TangemPayTxHistoryItem.Type.Withdrawal -> resourceReference(R.string.tangem_pay_withdrawal)
+            },
             subtitle = resourceReference(R.string.common_transfer),
-            icon = ImageReference.Res(R.drawable.ic_arrow_down_24),
+            icon = when (collateral.type) {
+                TangemPayTxHistoryItem.Type.Deposit -> ImageReference.Res(R.drawable.ic_arrow_down_24)
+                TangemPayTxHistoryItem.Type.Withdrawal -> ImageReference.Res(R.drawable.ic_arrow_up_24)
+            },
             time = DateTimeFormatters.formatDate(collateral.date, DateTimeFormatters.timeFormatter),
         )
     }
