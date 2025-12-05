@@ -24,11 +24,7 @@ import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.yield.supply.YieldSupplyRepository
 import com.tangem.domain.yield.supply.models.YieldSupplyEnterStatus
-import com.tangem.domain.yield.supply.usecase.YieldSupplyActivateUseCase
-import com.tangem.domain.yield.supply.usecase.YieldSupplyDeactivateUseCase
-import com.tangem.domain.yield.supply.usecase.YieldSupplyGetTokenStatusUseCase
-import com.tangem.domain.yield.supply.usecase.YieldSupplyIsAvailableUseCase
-import com.tangem.domain.yield.supply.usecase.YieldSupplyMinAmountUseCase
+import com.tangem.domain.yield.supply.usecase.*
 import com.tangem.features.yield.supply.api.YieldSupplyComponent
 import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
 import com.tangem.features.yield.supply.impl.R
@@ -274,8 +270,7 @@ internal class YieldSupplyModel @Inject constructor(
     private fun loadActiveState(cryptoCurrencyStatus: CryptoCurrencyStatus, yieldSupplyStatus: YieldSupplyStatus) {
         val cryptoCurrencyToken = cryptoCurrency as? CryptoCurrency.Token ?: return
         val showWarningIcon = !yieldSupplyStatus.isAllowedToSpend
-        val state = uiState.value
-        val isShowInfoIconPrevState = when (state) {
+        val isShowInfoIconPrevState = when (val state = uiState.value) {
             is YieldSupplyUM.Content -> state.showInfoIcon
             else -> false
         }
