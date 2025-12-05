@@ -182,6 +182,7 @@ class FetchWalletAccountsErrorHandlerTest {
                 group = UserTokensResponse.GroupType.NONE,
                 sort = UserTokensResponse.SortType.MANUAL,
                 totalAccounts = 1,
+                totalArchivedAccounts = 0,
             ),
             accounts = listOf(accountDTO),
             unassignedTokens = emptyList(),
