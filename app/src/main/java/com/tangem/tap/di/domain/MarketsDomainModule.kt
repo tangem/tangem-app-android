@@ -12,6 +12,7 @@ import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
 import com.tangem.domain.tokens.repository.CurrenciesRepository
+import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.derivations.DerivationsRepository
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
@@ -65,6 +66,7 @@ object MarketsDomainModule {
     fun provideSaveMarketTokensUseCase(
         derivationsRepository: DerivationsRepository,
         marketsTokenRepository: MarketsTokenRepository,
+        walletManagersFacade: WalletManagersFacade,
         currenciesRepository: CurrenciesRepository,
         multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
         multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
@@ -75,6 +77,7 @@ object MarketsDomainModule {
         return SaveMarketTokensUseCase(
             derivationsRepository = derivationsRepository,
             marketsTokenRepository = marketsTokenRepository,
+            walletManagersFacade = walletManagersFacade,
             currenciesRepository = currenciesRepository,
             multiNetworkStatusFetcher = multiNetworkStatusFetcher,
             multiQuoteStatusFetcher = multiQuoteStatusFetcher,
