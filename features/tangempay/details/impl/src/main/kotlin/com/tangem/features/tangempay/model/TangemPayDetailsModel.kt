@@ -5,6 +5,7 @@ import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.common.routing.AppRoute
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -22,6 +23,7 @@ import com.tangem.domain.pay.TangemPaySwapDataFactory
 import com.tangem.domain.pay.model.TangemPayCardBalance
 import com.tangem.domain.pay.repository.CustomerOrderRepository
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
+import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.visa.model.TangemPayCardFrozenState
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import com.tangem.features.tangempay.TangemPayConstants
@@ -59,6 +61,7 @@ import javax.inject.Inject
 internal class TangemPayDetailsModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
+    private val analytics: AnalyticsEventHandler,
     private val router: Router,
     private val urlOpener: UrlOpener,
     private val cardDetailsRepository: TangemPayCardDetailsRepository,
@@ -204,7 +207,7 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     override fun onClickAddFunds() {
         val currentBalance = balance
-        val depositAddress = params.config.depositAddress
+        val depositAddress = currentBalance?.depositAddress
         if (currentBalance == null || depositAddress == null) {
             showBottomSheetError(TangemPayDetailsErrorType.Receive)
         } else {
@@ -222,7 +225,7 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     override fun onClickWithdraw() {
         val currentBalance = balance
-        val depositAddress = params.config.depositAddress
+        val depositAddress = currentBalance?.depositAddress
         if (currentBalance == null || depositAddress == null) {
             showBottomSheetError(TangemPayDetailsErrorType.Withdraw)
         } else {
@@ -328,6 +331,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     }
 
     override fun onClickSwap(data: TangemPayTopUpData) {
+        analytics.send(TangemPayAnalyticsEvents.SwapClicked)
         bottomSheetNavigation.dismiss()
         router.push(
             AppRoute.Swap(
@@ -346,6 +350,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     }
 
     override fun onClickReceive(data: TangemPayTopUpData) {
+        analytics.send(TangemPayAnalyticsEvents.ReceiveFundsClicked)
         bottomSheetNavigation.dismiss()
         val config = TokenReceiveConfig(
             shouldShowWarning = false,
@@ -370,6 +375,6 @@ internal class TangemPayDetailsModel @Inject constructor(
     }
 
     private fun showBottomSheetError(type: TangemPayDetailsErrorType) {
-        uiMessageSender.send(message = TangemPayMessagesFactory.createErrorMessage(type = type))
+        uiMessageSender.send(message = TangemPayMessagesFactory.createErrorMessage(errorType = type))
     }
 }
