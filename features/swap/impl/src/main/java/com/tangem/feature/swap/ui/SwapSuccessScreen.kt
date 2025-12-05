@@ -101,13 +101,15 @@ private fun SwapSuccessScreenContent(state: SwapSuccessStateHolder, padding: Pad
                 .background(TangemTheme.colors.background.action),
         )
         SpacerH16()
-        InputRowDefault(
-            title = TextReference.Res(R.string.common_network_fee_title),
-            text = state.fee,
-            modifier = Modifier
-                .clip(TangemTheme.shapes.roundedCornersXMedium)
-                .background(TangemTheme.colors.background.action),
-        )
+        if (state.fee != TextReference.EMPTY) {
+            InputRowDefault(
+                title = TextReference.Res(R.string.common_network_fee_title),
+                text = state.fee,
+                modifier = Modifier
+                    .clip(TangemTheme.shapes.roundedCornersXMedium)
+                    .background(TangemTheme.colors.background.action),
+            )
+        }
     }
 }
 
