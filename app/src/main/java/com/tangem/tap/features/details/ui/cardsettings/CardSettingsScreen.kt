@@ -116,9 +116,6 @@ private fun ScanCardContent(onScanCardClick: () -> Unit) {
             text = stringResourceSafe(id = R.string.scan_card_settings_message),
             color = TangemTheme.colors.text.secondary,
             style = TangemTheme.typography.body1,
-            modifier = Modifier
-                .verticalScroll(rememberScrollState())
-                .weight(weight = 1f, fill = false),
         )
         Spacer(modifier = Modifier.size(TangemTheme.dimens.size32))
         DetailsMainButton(
