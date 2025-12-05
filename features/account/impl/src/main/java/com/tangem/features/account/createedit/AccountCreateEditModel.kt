@@ -274,7 +274,7 @@ internal class AccountCreateEditModel @Inject constructor(
     private fun showSomethingWrong() {
         val dialogMessage = DialogMessage(
             title = resourceReference(R.string.common_something_went_wrong),
-            message = resourceReference(R.string.account_could_not_create),
+            message = resourceReference(R.string.account_generic_error_dialog_message),
         )
         messageSender.send(dialogMessage)
     }

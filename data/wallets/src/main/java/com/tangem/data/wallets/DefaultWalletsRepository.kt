@@ -344,18 +344,27 @@ internal class DefaultWalletsRepository(
         upgradeWalletNotificationDisabled.update { it.plus(userWalletId) }
     }
 
-    override suspend fun setWalletName(walletId: String, walletName: String) = withContext(dispatchers.io) {
-        val userWallet = userWalletsStore.getSyncOrNull(key = UserWalletId(walletId))
+    override suspend fun setWalletName(walletId: UserWalletId, walletName: String) = withContext(dispatchers.io) {
+        val userWallet = userWalletsStore.getSyncOrNull(key = walletId)
 
         tangemTechApi.updateWallet(
-            walletId = walletId,
+            walletId = walletId.stringValue,
             body = WalletBody(name = walletName, type = WalletType.from(userWallet)),
         ).getOrThrow()
     }
 
-    override suspend fun getWalletInfo(walletId: String): UserWalletRemoteInfo = withContext(dispatchers.io) {
+    override suspend fun upgradeWallet(walletId: UserWalletId) = withContext(dispatchers.io) {
+        val userWallet = userWalletsStore.getSyncStrict(key = walletId)
+
+        tangemTechApi.updateWallet(
+            walletId = walletId.stringValue,
+            body = WalletBody(name = userWallet.name, type = WalletType.from(userWallet)),
+        ).getOrThrow()
+    }
+
+    override suspend fun getWalletInfo(walletId: UserWalletId): UserWalletRemoteInfo = withContext(dispatchers.io) {
         UserWalletRemoteInfoConverter.convert(
-            value = tangemTechApi.getWalletById(walletId).getOrThrow(),
+            value = tangemTechApi.getWalletById(walletId.stringValue).getOrThrow(),
         )
     }
 

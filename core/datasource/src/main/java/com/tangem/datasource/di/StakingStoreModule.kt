@@ -5,6 +5,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.core.DataStoreFactory
 import androidx.datastore.dataStoreFile
 import com.squareup.moshi.Moshi
+import com.tangem.datasource.api.ethpool.models.response.P2PEthPoolAccountResponse
 import com.tangem.datasource.api.stakekit.models.response.model.YieldBalanceWrapperDTO
 import com.tangem.datasource.api.stakekit.models.response.model.YieldDTO
 import com.tangem.datasource.local.datastore.RuntimeDataStore
@@ -75,6 +76,24 @@ internal object StakingStoreModule {
     @Singleton
     fun provideStakingActionsStore(): StakingActionsStore {
         return DefaultStakingActionsStore(dataStore = RuntimeDataStore())
+    }
+
+    @Provides
+    @Singleton
+    fun provideP2PBalancesPersistenceStore(
+        @NetworkMoshi moshi: Moshi,
+        @ApplicationContext context: Context,
+        dispatchers: CoroutineDispatcherProvider,
+    ): DataStore<Map<String, Set<P2PEthPoolAccountResponse>>> {
+        return DataStoreFactory.create(
+            serializer = MoshiDataStoreSerializer(
+                moshi = moshi,
+                types = mapWithStringKeyTypes(valueTypes = setTypes<P2PEthPoolAccountResponse>()),
+                defaultValue = emptyMap(),
+            ),
+            produceFile = { context.dataStoreFile(fileName = "p2p_balances") },
+            scope = CoroutineScope(context = dispatchers.io + SupervisorJob()),
+        )
     }
 
     @Provides

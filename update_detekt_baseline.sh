@@ -55,7 +55,7 @@ module_count=0
 temp_file=$(mktemp)
 
 find . -name "detekt-baseline-debug.xml" -type f | while IFS= read -r file; do
-    issue_count=$(grep -c "<ID>" "$file" 2>/dev/null || echo "0")
+    issue_count=$(grep -c "<ID>" "$file" 2>/dev/null) || issue_count=0
 
     if [ "$issue_count" -gt 0 ]; then
         module_name=$(echo "$file" | sed 's|^\./||' | sed 's|/detekt-baseline-debug.xml$||')
