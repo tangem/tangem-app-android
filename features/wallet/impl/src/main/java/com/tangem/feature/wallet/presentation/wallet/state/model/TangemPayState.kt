@@ -18,9 +18,17 @@ internal sealed class TangemPayState {
         val showProgress: Boolean = false,
     ) : TangemPayState()
 
+    data class FailedIssue(
+        val title: TextReference,
+        val description: TextReference,
+        @DrawableRes val iconRes: Int,
+        val onButtonClick: () -> Unit,
+    ) : TangemPayState()
+
     data class Card(
         val lastFourDigits: TextReference,
         val balanceText: TextReference,
+        val balanceSymbol: TextReference,
         val onClick: () -> Unit,
     ) : TangemPayState()
 

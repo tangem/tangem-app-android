@@ -66,10 +66,12 @@ internal interface TangemPayDataModule {
         fun provideTangemPayMainScreenCustomerInfoUseCase(
             repository: OnboardingRepository,
             customerOrderRepository: CustomerOrderRepository,
+            tangemPayOnboardingRepository: OnboardingRepository,
         ): TangemPayMainScreenCustomerInfoUseCase {
             return TangemPayMainScreenCustomerInfoUseCase(
                 repository = repository,
                 customerOrderRepository = customerOrderRepository,
+                tangemPayOnboardingRepository = tangemPayOnboardingRepository,
             )
         }
 

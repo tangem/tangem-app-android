@@ -15,13 +15,19 @@ import com.tangem.datasource.api.pay.models.response.FreezeUnfreezeCardResponse
 import com.tangem.datasource.local.visa.TangemPayCardFrozenStateStore
 import com.tangem.datasource.local.visa.TangemPayStorage
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.model.OrderStatus
 import com.tangem.domain.pay.model.SetPinResult
 import com.tangem.domain.pay.model.TangemPayCardBalance
 import com.tangem.domain.pay.model.TangemPayCardDetails
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
 import com.tangem.domain.visa.model.TangemPayCardFrozenState
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import timber.log.Timber
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.seconds
 
 private const val TAG = "TangemPay: CardDetailsRepository"
 
@@ -35,6 +41,10 @@ internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
     private val storage: TangemPayStorage,
     private val cardFrozenStateStore: TangemPayCardFrozenStateStore,
 ) : TangemPayCardDetailsRepository {
+
+    private val pollingScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+    private val pollingJobs = mutableMapOf<String, Job>()
+    private val storePollingMutex = Mutex()
 
     override suspend fun getCardBalance(userWalletId: UserWalletId): Either<UniversalError, TangemPayCardBalance> {
         return requestHelper.runWithErrorLogs(TAG) {
@@ -129,7 +139,7 @@ internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
         cardId: String,
     ): Either<UniversalError, TangemPayCardFrozenState> {
         cardFrozenStateStore.store(cardId, TangemPayCardFrozenState.Pending)
-        return requestHelper.makeSafeRequest(userWalletId) {
+        return requestHelper.performRequest(userWalletId) {
             tangemPayApi.freezeCard(authHeader = it, body = FreezeUnfreezeCardRequest(cardId = cardId))
         }.onLeft {
             cardFrozenStateStore.store(cardId, TangemPayCardFrozenState.Unfrozen)
@@ -143,6 +153,14 @@ internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
                 null,
                 -> TangemPayCardFrozenState.Unfrozen
             }
+            if (state == TangemPayCardFrozenState.Pending) {
+                startOrderIdPolling(
+                    userWalletId = userWalletId,
+                    cardId = cardId,
+                    orderId = response.result?.orderId,
+                    isFreeze = true,
+                )
+            }
             cardFrozenStateStore.store(cardId, state)
 
             state
@@ -154,7 +172,7 @@ internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
         cardId: String,
     ): Either<UniversalError, TangemPayCardFrozenState> {
         cardFrozenStateStore.store(cardId, TangemPayCardFrozenState.Pending)
-        return requestHelper.makeSafeRequest(userWalletId) {
+        return requestHelper.performRequest(userWalletId) {
             tangemPayApi.unfreezeCard(authHeader = it, body = FreezeUnfreezeCardRequest(cardId = cardId))
         }.onLeft {
             cardFrozenStateStore.store(cardId, TangemPayCardFrozenState.Frozen)
@@ -168,9 +186,73 @@ internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
                 null,
                 -> TangemPayCardFrozenState.Frozen
             }
+            if (state == TangemPayCardFrozenState.Pending) {
+                startOrderIdPolling(
+                    userWalletId = userWalletId,
+                    cardId = cardId,
+                    orderId = response.result?.orderId,
+                    isFreeze = false,
+                )
+            }
             cardFrozenStateStore.store(cardId, state)
 
             state
+        }
+    }
+
+    private suspend fun startOrderIdPolling(
+        userWalletId: UserWalletId,
+        cardId: String,
+        orderId: String?,
+        isFreeze: Boolean,
+    ) {
+        if (orderId.isNullOrEmpty()) return
+        storePollingMutex.withLock {
+            if (pollingJobs.containsKey(orderId)) return
+            val pollingJob = pollingScope.launch {
+                try {
+                    var retryCount = 0
+                    while (isActive && pollingJobs.containsKey(orderId)) {
+                        delay(duration = 5.seconds)
+
+                        val orderStatus = requestHelper.performRequest(userWalletId) { authHeader ->
+                            tangemPayApi.getOrder(authHeader, orderId)
+                        }
+
+                        orderStatus.onRight { response ->
+                            val status = response.result?.status
+                            if (status == OrderStatus.COMPLETED.apiName || status == OrderStatus.CANCELED.apiName) {
+                                // Remove from jobs
+                                pollingJobs.remove(key = orderId)
+
+                                // Final card state
+                                val finalState = when {
+                                    status == OrderStatus.COMPLETED.apiName && isFreeze
+                                    -> TangemPayCardFrozenState.Frozen
+                                    status == OrderStatus.COMPLETED.apiName && !isFreeze
+                                    -> TangemPayCardFrozenState.Unfrozen
+                                    else -> return@launch
+                                }
+
+                                cardFrozenStateStore.store(cardId, finalState)
+                            }
+                        }.onLeft { error ->
+                            Timber.e("error ${error.errorCode}")
+                            // stop retrying after 3 errors
+                            if (retryCount > MAX_POLLING_RETRIES) {
+                                pollingJobs.remove(key = orderId)
+                            }
+                        }
+                        retryCount++
+                    }
+                } catch (e: Exception) {
+                    Timber.e(e)
+                    storePollingMutex.withLock {
+                        pollingJobs.remove(orderId)
+                    }
+                }
+            }
+            pollingJobs[orderId] = pollingJob
         }
     }
 
@@ -194,5 +276,9 @@ internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
             -> visaLibLoader.getOrCreateConfig().rainRSAPublicKey.dev
             ApiEnvironment.PROD -> visaLibLoader.getOrCreateConfig().rainRSAPublicKey.prod
         }
+    }
+
+    private companion object {
+        const val MAX_POLLING_RETRIES = 3
     }
 }
