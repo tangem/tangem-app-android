@@ -7,6 +7,7 @@ import arrow.core.raise.Raise
 import arrow.core.raise.catch
 import arrow.core.raise.either
 import arrow.core.raise.ensure
+import com.tangem.domain.account.fetcher.SingleAccountListFetcher
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.models.ArchivedAccount
 import com.tangem.domain.account.repository.AccountsCRUDRepository
@@ -23,6 +24,8 @@ import com.tangem.domain.models.wallet.UserWalletId
  *
  * @property crudRepository repository for performing CRUD operations on accounts
  * @property mainAccountTokensMigration handles the migration of tokens from the main account to the recovered account
+ * @property cryptoCurrencyBalanceFetcher Fetcher for updating crypto currency balances.
+ * @property singleAccountListFetcher fetches the list of accounts for a single user wallet
  *
 [REDACTED_AUTHOR]
  */
@@ -30,6 +33,7 @@ class RecoverCryptoPortfolioUseCase(
     private val crudRepository: AccountsCRUDRepository,
     private val mainAccountTokensMigration: MainAccountTokensMigration,
     private val cryptoCurrencyBalanceFetcher: CryptoCurrencyBalanceFetcher,
+    private val singleAccountListFetcher: SingleAccountListFetcher,
 ) {
 
     /**
@@ -38,6 +42,8 @@ class RecoverCryptoPortfolioUseCase(
      * @param accountId the unique identifier of the account to recover
      */
     suspend operator fun invoke(accountId: AccountId): Either<Error, Account.CryptoPortfolio> = either {
+        fetchAccountList(userWalletId = accountId.userWalletId)
+
         val accountList = getAccountList(userWalletId = accountId.userWalletId)
 
         ensure(accountList.canAddMoreAccounts) {
@@ -60,6 +66,12 @@ class RecoverCryptoPortfolioUseCase(
         refreshBalances(accountId = accountId)
 
         recoveredAccount
+    }
+
+    private suspend fun Raise<Error>.fetchAccountList(userWalletId: UserWalletId) {
+        singleAccountListFetcher(params = SingleAccountListFetcher.Params(userWalletId)).onLeft {
+            raise(Error.DataOperationFailed(cause = it))
+        }
     }
 
     private suspend fun Raise<Error>.getAccountList(userWalletId: UserWalletId): AccountList {
