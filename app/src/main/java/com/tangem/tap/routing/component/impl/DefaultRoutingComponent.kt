@@ -10,6 +10,9 @@ import com.arkivanov.essenty.lifecycle.subscribe
 import com.google.android.material.snackbar.Snackbar
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.entity.InitScreenLaunchMode
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.Basic
+import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.context.childByContext
@@ -23,6 +26,7 @@ import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.onboarding.repository.OnboardingRepository
 import com.tangem.features.hotwallet.HotAccessCodeRequestComponent
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.hotwallet.accesscoderequest.proxy.HotWalletPasswordRequesterProxy
 import com.tangem.features.walletconnect.components.WcRoutingComponent
 import com.tangem.hot.sdk.TangemHotSdk
@@ -59,6 +63,9 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
     private val userWalletsListRepository: UserWalletsListRepository,
     private val cardRepository: CardRepository,
     private val onboardingRepository: OnboardingRepository,
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
+    private val trackingContextProxy: TrackingContextProxy,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : RoutingComponent,
     AppComponentContext by context,
     SnackbarHandler {
@@ -130,6 +137,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
                 )
             }
             else -> {
+                trackSignInEvent()
                 AppRoute.Wallet
             }
         }.also {
@@ -212,6 +220,21 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
         componentScope.launch(dispatchers.main) {
             val onboardingScanResponse = onboardingRepository.getUnfinishedFinalizeOnboarding() ?: return@launch
             store.dispatch(GlobalAction.ShowDialog(BackupDialog.UnfinishedBackupFound(onboardingScanResponse)))
+        }
+    }
+
+    private suspend fun trackSignInEvent() {
+        if (hotWalletFeatureToggles.isHotWalletEnabled) {
+            val userWallets = userWalletsListRepository.userWalletsSync()
+            val selectedWallet = userWalletsListRepository.selectedUserWalletSync() ?: return
+            trackingContextProxy.proceedWithContext(selectedWallet) {
+                analyticsEventHandler.send(
+                    event = Basic.SignedIn(
+                        signInType = Basic.SignedIn.SignInType.NoSecurity,
+                        walletsCount = userWallets.size,
+                    ),
+                )
+            }
         }
     }
 }
