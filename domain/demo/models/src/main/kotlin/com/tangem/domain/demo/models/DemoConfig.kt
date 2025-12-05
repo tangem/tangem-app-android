@@ -4,7 +4,7 @@ import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.Blockchain
 import java.math.BigDecimal
 
-@Suppress("LargeClass")
+@Suppress("LargeClass", "ClassOrdering", "PropertyUsedBeforeDeclaration")
 object DemoConfig {
 
     /**
@@ -65,7 +65,6 @@ object DemoConfig {
         return (releaseDemoCardIds + testDemoCardIds).distinct()
     }
 
-    @Suppress("ClassOrdering")
     private val releaseDemoCardIds = mutableListOf(
         // === Not from the Google Sheet table ===
         "AC01000000041225",
@@ -449,7 +448,6 @@ object DemoConfig {
         "AF10100000000084",
     )
 
-    @Suppress("ClassOrdering")
     private val testDemoCardIds = listOf(
         "FB20000000000186", // Note ETH
         "FB10000000000196", // Note BTC
@@ -457,6 +455,5 @@ object DemoConfig {
         "FB04000000000152", // Wallet 2
     )
 
-    @Suppress("ClassOrdering")
     private val debugTestDemoCardIds = emptyList<String>()
 }
