@@ -4,6 +4,7 @@ import arrow.core.Either
 import com.tangem.core.error.UniversalError
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.WithdrawalResult
 import com.tangem.domain.pay.repository.TangemPaySwapRepository
 import com.tangem.domain.tangempay.TangemPayWithdrawUseCase
 import java.math.BigDecimal
@@ -18,7 +19,7 @@ internal class DefaultTangemPayWithdrawUseCase @Inject constructor(
         cryptoAmount: BigDecimal,
         cryptoCurrencyId: CryptoCurrency.RawID,
         receiverCexAddress: String,
-    ): Either<UniversalError, Unit> {
+    ): Either<UniversalError, WithdrawalResult> {
         return repository.withdraw(
             userWalletId = userWalletId,
             cryptoAmount = cryptoAmount,
