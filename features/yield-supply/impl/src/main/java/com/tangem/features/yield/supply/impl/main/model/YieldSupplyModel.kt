@@ -42,6 +42,7 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 import kotlin.properties.Delegates
+import java.util.concurrent.atomic.AtomicBoolean
 
 @Suppress("LongParameterList", "LargeClass")
 @ModelScoped
@@ -70,10 +71,10 @@ internal class YieldSupplyModel @Inject constructor(
     private val cryptoCurrency = params.cryptoCurrency
     var userWallet: UserWallet by Delegates.notNull()
 
-    private var lastYieldSupplyStatus: YieldSupplyStatus? = null
     private val fetchCurrencyJobHolder = JobHolder()
 
     private var lastStatusCheckTimestamp = 0L
+    private val isFirstCryptoCurrencyStatusEmission = AtomicBoolean(true)
 
     init {
         checkIfYieldSupplyIsAvailable()
@@ -101,6 +102,9 @@ internal class YieldSupplyModel @Inject constructor(
                     ).onEach { maybeCryptoCurrency ->
                         maybeCryptoCurrency.fold(
                             ifRight = { cryptoCurrencyStatus ->
+                                if (isFirstCryptoCurrencyStatusEmission.compareAndSet(true, false)) {
+                                    sendInfoAboutProtocolStatus(cryptoCurrencyStatus)
+                                }
                                 onCryptoCurrencyStatusUpdated(cryptoCurrencyStatus)
                             },
                             ifLeft = {
@@ -238,7 +242,6 @@ internal class YieldSupplyModel @Inject constructor(
                     cryptoCurrency = cryptoCurrency,
                     yieldSupplyEnterStatus = null,
                 )
-                sendInfoAboutProtocolStatus(cryptoCurrencyStatus)
                 if (yieldSupplyStatus?.isActive == true) {
                     loadActiveState(
                         cryptoCurrencyStatus = cryptoCurrencyStatus,
@@ -348,7 +351,6 @@ internal class YieldSupplyModel @Inject constructor(
     }
 
     private fun sendInfoAboutProtocolStatus(cryptoCurrencyStatus: CryptoCurrencyStatus) {
-        if (lastYieldSupplyStatus == cryptoCurrencyStatus.value.yieldSupplyStatus) return
         val token = cryptoCurrency as? CryptoCurrency.Token ?: return
         val address = cryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value ?: return
         modelScope.launch(dispatchers.default) {
@@ -357,13 +359,9 @@ internal class YieldSupplyModel @Inject constructor(
                     userWalletId = userWallet.walletId,
                     cryptoCurrency = token,
                     address = address,
-                ).onRight {
-                    lastYieldSupplyStatus = cryptoCurrencyStatus.value.yieldSupplyStatus
-                }
+                )
             } else {
-                yieldSupplyDeactivateUseCase(token, address).onRight {
-                    lastYieldSupplyStatus = cryptoCurrencyStatus.value.yieldSupplyStatus
-                }
+                yieldSupplyDeactivateUseCase(token, address)
             }
         }
     }
