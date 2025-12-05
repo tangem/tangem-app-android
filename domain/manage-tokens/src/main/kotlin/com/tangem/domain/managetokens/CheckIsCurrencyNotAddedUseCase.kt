@@ -15,6 +15,11 @@ class CheckIsCurrencyNotAddedUseCase(
         derivationPath: Network.DerivationPath,
         contractAddress: String?,
     ): Either<Throwable, Boolean> = Either.catch {
-        repository.isCurrencyNotAdded(userWalletId, networkId, derivationPath, contractAddress)
+        repository.isCurrencyNotAdded(
+            userWalletId = userWalletId,
+            networkId = networkId,
+            derivationPath = derivationPath,
+            contractAddress = contractAddress,
+        )
     }
 }
