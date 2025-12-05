@@ -23,4 +23,6 @@ interface TrackingContextProxy {
     fun addHotWalletContext()
 
     fun removeContext()
+
+    fun proceedWithContext(userWallet: UserWallet, action: () -> Unit)
 }
