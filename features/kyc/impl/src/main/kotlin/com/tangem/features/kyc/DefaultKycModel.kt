@@ -1,11 +1,13 @@
 package com.tangem.features.kyc
 
 import androidx.compose.runtime.Stable
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.domain.pay.KycStartInfo
 import com.tangem.domain.pay.repository.KycRepository
+import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,6 +19,7 @@ import javax.inject.Inject
 @ModelScoped
 class DefaultKycModel @Inject constructor(
     paramsContainer: ParamsContainer,
+    analytics: AnalyticsEventHandler,
     override val dispatchers: CoroutineDispatcherProvider,
     private val kycRepository: KycRepository,
 ) : Model() {
@@ -27,6 +30,7 @@ class DefaultKycModel @Inject constructor(
     val uiState = _uiState.asStateFlow()
 
     init {
+        analytics.send(TangemPayAnalyticsEvents.KycFlowOpened)
         modelScope.launch {
             try {
                 kycRepository.getKycStartInfo(params.userWalletId).getOrNull()?.let { _uiState.emit(it) }
