@@ -59,7 +59,12 @@ sealed class TangemPayTxHistoryItem {
         override val amount: SerializedBigDecimal,
         override val currency: SerializedCurrency,
         val transactionHash: String,
+        val type: Type,
     ) : TangemPayTxHistoryItem()
+
+    enum class Type {
+        Deposit, Withdrawal
+    }
 
     enum class Status {
         PENDING,
