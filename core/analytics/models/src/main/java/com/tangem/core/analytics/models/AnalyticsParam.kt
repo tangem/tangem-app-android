@@ -83,12 +83,14 @@ sealed class AnalyticsParam {
         data object Onboarding : ScreensSources("Onboarding")
         data object LongTap : ScreensSources("Long Tap")
         data object Markets : ScreensSources("Markets")
-        data object HotWallet : ScreensSources("Hot Wallet")
         data object TangemPay : ScreensSources("Tangem Pay")
         data object WalletSettings : ScreensSources("Wallet Settings")
         data object Upgrade : ScreensSources("Upgrade")
         data object HardwareWallet : ScreensSources("Hardware Wallet")
         data object ImportWallet : ScreensSources("Import Wallet")
+        data object CreateNewWallet : ScreensSources("Create New Wallet")
+        data object AddNewWallet : ScreensSources("Add New Wallet")
+        data object CreateWallet : ScreensSources("Create Wallet")
     }
 
     sealed class TxSentFrom(val value: String) {

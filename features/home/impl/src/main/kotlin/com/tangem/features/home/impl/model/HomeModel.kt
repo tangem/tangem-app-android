@@ -8,8 +8,8 @@ import com.tangem.common.routing.AppRouter
 import com.tangem.common.routing.entity.InitScreenLaunchMode
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
-import com.tangem.core.analytics.models.Basic.SignedIn
-import com.tangem.core.analytics.models.Basic.SignedIn.SignInType
+import com.tangem.core.analytics.models.Basic.SignedInLegacy
+import com.tangem.core.analytics.models.Basic.SignedInLegacy.SignInType
 import com.tangem.core.decompose.di.GlobalUiMessageSender
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -127,7 +127,7 @@ internal class HomeModel @Inject constructor(
     }
 
     private fun onScanClick() {
-        analyticsEventHandler.send(IntroductionProcess.ButtonScanCard)
+        analyticsEventHandler.send(IntroductionProcess.ButtonScanCardLegacy)
         scanCard()
     }
 
@@ -212,7 +212,7 @@ internal class HomeModel @Inject constructor(
         val currency = ParamCardCurrencyConverter().convert(value = scanResponse.cardTypesResolver)
         if (currency != null) {
             analyticsEventHandler.send(
-                SignedIn(
+                SignedInLegacy(
                     currency = currency,
                     batch = scanResponse.card.batchId,
                     signInType = SignInType.Card,
