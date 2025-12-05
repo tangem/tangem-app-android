@@ -5,14 +5,26 @@ import arrow.core.left
 import arrow.core.right
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
+import com.tangem.common.extensions.calculateSha256
+import com.tangem.common.extensions.toHexString
 import com.tangem.data.walletconnect.utils.WC_TAG
 import com.tangem.domain.walletconnect.model.WcRequestError
 import com.tangem.domain.walletconnect.model.sdkcopy.WcSdkSessionRequest
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.suspendCancellableCoroutine
+import org.joda.time.Duration
 import timber.log.Timber
 import kotlin.coroutines.resume
 
 internal class DefaultWcRespondService : WcRespondService {
+
+    internal val expireDuration = Duration.standardSeconds(120)
+    internal val cachedRequest = MutableStateFlow<Set<Pair<Long, String>>>(emptySet())
+
+    internal fun sessionRequestHash(request: WcSdkSessionRequest): String {
+        return request.request.params.calculateSha256().toHexString()
+    }
 
     override suspend fun respond(request: WcSdkSessionRequest, response: String): Either<WcRequestError, String> =
         suspendCancellableCoroutine { continuation ->
@@ -56,6 +68,7 @@ internal class DefaultWcRespondService : WcRespondService {
 
     override fun rejectRequestNonBlock(request: WcSdkSessionRequest, message: String) {
         Timber.tag(WC_TAG).i("reject request $request")
+        removeCachedRequest(request)
         WalletKit.respondSessionRequest(
             params = Wallet.Params.SessionRequestResponse(
                 sessionTopic = request.topic,
@@ -68,5 +81,11 @@ internal class DefaultWcRespondService : WcRespondService {
             onSuccess = {},
             onError = {},
         )
+    }
+
+    private fun removeCachedRequest(request: WcSdkSessionRequest) {
+        cachedRequest.update { set ->
+            set.filterTo(mutableSetOf()) { (_, hash) -> hash != sessionRequestHash(request) }
+        }
     }
 }
