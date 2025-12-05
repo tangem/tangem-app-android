@@ -42,7 +42,7 @@ internal object FeedbackModule {
             emailSender = emailSender,
             appVersionProvider = appVersionProvider,
             userWalletsListRepository = userWalletsListRepository,
-            useNewUserWalletsRepository = hotWalletFeatureToggles.isHotWalletEnabled,
+            shouldUseNewUserWalletsRepository = hotWalletFeatureToggles.isHotWalletEnabled,
             getSelectedWalletUseCase = getSelectedWalletUseCase,
         )
     }
