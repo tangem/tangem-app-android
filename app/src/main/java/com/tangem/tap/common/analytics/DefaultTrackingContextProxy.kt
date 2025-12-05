@@ -25,8 +25,6 @@ internal class DefaultTrackingContextProxy(private val abTestsManager: ABTestsMa
     override fun setContext(scanResponse: ScanResponse) {
         val userWalletId = UserWalletIdBuilder.scanResponse(scanResponse).build()
 
-        Analytics.setContext(userWalletId, scanResponse)
-
         abTestsManager.setUserProperties(
             userId = calculateUserIdHash(userWalletId),
             batch = scanResponse.card.batchId,
@@ -71,6 +69,12 @@ internal class DefaultTrackingContextProxy(private val abTestsManager: ABTestsMa
 
     override fun removeContext() {
         Analytics.removeContext()
+    }
+
+    override fun proceedWithContext(userWallet: UserWallet, action: () -> Unit) {
+        setContext(userWallet)
+        action()
+        eraseContext()
     }
 
     private fun calculateUserIdHash(userWalletId: UserWalletId?): String? {
