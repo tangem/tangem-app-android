@@ -26,7 +26,7 @@ import java.io.File
  *
  * @property appLogsStore           app logs store
  * @property userWalletsListManager user wallets list manager
- * @property useNewUserWalletsRepository flag to use new user wallets repository
+ * @property shouldUseNewUserWalletsRepository flag to use new user wallets repository
  * @property userWalletsListRepository   user wallets repository
  * @property walletManagersStore    wallet managers store
  * @property emailSender            email sender
@@ -37,7 +37,7 @@ import java.io.File
 @Suppress("LongParameterList")
 internal class DefaultFeedbackRepository(
     private val appLogsStore: AppLogsStore,
-    private val useNewUserWalletsRepository: Boolean,
+    private val shouldUseNewUserWalletsRepository: Boolean,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val userWalletsListManager: UserWalletsListManager,
     private val walletManagersStore: WalletManagersStore,
@@ -97,9 +97,9 @@ internal class DefaultFeedbackRepository(
     override fun saveBlockchainErrorInfo(error: BlockchainErrorInfo) {
         val userWallet = getSelectedWalletUseCase.sync().getOrNull() ?: error("UserWallet is not selected")
 
-        blockchainsErrors.update {
-            it.toMutableMap().apply {
-                put(userWallet.walletId, error)
+        blockchainsErrors.update { map ->
+            map.toMutableMap().apply {
+                this[userWallet.walletId] = error
             }
         }
     }
@@ -126,7 +126,7 @@ internal class DefaultFeedbackRepository(
     }
 
     private suspend fun getUserWalletById(userWalletId: UserWalletId): UserWallet? {
-        return if (useNewUserWalletsRepository) {
+        return if (shouldUseNewUserWalletsRepository) {
             userWalletsListRepository.userWalletsSync().find { it.walletId == userWalletId }
         } else {
             userWalletsListManager.userWalletsSync.find { it.walletId == userWalletId }
@@ -134,7 +134,7 @@ internal class DefaultFeedbackRepository(
     }
 
     private fun totalUserWallets(): Int {
-        return if (useNewUserWalletsRepository) {
+        return if (shouldUseNewUserWalletsRepository) {
             userWalletsListRepository.userWallets.value?.size ?: 0
         } else {
             userWalletsListManager.walletsCount
