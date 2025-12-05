@@ -189,4 +189,14 @@ internal object YieldSupplyDomainModule {
             dispatcherProvider = dispatcherProvider,
         )
     }
+
+    @Provides
+    @Singleton
+    fun provideYieldSupplyEnterStatusUseCase(
+        yieldSupplyRepository: YieldSupplyRepository,
+    ): YieldSupplyEnterStatusUseCase {
+        return YieldSupplyEnterStatusUseCase(
+            yieldSupplyRepository = yieldSupplyRepository,
+        )
+    }
 }
