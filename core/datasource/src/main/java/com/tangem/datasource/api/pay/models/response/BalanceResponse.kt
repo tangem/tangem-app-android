@@ -25,7 +25,7 @@ data class FiatBalance(
 data class CryptoBalance(
     @Json(name = "id") val id: String,
     @Json(name = "chain_id") val chainId: Int,
-    @Json(name = "deposit_address") val depositAddress: String,
+    @Json(name = "deposit_address") val depositAddress: String?,
     @Json(name = "token_contract_address") val tokenContractAddress: String,
     @Json(name = "balance") val balance: BigDecimal,
 )
