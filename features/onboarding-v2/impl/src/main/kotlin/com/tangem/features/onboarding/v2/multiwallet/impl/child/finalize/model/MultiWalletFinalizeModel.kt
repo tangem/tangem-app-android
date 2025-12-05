@@ -41,6 +41,7 @@ import com.tangem.sdk.api.BackupServiceHolder
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.utils.StringsSigns
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.runSuspendCatching
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -91,7 +92,8 @@ internal class MultiWalletFinalizeModel @Inject constructor(
             // sets proper artwork state for initial step
             // (if we start from backup cards, we need to show proper artwork) ([REDACTED_TASK_KEY])
             when (getInitialStep()) {
-                MultiWalletFinalizeUM.Step.Primary -> { /* state is already set */ }
+                MultiWalletFinalizeUM.Step.Primary -> { /* state is already set */
+                }
                 MultiWalletFinalizeUM.Step.BackupDevice1 -> {
                     onEvent.emit(MultiWalletFinalizeComponent.Event.OneBackupCardAdded)
                 }
@@ -299,7 +301,11 @@ internal class MultiWalletFinalizeModel @Inject constructor(
                                     .updateWithHotWallet(wallet),
                             )
                         },
-                    ).getOrElse {
+                    ).onRight {
+                        launch(NonCancellable) {
+                            runSuspendCatching { walletsRepository.upgradeWallet(userWalletCreated.walletId) }
+                        }
+                    }.getOrElse {
                         error("Failed to upgrade to cold wallet. Error: $it")
                     }
                 }
