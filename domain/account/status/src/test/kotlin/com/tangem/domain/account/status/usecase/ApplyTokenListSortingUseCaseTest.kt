@@ -348,6 +348,7 @@ internal class ApplyTokenListSortingUseCaseTest {
                 customAccount, // unchanged due to error
             ),
             totalAccounts = accountList.totalAccounts,
+            totalArchivedAccounts = accountList.totalArchivedAccounts,
             sortType = TokensSortType.NONE,
             groupType = TokensGroupType.NONE,
         )

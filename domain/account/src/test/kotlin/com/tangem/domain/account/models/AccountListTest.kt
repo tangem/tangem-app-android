@@ -87,6 +87,7 @@ internal class AccountListTest {
                 userWalletId = userWalletId,
                 accounts = accounts,
                 totalAccounts = accounts.size,
+                totalArchivedAccounts = 0,
                 sortType = sortType,
                 groupType = groupType,
             )
@@ -96,6 +97,7 @@ internal class AccountListTest {
                 userWalletId = userWalletId,
                 accounts = accounts,
                 totalAccounts = accounts.size,
+                totalArchivedAccounts = 0,
                 sortType = sortType,
                 groupType = groupType,
             )
@@ -110,6 +112,7 @@ internal class AccountListTest {
                 userWalletId = userWalletId,
                 accounts = model.accounts,
                 totalAccounts = model.totalAccounts,
+                totalArchivedAccounts = 0,
             )
 
             // Assert
@@ -206,12 +209,14 @@ internal class AccountListTest {
                         userWalletId = userWalletId,
                         accounts = listOf(mainAccount),
                         totalAccounts = 1,
+                        totalArchivedAccounts = 0,
                     ).getOrNull()!!,
                     toAdd = newAccount,
                     expected = AccountList(
                         userWalletId = userWalletId,
                         accounts = listOf(mainAccount, newAccount),
                         totalAccounts = 2,
+                        totalArchivedAccounts = 0,
                     ),
                 )
             },
@@ -226,12 +231,14 @@ internal class AccountListTest {
                         userWalletId = userWalletId,
                         accounts = listOf(mainAccount),
                         totalAccounts = 1,
+                        totalArchivedAccounts = 0,
                     ).getOrNull()!!,
                     toAdd = newAccount,
                     expected = AccountList(
                         userWalletId = userWalletId,
                         accounts = listOf(newAccount),
                         totalAccounts = 1,
+                        totalArchivedAccounts = 0,
                     ),
                 )
             },
@@ -252,6 +259,7 @@ internal class AccountListTest {
                         userWalletId = userWalletId,
                         accounts = listOf(mainAccount),
                         totalAccounts = 1,
+                        totalArchivedAccounts = 0,
                     ).getOrNull()!!,
                     toAdd = newAccount,
                     expected = AccountList.Error.MainAccountNotFound.left(),
@@ -268,6 +276,7 @@ internal class AccountListTest {
                         userWalletId = userWalletId,
                         accounts = listOf(mainAccount),
                         totalAccounts = 1,
+                        totalArchivedAccounts = 0,
                     ).getOrNull()!!,
                     toAdd = newAccount,
                     expected = AccountList.Error.ExceedsMaxMainAccountsCount.left(),
@@ -284,6 +293,7 @@ internal class AccountListTest {
                         userWalletId = userWalletId,
                         accounts = listOf(mainAccount),
                         totalAccounts = 1,
+                        totalArchivedAccounts = 0,
                     ).getOrNull()!!,
                     toAdd = newAccount,
                     expected = AccountList.Error.DuplicateAccountNames.left(),
@@ -296,6 +306,7 @@ internal class AccountListTest {
                     userWalletId = userWalletId,
                     accounts = createAccounts(count = 20),
                     totalAccounts = 20,
+                    totalArchivedAccounts = 0,
                 ).getOrNull()!!,
                 toAdd = createAccount(derivationIndex = 21),
                 expected = AccountList.Error.ExceedsMaxAccountsCount.left(),
@@ -335,12 +346,14 @@ internal class AccountListTest {
                         userWalletId = userWalletId,
                         accounts = listOf(mainAccount, secondaryAccount),
                         totalAccounts = 2,
+                        totalArchivedAccounts = 0,
                     ).getOrNull()!!,
                     toRemove = secondaryAccount,
                     expected = AccountList(
                         userWalletId = userWalletId,
                         accounts = listOf(mainAccount),
                         totalAccounts = 1,
+                        totalArchivedAccounts = 0,
                     ),
                 )
             },
@@ -354,6 +367,7 @@ internal class AccountListTest {
                     userWalletId = userWalletId,
                     accounts = listOf(mainAccount),
                     totalAccounts = 1,
+                    totalArchivedAccounts = 0,
                 )
 
                 MinusTestModel(
@@ -372,6 +386,7 @@ internal class AccountListTest {
                         userWalletId = userWalletId,
                         accounts = listOf(mainAccount),
                         totalAccounts = 1,
+                        totalArchivedAccounts = 0,
                     ).getOrNull()!!,
                     toRemove = mainAccount,
                     expected = AccountList.Error.EmptyAccountsList.left(),
@@ -388,6 +403,7 @@ internal class AccountListTest {
                         userWalletId = userWalletId,
                         accounts = listOf(mainAccount, secondaryAccount),
                         totalAccounts = 2,
+                        totalArchivedAccounts = 0,
                     ).getOrNull()!!,
                     toRemove = mainAccount,
                     expected = AccountList.Error.MainAccountNotFound.left(),
