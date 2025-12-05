@@ -9,6 +9,7 @@ import com.tangem.domain.visa.model.TangemPayCardFrozenState
 import com.tangem.feature.wallet.child.wallet.model.TangemPayMainInfoManager
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
+import com.tangem.feature.wallet.presentation.wallet.analytics.utils.WalletTangemPayAnalyticsEventSender
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.TangemPayHiddenStateTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.TangemPayRefreshNeededStateTransformer
@@ -21,6 +22,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.*
 import timber.log.Timber
 
+@Suppress("LongParameterList")
 internal class TangemPayMainSubscriber @AssistedInject constructor(
     @Assisted private val userWallet: UserWallet,
     private val stateController: WalletStateController,
@@ -28,6 +30,7 @@ internal class TangemPayMainSubscriber @AssistedInject constructor(
     private val innerWalletRouter: InnerWalletRouter,
     private val cardDetailsRepository: TangemPayCardDetailsRepository,
     private val tangemPayMainInfoManager: TangemPayMainInfoManager,
+    private val analytics: WalletTangemPayAnalyticsEventSender,
 ) : WalletSubscriber() {
 
     override fun create(coroutineScope: CoroutineScope): Flow<*> {
@@ -63,7 +66,10 @@ internal class TangemPayMainSubscriber @AssistedInject constructor(
                             )
                         }
                     }
-                }.onRight { data -> updateTangemPay(data, userWalletId) }
+                }.onRight { data ->
+                    updateTangemPay(data, userWalletId)
+                    analytics.send(customerInfo = data)
+                }
             }
     }
 
