@@ -15,6 +15,7 @@ import com.tangem.features.tangempay.entity.TangemPayTxHistoryDetailsUM
 import com.tangem.features.tangempay.entity.TangemPayTxHistoryDetailsUM.ButtonState
 import com.tangem.utils.StringsSigns
 import com.tangem.utils.converter.Converter
+import com.tangem.utils.extensions.isPositive
 import com.tangem.utils.extensions.isZero
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -51,7 +52,10 @@ internal object TangemPayTxHistoryDetailsConverter :
 
     private fun TangemPayTxHistoryItem.extractIcon(): ImageReference {
         return when (this) {
-            is TangemPayTxHistoryItem.Collateral -> ImageReference.Res(R.drawable.ic_arrow_up_24)
+            is TangemPayTxHistoryItem.Collateral -> when (this.type) {
+                TangemPayTxHistoryItem.Type.Deposit -> ImageReference.Res(R.drawable.ic_arrow_down_24)
+                TangemPayTxHistoryItem.Type.Withdrawal -> ImageReference.Res(R.drawable.ic_arrow_up_24)
+            }
             is TangemPayTxHistoryItem.Fee -> ImageReference.Res(R.drawable.ic_percent_24)
             is TangemPayTxHistoryItem.Payment -> ImageReference.Res(R.drawable.ic_arrow_up_24)
             is TangemPayTxHistoryItem.Spend -> {
@@ -69,7 +73,10 @@ internal object TangemPayTxHistoryDetailsConverter :
         return when (this) {
             is TangemPayTxHistoryItem.Spend -> stringReference(this.enrichedMerchantName ?: this.merchantName)
             is TangemPayTxHistoryItem.Payment -> resourceReference(R.string.tangem_pay_withdrawal)
-            is TangemPayTxHistoryItem.Collateral -> resourceReference(R.string.tangem_pay_withdrawal)
+            is TangemPayTxHistoryItem.Collateral -> when (this.type) {
+                TangemPayTxHistoryItem.Type.Deposit -> resourceReference(R.string.tangem_pay_deposit)
+                TangemPayTxHistoryItem.Type.Withdrawal -> resourceReference(R.string.tangem_pay_withdrawal)
+            }
             is TangemPayTxHistoryItem.Fee -> {
                 this.description?.let(::stringReference) ?: resourceReference(R.string.tangem_pay_fee_title)
             }
@@ -113,7 +120,11 @@ internal object TangemPayTxHistoryDetailsConverter :
                 amountPrefix + amount
             }
             is TangemPayTxHistoryItem.Collateral -> {
-                val amountPrefix = if (this.amount.isZero()) "" else StringsSigns.MINUS
+                val amountPrefix = when {
+                    this.amount.isZero() -> ""
+                    this.amount.isPositive() -> StringsSigns.PLUS
+                    else -> StringsSigns.MINUS
+                }
                 val amount = this.amount.abs().format {
                     fiat(
                         fiatCurrencyCode = this@extractAmount.currency.currencyCode,
@@ -131,7 +142,10 @@ internal object TangemPayTxHistoryDetailsConverter :
             is TangemPayTxHistoryItem.Spend,
             is TangemPayTxHistoryItem.Payment,
             -> themedColor { TangemTheme.colors.text.primary1 }
-            is TangemPayTxHistoryItem.Collateral -> themedColor { TangemTheme.colors.text.primary1 }
+            is TangemPayTxHistoryItem.Collateral -> when (this.type) {
+                TangemPayTxHistoryItem.Type.Deposit -> themedColor { TangemTheme.colors.text.accent }
+                TangemPayTxHistoryItem.Type.Withdrawal -> themedColor { TangemTheme.colors.text.primary1 }
+            }
         }
     }
 
