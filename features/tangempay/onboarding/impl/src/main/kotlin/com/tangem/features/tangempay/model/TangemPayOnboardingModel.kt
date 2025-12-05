@@ -60,9 +60,9 @@ internal class TangemPayOnboardingModel @Inject constructor(
     }
 
     private fun showOnboarding() {
-        uiState.update {
+        uiState.update { state ->
             TangemPayOnboardingScreenState.Content(
-                onBack = it.onBack,
+                onBack = state.onBack,
                 onTermsClick = ::onTermsClick,
                 buttonConfig = TangemPayOnboardingScreenState.Content.ButtonConfig(
                     isLoading = false,
@@ -97,6 +97,7 @@ internal class TangemPayOnboardingModel @Inject constructor(
         urlOpener.openUrl(TangemPayConstants.TERMS_AND_LIMITS_LINK)
     }
 
+    @Suppress("NullableToStringCall")
     private fun onGetCardClick() {
         analytics.send(TangemPayAnalyticsEvents.GetCardClicked)
         uiState.transformerUpdate(TangemPayOnboardingButtonLoadingTransformer(isLoading = true))
@@ -114,8 +115,8 @@ internal class TangemPayOnboardingModel @Inject constructor(
             repository.getCustomerInfo(
                 userWalletId = userWalletId,
             ).fold(
-                ifLeft = {
-                    Timber.e("Error getCustomerInfo: ${it.errorCode}")
+                ifLeft = { error ->
+                    Timber.e("Error getCustomerInfo: ${error.errorCode}")
                     uiState.transformerUpdate(TangemPayOnboardingButtonLoadingTransformer(isLoading = false))
                 },
                 ifRight = { customerInfo ->
