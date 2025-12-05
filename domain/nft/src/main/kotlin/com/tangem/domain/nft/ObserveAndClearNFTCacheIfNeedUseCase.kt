@@ -6,12 +6,12 @@ import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.nft.repository.NFTRepository
+import com.tangem.domain.nft.utils.NFTCleaner
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import kotlinx.coroutines.flow.*
 
 class ObserveAndClearNFTCacheIfNeedUseCase(
-    private val nftRepository: NFTRepository,
+    private val nftCleaner: NFTCleaner,
     private val currenciesRepository: CurrenciesRepository,
     private val accountsFeatureToggles: AccountsFeatureToggles,
     private val singleAccountListSupplier: SingleAccountListSupplier,
@@ -26,7 +26,7 @@ class ObserveAndClearNFTCacheIfNeedUseCase(
         .distinctUntilChanged()
         .onEach { removedNetworks ->
             if (removedNetworks.isNotEmpty()) {
-                nftRepository.clearCache(userWalletId, removedNetworks.toList())
+                nftCleaner(userWalletId, removedNetworks)
             }
         }
 
