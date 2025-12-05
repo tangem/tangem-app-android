@@ -46,6 +46,8 @@ internal class TangemPayUpdateInfoStateTransformer(
     private fun createInitialState(): TangemPayState {
         val cardInfo = value?.info?.cardInfo
         val productInstance = value?.info?.productInstance
+
+        // when statement copied to WalletTangemPayAnalyticsEventSender. Be careful when editing.
         return when {
             value == null -> TangemPayState.Empty
             value.orderStatus == OrderStatus.CANCELED -> createCancelledState(onIssuingFailed)
