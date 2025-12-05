@@ -14,6 +14,9 @@ class HotWalletContextInterceptor(
 
     override fun intercept(params: MutableMap<String, String>) {
         params[AnalyticsParam.PRODUCT_TYPE] = AnalyticsParam.ProductType.MobileWallet.value
+        params.remove(AnalyticsParam.BATCH)
+        params.remove(AnalyticsParam.FIRMWARE)
+        params.remove(AnalyticsParam.CURRENCY)
     }
 
     companion object {
