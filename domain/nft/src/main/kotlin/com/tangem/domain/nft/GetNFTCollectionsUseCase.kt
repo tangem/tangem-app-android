@@ -1,9 +1,8 @@
 package com.tangem.domain.nft
 
 import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
-import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
+import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.models.account.Account
-import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.nft.models.NFTCollections
@@ -16,7 +15,7 @@ import kotlinx.coroutines.flow.*
 class GetNFTCollectionsUseCase(
     private val currenciesRepository: CurrenciesRepository,
     private val nftRepository: NFTRepository,
-    private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
+    private val singleAccountListSupplier: SingleAccountListSupplier,
     private val accountsFeatureToggles: AccountsFeatureToggles,
 ) {
 
@@ -33,13 +32,17 @@ class GetNFTCollectionsUseCase(
                 }
         }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     fun invokeForAccounts(userWalletId: UserWalletId): Flow<WalletNFTCollections> {
-        fun AccountStatus.flowOfNFTCollections(): Flow<Pair<Account, List<NFTCollections>>> =
-            nftCollections(userWalletId, this.flattenCurrencies().map { it.currency })
-                .map { nfts -> this.account to nfts }
+        fun Account.flowOfNFTCollections(): Flow<Pair<Account, List<NFTCollections>>> {
+            val currencies = (this as? Account.CryptoPortfolio)?.cryptoCurrencies.orEmpty()
 
-        return singleAccountStatusListSupplier(userWalletId)
-            .mapLatest { statusList -> statusList.accountStatuses.map { it.flowOfNFTCollections() } }
+            return nftCollections(userWalletId = userWalletId, cryptoCurrencies = currencies.toList())
+                .map { nfts -> this to nfts }
+        }
+
+        return singleAccountListSupplier(userWalletId)
+            .mapLatest { statusList -> statusList.accounts.map { it.flowOfNFTCollections() } }
             .flatMapLatest { flows -> combine(flows) { WalletNFTCollections(it.toMap()) } }
     }
 
