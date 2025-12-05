@@ -49,10 +49,10 @@ internal class OnrampOperationModel @Inject constructor(
     private val rampStateManager: RampStateManager,
 ) : Model() {
 
+    private val params: Params = paramsContainer.require()
+
     val state: StateFlow<OnrampOperationUM>
         field = MutableStateFlow(value = getInitialState())
-
-    private val params: Params = paramsContainer.require()
 
     private val selectedUserWallet = getWalletsUseCase.invokeSync()
         .first { it.walletId == params.userWalletId }
