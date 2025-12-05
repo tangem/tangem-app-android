@@ -2,6 +2,7 @@ package com.tangem.features.tangempay.model
 
 import androidx.compose.runtime.Stable
 import com.tangem.common.routing.AppRoute
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -10,6 +11,7 @@ import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.data.pay.util.TangemPayWalletsManager
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
+import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.features.tangempay.TangemPayConstants
 import com.tangem.features.tangempay.components.TangemPayOnboardingComponent
 import com.tangem.features.tangempay.model.transformers.TangemPayOnboardingButtonLoadingTransformer
@@ -28,8 +30,9 @@ import com.tangem.utils.transformer.update as transformerUpdate
 @Suppress("LongParameterList")
 internal class TangemPayOnboardingModel @Inject constructor(
     paramsContainer: ParamsContainer,
-    private val router: Router,
     override val dispatchers: CoroutineDispatcherProvider,
+    private val analytics: AnalyticsEventHandler,
+    private val router: Router,
     private val repository: OnboardingRepository,
     private val produceInitialDataUseCase: ProduceTangemPayInitialDataUseCase,
     private val urlOpener: UrlOpener,
@@ -41,6 +44,7 @@ internal class TangemPayOnboardingModel @Inject constructor(
         field = MutableStateFlow(getInitialState())
 
     init {
+        analytics.send(TangemPayAnalyticsEvents.ActivationScreenOpened)
         modelScope.launch {
             when (params) {
                 is TangemPayOnboardingComponent.Params.ContinueOnboarding -> {
@@ -89,10 +93,12 @@ internal class TangemPayOnboardingModel @Inject constructor(
     }
 
     private fun onTermsClick() {
+        analytics.send(TangemPayAnalyticsEvents.ViewTermsClicked)
         urlOpener.openUrl(TangemPayConstants.TERMS_AND_LIMITS_LINK)
     }
 
     private fun onGetCardClick() {
+        analytics.send(TangemPayAnalyticsEvents.GetCardClicked)
         uiState.transformerUpdate(TangemPayOnboardingButtonLoadingTransformer(isLoading = true))
         modelScope.launch {
             // TODO implement selector

@@ -13,12 +13,13 @@ android {
 
 dependencies {
     /** Core */
+    implementation(projects.core.analytics)
+    implementation(projects.core.analytics.models)
     implementation(projects.core.configToggles)
     implementation(projects.core.decompose)
     implementation(projects.core.error)
     implementation(projects.core.navigation)
     implementation(projects.core.ui)
-    implementation(projects.core.analytics.models)
 
     /** Common */
     implementation(projects.common.ui)
@@ -26,8 +27,8 @@ dependencies {
 
     /** Features api */
     implementation(projects.features.tangempay.details.api)
-    implementation(projects.features.txhistory.api)
     implementation(projects.features.tokenRecieve.api)
+    implementation(projects.features.txhistory.api)
 
     /** Domain */
     implementation(projects.domain.balanceHiding)
