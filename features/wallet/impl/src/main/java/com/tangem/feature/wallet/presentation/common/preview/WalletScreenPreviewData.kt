@@ -185,6 +185,7 @@ internal object WalletScreenPreviewData {
                 isFlickering = false,
                 onItemClick = { },
             ),
+            tangemPayState = TangemPayState.Empty,
             type = WalletState.MultiCurrency.WalletType.Cold,
         )
     }
