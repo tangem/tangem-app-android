@@ -4,6 +4,8 @@ import com.squareup.moshi.Moshi
 import com.tangem.datasource.api.pay.models.response.TangemPayTxHistoryResponse
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import com.tangem.utils.converter.Converter
+import com.tangem.utils.extensions.isPositive
+import com.tangem.utils.extensions.isZero
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
 import timber.log.Timber
@@ -40,6 +42,7 @@ internal class TangemPayTxHistoryItemConverter(moshi: Moshi) :
             enrichedMerchantName = spend.enrichedMerchantName,
             merchantName = spend.merchantName,
             enrichedMerchantCategory = spend.enrichedMerchantCategory,
+            merchantCategoryCode = spend.merchantCategoryCode,
             merchantCategory = spend.merchantCategory,
             status = TangemPayTxHistoryItemStatusConverter.convert(spend.status),
             enrichedMerchantIconUrl = spend.enrichedMerchantIcon,
@@ -86,6 +89,11 @@ internal class TangemPayTxHistoryItemConverter(moshi: Moshi) :
             currency = Currency.getInstance("usd"),
             amount = collateral.amount,
             transactionHash = collateral.transactionHash,
+            type = if (collateral.amount.isPositive() || collateral.amount.isZero()) {
+                TangemPayTxHistoryItem.Type.Deposit
+            } else {
+                TangemPayTxHistoryItem.Type.Withdrawal
+            },
         )
     }
 
