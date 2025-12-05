@@ -49,7 +49,6 @@ internal abstract class BasicAccountListSubscriber : BasicWalletSubscriber() {
         yieldSupplyApyMap: Map<String, String> = emptyMap(),
         stakingApyMap: Map<String, List<Yield.Validator>> = emptyMap(),
     ) {
-        val accountFlattenCurrencies = accountList.flattenCurrencies()
         val mainAccount = accountList.mainAccount
 
         when {
@@ -70,20 +69,8 @@ internal abstract class BasicAccountListSubscriber : BasicWalletSubscriber() {
                 )
             }
             isAccountMode -> {
-                val isAllAccountsEmpty = accountFlattenCurrencies.isEmpty()
-                if (isAllAccountsEmpty) {
-                    stateController.update(
-                        SetTokenListErrorTransformer(
-                            selectedWallet = userWallet,
-                            error = TokenListError.EmptyTokens,
-                            appCurrency = appCurrency,
-                        ),
-                    )
-                } else {
-                    val convertParams = TokenConverterParams.Account(accountList, expandedAccounts)
-
-                    updateContent(convertParams, appCurrency, yieldSupplyApyMap, stakingApyMap)
-                }
+                val convertParams = TokenConverterParams.Account(accountList, expandedAccounts)
+                updateContent(convertParams, appCurrency, yieldSupplyApyMap, stakingApyMap)
             }
         }
     }
