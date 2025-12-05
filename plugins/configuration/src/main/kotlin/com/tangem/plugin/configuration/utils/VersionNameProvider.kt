@@ -86,9 +86,9 @@ internal class VersionNameProvider(
 
         val major = matchResult.groupValues[1]
         val minor = matchResult.groupValues[2]
-        val patch = matchResult.groupValues[3].ifEmpty { "0" }
+        val patch = matchResult.groupValues[3]
 
-        return "$major.$minor.$patch"
+        return if (patch.isEmpty()) "$major.$minor" else "$major.$minor.$patch"
     }
 
     private fun incrementMinorVersion(version: String): String {
@@ -99,7 +99,7 @@ internal class VersionNameProvider(
         val minor = parts[1].toIntOrNull() ?: return version
         val newMinor = minor + 1
 
-        return "$major.$newMinor.0"
+        return "$major.$newMinor"
     }
 
 }
