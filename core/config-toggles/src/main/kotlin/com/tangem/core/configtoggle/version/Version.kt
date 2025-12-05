@@ -33,12 +33,9 @@ internal class Version private constructor(value: String) : Comparable<Version> 
         var result = major.compareTo(other.major)
         if (result == 0) result = minor.compareTo(other.minor)
         if (result == 0) {
-            when {
-                fix == null && other.fix == null -> result = 0
-                fix == null && other.fix != null -> result = -1
-                fix != null && other.fix == null -> result = 1
-                fix != null && other.fix != null -> result = fix.compareTo(other.fix)
-            }
+            val thisFix = fix ?: 0
+            val otherFix = other.fix ?: 0
+            result = thisFix.compareTo(otherFix)
         }
         return result
     }
