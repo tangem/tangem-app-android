@@ -30,6 +30,7 @@ class CardContextInterceptor(
 
     override fun canBeAppliedTo(event: AnalyticsEvent): Boolean {
         return when (event) {
+            is IntroductionProcess.ButtonScanCardLegacy -> false
             is IntroductionProcess.ButtonScanCard -> false
             else -> true
         }

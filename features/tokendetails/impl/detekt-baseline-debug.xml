@@ -31,7 +31,6 @@
     <ID>NamedArguments:TokenDetailsLoadedBalanceConverter.kt$TokenDetailsLoadedBalanceConverter$formatFiatAmount( status.value, stakingFiatAmount, currentState.selectedBalanceType, appCurrencyProvider(), )</ID>
     <ID>NamedArguments:TokenDetailsSwapTransactionsStateConverter.kt$TokenDetailsSwapTransactionsStateConverter$createStateInfo( transaction, toCryptoCurrency, fromCryptoCurrency, toFiatAmount, fromFiatAmount, )</ID>
     <ID>NestedScopeFunctions:TokenDetailsBalanceSelectStateConverter.kt$TokenDetailsBalanceSelectStateConverter$let { cryptoCurrencyStatus.value.fiatRate?.multiply(it) }</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:TokenDetailsModel.kt$TokenDetailsModel$private val isDemoCardUseCase: IsDemoCardUseCase</ID>
     <ID>NullableBooleanCheck:TokenDetailsSwapTransactionsStateConverter.kt$TokenDetailsSwapTransactionsStateConverter$transaction.status?.hasLongTime ?: false</ID>
     <ID>NullableToStringCall:DefaultTokenDetailsDeepLinkHandler.kt$DefaultTokenDetailsDeepLinkHandler$$networkId</ID>
     <ID>NullableToStringCall:DefaultTokenDetailsDeepLinkHandler.kt$DefaultTokenDetailsDeepLinkHandler$$tokenId</ID>
