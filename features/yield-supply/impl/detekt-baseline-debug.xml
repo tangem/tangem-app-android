@@ -3,7 +3,6 @@
   <ManuallySuppressedIssues/>
   <CurrentIssues>
     <ID>BooleanPropertyNaming:YieldSupplyApyComponent.kt$YieldSupplyApyComponent$val state by loadingState.collectAsState()</ID>
-    <ID>BooleanPropertyNaming:YieldSupplyModel.kt$YieldSupplyModel$private val handleNavigation = params.handleNavigation</ID>
     <ID>BooleanPropertyNaming:YieldSupplyModel.kt$YieldSupplyModel$val processing = uiState.value is YieldSupplyUM.Processing</ID>
     <ID>BooleanPropertyNaming:YieldSupplyModel.kt$YieldSupplyModel$val showWarningIcon = !yieldSupplyStatus.isAllowedToSpend</ID>
     <ID>BooleanPropertyNaming:YieldSupplyUM.kt$YieldSupplyUM.Content$val showInfoIcon: Boolean</ID>
@@ -16,10 +15,6 @@
     <ID>NamedArguments:YieldSupplyActiveContent.kt$Icon( painterResource(R.drawable.ic_token_info_24), contentDescription = null, modifier = Modifier.size(20.dp), tint = TangemTheme.colors.text.warning, )</ID>
     <ID>NamedArguments:YieldSupplyChartUM.kt$YieldSupplyMarketChartDataUM.Companion$YieldSupplyMarketChartDataUM(y = y, x = x, avr = 5.15, "%.1f")</ID>
     <ID>NoNameShadowing:YieldSupplyStopEarningModel.kt$YieldSupplyStopEarningModel$fee</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:YieldSupplyActiveComponent.kt$YieldSupplyActiveComponent.Params$val isBalanceHiddenFlow: StateFlow&lt;Boolean&gt;</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:YieldSupplyActiveEntryComponent.kt$YieldSupplyActiveEntryComponent.Params$val isBalanceHiddenFlow: StateFlow&lt;Boolean&gt;</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:YieldSupplyActiveEntryModel.kt$YieldSupplyActiveEntryModel$val isTransactionInProgressFlow: StateFlow&lt;Boolean&gt; field = MutableStateFlow(false)</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:YieldSupplyModel.kt$YieldSupplyModel$val isBalanceHiddenFlow: StateFlow&lt;Boolean&gt; field = MutableStateFlow(false)</ID>
     <ID>NullableToStringCall:YieldSupplyModel.kt$YieldSupplyModel$$tokenPendingStatus</ID>
     <ID>NullableToStringCall:YieldSupplyModel.kt$YieldSupplyModel$$tokenProtocolStatus</ID>
     <ID>NullableToStringCall:YieldSupplyModel.kt$YieldSupplyModel$$yieldSupplyStatus</ID>
