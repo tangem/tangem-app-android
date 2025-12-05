@@ -12,7 +12,8 @@ internal class TangemPayCardDetailsBlockStateFactory(
 ) {
 
     fun getInitialState() = TangemPayCardDetailsUM(
-        number = "${StringsSigns.ASTERISK}$cardNumberEnd",
+        number = "",
+        numberShort = "${StringsSigns.ASTERISK}$cardNumberEnd",
         expiry = "",
         cvv = "",
         buttonText = resourceReference(R.string.tangempay_card_details_reveal_text),
