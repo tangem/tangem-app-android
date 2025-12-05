@@ -58,7 +58,7 @@ internal class WelcomeMiddleware {
             .doOnSuccess { selectedUserWallet ->
                 sendSignedInAnalyticsEvent(
                     userWallet = selectedUserWallet,
-                    signInType = Basic.SignedIn.SignInType.Biometric,
+                    signInType = Basic.SignedInLegacy.SignInType.Biometric,
                 )
 
                 store.dispatchNavigationAction { replaceAll(AppRoute.Wallet) }
@@ -80,7 +80,7 @@ internal class WelcomeMiddleware {
                     store.dispatchWithMain(WelcomeAction.ProceedWithCard.Error(error))
                 }
                 .doOnSuccess {
-                    sendSignedInAnalyticsEvent(userWallet, signInType = Basic.SignedIn.SignInType.Card)
+                    sendSignedInAnalyticsEvent(userWallet, signInType = Basic.SignedInLegacy.SignInType.Card)
 
                     store.dispatchNavigationAction { replaceAll(AppRoute.Wallet) }
                     store.dispatchWithMain(WelcomeAction.ProceedWithCard.Success)
@@ -89,9 +89,7 @@ internal class WelcomeMiddleware {
         }
     }
 
-    private fun sendSignedInAnalyticsEvent(userWallet: UserWallet, signInType: Basic.SignedIn.SignInType) {
-        // TODO [REDACTED_TASK_KEY] [Hot Wallet] Analytics
-
+    private fun sendSignedInAnalyticsEvent(userWallet: UserWallet, signInType: Basic.SignedInLegacy.SignInType) {
         if (userWallet !is UserWallet.Cold) {
             return
         }
@@ -108,7 +106,7 @@ internal class WelcomeMiddleware {
             val userWalletsListManager = store.inject(DaggerGraphState::generalUserWalletsListManager)
 
             Analytics.send(
-                event = Basic.SignedIn(
+                event = Basic.SignedInLegacy(
                     currency = currency,
                     batch = scanResponse.card.batchId,
                     signInType = signInType,
