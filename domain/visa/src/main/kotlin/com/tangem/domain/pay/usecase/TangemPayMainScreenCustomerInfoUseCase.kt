@@ -23,16 +23,22 @@ private const val TAG = "TangemPayMainScreenCustomerInfoUseCase"
 class TangemPayMainScreenCustomerInfoUseCase(
     private val repository: OnboardingRepository,
     private val customerOrderRepository: CustomerOrderRepository,
+    private val tangemPayOnboardingRepository: OnboardingRepository,
 ) {
 
     suspend operator fun invoke(
         userWalletId: UserWalletId,
     ): Either<TangemPayCustomerInfoError, MainScreenCustomerInfo> = catch(
         block = {
+            Timber.tag(TAG).d("checkCustomerWallet")
             repository.checkCustomerWallet(userWalletId)
                 .fold(
-                    ifLeft = { TangemPayCustomerInfoError.UnknownError.left() },
+                    ifLeft = { error ->
+                        Timber.tag(TAG).e("Failed to check customer wallet ${error.javaClass.simpleName}")
+                        TangemPayCustomerInfoError.UnknownError.left()
+                    },
                     ifRight = { hasTangemPay ->
+                        Timber.tag(TAG).i("checkCustomerWallet $hasTangemPay")
                         if (hasTangemPay) {
                             proceedWithPaeraCustomerResult(userWalletId)
                         } else {
@@ -50,6 +56,9 @@ class TangemPayMainScreenCustomerInfoUseCase(
     private suspend fun proceedWithPaeraCustomerResult(
         userWalletId: UserWalletId,
     ): Either<TangemPayCustomerInfoError, MainScreenCustomerInfo> {
+        if (!tangemPayOnboardingRepository.isTangemPayInitialDataProduced(userWalletId)) {
+            return TangemPayCustomerInfoError.RefreshNeededError.left()
+        }
         val orderId = repository.getOrderId(userWalletId)
         return if (orderId != null) {
             proceedWithOrderId(userWalletId = userWalletId, orderId = orderId)
@@ -61,10 +70,15 @@ class TangemPayMainScreenCustomerInfoUseCase(
     private suspend fun proceedWithoutOrder(
         userWalletId: UserWalletId,
     ): Either<TangemPayCustomerInfoError, MainScreenCustomerInfo> {
+        Timber.tag(TAG).d("proceedWithoutOrder")
         return repository.getCustomerInfo(userWalletId)
-            .mapLeft { error -> error.mapErrorForCustomer() }
+            .mapLeft { error ->
+                Timber.tag(TAG).e("mapErrorForCustomer: $error")
+                error.mapErrorForCustomer()
+            }
             .map { customerInfo ->
-                if (customerInfo.cardInfo == null) {
+                Timber.tag(TAG).d("customerInfo")
+                if (customerInfo.cardInfo == null && customerInfo.isKycApproved) {
                     // If order id wasn't saved -> start order creation and get customer info
                     repository.createOrder(userWalletId)
                 }
@@ -111,10 +125,10 @@ class TangemPayMainScreenCustomerInfoUseCase(
     }
 
     private fun VisaApiError.mapErrorForCustomer(): TangemPayCustomerInfoError {
-        return if (this !is VisaApiError.NotPaeraCustomer) {
-            TangemPayCustomerInfoError.UnavailableError
-        } else {
-            TangemPayCustomerInfoError.UnknownError
+        return when (this) {
+            is VisaApiError.RefreshTokenExpired -> TangemPayCustomerInfoError.RefreshNeededError
+            is VisaApiError.NotPaeraCustomer -> TangemPayCustomerInfoError.UnknownError
+            else -> TangemPayCustomerInfoError.UnavailableError
         }
     }
 }
