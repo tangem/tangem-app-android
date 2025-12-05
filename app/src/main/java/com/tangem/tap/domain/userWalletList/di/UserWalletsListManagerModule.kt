@@ -7,6 +7,7 @@ import com.tangem.common.authentication.storage.AuthenticatedStorage
 import com.tangem.common.json.TangemSdkAdapter
 import com.tangem.common.services.secure.SecureStorage
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.scan.serialization.*
@@ -124,6 +125,8 @@ internal object UserWalletsListManagerModule {
         appPreferencesStore: AppPreferencesStore,
         hotWalletAccessCodeAttemptsRepository: HotWalletAccessCodeAttemptsRepository,
         tangemHotSdk: TangemHotSdk,
+        trackingContextProxy: TrackingContextProxy,
+        analyticsEventHandler: AnalyticsEventHandler,
     ): UserWalletsListRepository {
         val moshi = buildMoshi()
         val secureStorage = buildSecureStorage(applicationContext = applicationContext)
@@ -171,6 +174,8 @@ internal object UserWalletsListManagerModule {
             savePersistentInformation = ProviderSuspend { true }, // Always save persistent information for now
             hotWalletAccessCodeAttemptsRepository = hotWalletAccessCodeAttemptsRepository,
             tangemHotSdk = tangemHotSdk,
+            trackingContextProxy = trackingContextProxy,
+            analyticsEventHandler = analyticsEventHandler,
         )
     }
 
