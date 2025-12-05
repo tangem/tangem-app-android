@@ -6,8 +6,7 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
-import com.tangem.core.analytics.models.Basic.SignedIn
-import com.tangem.core.analytics.models.Basic.SignedIn.SignInType
+import com.tangem.core.analytics.models.Basic
 import com.tangem.core.decompose.di.GlobalUiMessageSender
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -19,8 +18,7 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.domain.card.ScanCardProcessor
-import com.tangem.domain.card.analytics.ParamCardCurrencyConverter
-import com.tangem.domain.card.common.util.cardTypesResolver
+import com.tangem.domain.card.analytics.IntroductionProcess
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.error.SaveWalletError
@@ -51,7 +49,6 @@ internal class CreateWalletStartModel @Inject constructor(
     private val scanCardProcessor: ScanCardProcessor,
     private val cardSdkConfigRepository: CardSdkConfigRepository,
     private val settingsRepository: SettingsRepository,
-    private val analyticsEventHandler: AnalyticsEventHandler,
     private val appRouter: AppRouter,
     private val coldUserWalletBuilderFactory: ColdUserWalletBuilder.Factory,
     private val saveWalletUseCase: SaveWalletUseCase,
@@ -59,6 +56,7 @@ internal class CreateWalletStartModel @Inject constructor(
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
     private val generateBuyTangemCardLinkUseCase: GenerateBuyTangemCardLinkUseCase,
     private val urlOpener: UrlOpener,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
 
     private val params = paramsContainer.require<CreateWalletStartComponent.Params>()
@@ -84,7 +82,7 @@ internal class CreateWalletStartModel @Inject constructor(
                         ),
                     ),
                     imageResId = R.drawable.img_hardware_wallet,
-                    showScanSecondaryButton = true,
+                    shouldShowScanSecondaryButton = true,
                     onPrimaryButtonClick = ::onBuyClick,
                     primaryButtonText = resourceReference(R.string.details_buy_wallet),
                     otherMethodTitle = resourceReference(R.string.welcome_create_wallet_mobile_title),
@@ -112,7 +110,7 @@ internal class CreateWalletStartModel @Inject constructor(
                         ),
                     ),
                     imageResId = R.drawable.img_mobile_wallet,
-                    showScanSecondaryButton = false,
+                    shouldShowScanSecondaryButton = false,
                     onPrimaryButtonClick = ::onStartWithMobileWalletClick,
                     primaryButtonText = resourceReference(R.string.welcome_create_wallet_mobile_title),
                     otherMethodTitle = resourceReference(R.string.welcome_create_wallet_use_hardware_title),
@@ -126,6 +124,9 @@ internal class CreateWalletStartModel @Inject constructor(
         )
 
     private fun onScanClick() {
+        analyticsEventHandler.send(
+            event = IntroductionProcess.ButtonScanCard(AnalyticsParam.ScreensSources.CreateNewWallet),
+        )
         scanCard()
     }
 
@@ -134,6 +135,7 @@ internal class CreateWalletStartModel @Inject constructor(
     }
 
     private fun onBuyClick() {
+        analyticsEventHandler.send(Basic.ButtonBuy(source = AnalyticsParam.ScreensSources.CreateNewWallet))
         modelScope.launch {
             generateBuyTangemCardLinkUseCase.invoke().let { urlOpener.openUrl(it) }
         }
@@ -182,11 +184,11 @@ internal class CreateWalletStartModel @Inject constructor(
         }
 
         saveWalletUseCase(userWallet = userWallet).fold(
-            ifLeft = {
+            ifLeft = { error ->
                 delay(HIDE_PROGRESS_DELAY)
                 setLoading(false)
-                when (it) {
-                    is SaveWalletError.DataError -> Timber.e(it.toString(), "Unable to save user wallet")
+                when (error) {
+                    is SaveWalletError.DataError -> Timber.e(error.toString(), "Unable to save user wallet")
                     is SaveWalletError.WalletAlreadySaved -> {
                         userWalletsListRepository.unlock(
                             userWalletId = userWallet.walletId,
@@ -199,26 +201,9 @@ internal class CreateWalletStartModel @Inject constructor(
             },
             ifRight = {
                 setLoading(false)
-                sendSignedInCardAnalyticsEvent(scanResponse = scanResponse, isImported = userWallet.isImported)
                 appRouter.replaceAll(AppRoute.Wallet)
             },
         )
-    }
-
-    private suspend fun sendSignedInCardAnalyticsEvent(scanResponse: ScanResponse, isImported: Boolean) {
-        val currency = ParamCardCurrencyConverter().convert(value = scanResponse.cardTypesResolver)
-        if (currency != null) {
-            analyticsEventHandler.send(
-                SignedIn(
-                    currency = currency,
-                    batch = scanResponse.card.batchId,
-                    signInType = SignInType.Card,
-                    walletsCount = userWalletsListRepository.userWalletsSync().size.toString(),
-                    isImported = isImported,
-                    hasBackup = scanResponse.card.backupStatus?.isActive,
-                ),
-            )
-        }
     }
 
     private fun setLoading(isLoading: Boolean) {
