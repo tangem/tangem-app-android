@@ -7,6 +7,7 @@ import com.tangem.core.ui.R
 @DrawableRes
 fun getActiveIconRes(blockchainId: String): Int {
     return when (blockchainId) {
+        "ink", "ink/test" -> R.drawable.img_ink_22
         "ARBITRUM-ONE", "ARBITRUM/test" -> R.drawable.img_arbitrum_22
         "BTC", "BTC/test" -> R.drawable.img_btc_22
         "BCH" -> R.drawable.img_btc_cash_22
@@ -106,6 +107,7 @@ fun getActiveIconRes(blockchainId: String): Int {
 @DrawableRes
 fun getActiveIconResByCoinId(coinId: String): Int {
     return when (coinId) {
+        "ink-ethereum" -> R.drawable.img_ink_22
         "binancecoin" -> R.drawable.img_bsc_22
         "bitcoin" -> R.drawable.img_btc_22
         "bitcoin-cash" -> R.drawable.img_btc_cash_22
@@ -202,6 +204,7 @@ fun getActiveIconResByCoinId(coinId: String): Int {
 @DrawableRes
 fun getGreyedOutIconRes(blockchainId: String): Int {
     return when (blockchainId) {
+        "ink", "ink/test" -> R.drawable.ic_ink_22
         "ARBITRUM-ONE", "ARBITRUM/test" -> R.drawable.ic_arbitrum_22
         "BTC", "BTC/test" -> R.drawable.ic_bitcoin_16
         "BCH" -> R.drawable.ic_bitcoin_cash_16

@@ -344,6 +344,7 @@ class NetworkFactory @Inject constructor(
             Blockchain.Pepecoin, Blockchain.PepecoinTestnet,
             Blockchain.Hyperliquid, Blockchain.HyperliquidTestnet,
             Blockchain.Quai, Blockchain.QuaiTestnet,
+            Blockchain.Ink, Blockchain.InkTestnet,
             // Blockchain.Linea, Blockchain.LineaTestnet,
             // Blockchain.ArbitrumNova,
             -> Network.TransactionExtrasType.NONE

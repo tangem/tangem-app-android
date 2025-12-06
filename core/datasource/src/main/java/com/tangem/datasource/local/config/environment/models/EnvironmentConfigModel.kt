@@ -89,6 +89,7 @@ data class GetBlockAccessTokens(
     @Json(name = "sui") val sui: GetBlockToken?,
     @Json(name = "telos") val telos: GetBlockToken?,
     @Json(name = "tezos") val tezos: GetBlockToken?,
+    @Json(name = "ink") val ink: GetBlockToken?,
 )
 
 @JsonClass(generateAdapter = true)

@@ -619,6 +619,24 @@
             "url": "https://rpc.hypurrscan.io/"
         }
     ],
+    "ink": [
+        {
+            "type": "public",
+            "url": "https://rpc-gel.inkonchain.com/"
+        },
+        {
+            "type": "private",
+            "name": "nownodes"
+        },
+        {
+            "type": "private",
+            "name": "getblock"
+        },
+        {
+            "type": "public",
+            "url": "https://rpc-qnd.inkonchain.com/"
+        }
+    ],
     "internet-computer": [
         {
             "type": "public",
