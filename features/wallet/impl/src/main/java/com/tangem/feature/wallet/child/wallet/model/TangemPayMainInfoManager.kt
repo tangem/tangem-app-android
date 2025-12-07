@@ -7,6 +7,7 @@ import com.tangem.domain.pay.model.TangemPayCustomerInfoError
 import com.tangem.domain.pay.usecase.TangemPayMainScreenCustomerInfoUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -16,11 +17,13 @@ internal class TangemPayMainInfoManager @Inject constructor(
 ) {
 
     val mainScreenCustomerInfo:
-        StateFlow<Pair<UserWalletId, Either<TangemPayCustomerInfoError, MainScreenCustomerInfo>>?>
-        field = MutableStateFlow(null)
+        StateFlow<Map<UserWalletId, Either<TangemPayCustomerInfoError, MainScreenCustomerInfo>>>
+        field = MutableStateFlow(mapOf())
 
     suspend fun refreshTangemPayInfo(userWalletId: UserWalletId) {
-        val info = tangemPayMainScreenCustomerInfoUseCase(userWalletId)
-        mainScreenCustomerInfo.value = Pair(userWalletId, info)
+        mainScreenCustomerInfo.update { currentMap ->
+            val info = tangemPayMainScreenCustomerInfoUseCase(userWalletId)
+            currentMap.toMutableMap().apply { this[userWalletId] = info }
+        }
     }
 }
