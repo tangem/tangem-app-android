@@ -4,10 +4,10 @@ import arrow.core.Option
 import arrow.core.some
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
-import com.tangem.domain.models.staking.YieldBalance
-import com.tangem.domain.staking.multi.MultiYieldBalanceProducer
-import com.tangem.domain.staking.multi.MultiYieldBalanceSupplier
-import com.tangem.domain.staking.single.SingleYieldBalanceProducer
+import com.tangem.domain.models.staking.StakingBalance
+import com.tangem.domain.staking.multi.MultiStakingBalanceProducer
+import com.tangem.domain.staking.multi.MultiStakingBalanceSupplier
+import com.tangem.domain.staking.single.SingleStakingBalanceProducer
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.indexOfFirstOrNull
 import dagger.assisted.Assisted
@@ -20,29 +20,29 @@ import kotlinx.coroutines.flow.mapNotNull
 import timber.log.Timber
 
 /**
- * Default implementation of [SingleYieldBalanceProducer]
+ * Default implementation of [SingleStakingBalanceProducer]
  *
- * @property params                    params
- * @property multiYieldBalanceSupplier multi yield balance supplier
- * @property analyticsExceptionHandler analytics exception handler
- * @property dispatchers               dispatchers
+ * @property params                       params
+ * @property multiStakingBalanceSupplier  multi staking balance supplier
+ * @property analyticsExceptionHandler    analytics exception handler
+ * @property dispatchers                  dispatchers
  *
 [REDACTED_AUTHOR]
  */
-internal class DefaultSingleYieldBalanceProducer @AssistedInject constructor(
-    @Assisted private val params: SingleYieldBalanceProducer.Params,
-    private val multiYieldBalanceSupplier: MultiYieldBalanceSupplier,
+internal class DefaultSingleStakingBalanceProducer @AssistedInject constructor(
+    @Assisted private val params: SingleStakingBalanceProducer.Params,
+    private val multiStakingBalanceSupplier: MultiStakingBalanceSupplier,
     private val analyticsExceptionHandler: AnalyticsExceptionHandler,
     private val dispatchers: CoroutineDispatcherProvider,
-) : SingleYieldBalanceProducer {
+) : SingleStakingBalanceProducer {
 
-    override val fallback: Option<YieldBalance> = YieldBalance.Error(stakingId = params.stakingId).some()
+    override val fallback: Option<StakingBalance> = StakingBalance.Error(stakingId = params.stakingId).some()
 
-    override fun produce(): Flow<YieldBalance> {
-        Timber.i("Producing yield balance for params:\n$params")
+    override fun produce(): Flow<StakingBalance> {
+        Timber.i("Producing staking balance for params:\n$params")
 
-        return multiYieldBalanceSupplier(
-            params = MultiYieldBalanceProducer.Params(userWalletId = params.userWalletId),
+        return multiStakingBalanceSupplier(
+            params = MultiStakingBalanceProducer.Params(userWalletId = params.userWalletId),
         )
             .mapNotNull { balances ->
                 val currentStakingId = params.stakingId
@@ -65,7 +65,7 @@ internal class DefaultSingleYieldBalanceProducer @AssistedInject constructor(
                         currentBalances.joinToString("\n"),
                     )
 
-                    val dataIndex = currentBalances.indexOfFirstOrNull { it is YieldBalance.Data }
+                    val dataIndex = currentBalances.indexOfFirstOrNull { it is StakingBalance.Data }
 
                     if (dataIndex != null) {
                         currentBalances[dataIndex]
@@ -75,7 +75,7 @@ internal class DefaultSingleYieldBalanceProducer @AssistedInject constructor(
                 } else {
                     val balance = currentBalances.firstOrNull() ?: return@mapNotNull null
 
-                    Timber.i("Yield balance found for $currentStakingId:\n$balance")
+                    Timber.i("Staking balance found for $currentStakingId:\n$balance")
                     balance
                 }
             }
@@ -84,7 +84,7 @@ internal class DefaultSingleYieldBalanceProducer @AssistedInject constructor(
     }
 
     @AssistedFactory
-    interface Factory : SingleYieldBalanceProducer.Factory {
-        override fun create(params: SingleYieldBalanceProducer.Params): DefaultSingleYieldBalanceProducer
+    interface Factory : SingleStakingBalanceProducer.Factory {
+        override fun create(params: SingleStakingBalanceProducer.Params): DefaultSingleStakingBalanceProducer
     }
 }

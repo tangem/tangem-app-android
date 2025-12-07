@@ -5,14 +5,14 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.staking.StakingID
 
 /**
- * Fetcher of yields balances
+ * Fetcher of staking balances
  *
 [REDACTED_AUTHOR]
  */
-interface MultiYieldBalanceFetcher : FlowFetcher<MultiYieldBalanceFetcher.Params> {
+interface MultiStakingBalanceFetcher : FlowFetcher<MultiStakingBalanceFetcher.Params> {
 
     /**
-     * Params for fetching multiple yield balances
+     * Params for fetching multiple staking balances
      *
      * @property userWalletId user wallet ID
      * @property stakingIds   map of currency ID to network
@@ -24,7 +24,7 @@ interface MultiYieldBalanceFetcher : FlowFetcher<MultiYieldBalanceFetcher.Params
 
         override fun toString(): String {
             return """
-                MultiYieldBalanceFetcher.Params(
+                MultiStakingBalanceFetcher.Params(
                     userWalletId = $userWalletId,
                     stakingIds: ${stakingIds.joinToString()}
                 )

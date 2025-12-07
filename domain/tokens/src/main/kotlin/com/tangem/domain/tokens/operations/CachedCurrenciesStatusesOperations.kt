@@ -16,7 +16,7 @@ import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.models.network.getAddress
 import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.domain.models.staking.StakingID
-import com.tangem.domain.models.staking.YieldBalance
+import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
 import com.tangem.domain.networks.single.SingleNetworkStatusProducer
@@ -26,9 +26,9 @@ import com.tangem.domain.quotes.single.SingleQuoteStatusProducer
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.model.StakingIntegrationID
-import com.tangem.domain.staking.multi.MultiYieldBalanceSupplier
-import com.tangem.domain.staking.single.SingleYieldBalanceProducer
-import com.tangem.domain.staking.single.SingleYieldBalanceSupplier
+import com.tangem.domain.staking.multi.MultiStakingBalanceSupplier
+import com.tangem.domain.staking.single.SingleStakingBalanceProducer
+import com.tangem.domain.staking.single.SingleStakingBalanceSupplier
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.operations.CurrenciesStatusesOperations.Error
@@ -46,8 +46,8 @@ class CachedCurrenciesStatusesOperations(
     private val singleNetworkStatusSupplier: SingleNetworkStatusSupplier,
     multiNetworkStatusSupplier: MultiNetworkStatusSupplier,
     private val singleQuoteStatusSupplier: SingleQuoteStatusSupplier,
-    private val singleYieldBalanceSupplier: SingleYieldBalanceSupplier,
-    multiYieldBalanceSupplier: MultiYieldBalanceSupplier,
+    private val singleStakingBalanceSupplier: SingleStakingBalanceSupplier,
+    multiStakingBalanceSupplier: MultiStakingBalanceSupplier,
     multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
     private val stakingIdFactory: StakingIdFactory,
 ) : BaseCurrencyStatusOperations(
@@ -56,8 +56,8 @@ class CachedCurrenciesStatusesOperations(
     multiNetworkStatusSupplier = multiNetworkStatusSupplier,
     singleNetworkStatusSupplier = singleNetworkStatusSupplier,
     singleQuoteStatusSupplier = singleQuoteStatusSupplier,
-    singleYieldBalanceSupplier = singleYieldBalanceSupplier,
-    multiYieldBalanceSupplier = multiYieldBalanceSupplier,
+    singleStakingBalanceSupplier = singleStakingBalanceSupplier,
+    multiStakingBalanceSupplier = multiStakingBalanceSupplier,
     multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
     stakingIdFactory = stakingIdFactory,
 ) {
@@ -95,7 +95,7 @@ class CachedCurrenciesStatusesOperations(
                     currencies = currencies,
                     maybeNetworkStatuses = null,
                     maybeQuotes = null,
-                    maybeYieldBalances = null,
+                    maybeStakingBalances = null,
                     isUpdating = true,
                 )
 
@@ -109,13 +109,13 @@ class CachedCurrenciesStatusesOperations(
             fun createCurrenciesStatuses(
                 maybeQuotes: Either<TokenListError, Set<QuoteStatus>>,
                 maybeNetworkStatuses: Either<TokenListError, Set<NetworkStatus>>,
-                maybeYieldBalances: Either<TokenListError, List<YieldBalance>>,
+                maybeStakingBalances: Either<TokenListError, List<StakingBalance>>,
                 isUpdating: Boolean,
             ) = createCurrenciesStatuses(
                 currencies = currencies,
                 maybeQuotes = maybeQuotes,
                 maybeNetworkStatuses = maybeNetworkStatuses,
-                maybeYieldBalances = maybeYieldBalances,
+                maybeStakingBalances = maybeStakingBalances,
                 isUpdating = isUpdating,
             )
 
@@ -166,13 +166,13 @@ class CachedCurrenciesStatusesOperations(
         currencies: NonEmptyList<CryptoCurrency>,
         maybeQuotes: Either<TokenListError, Set<QuoteStatus>>?,
         maybeNetworkStatuses: Either<TokenListError, Set<NetworkStatus>>?,
-        maybeYieldBalances: Either<TokenListError, List<YieldBalance>>?,
+        maybeStakingBalances: Either<TokenListError, List<StakingBalance>>?,
         isUpdating: Boolean,
     ): Lce<TokenListError, List<CryptoCurrencyStatus>> = lce {
         isLoading.set(isUpdating)
 
         val networksStatuses = maybeNetworkStatuses?.bindEither()?.toNonEmptySetOrNull()
-        val yieldBalances = maybeYieldBalances?.bindEither()
+        val stakingBalances = maybeStakingBalances?.bindEither()
         val quotes = recover({ maybeQuotes?.bind()?.toNonEmptySetOrNull() }) {
             null
         }
@@ -180,25 +180,25 @@ class CachedCurrenciesStatusesOperations(
         currencies.map { currency ->
             val quote = quotes?.firstOrNull { it.rawCurrencyId == currency.id.rawCurrencyId }
             val networkStatus = networksStatuses?.firstOrNull { it.network == currency.network }
-            val yieldBalance = findYieldBalanceOrNull(yieldBalances, currency, networkStatus)
+            val stakingBalance = findStakingBalanceOrNull(stakingBalances, currency, networkStatus)
 
             val currencyStatus = CryptoCurrencyStatusFactory.create(
                 currency = currency,
                 maybeNetworkStatus = networkStatus.toOption(),
                 maybeQuoteStatus = quote.toOption(),
-                maybeYieldBalance = yieldBalance.toOption(),
+                maybeStakingBalance = stakingBalance.toOption(),
             )
 
             currencyStatus
         }
     }
 
-    private fun findYieldBalanceOrNull(
-        yieldBalances: List<YieldBalance>?,
+    private fun findStakingBalanceOrNull(
+        stakingBalances: List<StakingBalance>?,
         currency: CryptoCurrency,
         networkStatus: NetworkStatus?,
-    ): YieldBalance? {
-        if (yieldBalances.isNullOrEmpty()) return null
+    ): StakingBalance? {
+        if (stakingBalances.isNullOrEmpty()) return null
 
         val supportedIntegration = StakingIntegrationID.create(currencyId = currency.id)?.value
         val address = networkStatus.getAddress()
@@ -206,8 +206,8 @@ class CachedCurrenciesStatusesOperations(
         return if (supportedIntegration != null && address != null) {
             val stakingId = StakingID(integrationId = supportedIntegration, address = address)
 
-            yieldBalances.firstOrNull { it.stakingId == stakingId }
-                ?: YieldBalance.Error(stakingId = stakingId)
+            stakingBalances.firstOrNull { it.stakingId == stakingId }
+                ?: StakingBalance.Error(stakingId = stakingId)
         } else {
             null
         }
@@ -302,9 +302,9 @@ class CachedCurrenciesStatusesOperations(
     private fun getYieldsBalancesUpdates(
         userWalletId: UserWalletId,
         cryptoCurrencies: Map<CryptoCurrency.ID, String?>,
-    ): EitherFlow<TokenListError, List<YieldBalance>> {
+    ): EitherFlow<TokenListError, List<StakingBalance>> {
         return channelFlow {
-            val state = MutableStateFlow(emptyList<YieldBalance>())
+            val state = MutableStateFlow(emptyList<StakingBalance>())
 
             val stakingIds = cryptoCurrencies.mapNotNullTo(hashSetOf()) { currencyWithAddress ->
                 stakingIdFactory.create(
@@ -316,8 +316,11 @@ class CachedCurrenciesStatusesOperations(
 
             stakingIds.onEach { stakingId ->
                 launch {
-                    singleYieldBalanceSupplier(
-                        params = SingleYieldBalanceProducer.Params(userWalletId = userWalletId, stakingId = stakingId),
+                    singleStakingBalanceSupplier(
+                        params = SingleStakingBalanceProducer.Params(
+                            userWalletId = userWalletId,
+                            stakingId = stakingId,
+                        ),
                     )
                         .onEach { balance ->
                             state.update { loadedBalances ->
