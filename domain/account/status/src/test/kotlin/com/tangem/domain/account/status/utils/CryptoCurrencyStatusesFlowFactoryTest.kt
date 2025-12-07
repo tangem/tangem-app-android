@@ -11,7 +11,7 @@ import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.models.quote.QuoteStatus
 import com.tangem.domain.models.staking.StakingID
-import com.tangem.domain.models.staking.YieldBalance
+import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isMultiCurrency
@@ -20,8 +20,8 @@ import com.tangem.domain.networks.single.SingleNetworkStatusSupplier
 import com.tangem.domain.quotes.single.SingleQuoteStatusProducer
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import com.tangem.domain.staking.StakingIdFactory
-import com.tangem.domain.staking.single.SingleYieldBalanceProducer
-import com.tangem.domain.staking.single.SingleYieldBalanceSupplier
+import com.tangem.domain.staking.single.SingleStakingBalanceProducer
+import com.tangem.domain.staking.single.SingleStakingBalanceSupplier
 import com.tangem.test.core.getEmittedValues
 import io.mockk.*
 import kotlinx.coroutines.flow.emptyFlow
@@ -41,13 +41,13 @@ class CryptoCurrencyStatusesFlowFactoryTest {
 
     private val singleNetworkStatusSupplier: SingleNetworkStatusSupplier = mockk()
     private val singleQuoteStatusSupplier: SingleQuoteStatusSupplier = mockk()
-    private val singleYieldBalanceSupplier: SingleYieldBalanceSupplier = mockk()
+    private val singleStakingBalanceSupplier: SingleStakingBalanceSupplier = mockk()
     private val stakingIdFactory: StakingIdFactory = mockk()
 
     private val factory = CryptoCurrencyStatusesFlowFactory(
         singleNetworkStatusSupplier = singleNetworkStatusSupplier,
         singleQuoteStatusSupplier = singleQuoteStatusSupplier,
-        singleYieldBalanceSupplier = singleYieldBalanceSupplier,
+        singleStakingBalanceSupplier = singleStakingBalanceSupplier,
         stakingIdFactory = stakingIdFactory,
     )
 
@@ -63,7 +63,7 @@ class CryptoCurrencyStatusesFlowFactoryTest {
         clearMocks(
             singleNetworkStatusSupplier,
             singleQuoteStatusSupplier,
-            singleYieldBalanceSupplier,
+            singleStakingBalanceSupplier,
             stakingIdFactory,
         )
     }
@@ -96,13 +96,13 @@ class CryptoCurrencyStatusesFlowFactoryTest {
             stakingIdFactory.create(currencyId = currency.id, defaultAddress = networkAddress.defaultAddress.value)
         } returns stakingId.right()
 
-        val yieldBalance = YieldBalance.Empty(stakingId = stakingId, source = StatusSource.ACTUAL)
-        val yieldBalanceFlow = flowOf(yieldBalance)
+        val stakingBalance = StakingBalance.Empty(stakingId = stakingId, source = StatusSource.ACTUAL)
+        val stakingBalanceFlow = flowOf(stakingBalance)
         every {
-            singleYieldBalanceSupplier(
-                params = SingleYieldBalanceProducer.Params(userWalletId = userWalletId, stakingId = stakingId),
+            singleStakingBalanceSupplier(
+                params = SingleStakingBalanceProducer.Params(userWalletId = userWalletId, stakingId = stakingId),
             )
-        } returns yieldBalanceFlow
+        } returns stakingBalanceFlow
 
         // Act
         val actual = factory.create(userWallet = userWallet, currency = currency).let(::getEmittedValues)
@@ -121,7 +121,7 @@ class CryptoCurrencyStatusesFlowFactoryTest {
         coVerify(ordering = Ordering.SEQUENCE) {
             singleNetworkStatusSupplier(params = SingleNetworkStatusProducer.Params(userWalletId, currency.network))
             stakingIdFactory.create(currencyId = currency.id, defaultAddress = networkAddress.defaultAddress.value)
-            singleYieldBalanceSupplier(params = SingleYieldBalanceProducer.Params(userWalletId, stakingId))
+            singleStakingBalanceSupplier(params = SingleStakingBalanceProducer.Params(userWalletId, stakingId))
         }
     }
 
