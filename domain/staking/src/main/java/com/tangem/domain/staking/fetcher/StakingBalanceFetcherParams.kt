@@ -5,17 +5,17 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 
 /**
- * Params for fetchers of yield balance
+ * Params for fetchers of staking balance
  *
 [REDACTED_AUTHOR]
  */
-sealed interface YieldBalanceFetcherParams {
+sealed interface StakingBalanceFetcherParams {
 
     /** User wallet ID */
     val userWalletId: UserWalletId
 
     /**
-     * Params for fetching multiple yield balances
+     * Params for fetching multiple staking balances
      *
      * @property userWalletId             user wallet ID
      * @property currencyIdWithNetworkMap map of currency ID to network
@@ -23,10 +23,10 @@ sealed interface YieldBalanceFetcherParams {
     data class Multi(
         override val userWalletId: UserWalletId,
         val currencyIdWithNetworkMap: Map<CryptoCurrency.ID, Network>,
-    ) : YieldBalanceFetcherParams
+    ) : StakingBalanceFetcherParams
 
     /**
-     * Params for fetching single yield balance
+     * Params for fetching single staking balance
      *
      * @property userWalletId user wallet ID
      * @property currencyId   currency ID
@@ -36,5 +36,5 @@ sealed interface YieldBalanceFetcherParams {
         override val userWalletId: UserWalletId,
         val currencyId: CryptoCurrency.ID,
         val network: Network,
-    ) : YieldBalanceFetcherParams
+    ) : StakingBalanceFetcherParams
 }
