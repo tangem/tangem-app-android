@@ -9,7 +9,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.staking.StakingIdFactory
-import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
+import com.tangem.domain.staking.multi.MultiStakingBalanceFetcher
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.derivations.DerivationsRepository
@@ -36,7 +36,7 @@ class SaveMarketTokensUseCase(
     private val currenciesRepository: CurrenciesRepository,
     private val multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
     private val multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
-    private val multiYieldBalanceFetcher: MultiYieldBalanceFetcher,
+    private val multiStakingBalanceFetcher: MultiStakingBalanceFetcher,
     private val stakingIdFactory: StakingIdFactory,
     private val parallelUpdatingScope: CoroutineScope,
 ) {
@@ -85,7 +85,7 @@ class SaveMarketTokensUseCase(
                     syncTokens(userWalletId, savedCurrencies)
 
                     launch { refreshUpdatedNetworks(userWalletId, savedCurrencies) }
-                    launch { refreshUpdatedYieldBalances(userWalletId, savedCurrencies) }
+                    launch { refreshUpdatedStakingBalances(userWalletId, savedCurrencies) }
                     launch { refreshUpdatedQuotes(savedCurrencies) }
                 }
             }
@@ -121,7 +121,7 @@ class SaveMarketTokensUseCase(
         )
     }
 
-    private suspend fun refreshUpdatedYieldBalances(
+    private suspend fun refreshUpdatedStakingBalances(
         userWalletId: UserWalletId,
         existingCurrencies: List<CryptoCurrency>,
     ) {
@@ -129,8 +129,8 @@ class SaveMarketTokensUseCase(
             stakingIdFactory.create(userWalletId = userWalletId, cryptoCurrency = it).getOrNull()
         }
 
-        multiYieldBalanceFetcher(
-            params = MultiYieldBalanceFetcher.Params(userWalletId = userWalletId, stakingIds = stakingIds),
+        multiStakingBalanceFetcher(
+            params = MultiStakingBalanceFetcher.Params(userWalletId = userWalletId, stakingIds = stakingIds),
         )
     }
 
