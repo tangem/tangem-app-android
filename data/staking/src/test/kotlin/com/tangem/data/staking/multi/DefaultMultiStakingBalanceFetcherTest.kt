@@ -5,7 +5,7 @@ import com.tangem.common.test.data.staking.MockYieldBalanceWrapperDTOFactory
 import com.tangem.common.test.data.staking.MockYieldDTOFactory
 import com.tangem.common.test.domain.wallet.MockUserWalletFactory
 import com.tangem.data.staking.store.P2PBalancesStore
-import com.tangem.data.staking.store.YieldsBalancesStore
+import com.tangem.data.staking.store.StakingBalancesStore
 import com.tangem.data.staking.utils.YieldBalanceRequestBodyFactory
 import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.common.response.ApiResponseError
@@ -17,7 +17,7 @@ import com.tangem.datasource.local.token.StakingYieldsStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.models.staking.StakingID
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
+import com.tangem.domain.staking.multi.MultiStakingBalanceFetcher
 import com.tangem.test.core.assertEitherLeft
 import com.tangem.test.core.assertEitherRight
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
@@ -31,20 +31,20 @@ import org.junit.jupiter.api.TestInstance
 [REDACTED_AUTHOR]
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-internal class DefaultMultiYieldBalanceFetcherTest {
+internal class DefaultMultiStakingBalanceFetcherTest {
 
     private val userWalletsStore: UserWalletsStore = mockk()
     private val stakingYieldsStore: StakingYieldsStore = mockk()
-    private val yieldsBalancesStore: YieldsBalancesStore = mockk(relaxUnitFun = true)
+    private val stakingBalancesStore: StakingBalancesStore = mockk(relaxUnitFun = true)
     private val p2pBalancesStore: P2PBalancesStore = mockk(relaxUnitFun = true)
     private val stakeKitApi: StakeKitApi = mockk()
     private val p2pApi: P2PEthPoolApi = mockk()
     private val p2pVaultsStore: P2PEthPoolVaultsStore = mockk()
 
-    private val fetcher = DefaultMultiYieldBalanceFetcher(
+    private val fetcher = DefaultMultiStakingBalanceFetcher(
         userWalletsStore = userWalletsStore,
         stakingYieldsStore = stakingYieldsStore,
-        yieldsBalancesStore = yieldsBalancesStore,
+        stakingBalancesStore = stakingBalancesStore,
         p2pBalancesStore = p2pBalancesStore,
         stakeKitApi = stakeKitApi,
         p2pApi = p2pApi,
@@ -54,13 +54,13 @@ internal class DefaultMultiYieldBalanceFetcherTest {
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(userWalletsStore, stakingYieldsStore, yieldsBalancesStore, stakeKitApi)
+        clearMocks(userWalletsStore, stakingYieldsStore, stakingBalancesStore, stakeKitApi)
     }
 
     @Test
-    fun `fetch yields balances successfully`() = runTest {
+    fun `fetch staking balances successfully`() = runTest {
         // Arrange
-        val params = MultiYieldBalanceFetcher.Params(userWalletId = userWalletId, stakingIds = tonAndSolanaIds)
+        val params = MultiStakingBalanceFetcher.Params(userWalletId = userWalletId, stakingIds = tonAndSolanaIds)
 
         coEvery { userWalletsStore.getSyncOrNull(params.userWalletId) } returns userWallet
 
@@ -81,21 +81,21 @@ internal class DefaultMultiYieldBalanceFetcherTest {
         // Assert
         coVerifyOrder {
             userWalletsStore.getSyncOrNull(params.userWalletId)
-            yieldsBalancesStore.refresh(userWalletId = params.userWalletId, stakingIds = tonAndSolanaIds)
+            stakingBalancesStore.refresh(userWalletId = params.userWalletId, stakingIds = tonAndSolanaIds)
             stakingYieldsStore.getSyncWithTimeout()
             stakeKitApi.getMultipleYieldBalances(requests)
-            yieldsBalancesStore.storeActual(userWalletId = userWalletId, values = result)
+            stakingBalancesStore.storeActual(userWalletId = userWalletId, values = result)
         }
 
-        coVerify(inverse = true) { yieldsBalancesStore.storeError(any(), any()) }
+        coVerify(inverse = true) { stakingBalancesStore.storeError(any(), any()) }
 
         assertEitherRight(actual)
     }
 
     @Test
-    fun `fetch yields balances successfully if one of stakingIds is unavailable`() = runTest {
+    fun `fetch staking balances successfully if one of stakingIds is unavailable`() = runTest {
         // Arrange
-        val params = MultiYieldBalanceFetcher.Params(userWalletId = userWalletId, stakingIds = tonAndSolanaIds)
+        val params = MultiStakingBalanceFetcher.Params(userWalletId = userWalletId, stakingIds = tonAndSolanaIds)
 
         coEvery { userWalletsStore.getSyncOrNull(params.userWalletId) } returns userWallet
 
@@ -113,20 +113,20 @@ internal class DefaultMultiYieldBalanceFetcherTest {
         // Assert
         coVerifyOrder {
             userWalletsStore.getSyncOrNull(params.userWalletId)
-            yieldsBalancesStore.refresh(userWalletId = params.userWalletId, stakingIds = tonAndSolanaIds)
+            stakingBalancesStore.refresh(userWalletId = params.userWalletId, stakingIds = tonAndSolanaIds)
             stakingYieldsStore.getSyncWithTimeout()
-            yieldsBalancesStore.storeError(userWalletId = userWalletId, stakingIds = setOf(solanaId))
+            stakingBalancesStore.storeError(userWalletId = userWalletId, stakingIds = setOf(solanaId))
             stakeKitApi.getMultipleYieldBalances(requests)
-            yieldsBalancesStore.storeActual(userWalletId = userWalletId, values = result)
+            stakingBalancesStore.storeActual(userWalletId = userWalletId, values = result)
         }
 
         assertEitherRight(actual)
     }
 
     @Test
-    fun `fetch yields balances failure if user wallet is not supported`() = runTest {
+    fun `fetch staking balances failure if user wallet is not supported`() = runTest {
         // Arrange
-        val params = MultiYieldBalanceFetcher.Params(userWalletId = userWalletId, stakingIds = tonAndSolanaIds)
+        val params = MultiStakingBalanceFetcher.Params(userWalletId = userWalletId, stakingIds = tonAndSolanaIds)
 
         val userWallet = MockUserWalletFactory.create().copy(isMultiCurrency = false)
         coEvery { userWalletsStore.getSyncOrNull(params.userWalletId) } returns userWallet
@@ -138,11 +138,11 @@ internal class DefaultMultiYieldBalanceFetcherTest {
         coVerifyOrder { userWalletsStore.getSyncOrNull(params.userWalletId) }
 
         coVerify(inverse = true) {
-            yieldsBalancesStore.refresh(userWalletId = any(), stakingIds = any())
+            stakingBalancesStore.refresh(userWalletId = any(), stakingIds = any())
             stakingYieldsStore.getSyncWithTimeout()
             stakeKitApi.getSingleYieldBalance(integrationId = any(), body = any())
-            yieldsBalancesStore.storeActual(userWalletId = any(), values = any())
-            yieldsBalancesStore.storeError(userWalletId = any(), stakingIds = any())
+            stakingBalancesStore.storeActual(userWalletId = any(), values = any())
+            stakingBalancesStore.storeError(userWalletId = any(), stakingIds = any())
         }
 
         val expected = IllegalStateException("Wallet ${params.userWalletId} is not supported: ${userWallet.toOption()}")
@@ -151,9 +151,9 @@ internal class DefaultMultiYieldBalanceFetcherTest {
     }
 
     @Test
-    fun `fetch yields balances failure if userWalletsStore returns null`() = runTest {
+    fun `fetch staking balances failure if userWalletsStore returns null`() = runTest {
         // Arrange
-        val params = MultiYieldBalanceFetcher.Params(userWalletId = userWalletId, stakingIds = tonAndSolanaIds)
+        val params = MultiStakingBalanceFetcher.Params(userWalletId = userWalletId, stakingIds = tonAndSolanaIds)
 
         coEvery { userWalletsStore.getSyncOrNull(params.userWalletId) } returns null
 
@@ -164,11 +164,11 @@ internal class DefaultMultiYieldBalanceFetcherTest {
         coVerifyOrder { userWalletsStore.getSyncOrNull(params.userWalletId) }
 
         coVerify(inverse = true) {
-            yieldsBalancesStore.refresh(userWalletId = any(), stakingIds = any())
+            stakingBalancesStore.refresh(userWalletId = any(), stakingIds = any())
             stakingYieldsStore.getSyncWithTimeout()
             stakeKitApi.getSingleYieldBalance(integrationId = any(), body = any())
-            yieldsBalancesStore.storeActual(userWalletId = any(), values = any())
-            yieldsBalancesStore.storeError(userWalletId = any(), stakingIds = any())
+            stakingBalancesStore.storeActual(userWalletId = any(), values = any())
+            stakingBalancesStore.storeError(userWalletId = any(), stakingIds = any())
         }
 
         val expected = IllegalStateException("Wallet ${params.userWalletId} is not supported: ${null.toOption()}")
@@ -177,9 +177,9 @@ internal class DefaultMultiYieldBalanceFetcherTest {
     }
 
     @Test
-    fun `fetch yields balances failure if stakingYieldsStore getSyncWithTimeout returns null`() = runTest {
+    fun `fetch staking balances failure if stakingYieldsStore getSyncWithTimeout returns null`() = runTest {
         // Arrange
-        val params = MultiYieldBalanceFetcher.Params(userWalletId = userWalletId, stakingIds = tonAndSolanaIds)
+        val params = MultiStakingBalanceFetcher.Params(userWalletId = userWalletId, stakingIds = tonAndSolanaIds)
 
         coEvery { userWalletsStore.getSyncOrNull(params.userWalletId) } returns userWallet
         coEvery { stakingYieldsStore.getSyncWithTimeout() } returns null
@@ -190,14 +190,14 @@ internal class DefaultMultiYieldBalanceFetcherTest {
         // Assert
         coVerifyOrder {
             userWalletsStore.getSyncOrNull(params.userWalletId)
-            yieldsBalancesStore.refresh(params.userWalletId, tonAndSolanaIds)
+            stakingBalancesStore.refresh(params.userWalletId, tonAndSolanaIds)
             stakingYieldsStore.getSyncWithTimeout()
-            yieldsBalancesStore.storeError(userWalletId, tonAndSolanaIds)
+            stakingBalancesStore.storeError(userWalletId, tonAndSolanaIds)
         }
 
         coVerify(inverse = true) {
             stakeKitApi.getMultipleYieldBalances(any())
-            yieldsBalancesStore.storeActual(userWalletId = any(), values = any())
+            stakingBalancesStore.storeActual(userWalletId = any(), values = any())
         }
 
         val expected = IllegalStateException("No enabled yields for ${params.userWalletId}")
@@ -206,9 +206,9 @@ internal class DefaultMultiYieldBalanceFetcherTest {
     }
 
     @Test
-    fun `fetch yields balances failure if stakingYieldsStore getSyncWithTimeout returns empty list`() = runTest {
+    fun `fetch staking balances failure if stakingYieldsStore getSyncWithTimeout returns empty list`() = runTest {
         // Arrange
-        val params = MultiYieldBalanceFetcher.Params(userWalletId = userWalletId, stakingIds = tonAndSolanaIds)
+        val params = MultiStakingBalanceFetcher.Params(userWalletId = userWalletId, stakingIds = tonAndSolanaIds)
 
         coEvery { userWalletsStore.getSyncOrNull(params.userWalletId) } returns userWallet
         coEvery { stakingYieldsStore.getSyncWithTimeout() } returns emptyList()
@@ -219,14 +219,14 @@ internal class DefaultMultiYieldBalanceFetcherTest {
         // Assert
         coVerifyOrder {
             userWalletsStore.getSyncOrNull(params.userWalletId)
-            yieldsBalancesStore.refresh(userWalletId = params.userWalletId, stakingIds = tonAndSolanaIds)
+            stakingBalancesStore.refresh(userWalletId = params.userWalletId, stakingIds = tonAndSolanaIds)
             stakingYieldsStore.getSyncWithTimeout()
-            yieldsBalancesStore.storeError(userWalletId, tonAndSolanaIds)
+            stakingBalancesStore.storeError(userWalletId, tonAndSolanaIds)
         }
 
         coVerify(inverse = true) {
             stakeKitApi.getMultipleYieldBalances(any())
-            yieldsBalancesStore.storeActual(userWalletId = any(), values = any())
+            stakingBalancesStore.storeActual(userWalletId = any(), values = any())
         }
 
         val expected = IllegalStateException("No enabled yields for ${params.userWalletId}")
@@ -235,9 +235,9 @@ internal class DefaultMultiYieldBalanceFetcherTest {
     }
 
     @Test
-    fun `fetch yields balances failure if yields converting is failed`() = runTest {
+    fun `fetch staking balances failure if yields converting is failed`() = runTest {
         // Arrange
-        val params = MultiYieldBalanceFetcher.Params(userWalletId = userWalletId, stakingIds = tonAndSolanaIds)
+        val params = MultiStakingBalanceFetcher.Params(userWalletId = userWalletId, stakingIds = tonAndSolanaIds)
 
         coEvery { userWalletsStore.getSyncOrNull(params.userWalletId) } returns userWallet
 
@@ -253,14 +253,14 @@ internal class DefaultMultiYieldBalanceFetcherTest {
         // Assert
         coVerifyOrder {
             userWalletsStore.getSyncOrNull(params.userWalletId)
-            yieldsBalancesStore.refresh(userWalletId = params.userWalletId, stakingIds = tonAndSolanaIds)
+            stakingBalancesStore.refresh(userWalletId = params.userWalletId, stakingIds = tonAndSolanaIds)
             stakingYieldsStore.getSyncWithTimeout()
-            yieldsBalancesStore.storeError(userWalletId, tonAndSolanaIds)
+            stakingBalancesStore.storeError(userWalletId, tonAndSolanaIds)
         }
 
         coVerify(inverse = true) {
             stakeKitApi.getMultipleYieldBalances(any())
-            yieldsBalancesStore.storeActual(userWalletId = any(), values = any())
+            stakingBalancesStore.storeActual(userWalletId = any(), values = any())
         }
 
         val expected = IllegalStateException("No enabled yields for ${params.userWalletId}")
@@ -269,9 +269,9 @@ internal class DefaultMultiYieldBalanceFetcherTest {
     }
 
     @Test
-    fun `fetch yields balances failure if available yields does not contain ids from params`() = runTest {
+    fun `fetch staking balances failure if available yields does not contain ids from params`() = runTest {
         // Arrange
-        val params = MultiYieldBalanceFetcher.Params(userWalletId = userWalletId, stakingIds = tonAndSolanaIds)
+        val params = MultiStakingBalanceFetcher.Params(userWalletId = userWalletId, stakingIds = tonAndSolanaIds)
 
         coEvery { userWalletsStore.getSyncOrNull(params.userWalletId) } returns userWallet
 
@@ -284,14 +284,14 @@ internal class DefaultMultiYieldBalanceFetcherTest {
         // Assert
         coVerifyOrder {
             userWalletsStore.getSyncOrNull(params.userWalletId)
-            yieldsBalancesStore.refresh(userWalletId = params.userWalletId, stakingIds = tonAndSolanaIds)
+            stakingBalancesStore.refresh(userWalletId = params.userWalletId, stakingIds = tonAndSolanaIds)
             stakingYieldsStore.getSyncWithTimeout()
-            yieldsBalancesStore.storeError(userWalletId, tonAndSolanaIds)
+            stakingBalancesStore.storeError(userWalletId, tonAndSolanaIds)
         }
 
         coVerify(inverse = true) {
             stakeKitApi.getMultipleYieldBalances(any())
-            yieldsBalancesStore.storeActual(userWalletId = any(), values = any())
+            stakingBalancesStore.storeActual(userWalletId = any(), values = any())
         }
 
         val expected = IllegalStateException(
@@ -306,9 +306,9 @@ internal class DefaultMultiYieldBalanceFetcherTest {
     }
 
     @Test
-    fun `fetch yields balances failure if stakeKitApi getMultipleYieldBalances is failed`() = runTest {
+    fun `fetch staking balances failure if stakeKitApi getMultipleYieldBalances is failed`() = runTest {
         // Arrange
-        val params = MultiYieldBalanceFetcher.Params(userWalletId = userWalletId, stakingIds = tonAndSolanaIds)
+        val params = MultiStakingBalanceFetcher.Params(userWalletId = userWalletId, stakingIds = tonAndSolanaIds)
 
         coEvery { userWalletsStore.getSyncOrNull(params.userWalletId) } returns userWallet
 
@@ -329,13 +329,13 @@ internal class DefaultMultiYieldBalanceFetcherTest {
         // Assert
         coVerifyOrder {
             userWalletsStore.getSyncOrNull(params.userWalletId)
-            yieldsBalancesStore.refresh(userWalletId = params.userWalletId, stakingIds = tonAndSolanaIds)
+            stakingBalancesStore.refresh(userWalletId = params.userWalletId, stakingIds = tonAndSolanaIds)
             stakingYieldsStore.getSyncWithTimeout()
             stakeKitApi.getMultipleYieldBalances(requests)
-            yieldsBalancesStore.storeError(userWalletId = userWalletId, stakingIds = tonAndSolanaIds)
+            stakingBalancesStore.storeError(userWalletId = userWalletId, stakingIds = tonAndSolanaIds)
         }
 
-        coVerify(inverse = true) { yieldsBalancesStore.storeActual(userWalletId = any(), values = any()) }
+        coVerify(inverse = true) { stakingBalancesStore.storeActual(userWalletId = any(), values = any()) }
 
         val expected = ApiResponseError.NetworkException()
 
