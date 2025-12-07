@@ -4,12 +4,12 @@ import com.google.common.truth.Truth
 import com.tangem.common.test.data.staking.MockYieldBalanceWrapperDTOFactory
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.data.staking.toDomain
+import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.models.staking.StakingID
-import com.tangem.domain.models.staking.YieldBalance
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.staking.multi.MultiYieldBalanceProducer
-import com.tangem.domain.staking.multi.MultiYieldBalanceSupplier
-import com.tangem.domain.staking.single.SingleYieldBalanceProducer
+import com.tangem.domain.staking.multi.MultiStakingBalanceProducer
+import com.tangem.domain.staking.multi.MultiStakingBalanceSupplier
+import com.tangem.domain.staking.single.SingleStakingBalanceProducer
 import com.tangem.test.core.getEmittedValues
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.clearMocks
@@ -26,20 +26,20 @@ import org.junit.jupiter.api.TestInstance
 [REDACTED_AUTHOR]
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-internal class DefaultSingleYieldBalanceProducerTest {
+internal class DefaultSingleStakingBalanceProducerTest {
 
-    private val params = SingleYieldBalanceProducer.Params(
+    private val params = SingleStakingBalanceProducer.Params(
         userWalletId = UserWalletId(stringValue = "011"),
         stakingId = tonId,
     )
 
-    private val multiNetworkStatusSupplier = mockk<MultiYieldBalanceSupplier>()
+    private val multiNetworkStatusSupplier = mockk<MultiStakingBalanceSupplier>()
     private val analyticsExceptionHandler = mockk<AnalyticsExceptionHandler>(relaxUnitFun = true)
     private val dispatchers = TestingCoroutineDispatcherProvider()
 
-    private val producer = DefaultSingleYieldBalanceProducer(
+    private val producer = DefaultSingleStakingBalanceProducer(
         params = params,
-        multiYieldBalanceSupplier = multiNetworkStatusSupplier,
+        multiStakingBalanceSupplier = multiNetworkStatusSupplier,
         analyticsExceptionHandler = analyticsExceptionHandler,
         dispatchers = dispatchers,
     )
@@ -61,7 +61,7 @@ internal class DefaultSingleYieldBalanceProducerTest {
             ),
         )
 
-        val multiParams = MultiYieldBalanceProducer.Params(userWalletId = params.userWalletId)
+        val multiParams = MultiStakingBalanceProducer.Params(userWalletId = params.userWalletId)
         every { multiNetworkStatusSupplier(multiParams) } returns multiFlow
 
         // Act
@@ -74,17 +74,17 @@ internal class DefaultSingleYieldBalanceProducerTest {
     }
 
     @Test
-    fun `flow is updated if yield balance is updated`() = runTest {
+    fun `flow is updated if staking balance is updated`() = runTest {
         // Arrange
-        val multiFlow = MutableSharedFlow<Set<YieldBalance>>(replay = 2, extraBufferCapacity = 1)
+        val multiFlow = MutableSharedFlow<Set<StakingBalance>>(replay = 2, extraBufferCapacity = 1)
 
-        val multiParams = MultiYieldBalanceProducer.Params(userWalletId = params.userWalletId)
+        val multiParams = MultiStakingBalanceProducer.Params(userWalletId = params.userWalletId)
         every { multiNetworkStatusSupplier(multiParams) } returns multiFlow
 
         val producerFlow = producer.produceWithFallback()
 
         val balance = MockYieldBalanceWrapperDTOFactory.createWithBalance(tonId).toDomain()
-        val updatedBalance = YieldBalance.Error(stakingId = tonId)
+        val updatedBalance = StakingBalance.Error(stakingId = tonId)
 
         // Act (first emit)
         multiFlow.emit(value = setOf(balance))
@@ -108,9 +108,9 @@ internal class DefaultSingleYieldBalanceProducerTest {
     @Test
     fun `flow is filtered the same status`() = runTest {
         // Arrange
-        val multiFlow = MutableSharedFlow<Set<YieldBalance>>(replay = 2, extraBufferCapacity = 1)
+        val multiFlow = MutableSharedFlow<Set<StakingBalance>>(replay = 2, extraBufferCapacity = 1)
 
-        val multiParams = MultiYieldBalanceProducer.Params(userWalletId = params.userWalletId)
+        val multiParams = MultiStakingBalanceProducer.Params(userWalletId = params.userWalletId)
         every { multiNetworkStatusSupplier(multiParams) } returns multiFlow
 
         val producerFlow = producer.produceWithFallback()
@@ -153,7 +153,7 @@ internal class DefaultSingleYieldBalanceProducerTest {
         }
             .buffer(capacity = 5)
 
-        val multiParams = MultiYieldBalanceProducer.Params(userWalletId = params.userWalletId)
+        val multiParams = MultiStakingBalanceProducer.Params(userWalletId = params.userWalletId)
         every { multiNetworkStatusSupplier(multiParams) } returns multiFlow
 
         val producerFlow = producer.produceWithFallback()
@@ -162,7 +162,7 @@ internal class DefaultSingleYieldBalanceProducerTest {
         val actual1 = getEmittedValues(flow = producerFlow)
 
         // Assert (first emit)
-        val fallbackStatus = YieldBalance.Error(stakingId = tonId.copy(address = "0x1"))
+        val fallbackStatus = StakingBalance.Error(stakingId = tonId.copy(address = "0x1"))
 
         Truth.assertThat(actual1).hasSize(1)
         Truth.assertThat(actual1).containsExactly(fallbackStatus)
@@ -184,7 +184,7 @@ internal class DefaultSingleYieldBalanceProducerTest {
 
         val multiFlow = flowOf(setOf(balance))
 
-        val multiParams = MultiYieldBalanceProducer.Params(userWalletId = params.userWalletId)
+        val multiParams = MultiStakingBalanceProducer.Params(userWalletId = params.userWalletId)
         every { multiNetworkStatusSupplier(multiParams) } returns multiFlow
 
         val producerFlow = producer.produce()

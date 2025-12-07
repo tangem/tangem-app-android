@@ -5,7 +5,7 @@ import com.tangem.common.test.data.staking.MockYieldBalanceWrapperDTOFactory
 import com.tangem.common.test.datastore.MockStateDataStore
 import com.tangem.data.staking.toDomain
 import com.tangem.datasource.local.datastore.RuntimeSharedStore
-import com.tangem.domain.models.staking.YieldBalance
+import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.test.core.getEmittedValues
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
@@ -15,12 +15,12 @@ import org.junit.Test
 /**
 [REDACTED_AUTHOR]
  */
-internal class YieldsBalancesStoreGetMethodTest {
+internal class StakingBalancesStoreGetMethodTest {
 
-    private val runtimeStore = RuntimeSharedStore<WalletIdWithBalances>()
+    private val runtimeStore = RuntimeSharedStore<WalletIdWithStakingBalances>()
     private val persistenceStore = MockStateDataStore<WalletIdWithWrappers>(default = emptyMap())
 
-    private val store = DefaultYieldsBalancesStore(
+    private val store = DefaultStakingBalancesStore(
         runtimeStore = runtimeStore,
         persistenceStore = persistenceStore,
         dispatchers = TestingCoroutineDispatcherProvider(),
@@ -32,7 +32,7 @@ internal class YieldsBalancesStoreGetMethodTest {
 
         val values = getEmittedValues(flow = actual)
 
-        val expected = listOf(emptySet<YieldBalance>())
+        val expected = listOf(emptySet<StakingBalance>())
         Truth.assertThat(values).isEqualTo(expected)
     }
 
@@ -44,7 +44,7 @@ internal class YieldsBalancesStoreGetMethodTest {
 
         val values = getEmittedValues(flow = actual)
 
-        val expected = listOf(emptySet<YieldBalance>())
+        val expected = listOf(emptySet<StakingBalance>())
         Truth.assertThat(values).isEqualTo(expected)
     }
 
@@ -59,7 +59,7 @@ internal class YieldsBalancesStoreGetMethodTest {
         val values = getEmittedValues(flow = actual)
 
         Truth.assertThat(values.size).isEqualTo(1)
-        Truth.assertThat(values).isEqualTo(listOf(emptySet<YieldBalance>()))
+        Truth.assertThat(values).isEqualTo(listOf(emptySet<StakingBalance>()))
     }
 
     @Test

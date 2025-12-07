@@ -3,10 +3,10 @@ package com.tangem.data.staking.store
 import androidx.datastore.core.DataStore
 import com.tangem.datasource.api.stakekit.models.response.model.YieldBalanceWrapperDTO
 import com.tangem.datasource.local.datastore.RuntimeSharedStore
-import com.tangem.datasource.local.token.converter.YieldBalanceConverter
+import com.tangem.datasource.local.token.converter.StakingBalanceConverter
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.models.staking.StakingID
-import com.tangem.domain.models.staking.YieldBalance
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.addOrReplace
@@ -19,10 +19,10 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 internal typealias WalletIdWithWrappers = Map<String, Set<YieldBalanceWrapperDTO>>
-internal typealias WalletIdWithBalances = Map<UserWalletId, Set<YieldBalance>>
+internal typealias WalletIdWithStakingBalances = Map<UserWalletId, Set<StakingBalance>>
 
 /**
- * Default implementation of [YieldsBalancesStore]
+ * Default implementation of [StakingBalancesStore]
  *
  * @property runtimeStore     runtime store
  * @property persistenceStore persistence store
@@ -30,11 +30,11 @@ internal typealias WalletIdWithBalances = Map<UserWalletId, Set<YieldBalance>>
  *
 [REDACTED_AUTHOR]
  */
-internal class DefaultYieldsBalancesStore(
-    private val runtimeStore: RuntimeSharedStore<WalletIdWithBalances>,
+internal class DefaultStakingBalancesStore(
+    private val runtimeStore: RuntimeSharedStore<WalletIdWithStakingBalances>,
     private val persistenceStore: DataStore<WalletIdWithWrappers>,
     dispatchers: CoroutineDispatcherProvider,
-) : YieldsBalancesStore {
+) : StakingBalancesStore {
 
     private val scope = CoroutineScope(context = SupervisorJob() + dispatchers.io)
 
@@ -45,7 +45,7 @@ internal class DefaultYieldsBalancesStore(
             runtimeStore.store(
                 value = cachedStatuses.map { (stringWalletId, wrappers) ->
                     val key = UserWalletId(stringWalletId)
-                    val value = YieldBalanceConverter(isCached = true).convertSet(input = wrappers)
+                    val value = StakingBalanceConverter(isCached = true).convertSet(input = wrappers)
                         .filterNotNull()
                         .toSet()
 
@@ -56,17 +56,17 @@ internal class DefaultYieldsBalancesStore(
         }
     }
 
-    override fun get(userWalletId: UserWalletId): Flow<Set<YieldBalance>> {
+    override fun get(userWalletId: UserWalletId): Flow<Set<StakingBalance>> {
         return runtimeStore.get().map { it[userWalletId].orEmpty() }
     }
 
-    override suspend fun getSyncOrNull(userWalletId: UserWalletId, stakingId: StakingID): YieldBalance? {
+    override suspend fun getSyncOrNull(userWalletId: UserWalletId, stakingId: StakingID): StakingBalance? {
         return runtimeStore.getSyncOrNull()
             ?.get(userWalletId)
             ?.firstOrNull { it.stakingId == stakingId }
     }
 
-    override suspend fun getAllSyncOrNull(userWalletId: UserWalletId): Set<YieldBalance>? {
+    override suspend fun getAllSyncOrNull(userWalletId: UserWalletId): Set<StakingBalance>? {
         return runtimeStore.getSyncOrNull()?.get(userWalletId)
     }
 
@@ -91,7 +91,7 @@ internal class DefaultYieldsBalancesStore(
         updateInRuntime(
             userWalletId = userWalletId,
             stakingIds = stakingIds,
-            ifNotFound = ::createErrorYieldBalance,
+            ifNotFound = ::createErrorStakingBalance,
             update = { it.copySealed(source = StatusSource.ONLY_CACHE) },
         )
     }
@@ -107,7 +107,7 @@ internal class DefaultYieldsBalancesStore(
     }
 
     private suspend fun storeInRuntime(userWalletId: UserWalletId, values: Set<YieldBalanceWrapperDTO>) {
-        val newBalances = YieldBalanceConverter(isCached = false).convertSet(input = values)
+        val newBalances = StakingBalanceConverter(isCached = false).convertSet(input = values)
             .filterNotNull()
             .toSet()
 
@@ -140,8 +140,8 @@ internal class DefaultYieldsBalancesStore(
     private suspend fun updateInRuntime(
         userWalletId: UserWalletId,
         stakingIds: Set<StakingID>,
-        ifNotFound: (StakingID) -> YieldBalance? = { null },
-        update: (YieldBalance) -> YieldBalance,
+        ifNotFound: (StakingID) -> StakingBalance? = { null },
+        update: (StakingBalance) -> StakingBalance,
     ) {
         runtimeStore.update(default = emptyMap()) { stored ->
             stored.toMutableMap().apply {
@@ -165,7 +165,7 @@ internal class DefaultYieldsBalancesStore(
         }
     }
 
-    private fun createErrorYieldBalance(id: StakingID): YieldBalance = YieldBalance.Error(stakingId = id)
+    private fun createErrorStakingBalance(id: StakingID): StakingBalance = StakingBalance.Error(stakingId = id)
 
     private fun YieldBalanceWrapperDTO.getStakingId(): StakingID? {
         val integrationId = integrationId

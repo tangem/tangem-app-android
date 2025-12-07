@@ -5,14 +5,14 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.staking.StakingID
 
 /**
- * Fetcher of yield balance
+ * Fetcher of staking balance
  *
 [REDACTED_AUTHOR]
  */
-interface SingleYieldBalanceFetcher : FlowFetcher<SingleYieldBalanceFetcher.Params> {
+interface SingleStakingBalanceFetcher : FlowFetcher<SingleStakingBalanceFetcher.Params> {
 
     /**
-     * Params for fetching single yield balance
+     * Params for fetching single staking balance
      *
      * @property userWalletId user wallet ID
      * @property stakingId    staking ID
