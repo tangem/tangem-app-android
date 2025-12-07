@@ -1,15 +1,14 @@
 package com.tangem.data.staking.store
 
 import androidx.datastore.core.DataStore
-import com.tangem.data.staking.converters.ethpool.P2PEthPoolAccountConverter
-import com.tangem.data.staking.converters.ethpool.P2PYieldBalanceConverter
+import com.tangem.data.staking.converters.ethpool.P2PStakingBalanceConverter
 import com.tangem.datasource.api.ethpool.models.response.P2PEthPoolAccountResponse
 import com.tangem.datasource.local.datastore.RuntimeSharedStore
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.models.staking.StakingID
-import com.tangem.domain.models.staking.YieldBalance
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.staking.model.ethpool.P2PEthPoolVault
+import com.tangem.domain.staking.model.StakingIntegrationID
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.addOrReplace
 import kotlinx.coroutines.CoroutineScope
@@ -19,25 +18,22 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import timber.log.Timber
 
-internal typealias WalletIdWithP2PBalances = Map<UserWalletId, Set<YieldBalance>>
+internal typealias WalletIdWithP2PStakingBalances = Map<UserWalletId, Set<StakingBalance>>
 internal typealias WalletIdWithP2PResponses = Map<String, Set<P2PEthPoolAccountResponse>>
 
 /**
  * Default implementation of [P2PBalancesStore]
  *
- * Stores P2P ETH Pool staking balances with persistence support.
+ * Stores P2P ETH Pool staking balances.
  *
  * @property runtimeStore runtime store
  * @property persistenceStore persistence store
- * @property vaultsProvider provider for vaults
  * @param dispatchers coroutine dispatchers
  */
 internal class DefaultP2PBalancesStore(
-    private val runtimeStore: RuntimeSharedStore<WalletIdWithP2PBalances>,
+    private val runtimeStore: RuntimeSharedStore<WalletIdWithP2PStakingBalances>,
     private val persistenceStore: DataStore<WalletIdWithP2PResponses>,
-    private val vaultsProvider: suspend () -> List<P2PEthPoolVault>,
     dispatchers: CoroutineDispatcherProvider,
 ) : P2PBalancesStore {
 
@@ -46,19 +42,13 @@ internal class DefaultP2PBalancesStore(
     init {
         scope.launch {
             val cachedData = persistenceStore.data.firstOrNull() ?: return@launch
-            val vaults = vaultsProvider()
 
             runtimeStore.store(
                 value = cachedData.map { (stringWalletId, responses) ->
                     val key = UserWalletId(stringWalletId)
-                    val value = responses.mapNotNull { response ->
-                        val vault = vaults.firstOrNull { it.vaultAddress == response.vaultAddress }
-                            ?: return@mapNotNull null
-                        val account = P2PEthPoolAccountConverter.convert(response)
-                        P2PYieldBalanceConverter.convert(
-                            account = account,
-                            vault = vault,
-                            address = account.delegatorAddress,
+                    val value = responses.map { response ->
+                        P2PStakingBalanceConverter.convert(
+                            response = response,
                             source = StatusSource.CACHE,
                         )
                     }.toSet()
@@ -69,17 +59,17 @@ internal class DefaultP2PBalancesStore(
         }
     }
 
-    override fun get(userWalletId: UserWalletId): Flow<Set<YieldBalance>> {
+    override fun get(userWalletId: UserWalletId): Flow<Set<StakingBalance>> {
         return runtimeStore.get().map { it[userWalletId].orEmpty() }
     }
 
-    override suspend fun getSyncOrNull(userWalletId: UserWalletId, stakingId: StakingID): YieldBalance? {
+    override suspend fun getSyncOrNull(userWalletId: UserWalletId, stakingId: StakingID): StakingBalance? {
         return runtimeStore.getSyncOrNull()
             ?.get(userWalletId)
             ?.firstOrNull { it.stakingId == stakingId }
     }
 
-    override suspend fun getAllSyncOrNull(userWalletId: UserWalletId): Set<YieldBalance>? {
+    override suspend fun getAllSyncOrNull(userWalletId: UserWalletId): Set<StakingBalance>? {
         return runtimeStore.getSyncOrNull()?.get(userWalletId)
     }
 
@@ -104,7 +94,7 @@ internal class DefaultP2PBalancesStore(
         updateInRuntime(
             userWalletId = userWalletId,
             stakingIds = stakingIds,
-            ifNotFound = ::createErrorYieldBalance,
+            ifNotFound = ::createErrorStakingBalance,
             update = { it.copySealed(source = StatusSource.ONLY_CACHE) },
         )
     }
@@ -117,20 +107,9 @@ internal class DefaultP2PBalancesStore(
     }
 
     private suspend fun storeInRuntime(userWalletId: UserWalletId, values: Set<P2PEthPoolAccountResponse>) {
-        val vaults = vaultsProvider()
-
-        val newBalances = values.mapNotNull { response ->
-            val vault = vaults.firstOrNull { it.vaultAddress == response.vaultAddress }
-            if (vault == null) {
-                Timber.w("Vault not found for ${response.vaultAddress}")
-                return@mapNotNull null
-            }
-
-            val account = P2PEthPoolAccountConverter.convert(response)
-            P2PYieldBalanceConverter.convert(
-                account = account,
-                vault = vault,
-                address = account.delegatorAddress,
+        val newBalances = values.map { response ->
+            P2PStakingBalanceConverter.convert(
+                response = response,
                 source = StatusSource.ACTUAL,
             )
         }.toSet()
@@ -173,8 +152,7 @@ internal class DefaultP2PBalancesStore(
             current.toMutableMap().apply {
                 this[userWalletId.stringValue] = this[userWalletId.stringValue].orEmpty()
                     .filterNot { response ->
-                        val responseIntegrationId = "p2p-ethereum-pooled:${response.vaultAddress}"
-                        responseIntegrationId in integrationIds
+                        StakingIntegrationID.P2P.EthereumPooled.value in integrationIds
                     }
                     .toSet()
             }
@@ -184,8 +162,8 @@ internal class DefaultP2PBalancesStore(
     private suspend fun updateInRuntime(
         userWalletId: UserWalletId,
         stakingIds: Set<StakingID>,
-        ifNotFound: (StakingID) -> YieldBalance? = { null },
-        update: (YieldBalance) -> YieldBalance,
+        ifNotFound: (StakingID) -> StakingBalance? = { null },
+        update: (StakingBalance) -> StakingBalance,
     ) {
         runtimeStore.update(default = emptyMap()) { stored ->
             stored.toMutableMap().apply {
@@ -209,5 +187,5 @@ internal class DefaultP2PBalancesStore(
         }
     }
 
-    private fun createErrorYieldBalance(id: StakingID): YieldBalance = YieldBalance.Error(stakingId = id)
+    private fun createErrorStakingBalance(id: StakingID): StakingBalance = StakingBalance.Error(stakingId = id)
 }
