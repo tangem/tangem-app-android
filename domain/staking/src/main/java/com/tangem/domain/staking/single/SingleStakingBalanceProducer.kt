@@ -2,15 +2,15 @@ package com.tangem.domain.staking.single
 
 import com.tangem.domain.core.flow.FlowProducer
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.models.staking.StakingID
-import com.tangem.domain.models.staking.YieldBalance
 
 /**
- * Producer of yield balance for selected wallet [UserWalletId]
+ * Producer of staking balance for selected wallet [UserWalletId]
  *
 [REDACTED_AUTHOR]
  */
-interface SingleYieldBalanceProducer : FlowProducer<YieldBalance> {
+interface SingleStakingBalanceProducer : FlowProducer<StakingBalance> {
 
     data class Params(
         val userWalletId: UserWalletId,
@@ -19,7 +19,7 @@ interface SingleYieldBalanceProducer : FlowProducer<YieldBalance> {
 
         override fun toString(): String {
             return """
-                SingleYieldBalanceProducer.Params(
+                SingleStakingBalanceProducer.Params(
                     userWalletId = $userWalletId,
                     stakingId = $stakingId,
                 )
@@ -27,5 +27,5 @@ interface SingleYieldBalanceProducer : FlowProducer<YieldBalance> {
         }
     }
 
-    interface Factory : FlowProducer.Factory<Params, SingleYieldBalanceProducer>
+    interface Factory : FlowProducer.Factory<Params, SingleStakingBalanceProducer>
 }

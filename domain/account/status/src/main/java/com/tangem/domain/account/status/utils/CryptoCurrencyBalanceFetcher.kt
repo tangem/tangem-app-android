@@ -6,7 +6,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.staking.StakingIdFactory
-import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
+import com.tangem.domain.staking.multi.MultiStakingBalanceFetcher
 import com.tangem.domain.tokens.wallet.FetchingSource
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
@@ -19,7 +19,7 @@ import timber.log.Timber
  *
  * @property multiNetworkStatusFetcher Fetcher for updating network statuses.
  * @property multiQuoteStatusFetcher Fetcher for updating quote statuses.
- * @property multiYieldBalanceFetcher Fetcher for updating yield balances.
+ * @property multiStakingBalanceFetcher Fetcher for updating staking balances.
  * @property stakingIdFactory Factory for creating staking IDs.
  * @property parallelUpdatingScope Coroutine scope for parallel balance updates.
  *
@@ -28,7 +28,7 @@ import timber.log.Timber
 class CryptoCurrencyBalanceFetcher(
     private val multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
     private val multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
-    private val multiYieldBalanceFetcher: MultiYieldBalanceFetcher,
+    private val multiStakingBalanceFetcher: MultiStakingBalanceFetcher,
     private val stakingIdFactory: StakingIdFactory,
     private val parallelUpdatingScope: CoroutineScope,
 ) {
@@ -52,7 +52,10 @@ class CryptoCurrencyBalanceFetcher(
                     FetchingSource.NETWORK to refreshNetworks(userWalletId = userWalletId, currencies = currencies)
                 },
                 async {
-                    FetchingSource.STAKING to refreshYieldBalances(userWalletId = userWalletId, currencies = currencies)
+                    FetchingSource.STAKING to refreshStakingBalances(
+                        userWalletId = userWalletId,
+                        currencies = currencies,
+                    )
                 },
                 async { FetchingSource.QUOTE to refreshQuotes(currencies = currencies) },
             )
@@ -85,7 +88,7 @@ class CryptoCurrencyBalanceFetcher(
         )
     }
 
-    private suspend fun refreshYieldBalances(
+    private suspend fun refreshStakingBalances(
         userWalletId: UserWalletId,
         currencies: List<CryptoCurrency>,
     ): Either<Throwable, Unit> {
@@ -93,8 +96,8 @@ class CryptoCurrencyBalanceFetcher(
             stakingIdFactory.create(userWalletId = userWalletId, cryptoCurrency = it).getOrNull()
         }
 
-        return multiYieldBalanceFetcher(
-            params = MultiYieldBalanceFetcher.Params(userWalletId = userWalletId, stakingIds = stakingIds),
+        return multiStakingBalanceFetcher(
+            params = MultiStakingBalanceFetcher.Params(userWalletId = userWalletId, stakingIds = stakingIds),
         )
     }
 
