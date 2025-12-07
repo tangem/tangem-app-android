@@ -19,7 +19,10 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.onEach
 import timber.log.Timber
 
 @Suppress("LongParameterList")
@@ -39,10 +42,11 @@ internal class TangemPayMainSubscriber @AssistedInject constructor(
 
     private fun subscribeOnTangemPayInfoUpdates(): Flow<*> {
         return tangemPayMainInfoManager.mainScreenCustomerInfo
-            .filterNotNull()
-            .filter { it.first == userWallet.walletId }
+            .filter { it.isNotEmpty() }
             .distinctUntilChanged()
-            .onEach { (userWalletId, mainInfoData) ->
+            .onEach { data ->
+                val userWalletId = userWallet.walletId
+                val mainInfoData = data[userWalletId] ?: return@onEach
                 mainInfoData.onLeft { tangemPayError ->
                     when (tangemPayError) {
                         TangemPayCustomerInfoError.RefreshNeededError -> {
@@ -66,9 +70,9 @@ internal class TangemPayMainSubscriber @AssistedInject constructor(
                             )
                         }
                     }
-                }.onRight { data ->
-                    updateTangemPay(data, userWalletId)
-                    analytics.send(customerInfo = data)
+                }.onRight { customerInfo ->
+                    updateTangemPay(customerInfo, userWalletId)
+                    analytics.send(customerInfo = customerInfo)
                 }
             }
     }
