@@ -403,7 +403,7 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
                 value = NetworkStatus.MissedDerivation, // Caution!!! Do not change this status
             ).some(),
             maybeQuoteStatus = quoteStatus.toOption(),
-            maybeYieldBalance = none(),
+            maybeStakingBalance = none(),
         )
     }
 

@@ -12,7 +12,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.staking.StakingIdFactory
-import com.tangem.domain.staking.single.SingleYieldBalanceFetcher
+import com.tangem.domain.staking.single.SingleStakingBalanceFetcher
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import kotlinx.coroutines.async
@@ -32,7 +32,7 @@ class AddCryptoCurrenciesUseCase(
     private val walletManagersFacade: WalletManagersFacade,
     private val multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
     private val multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
-    private val singleYieldBalanceFetcher: SingleYieldBalanceFetcher,
+    private val singleStakingBalanceFetcher: SingleStakingBalanceFetcher,
     private val multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
     private val stakingIdFactory: StakingIdFactory,
 ) {
@@ -82,7 +82,7 @@ class AddCryptoCurrenciesUseCase(
 
                 awaitAll(
                     async { refreshUpdatedNetworks(userWalletId, currencyToAdd, existingCurrencies) },
-                    async { refreshUpdatedYieldBalances(userWalletId, currencyToAdd) },
+                    async { refreshUpdatedStakingBalances(userWalletId, currencyToAdd) },
                     async { refreshUpdatedQuotes(currencyToAdd) },
                 )
             }
@@ -122,7 +122,7 @@ class AddCryptoCurrenciesUseCase(
 
             awaitAll(
                 async { refreshUpdatedNetworks(userWalletId, tokenToAdd, existingCurrencies) },
-                async { refreshUpdatedYieldBalances(userWalletId, tokenToAdd) },
+                async { refreshUpdatedStakingBalances(userWalletId, tokenToAdd) },
                 async { refreshUpdatedQuotes(tokenToAdd) },
             )
         }
@@ -177,7 +177,7 @@ class AddCryptoCurrenciesUseCase(
         )
     }
 
-    private suspend fun refreshUpdatedYieldBalances(
+    private suspend fun refreshUpdatedStakingBalances(
         userWalletId: UserWalletId,
         addedCurrency: CryptoCurrency,
     ): Either<Throwable, Unit> = either {
@@ -195,8 +195,8 @@ class AddCryptoCurrenciesUseCase(
                 return@either
             }
 
-        singleYieldBalanceFetcher(
-            params = SingleYieldBalanceFetcher.Params(userWalletId = userWalletId, stakingId = stakingId),
+        singleStakingBalanceFetcher(
+            params = SingleStakingBalanceFetcher.Params(userWalletId = userWalletId, stakingId = stakingId),
         )
             .bind()
     }

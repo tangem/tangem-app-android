@@ -5,7 +5,6 @@
     <ID>BooleanPropertyNaming:AddStakingNotificationsTransformer.kt$AddStakingNotificationsTransformer$val showNotification = sendingAmount + feeAmount &gt; balance</ID>
     <ID>BooleanPropertyNaming:AmountCurrencyChangeStateTransformer.kt$AmountCurrencyChangeStateTransformer$private val value: Boolean</ID>
     <ID>BooleanPropertyNaming:StakingModel.kt$StakingModel$val noBalanceState = balanceState == null</ID>
-    <ID>BooleanPropertyNaming:StakingModel.kt$StakingModel$val noYieldBalanceData = cryptoCurrencyStatus.value.yieldBalance !is YieldBalance.Data</ID>
     <ID>BooleanPropertyNaming:StakingUiState.kt$StakingStates.InitialInfoState.Data$val showBanner: Boolean</ID>
     <ID>BooleanPropertyNaming:StakingUiState.kt$StakingUiState$val showColdWalletInteractionIcon: Boolean</ID>
     <ID>CanBeNonNullable:StakingScreen.kt$bottomSheetConfig: TangemBottomSheetConfig?</ID>
@@ -42,7 +41,6 @@
     <ID>UnnecessaryLet:StakingTosText.kt$let { onTextClick(PRIVACY_POLICY_URL) }</ID>
     <ID>UnnecessaryLet:StakingTosText.kt$let { onTextClick(TERMS_OF_USE_URL) }</ID>
     <ID>UnsafeCallOnNullableType:StakingModel.kt$StakingModel$tonAccountInitializeTransaction!!</ID>
-    <ID>UseOrEmpty:StakingModel.kt$StakingModel$yieldBalance?.balance?.items ?: emptyList()</ID>
     <ID>UseOrEmpty:StakingTransactionSender.kt$StakingTransactionSender$getExplorerTransactionUrlUseCase( txHash = transactionHashes.last(), networkId = cryptoCurrencyStatus.currency.network.id, ).getOrNull() ?: ""</ID>
     <ID>VarCouldBeVal:StakingModel.kt$StakingModel$private var actionsJobHolder: JobHolder = JobHolder()</ID>
     <ID>VarCouldBeVal:StakingModel.kt$StakingModel$private var approvalJobHolder: JobHolder = JobHolder()</ID>

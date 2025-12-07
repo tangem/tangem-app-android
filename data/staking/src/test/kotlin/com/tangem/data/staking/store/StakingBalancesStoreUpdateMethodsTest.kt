@@ -7,8 +7,8 @@ import com.tangem.data.staking.toDomain
 import com.tangem.datasource.api.stakekit.models.response.model.YieldBalanceWrapperDTO
 import com.tangem.datasource.local.datastore.RuntimeSharedStore
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.models.staking.StakingID
-import com.tangem.domain.models.staking.YieldBalance
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import kotlinx.coroutines.flow.firstOrNull
@@ -18,12 +18,12 @@ import org.junit.Test
 /**
 [REDACTED_AUTHOR]
  */
-internal class YieldsBalancesStoreUpdateMethodsTest {
+internal class StakingBalancesStoreUpdateMethodsTest {
 
-    private val runtimeStore = RuntimeSharedStore<WalletIdWithBalances>()
+    private val runtimeStore = RuntimeSharedStore<WalletIdWithStakingBalances>()
     private val persistenceStore = MockStateDataStore<WalletIdWithWrappers>(default = emptyMap())
 
-    private val store = DefaultYieldsBalancesStore(
+    private val store = DefaultStakingBalancesStore(
         runtimeStore = runtimeStore,
         persistenceStore = persistenceStore,
         dispatchers = TestingCoroutineDispatcherProvider(),
@@ -33,7 +33,7 @@ internal class YieldsBalancesStoreUpdateMethodsTest {
     fun `refresh the single id if runtime store is empty`() = runTest {
         store.refresh(userWalletId = userWalletId, stakingId = stakingId)
 
-        val runtimeExpected = mapOf(userWalletId to emptySet<YieldBalance>())
+        val runtimeExpected = mapOf(userWalletId to emptySet<StakingBalance>())
 
         Truth.assertThat(runtimeStore.getSyncOrNull()).isEqualTo(runtimeExpected)
         Truth.assertThat(persistenceStore.data.firstOrNull()).isEqualTo(emptyMap<String, Set<YieldBalanceWrapperDTO>>())
@@ -63,7 +63,7 @@ internal class YieldsBalancesStoreUpdateMethodsTest {
     fun `refresh the multi ids if runtime store is empty`() = runTest {
         store.refresh(userWalletId = userWalletId, stakingIds = stakingIds)
 
-        val runtimeExpected = mapOf(userWalletId to emptySet<YieldBalance>())
+        val runtimeExpected = mapOf(userWalletId to emptySet<StakingBalance>())
 
         Truth.assertThat(runtimeStore.getSyncOrNull()).isEqualTo(runtimeExpected)
         Truth.assertThat(persistenceStore.data.firstOrNull()).isEqualTo(emptyMap<String, Set<YieldBalanceWrapperDTO>>())
@@ -129,7 +129,7 @@ internal class YieldsBalancesStoreUpdateMethodsTest {
         store.storeError(userWalletId = userWalletId, stakingIds = setOf(stakingId))
 
         val runtimeExpected = mapOf(
-            userWalletId to setOf(YieldBalance.Error(stakingId)),
+            userWalletId to setOf(StakingBalance.Error(stakingId)),
         )
 
         Truth.assertThat(runtimeStore.getSyncOrNull()).isEqualTo(runtimeExpected)

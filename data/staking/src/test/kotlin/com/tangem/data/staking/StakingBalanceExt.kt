@@ -1,28 +1,19 @@
 package com.tangem.data.staking
 
-import com.tangem.common.test.data.staking.MockP2PEthPoolAccountResponseFactory
-import com.tangem.data.staking.converters.ethpool.P2PEthPoolAccountConverter
-import com.tangem.data.staking.converters.ethpool.P2PYieldBalanceConverter
+import com.tangem.data.staking.converters.ethpool.P2PStakingBalanceConverter
 import com.tangem.datasource.api.ethpool.models.response.P2PEthPoolAccountResponse
 import com.tangem.datasource.api.stakekit.models.response.model.YieldBalanceWrapperDTO
-import com.tangem.datasource.local.token.converter.YieldBalanceConverter
+import com.tangem.datasource.local.token.converter.StakingBalanceConverter
 import com.tangem.domain.models.StatusSource
-import com.tangem.domain.models.staking.YieldBalance
-import com.tangem.domain.staking.model.ethpool.P2PEthPoolVault
+import com.tangem.domain.models.staking.StakingBalance
 
-internal fun YieldBalanceWrapperDTO.toDomain(source: StatusSource = StatusSource.CACHE): YieldBalance {
-    return YieldBalanceConverter(source = source).convert(this)!!
+internal fun YieldBalanceWrapperDTO.toDomain(source: StatusSource = StatusSource.CACHE): StakingBalance {
+    return StakingBalanceConverter(isCached = source == StatusSource.CACHE).convert(this)!!
 }
 
-internal fun P2PEthPoolAccountResponse.toDomain(
-    vault: P2PEthPoolVault = MockP2PEthPoolAccountResponseFactory.createMockVault(vaultAddress = vaultAddress),
-    source: StatusSource = StatusSource.CACHE,
-): YieldBalance {
-    val account = P2PEthPoolAccountConverter.convert(this)
-    return P2PYieldBalanceConverter.convert(
-        account = account,
-        vault = vault,
-        address = account.delegatorAddress,
+internal fun P2PEthPoolAccountResponse.toDomain(source: StatusSource = StatusSource.CACHE): StakingBalance.Data.P2P {
+    return P2PStakingBalanceConverter.convert(
+        response = this,
         source = source,
     )
 }
