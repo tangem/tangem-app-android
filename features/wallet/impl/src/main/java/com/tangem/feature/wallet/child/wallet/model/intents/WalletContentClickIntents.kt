@@ -8,7 +8,7 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.models.staking.YieldBalance
+import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
@@ -239,7 +239,7 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
                     token = currencyStatus.currency.symbol,
                     blockchain = currencyStatus.currency.network.name,
                     action = "Staking",
-                    state = if (currencyStatus.value.yieldBalance is YieldBalance.Data) {
+                    state = if (currencyStatus.value.stakingBalance is StakingBalance.Data) {
                         "Enabled"
                     } else {
                         "Disabled"
