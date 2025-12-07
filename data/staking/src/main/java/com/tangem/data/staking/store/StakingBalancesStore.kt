@@ -1,15 +1,13 @@
 package com.tangem.data.staking.store
 
-import com.tangem.datasource.api.ethpool.models.response.P2PEthPoolAccountResponse
+import com.tangem.datasource.api.stakekit.models.response.model.YieldBalanceWrapperDTO
 import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.models.staking.StakingID
 import com.tangem.domain.models.wallet.UserWalletId
 import kotlinx.coroutines.flow.Flow
 
-/**
- * Store for P2P ETH Pool staking balances
- */
-interface P2PBalancesStore {
+/** Store of StakeKit [StakingBalance] */
+interface StakingBalancesStore {
 
     fun get(userWalletId: UserWalletId): Flow<Set<StakingBalance>>
 
@@ -21,7 +19,7 @@ interface P2PBalancesStore {
 
     suspend fun refresh(userWalletId: UserWalletId, stakingIds: Set<StakingID>)
 
-    suspend fun storeActual(userWalletId: UserWalletId, values: Set<P2PEthPoolAccountResponse>)
+    suspend fun storeActual(userWalletId: UserWalletId, values: Set<YieldBalanceWrapperDTO>)
 
     suspend fun storeError(userWalletId: UserWalletId, stakingIds: Set<StakingID>)
 
