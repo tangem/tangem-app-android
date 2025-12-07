@@ -6,7 +6,7 @@ import com.tangem.common.test.data.staking.MockYieldBalanceWrapperDTOFactory
 import com.tangem.common.test.datastore.MockStateDataStore
 import com.tangem.data.staking.toDomain
 import com.tangem.datasource.local.datastore.RuntimeSharedStore
-import com.tangem.domain.models.staking.YieldBalance
+import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.every
@@ -18,16 +18,16 @@ import org.junit.Test
 /**
 [REDACTED_AUTHOR]
  */
-internal class YieldsBalancesStoreInitializationTest {
+internal class StakingBalancesStoreInitializationTest {
 
     @Test
     fun `test initialization if cache store is empty`() = runTest {
-        val runtimeStore = RuntimeSharedStore<WalletIdWithBalances>()
+        val runtimeStore = RuntimeSharedStore<WalletIdWithStakingBalances>()
         val persistenceStore: DataStore<WalletIdWithWrappers> = mockk()
 
         every { persistenceStore.data } returns emptyFlow()
 
-        DefaultYieldsBalancesStore(
+        DefaultStakingBalancesStore(
             runtimeStore = runtimeStore,
             persistenceStore = persistenceStore,
             dispatchers = TestingCoroutineDispatcherProvider(),
@@ -38,21 +38,21 @@ internal class YieldsBalancesStoreInitializationTest {
 
     @Test
     fun `test initialization if cache store contains empty map`() = runTest {
-        val runtimeStore = RuntimeSharedStore<WalletIdWithBalances>()
+        val runtimeStore = RuntimeSharedStore<WalletIdWithStakingBalances>()
         val persistenceStore = MockStateDataStore<WalletIdWithWrappers>(default = emptyMap())
 
-        DefaultYieldsBalancesStore(
+        DefaultStakingBalancesStore(
             runtimeStore = runtimeStore,
             persistenceStore = persistenceStore,
             dispatchers = TestingCoroutineDispatcherProvider(),
         )
 
-        Truth.assertThat(runtimeStore.getSyncOrNull()).isEqualTo(emptyMap<String, Set<YieldBalance>>())
+        Truth.assertThat(runtimeStore.getSyncOrNull()).isEqualTo(emptyMap<String, Set<StakingBalance>>())
     }
 
     @Test
     fun `test initialization if cache store is not empty`() = runTest {
-        val runtimeStore = RuntimeSharedStore<WalletIdWithBalances>()
+        val runtimeStore = RuntimeSharedStore<WalletIdWithStakingBalances>()
         val persistenceStore = MockStateDataStore<WalletIdWithWrappers>(default = emptyMap())
 
         val wrapper = MockYieldBalanceWrapperDTOFactory.createWithBalance()
@@ -63,7 +63,7 @@ internal class YieldsBalancesStoreInitializationTest {
             }
         }
 
-        DefaultYieldsBalancesStore(
+        DefaultStakingBalancesStore(
             runtimeStore = runtimeStore,
             persistenceStore = persistenceStore,
             dispatchers = TestingCoroutineDispatcherProvider(),
