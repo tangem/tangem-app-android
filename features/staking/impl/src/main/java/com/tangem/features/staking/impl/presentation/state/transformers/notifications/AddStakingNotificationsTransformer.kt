@@ -127,7 +127,7 @@ internal class AddStakingNotificationsTransformer(
         }
 
         val isActualSources = with(cryptoCurrencyStatus.value) {
-            sources.yieldBalanceSource.isActual() && sources.networkSource.isActual()
+            sources.stakingBalanceSource.isActual() && sources.networkSource.isActual()
         }
 
         return prevState.copy(
