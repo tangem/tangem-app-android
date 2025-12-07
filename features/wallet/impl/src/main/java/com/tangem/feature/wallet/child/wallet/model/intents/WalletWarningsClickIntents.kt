@@ -31,7 +31,7 @@ import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.settings.NeverToSuggestRateAppUseCase
 import com.tangem.domain.settings.RemindToRateAppLaterUseCase
 import com.tangem.domain.staking.StakingIdFactory
-import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
+import com.tangem.domain.staking.multi.MultiStakingBalanceFetcher
 import com.tangem.domain.tokens.model.analytics.PromoAnalyticsEvent
 import com.tangem.domain.tokens.model.analytics.PromoAnalyticsEvent.Program
 import com.tangem.domain.tokens.model.analytics.PromoAnalyticsEvent.PromotionBannerClicked
@@ -128,7 +128,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     private val urlOpener: UrlOpener,
     private val multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
     private val multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
-    private val multiYieldBalanceFetcher: MultiYieldBalanceFetcher,
+    private val multiStakingBalanceFetcher: MultiStakingBalanceFetcher,
     private val stakingIdFactory: StakingIdFactory,
     private val appRouter: AppRouter,
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
@@ -529,8 +529,11 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
                         stakingIdFactory.create(userWalletId = userWalletId, cryptoCurrency = it).getOrNull()
                     }
 
-                    multiYieldBalanceFetcher(
-                        params = MultiYieldBalanceFetcher.Params(userWalletId = userWalletId, stakingIds = stakingIds),
+                    multiStakingBalanceFetcher(
+                        params = MultiStakingBalanceFetcher.Params(
+                            userWalletId = userWalletId,
+                            stakingIds = stakingIds,
+                        ),
                     )
                         .onLeft { Timber.e("Unable to fetch yield balances: $it") }
                 },
