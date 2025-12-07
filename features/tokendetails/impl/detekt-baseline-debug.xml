@@ -36,7 +36,6 @@
     <ID>NullableToStringCall:DefaultTokenDetailsDeepLinkHandler.kt$DefaultTokenDetailsDeepLinkHandler$$tokenId</ID>
     <ID>NullableToStringCall:TokenDetailsStakingInfoConverter.kt$TokenDetailsStakingInfoConverter$$stakingCryptoAmount</ID>
     <ID>NullableToStringCall:TokenDetailsStakingInfoConverter.kt$TokenDetailsStakingInfoConverter$$stakingEntryInfo</ID>
-    <ID>NullableToStringCall:TokenDetailsStakingInfoConverter.kt$TokenDetailsStakingInfoConverter$$yieldBalance</ID>
     <ID>PropertyUsedBeforeDeclaration:ExpressStatusBottomSheetStateProvider.kt$ExpressStatusBottomSheetStateProvider$network</ID>
     <ID>PropertyUsedBeforeDeclaration:ExpressStatusBottomSheetStateProvider.kt$ExpressStatusBottomSheetStateProvider$token</ID>
     <ID>PropertyUsedBeforeDeclaration:TokenDetailsModel.kt$TokenDetailsModel$uiState</ID>
@@ -48,7 +47,6 @@
     <ID>UseEmptyCounterpart:TokenDetailsAnalyticsEvent.kt$TokenDetailsAnalyticsEvent$mapOf()</ID>
     <ID>UseEmptyCounterpart:TokenDetailsAnalyticsEvent.kt$TokenDetailsAnalyticsEvent.Notice$mapOf()</ID>
     <ID>UseOrEmpty:ExchangeStatusFactory.kt$ExchangeStatusFactory$savedTransactions ?.flatMap { setOf(it.fromCryptoCurrency.id, it.toCryptoCurrency.id) } ?.toSet() ?.getQuotesOrEmpty() ?: emptySet()</ID>
-    <ID>UseOrEmpty:TokenDetailsStakingInfoConverter.kt$TokenDetailsStakingInfoConverter$yieldBalance?.balance?.items ?: emptyList()</ID>
     <ID>VarCouldBeVal:TokenDetailsModel.kt$TokenDetailsModel$private var expressTxStatusTaskScheduler = SingleTaskScheduler&lt;PersistentList&lt;ExpressTransactionStateUM&gt;&gt;()</ID>
   </CurrentIssues>
 </SmellBaseline>

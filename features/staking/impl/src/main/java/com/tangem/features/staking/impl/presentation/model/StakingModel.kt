@@ -190,9 +190,9 @@ internal class StakingModel @Inject constructor(
 
     private val balancesToShow: List<BalanceItem>
         get() {
-            val yieldBalance = cryptoCurrencyStatus.value.yieldBalance as? YieldBalance.Data
+            val stakeKitBalance = cryptoCurrencyStatus.value.stakingBalance as? StakingBalance.Data.StakeKit
             return invalidatePendingTransactionsUseCase(
-                balanceItems = yieldBalance?.balance?.items ?: emptyList(),
+                balanceItems = stakeKitBalance?.balance?.items.orEmpty(),
                 stakingActions = stakingActions,
                 token = yield.token,
             ).getOrElse { emptyList() }
@@ -277,10 +277,10 @@ internal class StakingModel @Inject constructor(
         modelScope.launch {
             val isInitialInfoStep = value.currentStep == StakingStep.InitialInfo
             val noBalanceState = balanceState == null
-            val noYieldBalanceData = cryptoCurrencyStatus.value.yieldBalance !is YieldBalance.Data
+            val hasNoYieldBalanceData = cryptoCurrencyStatus.value.stakingBalance !is StakingBalance.Data.StakeKit
 
             when {
-                isInitialInfoStep && noBalanceState && yield.allValidatorsFull && noYieldBalanceData -> {
+                isInitialInfoStep && noBalanceState && yield.allValidatorsFull && hasNoYieldBalanceData -> {
                     stakingEventFactory.createStakingValidatorsUnavailableAlert()
                     return@launch
                 }
@@ -1116,7 +1116,7 @@ internal class StakingModel @Inject constructor(
     private suspend fun onDataLoaded(status: CryptoCurrencyStatus) {
         if (!isInitialInfoAnalyticSent) {
             isInitialInfoAnalyticSent = true
-            val balances = status.value.yieldBalance as? YieldBalance.Data
+            val balances = status.value.stakingBalance as? StakingBalance.Data.StakeKit
             paramsInterceptorHolder.addParamsInterceptor(
                 interceptor = StakingParamsInterceptor(status.currency.symbol),
             )
