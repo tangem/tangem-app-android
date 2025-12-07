@@ -4,28 +4,32 @@ import com.tangem.datasource.api.stakekit.models.response.model.BalanceDTO
 import com.tangem.datasource.api.stakekit.models.response.model.YieldBalanceWrapperDTO
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.staking.BalanceItem
+import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.models.staking.StakingID
-import com.tangem.domain.models.staking.YieldBalance
 import com.tangem.domain.models.staking.YieldBalanceItem
 import com.tangem.utils.converter.Converter
 import kotlinx.datetime.Instant
 
-class YieldBalanceConverter(
+/**
+ * Converts StakeKit DTO to [StakingBalance].
+ * Returns [StakingBalance.Data.StakeKit] for non-empty balances, [StakingBalance.Empty] otherwise.
+ */
+class StakingBalanceConverter(
     private val source: StatusSource,
-) : Converter<YieldBalanceWrapperDTO, YieldBalance?> {
+) : Converter<YieldBalanceWrapperDTO, StakingBalance?> {
 
     constructor(isCached: Boolean) : this(source = if (isCached) StatusSource.CACHE else StatusSource.ACTUAL)
 
-    override fun convert(value: YieldBalanceWrapperDTO): YieldBalance? {
+    override fun convert(value: YieldBalanceWrapperDTO): StakingBalance? {
         val stakingId = StakingID(
             integrationId = value.integrationId ?: return null,
             address = value.addresses.address,
         )
 
         return if (value.balances.isEmpty()) {
-            YieldBalance.Empty(stakingId = stakingId, source = source)
+            StakingBalance.Empty(stakingId = stakingId, source = source)
         } else {
-            YieldBalance.Data(
+            StakingBalance.Data.StakeKit(
                 stakingId = stakingId,
                 balance = YieldBalanceItem(
                     items = value.balances
