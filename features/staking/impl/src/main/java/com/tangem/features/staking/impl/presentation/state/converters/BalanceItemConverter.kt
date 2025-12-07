@@ -10,7 +10,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.staking.BalanceItem
 import com.tangem.domain.models.staking.BalanceType
 import com.tangem.domain.models.staking.BalanceType.Companion.isClickable
-import com.tangem.domain.models.staking.YieldBalance
+import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.models.staking.action.StakingActionType
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.staking.utils.getRewardStakingBalance
@@ -77,11 +77,11 @@ internal class BalanceItemConverter(
         val isIncludeStakingTotalBalance = BlockchainUtils.isIncludeStakingTotalBalance(
             blockchainId = cryptoCurrencyStatus.currency.network.rawId,
         )
-        val yieldBalance = cryptoCurrencyStatus.value.yieldBalance as? YieldBalance.Data
+        val stakeKitBalance = cryptoCurrencyStatus.value.stakingBalance as? StakingBalance.Data.StakeKit
         return if (isIncludeStakingTotalBalance) {
             amount
         } else {
-            amount - yieldBalance?.getRewardStakingBalance().orZero()
+            amount - stakeKitBalance?.getRewardStakingBalance().orZero()
         }
     }
 
