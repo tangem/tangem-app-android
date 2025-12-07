@@ -1,8 +1,8 @@
 package com.tangem.data.staking.store
 
 import com.tangem.datasource.api.ethpool.models.response.P2PEthPoolAccountResponse
+import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.models.staking.StakingID
-import com.tangem.domain.models.staking.YieldBalance
 import com.tangem.domain.models.wallet.UserWalletId
 import kotlinx.coroutines.flow.Flow
 
@@ -11,11 +11,11 @@ import kotlinx.coroutines.flow.Flow
  */
 interface P2PBalancesStore {
 
-    fun get(userWalletId: UserWalletId): Flow<Set<YieldBalance>>
+    fun get(userWalletId: UserWalletId): Flow<Set<StakingBalance>>
 
-    suspend fun getSyncOrNull(userWalletId: UserWalletId, stakingId: StakingID): YieldBalance?
+    suspend fun getSyncOrNull(userWalletId: UserWalletId, stakingId: StakingID): StakingBalance?
 
-    suspend fun getAllSyncOrNull(userWalletId: UserWalletId): Set<YieldBalance>?
+    suspend fun getAllSyncOrNull(userWalletId: UserWalletId): Set<StakingBalance>?
 
     suspend fun refresh(userWalletId: UserWalletId, stakingId: StakingID)
 
