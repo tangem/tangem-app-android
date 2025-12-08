@@ -86,7 +86,7 @@ internal class TangemPayMainSubscriber @AssistedInject constructor(
                 userWalletId = userWalletId,
                 value = data,
                 cardFrozenState = cardFrozenState,
-                onClickKyc = innerWalletRouter::openTangemPayOnboarding,
+                onClickKyc = { innerWalletRouter.openTangemPayOnboarding(userWalletId) },
                 onIssuingCard = clickIntents::onIssuingCardClicked,
                 onIssuingFailed = clickIntents::onIssuingFailedClicked,
                 openDetails = { config ->
