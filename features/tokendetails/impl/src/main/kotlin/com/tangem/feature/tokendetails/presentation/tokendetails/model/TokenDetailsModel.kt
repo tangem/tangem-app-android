@@ -1251,14 +1251,8 @@ internal class TokenDetailsModel @Inject constructor(
     }
 
     private fun handleNavigationParam() {
-        when (val action = params.navigationAction) {
-            is NavigationAction.Staking -> openStaking()
-            is NavigationAction.YieldSupply -> if (action.isActive) {
-                modelScope.launch(dispatchers.default) {
-                    fetchCurrencyStatusUseCase(userWalletId = userWalletId, id = cryptoCurrency.id)
-                }
-            }
-            else -> Unit
+        if (params.navigationAction is NavigationAction.Staking) {
+            openStaking()
         }
     }
 
