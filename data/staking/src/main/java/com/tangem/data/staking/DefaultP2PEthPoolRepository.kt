@@ -223,30 +223,18 @@ internal class DefaultP2PEthPoolRepository(
             .map { vaults ->
                 if (vaults.isEmpty()) {
                     return@map StakingAvailability.TemporaryUnavailable
-                }
-
-                val vault = findPublicVault(vaults = vaults)
-
-                if (vault != null) {
-                    StakingAvailability.Available(StakingOption.P2P(vault))
                 } else {
-                    StakingAvailability.TemporaryUnavailable
+                    StakingAvailability.Available(StakingOption.P2P(vaults))
                 }
             }
     }
 
     override suspend fun getStakingAvailabilitySync(): StakingAvailability {
         val vaults = getVaultsSync()
-        if (vaults.isEmpty()) {
-            return StakingAvailability.TemporaryUnavailable
-        }
-
-        val vault = findPublicVault(vaults = vaults)
-
-        return if (vault != null) {
-            StakingAvailability.Available(StakingOption.P2P(vault))
-        } else {
+        return if (vaults.isEmpty()) {
             StakingAvailability.TemporaryUnavailable
+        } else {
+            StakingAvailability.Available(StakingOption.P2P(vaults))
         }
     }
 
@@ -256,9 +244,5 @@ internal class DefaultP2PEthPoolRepository(
 
     private fun getVaultsFlow(): Flow<List<P2PEthPoolVault>> {
         return p2pEthPoolVaultsStore.get()
-    }
-
-    private fun findPublicVault(vaults: List<P2PEthPoolVault>): P2PEthPoolVault? {
-        return vaults.firstOrNull { vault -> !vault.isPrivate }
     }
 }

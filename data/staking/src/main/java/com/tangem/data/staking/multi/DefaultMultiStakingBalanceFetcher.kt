@@ -24,7 +24,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.staking.model.StakingIntegrationID
-import com.tangem.domain.staking.model.ethpool.P2PEthPoolNetwork
+import com.tangem.domain.staking.model.ethpool.P2PStakingConfig
 import com.tangem.domain.staking.multi.MultiStakingBalanceFetcher
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runSuspendCatching
@@ -155,7 +155,7 @@ internal class DefaultMultiStakingBalanceFetcher @Inject constructor(
                     for (address in addresses) {
                         runSuspendCatching {
                             val response = p2pApi.getAccountInfo(
-                                network = P2PEthPoolNetwork.MAINNET.value,
+                                network = P2PStakingConfig.activeNetwork.value,
                                 delegatorAddress = address,
                                 vaultAddress = vault.vaultAddress,
                             )
