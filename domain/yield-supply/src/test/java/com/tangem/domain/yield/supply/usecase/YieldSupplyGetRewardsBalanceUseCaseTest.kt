@@ -288,12 +288,12 @@ class YieldSupplyGetRewardsBalanceUseCaseTest {
 
     private companion object {
         private const val SCALE = 18
-        private val TICK_SECONDS_BD = BigDecimal("0.3")
+        private val TICK_SECONDS_BD = BigDecimal("0.8")
         private val SECONDS_PER_YEAR_BD = BigDecimal("31536000")
         private val HUNDRED_BD = BigDecimal("100")
 
         private const val MIN_DECIMALS = 3
-        private const val MAX_DECIMALS = 8
+        private const val MAX_DECIMALS = 12
 
         private val LN_10 = ln(10.0)
         private const val EPSILON = 1e-18
