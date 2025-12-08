@@ -99,19 +99,6 @@ internal fun TangemPayDetailsScreen(
                     }
                     else -> Unit
                 }
-                item(
-                    key = TangemPayDetailsBalanceBlockState::class.java,
-                    content = {
-                        TangemPayDetailsBalanceBlock(
-                            modifier = modifier
-                                .padding(horizontal = TangemTheme.dimens.spacing16)
-                                .padding(top = 12.dp)
-                                .fillMaxWidth(),
-                            state = state.balanceBlockState,
-                            isBalanceHidden = state.isBalanceHidden,
-                        )
-                    },
-                )
                 if (state.addToWalletBlockState != null) {
                     item(
                         key = AddToWalletBlockState::class.java,
@@ -125,6 +112,19 @@ internal fun TangemPayDetailsScreen(
                         },
                     )
                 }
+                item(
+                    key = TangemPayDetailsBalanceBlockState::class.java,
+                    content = {
+                        TangemPayDetailsBalanceBlock(
+                            modifier = modifier
+                                .padding(horizontal = TangemTheme.dimens.spacing16)
+                                .padding(top = 12.dp)
+                                .fillMaxWidth(),
+                            state = state.balanceBlockState,
+                            isBalanceHidden = state.isBalanceHidden,
+                        )
+                    },
+                )
                 with(txHistoryComponent) { txHistoryContent(listState = listState, state = txHistoryState) }
             }
         }
