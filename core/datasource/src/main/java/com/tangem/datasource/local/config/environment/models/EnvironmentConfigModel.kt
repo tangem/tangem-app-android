@@ -90,6 +90,16 @@ data class GetBlockAccessTokens(
     @Json(name = "telos") val telos: GetBlockToken?,
     @Json(name = "tezos") val tezos: GetBlockToken?,
     @Json(name = "ink") val ink: GetBlockToken?,
+    @Json(name = "lisk") val lisk: GetBlockToken?,
+    @Json(name = "soneium") val soneium: GetBlockToken?,
+    @Json(name = "mode") val mode: GetBlockToken?,
+    @Json(name = "swellchain") val swellChain: GetBlockToken?,
+    @Json(name = "superseed") val superseed: GetBlockToken?,
+    @Json(name = "bob") val bob: GetBlockToken?,
+    @Json(name = "unichain") val unichain: GetBlockToken?,
+    @Json(name = "metalL2") val metalL2: GetBlockToken?,
+    @Json(name = "celo") val celo: GetBlockToken?,
+    @Json(name = "fraxtal") val fraxtal: GetBlockToken?,
 )
 
 @JsonClass(generateAdapter = true)

@@ -132,6 +132,36 @@
 		},
 		"ink": {
 			"jsonRpc": "PLACEHOLDER"
+		},
+		"lisk": {
+			"jsonRpc": "PLACEHOLDER"
+		},
+		"mode": {
+			"jsonRpc": "PLACEHOLDER"
+		},
+		"swellchain": {
+			"jsonRpc": "PLACEHOLDER"
+		},
+		"superseed": {
+			"jsonRpc": "PLACEHOLDER"
+		},
+		"bob": {
+			"jsonRpc": "PLACEHOLDER"
+		},
+		"soneium": {
+			"jsonRpc": "PLACEHOLDER"
+		},
+		"unichain": {
+			"jsonRpc": "PLACEHOLDER"
+		},
+		"metalL2": {
+			"jsonRpc": "PLACEHOLDER"
+		},
+		"celo": {
+			"jsonRpc": "PLACEHOLDER"
+		},
+		"fraxtal": {
+			"jsonRpc": "PLACEHOLDER"
 		}
 	},
 	"kaspaSecondaryApiUrl": "PLACEHOLDER",

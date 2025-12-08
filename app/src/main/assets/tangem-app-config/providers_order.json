@@ -1450,5 +1450,181 @@
             "type": "private",
             "name": "quicknode"
         }
+    ],
+    "lisk": [
+        {
+            "type": "public",
+            "url": "https://rpc.api.lisk.com/"
+        },
+        {
+            "type": "private",
+            "name": "nownodes"
+        },
+        {
+            "type": "private",
+            "name": "getblock"
+        },
+        {
+            "type": "public",
+            "url": "https://rpc.api.lisk.com/"
+        }
+    ],
+    "soneium": [
+        {
+            "type": "public",
+            "url": "https://rpc.soneium.org/"
+        },
+        {
+            "type": "private",
+            "name": "nownodes"
+        },
+        {
+            "type": "private",
+            "name": "getblock"
+        },
+        {
+            "type": "public",
+            "url": "https://rpc.soneium.org/"
+        }
+    ],
+    "mode": [
+        {
+            "type": "public",
+            "url": "https://mainnet.mode.network/"
+        },
+        {
+            "type": "private",
+            "name": "nownodes"
+        },
+        {
+            "type": "private",
+            "name": "getblock"
+        },
+        {
+            "type": "public",
+            "url": "https://mainnet.mode.network/"
+        }
+    ],
+    "swellchain": [
+        {
+            "type": "public",
+            "url": "https://swell-mainnet.alt.technology"
+        },
+        {
+            "type": "private",
+            "name": "nownodes"
+        },
+        {
+            "type": "private",
+            "name": "getblock"
+        },
+        {
+            "type": "public",
+            "url": "https://swell-mainnet.alt.technology"
+        }
+    ],
+    "superseed": [
+        {
+            "type": "public",
+            "url": "https://mainnet.superseed.xyz"
+        },
+        {
+            "type": "private",
+            "name": "nownodes"
+        },
+        {
+            "type": "private",
+            "name": "getblock"
+        },
+        {
+            "type": "public",
+            "url": "https://mainnet.superseed.xyz"
+        }
+    ],
+    "bob": [
+        {
+            "type": "public",
+            "url": "https://bob.drpc.org"
+        },
+        {
+            "type": "private",
+            "name": "nownodes"
+        },
+        {
+            "type": "private",
+            "name": "getblock"
+        },
+        {
+            "type": "public",
+            "url": "https://bob.gateway.tenderly.co"
+        }
+    ],
+    "unichain": [
+        {
+            "type": "public",
+            "url": "https://mainnet.unichain.org"
+        },
+        {
+            "type": "private",
+            "name": "nownodes"
+        },
+        {
+            "type": "private",
+            "name": "getblock"
+        },
+        {
+            "type": "public",
+            "url": "https://mainnet.unichain.org"
+        }
+    ],
+    "metal-l2": [
+        {
+            "type": "public",
+            "url": "https://metall2.drpc.org"
+        },
+        {
+            "type": "private",
+            "name": "getblock"
+        },
+        {
+            "type": "public",
+            "url": "https://rpc.metall2.com"
+        }
+    ],
+    "celo": [
+        {
+            "type": "public",
+            "url": "https://forno.celo.org/"
+        },
+        {
+            "type": "private",
+            "name": "nownodes"
+        },
+        {
+            "type": "private",
+            "name": "getblock"
+        },
+        {
+            "type": "public",
+            "url": "https://forno.celo.org/"
+        }
+    ],
+    "fraxtal": [
+        {
+            "type": "public",
+            "url": "https://rpc.frax.com/"
+        },
+        {
+            "type": "private",
+            "name": "nownodes"
+        },
+        {
+            "type": "private",
+            "name": "getblock"
+        },
+        {
+            "type": "public",
+            "url": "https://rpc.frax.com/"
+        }
     ]
 }

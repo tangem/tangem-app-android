@@ -171,6 +171,26 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "quai-network/test" -> Blockchain.QuaiTestnet
         "ink" -> Blockchain.Ink
         "ink/test" -> Blockchain.InkTestnet
+        "lisk" -> Blockchain.Lisk
+        "lisk/test" -> Blockchain.LiskTestnet
+        "soneium" -> Blockchain.Soneium
+        "soneium/test" -> Blockchain.SoneiumTestnet
+        "mode" -> Blockchain.Mode
+        "mode/test" -> Blockchain.ModeTestnet
+        "swellchain" -> Blockchain.SwellChain
+        "swellchain/test" -> Blockchain.SwellChainTestnet
+        "superseed" -> Blockchain.Superseed
+        "superseed/test" -> Blockchain.SuperseedTestnet
+        "bob" -> Blockchain.Bob
+        "bob/test" -> Blockchain.BobTestnet
+        "metal-l2" -> Blockchain.MetalL2
+        "metal-l2/test" -> Blockchain.MetalL2Testnet
+        "unichain" -> Blockchain.Unichain
+        "unichain/test" -> Blockchain.UnichainTestnet
+        "celo" -> Blockchain.Celo
+        "celo/test" -> Blockchain.CeloTestnet
+        "fraxtal" -> Blockchain.Fraxtal
+        "fraxtal/test" -> Blockchain.FraxtalTestnet
         // "linea" -> Blockchain.Linea
         // "linea/test" -> Blockchain.LineaTestnet
         // "arbitrum-nova" -> Blockchain.ArbitrumNova
@@ -342,6 +362,28 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.QuaiTestnet -> "quai-network/test"
         Blockchain.Ink -> "ink"
         Blockchain.InkTestnet -> "ink/test"
+        Blockchain.Lisk -> "lisk"
+        Blockchain.LiskTestnet -> "lisk/test"
+        Blockchain.Soneium -> "soneium"
+        Blockchain.SoneiumTestnet -> "soneium/test"
+        Blockchain.Mode -> "mode"
+        Blockchain.ModeTestnet -> "mode/test"
+        Blockchain.SwellChain -> "swellchain"
+        Blockchain.SwellChainTestnet -> "swellchain/test"
+        Blockchain.Superseed -> "superseed"
+        Blockchain.SuperseedTestnet -> "superseed/test"
+        Blockchain.Bob -> "bob"
+        Blockchain.BobTestnet -> "bob/test"
+        Blockchain.Soneium -> "soneium"
+        Blockchain.SoneiumTestnet -> "soneium/test"
+        Blockchain.Unichain -> "unichain"
+        Blockchain.UnichainTestnet -> "unichain/test"
+        Blockchain.MetalL2 -> "metal-l2"
+        Blockchain.MetalL2Testnet -> "metal-l2/test"
+        Blockchain.Celo -> "celo"
+        Blockchain.CeloTestnet -> "celo/test"
+        Blockchain.Fraxtal -> "fraxtal"
+        Blockchain.FraxtalTestnet -> "fraxtal/test"
         // Blockchain.Linea -> "linea"
         // Blockchain.LineaTestnet -> "linea/test"
         // Blockchain.ArbitrumNova -> "arbitrum-nova"
@@ -451,6 +493,16 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Hyperliquid, Blockchain.HyperliquidTestnet -> "hyperliquid"
         Blockchain.Quai, Blockchain.QuaiTestnet -> "quai-network"
         Blockchain.Ink, Blockchain.InkTestnet -> "ink-ethereum"
+        Blockchain.Lisk, Blockchain.LiskTestnet -> "lisk-ethereum"
+        Blockchain.Mode, Blockchain.ModeTestnet -> "mode-ethereum"
+        Blockchain.SwellChain, Blockchain.SwellChainTestnet -> "swellchain-ethereum"
+        Blockchain.Superseed, Blockchain.SuperseedTestnet -> "superseed-ethereum"
+        Blockchain.Bob, Blockchain.BobTestnet -> "bob-ethereum"
+        Blockchain.Soneium, Blockchain.SoneiumTestnet -> "soneium-ethereum"
+        Blockchain.Unichain, Blockchain.UnichainTestnet -> "unichain-ethereum"
+        Blockchain.MetalL2, Blockchain.MetalL2Testnet -> "metal-l2-ethereum"
+        Blockchain.Celo, Blockchain.CeloTestnet -> "celo"
+        Blockchain.Fraxtal, Blockchain.FraxtalTestnet -> "frax"
         // Blockchain.Linea, Blockchain.LineaTestnet -> "linea-ethereum"
         // Blockchain.ArbitrumNova -> "arbitrum-nova-ethereum"
     }
