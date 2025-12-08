@@ -637,92 +637,6 @@
             "url": "https://rpc-qnd.inkonchain.com/"
         }
     ],
-    "lisk": [
-        {
-            "type": "public",
-            "url": "https://rpc.api.lisk.com/"
-        },
-        {
-            "type": "private",
-            "name": "getblock"
-        },
-        {
-            "type": "public",
-            "url": "https://rpc.api.lisk.com/"
-        }
-    ],
-    "mode": [
-        {
-            "type": "public",
-            "url": "https://mainnet.mode.network/"
-        },
-        {
-            "type": "private",
-            "name": "nownodes"
-        },
-        {
-            "type": "private",
-            "name": "getblock"
-        },
-        {
-            "type": "public",
-            "url": "https://mainnet.mode.network/"
-        }
-    ],
-    "swellchain": [
-        {
-            "type": "public",
-            "url": "https://swell-mainnet.alt.technology"
-        },
-        {
-            "type": "private",
-            "name": "nownodes"
-        },
-        {
-            "type": "private",
-            "name": "getblock"
-        },
-        {
-            "type": "public",
-            "url": "https://swell-mainnet.alt.technology"
-        }
-    ],
-    "superseed": [
-        {
-            "type": "public",
-            "url": "https://mainnet.superseed.xyz"
-        },
-        {
-            "type": "private",
-            "name": "nownodes"
-        },
-        {
-            "type": "private",
-            "name": "getblock"
-        },
-        {
-            "type": "public",
-            "url": "https://mainnet.superseed.xyz"
-        }
-    ],
-    "bob": [
-        {
-            "type": "public",
-            "url": "https://rpc.gobob.xyz/"
-        },
-        {
-            "type": "private",
-            "name": "nownodes"
-        },
-        {
-            "type": "private",
-            "name": "getblock"
-        },
-        {
-            "type": "public",
-            "url": "https://rpc.gobob.xyz/"
-        }
-    ],
     "internet-computer": [
         {
             "type": "public",
@@ -1537,6 +1451,24 @@
             "name": "quicknode"
         }
     ],
+    "lisk": [
+        {
+            "type": "public",
+            "url": "https://rpc.api.lisk.com/"
+        },
+        {
+            "type": "private",
+            "name": "nownodes"
+        },
+        {
+            "type": "private",
+            "name": "getblock"
+        },
+        {
+            "type": "public",
+            "url": "https://rpc.api.lisk.com/"
+        }
+    ],
     "soneium": [
         {
             "type": "public",
@@ -1553,6 +1485,78 @@
         {
             "type": "public",
             "url": "https://rpc.soneium.org/"
+        }
+    ],
+    "mode": [
+        {
+            "type": "public",
+            "url": "https://mainnet.mode.network/"
+        },
+        {
+            "type": "private",
+            "name": "nownodes"
+        },
+        {
+            "type": "private",
+            "name": "getblock"
+        },
+        {
+            "type": "public",
+            "url": "https://mainnet.mode.network/"
+        }
+    ],
+    "swellchain": [
+        {
+            "type": "public",
+            "url": "https://swell-mainnet.alt.technology"
+        },
+        {
+            "type": "private",
+            "name": "nownodes"
+        },
+        {
+            "type": "private",
+            "name": "getblock"
+        },
+        {
+            "type": "public",
+            "url": "https://swell-mainnet.alt.technology"
+        }
+    ],
+    "superseed": [
+        {
+            "type": "public",
+            "url": "https://mainnet.superseed.xyz"
+        },
+        {
+            "type": "private",
+            "name": "nownodes"
+        },
+        {
+            "type": "private",
+            "name": "getblock"
+        },
+        {
+            "type": "public",
+            "url": "https://mainnet.superseed.xyz"
+        }
+    ],
+    "bob": [
+        {
+            "type": "public",
+            "url": "https://rpc.gobob.xyz/"
+        },
+        {
+            "type": "private",
+            "name": "nownodes"
+        },
+        {
+            "type": "private",
+            "name": "getblock"
+        },
+        {
+            "type": "public",
+            "url": "https://rpc.gobob.xyz/"
         }
     ],
     "unichain": [
@@ -1576,11 +1580,7 @@
     "metal-l2": [
         {
             "type": "public",
-            "url": "https://rpc.metall2.com/"
-        },
-        {
-            "type": "private",
-            "name": "nownodes"
+            "url": "https://rpc.metall2.com"
         },
         {
             "type": "private",
@@ -1588,7 +1588,7 @@
         },
         {
             "type": "public",
-            "url": "https://rpc.metall2.com/"
+            "url": "https://rpc.metall2.com"
         }
     ],
     "celo": [

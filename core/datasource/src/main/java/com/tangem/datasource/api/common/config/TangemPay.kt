@@ -31,13 +31,13 @@ internal class TangemPay(
 
     private fun createDevEnvironment(): ApiEnvironmentConfig = ApiEnvironmentConfig(
         environment = ApiEnvironment.DEV,
-        baseUrl = "[REDACTED_ENV_URL]",
+        baseUrl = "https://api.us.paera.com/bff/",
         headers = createHeaders(),
     )
 
     private fun createMockedEnvironment(): ApiEnvironmentConfig = ApiEnvironmentConfig(
         environment = ApiEnvironment.MOCK,
-        baseUrl = "[REDACTED_ENV_URL]",
+        baseUrl = "https://api.us.paera.com/bff/",
         headers = createHeaders(),
     )
 

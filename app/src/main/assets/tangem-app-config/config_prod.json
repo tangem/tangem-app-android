@@ -1,216 +1,216 @@
 {
-	"amplitudeApiKey": "dummy-key",
+	"amplitudeApiKey": "PLACEHOLDER",
 	"appsFlyer": {
-		"appsFlyerDevKey": "dummy-key",
-		"appsFlyerAppID": "dummy-id"
+		"appsFlyerDevKey": "PLACEHOLDER",
+		"appsFlyerAppID": "PLACEHOLDER"
 	},
 	"blockchairApiKeys": [
-		"dummy-key"
+		"PLACEHOLDER"
 	],
-	"blockchairAuthorizationToken": "dummy-token",
+	"blockchairAuthorizationToken": "PLACEHOLDER",
 	"blockcypherTokens": [
-		"dummy-token"
+		"PLACEHOLDER"
 	],
-	"bscQuiknodeApiKey": "dummy-key",
-	"bscQuiknodeSubdomain": "dummy",
+	"bscQuiknodeApiKey": "PLACEHOLDER",
+	"bscQuiknodeSubdomain": "PLACEHOLDER",
 	"getBlockAccessTokens": {
 		"avalanche": {
-			"jsonRpc": "dummy-token"
+			"jsonRpc": "PLACEHOLDER"
 		},
 		"ethereum": {
-			"jsonRpc": "dummy-token"
+			"jsonRpc": "PLACEHOLDER"
 		},
 		"ethereumClassic":  {
-			"jsonRpc": "dummy-token"
+			"jsonRpc": "PLACEHOLDER"
 		},
 		"fantom": {
-			"jsonRpc": "dummy-token"
+			"jsonRpc": "PLACEHOLDER"
 		},
 		"rsk":  {
-			"jsonRpc": "dummy-token"
+			"jsonRpc": "PLACEHOLDER"
 		},
 		"bsc": {
-			"jsonRpc": "dummy-token"
+			"jsonRpc": "PLACEHOLDER"
 		},
 		"polygon":  {
-			"jsonRpc": "dummy-token"
+			"jsonRpc": "PLACEHOLDER"
 		},
 		"xdai": {
-			"jsonRpc": "dummy-token"
+			"jsonRpc": "PLACEHOLDER"
 		},
 		"cronos":  {
-			"jsonRpc": "dummy-token"
+			"jsonRpc": "PLACEHOLDER"
 		},
 		"solana":  {
-			"jsonRpc": "dummy-token"
+			"jsonRpc": "PLACEHOLDER"
 		},
 		"ton":  {
-			"jsonRpc": "dummy-token"
+			"jsonRpc": "PLACEHOLDER"
 		},
 		"tron":  {
-			"rest": "dummy-token"
+			"rest": "PLACEHOLDER"
 		},
 		"cosmos-hub": {
-			"rest": "dummy-token"
+			"rest": "PLACEHOLDER"
 		},
 		"near": {
-			"jsonRpc": "dummy-token"
+			"jsonRpc": "PLACEHOLDER"
 		},
 		"xrp": {
-			"jsonRpc": "dummy-token"
+			"jsonRpc": "PLACEHOLDER"
 		},
 		"cardano": {
-			"rosetta": "dummy-token"
+			"rosetta": "PLACEHOLDER"
 		},
 		"dogecoin": {
-			"blockBookRest": "dummy-token",
-			"jsonRpc": "dummy-token"
+			"blockBookRest": "PLACEHOLDER",
+			"jsonRpc": "PLACEHOLDER"
 		},
 		"litecoin": {
-			"blockBookRest": "dummy-token",
-			"jsonRpc": "dummy-token"
+			"blockBookRest": "PLACEHOLDER",
+			"jsonRpc": "PLACEHOLDER"
 		},
 		"dash": {
-			"blockBookRest": "dummy-token",
-			"jsonRpc": "dummy-token"
+			"blockBookRest": "PLACEHOLDER",
+			"jsonRpc": "PLACEHOLDER"
 		},
 		"bitcoin": {
-			"blockBookRest": "dummy-token",
-			"jsonRpc": "dummy-token"
+			"blockBookRest": "PLACEHOLDER",
+			"jsonRpc": "PLACEHOLDER"
 		},
 		"aptos": {
-			"rest": "dummy-token"
+			"rest": "PLACEHOLDER"
 		},
 		"algorand": {
-			"rest": "dummy-token"
+			"rest": "PLACEHOLDER"
 		},
 		"polygon-zkevm": {
-			"jsonRpc": "dummy-token"
+			"jsonRpc": "PLACEHOLDER"
 		},
 		"zksync": {
-			"jsonRpc": "dummy-token"
+			"jsonRpc": "PLACEHOLDER"
 		},
 		"base": {
-			"jsonRpc": "dummy-token"
+			"jsonRpc": "PLACEHOLDER"
 		},
 		"blast": {
-			"jsonRpc": "dummy-token"
+			"jsonRpc": "PLACEHOLDER"
 		},
 		"filecoin": {
-			"jsonRpc": "dummy-token"
+			"jsonRpc": "PLACEHOLDER"
 		},
 		"arbitrum-one": {
-			"jsonRpc": "dummy-token"
+			"jsonRpc": "PLACEHOLDER"
 		},
 		"bitcoinCash": {
-			"blockBookRest": "dummy-token",
-			"jsonRpc": "dummy-token"
+			"blockBookRest": "PLACEHOLDER",
+			"jsonRpc": "PLACEHOLDER"
 		},
 		"kusama": {
-			"jsonRpc": "dummy-token"
+			"jsonRpc": "PLACEHOLDER"
 		},
 		"moonbeam": {
-			"jsonRpc": "dummy-token"
+			"jsonRpc": "PLACEHOLDER"
 		},
 		"optimism": {
-			"jsonRpc": "dummy-token"
+			"jsonRpc": "PLACEHOLDER"
 		},
 		"polkadot": {
-			"jsonRpc": "dummy-token"
+			"jsonRpc": "PLACEHOLDER"
 		},
 		"shibarium": {
-			"jsonRpc": "dummy-token"
+			"jsonRpc": "PLACEHOLDER"
 		},
 		"sui": {
-			"jsonRpc": "dummy-token"
+			"jsonRpc": "PLACEHOLDER"
 		},
 		"telos": {
-			"jsonRpc": "dummy-token"
+			"jsonRpc": "PLACEHOLDER"
 		},
 		"tezos": {
-			"rest": "dummy-token"
+			"rest": "PLACEHOLDER"
 		},
 		"ink": {
-			"jsonRpc": "dummy-token"
+			"jsonRpc": "PLACEHOLDER"
 		},
 		"lisk": {
-			"jsonRpc": "dummy-token"
+			"jsonRpc": "PLACEHOLDER"
 		},
 		"mode": {
-			"jsonRpc": "dummy-token"
+			"jsonRpc": "PLACEHOLDER"
 		},
 		"swellchain": {
-			"jsonRpc": "dummy-token"
+			"jsonRpc": "PLACEHOLDER"
 		},
 		"superseed": {
-			"jsonRpc": "dummy-token"
+			"jsonRpc": "PLACEHOLDER"
 		},
 		"bob": {
-			"jsonRpc": "dummy-token"
+			"jsonRpc": "PLACEHOLDER"
 		},
 		"soneium": {
-			"jsonRpc": "dummy-token"
+			"jsonRpc": "PLACEHOLDER"
 		},
 		"unichain": {
-			"jsonRpc": "dummy-token"
+			"jsonRpc": "PLACEHOLDER"
 		},
 		"metalL2": {
-			"jsonRpc": "dummy-token"
+			"jsonRpc": "PLACEHOLDER"
 		},
 		"celo": {
-			"jsonRpc": "dummy-token"
+			"jsonRpc": "PLACEHOLDER"
 		},
 		"fraxtal": {
-			"jsonRpc": "dummy-token"
+			"jsonRpc": "PLACEHOLDER"
 		}
 	},
 	"kaspaSecondaryApiUrl": "https://api.kaspa.org/",
-	"infuraProjectId": "dummy-project-id",
-	"mercuryoSecret": "dummy-secret",
-	"mercuryoWidgetId": "dummy-widget-id",
-	"moonPayApiKey": "dummy-key",
-	"moonPayApiSecretKey": "dummy-secret",
-	"nowNodesApiKey": "dummy-key",
+	"infuraProjectId": "PLACEHOLDER",
+	"mercuryoSecret": "PLACEHOLDER",
+	"mercuryoWidgetId": "PLACEHOLDER",
+	"moonPayApiKey": "PLACEHOLDER",
+	"moonPayApiSecretKey": "PLACEHOLDER",
+	"nowNodesApiKey": "PLACEHOLDER",
 	"tonCenterApiKey": {
-		"mainnet": "dummy-key",
-		"testnet": "dummy-key"
+		"mainnet": "PLACEHOLDER",
+		"testnet": "PLACEHOLDER"
 	},
-	"quiknodeApiKey": "dummy-key",
-	"quiknodeSubdomain": "dummy",
-	"quiknodePlasmaApiKey": "dummy-key",
-	"quiknodePlasmaSubdomain": "dummy",
-	"tronGridApiKey": "dummy-key",
-	"walletConnectProjectId": "dummy-project-id",
-	"chiaFireAcademyApiKey": "dummy-key",
-	"chiaTangemApiKey": "dummy-key",
+	"quiknodeApiKey": "PLACEHOLDER",
+	"quiknodeSubdomain": "PLACEHOLDER",
+	"quiknodePlasmaApiKey": "PLACEHOLDER",
+	"quiknodePlasmaSubdomain": "PLACEHOLDER",
+	"tronGridApiKey": "PLACEHOLDER",
+	"walletConnectProjectId": "PLACEHOLDER",
+	"chiaFireAcademyApiKey": "PLACEHOLDER",
+	"chiaTangemApiKey": "PLACEHOLDER",
 	"express": {
-		"apiKey": "dummy-key",
-		"signVerifierPublicKey": "dummy-key"
+		"apiKey": "PLACEHOLDER",
+		"signVerifierPublicKey": "PLACEHOLDER"
 	},
 	"devExpress": {
-		"apiKey": "dummy-key",
-		"signVerifierPublicKey": "dummy-key"
+		"apiKey": "PLACEHOLDER",
+		"signVerifierPublicKey": "PLACEHOLDER"
 	},
-	"hederaArkhiaKey": "dummy-key",
-	"polygonScanApiKey": "dummy-key",
-	"koinosProApiKey": "dummy-key",
-	"stakeKitApiKey": "dummy-key",
-	"bittensorDwellirKey": "dummy-key",
-	"bittensorOnfinalityKey": "dummy-key",
-	"alephiumTangemApiKey": "dummy-key",
-	"moralisApiKey": "dummy-key",
-	"blockaidApiKey": "dummy-key",
-	"tangemApiKey": "dummy-key",
-	"tangemApiKeyDev": "dummy-key",
-	"tangemApiKeyStage": "dummy-key",
-	"etherscanApiKey": "dummy-key",
-	"yieldModuleApiKey": "dummy-key",
-	"yieldModuleApiKeyDev": "dummy-key",
-	"blinkApiKey": "dummy-key",
-	"tatumApiKey": "dummy-key",
-	"bffStaticToken": "dummy-token",
+	"hederaArkhiaKey": "PLACEHOLDER",
+	"polygonScanApiKey": "PLACEHOLDER",
+	"koinosProApiKey": "PLACEHOLDER",
+	"stakeKitApiKey": "PLACEHOLDER",
+	"bittensorDwellirKey": "PLACEHOLDER",
+	"bittensorOnfinalityKey": "PLACEHOLDER",
+	"alephiumTangemApiKey": "PLACEHOLDER",
+	"moralisApiKey": "PLACEHOLDER",
+	"blockaidApiKey": "PLACEHOLDER",
+	"tangemApiKey": "PLACEHOLDER",
+	"tangemApiKeyDev": "PLACEHOLDER",
+	"tangemApiKeyStage": "PLACEHOLDER",
+	"etherscanApiKey": "PLACEHOLDER",
+	"yieldModuleApiKey": "PLACEHOLDER",
+	"yieldModuleApiKeyDev": "PLACEHOLDER",
+	"blinkApiKey": "PLACEHOLDER",
+	"tatumApiKey": "PLACEHOLDER",
+	"bffStaticToken": "PLACEHOLDER",
 	"p2pApiKey": {
-        "mainnet": "dummy-key",
-        "hoodi": "dummy-key"
+        "mainnet": "PLACEHOLDER",
+        "hoodi": "PLACEHOLDER"
     }
 }
