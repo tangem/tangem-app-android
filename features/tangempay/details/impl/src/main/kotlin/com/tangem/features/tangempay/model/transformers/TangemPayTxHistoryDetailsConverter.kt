@@ -29,6 +29,7 @@ internal object TangemPayTxHistoryDetailsConverter :
     override fun convert(value: Input): TangemPayTxHistoryDetailsUM {
         val transaction = value.item
         return TangemPayTxHistoryDetailsUM(
+            isBalanceHidden = value.isBalanceHidden,
             title = transaction.extractDate(),
             iconState = transaction.extractIcon(),
             transactionTitle = transaction.extractTransactionTitle(),
@@ -254,6 +255,7 @@ internal object TangemPayTxHistoryDetailsConverter :
 
     data class Input(
         val item: TangemPayTxHistoryItem,
+        val isBalanceHidden: Boolean,
         val onExplorerClick: (String?) -> Unit,
         val onDisputeClick: () -> Unit,
         val onDismiss: () -> Unit,
