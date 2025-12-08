@@ -46,6 +46,7 @@ internal class TangemPayMainSubscriber @AssistedInject constructor(
             .distinctUntilChanged()
             .onEach { data ->
                 val userWalletId = userWallet.walletId
+                Timber.tag("scan===").e("onEach $userWalletId $data")
                 val mainInfoData = data[userWalletId] ?: return@onEach
                 mainInfoData.onLeft { tangemPayError ->
                     when (tangemPayError) {
