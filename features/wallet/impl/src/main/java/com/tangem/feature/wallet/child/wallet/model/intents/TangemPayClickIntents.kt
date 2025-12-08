@@ -13,8 +13,8 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.requireColdWallet
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
+import com.tangem.domain.pay.usecase.TangemPayMainScreenCustomerInfoUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
-import com.tangem.feature.wallet.child.wallet.model.TangemPayMainInfoManager
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.features.tangempay.TangemPayFeatureToggles
 import kotlinx.coroutines.launch
@@ -43,7 +43,7 @@ internal class TangemPayClickIntentsImplementor @Inject constructor(
     private val getWalletMetainfoUseCase: GetWalletMetaInfoUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
-    private val tangemPayInfoManager: TangemPayMainInfoManager,
+    private val tangemPayMainScreenCustomerInfoUseCase: TangemPayMainScreenCustomerInfoUseCase,
     private val uiMessageSender: UiMessageSender,
 ) : BaseWalletClickIntents(), TangemPayIntents {
 
@@ -54,13 +54,13 @@ internal class TangemPayClickIntentsImplementor @Inject constructor(
         ) {
             return
         }
-        tangemPayInfoManager.refreshTangemPayInfo(userWalletId)
+        tangemPayMainScreenCustomerInfoUseCase.fetch(userWalletId)
     }
 
     override fun onRefreshPayToken(userWalletId: UserWalletId) {
         modelScope.launch {
             produceInitialDataTangemPay.invoke(userWalletId)
-            tangemPayInfoManager.refreshTangemPayInfo(userWalletId)
+            tangemPayMainScreenCustomerInfoUseCase.fetch(userWalletId)
         }
     }
 
