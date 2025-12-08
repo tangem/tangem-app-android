@@ -89,6 +89,12 @@ internal class YieldSupplyModel @Inject constructor(
             val isAvailable = yieldSupplyIsAvailableUseCase(params.userWalletId, params.cryptoCurrency)
             if (isAvailable) {
                 subscribeOnCurrencyStatusUpdates()
+                singleNetworkStatusFetcher(
+                    params = SingleNetworkStatusFetcher.Params(
+                        userWalletId = userWallet.walletId,
+                        network = cryptoCurrency.network,
+                    ),
+                )
             }
         }
     }
