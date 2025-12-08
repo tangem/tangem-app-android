@@ -177,6 +177,14 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "soneium/test" -> Blockchain.SoneiumTestnet
         "mode" -> Blockchain.Mode
         "mode/test" -> Blockchain.ModeTestnet
+        "swellchain" -> Blockchain.SwellChain
+        "swellchain/test" -> Blockchain.SwellChainTestnet
+        "superseed" -> Blockchain.Superseed
+        "superseed/test" -> Blockchain.SuperseedTestnet
+        "bob" -> Blockchain.Bob
+        "bob/test" -> Blockchain.BobTestnet
+        "metal-l2" -> Blockchain.MetalL2
+        "metal-l2/test" -> Blockchain.MetalL2Testnet
         "unichain" -> Blockchain.Unichain
         "unichain/test" -> Blockchain.UnichainTestnet
         "celo" -> Blockchain.Celo
