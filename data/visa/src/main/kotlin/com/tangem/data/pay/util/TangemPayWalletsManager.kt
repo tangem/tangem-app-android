@@ -33,7 +33,6 @@ class TangemPayWalletsManager @Inject constructor(
     private fun findColdWallet(userWallets: List<UserWallet>?): UserWallet.Cold {
         return userWallets?.find {
             it is UserWallet.Cold && it.isMultiCurrency
-        } as? UserWallet.Cold
-            ?: error("Cannot find cold user wallet")
+        } as? UserWallet.Cold ?: error("Cannot find cold user wallet")
     }
 }
