@@ -92,8 +92,8 @@ class YieldSupplyGetRewardsBalanceUseCase(
     }
 
     private companion object {
-        const val TICK_MILLIS: Long = 300
-        private val TICK_SECONDS_BD = BigDecimal("0.3")
+        const val TICK_MILLIS: Long = 800
+        private val TICK_SECONDS_BD = BigDecimal("0.8")
         private val SECONDS_PER_YEAR_BD = BigDecimal("31536000") // 365 * 24 * 60 * 60
         private val HUNDRED_BD = BigDecimal("100")
         private const val SCALE = 18
