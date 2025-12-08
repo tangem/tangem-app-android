@@ -583,7 +583,6 @@
   <string name="hw_backup_need_title">Zuerst die Sicherung abschließen</string>
   <string name="hw_backup_no_backup">Unvollständig</string>
   <string name="hw_backup_section_other_title">Andere Methoden</string>
-  <string name="hw_backup_seed_description">Physische Geräte, die Deine privaten Schlüssel sicher offline speichern.</string>
   <string name="hw_backup_seed_title">Wiederherstellungs-Phrase</string>
   <string name="hw_backup_to_upgrade_description">Um Deine Wallet auf Hardware umzustellen, erstelle vorher ein Backup.</string>
   <string name="hw_create_keys_description">Deine privaten Schlüssel sind sicher verschlüsselt und auf Deinem Telefon gespeichert.</string>
