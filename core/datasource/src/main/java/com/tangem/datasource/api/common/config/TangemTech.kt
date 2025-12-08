@@ -38,19 +38,19 @@ internal class TangemTech(
 
     private fun createDevEnvironment(): ApiEnvironmentConfig = ApiEnvironmentConfig(
         environment = ApiEnvironment.DEV,
-        baseUrl = "https://api.tangem.org/",
+        baseUrl = "[REDACTED_ENV_URL]",
         headers = createHeaders(ApiEnvironment.DEV),
     )
 
     private fun createStageEnvironment(): ApiEnvironmentConfig = ApiEnvironmentConfig(
         environment = ApiEnvironment.STAGE,
-        baseUrl = "https://api.tangem.org/",
+        baseUrl = "[REDACTED_ENV_URL]",
         headers = createHeaders(ApiEnvironment.STAGE),
     )
 
     private fun createMockedEnvironment(): ApiEnvironmentConfig = ApiEnvironmentConfig(
         environment = ApiEnvironment.MOCK,
-        baseUrl = "https://api.tangem.org/",
+        baseUrl = "[REDACTED_ENV_URL]",
         headers = createHeaders(ApiEnvironment.MOCK),
     )
 

@@ -46,7 +46,7 @@ internal class StakeKit(
     private fun createMockEnvironment(): ApiEnvironmentConfig {
         return ApiEnvironmentConfig(
             environment = ApiEnvironment.MOCK,
-            baseUrl = "https://api.stakek.it/v1/",
+            baseUrl = "[REDACTED_ENV_URL]",
             headers = createHeaders(),
         )
     }

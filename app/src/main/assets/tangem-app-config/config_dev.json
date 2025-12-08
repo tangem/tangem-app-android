@@ -164,7 +164,7 @@
 			"jsonRpc": "PLACEHOLDER"
 		}
 	},
-	"kaspaSecondaryApiUrl": "https://api.kaspa.org/",
+	"kaspaSecondaryApiUrl": "PLACEHOLDER",
 	"infuraProjectId": "PLACEHOLDER",
 	"mercuryoSecret": "PLACEHOLDER",
 	"mercuryoWidgetId": "PLACEHOLDER",

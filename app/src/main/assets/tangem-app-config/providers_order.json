@@ -1544,7 +1544,7 @@
     "bob": [
         {
             "type": "public",
-            "url": "https://rpc.gobob.xyz/"
+            "url": "https://bob.drpc.org"
         },
         {
             "type": "private",
@@ -1556,7 +1556,7 @@
         },
         {
             "type": "public",
-            "url": "https://rpc.gobob.xyz/"
+            "url": "https://bob.gateway.tenderly.co"
         }
     ],
     "unichain": [
@@ -1580,7 +1580,7 @@
     "metal-l2": [
         {
             "type": "public",
-            "url": "https://rpc.metall2.com"
+            "url": "https://metall2.drpc.org"
         },
         {
             "type": "private",
