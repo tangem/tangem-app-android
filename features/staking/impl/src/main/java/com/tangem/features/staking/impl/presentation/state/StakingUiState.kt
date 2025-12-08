@@ -138,4 +138,5 @@ enum class StakingStep {
     RestakeValidator,
     Confirmation,
     Validators,
+    Success,
 }

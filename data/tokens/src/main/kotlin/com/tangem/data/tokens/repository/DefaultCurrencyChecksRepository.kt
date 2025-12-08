@@ -9,7 +9,7 @@ import com.tangem.data.tokens.converters.UtxoConverter
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.models.staking.YieldBalance
+import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.staking.utils.getTotalStakingBalance
 import com.tangem.domain.tokens.model.CurrencyAmount
@@ -132,16 +132,22 @@ internal class DefaultCurrencyChecksRepository(
         userWalletId: UserWalletId,
         currencyStatus: CryptoCurrencyStatus,
     ): CryptoCurrencyWarning.Rent? {
+        if (currencyStatus.currency !is CryptoCurrency.Coin) return null
+
         val rentData = walletManagersFacade.getRentInfo(userWalletId, currencyStatus.currency.network) ?: return null
         val balanceValue = currencyStatus.value as? CryptoCurrencyStatus.Loaded ?: return null
-        val stakingBalance = balanceValue.yieldBalance as? YieldBalance.Data
+        val stakingBalance = balanceValue.stakingBalance as? StakingBalance.Data
         val stakingTotalBalance = stakingBalance?.getTotalStakingBalance(
             blockchainId = currencyStatus.currency.network.rawId,
         ).orZero()
         return when {
             balanceValue.amount.isZero() && stakingTotalBalance.isZero() -> null
             balanceValue.amount < rentData.exemptionAmount && stakingTotalBalance.isZero() -> {
-                CryptoCurrencyWarning.Rent(rentData.rent, rentData.exemptionAmount)
+                CryptoCurrencyWarning.Rent(
+                    rent = rentData.rent,
+                    exemptionAmount = rentData.exemptionAmount,
+                    cryptoCurrency = currencyStatus.currency,
+                )
             }
             else -> null
         }
@@ -156,7 +162,11 @@ internal class DefaultCurrencyChecksRepository(
         return when {
             balanceAfterTransaction.isZero() -> null
             balanceAfterTransaction < rentData.exemptionAmount -> {
-                CryptoCurrencyWarning.Rent(rentData.rent, rentData.exemptionAmount)
+                CryptoCurrencyWarning.Rent(
+                    rent = rentData.rent,
+                    exemptionAmount = rentData.exemptionAmount,
+                    cryptoCurrency = currencyStatus.currency,
+                )
             }
             else -> null
         }

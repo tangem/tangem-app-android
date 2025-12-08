@@ -101,7 +101,7 @@ internal class VersionTest {
 
         val actual = one?.compareTo(other)
 
-        Truth.assertThat(actual).isEqualTo(ONE_IS_LESS_THAN_OTHER)
+        Truth.assertThat(actual).isEqualTo(ONE_IS_EQUAL_TO_OTHER)
     }
 
     @Test
@@ -111,7 +111,7 @@ internal class VersionTest {
 
         val actual = one?.compareTo(other)
 
-        Truth.assertThat(actual).isEqualTo(ONE_IS_GREATER_THAN_OTHER)
+        Truth.assertThat(actual).isEqualTo(ONE_IS_EQUAL_TO_OTHER)
     }
 
     private companion object {

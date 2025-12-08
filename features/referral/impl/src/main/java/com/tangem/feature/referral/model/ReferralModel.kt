@@ -4,9 +4,9 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import arrow.core.getOrElse
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
+import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -22,7 +22,6 @@ import com.tangem.domain.account.status.producer.SingleAccountStatusListProducer
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.account.status.usecase.GetAccountCurrencyByAddressUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
-import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.models.PortfolioId
@@ -41,6 +40,7 @@ import com.tangem.feature.referral.models.DemoModeException
 import com.tangem.feature.referral.models.ReferralStateHolder
 import com.tangem.feature.referral.models.ReferralStateHolder.*
 import com.tangem.features.account.PortfolioFetcher
+import com.tangem.features.account.PortfolioSelectorComponent
 import com.tangem.features.account.PortfolioSelectorController
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.*
@@ -84,6 +84,11 @@ internal class ReferralModel @Inject constructor(
     var uiState: ReferralStateHolder by mutableStateOf(createInitiallyUiState())
         private set
 
+    val portfolioSelectorCallback = object : PortfolioSelectorComponent.BottomSheetCallback {
+        override val onDismiss: () -> Unit = { bottomSheetNavigation.dismiss() }
+        override val onBack: () -> Unit = { bottomSheetNavigation.dismiss() }
+    }
+
     init {
         analyticsEventHandler.send(ReferralEvents.ReferralScreenOpened)
         if (accountsFeatureToggles.isFeatureEnabled) {
@@ -110,39 +115,45 @@ internal class ReferralModel @Inject constructor(
     }
 
     private fun combineAccountUI(referralData: ReferralData): Flow<AccountAward?> = combine(
-        flow = portfolioSelectorController.selectedAccountWithData(portfolioFetcher),
-        flow2 = getBalanceHidingSettingsFlow(),
-        flow3 = appCurrencyFlow(),
-    ) { a, b, c -> Triple(a, b, c) }.mapLatest { triple ->
-        val (_, selectedAccount) = triple.first ?: return@mapLatest null
-        val isBalanceHidden = triple.second
-        val appCurrency: AppCurrency = triple.third
-        val awardCryptoCurrency = referralInteractor.getCryptoCurrency(
-            userWalletId = params.userWalletId,
-            tokenData = referralData.getToken(),
-        ) ?: return@mapLatest null
+        flow = portfolioSelectorController.selectedAccountWithData(portfolioFetcher)
+            .onEach { bottomSheetNavigation.dismiss() },
+        flow2 = getBalanceHidingSettingsUseCase.isBalanceHidden(),
+        flow3 = getSelectedAppCurrencyUseCase.invokeOrDefault(),
+        flow4 = portfolioFetcher.data,
+    ) { pair, isBalanceHidden, appCurrency, portfolios ->
+        val selectedAccount = pair?.second ?: return@combine null
+
         val cryptoPortfolio = when (selectedAccount) {
             is AccountStatus.CryptoPortfolio -> selectedAccount
         }
+
+        val awardCryptoCurrency = referralInteractor.getCryptoCurrency(
+            userWalletId = params.userWalletId,
+            tokenData = referralData.getToken(),
+            accountIndex = cryptoPortfolio.account.derivationIndex,
+        ) ?: return@combine null
+
         val accountAwardToken = cryptoPortfolio.tokenList.flattenCurrencies()
             .find { it.currency.id == awardCryptoCurrency.id }
-        return@mapLatest AccountAwardConverter(
+
+        return@combine AccountAwardConverter(
             isBalanceHidden = isBalanceHidden,
             awardCryptoCurrency = awardCryptoCurrency,
             accountAwardToken = accountAwardToken,
             cryptoPortfolio = cryptoPortfolio,
             appCurrency = appCurrency,
+            isSingleAccount = portfolios.isSingleChoice,
             onAccountClick = { bottomSheetNavigation.activate(Unit) },
         ).convert(Unit)
     }
 
     private fun createInitiallyUiState() = ReferralStateHolder(
-        headerState = ReferralStateHolder.HeaderState(
+        headerState = HeaderState(
             onBackClicked = appRouter::pop,
         ),
         referralInfoState = ReferralInfoState.Loading,
         errorSnackbar = null,
-        analytics = ReferralStateHolder.Analytics(
+        analytics = Analytics(
             onAgreementClicked = ::onAgreementClicked,
             onCopyClicked = ::onCopyClicked,
             onShareClicked = ::onShareClicked,
@@ -168,11 +179,11 @@ internal class ReferralModel @Inject constructor(
             showErrorSnackbar(DemoModeException())
         } else {
             analyticsEventHandler.send(ReferralEvents.ClickParticipate)
+            val lastInfoState = uiState.referralInfoState
             uiState = uiState.copy(referralInfoState = ReferralInfoState.Loading)
             modelScope.launch {
-                val lastInfoState = uiState.referralInfoState
                 val portfolioId = when (accountsFeatureToggles.isFeatureEnabled) {
-                    true -> PortfolioId(requireNotNull(portfolioSelectorController.selectedAccount.value))
+                    true -> PortfolioId(requireNotNull(portfolioSelectorController.selectedAccountSync))
                     false -> PortfolioId(params.userWalletId)
                 }
                 runCatching { referralInteractor.startReferral(portfolioId) }
@@ -259,7 +270,7 @@ internal class ReferralModel @Inject constructor(
 
     private suspend fun selectAccount(referralData: ReferralData) {
         when (referralData) {
-            is ReferralData.NonParticipantData -> if (portfolioSelectorController.selectedAccount.value == null) {
+            is ReferralData.NonParticipantData -> if (portfolioSelectorController.selectedAccountSync == null) {
                 portfolioSelectorController.selectAccount(
                     accountId = walletAccounts(params.userWalletId).first().mainAccount.account.accountId,
                 )
@@ -268,18 +279,6 @@ internal class ReferralModel @Inject constructor(
                 accountId = findAccountByAddress(referralData.referral.address)?.account?.accountId,
             )
         }
-    }
-
-    private fun getBalanceHidingSettingsFlow(): Flow<Boolean> {
-        return getBalanceHidingSettingsUseCase()
-            .map { it.isBalanceHidden }
-            .distinctUntilChanged()
-    }
-
-    private fun appCurrencyFlow(): Flow<AppCurrency> {
-        return getSelectedAppCurrencyUseCase()
-            .map { it.getOrElse { AppCurrency.Default } }
-            .distinctUntilChanged()
     }
 
     @Suppress("MagicNumber")

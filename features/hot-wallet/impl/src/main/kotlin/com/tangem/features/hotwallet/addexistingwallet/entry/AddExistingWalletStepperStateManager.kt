@@ -15,16 +15,14 @@ internal class AddExistingWalletStepperStateManager {
                 title = resourceReference(R.string.wallet_import_seed_navtitle),
                 showBackButton = true,
                 showSkipButton = false,
-                showFeedbackButton = true,
             )
 
             is AddExistingWalletRoute.BackupCompleted -> HotWalletStepperComponent.StepperUM(
                 currentStep = STEP_BACKUP,
                 steps = STEPS_COUNT,
-                title = resourceReference(R.string.common_backup),
+                title = resourceReference(R.string.wallet_import_title),
                 showBackButton = false,
                 showSkipButton = false,
-                showFeedbackButton = false,
             )
 
             is AddExistingWalletRoute.SetAccessCode -> HotWalletStepperComponent.StepperUM(
@@ -33,7 +31,6 @@ internal class AddExistingWalletStepperStateManager {
                 title = resourceReference(R.string.access_code_navtitle),
                 showBackButton = false,
                 showSkipButton = true,
-                showFeedbackButton = false,
             )
 
             is AddExistingWalletRoute.ConfirmAccessCode -> HotWalletStepperComponent.StepperUM(
@@ -42,7 +39,6 @@ internal class AddExistingWalletStepperStateManager {
                 title = resourceReference(R.string.access_code_navtitle),
                 showBackButton = true,
                 showSkipButton = true,
-                showFeedbackButton = false,
             )
 
             is AddExistingWalletRoute.PushNotifications -> HotWalletStepperComponent.StepperUM(
@@ -51,7 +47,6 @@ internal class AddExistingWalletStepperStateManager {
                 title = resourceReference(R.string.onboarding_title_notifications),
                 showBackButton = false,
                 showSkipButton = false,
-                showFeedbackButton = false,
             )
 
             is AddExistingWalletRoute.SetupFinished -> HotWalletStepperComponent.StepperUM(
@@ -60,7 +55,6 @@ internal class AddExistingWalletStepperStateManager {
                 title = resourceReference(R.string.common_done),
                 showBackButton = false,
                 showSkipButton = false,
-                showFeedbackButton = false,
             )
         }
     }

@@ -41,6 +41,7 @@ dependencies {
     implementation(projects.domain.nft.models)
     implementation(projects.domain.walletConnect.models)
     implementation(projects.domain.yieldSupply.models)
+    implementation(projects.domain.visa.models)
 
     /** Tangem libraries */
     implementation(tangemDeps.blockchain)
@@ -89,10 +90,6 @@ dependencies {
     implementation(deps.room.ktx)
     ksp(deps.room.compiler)
 
-    testImplementation(deps.test.coroutine)
-    testImplementation(deps.test.junit5)
+    testImplementation(projects.test.core)
     testRuntimeOnly(deps.test.junit5.engine)
-    testImplementation(deps.test.mockk)
-    testImplementation(deps.test.truth)
-    testImplementation(projects.common.test)
 }

@@ -3,7 +3,6 @@ package com.tangem.common.ui.navigationButtons.preview
 import com.tangem.common.ui.R
 import com.tangem.common.ui.navigationButtons.NavigationButton
 import com.tangem.common.ui.navigationButtons.NavigationButtonsState
-import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 
 internal object NavigationButtonsPreview {
@@ -26,16 +25,6 @@ internal object NavigationButtonsPreview {
         onClick = {},
     )
 
-    private val prev = NavigationButton(
-        textReference = TextReference.EMPTY,
-        iconRes = R.drawable.ic_back_24,
-        isSecondary = true,
-        isIconVisible = true,
-        shouldShowProgress = false,
-        isEnabled = true,
-        onClick = {},
-    )
-
     private val finished = NavigationButton(
         textReference = resourceReference(R.string.common_close),
         isSecondary = false,
@@ -47,7 +36,6 @@ internal object NavigationButtonsPreview {
 
     val allButtons = NavigationButtonsState.Data(
         primaryButton = finished,
-        prevButton = prev,
         extraButtons = extraButtons,
         txUrl = "https://tangem.com",
         onTextClick = {},

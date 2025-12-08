@@ -24,6 +24,7 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import timber.log.Timber
 import java.math.BigDecimal
+import kotlin.String
 
 internal class TokenDetailsNotificationConverter(
     private val userWalletId: UserWalletId,
@@ -99,11 +100,11 @@ internal class TokenDetailsNotificationConverter(
             )
             CryptoCurrencyWarning.SomeNetworksUnreachable -> NetworksUnreachable
             is CryptoCurrencyWarning.SomeNetworksNoAccount -> NetworksNoAccount(
-                network = warning.amountCurrency.name,
+                network = warning.amountCurrency.network.name,
                 amount = warning.amountToCreateAccount.format {
                     crypto(symbol = "", decimals = warning.amountCurrency.decimals)
-                },
-                symbol = warning.amountCurrency.symbol,
+                }.trim(),
+                symbol = warning.amountCurrency.network.currencySymbol,
             )
             is CryptoCurrencyWarning.TopUpWithoutReserve -> TopUpWithoutReserve
             is CryptoCurrencyWarning.SwapPromo -> SwapPromo(
@@ -131,7 +132,7 @@ internal class TokenDetailsNotificationConverter(
             )
             is CryptoCurrencyWarning.RequiredTrustline -> RequiredTrustlineWarning(
                 currency = warning.currency,
-                amount = warning.requiredAmount.format { crypto(symbol = "", warning.currencyDecimals) },
+                amount = warning.requiredAmount.format { crypto(symbol = "", warning.currencyDecimals) }.trim(),
                 currencySymbol = warning.currencySymbol,
                 onOpenClick = clickIntents::onOpenTrustlineClick,
             )

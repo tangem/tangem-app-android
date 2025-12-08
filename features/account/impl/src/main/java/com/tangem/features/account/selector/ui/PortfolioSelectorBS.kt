@@ -1,7 +1,6 @@
 package com.tangem.features.account.selector.ui
 
 import android.content.res.Configuration
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -19,21 +18,26 @@ import com.tangem.features.account.impl.R
 import com.tangem.features.account.selector.entity.PortfolioSelectorUM
 
 @Composable
-internal fun PortfolioSelectorBS(state: PortfolioSelectorUM, onDismiss: () -> Unit, modifier: Modifier = Modifier) {
+internal fun PortfolioSelectorBS(
+    state: PortfolioSelectorUM,
+    onDismiss: () -> Unit,
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     TangemModalBottomSheet<TangemBottomSheetConfigContent.Empty>(
         config = TangemBottomSheetConfig(
             isShown = true,
             onDismissRequest = onDismiss,
             content = TangemBottomSheetConfigContent.Empty,
         ),
-        onBack = onDismiss,
+        onBack = onBack,
         scrollableContent = false,
-        containerColor = TangemTheme.colors.background.secondary,
+        containerColor = TangemTheme.colors.background.tertiary,
         title = {
             TangemModalBottomSheetTitle(
                 title = state.title,
                 startIconRes = R.drawable.ic_back_24,
-                onStartClick = onDismiss,
+                onStartClick = onBack,
             )
         },
         content = {
@@ -54,7 +58,8 @@ private fun Preview(@PreviewParameter(PortfolioSelectorPreviewStateProvider::cla
         PortfolioSelectorBS(
             state = params,
             onDismiss = {},
-            modifier = Modifier.background(color = TangemTheme.colors.background.secondary),
+            modifier = Modifier,
+            onBack = {},
         )
     }
 }

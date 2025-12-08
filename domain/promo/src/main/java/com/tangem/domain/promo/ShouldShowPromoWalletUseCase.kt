@@ -29,7 +29,10 @@ class ShouldShowPromoWalletUseCase(
         if (!isReady) return false
 
         return when (promoId) {
-            PromoId.Referral -> true
+            PromoId.Referral,
+            PromoId.VisaPresale,
+            PromoId.BlackFriday,
+            -> true
             PromoId.Sepa -> {
                 val walletFirstUsageDate = settingsRepository.getWalletFirstUsageDate()
                 if (walletFirstUsageDate == 0L) return false
@@ -39,6 +42,7 @@ class ShouldShowPromoWalletUseCase(
             }
         }
     }
+
     suspend fun neverToShow(promoId: PromoId) = promoRepository.setNeverToShowWalletPromo(promoId)
 
     private companion object {

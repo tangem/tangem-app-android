@@ -6,27 +6,29 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.tangem.core.ui.components.buttons.common.TangemButton
-import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
+import com.tangem.core.ui.components.SecondaryButton
 import com.tangem.core.ui.components.buttons.common.TangemButtonSize
-import com.tangem.core.ui.components.buttons.common.TangemButtonsDefaults
-import com.tangem.core.ui.extensions.conditional
+import com.tangem.core.ui.components.label.Label
+import com.tangem.core.ui.components.label.entity.LabelStyle
+import com.tangem.core.ui.components.label.entity.LabelUM
+import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.createwalletselection.entity.CreateWalletSelectionUM
 import com.tangem.features.createwalletselection.impl.R
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 @Suppress("LongMethod")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -34,7 +36,7 @@ import com.tangem.features.createwalletselection.impl.R
 internal fun CreateWalletSelectionContent(state: CreateWalletSelectionUM, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
-            .background(TangemTheme.colors.background.primary)
+            .background(TangemTheme.colors.background.secondary)
             .fillMaxSize()
             .systemBarsPadding(),
     ) {
@@ -42,7 +44,7 @@ internal fun CreateWalletSelectionContent(state: CreateWalletSelectionUM, modifi
             modifier = Modifier
                 .statusBarsPadding(),
             colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = TangemTheme.colors.background.primary,
+                containerColor = TangemTheme.colors.background.secondary,
             ),
             navigationIcon = {
                 IconButton(onClick = state.onBackClick) {
@@ -58,7 +60,7 @@ internal fun CreateWalletSelectionContent(state: CreateWalletSelectionUM, modifi
                 Text(
                     modifier = Modifier
                         .padding(16.dp),
-                    text = stringResourceSafe(R.string.wallet_create_nav_info_title),
+                    text = stringResourceSafe(R.string.wallet_add_support_title),
                     style = TangemTheme.typography.body1,
                     color = TangemTheme.colors.text.primary1,
                     maxLines = 1,
@@ -78,60 +80,33 @@ internal fun CreateWalletSelectionContent(state: CreateWalletSelectionUM, modifi
             Text(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                text = stringResourceSafe(R.string.wallet_create_title),
+                    .padding(
+                        start = 16.dp,
+                        end = 16.dp,
+                        bottom = 24.dp,
+                    ),
+                text = stringResourceSafe(R.string.wallet_add_common_title),
                 style = TangemTheme.typography.h2,
                 color = TangemTheme.colors.text.primary1,
                 textAlign = TextAlign.Center,
             )
-            WalletBlock(
-                modifier = Modifier
-                    .padding(top = 24.dp),
-                title = stringResourceSafe(R.string.wallet_create_mobile_title),
-                description = stringResourceSafe(R.string.wallet_create_mobile_description),
-                badge = {
-                    Box(
-                        modifier = Modifier
-                            .background(
-                                color = TangemTheme.colors.field.focused,
-                                shape = TangemTheme.shapes.roundedCorners8,
-                            )
-                            .padding(horizontal = 8.dp, vertical = 4.dp),
-                    ) {
-                        Text(
-                            text = stringResourceSafe(R.string.common_free),
-                            style = TangemTheme.typography.caption1,
-                            color = TangemTheme.colors.text.secondary,
-                        )
-                    }
-                },
-                onClick = state.onMobileWalletClick,
-            )
-            WalletBlock(
-                title = stringResourceSafe(R.string.wallet_create_hardware_title),
-                description = stringResourceSafe(R.string.wallet_create_hardware_description),
-                badge = {
-                    Box(
-                        modifier = Modifier
-                            .background(
-                                color = TangemTheme.colors.text.accent.copy(alpha = 0.1f),
-                                shape = TangemTheme.shapes.roundedCorners8,
-                            )
-                            .padding(horizontal = 8.dp, vertical = 4.dp),
-                    ) {
-                        Text(
-                            text = stringResourceSafe(R.string.wallet_create_hardware_badge, state.hardwareWalletPrice),
-                            style = TangemTheme.typography.caption1,
-                            color = TangemTheme.colors.text.accent,
-                        )
-                    }
-                },
-                onClick = state.onHardwareWalletClick,
-            )
+            state.blocks.forEach { block ->
+                WalletBlock(
+                    modifier = Modifier
+                        .padding(top = 8.dp),
+                    title = block.title.resolveReference(),
+                    description = block.description.resolveReference(),
+                    features = block.features,
+                    badge = block.titleLabel?.let {
+                        { Label(it) }
+                    },
+                    onClick = block.onClick,
+                )
+            }
         }
-        AnimatedVisibility(state.showAlreadyHaveWallet) {
+        AnimatedVisibility(state.shouldShowAlreadyHaveWallet) {
             AlreadyHaveTangemWalletBlock(
-                onScanClick = state.onScanClick,
+                onBuyClick = state.onBuyClick,
                 isScanInProgress = state.isScanInProgress,
             )
         }
@@ -143,8 +118,9 @@ private fun WalletBlock(
     title: String,
     description: String,
     onClick: () -> Unit,
+    features: ImmutableList<CreateWalletSelectionUM.Feature>,
     modifier: Modifier = Modifier,
-    badge: @Composable () -> Unit,
+    badge: @Composable (() -> Unit)? = null,
 ) {
     Column(
         modifier = modifier
@@ -152,11 +128,14 @@ private fun WalletBlock(
             .padding(top = 8.dp)
             .clip(TangemTheme.shapes.roundedCornersXMedium)
             .background(
-                color = TangemTheme.colors.field.primary,
+                color = TangemTheme.colors.background.primary,
                 shape = TangemTheme.shapes.roundedCornersXMedium,
             )
             .clickable(onClick = onClick)
-            .padding(16.dp),
+            .padding(
+                horizontal = 16.dp,
+                vertical = 12.dp,
+            ),
     ) {
         Row {
             Text(
@@ -167,7 +146,7 @@ private fun WalletBlock(
                 style = TangemTheme.typography.subtitle1,
                 color = TangemTheme.colors.text.primary1,
             )
-            badge()
+            badge?.invoke()
         }
         Text(
             modifier = Modifier
@@ -176,24 +155,57 @@ private fun WalletBlock(
             style = TangemTheme.typography.body2,
             color = TangemTheme.colors.text.tertiary,
         )
+        if (features.isNotEmpty()) {
+            HorizontalDivider(
+                modifier = Modifier.padding(top = 12.dp),
+                thickness = 0.5.dp,
+                color = TangemTheme.colors.stroke.primary,
+            )
+            features.forEach { feature ->
+                Feature(
+                    feature = feature,
+                    modifier = Modifier
+                        .padding(top = 12.dp),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun Feature(feature: CreateWalletSelectionUM.Feature, modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier,
+    ) {
+        Icon(
+            modifier = Modifier.size(TangemTheme.dimens.size16),
+            painter = painterResource(id = feature.iconResId),
+            contentDescription = null,
+            tint = TangemTheme.colors.icon.accent,
+        )
+        Text(
+            modifier = Modifier
+                .weight(1f, fill = false)
+                .padding(start = 6.dp),
+            text = feature.title.resolveReference(),
+            style = TangemTheme.typography.caption2,
+            color = TangemTheme.colors.text.secondary,
+        )
     }
 }
 
 @Composable
 private fun AlreadyHaveTangemWalletBlock(
-    onScanClick: () -> Unit,
+    onBuyClick: () -> Unit,
     isScanInProgress: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    var buttonWidth by remember { mutableStateOf(0) }
-    val density = LocalDensity.current
-
     Row(
         modifier = modifier
             .fillMaxWidth()
             .padding(16.dp)
             .background(
-                color = TangemTheme.colors.field.primary,
+                color = TangemTheme.colors.background.primary,
                 shape = TangemTheme.shapes.roundedCornersXMedium,
             )
             .padding(
@@ -206,30 +218,16 @@ private fun AlreadyHaveTangemWalletBlock(
             modifier = Modifier
                 .weight(1f)
                 .padding(end = 16.dp),
-            text = stringResourceSafe(R.string.wallet_create_scan_question),
+            text = stringResourceSafe(R.string.wallet_add_hardware_purchase),
             style = TangemTheme.typography.button,
             color = TangemTheme.colors.text.primary1,
         )
 
-        TangemButton(
-            modifier = Modifier
-                .conditional(buttonWidth > 0) {
-                    width(with(density) { buttonWidth.toDp() })
-                }
-                .onGloballyPositioned { coordinates ->
-                    if (buttonWidth == 0) {
-                        buttonWidth = coordinates.size.width
-                    }
-                },
-            text = stringResourceSafe(R.string.wallet_create_scan_title),
-            onClick = onScanClick,
-            icon = TangemButtonIconPosition.End(iconResId = R.drawable.ic_tangem_24),
+        SecondaryButton(
+            text = stringResourceSafe(R.string.wallet_import_buy_title),
+            onClick = onBuyClick,
             size = TangemButtonSize.RoundedAction,
             showProgress = isScanInProgress,
-            colors = TangemButtonsDefaults.secondaryButtonColors,
-            textStyle = TangemTheme.typography.subtitle1,
-            enabled = true,
-            animateContentChange = true,
         )
     }
 }
@@ -241,11 +239,45 @@ private fun PreviewCreateWalletContent() {
     TangemThemePreview {
         CreateWalletSelectionContent(
             state = CreateWalletSelectionUM(
-                showAlreadyHaveWallet = true,
-                onBackClick = {},
-                onMobileWalletClick = {},
-                onHardwareWalletClick = {},
-                onScanClick = {},
+                onBackClick = { },
+                blocks = persistentListOf(
+                    CreateWalletSelectionUM.Block(
+                        title = resourceReference(R.string.wallet_create_hardware_title),
+                        titleLabel = LabelUM(
+                            text = resourceReference(R.string.common_recommended),
+                            style = LabelStyle.ACCENT,
+                        ),
+                        description = resourceReference(R.string.wallet_add_hardware_description),
+                        features = persistentListOf(
+                            CreateWalletSelectionUM.Feature(
+                                iconResId = R.drawable.ic_add_wallet_16,
+                                title = resourceReference(R.string.wallet_add_hardware_info_create),
+                            ),
+                            CreateWalletSelectionUM.Feature(
+                                iconResId = R.drawable.ic_import_seed_16,
+                                title = resourceReference(R.string.wallet_add_import_seed_phrase),
+                            ),
+                        ),
+                        onClick = { },
+                    ),
+                    CreateWalletSelectionUM.Block(
+                        title = resourceReference(R.string.wallet_create_mobile_title),
+                        titleLabel = null,
+                        description = resourceReference(R.string.wallet_add_mobile_description),
+                        features = persistentListOf(
+                            CreateWalletSelectionUM.Feature(
+                                iconResId = R.drawable.ic_mobile_wallet_16,
+                                title = resourceReference(R.string.hw_create_title),
+                            ),
+                            CreateWalletSelectionUM.Feature(
+                                iconResId = R.drawable.ic_import_seed_16,
+                                title = resourceReference(R.string.wallet_add_import_seed_phrase),
+                            ),
+                        ),
+                        onClick = { },
+                    ),
+                ),
+                onBuyClick = { },
             ),
         )
     }

@@ -1,13 +1,17 @@
 package com.tangem.features.tokenreceive.entity
 
+import androidx.compose.ui.graphics.Color
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.R
+import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.networkIconResId
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.models.ReceiveAddressModel
+import com.tangem.domain.models.TokenReceiveType
 import com.tangem.domain.models.TokenReceiveNotification
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.ens.EnsAddress
@@ -15,7 +19,6 @@ import com.tangem.features.tokenreceive.entity.ReceiveAddress.Type.Ens
 import com.tangem.features.tokenreceive.entity.ReceiveAddress.Type.Primary
 import com.tangem.features.tokenreceive.ui.state.TokenReceiveUM
 import com.tangem.utils.Provider
-import com.tangem.utils.extensions.addIf
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toPersistentList
@@ -25,6 +28,7 @@ internal class TokenReceiveStateFactory(
     private val cryptoCurrency: CryptoCurrency,
     private val addresses: List<ReceiveAddressModel>,
     private val tokenReceiveNotification: List<TokenReceiveNotification>,
+    private val tokenReceiveType: TokenReceiveType,
 ) {
 
     private val iconStateConverter by lazy(::CryptoCurrencyToIconStateConverter)
@@ -35,7 +39,10 @@ internal class TokenReceiveStateFactory(
                 addresses = addresses,
                 cryptoCurrency = cryptoCurrency,
             ),
-            iconState = iconStateConverter.convert(cryptoCurrency),
+            iconState = when (tokenReceiveType) {
+                is TokenReceiveType.Default -> iconStateConverter.convert(cryptoCurrency)
+                is TokenReceiveType.Custom -> getCustomCurrencyIconState(tokenReceiveType)
+            },
             network = cryptoCurrency.network.name,
             isEnsResultLoading = false,
             notificationConfigs = getNotifications(
@@ -130,12 +137,7 @@ internal class TokenReceiveStateFactory(
         tokenName: String,
         tokenReceiveNotification: List<TokenReceiveNotification>,
     ): List<NotificationUM> {
-        val yieldSupplyNotification: TokenReceiveNotification? =
-            tokenReceiveNotification.firstOrNull { it.isYieldSupplyNotification }
         return buildList {
-            addIf(yieldSupplyNotification != null) {
-                NotificationUM.Warning.YieldSupplyIsActive(tokenName)
-            }
             add(
                 NotificationUM.Info(
                     title = resourceReference(
@@ -159,4 +161,13 @@ internal class TokenReceiveStateFactory(
             }
         }
     }
+
+    private fun getCustomCurrencyIconState(type: TokenReceiveType.Custom) = CurrencyIconState.TokenIcon(
+        url = type.tokenIconUrl,
+        topBadgeIconResId = cryptoCurrency.networkIconResId,
+        fallbackTint = Color(type.fallbackTint),
+        fallbackBackground = Color(type.fallbackBackground),
+        isGrayscale = false,
+        shouldShowCustomBadge = false,
+    )
 }

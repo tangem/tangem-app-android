@@ -27,6 +27,7 @@ dependencies {
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.networks)
+    implementation(projects.domain.walletManager)
     implementation(projects.domain.wallets)
 
     /* Libs - SDK */
@@ -48,10 +49,7 @@ dependencies {
 
     /* Test */
     testImplementation(projects.common.test)
-    testImplementation(deps.test.coroutine)
-    testImplementation(deps.test.junit5)
+    testImplementation(projects.test.core)
     testRuntimeOnly(deps.test.junit5.engine)
-    testImplementation(deps.test.mockk)
-    testImplementation(deps.test.truth)
     testImplementation(deps.moshi)
 }

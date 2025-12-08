@@ -3,6 +3,7 @@ package com.tangem.data.networks.converters
 import com.google.common.truth.Truth
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.datasource.local.network.entity.NetworkStatusDM
+import com.tangem.datasource.local.network.entity.NetworkStatusDM.*
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency.ID
 import com.tangem.domain.models.currency.CryptoCurrency.ID.Body
@@ -12,9 +13,9 @@ import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.models.network.NetworkStatus.Amount
 import com.tangem.domain.models.yield.supply.YieldSupplyStatus
+import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 
 /**
@@ -26,7 +27,7 @@ internal class NetworkStatusDataModelConverterTest {
     private val network: Network = MockCryptoCurrencyFactory().ethereum.network
 
     @ParameterizedTest
-    @MethodSource("provideTestModels")
+    @ProvideTestModels
     fun convert(model: ConvertModel) {
         // Act
         val actual = NetworkStatusDataModelConverter.convert(value = model.value)
@@ -48,11 +49,7 @@ internal class NetworkStatusDataModelConverterTest {
                         ),
                     ),
                     amounts = mapOf(
-                        ID(
-                            prefix = Prefix.COIN_PREFIX,
-                            body = Body.NetworkId(rawId = "BCH"),
-                            suffix = ID.Suffix.RawID(rawId = "bitcoin-cash"),
-                        ) to Amount.Loaded(value = BigDecimal.ZERO),
+                        ID.fromValue(value = "coin⟨ETH→0⟩ethereum") to Amount.Loaded(value = BigDecimal.ZERO),
                         ID(
                             prefix = Prefix.COIN_PREFIX,
                             body = Body.NetworkId(rawId = "BTC"),
@@ -61,14 +58,11 @@ internal class NetworkStatusDataModelConverterTest {
                     ),
                     pendingTransactions = mapOf(), // doesn't matter
                     yieldSupplyStatuses = mapOf(
-                        ID(
-                            prefix = Prefix.COIN_PREFIX,
-                            body = Body.NetworkId(rawId = "BCH"),
-                            suffix = ID.Suffix.RawID(rawId = "bitcoin-cash"),
-                        ) to YieldSupplyStatus(
+                        ID.fromValue(value = "token⟨ETH→0⟩usdt⚓0x1") to YieldSupplyStatus(
                             isActive = false,
                             isInitialized = false,
                             isAllowedToSpend = false,
+                            effectiveProtocolBalance = BigDecimal.ONE,
                         ),
                         ID(
                             prefix = Prefix.COIN_PREFIX,
@@ -79,25 +73,29 @@ internal class NetworkStatusDataModelConverterTest {
                     source = StatusSource.ACTUAL, // doesn't matter
                 ),
             ),
-            expected = NetworkStatusDM.Verified(
-                networkId = NetworkStatusDM.ID(network.rawId),
-                derivationPath = NetworkStatusDM.DerivationPath(
+            expected = Verified(
+                networkId = ID(network.rawId),
+                derivationPath = DerivationPath(
                     value = "",
-                    type = NetworkStatusDM.DerivationPath.Type.NONE,
+                    type = DerivationPath.Type.NONE,
                 ),
                 selectedAddress = "0x123",
                 availableAddresses = setOf(
-                    NetworkStatusDM.Address(
+                    Address(
                         value = "0x123",
-                        type = NetworkStatusDM.Address.Type.Primary,
+                        type = Address.Type.Primary,
                     ),
                 ),
-                amounts = mapOf("coin⟨BCH⟩bitcoin-cash" to BigDecimal.ZERO),
-                yieldSupplyStatuses = mapOf(
-                    "coin⟨BCH⟩bitcoin-cash" to NetworkStatusDM.YieldSupplyStatus(
+                amounts = listOf(
+                    CurrencyAmount(CurrencyId.createCoinId("ethereum"), BigDecimal.ZERO),
+                ),
+                yieldSupplyStatuses = listOf(
+                    YieldSupplyStatus(
+                        id = CurrencyId.createTokenId("usdt", "0x1"),
                         isActive = false,
                         isInitialized = false,
                         isAllowedToSpend = false,
+                        effectiveProtocolBalance = BigDecimal.ONE,
                     ),
                 ),
             ),
@@ -120,17 +118,17 @@ internal class NetworkStatusDataModelConverterTest {
                     source = StatusSource.ACTUAL, // doesn't matter
                 ),
             ),
-            expected = NetworkStatusDM.NoAccount(
-                networkId = NetworkStatusDM.ID(network.rawId),
-                derivationPath = NetworkStatusDM.DerivationPath(
+            expected = NoAccount(
+                networkId = ID(network.rawId),
+                derivationPath = DerivationPath(
                     value = "",
-                    type = NetworkStatusDM.DerivationPath.Type.NONE,
+                    type = DerivationPath.Type.NONE,
                 ),
                 selectedAddress = "0x123",
                 availableAddresses = setOf(
-                    NetworkStatusDM.Address(
+                    Address(
                         value = "0x123",
-                        type = NetworkStatusDM.Address.Type.Primary,
+                        type = Address.Type.Primary,
                     ),
                 ),
                 amountToCreateAccount = BigDecimal.ONE,

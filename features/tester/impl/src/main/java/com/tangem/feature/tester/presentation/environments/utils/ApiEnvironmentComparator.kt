@@ -10,13 +10,15 @@ import com.tangem.datasource.api.common.config.ApiEnvironmentConfig
  */
 internal object ApiEnvironmentComparator : Comparator<ApiEnvironmentConfig> {
 
-    private val apiEnvironmentPriorityMap = ApiEnvironment.entries.associateWith {
-        when (it) {
+    private val apiEnvironmentPriorityMap = ApiEnvironment.entries.associateWith { environment ->
+        when (environment) {
             ApiEnvironment.DEV -> 0
             ApiEnvironment.DEV_2 -> 1
-            ApiEnvironment.STAGE -> 2
-            ApiEnvironment.MOCK -> 3
-            ApiEnvironment.PROD -> 4
+            ApiEnvironment.DEV_3 -> 2
+            ApiEnvironment.STAGE -> 3
+            ApiEnvironment.STAGE_2 -> 4
+            ApiEnvironment.MOCK -> 5
+            ApiEnvironment.PROD -> 6
         }
     }
 

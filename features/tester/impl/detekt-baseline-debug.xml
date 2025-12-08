@@ -1,0 +1,36 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>BooleanPropertyNaming:ExcludedBlockchainsScreenUM.kt$ExcludedBlockchainsScreenUM$val showRecoverWarning: Boolean</ID>
+    <ID>CanBeNonNullable:TestPushDeepLinkBottomSheet.kt$config: TangemBottomSheetConfig?</ID>
+    <ID>CastNullableToNonNullableType:TestPushMarketTokenSearchBottomSheetTransformer.kt$TestPushMarketTokenSearchBottomSheetTransformer$as</ID>
+    <ID>CastNullableToNonNullableType:TestPushViewModel.kt$TestPushViewModel$as</ID>
+    <ID>ExplicitCollectionElementAccessMethod:TestPushAddKeyDataTransformer.kt$TestPushAddKeyDataTransformer$mutableData.set(index = index, updated)</ID>
+    <ID>ExplicitCollectionElementAccessMethod:TestPushAddValueDataTransformer.kt$TestPushAddValueDataTransformer$mutableData.set(index = index, updated)</ID>
+    <ID>MaxChainedCallsOnSameLine:BlockchainProvidersScreen.kt$ProvidersDnDTarget$event.toAndroidDragEvent().clipData.getItemAt(0).text.toString().toInt()</ID>
+    <ID>MultilineLambdaItParameter:BlockchainProvidersScreen.kt${ value = it state.onValueChange(it.text) }</ID>
+    <ID>MultilineLambdaItParameter:BlockchainProvidersViewModel.kt$BlockchainProvidersViewModel${ if (it.blockchainId == blockchainId) { it.update() } else { it } }</ID>
+    <ID>MultilineLambdaItParameter:BlockchainProvidersViewModel.kt$BlockchainProvidersViewModel${ it.copyProvidersUM(blockchainId = id) { copy( addPublicProviderDialog = addPublicProviderDialog.copy( hasError = !PatternsCompat.WEB_URL.matcher(url).matches(), ), ) } }</ID>
+    <ID>MultilineLambdaItParameter:BlockchainProvidersViewModel.kt$BlockchainProvidersViewModel${ it.copyProvidersUM(blockchainId = id) { copy(providers = providers.toImmutableList()) } }</ID>
+    <ID>MultilineLambdaItParameter:BlockchainProvidersViewModel.kt$BlockchainProvidersViewModel${ it.key.fullName.contains(other = query, ignoreCase = true) || it.key.currency.contains(other = query, ignoreCase = true) }</ID>
+    <ID>MultilineLambdaItParameter:BlockchainProvidersViewModel.kt$BlockchainProvidersViewModel${ val (blockchain, providers) = it ProvidersUM( blockchainId = blockchain.id, blockchainName = blockchain.fullName, blockchainSymbol = blockchain.currency, providers = providers.map(BlockchainProvidersUM::ProviderUM).toImmutableList(), isExpanded = false, onDrop = { prev, current -&gt; onDrop(blockchain.id, prev, current) }, addPublicProviderDialog = AddPublicProviderDialogUM( hasError = false, onValueChange = { onPublicProviderUrlChange(id = blockchain.id, url = it) }, onSaveClick = { onAddProviderClick(id = blockchain.id, url = it) }, ), ) }</ID>
+    <ID>MultilineLambdaItParameter:EnvironmentTogglesScreen.kt${ Text( text = it, color = TangemTheme.colors.text.accent, overflow = TextOverflow.Ellipsis, maxLines = 1, style = TangemTheme.typography.body2, ) }</ID>
+    <ID>MultilineLambdaItParameter:EnvironmentsTogglesViewModel.kt$EnvironmentsTogglesViewModel${ val (config, currentEnvironment) = it if (config.environmentConfigs.size &lt;= 1) return@mapNotNull null EnvironmentTogglesScreenUM.ApiInfoUM( name = config.id.name, select = currentEnvironment.name, url = config.environmentConfigs.firstOrNull { it.environment == currentEnvironment }?.baseUrl ?: error("Current environment's url isn't found"), environments = config.environmentConfigs .sortedWith(ApiEnvironmentComparator) .map { environmentConfig -&gt; environmentConfig.environment.name } .toImmutableSet(), ) }</ID>
+    <ID>MultilineLambdaItParameter:TestPushViewModel.kt$TestPushViewModel${ _uiState.update( TestPushMarketTokenClickBottomSheetTransformer( it, ), ) marketsJobHolder.cancel() dismissBottomSheet() }</ID>
+    <ID>MultilineLambdaItParameter:TestPushViewModel.kt$TestPushViewModel${ _uiState.update( TestPushMarketTokenSearchBottomSheetTransformer( it, ), ) onMarketsBatchReload(it.text) }</ID>
+    <ID>MultilineLambdaItParameter:TesterAccountsViewModel.kt$TesterAccountsViewModel${ it.copy( accountListBottomSheetConfig = it.accountListBottomSheetConfig.copy( isAccountsShown = false, ), ) }</ID>
+    <ID>MultilineLambdaItParameter:TesterAccountsViewModel.kt$TesterAccountsViewModel${ it.copy( walletSelector = it.walletSelector.copy(selected = userWallet), accountListBottomSheetConfig = it.accountListBottomSheetConfig.copy( accounts = getWalletAccounts(userWallet.walletId), ), ) }</ID>
+    <ID>MultilineLambdaItParameter:TesterActionsScreen.kt${ builder.setStream( FileProvider.getUriForFile(activity, "${activity.packageName}.provider", it), ) }</ID>
+    <ID>MultilineLambdaItParameter:TesterActivity.kt$TesterActivity${ val route = when (it) { ButtonUM.FEATURE_TOGGLES -&gt; TesterScreen.FEATURE_TOGGLES ButtonUM.EXCLUDED_BLOCKCHAINS -&gt; TesterScreen.EXCLUDED_BLOCKCHAINS ButtonUM.ENVIRONMENT_TOGGLES -&gt; TesterScreen.ENVIRONMENTS_TOGGLES ButtonUM.BLOCKCHAIN_PROVIDERS -&gt; TesterScreen.BLOCKCHAIN_PROVIDERS ButtonUM.TESTER_ACTIONS -&gt; TesterScreen.TESTER_ACTIONS ButtonUM.TEST_PUSHES -&gt; TesterScreen.TEST_PUSHES ButtonUM.ACCOUNTS -&gt; TesterScreen.ACCOUNTS } innerTesterRouter.open(route) }</ID>
+    <ID>NoNameShadowing:AccountsScreen.kt$content</ID>
+    <ID>NoNameShadowing:BlockchainProvidersViewModel.kt$BlockchainProvidersViewModel${ onAddProviderClick(id = blockchain.id, url = it) }</ID>
+    <ID>NoNameShadowing:BlockchainProvidersViewModel.kt$BlockchainProvidersViewModel${ onPublicProviderUrlChange(id = blockchain.id, url = it) }</ID>
+    <ID>NoNameShadowing:EnvironmentsTogglesViewModel.kt$EnvironmentsTogglesViewModel${ it.environment == currentEnvironment }</ID>
+    <ID>NoNameShadowing:TesterActivity.kt$TesterActivity${ val route = when (it) { ButtonUM.FEATURE_TOGGLES -&gt; TesterScreen.FEATURE_TOGGLES ButtonUM.EXCLUDED_BLOCKCHAINS -&gt; TesterScreen.EXCLUDED_BLOCKCHAINS ButtonUM.ENVIRONMENT_TOGGLES -&gt; TesterScreen.ENVIRONMENTS_TOGGLES ButtonUM.BLOCKCHAIN_PROVIDERS -&gt; TesterScreen.BLOCKCHAIN_PROVIDERS ButtonUM.TESTER_ACTIONS -&gt; TesterScreen.TESTER_ACTIONS ButtonUM.TEST_PUSHES -&gt; TesterScreen.TEST_PUSHES ButtonUM.ACCOUNTS -&gt; TesterScreen.ACCOUNTS } innerTesterRouter.open(route) }</ID>
+    <ID>PropertyUsedBeforeDeclaration:BlockchainProvidersViewModel.kt$BlockchainProvidersViewModel$_state</ID>
+    <ID>PropertyUsedBeforeDeclaration:BlockchainProvidersViewModel.kt$BlockchainProvidersViewModel$searchQuery</ID>
+    <ID>PropertyUsedBeforeDeclaration:EnvironmentsTogglesViewModel.kt$EnvironmentsTogglesViewModel$_uiState</ID>
+    <ID>PropertyUsedBeforeDeclaration:TesterActionsViewModel.kt$TesterActionsViewModel$initialState</ID>
+  </CurrentIssues>
+</SmellBaseline>

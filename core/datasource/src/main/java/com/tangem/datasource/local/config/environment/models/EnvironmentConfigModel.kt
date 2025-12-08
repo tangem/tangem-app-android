@@ -16,6 +16,8 @@ class EnvironmentConfigModel(
     @Json(name = "quiknodeApiKey") val quiknodeApiKey: String,
     @Json(name = "bscQuiknodeSubdomain") val bscQuiknodeSubdomain: String,
     @Json(name = "bscQuiknodeApiKey") val bscQuiknodeApiKey: String,
+    @Json(name = "quiknodePlasmaSubdomain") val quiknodePlasmaSubdomain: String,
+    @Json(name = "quiknodePlasmaApiKey") val quiknodePlasmaApiKey: String,
     @Json(name = "nowNodesApiKey") val nowNodesApiKey: String,
     @Json(name = "getBlockAccessTokens") val getBlockAccessTokens: GetBlockAccessTokens?,
     @Json(name = "tonCenterApiKey") val tonCenterKeys: TonCenterKeys,
@@ -33,6 +35,7 @@ class EnvironmentConfigModel(
     @Json(name = "hederaArkhiaKey") val hederaArkhiaKey: String?,
     @Json(name = "polygonScanApiKey") val polygonScanApiKey: String?,
     @Json(name = "stakeKitApiKey") val stakeKitApiKey: String?,
+    @Json(name = "p2pApiKey") val p2pApiKey: P2PKeys?,
     @Json(name = "bittensorDwellirKey") val bittensorDwellirApiKey: String?,
     @Json(name = "bittensorOnfinalityKey") val bittensorOnfinalityKey: String?,
     @Json(name = "koinosProApiKey") val koinosProApiKey: String?,
@@ -45,7 +48,10 @@ class EnvironmentConfigModel(
     @Json(name = "tangemApiKeyStage") val tangemApiKeyStage: String?,
     @Json(name = "etherscanApiKey") val etherScanApiKey: String?,
     @Json(name = "yieldModuleApiKey") val yieldModuleApiKey: String?,
+    @Json(name = "yieldModuleApiKeyDev") val yieldModuleApiKeyDev: String?,
     @Json(name = "blinkApiKey") val blinkApiKey: String?,
+    @Json(name = "tatumApiKey") val tatumApiKey: String?,
+    @Json(name = "bffStaticToken") val bffStaticToken: String?,
 )
 
 @JsonClass(generateAdapter = true)
@@ -93,6 +99,12 @@ data class GetBlockAccessTokens(
 data class TonCenterKeys(
     @Json(name = "mainnet") val mainnet: String,
     @Json(name = "testnet") val testnet: String,
+)
+
+@JsonClass(generateAdapter = true)
+data class P2PKeys(
+    @Json(name = "mainnet") val mainnet: String,
+    @Json(name = "hoodi") val hoodi: String,
 )
 
 @JsonClass(generateAdapter = true)

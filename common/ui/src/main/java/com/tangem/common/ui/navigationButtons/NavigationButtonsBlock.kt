@@ -55,7 +55,6 @@ fun NavigationButtonsBlock(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
         ) {
-            PreviousButton(state?.prevButton)
             NavigationPrimaryButton(state?.primaryButton, modifier = Modifier.weight(1f))
         }
     }

@@ -4,6 +4,7 @@ import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.extensions.TextReference
+import kotlinx.collections.immutable.ImmutableList
 
 /** Tokens list item state */
 @Immutable
@@ -41,12 +42,12 @@ sealed interface TokensListItemUM {
     }
 
     data class Portfolio(
-        val state: TokenItemState,
+        val tokenItemUM: TokenItemState,
         val isExpanded: Boolean,
         val isCollapsable: Boolean,
-        val tokens: List<PortfolioTokensListItemUM>,
+        val tokens: ImmutableList<PortfolioTokensListItemUM>,
     ) : TokensListItemUM {
-        override val id: String = state.id
+        override val id: String = tokenItemUM.id
     }
 
     data class Text(override val id: Any, val text: TextReference) : TokensListItemUM

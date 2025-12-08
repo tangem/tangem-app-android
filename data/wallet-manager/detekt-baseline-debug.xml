@@ -1,0 +1,9 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>MultilineLambdaItParameter:UpdateWalletManagerResultFactory.kt$UpdateWalletManagerResultFactory${ createCurrencyTransaction( txHistoryItemConverter = txHistoryItemConverter, data = it, ) }</ID>
+    <ID>UnsafeCallOnNullableType:WalletManagerFactory.kt$blockchain.getTestnetVersion()!!</ID>
+    <ID>UnsafeCallOnNullableType:WalletManagerFactory.kt$scanResponse.secondTwinPublicKey!!</ID>
+  </CurrentIssues>
+</SmellBaseline>

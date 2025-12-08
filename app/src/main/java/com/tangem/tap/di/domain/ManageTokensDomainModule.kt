@@ -1,20 +1,22 @@
 package com.tangem.tap.di.domain
 
-import com.tangem.domain.wallets.derivations.DerivationsRepository
 import com.tangem.domain.managetokens.*
 import com.tangem.domain.managetokens.repository.CustomTokensRepository
 import com.tangem.domain.managetokens.repository.ManageTokensRepository
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.staking.StakingIdFactory
-import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
+import com.tangem.domain.staking.multi.MultiStakingBalanceFetcher
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.domain.wallets.derivations.DerivationsRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
 import javax.inject.Singleton
 
 @Module
@@ -72,8 +74,9 @@ internal object ManageTokensDomainModule {
         derivationsRepository: DerivationsRepository,
         multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
         multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
-        multiYieldBalanceFetcher: MultiYieldBalanceFetcher,
+        multiStakingBalanceFetcher: MultiStakingBalanceFetcher,
         stakingIdFactory: StakingIdFactory,
+        dispatchers: CoroutineDispatcherProvider,
     ): SaveManagedTokensUseCase {
         return SaveManagedTokensUseCase(
             customTokensRepository = customTokensRepository,
@@ -82,8 +85,9 @@ internal object ManageTokensDomainModule {
             derivationsRepository = derivationsRepository,
             multiNetworkStatusFetcher = multiNetworkStatusFetcher,
             multiQuoteStatusFetcher = multiQuoteStatusFetcher,
-            multiYieldBalanceFetcher = multiYieldBalanceFetcher,
+            multiStakingBalanceFetcher = multiStakingBalanceFetcher,
             stakingIdFactory = stakingIdFactory,
+            parallelUpdatingScope = CoroutineScope(SupervisorJob() + dispatchers.default),
         )
     }
 

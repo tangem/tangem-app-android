@@ -3,14 +3,15 @@ package com.tangem.data.networks.converters
 import com.google.common.truth.Truth
 import com.tangem.datasource.local.network.entity.NetworkStatusDM
 import com.tangem.domain.models.network.NetworkAddress
+import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.MethodSource
 
 /**
 [REDACTED_AUTHOR]
  */
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class NetworkAddressConverterTest {
 
     @Nested
@@ -18,7 +19,7 @@ internal class NetworkAddressConverterTest {
     inner class Convert {
 
         @ParameterizedTest
-        @MethodSource("provideTestModels")
+        @ProvideTestModels
         fun convert(model: ConvertModel) {
             // Act
             val actual = runCatching { NetworkAddressConverter.convert(value = model.value) }
@@ -190,7 +191,7 @@ internal class NetworkAddressConverterTest {
     inner class ConvertBack {
 
         @ParameterizedTest
-        @MethodSource("provideTestModels")
+        @ProvideTestModels
         fun convertBack(model: ConvertBackModel) {
             // Act
             val actual = NetworkAddressConverter.convertBack(value = model.value)

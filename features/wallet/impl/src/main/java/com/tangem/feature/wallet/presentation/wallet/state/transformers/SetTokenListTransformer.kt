@@ -2,6 +2,7 @@ package com.tangem.feature.wallet.presentation.wallet.state.transformers
 
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletCardState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
@@ -17,6 +18,7 @@ internal class SetTokenListTransformer(
     private val appCurrency: AppCurrency,
     private val clickIntents: WalletClickIntents,
     private val yieldSupplyApyMap: Map<String, String> = emptyMap(),
+    private val stakingApyMap: Map<String, List<Yield.Validator>> = emptyMap(),
 ) : WalletStateTransformer(userWallet.walletId) {
 
     override fun transform(prevState: WalletState): WalletState {
@@ -59,7 +61,8 @@ internal class SetTokenListTransformer(
             selectedWallet = userWallet,
             appCurrency = appCurrency,
             clickIntents = clickIntents,
-            apyMap = yieldSupplyApyMap,
+            yieldModuleApyMap = yieldSupplyApyMap,
+            stakingApyMap = stakingApyMap,
         ).convert(value = this)
     }
 }

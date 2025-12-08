@@ -33,6 +33,7 @@ dependencies {
 
     // region Project - Libs
     implementation(projects.libs.blockchainSdk)
+    implementation(tangemDeps.blockchain) { exclude(module = "joda-time") }
     // endregion
 
     // region DI
@@ -47,13 +48,10 @@ dependencies {
     // endregion
 
     // region Tests
-    testImplementation(deps.test.coroutine)
-    testImplementation(deps.test.junit5)
     testRuntimeOnly(deps.test.junit5.engine)
-    testImplementation(deps.test.mockk)
-    testImplementation(deps.test.truth)
     testImplementation(tangemDeps.blockchain)
     testImplementation(tangemDeps.card.core)
     testImplementation(projects.common.test)
+    testImplementation(projects.test.core)
     // endregion
 }

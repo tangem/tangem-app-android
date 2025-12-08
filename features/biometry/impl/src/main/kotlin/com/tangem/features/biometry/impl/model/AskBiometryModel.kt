@@ -55,7 +55,7 @@ internal class AskBiometryModel @Inject constructor(
 
     private val _uiState = MutableStateFlow(
         AskBiometryUM(
-            bottomSheetVariant = params.isBottomSheetVariant,
+            isBottomSheetVariant = params.isBottomSheetVariant,
             onAllowClick = ::onAllowClick,
             onDontAllowClick = ::dontAllow,
             onDismiss = ::dismiss,
@@ -85,7 +85,7 @@ internal class AskBiometryModel @Inject constructor(
                 return@launch
             }
 
-            _uiState.update { it.copy(showProgress = true) }
+            _uiState.update { it.copy(shouldShowProgress = true) }
 
             /*
 
@@ -96,7 +96,7 @@ internal class AskBiometryModel @Inject constructor(
                 uiMessageSender.send(
                     SnackbarMessage(stringReference("No selected user wallet")),
                 )
-                _uiState.update { it.copy(showProgress = false) }
+                _uiState.update { it.copy(shouldShowProgress = false) }
 
                 return@launch
             }
@@ -114,6 +114,7 @@ internal class AskBiometryModel @Inject constructor(
 
         if (hotWalletFeatureToggles.isHotWalletEnabled) {
             walletsRepository.setUseBiometricAuthentication(value = true)
+            walletsRepository.setRequireAccessCode(value = false)
             setBiometryLockForAllWallets()
             cardSdkConfigRepository.setAccessCodeRequestPolicy(
                 isBiometricsRequestPolicy = walletsRepository.requireAccessCode().not(),
@@ -127,7 +128,7 @@ internal class AskBiometryModel @Inject constructor(
             }
         }
 
-        if (_uiState.value.bottomSheetVariant) {
+        if (_uiState.value.isBottomSheetVariant) {
             dismissBSFlow.emit(Unit)
             delay(timeMillis = 500)
         }
@@ -135,13 +136,15 @@ internal class AskBiometryModel @Inject constructor(
         params.modelCallbacks.onAllowed()
     }
 
-    private fun setBiometryLockForAllWallets() {
-        modelScope.launch {
-            userWalletsListRepository.userWalletsSync().forEach { userWallet ->
-                userWalletsListRepository.setLock(
-                    userWalletId = userWallet.walletId,
-                    lockMethod = UserWalletsListRepository.LockMethod.Biometric,
-                    changeUnsecured = false,
+    private suspend fun setBiometryLockForAllWallets() {
+        userWalletsListRepository.userWalletsSync().forEach { userWallet ->
+            userWalletsListRepository.setLock(
+                userWalletId = userWallet.walletId,
+                lockMethod = UserWalletsListRepository.LockMethod.Biometric,
+                changeUnsecured = false,
+            ).onLeft { error ->
+                uiMessageSender.send(
+                    SnackbarMessage(stringReference("Something went wrong. Please contact support: $error")),
                 )
             }
         }

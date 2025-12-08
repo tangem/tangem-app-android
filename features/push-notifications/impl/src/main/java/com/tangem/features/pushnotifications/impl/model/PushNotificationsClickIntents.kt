@@ -3,7 +3,7 @@ package com.tangem.features.pushnotifications.impl.model
 internal interface PushNotificationsClickIntents {
     fun onAllowClick()
 
-    fun onLaterClick(isFromBs: Boolean)
+    fun onLaterClick()
 
     fun onAllowPermission()
 

@@ -7,11 +7,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.swap.SwapErrorResolver
 import com.tangem.domain.swap.SwapRepositoryV2
-import com.tangem.domain.swap.models.SwapCryptoCurrency
-import com.tangem.domain.swap.models.SwapCurrencies
-import com.tangem.domain.swap.models.SwapCurrenciesGroup
-import com.tangem.domain.swap.models.SwapPairModel
-import com.tangem.domain.swap.models.SwapTxType
+import com.tangem.domain.swap.models.*
 
 /**
  * Get list of swap pairs
@@ -67,13 +63,18 @@ class GetSwapPairsUseCase(
         groupingCurrency: (SwapPairModel) -> CryptoCurrencyStatus,
         cryptoCurrencyStatusList: List<CryptoCurrencyStatus>,
     ): SwapCurrenciesGroup {
-        val availableCryptoCurrencies = filter { pair -> filteringCurrency(pair).currency.id == initialCurrency.id }
-            // Search available to swap currency
+        val availableCryptoCurrencies = asSequence()
             .filter { pair ->
+                filteringCurrency(pair).currency.id.rawCurrencyId == initialCurrency.id.rawCurrencyId
+            }
+            .filter { pair ->
+                // Search available to swap currency
                 cryptoCurrencyStatusList.any { currencyStatus ->
                     currencyStatus.currency.id == pair.to.currency.id
                 }
-            }.map { pair -> SwapCryptoCurrency(groupingCurrency(pair), pair.providers) }
+            }
+            .map { pair -> SwapCryptoCurrency(groupingCurrency(pair), pair.providers) }
+            .toList()
 
         val unavailableCryptoCurrencies =
             cryptoCurrencyStatusList - availableCryptoCurrencies.map { it.currencyStatus }.toSet()

@@ -15,6 +15,7 @@ dependencies {
     // region Core modules
     implementation(projects.core.res)
     implementation(projects.core.utils)
+    implementation(projects.core.analytics)
     // endregion
 
     // region Domain modules
@@ -30,6 +31,8 @@ dependencies {
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.notifications.models)
+    implementation(projects.domain.demo.models)
+    implementation(projects.domain.hotWallet)
     // endregion
 
     // region Tangem libraries

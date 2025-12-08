@@ -1,9 +1,7 @@
 package com.tangem.data.walletconnect.request
 
 import com.reown.walletkit.client.Wallet
-import com.tangem.common.extensions.calculateSha256
-import com.tangem.common.extensions.toHexString
-import com.tangem.data.walletconnect.respond.WcRespondService
+import com.tangem.data.walletconnect.respond.DefaultWcRespondService
 import com.tangem.data.walletconnect.utils.WC_TAG
 import com.tangem.data.walletconnect.utils.WcSdkObserver
 import com.tangem.data.walletconnect.utils.WcSdkSessionRequestConverter
@@ -14,16 +12,13 @@ import com.tangem.domain.walletconnect.model.sdkcopy.WcSdkSessionRequest
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 import org.joda.time.DateTime
-import org.joda.time.Duration
 import timber.log.Timber
 
 internal class DefaultWcRequestService(
     private val requestConverters: Set<WcRequestToUseCaseConverter>,
-    private val respondService: WcRespondService,
+    private val respondService: DefaultWcRespondService,
 ) : WcSdkObserver, WcRequestService {
 
-    private val expireDuration = Duration.standardSeconds(120)
-    private val cachedRequest = MutableStateFlow<Set<Pair<Long, String>>>(setOf())
     private val _wcRequest: Channel<Pair<WcMethodName, WcSdkSessionRequest>> = Channel(Channel.BUFFERED)
     override val wcRequest: Flow<Pair<WcMethodName, WcSdkSessionRequest>> = _wcRequest.receiveAsFlow()
         .filter { filterDuplicateRequest(request = it.second) }
@@ -52,10 +47,10 @@ internal class DefaultWcRequestService(
     }
 
     private fun filterDuplicateRequest(request: WcSdkSessionRequest): Boolean {
-        val hash = request.request.params.calculateSha256().toHexString()
+        val hash = respondService.sessionRequestHash(request)
         val now = DateTime.now().millis
-        val expiredMillis = now - expireDuration.millis
-        val cachedRequest = cachedRequest.updateAndGet {
+        val expiredMillis = now - respondService.expireDuration.millis
+        val cachedRequest = respondService.cachedRequest.updateAndGet {
             it.filterTo(mutableSetOf()) { (millis, _) -> millis > expiredMillis }
         }
 
@@ -67,8 +62,8 @@ internal class DefaultWcRequestService(
     }
 
     private fun saveRequest(request: WcSdkSessionRequest) {
-        val hash = request.request.params.calculateSha256().toHexString()
+        val hash = respondService.sessionRequestHash(request)
         val now = DateTime.now().millis
-        cachedRequest.update { it + (now to hash) }
+        respondService.cachedRequest.update { it + (now to hash) }
     }
 }

@@ -2,6 +2,7 @@ package com.tangem.features.nft.receive.model
 
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
+import com.tangem.common.ui.account.toUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -11,23 +12,28 @@ import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.components.fields.InputManager
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.DialogMessage
-import com.tangem.domain.models.Asset
-import com.tangem.domain.models.ReceiveAddressModel
+import com.tangem.domain.account.producer.SingleAccountProducer
+import com.tangem.domain.account.supplier.SingleAccountSupplier
+import com.tangem.domain.account.usecase.IsAccountsModeEnabledUseCase
+import com.tangem.domain.models.PortfolioId
 import com.tangem.domain.models.TokenReceiveConfig
-import com.tangem.domain.models.TokenReceiveNotification
+import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.models.network.NetworkStatus
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.nft.FilterNFTAvailableNetworksUseCase
 import com.tangem.domain.nft.GetNFTCurrencyUseCase
 import com.tangem.domain.nft.GetNFTNetworkStatusUseCase
 import com.tangem.domain.nft.GetNFTNetworksUseCase
 import com.tangem.domain.nft.analytics.NFTAnalyticsEvent
-import com.tangem.domain.tokens.GetViewedTokenReceiveWarningUseCase
-import com.tangem.domain.transaction.usecase.GetEnsNameUseCase
+import com.tangem.domain.transaction.usecase.ReceiveAddressesFactory
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.nft.impl.R
 import com.tangem.features.nft.receive.NFTReceiveComponent
 import com.tangem.features.nft.receive.entity.NFTReceiveUM
@@ -36,7 +42,6 @@ import com.tangem.features.nft.receive.entity.transformer.ToggleSearchBarTransfo
 import com.tangem.features.nft.receive.entity.transformer.UpdateDataStateTransformer
 import com.tangem.features.nft.receive.entity.transformer.UpdateSearchQueryTransformer
 import com.tangem.features.tokenreceive.TokenReceiveFeatureToggle
-import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.*
@@ -56,9 +61,11 @@ internal class NFTReceiveModel @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val messageSender: UiMessageSender,
     private val tokenReceiveFeatureToggle: TokenReceiveFeatureToggle,
-    private val getViewedTokenReceiveWarningUseCase: GetViewedTokenReceiveWarningUseCase,
-    private val getEnsNameUseCase: GetEnsNameUseCase,
     private val getNFTCurrencyUseCase: GetNFTCurrencyUseCase,
+    private val receiveAddressesFactory: ReceiveAddressesFactory,
+    private val getUserWalletUseCase: GetUserWalletUseCase,
+    private val singleAccountSupplier: SingleAccountSupplier,
+    private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     paramsContainer: ParamsContainer,
 ) : Model() {
 
@@ -69,10 +76,7 @@ internal class NFTReceiveModel @Inject constructor(
     private val _state = MutableStateFlow(
         value = NFTReceiveUM(
             onBackClick = params.onBackClick,
-            appBarSubtitle = resourceReference(
-                R.string.hot_crypto_add_token_subtitle,
-                formatArgs = wrappedList(params.walletName),
-            ),
+            appBarSubtitle = TextReference.EMPTY,
             search = getInitialSearchBar(),
             networks = NFTReceiveUM.Networks.Content(
                 availableItems = persistentListOf(),
@@ -87,11 +91,44 @@ internal class NFTReceiveModel @Inject constructor(
     init {
         analyticsEventHandler.send(NFTAnalyticsEvent.Receive.ScreenOpened)
         subscribeToNFTAvailableNetworks()
+        loadPortfolioName()
     }
+
+    private fun loadPortfolioName() = modelScope.launch(dispatchers.default) {
+        val appBarSubtitle = when (val portfolioId = params.portfolioId) {
+            is PortfolioId.Wallet -> loadWalletName(portfolioId.userWalletId)
+            is PortfolioId.Account -> if (isAccountsModeEnabledUseCase.invokeSync()) {
+                loadAccountName(portfolioId.accountId)
+            } else {
+                loadWalletName(portfolioId.userWalletId)
+            }
+        }
+        _state.update { it.copy(appBarSubtitle = appBarSubtitle) }
+    }
+
+    private fun loadWalletName(userWalletId: UserWalletId): TextReference {
+        return getUserWalletUseCase(userWalletId)
+            .map { it.name }
+            .getOrNull()
+            ?.let { createAppBarSubtitle(stringReference(it)) }
+            ?: TextReference.EMPTY
+    }
+
+    private suspend fun loadAccountName(accountId: AccountId): TextReference {
+        return singleAccountSupplier
+            .getSyncOrNull(SingleAccountProducer.Params(accountId))
+            ?.let { createAppBarSubtitle(it.accountName.toUM().value) }
+            ?: TextReference.EMPTY
+    }
+
+    private fun createAppBarSubtitle(text: TextReference) = resourceReference(
+        R.string.hot_crypto_add_token_subtitle,
+        formatArgs = wrappedList(text),
+    )
 
     private fun subscribeToNFTAvailableNetworks() {
         combine(
-            flow = getNFTNetworksUseCase(params.userWalletId),
+            flow = getNFTNetworksUseCase(params.portfolioId),
             flow2 = searchManager.query.distinctUntilChanged(),
         ) { networks, query ->
             filterNFTAvailableNetworksUseCase(networks, query)
@@ -104,6 +141,7 @@ internal class NFTReceiveModel @Inject constructor(
                     ).transform(it)
                 }
             }
+            .flowOn(dispatchers.default)
             .launchIn(modelScope)
     }
 
@@ -150,7 +188,7 @@ internal class NFTReceiveModel @Inject constructor(
                 analyticsEventHandler.send(NFTAnalyticsEvent.Receive.BlockchainChosen(network.name))
 
                 val networkStatus = getNFTNetworkStatusUseCase.invoke(
-                    userWalletId = params.userWalletId,
+                    userWalletId = params.portfolioId.userWalletId,
                     network = network,
                 ) ?: return@launch
 
@@ -196,54 +234,11 @@ internal class NFTReceiveModel @Inject constructor(
 
     private suspend fun configureReceiveAddresses(addresses: NetworkAddress, network: Network): TokenReceiveConfig {
         val cryptoCurrency = getNFTCurrencyUseCase.invoke(network)
-
-        val ensName = getEnsNameUseCase.invoke(
-            userWalletId = params.userWalletId,
+        return receiveAddressesFactory.createForNft(
+            userWalletId = params.portfolioId.userWalletId,
+            addresses = addresses,
             network = network,
-            address = addresses.defaultAddress.value,
-        )
-
-        val receiveAddresses = buildList {
-            ensName?.let { ens ->
-                add(
-                    ReceiveAddressModel(
-                        nameService = ReceiveAddressModel.NameService.Ens,
-                        value = ens,
-                    ),
-                )
-            }
-            addresses.availableAddresses.map { address ->
-                add(
-                    ReceiveAddressModel(
-                        nameService = when (address.type) {
-                            NetworkAddress.Address.Type.Primary -> ReceiveAddressModel.NameService.Default
-                            NetworkAddress.Address.Type.Secondary -> ReceiveAddressModel.NameService.Legacy
-                        },
-                        value = address.value,
-                    ),
-                )
-            }
-        }
-
-        val notifications = buildList {
-            if (BlockchainUtils.isSolana(network.rawId)) {
-                add(
-                    TokenReceiveNotification(
-                        title = R.string.nft_receive_unsupported_types,
-                        subtitle = R.string.nft_receive_unsupported_types_description,
-                    ),
-                )
-            }
-        }
-
-        return TokenReceiveConfig(
-            shouldShowWarning = Asset.NFT.name !in getViewedTokenReceiveWarningUseCase(),
-            cryptoCurrency = cryptoCurrency,
-            userWalletId = params.userWalletId,
-            showMemoDisclaimer = false,
-            receiveAddress = receiveAddresses,
-            tokenReceiveNotification = notifications,
-            asset = Asset.NFT,
+            nft = cryptoCurrency,
         )
     }
 }

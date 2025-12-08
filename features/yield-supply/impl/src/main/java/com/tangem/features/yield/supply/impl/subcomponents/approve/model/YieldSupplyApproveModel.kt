@@ -1,13 +1,17 @@
 package com.tangem.features.yield.supply.impl.subcomponents.approve.model
 
 import arrow.core.getOrElse
+import com.tangem.blockchain.common.TransactionData
+import com.tangem.blockchain.common.transaction.TransactionFee
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.Basic
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.extensions.*
-import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
@@ -19,6 +23,7 @@ import com.tangem.domain.transaction.usecase.CreateApprovalTransactionUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetContractAddressUseCase
+import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
 import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.impl.common.YieldSupplyAlertFactory
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyActionUM
@@ -29,7 +34,7 @@ import com.tangem.features.yield.supply.impl.subcomponents.approve.YieldSupplyAp
 import com.tangem.features.yield.supply.impl.subcomponents.notifications.YieldSupplyNotificationsComponent
 import com.tangem.features.yield.supply.impl.subcomponents.notifications.YieldSupplyNotificationsUpdateTrigger
 import com.tangem.features.yield.supply.impl.subcomponents.notifications.entity.YieldSupplyNotificationData
-import com.tangem.utils.StringsSigns.DOT
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.utils.TangemBlogUrlBuilder
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.transformer.update
@@ -44,6 +49,7 @@ import javax.inject.Inject
 internal class YieldSupplyApproveModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     paramsContainer: ParamsContainer,
+    private val analyticsEventHandler: AnalyticsEventHandler,
     private val urlOpener: UrlOpener,
     private val yieldSupplyNotificationsUpdateTrigger: YieldSupplyNotificationsUpdateTrigger,
     private val createApprovalTransactionUseCase: CreateApprovalTransactionUseCase,
@@ -111,8 +117,15 @@ internal class YieldSupplyApproveModel @Inject constructor(
     }
 
     fun onClick() {
+        params.callback.onTransactionProgress(true)
+
         val yieldSupplyFeeUM = uiState.value.yieldSupplyFeeUM as? YieldSupplyFeeUM.Content ?: return
         uiState.update(YieldSupplyTransactionInProgressTransformer)
+
+        analyticsEventHandler.send(YieldSupplyAnalytics.ButtonGiveApprove(
+            token = cryptoCurrency.symbol,
+            blockchain = cryptoCurrency.network.name,
+        ))
 
         modelScope.launch(dispatchers.default) {
             sendTransactionUseCase(
@@ -123,9 +136,15 @@ internal class YieldSupplyApproveModel @Inject constructor(
                 ifLeft = { error ->
                     Timber.e(error.toString())
                     uiState.update(YieldSupplyTransactionReadyTransformer)
+                    analyticsEventHandler.send(
+                        YieldSupplyAnalytics.EarnErrors(
+                            action = YieldSupplyAnalytics.Action.Approve,
+                            errorDescription = error.getAnalyticsDescription(),
+                        ),
+                    )
                     yieldSupplyAlertFactory.getSendTransactionErrorState(
                         error = error,
-                        popBack = params.callback::onBackClick,
+                        popBack = params.callback::onDismissClick,
                         onFailedTxEmailClick = { errorMessage ->
                             modelScope.launch(dispatchers.default) {
                                 yieldSupplyAlertFactory.onFailedTxEmailClick(
@@ -136,8 +155,25 @@ internal class YieldSupplyApproveModel @Inject constructor(
                             }
                         },
                     )
+                    params.callback.onTransactionProgress(false)
                 },
                 ifRight = {
+                    val event = AnalyticsParam.TxSentFrom.Earning(
+                        blockchain = cryptoCurrency.network.name,
+                        token = cryptoCurrency.symbol,
+                        feeType = AnalyticsParam.FeeType.Normal,
+                    )
+                    analyticsEventHandler.send(
+                        Basic.TransactionSent(
+                            sentFrom = event,
+                            memoType = Basic.TransactionSent.MemoType.Null,
+                        ),
+                    )
+                    analyticsEventHandler.send(YieldSupplyAnalytics.ApprovalAction(
+                        token = cryptoCurrency.symbol,
+                        blockchain = cryptoCurrency.network.name,
+                        action = YieldSupplyAnalytics.Action.Approve,
+                    ))
                     params.callback.onTransactionSent()
                 },
             )
@@ -194,40 +230,43 @@ internal class YieldSupplyApproveModel @Inject constructor(
                 }
             },
             ifRight = { fee ->
-                val feeCryptoValue = fee.normal.amount.value
+                applyFee(fee, approvalTransitionData)
+            },
+        )
+    }
 
-                val feeFiatValue = feeCryptoCurrencyStatus.value.fiatRate?.let { rate ->
-                    feeCryptoValue?.multiply(rate)
-                }
-                val cryptoFee = feeCryptoValue.format { crypto(feeCryptoCurrencyStatus.currency) }
-                val fiatFee = feeFiatValue.format { fiat(appCurrency.code, appCurrency.symbol) }
+    private suspend fun applyFee(transactionFee: TransactionFee, approvalTransitionData: TransactionData.Uncompiled) {
+        val feeCryptoValue = transactionFee.normal.amount.value
 
-                uiState.update {
-                    if (cryptoCurrencyStatus.value is CryptoCurrencyStatus.Loading) {
-                        it.copy(yieldSupplyFeeUM = YieldSupplyFeeUM.Loading)
-                    } else {
-                        it.copy(
-                            isPrimaryButtonEnabled = true,
-                            yieldSupplyFeeUM = YieldSupplyFeeUM.Content(
-                                transactionDataList = persistentListOf(approvalTransitionData.copy(fee = fee.normal)),
-                                feeValue = combinedReference(
-                                    stringReference(cryptoFee),
-                                    stringReference(" $DOT "),
-                                    stringReference(fiatFee),
-                                ),
-                                currentNetworkFeeValue = TextReference.EMPTY,
-                                maxNetworkFeeValue = TextReference.EMPTY,
-                            ),
-                        )
-                    }
-                }
-                yieldSupplyNotificationsUpdateTrigger.triggerUpdate(
-                    data = YieldSupplyNotificationData(
-                        feeValue = feeCryptoValue,
-                        feeError = null,
+        val feeFiatValue = feeCryptoCurrencyStatus.value.fiatRate?.let { rate ->
+            feeCryptoValue?.multiply(rate)
+        }
+        val fiatFee = feeFiatValue.format { fiat(appCurrency.code, appCurrency.symbol) }
+
+        uiState.update {
+            if (cryptoCurrencyStatus.value is CryptoCurrencyStatus.Loading) {
+                it.copy(yieldSupplyFeeUM = YieldSupplyFeeUM.Loading)
+            } else {
+                it.copy(
+                    isPrimaryButtonEnabled = true,
+                    yieldSupplyFeeUM = YieldSupplyFeeUM.Content(
+                        transactionDataList = persistentListOf(
+                            approvalTransitionData.copy(fee = transactionFee.normal),
+                        ),
+                        feeFiatValue = stringReference(fiatFee),
+                        maxNetworkFeeFiatValue = TextReference.EMPTY,
+                        minTopUpFiatValue = TextReference.EMPTY,
+                        feeNoteValue = TextReference.EMPTY,
+                        estimatedFiatValue = TextReference.EMPTY,
                     ),
                 )
-            },
+            }
+        }
+        yieldSupplyNotificationsUpdateTrigger.triggerUpdate(
+            data = YieldSupplyNotificationData(
+                feeValue = feeCryptoValue,
+                feeError = null,
+            ),
         )
     }
 

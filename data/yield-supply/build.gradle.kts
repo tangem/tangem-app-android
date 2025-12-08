@@ -22,12 +22,14 @@ dependencies {
     /** Core */
     implementation(projects.core.datasource)
     implementation(projects.core.utils)
+    implementation(projects.core.analytics)
 
     /** Domain */
     implementation(projects.domain.yieldSupply)
     implementation(projects.domain.yieldSupply.models)
     implementation(projects.domain.walletManager)
     implementation(projects.domain.legacy)
+    implementation(projects.domain.txhistory.models)
 
     implementation(projects.libs.blockchainSdk)
 

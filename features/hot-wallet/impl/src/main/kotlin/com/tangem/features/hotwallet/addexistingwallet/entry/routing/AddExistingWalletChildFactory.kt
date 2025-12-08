@@ -33,7 +33,8 @@ internal class AddExistingWalletChildFactory @Inject constructor(
                 context = childContext,
                 params = ManualBackupCompletedComponent.Params(
                     userWalletId = route.userWalletId,
-                    callbacks = model.manualBackupCompletedComponentModelCallbacks,
+                    callbacks = model.manualBackupCompletedModelCallbacks,
+                    isImportFlow = true,
                 ),
             )
             is AddExistingWalletRoute.SetAccessCode -> accessCodeComponentFactory.create(
@@ -61,7 +62,7 @@ internal class AddExistingWalletChildFactory @Inject constructor(
             is AddExistingWalletRoute.SetupFinished -> MobileWalletSetupFinishedComponent(
                 context = childContext,
                 params = MobileWalletSetupFinishedComponent.Params(
-                    callbacks = model.mobileWalletSetupFinishedComponentModelCallbacks,
+                    callbacks = model.mobileWalletSetupFinishedModelCallbacks,
                 ),
             )
         }

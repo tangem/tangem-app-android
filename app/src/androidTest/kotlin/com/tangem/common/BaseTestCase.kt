@@ -1,8 +1,8 @@
 package com.tangem.common
 
 import android.Manifest
+import androidx.compose.ui.test.isRoot
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
-import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.printToLog
 import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.intent.Intents
@@ -63,7 +63,6 @@ abstract class BaseTestCase : TestCase(
     private val apiEnvironmentRule = ApiEnvironmentRule()
     private val permissionRule = GrantPermissionRule.grant(
         Manifest.permission.POST_NOTIFICATIONS,
-        Manifest.permission.CAMERA,
     )
 
     /**
@@ -121,6 +120,8 @@ abstract class BaseTestCase : TestCase(
     /**
      * Prints the Compose semantics tree to logcat for debugging UI tests.
      *
+     * @param rootIndex       Use rootIndex > 0, if you need to print semantics tree for bottom sheet.
+     *                        Default: 0.
      * @param useUnmergedTree When true, shows unmerged tree with all individual nodes.
      *                        Use for accessing inner elements of compound components.
      *                        Default: false (merged tree - accessibility view).
@@ -129,11 +130,13 @@ abstract class BaseTestCase : TestCase(
      *                        Default: Int.MAX_VALUE (unlimited depth).
      */
     fun printSemanticTree(
+        rootIndex: Int = 0,
         useUnmergedTree: Boolean = false,
         tag: String = "SEMANTIC_TREE",
-        maxDepth: Int = Int.MAX_VALUE)
-    {
-        composeTestRule.onRoot(useUnmergedTree = useUnmergedTree).printToLog(tag, maxDepth)
+        maxDepth: Int = Int.MAX_VALUE
+    ) {
+        composeTestRule.onAllNodes(isRoot(), useUnmergedTree = useUnmergedTree)[rootIndex]
+            .printToLog(tag, maxDepth)
     }
 
     fun waitForIdle() = composeTestRule.waitForIdle()
@@ -141,7 +144,7 @@ abstract class BaseTestCase : TestCase(
     private fun setFeatureToggles() {
         runBlocking {
             with(featureTogglesManager as MutableFeatureTogglesManager) {
-                changeToggle("WALLET_CONNECT_REDESIGN_ENABLED", true)
+                changeToggle("NEW_TOKEN_RECEIVE_ENABLED", true)
                 changeToggle("WALLET_BALANCE_FETCHER_ENABLED", true)
                 changeToggle("SWAP_REDESIGN_ENABLED", true)
                 changeToggle("NEW_ONRAMP_MAIN_ENABLED", true)

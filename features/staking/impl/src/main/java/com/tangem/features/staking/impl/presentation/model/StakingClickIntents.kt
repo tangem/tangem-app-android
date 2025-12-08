@@ -9,6 +9,7 @@ import com.tangem.features.staking.impl.presentation.state.BalanceState
 import com.tangem.features.staking.impl.presentation.state.bottomsheet.InfoType
 import java.math.BigDecimal
 
+// TODO split this interface to click intents and other interaction events
 @Suppress("TooManyFunctions")
 internal interface StakingClickIntents : AmountScreenClickIntents {
 
@@ -69,4 +70,10 @@ internal interface StakingClickIntents : AmountScreenClickIntents {
     fun showPrimaryClickAlert()
 
     fun onOpenLearnMoreAboutApproveClick()
+
+    fun onActivateTonAccountNotificationClick()
+
+    fun onActivateTonAccountNotificationShow()
+
+    fun onActivateTonAccountClick()
 }

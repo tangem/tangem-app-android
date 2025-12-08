@@ -1,7 +1,5 @@
 package com.tangem.feature.tester.presentation.accounts.ui
 
-import android.content.Context
-import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -9,13 +7,14 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEachIndexed
@@ -31,6 +30,7 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.tester.impl.R
 import com.tangem.feature.tester.presentation.accounts.entity.AccountsUM
+import kotlinx.collections.immutable.ImmutableList
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -38,7 +38,7 @@ internal fun AccountsScreen(state: AccountsUM, modifier: Modifier = Modifier) {
     BackHandler(onBack = state.onBackClick)
 
     var isWalletSelectorShown by remember { mutableStateOf(false) }
-    var isAccountListShown by remember { mutableStateOf(false) }
+    val isAccountListShown by rememberUpdatedState(state.accountListBottomSheetConfig.isAccountsShown)
 
     LazyColumn(
         modifier = modifier
@@ -59,18 +59,7 @@ internal fun AccountsScreen(state: AccountsUM, modifier: Modifier = Modifier) {
         }
 
         if (state.walletSelector.selected != null) {
-            ManageAccountsButtons(
-                state = state,
-                onAccountsClick = { context ->
-                    val isEmpty = state.onAccountsClick()
-
-                    if (!isEmpty) {
-                        isAccountListShown = true
-                    } else {
-                        Toast.makeText(context, "No accounts found", Toast.LENGTH_SHORT).show()
-                    }
-                },
-            )
+            ManageAccountsButtons(buttons = state.buttons)
         }
     }
 
@@ -82,7 +71,7 @@ internal fun AccountsScreen(state: AccountsUM, modifier: Modifier = Modifier) {
 
     AccountList(
         isShown = isAccountListShown,
-        onDismissRequest = { isAccountListShown = false },
+        onDismissRequest = state.accountListBottomSheetConfig.onDismiss,
         content = state.accountListBottomSheetConfig,
     )
 }
@@ -190,57 +179,39 @@ private fun AccountList(
         ),
         titleText = stringReference("Accounts"),
     ) { content: AccountsUM.AccountListBottomSheetConfig ->
-        content.accounts.fastForEachIndexed { index, account ->
-            val accountName = account.accountName.toUM().value.resolveReference()
-            Text(
-                text = "#${account.derivationIndex.value} – $accountName",
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp, vertical = 12.dp),
-                style = TangemTheme.typography.body2,
-                color = TangemTheme.colors.text.primary1,
-            )
+        LazyColumn {
+            itemsIndexed(content.accounts) { index, account ->
+                val accountName = account.accountName.toUM().value.resolveReference()
+                Text(
+                    text = "$accountName [#${account.derivationIndex.value}]",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp, vertical = 12.dp),
+                    style = TangemTheme.typography.body2,
+                    color = TangemTheme.colors.text.primary1,
+                )
 
-            if (index == content.accounts.lastIndex) {
-                Spacer(modifier = Modifier.height(16.dp))
-            } else {
-                DividerWithPadding(start = 16.dp, end = 16.dp)
+                if (index == content.accounts.lastIndex) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                } else {
+                    DividerWithPadding(start = 16.dp, end = 16.dp)
+                }
             }
         }
     }
 }
 
 @Suppress("FunctionNaming")
-private fun LazyListScope.ManageAccountsButtons(state: AccountsUM, onAccountsClick: (Context) -> Unit) {
-    item {
-        val context = LocalContext.current
-
+private fun LazyListScope.ManageAccountsButtons(buttons: ImmutableList<AccountsUM.Button>) {
+    items(buttons) { button ->
         PrimaryButton(
-            text = stringResourceSafe(R.string.accounts),
-            onClick = { onAccountsClick(context) },
+            text = button.title,
+            onClick = button.onClick,
             modifier = Modifier
                 .padding(horizontal = 16.dp, vertical = 8.dp)
                 .fillMaxWidth(),
-        )
-    }
-
-    item {
-        PrimaryButton(
-            text = "Fetch accounts",
-            onClick = state.onFetchAccountsClick,
-            modifier = Modifier
-                .padding(horizontal = 16.dp, vertical = 8.dp)
-                .fillMaxWidth(),
-        )
-    }
-
-    item {
-        PrimaryButton(
-            text = "Clear ETag",
-            onClick = state.onClearETagClick,
-            modifier = Modifier
-                .padding(horizontal = 16.dp, vertical = 8.dp)
-                .fillMaxWidth(),
+            showProgress = button.isInProgress,
+            enabled = button.isEnabled,
         )
     }
 }

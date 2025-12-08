@@ -34,7 +34,9 @@ class YieldSupplyEstimateEnterFeeUseCaseTest {
     private val blockAidGasEstimate: BlockAidGasEstimate = mockk()
     private val useCase = YieldSupplyEstimateEnterFeeUseCase(feeRepository, feeErrorResolver, blockAidGasEstimate)
 
-    private val userWallet: UserWallet = mockk()
+    private val userWallet: UserWallet = mockk {
+        every { walletId } returns mockk()
+    }
     private val cryptoCurrency: CryptoCurrency = mockk(relaxed = true) {
         every { decimals } returns 18
     }
@@ -314,9 +316,9 @@ class YieldSupplyEstimateEnterFeeUseCaseTest {
         val deployFee = txs.first().fee as Fee.Ethereum.EIP1559
         val approveFee = txs[1].fee as Fee.Ethereum.EIP1559
         val enterFee = txs.last().fee as Fee.Ethereum.EIP1559
-        Truth.assertThat(deployFee.gasLimit).isEqualTo(BigInteger.valueOf(1_000))
-        Truth.assertThat(approveFee.gasLimit).isEqualTo(BigInteger.valueOf(2_000))
-        Truth.assertThat(enterFee.gasLimit).isEqualTo(BigInteger.valueOf(3_000))
+        Truth.assertThat(deployFee.gasLimit).isEqualTo(BigInteger.valueOf(1_200))
+        Truth.assertThat(approveFee.gasLimit).isEqualTo(BigInteger.valueOf(2_400))
+        Truth.assertThat(enterFee.gasLimit).isEqualTo(BigInteger.valueOf(3_600))
     }
 
     @Test
@@ -353,9 +355,9 @@ class YieldSupplyEstimateEnterFeeUseCaseTest {
         val deployFee = txs.first().fee as Fee.Ethereum.Legacy
         val approveFee = txs[1].fee as Fee.Ethereum.Legacy
         val enterFee = txs.last().fee as Fee.Ethereum.Legacy
-        Truth.assertThat(deployFee.gasLimit).isEqualTo(BigInteger.valueOf(1_000))
-        Truth.assertThat(approveFee.gasLimit).isEqualTo(BigInteger.valueOf(2_000))
-        Truth.assertThat(enterFee.gasLimit).isEqualTo(BigInteger.valueOf(3_000))
+        Truth.assertThat(deployFee.gasLimit).isEqualTo(BigInteger.valueOf(1_200))
+        Truth.assertThat(approveFee.gasLimit).isEqualTo(BigInteger.valueOf(2_400))
+        Truth.assertThat(enterFee.gasLimit).isEqualTo(BigInteger.valueOf(3_600))
     }
 
     private fun getDeployTx() = uncompiled(

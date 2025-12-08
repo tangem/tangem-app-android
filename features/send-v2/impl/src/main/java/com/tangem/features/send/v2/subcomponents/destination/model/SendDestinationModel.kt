@@ -11,6 +11,10 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
+import com.tangem.domain.account.status.supplier.MultiAccountStatusListSupplier
+import com.tangem.domain.account.usecase.IsAccountsModeEnabledUseCase
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.network.CryptoCurrencyAddress
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.isLocked
@@ -64,7 +68,10 @@ internal class SendDestinationModel @Inject constructor(
     private val isSelfSendAvailableUseCase: IsSelfSendAvailableUseCase,
     private val listenToQrScanningUseCase: ListenToQrScanningUseCase,
     private val parseQrCodeUseCase: ParseQrCodeUseCase,
+    private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val accountsFeatureToggles: AccountsFeatureToggles,
+    private val multiAccountStatusListSupplier: MultiAccountStatusListSupplier,
 ) : Model(), SendDestinationClickIntents {
     private val params: SendDestinationComponentParams = paramsContainer.require()
 
@@ -142,7 +149,7 @@ internal class SendDestinationModel @Inject constructor(
         )
     }
 
-    fun saveResult() {
+    private fun saveResult() {
         val params = params as? SendDestinationComponentParams.DestinationParams ?: return
         params.callback.onDestinationResult(uiState.value)
     }
@@ -183,8 +190,14 @@ internal class SendDestinationModel @Inject constructor(
 
     private fun getWalletsAndRecent() {
         combine(
-            flow = getWalletsUseCase().conflate().map {
-                waitForDelay(RECENT_LOAD_DELAY) { it.toAvailableWallets() }
+            flow = if (accountsFeatureToggles.isFeatureEnabled) {
+                getAddedAddresses()
+            } else {
+                getWalletsUseCase().conflate().map {
+                    waitForDelay(RECENT_LOAD_DELAY) {
+                        it.toAvailableWallets()
+                    }
+                }
             },
             flow2 = getFixedTxHistoryItemsUseCase(
                 userWalletId = userWalletId,
@@ -193,12 +206,12 @@ internal class SendDestinationModel @Inject constructor(
             ).getOrElse { flowOf(emptyList()) }.map {
                 waitForDelay(RECENT_LOAD_DELAY) { it }
             }.conflate(),
-        ) { destinationWalletList, txHistoryList ->
+            flow3 = isAccountsModeEnabledUseCase().distinctUntilChanged(),
+        ) { destinationWalletList, txHistoryList, isAccountsMode ->
             val isSelfSendAvailable = isSelfSendAvailableUseCase.invokeSync(
                 userWalletId = userWalletId,
                 network = cryptoCurrency.network,
             )
-
             _uiState.update(
                 SendDestinationRecentListTransformer(
                     cryptoCurrency = cryptoCurrency,
@@ -206,9 +219,10 @@ internal class SendDestinationModel @Inject constructor(
                     isSelfSendAvailable = isSelfSendAvailable,
                     destinationWalletList = destinationWalletList,
                     txHistoryList = txHistoryList,
+                    isAccountsMode = isAccountsMode,
                 ),
             )
-        }.launchIn(modelScope)
+        }.flowOn(dispatchers.default).launchIn(modelScope)
     }
 
     private suspend fun List<UserWallet>.toAvailableWallets(): List<DestinationWalletUM> {
@@ -220,7 +234,7 @@ internal class SendDestinationModel @Inject constructor(
                     async {
                         val addresses = if (!wallet.isMultiCurrency) {
                             getCryptoCurrencyUseCase(wallet.walletId).getOrNull()?.let {
-                                if (it.network.id == cryptoCurrencyNetwork.id) {
+                                if (it.network.rawId == cryptoCurrencyNetwork.rawId) {
                                     getNetworkAddressesUseCase.invokeSync(
                                         userWalletId = wallet.walletId,
                                         networkRawId = it.network.id.rawId,
@@ -253,6 +267,46 @@ internal class SendDestinationModel @Inject constructor(
         }
     }
 
+    private fun getAddedAddresses(): Flow<List<DestinationWalletUM>> {
+        return combine(
+            flow = getWalletsUseCase().conflate(),
+            flow2 = multiAccountStatusListSupplier().conflate(),
+        ) { wallets, accountList ->
+            val cryptoCurrencyNetwork = cryptoCurrency.network
+
+            coroutineScope {
+                accountList.mapNotNull { accountStatusList ->
+                    val wallet =
+                        wallets.filterNot { it.isLocked }.firstOrNull { it.walletId == accountStatusList.userWalletId }
+                            ?: return@mapNotNull null
+
+                    async {
+                        accountStatusList.accountStatuses.map { accountStatus ->
+                            async {
+                                accountStatus.flattenCurrencies()
+                                    .filter { it.currency.network.rawId == cryptoCurrencyNetwork.rawId }
+                                    .mapNotNull { cryptoCurrencyStatus ->
+                                        val address = cryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value
+                                            ?: return@mapNotNull null
+
+                                        async {
+                                            DestinationWalletUM(
+                                                name = wallet.name,
+                                                address = address,
+                                                cryptoCurrency = cryptoCurrencyStatus.currency,
+                                                userWalletId = wallet.walletId,
+                                                account = accountStatus.account as? Account.CryptoPortfolio,
+                                            )
+                                        }
+                                    }.awaitAll()
+                            }
+                        }.awaitAll().flatten()
+                    }
+                }.awaitAll().flatten()
+            }
+        }.flowOn(dispatchers.default)
+    }
+
     private fun validate(address: String, memo: String?, type: EnterAddressSource? = null) {
         modelScope.launch {
             _uiState.update(SendDestinationValidationStartedTransformer)
@@ -278,7 +332,12 @@ internal class SendDestinationModel @Inject constructor(
                     ),
                 )
             }
-            _uiState.update(SendDestinationValidationResultTransformer(addressValidationResult, memoValidationResult))
+            _uiState.update(
+                SendDestinationValidationResultTransformer(
+                    addressValidationResult,
+                    memoValidationResult,
+                ),
+            )
             autoNextFromRecipient(type, addressValidationResult.isRight(), memoValidationResult.isRight())
         }.saveIn(validationJobHolder)
     }

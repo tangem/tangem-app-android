@@ -41,32 +41,45 @@ internal class YieldSupply(
     private fun createDevEnvironment(): ApiEnvironmentConfig = ApiEnvironmentConfig(
         environment = ApiEnvironment.DEV,
         baseUrl = "[REDACTED_ENV_URL]",
-        headers = createHeaders(),
+        headers = createHeaders(ApiEnvironment.DEV),
     )
 
     private fun createStageEnvironment(): ApiEnvironmentConfig = ApiEnvironmentConfig(
         environment = ApiEnvironment.STAGE,
         baseUrl = "[REDACTED_ENV_URL]",
-        headers = createHeaders(),
+        headers = createHeaders(ApiEnvironment.STAGE),
     )
 
     private fun createMockedEnvironment(): ApiEnvironmentConfig = ApiEnvironmentConfig(
         environment = ApiEnvironment.MOCK,
         baseUrl = "[REDACTED_ENV_URL]",
-        headers = createHeaders(),
+        headers = createHeaders(ApiEnvironment.MOCK),
     )
 
     private fun createProdEnvironment(): ApiEnvironmentConfig = ApiEnvironmentConfig(
         environment = ApiEnvironment.PROD,
         baseUrl = "https://yield.tangem.org/",
-        headers = createHeaders(),
+        headers = createHeaders(ApiEnvironment.PROD),
     )
 
-    private fun createHeaders() = buildMap {
+    private fun createHeaders(apiEnvironment: ApiEnvironment) = buildMap {
         put(key = "api-key", value = ProviderSuspend {
-            environmentConfigStorage.getConfigSync().yieldModuleApiKey.orEmpty()
+            getApiKey(apiEnvironment)
         })
         putAll(from = RequestHeader.AppVersionPlatformHeaders(appVersionProvider, appInfoProvider).values)
         putAll(from = RequestHeader.AuthenticationHeader(authProvider).values)
+    }
+
+    private fun getApiKey(apiEnvironment: ApiEnvironment): String {
+        return when (apiEnvironment) {
+            ApiEnvironment.MOCK,
+            ApiEnvironment.DEV,
+            ApiEnvironment.DEV_2,
+            ApiEnvironment.DEV_3,
+            ApiEnvironment.STAGE,
+            ApiEnvironment.STAGE_2,
+            -> environmentConfigStorage.getConfigSync().yieldModuleApiKeyDev
+            ApiEnvironment.PROD -> environmentConfigStorage.getConfigSync().yieldModuleApiKey
+        } ?: error("No tangem tech api config provided")
     }
 }

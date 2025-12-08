@@ -1,6 +1,10 @@
 package com.tangem.tests
 
 import com.tangem.common.BaseTestCase
+import com.tangem.common.annotations.ApiEnv
+import com.tangem.common.annotations.ApiEnvConfig
+import com.tangem.datasource.api.common.config.ApiConfig
+import com.tangem.datasource.api.common.config.ApiEnvironment
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.scenarios.checkMultiCurrencyMainScreen
 import com.tangem.scenarios.checkSingleCurrencyMainScreen
@@ -15,6 +19,10 @@ import org.junit.Test
 @HiltAndroidTest
 class ScanCardTest : BaseTestCase() {
 
+    @ApiEnv(
+        ApiEnvConfig(ApiConfig.ID.TangemTech, ApiEnvironment.PROD),
+        ApiEnvConfig(ApiConfig.ID.Express, ApiEnvironment.PROD)
+    )
     @AllureId("868")
     @DisplayName("Scan: Scanning single-currency cards")
     @Test

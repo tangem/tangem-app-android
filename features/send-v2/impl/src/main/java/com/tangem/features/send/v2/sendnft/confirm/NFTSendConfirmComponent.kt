@@ -13,6 +13,7 @@ import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.nft.models.NFTAsset
@@ -88,7 +89,9 @@ internal class NFTSendConfirmComponent @AssistedInject constructor(
             nftAsset = params.nftAsset,
             nftCollectionName = params.nftCollectionName,
             isSuccessScreen = false,
-            title = resourceReference(R.string.send_from_wallet_name, wrappedList(params.userWallet.name)),
+            account = params.account,
+            isAccountsMode = params.isAccountsMode,
+            walletTitle = resourceReference(R.string.send_from_wallet_name, wrappedList(params.userWallet.name)),
         ),
     )
 
@@ -150,6 +153,8 @@ internal class NFTSendConfirmComponent @AssistedInject constructor(
         val nftCollectionName: String,
         val cryptoCurrencyStatus: CryptoCurrencyStatus,
         val feeCryptoCurrencyStatus: CryptoCurrencyStatus,
+        val account: Account.CryptoPortfolio?,
+        val isAccountsMode: Boolean,
         val callback: ModelCallback,
         val currentRoute: Flow<CommonSendRoute.Confirm>,
         val isBalanceHidingFlow: StateFlow<Boolean>,

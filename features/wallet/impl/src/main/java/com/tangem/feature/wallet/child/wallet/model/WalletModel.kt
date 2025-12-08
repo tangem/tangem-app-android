@@ -4,11 +4,14 @@ import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
+import com.squareup.sqldelight.internal.AtomicBoolean
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
+import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
+import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
@@ -18,8 +21,7 @@ import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.nft.ObserveAndClearNFTCacheIfNeedUseCase
 import com.tangem.domain.notifications.GetIsHuaweiDeviceWithoutGoogleServicesUseCase
 import com.tangem.domain.notifications.repository.NotificationsRepository
-import com.tangem.domain.pay.usecase.TangemPayIssueOrderUseCase
-import com.tangem.domain.pay.usecase.TangemPayMainScreenCustomerInfoUseCase
+import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.settings.*
 import com.tangem.domain.tokens.RefreshMultiCurrencyWalletQuotesUseCase
 import com.tangem.domain.wallets.usecase.*
@@ -41,7 +43,6 @@ import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvid
 import com.tangem.features.biometry.AskBiometryComponent
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.pushnotifications.api.PushNotificationsModelCallbacks
-import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
 import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.wallet.deeplink.WalletDeepLinkActionListener
 import com.tangem.features.yield.supply.api.YieldSupplyFeatureToggles
@@ -76,7 +77,6 @@ internal class WalletModel @Inject constructor(
     private val selectedWalletAnalyticsSender: SelectedWalletAnalyticsSender,
     private val walletNameMigrationUseCase: WalletNameMigrationUseCase,
     private val refreshMultiCurrencyWalletQuotesUseCase: RefreshMultiCurrencyWalletQuotesUseCase,
-    private val shouldAskPermissionUseCase: ShouldAskPermissionUseCase,
     private val walletImageResolver: WalletImageResolver,
     private val tokenListStore: MultiWalletTokenListStore,
     private val onrampStatusFactory: OnrampStatusFactory,
@@ -91,11 +91,13 @@ internal class WalletModel @Inject constructor(
     private val getIsHuaweiDeviceWithoutGoogleServicesUseCase: GetIsHuaweiDeviceWithoutGoogleServicesUseCase,
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
     private val userWalletsListRepository: UserWalletsListRepository,
-    private val tangemPayMainScreenCustomerInfoUseCase: TangemPayMainScreenCustomerInfoUseCase,
-    private val tangemPayIssueOrderUseCase: TangemPayIssueOrderUseCase,
     private val tangemPayFeatureToggles: TangemPayFeatureToggles,
     private val yieldSupplyApyUpdateUseCase: YieldSupplyApyUpdateUseCase,
+    private val tangemPayOnboardingRepository: OnboardingRepository,
     private val yieldSupplyFeatureToggles: YieldSupplyFeatureToggles,
+    private val accountsFeatureToggles: AccountsFeatureToggles,
+    private val tangemPayMainInfoManager: TangemPayMainInfoManager,
+    private val trackingContextProxy: TrackingContextProxy,
     val screenLifecycleProvider: ScreenLifecycleProvider,
     val innerWalletRouter: InnerWalletRouter,
 ) : Model() {
@@ -111,11 +113,13 @@ internal class WalletModel @Inject constructor(
     private val updateTangemPayJobHolder = JobHolder()
 
     private var expressTxStatusTaskScheduler = SingleTaskScheduler<Unit>()
+    private val hasMainScreenOpenedEventSent = AtomicBoolean(false)
 
     init {
-        analyticsEventsHandler.send(WalletScreenAnalyticsEvent.MainScreen.ScreenOpened)
+        if (!hotWalletFeatureToggles.isHotWalletEnabled) {
+            analyticsEventsHandler.send(WalletScreenAnalyticsEvent.MainScreen.ScreenOpenedLegacy)
+        }
 
-        suggestToEnableBiometrics()
         suggestToOpenMarkets()
 
         maybeMigrateNames()
@@ -126,10 +130,16 @@ internal class WalletModel @Inject constructor(
         subscribeOnSelectedWalletFlow()
         subscribeToScreenBackgroundState()
         subscribeOnPushNotificationsPermission()
-        subscribeToTangemPayInfo()
+        subscribeTangemPayOnWalletState()
         enableNotificationsIfNeeded()
 
         clickIntents.initialize(innerWalletRouter, modelScope)
+    }
+
+    fun onResume() {
+        modelScope.launch(dispatchers.main) {
+            suggestToEnableBiometrics()
+        }
     }
 
     private fun updateYieldSupplyApy() {
@@ -160,15 +170,13 @@ internal class WalletModel @Inject constructor(
         walletScreenContentLoader.cancelAll()
     }
 
-    private fun suggestToEnableBiometrics() {
-        modelScope.launch(dispatchers.main) {
-            withContext(dispatchers.io) { delay(timeMillis = 1_800) }
+    private suspend fun suggestToEnableBiometrics() {
+        if (shouldShowAskBiometryBottomSheet()) {
+            delay(timeMillis = 1_800)
 
-            if (shouldShowAskBiometryBottomSheet()) {
-                innerWalletRouter.dialogNavigation.activate(
-                    configuration = WalletDialogConfig.AskForBiometry,
-                )
-            }
+            innerWalletRouter.dialogNavigation.activate(
+                configuration = WalletDialogConfig.AskForBiometry,
+            )
         }
     }
 
@@ -189,7 +197,6 @@ internal class WalletModel @Inject constructor(
     private suspend fun shouldShowAskBiometryBottomSheet(): Boolean {
         return if (hotWalletFeatureToggles.isHotWalletEnabled) {
             userWalletsListRepository.userWalletsSync().any { it is UserWallet.Cold } &&
-                innerWalletRouter.isWalletLastScreen() &&
                 shouldShowAskBiometryUseCase() &&
                 canUseBiometryUseCase()
         } else {
@@ -238,19 +245,23 @@ internal class WalletModel @Inject constructor(
 
     private fun subscribeOnPushNotificationsPermission() {
         modelScope.launch {
-            val shouldAskPermission = shouldAskPermissionUseCase(PUSH_PERMISSION)
-            val afterUpdate = notificationsRepository.shouldShowSubscribeOnNotificationsAfterUpdate()
+            val shouldAskNotificationPermissionsViaBs = notificationsRepository.shouldAskNotificationPermissionsViaBs()
+            val shouldShow = notificationsRepository.shouldShowSubscribeOnNotificationsAfterUpdate()
             val isBiometricsEnabled = shouldSaveUserWalletsSyncUseCase()
             val isHuaweiDevice = getIsHuaweiDeviceWithoutGoogleServicesUseCase()
-            val shouldShowBottomSheet = shouldAskPermission || afterUpdate
             Timber.d(
-                "push BS afterUpdate: $afterUpdate," +
-                    "shouldAskPermission $shouldAskPermission," +
+                "push BS afterUpdate: $shouldShow," +
                     "isBiometricsEnabled $isBiometricsEnabled," +
                     "isHuaweiDevice $isHuaweiDevice",
             )
+            if (!shouldAskNotificationPermissionsViaBs) {
+                notificationsRepository.setShouldAskNotificationPermissionsViaBs(true)
+                return@launch
+            }
             if (!isBiometricsEnabled) return@launch
-            if (!shouldShowBottomSheet) return@launch
+            if (!shouldShow) {
+                return@launch
+            }
 
             delay(timeMillis = 1_800)
 
@@ -263,11 +274,25 @@ internal class WalletModel @Inject constructor(
     // It's okay here because we need to be able to observe the selected wallet changes
     @Suppress("DEPRECATION")
     private fun subscribeOnSelectedWalletFlow() {
-        getSelectedWalletUseCase().onRight {
-            it
+        getSelectedWalletUseCase().onRight { walletFlow ->
+            walletFlow
                 .conflate()
                 .distinctUntilChanged()
                 .onEach { selectedWallet ->
+                    trackingContextProxy.setContext(selectedWallet)
+
+                    if (hotWalletFeatureToggles.isHotWalletEnabled && !hasMainScreenOpenedEventSent.get()) {
+                        // send it here because we need context to be set
+                        modelScope.launch {
+                            val hasMobileWallet = userWalletsListRepository.userWalletsSync()
+                                .any { it is UserWallet.Hot }
+                            analyticsEventsHandler.send(
+                                WalletScreenAnalyticsEvent.MainScreen.ScreenOpened(hasMobileWallet),
+                            )
+                            hasMainScreenOpenedEventSent.set(true)
+                        }
+                    }
+
                     if (selectedWallet.isMultiCurrency) {
                         selectedWalletAnalyticsSender.send(selectedWallet)
                     }
@@ -336,46 +361,42 @@ internal class WalletModel @Inject constructor(
             .saveIn(clearNFTCacheJobHolder)
     }
 
-    private fun subscribeToTangemPayInfo() {
+    private fun subscribeTangemPayOnWalletState() {
         /**
          * Update state each time a user opens/returns to wallet screen
          * and every minute while user stays on the main screen
          */
-        screenLifecycleProvider.isBackgroundState.onEach { inBackground ->
-            updateTangemPayJobHolder.cancel()
-            if (!inBackground && tangemPayFeatureToggles.isTangemPayEnabled) {
+        if (!tangemPayFeatureToggles.isTangemPayEnabled) return
+
+        combine(
+            flow = screenLifecycleProvider.isBackgroundState,
+            flow2 = uiState.mapNotNull {
+                it.wallets.getOrNull(it.selectedWalletIndex)?.walletCardState?.id
+            }.distinctUntilChanged(),
+            transform = ::Pair,
+        ).onEach { (inBackground, userWalletId) ->
+            if (inBackground) return@onEach
+
+            val savedCustomerInfo =
+                tangemPayOnboardingRepository.getSavedCustomerInfo(userWalletId)
+
+            val isShouldLaunchPeriodicUpdate = savedCustomerInfo?.cardInfo == null &&
+                tangemPayOnboardingRepository.isTangemPayInitialDataProduced(userWalletId)
+
+            if (isShouldLaunchPeriodicUpdate) {
+                updateTangemPayJobHolder.cancel()
                 modelScope.launch {
-                    refreshTangemPayInfo()
+                    tangemPayMainInfoManager.refreshTangemPayInfo(userWalletId)
                     while (isActive) {
                         delay(TANGEM_PAY_UPDATE_INTERVAL)
-                        refreshTangemPayInfo()
+                        tangemPayMainInfoManager.refreshTangemPayInfo(userWalletId)
                     }
                 }.saveIn(updateTangemPayJobHolder)
+            } else {
+                // Don't refresh customer info periodically if the card was already issued, only update on swipe to refresh
+                tangemPayMainInfoManager.refreshTangemPayInfo(userWalletId)
             }
         }.launchIn(modelScope)
-    }
-
-    private suspend fun refreshTangemPayInfo() {
-        val info = tangemPayMainScreenCustomerInfoUseCase()
-        if (info != null) {
-            stateHolder.update(
-                transformer = TangemPayStateTransformer(
-                    value = info,
-                    onIssueOrderClick = ::issueOrder,
-                    onContinueKycClick = innerWalletRouter::openTangemPayOnboarding,
-                    openDetails = innerWalletRouter::openTangemPayDetails,
-                ),
-            )
-        }
-    }
-
-    private fun issueOrder() {
-        modelScope.launch {
-            stateHolder.update(TangemPayStateTransformer(issueProgressState = true))
-            tangemPayIssueOrderUseCase().onLeft {
-                stateHolder.update(TangemPayStateTransformer(issueState = true, onIssueOrderClick = ::issueOrder))
-            }
-        }
     }
 
     private fun needToRefreshTimer() {
@@ -409,6 +430,7 @@ internal class WalletModel @Inject constructor(
         when (action) {
             is WalletsUpdateActionResolver.Action.InitializeWallets -> initializeWallets(action)
             is WalletsUpdateActionResolver.Action.ReinitializeWallet -> reinitializeWallet(action)
+            is WalletsUpdateActionResolver.Action.ReinitializeWallets -> reinitializeWallets(action)
             is WalletsUpdateActionResolver.Action.AddWallet -> addWallet(action)
             is WalletsUpdateActionResolver.Action.DeleteWallet -> deleteWallet(action)
             is WalletsUpdateActionResolver.Action.UnlockWallet -> unlockWallet(action)
@@ -513,22 +535,66 @@ internal class WalletModel @Inject constructor(
         )
     }
 
+    private fun reinitializeWallets(action: WalletsUpdateActionResolver.Action.ReinitializeWallets) {
+        action.wallets.forEach { userWallet ->
+            walletScreenContentLoader.cancel(userWallet.walletId)
+            tokenListStore.remove(userWallet.walletId)
+
+            walletScreenContentLoader.load(
+                userWallet = userWallet,
+                clickIntents = clickIntents,
+                coroutineScope = modelScope,
+            )
+
+            modelScope.launch(dispatchers.main) {
+                fetchWalletContent(userWallet = userWallet)
+            }
+
+            stateHolder.update(
+                ReinitializeWalletTransformer(
+                    prevWalletId = userWallet.walletId,
+                    newUserWallet = userWallet,
+                    clickIntents = clickIntents,
+                    walletImageResolver = walletImageResolver,
+                ),
+            )
+        }
+    }
+
     private suspend fun addWallet(action: WalletsUpdateActionResolver.Action.AddWallet) {
-        walletScreenContentLoader.load(
-            userWallet = action.selectedWallet,
-            clickIntents = clickIntents,
-            coroutineScope = modelScope,
-        )
+        if (accountsFeatureToggles.isFeatureEnabled) {
+            fetchWalletContent(userWallet = action.selectedWallet)
 
-        fetchWalletContent(userWallet = action.selectedWallet)
+            stateHolder.update(
+                AddWalletTransformer(
+                    userWallet = action.selectedWallet,
+                    clickIntents = clickIntents,
+                    walletImageResolver = walletImageResolver,
+                ),
+            )
 
-        stateHolder.update(
-            AddWalletTransformer(
+            walletScreenContentLoader.load(
                 userWallet = action.selectedWallet,
                 clickIntents = clickIntents,
-                walletImageResolver = walletImageResolver,
-            ),
-        )
+                coroutineScope = modelScope,
+            )
+        } else {
+            walletScreenContentLoader.load(
+                userWallet = action.selectedWallet,
+                clickIntents = clickIntents,
+                coroutineScope = modelScope,
+            )
+
+            fetchWalletContent(userWallet = action.selectedWallet)
+
+            stateHolder.update(
+                AddWalletTransformer(
+                    userWallet = action.selectedWallet,
+                    clickIntents = clickIntents,
+                    walletImageResolver = walletImageResolver,
+                ),
+            )
+        }
 
         scrollToWallet(prevIndex = action.prevWalletIndex, newIndex = action.selectedWalletIndex) {
             stateHolder.update {

@@ -41,10 +41,10 @@ internal class DefaultAskBiometryComponent @AssistedInject constructor(
     @Composable
     override fun BottomSheet() {
         val state by model.uiState.collectAsStateWithLifecycle()
-        val bsShown by bsShown.collectAsStateWithLifecycle()
-        val bsConfig = remember(this, bsShown) {
+        val isBSShown by bsShown.collectAsStateWithLifecycle()
+        val bsConfig = remember(this, isBSShown) {
             TangemBottomSheetConfig(
-                isShown = bsShown,
+                isShown = isBSShown,
                 onDismissRequest = ::dismiss,
                 content = TangemBottomSheetConfigContent.Empty,
             )

@@ -41,6 +41,7 @@ internal object TokenMarketListConverter : Converter<TokenMarketListResponse, To
                 ),
                 tokenCharts = TokenMarket.Charts(h24 = null, week = null, month = null),
                 stakingRate = stakingRate,
+                updateTimestamp = value.timestamp,
             )
         }
         return TokenMarketListWithMaxApy(tokens, value.summary?.maxApy)

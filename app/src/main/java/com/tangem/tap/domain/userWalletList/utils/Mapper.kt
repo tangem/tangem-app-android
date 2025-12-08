@@ -10,7 +10,7 @@ internal val UserWallet.sensitiveInformation: UserWalletSensitiveInformation
     get() = when (this) {
         is UserWallet.Cold -> UserWalletSensitiveInformation(
             wallets = scanResponse.card.wallets,
-            visaCardActivationStatus = scanResponse.visaCardActivationStatus,
+            // visaCardActivationStatus = scanResponse.visaCardActivationStatus,
             mobileWallets = null,
         )
         is UserWallet.Hot -> UserWalletSensitiveInformation(
@@ -30,7 +30,7 @@ internal val UserWallet.publicInformation: UserWalletPublicInformation
                 card = scanResponse.card.copy(
                     wallets = emptyList(),
                 ),
-                visaCardActivationStatus = null,
+                // visaCardActivationStatus = null,
             ),
             hasBackupError = hasBackupError,
             hotWalletId = null,
@@ -80,7 +80,7 @@ internal fun UserWallet.updateWith(sensitiveInformation: UserWalletSensitiveInfo
                     card = scanResponse.card.copy(
                         wallets = requireNotNull(sensitiveInformation.wallets),
                     ),
-                    visaCardActivationStatus = sensitiveInformation.visaCardActivationStatus,
+                    // visaCardActivationStatus = sensitiveInformation.visaCardActivationStatus,
                 ),
             )
         }
@@ -113,7 +113,7 @@ internal fun UserWallet.lock(): UserWallet = when (this) {
                 card = scanResponse.card.copy(
                     wallets = emptyList(),
                 ),
-                visaCardActivationStatus = null,
+                // visaCardActivationStatus = null,
             ),
         )
     }

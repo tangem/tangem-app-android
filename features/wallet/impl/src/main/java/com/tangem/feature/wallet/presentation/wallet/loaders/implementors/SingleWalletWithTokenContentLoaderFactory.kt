@@ -2,9 +2,9 @@ package com.tangem.feature.wallet.presentation.wallet.loaders.implementors
 
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
-import com.tangem.domain.promo.GetStoryContentUseCase
-import com.tangem.domain.tokens.RunPolkadotAccountHealthCheckUseCase
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.promo.GetStoryContentUseCase
+import com.tangem.domain.staking.usecase.StakingApyFlowUseCase
 import com.tangem.domain.wallets.usecase.ShouldSaveUserWalletsUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyApyFlowUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
@@ -15,11 +15,12 @@ import com.tangem.feature.wallet.presentation.wallet.domain.GetMultiWalletWarnin
 import com.tangem.feature.wallet.presentation.wallet.domain.MultiWalletTokenListStore
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletWithFundsChecker
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
-import com.tangem.feature.wallet.presentation.account.AccountDependencies
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import javax.inject.Inject
 
 // TODO: Refactor
 @Suppress("LongParameterList")
+@Deprecated("Use SingleWalletWithTokenContentLoaderV2.Factory instead")
 @ModelScoped
 internal class SingleWalletWithTokenContentLoaderFactory @Inject constructor(
     private val stateHolder: WalletStateController,
@@ -30,11 +31,11 @@ internal class SingleWalletWithTokenContentLoaderFactory @Inject constructor(
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val walletWarningsAnalyticsSender: WalletWarningsAnalyticsSender,
     private val walletWarningsSingleEventSender: WalletWarningsSingleEventSender,
-    private val runPolkadotAccountHealthCheckUseCase: RunPolkadotAccountHealthCheckUseCase,
     private val shouldSaveUserWalletsUseCase: ShouldSaveUserWalletsUseCase,
     private val getStoryContentUseCase: GetStoryContentUseCase,
-    private val accountDependencies: AccountDependencies,
     private val yieldSupplyApyFlowUseCase: YieldSupplyApyFlowUseCase,
+    private val stakingApyFlowUseCase: StakingApyFlowUseCase,
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
 ) {
 
     fun create(userWallet: UserWallet.Cold, clickIntents: WalletClickIntents): SingleWalletWithTokenContentLoader {
@@ -49,11 +50,11 @@ internal class SingleWalletWithTokenContentLoaderFactory @Inject constructor(
             getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
             walletWarningsAnalyticsSender = walletWarningsAnalyticsSender,
             walletWarningsSingleEventSender = walletWarningsSingleEventSender,
-            runPolkadotAccountHealthCheckUseCase = runPolkadotAccountHealthCheckUseCase,
             getStoryContentUseCase = getStoryContentUseCase,
             shouldSaveUserWalletsUseCase = shouldSaveUserWalletsUseCase,
-            accountDependencies = accountDependencies,
             yieldSupplyApyFlowUseCase = yieldSupplyApyFlowUseCase,
+            stakingApyFlowUseCase = stakingApyFlowUseCase,
+            hotWalletFeatureToggles = hotWalletFeatureToggles,
         )
     }
 }

@@ -4,10 +4,11 @@ import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.tangemTech.models.YieldMarketsResponse
 import com.tangem.datasource.api.tangemTech.models.YieldModuleStatusResponse
 import com.tangem.datasource.api.tangemTech.models.YieldSupplyChangeTokenStatusBody
-import com.tangem.datasource.api.tangemTech.models.YieldTokenStatusResponse
+import com.tangem.datasource.api.tangemTech.models.YieldSupplyMarketTokenDto
 import com.tangem.datasource.api.tangemTech.models.YieldTokenChartResponse
 import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.Header
 import retrofit2.http.POST
 import retrofit2.http.Path
 import retrofit2.http.Query
@@ -21,7 +22,7 @@ interface YieldSupplyApi {
     suspend fun getYieldTokenStatus(
         @Path("chainId") chainId: Int,
         @Path("tokenAddress") tokenAddress: String,
-    ): ApiResponse<YieldTokenStatusResponse>
+    ): ApiResponse<YieldSupplyMarketTokenDto>
 
     @GET("api/v1/yield/token/{chainId}/{tokenAddress}/chart")
     suspend fun getYieldTokenChart(
@@ -34,6 +35,7 @@ interface YieldSupplyApi {
     @POST("api/v1/module/activate")
     suspend fun activateYieldModule(
         @Body body: YieldSupplyChangeTokenStatusBody,
+        @Header("userWalletId") userWalletId: String,
     ): ApiResponse<YieldModuleStatusResponse>
 
     @POST("api/v1/module/deactivate")

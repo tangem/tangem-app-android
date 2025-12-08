@@ -4,22 +4,22 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
-import com.tangem.common.test.utils.assertEither
-import com.tangem.common.test.utils.assertEitherRight
 import com.tangem.domain.card.CardTypesResolver
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.staking.StakingID
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.staking.StakingIdFactory
-import com.tangem.domain.models.staking.StakingID
 import com.tangem.domain.staking.model.StakingIntegrationID
-import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
+import com.tangem.domain.staking.multi.MultiStakingBalanceFetcher
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.wallet.FetchingSource.*
 import com.tangem.domain.tokens.wallet.implementor.MultiWalletBalanceFetcher
 import com.tangem.domain.tokens.wallet.implementor.SingleWalletBalanceFetcher
 import com.tangem.domain.tokens.wallet.implementor.SingleWalletWithTokenBalanceFetcher
+import com.tangem.test.core.assertEither
+import com.tangem.test.core.assertEitherRight
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
@@ -41,7 +41,7 @@ internal class WalletBalanceFetcherTest {
     private val singleWalletBalanceFetcher: SingleWalletBalanceFetcher = mockk()
     private val multiNetworkStatusFetcher: MultiNetworkStatusFetcher = mockk()
     private val multiQuoteStatusFetcher: MultiQuoteStatusFetcher = mockk()
-    private val multiYieldBalanceFetcher: MultiYieldBalanceFetcher = mockk()
+    private val multiStakingBalanceFetcher: MultiStakingBalanceFetcher = mockk()
     private val stakingIdFactory: StakingIdFactory = mockk()
 
     private val fetcher = WalletBalanceFetcher(
@@ -51,7 +51,7 @@ internal class WalletBalanceFetcherTest {
         singleWalletBalanceFetcher = singleWalletBalanceFetcher,
         multiNetworkStatusFetcher = multiNetworkStatusFetcher,
         multiQuoteStatusFetcher = multiQuoteStatusFetcher,
-        multiYieldBalanceFetcher = multiYieldBalanceFetcher,
+        multiStakingBalanceFetcher = multiStakingBalanceFetcher,
         stakingIdFactory = stakingIdFactory,
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
@@ -65,7 +65,7 @@ internal class WalletBalanceFetcherTest {
             singleWalletBalanceFetcher,
             multiNetworkStatusFetcher,
             multiQuoteStatusFetcher,
-            multiYieldBalanceFetcher,
+            multiStakingBalanceFetcher,
         )
     }
 
@@ -91,7 +91,7 @@ internal class WalletBalanceFetcherTest {
             multiNetworkStatusFetcher(params = any())
             multiQuoteStatusFetcher(params = any())
             stakingIdFactory.create(userWalletId = any(), cryptoCurrency = any())
-            multiYieldBalanceFetcher(params = any())
+            multiStakingBalanceFetcher(params = any())
         }
     }
 
@@ -122,7 +122,7 @@ internal class WalletBalanceFetcherTest {
             multiNetworkStatusFetcher(params = any())
             multiQuoteStatusFetcher(params = any())
             stakingIdFactory.create(userWalletId = any(), cryptoCurrency = any())
-            multiYieldBalanceFetcher(params = any())
+            multiStakingBalanceFetcher(params = any())
         }
     }
 
@@ -156,7 +156,7 @@ internal class WalletBalanceFetcherTest {
             multiNetworkStatusFetcher(params = any())
             multiQuoteStatusFetcher(params = any())
             stakingIdFactory.create(userWalletId = any(), cryptoCurrency = any())
-            multiYieldBalanceFetcher(params = any())
+            multiStakingBalanceFetcher(params = any())
         }
     }
 
@@ -188,7 +188,7 @@ internal class WalletBalanceFetcherTest {
             multiNetworkStatusFetcher(params = any())
             multiQuoteStatusFetcher(params = any())
             stakingIdFactory.create(userWalletId = any(), cryptoCurrency = any())
-            multiYieldBalanceFetcher(params = any())
+            multiStakingBalanceFetcher(params = any())
         }
     }
 
@@ -234,7 +234,7 @@ internal class WalletBalanceFetcherTest {
             singleWalletBalanceFetcher.getCryptoCurrencies(userWalletId = any())
             multiQuoteStatusFetcher(params = any())
             stakingIdFactory.create(userWalletId = any(), cryptoCurrency = any())
-            multiYieldBalanceFetcher(params = any())
+            multiStakingBalanceFetcher(params = any())
         }
     }
 
@@ -280,7 +280,7 @@ internal class WalletBalanceFetcherTest {
             singleWalletBalanceFetcher.getCryptoCurrencies(userWalletId = any())
             multiNetworkStatusFetcher(params = any())
             stakingIdFactory.create(userWalletId = any(), cryptoCurrency = any())
-            multiYieldBalanceFetcher(params = any())
+            multiStakingBalanceFetcher(params = any())
         }
     }
 
@@ -292,7 +292,7 @@ internal class WalletBalanceFetcherTest {
         }
 
         val currencies = cryptoCurrencyFactory.ethereumAndStellar.toSet()
-        val yieldBalanceFetcherParams = MultiYieldBalanceFetcher.Params(
+        val stakingBalanceFetcherParams = MultiStakingBalanceFetcher.Params(
             userWalletId = userWalletId,
             stakingIds = setOf(ethereumStakingId, stellarStakingId),
         )
@@ -308,7 +308,7 @@ internal class WalletBalanceFetcherTest {
         coEvery {
             stakingIdFactory.create(userWalletId = userWalletId, cryptoCurrency = cryptoCurrencyFactory.stellar)
         } returns Either.Right(stellarStakingId)
-        coEvery { multiYieldBalanceFetcher(params = yieldBalanceFetcherParams) } returns exception.left()
+        coEvery { multiStakingBalanceFetcher(params = stakingBalanceFetcherParams) } returns exception.left()
 
         // Act
         val actual = fetcher(params = WalletBalanceFetcher.Params(userWalletId = userWalletId))
@@ -326,7 +326,7 @@ internal class WalletBalanceFetcherTest {
             multiWalletBalanceFetcher.fetchingSources
             stakingIdFactory.create(userWalletId = userWalletId, cryptoCurrency = cryptoCurrencyFactory.ethereum)
             stakingIdFactory.create(userWalletId = userWalletId, cryptoCurrency = cryptoCurrencyFactory.stellar)
-            multiYieldBalanceFetcher(params = yieldBalanceFetcherParams)
+            multiStakingBalanceFetcher(params = stakingBalanceFetcherParams)
         }
 
         coVerify(inverse = true) {
@@ -372,7 +372,7 @@ internal class WalletBalanceFetcherTest {
             singleWalletBalanceFetcher.getCryptoCurrencies(userWalletId = any())
             multiNetworkStatusFetcher(params = any())
             multiQuoteStatusFetcher(params = any())
-            multiYieldBalanceFetcher(params = any())
+            multiStakingBalanceFetcher(params = any())
         }
     }
 
@@ -385,7 +385,9 @@ internal class WalletBalanceFetcherTest {
 
         val currencies = cryptoCurrencyFactory.ethereumAndStellar.toSet()
         val stakingId = Either.Left(
-            StakingIdFactory.Error.UnableToGetAddress(integrationId = StakingIntegrationID.EthereumToken.Polygon),
+            StakingIdFactory.Error.UnableToGetAddress(
+                integrationId = StakingIntegrationID.StakeKit.EthereumToken.Polygon,
+            ),
         )
 
         every { currenciesRepository.getCardTypesResolver(userWalletId = userWalletId) } returns cardTypesResolver
@@ -412,7 +414,7 @@ internal class WalletBalanceFetcherTest {
             singleWalletBalanceFetcher.getCryptoCurrencies(userWalletId = any())
             multiNetworkStatusFetcher(params = any())
             multiQuoteStatusFetcher(params = any())
-            multiYieldBalanceFetcher(params = any())
+            multiStakingBalanceFetcher(params = any())
         }
     }
 
@@ -425,7 +427,9 @@ internal class WalletBalanceFetcherTest {
 
         val currencies = cryptoCurrencyFactory.ethereumAndStellar.toSet()
         val ethereumStakingId = Either.Left(
-            StakingIdFactory.Error.UnableToGetAddress(integrationId = StakingIntegrationID.EthereumToken.Polygon),
+            StakingIdFactory.Error.UnableToGetAddress(
+                integrationId = StakingIntegrationID.StakeKit.EthereumToken.Polygon,
+            ),
         )
         val stellarStakingId = Either.Left(StakingIdFactory.Error.UnsupportedCurrency)
 
@@ -458,7 +462,7 @@ internal class WalletBalanceFetcherTest {
             singleWalletBalanceFetcher.getCryptoCurrencies(userWalletId = any())
             multiNetworkStatusFetcher(params = any())
             multiQuoteStatusFetcher(params = any())
-            multiYieldBalanceFetcher(params = any())
+            multiStakingBalanceFetcher(params = any())
         }
     }
 
@@ -481,7 +485,7 @@ internal class WalletBalanceFetcherTest {
             appCurrencyId = null,
         )
 
-        val yieldBalanceFetcherParams = MultiYieldBalanceFetcher.Params(
+        val stakingBalanceFetcherParams = MultiStakingBalanceFetcher.Params(
             userWalletId = userWalletId,
             stakingIds = setOf(ethereumStakingId, stellarStakingId),
         )
@@ -499,7 +503,7 @@ internal class WalletBalanceFetcherTest {
         coEvery {
             stakingIdFactory.create(userWalletId = userWalletId, cryptoCurrency = cryptoCurrencyFactory.stellar)
         } returns Either.Right(stellarStakingId)
-        coEvery { multiYieldBalanceFetcher(params = yieldBalanceFetcherParams) } returns exception.left()
+        coEvery { multiStakingBalanceFetcher(params = stakingBalanceFetcherParams) } returns exception.left()
 
         // Act
         val actual = fetcher(params = WalletBalanceFetcher.Params(userWalletId = userWalletId))
@@ -521,7 +525,7 @@ internal class WalletBalanceFetcherTest {
             multiQuoteStatusFetcher(params = quoteStatusFetcherParams)
             stakingIdFactory.create(userWalletId = userWalletId, cryptoCurrency = cryptoCurrencyFactory.ethereum)
             stakingIdFactory.create(userWalletId = userWalletId, cryptoCurrency = cryptoCurrencyFactory.stellar)
-            multiYieldBalanceFetcher(params = yieldBalanceFetcherParams)
+            multiStakingBalanceFetcher(params = stakingBalanceFetcherParams)
         }
 
         coVerify(inverse = true) {
@@ -549,7 +553,7 @@ internal class WalletBalanceFetcherTest {
             appCurrencyId = null,
         )
 
-        val yieldBalanceFetcherParams = MultiYieldBalanceFetcher.Params(
+        val stakingBalanceFetcherParams = MultiStakingBalanceFetcher.Params(
             userWalletId = userWalletId,
             stakingIds = setOf(ethereumStakingId, stellarStakingId),
         )
@@ -565,7 +569,7 @@ internal class WalletBalanceFetcherTest {
         coEvery {
             stakingIdFactory.create(userWalletId = userWalletId, cryptoCurrency = cryptoCurrencyFactory.stellar)
         } returns Either.Right(stellarStakingId)
-        coEvery { multiYieldBalanceFetcher(params = yieldBalanceFetcherParams) } returns Unit.right()
+        coEvery { multiStakingBalanceFetcher(params = stakingBalanceFetcherParams) } returns Unit.right()
 
         // Act
         val actual = fetcher(params = WalletBalanceFetcher.Params(userWalletId = userWalletId))
@@ -582,7 +586,7 @@ internal class WalletBalanceFetcherTest {
             multiQuoteStatusFetcher(params = quoteStatusFetcherParams)
             stakingIdFactory.create(userWalletId = userWalletId, cryptoCurrency = cryptoCurrencyFactory.ethereum)
             stakingIdFactory.create(userWalletId = userWalletId, cryptoCurrency = cryptoCurrencyFactory.stellar)
-            multiYieldBalanceFetcher(params = yieldBalanceFetcherParams)
+            multiStakingBalanceFetcher(params = stakingBalanceFetcherParams)
         }
 
         coVerify(inverse = true) {
@@ -638,7 +642,7 @@ internal class WalletBalanceFetcherTest {
             multiWalletBalanceFetcher.getCryptoCurrencies(userWalletId = any())
             singleWalletBalanceFetcher.getCryptoCurrencies(userWalletId = any())
             stakingIdFactory.create(userWalletId = any(), cryptoCurrency = any())
-            multiYieldBalanceFetcher(params = any())
+            multiStakingBalanceFetcher(params = any())
         }
     }
 
@@ -688,7 +692,7 @@ internal class WalletBalanceFetcherTest {
             multiWalletBalanceFetcher.getCryptoCurrencies(userWalletId = any())
             singleWalletWithTokenBalanceFetcher.getCryptoCurrencies(userWalletId = any())
             stakingIdFactory.create(userWalletId = any(), cryptoCurrency = any())
-            multiYieldBalanceFetcher(params = any())
+            multiStakingBalanceFetcher(params = any())
         }
     }
 

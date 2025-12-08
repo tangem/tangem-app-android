@@ -1,9 +1,12 @@
 package com.tangem.data.pay.repository
 
+import com.squareup.moshi.Moshi
 import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.visa.utils.TangemPayTxHistoryItemConverter
 import com.tangem.datasource.api.pay.TangemPayApi
+import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.local.visa.TangemPayTxHistoryItemsStore
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.tangempay.model.TangemPayTxHistoryListBatchFlow
 import com.tangem.domain.tangempay.model.TangemPayTxHistoryListBatchingContext
 import com.tangem.domain.tangempay.model.TangemPayTxHistoryListConfig
@@ -26,9 +29,13 @@ internal class DefaultTangemPayTxHistoryRepository @Inject constructor(
     private val cacheRegistry: CacheRegistry,
     private val txHistoryItemsStore: TangemPayTxHistoryItemsStore,
     private val dispatchers: CoroutineDispatcherProvider,
+    @NetworkMoshi private val moshi: Moshi,
 ) : TangemPayTxHistoryRepository {
 
+    private val txHistoryItemConverter by lazy { TangemPayTxHistoryItemConverter(moshi) }
+
     override fun getTxHistoryBatchFlow(
+        userWalletId: UserWalletId,
         batchSize: Int,
         context: TangemPayTxHistoryListBatchingContext,
     ): TangemPayTxHistoryListBatchFlow {
@@ -36,18 +43,24 @@ internal class DefaultTangemPayTxHistoryRepository @Inject constructor(
             fetchDispatcher = dispatchers.io,
             context = context,
             generateNewKey = { keys -> keys.lastOrNull()?.inc() ?: 0 },
-            batchFetcher = createFetcher(batchSize),
+            batchFetcher = createFetcher(userWalletId, batchSize),
         ).toBatchFlow()
     }
 
     private fun createFetcher(
+        userWalletId: UserWalletId,
         batchSize: Int,
     ): BatchFetcher<TangemPayTxHistoryListConfig, List<TangemPayTxHistoryItem>> {
         return CursorBatchFetcher(
             prefetchDistance = batchSize,
             batchSize = batchSize,
             subFetcher = { request, _, _ ->
-                val items = loadItems(config = request.params, cursor = request.cursor, limit = request.limit)
+                val items = loadItems(
+                    userWalletId = userWalletId,
+                    config = request.params,
+                    cursor = request.cursor,
+                    limit = request.limit,
+                )
                 BatchFetchResult.Success(
                     data = items,
                     last = items.size < request.limit,
@@ -59,6 +72,7 @@ internal class DefaultTangemPayTxHistoryRepository @Inject constructor(
     }
 
     private suspend fun loadItems(
+        userWalletId: UserWalletId,
         config: TangemPayTxHistoryListConfig,
         cursor: String?,
         limit: Int,
@@ -66,7 +80,14 @@ internal class DefaultTangemPayTxHistoryRepository @Inject constructor(
         cacheRegistry.invokeOnExpire(
             key = getCacheKey(customerWalletAddress = config.customerWalletAddress, cursor = cursor),
             skipCache = config.shouldRefresh,
-            block = { fetch(customerWalletAddress = config.customerWalletAddress, cursor = cursor, pageSize = limit) },
+            block = {
+                fetch(
+                    userWalletId = userWalletId,
+                    customerWalletAddress = config.customerWalletAddress,
+                    cursor = cursor,
+                    pageSize = limit,
+                )
+            },
         )
 
         return txHistoryItemsStore.getSyncOrNull(
@@ -79,12 +100,17 @@ internal class DefaultTangemPayTxHistoryRepository @Inject constructor(
         return "tangem_pay_tx_history_${customerWalletAddress}_${cursor ?: INITIAL_CURSOR}"
     }
 
-    private suspend fun fetch(customerWalletAddress: String, cursor: String?, pageSize: Int) {
+    private suspend fun fetch(
+        userWalletId: UserWalletId,
+        customerWalletAddress: String,
+        cursor: String?,
+        pageSize: Int,
+    ) {
         requestPerformer.runWithErrorLogs(TAG) {
-            val result = requestPerformer.request { authHeader ->
+            val result = requestPerformer.request(userWalletId) { authHeader ->
                 visaApi.getTangemPayTxHistory(authHeader = authHeader, limit = pageSize, cursor = cursor)
             }.result
-            val items = TangemPayTxHistoryItemConverter.convertList(result.transactions).filterNotNull()
+            val items = txHistoryItemConverter.convertList(result.transactions).filterNotNull()
             txHistoryItemsStore.store(key = customerWalletAddress, cursor = cursor ?: INITIAL_CURSOR, value = items)
         }.onLeft { error(it.toString()) }
     }

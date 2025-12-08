@@ -10,10 +10,15 @@ package com.tangem.core.ui.components.bottomsheets
 data class TangemBottomSheetConfig(
     val isShown: Boolean,
     val onDismissRequest: () -> Unit,
+    val dismissOnClickOutside: (() -> Boolean)? = null,
     val content: TangemBottomSheetConfigContent,
 ) {
 
     companion object {
-        val Empty = TangemBottomSheetConfig(false, {}, TangemBottomSheetConfigContent.Empty)
+        val Empty = TangemBottomSheetConfig(
+            isShown = false,
+            onDismissRequest = {},
+            content = TangemBottomSheetConfigContent.Empty,
+        )
     }
 }

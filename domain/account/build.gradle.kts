@@ -18,9 +18,9 @@ dependencies {
     implementation(deps.kotlin.coroutines)
     implementation(deps.kotlin.serialization)
 
-    testImplementation(deps.test.coroutine)
-    testImplementation(deps.test.junit5)
+    // region Test libraries
+    testImplementation(projects.test.core)
+    testImplementation(projects.test.mock)
     testRuntimeOnly(deps.test.junit5.engine)
-    testImplementation(deps.test.mockk)
-    testImplementation(deps.test.truth)
+    // endregion
 }

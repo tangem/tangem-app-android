@@ -14,7 +14,6 @@ interface HotWalletStepperComponent : ComposableContentComponent {
         val title: TextReference,
         val showBackButton: Boolean,
         val showSkipButton: Boolean,
-        val showFeedbackButton: Boolean,
     ) {
         companion object {
             fun initialState() = StepperUM(
@@ -23,7 +22,6 @@ interface HotWalletStepperComponent : ComposableContentComponent {
                 title = TextReference.EMPTY,
                 showBackButton = false,
                 showSkipButton = false,
-                showFeedbackButton = false,
             )
         }
     }

@@ -7,11 +7,13 @@ import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.get
 import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
+import com.tangem.datasource.local.preferences.utils.getSyncOrNull
 import com.tangem.datasource.local.preferences.utils.store
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.settings.usercountry.models.GB_COUNTRY
 import com.tangem.domain.settings.usercountry.models.UserCountry
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.runSuspendCatching
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -91,11 +93,16 @@ internal class DefaultSettingsRepository(
     }
 
     override suspend fun shouldSaveAccessCodes(): Boolean {
-        return appPreferencesStore.getSyncOrDefault(key = PreferencesKeys.SHOULD_SAVE_ACCESS_CODES_KEY, default = false)
+        return appPreferencesStore.getSyncOrNull(key = PreferencesKeys.REQUIRE_ACCESS_CODE_KEY)?.not()
+            ?: appPreferencesStore.getSyncOrDefault(
+                key = PreferencesKeys.SHOULD_SAVE_ACCESS_CODES_KEY,
+                default = false,
+            )
     }
 
     override suspend fun setShouldSaveAccessCodes(value: Boolean) {
         appPreferencesStore.store(key = PreferencesKeys.SHOULD_SAVE_ACCESS_CODES_KEY, value = value)
+        appPreferencesStore.store(key = PreferencesKeys.REQUIRE_ACCESS_CODE_KEY, value = value.not())
     }
 
     override suspend fun incrementAppLaunchCounter() {
@@ -147,7 +154,7 @@ internal class DefaultSettingsRepository(
         }
 
         withContext(dispatchers.io) {
-            val country = runCatching { tangemTechApi.getUserCountryCode() }
+            val country = runSuspendCatching { tangemTechApi.getUserCountryCode() }
                 .fold(
                     onSuccess = GeoResponse::code,
                     onFailure = { Locale.getDefault().country },

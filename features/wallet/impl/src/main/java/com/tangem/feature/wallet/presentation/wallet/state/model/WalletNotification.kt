@@ -10,6 +10,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.pluralReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.feature.wallet.child.wallet.model.WalletActivationBannerType
 import com.tangem.feature.wallet.impl.R
 import org.joda.time.DateTime
 
@@ -143,6 +144,24 @@ sealed class WalletNotification(val config: NotificationConfig) {
             title = resourceReference(R.string.yield_module_main_view_approve_notification_title),
             subtitle = resourceReference(R.string.yield_module_main_view_approve_notification_description),
         )
+
+        data object TangemPayUnreachable : Warning(
+            title = resourceReference(id = R.string.tangempay_temporarily_unavailable),
+            subtitle = resourceReference(id = R.string.tangempay_service_unreachable_try_later),
+        )
+
+        data class TangemPayRefreshNeeded(
+            @DrawableRes val tangemIcon: Int?,
+            val onRefreshClick: () -> Unit,
+        ) : Warning(
+            title = resourceReference(id = R.string.tangempay_payment_account_sync_needed),
+            subtitle = resourceReference(id = R.string.tangempay_use_tangem_device_to_restore_payment_account),
+            buttonsState = ButtonsState.PrimaryButtonConfig(
+                text = resourceReference(id = R.string.home_button_scan),
+                iconResId = tangemIcon,
+                onClick = onRefreshClick,
+            ),
+        )
     }
 
     sealed class Informational(
@@ -269,14 +288,18 @@ sealed class WalletNotification(val config: NotificationConfig) {
     )
 
     data class FinishWalletActivation(
-        val iconTint: IconTint,
+        val type: WalletActivationBannerType,
         val buttonsState: ButtonsState,
+        val isBackupExists: Boolean,
     ) : WalletNotification(
         config = NotificationConfig(
             title = resourceReference(R.string.hw_activation_need_title),
             subtitle = resourceReference(R.string.hw_activation_need_description),
             iconResId = R.drawable.img_knight_shield_32,
-            iconTint = iconTint,
+            iconTint = when (type) {
+                WalletActivationBannerType.Attention -> IconTint.Attention
+                WalletActivationBannerType.Warning -> IconTint.Warning
+            },
             buttonsState = buttonsState,
         ),
     )
@@ -298,6 +321,23 @@ sealed class WalletNotification(val config: NotificationConfig) {
         ),
     )
 
+    data class VisaPresalePromo(
+        val onCloseClick: () -> Unit,
+        val onClick: () -> Unit,
+    ) : WalletNotification(
+        config = NotificationConfig(
+            title = resourceReference(R.string.notification_visa_waitlist_promo_title),
+            subtitle = resourceReference(R.string.notification_visa_waitlist_promo_text),
+            iconResId = R.drawable.img_visa_waitlist_promo,
+            onCloseClick = onCloseClick,
+            buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
+                text = resourceReference(R.string.notification_referral_promo_button),
+                onClick = onClick,
+            ),
+            iconSize = 54.dp,
+        ),
+    )
+
     data class Sepa(
         val onCloseClick: () -> Unit,
         val onClick: () -> Unit,
@@ -309,6 +349,23 @@ sealed class WalletNotification(val config: NotificationConfig) {
             onCloseClick = onCloseClick,
             buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
                 text = resourceReference(R.string.notification_sepa_button),
+                onClick = onClick,
+            ),
+            iconSize = 54.dp,
+        ),
+    )
+
+    data class BlackFridayPromo(
+        val onCloseClick: () -> Unit,
+        val onClick: () -> Unit,
+    ) : WalletNotification(
+        config = NotificationConfig(
+            title = resourceReference(R.string.notification_black_friday_title),
+            subtitle = resourceReference(R.string.notification_black_friday_text),
+            iconResId = R.drawable.img_black_friday_promo,
+            onCloseClick = onCloseClick,
+            buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
+                text = resourceReference(R.string.common_claim),
                 onClick = onClick,
             ),
             iconSize = 54.dp,

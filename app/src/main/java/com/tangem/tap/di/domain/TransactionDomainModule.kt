@@ -5,16 +5,20 @@ import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.networks.single.SingleNetworkStatusSupplier
+import com.tangem.domain.tokens.GetViewedTokenReceiveWarningUseCase
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
 import com.tangem.domain.transaction.FeeRepository
 import com.tangem.domain.transaction.TransactionRepository
 import com.tangem.domain.transaction.WalletAddressServiceRepository
 import com.tangem.domain.transaction.usecase.*
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
 import javax.inject.Singleton
 
 @Suppress("TooManyFunctions")
@@ -27,7 +31,7 @@ internal object TransactionDomainModule {
     fun provideGetFeeUseCase(walletManagersFacade: WalletManagersFacade): GetFeeUseCase {
         return GetFeeUseCase(
             walletManagersFacade = walletManagersFacade,
-            demoConfig = DemoConfig(),
+            demoConfig = DemoConfig,
         )
     }
 
@@ -45,13 +49,15 @@ internal object TransactionDomainModule {
         walletManagersFacade: WalletManagersFacade,
         singleNetworkStatusFetcher: SingleNetworkStatusFetcher,
         tangemHotWalletSignerFactory: TangemHotWalletSigner.Factory,
+        dispatchers: CoroutineDispatcherProvider,
     ): SendTransactionUseCase {
         return SendTransactionUseCase(
-            demoConfig = DemoConfig(),
+            demoConfig = DemoConfig,
             cardSdkConfigRepository = cardSdkConfigRepository,
             transactionRepository = transactionRepository,
             walletManagersFacade = walletManagersFacade,
             singleNetworkStatusFetcher = singleNetworkStatusFetcher,
+            parallelUpdatingScope = CoroutineScope(SupervisorJob() + dispatchers.io),
             getHotWalletSigner = tangemHotWalletSignerFactory::create,
         )
     }
@@ -125,7 +131,7 @@ internal object TransactionDomainModule {
     fun provideEstimateFeeUseCase(walletManagersFacade: WalletManagersFacade): EstimateFeeUseCase {
         return EstimateFeeUseCase(
             walletManagersFacade = walletManagersFacade,
-            demoConfig = DemoConfig(),
+            demoConfig = DemoConfig,
         )
     }
 
@@ -228,6 +234,18 @@ internal object TransactionDomainModule {
         return GetEnsNameUseCase(
             walletManagersFacade = walletManagersFacade,
             walletAddressServiceRepository = walletAddressServiceRepository,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideReceiveAddressesFactory(
+        getEnsNameUseCase: GetEnsNameUseCase,
+        getViewedTokenReceiveWarningUseCase: GetViewedTokenReceiveWarningUseCase,
+    ): ReceiveAddressesFactory {
+        return ReceiveAddressesFactory(
+            getEnsNameUseCase = getEnsNameUseCase,
+            getViewedTokenReceiveWarningUseCase = getViewedTokenReceiveWarningUseCase,
         )
     }
 

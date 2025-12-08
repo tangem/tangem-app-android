@@ -2,7 +2,6 @@ package com.tangem.feature.qrscanning.presentation.transformers
 
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.qrscanning.models.QrResultSource
 import com.tangem.domain.qrscanning.models.SourceType
@@ -22,7 +21,7 @@ internal class InitializeQrScanningStateTransformer(
     override fun transform(prevState: QrScanningState): QrScanningState {
         val message = when (source) {
             SourceType.SEND -> network?.let { resourceReference(R.string.send_qrcode_scan_info, wrappedList(it)) }
-            SourceType.WALLET_CONNECT -> stringReference("Open Web3 app and chose WalletConnect option")
+            SourceType.WALLET_CONNECT -> resourceReference(R.string.wc_qr_scan_hint)
         }
 
         return QrScanningState(

@@ -28,11 +28,11 @@
         "version": "5.21.0"
     },
     {
-        "name": "scroll",
-        "version": "undefined"
+        "name": "zklink",
+        "version": "5.31"
     },
     {
-        "name": "zklink",
-        "version": "undefined"
+        "name": "plasma",
+        "version": "5.31"
     }
 ]

@@ -4,25 +4,24 @@ import arrow.core.left
 import arrow.core.right
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
-import com.tangem.common.test.utils.assertEither
 import com.tangem.data.common.currency.CardCryptoCurrencyFactory
 import com.tangem.data.common.currency.UserTokensResponseFactory
 import com.tangem.data.common.currency.UserTokensSaver
 import com.tangem.data.tokens.utils.CustomTokensMerger
 import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.common.response.ApiResponseError
-import com.tangem.datasource.api.express.models.TangemExpressValues.EMPTY_CONTRACT_ADDRESS_VALUE
-import com.tangem.datasource.api.express.models.request.LeastTokenInfo
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
-import com.tangem.datasource.exchangeservice.swap.ExpressServiceLoader
 import com.tangem.datasource.local.token.UserTokensResponseStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.demo.models.DemoConfig
+import com.tangem.domain.express.ExpressServiceFetcher
+import com.tangem.domain.express.models.ExpressAsset
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesFetcher
+import com.tangem.test.core.assertEither
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
@@ -45,17 +44,17 @@ internal class DefaultMultiWalletCryptoCurrenciesFetcherTest {
     private val userTokensResponseStore: UserTokensResponseStore = mockk(relaxUnitFun = true)
     private val userTokensSaver: UserTokensSaver = mockk(relaxUnitFun = true)
     private val cardCryptoCurrencyFactory: CardCryptoCurrencyFactory = mockk()
-    private val expressServiceLoader: ExpressServiceLoader = mockk(relaxUnitFun = true)
+    private val expressServiceFetcher: ExpressServiceFetcher = mockk(relaxUnitFun = true)
 
     private val fetcher = DefaultMultiWalletCryptoCurrenciesFetcher(
-        demoConfig = DemoConfig(),
+        demoConfig = DemoConfig,
         userWalletsStore = userWalletsStore,
         tangemTechApi = tangemTechApi,
         customTokensMerger = customTokensMerger,
         userTokensResponseStore = userTokensResponseStore,
         userTokensSaver = userTokensSaver,
         cardCryptoCurrencyFactory = cardCryptoCurrencyFactory,
-        expressServiceLoader = expressServiceLoader,
+        expressServiceFetcher = expressServiceFetcher,
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
 
@@ -67,7 +66,7 @@ internal class DefaultMultiWalletCryptoCurrenciesFetcherTest {
             userTokensResponseStore,
             userTokensSaver,
             cardCryptoCurrencyFactory,
-            expressServiceLoader,
+            expressServiceFetcher,
         )
     }
 
@@ -131,6 +130,13 @@ internal class DefaultMultiWalletCryptoCurrenciesFetcherTest {
             customTokensMerger.mergeIfPresented(userWalletId = params.userWalletId, response = userTokensResponse)
         } returns userTokensResponse
 
+        coEvery {
+            expressServiceFetcher.fetch(
+                userWallet = mockUserWallet,
+                assetIds = userTokensResponse.toAssetId(),
+            )
+        } returns Unit.right()
+
         // Act
         val actual = fetcher(params)
 
@@ -144,7 +150,7 @@ internal class DefaultMultiWalletCryptoCurrenciesFetcherTest {
             cardCryptoCurrencyFactory.createDefaultCoinsForMultiCurrencyWallet(mockUserWallet)
             customTokensMerger.mergeIfPresented(userWalletId = params.userWalletId, response = userTokensResponse)
             userTokensSaver.store(userWalletId = params.userWalletId, response = userTokensResponse)
-            expressServiceLoader.update(userWallet = mockUserWallet, userTokens = userTokensResponse.toLeastTokens())
+            expressServiceFetcher.fetch(userWallet = mockUserWallet, assetIds = userTokensResponse.toAssetId())
         }
     }
 
@@ -170,6 +176,13 @@ internal class DefaultMultiWalletCryptoCurrenciesFetcherTest {
             customTokensMerger.mergeIfPresented(userWalletId = params.userWalletId, response = apiResponse.data)
         } returns apiResponse.data
 
+        coEvery {
+            expressServiceFetcher.fetch(
+                userWallet = mockUserWallet,
+                assetIds = defaultResponse.toAssetId(),
+            )
+        } returns Unit.right()
+
         // Act
         val actual = fetcher(params)
 
@@ -183,7 +196,7 @@ internal class DefaultMultiWalletCryptoCurrenciesFetcherTest {
             tangemTechApi.getUserTokens(userId = params.userWalletId.stringValue)
             customTokensMerger.mergeIfPresented(userWalletId = params.userWalletId, response = apiResponse.data)
             userTokensSaver.store(userWalletId = params.userWalletId, response = apiResponse.data)
-            expressServiceLoader.update(userWallet = mockUserWallet, userTokens = defaultResponse.toLeastTokens())
+            expressServiceFetcher.fetch(userWallet = mockUserWallet, assetIds = defaultResponse.toAssetId())
         }
 
         coVerify(inverse = true) {
@@ -212,6 +225,13 @@ internal class DefaultMultiWalletCryptoCurrenciesFetcherTest {
             customTokensMerger.mergeIfPresented(userWalletId = params.userWalletId, response = apiResponse.data)
         } returns apiResponse.data
 
+        coEvery {
+            expressServiceFetcher.fetch(
+                userWallet = mockUserWallet,
+                assetIds = apiResponse.data.toAssetId(),
+            )
+        } returns Unit.right()
+
         // Act
         val actual = fetcher(params)
 
@@ -224,7 +244,7 @@ internal class DefaultMultiWalletCryptoCurrenciesFetcherTest {
             tangemTechApi.getUserTokens(userId = params.userWalletId.stringValue)
             customTokensMerger.mergeIfPresented(userWalletId = params.userWalletId, response = apiResponse.data)
             userTokensSaver.store(userWalletId = params.userWalletId, response = apiResponse.data)
-            expressServiceLoader.update(userWallet = mockUserWallet, userTokens = defaultResponse.toLeastTokens())
+            expressServiceFetcher.fetch(userWallet = mockUserWallet, assetIds = defaultResponse.toAssetId())
         }
 
         coVerify(inverse = true) {
@@ -273,6 +293,13 @@ internal class DefaultMultiWalletCryptoCurrenciesFetcherTest {
             customTokensMerger.mergeIfPresented(userWalletId = params.userWalletId, response = userTokensResponse)
         } returns userTokensResponse
 
+        coEvery {
+            expressServiceFetcher.fetch(
+                userWallet = mockUserWallet,
+                assetIds = userTokensResponse.toAssetId(),
+            )
+        } returns Unit.right()
+
         // Act
         val actual = fetcher(params)
 
@@ -286,7 +313,7 @@ internal class DefaultMultiWalletCryptoCurrenciesFetcherTest {
             userTokensResponseStore.getSyncOrNull(userWalletId = userWalletId)
             customTokensMerger.mergeIfPresented(userWalletId = params.userWalletId, response = userTokensResponse)
             userTokensSaver.store(userWalletId = params.userWalletId, response = userTokensResponse)
-            expressServiceLoader.update(userWallet = mockUserWallet, userTokens = userTokensResponse.toLeastTokens())
+            expressServiceFetcher.fetch(userWallet = mockUserWallet, assetIds = userTokensResponse.toAssetId())
         }
 
         coVerify(inverse = true) {
@@ -317,6 +344,13 @@ internal class DefaultMultiWalletCryptoCurrenciesFetcherTest {
             customTokensMerger.mergeIfPresented(userWalletId = params.userWalletId, response = defaultResponse)
         } returns defaultResponse
 
+        coEvery {
+            expressServiceFetcher.fetch(
+                userWallet = mockUserWallet,
+                assetIds = defaultResponse.toAssetId(),
+            )
+        } returns Unit.right()
+
         // Act
         val actual = fetcher(params)
 
@@ -330,7 +364,7 @@ internal class DefaultMultiWalletCryptoCurrenciesFetcherTest {
             userTokensResponseStore.getSyncOrNull(userWalletId = userWalletId)
             customTokensMerger.mergeIfPresented(userWalletId = params.userWalletId, response = defaultResponse)
             userTokensSaver.store(userWalletId = params.userWalletId, response = defaultResponse)
-            expressServiceLoader.update(userWallet = mockUserWallet, userTokens = defaultResponse.toLeastTokens())
+            expressServiceFetcher.fetch(userWallet = mockUserWallet, assetIds = defaultResponse.toAssetId())
         }
 
         coVerify(inverse = true) {
@@ -383,6 +417,13 @@ internal class DefaultMultiWalletCryptoCurrenciesFetcherTest {
             customTokensMerger.mergeIfPresented(userWalletId = params.userWalletId, response = userTokensResponse)
         } returns userTokensResponse
 
+        coEvery {
+            expressServiceFetcher.fetch(
+                userWallet = mockUserWallet,
+                assetIds = userTokensResponse.toAssetId(),
+            )
+        } returns Unit.right()
+
         // Act
         val actual = fetcher(params)
 
@@ -398,7 +439,7 @@ internal class DefaultMultiWalletCryptoCurrenciesFetcherTest {
             userTokensSaver.push(userWalletId = params.userWalletId, response = userTokensResponse)
             customTokensMerger.mergeIfPresented(userWalletId = params.userWalletId, response = userTokensResponse)
             userTokensSaver.store(userWalletId = params.userWalletId, response = userTokensResponse)
-            expressServiceLoader.update(userWallet = mockUserWallet, userTokens = userTokensResponse.toLeastTokens())
+            expressServiceFetcher.fetch(userWallet = mockUserWallet, assetIds = userTokensResponse.toAssetId())
         }
     }
 
@@ -429,6 +470,13 @@ internal class DefaultMultiWalletCryptoCurrenciesFetcherTest {
             customTokensMerger.mergeIfPresented(userWalletId = params.userWalletId, response = defaultResponse)
         } returns defaultResponse
 
+        coEvery {
+            expressServiceFetcher.fetch(
+                userWallet = mockUserWallet,
+                assetIds = defaultResponse.toAssetId(),
+            )
+        } returns Unit.right()
+
         // Act
         val actual = fetcher(params)
 
@@ -443,7 +491,7 @@ internal class DefaultMultiWalletCryptoCurrenciesFetcherTest {
             userTokensSaver.push(userWalletId = params.userWalletId, response = defaultResponse)
             customTokensMerger.mergeIfPresented(userWalletId = params.userWalletId, response = defaultResponse)
             userTokensSaver.store(userWalletId = params.userWalletId, response = defaultResponse)
-            expressServiceLoader.update(userWallet = mockUserWallet, userTokens = defaultResponse.toLeastTokens())
+            expressServiceFetcher.fetch(userWallet = mockUserWallet, assetIds = defaultResponse.toAssetId())
         }
 
         coVerify(inverse = true) {
@@ -471,11 +519,11 @@ internal class DefaultMultiWalletCryptoCurrenciesFetcherTest {
             ),
         )
 
-        fun UserTokensResponse.toLeastTokens(): List<LeastTokenInfo> {
-            return tokens.map { token ->
-                LeastTokenInfo(
-                    contractAddress = token.contractAddress ?: EMPTY_CONTRACT_ADDRESS_VALUE,
-                    network = token.networkId,
+        fun UserTokensResponse.toAssetId(): Set<ExpressAsset.ID> {
+            return tokens.mapTo(hashSetOf()) { token ->
+                ExpressAsset.ID(
+                    networkId = token.networkId,
+                    contractAddress = token.contractAddress,
                 )
             }
         }

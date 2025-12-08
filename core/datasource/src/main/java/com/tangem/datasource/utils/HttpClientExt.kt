@@ -6,13 +6,6 @@ import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 
 /** Extension for adding headers [requestHeaders] to every [OkHttpClient] request */
-internal fun OkHttpClient.Builder.addHeaders(vararg requestHeaders: RequestHeader): OkHttpClient.Builder {
-    return addInterceptor(
-        interceptor = AddHeadersInterceptor(requestHeaders = requestHeaders.toSet()),
-    )
-}
-
-/** Extension for adding headers [requestHeaders] to every [OkHttpClient] request */
 internal fun OkHttpClient.Builder.addHeaders(
     requestHeaders: Map<String, ProviderSuspend<String>>,
 ): OkHttpClient.Builder {

@@ -53,6 +53,7 @@ internal fun createGetWalletAccountsResponse(
             group = groupType,
             sort = sortType,
             totalAccounts = 1,
+            totalArchivedAccounts = 0,
         ),
         accounts = buildList {
             createWalletAccountDTO(
@@ -77,8 +78,9 @@ internal fun createAccountList(
 ): AccountList {
     return AccountList(
         userWalletId = userWalletId,
-        accounts = setOf(createCryptoPortfolio(userWalletId)),
+        accounts = listOf(createCryptoPortfolio(userWalletId)),
         totalAccounts = 1,
+        totalArchivedAccounts = 0,
         sortType = sortType,
         groupType = groupType,
     )

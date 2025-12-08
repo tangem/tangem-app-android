@@ -1,0 +1,52 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>BooleanPropertyNaming:AddStakingNotificationsTransformer.kt$AddStakingNotificationsTransformer$val showNotification = sendingAmount + feeAmount &gt; balance</ID>
+    <ID>BooleanPropertyNaming:AmountCurrencyChangeStateTransformer.kt$AmountCurrencyChangeStateTransformer$private val value: Boolean</ID>
+    <ID>BooleanPropertyNaming:StakingModel.kt$StakingModel$val noBalanceState = balanceState == null</ID>
+    <ID>BooleanPropertyNaming:StakingUiState.kt$StakingStates.InitialInfoState.Data$val showBanner: Boolean</ID>
+    <ID>BooleanPropertyNaming:StakingUiState.kt$StakingUiState$val showColdWalletInteractionIcon: Boolean</ID>
+    <ID>CanBeNonNullable:StakingScreen.kt$bottomSheetConfig: TangemBottomSheetConfig?</ID>
+    <ID>CastNullableToNonNullableType:SetApprovalBottomSheetInProgressTransformer.kt$SetApprovalBottomSheetInProgressTransformer$as</ID>
+    <ID>CastNullableToNonNullableType:SetApprovalBottomSheetTypeChangeTransformer.kt$SetApprovalBottomSheetTypeChangeTransformer$as</ID>
+    <ID>MultilineLambdaItParameter:AddStakingNotificationsTransformer.kt$AddStakingNotificationsTransformer${ it is StakingNotification.Error || it is NotificationUM.Error || it is NotificationUM.Warning.NetworkFeeUnreachable || it is StakingNotification.Warning.TransactionInProgress || it is StakingNotification.Warning.InitializeTonAccount }</ID>
+    <ID>MultilineLambdaItParameter:DefaultStakingDeepLinkHandler.kt$DefaultStakingDeepLinkHandler${ val isNetwork = it.network.backendId.equals(networkId, ignoreCase = true) val isCurrency = it.id.rawCurrencyId?.value?.equals(tokenId, ignoreCase = true) == true isNetwork &amp;&amp; isCurrency }</ID>
+    <ID>MultilineLambdaItParameter:StakingFeeBlock.kt${ if (it == FeeState.Error) { Text( text = DASH_SIGN, color = TangemTheme.colors.text.primary1, style = TangemTheme.typography.body1, ) } }</ID>
+    <ID>MultilineLambdaItParameter:StakingFeeBlock.kt${ if (it == FeeState.Loading) { RectangleShimmer( radius = TangemTheme.dimens.radius3, modifier = Modifier.size( height = TangemTheme.dimens.size24, width = TangemTheme.dimens.size90, ), ) } }</ID>
+    <ID>MultilineLambdaItParameter:StakingFeeTransactionLoader.kt$StakingFeeTransactionLoader${ onStakingFeeError(it) null }</ID>
+    <ID>MultilineLambdaItParameter:StakingFeeTransactionLoader.kt$StakingFeeTransactionLoader${ onStakingFeeError(it) return }</ID>
+    <ID>MultilineLambdaItParameter:StakingInfoNotificationsFactory.kt$StakingInfoNotificationsFactory${ it.type == BalanceType.PREPARING || it.type == BalanceType.STAKED || it.type == BalanceType.LOCKED }</ID>
+    <ID>MultilineLambdaItParameter:StakingInfoNotificationsFactory.kt$StakingInfoNotificationsFactory${ it.type == BalanceType.STAKED || it.type == BalanceType.PREPARING || it.type == BalanceType.UNSTAKED }</ID>
+    <ID>MultilineLambdaItParameter:StakingModel.kt$StakingModel${ EnterAmountBoundary( amount = it, fiatRate = status.value.fiatRate.orZero(), ) }</ID>
+    <ID>MultilineLambdaItParameter:StakingModel.kt$StakingModel${ Timber.e(it) false }</ID>
+    <ID>MultilineLambdaItParameter:StakingModel.kt$StakingModel${ isBalanceHiddenFlow.value = it.isBalanceHidden stateController.update( transformer = HideBalanceStateTransformer( isBalanceHidden = it.isBalanceHidden, cryptoCurrencyStatus = cryptoCurrencyStatus, appCurrency = appCurrency, ), ) }</ID>
+    <ID>MultilineLambdaItParameter:StakingModel.kt$StakingModel${ stateController.update( SetFeeToTonInitializeBottomSheetTransformer( appCurrencyProvider = Provider { appCurrency }, feeCryptoCurrencyStatus = feeCryptoCurrencyStatus, fee = it.normal, isFeeApproximate = false, ), ) }</ID>
+    <ID>MultilineLambdaItParameter:StakingStateController.kt$StakingStateController${ it.copy( showColdWalletInteractionIcon = userWallet is UserWallet.Cold, ) }</ID>
+    <ID>MultilineLambdaItParameter:StakingTransactionSender.kt$StakingTransactionSender${ onConstructError(it) null }</ID>
+    <ID>MultilineLambdaItParameter:StakingTransactionSender.kt$StakingTransactionSender${ onConstructError(it) return emptyList() }</ID>
+    <ID>NoNameShadowing:StakingFeeTransactionLoader.kt$StakingFeeTransactionLoader$amount</ID>
+    <ID>NoNameShadowing:StakingFeeTransactionLoader.kt$StakingFeeTransactionLoader${ if (!it.amount.isZero()) return feeResult }</ID>
+    <ID>NullCheckOnMutableProperty:StakingModel.kt$StakingModel$if (feeCryptoCurrencyStatus != null &amp;&amp; fee != null) { getBalanceNotEnoughForFeeWarningUseCase( fee = fee, userWalletId = userWalletId, tokenStatus = cryptoCurrencyStatus, coinStatus = feeCryptoCurrencyStatus ?: cryptoCurrencyStatus, ).getOrNull() } else { null }</ID>
+    <ID>NullableToStringCall:DefaultStakingDeepLinkHandler.kt$DefaultStakingDeepLinkHandler$$networkId</ID>
+    <ID>NullableToStringCall:DefaultStakingDeepLinkHandler.kt$DefaultStakingDeepLinkHandler$$tokenId</ID>
+    <ID>PropertyUsedBeforeDeclaration:StakingFeeBlock.kt$FeeBlockPreviewProvider$contentState</ID>
+    <ID>PropertyUsedBeforeDeclaration:StakingModel.kt$StakingModel$isAmountSubtractAvailable</ID>
+    <ID>PropertyUsedBeforeDeclaration:StakingStateController.kt$StakingStateController$uiState</ID>
+    <ID>ReusedModifierInstance:StakingClaimRewardsValidatorContent.kt$InputRowImageInfo( subtitle = item.title, caption = item.getAprTextNeutral(), infoTitle = item.formattedFiatAmount, infoSubtitle = item.formattedCryptoAmount, imageUrl = item.validator?.image.orEmpty(), onImageError = { ValidatorImagePlaceholder() }, modifier = modifier .roundedShapeItemDecoration(index, state.rewards.lastIndex, false) .background(TangemTheme.colors.background.action) .clickable( enabled = item.pendingActions.isNotEmpty(), onClick = { clickIntents.onActiveStake(item) }, ), )</ID>
+    <ID>SuspendFunSwallowedCancellation:StakingModel.kt$StakingModel$runCatching</ID>
+    <ID>UnnecessaryEventHandlerParameter:StakingInitialInfoContent.kt$onClick: (BalanceState) -&gt; Unit</ID>
+    <ID>UnnecessaryFilter:StakingInfoNotificationsFactory.kt$StakingInfoNotificationsFactory$filter { it.validator?.address == validatorAddress }</ID>
+    <ID>UnnecessaryLet:StakingModel.kt$StakingModel$let(::add)</ID>
+    <ID>UnnecessaryLet:StakingTosText.kt$let { onTextClick(PRIVACY_POLICY_URL) }</ID>
+    <ID>UnnecessaryLet:StakingTosText.kt$let { onTextClick(TERMS_OF_USE_URL) }</ID>
+    <ID>UnsafeCallOnNullableType:StakingModel.kt$StakingModel$tonAccountInitializeTransaction!!</ID>
+    <ID>UseOrEmpty:StakingTransactionSender.kt$StakingTransactionSender$getExplorerTransactionUrlUseCase( txHash = transactionHashes.last(), networkId = cryptoCurrencyStatus.currency.network.id, ).getOrNull() ?: ""</ID>
+    <ID>VarCouldBeVal:StakingModel.kt$StakingModel$private var actionsJobHolder: JobHolder = JobHolder()</ID>
+    <ID>VarCouldBeVal:StakingModel.kt$StakingModel$private var approvalJobHolder: JobHolder = JobHolder()</ID>
+    <ID>VarCouldBeVal:StakingModel.kt$StakingModel$private var feeJobHolder: JobHolder = JobHolder()</ID>
+    <ID>VarCouldBeVal:StakingModel.kt$StakingModel$private var sendTransactionJobHolder = JobHolder()</ID>
+    <ID>VarCouldBeVal:StakingModel.kt$StakingModel$private var stakingStateRouter: StakingStateRouter = StakingStateRouter( appRouter = appRouter, stateController = stateController, analyticsEventsHandler = analyticsEventHandler, )</ID>
+    <ID>VarCouldBeVal:StakingModel.kt$StakingModel$private var stepChangesJobHolder = JobHolder()</ID>
+  </CurrentIssues>
+</SmellBaseline>

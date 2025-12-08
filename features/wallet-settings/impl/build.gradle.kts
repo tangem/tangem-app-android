@@ -29,6 +29,7 @@ dependencies {
     implementation(projects.core.navigation)
     implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
+    implementation(projects.core.datasource)
     implementation(projects.common.routing)
     implementation(projects.common.ui)
 
@@ -62,6 +63,7 @@ dependencies {
     implementation(deps.compose.material3)
     implementation(deps.compose.shimmer)
     implementation(deps.decompose.ext.compose)
+    implementation(deps.compose.reorderableV2)
 
     /* DI */
     implementation(deps.hilt.android)

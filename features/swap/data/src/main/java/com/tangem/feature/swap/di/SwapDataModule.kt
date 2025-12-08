@@ -3,12 +3,15 @@ package com.tangem.feature.swap.di
 import com.squareup.moshi.Moshi
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.data.common.currency.ResponseCryptoCurrenciesFactory
+import com.tangem.data.common.network.NetworkFactory
 import com.tangem.datasource.api.express.TangemExpressApi
 import com.tangem.datasource.api.express.models.response.ExpressErrorResponse
 import com.tangem.datasource.crypto.DataSignatureVerifier
 import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
+import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
+import com.tangem.domain.account.supplier.SingleAccountListSupplier
 import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.feature.swap.DefaultSwapRepository
@@ -60,11 +63,17 @@ internal class SwapDataModule {
     fun provideSwapTransactionRepository(
         appPreferencesStore: AppPreferencesStore,
         responseCryptoCurrenciesFactory: ResponseCryptoCurrenciesFactory,
+        networkFactory: NetworkFactory,
+        singleAccountListSupplier: SingleAccountListSupplier,
+        accountsFeatureToggles: AccountsFeatureToggles,
         dispatcherProvider: CoroutineDispatcherProvider,
     ): SwapTransactionRepository {
         return DefaultSwapTransactionRepository(
             appPreferencesStore = appPreferencesStore,
             responseCryptoCurrenciesFactory = responseCryptoCurrenciesFactory,
+            networkFactory = networkFactory,
+            singleAccountListSupplier = singleAccountListSupplier,
+            accountsFeatureToggles = accountsFeatureToggles,
             dispatchers = dispatcherProvider,
         )
     }

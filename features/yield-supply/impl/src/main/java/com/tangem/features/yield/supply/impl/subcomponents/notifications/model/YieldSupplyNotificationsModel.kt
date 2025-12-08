@@ -5,11 +5,13 @@ import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.common.ui.notifications.NotificationsFactory.addExceedsBalanceNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addFeeUnreachableNotification
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.tokens.GetBalanceNotEnoughForFeeWarningUseCase
+import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
 import com.tangem.features.yield.supply.impl.subcomponents.notifications.YieldSupplyNotificationsComponent
 import com.tangem.features.yield.supply.impl.subcomponents.notifications.YieldSupplyNotificationsUpdateListener
 import com.tangem.lib.crypto.BlockchainUtils
@@ -25,6 +27,7 @@ import javax.inject.Inject
 internal class YieldSupplyNotificationsModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
+    private val analyticsEventHandler: AnalyticsEventHandler,
     private val appRouter: AppRouter,
     private val getBalanceNotEnoughForFeeWarningUseCase: GetBalanceNotEnoughForFeeWarningUseCase,
     private val yieldSupplyNotificationsUpdateListener: YieldSupplyNotificationsUpdateListener,
@@ -68,7 +71,17 @@ internal class YieldSupplyNotificationsModel @Inject constructor(
                         coinStatus = feeCryptoCurrencyStatus,
                         feeError = data.feeError,
                         onClick = ::openTokenDetails,
+                        dustValue = null,
                         onReload = params.callback::onFeeReload,
+                    )
+                }
+
+                if (notifications.any { it is NotificationUM.Error.TokenExceedsBalance }) {
+                    analyticsEventHandler.send(
+                        YieldSupplyAnalytics.NoticeNotEnoughFee(
+                            token = cryptoCurrencyStatus.currency.symbol,
+                            blockchain = cryptoCurrencyStatus.currency.network.name,
+                        ),
                     )
                 }
 

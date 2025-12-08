@@ -6,8 +6,8 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.domain.tokens.GetTokenListUseCase
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.tokens.GetTokenListUseCase
 import com.tangem.features.wallet.utils.UserWalletsFetcher
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
@@ -30,6 +30,7 @@ internal class WcUserWalletsFetcher(
         messageSender = messageSender,
         onlyMultiCurrency = true,
         isAuthMode = false,
+        isClickableIfLocked = false,
         onWalletClick = { onWalletSelected(it) },
     )
 
@@ -41,7 +42,7 @@ internal class WcUserWalletsFetcher(
         }
 
     private fun getTokenListFlow(walletItem: UserWalletItemUM): Flow<UserWalletItemUM> {
-        return getTokenListUseCase.launch(walletItem.id).map { lce ->
+        return getTokenListUseCase.launch(UserWalletId(walletItem.id)).map { lce ->
             val information = lce.fold(
                 ifLoading = { UserWalletItemUM.Information.Loading },
                 ifError = { UserWalletItemUM.Information.Failed },

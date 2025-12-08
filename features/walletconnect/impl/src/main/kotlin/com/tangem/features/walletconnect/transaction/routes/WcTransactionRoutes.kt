@@ -22,7 +22,7 @@ internal sealed class WcTransactionRoutes : TangemBottomSheetConfigContent, Rout
     data object SelectFee : WcTransactionRoutes()
 
     @Serializable
-    data class Alert(val type: Type) : WcTransactionRoutes() {
+    data class Alert(val alertType: Type) : WcTransactionRoutes() {
         @Serializable
         sealed class Type {
             data class Verified(val appName: String) : Type()
@@ -44,9 +44,7 @@ internal sealed class WcTransactionRoutes : TangemBottomSheetConfigContent, Rout
     }
 
     @Serializable
-    data class MultipleTransactions(
-        val onConfirm: () -> Unit,
-    ) : WcTransactionRoutes()
+    data object MultipleTransactions : WcTransactionRoutes()
 
     @Serializable
     data object TransactionProcess : WcTransactionRoutes()

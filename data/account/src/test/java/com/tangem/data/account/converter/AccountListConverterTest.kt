@@ -1,7 +1,6 @@
 package com.tangem.data.account.converter
 
 import com.google.common.truth.Truth
-import com.tangem.common.test.utils.ProvideTestModels
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.domain.account.models.AccountList
@@ -10,6 +9,7 @@ import com.tangem.domain.models.TokensSortType
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.test.core.ProvideTestModels
 import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
@@ -137,6 +137,7 @@ class AccountListConverterTest {
                             group = UserTokensResponse.GroupType.NETWORK,
                             sort = UserTokensResponse.SortType.BALANCE,
                             totalAccounts = 1,
+                            totalArchivedAccounts = 0,
                         ),
                         accounts = emptyList(),
                         unassignedTokens = emptyList(),

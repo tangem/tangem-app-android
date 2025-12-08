@@ -1,203 +1,122 @@
 package com.tangem.features.createwalletselection
 
-import com.tangem.common.core.TangemError
-import com.tangem.common.core.TangemSdkError
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
-import com.tangem.core.analytics.models.Basic.SignedIn
-import com.tangem.core.analytics.models.Basic.SignedIn.SignInType
-import com.tangem.core.decompose.di.GlobalUiMessageSender
+import com.tangem.core.analytics.models.Basic
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
-import com.tangem.core.ui.R
+import com.tangem.core.ui.components.label.entity.LabelStyle
+import com.tangem.core.ui.components.label.entity.LabelUM
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.message.DialogMessage
-import com.tangem.domain.card.ScanCardProcessor
-import com.tangem.domain.card.analytics.IntroductionProcess
-import com.tangem.domain.card.analytics.ParamCardCurrencyConverter
-import com.tangem.domain.card.analytics.Shop
-import com.tangem.domain.card.common.util.cardTypesResolver
-import com.tangem.domain.card.repository.CardSdkConfigRepository
-import com.tangem.domain.common.wallets.UserWalletsListRepository
-import com.tangem.domain.common.wallets.error.SaveWalletError
-import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.settings.repositories.SettingsRepository
-import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
+import com.tangem.core.ui.message.dialog.Dialogs.hotWalletCreationNotSupportedDialog
+import com.tangem.domain.hotwallet.IsHotWalletCreationSupported
 import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
-import com.tangem.domain.wallets.usecase.SaveWalletUseCase
 import com.tangem.features.createwalletselection.entity.CreateWalletSelectionUM
+import com.tangem.features.createwalletselection.impl.R
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import javax.inject.Inject
-
-private const val HIDE_PROGRESS_DELAY = 400L
 
 @Suppress("LongParameterList")
 @ModelScoped
 internal class CreateWalletSelectionModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
-    private val scanCardProcessor: ScanCardProcessor,
-    private val cardSdkConfigRepository: CardSdkConfigRepository,
-    private val settingsRepository: SettingsRepository,
     private val analyticsEventHandler: AnalyticsEventHandler,
-    private val appRouter: AppRouter,
-    private val coldUserWalletBuilderFactory: ColdUserWalletBuilder.Factory,
-    private val saveWalletUseCase: SaveWalletUseCase,
     private val generateBuyTangemCardLinkUseCase: GenerateBuyTangemCardLinkUseCase,
     private val urlOpener: UrlOpener,
-    private val userWalletsListRepository: UserWalletsListRepository,
-    @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
+    private val isHotWalletCreationSupported: IsHotWalletCreationSupported,
+    private val uiMessageSender: UiMessageSender,
 ) : Model() {
 
     internal val uiState: StateFlow<CreateWalletSelectionUM>
         field = MutableStateFlow(
             CreateWalletSelectionUM(
                 onBackClick = { router.pop() },
-                onMobileWalletClick = ::onMobileWalletClick,
-                onHardwareWalletClick = ::onHardwareWalletClick,
-                onScanClick = ::onScanClick,
+                blocks = persistentListOf(
+                    CreateWalletSelectionUM.Block(
+                        title = resourceReference(R.string.wallet_create_hardware_title),
+                        titleLabel = LabelUM(
+                            text = resourceReference(R.string.common_recommended),
+                            style = LabelStyle.ACCENT,
+                        ),
+                        description = resourceReference(R.string.wallet_add_hardware_description),
+                        features = persistentListOf(
+                            CreateWalletSelectionUM.Feature(
+                                iconResId = R.drawable.ic_add_wallet_16,
+                                title = resourceReference(R.string.wallet_add_hardware_info_create),
+                            ),
+                            CreateWalletSelectionUM.Feature(
+                                iconResId = R.drawable.ic_import_seed_16,
+                                title = resourceReference(R.string.wallet_add_import_seed_phrase),
+                            ),
+                        ),
+                        onClick = ::onHardwareWalletClick,
+                    ),
+                    CreateWalletSelectionUM.Block(
+                        title = resourceReference(R.string.wallet_create_mobile_title),
+                        titleLabel = null,
+                        description = resourceReference(R.string.wallet_add_mobile_description),
+                        features = persistentListOf(
+                            CreateWalletSelectionUM.Feature(
+                                iconResId = R.drawable.ic_mobile_wallet_16,
+                                title = resourceReference(R.string.hw_create_title),
+                            ),
+                            CreateWalletSelectionUM.Feature(
+                                iconResId = R.drawable.ic_import_seed_16,
+                                title = resourceReference(R.string.wallet_add_import_seed_phrase),
+                            ),
+                        ),
+                        onClick = ::onMobileWalletClick,
+                    ),
+                ),
+                onBuyClick = ::onBuyClick,
+                shouldShowAlreadyHaveWallet = true,
             ),
         )
 
     init {
-        showAlreadyHaveWalletWithDelay()
+        // temporarily disabled by timer and enabled by default
+        // showAlreadyHaveWalletWithDelay()
     }
 
+    @Suppress("UnusedPrivateMember")
     private fun showAlreadyHaveWalletWithDelay() {
         modelScope.launch {
             delay(SHOW_ALREADY_HAVE_WALLET_DELAY)
-            uiState.update { it.copy(showAlreadyHaveWallet = true) }
+            uiState.update { it.copy(shouldShowAlreadyHaveWallet = true) }
         }
     }
 
     private fun onMobileWalletClick() {
+        if (!isHotWalletCreationSupported()) {
+            uiMessageSender.send(
+                hotWalletCreationNotSupportedDialog(isHotWalletCreationSupported.getLeastVersionName()),
+            )
+            return
+        }
+
         router.push(AppRoute.CreateMobileWallet)
     }
 
     private fun onHardwareWalletClick() {
-        analyticsEventHandler.send(IntroductionProcess.ButtonBuyCards)
-        analyticsEventHandler.send(Shop.ScreenOpened)
+        router.push(AppRoute.CreateHardwareWallet)
+    }
+
+    private fun onBuyClick() {
+        analyticsEventHandler.send(Basic.ButtonBuy(source = AnalyticsParam.ScreensSources.AddNewWallet))
         modelScope.launch {
             generateBuyTangemCardLinkUseCase.invoke().let { urlOpener.openUrl(it) }
         }
-    }
-
-    private fun onScanClick() {
-        analyticsEventHandler.send(IntroductionProcess.ButtonScanCard)
-        scanCard()
-    }
-
-    private fun scanCard() {
-        modelScope.launch {
-            setLoading(true)
-
-            val shouldSaveAccessCodes = settingsRepository.shouldSaveAccessCodes()
-            cardSdkConfigRepository.setAccessCodeRequestPolicy(
-                isBiometricsRequestPolicy = shouldSaveAccessCodes,
-            )
-
-            val analyticsSource = AnalyticsParam.ScreensSources.Intro
-
-            scanCardProcessor.scan(
-                analyticsSource = analyticsSource,
-                onProgressStateChange = { showProgress ->
-                    if (!showProgress) {
-                        delay(HIDE_PROGRESS_DELAY)
-                        setLoading(false)
-                    } else {
-                        setLoading(true)
-                    }
-                },
-                onFailure = { error ->
-                    handleScanError(error)
-                    delay(HIDE_PROGRESS_DELAY)
-                    setLoading(false)
-                },
-                onSuccess = { scanResponse ->
-                    proceedWithScanResponse(scanResponse)
-                },
-            )
-        }
-    }
-
-    private suspend fun proceedWithScanResponse(scanResponse: ScanResponse) {
-        val userWallet = coldUserWalletBuilderFactory.create(scanResponse = scanResponse).build()
-
-        if (userWallet == null) {
-            Timber.e("User wallet not created")
-            setLoading(false)
-            return
-        }
-
-        saveWalletUseCase(userWallet = userWallet).fold(
-            ifLeft = {
-                delay(HIDE_PROGRESS_DELAY)
-                setLoading(false)
-                when (it) {
-                    is SaveWalletError.DataError -> Timber.e(it.toString(), "Unable to save user wallet")
-                    is SaveWalletError.WalletAlreadySaved -> {
-                        userWalletsListRepository.unlock(
-                            userWalletId = userWallet.walletId,
-                            unlockMethod = UserWalletsListRepository.UnlockMethod.Scan(scanResponse),
-                        ).onRight {
-                            appRouter.replaceAll(AppRoute.Wallet)
-                        }
-                    }
-                }
-            },
-            ifRight = {
-                setLoading(false)
-                sendSignedInCardAnalyticsEvent(scanResponse)
-                appRouter.replaceAll(AppRoute.Wallet)
-            },
-        )
-    }
-
-    private suspend fun sendSignedInCardAnalyticsEvent(scanResponse: ScanResponse) {
-        val currency = ParamCardCurrencyConverter().convert(value = scanResponse.cardTypesResolver)
-        if (currency != null) {
-            analyticsEventHandler.send(
-                SignedIn(
-                    currency = currency,
-                    batch = scanResponse.card.batchId,
-                    signInType = SignInType.Card,
-                    walletsCount = userWalletsListRepository.userWalletsSync().size.toString(),
-                    hasBackup = scanResponse.card.backupStatus?.isActive,
-                ),
-            )
-        }
-    }
-
-    private fun setLoading(isLoading: Boolean) {
-        uiState.update { it.copy(isScanInProgress = isLoading) }
-    }
-
-    fun handleScanError(error: TangemError) {
-        when (error) {
-            is TangemSdkError.NfcFeatureIsUnavailable -> handleNfcFeatureUnavailable()
-            is TangemSdkError -> Timber.e(error, "Scan error occurred")
-            else -> Timber.e(error, "Error happened")
-        }
-    }
-
-    private fun handleNfcFeatureUnavailable() {
-        uiMessageSender.send(
-            message = DialogMessage(
-                message = resourceReference(R.string.nfc_error_unavailable),
-                title = resourceReference(id = R.string.common_error),
-            ),
-        )
     }
 
     companion object {

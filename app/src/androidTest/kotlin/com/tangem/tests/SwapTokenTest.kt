@@ -4,16 +4,15 @@ import androidx.compose.ui.test.hasText
 import com.tangem.common.BaseTestCase
 import com.tangem.common.annotations.ApiEnv
 import com.tangem.common.annotations.ApiEnvConfig
-import com.tangem.common.constants.TestConstants.TOTAL_BALANCE
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT_LONG
 import com.tangem.common.extensions.*
-import com.tangem.common.utils.*
+import com.tangem.common.utils.resetWireMockScenarios
 import com.tangem.datasource.api.common.config.ApiConfig
 import com.tangem.datasource.api.common.config.ApiEnvironment
-import com.tangem.screens.*
 import com.tangem.scenarios.openMainScreen
 import com.tangem.scenarios.synchronizeAddresses
+import com.tangem.screens.*
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
@@ -31,7 +30,6 @@ class SwapTokenTest : BaseTestCase() {
     fun networkFeeTest() {
         val inputAmount = "100"
         val tokenTitle = "Polygon"
-        val balance = TOTAL_BALANCE
 
         setupHooks().run {
 
@@ -40,7 +38,7 @@ class SwapTokenTest : BaseTestCase() {
                 openMainScreen()
             }
             step("Synchronize addresses") {
-                synchronizeAddresses(balance)
+                synchronizeAddresses()
             }
             step("Click on token with name: '$tokenTitle'") {
                 onMainScreen { tokenWithTitleAndAddress(tokenTitle).clickWithAssertion() }
@@ -49,7 +47,7 @@ class SwapTokenTest : BaseTestCase() {
                 onTokenDetailsScreen { title.assertIsDisplayed() }
             }
             step("Click on 'Swap' button") {
-                onTokenDetailsScreen { swapButton.performClick() }
+                onTokenDetailsScreen { swapButton().performClick() }
             }
             step("Close 'Stories' screen") {
                 onSwapStoriesScreen { closeButton.clickWithAssertion() }
@@ -115,13 +113,12 @@ class SwapTokenTest : BaseTestCase() {
             }
         ).run {
             val tokenTitle = "Polygon"
-            val balance = TOTAL_BALANCE
 
             step("Open 'Main Screen'") {
                 openMainScreen()
             }
             step("Synchronize addresses") {
-                synchronizeAddresses(balance)
+                synchronizeAddresses()
             }
             step("Click on token with name: '$tokenTitle'") {
                 onMainScreen { tokenWithTitleAndAddress(tokenTitle).clickWithAssertion() }
@@ -134,7 +131,7 @@ class SwapTokenTest : BaseTestCase() {
                 disableMobileData()
             }
             step("Click on 'Swap' button") {
-                onTokenDetailsScreen { swapButton.performClick() }
+                onTokenDetailsScreen { swapButton().performClick() }
             }
             step("Close 'Stories' screen") {
                 onSwapStoriesScreen { closeButton.clickWithAssertion() }
@@ -164,13 +161,12 @@ class SwapTokenTest : BaseTestCase() {
         val inputAmount = "100"
         setupHooks().run {
             val tokenTitle = "Polygon"
-            val balance = TOTAL_BALANCE
 
             step("Open 'Main Screen'") {
                 openMainScreen()
             }
             step("Synchronize addresses") {
-                synchronizeAddresses(balance)
+                synchronizeAddresses()
             }
             step("Click on token with name: '$tokenTitle'") {
                 onMainScreen { tokenWithTitleAndAddress(tokenTitle).clickWithAssertion() }
@@ -179,7 +175,7 @@ class SwapTokenTest : BaseTestCase() {
                 onTokenDetailsScreen { title.assertIsDisplayed() }
             }
             step("Click on 'Swap' button") {
-                onTokenDetailsScreen { swapButton.performClick() }
+                onTokenDetailsScreen { swapButton().performClick() }
             }
             step("Close 'Stories' screen") {
                 onSwapStoriesScreen { closeButton.clickWithAssertion() }

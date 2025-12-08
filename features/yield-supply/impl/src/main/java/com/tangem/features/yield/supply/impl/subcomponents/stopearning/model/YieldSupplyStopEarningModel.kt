@@ -1,6 +1,9 @@
 package com.tangem.features.yield.supply.impl.subcomponents.stopearning.model
 
 import arrow.core.getOrElse
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.Basic
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -15,8 +18,13 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.tokens.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
+import com.tangem.domain.yield.supply.INCREASE_GAS_LIMIT_FOR_SUPPLY
+import com.tangem.domain.yield.supply.YieldSupplyRepository
+import com.tangem.domain.yield.supply.increaseGasLimitBy
+import com.tangem.domain.yield.supply.models.YieldSupplyEnterStatus
 import com.tangem.domain.yield.supply.usecase.YieldSupplyDeactivateUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyStopEarningUseCase
+import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
 import com.tangem.features.yield.supply.impl.R
 import com.tangem.features.yield.supply.impl.common.YieldSupplyAlertFactory
 import com.tangem.features.yield.supply.impl.common.entity.YieldSupplyActionUM
@@ -42,6 +50,7 @@ import javax.inject.Inject
 internal class YieldSupplyStopEarningModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     paramsContainer: ParamsContainer,
+    private val analytics: AnalyticsEventHandler,
     private val getFeeUseCase: GetFeeUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase,
@@ -51,6 +60,7 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
     private val yieldSupplyNotificationsUpdateTrigger: YieldSupplyNotificationsUpdateTrigger,
     private val yieldSupplyAlertFactory: YieldSupplyAlertFactory,
     private val yieldSupplyDeactivateUseCase: YieldSupplyDeactivateUseCase,
+    private val yieldSupplyRepository: YieldSupplyRepository,
 ) : Model(), YieldSupplyNotificationsComponent.ModelCallback {
 
     private val params: YieldSupplyStopEarningComponent.Params = paramsContainer.require()
@@ -76,7 +86,7 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
     val uiState: StateFlow<YieldSupplyActionUM>
         field: MutableStateFlow<YieldSupplyActionUM> = MutableStateFlow(
             YieldSupplyActionUM(
-                title = resourceReference(R.string.yield_module_stop_earning),
+                title = resourceReference(R.string.yield_module_stop_earning_sheet_title),
                 subtitle = resourceReference(
                     id = R.string.yield_module_stop_earning_sheet_description,
                     formatArgs = wrappedList(cryptoCurrency.symbol),
@@ -91,6 +101,13 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
         )
 
     init {
+        val currency = params.cryptoCurrencyStatusFlow.value.currency
+        analytics.send(
+            YieldSupplyAnalytics.StopEarningScreen(
+                token = currency.symbol,
+                blockchain = currency.network.name,
+            ),
+        )
         modelScope.launch {
             appCurrency = getSelectedAppCurrencyUseCase.invokeSync().getOrElse { AppCurrency.Default }
             subscribeOnCurrencyStatusUpdates()
@@ -109,7 +126,15 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
     }
 
     fun onClick() {
+        params.callback.onTransactionProgress(true)
+
         val yieldSupplyFeeUM = uiState.value.yieldSupplyFeeUM as? YieldSupplyFeeUM.Content ?: return
+        analytics.send(
+            YieldSupplyAnalytics.ButtonStopEarning(
+                token = cryptoCurrency.symbol,
+                blockchain = cryptoCurrency.network.name,
+            ),
+        )
         uiState.update(YieldSupplyTransactionInProgressTransformer)
 
         modelScope.launch(dispatchers.default) {
@@ -121,9 +146,15 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
                 ifLeft = { error ->
                     Timber.e(error.toString())
                     uiState.update(YieldSupplyTransactionReadyTransformer)
+                    analytics.send(
+                        YieldSupplyAnalytics.EarnErrors(
+                            action = YieldSupplyAnalytics.Action.Stop,
+                            errorDescription = error.getAnalyticsDescription(),
+                        ),
+                    )
                     yieldSupplyAlertFactory.getSendTransactionErrorState(
                         error = error,
-                        popBack = params.callback::onBackClick,
+                        popBack = params.callback::onDismissClick,
                         onFailedTxEmailClick = { errorMessage ->
                             modelScope.launch(dispatchers.default) {
                                 yieldSupplyAlertFactory.onFailedTxEmailClick(
@@ -134,12 +165,45 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
                             }
                         },
                     )
+                    params.callback.onTransactionProgress(false)
                 },
                 ifRight = {
-                    yieldSupplyDeactivateUseCase(cryptoCurrency as CryptoCurrency.Token)
-                    params.callback.onTransactionSent()
+                    onStopEarningTransactionSuccess()
                 },
             )
+        }
+    }
+
+    private suspend fun onStopEarningTransactionSuccess() {
+        yieldSupplyRepository.saveTokenProtocolStatus(
+            userWallet.walletId,
+            cryptoCurrency,
+            YieldSupplyEnterStatus.Exit,
+        )
+        analytics.send(
+            YieldSupplyAnalytics.FundsWithdrawn(
+                token = cryptoCurrency.symbol,
+                blockchain = cryptoCurrency.network.name,
+            ),
+        )
+        val event = AnalyticsParam.TxSentFrom.Earning(
+            blockchain = cryptoCurrency.network.name,
+            token = cryptoCurrency.symbol,
+            feeType = AnalyticsParam.FeeType.Normal,
+        )
+        analytics.send(
+            Basic.TransactionSent(
+                sentFrom = event,
+                memoType = Basic.TransactionSent.MemoType.Null,
+            ),
+        )
+        val address = cryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value
+        if (address != null) {
+            yieldSupplyDeactivateUseCase(cryptoCurrency, address)
+        }
+
+        modelScope.launch {
+            params.callback.onStopEarningTransactionSent()
         }
     }
 
@@ -185,7 +249,7 @@ internal class YieldSupplyStopEarningModel @Inject constructor(
                 }
             },
             ifRight = { fee ->
-                val fee = fee.normal
+                val fee = fee.normal.increaseGasLimitBy(INCREASE_GAS_LIMIT_FOR_SUPPLY)
                 val feeCryptoValue = fee.amount.value.orZero()
 
                 uiState.update(

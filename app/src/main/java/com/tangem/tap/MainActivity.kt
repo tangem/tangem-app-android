@@ -22,7 +22,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.core.net.toUri
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import arrow.core.getOrElse
@@ -44,11 +43,8 @@ import com.tangem.domain.settings.SetGoogleServicesAvailabilityUseCase
 import com.tangem.domain.settings.ShouldInitiallyAskPermissionUseCase
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.staking.SendUnsubmittedHashesUseCase
-import com.tangem.domain.tokens.GetPolkadotCheckHasImmortalUseCase
-import com.tangem.domain.tokens.GetPolkadotCheckHasResetUseCase
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.usecase.ClearAllHotWalletContextualUnlockUseCase
-import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.features.tester.api.TesterMenuLauncher
@@ -114,12 +110,6 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
 
     @Inject
     lateinit var sendUnsubmittedHashesUseCase: SendUnsubmittedHashesUseCase
-
-    @Inject
-    lateinit var getPolkadotCheckHasResetUseCase: GetPolkadotCheckHasResetUseCase
-
-    @Inject
-    lateinit var getPolkadotCheckHasImmortalUseCase: GetPolkadotCheckHasImmortalUseCase
 
     @Inject
     lateinit var analyticsEventsHandler: AnalyticsEventHandler
@@ -228,7 +218,6 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
 
         initContent()
 
-        observePolkadotAccountHealthCheck()
         sendStakingUnsubmittedHashes()
         checkGoogleServicesAvailability()
 
@@ -313,7 +302,9 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
     }
 
     private fun createAppThemeModeFlow(): SharedFlow<AppThemeMode> {
-        val tangemApplication = application as TangemApplication
+        val tangemApplication = requireNotNull(application as? TangemApplication) {
+            "Application is null"
+        }
 
         return tangemApplication.getAppThemeModeUseCase()
             .filterNotNull()
@@ -433,27 +424,6 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
             webLink?.uriValidate() == true -> {
                 urlOpener.openUrl(webLink)
             }
-        }
-    }
-
-    private fun observePolkadotAccountHealthCheck() {
-        lifecycleScope.launch {
-            getPolkadotCheckHasResetUseCase()
-                .flowWithLifecycle(lifecycle, minActiveState = Lifecycle.State.CREATED)
-                .distinctUntilChanged()
-                .collect {
-                    analyticsEventsHandler.send(WalletScreenAnalyticsEvent.Token.PolkadotAccountReset(it.second))
-                }
-        }
-        lifecycleScope.launch {
-            getPolkadotCheckHasImmortalUseCase()
-                .flowWithLifecycle(lifecycle, minActiveState = Lifecycle.State.CREATED)
-                .distinctUntilChanged()
-                .collect { (_, hasImmortalTransaction) ->
-                    analyticsEventsHandler.send(
-                        WalletScreenAnalyticsEvent.Token.PolkadotImmortalTransactions(hasImmortalTransaction),
-                    )
-                }
         }
     }
 
