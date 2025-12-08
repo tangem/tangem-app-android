@@ -5,6 +5,7 @@ import androidx.paging.cachedIn
 import androidx.paging.map
 import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.card.common.util.cardTypesResolver
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.network.TxInfo
 import com.tangem.domain.models.wallet.UserWallet
@@ -51,7 +52,7 @@ internal class TxHistorySubscriberV2(
                         refresh = isRefresh,
                     ).map { it.cachedIn(coroutineScope) }
 
-                    setLoadedTxHistoryState(maybeTxHistoryItems)
+                    setLoadedTxHistoryState(maybeTxHistoryItems, currency = status.currency)
                 }
             }
         }
@@ -60,18 +61,19 @@ internal class TxHistorySubscriberV2(
     private fun setLoadingTxHistoryState(maybeTxHistoryItemCount: MaybeTxHistoryCount, status: CryptoCurrencyStatus) {
         stateController.update(
             maybeTxHistoryItemCount.fold(
-                ifLeft = {
+                ifLeft = { error ->
                     SetTxHistoryCountErrorTransformer(
                         userWallet = userWallet,
-                        error = it,
+                        error = error,
                         pendingTransactions = status.value.pendingTransactions,
                         clickIntents = clickIntents,
+                        currency = status.currency,
                     )
                 },
-                ifRight = {
+                ifRight = { txCount ->
                     SetTxHistoryCountTransformer(
                         userWalletId = userWallet.walletId,
-                        transactionsCount = it,
+                        transactionsCount = txCount,
                         clickIntents = clickIntents,
                     )
                 },
@@ -79,7 +81,7 @@ internal class TxHistorySubscriberV2(
         )
     }
 
-    private fun setLoadedTxHistoryState(maybeTxHistoryItems: MaybeTxHistoryItems) {
+    private fun setLoadedTxHistoryState(maybeTxHistoryItems: MaybeTxHistoryItems, currency: CryptoCurrency) {
         stateController.update(
             maybeTxHistoryItems.fold(
                 ifLeft = {
@@ -92,6 +94,7 @@ internal class TxHistorySubscriberV2(
                 ifRight = { itemsFlow ->
                     val blockchain = userWallet.scanResponse.cardTypesResolver.getBlockchain()
                     val itemConverter = TxHistoryItemStateConverter(
+                        currency = currency,
                         symbol = blockchain.currency,
                         decimals = blockchain.decimals(),
                         clickIntents = clickIntents,

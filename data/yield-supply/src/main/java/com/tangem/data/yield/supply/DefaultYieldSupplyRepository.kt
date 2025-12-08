@@ -174,10 +174,10 @@ internal class DefaultYieldSupplyRepository(
         null
     }
 
-    private fun Set<TxInfo>.hasYieldEnterTransactions(yieldAddress: String) = any {
-        it.type == TxInfo.TransactionType.YieldSupply.Enter ||
-            it.type == TxInfo.TransactionType.Approve &&
-            (it.interactionAddressType as? TxInfo.InteractionAddressType.Contract)?.address == yieldAddress
+    private fun Set<TxInfo>.hasYieldEnterTransactions(yieldAddress: String) = any { txInfo ->
+        txInfo.type is TxInfo.TransactionType.YieldSupply.Enter ||
+            txInfo.type == TxInfo.TransactionType.Approve &&
+            (txInfo.interactionAddressType as? TxInfo.InteractionAddressType.Contract)?.address == yieldAddress
     }
 
     private fun Set<TxInfo>.hasYieldExitTransactions() = any {
