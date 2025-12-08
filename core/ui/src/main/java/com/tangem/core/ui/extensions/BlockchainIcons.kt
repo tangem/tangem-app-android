@@ -11,6 +11,10 @@ fun getActiveIconRes(blockchainId: String): Int {
         "lisk", "lisk/test" -> R.drawable.img_lisk_22
         "soneium", "soneium/test" -> R.drawable.img_soneium_22
         "mode", "mode/test" -> R.drawable.img_mode_22
+        "swellchain", "swellchain/test" -> R.drawable.img_swellchain_22
+        "superseed", "superseed/test" -> R.drawable.img_superseed_22
+        "bob", "bob/test" -> R.drawable.img_bob_22
+        "metal-l2", "metal-l2/test" -> R.drawable.img_metal_l2_22
         "unichain", "unichain/test" -> R.drawable.img_unichain_22
         "celo", "celo/test" -> R.drawable.img_celo_22
         "fraxtal", "fraxtal/test" -> R.drawable.img_fraxtal_22
@@ -117,6 +121,10 @@ fun getActiveIconResByCoinId(coinId: String): Int {
         "lisk-ethereum" -> R.drawable.img_lisk_22
         "soneium-ethereum" -> R.drawable.img_soneium_22
         "mode-ethereum" -> R.drawable.img_mode_22
+        "swellchain-ethereum" -> R.drawable.img_swellchain_22
+        "superseed-ethereum" -> R.drawable.img_superseed_22
+        "bob-ethereum" -> R.drawable.img_bob_22
+        "metal-l2-ethereum" -> R.drawable.img_metal_l2_22
         "unichain-ethereum" -> R.drawable.img_unichain_22
         "celo-ethereum" -> R.drawable.img_celo_22
         "fraxtal-ethereum" -> R.drawable.img_fraxtal_22
@@ -220,6 +228,10 @@ fun getGreyedOutIconRes(blockchainId: String): Int {
         "lisk", "lisk/test" -> R.drawable.ic_lisk_22
         "soneium", "soneium/test" -> R.drawable.ic_soneium_22
         "mode", "mode/test" -> R.drawable.ic_mode_22
+        "swellchain", "swellchain/test" -> R.drawable.ic_swellchain_22
+        "superseed", "superseed/test" -> R.drawable.ic_superseed_22
+        "bob", "bob/test" -> R.drawable.ic_bob_22
+        "metal-l2", "metal-l2/test" -> R.drawable.ic_metal_l2_22
         "unichain", "unichain/test" -> R.drawable.ic_unichain_22
         "celo", "celo/test" -> R.drawable.ic_celo_22
         "fraxtal", "fraxtal/test" -> R.drawable.ic_fraxtal_22
