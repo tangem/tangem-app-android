@@ -2,16 +2,13 @@ package com.tangem.domain.pay.usecase
 
 import arrow.core.Either
 import arrow.core.left
-import arrow.core.raise.catch
 import arrow.core.right
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.model.CustomerInfo
-import com.tangem.domain.pay.model.MainScreenCustomerInfo
-import com.tangem.domain.pay.model.OrderStatus
-import com.tangem.domain.pay.model.TangemPayCustomerInfoError
+import com.tangem.domain.pay.model.*
 import com.tangem.domain.pay.repository.CustomerOrderRepository
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.visa.error.VisaApiError
+import kotlinx.coroutines.flow.*
 import timber.log.Timber
 
 private const val TAG = "TangemPayMainScreenCustomerInfoUseCase"
@@ -26,32 +23,50 @@ class TangemPayMainScreenCustomerInfoUseCase(
     private val tangemPayOnboardingRepository: OnboardingRepository,
 ) {
 
-    suspend operator fun invoke(
-        userWalletId: UserWalletId,
-    ): Either<TangemPayCustomerInfoError, MainScreenCustomerInfo> = catch(
-        block = {
-            Timber.tag(TAG).d("checkCustomerWallet")
-            repository.checkCustomerWallet(userWalletId)
-                .fold(
-                    ifLeft = { error ->
-                        Timber.tag(TAG).e("Failed to check customer wallet ${error.javaClass.simpleName}")
-                        TangemPayCustomerInfoError.UnknownError.left()
-                    },
-                    ifRight = { hasTangemPay ->
-                        Timber.tag(TAG).i("checkCustomerWallet $hasTangemPay")
-                        if (hasTangemPay) {
-                            proceedWithPaeraCustomerResult(userWalletId)
-                        } else {
-                            TangemPayCustomerInfoError.UnknownError.left() // ignore if there's no TangemPay
+    val state: StateFlow<Map<UserWalletId, Either<TangemPayCustomerInfoError, MainCustomerInfoContentState>>>
+        field = MutableStateFlow(value = mapOf())
+
+    suspend fun fetch(userWalletId: UserWalletId) {
+        Timber.tag(TAG).i("fetch: $userWalletId")
+        repository.checkCustomerWallet(userWalletId)
+            .fold(
+                ifLeft = { error ->
+                    Timber.tag(TAG).e("Failed checkCustomerWallet for $userWalletId: ${error.javaClass.simpleName}")
+                    updateState(userWalletId, TangemPayCustomerInfoError.UnknownError.left())
+                },
+                ifRight = { hasTangemPay ->
+                    Timber.tag(TAG).i("checkCustomerWallet for $userWalletId: $hasTangemPay")
+                    if (hasTangemPay) {
+                        val oldResult = state.value[userWalletId]
+                        if (oldResult == null) {
+                            updateState(userWalletId, MainCustomerInfoContentState.Loading.right())
                         }
-                    },
-                )
-        },
-        catch = { error ->
-            Timber.tag(TAG).e(error)
-            TangemPayCustomerInfoError.UnknownError.left()
-        },
-    )
+
+                        val result = proceedWithPaeraCustomerResult(userWalletId)
+                            .map(MainCustomerInfoContentState::Content)
+                        updateState(userWalletId, result)
+                    } else {
+                        // ignore if there's no TangemPay
+                        updateState(userWalletId, TangemPayCustomerInfoError.UnknownError.left())
+                    }
+                },
+            )
+    }
+
+    operator fun invoke(
+        userWalletId: UserWalletId,
+    ): Flow<Either<TangemPayCustomerInfoError, MainCustomerInfoContentState>> {
+        return state.mapNotNull { map -> map[userWalletId] }
+    }
+
+    private fun updateState(
+        userWalletId: UserWalletId,
+        either: Either<TangemPayCustomerInfoError, MainCustomerInfoContentState>,
+    ) {
+        state.update { currentMap ->
+            currentMap.toMutableMap().apply { this[userWalletId] = either }
+        }
+    }
 
     private suspend fun proceedWithPaeraCustomerResult(
         userWalletId: UserWalletId,
@@ -70,14 +85,13 @@ class TangemPayMainScreenCustomerInfoUseCase(
     private suspend fun proceedWithoutOrder(
         userWalletId: UserWalletId,
     ): Either<TangemPayCustomerInfoError, MainScreenCustomerInfo> {
-        Timber.tag(TAG).d("proceedWithoutOrder")
         return repository.getCustomerInfo(userWalletId)
             .mapLeft { error ->
                 Timber.tag(TAG).e("mapErrorForCustomer: $error")
                 error.mapErrorForCustomer()
             }
             .map { customerInfo ->
-                Timber.tag(TAG).d("customerInfo")
+                Timber.tag(TAG).i("customerInfo")
                 if (customerInfo.cardInfo == null && customerInfo.isKycApproved) {
                     // If order id wasn't saved -> start order creation and get customer info
                     repository.createOrder(userWalletId)
