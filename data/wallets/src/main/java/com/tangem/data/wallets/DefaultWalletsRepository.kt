@@ -5,22 +5,22 @@ import arrow.core.left
 import arrow.core.right
 import com.tangem.data.wallets.converters.UserWalletRemoteInfoConverter
 import com.tangem.datasource.api.common.AuthProvider
+import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.common.response.ApiResponseError.HttpException
 import com.tangem.datasource.api.common.response.fold
 import com.tangem.datasource.api.common.response.getOrThrow
+import com.tangem.datasource.api.common.response.isNetworkError
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.converters.WalletIdBodyConverter
-import com.tangem.datasource.api.tangemTech.models.PromocodeActivationBody
-import com.tangem.datasource.api.tangemTech.models.SeedPhraseNotificationDTO
+import com.tangem.datasource.api.tangemTech.models.*
 import com.tangem.datasource.api.tangemTech.models.SeedPhraseNotificationDTO.Status
-import com.tangem.datasource.api.tangemTech.models.WalletBody
-import com.tangem.datasource.api.tangemTech.models.WalletType
 import com.tangem.datasource.local.datastore.RuntimeStateStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.PreferencesKeys.SEED_FIRST_NOTIFICATION_SHOW_TIME
 import com.tangem.datasource.local.preferences.utils.*
 import com.tangem.datasource.local.userwallet.UserWalletsStore
+import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.models.SeedPhraseNotificationsStatus
@@ -30,13 +30,15 @@ import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.utils.WEEK_MILLIS
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runCatching
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 typealias SeedPhraseNotificationsStatuses = Map<UserWalletId, SeedPhraseNotificationsStatus>
 
-@Suppress("TooManyFunctions", "LargeClass")
+@Suppress("TooManyFunctions", "LargeClass", "LongParameterList")
 internal class DefaultWalletsRepository(
     private val appPreferencesStore: AppPreferencesStore,
     private val tangemTechApi: TangemTechApi,
@@ -44,6 +46,8 @@ internal class DefaultWalletsRepository(
     private val seedPhraseNotificationVisibilityStore: RuntimeStateStore<SeedPhraseNotificationsStatuses>,
     private val dispatchers: CoroutineDispatcherProvider,
     private val authProvider: AuthProvider,
+    private val accountsFeatureToggles: AccountsFeatureToggles,
+    private val moshi: com.squareup.moshi.Moshi,
 ) : WalletsRepository {
 
     private val upgradeWalletNotificationDisabled: MutableStateFlow<Set<UserWalletId>> =
@@ -388,24 +392,58 @@ internal class DefaultWalletsRepository(
 
     override suspend fun associateWallets(applicationId: String, wallets: List<UserWallet>) =
         withContext(dispatchers.io) {
-            val publicKeys = authProvider.getCardsPublicKeys()
-            val walletsBody = wallets.map { userWallet ->
-                WalletIdBodyConverter.convert(
-                    userWallet = userWallet,
-                    publicKeys = if (userWallet is UserWallet.Cold) {
-                        publicKeys.filterKeys {
-                            userWallet.cardsInWallet.contains(it)
-                        }
-                    } else {
-                        emptyMap()
-                    },
-                )
-            }
+            if (accountsFeatureToggles.isFeatureEnabled) {
+                val associateApplicationIdWithWallets: suspend () -> ApiResponse<Unit> = {
+                    tangemTechApi.associateApplicationIdWithWalletsV2(
+                        applicationId = applicationId,
+                        body = AssociateApplicationIdWithWalletsBody(
+                            walletIds = wallets.map { it.walletId.stringValue }.distinct(),
+                        ),
+                    )
+                }
 
-            tangemTechApi.associateApplicationIdWithWallets(
-                applicationId = applicationId,
-                body = walletsBody,
-            ).getOrThrow()
+                val apiResponse = associateApplicationIdWithWallets()
+
+                if (apiResponse is ApiResponse.Success) return@withContext
+
+                if (apiResponse is ApiResponse.Error &&
+                    apiResponse.cause.isNetworkError(HttpException.Code.BAD_REQUEST)
+                ) {
+                    val errorBody = (apiResponse.cause as? HttpException)?.errorBody
+                        ?: error("Bad Request must have error body")
+
+                    val adapter = moshi.adapter(AssociateAppWithWalletsErrorResponse::class.java)
+                    val errorResponse = adapter.fromJson(errorBody)
+                        ?: error("Cannot parse error body: $errorBody")
+
+                    errorResponse.missingWalletIds
+                        .map {
+                            async { createWallet(userWalletId = UserWalletId(it)) }
+                        }
+                        .awaitAll()
+
+                    associateApplicationIdWithWallets().getOrThrow()
+                }
+            } else {
+                val publicKeys = authProvider.getCardsPublicKeys()
+                val walletsBody = wallets.map { userWallet ->
+                    WalletIdBodyConverter.convert(
+                        userWallet = userWallet,
+                        publicKeys = if (userWallet is UserWallet.Cold) {
+                            publicKeys.filterKeys {
+                                userWallet.cardsInWallet.contains(it)
+                            }
+                        } else {
+                            emptyMap()
+                        },
+                    )
+                }
+
+                tangemTechApi.associateApplicationIdWithWallets(
+                    applicationId = applicationId,
+                    body = walletsBody,
+                ).getOrThrow()
+            }
         }
 
     override suspend fun activatePromoCode(
