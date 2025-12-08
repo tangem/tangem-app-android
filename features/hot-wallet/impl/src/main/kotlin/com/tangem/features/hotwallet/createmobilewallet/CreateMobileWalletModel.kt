@@ -5,6 +5,9 @@ import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.ui.message.dialog.Dialogs.hotWalletCreationNotSupportedDialog
+import com.tangem.domain.hotwallet.IsHotWalletCreationSupported
 import com.tangem.domain.wallets.builder.HotUserWalletBuilder
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
 import com.tangem.domain.wallets.usecase.SyncWalletWithRemoteUseCase
@@ -32,6 +35,8 @@ internal class CreateMobileWalletModel @Inject constructor(
     private val router: Router,
     private val tangemHotSdk: TangemHotSdk,
     private val trackingContextProxy: TrackingContextProxy,
+    private val isHotWalletCreationSupported: IsHotWalletCreationSupported,
+    private val uiMessageSender: UiMessageSender,
 ) : Model() {
 
     internal val uiState: StateFlow<CreateMobileWalletUM>
@@ -54,10 +59,13 @@ internal class CreateMobileWalletModel @Inject constructor(
     }
 
     private fun onImportClick() {
+        checkHotWalletCreationSupported(notSupported = { return })
         router.push(AppRoute.AddExistingWallet)
     }
 
     private fun onCreateClick() {
+        checkHotWalletCreationSupported(notSupported = { return })
+
         modelScope.launch {
             uiState.update {
                 it.copy(createButtonLoading = true)
@@ -70,15 +78,25 @@ internal class CreateMobileWalletModel @Inject constructor(
 
                 saveUserWalletUseCase(userWallet)
 
-                launch(NonCancellable) {
+                launch(dispatchers.main + NonCancellable) {
                     syncWalletWithRemoteUseCase(userWalletId = userWallet.walletId)
                 }
+
                 router.replaceAll(AppRoute.Wallet)
             }.onFailure { throwable ->
                 Timber.e(throwable)
 
                 uiState.update { it.copy(createButtonLoading = false) }
             }
+        }
+    }
+
+    private inline fun checkHotWalletCreationSupported(notSupported: () -> Unit) {
+        if (!isHotWalletCreationSupported()) {
+            uiMessageSender.send(
+                hotWalletCreationNotSupportedDialog(isHotWalletCreationSupported.getLeastVersionName()),
+            )
+            notSupported()
         }
     }
 }
