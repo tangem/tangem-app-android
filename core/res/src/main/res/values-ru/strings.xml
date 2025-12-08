@@ -274,7 +274,7 @@
   <string name="common_from">Из</string>
   <string name="common_from_wallet_name">Из %s</string>
   <string name="common_generate_addresses">Синхронизировать адреса</string>
-  <string name="common_get_started">Начать зарабатывать</string>
+  <string name="common_get_started">Начать</string>
   <string name="common_get_token">Получить токен</string>
   <string name="common_go_to_provider">К провайдеру</string>
   <string name="common_go_to_token">Перейти в токен</string>
@@ -576,7 +576,7 @@
   <string name="hw_backup_need_title">Сначала завершите создание резервной копии</string>
   <string name="hw_backup_no_backup">Не завершено</string>
   <string name="hw_backup_section_other_title">Другие способы</string>
-  <string name="hw_backup_seed_description">Физические устройства, которые надёжно хранят ваш приватный ключ офлайн.</string>
+  <string name="hw_backup_seed_description">Сохраните свою recovery-фразу вручную в надёжном месте. Держите её в секрете, чтобы защитить свои средства.</string>
   <string name="hw_backup_seed_title">Фраза восстановления</string>
   <string name="hw_backup_to_secure_description">Чтобы защитить ваш кошелёк с помощью кода доступа, сначала завершите резервное копирование.</string>
   <string name="hw_backup_to_upgrade_description">Чтобы улучшить кошелёк до аппаратного, сначала создайте резервную копию.</string>
@@ -1075,7 +1075,7 @@
   <string name="save_user_wallet_agreement_notice">Обратите внимание, что для совершения транзакции с вашими средствами по-прежнему потребуется ваша карта или кольцо</string>
   <string name="scan_card_settings_button">Сканировать</string>
   <string name="scan_card_settings_message">Отсканируйте карту или кольцо, чтобы изменить ее настройки. Изменения затронут только ту карту или кольцо, которые вы отсканировали, и не повлияют на другие устройства, привязанные к вашему кошельку.</string>
-  <string name="scan_card_settings_title">Приготовьте свой Tangem!</string>
+  <string name="scan_card_settings_title">Приготовьте устройство Tangem!</string>
   <string name="security_alert_title">Уведомление безопасности</string>
   <string name="seed_warning_no">Нет</string>
   <string name="seed_warning_yes">Да</string>
@@ -1538,6 +1538,7 @@
   <string name="wallet_import_google_drive_description">Восстановите существующий кошелек через Google Drive.</string>
   <string name="wallet_import_google_drive_title">Импорт из Google Drive</string>
   <string name="wallet_import_navtitle">Добавить существующий кошелек</string>
+  <string name="wallet_import_scan_description">Физические устройства, которые безопасно хранят ваш приватный ключ офлайн.</string>
   <string name="wallet_import_scan_title">Сканировать кошелек Tangem</string>
   <string name="wallet_import_seed_description">Импортируйте существующий кошелек через вашу фразу восстановления.</string>
   <string name="wallet_import_seed_navtitle">Имрортировать кошелек</string>
@@ -1854,9 +1855,9 @@
   <string name="yield_module_token_details_earn_notification_earning_on_your_balance_title">Режим доходности</string>
   <string name="yield_module_token_details_earn_notification_processing">Включение режима доходности</string>
   <string name="yield_module_token_details_earn_notification_title">Режим доходности</string>
-  <string name="yield_module_transaction_enter">Режим доходности включен</string>
+  <string name="yield_module_transaction_enter">Включение режима доходности</string>
   <string name="yield_module_transaction_enter_subtitle">%1$s отправлено в Aave</string>
-  <string name="yield_module_transaction_exit">Режим доходности выключен</string>
+  <string name="yield_module_transaction_exit">Отключение режима доходности</string>
   <string name="yield_module_transaction_exit_subtitle">%1$s выведено из Aave</string>
   <string name="yield_module_transaction_topup">Перевод средств в Aave</string>
   <string name="yield_module_transaction_topup_subtitle">%1$s отправлено в Aave</string>

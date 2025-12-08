@@ -3,6 +3,10 @@
   <string name="access_code_alert_skip_description">Without an access code, your wallet is not secure.</string>
   <string name="access_code_alert_skip_ok">Skip anyway</string>
   <string name="access_code_alert_skip_title">Access code not set</string>
+  <string name="access_code_alert_validation_cancel">Change code</string>
+  <string name="access_code_alert_validation_description">Your access code will be used to unlock your wallet and to protect access to the assets</string>
+  <string name="access_code_alert_validation_ok">Use anyway</string>
+  <string name="access_code_alert_validation_title">This access code can be easily guessed</string>
   <string name="access_code_check_title">Enter access code</string>
   <string name="access_code_check_warining_delete">Wrong access code. Your mobile wallet will be deleted after %s more incorrect attempts.</string>
   <string name="access_code_check_warining_lock">Wrong access code. The app will be locked after %s more failed attempts</string>
@@ -596,7 +600,7 @@
   <string name="hw_backup_need_title">Finalize backup first</string>
   <string name="hw_backup_no_backup">Incomplete</string>
   <string name="hw_backup_section_other_title">Other methods</string>
-  <string name="hw_backup_seed_description">Physical devices that securely store your private key offline.</string>
+  <string name="hw_backup_seed_description">Manually save your recovery phrase in a secure place and keep it private to protect your funds.</string>
   <string name="hw_backup_seed_title">Recovery phrase</string>
   <string name="hw_backup_to_secure_description">To secure your wallet with a Access Code, complete the backup first.</string>
   <string name="hw_backup_to_upgrade_description">To upgrade your wallet to hardware, back it up first.</string>
@@ -788,6 +792,10 @@
   <string name="markets_token_details_volume">Volume</string>
   <string name="markets_tooltip_message">Pull this up or tap the search bar to add tokens directly from the market</string>
   <string name="markets_tooltip_title">Add tokens</string>
+  <string name="markets_yield_supply_banner_description">Power up your assets while supplying them with instant access. %s</string>
+  <string name="markets_yield_supply_banner_title">Activate Yield Mode</string>
+  <string name="mobile_wallet_requires_min_os_warning_body">You must update to %1$s in order to create mobile wallet</string>
+  <string name="mobile_wallet_requires_min_os_warning_title">Mobile Wallet requires %1$s or later</string>
   <string name="news_all_news">All news</string>
   <string name="news_stay_in_the_loop">Stay in the loop</string>
   <string name="nfc_error_unavailable">NFC is not available on your device</string>
@@ -1450,6 +1458,8 @@
   <string name="tangempay_failed_to_issue_card">Failed to issue card</string>
   <string name="tangempay_failed_to_issue_card_retry_description">A technical error has occurred, please try again by clicking the button below.</string>
   <string name="tangempay_failed_to_issue_card_support_description">A technical error has occurred, please contact support.</string>
+  <string name="tangempay_get_banner_description">Use your crypto for real world spending. \nIt\'s a payment card unlike any other.</string>
+  <string name="tangempay_get_tangem_pay">Get Tangem Pay</string>
   <string name="tangempay_issue_card_notification_description">It usually takes up to 15 minutes</string>
   <string name="tangempay_issue_card_notification_title">Setting up your Tangem Card</string>
   <string name="tangempay_issuing_your_card">Issuing your card</string>
@@ -1474,6 +1484,7 @@
   <string name="tangempay_service_unavailable_title">Service temporarily unavailable</string>
   <string name="tangempay_service_unreachable_try_later">The service is currently unreachable. Please try again later.</string>
   <string name="tangempay_sync_needed">Sync needed</string>
+  <string name="tangempay_tangem_visa_card">Tangem Visa Card</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay is temporarily unavailable</string>
   <string name="tangempay_title">Tangem Pay</string>
   <string name="tangempay_use_tangem_device_to_restore_payment_account">Use your card or ring to restore access to your payment account</string>
@@ -1520,6 +1531,7 @@
   <string name="transaction_history_multiple_addresses">Multiple addresses</string>
   <string name="transaction_history_not_supported_description">Transaction history is currently not supported for this blockchain. But don\'t worry, we\'re working on it! In the meantime you can check it in the explorer.</string>
   <string name="transaction_history_operation">Operation</string>
+  <string name="transaction_history_transaction_for_address">for: %s</string>
   <string name="transaction_history_transaction_from_address">from: %s</string>
   <string name="transaction_history_transaction_to_address">to: %s</string>
   <string name="transaction_history_transaction_validator">validator: %s</string>
@@ -1973,6 +1985,7 @@
   <string name="yield_module_fee_policy_tangem_service_fee_title">Tangem also takes a 15% service fee on yield generated.</string>
   <string name="yield_module_high_fee_error">Your funds will be automatically supplied to Aave once network fees are lower or your balance meets the minimum required amount.</string>
   <string name="yield_module_historical_returns">Historical returns</string>
+  <string name="yield_module_main_screen_promo_banner_message">"Enable %1$s%% APY on your balance"</string>
   <string name="yield_module_main_view_approve_notification_description">Approval for your token in Yield Mode has been revoked. Open the token to grant permission again.</string>
   <string name="yield_module_main_view_approve_notification_title">Token approval needed</string>
   <string name="yield_module_network_fee_unreachable_notification_description">Check your network connection</string>
@@ -2016,12 +2029,16 @@
   <string name="yield_module_token_details_earn_notification_earning_on_your_balance_title">Yield Mode</string>
   <string name="yield_module_token_details_earn_notification_processing">Enabling Yield Mode</string>
   <string name="yield_module_token_details_earn_notification_title">Yield Mode</string>
-  <string name="yield_module_transaction_enter">Yield Mode enabled</string>
+  <string name="yield_module_transaction_deploy_contract">Yield Mode contract deploy</string>
+  <string name="yield_module_transaction_enter">Yield Mode enable</string>
   <string name="yield_module_transaction_enter_subtitle">%1$s supplied to Aave</string>
-  <string name="yield_module_transaction_exit">Yield Mode disabled</string>
+  <string name="yield_module_transaction_exit">Yield Mode disable</string>
   <string name="yield_module_transaction_exit_subtitle">%1$s withdrawn from Aave</string>
+  <string name="yield_module_transaction_initialize">Yield Mode initialize</string>
+  <string name="yield_module_transaction_reactivate">Yield Mode reactivate</string>
   <string name="yield_module_transaction_topup">Supply to Aave</string>
   <string name="yield_module_transaction_topup_subtitle">%1$s supplied to Aave</string>
+  <string name="yield_module_transaction_withdraw">Withdraw from Aave</string>
   <string name="yield_module_transfer_mode_automatic">Automatic</string>
   <string name="yield_module_unable_to_cover_fee_description">Add some %1$s %2$s to cover the network fee for transactions.</string>
   <string name="yield_module_unable_to_cover_fee_title">Unable to cover %s fee</string>
