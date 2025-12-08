@@ -15,7 +15,6 @@ import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
 import com.tangem.domain.card.common.visa.VisaUtilities
 import com.tangem.domain.visa.error.VisaActivationError
-import com.tangem.operations.ScanTask
 import com.tangem.operations.derivation.DeriveWalletPublicKeyTask
 import com.tangem.operations.sign.SignHashCommand
 
@@ -92,25 +91,7 @@ class TangemPaySignWithdrawalHashTask(
                             ?: targetWalletPublicKey.toDecompressedPublicKey(),
                     ).asRSVLegacyEVM().toHexString().lowercase()
 
-                    scanCard(
-                        session = session,
-                        callback = callback,
-                        signedData = rsvSignature,
-                    )
-                }
-                is CompletionResult.Failure -> {
-                    callback(CompletionResult.Failure(result.error))
-                }
-            }
-        }
-    }
-
-    private fun scanCard(signedData: String, session: CardSession, callback: CompletionCallback<String>) {
-        val scanTask = ScanTask()
-        scanTask.run(session) { result ->
-            when (result) {
-                is CompletionResult.Success -> {
-                    callback(CompletionResult.Success(signedData))
+                    callback(CompletionResult.Success(rsvSignature))
                 }
                 is CompletionResult.Failure -> {
                     callback(CompletionResult.Failure(result.error))
