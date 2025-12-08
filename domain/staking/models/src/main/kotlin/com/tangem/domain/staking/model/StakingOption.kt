@@ -39,11 +39,11 @@ sealed interface StakingOption {
      * P2P pooled staking option
      * Wraps P2P ETH Pool vault information
      */
-    data class P2P(val vault: P2PEthPoolVault) : StakingOption {
+    data class P2P(val vaults: List<P2PEthPoolVault>) : StakingOption {
         override val integrationId: String = "p2p-ethereum-pooled"
-        override val apy: SerializedBigDecimal = vault.apy
+        override val apy: SerializedBigDecimal = vaults.maxOf { it.apy }
         override val token: YieldToken = createEthToken()
-        override val isAvailable: Boolean = !vault.isPrivate
+        override val isAvailable: Boolean = vaults.isNotEmpty()
 
         private fun createEthToken(): YieldToken { // TODO
             return YieldToken(
