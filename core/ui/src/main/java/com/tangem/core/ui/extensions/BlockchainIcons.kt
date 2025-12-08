@@ -8,6 +8,12 @@ import com.tangem.core.ui.R
 fun getActiveIconRes(blockchainId: String): Int {
     return when (blockchainId) {
         "ink", "ink/test" -> R.drawable.img_ink_22
+        "lisk", "lisk/test" -> R.drawable.img_lisk_22
+        "soneium", "soneium/test" -> R.drawable.img_soneium_22
+        "mode", "mode/test" -> R.drawable.img_mode_22
+        "unichain", "unichain/test" -> R.drawable.img_unichain_22
+        "celo", "celo/test" -> R.drawable.img_celo_22
+        "fraxtal", "fraxtal/test" -> R.drawable.img_fraxtal_22
         "ARBITRUM-ONE", "ARBITRUM/test" -> R.drawable.img_arbitrum_22
         "BTC", "BTC/test" -> R.drawable.img_btc_22
         "BCH" -> R.drawable.img_btc_cash_22
@@ -108,6 +114,12 @@ fun getActiveIconRes(blockchainId: String): Int {
 fun getActiveIconResByCoinId(coinId: String): Int {
     return when (coinId) {
         "ink-ethereum" -> R.drawable.img_ink_22
+        "lisk-ethereum" -> R.drawable.img_lisk_22
+        "soneium-ethereum" -> R.drawable.img_soneium_22
+        "mode-ethereum" -> R.drawable.img_mode_22
+        "unichain-ethereum" -> R.drawable.img_unichain_22
+        "celo-ethereum" -> R.drawable.img_celo_22
+        "fraxtal-ethereum" -> R.drawable.img_fraxtal_22
         "binancecoin" -> R.drawable.img_bsc_22
         "bitcoin" -> R.drawable.img_btc_22
         "bitcoin-cash" -> R.drawable.img_btc_cash_22
@@ -205,6 +217,12 @@ fun getActiveIconResByCoinId(coinId: String): Int {
 fun getGreyedOutIconRes(blockchainId: String): Int {
     return when (blockchainId) {
         "ink", "ink/test" -> R.drawable.ic_ink_22
+        "lisk", "lisk/test" -> R.drawable.ic_lisk_22
+        "soneium", "soneium/test" -> R.drawable.ic_soneium_22
+        "mode", "mode/test" -> R.drawable.ic_mode_22
+        "unichain", "unichain/test" -> R.drawable.ic_unichain_22
+        "celo", "celo/test" -> R.drawable.ic_celo_22
+        "fraxtal", "fraxtal/test" -> R.drawable.ic_fraxtal_22
         "ARBITRUM-ONE", "ARBITRUM/test" -> R.drawable.ic_arbitrum_22
         "BTC", "BTC/test" -> R.drawable.ic_bitcoin_16
         "BCH" -> R.drawable.ic_bitcoin_cash_16

@@ -161,6 +161,16 @@ internal val Blockchain.moonPaySupportedCurrency: MoonPaySupportedCurrency?
         Hyperliquid, HyperliquidTestnet -> null
         Quai, QuaiTestnet -> null
         Ink, InkTestnet -> null
+        Lisk, LiskTestnet -> null
+        Mode, ModeTestnet -> null
+        SwellChain, SwellChainTestnet -> null
+        Superseed, SuperseedTestnet -> null
+        Bob, BobTestnet -> null
+        Soneium, SoneiumTestnet -> null
+        Unichain, UnichainTestnet -> null
+        MetalL2, MetalL2Testnet -> null
+        Celo, CeloTestnet -> null
+        Fraxtal, FraxtalTestnet -> null
         // Linea, LineaTestnet -> null
         // ArbitrumNova -> null
     }

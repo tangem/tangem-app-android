@@ -214,6 +214,26 @@ data object Wallet2CardConfig : CardConfig {
             Blockchain.QuaiTestnet -> EllipticCurve.Secp256k1
             Blockchain.Ink -> EllipticCurve.Secp256k1
             Blockchain.InkTestnet -> EllipticCurve.Secp256k1
+            Blockchain.Lisk -> EllipticCurve.Secp256k1
+            Blockchain.LiskTestnet -> EllipticCurve.Secp256k1
+            Blockchain.Mode -> EllipticCurve.Secp256k1
+            Blockchain.ModeTestnet -> EllipticCurve.Secp256k1
+            Blockchain.SwellChain -> EllipticCurve.Secp256k1
+            Blockchain.SwellChainTestnet -> EllipticCurve.Secp256k1
+            Blockchain.Superseed -> EllipticCurve.Secp256k1
+            Blockchain.SuperseedTestnet -> EllipticCurve.Secp256k1
+            Blockchain.Bob -> EllipticCurve.Secp256k1
+            Blockchain.BobTestnet -> EllipticCurve.Secp256k1
+            Blockchain.Soneium -> EllipticCurve.Secp256k1
+            Blockchain.SoneiumTestnet -> EllipticCurve.Secp256k1
+            Blockchain.Unichain -> EllipticCurve.Secp256k1
+            Blockchain.UnichainTestnet -> EllipticCurve.Secp256k1
+            Blockchain.MetalL2 -> EllipticCurve.Secp256k1
+            Blockchain.MetalL2Testnet -> EllipticCurve.Secp256k1
+            Blockchain.Celo -> EllipticCurve.Secp256k1
+            Blockchain.CeloTestnet -> EllipticCurve.Secp256k1
+            Blockchain.Fraxtal -> EllipticCurve.Secp256k1
+            Blockchain.FraxtalTestnet -> EllipticCurve.Secp256k1
             // Blockchain.Linea -> EllipticCurve.Secp256k1
             // Blockchain.LineaTestnet -> EllipticCurve.Secp256k1
             // Blockchain.ArbitrumNova -> EllipticCurve.Secp256k1

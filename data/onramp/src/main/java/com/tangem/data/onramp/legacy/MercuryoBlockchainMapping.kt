@@ -161,6 +161,16 @@ public val Blockchain.mercuryoNetwork: String?
             Blockchain.Hyperliquid, Blockchain.HyperliquidTestnet -> null
             Blockchain.Quai, Blockchain.QuaiTestnet -> null
             Blockchain.Ink, Blockchain.InkTestnet -> null
+            Blockchain.Lisk, Blockchain.LiskTestnet -> null
+            Blockchain.Mode, Blockchain.ModeTestnet -> null
+            Blockchain.SwellChain, Blockchain.SwellChainTestnet -> null
+            Blockchain.Superseed, Blockchain.SuperseedTestnet -> null
+            Blockchain.Bob, Blockchain.BobTestnet -> null
+            Blockchain.Soneium, Blockchain.SoneiumTestnet -> null
+            Blockchain.Unichain, Blockchain.UnichainTestnet -> null
+            Blockchain.MetalL2, Blockchain.MetalL2Testnet -> null
+            Blockchain.Celo, Blockchain.CeloTestnet -> null
+            Blockchain.Fraxtal, Blockchain.FraxtalTestnet -> null
             // Blockchain.Linea, Blockchain.LineaTestnet -> null
             // Blockchain.ArbitrumNova -> null
         }

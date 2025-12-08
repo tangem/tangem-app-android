@@ -106,6 +106,16 @@ internal object BlockchainSDKConfigConverter : Converter<EnvironmentConfigModel,
                 telos = GetBlockAccessToken(jsonRpc = accessTokens.telos?.jsonRPC),
                 tezos = GetBlockAccessToken(rest = accessTokens.tezos?.rest),
                 ink = GetBlockAccessToken(jsonRpc = accessTokens.ink?.jsonRPC),
+                lisk = GetBlockAccessToken(jsonRpc = accessTokens.lisk?.jsonRPC),
+                soneium = GetBlockAccessToken(jsonRpc = accessTokens.soneium?.jsonRPC),
+                mode = GetBlockAccessToken(jsonRpc = accessTokens.mode?.jsonRPC),
+                swellchain = GetBlockAccessToken(jsonRpc = accessTokens.swellChain?.jsonRPC),
+                superseed = GetBlockAccessToken(jsonRpc = accessTokens.superseed?.jsonRPC),
+                bob = GetBlockAccessToken(jsonRpc = accessTokens.bob?.jsonRPC),
+                unichain = GetBlockAccessToken(jsonRpc = accessTokens.unichain?.jsonRPC),
+                metalL2 = GetBlockAccessToken(jsonRpc = accessTokens.metalL2?.jsonRPC),
+                celo = GetBlockAccessToken(jsonRpc = accessTokens.celo?.jsonRPC),
+                fraxtal = GetBlockAccessToken(jsonRpc = accessTokens.fraxtal?.jsonRPC),
             )
         }
     }
