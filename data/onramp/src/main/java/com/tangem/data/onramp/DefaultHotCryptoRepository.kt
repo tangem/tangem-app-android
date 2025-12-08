@@ -11,13 +11,10 @@ import com.tangem.data.onramp.converters.HotCryptoCurrencyConverter
 import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.tangemTech.TangemTechApi
-import com.tangem.datasource.api.tangemTech.models.CurrenciesResponse
 import com.tangem.datasource.api.tangemTech.models.HotCryptoResponse
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
+import com.tangem.datasource.appcurrency.AppCurrencyResponseStore
 import com.tangem.datasource.exchangeservice.hotcrypto.HotCryptoResponseStore
-import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.datasource.local.preferences.PreferencesKeys
-import com.tangem.datasource.local.preferences.utils.getObject
 import com.tangem.datasource.local.token.UserTokensResponseStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.card.common.extensions.canHandleBlockchain
@@ -39,13 +36,13 @@ import timber.log.Timber
 /**
  * Default implementation of [HotCryptoRepository]
  *
- * @property excludedBlockchains    excluded blockchains
- * @property hotCryptoResponseStore store of `HotCryptoResponse`
- * @property userWalletsStore       store of `UserWallet`
- * @property tangemTechApi          tangem tech api
- * @property appPreferencesStore    app preferences store
- * @property dispatchers            dispatchers
- * @property analyticsEventHandler  analytics event handler
+ * @property excludedBlockchains      excluded blockchains
+ * @property hotCryptoResponseStore   store of `HotCryptoResponse`
+ * @property userWalletsStore         store of `UserWallet`
+ * @property tangemTechApi            tangem tech api
+ * @property appCurrencyResponseStore store of current app currency
+ * @property dispatchers              dispatchers
+ * @property analyticsEventHandler    analytics event handler
  *
 [REDACTED_AUTHOR]
  */
@@ -56,7 +53,7 @@ internal class DefaultHotCryptoRepository(
     private val hotCryptoResponseStore: HotCryptoResponseStore,
     private val userWalletsStore: UserWalletsStore,
     private val tangemTechApi: TangemTechApi,
-    private val appPreferencesStore: AppPreferencesStore,
+    private val appCurrencyResponseStore: AppCurrencyResponseStore,
     private val userTokensResponseStore: UserTokensResponseStore,
     private val dispatchers: CoroutineDispatcherProvider,
     private val analyticsEventHandler: AnalyticsEventHandler,
@@ -112,8 +109,8 @@ internal class DefaultHotCryptoRepository(
     }
 
     private fun getHotCryptoFlow(): Flow<HotCryptoResponse?> {
-        return appPreferencesStore
-            .getObject<CurrenciesResponse.Currency>(key = PreferencesKeys.SELECTED_APP_CURRENCY_KEY)
+        return appCurrencyResponseStore
+            .get()
             .map { it?.id ?: "usd" }
             .distinctUntilChanged()
             .map { getHotCrypto(appCurrencyId = it).getOrNull() }
