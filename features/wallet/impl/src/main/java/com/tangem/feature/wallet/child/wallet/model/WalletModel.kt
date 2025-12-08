@@ -20,6 +20,7 @@ import com.tangem.domain.nft.ObserveAndClearNFTCacheIfNeedUseCase
 import com.tangem.domain.notifications.GetIsHuaweiDeviceWithoutGoogleServicesUseCase
 import com.tangem.domain.notifications.repository.NotificationsRepository
 import com.tangem.domain.pay.repository.OnboardingRepository
+import com.tangem.domain.pay.usecase.TangemPayMainScreenCustomerInfoUseCase
 import com.tangem.domain.settings.*
 import com.tangem.domain.tokens.RefreshMultiCurrencyWalletQuotesUseCase
 import com.tangem.domain.wallets.usecase.*
@@ -94,7 +95,7 @@ internal class WalletModel @Inject constructor(
     private val tangemPayOnboardingRepository: OnboardingRepository,
     private val yieldSupplyFeatureToggles: YieldSupplyFeatureToggles,
     private val accountsFeatureToggles: AccountsFeatureToggles,
-    private val tangemPayMainInfoManager: TangemPayMainInfoManager,
+    private val tangemPayMainScreenCustomerInfoUseCase: TangemPayMainScreenCustomerInfoUseCase,
     val screenLifecycleProvider: ScreenLifecycleProvider,
     val innerWalletRouter: InnerWalletRouter,
 ) : Model() {
@@ -371,15 +372,15 @@ internal class WalletModel @Inject constructor(
             if (isShouldLaunchPeriodicUpdate) {
                 updateTangemPayJobHolder.cancel()
                 modelScope.launch {
-                    tangemPayMainInfoManager.refreshTangemPayInfo(userWalletId)
+                    tangemPayMainScreenCustomerInfoUseCase.fetch(userWalletId)
                     while (isActive) {
                         delay(TANGEM_PAY_UPDATE_INTERVAL)
-                        tangemPayMainInfoManager.refreshTangemPayInfo(userWalletId)
+                        tangemPayMainScreenCustomerInfoUseCase.fetch(userWalletId)
                     }
                 }.saveIn(updateTangemPayJobHolder)
             } else {
                 // Don't refresh customer info periodically if the card was already issued, only update on swipe to refresh
-                tangemPayMainInfoManager.refreshTangemPayInfo(userWalletId)
+                tangemPayMainScreenCustomerInfoUseCase.fetch(userWalletId)
             }
         }.launchIn(modelScope)
     }
