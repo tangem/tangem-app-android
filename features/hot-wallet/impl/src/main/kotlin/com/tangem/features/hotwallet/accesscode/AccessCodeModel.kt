@@ -11,6 +11,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.hotwallet.IsAccessCodeSimpleUseCase
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.settings.CanUseBiometryUseCase
@@ -56,6 +57,7 @@ internal class AccessCodeModel @Inject constructor(
     private val shouldShowAskBiometryUseCase: ShouldShowAskBiometryUseCase,
     private val setAskBiometryShownUseCase: SetAskBiometryShownUseCase,
     private val canUseBiometryUseCase: CanUseBiometryUseCase,
+    private val isAccessCodeSimpleUseCase: IsAccessCodeSimpleUseCase,
     private val uiMessageSender: UiMessageSender,
 ) : Model() {
 
@@ -117,14 +119,43 @@ internal class AccessCodeModel @Inject constructor(
         modelScope.launch {
             delay(timeMillis = SUCCESS_DISPLAY_DURATION_MS)
 
-            params.callbacks.onNewAccessCodeInput(params.userWalletId, uiState.value.accessCode)
-
-            uiState.update { currentState ->
-                currentState.copy(
-                    accessCode = "",
-                )
+            if (isAccessCodeSimpleUseCase(uiState.value.accessCode)) {
+                showSimpleAccessCodeDialog()
+            } else {
+                setNewCode()
             }
         }
+    }
+
+    private fun setNewCode() {
+        params.callbacks.onNewAccessCodeInput(params.userWalletId, uiState.value.accessCode)
+
+        uiState.update { currentState ->
+            currentState.copy(
+                accessCode = "",
+            )
+        }
+    }
+
+    private fun showSimpleAccessCodeDialog() {
+        uiMessageSender.send(
+            DialogMessage(
+                title = resourceReference(R.string.access_code_alert_validation_title),
+                message = resourceReference(R.string.access_code_alert_validation_description),
+                firstAction = EventMessageAction(
+                    title = resourceReference(R.string.access_code_alert_validation_cancel),
+                    onClick = {
+                        uiState.update { currentState ->
+                            currentState.copy(onAccessCodeChange = ::onAccessCodeChange)
+                        }
+                    },
+                ),
+                secondAction = EventMessageAction(
+                    title = resourceReference(R.string.access_code_alert_validation_ok),
+                    onClick = ::setNewCode,
+                ),
+            ),
+        )
     }
 
     private suspend fun showErrorAndReset() {
