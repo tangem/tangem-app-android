@@ -3,8 +3,14 @@ package com.tangem.tap.di.domain
 import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.account.fetcher.SingleAccountListFetcher
 import com.tangem.domain.account.repository.AccountsCRUDRepository
+import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
+import com.tangem.domain.account.status.usecase.ArchiveCryptoPortfolioUseCase
+import com.tangem.domain.account.status.usecase.RecoverCryptoPortfolioUseCase
+import com.tangem.domain.account.status.utils.CryptoCurrencyBalanceFetcher
 import com.tangem.domain.account.tokens.MainAccountTokensMigration
 import com.tangem.domain.account.usecase.*
+import com.tangem.feature.referral.data.ExternalReferralRepository
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -32,25 +38,43 @@ internal object AccountDomainModule {
     @Provides
     @Singleton
     fun provideUpdateCryptoPortfolioUseCase(
+        singleAccountListFetcher: SingleAccountListFetcher,
         accountsCRUDRepository: AccountsCRUDRepository,
     ): UpdateCryptoPortfolioUseCase {
-        return UpdateCryptoPortfolioUseCase(crudRepository = accountsCRUDRepository)
+        return UpdateCryptoPortfolioUseCase(
+            singleAccountListFetcher = singleAccountListFetcher,
+            crudRepository = accountsCRUDRepository,
+        )
     }
 
     @Provides
     @Singleton
     fun provideArchiveCryptoPortfolioUseCase(
+        singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
         accountsCRUDRepository: AccountsCRUDRepository,
+        referralRepository: ExternalReferralRepository,
     ): ArchiveCryptoPortfolioUseCase {
-        return ArchiveCryptoPortfolioUseCase(crudRepository = accountsCRUDRepository)
+        return ArchiveCryptoPortfolioUseCase(
+            singleAccountStatusListSupplier = singleAccountStatusListSupplier,
+            crudRepository = accountsCRUDRepository,
+            referralRepository = referralRepository,
+        )
     }
 
     @Provides
     @Singleton
     fun provideRecoverCryptoPortfolioUseCase(
         accountsCRUDRepository: AccountsCRUDRepository,
+        mainAccountTokensMigration: MainAccountTokensMigration,
+        cryptoCurrencyBalanceFetcher: CryptoCurrencyBalanceFetcher,
+        singleAccountListFetcher: SingleAccountListFetcher,
     ): RecoverCryptoPortfolioUseCase {
-        return RecoverCryptoPortfolioUseCase(crudRepository = accountsCRUDRepository)
+        return RecoverCryptoPortfolioUseCase(
+            crudRepository = accountsCRUDRepository,
+            mainAccountTokensMigration = mainAccountTokensMigration,
+            cryptoCurrencyBalanceFetcher = cryptoCurrencyBalanceFetcher,
+            singleAccountListFetcher = singleAccountListFetcher,
+        )
     }
 
     @Provides
@@ -76,6 +100,18 @@ internal object AccountDomainModule {
         return IsAccountsModeEnabledUseCase(
             crudRepository = accountsCRUDRepository,
             accountsFeatureToggles = accountsFeatureToggles,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideApplyAccountListSortingUseCase(
+        accountsCRUDRepository: AccountsCRUDRepository,
+        dispatchers: CoroutineDispatcherProvider,
+    ): ApplyAccountListSortingUseCase {
+        return ApplyAccountListSortingUseCase(
+            accountsCRUDRepository = accountsCRUDRepository,
+            dispatchers = dispatchers,
         )
     }
 }

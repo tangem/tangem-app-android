@@ -2,63 +2,61 @@ package com.tangem.domain.account.models
 
 import arrow.core.Either
 import arrow.core.left
+import arrow.core.right
 import com.google.common.truth.Truth
-import com.tangem.domain.account.utils.createAccount
-import com.tangem.domain.account.utils.createAccounts
+import com.tangem.domain.models.TokensGroupType
+import com.tangem.domain.models.TokensSortType
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountName
 import com.tangem.domain.models.account.CryptoPortfolioIcon
+import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.test.core.ProvideTestModels
+import com.tangem.test.mock.MockAccounts
+import com.tangem.test.mock.MockAccounts.createAccount
+import com.tangem.test.mock.MockAccounts.createAccountList
+import com.tangem.test.mock.MockAccounts.createAccounts
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.MethodSource
 
 /**
 [REDACTED_AUTHOR]
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class AccountListTest {
+internal class AccountListTest {
 
     @Test
     fun mainAccount() {
-        // Arrange
-        val mainAccount = Account.CryptoPortfolio.createMainAccount(userWalletId = userWalletId)
-
-        val accountList = AccountList(
-            userWalletId = userWalletId,
-            accounts = setOf(mainAccount),
-            totalAccounts = 1,
-        )
-            .getOrNull()!!
-
         // Act
-        val actual = accountList.mainAccount
+        val actual = MockAccounts.onlyMainAccount.mainAccount
 
         // Assert
-        val expected = mainAccount
+        val expected = Account.CryptoPortfolio.createMainAccount(userWalletId = userWalletId)
         Truth.assertThat(actual).isEqualTo(expected)
     }
 
     @Test
     fun canAddMoreAccounts() {
         // Arrange
-        val accountList = AccountList(
-            userWalletId = userWalletId,
-            accounts = createAccounts(userWalletId = userWalletId, count = 2),
-            totalAccounts = 2,
-        ).getOrNull()!!
+        val accountList = createAccountList(activeAccounts = 2)
 
-        val fullAccountList = AccountList(
-            userWalletId = userWalletId,
-            accounts = createAccounts(userWalletId = userWalletId, count = 20),
-            totalAccounts = 20,
-        ).getOrNull()!!
+        val fullAccountList = MockAccounts.fullAccountList
 
         // Act & Assert
         Truth.assertThat(accountList.canAddMoreAccounts).isTrue()
         Truth.assertThat(fullAccountList.canAddMoreAccounts).isFalse()
+    }
+
+    @Test
+    fun activeAccounts() {
+        // Arrange
+        val accountList = createAccountList(activeAccounts = 5, totalAccounts = 10)
+
+        // Act & Assert
+        val expected = 5
+        Truth.assertThat(accountList.activeAccounts).isEqualTo(expected)
     }
 
     @Test
@@ -67,12 +65,9 @@ class AccountListTest {
         val actual = AccountList.empty(userWalletId)
 
         // Assert
-        val expected = AccountList(
-            userWalletId = userWalletId,
-            accounts = setOf(Account.CryptoPortfolio.createMainAccount(userWalletId = userWalletId)),
-            totalAccounts = 1,
-        ).getOrNull()!!
+        val expected = MockAccounts.onlyMainAccount
 
+        // Assert
         Truth.assertThat(actual).isEqualTo(expected)
     }
 
@@ -80,14 +75,44 @@ class AccountListTest {
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     inner class Create {
 
+        @Test
+        fun `invoke with non default sort and group types`() {
+            // Arrange
+            val accounts = createAccounts(count = 5)
+            val sortType = TokensSortType.BALANCE
+            val groupType = TokensGroupType.NETWORK
+
+            // Act
+            val actual = AccountList(
+                userWalletId = userWalletId,
+                accounts = accounts,
+                totalAccounts = accounts.size,
+                totalArchivedAccounts = 0,
+                sortType = sortType,
+                groupType = groupType,
+            )
+
+            // Assert
+            val expected = AccountList(
+                userWalletId = userWalletId,
+                accounts = accounts,
+                totalAccounts = accounts.size,
+                totalArchivedAccounts = 0,
+                sortType = sortType,
+                groupType = groupType,
+            )
+            Truth.assertThat(actual).isEqualTo(expected)
+        }
+
         @ParameterizedTest
-        @MethodSource("provideTestModels")
+        @ProvideTestModels
         fun invoke(model: CreateTestModel) {
             // Act
             val actual = AccountList(
                 userWalletId = userWalletId,
                 accounts = model.accounts,
-                totalAccounts = model.accounts.size,
+                totalAccounts = model.totalAccounts,
+                totalArchivedAccounts = 0,
             )
 
             // Assert
@@ -96,17 +121,21 @@ class AccountListTest {
 
         private fun provideTestModels() = listOf(
             CreateTestModel(
-                accounts = emptySet(),
+                accounts = emptyList(),
                 expected = AccountList.Error.EmptyAccountsList.left(),
             ),
             CreateTestModel(
-                accounts = setOf(
-                    createAccount(userWalletId = userWalletId, derivationIndex = 1),
+                accounts = createAccounts(count = 21),
+                expected = AccountList.Error.ExceedsMaxAccountsCount.left(),
+            ),
+            CreateTestModel(
+                accounts = listOf(
+                    createAccount(derivationIndex = 1),
                 ),
                 expected = AccountList.Error.MainAccountNotFound.left(),
             ),
             CreateTestModel(
-                accounts = setOf(
+                accounts = listOf(
                     Account.CryptoPortfolio.createMainAccount(userWalletId),
                     Account.CryptoPortfolio.createMainAccount(userWalletId).copy(
                         icon = CryptoPortfolioIcon.ofDefaultCustomAccount(),
@@ -114,42 +143,44 @@ class AccountListTest {
                 ),
                 expected = AccountList.Error.ExceedsMaxMainAccountsCount.left(),
             ),
-            createAccounts(userWalletId = userWalletId, count = 1).let {
-                CreateTestModel(
-                    accounts = it,
-                    expected = AccountList(userWalletId = userWalletId, accounts = it, totalAccounts = 1),
-                )
-            },
-            createAccounts(userWalletId = userWalletId, count = 20).let {
-                CreateTestModel(
-                    accounts = it,
-                    expected = AccountList(userWalletId = userWalletId, accounts = it, totalAccounts = 20),
-                )
-            },
             CreateTestModel(
-                accounts = createAccounts(userWalletId = userWalletId, count = 21),
-                expected = AccountList.Error.ExceedsMaxAccountsCount.left(),
-            ),
-            CreateTestModel(
-                accounts = setOf(
-                    createAccount(userWalletId = userWalletId, derivationIndex = 0),
-                    createAccount(userWalletId = userWalletId, derivationIndex = 1),
-                    createAccount(userWalletId = userWalletId, derivationIndex = 1),
+                accounts = listOf(
+                    createAccount(derivationIndex = 0),
+                    createAccount(derivationIndex = 1),
+                    createAccount(derivationIndex = 1),
                 ),
                 expected = AccountList.Error.DuplicateAccountIds.left(),
             ),
             CreateTestModel(
-                accounts = setOf(
-                    createAccount(userWalletId = userWalletId, name = "Name", derivationIndex = 0),
-                    createAccount(userWalletId = userWalletId, name = "Name", derivationIndex = 1),
+                accounts = listOf(
+                    createAccount(name = "Name", derivationIndex = 0),
+                    createAccount(name = "Name", derivationIndex = 1),
                 ),
                 expected = AccountList.Error.DuplicateAccountNames.left(),
             ),
+            CreateTestModel(
+                accounts = createAccounts(count = 2),
+                totalAccounts = 1,
+                expected = AccountList.Error.TotalAccountsLessThanActive.left(),
+            ),
+            createAccountList(activeAccounts = 1).let {
+                CreateTestModel(
+                    accounts = it.accounts,
+                    expected = it.right(),
+                )
+            },
+            createAccountList(activeAccounts = 20).let {
+                CreateTestModel(
+                    accounts = it.accounts,
+                    expected = it.right(),
+                )
+            },
         )
     }
 
     data class CreateTestModel(
-        val accounts: Set<Account>,
+        val accounts: List<Account>,
+        val totalAccounts: Int = accounts.size,
         val expected: Either<AccountList.Error, AccountList>,
     )
 
@@ -158,7 +189,7 @@ class AccountListTest {
     inner class Plus {
 
         @ParameterizedTest
-        @MethodSource("provideTestModels")
+        @ProvideTestModels
         fun invoke(model: PlusTestModel) {
             // Act
             val actual = model.initial.plus(other = model.toAdd)
@@ -171,19 +202,21 @@ class AccountListTest {
             // region Add new account
             run {
                 val mainAccount = Account.CryptoPortfolio.createMainAccount(userWalletId)
-                val newAccount = createAccount(userWalletId = userWalletId, derivationIndex = 1)
+                val newAccount = createAccount(derivationIndex = 1)
 
                 PlusTestModel(
                     initial = AccountList(
                         userWalletId = userWalletId,
-                        accounts = setOf(mainAccount),
+                        accounts = listOf(mainAccount),
                         totalAccounts = 1,
+                        totalArchivedAccounts = 0,
                     ).getOrNull()!!,
                     toAdd = newAccount,
                     expected = AccountList(
                         userWalletId = userWalletId,
-                        accounts = setOf(mainAccount, newAccount),
+                        accounts = listOf(mainAccount, newAccount),
                         totalAccounts = 2,
+                        totalArchivedAccounts = 0,
                     ),
                 )
             },
@@ -196,27 +229,89 @@ class AccountListTest {
                 PlusTestModel(
                     initial = AccountList(
                         userWalletId = userWalletId,
-                        accounts = setOf(mainAccount),
+                        accounts = listOf(mainAccount),
                         totalAccounts = 1,
+                        totalArchivedAccounts = 0,
                     ).getOrNull()!!,
                     toAdd = newAccount,
                     expected = AccountList(
                         userWalletId = userWalletId,
-                        accounts = setOf(newAccount),
+                        accounts = listOf(newAccount),
                         totalAccounts = 1,
+                        totalArchivedAccounts = 0,
                     ),
                 )
             },
             // endregion
+            // region MainAccountNotFound
+            run {
+                val mainAccount = Account.CryptoPortfolio.createMainAccount(userWalletId)
+                val newAccount = Account.CryptoPortfolio(
+                    accountId = mainAccount.accountId,
+                    accountName = mainAccount.accountName,
+                    derivationIndex = DerivationIndex(1).getOrNull()!!,
+                    icon = mainAccount.icon,
+                    cryptoCurrencies = mainAccount.cryptoCurrencies,
+                )
+
+                PlusTestModel(
+                    initial = AccountList(
+                        userWalletId = userWalletId,
+                        accounts = listOf(mainAccount),
+                        totalAccounts = 1,
+                        totalArchivedAccounts = 0,
+                    ).getOrNull()!!,
+                    toAdd = newAccount,
+                    expected = AccountList.Error.MainAccountNotFound.left(),
+                )
+            },
+            // endregion
+            // region ExceedsMaxMainAccountsCount
+            run {
+                val mainAccount = Account.CryptoPortfolio.createMainAccount(userWalletId)
+                val newAccount = Account.CryptoPortfolio.createMainAccount(UserWalletId("012"))
+
+                PlusTestModel(
+                    initial = AccountList(
+                        userWalletId = userWalletId,
+                        accounts = listOf(mainAccount),
+                        totalAccounts = 1,
+                        totalArchivedAccounts = 0,
+                    ).getOrNull()!!,
+                    toAdd = newAccount,
+                    expected = AccountList.Error.ExceedsMaxMainAccountsCount.left(),
+                )
+            },
+            // endregion
+            // region DuplicateAccountNames
+            run {
+                val mainAccount = Account.CryptoPortfolio.createMainAccount(userWalletId)
+                val newAccount = createAccount(derivationIndex = 1).copy(accountName = mainAccount.accountName)
+
+                PlusTestModel(
+                    initial = AccountList(
+                        userWalletId = userWalletId,
+                        accounts = listOf(mainAccount),
+                        totalAccounts = 1,
+                        totalArchivedAccounts = 0,
+                    ).getOrNull()!!,
+                    toAdd = newAccount,
+                    expected = AccountList.Error.DuplicateAccountNames.left(),
+                )
+            },
+            // endregion
+            // region ExceedsMaxAccountsCount
             PlusTestModel(
                 initial = AccountList(
                     userWalletId = userWalletId,
-                    accounts = createAccounts(userWalletId = userWalletId, count = 20),
+                    accounts = createAccounts(count = 20),
                     totalAccounts = 20,
+                    totalArchivedAccounts = 0,
                 ).getOrNull()!!,
-                toAdd = createAccount(userWalletId = userWalletId, derivationIndex = 21),
+                toAdd = createAccount(derivationIndex = 21),
                 expected = AccountList.Error.ExceedsMaxAccountsCount.left(),
             ),
+            // endregion
         )
     }
 
@@ -231,7 +326,7 @@ class AccountListTest {
     inner class Minus {
 
         @ParameterizedTest
-        @MethodSource("provideTestModels")
+        @ProvideTestModels
         fun invoke(model: MinusTestModel) {
             // Act
             val actual = model.initial.minus(model.toRemove)
@@ -244,19 +339,21 @@ class AccountListTest {
             // region Remove existing account
             run {
                 val mainAccount = Account.CryptoPortfolio.createMainAccount(userWalletId)
-                val secondaryAccount = createAccount(userWalletId = userWalletId, derivationIndex = 2)
+                val secondaryAccount = createAccount(derivationIndex = 2)
 
                 MinusTestModel(
                     initial = AccountList(
                         userWalletId = userWalletId,
-                        accounts = setOf(mainAccount, secondaryAccount),
+                        accounts = listOf(mainAccount, secondaryAccount),
                         totalAccounts = 2,
+                        totalArchivedAccounts = 0,
                     ).getOrNull()!!,
                     toRemove = secondaryAccount,
                     expected = AccountList(
                         userWalletId = userWalletId,
-                        accounts = setOf(mainAccount),
+                        accounts = listOf(mainAccount),
                         totalAccounts = 1,
+                        totalArchivedAccounts = 0,
                     ),
                 )
             },
@@ -264,20 +361,19 @@ class AccountListTest {
             // region Remove unexisting account
             run {
                 val mainAccount = Account.CryptoPortfolio.createMainAccount(userWalletId)
-                val notInList = createAccount(userWalletId = userWalletId, derivationIndex = 3)
+                val notInList = createAccount(derivationIndex = 3)
+
+                val accountList = AccountList(
+                    userWalletId = userWalletId,
+                    accounts = listOf(mainAccount),
+                    totalAccounts = 1,
+                    totalArchivedAccounts = 0,
+                )
 
                 MinusTestModel(
-                    initial = AccountList(
-                        userWalletId = userWalletId,
-                        accounts = setOf(mainAccount),
-                        totalAccounts = 1,
-                    ).getOrNull()!!,
+                    initial = accountList.getOrNull()!!,
                     toRemove = notInList,
-                    expected = AccountList(
-                        userWalletId = userWalletId,
-                        accounts = setOf(mainAccount),
-                        totalAccounts = 1,
-                    ),
+                    expected = accountList,
                 )
             },
             // endregion
@@ -288,8 +384,9 @@ class AccountListTest {
                 MinusTestModel(
                     initial = AccountList(
                         userWalletId = userWalletId,
-                        accounts = setOf(mainAccount),
+                        accounts = listOf(mainAccount),
                         totalAccounts = 1,
+                        totalArchivedAccounts = 0,
                     ).getOrNull()!!,
                     toRemove = mainAccount,
                     expected = AccountList.Error.EmptyAccountsList.left(),
@@ -299,13 +396,14 @@ class AccountListTest {
             // region MainAccountNotFound
             run {
                 val mainAccount = Account.CryptoPortfolio.createMainAccount(userWalletId)
-                val secondaryAccount = createAccount(userWalletId = userWalletId, derivationIndex = 2)
+                val secondaryAccount = createAccount(derivationIndex = 2)
 
                 MinusTestModel(
                     initial = AccountList(
                         userWalletId = userWalletId,
-                        accounts = setOf(mainAccount, secondaryAccount),
+                        accounts = listOf(mainAccount, secondaryAccount),
                         totalAccounts = 2,
+                        totalArchivedAccounts = 0,
                     ).getOrNull()!!,
                     toRemove = mainAccount,
                     expected = AccountList.Error.MainAccountNotFound.left(),
@@ -323,6 +421,6 @@ class AccountListTest {
 
     private companion object {
 
-        val userWalletId = UserWalletId("011")
+        val userWalletId = MockAccounts.userWalletId
     }
 }

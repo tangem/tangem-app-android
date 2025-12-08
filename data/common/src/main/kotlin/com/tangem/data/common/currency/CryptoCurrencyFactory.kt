@@ -1,11 +1,13 @@
 package com.tangem.data.common.currency
 
+import com.tangem.blockchain.blockchains.ethereum.Chain
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.blockchainsdk.utils.toCoinId
 import com.tangem.data.common.network.NetworkFactory
+import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
@@ -17,7 +19,7 @@ class CryptoCurrencyFactory(
     private val excludedBlockchains: ExcludedBlockchains,
 ) {
 
-    private val networkFactory by lazy(LazyThreadSafetyMode.NONE) { NetworkFactory(excludedBlockchains) }
+    val networkFactory by lazy(LazyThreadSafetyMode.NONE) { NetworkFactory(excludedBlockchains) }
 
     @Suppress("LongParameterList") // Yep, it's long
     fun createToken(
@@ -47,6 +49,7 @@ class CryptoCurrencyFactory(
         blockchain: Blockchain,
         extraDerivationPath: String?,
         userWallet: UserWallet,
+        accountIndex: DerivationIndex? = null,
     ): CryptoCurrency.Token? {
         if (blockchain == Blockchain.Unknown) {
             Timber.e("Unable to map the SDK token to the domain token with Unknown blockchain")
@@ -57,6 +60,7 @@ class CryptoCurrencyFactory(
             blockchain = blockchain,
             extraDerivationPath = extraDerivationPath,
             userWallet = userWallet,
+            accountIndex = accountIndex,
         ) ?: return null
 
         val id = getTokenId(network, sdkToken)
@@ -74,9 +78,31 @@ class CryptoCurrencyFactory(
     }
 
     fun createCoin(
+        chainId: Int,
+        extraDerivationPath: String?,
+        userWallet: UserWallet,
+        accountIndex: DerivationIndex? = null,
+    ): CryptoCurrency.Coin? {
+        val blockchain: Blockchain? = Chain.entries.find { it.id == chainId }?.blockchain
+
+        return if (blockchain != null) {
+            createCoin(
+                blockchain = blockchain,
+                extraDerivationPath = extraDerivationPath,
+                userWallet = userWallet,
+                accountIndex = accountIndex,
+            )
+        } else {
+            Timber.e("Unable to get blockchain from chainId == $chainId")
+            null
+        }
+    }
+
+    fun createCoin(
         blockchain: Blockchain,
         extraDerivationPath: String?,
         userWallet: UserWallet,
+        accountIndex: DerivationIndex? = null,
     ): CryptoCurrency.Coin? {
         if (blockchain == Blockchain.Unknown) {
             Timber.e("Unable to map the SDK token to the domain token with Unknown blockchain")
@@ -87,6 +113,7 @@ class CryptoCurrencyFactory(
             blockchain = blockchain,
             extraDerivationPath = extraDerivationPath,
             userWallet = userWallet,
+            accountIndex = accountIndex,
         ) ?: return null
 
         return createCoin(network)

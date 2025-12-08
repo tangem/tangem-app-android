@@ -18,13 +18,11 @@ import com.tangem.domain.promo.models.PromoId
 import com.tangem.domain.promo.models.StoryContent
 import com.tangem.feature.referral.domain.ReferralRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.mapLatest
+import com.tangem.utils.coroutines.runCatching
+import com.tangem.utils.coroutines.runSuspendCatching
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
-import com.tangem.utils.coroutines.runCatching
 
 internal class DefaultPromoRepository(
     private val tangemApi: TangemTechApi,
@@ -41,24 +39,38 @@ internal class DefaultPromoRepository(
         return appPreferencesStore.get(
             key = PreferencesKeys.getShouldShowPromoKey(promoId = promoId.name),
             default = true,
-        ).map { shouldShow ->
-            when (promoId) {
-                PromoId.Referral -> runCatching {
-                    !referralRepository.isReferralParticipant(userWalletId) && shouldShow
-                }.getOrDefault(false)
-                PromoId.Sepa -> {
-                    val isActive = getSepaPromoBanner()?.isActive ?: false
+        )
+            .distinctUntilChanged()
+            .map { shouldShow ->
+                when (promoId) {
+                    PromoId.Referral -> runSuspendCatching {
+                        !referralRepository.isReferralParticipant(userWalletId) && shouldShow
+                    }.getOrDefault(false)
+                    PromoId.Sepa -> {
+                        val isActive = getSepaPromoBanner()?.isActive == true
 
-                    isActive && shouldShow
+                        isActive && shouldShow
+                    }
+                    PromoId.VisaPresale -> {
+                        val isActive = getVisaPromoBanner()?.isActive == true
+
+                        isActive && shouldShow
+                    }
+                    PromoId.BlackFriday -> {
+                        val isActive = getBlackFridayPromoBanner()?.isActive == true
+
+                        isActive && shouldShow
+                    }
                 }
             }
-        }
     }
 
     override fun isReadyToShowTokenPromo(promoId: PromoId): Flow<Boolean> {
         return when (promoId) {
             PromoId.Referral -> flowOf(false)
             PromoId.Sepa -> flowOf(false)
+            PromoId.VisaPresale -> flowOf(false)
+            PromoId.BlackFriday -> flowOf(false)
         }
     }
 
@@ -70,7 +82,7 @@ internal class DefaultPromoRepository(
         appPreferencesStore.store(PreferencesKeys.getShouldShowPromoKey(promoId = promoId.name), false)
     }
 
-    override suspend fun isMarketsStakingNotificationHideClicked(): Flow<Boolean> {
+    override fun isMarketsStakingNotificationHideClicked(): Flow<Boolean> {
         return appPreferencesStore.get(
             key = PreferencesKeys.MARKETS_STAKING_NOTIFICATION_HIDE_CLICKED_KEY,
             default = false,
@@ -94,7 +106,7 @@ internal class DefaultPromoRepository(
         val storedPromo = promoStoriesStore.getSyncOrNull(storyId = id)
         // Get last stored promo by id if possible or get from network
         val story = if (storedPromo == null && refresh) {
-            val storyContent = runCatching {
+            val storyContent = runSuspendCatching {
                 // Important to return
                 withTimeoutOrNull(STORIES_LOAD_DELAY) {
                     tangemApi.getStoryById(storyId = id).getOrThrow()
@@ -134,8 +146,26 @@ internal class DefaultPromoRepository(
         }.getOrNull()
     }
 
+    private suspend fun getVisaPromoBanner(): PromoBanner? {
+        return runCatching(dispatchers.io) {
+            promoBannerConverter.convert(
+                tangemApi.getPromoBanner(VISA_NAME).getOrThrow(),
+            )
+        }.getOrNull()
+    }
+
+    private suspend fun getBlackFridayPromoBanner(): PromoBanner? {
+        return runCatching(dispatchers.io) {
+            promoBannerConverter.convert(
+                tangemApi.getPromoBanner(BLACK_FRIDAY_NAME).getOrThrow(),
+            )
+        }.getOrNull()
+    }
+
     private companion object {
         const val SEPA_NAME = "sepa"
+        const val VISA_NAME = "visa-waitlist"
+        const val BLACK_FRIDAY_NAME = "black-friday"
         const val STORIES_LOAD_DELAY = 1000L
     }
 }

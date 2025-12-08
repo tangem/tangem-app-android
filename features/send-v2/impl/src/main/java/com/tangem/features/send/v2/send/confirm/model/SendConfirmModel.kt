@@ -20,6 +20,8 @@ import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
+import com.tangem.domain.account.status.usecase.ManageCryptoCurrenciesUseCase
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
@@ -31,6 +33,7 @@ import com.tangem.domain.settings.IsSendTapHelpEnabledUseCase
 import com.tangem.domain.settings.NeverShowTapHelpUseCase
 import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
 import com.tangem.domain.tokens.IsAmountSubtractAvailableUseCase
+import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.transaction.usecase.CreateTransferTransactionUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
@@ -56,15 +59,20 @@ import com.tangem.features.send.v2.common.ui.state.ConfirmUM
 import com.tangem.features.send.v2.impl.R
 import com.tangem.features.send.v2.send.analytics.SendAnalyticHelper
 import com.tangem.features.send.v2.send.confirm.SendConfirmComponent
-import com.tangem.features.send.v2.send.confirm.model.transformers.*
+import com.tangem.features.send.v2.send.confirm.model.transformers.SendConfirmInitialStateTransformer
+import com.tangem.features.send.v2.send.confirm.model.transformers.SendConfirmSendingStateTransformer
+import com.tangem.features.send.v2.send.confirm.model.transformers.SendConfirmSentStateTransformer
+import com.tangem.features.send.v2.send.confirm.model.transformers.SendConfirmationNotificationsTransformerV2
 import com.tangem.features.send.v2.send.ui.state.SendUM
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountReduceTrigger
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.orZero
 import com.tangem.utils.extensions.stripZeroPlainString
 import com.tangem.utils.transformer.update
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.math.BigDecimal
 import javax.inject.Inject
@@ -100,6 +108,9 @@ internal class SendConfirmModel @Inject constructor(
     private val feeSelectorReloadTrigger: FeeSelectorReloadTrigger,
     private val sendAmountReduceTrigger: SendAmountReduceTrigger,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
+    private val accountsFeatureToggles: AccountsFeatureToggles,
+    private val manageCryptoCurrenciesUseCase: ManageCryptoCurrenciesUseCase,
+    private val currenciesRepository: CurrenciesRepository,
     sendBalanceUpdaterFactory: SendBalanceUpdater.Factory,
 ) : Model(), SendConfirmClickIntents, FeeSelectorModelCallback, SendNotificationsComponent.ModelCallback {
 
@@ -156,6 +167,7 @@ internal class SendConfirmModel @Inject constructor(
 
     fun updateState(state: SendUM) {
         _uiState.value = state
+        onFeeReload()
         updateConfirmNotifications()
     }
 
@@ -422,12 +434,21 @@ internal class SendConfirmModel @Inject constructor(
         val userWalletId = receivingUserWallet.userWalletId ?: return
         val network = receivingUserWallet.network ?: return
 
-        modelScope.launch {
-            addCryptoCurrenciesUseCase(
-                userWalletId = userWalletId,
-                cryptoCurrency = cryptoCurrency,
-                network = network,
-            )
+        modelScope.launch(dispatchers.default) {
+            if (accountsFeatureToggles.isFeatureEnabled) {
+                val accountId = receivingUserWallet.accountId ?: return@launch
+
+                val tokenToAdd = currenciesRepository.createTokenCurrency(cryptoCurrency, network)
+                manageCryptoCurrenciesUseCase(accountId = accountId, add = tokenToAdd)
+            } else {
+                withContext(NonCancellable) {
+                    addCryptoCurrenciesUseCase(
+                        userWalletId = userWalletId,
+                        cryptoCurrency = cryptoCurrency,
+                        network = network,
+                    )
+                }
+            }.onLeft(Timber::e)
         }
     }
 

@@ -17,6 +17,12 @@ sealed interface ManageTokensMode {
 }
 
 sealed interface AddCustomTokenMode {
-    data class Wallet(val userWalletId: UserWalletId) : AddCustomTokenMode
-    data class Account(val accountId: AccountId) : AddCustomTokenMode
+
+    val userWalletId: UserWalletId
+
+    data class Wallet(override val userWalletId: UserWalletId) : AddCustomTokenMode
+
+    data class Account(val accountId: AccountId) : AddCustomTokenMode {
+        override val userWalletId: UserWalletId = accountId.userWalletId
+    }
 }

@@ -10,7 +10,6 @@ tasks.withType<Test>().configureEach {
 }
 
 dependencies {
-    api(projects.domain.visa.models)
     api(projects.domain.core)
     api(projects.core.utils)
 
@@ -19,12 +18,11 @@ dependencies {
     implementation(deps.moshi.kotlin)
     implementation(deps.moshi.adapters)
     implementation(deps.kotlin.datetime)
+    implementation(deps.jodatime)
     implementation(deps.kotlin.serialization)
     ksp(deps.moshi.kotlin.codegen)
     implementation(deps.arrow.core)
 
-    testImplementation(deps.test.junit5)
+    testImplementation(projects.test.core)
     testRuntimeOnly(deps.test.junit5.engine)
-    testImplementation(deps.test.truth)
-    testImplementation(deps.test.mockk)
 }

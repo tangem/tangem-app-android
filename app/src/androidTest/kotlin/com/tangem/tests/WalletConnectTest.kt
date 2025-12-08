@@ -1,13 +1,16 @@
 package com.tangem.tests
 
+import android.Manifest
 import com.tangem.common.BaseTestCase
-import com.tangem.common.constants.TestConstants.TOTAL_BALANCE
 import com.tangem.common.constants.TestConstants.WAIT_UNTIL_TIMEOUT
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.utils.getWcUri
 import com.tangem.common.utils.setClipboardText
 import com.tangem.scenarios.*
-import com.tangem.screens.*
+import com.tangem.screens.onWalletConnectBottomSheet
+import com.tangem.screens.onWalletConnectDetailsBottomSheet
+import com.tangem.screens.onScanQrScreen
+import com.tangem.screens.onWalletConnectScreen
 import com.tangem.wallet.BuildConfig
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.qameta.allure.kotlin.AllureId
@@ -23,7 +26,6 @@ class WalletConnectTest : BaseTestCase() {
     @Ignore("TODO [REDACTED_JIRA] React app deeplink doesn't work")
     @Test
     fun openWalletConnectSessionOnMainScreenTest() {
-        val balance = TOTAL_BALANCE
         val dAppName = "React App"
         val deepLinkUri = getWcUri()
 
@@ -32,7 +34,7 @@ class WalletConnectTest : BaseTestCase() {
                 openMainScreen()
             }
             step("Synchronize addresses") {
-                synchronizeAddresses(balance)
+                synchronizeAddresses()
             }
             step("Create WC session buy deeplink") {
                 openAppByDeepLink(deepLinkUri)
@@ -81,7 +83,6 @@ class WalletConnectTest : BaseTestCase() {
     @Ignore("TODO [REDACTED_JIRA] React app deeplink doesn't work")
     @Test
     fun openWalletConnectSessionNotOnMainScreenTest() {
-        val balance = TOTAL_BALANCE
         val dAppName = "React App"
         val deepLinkUri = getWcUri()
 
@@ -90,7 +91,7 @@ class WalletConnectTest : BaseTestCase() {
                 openMainScreen()
             }
             step("Synchronize addresses") {
-                synchronizeAddresses(balance)
+                synchronizeAddresses()
             }
             step("Open 'Wallet Connect' screen") {
                 openWalletConnectScreen()
@@ -139,7 +140,6 @@ class WalletConnectTest : BaseTestCase() {
     @Ignore("TODO [REDACTED_JIRA] React app deeplink doesn't work")
     @Test
     fun openWalletConnectSessionTest() {
-        val balance = TOTAL_BALANCE
         val dAppName = "React App"
         val packageName = BuildConfig.APPLICATION_ID
         val deepLinkUri = getWcUri()
@@ -149,7 +149,7 @@ class WalletConnectTest : BaseTestCase() {
                 openMainScreen()
             }
             step("Synchronize addresses") {
-                synchronizeAddresses(balance)
+                synchronizeAddresses()
             }
             step("Kill app") {
                 device.apps.kill(packageName)
@@ -194,12 +194,17 @@ class WalletConnectTest : BaseTestCase() {
     @Ignore("TODO [REDACTED_JIRA] React app deeplink doesn't work")
     @Test
     fun openWalletConnectSessionByClipboardLinkTest() {
-        val balance = TOTAL_BALANCE
         val dAppName = "React App"
         val context = device.context
         val deepLinkUri = getWcUri()
+        val packageName = BuildConfig.APPLICATION_ID
+        val permissionName = Manifest.permission.CAMERA
 
-        setupHooks().run {
+        setupHooks(
+            additionalBeforeSection = {
+                device.uiDevice.executeShellCommand("pm grant $packageName $permissionName")
+            },
+        ).run {
             step("Set URI to clipboard") {
                 setClipboardText(context, deepLinkUri)
             }
@@ -207,7 +212,7 @@ class WalletConnectTest : BaseTestCase() {
                 openMainScreen()
             }
             step("Synchronize addresses") {
-                synchronizeAddresses(balance)
+                synchronizeAddresses()
             }
             step("Open 'Wallet Connect' screen") {
                 openWalletConnectScreen()
@@ -216,7 +221,7 @@ class WalletConnectTest : BaseTestCase() {
                 onWalletConnectScreen { newConnectionButton.performClick() }
             }
             step("CLick 'Paste from clipboard' button") {
-                onWalletConnectScanQrScreen { pasteFromClipboardButton.clickWithAssertion() }
+                onScanQrScreen { pasteFromClipboardButton.clickWithAssertion() }
             }
             step("Check 'Wallet Connect' bottom sheet") {
                 waitForIdle()

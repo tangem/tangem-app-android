@@ -16,6 +16,7 @@ import com.tangem.blockchain.network.BlockchainSdkRetrofitBuilder
 import com.tangem.blockchainsdk.BlockchainSDKFactory
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.common.routing.AppRouter
+import com.tangem.core.abtests.manager.ABTestsManager
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.api.ParamsInterceptor
 import com.tangem.core.analytics.filter.OneTimeEventFilter
@@ -240,6 +241,12 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
     private val wcInitializeUseCase
         get() = entryPoint.getWcInitializeUseCase()
 
+    private val trackingContextProxy
+        get() = entryPoint.getTrackingContextProxy()
+
+    private val abTestsManager: ABTestsManager
+        get() = entryPoint.getABTestsManager()
+
     // endregion
 
     private val appScope = MainScope()
@@ -310,6 +317,8 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
             initWithConfigDependency(environmentConfig = environmentConfigStorage.initialize())
         }
 
+        abTestsManager.init()
+
         appScope.launch {
             launch(Dispatchers.IO) {
                 loadNativeLibraries()
@@ -319,7 +328,7 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
 
         ExceptionHandler.append(blockchainExceptionHandler)
 
-        if (LogConfig.network.blockchainSdkNetwork) {
+        if (LogConfig.network.isBlockchainSdkNetworkLogEnabled) {
             BlockchainSdkRetrofitBuilder.interceptors = listOf(
                 createNetworkLoggingInterceptor(),
                 ChuckerInterceptor(this),
@@ -385,6 +394,7 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
                     userWalletsListRepository = userWalletsListRepository,
                     tangemHotSdk = tangemHotSdk,
                     hotWalletFeatureToggles = hotWalletFeatureToggles,
+                    trackingContextProxy = trackingContextProxy,
                 ),
             ),
         )

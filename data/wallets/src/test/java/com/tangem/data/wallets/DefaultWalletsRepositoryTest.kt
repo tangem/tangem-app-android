@@ -8,11 +8,12 @@ import com.tangem.datasource.api.common.AuthProvider
 import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.common.response.ApiResponseError.HttpException
 import com.tangem.datasource.api.tangemTech.TangemTechApi
-import com.tangem.datasource.api.tangemTech.models.WalletResponse
 import com.tangem.datasource.api.tangemTech.models.PromocodeActivationBody
 import com.tangem.datasource.api.tangemTech.models.PromocodeActivationResponse
+import com.tangem.datasource.api.tangemTech.models.WalletResponse
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.models.errors.ActivatePromoCodeError
@@ -51,6 +52,8 @@ class DefaultWalletsRepositoryTest {
             seedPhraseNotificationVisibilityStore = mockk(),
             dispatchers = dispatchers,
             authProvider = mockk(),
+            accountsFeatureToggles = mockk(),
+            moshi = mockk(),
         )
     }
 
@@ -204,6 +207,10 @@ class DefaultWalletsRepositoryTest {
             coEvery { getCardsPublicKeys() } returns publicKeys
         }
 
+        val accountsFeatureToggles = mockk<AccountsFeatureToggles> {
+            every { isFeatureEnabled } returns false
+        }
+
         repository = DefaultWalletsRepository(
             appPreferencesStore = appPreferenceStore,
             tangemTechApi = tangemTechApi,
@@ -211,6 +218,8 @@ class DefaultWalletsRepositoryTest {
             seedPhraseNotificationVisibilityStore = mockk(),
             dispatchers = dispatchers,
             authProvider = authProvider,
+            accountsFeatureToggles = accountsFeatureToggles,
+            moshi = mockk(),
         )
 
         coEvery {
@@ -226,15 +235,17 @@ class DefaultWalletsRepositoryTest {
         // THEN
         coVerify(exactly = 1) {
             tangemTechApi.associateApplicationIdWithWallets(
-                eq(applicationId),
-                match { body ->
+                applicationId = eq(applicationId),
+                body = match { body ->
                     body.size == 2 &&
                         body.any {
-                            it.walletId == wallet1Id && it.cards.any { card -> card.cardPublicKey == "public_key_1" } &&
+                            it.walletId == wallet1Id &&
+                                it.cards!!.any { card -> card.cardPublicKey == "public_key_1" } &&
                                 it.name == "Wallet 1"
                         } &&
                         body.any {
-                            it.walletId == wallet2Id && it.cards.any { card -> card.cardPublicKey == "public_key_2" } &&
+                            it.walletId == wallet2Id &&
+                                it.cards!!.any { card -> card.cardPublicKey == "public_key_2" } &&
                                 it.name == "Wallet 2"
                         }
                 },

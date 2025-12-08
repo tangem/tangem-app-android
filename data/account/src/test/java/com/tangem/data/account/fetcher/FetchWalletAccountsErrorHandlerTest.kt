@@ -1,19 +1,26 @@
 package com.tangem.data.account.fetcher
 
+import com.tangem.data.account.converter.createGetWalletAccountsResponse
+import com.tangem.data.account.converter.createWalletAccountDTO
 import com.tangem.data.account.utils.DefaultWalletAccountsResponseFactory
-import com.tangem.data.account.utils.toUserTokensResponse
 import com.tangem.data.common.currency.UserTokensSaver
+import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.common.response.ApiResponseError.HttpException.Code
+import com.tangem.datasource.api.common.response.ETAG_HEADER
+import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
+import com.tangem.datasource.api.tangemTech.models.WalletIdBody
+import com.tangem.datasource.api.tangemTech.models.WalletType
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
+import com.tangem.datasource.api.tangemTech.models.account.toUserTokensResponse
 import com.tangem.datasource.local.token.UserTokensResponseStore
+import com.tangem.datasource.local.userwallet.UserWalletsStore
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
-import io.mockk.clearMocks
-import io.mockk.coEvery
-import io.mockk.coVerify
-import io.mockk.mockk
+import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import io.mockk.*
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -25,19 +32,30 @@ import org.junit.jupiter.api.TestInstance
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class FetchWalletAccountsErrorHandlerTest {
 
+    private val tangemTechApi: TangemTechApi = mockk()
+    private val userWalletsStore: UserWalletsStore = mockk()
     private val userTokensSaver: UserTokensSaver = mockk(relaxUnitFun = true)
     private val userTokensResponseStore: UserTokensResponseStore = mockk(relaxUnitFun = true)
     private val defaultWalletAccountsResponseFactory: DefaultWalletAccountsResponseFactory = mockk()
 
     private val handler = FetchWalletAccountsErrorHandler(
+        tangemTechApi = tangemTechApi,
+        userWalletsStore = userWalletsStore,
         userTokensSaver = userTokensSaver,
         userTokensResponseStore = userTokensResponseStore,
         defaultWalletAccountsResponseFactory = defaultWalletAccountsResponseFactory,
+        dispatchers = TestingCoroutineDispatcherProvider(),
     )
+
+    private val pushWalletAccounts: suspend (List<WalletAccountDTO>, String) -> GetWalletAccountsResponse =
+        mockk(relaxed = true)
+    private val storeWalletAccounts: suspend (UserWalletId, GetWalletAccountsResponse) -> Unit = mockk(relaxed = true)
 
     @BeforeEach
     fun setupEach() {
         clearMocks(
+            tangemTechApi,
+            userWalletsStore,
             userTokensSaver,
             userTokensResponseStore,
             defaultWalletAccountsResponseFactory,
@@ -47,20 +65,19 @@ class FetchWalletAccountsErrorHandlerTest {
     @Test
     fun `does not update accounts when response is up to date`() = runTest {
         // Arrange
+        val response = createGetWalletAccountsResponse(userWalletId)
+
         val error = ApiResponseError.HttpException(
             code = Code.NOT_MODIFIED,
             message = "Not Modified",
             errorBody = null,
         )
 
-        val pushWalletAccounts: suspend (UserWalletId, List<WalletAccountDTO>) -> Unit = mockk()
-        val storeWalletAccounts: suspend (UserWalletId, GetWalletAccountsResponse) -> Unit = mockk()
-
         // Act
         handler.handle(
             error = error,
             userWalletId = userWalletId,
-            savedAccountsResponse = null,
+            savedAccountsResponse = response,
             pushWalletAccounts = pushWalletAccounts,
             storeWalletAccounts = storeWalletAccounts,
         )
@@ -70,7 +87,7 @@ class FetchWalletAccountsErrorHandlerTest {
             userTokensResponseStore.getSyncOrNull(userWalletId = any())
             defaultWalletAccountsResponseFactory.create(userWalletId = any(), userTokensResponse = any())
             pushWalletAccounts(any(), any())
-            userTokensSaver.push(userWalletId = any(), response = any())
+            userTokensSaver.pushWithRetryer(userWalletId = any(), response = any())
             storeWalletAccounts(any(), any())
         }
     }
@@ -84,29 +101,34 @@ class FetchWalletAccountsErrorHandlerTest {
             errorBody = null,
         )
 
-        val accountDTO = WalletAccountDTO(
-            id = "nibh",
-            name = "Michael Dotson",
-            derivationIndex = 7135,
-            icon = "consectetuer",
-            iconColor = "ferri",
-            tokens = listOf(),
-            totalTokens = 7738,
-            totalNetworks = 3348,
+        val accountDTO = createWalletAccountDTO(userWalletId)
+
+        val savedAccountsResponse = createGetWalletAccountsResponse(userWalletId)
+
+        val eTagValue = "etag-value"
+        val apiResponse = ApiResponse.Success(
+            data = Unit,
+            headers = mapOf(ETAG_HEADER to listOf(eTagValue)),
+            code = Code.CREATED,
         )
 
-        val savedAccountsResponse = GetWalletAccountsResponse(
-            wallet = GetWalletAccountsResponse.Wallet(
-                group = UserTokensResponse.GroupType.NONE,
-                sort = UserTokensResponse.SortType.MANUAL,
-                totalAccounts = 1,
-            ),
-            accounts = listOf(accountDTO),
-            unassignedTokens = emptyList(),
-        )
+        val walletName = "Wallet"
+        val userWallet = mockk<UserWallet.Cold> {
+            every { this@mockk.walletId } returns userWalletId
+            every { this@mockk.name } returns walletName
+        }
+        coEvery { userWalletsStore.getSyncOrNull(userWalletId) } returns userWallet
 
-        val pushWalletAccounts: suspend (UserWalletId, List<WalletAccountDTO>) -> Unit = mockk(relaxed = true)
-        val storeWalletAccounts: suspend (UserWalletId, GetWalletAccountsResponse) -> Unit = mockk(relaxed = true)
+        coEvery {
+            tangemTechApi.createWallet(
+                WalletIdBody(
+                    walletId = userWalletId.stringValue,
+                    name = walletName,
+                    walletType = WalletType.COLD,
+                ),
+            )
+        } returns apiResponse
+        coEvery { pushWalletAccounts(listOf(accountDTO), eTagValue) } returns savedAccountsResponse
 
         // Act
         handler.handle(
@@ -119,8 +141,15 @@ class FetchWalletAccountsErrorHandlerTest {
 
         // Assert
         coVerify {
-            pushWalletAccounts(userWalletId, listOf(accountDTO))
-            userTokensSaver.push(userWalletId, response = savedAccountsResponse.toUserTokensResponse())
+            userTokensSaver.pushWithRetryer(userWalletId, response = savedAccountsResponse.toUserTokensResponse())
+            tangemTechApi.createWallet(
+                WalletIdBody(
+                    walletId = userWalletId.stringValue,
+                    name = walletName,
+                    walletType = WalletType.COLD,
+                ),
+            )
+            pushWalletAccounts(listOf(accountDTO), eTagValue)
             storeWalletAccounts(userWalletId, savedAccountsResponse)
         }
 
@@ -151,6 +180,7 @@ class FetchWalletAccountsErrorHandlerTest {
                 group = UserTokensResponse.GroupType.NONE,
                 sort = UserTokensResponse.SortType.MANUAL,
                 totalAccounts = 1,
+                totalArchivedAccounts = 0,
             ),
             accounts = listOf(accountDTO),
             unassignedTokens = emptyList(),
@@ -162,9 +192,6 @@ class FetchWalletAccountsErrorHandlerTest {
         coEvery {
             defaultWalletAccountsResponseFactory.create(userWalletId, userTokensResponse)
         } returns savedAccountsResponse
-
-        val pushWalletAccounts: suspend (UserWalletId, List<WalletAccountDTO>) -> Unit = mockk(relaxed = true)
-        val storeWalletAccounts: suspend (UserWalletId, GetWalletAccountsResponse) -> Unit = mockk(relaxed = true)
 
         // Act
         handler.handle(
@@ -184,7 +211,7 @@ class FetchWalletAccountsErrorHandlerTest {
 
         coVerify(inverse = true) {
             pushWalletAccounts(any(), any())
-            userTokensSaver.push(userWalletId = any(), response = any())
+            userTokensSaver.pushWithRetryer(userWalletId = any(), response = any())
         }
     }
 

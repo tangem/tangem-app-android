@@ -51,6 +51,7 @@ dependencies {
     implementation(deps.androidx.datastore)
     implementation(deps.jodatime)
     implementation(deps.kotlin.coroutines)
+    implementation(deps.kotlin.datetime)
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.moshi)
     implementation(deps.moshi.kotlin)
@@ -69,11 +70,8 @@ dependencies {
 
     // endregion
 
-    testImplementation(deps.test.coroutine)
-    testImplementation(deps.test.junit5)
     testRuntimeOnly(deps.test.junit5.engine)
-    testImplementation(deps.test.mockk)
-    testImplementation(deps.test.truth)
     testImplementation(tangemDeps.card.core)
     testImplementation(projects.common.test)
+    testImplementation(projects.test.core)
 }

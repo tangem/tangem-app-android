@@ -57,13 +57,17 @@ sealed interface Account {
         val networksCount: Int
             get() = cryptoCurrencies.map(CryptoCurrency::network).distinct().size
 
-        fun copy(accountName: AccountName = this.accountName, icon: CryptoPortfolioIcon = this.icon): CryptoPortfolio {
+        fun copy(
+            accountName: AccountName = this.accountName,
+            icon: CryptoPortfolioIcon = this.icon,
+            cryptoCurrencies: Set<CryptoCurrency> = this.cryptoCurrencies,
+        ): CryptoPortfolio {
             return CryptoPortfolio(
                 accountId = this.accountId,
                 accountName = accountName,
                 icon = icon,
                 derivationIndex = this.derivationIndex,
-                cryptoCurrencies = this.cryptoCurrencies,
+                cryptoCurrencies = cryptoCurrencies,
             )
         }
 

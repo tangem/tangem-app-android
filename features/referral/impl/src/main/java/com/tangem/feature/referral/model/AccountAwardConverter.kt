@@ -1,5 +1,6 @@
 package com.tangem.feature.referral.model
 
+import com.tangem.common.ui.account.PortfolioSelectUM
 import com.tangem.common.ui.account.toUM
 import com.tangem.common.ui.tokens.TokenItemStateConverter.Companion.getFormattedCryptoAmount
 import com.tangem.common.ui.tokens.TokenItemStateConverter.Companion.getFormattedFiatAmount
@@ -14,8 +15,10 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.feature.referral.models.ReferralStateHolder.AccountAward
 import com.tangem.utils.converter.Converter
 
+@Suppress("LongParameterList")
 internal class AccountAwardConverter(
     private val isBalanceHidden: Boolean,
+    private val isSingleAccount: Boolean,
     private val appCurrency: AppCurrency,
     private val awardCryptoCurrency: CryptoCurrency,
     private val accountAwardToken: CryptoCurrencyStatus?,
@@ -47,8 +50,8 @@ internal class AccountAwardConverter(
                 id = currency.id.value,
                 iconState = CryptoCurrencyToIconStateConverter().convert(currency),
                 titleState = TokenItemState.TitleState.Content(stringReference(currency.name)),
-                fiatAmountState = TokenItemState.FiatAmountState.Content(text = ""),
-                subtitle2State = TokenItemState.Subtitle2State.TextContent(text = ""),
+                fiatAmountState = null,
+                subtitle2State = null,
                 subtitleState = TokenItemState.SubtitleState.TextContent(stringReference(currency.symbol)),
                 onItemClick = null,
                 onItemLongClick = null,
@@ -56,11 +59,15 @@ internal class AccountAwardConverter(
         }
 
         return AccountAward(
-            accountName = cryptoPortfolio.account.accountName.toUM().value,
-            accountIcon = cryptoPortfolio.account.icon.toUM(),
-            onAccountClick = onAccountClick,
             isBalanceHidden = isBalanceHidden,
             tokenState = tokenState,
+            accountSelectUM = PortfolioSelectUM(
+                icon = cryptoPortfolio.account.icon.toUM(),
+                name = cryptoPortfolio.account.accountName.toUM().value,
+                isAccountMode = true,
+                onClick = onAccountClick,
+                isMultiChoice = !isSingleAccount,
+            ),
         )
     }
 }

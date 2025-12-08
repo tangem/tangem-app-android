@@ -10,6 +10,7 @@ import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
@@ -62,6 +63,8 @@ internal class SendWithSwapConfirmComponent @AssistedInject constructor(
             swapDirection = params.swapDirection,
             filterProviderTypes = SEND_WITH_SWAP_PROVIDER_TYPES,
             analyticsSendSource = params.analyticsSendSource,
+            accountFlow = params.accountFlow,
+            isAccountModeFlow = params.isAccountModeFlow,
         ),
         onResult = model::onAmountResult,
         onClick = model::showEditAmount,
@@ -175,6 +178,8 @@ internal class SendWithSwapConfirmComponent @AssistedInject constructor(
         val isBalanceHidingFlow: StateFlow<Boolean>,
         val primaryCryptoCurrencyStatusFlow: StateFlow<CryptoCurrencyStatus>,
         val primaryFeePaidCurrencyStatusFlow: StateFlow<CryptoCurrencyStatus>,
+        val accountFlow: StateFlow<Account.CryptoPortfolio?>,
+        val isAccountModeFlow: StateFlow<Boolean>,
         val callback: ModelCallback,
     )
 
@@ -184,6 +189,6 @@ internal class SendWithSwapConfirmComponent @AssistedInject constructor(
     }
 
     interface ModelCallback {
-        fun onResult(sendWithSwapUM: SendWithSwapUM)
+        fun onResult(route: SendWithSwapRoute, sendWithSwapUM: SendWithSwapUM)
     }
 }

@@ -53,3 +53,4 @@ app/src/external/google-services.json
 
 # Kotlin Plugin
 .kotlin/
+find-latest-release-branch.output

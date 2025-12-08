@@ -1,5 +1,7 @@
 package com.tangem.feature.swap.domain
 
+import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
@@ -10,10 +12,13 @@ import kotlinx.coroutines.flow.Flow
 
 interface SwapTransactionRepository {
 
+    @Suppress("LongParameterList")
     suspend fun storeTransaction(
         userWalletId: UserWalletId,
         fromCryptoCurrency: CryptoCurrency,
         toCryptoCurrency: CryptoCurrency,
+        fromAccount: Account.CryptoPortfolio?,
+        toAccount: Account.CryptoPortfolio?,
         transaction: SavedSwapTransactionModel,
     )
 
@@ -22,14 +27,13 @@ interface SwapTransactionRepository {
         cryptoCurrencyId: CryptoCurrency.ID,
     ): Flow<List<SavedSwapTransactionListModel>?>
 
-    suspend fun removeTransaction(
-        userWalletId: UserWalletId,
-        fromCryptoCurrency: CryptoCurrency,
-        toCryptoCurrency: CryptoCurrency,
-        txId: String,
-    )
+    suspend fun removeTransaction(userWalletId: UserWalletId, txId: String)
 
-    suspend fun storeTransactionState(txId: String, status: ExchangeStatusModel, refundTokenCurrency: CryptoCurrency?)
+    suspend fun storeTransactionState(
+        txId: String,
+        status: ExchangeStatusModel,
+        accountWithCurrency: Pair<AccountId?, CryptoCurrency>? = null,
+    )
 
     suspend fun storeLastSwappedCryptoCurrencyId(userWalletId: UserWalletId, cryptoCurrencyId: CryptoCurrency.ID)
 

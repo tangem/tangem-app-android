@@ -166,8 +166,32 @@ internal object WalletsDomainModule {
 
     @Provides
     @Singleton
-    fun providesUnlockWalletUseCase(userWalletsListManager: UserWalletsListManager): UnlockWalletsUseCase {
+    fun providesUnlockWalletsUseCase(userWalletsListManager: UserWalletsListManager): UnlockWalletsUseCase {
         return UnlockWalletsUseCase(userWalletsListManager = userWalletsListManager)
+    }
+
+    @Provides
+    @Singleton
+    fun providesUnlockWalletUseCase(
+        nonBiometricUnlockWalletUseCase: NonBiometricUnlockWalletUseCase,
+        userWalletsListRepository: UserWalletsListRepository,
+    ): UnlockWalletUseCase {
+        return UnlockWalletUseCase(
+            nonBiometricUnlockWalletUseCase = nonBiometricUnlockWalletUseCase,
+            userWalletsListRepository = userWalletsListRepository,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun providesNonBiometricUnlockWalletUseCase(
+        userWalletsListRepository: UserWalletsListRepository,
+        walletsRepository: WalletsRepository,
+    ): NonBiometricUnlockWalletUseCase {
+        return NonBiometricUnlockWalletUseCase(
+            userWalletsListRepository = userWalletsListRepository,
+            walletsRepository = walletsRepository,
+        )
     }
 
     @Provides
@@ -466,5 +490,35 @@ internal object WalletsDomainModule {
         return YieldSupplyApyUpdateUseCase(
             yieldSupplyRepository = yieldSupplyRepository,
         )
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetWalletsForAutomaticallyPushEnablingUseCase(
+        userWalletsListManager: UserWalletsListManager,
+        userWalletsListRepository: UserWalletsListRepository,
+        hotWalletFeatureToggles: HotWalletFeatureToggles,
+        dispatcherProvider: CoroutineDispatcherProvider,
+    ): GetWalletsForAutomaticallyPushEnablingUseCase {
+        return GetWalletsForAutomaticallyPushEnablingUseCase(
+            userWalletsListManager = userWalletsListManager,
+            userWalletsListRepository = userWalletsListRepository,
+            shouldUseNewListRepository = hotWalletFeatureToggles.isHotWalletEnabled,
+            dispatchers = dispatcherProvider,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideHasSecuredWalletsUseCase(
+        userWalletsListRepository: UserWalletsListRepository,
+    ): HasSecuredWalletsUseCase {
+        return HasSecuredWalletsUseCase(userWalletsListRepository = userWalletsListRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideSyncWalletWithRemoteUseCase(walletsRepository: WalletsRepository): SyncWalletWithRemoteUseCase {
+        return SyncWalletWithRemoteUseCase(walletsRepository = walletsRepository)
     }
 }

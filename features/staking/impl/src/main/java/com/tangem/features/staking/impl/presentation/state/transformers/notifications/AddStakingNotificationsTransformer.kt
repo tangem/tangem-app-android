@@ -40,6 +40,7 @@ import java.math.BigDecimal
 internal class AddStakingNotificationsTransformer(
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
     private val appCurrencyProvider: Provider<AppCurrency>,
+    private val isAccountInitializedProvider: Provider<Boolean>,
     private val feeCryptoCurrencyStatus: CryptoCurrencyStatus?,
     private val currencyWarning: CryptoCurrencyWarning?,
     private val feeError: GetFeeError?,
@@ -90,37 +91,43 @@ internal class AddStakingNotificationsTransformer(
             BigDecimal.ZERO
         }
 
-        val notifications = buildList {
-            // errors
-            addErrorNotifications(
-                prevState = prevState,
-                feeError = feeError,
-                sendingAmount = sendingAmount,
-                onReload = prevState.clickIntents::getFee,
-                feeValue = feeValue,
-            )
-            addStakingErrorNotifications(stakingError = stakingError, onReload = prevState.clickIntents::getFee)
-            // warnings
-            addWarningNotifications(
-                prevState = prevState,
-                amountState = amountState,
-                feeState = feeState,
-                sendingAmount = sendingAmount,
-                isFeeCoverage = isFeeCoverage && isEnterAction && !sendingAmount.equals(minimumRequirement),
-            )
+        val notifications = if (isAccountInitializedProvider.invoke()) {
+            buildList {
+                // errors
+                addErrorNotifications(
+                    prevState = prevState,
+                    feeError = feeError,
+                    sendingAmount = sendingAmount,
+                    onReload = prevState.clickIntents::getFee,
+                    feeValue = feeValue,
+                )
+                addStakingErrorNotifications(stakingError = stakingError, onReload = prevState.clickIntents::getFee)
+                // warnings
+                addWarningNotifications(
+                    prevState = prevState,
+                    amountState = amountState,
+                    feeState = feeState,
+                    sendingAmount = sendingAmount,
+                    isFeeCoverage = isFeeCoverage && isEnterAction && !sendingAmount.equals(minimumRequirement),
+                )
 
-            stakingInfoNotificationsFactory.addInfoNotifications(
-                notifications = this,
-                prevState = prevState,
-                sendingAmount = sendingAmount,
-                actionAmount = amountValue,
-                feeValue = feeValue,
-                tonBalanceExtraFeeThreshold = TON_BALANCE_EXTRA_FEE_THRESHOLD,
-            )
-        }.toImmutableList()
+                stakingInfoNotificationsFactory.addInfoNotifications(
+                    notifications = this,
+                    prevState = prevState,
+                    sendingAmount = sendingAmount,
+                    actionAmount = amountValue,
+                    feeValue = feeValue,
+                    tonBalanceExtraFeeThreshold = TON_BALANCE_EXTRA_FEE_THRESHOLD,
+                )
+            }.toImmutableList()
+        } else {
+            buildList {
+                addTonInitializeAccountNotification(prevState)
+            }.toImmutableList()
+        }
 
         val isActualSources = with(cryptoCurrencyStatus.value) {
-            sources.yieldBalanceSource.isActual() && sources.networkSource.isActual()
+            sources.stakingBalanceSource.isActual() && sources.networkSource.isActual()
         }
 
         return prevState.copy(
@@ -130,7 +137,8 @@ internal class AddStakingNotificationsTransformer(
                     it is StakingNotification.Error ||
                         it is NotificationUM.Error ||
                         it is NotificationUM.Warning.NetworkFeeUnreachable ||
-                        it is StakingNotification.Warning.TransactionInProgress
+                        it is StakingNotification.Warning.TransactionInProgress ||
+                        it is StakingNotification.Warning.InitializeTonAccount
                 } && isActualSources,
             ),
         )
@@ -206,6 +214,7 @@ internal class AddStakingNotificationsTransformer(
             reserveAmount = currencyCheck.reserveAmount,
             sendingAmount = sendingAmount,
             cryptoCurrency = cryptoCurrency,
+            feeCryptoCurrency = feeCryptoCurrencyStatus?.currency,
             isAccountFunded = false,
         )
     }
@@ -219,7 +228,6 @@ internal class AddStakingNotificationsTransformer(
     ) {
         val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
         val appCurrency = appCurrencyProvider()
-        cryptoCurrencyStatus.currency
 
         addRentExemptionNotification(
             rentWarning = currencyCheck.rentWarning,
@@ -279,6 +287,20 @@ internal class AddStakingNotificationsTransformer(
 
         if (isTon(cryptoCurrencyNetworkIdValue) && amount < TON_BALANCE_EXTRA_FEE_THRESHOLD) {
             add(NotificationUM.Error.TonStakingExtraFeeError)
+        }
+    }
+
+    private fun MutableList<NotificationUM>.addTonInitializeAccountNotification(prevState: StakingUiState) {
+        val isAccountInitialized = isAccountInitializedProvider.invoke()
+        val cryptoCurrencyNetworkIdValue = cryptoCurrencyStatusProvider().currency.network.rawId
+
+        if (isTon(cryptoCurrencyNetworkIdValue) && !isAccountInitialized) {
+            prevState.clickIntents.onActivateTonAccountNotificationShow()
+            add(
+                StakingNotification.Warning.InitializeTonAccount(
+                    onInitializeClick = prevState.clickIntents::onActivateTonAccountNotificationClick,
+                ),
+            )
         }
     }
 

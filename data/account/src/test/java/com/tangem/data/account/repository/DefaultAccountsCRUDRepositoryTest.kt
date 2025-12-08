@@ -1,16 +1,16 @@
 package com.tangem.data.account.repository
 
+import android.content.res.Resources
 import arrow.core.None
 import arrow.core.toOption
 import com.google.common.truth.Truth
-import com.tangem.common.test.utils.getEmittedValues
 import com.tangem.data.account.converter.*
 import com.tangem.data.account.store.AccountsResponseStore
 import com.tangem.data.account.store.AccountsResponseStoreFactory
 import com.tangem.data.account.store.ArchivedAccountsStore
 import com.tangem.data.account.store.ArchivedAccountsStoreFactory
 import com.tangem.data.common.account.WalletAccountsSaver
-import com.tangem.data.common.cache.etag.ETagsStore
+import com.tangem.data.common.currency.UserTokensSaver
 import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
@@ -25,8 +25,8 @@ import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountName
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.domain.models.account.DerivationIndex
-import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.test.core.getEmittedValues
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -37,6 +37,7 @@ import kotlin.time.Duration.Companion.minutes
 /**
 [REDACTED_AUTHOR]
  */
+@Suppress("UnusedFlow")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class DefaultAccountsCRUDRepositoryTest {
 
@@ -52,11 +53,14 @@ class DefaultAccountsCRUDRepositoryTest {
     private val archivedAccountsStore = ArchivedAccountsStore(runtimeStore = archivedAccountsInnerStore)
 
     private val userWalletsStore: UserWalletsStore = mockk()
-    private val eTagsStore: ETagsStore = mockk()
+    private val userTokensSaver: UserTokensSaver = mockk()
+    private val archivedAccountsETagStore: RuntimeStateStore<Map<String, String?>> = mockk(relaxUnitFun = true)
 
     private val convertersContainer: AccountConverterFactoryContainer = mockk()
     private val accountListConverter: AccountListConverter = mockk()
     private val cryptoPortfolioConverter: CryptoPortfolioConverter = mockk()
+
+    private val resources: Resources = mockk()
 
     private val repository = DefaultAccountsCRUDRepository(
         tangemTechApi = tangemTechApi,
@@ -64,8 +68,10 @@ class DefaultAccountsCRUDRepositoryTest {
         accountsResponseStoreFactory = accountsResponseStoreFactory,
         archivedAccountsStoreFactory = archivedAccountsStoreFactory,
         userWalletsStore = userWalletsStore,
-        eTagsStore = eTagsStore,
+        userTokensSaver = userTokensSaver,
+        archivedAccountsETagStore = archivedAccountsETagStore,
         convertersContainer = convertersContainer,
+        resources = resources,
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
 
@@ -529,7 +535,7 @@ class DefaultAccountsCRUDRepositoryTest {
 
             val archivedAccount = ArchivedAccountConverter(userWalletId).convert(accountDTO)
 
-            coEvery { eTagsStore.getSyncOrNull(userWalletId, ETagsStore.Key.WalletAccounts) } returns eTag
+            coEvery { archivedAccountsETagStore.getSyncOrNull() } returns mapOf(userWalletId.stringValue to eTag)
 
             coEvery {
                 tangemTechApi.getWalletArchivedAccounts(userWalletId.stringValue, eTag)
@@ -543,9 +549,10 @@ class DefaultAccountsCRUDRepositoryTest {
             Truth.assertThat(actual).containsExactly(archivedAccount)
 
             coVerifyOrder {
-                eTagsStore.getSyncOrNull(userWalletId, ETagsStore.Key.WalletAccounts)
-                tangemTechApi.getWalletArchivedAccounts(userWalletId.stringValue, eTag)
+                archivedAccountsETagStore.getSyncOrNull()
                 archivedAccountsStoreFactory.create(userWalletId)
+                tangemTechApi.getWalletArchivedAccounts(userWalletId.stringValue, eTag)
+                archivedAccountsETagStore.update(any())
             }
         }
 
@@ -555,7 +562,7 @@ class DefaultAccountsCRUDRepositoryTest {
             val eTag = "etag123"
             val exception = Exception("API error")
 
-            coEvery { eTagsStore.getSyncOrNull(userWalletId, ETagsStore.Key.WalletAccounts) } returns eTag
+            coEvery { archivedAccountsETagStore.getSyncOrNull() } returns mapOf(userWalletId.stringValue to eTag)
             coEvery { tangemTechApi.getWalletArchivedAccounts(userWalletId.stringValue, eTag) } throws exception
 
             // Act
@@ -567,7 +574,7 @@ class DefaultAccountsCRUDRepositoryTest {
             Truth.assertThat(archivedAccountsStore.getSyncOrNull()).isNull()
 
             coVerifyOrder {
-                eTagsStore.getSyncOrNull(userWalletId, ETagsStore.Key.WalletAccounts)
+                archivedAccountsETagStore.getSyncOrNull()
                 tangemTechApi.getWalletArchivedAccounts(userWalletId.stringValue, eTag)
             }
         }
@@ -580,24 +587,18 @@ class DefaultAccountsCRUDRepositoryTest {
         @Test
         fun `saveAccounts should call API and update store`() = runTest {
             // Arrange
-            val userWallet = mockk<UserWallet> {
-                every { this@mockk.walletId } returns userWalletId
-            }
-
             val accountList = AccountList.empty(userWalletId = userWalletId)
+            val accounts = accountList.accounts.filterIsInstance<CryptoPortfolio>()
 
-            val accountsResponse = mockk<GetWalletAccountsResponse>()
+            val accountsResponse = createGetWalletAccountsResponse(userWalletId)
             accountsResponseStoreFlow.value = accountsResponse
 
-            val converter = mockk<GetWalletAccountsResponseConverter> {
-                every { this@mockk.convert(accountList) } returns accountsResponse
+            val converter = mockk<CryptoPortfolioConverter> {
+                every { this@mockk.convertListBack(accounts) } returns accountsResponse.accounts
             }
 
-            every { userWalletsStore.getSyncStrict(userWalletId) } returns userWallet
-
-            every {
-                convertersContainer.getWalletAccountsResponseCF.create(userWallet = userWallet)
-            } returns converter
+            every { convertersContainer.createCryptoPortfolioConverter(userWalletId) } returns converter
+            coEvery { walletAccountsSaver.push(userWalletId, accountsResponse.accounts) } returns accountsResponse
 
             // Act
             repository.saveAccounts(accountList)
@@ -606,37 +607,30 @@ class DefaultAccountsCRUDRepositoryTest {
             Truth.assertThat(accountsResponseStoreFlow.value).isEqualTo(accountsResponse)
 
             coVerifyOrder {
-                convertersContainer.getWalletAccountsResponseCF.create(userWallet)
-                converter.convert(accountList)
-                walletAccountsSaver.pushAndStore(userWalletId, accountsResponse)
+                convertersContainer.createCryptoPortfolioConverter(userWalletId)
+                converter.convertListBack(accounts)
+                walletAccountsSaver.push(userWalletId, accountsResponse.accounts)
             }
         }
 
         @Test
         fun `saveAccounts if API request is failed`() = runTest {
             // Arrange
-            val userWallet = mockk<UserWallet> {
-                every { this@mockk.walletId } returns userWalletId
-            }
-
             val accountList = AccountList.empty(userWalletId = userWalletId)
+            val accounts = accountList.accounts.filterIsInstance<CryptoPortfolio>()
 
-            val accountsResponse = mockk<GetWalletAccountsResponse>()
+            val accountsResponse = createGetWalletAccountsResponse(userWalletId)
             accountsResponseStoreFlow.value = accountsResponse
 
-            val converter = mockk<GetWalletAccountsResponseConverter> {
-                every { this@mockk.convert(accountList) } returns accountsResponse
+            val converter = mockk<CryptoPortfolioConverter> {
+                every { this@mockk.convertListBack(accounts) } returns accountsResponse.accounts
             }
 
-            every { userWalletsStore.getSyncStrict(userWalletId) } returns userWallet
-
-            every {
-                convertersContainer.getWalletAccountsResponseCF.create(userWallet = userWallet)
-            } returns converter
+            every { convertersContainer.createCryptoPortfolioConverter(userWalletId) } returns converter
 
             val exception = Exception("Test error")
 
-            coEvery { walletAccountsSaver.pushAndStore(userWalletId, accountsResponse) } throws exception
+            coEvery { walletAccountsSaver.push(userWalletId, accountsResponse.accounts) } throws exception
 
             // Act
             val actual = runCatching { repository.saveAccounts(accountList) }.exceptionOrNull()!!
@@ -646,24 +640,23 @@ class DefaultAccountsCRUDRepositoryTest {
             Truth.assertThat(actual).hasMessageThat().isEqualTo(exception.message)
 
             coVerifyOrder {
-                convertersContainer.getWalletAccountsResponseCF.create(userWallet)
-                converter.convert(accountList)
-                walletAccountsSaver.pushAndStore(userWalletId, accountsResponse)
+                convertersContainer.createCryptoPortfolioConverter(userWalletId)
+                converter.convertListBack(accounts)
             }
         }
     }
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    inner class GetTotalAccountsCountSync {
+    inner class GetTotalActiveAccountsCountSync {
 
         @Test
-        fun `getTotalAccountsCountSync returns None if account list response is null`() = runTest {
+        fun `getTotalActiveAccountsCountSync returns None if account list response is null`() = runTest {
             // Arrange
             accountsResponseStoreFlow.value = null
 
             // Act
-            val actual = repository.getTotalAccountsCountSync(userWalletId)
+            val actual = repository.getTotalActiveAccountsCountSync(userWalletId)
 
             // Assert
             Truth.assertThat(actual).isEqualTo(None)
@@ -675,20 +668,22 @@ class DefaultAccountsCRUDRepositoryTest {
         }
 
         @Test
-        fun `getTotalAccountsCountSync returns Some with totalAccounts when response is valid`() = runTest {
+        fun `getTotalActiveAccountsCountSync returns Some with totalAccounts when response is valid`() = runTest {
             // Arrange
             val totalAccounts = 5
-            val response = mockk<GetWalletAccountsResponse> {
-                every { this@mockk.wallet.totalAccounts } returns totalAccounts
+            val response = createGetWalletAccountsResponse(userWalletId).let {
+                it.copy(
+                    wallet = it.wallet.copy(totalAccounts = totalAccounts),
+                )
             }
 
             accountsResponseStoreFlow.value = response
 
             // Act
-            val actual = repository.getTotalAccountsCountSync(userWalletId)
+            val actual = repository.getTotalActiveAccountsCountSync(userWalletId)
 
             // Assert
-            val expected = totalAccounts.toOption()
+            val expected = 1.toOption()
             Truth.assertThat(actual).isEqualTo(expected)
 
             verifyOrder {
@@ -700,15 +695,15 @@ class DefaultAccountsCRUDRepositoryTest {
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    inner class GetTotalAccountsCount {
+    inner class GetTotalActiveAccountsCount {
 
         @Test
-        fun `getTotalAccountsCount emits 0 when account list response is null`() = runTest {
+        fun `getTotalActiveAccountsCount emits 0 when account list response is null`() = runTest {
             // Arrange
             accountsResponseStoreFlow.value = null
 
             // Act
-            val flow = repository.getTotalAccountsCount(userWalletId)
+            val flow = repository.getTotalActiveAccountsCount(userWalletId)
             val actual = getEmittedValues(flow)
 
             // Assert
@@ -721,21 +716,23 @@ class DefaultAccountsCRUDRepositoryTest {
         }
 
         @Test
-        fun `getTotalAccountsCount emits correct value when response is valid`() = runTest {
+        fun `getTotalActiveAccountsCount emits correct value when response is valid`() = runTest {
             // Arrange
             val totalAccounts = 7
-            val response = mockk<GetWalletAccountsResponse> {
-                every { this@mockk.wallet.totalAccounts } returns totalAccounts
+            val response = createGetWalletAccountsResponse(userWalletId).let {
+                it.copy(
+                    wallet = it.wallet.copy(totalAccounts = totalAccounts),
+                )
             }
 
             accountsResponseStoreFlow.value = response
 
             // Act
-            val flow = repository.getTotalAccountsCount(userWalletId)
+            val flow = repository.getTotalActiveAccountsCount(userWalletId)
             val actual = getEmittedValues(flow)
 
             // Assert
-            Truth.assertThat(actual).containsExactly(totalAccounts.toOption())
+            Truth.assertThat(actual).containsExactly(1.toOption())
             verifyOrder {
                 accountsResponseStoreFactory.create(userWalletId)
                 accountsResponseStore.data

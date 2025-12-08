@@ -44,10 +44,12 @@ object NotificationsFactory {
         }
     }
 
+    @Suppress("LongParameterList")
     fun MutableList<NotificationUM>.addFeeUnreachableNotification(
         tokenStatus: CryptoCurrencyStatus,
         coinStatus: CryptoCurrencyStatus,
         feeError: GetFeeError?,
+        dustValue: BigDecimal?,
         onReload: () -> Unit,
         onClick: (currency: CryptoCurrency) -> Unit,
     ) {
@@ -70,7 +72,16 @@ object NotificationsFactory {
             )
             is GetFeeError.BlockchainErrors.SuiOneCoinRequired ->
                 add(NotificationUM.Sui.NotEnoughCoinForTokenTransaction)
-            is GetFeeError.DataError,
+            is GetFeeError.DataError -> when (feeError.cause) {
+                BlockchainSdkError.TransactionDustChangeError -> add(
+                    NotificationUM.Error.MinimumAmountError(
+                        amount = dustValue.format { crypto(tokenStatus.currency) },
+                    ),
+                )
+                else -> add(
+                    NotificationUM.Warning.NetworkFeeUnreachable(onReload),
+                )
+            }
             is GetFeeError.UnknownError,
             -> add(
                 NotificationUM.Warning.NetworkFeeUnreachable(onReload),
@@ -101,13 +112,22 @@ object NotificationsFactory {
         reserveAmount: BigDecimal?,
         sendingAmount: BigDecimal,
         cryptoCurrency: CryptoCurrency,
+        feeCryptoCurrency: CryptoCurrency?,
         isAccountFunded: Boolean,
     ) {
-        if (!isAccountFunded && reserveAmount != null && reserveAmount > sendingAmount) {
+        val sendingCoinAmount = when (cryptoCurrency) {
+            is CryptoCurrency.Coin -> sendingAmount
+            is CryptoCurrency.Token -> BigDecimal.ZERO
+        }
+
+        if (feeCryptoCurrency == null && cryptoCurrency is CryptoCurrency.Token) {
+            // No need to show reserve amount warning if fee currency is unknown for token transfer
+            return
+        } else if (!isAccountFunded && reserveAmount != null && reserveAmount > sendingCoinAmount) {
             add(
                 NotificationUM.Error.ReserveAmount(
                     reserveAmount.format {
-                        crypto(cryptoCurrency)
+                        crypto(feeCryptoCurrency ?: cryptoCurrency)
                     },
                 ),
             )
@@ -357,6 +377,12 @@ object NotificationsFactory {
             is BlockchainSdkError.DestinationTagRequired -> addRequireDestinationTagErrorNotification()
             is BlockchainSdkError.Solana.DestinationRentExemption -> addRentExemptionDestinationNotification(
                 rentExemptionAmount = validationError.rentAmount,
+                cryptoCurrency = cryptoCurrency,
+            )
+            is BlockchainSdkError.TransactionDustChangeError -> add(
+                NotificationUM.Error.MinimumAmountError(
+                    amount = dustValue.format { crypto(cryptoCurrency) },
+                ),
             )
             null,
             -> minAdaValue?.let {
@@ -446,10 +472,15 @@ object NotificationsFactory {
         add(NotificationUM.Solana.RentInfo(rentWarning))
     }
 
-    fun MutableList<NotificationUM>.addRentExemptionDestinationNotification(rentExemptionAmount: BigDecimal) {
+    private fun MutableList<NotificationUM>.addRentExemptionDestinationNotification(
+        rentExemptionAmount: BigDecimal,
+        cryptoCurrency: CryptoCurrency,
+    ) {
+        if (cryptoCurrency !is CryptoCurrency.Coin) return
         add(
             NotificationUM.Solana.RentExemptionDestination(
                 rentExemptionAmount = rentExemptionAmount,
+                cryptoCurrency = cryptoCurrency,
             ),
         )
     }

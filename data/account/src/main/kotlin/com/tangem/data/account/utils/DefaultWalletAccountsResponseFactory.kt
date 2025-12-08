@@ -1,14 +1,16 @@
 package com.tangem.data.account.utils
 
 import com.tangem.data.account.converter.CryptoPortfolioConverter
-import com.tangem.data.common.currency.CardCryptoCurrencyFactory
 import com.tangem.data.common.currency.UserTokensResponseFactory
+import com.tangem.data.common.network.NetworkFactory
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
+import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.account.models.AccountList
-import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.account.AccountId
+import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import javax.inject.Inject
@@ -16,22 +18,22 @@ import javax.inject.Inject
 /**
  * Factory to create default [GetWalletAccountsResponse].
  *
- * @property userWalletsListRepository repository to get user wallet information
+ * @property userWalletsStore          store to get user wallet information
  * @property cryptoPortfolioCF         converter factory to convert crypto portfolio accounts
  * @property userTokensResponseFactory factory to create [UserTokensResponse]
- * @property cardCryptoCurrencyFactory factory to get default coins for multi-currency wallet
+ * @property networkFactory            factory to create network derivation path
  *
 [REDACTED_AUTHOR]
  */
 internal class DefaultWalletAccountsResponseFactory @Inject constructor(
-    private val userWalletsListRepository: UserWalletsListRepository,
+    private val userWalletsStore: UserWalletsStore,
     private val cryptoPortfolioCF: CryptoPortfolioConverter.Factory,
     private val userTokensResponseFactory: UserTokensResponseFactory,
-    private val cardCryptoCurrencyFactory: CardCryptoCurrencyFactory,
+    private val networkFactory: NetworkFactory,
 ) {
 
-    suspend fun create(userWalletId: UserWalletId, userTokensResponse: UserTokensResponse?): GetWalletAccountsResponse {
-        val userWallet = userWalletsListRepository.userWalletsSync().firstOrNull { it.walletId == userWalletId }
+    fun create(userWalletId: UserWalletId, userTokensResponse: UserTokensResponse?): GetWalletAccountsResponse {
+        val userWallet = userWalletsStore.getSyncOrNull(userWalletId)
 
         val accountDTOs = userWallet?.let(::createDefaultAccountDTOs).orEmpty()
         val response = userTokensResponse.orDefault(userWallet = userWallet)
@@ -41,6 +43,7 @@ internal class DefaultWalletAccountsResponseFactory @Inject constructor(
                 group = response.group,
                 sort = response.sort,
                 totalAccounts = accountDTOs.size,
+                totalArchivedAccounts = 0,
             ),
             accounts = accountDTOs.assignTokens(userWalletId = userWalletId, tokens = response.tokens),
             unassignedTokens = emptyList(),
@@ -59,10 +62,12 @@ internal class DefaultWalletAccountsResponseFactory @Inject constructor(
     private fun UserTokensResponse?.orDefault(userWallet: UserWallet?): UserTokensResponse {
         if (this != null) return this
 
-        return userTokensResponseFactory.createUserTokensResponse(
-            currencies = userWallet?.let(cardCryptoCurrencyFactory::createDefaultCoinsForMultiCurrencyWallet).orEmpty(),
-            isGroupedByNetwork = false,
-            isSortedByBalance = false,
+        return userTokensResponseFactory.createDefaultResponse(
+            userWallet = userWallet,
+            networkFactory = networkFactory,
+            accountId = userWallet?.let {
+                AccountId.forCryptoPortfolio(userWalletId = it.walletId, derivationIndex = DerivationIndex.Main)
+            },
         )
     }
 }

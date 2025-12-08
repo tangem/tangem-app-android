@@ -41,7 +41,9 @@ internal class StakingStateRouter(
             StakingStep.Validators,
             StakingStep.Amount,
             -> showConfirmation()
-            StakingStep.Confirmation -> showInitial()
+            StakingStep.Confirmation,
+            StakingStep.Success,
+            -> showInitial()
         }
     }
 
@@ -65,6 +67,7 @@ internal class StakingStateRouter(
                 }
             }
             StakingStep.Validators -> showConfirmation()
+            StakingStep.Success -> appRouter.pop()
         }
     }
 

@@ -20,20 +20,27 @@ import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.nft.models.NFTAsset
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.blockchainsdk.utils.toBlockchain
+import com.tangem.datasource.api.common.response.fold
+import com.tangem.datasource.api.tangemTech.TangemTechApi
+import com.tangem.datasource.api.tangemTech.models.OperationType
+import com.tangem.datasource.api.tangemTech.models.TransactionEventBody
 import com.tangem.datasource.local.walletmanager.WalletManagersStore
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.transaction.TransactionRepository
+import com.tangem.domain.transaction.models.EventTransactionTypeDto
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.runCatching
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.math.BigDecimal
 import java.math.BigInteger
 
-@Suppress("LargeClass")
+@Suppress("LargeClass", "NullableToStringCall")
 internal class DefaultTransactionRepository(
+    private val tangemTechApi: TangemTechApi,
     private val walletManagersFacade: WalletManagersFacade,
     private val walletManagersStore: WalletManagersStore,
     private val dispatchers: CoroutineDispatcherProvider,
@@ -57,12 +64,12 @@ internal class DefaultTransactionRepository(
 
         val extras = txExtras ?: getMemoExtras(networkId = network.rawId, memo)
 
-        val destination = if (amount.type is AmountType.TokenYieldSupply) {
+        val patchedDestination = if (amount.type is AmountType.TokenYieldSupply) {
             walletManager.getYieldModuleAddress()
         } else {
             destination
         }
-        val amount = if (amount.type is AmountType.TokenYieldSupply) {
+        val patchedAmount = if (amount.type is AmountType.TokenYieldSupply) {
             amount.copy(value = BigDecimal.ZERO)
         } else {
             amount
@@ -70,17 +77,17 @@ internal class DefaultTransactionRepository(
 
         return@withContext if (fee != null) {
             walletManager.createTransaction(
-                amount = amount,
+                amount = patchedAmount,
                 fee = fee,
-                destination = destination,
+                destination = patchedDestination,
             ).copy(
                 extras = extras,
             )
         } else {
             TransactionData.Uncompiled(
-                amount = amount,
+                amount = patchedAmount,
                 sourceAddress = walletManager.wallet.address,
-                destinationAddress = destination,
+                destinationAddress = patchedDestination,
                 extras = extras,
                 fee = null,
             )
@@ -137,6 +144,12 @@ internal class DefaultTransactionRepository(
     ): TransactionData.Uncompiled = withContext(dispatchers.io) {
         val blockchain = network.toBlockchain()
 
+        val walletManager = walletManagersFacade.getOrCreateWalletManager(
+            userWalletId = userWalletId,
+            blockchain = blockchain,
+            derivationPath = network.derivationPath.value,
+        ) ?: error("Wallet manager not found")
+
         val extras = createTransactionDataExtras(
             callData = SmartContractCallDataProviderFactory.getApprovalCallData(
                 spenderAddress = spenderAddress,
@@ -148,15 +161,23 @@ internal class DefaultTransactionRepository(
             gasLimit = null,
         )
 
-        return@withContext createTransaction(
-            amount = amount,
-            fee = fee,
-            memo = null,
-            destination = contractAddress,
-            userWalletId = userWalletId,
-            network = network,
-            txExtras = extras,
-        )
+        return@withContext if (fee != null) {
+            walletManager.createTransaction(
+                amount = amount,
+                fee = fee,
+                destination = contractAddress,
+            ).copy(
+                extras = extras,
+            )
+        } else {
+            TransactionData.Uncompiled(
+                amount = amount,
+                sourceAddress = walletManager.wallet.address,
+                destinationAddress = contractAddress,
+                extras = extras,
+                fee = null,
+            )
+        }
     }
 
     override suspend fun createNFTTransferTransaction(
@@ -267,7 +288,7 @@ internal class DefaultTransactionRepository(
             blockchain = blockchain,
             derivationPath = network.derivationPath.value,
         )
-        (walletManager as TransactionSender).send(txData, signer)
+        (requireNotNull(walletManager) as TransactionSender).send(txData, signer)
     }
 
     override suspend fun sendMultipleTransactions(
@@ -283,7 +304,7 @@ internal class DefaultTransactionRepository(
             blockchain = blockchain,
             derivationPath = network.derivationPath.value,
         )
-        (walletManager as TransactionSender).sendMultiple(txsData, signer, sendMode)
+        (requireNotNull(walletManager) as TransactionSender).sendMultiple(txsData, signer, sendMode)
     }
 
     override fun createTransactionDataExtras(
@@ -399,6 +420,31 @@ internal class DefaultTransactionRepository(
     ) = withContext(dispatchers.io) {
         val preparer = getPreparer(network, userWalletId)
         preparer.prepareAndSignMultiple(transactionData, signer)
+    }
+
+    override suspend fun sendTransactionHash(hash: String, transactionType: EventTransactionTypeDto) {
+        runCatching(dispatchers.io) {
+            val operationType = when (transactionType) {
+                EventTransactionTypeDto.DEPOSIT -> OperationType.YIELD_DEPOSIT
+                EventTransactionTypeDto.WITHDRAW -> OperationType.YIELD_WITHDRAW
+                EventTransactionTypeDto.SEND -> OperationType.YIELD_SEND
+            }
+            val body = TransactionEventBody(
+                operationType = operationType,
+                transactionId = hash,
+            )
+            val response = tangemTechApi.transactionEvents(body)
+            response.fold(
+                onSuccess = {
+                    Timber.d("Successfully sent yield supply transaction hash: $hash")
+                },
+                onError = { error ->
+                    Timber.e(error, "Failed to send yield supply transaction hash: $hash")
+                },
+            )
+        }.onFailure { error ->
+            Timber.e(error, "Failed to send yield supply transaction hash: $hash")
+        }
     }
 
     private suspend fun getPreparer(network: Network, userWalletId: UserWalletId): TransactionPreparer {

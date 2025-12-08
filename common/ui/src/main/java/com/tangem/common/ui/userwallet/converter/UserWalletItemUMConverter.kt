@@ -2,10 +2,7 @@ package com.tangem.common.ui.userwallet.converter
 
 import com.tangem.common.ui.R
 import com.tangem.common.ui.userwallet.state.UserWalletItemUM
-import com.tangem.core.ui.components.label.entity.LabelStyle
-import com.tangem.core.ui.components.label.entity.LabelUM
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.fiat
@@ -35,6 +32,7 @@ class UserWalletItemUMConverter(
     private val balance: TotalFiatBalance? = null,
     private val isBalanceHidden: Boolean = false,
     private val isAuthMode: Boolean = false,
+    private val isClickableIfLocked: Boolean = false,
     private val endIcon: UserWalletItemUM.EndIcon = UserWalletItemUM.EndIcon.None,
     artwork: UserWalletItemUM.ImageState? = null,
 ) : Converter<UserWallet, UserWalletItemUM> {
@@ -44,7 +42,7 @@ class UserWalletItemUMConverter(
     override fun convert(value: UserWallet): UserWalletItemUM {
         return with(value) {
             UserWalletItemUM(
-                id = walletId,
+                id = walletId.stringValue,
                 name = stringReference(name),
                 information = getInfo(userWallet = this),
                 balance = getBalanceInfo(userWallet = this),
@@ -52,24 +50,12 @@ class UserWalletItemUMConverter(
                 endIcon = endIcon,
                 onClick = { onClick(value.walletId) },
                 imageState = artwork,
-                label = getLabelOrNull(userWallet = this),
             )
         }
     }
 
     private fun isEnabled(userWallet: UserWallet): Boolean {
-        return isAuthMode || userWallet.isLocked.not()
-    }
-
-    private fun getLabelOrNull(userWallet: UserWallet): LabelUM? {
-        return if (isAuthMode.not() && userWallet is UserWallet.Hot && !userWallet.backedUp) {
-            LabelUM(
-                text = resourceReference(R.string.hw_backup_no_backup),
-                style = LabelStyle.WARNING,
-            )
-        } else {
-            null
-        }
+        return isAuthMode || isClickableIfLocked || userWallet.isLocked.not()
     }
 
     private fun getInfo(userWallet: UserWallet): UserWalletItemUM.Information.Loaded {

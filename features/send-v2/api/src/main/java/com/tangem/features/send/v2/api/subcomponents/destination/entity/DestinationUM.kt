@@ -18,6 +18,7 @@ sealed class DestinationUM {
         val isValidating: Boolean = false,
         val isInitialized: Boolean = false,
         val isRecentHidden: Boolean,
+        val isAccountsMode: Boolean? = null,
     ) : DestinationUM()
 
     data class Empty(

@@ -5,7 +5,6 @@ import com.tangem.blockchain.common.TransactionData
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.extensions.TextReference
 import kotlinx.collections.immutable.ImmutableList
-import java.math.BigDecimal
 
 @Immutable
 internal sealed class YieldSupplyFeeUM {
@@ -13,9 +12,13 @@ internal sealed class YieldSupplyFeeUM {
     data object Error : YieldSupplyFeeUM()
     data class Content(
         val transactionDataList: ImmutableList<TransactionData.Uncompiled>,
-        val feeValue: TextReference,
-        val currentNetworkFeeValue: TextReference,
-        val maxNetworkFeeValue: TextReference,
+        val feeFiatValue: TextReference,
+        // TODO move to FeePolicyUM
+        val estimatedFiatValue: TextReference,
+        val maxNetworkFeeFiatValue: TextReference,
+        val minTopUpFiatValue: TextReference,
+        val feeNoteValue: TextReference = TextReference.EMPTY,
+        val minFeeNoteValue: TextReference = TextReference.EMPTY,
     ) : YieldSupplyFeeUM()
 }
 
@@ -28,5 +31,4 @@ internal data class YieldSupplyActionUM(
     val yieldSupplyFeeUM: YieldSupplyFeeUM,
     val isPrimaryButtonEnabled: Boolean,
     val isTransactionSending: Boolean,
-    val maxFee: BigDecimal = BigDecimal.ZERO,
 )

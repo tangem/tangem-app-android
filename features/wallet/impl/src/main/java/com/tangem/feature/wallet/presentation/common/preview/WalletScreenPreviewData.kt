@@ -3,7 +3,6 @@ package com.tangem.feature.wallet.presentation.common.preview
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.marketprice.PriceChangeType
-import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.components.notifications.NotificationConfig.ButtonsState
 import com.tangem.core.ui.components.token.AccountItemPreviewData
 import com.tangem.core.ui.components.token.state.TokenItemState
@@ -14,11 +13,13 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.feature.wallet.child.wallet.model.WalletActivationBannerType
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData.topBarConfig
 import com.tangem.feature.wallet.presentation.wallet.state.model.*
 import com.tangem.utils.StringsSigns.DASH_SIGN
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toPersistentList
 
 internal object WalletScreenPreviewData {
     private val tokenItemState = TokenItemState.Content(
@@ -86,17 +87,39 @@ internal object WalletScreenPreviewData {
     private val portfolioContentState = WalletTokensListState.ContentState.PortfolioContent(
         items = persistentListOf(
             TokensListItemUM.Portfolio(
-                tokens = textContentTokensState.items.filterIsInstance<PortfolioTokensListItemUM>(),
+                tokens = textContentTokensState.items.filterIsInstance<PortfolioTokensListItemUM>().toPersistentList(),
                 isExpanded = false,
                 isCollapsable = true,
-                state = AccountItemPreviewData.accountItem
+                tokenItemUM = AccountItemPreviewData.accountItem
                     .copy(iconState = AccountItemPreviewData.accountLetterIcon),
             ),
             TokensListItemUM.Portfolio(
-                tokens = textContentTokensState.items.filterIsInstance<PortfolioTokensListItemUM>(),
+                tokens = textContentTokensState.items.filterIsInstance<PortfolioTokensListItemUM>().toPersistentList(),
                 isExpanded = true,
                 isCollapsable = true,
-                state = AccountItemPreviewData.accountItem,
+                tokenItemUM = AccountItemPreviewData.accountItem,
+            ),
+        ),
+        organizeTokensButtonConfig = WalletTokensListState.OrganizeTokensButtonConfig(
+            isEnabled = true,
+            onClick = {},
+        ),
+    )
+
+    private val emptyPortfolioContentState = WalletTokensListState.ContentState.PortfolioContent(
+        items = persistentListOf(
+            TokensListItemUM.Portfolio(
+                tokens = textContentTokensState.items.filterIsInstance<PortfolioTokensListItemUM>().toPersistentList(),
+                isExpanded = false,
+                isCollapsable = true,
+                tokenItemUM = AccountItemPreviewData.accountItem
+                    .copy(iconState = AccountItemPreviewData.accountLetterIcon),
+            ),
+            TokensListItemUM.Portfolio(
+                tokens = persistentListOf(),
+                isExpanded = true,
+                isCollapsable = true,
+                tokenItemUM = AccountItemPreviewData.accountItem,
             ),
         ),
         organizeTokensButtonConfig = WalletTokensListState.OrganizeTokensButtonConfig(
@@ -144,11 +167,12 @@ internal object WalletScreenPreviewData {
             warnings = persistentListOf(
                 WalletNotification.Warning.SomeNetworksUnreachable,
                 WalletNotification.FinishWalletActivation(
-                    iconTint = NotificationConfig.IconTint.Attention,
+                    type = WalletActivationBannerType.Attention,
                     buttonsState = ButtonsState.SecondaryButtonConfig(
                         text = resourceReference(R.string.hw_activation_need_finish),
                         onClick = { },
                     ),
+                    isBackupExists = false,
                 ),
             ),
             bottomSheetConfig = null,
@@ -161,6 +185,7 @@ internal object WalletScreenPreviewData {
                 isFlickering = false,
                 onItemClick = { },
             ),
+            tangemPayState = TangemPayState.Empty,
             type = WalletState.MultiCurrency.WalletType.Cold,
         )
     }
@@ -205,6 +230,14 @@ internal object WalletScreenPreviewData {
             wallets = persistentListOf(
                 singleWalletLockedState,
                 multiWalletState.copy(tokensListState = portfolioContentState),
+            ),
+        )
+
+    internal val accountScreenWithEmptyTokensState =
+        walletScreenState.copy(
+            wallets = persistentListOf(
+                singleWalletLockedState,
+                multiWalletState.copy(tokensListState = emptyPortfolioContentState),
             ),
         )
 }

@@ -10,15 +10,19 @@ import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.staking.StakingIdFactory
-import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
+import com.tangem.domain.staking.multi.MultiStakingBalanceFetcher
 import com.tangem.domain.tokens.repository.CurrenciesRepository
+import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.derivations.DerivationsRepository
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
 import javax.inject.Singleton
 
 @Module
@@ -62,20 +66,34 @@ object MarketsDomainModule {
     fun provideSaveMarketTokensUseCase(
         derivationsRepository: DerivationsRepository,
         marketsTokenRepository: MarketsTokenRepository,
+        walletManagersFacade: WalletManagersFacade,
         currenciesRepository: CurrenciesRepository,
         multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
         multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
-        multiYieldBalanceFetcher: MultiYieldBalanceFetcher,
+        multiStakingBalanceFetcher: MultiStakingBalanceFetcher,
         stakingIdFactory: StakingIdFactory,
+        dispatchers: CoroutineDispatcherProvider,
     ): SaveMarketTokensUseCase {
         return SaveMarketTokensUseCase(
             derivationsRepository = derivationsRepository,
             marketsTokenRepository = marketsTokenRepository,
+            walletManagersFacade = walletManagersFacade,
             currenciesRepository = currenciesRepository,
             multiNetworkStatusFetcher = multiNetworkStatusFetcher,
             multiQuoteStatusFetcher = multiQuoteStatusFetcher,
-            multiYieldBalanceFetcher = multiYieldBalanceFetcher,
+            multiStakingBalanceFetcher = multiStakingBalanceFetcher,
             stakingIdFactory = stakingIdFactory,
+            parallelUpdatingScope = CoroutineScope(SupervisorJob() + dispatchers.default),
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetTokenMarketCryptoCurrency(
+        marketsTokenRepository: MarketsTokenRepository,
+    ): GetTokenMarketCryptoCurrency {
+        return GetTokenMarketCryptoCurrency(
+            marketsTokenRepository = marketsTokenRepository,
         )
     }
 

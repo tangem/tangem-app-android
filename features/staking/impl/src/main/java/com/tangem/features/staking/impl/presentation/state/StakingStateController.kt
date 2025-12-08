@@ -87,7 +87,7 @@ internal class StakingStateController @Inject constructor(
             cryptoCurrencyBlockchainId = "",
             currentStep = StakingStep.InitialInfo,
             initialInfoState = StakingStates.InitialInfoState.Empty(),
-            amountState = AmountState.Empty(isRedesignEnabled = false),
+            amountState = AmountState.Empty,
             validatorState = StakingStates.ValidatorState.Empty(),
             rewardsValidatorsState = StakingStates.RewardsValidatorsState.Empty(),
             confirmationState = StakingStates.ConfirmationState.Empty(),

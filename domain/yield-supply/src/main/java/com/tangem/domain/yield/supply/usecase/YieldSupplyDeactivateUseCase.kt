@@ -8,7 +8,9 @@ class YieldSupplyDeactivateUseCase(
     private val yieldSupplyRepository: YieldSupplyRepository,
 ) {
 
-    suspend operator fun invoke(cryptoCurrencyToken: CryptoCurrency.Token): Either<Throwable, Boolean> = Either.catch {
-        yieldSupplyRepository.deactivateProtocol(cryptoCurrencyToken)
-    }
+    suspend operator fun invoke(cryptoCurrency: CryptoCurrency, address: String): Either<Throwable, Boolean> =
+        Either.catch {
+            val token = cryptoCurrency as? CryptoCurrency.Token ?: error("Token expected")
+            yieldSupplyRepository.deactivateProtocol(token, address)
+        }
 }

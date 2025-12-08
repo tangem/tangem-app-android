@@ -1,0 +1,15 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>MultilineLambdaItParameter:AccountCryptoCurrencyStatusFinder.kt$AccountCryptoCurrencyStatusFinder${ val cryptoPortfolio = it.account as? Account.CryptoPortfolio ?: return@filter false cryptoPortfolio.derivationIndex.value in possibleAccountIndexes }</ID>
+    <ID>MultilineLambdaItParameter:AccountCryptoCurrencyStatusFinder.kt$AccountCryptoCurrencyStatusFinder${ val cryptoPortfolio = it.account as? Account.CryptoPortfolio ?: return@firstOrNull false cryptoPortfolio.derivationIndex.value == possibleAccountIndex }</ID>
+    <ID>MultilineLambdaItParameter:AccountCryptoCurrencyStatusFinder.kt$AccountCryptoCurrencyStatusFinder${ val currency = it.currency val isContractAddressMatch = contractAddress == null || currency.id.contractAddress.equals(contractAddress, ignoreCase = true) currency.network.rawId == networkId.rawId.value &amp;&amp; currency.network.derivationPath.value == derivationPath.value &amp;&amp; isContractAddressMatch }</ID>
+    <ID>MultilineLambdaItParameter:ApplyTokenListSortingUseCaseV2.kt$ApplyTokenListSortingUseCaseV2${ errors[account.accountId] = it return@map account }</ID>
+    <ID>MultilineLambdaItParameter:DefaultMultiAccountStatusListProducer.kt$DefaultMultiAccountStatusListProducer${ singleAccountStatusListSupplier( params = SingleAccountStatusListProducer.Params(it.walletId), ) }</ID>
+    <ID>UnnecessaryAbstractClass:MultiAccountStatusListSupplier.kt$MultiAccountStatusListSupplier$MultiAccountStatusListSupplier</ID>
+    <ID>UnnecessaryAbstractClass:SingleAccountStatusListSupplier.kt$SingleAccountStatusListSupplier$SingleAccountStatusListSupplier</ID>
+    <ID>UnnecessaryAbstractClass:SingleAccountStatusSupplier.kt$SingleAccountStatusSupplier$SingleAccountStatusSupplier</ID>
+    <ID>UnnecessaryLet:RecoverCryptoPortfolioUseCase.kt$RecoverCryptoPortfolioUseCase$let(AccountName::invoke)</ID>
+  </CurrentIssues>
+</SmellBaseline>

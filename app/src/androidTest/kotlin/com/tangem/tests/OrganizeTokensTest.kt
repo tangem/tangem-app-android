@@ -2,7 +2,6 @@ package com.tangem.tests
 
 import androidx.compose.ui.test.onAllNodesWithText
 import com.tangem.common.BaseTestCase
-import com.tangem.common.constants.TestConstants.TOTAL_BALANCE
 import com.tangem.common.extensions.SwipeDirection
 import com.tangem.common.extensions.clickWithAssertion
 import com.tangem.common.extensions.swipeVertical
@@ -92,13 +91,12 @@ class OrganizeTokensTest : BaseTestCase() {
         setupHooks().run {
             val ethereumTitle = "Ethereum"
             val bitcoinTitle = "Bitcoin"
-            val balance = TOTAL_BALANCE
 
             step("Open 'Main Screen'") {
                 openMainScreen()
             }
             step("Synchronize addresses") {
-                synchronizeAddresses(balance)
+                synchronizeAddresses()
             }
             step("Check positions of tokens on 'Main Screen'") {
                 onMainScreen {
@@ -179,13 +177,12 @@ class OrganizeTokensTest : BaseTestCase() {
             val bitcoinTitle = "Bitcoin"
             val polygonTitle = "Polygon"
             val polExMaticTitle = "POL (ex-MATIC)"
-            val balance = TOTAL_BALANCE
 
             step("Open 'Main Screen'") {
                 openMainScreen()
             }
             step("Synchronize addresses") {
-                synchronizeAddresses(balance)
+                synchronizeAddresses()
             }
             step("Check positions of tokens on 'Main Screen'") {
                 onMainScreen {

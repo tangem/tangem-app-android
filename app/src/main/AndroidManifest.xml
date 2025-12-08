@@ -11,12 +11,15 @@
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="com.google.android.gms.permission.AD_ID" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" tools:node="remove" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" tools:node="remove" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" tools:node="remove" />
 
     <uses-feature android:name="android.hardware.camera" />
     <uses-feature android:name="android.hardware.camera.autofocus" />
     <uses-feature
         android:name="android.hardware.nfc"
-        android:required="true" />
+        android:required="false" />
 
     <queries>
         <intent>
@@ -276,6 +279,17 @@
                     android:host="onboard-visa"
                     android:scheme="tangem" />
             </intent-filter>
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:scheme="https"
+                    android:host="tangem.com"
+                    android:path="/pay-app" />
+            </intent-filter>
         </activity>
 
         <!-- Disable android.startup completely. Used for Worker according doc -->
@@ -310,4 +324,8 @@
             </intent-filter>
         </service>
     </application>
+    <queries>
+        <!-- Needed from Android 11 to open Google Wallet for payment with Visa card -->
+       <package android:name="com.google.android.apps.walletnfcrel" />
+   </queries>
 </manifest>

@@ -2,11 +2,11 @@ package com.tangem.feature.wallet.presentation.wallet.state.transformers.convert
 
 import com.tangem.common.ui.account.AccountCryptoPortfolioItemStateConverter
 import com.tangem.common.ui.tokens.TokenItemStateConverter
-import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.components.tokenlist.state.PortfolioTokensListItemUM
 import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.domain.account.models.AccountStatusList
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.models.PortfolioId
@@ -14,15 +14,14 @@ import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.account.AccountId
 import com.tangem.domain.models.account.AccountStatus
-import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.models.tokenlist.TokenList.GroupedByNetwork.NetworkGroup
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListState
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListState.OrganizeTokensButtonConfig
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.TokenConverterParams
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.PersistentList
@@ -36,25 +35,32 @@ internal class TokenListStateConverter(
     private val params: TokenConverterParams,
     private val selectedWallet: UserWallet,
     private val clickIntents: WalletClickIntents,
-    private val apyMap: Map<String, String> = emptyMap(),
+    private val yieldModuleApyMap: Map<String, String>,
+    private val stakingApyMap: Map<String, List<Yield.Validator>>,
 ) : Converter<WalletTokensListState, WalletTokensListState> {
 
     private val onTokenClick: (accountId: AccountId?, currencyStatus: CryptoCurrencyStatus) -> Unit =
         { accountId, currencyStatus ->
-            val id = accountId?.let { PortfolioId(accountId) } ?: PortfolioId(selectedWallet.walletId)
-            clickIntents.onTokenItemClick(id, currencyStatus)
+            clickIntents.onTokenItemClick(selectedWallet.walletId, currencyStatus)
         }
 
     private val onTokenLongClick: (accountId: AccountId?, currencyStatus: CryptoCurrencyStatus) -> Unit =
         { accountId, currencyStatus ->
-            val id = accountId?.let { PortfolioId(accountId) } ?: PortfolioId(selectedWallet.walletId)
-            clickIntents.onTokenItemLongClick(id, currencyStatus)
+            clickIntents.onTokenItemLongClick(selectedWallet.walletId, currencyStatus)
+        }
+
+    private val onApyLabelClick: (currencyStatus: CryptoCurrencyStatus, apy: String) -> Unit =
+        { currencyStatus, apy ->
+            clickIntents.onApyLabelClick(selectedWallet.walletId, currencyStatus, apy)
         }
 
     private fun tokenStatusConverter(accountId: AccountId? = null) = TokenItemStateConverter(
         appCurrency = appCurrency,
+        yieldModuleApyMap = yieldModuleApyMap,
+        stakingApyMap = stakingApyMap,
         onItemClick = { _, status -> onTokenClick(accountId, status) },
         onItemLongClick = { _, status -> onTokenLongClick(accountId, status) },
+        onApyLabelClick = { status, apy -> onApyLabelClick(status, apy) },
     )
 
     override fun convert(value: WalletTokensListState): WalletTokensListState {
@@ -82,8 +88,6 @@ internal class TokenListStateConverter(
 
     private fun convertAccountList(params: TokenConverterParams.Account): WalletTokensListState {
         val accountList = params.accountList
-        // todo account null for firs iteration?
-        val organizeTokensButtonConfig: OrganizeTokensButtonConfig? = null
 
         fun AccountStatus.CryptoPortfolio.map(): TokensListItemUM.Portfolio {
             val tokenList: TokenList = this.tokenList
@@ -100,6 +104,7 @@ internal class TokenListStateConverter(
                 appCurrency = appCurrency,
                 account = account,
                 onItemClick = onItemClick,
+                priceChangeLce = this.priceChangeLce,
             )
             val accountItem = converter.convert(tokenList.totalFiatBalance)
             val tokenConverter = tokenStatusConverter(account.accountId)
@@ -112,10 +117,10 @@ internal class TokenListStateConverter(
                 is WalletTokensListState.Empty -> listOf()
             }
             return TokensListItemUM.Portfolio(
-                state = accountItem,
+                tokenItemUM = accountItem,
                 isExpanded = isExtend,
                 isCollapsable = true,
-                tokens = items.filterIsInstance<PortfolioTokensListItemUM>(),
+                tokens = items.filterIsInstance<PortfolioTokensListItemUM>().toPersistentList(),
             )
         }
 
@@ -127,7 +132,7 @@ internal class TokenListStateConverter(
             }
         return WalletTokensListState.ContentState.PortfolioContent(
             items = accountItems.toPersistentList(),
-            organizeTokensButtonConfig = organizeTokensButtonConfig,
+            organizeTokensButtonConfig = getOrganizeTokensButtonStateV2(accountList = accountList),
         )
     }
 
@@ -169,53 +174,11 @@ internal class TokenListStateConverter(
         tokenConverter: TokenItemStateConverter,
         token: CryptoCurrencyStatus,
     ): List<TokensListItemUM> {
-        val tokenItemState = tokenConverter.convert(token).withEarnApyBadge(token)
+        val tokenItemState = tokenConverter.convert(token)
 
         add(TokensListItemUM.Token(tokenItemState))
 
         return this
-    }
-
-    private fun TokenItemState.withEarnApyBadge(cryptoCurrencyStatus: CryptoCurrencyStatus): TokenItemState {
-        val apy: String? = resolveEarnApy(cryptoCurrencyStatus)
-
-        val shouldApply = apy != null && this.titleState is TokenItemState.TitleState.Content
-
-        return if (!shouldApply) {
-            this
-        } else {
-            val contentTitle = this.titleState as TokenItemState.TitleState.Content
-            val newTitle = contentTitle.copy(
-                earnApy = resourceReference(
-                    R.string.yield_module_earn_badge,
-                    wrappedList(apy),
-                ),
-            )
-
-            when (this) {
-                is TokenItemState.Content -> this.copy(titleState = newTitle)
-                is TokenItemState.Unreachable -> this.copy(titleState = newTitle)
-                is TokenItemState.NoAddress -> this.copy(titleState = newTitle)
-                is TokenItemState.Loading -> this.copy(titleState = newTitle)
-                is TokenItemState.Draggable -> this.copy(titleState = newTitle)
-                is TokenItemState.Locked -> this
-            }
-        }
-    }
-
-    private fun resolveEarnApy(cryptoCurrencyStatus: CryptoCurrencyStatus): String? {
-        if (apyMap.isEmpty()) return null
-
-        val isYieldSupplyActive = (cryptoCurrencyStatus.value as? CryptoCurrencyStatus.Loaded)
-            ?.yieldSupplyStatus?.isActive == true
-        if (isYieldSupplyActive) return null
-
-        val contract = (cryptoCurrencyStatus.currency as? CryptoCurrency.Token)
-            ?.contractAddress
-            ?.lowercase() ?: return null
-
-        val yieldSupplyKey = "${cryptoCurrencyStatus.currency.network.backendId}_$contract"
-        return apyMap[yieldSupplyKey]
     }
 
     private fun getOrganizeTokensButtonState(tokenList: TokenList): WalletOrganizeTokensButtonConfig? {
@@ -227,6 +190,17 @@ internal class TokenListStateConverter(
         return if (currenciesSize > 1 && !isSingleCurrencyWalletWithToken()) {
             WalletOrganizeTokensButtonConfig(
                 isEnabled = tokenList.totalFiatBalance !is TotalFiatBalance.Loading,
+                onClick = clickIntents::onOrganizeTokensClick,
+            )
+        } else {
+            null
+        }
+    }
+
+    private fun getOrganizeTokensButtonStateV2(accountList: AccountStatusList): WalletOrganizeTokensButtonConfig? {
+        return if (accountList.flattenCurrencies().size > 1 && !isSingleCurrencyWalletWithToken()) {
+            WalletOrganizeTokensButtonConfig(
+                isEnabled = accountList.totalFiatBalance !is TotalFiatBalance.Loading,
                 onClick = clickIntents::onOrganizeTokensClick,
             )
         } else {

@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -22,7 +23,6 @@ import com.tangem.common.ui.R
 import com.tangem.common.ui.account.AccountIconPreviewData
 import com.tangem.common.ui.account.AccountRow
 import com.tangem.core.ui.components.SpacerH
-import com.tangem.core.ui.components.SpacerH16
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.components.buttons.SecondarySmallButton
 import com.tangem.core.ui.components.buttons.SmallButtonConfig
@@ -49,6 +49,7 @@ internal fun AccountDetailsContent(state: AccountDetailsUM, modifier: Modifier =
         )
 
         Column(
+            verticalArrangement = Arrangement.spacedBy(16.dp),
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = TangemTheme.dimens.spacing16)
@@ -61,21 +62,22 @@ internal fun AccountDetailsContent(state: AccountDetailsUM, modifier: Modifier =
                 style = TangemTheme.typography.h1,
                 color = TangemTheme.colors.text.primary1,
             )
-            SpacerH16()
             AccountRow(state)
-            SpacerH16()
-            ManageTokensRow(state)
+            if (state.isManageTokensAvailable) {
+                ManageTokensRow(state)
+            }
             when (state.archiveMode) {
                 is AccountDetailsUM.ArchiveMode.Available -> {
-                    SpacerH16()
-                    ArchiveAccountRow(state.archiveMode)
-                    SpacerH(8.dp)
-                    Text(
-                        modifier = Modifier.padding(horizontal = 12.dp),
-                        text = stringResourceSafe(R.string.account_details_archive_description),
-                        style = TangemTheme.typography.caption2,
-                        color = TangemTheme.colors.text.tertiary,
-                    )
+                    Column {
+                        ArchiveAccountRow(state.archiveMode)
+                        SpacerH(8.dp)
+                        Text(
+                            modifier = Modifier.padding(horizontal = 12.dp),
+                            text = stringResourceSafe(R.string.account_details_archive_description),
+                            style = TangemTheme.typography.caption2,
+                            color = TangemTheme.colors.text.tertiary,
+                        )
+                    }
                 }
                 AccountDetailsUM.ArchiveMode.None -> Unit
             }
@@ -90,21 +92,33 @@ private fun ArchiveAccountRow(state: AccountDetailsUM.ArchiveMode.Available) {
             .fillMaxWidth()
             .clip(RoundedCornerShape(TangemTheme.dimens.radius12))
             .background(TangemTheme.colors.background.primary)
-            .clickable(onClick = state.onArchiveAccountClick)
+            .clickable(enabled = !state.isLoading, onClick = state.onArchiveAccountClick)
             .padding(all = TangemTheme.dimens.spacing12),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
     ) {
-        Icon(
-            tint = TangemTheme.colors.icon.warning,
-            imageVector = ImageVector.vectorResource(id = R.drawable.ic_archive_24),
-            contentDescription = null,
-        )
-        Text(
-            text = stringResourceSafe(R.string.account_details_archive),
-            color = TangemTheme.colors.text.warning,
-            style = TangemTheme.typography.subtitle1,
-        )
+        if (state.isLoading) {
+            CircularProgressIndicator(
+                color = TangemTheme.colors.text.disabled,
+                modifier = Modifier.size(TangemTheme.dimens.size24),
+            )
+            Text(
+                text = stringResourceSafe(R.string.account_details_archiving),
+                color = TangemTheme.colors.text.disabled,
+                style = TangemTheme.typography.subtitle1,
+            )
+        } else {
+            Icon(
+                tint = TangemTheme.colors.icon.warning,
+                imageVector = ImageVector.vectorResource(id = R.drawable.ic_archive_24),
+                contentDescription = null,
+            )
+            Text(
+                text = stringResourceSafe(R.string.account_details_archive),
+                color = TangemTheme.colors.text.warning,
+                style = TangemTheme.typography.subtitle1,
+            )
+        }
     }
 }
 
@@ -173,23 +187,28 @@ private fun WcConnectionsContentPreview(@PreviewParameter(PreviewStateProvider::
     }
 }
 
+private val archiveModeAvailable
+    get() = AccountDetailsUM.ArchiveMode.Available(
+        onArchiveAccountClick = {},
+        isLoading = false,
+    )
+
 private class PreviewStateProvider : CollectionPreviewParameterProvider<AccountDetailsUM>(
     buildList {
         val accountName = "Main"
-        var portfolioIcon = AccountIconPreviewData.randomAccountIcon()
+        val portfolioIcon = AccountIconPreviewData.randomAccountIcon()
         val first = AccountDetailsUM(
             onCloseClick = {},
             onAccountEditClick = {},
             onManageTokensClick = {},
-            archiveMode = AccountDetailsUM.ArchiveMode.Available(
-                onArchiveAccountClick = {},
-            ),
+            archiveMode = archiveModeAvailable,
             accountName = stringReference(accountName),
             accountIcon = portfolioIcon,
+            isManageTokensAvailable = true,
         )
         add(first)
-        portfolioIcon = AccountIconPreviewData.randomAccountIcon(letter = true)
-        add(first.copy(accountIcon = portfolioIcon))
+        add(first.copy(archiveMode = archiveModeAvailable.copy(isLoading = true)))
         add(first.copy(archiveMode = AccountDetailsUM.ArchiveMode.None))
+        add(first.copy(isManageTokensAvailable = false))
     },
 )

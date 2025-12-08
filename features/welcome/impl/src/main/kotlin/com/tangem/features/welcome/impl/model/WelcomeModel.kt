@@ -1,18 +1,17 @@
 package com.tangem.features.welcome.impl.model
 
 import com.tangem.common.routing.AppRoute
+import com.tangem.common.ui.userwallet.handle
 import com.tangem.common.ui.userwallet.state.UserWalletItemUM
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.Basic
+import com.tangem.core.analytics.models.event.SignIn
+import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
-import com.tangem.core.navigation.url.UrlOpener
-import com.tangem.core.ui.components.bottomsheets.BottomSheetOption
-import com.tangem.core.ui.components.bottomsheets.OptionsBottomSheetContent
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
-import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.error.UnlockWalletError
 import com.tangem.domain.models.wallet.UserWallet
@@ -20,11 +19,9 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.settings.CanUseBiometryUseCase
 import com.tangem.domain.wallets.repository.WalletsRepository
-import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
+import com.tangem.domain.wallets.usecase.NonBiometricUnlockWalletUseCase
 import com.tangem.features.wallet.utils.UserWalletsFetcher
-import com.tangem.features.welcome.impl.R
 import com.tangem.features.welcome.impl.ui.state.WelcomeUM
-import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
@@ -32,7 +29,6 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -42,10 +38,11 @@ internal class WelcomeModel @Inject constructor(
     private val router: Router,
     private val uiMessageSender: UiMessageSender,
     private val userWalletsListRepository: UserWalletsListRepository,
+    private val nonBiometricUnlockWalletUseCase: NonBiometricUnlockWalletUseCase,
     private val canUseBiometryUseCase: CanUseBiometryUseCase,
     private val walletsRepository: WalletsRepository,
-    private val generateBuyTangemCardLinkUseCase: GenerateBuyTangemCardLinkUseCase,
-    private val urlOpener: UrlOpener,
+    private val trackingContextProxy: TrackingContextProxy,
+    private val analyticsEventHandler: AnalyticsEventHandler,
     userWalletsFetcherFactory: UserWalletsFetcher.Factory,
 ) : Model() {
 
@@ -56,10 +53,19 @@ internal class WelcomeModel @Inject constructor(
         messageSender = uiMessageSender,
         onlyMultiCurrency = false,
         isAuthMode = true,
+        isClickableIfLocked = true,
         onWalletClick = { walletId ->
             modelScope.launch {
                 val userWallets = userWalletsListRepository.userWalletsSync()
                 val userWallet = userWallets.first { it.walletId == walletId }
+                trackingContextProxy.proceedWithContext(userWallet) {
+                    val signInType = when {
+                        !userWallet.isLocked -> SignIn.ButtonWallet.SignInType.NoSecurity
+                        userWallet is UserWallet.Cold -> SignIn.ButtonWallet.SignInType.Card
+                        else -> SignIn.ButtonWallet.SignInType.AccessCode
+                    }
+                    analyticsEventHandler.send(SignIn.ButtonWallet(signInType))
+                }
                 onUserWalletClick(userWallet)
             }
         },
@@ -72,6 +78,8 @@ internal class WelcomeModel @Inject constructor(
         modelScope.launch {
             userWalletsListRepository.load()
             wallets.value = walletsFetcher.userWallets.first()
+
+            analyticsEventHandler.send(SignIn.ScreenOpened(wallets.value.size))
 
             launch {
                 walletsFetcher.userWallets
@@ -97,7 +105,10 @@ internal class WelcomeModel @Inject constructor(
                         router.replaceAll(AppRoute.Wallet)
                     }
                     .onLeft {
-                        it.handle(null, onUserCancelled = { tryToUnlockWithAccessCodeRightAway() })
+                        it.handle(
+                            specificWalletId = null,
+                            onUserCancelled = { tryToUnlockWithAccessCodeRightAway() },
+                        )
                         setSelectWalletState()
                     }
             } else {
@@ -109,10 +120,10 @@ internal class WelcomeModel @Inject constructor(
 
     private suspend fun tryToUnlockWithAccessCodeRightAway() {
         if (onlyOneHotWalletWithAccessCode()) {
-            val userWallets = userWalletsListRepository.userWalletsSync()
-            val userWallet = userWallets.first()
+            val hotWalletLockedWithAccessCode = userWalletsListRepository.userWalletsSync()
+                .first { it.isLocked && it is UserWallet.Hot } as UserWallet.Hot
             uiState.value = WelcomeUM.Empty
-            unlockWallet(userWallet.walletId, UserWalletsListRepository.UnlockMethod.AccessCode)
+            nonBiometricUnlockWallet(hotWalletLockedWithAccessCode.walletId)
         }
     }
 
@@ -125,6 +136,7 @@ internal class WelcomeModel @Inject constructor(
                 showUnlockWithBiometricButton = canUnlockWithBiometrics(),
                 addWalletClick = ::addWalletClick,
                 onUnlockWithBiometricClick = {
+                    analyticsEventHandler.send(SignIn.ButtonUnlockAllWithBiometric())
                     modelScope.launch {
                         userWalletsListRepository.unlockAllWallets()
                             .onRight {
@@ -146,76 +158,31 @@ internal class WelcomeModel @Inject constructor(
     }
 
     private fun addWalletClick() {
-        updateSelectState { currentState ->
-            currentState.copy(
-                addWalletBottomSheet = TangemBottomSheetConfig(
-                    isShown = true,
-                    content = OptionsBottomSheetContent(
-                        options = persistentListOf(
-                            BottomSheetOption(
-                                key = ADD_WALLET_KEY_CREATE,
-                                label = resourceReference(R.string.home_button_create_new_wallet),
-                            ),
-                            BottomSheetOption(
-                                key = ADD_WALLET_KEY_ADD,
-                                label = resourceReference(R.string.home_button_add_existing_wallet),
-                            ),
-                            BottomSheetOption(
-                                key = ADD_WALLET_KEY_BUY,
-                                label = resourceReference(R.string.details_buy_wallet),
-                            ),
-                        ),
-                        onOptionClick = { optionKey ->
-                            updateSelectState {
-                                it.copy(addWalletBottomSheet = it.addWalletBottomSheet.copy(isShown = false))
-                            }
-                            onAddWalletOptionClick(optionKey)
-                        },
-                    ),
-                    onDismissRequest = {
-                        updateSelectState {
-                            it.copy(addWalletBottomSheet = it.addWalletBottomSheet.copy(isShown = false))
-                        }
-                    },
-                ),
-            )
-        }
-    }
-
-    private fun onAddWalletOptionClick(optionKey: String) {
-        when (optionKey) {
-            ADD_WALLET_KEY_CREATE -> router.push(AppRoute.CreateWalletSelection)
-            ADD_WALLET_KEY_ADD -> router.push(AppRoute.AddExistingWallet)
-            ADD_WALLET_KEY_BUY -> modelScope.launch {
-                generateBuyTangemCardLinkUseCase.invoke().let { urlOpener.openUrl(it) }
-            }
-        }
+        analyticsEventHandler.send(SignIn.ButtonAddWallet(AnalyticsParam.ScreensSources.SignIn))
+        router.push(AppRoute.CreateWalletSelection)
     }
 
     private suspend fun onlyOneHotWalletWithAccessCode(): Boolean {
-        val userWalletsWithLock = userWalletsListRepository.userWalletsSync().filter { it.isLocked }
-        if (userWalletsWithLock.size != 1) return false
-        val wallet = userWalletsWithLock.first()
-        return wallet is UserWallet.Hot && wallet.hotWalletId.authType != HotWalletId.AuthType.NoPassword
+        val userWallets = userWalletsListRepository.userWalletsSync()
+        if (userWallets.size != 1) return false
+        val wallet = userWallets.first()
+        return wallet is UserWallet.Hot && wallet.isLocked
     }
 
     private fun onUserWalletClick(userWallet: UserWallet) = modelScope.launch {
         if (userWallet.isLocked.not()) {
             // If the wallet is not locked, we can proceed to the wallet screen directly
             userWalletsListRepository.select(userWallet.walletId)
+            trackSignInEvent(userWallet, Basic.SignedIn.SignInType.NoSecurity)
             router.replaceAll(AppRoute.Wallet)
             return@launch
         }
 
-        val unlockMethod = when (userWallet) {
-            is UserWallet.Cold -> UserWalletsListRepository.UnlockMethod.Scan()
-            is UserWallet.Hot -> {
-                uiState.value = WelcomeUM.Empty
-                UserWalletsListRepository.UnlockMethod.AccessCode
-            }
+        if (userWallet is UserWallet.Hot) {
+            uiState.value = WelcomeUM.Empty
         }
 
-        unlockWallet(userWallet.walletId, unlockMethod)
+        nonBiometricUnlockWallet(userWallet.walletId)
         setSelectWalletState()
     }
 
@@ -223,8 +190,8 @@ internal class WelcomeModel @Inject constructor(
         return canUseBiometryUseCase() && walletsRepository.useBiometricAuthentication()
     }
 
-    suspend fun unlockWallet(userWalletId: UserWalletId, unlockMethod: UserWalletsListRepository.UnlockMethod) {
-        userWalletsListRepository.unlock(userWalletId, unlockMethod)
+    suspend fun nonBiometricUnlockWallet(userWalletId: UserWalletId) {
+        nonBiometricUnlockWalletUseCase(userWalletId)
             .onRight {
                 routedOut = true
                 userWalletsListRepository.select(userWalletId)
@@ -236,27 +203,15 @@ internal class WelcomeModel @Inject constructor(
     }
 
     suspend fun UnlockWalletError.handle(specificWalletId: UserWalletId?, onUserCancelled: suspend () -> Unit = { }) {
-        when (this) {
-            UnlockWalletError.AlreadyUnlocked -> {
+        handle(
+            onAlreadyUnlocked = {
                 // this should not happen, as we check for locked state before this
                 specificWalletId?.let { userWalletsListRepository.select(it) }
                 router.replaceAll(AppRoute.Wallet)
-            }
-            UnlockWalletError.ScannedCardWalletNotMatched -> {
-                // TODO Scanned card does not match the wallet
-            }
-            UnlockWalletError.UnableToUnlock -> {
-                // TODO Unable to unlock the wallet"
-            }
-            UnlockWalletError.UserCancelled -> onUserCancelled()
-            UnlockWalletError.UserWalletNotFound -> {
-                // This should never happen in this flow, as we always check for the wallet existence before unlocking
-                Timber.e("User wallet not found for unlock: $specificWalletId")
-                uiMessageSender.send(
-                    SnackbarMessage(TextReference.Res(R.string.generic_error)),
-                )
-            }
-        }
+            },
+            onUserCancelled = { onUserCancelled() },
+            showMessage = uiMessageSender::send,
+        )
     }
 
     private fun updateSelectState(block: (WelcomeUM.SelectWallet) -> WelcomeUM.SelectWallet) {
@@ -269,9 +224,15 @@ internal class WelcomeModel @Inject constructor(
         }
     }
 
-    companion object {
-        private const val ADD_WALLET_KEY_CREATE = "create"
-        private const val ADD_WALLET_KEY_ADD = "add"
-        private const val ADD_WALLET_KEY_BUY = "buy"
+    private suspend fun trackSignInEvent(userWallet: UserWallet, type: Basic.SignedIn.SignInType) {
+        val walletsCount = userWalletsListRepository.userWalletsSync().size
+        trackingContextProxy.proceedWithContext(userWallet) {
+            analyticsEventHandler.send(
+                event = Basic.SignedIn(
+                    signInType = type,
+                    walletsCount = walletsCount,
+                ),
+            )
+        }
     }
 }

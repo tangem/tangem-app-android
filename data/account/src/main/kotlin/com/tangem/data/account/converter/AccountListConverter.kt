@@ -3,6 +3,8 @@ package com.tangem.data.account.converter
 import arrow.core.getOrElse
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.domain.account.models.AccountList
+import com.tangem.domain.models.TokensGroupType
+import com.tangem.domain.models.TokensSortType
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.utils.converter.Converter
 import dagger.assisted.Assisted
@@ -27,12 +29,16 @@ internal class AccountListConverter @AssistedInject constructor(
     }
 
     override fun convert(value: GetWalletAccountsResponse): AccountList {
+        val sortType = value.wallet.sort?.let(TokensSortTypeConverter::convert) ?: TokensSortType.NONE
+        val groupType = value.wallet.group?.let(TokensGroupTypeConverter::convert) ?: TokensGroupType.NONE
+
         return AccountList(
             userWalletId = userWallet.walletId,
-            accounts = value.accounts.map(cryptoPortfolioConverter::convert).toSet(),
+            accounts = value.accounts.map(cryptoPortfolioConverter::convert),
             totalAccounts = value.wallet.totalAccounts,
-            sortType = TokensSortTypeConverter.convert(value.wallet.sort),
-            groupType = TokensGroupTypeConverter.convert(value.wallet.group),
+            totalArchivedAccounts = value.wallet.totalArchivedAccounts,
+            sortType = sortType,
+            groupType = groupType,
         )
             .getOrElse {
                 error("Failed to convert GetWalletAccountsResponse to AccountList: $it")

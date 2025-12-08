@@ -115,6 +115,9 @@ data class TxInfo(
 
             @Serializable
             data object Exit : YieldSupply
+
+            @Serializable
+            data object Topup : YieldSupply
         }
 
         @Serializable

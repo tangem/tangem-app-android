@@ -13,6 +13,9 @@ tasks.withType<Test>().configureEach {
 }
 
 dependencies {
+    /** Core */
+    implementation(projects.core.ui)
+
     /** Domain */
     implementation(projects.domain.models)
     implementation(projects.domain.yieldSupply.models)
@@ -21,6 +24,9 @@ dependencies {
     implementation(projects.domain.legacy)
     implementation(projects.domain.blockaid.models)
     implementation(projects.domain.blockaid)
+    implementation(projects.domain.quotes)
+    implementation(projects.domain.tokens)
+    implementation(projects.domain.appCurrency.models)
 
     /** Tandem SDK */
     implementation(tangemDeps.blockchain)

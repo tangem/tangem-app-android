@@ -46,15 +46,6 @@ internal class MockCurrenciesRepository(
         isTokensSortedByBalanceAfterSortingApply = isSortedByBalance
     }
 
-    override suspend fun saveNewCurrenciesList(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) = Unit
-
-    override suspend fun addCurrencies(
-        userWalletId: UserWalletId,
-        currencies: List<CryptoCurrency>,
-    ): List<CryptoCurrency> = emptyList()
-
-    override suspend fun saveNewCurrenciesListCache(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) = Unit
-
     override suspend fun addCurrenciesCache(
         userWalletId: UserWalletId,
         currencies: List<CryptoCurrency>,
@@ -77,10 +68,6 @@ internal class MockCurrenciesRepository(
         return tokens.first().getOrElse { e -> throw e }
     }
 
-    override suspend fun getMultiCurrencyWalletCachedCurrenciesSync(userWalletId: UserWalletId): List<CryptoCurrency> {
-        return tokens.first().getOrElse { e -> throw e }
-    }
-
     override suspend fun getSingleCurrencyWalletPrimaryCurrency(
         userWalletId: UserWalletId,
         refresh: Boolean,
@@ -100,29 +87,6 @@ internal class MockCurrenciesRepository(
         id: CryptoCurrency.ID,
     ): CryptoCurrency {
         return token.getOrElse { e -> throw e }
-    }
-
-    override fun getMultiCurrencyWalletCurrenciesUpdates(userWalletId: UserWalletId): Flow<List<CryptoCurrency>> {
-        return tokens.map { it.getOrElse { e -> throw e } }
-    }
-
-    override suspend fun getMultiCurrencyWalletCurrency(
-        userWalletId: UserWalletId,
-        id: CryptoCurrency.ID,
-    ): CryptoCurrency {
-        val token = token.getOrElse { e -> throw e }
-
-        require(token.id == id)
-
-        return token
-    }
-
-    override suspend fun getMultiCurrencyWalletCurrency(userWalletId: UserWalletId, id: String): CryptoCurrency {
-        val token = token.getOrElse { e -> throw e }
-
-        require(token.id.value == id)
-
-        return token
     }
 
     override suspend fun getNetworkCoin(
@@ -150,6 +114,10 @@ internal class MockCurrenciesRepository(
 
     override suspend fun getFeePaidCurrency(userWalletId: UserWalletId, network: Network): FeePaidCurrency {
         return FeePaidCurrency.Coin
+    }
+
+    override fun createCoinCurrency(network: Network): CryptoCurrency.Coin {
+        error("not implemented")
     }
 
     override fun createTokenCurrency(cryptoCurrency: CryptoCurrency.Token, network: Network): CryptoCurrency.Token {

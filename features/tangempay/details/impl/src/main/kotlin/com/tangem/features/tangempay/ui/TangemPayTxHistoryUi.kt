@@ -1,13 +1,11 @@
 package com.tangem.features.tangempay.ui
 
-import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -15,7 +13,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
@@ -24,7 +21,6 @@ import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ChainStyle
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
-import coil.compose.rememberAsyncImagePainter
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.CircleShimmer
 import com.tangem.core.ui.components.RectangleShimmer
@@ -32,6 +28,7 @@ import com.tangem.core.ui.components.buttons.actions.ActionButton
 import com.tangem.core.ui.components.list.InfiniteListHandler
 import com.tangem.core.ui.components.transactions.TxHistoryGroupTitle
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
+import com.tangem.core.ui.extensions.ImageReference
 import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
@@ -241,7 +238,7 @@ private fun TangemPayTransaction(
                     bottom.linkTo(timestampItem.top)
                     start.linkTo(titleItem.end)
                     end.linkTo(parent.end)
-                    width = Dimension.fillToConstraints
+                    width = Dimension.preferredWrapContent
                 },
             )
 
@@ -260,51 +257,15 @@ private fun TangemPayTransaction(
 @Composable
 private fun Icon(state: TangemPayTransactionState, modifier: Modifier = Modifier) {
     when (state) {
-        is TangemPayTransactionState.Content.Spend -> {
-            if (state.iconUrl != null) {
-                RemoteIcon(modifier = modifier, url = state.iconUrl)
-            } else {
-                LocalStaticIcon(modifier = modifier, id = R.drawable.ic_category_24)
-            }
+        is TangemPayTransactionState.Content -> when (val iconReference = state.icon) {
+            is ImageReference.Url -> RemoteIcon(modifier = modifier, url = iconReference.url)
+            is ImageReference.Res -> LocalStaticIcon(
+                modifier = modifier,
+                id = iconReference.resId,
+                iconSize = TangemTheme.dimens.size20,
+            )
         }
-        is TangemPayTransactionState.Content.Fee -> LocalStaticIcon(modifier = modifier, id = R.drawable.ic_percent_24)
-        is TangemPayTransactionState.Content.Payment -> LocalStaticIcon(
-            modifier = modifier,
-            id = if (state.isIncome) R.drawable.ic_arrow_down_24 else R.drawable.ic_arrow_up_24,
-        )
-        is TangemPayTransactionState.Loading -> {
-            CircleShimmer(modifier = modifier.size(TangemTheme.dimens.size40))
-        }
-    }
-}
-
-@Composable
-private fun RemoteIcon(url: String, modifier: Modifier = Modifier) {
-    Icon(
-        modifier = modifier
-            .size(TangemTheme.dimens.size40)
-            .clip(CircleShape),
-        painter = rememberAsyncImagePainter(url),
-        contentDescription = null,
-        tint = Color.Unspecified,
-    )
-}
-
-@Composable
-private fun LocalStaticIcon(@DrawableRes id: Int, modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier
-            .size(TangemTheme.dimens.size40)
-            .background(color = TangemTheme.colors.icon.secondary.copy(alpha = 0.1F), shape = CircleShape),
-    ) {
-        Icon(
-            painter = painterResource(id),
-            contentDescription = null,
-            modifier = Modifier
-                .size(TangemTheme.dimens.size20)
-                .align(Alignment.Center),
-            tint = TangemTheme.colors.icon.informative,
-        )
+        is TangemPayTransactionState.Loading -> CircleShimmer(modifier = modifier)
     }
 }
 
@@ -357,13 +318,13 @@ private fun Amount(state: TangemPayTransactionState, isBalanceHidden: Boolean, m
                 text = state.amount.orMaskWithStars(isBalanceHidden),
                 modifier = modifier,
                 textAlign = TextAlign.End,
-                color = state.amountColor(),
+                color = state.amountColor.resolveReference(),
                 style = TangemTheme.typography.body2,
             )
         }
         is TangemPayTransactionState.Loading -> {
             RectangleShimmer(
-                modifier = modifier.size(width = TangemTheme.dimens.size40, height = TangemTheme.dimens.size12),
+                modifier = modifier.size(width = TangemTheme.dimens.size72, height = TangemTheme.dimens.size12),
             )
         }
     }

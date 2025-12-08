@@ -2,6 +2,7 @@ package com.tangem.features.yield.supply.impl.subcomponents.startearning
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
@@ -56,9 +57,11 @@ internal class YieldSupplyStartEarningEntryComponent(
     @Composable
     override fun BottomSheet() {
         val stackState by innerStack.subscribeAsState()
+        val uiState by model.uiState.collectAsStateWithLifecycle()
 
         YieldSupplyStartEarningBottomSheet(
             stackState = stackState,
+            dismissOnClickOutside = { !uiState.isTransactionSending },
             onDismiss = ::dismiss,
         )
     }

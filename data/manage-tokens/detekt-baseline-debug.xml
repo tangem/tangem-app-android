@@ -1,0 +1,9 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>MultilineLambdaItParameter:DefaultCustomTokensRepository.kt$DefaultCustomTokensRepository${ // TODO: refactor https://tangem.atlassian.net/browse/AND-10006\ if (it.isTestnet() || it in excludedBlockchains || it in hotWalletExcludedBlockchains) { return@mapNotNull null } networkFactory.create( blockchain = it, extraDerivationPath = null, userWallet = userWallet, ) }</ID>
+    <ID>MultilineLambdaItParameter:ManageTokensUpdateFetcher.kt$ManageTokensUpdateFetcher${ if (it.key == toUpdate[index].key) { Batch(it.key, updatedItems) } else { null } }</ID>
+    <ID>UnsafeCallOnNullableType:DefaultCustomTokensRepository.kt$DefaultCustomTokensRepository$coinNetwork.decimalCount!!</ID>
+  </CurrentIssues>
+</SmellBaseline>

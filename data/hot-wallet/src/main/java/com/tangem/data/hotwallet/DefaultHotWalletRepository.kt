@@ -1,0 +1,37 @@
+package com.tangem.data.hotwallet
+
+import android.os.Build
+import androidx.annotation.ChecksSdkIntAtLeast
+import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.datasource.local.preferences.utils.getObjectMap
+import com.tangem.domain.hotwallet.repository.HotWalletRepository
+import com.tangem.domain.models.wallet.UserWalletId
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+
+internal class DefaultHotWalletRepository(
+    private val appPreferencesStore: AppPreferencesStore,
+) : HotWalletRepository {
+
+    @ChecksSdkIntAtLeast(api = Build.VERSION_CODES.Q)
+    override fun isWalletCreationSupported(): Boolean {
+        return BuildConfig.DEBUG || Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
+    }
+
+    override fun getLeastSupportedAndroidVersionName(): String = "Android 10"
+
+    override fun accessCodeSkipped(userWalletId: UserWalletId): Flow<Boolean> = appPreferencesStore
+        .getObjectMap<Boolean>(PreferencesKeys.ACCESS_CODE_SKIPPED_STATES_KEY)
+        .map { it[userWalletId.stringValue] == true }
+
+    override suspend fun setAccessCodeSkipped(userWalletId: UserWalletId, skipped: Boolean) {
+        appPreferencesStore.editData { mutablePreferences ->
+            mutablePreferences.setObjectMap(
+                key = PreferencesKeys.ACCESS_CODE_SKIPPED_STATES_KEY,
+                value = mutablePreferences.getObjectMap<Boolean>(PreferencesKeys.ACCESS_CODE_SKIPPED_STATES_KEY)
+                    .plus(userWalletId.stringValue to skipped),
+            )
+        }
+    }
+}

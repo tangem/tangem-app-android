@@ -10,8 +10,8 @@ import com.tangem.features.send.v2.api.params.FeeSelectorParams.FeeSelectorDetai
 import com.tangem.features.walletconnect.connections.components.AlertsComponentV2
 import com.tangem.features.walletconnect.connections.utils.WcAlertsFactory.createCommonTransactionAppInfoAlertUM
 import com.tangem.features.walletconnect.transaction.components.send.WcCustomAllowanceComponent
-import com.tangem.features.walletconnect.transaction.components.send.WcSendingProcessComponent
 import com.tangem.features.walletconnect.transaction.components.send.WcSendMultipleTransactionsComponent
+import com.tangem.features.walletconnect.transaction.components.send.WcSendingProcessComponent
 import com.tangem.features.walletconnect.transaction.entity.common.WcCommonTransactionModel
 import com.tangem.features.walletconnect.transaction.model.WcSendTransactionModel
 import com.tangem.features.walletconnect.transaction.routes.WcTransactionRoutes
@@ -27,7 +27,7 @@ internal fun getWcCommonScreen(
         is WcTransactionRoutes.Transaction -> transactionScreenConverter()
         is WcTransactionRoutes.Alert -> AlertsComponentV2(
             appComponentContext = appComponentContext,
-            messageUM = createCommonTransactionAppInfoAlertUM(config.type),
+            messageUM = createCommonTransactionAppInfoAlertUM(config.alertType),
         )
         is WcTransactionRoutes.TransactionRequestInfo -> WcTransactionRequestInfoComponent(
             appComponentContext = appComponentContext,
@@ -65,7 +65,7 @@ internal fun getWcCommonScreen(
             WcSendMultipleTransactionsComponent(
                 appComponentContext = appComponentContext,
                 model = model,
-                onConfirm = config.onConfirm,
+                onConfirm = { model.onMultiTransactionConfirm() },
             )
         }
         WcTransactionRoutes.TransactionProcess -> {

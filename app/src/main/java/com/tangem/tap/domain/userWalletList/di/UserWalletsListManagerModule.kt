@@ -7,6 +7,7 @@ import com.tangem.common.authentication.storage.AuthenticatedStorage
 import com.tangem.common.json.TangemSdkAdapter
 import com.tangem.common.services.secure.SecureStorage
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.scan.serialization.*
@@ -15,6 +16,7 @@ import com.tangem.domain.visa.model.VisaCardActivationStatus
 import com.tangem.domain.wallets.hot.HotWalletAccessCodeAttemptsRepository
 import com.tangem.domain.wallets.hot.HotWalletPasswordRequester
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
+import com.tangem.hot.sdk.TangemHotSdk
 import com.tangem.sdk.storage.AndroidSecureStorage
 import com.tangem.sdk.storage.AndroidSecureStorageV2
 import com.tangem.sdk.storage.createEncryptedSharedPreferences
@@ -122,6 +124,9 @@ internal object UserWalletsListManagerModule {
         passwordRequester: HotWalletPasswordRequester,
         appPreferencesStore: AppPreferencesStore,
         hotWalletAccessCodeAttemptsRepository: HotWalletAccessCodeAttemptsRepository,
+        tangemHotSdk: TangemHotSdk,
+        trackingContextProxy: TrackingContextProxy,
+        analyticsEventHandler: AnalyticsEventHandler,
     ): UserWalletsListRepository {
         val moshi = buildMoshi()
         val secureStorage = buildSecureStorage(applicationContext = applicationContext)
@@ -168,6 +173,9 @@ internal object UserWalletsListManagerModule {
             appPreferencesStore = appPreferencesStore,
             savePersistentInformation = ProviderSuspend { true }, // Always save persistent information for now
             hotWalletAccessCodeAttemptsRepository = hotWalletAccessCodeAttemptsRepository,
+            tangemHotSdk = tangemHotSdk,
+            trackingContextProxy = trackingContextProxy,
+            analyticsEventHandler = analyticsEventHandler,
         )
     }
 

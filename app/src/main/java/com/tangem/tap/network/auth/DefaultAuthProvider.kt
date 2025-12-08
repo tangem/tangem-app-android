@@ -2,14 +2,19 @@ package com.tangem.tap.network.auth
 
 import com.tangem.common.extensions.toHexString
 import com.tangem.datasource.api.common.AuthProvider
+import com.tangem.datasource.api.common.config.ApiEnvironment
+import com.tangem.datasource.local.config.environment.EnvironmentConfigStorage
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
+import com.tangem.utils.Provider
+import com.tangem.utils.ProviderSuspend
 
 internal class DefaultAuthProvider(
     private val userWalletsListManager: UserWalletsListManager,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val shouldUseNewListRepository: Boolean = false,
+    private val environmentConfigStorage: EnvironmentConfigStorage,
 ) : AuthProvider {
 
     override suspend fun getCardPublicKey(): String {
@@ -35,6 +40,22 @@ internal class DefaultAuthProvider(
     override suspend fun getCardsPublicKeys(): Map<String, String> {
         return getWallets().filterIsInstance<UserWallet.Cold>().associate {
             it.scanResponse.card.cardId to it.scanResponse.card.cardPublicKey.toHexString()
+        }
+    }
+
+    override fun getApiKey(apiEnvironment: Provider<ApiEnvironment>): ProviderSuspend<String> {
+        return ProviderSuspend {
+            when (apiEnvironment.invoke()) {
+                ApiEnvironment.MOCK,
+                ApiEnvironment.DEV,
+                ApiEnvironment.DEV_2,
+                ApiEnvironment.DEV_3,
+                -> environmentConfigStorage.getConfigSync().tangemApiKeyDev
+                ApiEnvironment.STAGE_2,
+                ApiEnvironment.STAGE,
+                -> environmentConfigStorage.getConfigSync().tangemApiKeyStage
+                ApiEnvironment.PROD -> environmentConfigStorage.getConfigSync().tangemApiKey
+            } ?: error("No tangem tech api config provided")
         }
     }
 

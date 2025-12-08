@@ -3,10 +3,13 @@ package com.tangem.tap.di.domain
 import com.tangem.domain.blockaid.BlockAidGasEstimate
 import com.tangem.domain.transaction.FeeRepository
 import com.tangem.domain.transaction.error.FeeErrorResolver
+import com.tangem.domain.quotes.QuotesRepository
+import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.yield.supply.YieldSupplyErrorResolver
 import com.tangem.domain.yield.supply.YieldSupplyRepository
 import com.tangem.domain.yield.supply.YieldSupplyTransactionRepository
 import com.tangem.domain.yield.supply.usecase.*
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -129,6 +132,70 @@ internal object YieldSupplyDomainModule {
         yieldSupplyRepository: YieldSupplyRepository,
     ): YieldSupplyDeactivateUseCase {
         return YieldSupplyDeactivateUseCase(
+            yieldSupplyRepository = yieldSupplyRepository,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideYieldSupplyMinAmountUseCase(
+        feeRepository: FeeRepository,
+        quotesRepository: QuotesRepository,
+        currenciesRepository: CurrenciesRepository,
+    ): YieldSupplyMinAmountUseCase {
+        return YieldSupplyMinAmountUseCase(
+            feeRepository = feeRepository,
+            quotesRepository = quotesRepository,
+            currenciesRepository = currenciesRepository,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideYieldSupplyGetCurrentFeeUseCase(
+        feeRepository: FeeRepository,
+        quotesRepository: QuotesRepository,
+        currenciesRepository: CurrenciesRepository,
+    ): YieldSupplyGetCurrentFeeUseCase {
+        return YieldSupplyGetCurrentFeeUseCase(
+            feeRepository = feeRepository,
+            quotesRepository = quotesRepository,
+            currenciesRepository = currenciesRepository,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideYieldSupplyGetMaxFeeUseCase(
+        yieldSupplyRepository: YieldSupplyRepository,
+        quotesRepository: QuotesRepository,
+        currenciesRepository: CurrenciesRepository,
+    ): YieldSupplyGetMaxFeeUseCase {
+        return YieldSupplyGetMaxFeeUseCase(
+            yieldSupplyRepository = yieldSupplyRepository,
+            quotesRepository = quotesRepository,
+            currenciesRepository = currenciesRepository,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideYieldSupplyGetRewardsBalanceUseCase(
+        yieldSupplyRepository: YieldSupplyRepository,
+        dispatcherProvider: CoroutineDispatcherProvider,
+    ): YieldSupplyGetRewardsBalanceUseCase {
+        return YieldSupplyGetRewardsBalanceUseCase(
+            yieldSupplyRepository = yieldSupplyRepository,
+            dispatcherProvider = dispatcherProvider,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideYieldSupplyEnterStatusUseCase(
+        yieldSupplyRepository: YieldSupplyRepository,
+    ): YieldSupplyEnterStatusUseCase {
+        return YieldSupplyEnterStatusUseCase(
             yieldSupplyRepository = yieldSupplyRepository,
         )
     }

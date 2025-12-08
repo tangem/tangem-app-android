@@ -24,6 +24,7 @@ internal sealed class SendAnalyticEvents(
         val feeType: AnalyticsParam.FeeType,
         val blockchain: String,
         val nonceNotEmpty: Boolean,
+        private val ensStatus: AnalyticsParam.EnsStatus,
     ) : SendAnalyticEvents(
         event = "Transaction Sent Screen Opened",
         params = mapOf(
@@ -31,7 +32,10 @@ internal sealed class SendAnalyticEvents(
             FEE_TYPE to feeType.value,
             BLOCKCHAIN to blockchain,
             NONCE to nonceNotEmpty.toString().capitalize(),
-            ENS_ADDRESS to (blockchain == "Ethereum").toString(),
+            ENS_ADDRESS to when (ensStatus) {
+                AnalyticsParam.EnsStatus.EMPTY -> false.toString().capitalize()
+                AnalyticsParam.EnsStatus.FULL -> true.toString().capitalize()
+            },
         ),
     )
 

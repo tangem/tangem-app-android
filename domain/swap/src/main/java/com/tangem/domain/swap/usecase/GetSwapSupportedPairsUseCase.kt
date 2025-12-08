@@ -7,11 +7,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.swap.SwapErrorResolver
 import com.tangem.domain.swap.SwapRepositoryV2
-import com.tangem.domain.swap.models.SwapCryptoCurrency
-import com.tangem.domain.swap.models.SwapCurrencies
-import com.tangem.domain.swap.models.SwapCurrenciesGroup
-import com.tangem.domain.swap.models.SwapPairModel
-import com.tangem.domain.swap.models.SwapTxType
+import com.tangem.domain.swap.models.*
 
 /**
  * Returns pais
@@ -36,7 +32,7 @@ class GetSwapSupportedPairsUseCase(
             swapTxType = swapTxType,
         )
 
-        val filteredOutInitial = cryptoCurrencyList.filterNot { it.id == initialCurrency.id }
+        val filteredOutInitial = cryptoCurrencyList.filterNot { it.id.rawNetworkId == initialCurrency.id.rawNetworkId }
 
         val fromGroup = pairs.groupPairs(
             initialCurrency = initialCurrency,
@@ -63,15 +59,20 @@ class GetSwapSupportedPairsUseCase(
         groupingCurrency: (SwapPairModel) -> CryptoCurrencyStatus,
         cryptoCurrencyList: List<CryptoCurrency>,
     ): SwapCurrenciesGroup {
-        val availableCryptoCurrencies = filter { pair -> filteringCurrency(pair).currency.id == initialCurrency.id }
-            // Search available to swap currency
+        val availableCryptoCurrencies = asSequence()
             .filter { pair ->
+                filteringCurrency(pair).currency.id.rawCurrencyId == initialCurrency.id.rawCurrencyId
+            }
+            .filter { pair ->
+                // Search available to swap currency
                 cryptoCurrencyList.any { currencyStatus ->
                     // Allowed only on networks without tx extras (e.i. memo and destination tag)
                     val isExtrasSupported = currencyStatus.network.transactionExtrasType.isTxExtrasSupported()
                     currencyStatus.id == pair.to.currency.id && !isExtrasSupported
                 }
-            }.map { pair -> SwapCryptoCurrency(groupingCurrency(pair), pair.providers) }
+            }
+            .map { pair -> SwapCryptoCurrency(groupingCurrency(pair), pair.providers) }
+            .toList()
 
         val unavailableCryptoCurrencies =
             cryptoCurrencyList - availableCryptoCurrencies.map { it.currencyStatus.currency }.toSet()

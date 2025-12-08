@@ -3,13 +3,23 @@ package com.tangem.features.managetokens.model
 import arrow.core.getOrElse
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
+import com.tangem.blockchain.common.Blockchain
+import com.tangem.common.ui.account.toUM
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.message.DialogMessage
+import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
+import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.managetokens.GetSupportedNetworksUseCase
+import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.network.Network
 import com.tangem.features.managetokens.component.AddCustomTokenMode
 import com.tangem.features.managetokens.component.CustomTokenSelectorComponent
@@ -25,10 +35,12 @@ import com.tangem.features.managetokens.entity.item.SelectableItemUM
 import com.tangem.features.managetokens.impl.R
 import com.tangem.features.managetokens.utils.mapper.toCurrencyNetworkModel
 import com.tangem.features.managetokens.utils.mapper.toDerivationPathModel
+import com.tangem.lib.crypto.derivation.AccountNodeRecognizer
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -38,6 +50,8 @@ internal class CustomTokenSelectorModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val getSupportedNetworksUseCase: GetSupportedNetworksUseCase,
     private val messageSender: UiMessageSender,
+    private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
+    private val accountsFeatureToggles: AccountsFeatureToggles,
     paramsContainer: ParamsContainer,
 ) : Model() {
 
@@ -113,7 +127,7 @@ internal class CustomTokenSelectorModel @Inject constructor(
                         isDefault = true,
                     )
 
-                    selector.onDerivationPathSelected(model)
+                    selector.onDerivationPathSelected(model, null)
                 },
             )
         }
@@ -138,7 +152,7 @@ internal class CustomTokenSelectorModel @Inject constructor(
                             isDefault = false,
                         )
 
-                        selector.onDerivationPathSelected(model)
+                        selector.onDerivationPathSelected(model, null)
                     },
                 )
             }
@@ -146,9 +160,8 @@ internal class CustomTokenSelectorModel @Inject constructor(
         return derivationPaths
     }
 
-    private suspend fun getSupportedNetworks(mode: AddCustomTokenMode): List<Network> = when (mode) {
-        is AddCustomTokenMode.Account -> TODO("Account")
-        is AddCustomTokenMode.Wallet -> getSupportedNetworksUseCase(mode.userWalletId).getOrElse { e ->
+    private suspend fun getSupportedNetworks(mode: AddCustomTokenMode): List<Network> {
+        return getSupportedNetworksUseCase(mode.userWalletId).getOrElse { e ->
             val message = SnackbarMessage(message = resourceReference(R.string.common_unknown_error))
             messageSender.send(message)
 
@@ -159,7 +172,10 @@ internal class CustomTokenSelectorModel @Inject constructor(
     private fun showCustomDerivationInput() {
         val config = when (params) {
             is NetworkSelector -> return
-            is DerivationPathSelector -> CustomTokenSelectorDialogConfig.CustomDerivationInput(params.mode)
+            is DerivationPathSelector -> CustomTokenSelectorDialogConfig.CustomDerivationInput(
+                params.mode,
+                params.selectedNetwork,
+            )
         }
 
         dialogNavigation.activate(config)
@@ -168,7 +184,63 @@ internal class CustomTokenSelectorModel @Inject constructor(
     fun selectCustomDerivationPath(value: SelectedDerivationPath) {
         when (params) {
             is NetworkSelector -> return
-            is DerivationPathSelector -> params.onDerivationPathSelected(value)
+            is DerivationPathSelector -> if (accountsFeatureToggles.isFeatureEnabled) {
+                params.checkAccountDerivation(value)
+            } else {
+                params.onDerivationPathSelected(value, null)
+            }
         }
+    }
+
+    private fun DerivationPathSelector.checkAccountDerivation(derivationPath: SelectedDerivationPath) =
+        modelScope.launch {
+            val account = derivationPath.id
+                ?.let { Blockchain.fromId(it.rawId.value) }?.let(::AccountNodeRecognizer)
+                ?.let { recognizer -> derivationPath.value.value?.let { recognizer.recognize(it) } }
+                ?.let { accountNode ->
+                    fun AccountStatus.CryptoPortfolio.sameNodeAndNotMain() = !this.account.isMainAccount &&
+                        this.account.derivationIndex.value.toLong() == accountNode
+
+                    val accounts = singleAccountStatusListSupplier(mode.userWalletId)
+                        .first().accountStatuses
+
+                    val accountStatus = accounts.find {
+                        when (it) {
+                            is AccountStatus.CryptoPortfolio -> it.sameNodeAndNotMain()
+                        }
+                    }
+
+                    accountStatus?.account
+                }
+
+            val accountName = when (account) {
+                is Account.CryptoPortfolio -> account.accountName
+                null -> null
+            }
+
+            if (accountName == null) {
+                onDerivationPathSelected(derivationPath, null)
+            } else {
+                showAccountNameExist(
+                    accountName = accountName.toUM().value,
+                    onClick = { onDerivationPathSelected(derivationPath, account) },
+                )
+            }
+        }
+
+    private fun showAccountNameExist(accountName: TextReference, onClick: () -> Unit) {
+        val firstAction = EventMessageAction(
+            title = resourceReference(R.string.common_got_it),
+            onClick = onClick,
+        )
+        val dialogMessage = DialogMessage(
+            title = resourceReference(R.string.custom_token_another_account_dialog_title),
+            message = resourceReference(
+                R.string.custom_token_another_account_dialog_description,
+                wrappedList(accountName),
+            ),
+            firstActionBuilder = { firstAction },
+        )
+        messageSender.send(dialogMessage)
     }
 }

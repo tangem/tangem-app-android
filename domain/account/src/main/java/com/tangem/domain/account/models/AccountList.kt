@@ -13,19 +13,22 @@ import com.tangem.utils.extensions.addOrReplace
 import kotlinx.serialization.Serializable
 
 /**
- * Represents a list of accounts associated with a user wallet
+ * Represents a list of accounts associated with a user wallet ID.
  *
  * @property userWalletId  the user wallet id associated with the account list
- * @property accounts      a set of accounts belonging to the user wallet
- * @property totalAccounts the total number of accounts
+ * @property accounts      a list of accounts belonging to the user wallet
+ * @property totalAccounts the total number of accounts (including archived ones)
+ * @property sortType      the sorting type applied to the accounts
+ * @property groupType     the grouping type applied to the accounts
  *
 [REDACTED_AUTHOR]
  */
 @Serializable
 data class AccountList private constructor(
     val userWalletId: UserWalletId,
-    val accounts: Set<Account>,
+    val accounts: List<Account>,
     val totalAccounts: Int,
+    val totalArchivedAccounts: Int,
     val sortType: TokensSortType,
     val groupType: TokensGroupType,
 ) {
@@ -37,6 +40,10 @@ data class AccountList private constructor(
     /** Returns true if more accounts can be added (the maximum number of accounts has not been reached) */
     val canAddMoreAccounts: Boolean
         get() = accounts.size < MAX_ACCOUNTS_COUNT
+
+    /** Returns the number of active accounts in the list */
+    val activeAccounts: Int
+        get() = accounts.size
 
     /**
      * Adds an account to the account list.
@@ -54,6 +61,7 @@ data class AccountList private constructor(
             userWalletId = this.userWalletId,
             accounts = accounts,
             totalAccounts = this.totalAccounts + if (isNewAccount) 1 else 0,
+            totalArchivedAccounts = this.totalArchivedAccounts,
             sortType = this.sortType,
             groupType = this.groupType,
         )
@@ -68,7 +76,7 @@ data class AccountList private constructor(
      */
     operator fun minus(other: Account): Either<Error, AccountList> {
         val isExistingAccount = this.accounts.any { it.accountId == other.accountId }
-        val accounts = this.accounts.toMutableSet().apply {
+        val accounts = this.accounts.toMutableList().apply {
             removeIf { it.accountId == other.accountId }
         }
 
@@ -76,9 +84,23 @@ data class AccountList private constructor(
             userWalletId = this.userWalletId,
             accounts = accounts,
             totalAccounts = this.totalAccounts - if (isExistingAccount) 1 else 0,
+            totalArchivedAccounts = this.totalArchivedAccounts,
             sortType = this.sortType,
             groupType = this.groupType,
         )
+    }
+
+    /**
+     * Flattens the list of accounts to extract all crypto currencies contained within them.
+     *
+     * @return a list of all crypto currencies from all accounts
+     */
+    fun flattenCurrencies(): List<CryptoCurrency> {
+        return accounts.flatMap { account ->
+            when (account) {
+                is Account.CryptoPortfolio -> account.cryptoCurrencies
+            }
+        }
     }
 
     /**
@@ -123,11 +145,17 @@ data class AccountList private constructor(
         data object DuplicateAccountNames : Error {
             override fun toString(): String = "$tag: Account list contains duplicate account names"
         }
+
+        @Serializable
+        data object TotalAccountsLessThanActive : Error {
+            override fun toString(): String = "$tag: Total accounts cannot be less than active accounts"
+        }
     }
 
     companion object {
 
         const val MAX_ACCOUNTS_COUNT = 20
+        const val MAX_ARCHIVED_ACCOUNTS_COUNT = 1000
         private const val MAX_MAIN_ACCOUNTS_COUNT = 1
 
         /**
@@ -140,8 +168,9 @@ data class AccountList private constructor(
          */
         operator fun invoke(
             userWalletId: UserWalletId,
-            accounts: Set<Account>,
+            accounts: List<Account>,
             totalAccounts: Int,
+            totalArchivedAccounts: Int,
             sortType: TokensSortType = TokensSortType.NONE,
             groupType: TokensGroupType = TokensGroupType.NONE,
         ): Either<Error, AccountList> = either {
@@ -161,17 +190,22 @@ data class AccountList private constructor(
             val uniqueAccountIdsCount = accounts.map { it.accountId.value }.distinct().size
             ensure(accounts.size == uniqueAccountIdsCount) { Error.DuplicateAccountIds }
 
-            val customNames = accounts.mapNotNull { (it.accountName as? AccountName.Custom)?.value }
+            val customNames = accounts.map { (it.accountName as? AccountName.Custom)?.value }
             val uniqueCustomNameCount = customNames.distinct().size
 
             ensure(customNames.size == uniqueCustomNameCount) {
                 Error.DuplicateAccountNames
             }
 
+            ensure(totalAccounts >= accounts.size) {
+                Error.TotalAccountsLessThanActive
+            }
+
             AccountList(
                 userWalletId = userWalletId,
                 accounts = accounts,
                 totalAccounts = totalAccounts,
+                totalArchivedAccounts = totalArchivedAccounts,
                 sortType = sortType,
                 groupType = groupType,
             )
@@ -190,19 +224,20 @@ data class AccountList private constructor(
         ): AccountList {
             return AccountList(
                 userWalletId = userWalletId,
-                accounts = setOf(
+                accounts = listOf(
                     Account.CryptoPortfolio.createMainAccount(
                         userWalletId = userWalletId,
                         cryptoCurrencies = cryptoCurrencies,
                     ),
                 ),
                 totalAccounts = 1,
+                totalArchivedAccounts = 0,
                 sortType = sortType,
                 groupType = groupType,
             )
         }
 
-        private fun Set<Account>.mainAccountsCount(): Int {
+        private fun List<Account>.mainAccountsCount(): Int {
             return count { (it as? Account.CryptoPortfolio)?.isMainAccount == true }
         }
     }

@@ -16,7 +16,7 @@ internal class LoadingAccountTokenItemConverter(
         val (account, currencies) = value
 
         return TokensListItemUM.Portfolio(
-            state = AccountCryptoPortfolioItemStateConverter(
+            tokenItemUM = AccountCryptoPortfolioItemStateConverter(
                 appCurrency = appCurrency,
                 account = account,
                 onItemClick = null,

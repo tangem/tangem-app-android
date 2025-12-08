@@ -16,6 +16,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
+import com.tangem.common.ui.account.AccountTitle
+import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.utils.getFiatReference
 import com.tangem.common.ui.navigationButtons.NavigationButton
@@ -130,24 +132,24 @@ private fun SuccessContent(sendWithSwapUM: SendWithSwapUM, modifier: Modifier = 
 
 @Composable
 private fun SwapAmountBlock(amountUM: SwapAmountUM.Content) {
+    val amountFieldUM = amountUM.primaryAmount.amountField as? AmountState.Data ?: return
+
     AmountBlock(
-        title = resourceReference(
-            id = R.string.send_from_wallet_name,
-            formatArgs = wrappedList(
-                (amountUM.primaryAmount.amountField as? AmountState.Data)?.title
-                    ?: TextReference.EMPTY,
-            ),
-        ),
+        accountTitleUM = amountFieldUM.accountTitleUM,
         amountFieldUM = amountUM.primaryAmount,
     )
     AmountBlock(
-        title = resourceReference(R.string.send_with_swap_recipient_amount_success_title),
+        accountTitleUM = AccountTitleUM.Text(resourceReference(R.string.send_with_swap_recipient_amount_success_title)),
         amountFieldUM = amountUM.secondaryAmount,
     )
 }
 
 @Composable
-private fun AmountBlock(title: TextReference, amountFieldUM: SwapAmountFieldUM, modifier: Modifier = Modifier) {
+private fun AmountBlock(
+    accountTitleUM: AccountTitleUM,
+    amountFieldUM: SwapAmountFieldUM,
+    modifier: Modifier = Modifier,
+) {
     val amountFieldData = amountFieldUM.amountField as? AmountState.Data ?: return
     val cryptoAmount = amountFieldData.amountTextField.cryptoAmount
     val fiatAmount = amountFieldData.amountTextField.fiatAmount
@@ -158,11 +160,7 @@ private fun AmountBlock(title: TextReference, amountFieldUM: SwapAmountFieldUM, 
             .background(TangemTheme.colors.background.action)
             .padding(12.dp),
     ) {
-        Text(
-            text = title.resolveReference(),
-            style = TangemTheme.typography.subtitle2,
-            color = TangemTheme.colors.text.tertiary,
-        )
+        AccountTitle(accountTitleUM)
         Row(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -312,6 +310,7 @@ private fun SendWithSwapSuccessContent_Preview() {
                     isValidating = false,
                     isInitialized = false,
                     isRecentHidden = false,
+                    isAccountsMode = false,
                 ),
                 feeSelectorUM = FeeSelectorUM.Content(
                     fees = TransactionFee.Single(

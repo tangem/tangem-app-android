@@ -8,8 +8,8 @@ import com.tangem.common.routing.AppRouter
 import com.tangem.common.routing.entity.InitScreenLaunchMode
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
-import com.tangem.core.analytics.models.Basic.SignedIn
-import com.tangem.core.analytics.models.Basic.SignedIn.SignInType
+import com.tangem.core.analytics.models.Basic.SignedInLegacy
+import com.tangem.core.analytics.models.Basic.SignedInLegacy.SignInType
 import com.tangem.core.decompose.di.GlobalUiMessageSender
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -86,8 +86,7 @@ internal class HomeModel @Inject constructor(
             onScanClick = ::onScanClick,
             onShopClick = ::onShopClick,
             onSearchTokensClick = ::onSearchTokensClick,
-            onCreateNewWalletClick = ::onCreateNewWalletClick,
-            onAddExistingWalletClick = ::onAddExistingWalletClick,
+            onGetStartedClick = ::onGetStartedClick,
         ),
     )
 
@@ -128,7 +127,7 @@ internal class HomeModel @Inject constructor(
     }
 
     private fun onScanClick() {
-        analyticsEventHandler.send(IntroductionProcess.ButtonScanCard)
+        analyticsEventHandler.send(IntroductionProcess.ButtonScanCardLegacy)
         scanCard()
     }
 
@@ -145,12 +144,8 @@ internal class HomeModel @Inject constructor(
         router.push(AppRoute.ManageTokens(Source.STORIES))
     }
 
-    private fun onCreateNewWalletClick() {
-        router.push(AppRoute.CreateWalletSelection)
-    }
-
-    private fun onAddExistingWalletClick() {
-        router.push(AppRoute.AddExistingWallet)
+    private fun onGetStartedClick() {
+        router.push(AppRoute.CreateWalletStart(mode = AppRoute.CreateWalletStart.Mode.ColdWallet))
     }
 
     private fun scanCard() {
@@ -207,21 +202,22 @@ internal class HomeModel @Inject constructor(
             ifRight = {
                 reduxStateHolder.onUserWalletSelected(userWallet)
                 setLoading(false)
-                sendSignedInCardAnalyticsEvent(scanResponse)
+                sendSignedInCardAnalyticsEvent(scanResponse, userWallet.isImported)
                 appRouter.replaceAll(AppRoute.Wallet)
             },
         )
     }
 
-    private suspend fun sendSignedInCardAnalyticsEvent(scanResponse: ScanResponse) {
+    private suspend fun sendSignedInCardAnalyticsEvent(scanResponse: ScanResponse, isImported: Boolean) {
         val currency = ParamCardCurrencyConverter().convert(value = scanResponse.cardTypesResolver)
         if (currency != null) {
             analyticsEventHandler.send(
-                SignedIn(
+                SignedInLegacy(
                     currency = currency,
                     batch = scanResponse.card.batchId,
                     signInType = SignInType.Card,
                     walletsCount = getWalletsCount().toString(),
+                    isImported = isImported,
                     hasBackup = scanResponse.card.backupStatus?.isActive,
                 ),
             )
@@ -240,7 +236,7 @@ internal class HomeModel @Inject constructor(
         _uiState.update { it.copy(scanInProgress = isLoading) }
     }
 
-    fun handleScanError(error: TangemError) {
+    private fun handleScanError(error: TangemError) {
         when (error) {
             is TangemSdkError.NfcFeatureIsUnavailable -> handleNfcFeatureUnavailable()
             is TangemSdkError -> Timber.e(error, "Scan error occurred")

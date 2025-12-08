@@ -8,6 +8,9 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.components.token.state.TokenItemState
+import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
+import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
+import com.tangem.domain.account.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.features.onramp.component.SwapSelectTokensComponent
@@ -32,20 +35,26 @@ internal class SwapSelectTokensModel @Inject constructor(
     private val router: Router,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
+    private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
+    private val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase,
+    private val accountsFeatureToggles: AccountsFeatureToggles,
 ) : Model() {
 
     val state: StateFlow<SwapSelectTokensUM> = controller.state
 
-    val fromCurrencyStatus: StateFlow<CryptoCurrencyStatus?> get() = _fromCurrencyStatus
+    val fromCurrencyStatus: StateFlow<CryptoCurrencyStatus?>
+        field = MutableStateFlow<CryptoCurrencyStatus?>(value = null)
 
-    private val _fromCurrencyStatus = MutableStateFlow<CryptoCurrencyStatus?>(value = null)
     private val _toCurrencyStatus = MutableStateFlow<CryptoCurrencyStatus?>(value = null)
 
     private val params = paramsContainer.require<SwapSelectTokensComponent.Params>()
 
+    private var isAccountsMode: Boolean = false
+
     init {
         controller.update { it.copy(onBackClick = ::onBackClick) }
 
+        subscribeOnAccountsMode()
         subscribeOnBalanceHidingSettings()
     }
 
@@ -60,14 +69,25 @@ internal class SwapSelectTokensModel @Inject constructor(
             event = MainScreenAnalyticsEvent.SwapTokenClicked(currencySymbol = status.currency.symbol),
         )
 
-        _fromCurrencyStatus.value = status
+        fromCurrencyStatus.value = status
 
-        controller.update(
-            transformer = SelectFromTokenTransformer(
-                selectedTokenItemState = selectedTokenItemState,
-                onRemoveClick = ::onRemoveFromTokenClick,
-            ),
-        )
+        modelScope.launch {
+            controller.update(
+                transformer = SelectFromTokenTransformer(
+                    selectedTokenItemState = selectedTokenItemState,
+                    onRemoveClick = ::onRemoveFromTokenClick,
+                    isAccountsMode = isAccountsMode,
+                    account = if (accountsFeatureToggles.isFeatureEnabled) {
+                        getAccountCurrencyStatusUseCase.invokeSync(
+                            userWalletId = params.userWalletId,
+                            currency = status.currency,
+                        ).getOrNull()?.account
+                    } else {
+                        null
+                    },
+                ),
+            )
+        }
     }
 
     /**
@@ -84,7 +104,20 @@ internal class SwapSelectTokensModel @Inject constructor(
         modelScope.launch {
             _toCurrencyStatus.value = status
 
-            controller.update(transformer = SelectToTokenTransformer(selectedTokenItemState))
+            controller.update(
+                transformer = SelectToTokenTransformer(
+                    selectedTokenItemState = selectedTokenItemState,
+                    isAccountsMode = isAccountsMode,
+                    account = if (accountsFeatureToggles.isFeatureEnabled) {
+                        getAccountCurrencyStatusUseCase.invokeSync(
+                            userWalletId = params.userWalletId,
+                            currency = status.currency,
+                        ).getOrNull()?.account
+                    } else {
+                        null
+                    },
+                ),
+            )
 
             // require some delay to show state with selected "from" and "to" tokens
             delay(timeMillis = 500)
@@ -119,6 +152,16 @@ internal class SwapSelectTokensModel @Inject constructor(
             .launchIn(modelScope)
     }
 
+    private fun subscribeOnAccountsMode() {
+        isAccountsModeEnabledUseCase()
+            .distinctUntilChanged()
+            .onEach {
+                isAccountsMode = it
+            }
+            .flowOn(dispatchers.default)
+            .launchIn(modelScope)
+    }
+
     private fun onBackClick() {
         analyticsEventHandler.send(
             event = MainScreenAnalyticsEvent.ButtonClose(source = AnalyticsParam.ScreensSources.Swap),
@@ -128,7 +171,7 @@ internal class SwapSelectTokensModel @Inject constructor(
     }
 
     private fun onRemoveFromTokenClick() {
-        val currencySymbol = requireNotNull(_fromCurrencyStatus.value?.currency?.symbol) {
+        val currencySymbol = requireNotNull(fromCurrencyStatus.value?.currency?.symbol) {
             "Token was not selected"
         }
 
@@ -140,7 +183,7 @@ internal class SwapSelectTokensModel @Inject constructor(
     }
 
     private fun removeSelectedFromToken() {
-        _fromCurrencyStatus.value = null
+        fromCurrencyStatus.value = null
 
         controller.update(transformer = RemoveSelectedFromTokenTransformer)
     }

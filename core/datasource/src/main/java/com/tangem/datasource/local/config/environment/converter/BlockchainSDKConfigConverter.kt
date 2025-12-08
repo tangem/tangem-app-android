@@ -26,6 +26,10 @@ internal object BlockchainSDKConfigConverter : Converter<EnvironmentConfigModel,
                 apiKey = value.bscQuiknodeApiKey,
                 subdomain = value.bscQuiknodeSubdomain,
             ),
+            quickNodePlasmaCredentials = QuickNodeCredentials(
+                apiKey = value.quiknodePlasmaApiKey,
+                subdomain = value.quiknodePlasmaSubdomain,
+            ),
             infuraProjectId = value.infuraProjectId,
             tronGridApiKey = value.tronGridApiKey,
             nowNodeCredentials = NowNodeCredentials(value.nowNodesApiKey),
@@ -46,6 +50,7 @@ internal object BlockchainSDKConfigConverter : Converter<EnvironmentConfigModel,
             moralisApiKey = value.moralisApiKey,
             etherscanApiKey = value.etherScanApiKey,
             blinkApiKey = value.blinkApiKey,
+            tatumApiKey = value.tatumApiKey,
         )
     }
 

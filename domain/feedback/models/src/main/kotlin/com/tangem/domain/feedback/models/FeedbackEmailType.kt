@@ -1,5 +1,6 @@
 package com.tangem.domain.feedback.models
 
+import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import com.tangem.domain.visa.model.VisaTxDetails
 
 /**
@@ -56,6 +57,8 @@ sealed interface FeedbackEmailType {
     }
 
     sealed class Visa : FeedbackEmailType {
+        data class FailedIssueCard(override val walletMetaInfo: WalletMetaInfo) : Visa()
+
         data class DirectUserRequest(override val walletMetaInfo: WalletMetaInfo) : Visa()
 
         data class Activation(override val walletMetaInfo: WalletMetaInfo) : Visa()
@@ -63,6 +66,17 @@ sealed interface FeedbackEmailType {
         data class Dispute(
             val visaTxDetails: VisaTxDetails,
             override val walletMetaInfo: WalletMetaInfo,
+        ) : Visa()
+
+        data class DisputeV2(
+            val item: TangemPayTxHistoryItem,
+            override val walletMetaInfo: WalletMetaInfo,
+        ) : Visa()
+
+        data class Withdrawal(
+            override val walletMetaInfo: WalletMetaInfo,
+            val providerName: String,
+            val txId: String,
         ) : Visa()
     }
 }

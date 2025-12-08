@@ -9,7 +9,6 @@ import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.card.common.util.getCardsCount
-import com.tangem.domain.models.PortfolioId
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.visa.exception.RefreshTokenExpiredException
@@ -138,7 +137,7 @@ internal class SetVisaInfoTransformer(
                 fiatAmount = visaCurrency.balances.available.multiply(visaCurrency.fiatRate),
                 fiatRate = visaCurrency.fiatRate,
                 priceChange = visaCurrency.priceChange,
-                yieldBalance = null,
+                stakingBalance = null,
                 yieldSupplyStatus = null,
                 hasCurrentNetworkTransactions = false,
                 pendingTransactions = emptySet(),
@@ -153,7 +152,7 @@ internal class SetVisaInfoTransformer(
                 dimContent = false,
                 onClick = {
                     clickIntents.onReceiveClick(
-                        portfolioId = PortfolioId(userWalletId), // todo account Visa use Main account?
+                        userWalletId = userWalletId,
                         cryptoCurrencyStatus = cryptoCurrencyStatus,
                         event = MainScreenAnalyticsEvent.ButtonReceive,
                     )

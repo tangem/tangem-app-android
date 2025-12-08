@@ -16,6 +16,7 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.components.NavigationBar3ButtonsScrim
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.tokens.model.details.NavigationAction
 import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDetailsModel
 import com.tangem.feature.tokendetails.presentation.tokendetails.route.TokenDetailsBottomSheetConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.TokenDetailsScreen
@@ -76,6 +77,8 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
         params = YieldSupplyComponent.Params(
             userWalletId = params.userWalletId,
             cryptoCurrency = params.currency,
+            shouldHandleNavigation = (params.navigationAction as? NavigationAction.YieldSupply)
+                ?.isActive,
         ),
     )
 

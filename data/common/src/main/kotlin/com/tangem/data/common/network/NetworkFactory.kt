@@ -7,10 +7,12 @@ import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.domain.card.common.extensions.canHandleToken
-import com.tangem.domain.wallets.derivations.derivationStyleProvider
+import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.derivations.DerivationStyleProvider
+import com.tangem.domain.wallets.derivations.derivationStyleProvider
+import com.tangem.lib.crypto.derivation.toMutable
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -21,6 +23,7 @@ import javax.inject.Inject
  *
 [REDACTED_AUTHOR]
  */
+@Suppress("LargeClass")
 class NetworkFactory @Inject constructor(
     private val excludedBlockchains: ExcludedBlockchains,
 ) {
@@ -32,18 +35,25 @@ class NetworkFactory @Inject constructor(
      * @param extraDerivationPath extra derivation path
      * @param userWallet          user wallet
      */
-    fun create(blockchain: Blockchain, extraDerivationPath: String?, userWallet: UserWallet): Network? {
+    fun create(
+        blockchain: Blockchain,
+        extraDerivationPath: String?,
+        userWallet: UserWallet,
+        accountIndex: DerivationIndex? = null,
+    ): Network? {
         return create(
             blockchain = blockchain,
             derivationPath = createDerivationPath(
                 blockchain = blockchain,
                 extraDerivationPath = extraDerivationPath,
                 cardDerivationStyleProvider = userWallet.derivationStyleProvider,
+                accountIndex = accountIndex,
             ),
             canHandleTokens = userWallet.canHandleToken(
                 blockchain = blockchain,
                 excludedBlockchains = excludedBlockchains,
             ),
+            accountIndex = accountIndex,
         )
     }
 
@@ -57,6 +67,25 @@ class NetworkFactory @Inject constructor(
     fun create(networkId: Network.ID, derivationPath: Network.DerivationPath, userWallet: UserWallet): Network? {
         val blockchain = networkId.toBlockchain()
 
+        return create(
+            blockchain = blockchain,
+            derivationPath = derivationPath,
+            canHandleTokens = userWallet.canHandleToken(
+                blockchain = blockchain,
+                excludedBlockchains = excludedBlockchains,
+            ),
+            shouldCheckChia = false,
+        )
+    }
+
+    /**
+     * Create
+     *
+     * @param blockchain     blockchain
+     * @param derivationPath derivation path
+     * @param userWallet     user wallet
+     */
+    fun create(blockchain: Blockchain, derivationPath: Network.DerivationPath, userWallet: UserWallet): Network? {
         return create(
             blockchain = blockchain,
             derivationPath = derivationPath,
@@ -80,6 +109,7 @@ class NetworkFactory @Inject constructor(
         extraDerivationPath: String?,
         derivationStyleProvider: DerivationStyleProvider?,
         canHandleTokens: Boolean,
+        accountIndex: DerivationIndex? = null,
     ): Network? {
         return create(
             blockchain = blockchain,
@@ -87,8 +117,10 @@ class NetworkFactory @Inject constructor(
                 blockchain = blockchain,
                 extraDerivationPath = extraDerivationPath,
                 cardDerivationStyleProvider = derivationStyleProvider,
+                accountIndex = accountIndex,
             ),
             canHandleTokens = canHandleTokens,
+            accountIndex = accountIndex,
         )
     }
 
@@ -96,8 +128,11 @@ class NetworkFactory @Inject constructor(
         blockchain: Blockchain,
         derivationPath: Network.DerivationPath,
         canHandleTokens: Boolean,
+        accountIndex: DerivationIndex? = null,
+        shouldCheckChia: Boolean = true,
     ): Network? {
         if (!blockchain.isBlockchainSupported()) return null
+        if (shouldCheckChia && blockchain == Blockchain.Chia && accountIndex != DerivationIndex.Main) return null
 
         return runCatching {
             Network(
@@ -130,14 +165,15 @@ class NetworkFactory @Inject constructor(
         return true
     }
 
-    private fun createDerivationPath(
+    fun createDerivationPath(
         blockchain: Blockchain,
         extraDerivationPath: String?,
         cardDerivationStyleProvider: DerivationStyleProvider?,
+        accountIndex: DerivationIndex? = null,
     ): Network.DerivationPath {
         if (cardDerivationStyleProvider == null) return Network.DerivationPath.None
 
-        val defaultDerivationPath = getDefaultDerivationPath(blockchain, cardDerivationStyleProvider)
+        val defaultDerivationPath = getDefaultDerivationPath(blockchain, cardDerivationStyleProvider, accountIndex)
 
         return if (extraDerivationPath.isNullOrBlank()) {
             if (defaultDerivationPath.isNullOrBlank()) {
@@ -157,8 +193,19 @@ class NetworkFactory @Inject constructor(
     private fun getDefaultDerivationPath(
         blockchain: Blockchain,
         derivationStyleProvider: DerivationStyleProvider,
+        accountIndex: DerivationIndex?,
     ): String? {
-        return blockchain.derivationPath(derivationStyleProvider.getDerivationStyle())?.rawPath
+        val default = blockchain.derivationPath(derivationStyleProvider.getDerivationStyle())
+            ?: return null
+
+        return if (accountIndex == null || accountIndex == DerivationIndex.Main) {
+            default
+        } else {
+            default.toMutable()
+                .replaceAccountNode(value = accountIndex.value.toLong(), blockchain = blockchain)
+                .apply()
+        }
+            .rawPath
     }
 
     private fun getNetworkStandardType(blockchain: Blockchain): Network.StandardType {
@@ -327,6 +374,8 @@ class NetworkFactory @Inject constructor(
             Blockchain.Hyperliquid, Blockchain.HyperliquidTestnet,
             Blockchain.Quai, Blockchain.QuaiTestnet,
             Blockchain.Linea, Blockchain.LineaTestnet,
+            Blockchain.ArbitrumNova,
+            Blockchain.Plasma, Blockchain.PlasmaTestnet,
             -> Network.TransactionExtrasType.NONE
             // endregion
         }

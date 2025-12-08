@@ -50,8 +50,11 @@ interface TangemTechApi {
         @Body userTokens: UserTokensResponse,
     ): ApiResponse<Unit>
 
-    @POST("v1/user-tokens")
-    suspend fun markUserWallerWasCreated(@Body body: MarkUserWalletWasCreatedBody): ApiResponse<Unit>
+    @PUT("/v1/wallets/{walletId}/tokens")
+    suspend fun saveTokens(
+        @Path(value = "walletId") userId: String,
+        @Body userTokens: UserTokensResponse,
+    ): ApiResponse<Unit>
 
     /** Returns referral status by [walletId] */
     @GET("v1/referral/{walletId}")
@@ -132,11 +135,20 @@ interface TangemTechApi {
         @Body body: List<WalletIdBody>,
     ): ApiResponse<Unit>
 
+    @PUT("/v1/user-wallets/applications/{application_id}/wallets")
+    suspend fun associateApplicationIdWithWalletsV2(
+        @Path("application_id") applicationId: String,
+        @Body body: AssociateApplicationIdWithWalletsBody,
+    ): ApiResponse<Unit>
+
     @GET("v1/user-wallets/wallets/{wallet_id}")
     suspend fun getWalletById(@Path("wallet_id") walletId: String): ApiResponse<WalletResponse>
 
     @GET("v1/user-wallets/wallets/by-app/{app_id}")
     suspend fun getWallets(@Path("app_id") appId: String): ApiResponse<List<WalletResponse>>
+
+    @POST("v1/user-wallets/wallets")
+    suspend fun createWallet(@Body body: WalletIdBody): ApiResponse<Unit>
     // endregion
 
     // promo
@@ -156,7 +168,7 @@ interface TangemTechApi {
         @Path("walletId") walletId: String,
         @Header("If-Match") eTag: String,
         @Body body: SaveWalletAccountsResponse,
-    ): ApiResponse<Unit>
+    ): ApiResponse<GetWalletAccountsResponse>
 
     @GET("/v1/wallets/{walletId}/accounts/archived")
     suspend fun getWalletArchivedAccounts(
@@ -172,4 +184,13 @@ interface TangemTechApi {
         @Header("Cache-Control") cacheControl: String = "max-age=600",
     ): ApiResponse<PromoBannerResponse>
     // endregion
+
+    /**
+     * Stores transaction hash in cache to prevent duplicate push
+     * notifications for yield operations (deposit, withdraw, send).
+     * Used when yield operations generate intermediate transactions
+     * that should not trigger notifications.
+     */
+    @POST("v1/transaction-events")
+    suspend fun transactionEvents(@Body name: TransactionEventBody): ApiResponse<Unit>
 }

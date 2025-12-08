@@ -1,0 +1,11 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>BooleanPropertyNaming:FeeSelectorData.kt$FeeSelectorData$val removeSuggestedFee: Boolean = false</ID>
+    <ID>BooleanPropertyNaming:SendEntryRoute.kt$SendEntryRoute.ChooseToken$val showSendViaSwapNotification: Boolean</ID>
+    <ID>UseEmptyCounterpart:CommonSendAmountAnalyticEvents.kt$CommonSendAmountAnalyticEvents$mapOf()</ID>
+    <ID>UseEmptyCounterpart:CommonSendAnalyticEvents.kt$CommonSendAnalyticEvents$mapOf()</ID>
+    <ID>UseEmptyCounterpart:CommonSendFeeAnalyticEvents.kt$CommonSendFeeAnalyticEvents$mapOf()</ID>
+  </CurrentIssues>
+</SmellBaseline>

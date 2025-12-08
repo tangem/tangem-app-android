@@ -10,21 +10,23 @@ sealed class Basic(
     ) : Basic(
         event = "Card Was Scanned",
         params = mapOf(
-            AnalyticsParam.SOURCE to source.value,
+            AnalyticsParam.Key.SOURCE to source.value,
         ),
     )
 
-    class SignedIn(
+    class SignedInLegacy(
         currency: AnalyticsParam.WalletType,
         batch: String,
         signInType: SignInType,
         walletsCount: String,
+        isImported: Boolean,
         hasBackup: Boolean?,
     ) : Basic(
         event = "Signed in",
         params = buildMap {
-            put(AnalyticsParam.CURRENCY, currency.value)
-            put(AnalyticsParam.BATCH, batch)
+            put(AnalyticsParam.Key.CURRENCY, currency.value)
+            put(AnalyticsParam.Key.BATCH, batch)
+            put("Wallet Type", if (isImported) "Seed Phrase" else "Seedless")
             put("Sign in type", signInType.name)
             put("Wallets Count", walletsCount)
             if (hasBackup != null) {
@@ -37,10 +39,37 @@ sealed class Basic(
         }
     }
 
+    class SignedIn(
+        signInType: SignInType,
+        walletsCount: Int,
+    ) : Basic(
+        event = "Signed in",
+        params = buildMap {
+            put("Sign in type", signInType.value)
+            put("Wallets Count", walletsCount.toString())
+        },
+    ) {
+        enum class SignInType(val value: String) {
+            Card("Card"),
+            Biometric("Biometric"),
+            NoSecurity("No Security"),
+            AccessCode("Access Code"),
+        }
+    }
+
+    class ButtonBuy(
+        source: AnalyticsParam.ScreensSources,
+    ) : Basic(
+        event = "Button - Buy",
+        params = buildMap {
+            put(AnalyticsParam.Key.SOURCE, source.value)
+        },
+    )
+
     class ToppedUp(userWalletId: String, currency: AnalyticsParam.WalletType) :
         Basic(
             event = "Topped up",
-            params = mapOf(AnalyticsParam.CURRENCY to currency.value),
+            params = mapOf(AnalyticsParam.Key.CURRENCY to currency.value),
         ),
         OneTimeAnalyticsEvent {
 
@@ -51,16 +80,16 @@ sealed class Basic(
         Basic(
             event = "Transaction sent",
             params = buildMap {
-                this[AnalyticsParam.SOURCE] = sentFrom.value
+                this[AnalyticsParam.Key.SOURCE] = sentFrom.value
                 if (sentFrom is AnalyticsParam.TxData) {
-                    this[AnalyticsParam.BLOCKCHAIN] = sentFrom.blockchain
-                    this[AnalyticsParam.TOKEN_PARAM] = sentFrom.token
+                    this[AnalyticsParam.Key.BLOCKCHAIN] = sentFrom.blockchain
+                    this[AnalyticsParam.Key.TOKEN_PARAM] = sentFrom.token
                     sentFrom.feeType?.value?.let {
-                        this[AnalyticsParam.FEE_TYPE] = it
+                        this[AnalyticsParam.Key.FEE_TYPE] = it
                     }
                 }
                 if (sentFrom is AnalyticsParam.TxSentFrom.Approve) {
-                    this[AnalyticsParam.PERMISSION_TYPE] = sentFrom.permissionType
+                    this[AnalyticsParam.Key.PERMISSION_TYPE] = sentFrom.permissionType
                 }
                 this["Memo"] = memoType.name
             },
@@ -77,7 +106,7 @@ sealed class Basic(
     class ButtonSupport(source: AnalyticsParam.ScreensSources) : Basic(
         event = "Request Support",
         params = mapOf(
-            AnalyticsParam.SOURCE to source.value,
+            AnalyticsParam.Key.SOURCE to source.value,
         ),
     )
 
@@ -87,7 +116,7 @@ sealed class Basic(
     ) : Basic(
         event = "Biometry Failed",
         params = mapOf(
-            AnalyticsParam.SOURCE to source.value,
+            AnalyticsParam.Key.SOURCE to source.value,
             "Reason" to reason.value,
         ),
     ) {

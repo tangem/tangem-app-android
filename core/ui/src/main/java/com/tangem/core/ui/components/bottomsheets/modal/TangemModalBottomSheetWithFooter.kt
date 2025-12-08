@@ -88,7 +88,22 @@ inline fun <reified T : TangemBottomSheetConfigContent> DefaultModalBottomSheetW
     noinline footer: @Composable (BoxScope.(T) -> Unit)?,
 ) {
     var isVisible by remember { mutableStateOf(value = config.isShown) }
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = skipPartiallyExpanded)
+
+    val sheetState = if (config.dismissOnClickOutside == null) {
+        rememberModalBottomSheetState(skipPartiallyExpanded = skipPartiallyExpanded)
+    } else {
+        rememberModalBottomSheetState(
+            skipPartiallyExpanded = skipPartiallyExpanded,
+            confirmValueChange = { sheetValue ->
+                if (config.dismissOnClickOutside().not()) {
+                    // Ignore transitions to hidden (prevents dismiss on outside click/back press)
+                    sheetValue != SheetValue.Hidden
+                } else {
+                    true
+                }
+            },
+        )
+    }
 
     if (isVisible && config.content is T) {
         BasicModalBottomSheetWithFooter<T>(
