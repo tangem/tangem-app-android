@@ -357,7 +357,10 @@ internal class WalletModel @Inject constructor(
             }.distinctUntilChanged(),
             transform = ::Pair,
         ).onEach { (inBackground, userWalletId) ->
-            if (inBackground) return@onEach
+            if (inBackground) {
+                updateTangemPayJobHolder.cancel()
+                return@onEach
+            }
 
             val savedCustomerInfo =
                 tangemPayOnboardingRepository.getSavedCustomerInfo(userWalletId)
