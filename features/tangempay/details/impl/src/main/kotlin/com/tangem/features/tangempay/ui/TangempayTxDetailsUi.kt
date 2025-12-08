@@ -77,7 +77,7 @@ internal fun TangemPayTxHistoryDetailsContent(state: TangemPayTxHistoryDetailsUM
             )
             Text(
                 modifier = Modifier.padding(top = 8.dp),
-                text = state.transactionAmount,
+                text = state.transactionAmount.orMaskWithStars(state.isBalanceHidden),
                 style = TangemTheme.typography.head,
                 color = state.transactionAmountColor.resolveReference(),
             )
@@ -158,6 +158,7 @@ private fun TangemPayTxHistoryDetailsContentPreview(
 private class TangemPayTxHistoryDetailsUMProvider : CollectionPreviewParameterProvider<TangemPayTxHistoryDetailsUM>(
     listOf(
         TangemPayTxHistoryDetailsUM(
+            isBalanceHidden = true,
             title = stringReference("12 June • 12:40"),
             iconState = ImageReference.Res(R.drawable.ic_category_24),
             transactionTitle = stringReference("Starbucks"),
@@ -180,6 +181,7 @@ private class TangemPayTxHistoryDetailsUMProvider : CollectionPreviewParameterPr
             dismiss = {},
         ),
         TangemPayTxHistoryDetailsUM(
+            isBalanceHidden = true,
             title = stringReference("12 June • 12:40"),
             iconState = ImageReference.Res(R.drawable.ic_category_24),
             transactionTitle = stringReference("Starbucks"),
@@ -205,6 +207,7 @@ private class TangemPayTxHistoryDetailsUMProvider : CollectionPreviewParameterPr
             dismiss = {},
         ),
         TangemPayTxHistoryDetailsUM(
+            isBalanceHidden = false,
             title = stringReference("12 June • 12:40"),
             iconState = ImageReference.Res(R.drawable.ic_category_24),
             transactionTitle = stringReference("Starbucks"),
@@ -226,6 +229,7 @@ private class TangemPayTxHistoryDetailsUMProvider : CollectionPreviewParameterPr
             dismiss = {},
         ),
         TangemPayTxHistoryDetailsUM(
+            isBalanceHidden = false,
             title = stringReference("12 June • 12:40"),
             iconState = ImageReference.Res(R.drawable.ic_percent_24),
             transactionTitle = stringReference("Fee"),
@@ -248,6 +252,7 @@ private class TangemPayTxHistoryDetailsUMProvider : CollectionPreviewParameterPr
             dismiss = {},
         ),
         TangemPayTxHistoryDetailsUM(
+            isBalanceHidden = false,
             title = stringReference("12 June • 12:40"),
             iconState = ImageReference.Res(R.drawable.ic_arrow_down_24),
             transactionTitle = stringReference("Deposit"),
@@ -266,6 +271,7 @@ private class TangemPayTxHistoryDetailsUMProvider : CollectionPreviewParameterPr
             dismiss = {},
         ),
         TangemPayTxHistoryDetailsUM(
+            isBalanceHidden = false,
             title = stringReference("12 June • 12:40"),
             iconState = ImageReference.Res(R.drawable.ic_arrow_up_24),
             transactionTitle = stringReference("Withdrawal"),
