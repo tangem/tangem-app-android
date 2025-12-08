@@ -17,11 +17,13 @@ import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
+import com.tangem.core.ui.message.dialog.Dialogs.hotWalletCreationNotSupportedDialog
 import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.card.analytics.IntroductionProcess
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.error.SaveWalletError
+import com.tangem.domain.hotwallet.IsHotWalletCreationSupported
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
@@ -52,6 +54,7 @@ internal class CreateWalletStartModel @Inject constructor(
     private val appRouter: AppRouter,
     private val coldUserWalletBuilderFactory: ColdUserWalletBuilder.Factory,
     private val saveWalletUseCase: SaveWalletUseCase,
+    private val isHotWalletCreationSupported: IsHotWalletCreationSupported,
     private val userWalletsListRepository: UserWalletsListRepository,
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
     private val generateBuyTangemCardLinkUseCase: GenerateBuyTangemCardLinkUseCase,
@@ -131,6 +134,13 @@ internal class CreateWalletStartModel @Inject constructor(
     }
 
     private fun onStartWithMobileWalletClick() {
+        if (!isHotWalletCreationSupported()) {
+            uiMessageSender.send(
+                hotWalletCreationNotSupportedDialog(isHotWalletCreationSupported.getLeastVersionName()),
+            )
+            return
+        }
+
         router.push(AppRoute.CreateMobileWallet)
     }
 
