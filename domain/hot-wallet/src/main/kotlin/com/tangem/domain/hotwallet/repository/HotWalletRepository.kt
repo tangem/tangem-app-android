@@ -5,6 +5,10 @@ import kotlinx.coroutines.flow.Flow
 
 interface HotWalletRepository {
 
+    fun isWalletCreationSupported(): Boolean
+
+    fun getLeastSupportedAndroidVersionName(): String
+
     fun accessCodeSkipped(userWalletId: UserWalletId): Flow<Boolean>
 
     suspend fun setAccessCodeSkipped(userWalletId: UserWalletId, skipped: Boolean)
