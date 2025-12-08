@@ -373,7 +373,12 @@ internal class TangemPayDetailsModel @Inject constructor(
     }
 
     override fun onTransactionClick(item: TangemPayTxHistoryItem) {
-        bottomSheetNavigation.activate(TangemPayDetailsNavigation.TransactionDetails(item))
+        bottomSheetNavigation.activate(
+            configuration = TangemPayDetailsNavigation.TransactionDetails(
+                transaction = item,
+                isBalanceHidden = uiState.value.isBalanceHidden,
+            ),
+        )
     }
 
     override fun onClickTermsAndLimits() {
