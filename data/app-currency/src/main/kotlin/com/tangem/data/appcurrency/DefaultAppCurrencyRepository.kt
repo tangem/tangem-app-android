@@ -5,12 +5,8 @@ import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.CurrenciesResponse
+import com.tangem.datasource.appcurrency.AppCurrencyResponseStore
 import com.tangem.datasource.local.appcurrency.AvailableAppCurrenciesStore
-import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.datasource.local.preferences.PreferencesKeys
-import com.tangem.datasource.local.preferences.utils.getObject
-import com.tangem.datasource.local.preferences.utils.getSyncOrNull
-import com.tangem.datasource.local.preferences.utils.storeObject
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -24,7 +20,7 @@ import org.joda.time.Duration
 
 internal class DefaultAppCurrencyRepository(
     private val tangemTechApi: TangemTechApi,
-    private val appPreferencesStore: AppPreferencesStore,
+    private val appCurrencyResponseStore: AppCurrencyResponseStore,
     private val availableAppCurrenciesStore: AvailableAppCurrenciesStore,
     private val cacheRegistry: CacheRegistry,
     private val dispatchers: CoroutineDispatcherProvider,
@@ -35,15 +31,15 @@ internal class DefaultAppCurrencyRepository(
     override fun getSelectedAppCurrency(): Flow<AppCurrency> {
         return channelFlow {
             launch {
-                appPreferencesStore
-                    .getObject<CurrenciesResponse.Currency>(key = PreferencesKeys.SELECTED_APP_CURRENCY_KEY)
+                appCurrencyResponseStore
+                    .get()
                     .filterNotNull()
                     .map(appCurrencyConverter::convert)
                     .collect(::send)
             }
 
             withContext(dispatchers.io) {
-                if (appPreferencesStore.getSyncOrNull(PreferencesKeys.SELECTED_APP_CURRENCY_KEY) == null) {
+                if (appCurrencyResponseStore.getSyncOrNull() == null) {
                     fetchDefaultAppCurrency()
                 }
             }
@@ -70,17 +66,14 @@ internal class DefaultAppCurrencyRepository(
                 "Unable to find app currency with provided code: $currencyCode"
             }
 
-            appPreferencesStore.storeObject(
-                key = PreferencesKeys.SELECTED_APP_CURRENCY_KEY,
-                value = currency,
-            )
+            appCurrencyResponseStore.store(currency)
         }
     }
 
     override suspend fun fetchDefaultAppCurrency(isRefresh: Boolean) {
         withContext(dispatchers.io) {
             fetchAvailableCurrenciesIfExpired(isRefresh)
-            val appCurrency = appPreferencesStore.getSyncOrNull(PreferencesKeys.SELECTED_APP_CURRENCY_KEY)
+            val appCurrency = appCurrencyResponseStore.getSyncOrNull()?.code
             changeAppCurrency(appCurrency ?: DEFAULT_CURRENCY_CODE)
         }
     }
