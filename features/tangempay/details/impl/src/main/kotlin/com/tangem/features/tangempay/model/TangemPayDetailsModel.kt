@@ -17,10 +17,13 @@ import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfi
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
+import com.tangem.domain.feedback.SendFeedbackEmailUseCase
+import com.tangem.domain.feedback.models.FeedbackEmailType
+import com.tangem.domain.feedback.models.WalletMetaInfo
 import com.tangem.domain.models.TokenReceiveConfig
 import com.tangem.domain.pay.TangemPayCryptoCurrencyFactory
-import com.tangem.domain.pay.model.TangemPayTopUpData
 import com.tangem.domain.pay.model.TangemPayCardBalance
+import com.tangem.domain.pay.model.TangemPayTopUpData
 import com.tangem.domain.pay.repository.CustomerOrderRepository
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
@@ -73,6 +76,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     private val tangemPayCryptoCurrencyFactory: TangemPayCryptoCurrencyFactory,
     private val orderRepository: CustomerOrderRepository,
     private val getUserWalletUseCase: GetUserWalletUseCase,
+    private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
 ) : Model(), TangemPayTxHistoryUiActions, TangemPayDetailIntents, AddFundsListener {
 
     private val params: TangemPayDetailsContainerComponent.Params = paramsContainer.require()
@@ -304,6 +308,16 @@ internal class TangemPayDetailsModel @Inject constructor(
                 ),
             )
         }.saveIn(addToWalletBannerJobHolder)
+    }
+
+    override fun onContactSupportClicked() {
+        modelScope.launch {
+            sendFeedbackEmailUseCase.invoke(
+                type = FeedbackEmailType.Visa.FeatureIsBeta(
+                    walletMetaInfo = WalletMetaInfo(userWalletId = params.userWalletId),
+                ),
+            )
+        }
     }
 
     override fun onRefreshSwipe(refreshState: ShowRefreshState) {
