@@ -38,6 +38,7 @@ internal class EmailMessageBodyResolver(
             is FeedbackEmailType.Visa.Dispute -> addVisaRequestBody(type.walletMetaInfo, type.visaTxDetails)
             is FeedbackEmailType.Visa.DisputeV2 -> addTangemPayRequestBody(type.walletMetaInfo, type.item)
             is FeedbackEmailType.Visa.Withdrawal -> addTangemPayWithdrawalRequestBody(type)
+            is FeedbackEmailType.Visa.FeatureIsBeta -> addTangemPayBetaRequestBody(type.walletMetaInfo)
         }
 
         return build()
@@ -50,6 +51,15 @@ internal class EmailMessageBodyResolver(
         addUserRequestBody(walletMetaInfo)
         addDelimiter()
         addTangemPayTxInfo(item)
+    }
+
+    private fun FeedbackDataBuilder.addTangemPayBetaRequestBody(walletMetaInfo: WalletMetaInfo) {
+        addPhoneInfoBody()
+        addDelimiter()
+        walletMetaInfo.userWalletId?.let { userWalletId ->
+            addUserWalletId(userWalletId = userWalletId.stringValue)
+            addDelimiter()
+        }
     }
 
     private suspend fun FeedbackDataBuilder.addTangemPayWithdrawalRequestBody(
