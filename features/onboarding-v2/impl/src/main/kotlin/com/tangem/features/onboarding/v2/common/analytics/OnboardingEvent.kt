@@ -32,6 +32,21 @@ sealed class OnboardingEvent(
             },
         )
 
+        class WalletCreatedSuccessfullyAppsFlyer(
+            creationType: WalletCreationType = WalletCreationType.PrivateKey,
+            seedPhraseLength: Int? = null,
+            hasPassphrase: Boolean,
+        ) : CreateWallet(
+            event = "wallet_created_successfully",
+            params = buildMap {
+                put("Creation Type", creationType.value)
+                if (seedPhraseLength != null) {
+                    put("Seed Phrase Length", seedPhraseLength.toString())
+                }
+                put("passphrase", if (hasPassphrase) "Full" else "Empty")
+            },
+        )
+
         sealed class WalletCreationType(val value: String) {
             data object PrivateKey : WalletCreationType(value = "Private Key")
             data object NewSeed : WalletCreationType(value = "New Seed")

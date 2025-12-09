@@ -35,10 +35,7 @@ object Analytics : GlobalAnalyticsEventHandler {
     private val analyticsMutex = Mutex()
 
     private val analyticsHandlers: List<AnalyticsHandler>
-        get() = handlers.values.filter { !it.isSpecific }
-
-    private val specificAnalyticsHandlers: List<AnalyticsHandler>
-        get() = handlers.values.filter { it.isSpecific }
+        get() = handlers.values.toList()
 
     override fun addHandler(name: String, handler: AnalyticsHandler) {
         handlers[name] = handler
@@ -87,17 +84,15 @@ object Analytics : GlobalAnalyticsEventHandler {
     }
 
     override fun send(event: AnalyticsEvent) {
-        val analyticsHandlersImpl = if (event.isSpecific) specificAnalyticsHandlers else analyticsHandlers
-
         analyticsScope.launch {
             event.params = applyParamsInterceptors(event)
             val eventFilter = analyticsFilters.firstOrNull { it.canBeAppliedTo(event) }
 
             analyticsMutex.withLock {
                 when {
-                    eventFilter == null -> analyticsHandlersImpl.forEach { handler -> handler.send(event) }
+                    eventFilter == null -> analyticsHandlers.forEach { handler -> handler.send(event) }
                     eventFilter.canBeSent(event) -> {
-                        analyticsHandlersImpl
+                        analyticsHandlers
                             .filter { handler -> eventFilter.canBeConsumedByHandler(handler, event) }
                             .forEach { handler -> handler.send(event) }
                     }
@@ -107,12 +102,10 @@ object Analytics : GlobalAnalyticsEventHandler {
     }
 
     override fun sendErrorEvent(event: AnalyticsEvent) {
-        val analyticsHandlersImpl = if (event.isSpecific) specificAnalyticsHandlers else analyticsHandlers
-
         analyticsScope.launch {
             event.params = applyParamsInterceptors(event)
             analyticsMutex.withLock {
-                analyticsHandlersImpl.filterIsInstance<AnalyticsErrorHandler>()
+                analyticsHandlers.filterIsInstance<AnalyticsErrorHandler>()
                     .forEach { handler -> handler.sendErrorEvent(event) }
             }
         }

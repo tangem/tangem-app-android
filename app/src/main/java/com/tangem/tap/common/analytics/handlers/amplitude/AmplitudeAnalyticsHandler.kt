@@ -2,6 +2,7 @@ package com.tangem.tap.common.analytics.handlers.amplitude
 
 import com.tangem.core.analytics.api.AnalyticsHandler
 import com.tangem.core.analytics.api.AnalyticsUserIdHandler
+import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
 
 class AmplitudeAnalyticsHandler(
@@ -18,8 +19,8 @@ class AmplitudeAnalyticsHandler(
         client.clearUserId()
     }
 
-    override fun send(eventId: String, params: Map<String, String>) {
-        client.logEvent(eventId, params)
+    override fun send(event: AnalyticsEvent) {
+        client.logEvent(event.category, event.params)
     }
 
     companion object {

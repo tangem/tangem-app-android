@@ -19,6 +19,7 @@ import com.tangem.common.routing.AppRouter
 import com.tangem.core.abtests.manager.ABTestsManager
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.api.ParamsInterceptor
+import com.tangem.core.analytics.filter.AppsFlyerEventFilter
 import com.tangem.core.analytics.filter.OneTimeEventFilter
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
@@ -423,6 +424,7 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
         factory.addHandlerBuilder(AppsFlyerAnalyticsHandler.Builder())
 
         factory.addFilter(oneTimeEventFilter)
+        factory.addFilter(AppsFlyerEventFilter())
 
         val buildData = AnalyticsHandlerBuilder.Data(
             application = application,
