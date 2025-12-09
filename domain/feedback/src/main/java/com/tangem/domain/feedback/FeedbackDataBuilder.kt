@@ -49,6 +49,10 @@ internal class FeedbackDataBuilder {
         builder.appendKeyValue("Total saved wallets", userWalletsInfo.totalUserWallets.toString())
     }
 
+    fun addUserWalletId(userWalletId: String) {
+        builder.appendKeyValue("User Wallet ID", userWalletId)
+    }
+
     fun addUserWalletMetaInfo(walletMetaInfo: WalletMetaInfo) {
         builder.appendKeyValue("Mobile Wallet is backed up", walletMetaInfo.hotWalletIsBackedUp?.toString())
         builder.appendKeyValue("Card ID", walletMetaInfo.cardId)
