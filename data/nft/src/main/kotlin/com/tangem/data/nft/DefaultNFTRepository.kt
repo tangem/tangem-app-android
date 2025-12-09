@@ -1,5 +1,6 @@
 package com.tangem.data.nft
 
+import android.content.Context
 import android.content.res.Resources
 import arrow.core.Either
 import com.tangem.blockchain.common.Blockchain
@@ -26,15 +27,19 @@ import com.tangem.domain.nft.models.NFTCollection
 import com.tangem.domain.nft.models.NFTCollections
 import com.tangem.domain.nft.models.NFTSalePrice
 import com.tangem.domain.nft.repository.NFTRepository
+import com.tangem.domain.nft.utils.NFTCleaner
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
+import com.tangem.utils.coroutines.runSuspendCatching
 import com.tangem.utils.coroutines.saveIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import com.tangem.blockchain.nft.models.NFTAsset as SdkNFTAsset
@@ -49,9 +54,10 @@ internal class DefaultNFTRepository @Inject constructor(
     private val userWalletsStore: UserWalletsStore,
     private val networkFactory: NetworkFactory,
     private val excludedBlockchains: ExcludedBlockchains,
-    resources: Resources,
-) : NFTRepository {
+    @ApplicationContext private val context: Context,
+) : NFTRepository, NFTCleaner {
 
+    private val resources: Resources by lazy { context.resources }
     private val networkJobs = ConcurrentHashMap<Network, JobHolder>()
     private val collectionJobs = ConcurrentHashMap<NFTCollection.Identifier, JobHolder>()
     private val cryptoCurrencyFactory = CryptoCurrencyFactory(excludedBlockchains)
@@ -218,10 +224,22 @@ internal class DefaultNFTRepository @Inject constructor(
             assetIdentifier = assetIdConverter.convertBack(assetIdentifier),
         )
 
-    override suspend fun clearCache(userWalletId: UserWalletId, networks: List<Network>) {
-        networks.forEach {
-            getNFTPersistenceStore(userWalletId, it).clear()
-            getNFTRuntimeStore(userWalletId, it).clear()
+    // NFTCleaner implementation
+    override suspend fun invoke(userWalletId: UserWalletId, networks: Set<Network>) {
+        if (networks.isEmpty()) {
+            Timber.d("No networks to clear for wallet: $userWalletId")
+            return
+        }
+
+        networks.forEach { network ->
+            runSuspendCatching {
+                getNFTPersistenceStore(userWalletId = userWalletId, network = network).clear()
+                // FIXME: nftRuntimeStore is created with only network, so clearing it may affect other wallets
+                //  nftRuntimeStoreFactory.provide(network = network).clear()
+            }
+                .onFailure { throwable ->
+                    Timber.e(throwable, "Failed to clear NFT data for network $network for wallet: $userWalletId")
+                }
         }
     }
 
