@@ -5,6 +5,7 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.domain.pay.TangemPaySwapDataFactory
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.tangempay.components.TangemPayAddFundsComponent
 import com.tangem.features.tangempay.entity.TangemPayAddFundsUM
 import com.tangem.features.tangempay.model.transformers.TangemPayAddFundsUMConverter
@@ -17,6 +18,7 @@ internal class TangemPayAddFundsModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val tangemPaySwapDataFactory: TangemPaySwapDataFactory,
+    private val getUserWalletUseCase: GetUserWalletUseCase,
 ) : Model() {
 
     private val params = paramsContainer.require<TangemPayAddFundsComponent.Params>()
@@ -24,7 +26,11 @@ internal class TangemPayAddFundsModel @Inject constructor(
     val uiState: TangemPayAddFundsUM = getInitialState()
 
     private fun getInitialState(): TangemPayAddFundsUM {
+        val userWallet = requireNotNull(
+            getUserWalletUseCase(params.walletId).getOrNull(),
+        ) { "User wallet not found for id: ${params.walletId}" }
         val data = tangemPaySwapDataFactory.create(
+            userWallet = userWallet,
             depositAddress = params.depositAddress,
             chainId = params.chainId,
             cryptoBalance = params.cryptoBalance,

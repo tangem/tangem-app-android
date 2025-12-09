@@ -9,9 +9,13 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.data.pay.util.TangemPayWalletsManager
+import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
+import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.tangempay.TangemPayConstants
 import com.tangem.features.tangempay.components.TangemPayOnboardingComponent
 import com.tangem.features.tangempay.model.transformers.TangemPayOnboardingButtonLoadingTransformer
@@ -37,6 +41,8 @@ internal class TangemPayOnboardingModel @Inject constructor(
     private val produceInitialDataUseCase: ProduceTangemPayInitialDataUseCase,
     private val urlOpener: UrlOpener,
     private val tangemPayWalletsManager: TangemPayWalletsManager,
+    private val getUserWalletUseCase: GetUserWalletUseCase,
+    private val getSelectedWalletUseCase: GetSelectedWalletUseCase,
 ) : Model() {
 
     private val params = paramsContainer.require<TangemPayOnboardingComponent.Params>()
@@ -74,8 +80,9 @@ internal class TangemPayOnboardingModel @Inject constructor(
 
     private suspend fun checkCustomerInfo() {
         // TODO implement selector
+        val userWalletId = getUserWalletForPay(params.userWalletId)
         repository.getCustomerInfo(
-            userWalletId = tangemPayWalletsManager.getDefaultWalletForTangemPayBlocking().walletId,
+            userWalletId = userWalletId,
         )
             // selector
             .onRight { customerInfo ->
@@ -92,6 +99,24 @@ internal class TangemPayOnboardingModel @Inject constructor(
             .onLeft { back() }
     }
 
+    private fun getUserWalletForPay(userWalletId: UserWalletId?): UserWalletId {
+        val userWallet = userWalletId?.let { getUserWalletUseCase(it).getOrNull() }
+        return if (userWallet?.isMultiCurrency == true) {
+            userWallet.walletId
+        } else {
+            tryGetSelectedWalletId()
+        }
+    }
+
+    private fun tryGetSelectedWalletId(): UserWalletId {
+        val selectedWallet = getSelectedWalletUseCase.sync().getOrNull()
+        return if (selectedWallet?.isMultiCurrency == true) {
+            selectedWallet.walletId
+        } else {
+            tangemPayWalletsManager.getDefaultWalletForTangemPayBlocking().walletId
+        }
+    }
+
     private fun onTermsClick() {
         analytics.send(TangemPayAnalyticsEvents.ViewTermsClicked)
         urlOpener.openUrl(TangemPayConstants.TERMS_AND_LIMITS_LINK)
@@ -103,7 +128,7 @@ internal class TangemPayOnboardingModel @Inject constructor(
         uiState.transformerUpdate(TangemPayOnboardingButtonLoadingTransformer(isLoading = true))
         modelScope.launch {
             // TODO implement selector
-            val userWalletId = tangemPayWalletsManager.getDefaultWalletForTangemPayBlocking().walletId
+            val userWalletId = getUserWalletForPay(params.userWalletId)
             val result = produceInitialDataUseCase(userWalletId)
             if (result.isLeft()) {
                 Timber.e("Error producing initial data: ${result.leftOrNull()?.message}")
@@ -135,7 +160,7 @@ internal class TangemPayOnboardingModel @Inject constructor(
         router.replaceAll(
             AppRoute.Wallet,
             AppRoute.Kyc(
-                userWalletId = tangemPayWalletsManager.getDefaultWalletForTangemPayBlocking().walletId,
+                userWalletId = getUserWalletForPay(params.userWalletId),
             ),
         )
     }

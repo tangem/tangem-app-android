@@ -18,14 +18,15 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.models.TokenReceiveConfig
-import com.tangem.domain.pay.TangemPayTopUpData
 import com.tangem.domain.pay.TangemPaySwapDataFactory
+import com.tangem.domain.pay.TangemPayTopUpData
 import com.tangem.domain.pay.model.TangemPayCardBalance
 import com.tangem.domain.pay.repository.CustomerOrderRepository
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.visa.model.TangemPayCardFrozenState
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.tangempay.TangemPayConstants
 import com.tangem.features.tangempay.components.AddFundsListener
 import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
@@ -55,7 +56,7 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 @Stable
 @ModelScoped
 internal class TangemPayDetailsModel @Inject constructor(
@@ -71,6 +72,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     private val txHistoryUpdateListener: TangemPayTxHistoryUpdateListener,
     private val tangemPaySwapDataFactory: TangemPaySwapDataFactory,
     private val orderRepository: CustomerOrderRepository,
+    private val getUserWalletUseCase: GetUserWalletUseCase,
 ) : Model(), TangemPayTxHistoryUiActions, TangemPayDetailIntents, AddFundsListener {
 
     private val params: TangemPayDetailsContainerComponent.Params = paramsContainer.require()
@@ -234,7 +236,11 @@ internal class TangemPayDetailsModel @Inject constructor(
                 if (hasActiveWithdrawal) {
                     showBottomSheetError(TangemPayDetailsErrorType.WithdrawInProgress)
                 } else {
+                    val userWallet = requireNotNull(
+                        getUserWalletUseCase(params.userWalletId).getOrNull(),
+                    ) { "User wallet not found: ${params.userWalletId}" }
                     val data = tangemPaySwapDataFactory.create(
+                        userWallet = userWallet,
                         depositAddress = depositAddress,
                         chainId = params.config.chainId,
                         cryptoBalance = currentBalance.cryptoBalance,
@@ -367,7 +373,12 @@ internal class TangemPayDetailsModel @Inject constructor(
     }
 
     override fun onTransactionClick(item: TangemPayTxHistoryItem) {
-        bottomSheetNavigation.activate(TangemPayDetailsNavigation.TransactionDetails(item))
+        bottomSheetNavigation.activate(
+            configuration = TangemPayDetailsNavigation.TransactionDetails(
+                transaction = item,
+                isBalanceHidden = uiState.value.isBalanceHidden,
+            ),
+        )
     }
 
     override fun onClickTermsAndLimits() {
