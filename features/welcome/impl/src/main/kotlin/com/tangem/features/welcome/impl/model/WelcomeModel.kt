@@ -3,6 +3,11 @@ package com.tangem.features.welcome.impl.model
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.ui.userwallet.handle
 import com.tangem.common.ui.userwallet.state.UserWalletItemUM
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.Basic
+import com.tangem.core.analytics.models.event.SignIn
+import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.navigation.Router
@@ -36,6 +41,8 @@ internal class WelcomeModel @Inject constructor(
     private val nonBiometricUnlockWalletUseCase: NonBiometricUnlockWalletUseCase,
     private val canUseBiometryUseCase: CanUseBiometryUseCase,
     private val walletsRepository: WalletsRepository,
+    private val trackingContextProxy: TrackingContextProxy,
+    private val analyticsEventHandler: AnalyticsEventHandler,
     userWalletsFetcherFactory: UserWalletsFetcher.Factory,
 ) : Model() {
 
@@ -51,6 +58,14 @@ internal class WelcomeModel @Inject constructor(
             modelScope.launch {
                 val userWallets = userWalletsListRepository.userWalletsSync()
                 val userWallet = userWallets.first { it.walletId == walletId }
+                trackingContextProxy.proceedWithContext(userWallet) {
+                    val signInType = when {
+                        !userWallet.isLocked -> SignIn.ButtonWallet.SignInType.NoSecurity
+                        userWallet is UserWallet.Cold -> SignIn.ButtonWallet.SignInType.Card
+                        else -> SignIn.ButtonWallet.SignInType.AccessCode
+                    }
+                    analyticsEventHandler.send(SignIn.ButtonWallet(signInType))
+                }
                 onUserWalletClick(userWallet)
             }
         },
@@ -63,6 +78,8 @@ internal class WelcomeModel @Inject constructor(
         modelScope.launch {
             userWalletsListRepository.load()
             wallets.value = walletsFetcher.userWallets.first()
+
+            analyticsEventHandler.send(SignIn.ScreenOpened(wallets.value.size))
 
             launch {
                 walletsFetcher.userWallets
@@ -119,6 +136,7 @@ internal class WelcomeModel @Inject constructor(
                 showUnlockWithBiometricButton = canUnlockWithBiometrics(),
                 addWalletClick = ::addWalletClick,
                 onUnlockWithBiometricClick = {
+                    analyticsEventHandler.send(SignIn.ButtonUnlockAllWithBiometric())
                     modelScope.launch {
                         userWalletsListRepository.unlockAllWallets()
                             .onRight {
@@ -140,6 +158,7 @@ internal class WelcomeModel @Inject constructor(
     }
 
     private fun addWalletClick() {
+        analyticsEventHandler.send(SignIn.ButtonAddWallet(AnalyticsParam.ScreensSources.SignIn))
         router.push(AppRoute.CreateWalletSelection)
     }
 
@@ -154,6 +173,7 @@ internal class WelcomeModel @Inject constructor(
         if (userWallet.isLocked.not()) {
             // If the wallet is not locked, we can proceed to the wallet screen directly
             userWalletsListRepository.select(userWallet.walletId)
+            trackSignInEvent(userWallet, Basic.SignedIn.SignInType.NoSecurity)
             router.replaceAll(AppRoute.Wallet)
             return@launch
         }
@@ -201,6 +221,18 @@ internal class WelcomeModel @Inject constructor(
             } else {
                 currentState
             }
+        }
+    }
+
+    private suspend fun trackSignInEvent(userWallet: UserWallet, type: Basic.SignedIn.SignInType) {
+        val walletsCount = userWalletsListRepository.userWalletsSync().size
+        trackingContextProxy.proceedWithContext(userWallet) {
+            analyticsEventHandler.send(
+                event = Basic.SignedIn(
+                    signInType = type,
+                    walletsCount = walletsCount,
+                ),
+            )
         }
     }
 }
