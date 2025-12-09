@@ -17,6 +17,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+@Suppress("LongParameterList")
 internal class ImportSeedPhraseUiStateBuilder(
     private val modelScope: CoroutineScope,
     private val mnemonicRepository: MnemonicRepository,
@@ -24,6 +25,7 @@ internal class ImportSeedPhraseUiStateBuilder(
     private val updateUiState: ((AddExistingWalletImportUM) -> AddExistingWalletImportUM) -> Unit,
     private val importWallet: (mnemonic: Mnemonic, passphrase: String?) -> Unit,
     private val onPassphraseInfoClick: () -> Unit,
+    private val onImportClick: () -> Unit,
 ) {
     private val wordsCheckJobHolder = JobHolder()
     private var importedMnemonic: Mnemonic? = null
@@ -57,6 +59,7 @@ internal class ImportSeedPhraseUiStateBuilder(
     }
 
     private fun onCreateWallet() {
+        onImportClick()
         val mnemonic = importedMnemonic ?: return
         val passphrase = passphrase?.takeIf { it.isNotEmpty() }
         importWallet(mnemonic, passphrase)
