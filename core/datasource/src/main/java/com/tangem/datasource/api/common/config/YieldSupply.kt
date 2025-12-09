@@ -77,6 +77,7 @@ internal class YieldSupply(
             ApiEnvironment.DEV_2,
             ApiEnvironment.DEV_3,
             ApiEnvironment.STAGE,
+            ApiEnvironment.STAGE_2,
             -> environmentConfigStorage.getConfigSync().yieldModuleApiKeyDev
             ApiEnvironment.PROD -> environmentConfigStorage.getConfigSync().yieldModuleApiKey
         } ?: error("No tangem tech api config provided")
