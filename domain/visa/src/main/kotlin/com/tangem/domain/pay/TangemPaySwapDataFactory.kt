@@ -4,12 +4,14 @@ import arrow.core.Either
 import com.tangem.core.error.UniversalError
 import com.tangem.domain.models.ReceiveAddressModel
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import java.math.BigDecimal
 
 interface TangemPaySwapDataFactory {
 
     fun create(
+        userWallet: UserWallet,
         depositAddress: String,
         chainId: Int,
         cryptoBalance: BigDecimal,

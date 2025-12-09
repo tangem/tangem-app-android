@@ -529,7 +529,9 @@ internal class ChildFactory @Inject constructor(
             is AppRoute.CreateMobileWallet -> {
                 createComponentChild(
                     context = context,
-                    params = Unit,
+                    params = CreateMobileWalletComponent.Params(
+                        source = route.source,
+                    ),
                     componentFactory = createMobileWalletComponentFactory,
                 )
             }
@@ -660,8 +662,13 @@ internal class ChildFactory @Inject constructor(
                 createComponentChild(
                     context = context,
                     params = when (val mode = route.mode) {
-                        is AppRoute.TangemPayOnboarding.Mode.ContinueOnboarding -> ContinueOnboarding
-                        is AppRoute.TangemPayOnboarding.Mode.Deeplink -> Deeplink(deeplink = mode.deeplink)
+                        is AppRoute.TangemPayOnboarding.Mode.ContinueOnboarding -> ContinueOnboarding(
+                            userWalletId = mode.userWalletId,
+                        )
+                        is AppRoute.TangemPayOnboarding.Mode.Deeplink -> Deeplink(
+                            deeplink = mode.deeplink,
+                            userWalletId = mode.userWalletId,
+                        )
                     },
                     componentFactory = tangemPayOnboardingComponentFactory,
                 )

@@ -21,11 +21,11 @@ import com.tangem.domain.visa.model.TangemPayAuthTokens
 import com.tangem.domain.visa.model.getAuthHeader
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import timber.log.Timber
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -40,7 +40,7 @@ internal class TangemPayRequestPerformer @Inject constructor(
     private val tangemPayStorage: TangemPayStorage,
 ) {
 
-    private val customerWalletAddress = MutableStateFlow<String?>(null)
+    private val customerWalletAddresses = ConcurrentHashMap<UserWalletId, String>()
     private val tokensMutex = Mutex()
     private val errorConverter = TangemPayErrorConverter(moshi)
 
@@ -110,7 +110,7 @@ internal class TangemPayRequestPerformer @Inject constructor(
     }
 
     suspend fun getCustomerWalletAddress(userWalletId: UserWalletId): String {
-        val existingAddress = customerWalletAddress.value
+        val existingAddress = customerWalletAddresses[userWalletId]
         if (existingAddress != null) {
             return existingAddress
         }
@@ -118,7 +118,7 @@ internal class TangemPayRequestPerformer @Inject constructor(
             userWalletId = userWalletId,
         ) ?: error("Can not find customer address")
 
-        customerWalletAddress.value = storedAddress
+        customerWalletAddresses[userWalletId] = storedAddress
         return storedAddress
     }
 

@@ -23,6 +23,7 @@ internal fun TangemPayMainScreenBlock(state: TangemPayState, isBalanceHidden: Bo
         is TangemPayState.RefreshNeeded -> TangemPayRefreshBlock(state, modifier)
         is TangemPayState.TemporaryUnavailable -> TangemPayUnavailableBlock(state, modifier)
         is TangemPayState.FailedIssue -> TangemPayFailedIssueState(state, modifier)
+        TangemPayState.Loading -> TangemPayLoadingScreenBlock(modifier)
     }
 }
 
@@ -32,6 +33,8 @@ internal fun TangemPayMainScreenBlock(state: TangemPayState, isBalanceHidden: Bo
 private fun TangemPayMainScreenBlockPreview() {
     TangemThemePreview {
         Column(verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8)) {
+            TangemPayMainScreenBlock(state = TangemPayState.Loading, isBalanceHidden = false)
+
             TangemPayMainScreenBlock(
                 Progress(
                     title = TextReference.Res(R.string.tangempay_kyc_in_progress_notification_title),
