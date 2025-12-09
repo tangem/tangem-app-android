@@ -48,7 +48,7 @@ class TokenItemStateConverter(
     private val iconStateProvider: (CryptoCurrencyStatus) -> CurrencyIconState = {
         CryptoCurrencyToIconStateConverter().convert(it)
     },
-    private val onApyLabelClick: ((CryptoCurrencyStatus, String) -> Unit)? = null,
+    private val onApyLabelClick: ((CryptoCurrencyStatus, ApySource, String) -> Unit)? = null,
     private val titleStateProvider: (CryptoCurrencyStatus) -> TokenItemState.TitleState = { currencyStatus ->
         createTitleState(
             currencyStatus = currencyStatus,
@@ -166,7 +166,7 @@ class TokenItemStateConverter(
             currencyStatus: CryptoCurrencyStatus,
             yieldModuleApyMap: Map<String, String>,
             stakingApyMap: Map<String, List<Yield.Validator>>,
-            onApyLabelClick: ((CryptoCurrencyStatus, String) -> Unit)?,
+            onApyLabelClick: ((CryptoCurrencyStatus, ApySource, String) -> Unit)?,
         ): TokenItemState.TitleState {
             return when (val value = currencyStatus.value) {
                 is CryptoCurrencyStatus.Loading,
@@ -192,7 +192,7 @@ class TokenItemStateConverter(
                         earnApy = apyInfo?.text,
                         earnApyIsActive = apyInfo?.isActive == true,
                         onApyLabelClick = if (apyInfo?.apy != null && onApyLabelClick != null) {
-                            { onApyLabelClick.invoke(currencyStatus, apyInfo.apy) }
+                            { onApyLabelClick.invoke(currencyStatus, apyInfo.source, apyInfo.apy) }
                         } else {
                             null
                         },
@@ -224,6 +224,7 @@ class TokenItemStateConverter(
                         ),
                         isActive = isActive,
                         apy = yieldSupplyApy,
+                        source = ApySource.YIELD_SUPPLY,
                     )
                 }
             }
@@ -249,6 +250,7 @@ class TokenItemStateConverter(
                         ),
                         isActive = stakingInfo.isActive,
                         apy = apyString,
+                        source = ApySource.STAKING,
                     )
                 }
             }
@@ -430,5 +432,11 @@ class TokenItemStateConverter(
         val text: TextReference?,
         val isActive: Boolean,
         val apy: String?,
+        val source: ApySource,
     )
+
+    enum class ApySource {
+        STAKING,
+        YIELD_SUPPLY,
+    }
 }
