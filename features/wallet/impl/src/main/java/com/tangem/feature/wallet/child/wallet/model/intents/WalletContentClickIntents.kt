@@ -4,6 +4,7 @@ import arrow.core.getOrElse
 import com.tangem.common.ui.expressStatus.ExpressStatusBottomSheetConfig
 import com.tangem.common.ui.tokens.TokenItemStateConverter.ApySource
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.domain.models.account.Account
@@ -354,7 +355,7 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
             is WalletNFTItemUM.Content -> {
                 analyticsEventHandler.send(
                     NFTAnalyticsEvent.NFTListScreenOpened(
-                        state = NFTAnalyticsEvent.NFTListScreenOpened.State.Full,
+                        state = AnalyticsParam.EmptyFull.Full,
                         allAssetsCount = state.allAssetsCount,
                         collectionsCount = state.collectionsCount,
                         noCollectionAssetsCount = state.noCollectionAssetsCount,
@@ -364,7 +365,7 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
             is WalletNFTItemUM.Empty -> {
                 analyticsEventHandler.send(
                     NFTAnalyticsEvent.NFTListScreenOpened(
-                        state = NFTAnalyticsEvent.NFTListScreenOpened.State.Empty,
+                        state = AnalyticsParam.EmptyFull.Empty,
                         allAssetsCount = 0,
                         collectionsCount = 0,
                         noCollectionAssetsCount = 0,
