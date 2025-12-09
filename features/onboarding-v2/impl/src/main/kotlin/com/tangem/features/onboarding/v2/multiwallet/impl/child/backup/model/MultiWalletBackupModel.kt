@@ -250,7 +250,7 @@ class MultiWalletBackupModel @Inject constructor(
 
     private fun showCardVerificationFailedDialog(error: TangemSdkError.CardVerificationFailed) {
         analyticsEventHandler.send(
-            event = OnboardingAnalyticsEvent.Onboarding.OfflineAttestationFailed(AnalyticsParam.ScreensSources.Backup),
+            event = OnboardingAnalyticsEvent.Error.OfflineAttestationFailed(AnalyticsParam.ScreensSources.Backup),
         )
 
         val resource = error.localizedDescriptionRes()
