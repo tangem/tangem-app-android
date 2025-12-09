@@ -271,6 +271,7 @@ internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
             ApiEnvironment.DEV_2,
             ApiEnvironment.DEV_3,
             ApiEnvironment.STAGE,
+            ApiEnvironment.STAGE_2,
             ApiEnvironment.MOCK,
             -> visaLibLoader.getOrCreateConfig().rainRSAPublicKey.dev
             ApiEnvironment.PROD -> visaLibLoader.getOrCreateConfig().rainRSAPublicKey.prod
