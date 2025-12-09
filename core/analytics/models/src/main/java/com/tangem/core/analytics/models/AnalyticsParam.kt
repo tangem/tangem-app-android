@@ -11,11 +11,6 @@ sealed class AnalyticsParam {
         companion object
     }
 
-    sealed class TokenBalanceState(val value: String) {
-        data object Empty : TokenBalanceState("Empty")
-        data object Full : TokenBalanceState("Full")
-    }
-
     sealed class RateApp(val value: String) {
         data object Liked : RateApp("Liked")
         data object Disliked : RateApp("Disliked")
@@ -205,8 +200,9 @@ sealed class AnalyticsParam {
         Pending(value = "Pending"),
     }
 
-    enum class EnsStatus(val value: String) {
-        EMPTY("Empty"), FULL("Full")
+    enum class EmptyFull(val value: String) {
+        Empty("Empty"),
+        Full("Full"),
     }
 
     enum class ProductType(val value: String) {
