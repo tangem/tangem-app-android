@@ -15,7 +15,7 @@ import dagger.assisted.AssistedInject
 @Suppress("UnusedPrivateMember")
 internal class DefaultCreateMobileWalletComponent @AssistedInject constructor(
     @Assisted private val context: AppComponentContext,
-    @Assisted private val params: Unit,
+    @Assisted private val params: CreateMobileWalletComponent.Params,
 ) : CreateMobileWalletComponent, AppComponentContext by context {
 
     private val model: CreateMobileWalletModel = getOrCreateModel(params)
@@ -31,6 +31,9 @@ internal class DefaultCreateMobileWalletComponent @AssistedInject constructor(
 
     @AssistedFactory
     interface Factory : CreateMobileWalletComponent.Factory {
-        override fun create(context: AppComponentContext, params: Unit): DefaultCreateMobileWalletComponent
+        override fun create(
+            context: AppComponentContext,
+            params: CreateMobileWalletComponent.Params,
+        ): DefaultCreateMobileWalletComponent
     }
 }
