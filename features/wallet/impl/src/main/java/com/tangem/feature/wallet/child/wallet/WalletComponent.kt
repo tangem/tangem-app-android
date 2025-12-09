@@ -7,6 +7,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.slot.childSlot
 import com.arkivanov.decompose.router.slot.dismiss
+import com.arkivanov.essenty.lifecycle.doOnResume
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
@@ -48,6 +49,7 @@ internal class WalletComponent @AssistedInject constructor(
 
     init {
         lifecycle.subscribe(model.screenLifecycleProvider)
+        doOnResume { model.onResume() }
         componentScope.launch { model.innerWalletRouter.navigateToFlow.collect { navigate(it) } }
     }
 

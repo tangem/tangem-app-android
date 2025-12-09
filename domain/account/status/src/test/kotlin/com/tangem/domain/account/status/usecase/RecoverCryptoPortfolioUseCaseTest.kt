@@ -5,6 +5,7 @@ import arrow.core.left
 import arrow.core.right
 import arrow.core.toOption
 import com.google.common.truth.Truth
+import com.tangem.domain.account.fetcher.SingleAccountListFetcher
 import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.account.models.ArchivedAccount
 import com.tangem.domain.account.repository.AccountsCRUDRepository
@@ -27,17 +28,19 @@ import kotlin.random.Random
 class RecoverCryptoPortfolioUseCaseTest {
 
     private val crudRepository: AccountsCRUDRepository = mockk(relaxUnitFun = true)
+    private val singleAccountListFetcher: SingleAccountListFetcher = mockk()
     private val mainAccountTokensMigration: MainAccountTokensMigration = mockk()
     private val cryptoCurrencyBalanceFetcher: CryptoCurrencyBalanceFetcher = mockk(relaxUnitFun = true)
     private val useCase = RecoverCryptoPortfolioUseCase(
         crudRepository = crudRepository,
         mainAccountTokensMigration = mainAccountTokensMigration,
         cryptoCurrencyBalanceFetcher = cryptoCurrencyBalanceFetcher,
+        singleAccountListFetcher = singleAccountListFetcher,
     )
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(crudRepository, mainAccountTokensMigration, cryptoCurrencyBalanceFetcher)
+        clearMocks(crudRepository, mainAccountTokensMigration, cryptoCurrencyBalanceFetcher, singleAccountListFetcher)
     }
 
     @Test
@@ -56,6 +59,7 @@ class RecoverCryptoPortfolioUseCaseTest {
 
         val updatedAccountList = (accountList + account).getOrNull()!!
 
+        coEvery { singleAccountListFetcher(SingleAccountListFetcher.Params(userWalletId)) } returns Unit.right()
         coEvery { crudRepository.getAccountListSync(userWalletId) } returns accountList.toOption()
         coEvery { crudRepository.getArchivedAccountSync(account.accountId) } returns archivedAccount.toOption()
         coEvery { mainAccountTokensMigration.migrate(userWalletId, account.derivationIndex) } returns Unit.right()
@@ -69,6 +73,7 @@ class RecoverCryptoPortfolioUseCaseTest {
         Truth.assertThat(actual).isEqualTo(expected)
 
         coVerifySequence {
+            singleAccountListFetcher(SingleAccountListFetcher.Params(userWalletId))
             crudRepository.getAccountListSync(userWalletId)
             crudRepository.getArchivedAccountSync(account.accountId)
             crudRepository.saveAccounts(updatedAccountList)
@@ -85,6 +90,7 @@ class RecoverCryptoPortfolioUseCaseTest {
             derivationIndex = DerivationIndex.Companion.Main,
         )
 
+        coEvery { singleAccountListFetcher(SingleAccountListFetcher.Params(userWalletId)) } returns Unit.right()
         coEvery { crudRepository.getAccountListSync(userWalletId) } returns None
 
         // Act
@@ -95,7 +101,8 @@ class RecoverCryptoPortfolioUseCaseTest {
         Truth.assertThat(actual.cause).isInstanceOf(expected::class.java)
         Truth.assertThat(actual.cause).hasMessageThat().isEqualTo(expected.message)
 
-        coVerifySequence { crudRepository.getAccountListSync(userWalletId) }
+        coVerifySequence { singleAccountListFetcher(SingleAccountListFetcher.Params(userWalletId))
+            crudRepository.getAccountListSync(userWalletId) }
         coVerify(inverse = true) {
             crudRepository.getArchivedAccountSync(any())
             crudRepository.saveAccounts(any())
@@ -111,6 +118,7 @@ class RecoverCryptoPortfolioUseCaseTest {
         )
         val exception = IllegalStateException("Test error")
 
+        coEvery { singleAccountListFetcher(SingleAccountListFetcher.Params(userWalletId)) } returns Unit.right()
         coEvery { crudRepository.getAccountListSync(userWalletId) } throws exception
 
         // Act
@@ -120,7 +128,8 @@ class RecoverCryptoPortfolioUseCaseTest {
         val expected = DataOperationFailed(exception).left()
         Truth.assertThat(actual).isEqualTo(expected)
 
-        coVerifySequence { crudRepository.getAccountListSync(userWalletId) }
+        coVerifySequence { singleAccountListFetcher(SingleAccountListFetcher.Params(userWalletId))
+            crudRepository.getAccountListSync(userWalletId) }
         coVerify(inverse = true) {
             crudRepository.getArchivedAccountSync(any())
             crudRepository.saveAccounts(any())
@@ -134,6 +143,7 @@ class RecoverCryptoPortfolioUseCaseTest {
         val accountList = AccountList.Companion.empty(userWalletId)
         val exception = IllegalStateException("Test error")
 
+        coEvery { singleAccountListFetcher(SingleAccountListFetcher.Params(userWalletId)) } returns Unit.right()
         coEvery { crudRepository.getAccountListSync(userWalletId) } returns accountList.toOption()
         coEvery { crudRepository.getArchivedAccountSync(account.accountId) } throws exception
 
@@ -145,6 +155,7 @@ class RecoverCryptoPortfolioUseCaseTest {
         Truth.assertThat(actual).isEqualTo(expected)
 
         coVerifySequence {
+            singleAccountListFetcher(SingleAccountListFetcher.Params(userWalletId))
             crudRepository.getAccountListSync(userWalletId)
             crudRepository.getArchivedAccountSync(account.accountId)
         }
@@ -157,6 +168,7 @@ class RecoverCryptoPortfolioUseCaseTest {
         val account = createAccount(userWalletId)
         val accountList = AccountList.Companion.empty(userWalletId)
 
+        coEvery { singleAccountListFetcher(SingleAccountListFetcher.Params(userWalletId)) } returns Unit.right()
         coEvery { crudRepository.getAccountListSync(userWalletId) } returns accountList.toOption()
         coEvery { crudRepository.getArchivedAccountSync(account.accountId) } returns None
 
@@ -169,6 +181,7 @@ class RecoverCryptoPortfolioUseCaseTest {
         Truth.assertThat(actual.cause).hasMessageThat().isEqualTo(expected.message)
 
         coVerifySequence {
+            singleAccountListFetcher(SingleAccountListFetcher.Params(userWalletId))
             crudRepository.getAccountListSync(userWalletId)
             crudRepository.getArchivedAccountSync(account.accountId)
         }
@@ -192,6 +205,7 @@ class RecoverCryptoPortfolioUseCaseTest {
         val updatedAccountList = (accountList + account).getOrNull()!!
         val exception = IllegalStateException("Save failed")
 
+        coEvery { singleAccountListFetcher(SingleAccountListFetcher.Params(userWalletId)) } returns Unit.right()
         coEvery { crudRepository.getAccountListSync(userWalletId) } returns accountList.toOption()
         coEvery { crudRepository.getArchivedAccountSync(account.accountId) } returns archivedAccount.toOption()
         coEvery { crudRepository.saveAccounts(updatedAccountList) } throws exception
@@ -204,9 +218,38 @@ class RecoverCryptoPortfolioUseCaseTest {
         Truth.assertThat(actual).isEqualTo(expected)
 
         coVerifySequence {
+            singleAccountListFetcher(SingleAccountListFetcher.Params(userWalletId))
             crudRepository.getAccountListSync(userWalletId)
             crudRepository.getArchivedAccountSync(account.accountId)
             crudRepository.saveAccounts(updatedAccountList)
+        }
+    }
+
+    @Test
+    fun `invoke should return error if fetch is failed`() = runTest {
+        // Arrange
+        val accountId = AccountId.Companion.forCryptoPortfolio(
+            userWalletId = userWalletId,
+            derivationIndex = DerivationIndex.Companion.Main,
+        )
+        val exception = IllegalStateException("Test error")
+
+        coEvery { singleAccountListFetcher(SingleAccountListFetcher.Params(userWalletId)) } returns exception.left()
+
+        // Act
+        val actual = useCase(accountId)
+
+        // Assert
+        val expected = DataOperationFailed(exception).left()
+        Truth.assertThat(actual).isEqualTo(expected)
+
+        coVerifySequence {
+            singleAccountListFetcher(SingleAccountListFetcher.Params(userWalletId))
+        }
+        coVerify(inverse = true) {
+            crudRepository.getAccountListSync(any())
+            crudRepository.getArchivedAccountSync(any())
+            crudRepository.saveAccounts(any())
         }
     }
 
