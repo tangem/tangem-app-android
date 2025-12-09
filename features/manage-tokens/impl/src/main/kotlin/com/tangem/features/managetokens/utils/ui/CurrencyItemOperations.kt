@@ -4,12 +4,14 @@ import com.tangem.domain.managetokens.model.ManagedCryptoCurrency
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency.SourceNetwork
 import com.tangem.features.managetokens.entity.item.CurrencyItemUM
 import com.tangem.features.managetokens.entity.item.CurrencyItemUM.Basic.NetworksUM
+import com.tangem.features.managetokens.utils.list.CurrencyUpdates
 import com.tangem.features.managetokens.utils.mapper.toUiNetworksModel
 import kotlinx.collections.immutable.toImmutableList
 
 internal fun CurrencyItemUM.toggleExpanded(
     currency: ManagedCryptoCurrency,
     isEditable: Boolean,
+    updates: CurrencyUpdates,
     onSelectCurrencyNetwork: (SourceNetwork, Boolean) -> Unit,
     onLongTap: (SourceNetwork) -> Unit,
 ): CurrencyItemUM {
@@ -30,6 +32,7 @@ internal fun CurrencyItemUM.toggleExpanded(
                 networks = currency.toUiNetworksModel(
                     isExpanded = isExpanded,
                     isItemsEditable = isEditable,
+                    updates = updates,
                     onSelectedStateChange = onSelectCurrencyNetwork,
                     onLongTap = onLongTap,
                 ),
