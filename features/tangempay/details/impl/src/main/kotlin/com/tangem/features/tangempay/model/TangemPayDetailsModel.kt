@@ -18,8 +18,8 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.models.TokenReceiveConfig
-import com.tangem.domain.pay.TangemPaySwapDataFactory
-import com.tangem.domain.pay.TangemPayTopUpData
+import com.tangem.domain.pay.TangemPayCryptoCurrencyFactory
+import com.tangem.domain.pay.model.TangemPayTopUpData
 import com.tangem.domain.pay.model.TangemPayCardBalance
 import com.tangem.domain.pay.repository.CustomerOrderRepository
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
@@ -70,7 +70,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     private val uiMessageSender: UiMessageSender,
     private val cardDetailsEventListener: CardDetailsEventListener,
     private val txHistoryUpdateListener: TangemPayTxHistoryUpdateListener,
-    private val tangemPaySwapDataFactory: TangemPaySwapDataFactory,
+    private val tangemPayCryptoCurrencyFactory: TangemPayCryptoCurrencyFactory,
     private val orderRepository: CustomerOrderRepository,
     private val getUserWalletUseCase: GetUserWalletUseCase,
 ) : Model(), TangemPayTxHistoryUiActions, TangemPayDetailIntents, AddFundsListener {
@@ -236,27 +236,22 @@ internal class TangemPayDetailsModel @Inject constructor(
                 if (hasActiveWithdrawal) {
                     showBottomSheetError(TangemPayDetailsErrorType.WithdrawInProgress)
                 } else {
-                    val userWallet = requireNotNull(
-                        getUserWalletUseCase(params.userWalletId).getOrNull(),
-                    ) { "User wallet not found: ${params.userWalletId}" }
-                    val data = tangemPaySwapDataFactory.create(
-                        userWallet = userWallet,
-                        depositAddress = depositAddress,
-                        chainId = params.config.chainId,
-                        cryptoBalance = currentBalance.cryptoBalance,
-                        fiatBalance = currentBalance.fiatBalance,
-                    ).getOrNull()
-                    if (data != null) {
+                    val userWallet = getUserWalletUseCase(params.userWalletId).getOrNull()
+                    val currency = userWallet?.let {
+                        tangemPayCryptoCurrencyFactory.create(userWallet = userWallet, chainId = params.config.chainId)
+                            .getOrNull()
+                    }
+                    if (currency != null) {
                         router.push(
                             AppRoute.Swap(
-                                currencyFrom = data.currency,
-                                userWalletId = data.walletId,
+                                currencyFrom = currency,
+                                userWalletId = params.userWalletId,
                                 isInitialReverseOrder = false,
                                 screenSource = AnalyticsParam.ScreensSources.TangemPay.value,
                                 tangemPayInput = AppRoute.Swap.TangemPayInput(
-                                    cryptoAmount = data.cryptoBalance,
-                                    fiatAmount = data.fiatBalance,
-                                    depositAddress = data.depositAddress,
+                                    cryptoAmount = currentBalance.availableForWithdrawal,
+                                    fiatAmount = currentBalance.availableForWithdrawal,
+                                    depositAddress = depositAddress,
                                     isWithdrawal = true,
                                 ),
                             ),
@@ -277,7 +272,13 @@ internal class TangemPayDetailsModel @Inject constructor(
                 Timber.e(e)
                 return@launch
             }
-            uiState.update(DetailsBalanceTransformer(balance = result))
+            uiState.update(
+                transformer = DetailsBalanceTransformer(
+                    balance = result,
+                    userWallet = getUserWalletUseCase(params.userWalletId).getOrNull(),
+                    cryptoCurrencyFactory = tangemPayCryptoCurrencyFactory,
+                ),
+            )
         }.saveIn(fetchBalanceJobHolder)
     }
 
