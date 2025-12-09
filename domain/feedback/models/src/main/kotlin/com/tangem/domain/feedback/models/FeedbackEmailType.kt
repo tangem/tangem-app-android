@@ -78,5 +78,7 @@ sealed interface FeedbackEmailType {
             val providerName: String,
             val txId: String,
         ) : Visa()
+
+        data class FeatureIsBeta(override val walletMetaInfo: WalletMetaInfo) : Visa()
     }
 }
