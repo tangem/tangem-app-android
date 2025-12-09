@@ -29,7 +29,7 @@ internal fun AskBiometry(state: AskBiometryUM, modifier: Modifier = Modifier) {
         Column(
             modifier = Modifier.weight(1f),
         ) {
-            if (state.bottomSheetVariant) {
+            if (state.isBottomSheetVariant) {
                 Header(onCloseClick = state.onDismiss)
             }
 
@@ -128,12 +128,12 @@ private fun Footer(state: AskBiometryUM, modifier: Modifier = Modifier) {
     ) {
         PrimaryButton(
             modifier = Modifier.fillMaxWidth(),
-            showProgress = state.showProgress,
+            showProgress = state.shouldShowProgress,
             text = stringResourceSafe(id = R.string.save_user_wallet_agreement_allow_biometrics),
             onClick = state.onAllowClick,
         )
 
-        if (state.bottomSheetVariant.not()) {
+        if (state.isBottomSheetVariant.not()) {
             SpacerH12()
 
             SecondaryButton(
@@ -199,7 +199,7 @@ private fun Preview() {
 private fun PreviewBS() {
     TangemThemePreview {
         AskBiometry(
-            state = AskBiometryUM(bottomSheetVariant = true),
+            state = AskBiometryUM(isBottomSheetVariant = true),
         )
     }
 }

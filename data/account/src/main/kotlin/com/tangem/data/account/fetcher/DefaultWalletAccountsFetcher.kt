@@ -95,27 +95,29 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
         userWalletId: UserWalletId,
         body: SaveWalletAccountsResponse,
     ): GetWalletAccountsResponse? {
+        return pushInternal(userWalletId = userWalletId, body = body)
+    }
+
+    private suspend fun pushInternal(
+        userWalletId: UserWalletId,
+        body: SaveWalletAccountsResponse,
+        eTag: String? = null,
+    ): GetWalletAccountsResponse? {
         return safeApiCall(
             call = {
-                var eTag = getETag(userWalletId)
-
-                if (eTag == null) {
-                    fetch(userWalletId)
-
-                    eTag = getETag(userWalletId) ?: error("ETag is null after fetch")
-                }
+                val resolvedETag = eTag ?: getETagForPush(userWalletId)
 
                 val apiResponse = withContext(dispatchers.io) {
                     tangemTechApi.saveWalletAccounts(
                         walletId = userWalletId.stringValue,
-                        eTag = eTag,
+                        eTag = resolvedETag,
                         body = body,
                     )
                 }
 
                 saveETag(userWalletId, apiResponse)
 
-                apiResponse.bind()
+                apiResponse.bind().enrichByAccountId()
             },
             onError = { error ->
                 if (error.isNetworkError(code = Code.PRECONDITION_FAILED)) {
@@ -125,6 +127,19 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
                 null
             },
         )
+    }
+
+    private suspend fun getETagForPush(userWalletId: UserWalletId): String {
+        var savedETag = getETag(userWalletId)
+
+        if (savedETag == null) {
+            fetch(userWalletId)
+
+            savedETag = getETag(userWalletId)
+                ?: error("Failed to retrieve ETag after fetching wallet accounts for wallet $userWalletId")
+        }
+
+        return savedETag
     }
 
     private suspend fun fetchWalletAccounts(
@@ -142,10 +157,11 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
 
                 saveETag(userWalletId, apiResponse)
 
-                val responseBody = apiResponse.bind()
-                store(userWalletId = userWalletId, response = responseBody)
+                val response = apiResponse.bind().enrichByAccountId()
 
-                FetchResult(responseBody)
+                store(userWalletId = userWalletId, response = response)
+
+                FetchResult(response)
             },
             onError = { throwable ->
                 // pushWalletAccounts and storeWalletAccounts help to avoid cyclic dependency
@@ -153,7 +169,13 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
                     error = throwable,
                     userWalletId = userWalletId,
                     savedAccountsResponse = savedAccountsResponse,
-                    pushWalletAccounts = ::push,
+                    pushWalletAccounts = { accounts, eTag ->
+                        pushInternal(
+                            userWalletId = userWalletId,
+                            body = SaveWalletAccountsResponse(accounts),
+                            eTag = eTag,
+                        )
+                    },
                     storeWalletAccounts = ::store,
                 )
             },
@@ -213,6 +235,18 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
         if (eTag != null) {
             eTagsStore.store(userWalletId = userWalletId, key = ETagsStore.Key.WalletAccounts, value = eTag)
         }
+    }
+
+    private fun GetWalletAccountsResponse.enrichByAccountId(): GetWalletAccountsResponse {
+        return copy(
+            accounts = accounts.map { accountDTO ->
+                accountDTO.copy(
+                    tokens = accountDTO.tokens?.map { token ->
+                        token.copy(accountId = accountDTO.id)
+                    },
+                )
+            },
+        )
     }
 
     private fun getAccountsResponseStore(userWalletId: UserWalletId): AccountsResponseStore {

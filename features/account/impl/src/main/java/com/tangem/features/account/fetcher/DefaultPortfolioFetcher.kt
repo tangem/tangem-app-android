@@ -72,7 +72,7 @@ internal class DefaultPortfolioFetcher @AssistedInject constructor(
 
     private fun List<UserWallet>.filterWallets(mode: Mode): List<UserWallet> = this.filter { wallet ->
         when (mode) {
-            is Mode.All -> if (mode.onlyMultiCurrency) wallet.isMultiCurrency else true
+            is Mode.All -> if (mode.isOnlyMultiCurrency) wallet.isMultiCurrency else true
             is Mode.Wallet -> wallet.walletId == mode.walletId
         }
     }

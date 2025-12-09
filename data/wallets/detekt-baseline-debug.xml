@@ -3,8 +3,6 @@
   <ManuallySuppressedIssues/>
   <CurrentIssues>
     <ID>MultilineLambdaItParameter:DefaultColdMapDerivationsRepository.kt$DefaultColdMapDerivationsRepository${ networkFactory.create( blockchain = Blockchain.fromNetworkId(it.value) ?: return@mapNotNull null, extraDerivationPath = null, userWallet = userWallet, ) }</ID>
-    <ID>MultilineLambdaItParameter:DefaultDerivationsRepository.kt$DefaultDerivationsRepository${ userWallet.update(it.first) it.second }</ID>
-    <ID>MultilineLambdaItParameter:DefaultHotMapDerivationsRepository.kt$DefaultHotMapDerivationsRepository${ networkFactory.create( blockchain = Blockchain.fromNetworkId(it.value) ?: return@mapNotNull null, extraDerivationPath = null, userWallet = userWallet, ) }</ID>
     <ID>MultilineLambdaItParameter:DefaultHotWalletAccessCodeAttemptsRepository.kt$DefaultHotWalletAccessCodeAttemptsRepository${ AttemptsPersistentData( attempts = it[PreferencesKeys.getHotWalletUnlockAttemptsKey(id.attemptIdKey())] ?: 0, bootCount = it[PreferencesKeys.getHotWalletUnlockBootKey(id.attemptIdKey())] ?: 0, deadline = it[PreferencesKeys.getHotWalletUnlockDeadlineKey(id.attemptIdKey())] ?: 0L, ) }</ID>
     <ID>MultilineLambdaItParameter:DefaultHotWalletAccessCodeAttemptsRepository.kt$DefaultHotWalletAccessCodeAttemptsRepository${ it.remove(PreferencesKeys.getHotWalletUnlockAttemptsKey(authAttemptId.attemptIdKey())) it.remove(PreferencesKeys.getHotWalletUnlockAttemptsKey(noAuthAttemptId.attemptIdKey())) it.remove(PreferencesKeys.getHotWalletUnlockBootKey(authAttemptId.attemptIdKey())) it.remove(PreferencesKeys.getHotWalletUnlockBootKey(noAuthAttemptId.attemptIdKey())) it.remove(PreferencesKeys.getHotWalletUnlockDeadlineKey(authAttemptId.attemptIdKey())) it.remove(PreferencesKeys.getHotWalletUnlockDeadlineKey(noAuthAttemptId.attemptIdKey())) }</ID>
     <ID>MultilineLambdaItParameter:DefaultHotWalletAccessCodeAttemptsRepository.kt$DefaultHotWalletAccessCodeAttemptsRepository${ while (true) { emit(toState(id, it.attempts, it.deadline, it.bootCount)) val remaining = remainingSeconds(it.deadline, it.bootCount) if (remaining &lt;= 0) break delay(timeMillis = 1000) } }</ID>
@@ -13,12 +11,9 @@
     <ID>MultilineLambdaItParameter:TangemHotWalletSigner.kt$TangemHotWalletSigner${ Timber.e(it) return if (it is TangemSdkError) { CompletionResult.Failure(it) } else { CompletionResult.Failure(TangemSdkError.ExceptionError(it)) } }</ID>
     <ID>NamedArguments:DefaultHotWalletAccessCodeAttemptsRepository.kt$DefaultHotWalletAccessCodeAttemptsRepository$toState(id, count, deadline, boot)</ID>
     <ID>NamedArguments:DefaultHotWalletAccessCodeAttemptsRepository.kt$DefaultHotWalletAccessCodeAttemptsRepository$toState(id, it.attempts, it.deadline, it.bootCount)</ID>
-    <ID>SuspendFunSwallowedCancellation:DefaultHotWalletAccessor.kt$DefaultHotWalletAccessor$runCatching</ID>
     <ID>SuspendFunSwallowedCancellation:TangemHotWalletSigner.kt$TangemHotWalletSigner$runCatching</ID>
     <ID>UnnecessaryLet:MissedDerivationsFinder.kt$MissedDerivationsFinder$let(::findByNetworks)</ID>
-    <ID>UnusedImports:DefaultDerivationsRepository.kt$import com.tangem.common.map</ID>
     <ID>UseOrEmpty:DefaultColdMapDerivationsRepository.kt$DefaultColdMapDerivationsRepository$oldKeys[walletKey] ?: emptyMap()</ID>
-    <ID>UseOrEmpty:DefaultHotMapDerivationsRepository.kt$DefaultHotMapDerivationsRepository$oldKeys[walletKey] ?: emptyMap()</ID>
     <ID>VarCouldBeVal:DefaultHotWalletAccessor.kt$DefaultHotWalletAccessor$private var contextualUnlockHotWallet: ConcurrentHashMap&lt;HotWalletId, UnlockHotWallet?&gt; = ConcurrentHashMap()</ID>
   </CurrentIssues>
 </SmellBaseline>

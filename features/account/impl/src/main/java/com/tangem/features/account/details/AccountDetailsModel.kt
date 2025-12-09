@@ -104,21 +104,13 @@ internal class AccountDetailsModel @Inject constructor(
     }
 
     private fun failedArchiveDialog(error: ArchiveCryptoPortfolioUseCase.Error) {
-        val titleRes = when (error) {
-            is ArchiveCryptoPortfolioUseCase.Error.CriticalTechError.AccountListRequirementsNotMet,
-            is ArchiveCryptoPortfolioUseCase.Error.CriticalTechError.AccountNotFound,
-            is ArchiveCryptoPortfolioUseCase.Error.CriticalTechError.AccountsNotCreated,
-            is ArchiveCryptoPortfolioUseCase.Error.DataOperationFailed,
-            -> R.string.common_something_went_wrong
-            is ArchiveCryptoPortfolioUseCase.Error.ActiveReferralStatus,
-            -> R.string.account_could_not_archive_referral_program_title
-        }
+        val titleRes = R.string.common_something_went_wrong
         val messageRes = when (error) {
             is ArchiveCryptoPortfolioUseCase.Error.CriticalTechError.AccountListRequirementsNotMet,
             is ArchiveCryptoPortfolioUseCase.Error.CriticalTechError.AccountNotFound,
             is ArchiveCryptoPortfolioUseCase.Error.CriticalTechError.AccountsNotCreated,
             is ArchiveCryptoPortfolioUseCase.Error.DataOperationFailed,
-            -> R.string.account_could_not_archive
+            -> R.string.account_generic_error_dialog_message
             is ArchiveCryptoPortfolioUseCase.Error.ActiveReferralStatus,
             -> R.string.account_could_not_archive_referral_program_message
         }

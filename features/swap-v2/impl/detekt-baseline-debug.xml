@@ -32,19 +32,6 @@
     <ID>NamedArguments:SwapTransactionSender.kt$SwapTransactionSender$getSwapDataUseCase( userWallet = userWallet, fromCryptoCurrencyStatus = fromStatus, fromAmount = fromAmount.toStringWithRightOffset(fromStatus.currency.decimals), toCryptoCurrency = toStatus.currency, toAddress = destination, expressProvider = provider, rateType = rateType, expressOperationType, )</ID>
     <ID>NoNameShadowing:SendWithSwapContent.kt$navigationUM</ID>
     <ID>NoNameShadowing:SwapAmountContent.kt$amountFieldUM</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:SendWithSwapConfirmComponent.kt$SendWithSwapConfirmComponent.Params$val isAccountModeFlow: StateFlow&lt;Boolean&gt;</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:SendWithSwapConfirmComponent.kt$SendWithSwapConfirmComponent.Params$val isBalanceHidingFlow: StateFlow&lt;Boolean&gt;</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:SendWithSwapConfirmModel.kt$SendWithSwapConfirmModel$private val isAmountSubtractAvailableUseCase: IsAmountSubtractAvailableUseCase</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:SendWithSwapConfirmModel.kt$SendWithSwapConfirmModel$private val isSendTapHelpEnabledUseCase: IsSendTapHelpEnabledUseCase</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:SendWithSwapModel.kt$SendWithSwapModel$private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:SendWithSwapModel.kt$SendWithSwapModel$val isAccountModeFlow: StateFlow&lt;Boolean&gt; field = MutableStateFlow(false)</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:SendWithSwapModel.kt$SendWithSwapModel$val isBalanceHiddenFlow: StateFlow&lt;Boolean&gt; field = MutableStateFlow(false)</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:SwapAmountComponentParams.kt$SwapAmountComponentParams$abstract val isAccountModeFlow: StateFlow&lt;Boolean&gt;</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:SwapAmountComponentParams.kt$SwapAmountComponentParams$abstract val isBalanceHidingFlow: StateFlow&lt;Boolean&gt;</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:SwapAmountComponentParams.kt$SwapAmountComponentParams.AmountBlockParams$override val isAccountModeFlow: StateFlow&lt;Boolean&gt;</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:SwapAmountComponentParams.kt$SwapAmountComponentParams.AmountBlockParams$override val isBalanceHidingFlow: StateFlow&lt;Boolean&gt;</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:SwapAmountComponentParams.kt$SwapAmountComponentParams.AmountParams$override val isAccountModeFlow: StateFlow&lt;Boolean&gt;</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:SwapAmountComponentParams.kt$SwapAmountComponentParams.AmountParams$override val isBalanceHidingFlow: StateFlow&lt;Boolean&gt;</ID>
     <ID>NullableToStringCall:SendWithSwapConfirmModel.kt$SendWithSwapConfirmModel$error.toString()</ID>
     <ID>NullableToStringCall:SwapAmountModel.kt$SwapAmountModel$$primaryStatus</ID>
     <ID>NullableToStringCall:SwapAmountModel.kt$SwapAmountModel$$secondaryStatus</ID>

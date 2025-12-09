@@ -107,7 +107,6 @@
     <ID>NoNameShadowing:MultiWalletCreateWalletModel.kt$MultiWalletCreateWalletModel${ it.copy(resultUserWallet = userWallet) }</ID>
     <ID>NoNameShadowing:MultiWalletUpgradeWalletModel.kt$MultiWalletUpgradeWalletModel${ it.copy(resultUserWallet = userWallet) }</ID>
     <ID>NoNameShadowing:Wallet1ChooseOptionModel.kt$Wallet1ChooseOptionModel${ it.copy(resultUserWallet = userWallet) }</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:MultiWalletSeedPhraseModel.kt$MultiWalletSeedPhraseModel$private val isWalletAlreadySavedUseCase: IsWalletAlreadySavedUseCase</ID>
     <ID>PropertyUsedBeforeDeclaration:MultiWalletCreateWalletModel.kt$MultiWalletCreateWalletModel$onDone</ID>
     <ID>RedundantSuspendModifier:MultiWalletCreateWalletModel.kt$MultiWalletCreateWalletModel$suspend</ID>
     <ID>RedundantSuspendModifier:OnboardingNoteCreateWalletModel.kt$OnboardingNoteCreateWalletModel$suspend</ID>
