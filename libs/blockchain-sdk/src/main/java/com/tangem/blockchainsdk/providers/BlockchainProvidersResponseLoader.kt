@@ -30,18 +30,19 @@ internal class BlockchainProvidersResponseLoader @Inject constructor(
     suspend fun load(): BlockchainProvidersResponse? {
         val localResponse = loadLocal().ifEmpty { return null }
 
-        return loadRemote().fold(
-            onSuccess = { remoteResponse ->
-                blockchainProvidersResponseMerger.merge(
-                    local = localResponse,
-                    remote = remoteResponse,
-                )
-            },
-            onFailure = {
-                Timber.e(it, "Failed to load blockchain provider types from backend")
-                localResponse
-            },
-        )
+        return localResponse
+        // return loadRemote().fold(
+        //     onSuccess = { remoteResponse ->
+        //         blockchainProvidersResponseMerger.merge(
+        //             local = localResponse,
+        //             remote = remoteResponse,
+        //         )
+        //     },
+        //     onFailure = {
+        //         Timber.e(it, "Failed to load blockchain provider types from backend")
+        //         localResponse
+        //     },
+        // )
     }
 
     private suspend fun loadLocal(): BlockchainProvidersResponse = blockchainProvidersStorage.getConfigSync()
