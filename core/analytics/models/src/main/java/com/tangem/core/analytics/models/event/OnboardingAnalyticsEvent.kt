@@ -2,6 +2,7 @@ package com.tangem.core.analytics.models.event
 
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.AppsFlyerEvent
 
 sealed class OnboardingAnalyticsEvent(
     category: String,
@@ -13,6 +14,8 @@ sealed class OnboardingAnalyticsEvent(
         event: String,
         params: Map<String, String> = mapOf(),
     ) : OnboardingAnalyticsEvent(category = "Onboarding", event = event, params = params) {
+
+        class AppsFlyerEntryScreenView : Onboarding(event = "wallet_entry_screen_view"), AppsFlyerEvent
 
         class Started(
             source: String,
@@ -56,6 +59,23 @@ sealed class OnboardingAnalyticsEvent(
             passPhraseState: AnalyticsParam.EmptyFull,
         ) : CreateWallet(
             event = "Wallet Created Successfully",
+            params = buildMap {
+                put(AnalyticsParam.SOURCE, source)
+                put("Creation Type", creationType.value)
+                put("Passphrase", passPhraseState.value)
+                if (seedPhraseLength != null) {
+                    put("Seed Phrase Length", seedPhraseLength.toString())
+                }
+            },
+        )
+
+        class AppsFlyerWalletCreatedSuccessfully(
+            source: String,
+            creationType: WalletCreationType = WalletCreationType.NewSeed,
+            seedPhraseLength: Int? = null,
+            passPhraseState: AnalyticsParam.EmptyFull,
+        ) : CreateWallet(
+            event = "wallet_created_successfully",
             params = buildMap {
                 put(AnalyticsParam.SOURCE, source)
                 put("Creation Type", creationType.value)

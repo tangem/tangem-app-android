@@ -91,15 +91,7 @@ internal class CreateMobileWalletModel @Inject constructor(
 
                 saveUserWalletUseCase(userWallet)
 
-                analyticsEventHandler.send(OnboardingAnalyticsEvent.Onboarding.Finished(source = params.source))
-                analyticsEventHandler.send(
-                    event = OnboardingAnalyticsEvent.CreateWallet.WalletCreatedSuccessfully(
-                        source = params.source,
-                        creationType = OnboardingAnalyticsEvent.CreateWallet.WalletCreationType.NewSeed,
-                        seedPhraseLength = SEED_PHRASE_LENGTH,
-                        passPhraseState = AnalyticsParam.EmptyFull.Empty,
-                    ),
-                )
+                sendCreationAnalytics()
 
                 launch(dispatchers.main + NonCancellable) {
                     syncWalletWithRemoteUseCase(userWalletId = userWallet.walletId)
@@ -112,6 +104,26 @@ internal class CreateMobileWalletModel @Inject constructor(
                 uiState.update { it.copy(createButtonLoading = false) }
             }
         }
+    }
+
+    private fun sendCreationAnalytics() {
+        analyticsEventHandler.send(OnboardingAnalyticsEvent.Onboarding.Finished(source = params.source))
+        analyticsEventHandler.send(
+            event = OnboardingAnalyticsEvent.CreateWallet.WalletCreatedSuccessfully(
+                source = params.source,
+                creationType = OnboardingAnalyticsEvent.CreateWallet.WalletCreationType.NewSeed,
+                seedPhraseLength = SEED_PHRASE_LENGTH,
+                passPhraseState = AnalyticsParam.EmptyFull.Empty,
+            ),
+        )
+        analyticsEventHandler.send(
+            OnboardingAnalyticsEvent.CreateWallet.AppsFlyerWalletCreatedSuccessfully(
+                source = params.source,
+                creationType = OnboardingAnalyticsEvent.CreateWallet.WalletCreationType.NewSeed,
+                seedPhraseLength = SEED_PHRASE_LENGTH,
+                passPhraseState = AnalyticsParam.EmptyFull.Empty,
+            )
+        )
     }
 
     private inline fun checkHotWalletCreationSupported(notSupported: () -> Unit) {
