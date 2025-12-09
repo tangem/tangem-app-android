@@ -5,6 +5,7 @@ import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObject
 import com.tangem.datasource.local.preferences.utils.getObjectSyncOrNull
+import com.tangem.datasource.local.preferences.utils.storeObject
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -23,6 +24,13 @@ internal class DefaultAppCurrencyResponseStore(
     override suspend fun getSyncOrNull(): CurrenciesResponse.Currency? {
         return appPreferencesStore.getObjectSyncOrNull<CurrenciesResponse.Currency>(
             PreferencesKeys.SELECTED_APP_CURRENCY_KEY,
+        )
+    }
+
+    override suspend fun store(currency: CurrenciesResponse.Currency) {
+        appPreferencesStore.storeObject(
+            PreferencesKeys.SELECTED_APP_CURRENCY_KEY,
+            currency,
         )
     }
 }
