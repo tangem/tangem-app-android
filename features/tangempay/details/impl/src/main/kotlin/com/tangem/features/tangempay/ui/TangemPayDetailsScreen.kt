@@ -31,11 +31,10 @@ import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfi
 import com.tangem.core.ui.components.containers.pullToRefresh.TangemPullToRefreshContainer
 import com.tangem.core.ui.components.dropdownmenu.TangemDropdownItem
 import com.tangem.core.ui.components.dropdownmenu.TangemDropdownMenu
+import com.tangem.core.ui.components.notifications.Notification
+import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.components.text.applyBladeBrush
-import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.orMaskWithStars
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.TokenDetailsTopBarTestTags
@@ -81,7 +80,9 @@ internal fun TangemPayDetailsScreen(
             ) {
                 item(TangemPayCardDetailsUM::class.java) {
                     cardDetailsBlockComponent.CardDetailsBlockContent(
-                        modifier = Modifier.padding(horizontal = 16.dp).padding(top = 8.dp),
+                        modifier = Modifier
+                            .padding(horizontal = 16.dp)
+                            .padding(top = 8.dp),
                         state = cardDetailsState,
                     )
                 }
@@ -116,12 +117,24 @@ internal fun TangemPayDetailsScreen(
                     key = TangemPayDetailsBalanceBlockState::class.java,
                     content = {
                         TangemPayDetailsBalanceBlock(
-                            modifier = modifier
+                            modifier = Modifier
                                 .padding(horizontal = TangemTheme.dimens.spacing16)
                                 .padding(top = 12.dp)
                                 .fillMaxWidth(),
                             state = state.balanceBlockState,
                             isBalanceHidden = state.isBalanceHidden,
+                        )
+                    },
+                )
+                item(
+                    key = "TANGEM_PAY_IS_IN_BETA",
+                    content = {
+                        TangemPayBetaBlock(
+                            modifier = modifier
+                                .padding(horizontal = TangemTheme.dimens.spacing16)
+                                .padding(top = 12.dp)
+                                .fillMaxWidth(),
+                            config = state.betaNotificationConfig,
                         )
                     },
                 )
@@ -131,9 +144,14 @@ internal fun TangemPayDetailsScreen(
     }
 }
 
+@Composable
+private fun TangemPayBetaBlock(config: NotificationConfig, modifier: Modifier = Modifier) {
+    Notification(modifier = modifier, config = config)
+}
+
 // region Balance block
 @Composable
-internal fun TangemPayDetailsBalanceBlock(
+private fun TangemPayDetailsBalanceBlock(
     state: TangemPayDetailsBalanceBlockState,
     isBalanceHidden: Boolean,
     modifier: Modifier = Modifier,
@@ -335,6 +353,16 @@ private class TangemPayDetailsUMProvider : CollectionPreviewParameterProvider<Ta
             isBalanceHidden = false,
             addFundsEnabled = true,
             cardFrozenState = CardFrozenState.Frozen(onUnfreeze = {}),
+            betaNotificationConfig = NotificationConfig(
+                title = resourceReference(R.string.tangem_pay_beta_notification_title),
+                subtitle = resourceReference(R.string.tangem_pay_beta_notification_subtitle),
+                iconResId = R.drawable.img_visa_notification,
+                buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
+                    text = resourceReference(R.string.common_contact_support),
+                    onClick = {},
+                ),
+                iconSize = 36.dp,
+            ),
         ),
         TangemPayDetailsUM(
             topBarConfig = TangemPayDetailsTopBarConfig(onBackClick = {}, items = null),
@@ -344,6 +372,16 @@ private class TangemPayDetailsUMProvider : CollectionPreviewParameterProvider<Ta
             isBalanceHidden = false,
             addFundsEnabled = true,
             cardFrozenState = CardFrozenState.Unfrozen,
+            betaNotificationConfig = NotificationConfig(
+                title = resourceReference(R.string.tangem_pay_beta_notification_title),
+                subtitle = resourceReference(R.string.tangem_pay_beta_notification_subtitle),
+                iconResId = R.drawable.img_visa_notification,
+                buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
+                    text = resourceReference(R.string.common_contact_support),
+                    onClick = {},
+                ),
+                iconSize = 36.dp,
+            ),
         ),
     ),
 )
