@@ -328,7 +328,7 @@ open class TangemApplication : Application(), ImageLoaderFactory, Configuration.
 
         ExceptionHandler.append(blockchainExceptionHandler)
 
-        if (LogConfig.network.blockchainSdkNetwork) {
+        if (LogConfig.network.isBlockchainSdkNetworkLogEnabled) {
             BlockchainSdkRetrofitBuilder.interceptors = listOf(
                 createNetworkLoggingInterceptor(),
                 ChuckerInterceptor(this),
