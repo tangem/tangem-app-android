@@ -7,6 +7,7 @@ import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
+import com.tangem.core.analytics.models.event.OnboardingAnalyticsEvent
 import com.tangem.core.decompose.di.GlobalUiMessageSender
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -134,6 +135,11 @@ internal class CreateWalletStartModel @Inject constructor(
     }
 
     private fun onStartWithMobileWalletClick() {
+        analyticsEventHandler.send(
+            event = OnboardingAnalyticsEvent.Onboarding.ButtonMobileWallet(
+                source = AnalyticsParam.ScreensSources.CreateNewWallet.value,
+            ),
+        )
         if (!isHotWalletCreationSupported()) {
             uiMessageSender.send(
                 hotWalletCreationNotSupportedDialog(isHotWalletCreationSupported.getLeastVersionName()),
@@ -141,7 +147,7 @@ internal class CreateWalletStartModel @Inject constructor(
             return
         }
 
-        router.push(AppRoute.CreateMobileWallet)
+        router.push(AppRoute.CreateMobileWallet(AnalyticsParam.ScreensSources.CreateNewWallet.value))
     }
 
     private fun onBuyClick() {
