@@ -529,7 +529,9 @@ internal class ChildFactory @Inject constructor(
             is AppRoute.CreateMobileWallet -> {
                 createComponentChild(
                     context = context,
-                    params = Unit,
+                    params = CreateMobileWalletComponent.Params(
+                        source = route.source,
+                    ),
                     componentFactory = createMobileWalletComponentFactory,
                 )
             }
