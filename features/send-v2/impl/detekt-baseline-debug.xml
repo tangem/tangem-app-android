@@ -46,29 +46,6 @@
     <ID>NestedScopeFunctions:KaspaCustomFeeConverter.kt$KaspaCustomFeeConverter$let { val valueDecimal = it.value.parseToBigDecimal(it.decimals) // krc-20 transaction will be failed if custom fee value is less than minimum, // so we set value to minimum in this case if (valueDecimal &lt; minimumFee.amount.value) { val fixedValue = minimumFeeAmountValue.parseBigDecimal(it.decimals) set( FEE_AMOUNT_INDEX, it.copy( value = fixedValue, label = getFiatReference( rate = currencyStatus.fiatRate, value = valueDecimal, appCurrency = appCurrency, ), ), ) } }</ID>
     <ID>NoNameShadowing:FeeSelectorAlertFactory.kt$FeeSelectorAlertFactory$newFee</ID>
     <ID>NoNameShadowing:SendContent.kt$navigationUM</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:FeeSelectorModel.kt$FeeSelectorModel$private val isFeeApproximateUseCase: IsFeeApproximateUseCase</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:NFTSendConfirmComponent.kt$NFTSendConfirmComponent.Params$val isBalanceHidingFlow: StateFlow&lt;Boolean&gt;</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:NFTSendConfirmModel.kt$NFTSendConfirmModel$private val isSendTapHelpEnabledUseCase: IsSendTapHelpEnabledUseCase</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:NFTSendModel.kt$NFTSendModel$private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:NFTSendModel.kt$NFTSendModel$val isBalanceHiddenFlow: StateFlow&lt;Boolean&gt; field = MutableStateFlow(false)</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:NotificationsModel.kt$NotificationsModel$private val isAmountSubtractAvailableUseCase: IsAmountSubtractAvailableUseCase</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:SendAmountComponentParams.kt$SendAmountComponentParams$abstract val isAccountModeFlow: StateFlow&lt;Boolean&gt;</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:SendAmountComponentParams.kt$SendAmountComponentParams$abstract val isBalanceHidingFlow: StateFlow&lt;Boolean&gt;</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:SendAmountComponentParams.kt$SendAmountComponentParams.AmountBlockParams$override val isAccountModeFlow: StateFlow&lt;Boolean&gt;</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:SendAmountComponentParams.kt$SendAmountComponentParams.AmountBlockParams$override val isBalanceHidingFlow: StateFlow&lt;Boolean&gt;</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:SendAmountComponentParams.kt$SendAmountComponentParams.AmountParams$override val isAccountModeFlow: StateFlow&lt;Boolean&gt;</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:SendAmountComponentParams.kt$SendAmountComponentParams.AmountParams$override val isBalanceHidingFlow: StateFlow&lt;Boolean&gt;</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:SendAmountModel.kt$SendAmountModel$val isSendWithSwapAvailable: StateFlow&lt;Boolean&gt; field = MutableStateFlow(false)</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:SendConfirmComponent.kt$SendConfirmComponent.Params$val isAccountModeFlow: StateFlow&lt;Boolean&gt;</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:SendConfirmComponent.kt$SendConfirmComponent.Params$val isBalanceHidingFlow: StateFlow&lt;Boolean&gt;</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:SendConfirmModel.kt$SendConfirmModel$private val isAmountSubtractAvailableUseCase: IsAmountSubtractAvailableUseCase</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:SendConfirmModel.kt$SendConfirmModel$private val isSendTapHelpEnabledUseCase: IsSendTapHelpEnabledUseCase</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:SendConfirmModel.kt$SendConfirmModel$val isBalanceHiddenFlow: StateFlow&lt;Boolean&gt; field = MutableStateFlow(false)</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:SendDestinationModel.kt$SendDestinationModel$private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:SendDestinationModel.kt$SendDestinationModel$private val isSelfSendAvailableUseCase: IsSelfSendAvailableUseCase</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:SendModel.kt$SendModel$private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:SendModel.kt$SendModel$val isAccountModeFlow: StateFlow&lt;Boolean&gt; field = MutableStateFlow(false)</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:SendModel.kt$SendModel$val isBalanceHiddenFlow: StateFlow&lt;Boolean&gt; field = MutableStateFlow(false)</ID>
     <ID>NullCheckOnMutableProperty:SendAmountModel.kt$SendAmountModel$if (uiState.value is AmountState.Empty &amp;&amp; userWallet != null) { val isOnlyOneWallet = getWalletsUseCase.invokeSync().size == 1 val walletTitle = if (isOnlyOneWallet) { resourceReference(R.string.send_from_title) } else { resourceReference( R.string.send_from_wallet_name, WrappedList(listOf(userWallet?.name.orEmpty())), // TODO AND-11440 ) } _uiState.update { AmountStateConverter( clickIntents = this, appCurrency = appCurrency, cryptoCurrencyStatus = cryptoCurrencyStatus, maxEnterAmount = maxAmountBoundary, iconStateConverter = CryptoCurrencyToIconStateConverter(), isBalanceHidden = params.isBalanceHidingFlow.value, accountTitleUM = AmountAccountConverter( isAccountsMode = isAccountsMode, walletTitle = walletTitle, prefixText = resourceReference(R.string.common_from), ).convert(account), ).convert( AmountParameters( title = walletTitle, value = "", ), ) } }</ID>
     <ID>NullableToStringCall:BitcoinCustomFeeConverter.kt$BitcoinCustomFeeConverter$toSatoshiPerByte( amount = feeValue, decimals = value.amount.decimals, txSize = value.txSize, ).toString()</ID>
     <ID>NullableToStringCall:NFTSendConfirmModel.kt$NFTSendConfirmModel$params.nftAsset.amount.toString()</ID>
