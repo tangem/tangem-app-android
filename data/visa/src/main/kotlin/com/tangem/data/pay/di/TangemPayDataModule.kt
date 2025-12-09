@@ -1,10 +1,10 @@
 package com.tangem.data.pay.di
 
-import com.tangem.data.pay.DefaultTangemPaySwapDataFactory
+import com.tangem.data.pay.DefaultTangemPayCryptoCurrencyFactory
 import com.tangem.data.pay.repository.*
 import com.tangem.data.pay.usecase.DefaultGetTangemPayCurrencyStatusUseCase
 import com.tangem.data.pay.usecase.DefaultTangemPayWithdrawUseCase
-import com.tangem.domain.pay.TangemPaySwapDataFactory
+import com.tangem.domain.pay.TangemPayCryptoCurrencyFactory
 import com.tangem.domain.pay.repository.*
 import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
 import com.tangem.domain.pay.usecase.TangemPayMainScreenCustomerInfoUseCase
@@ -48,7 +48,9 @@ internal interface TangemPayDataModule {
 
     @Binds
     @Singleton
-    fun bindTangemPaySwapDataFactory(factory: DefaultTangemPaySwapDataFactory): TangemPaySwapDataFactory
+    fun bindTangemPayCryptoCurrencyFactory(
+        factory: DefaultTangemPayCryptoCurrencyFactory,
+    ): TangemPayCryptoCurrencyFactory
 
     @Binds
     @Singleton
