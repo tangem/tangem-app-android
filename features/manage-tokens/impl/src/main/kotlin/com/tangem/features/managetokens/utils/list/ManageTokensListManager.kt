@@ -329,6 +329,10 @@ internal class ManageTokensListManager @AssistedInject constructor(
             val updatedUiItem = uiBatch.data[currencyIndex].toggleExpanded(
                 currency = currencyBatch.data[currencyIndex],
                 isEditable = batches.canEditItems,
+                updates = CurrencyUpdates(
+                    toAdd = currenciesToAdd.value,
+                    toRemove = currenciesToRemove.value,
+                ),
                 onSelectCurrencyNetwork = { networkId, isSelected ->
                     selectNetwork(currencyBatch.key, currency, networkId, isSelected)
                 },
