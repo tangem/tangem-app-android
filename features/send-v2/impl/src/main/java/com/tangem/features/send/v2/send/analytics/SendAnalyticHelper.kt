@@ -53,13 +53,13 @@ internal class SendAnalyticHelper @Inject constructor(
         }
     }
 
-    private fun getEnsStatus(sendUM: SendUM): AnalyticsParam.EnsStatus {
+    private fun getEnsStatus(sendUM: SendUM): AnalyticsParam.EmptyFull {
         val blockchainAddressForEns =
             (sendUM.destinationUM as? DestinationUM.Content)?.addressTextField?.isAddressEns
         return if (blockchainAddressForEns == true) {
-            AnalyticsParam.EnsStatus.FULL
+            AnalyticsParam.EmptyFull.Full
         } else {
-            AnalyticsParam.EnsStatus.EMPTY
+            AnalyticsParam.EmptyFull.Empty
         }
     }
 }
