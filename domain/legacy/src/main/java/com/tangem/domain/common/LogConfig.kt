@@ -4,17 +4,17 @@ import com.tangem.domain.features.BuildConfig
 
 object LogConfig {
     const val imageLoader: Boolean = false
-    val storeAction: Boolean = BuildConfig.LOG_ENABLED
+    val shouldStoreAction: Boolean = BuildConfig.LOG_ENABLED
     val network: NetworkLogConfig = NetworkLogConfig
     val analyticsHandlers: AnalyticsHandlersLogConfig = AnalyticsHandlersLogConfig
 }
 
 object NetworkLogConfig {
-    val blockchainSdkNetwork: Boolean = BuildConfig.LOG_ENABLED
+    val isBlockchainSdkNetworkLogEnabled: Boolean = BuildConfig.LOG_ENABLED
 }
 
 object AnalyticsHandlersLogConfig {
-    val firebase: Boolean = BuildConfig.LOG_ENABLED
-    val amplitude: Boolean = BuildConfig.LOG_ENABLED
-    val appsflyer: Boolean = BuildConfig.LOG_ENABLED
+    val isFirebaseLogEnabled: Boolean = BuildConfig.LOG_ENABLED
+    val isAmplitudeLogEnabled: Boolean = BuildConfig.LOG_ENABLED
+    val isAppsflyerLogEnabled: Boolean = BuildConfig.LOG_ENABLED
 }
