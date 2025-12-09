@@ -37,7 +37,7 @@ sealed class WalletScreenAnalyticsEvent {
             },
         )
 
-        class TokenBalance(balance: AnalyticsParam.TokenBalanceState, token: String) : Basic(
+        class TokenBalance(balance: AnalyticsParam.EmptyFull, token: String) : Basic(
             event = "Token Balance",
             params = mapOf(
                 AnalyticsParam.STATE to balance.value,
