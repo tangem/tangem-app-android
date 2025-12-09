@@ -1,5 +1,6 @@
 package com.tangem.common.ui.news
 
+import com.tangem.core.ui.components.label.entity.LabelUM
 import kotlinx.collections.immutable.ImmutableSet
 
 data class ArticleConfigUM(
@@ -8,6 +9,6 @@ data class ArticleConfigUM(
     val score: Float,
     val createdAt: String,
     val isTrending: Boolean,
-    val tags: ImmutableSet<ArticleTagUM>,
+    val tags: ImmutableSet<LabelUM>,
     val isViewed: Boolean,
 )
