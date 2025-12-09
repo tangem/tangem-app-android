@@ -93,7 +93,7 @@ internal class TangemPayClickIntentsImplementor @Inject constructor(
                 body = resourceReference(R.string.tangempay_failed_to_issue_card_support_description)
             }
             secondaryButton {
-                text = resourceReference(R.string.details_row_title_contact_to_support)
+                text = resourceReference(R.string.common_contact_support)
                 onClick {
                     onPaySupportClick()
                     closeBs()
