@@ -41,7 +41,6 @@ internal class TangemPayDetailsStateFactory(
                 ),
             )
         }
-
         return TangemPayDetailsUM(
             topBarConfig = TangemPayDetailsTopBarConfig(
                 onBackClick = onBack,

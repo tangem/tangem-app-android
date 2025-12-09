@@ -9,7 +9,6 @@ import com.tangem.core.error.UniversalError
 import com.tangem.data.common.currency.CryptoCurrencyFactory
 import com.tangem.data.common.network.NetworkFactory
 import com.tangem.data.pay.util.TangemPayErrorConverter
-import com.tangem.data.pay.util.TangemPayWalletsManager
 import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.domain.models.ReceiveAddressModel
 import com.tangem.domain.models.ReceiveAddressModel.NameService
@@ -32,7 +31,6 @@ private const val TOKEN_DECIMALS = 6
 
 internal class DefaultTangemPaySwapDataFactory @Inject constructor(
     @NetworkMoshi moshi: Moshi,
-    private val tangemPayWalletsManager: TangemPayWalletsManager,
     excludedBlockchains: ExcludedBlockchains,
 ) : TangemPaySwapDataFactory {
 
@@ -63,17 +61,17 @@ internal class DefaultTangemPaySwapDataFactory @Inject constructor(
     }
 
     override fun create(
+        userWallet: UserWallet,
         depositAddress: String,
         chainId: Int,
         cryptoBalance: BigDecimal,
         fiatBalance: BigDecimal,
     ): Either<UniversalError, TangemPayTopUpData> {
         return catch {
-            val wallet = tangemPayWalletsManager.getDefaultWalletForTangemPayBlocking()
-            val currency = getCurrency(wallet, chainId)
+            val currency = getCurrency(userWallet, chainId)
             TangemPayTopUpData(
                 currency = currency,
-                walletId = wallet.walletId,
+                walletId = userWallet.walletId,
                 cryptoBalance = cryptoBalance,
                 fiatBalance = fiatBalance,
                 depositAddress = depositAddress,
