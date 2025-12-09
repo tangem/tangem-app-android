@@ -30,7 +30,7 @@ platform :android do
     FileUtils.cp("../app/src/main/assets/tangem-app-config/android/google-services/dev/google-services.json", "../app")
     FileUtils.cp("../tangem-android-tools/CI/gradle_properties/tests_ci_gradle.properties", "../gradle.properties")
     puts File.read("../gradle.properties")
-    gradle(task: "test")
+    gradle(task: "unitTest")
   end
 
   desc "Build internal APK Firebase App Distribution"
