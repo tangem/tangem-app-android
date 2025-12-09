@@ -2,11 +2,12 @@ package com.tangem.feature.wallet.child.wallet.model.intents
 
 import arrow.core.getOrElse
 import com.tangem.common.ui.expressStatus.ExpressStatusBottomSheetConfig
+import com.tangem.common.ui.tokens.TokenItemStateConverter.ApySource
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.domain.models.account.Account
-import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.models.wallet.UserWallet
@@ -50,7 +51,12 @@ internal interface WalletContentClickIntents {
 
     fun onTokenItemLongClick(userWalletId: UserWalletId, cryptoCurrencyStatus: CryptoCurrencyStatus)
 
-    fun onApyLabelClick(userWalletId: UserWalletId, currencyStatus: CryptoCurrencyStatus, apy: String)
+    fun onApyLabelClick(
+        userWalletId: UserWalletId,
+        currencyStatus: CryptoCurrencyStatus,
+        apySource: ApySource,
+        apy: String,
+    )
 
     fun onAccountExpandClick(account: Account)
 
@@ -162,11 +168,17 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
         }
     }
 
-    override fun onApyLabelClick(userWalletId: UserWalletId, currencyStatus: CryptoCurrencyStatus, apy: String) {
-        val navigationAction = if (currencyStatus.currency is CryptoCurrency.Token) {
-            NavigationAction.YieldSupply(currencyStatus.value.yieldSupplyStatus?.isActive == true)
-        } else {
-            NavigationAction.Staking
+    override fun onApyLabelClick(
+        userWalletId: UserWalletId,
+        currencyStatus: CryptoCurrencyStatus,
+        apySource: ApySource,
+        apy: String,
+    ) {
+        val navigationAction = when (apySource) {
+            ApySource.STAKING -> NavigationAction.Staking
+            ApySource.YIELD_SUPPLY -> {
+                NavigationAction.YieldSupply(currencyStatus.value.yieldSupplyStatus?.isActive == true)
+            }
         }
 
         sendApyLabelClickAnalytics(navigationAction, currencyStatus)
@@ -343,7 +355,7 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
             is WalletNFTItemUM.Content -> {
                 analyticsEventHandler.send(
                     NFTAnalyticsEvent.NFTListScreenOpened(
-                        state = NFTAnalyticsEvent.NFTListScreenOpened.State.Full,
+                        state = AnalyticsParam.EmptyFull.Full,
                         allAssetsCount = state.allAssetsCount,
                         collectionsCount = state.collectionsCount,
                         noCollectionAssetsCount = state.noCollectionAssetsCount,
@@ -353,7 +365,7 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
             is WalletNFTItemUM.Empty -> {
                 analyticsEventHandler.send(
                     NFTAnalyticsEvent.NFTListScreenOpened(
-                        state = NFTAnalyticsEvent.NFTListScreenOpened.State.Empty,
+                        state = AnalyticsParam.EmptyFull.Empty,
                         allAssetsCount = 0,
                         collectionsCount = 0,
                         noCollectionAssetsCount = 0,

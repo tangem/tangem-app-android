@@ -346,7 +346,9 @@ sealed class AppRoute(val path: String) : Route {
     object CreateHardwareWallet : AppRoute(path = "/create_hardware_wallet")
 
     @Serializable
-    object CreateMobileWallet : AppRoute(path = "/create_mobile_wallet")
+    data class CreateMobileWallet(
+        val source: String,
+    ) : AppRoute(path = "/create_mobile_wallet")
 
     @Serializable
     data class UpgradeWallet(
@@ -431,10 +433,13 @@ sealed class AppRoute(val path: String) : Route {
             @Serializable
             data class Deeplink(
                 val deeplink: String,
+                val userWalletId: UserWalletId?,
             ) : Mode()
 
             @Serializable
-            object ContinueOnboarding : Mode()
+            data class ContinueOnboarding(
+                val userWalletId: UserWalletId?,
+            ) : Mode()
         }
     }
 
