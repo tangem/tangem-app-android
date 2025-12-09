@@ -22,6 +22,8 @@ internal class DevFeatureTogglesManager(
 ) : MutableFeatureTogglesManager {
 
     private val fileFeatureTogglesMap: Map<String, Boolean> = getFileFeatureToggles()
+
+    @Suppress("DoubleMutabilityForCollection")
     private var featureTogglesMap: MutableMap<String, Boolean> by Delegates.notNull()
 
     init {
