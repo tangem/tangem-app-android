@@ -11,9 +11,7 @@ import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
-import com.tangem.core.ui.components.bottomsheets.message.*
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.message.bottomSheetMessage
 import com.tangem.domain.card.SetCardWasScannedUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
@@ -33,14 +31,13 @@ import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.settings.NeverToSuggestRateAppUseCase
 import com.tangem.domain.settings.RemindToRateAppLaterUseCase
 import com.tangem.domain.staking.StakingIdFactory
-import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
+import com.tangem.domain.staking.multi.MultiStakingBalanceFetcher
 import com.tangem.domain.tokens.model.analytics.PromoAnalyticsEvent
 import com.tangem.domain.tokens.model.analytics.PromoAnalyticsEvent.Program
 import com.tangem.domain.tokens.model.analytics.PromoAnalyticsEvent.PromotionBannerClicked
 import com.tangem.domain.wallets.legacy.UserWalletsListManager.Lockable.UnlockType
 import com.tangem.domain.wallets.models.UnlockWalletsError
 import com.tangem.domain.wallets.usecase.*
-import com.tangem.feature.wallet.child.wallet.model.WalletActivationBannerType
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent.Basic
@@ -106,7 +103,7 @@ internal interface WalletWarningsClickIntents {
 
     fun onDenyPermissions()
 
-    fun onFinishWalletActivationClick(bannerType: WalletActivationBannerType, isBackupExists: Boolean)
+    fun onFinishWalletActivationClick(isBackupExists: Boolean)
 }
 
 @Suppress("LargeClass", "LongParameterList", "TooManyFunctions")
@@ -131,7 +128,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     private val urlOpener: UrlOpener,
     private val multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
     private val multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
-    private val multiYieldBalanceFetcher: MultiYieldBalanceFetcher,
+    private val multiStakingBalanceFetcher: MultiStakingBalanceFetcher,
     private val stakingIdFactory: StakingIdFactory,
     private val appRouter: AppRouter,
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
@@ -460,40 +457,10 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
         }
     }
 
-    override fun onFinishWalletActivationClick(bannerType: WalletActivationBannerType, isBackupExists: Boolean) {
-        when (bannerType) {
-            WalletActivationBannerType.Attention -> {
-                val userWallet = getSelectedUserWallet() ?: return
-                appRouter.push(WalletActivation(userWallet.walletId, isBackupExists))
-            }
-            WalletActivationBannerType.Warning -> {
-                val message = bottomSheetMessage {
-                    infoBlock {
-                        icon(R.drawable.img_knight_shield_32) {
-                            type = MessageBottomSheetUMV2.Icon.Type.Warning
-                            backgroundType = MessageBottomSheetUMV2.Icon.BackgroundType.SameAsTint
-                        }
-                        title = resourceReference(R.string.hw_activation_need_title)
-                        body = resourceReference(R.string.hw_activation_need_description)
-                    }
-                    secondaryButton {
-                        text = resourceReference(R.string.common_later)
-                        onClick {
-                            closeBs()
-                        }
-                    }
-                    primaryButton {
-                        text = resourceReference(R.string.hw_activation_need_backup)
-                        onClick {
-                            val userWallet = getSelectedUserWallet() ?: return@onClick
-                            appRouter.push(WalletActivation(userWallet.walletId, isBackupExists))
-                            closeBs()
-                        }
-                    }
-                }
-                uiMessageSender.send(message)
-            }
-        }
+    override fun onFinishWalletActivationClick(isBackupExists: Boolean) {
+        analyticsEventHandler.send(MainScreen.ButtonFinalizeActivation)
+        val userWalletId = stateHolder.getSelectedWalletId()
+        appRouter.push(WalletActivation(userWalletId, isBackupExists))
     }
 
     override fun onAllowPermissions() {
@@ -562,8 +529,11 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
                         stakingIdFactory.create(userWalletId = userWalletId, cryptoCurrency = it).getOrNull()
                     }
 
-                    multiYieldBalanceFetcher(
-                        params = MultiYieldBalanceFetcher.Params(userWalletId = userWalletId, stakingIds = stakingIds),
+                    multiStakingBalanceFetcher(
+                        params = MultiStakingBalanceFetcher.Params(
+                            userWalletId = userWalletId,
+                            stakingIds = stakingIds,
+                        ),
                     )
                         .onLeft { Timber.e("Unable to fetch yield balances: $it") }
                 },

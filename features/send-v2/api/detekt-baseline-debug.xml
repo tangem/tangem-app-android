@@ -4,7 +4,6 @@
   <CurrentIssues>
     <ID>BooleanPropertyNaming:FeeSelectorData.kt$FeeSelectorData$val removeSuggestedFee: Boolean = false</ID>
     <ID>BooleanPropertyNaming:SendEntryRoute.kt$SendEntryRoute.ChooseToken$val showSendViaSwapNotification: Boolean</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:SendDestinationComponentParams.kt$SendDestinationComponentParams.DestinationParams$val isBalanceHidingFlow: StateFlow&lt;Boolean&gt;</ID>
     <ID>UseEmptyCounterpart:CommonSendAmountAnalyticEvents.kt$CommonSendAmountAnalyticEvents$mapOf()</ID>
     <ID>UseEmptyCounterpart:CommonSendAnalyticEvents.kt$CommonSendAnalyticEvents$mapOf()</ID>
     <ID>UseEmptyCounterpart:CommonSendFeeAnalyticEvents.kt$CommonSendFeeAnalyticEvents$mapOf()</ID>

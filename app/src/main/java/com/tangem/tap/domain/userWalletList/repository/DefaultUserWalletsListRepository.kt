@@ -7,6 +7,9 @@ import arrow.core.raise.either
 import arrow.core.right
 import com.tangem.common.*
 import com.tangem.common.core.TangemSdkError
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.Basic
+import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
@@ -50,6 +53,8 @@ internal class DefaultUserWalletsListRepository(
     private val appPreferencesStore: AppPreferencesStore,
     private val hotWalletAccessCodeAttemptsRepository: HotWalletAccessCodeAttemptsRepository,
     private val tangemHotSdk: TangemHotSdk,
+    private val trackingContextProxy: TrackingContextProxy,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : UserWalletsListRepository {
 
     override val userWallets = MutableStateFlow<List<UserWallet>?>(null)
@@ -235,6 +240,7 @@ internal class DefaultUserWalletsListRepository(
         when (unlockMethod) {
             UserWalletsListRepository.UnlockMethod.Biometric -> {
                 unlockAllWallets().bind()
+                trackSignInEvent(userWallet, Basic.SignedIn.SignInType.Biometric)
                 select(userWalletId)
             }
             UserWalletsListRepository.UnlockMethod.AccessCode -> {
@@ -263,7 +269,10 @@ internal class DefaultUserWalletsListRepository(
                 removePasswordAttempts(userWallet)
 
                 sensitiveInformationRepository.getAll(listOf(encryptionKey))
-                    .doOnSuccess { sensitiveInfo -> updateWallets { it?.updateWith(sensitiveInfo) } }
+                    .doOnSuccess { sensitiveInfo ->
+                        updateWallets { it?.updateWith(sensitiveInfo) }
+                        trackSignInEvent(userWallet, Basic.SignedIn.SignInType.AccessCode)
+                    }
                     .doOnFailure { error -> raise(UnlockWalletError.UnableToUnlock.RawException(error)) }
             }
             is UserWalletsListRepository.UnlockMethod.Scan -> {
@@ -291,7 +300,10 @@ internal class DefaultUserWalletsListRepository(
                 )
 
                 sensitiveInformationRepository.getAll(listOf(encryptionKey))
-                    .doOnSuccess { sensitiveInfo -> updateWallets { it?.updateWith(sensitiveInfo) } }
+                    .doOnSuccess { sensitiveInfo ->
+                        updateWallets { it?.updateWith(sensitiveInfo) }
+                        trackSignInEvent(userWallet, Basic.SignedIn.SignInType.Card)
+                    }
                     .doOnFailure { error -> raise(UnlockWalletError.UnableToUnlock.RawException(error)) }
             }
         }
@@ -332,6 +344,9 @@ internal class DefaultUserWalletsListRepository(
         sensitiveInformationRepository.getAll(allKeys)
             .doOnSuccess { sensitiveInfo ->
                 updateWallets { wallets -> wallets?.updateWith(sensitiveInfo) }
+                selectedUserWallet.value?.let {
+                    trackSignInEvent(it, Basic.SignedIn.SignInType.Biometric)
+                }
             }
             .doOnFailure { error -> raise(UnlockWalletError.UnableToUnlock.RawException(error)) }
     }
@@ -507,5 +522,16 @@ internal class DefaultUserWalletsListRepository(
         }
 
         return lastOrNull()
+    }
+
+    private fun trackSignInEvent(userWallet: UserWallet, type: Basic.SignedIn.SignInType) {
+        trackingContextProxy.proceedWithContext(userWallet) {
+            analyticsEventHandler.send(
+                event = Basic.SignedIn(
+                    signInType = type,
+                    walletsCount = userWallets.value?.size ?: 0,
+                ),
+            )
+        }
     }
 }

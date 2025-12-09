@@ -31,7 +31,6 @@ internal fun HotWalletStepper(
     state: HotWalletStepperComponent.StepperUM,
     onBackClick: () -> Unit,
     onSkipClick: () -> Unit,
-    onFeedbackClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val fraction = state.currentStep.toFloat() / state.steps.coerceAtLeast(1)
@@ -47,20 +46,16 @@ internal fun HotWalletStepper(
             } else {
                 null
             },
-            endButton = when {
-                state.showSkipButton -> TopAppBarButtonUM.Text(
+            endButton = if (state.showSkipButton) {
+                TopAppBarButtonUM.Text(
                     text = resourceReference(R.string.common_skip),
                     onClicked = onSkipClick,
                 )
-                state.showFeedbackButton -> TopAppBarButtonUM.Icon(
-                    iconRes = R.drawable.ic_chat_24,
-                    onClicked = onFeedbackClick,
-                )
-                else -> null
+            } else {
+                null
             },
             title = state.title,
             containerColor = TangemTheme.colors.background.primary,
-            modifier = modifier,
             titleAlignment = Alignment.CenterHorizontally,
         )
 
@@ -95,11 +90,9 @@ private fun HotWalletStepper_Preview() {
                     title = resourceReference(R.string.common_done),
                     showBackButton = true,
                     showSkipButton = false,
-                    showFeedbackButton = true,
                 ),
                 onBackClick = {},
                 onSkipClick = {},
-                onFeedbackClick = {},
             )
         }
     }

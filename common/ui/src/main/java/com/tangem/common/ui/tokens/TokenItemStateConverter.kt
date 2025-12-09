@@ -21,7 +21,7 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.currency.yieldSupplyKey
-import com.tangem.domain.models.staking.YieldBalance
+import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.staking.model.isStakingSupported
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.staking.utils.getTotalWithRewardsStakingBalance
@@ -159,7 +159,7 @@ class TokenItemStateConverter(
             return totalAmount.format { crypto(currency) }
         }
 
-        private fun CryptoCurrencyStatus.getStakedBalance() = (value.yieldBalance as? YieldBalance.Data)
+        private fun CryptoCurrencyStatus.getStakedBalance() = (value.stakingBalance as? StakingBalance.Data)
             ?.getTotalWithRewardsStakingBalance(blockchainId = currency.network.rawId).orZero()
 
         private fun createTitleState(
@@ -266,12 +266,13 @@ class TokenItemStateConverter(
             val validators = stakingApyMap[stakingKey]
                 ?: return StakingLocalInfo(rate = null, isActive = false, rewardType = null)
 
-            val yieldBalance = currencyStatus.value.yieldBalance
-            val hasStakedBalance = yieldBalance is YieldBalance.Data
+            val stakingBalance = currencyStatus.value.stakingBalance as? StakingBalance.Data
+            val stakeKitBalance = stakingBalance as? StakingBalance.Data.StakeKit
 
-            val rateInfo: Pair<BigDecimal, Yield.RewardType?>? = if (hasStakedBalance) {
+            val rateInfo: Pair<BigDecimal, Yield.RewardType?>? = if (stakeKitBalance != null) {
+                // StakeKit-specific: try to find rate from validator address
                 val validatorsByAddress = validators.associateBy { it.address }
-                yieldBalance.balance.items
+                stakeKitBalance.balance.items
                     .mapNotNull { it.validatorAddress }
                     .firstNotNullOfOrNull { address ->
                         val validator = validatorsByAddress[address]
@@ -286,6 +287,8 @@ class TokenItemStateConverter(
                         }
                         .maxByOrNull { it.first }
             } else {
+                // P2P or no balance: use preferred validators
+                // TODO p2p
                 validators
                     .filter { it.preferred }
                     .mapNotNull { validator ->
@@ -298,7 +301,7 @@ class TokenItemStateConverter(
 
             return StakingLocalInfo(
                 rate = rateInfo?.first,
-                isActive = hasStakedBalance,
+                isActive = stakingBalance != null,
                 rewardType = rateInfo?.second,
             )
         }
