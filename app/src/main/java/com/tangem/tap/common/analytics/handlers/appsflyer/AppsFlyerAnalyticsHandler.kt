@@ -19,11 +19,11 @@ class AppsFlyerAnalyticsHandler(
     }
 
     override fun setUserId(userId: String) {
-
+        client.setUserId(userId)
     }
 
     override fun clearUserId() {
-        TODO("Not yet implemented")
+        client.clearUserId()
     }
 
     companion object {
