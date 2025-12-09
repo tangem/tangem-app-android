@@ -17,6 +17,7 @@ import com.tangem.feature.swap.domain.models.domain.ExchangeStatusModel
 import com.tangem.feature.swap.domain.models.domain.SavedSwapTransactionListModel
 import com.tangem.feature.swap.domain.models.domain.SavedSwapTransactionListModelInner
 import com.tangem.feature.swap.domain.models.domain.SavedSwapTransactionModel
+import com.tangem.lib.crypto.derivation.AccountNodeRecognizer
 import com.tangem.utils.converter.Converter
 
 internal class SavedSwapTransactionListConverter(
@@ -75,9 +76,23 @@ internal class SavedSwapTransactionListConverter(
                     .map { tx ->
                         val status = txStatuses[tx.txId]
                         val refundCurrency = status?.refundTokensResponse?.let { id ->
+                            val blockchain = Blockchain.fromNetworkId(id.networkId) ?: return@let null
+                            val derivationPath = id.derivationPath ?: return@let null
+
+                            val accountIndex = if (blockchain == Blockchain.Chia) {
+                                DerivationIndex.Main
+                            } else {
+                                val recognizer = AccountNodeRecognizer(blockchain = blockchain)
+                                val index = recognizer.recognize(derivationPathValue = derivationPath)?.toInt()
+                                    ?: return@let null
+
+                                DerivationIndex(index).getOrNull() ?: return@let null
+                            }
+
                             responseCryptoCurrenciesFactory.createCurrency(
                                 responseToken = id,
                                 userWallet = userWallet,
+                                accountIndex = accountIndex,
                             )
                         }
                         val statusWithRefundCurrency = status?.copy(refundCurrency = refundCurrency)
