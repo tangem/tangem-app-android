@@ -428,6 +428,7 @@ internal class SendWithSwapConfirmModel @Inject constructor(
                 route = SendWithSwapRoute.Confirm,
                 sendWithSwapUM = state.copy(
                     navigationUM = NavigationUM.Content(
+                        source = SendWithSwapRoute.Confirm.javaClass.simpleName,
                         title = resourceReference(id = R.string.send_with_swap_confirm_title),
                         subtitle = null,
                         backIconRes = R.drawable.ic_back_24,
