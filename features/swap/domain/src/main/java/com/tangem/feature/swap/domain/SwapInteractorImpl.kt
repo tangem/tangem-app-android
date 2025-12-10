@@ -92,6 +92,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
     private val amountFormatter: AmountFormatter,
     private val rampStateManager: RampStateManager,
     private val singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
+    private val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase,
     private val accountsFeatureToggles: AccountsFeatureToggles,
     @Assisted private val userWalletId: UserWalletId,
 ) : SwapInteractor {
@@ -631,9 +632,14 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         } else {
             amount
         }
+        val feePaidCurrencyStatus = getFeePaidCryptoCurrencyStatusSyncUseCase(
+            userWalletId = userWalletId,
+            cryptoCurrencyStatus = fromTokenStatus,
+        ).getOrNull()
         val currencyCheck = getCurrencyCheckUseCase(
             userWalletId = userWalletId,
             currencyStatus = fromTokenStatus,
+            feeCurrencyStatus = feePaidCurrencyStatus,
             amount = amountToRequest.value,
             fee = fee,
             feeCurrencyBalanceAfterTransaction = balanceAfterTransaction,
