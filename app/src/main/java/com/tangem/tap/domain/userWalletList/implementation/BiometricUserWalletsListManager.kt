@@ -18,8 +18,12 @@ import com.tangem.tap.domain.userWalletList.utils.toUserWallets
 import com.tangem.tap.domain.userWalletList.utils.updateWith
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import timber.log.Timber
 
+@Suppress("LargeClass")
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class BiometricUserWalletsListManager(
     private val keysRepository: UserWalletsKeysRepository,
@@ -28,6 +32,9 @@ internal class BiometricUserWalletsListManager(
     private val selectedUserWalletRepository: SelectedUserWalletRepository,
 ) : UserWalletsListManager.Lockable {
     private val state = MutableStateFlow(State())
+
+    private var hasSavedWallets: Boolean? = null
+    private val savedWalletMutex = Mutex()
 
     override val isLockable: Boolean = true
 
@@ -61,7 +68,21 @@ internal class BiometricUserWalletsListManager(
         get() = state.value.isLocked
 
     override val hasUserWallets: Boolean
-        get() = keysRepository.hasSavedEncryptionKeys()
+        get() {
+            return runBlocking {
+                // workaround to avoid calling hasSavedEncryptionKeys many times because of performance
+                savedWalletMutex.withLock {
+                    val hasSavedWalletsLocal = hasSavedWallets
+                    if (hasSavedWalletsLocal == null || !hasSavedWalletsLocal) {
+                        val hasKeys = keysRepository.hasSavedEncryptionKeys()
+                        hasSavedWallets = hasKeys
+                        hasKeys
+                    } else {
+                        true
+                    }
+                }
+            }
+        }
 
     override val walletsCount: Int
         get() = state.value.userWallets.size
@@ -194,6 +215,9 @@ internal class BiometricUserWalletsListManager(
     }
 
     override suspend fun clear(): CompletionResult<Unit> {
+        savedWalletMutex.withLock {
+            hasSavedWallets = null
+        }
         return sensitiveInformationRepository.clear()
             .flatMap { publicInformationRepository.clear() }
             .map {
