@@ -41,11 +41,11 @@ internal class OnboardingNoteCreateWalletModel @Inject constructor(
     )
 
     init {
-        Analytics.send(OnboardingEvent.CreateWallet.ScreenOpened)
+        Analytics.send(OnboardingEvent.CreateWallet.ScreenOpened())
         modelScope.launch {
             val scanResponse = params.childParams.commonState.value.scanResponse ?: return@launch
             if (!cardRepository.isActivationStarted(scanResponse.card.cardId)) {
-                Analytics.send(OnboardingEvent.Started)
+                Analytics.send(OnboardingEvent.Started())
             }
         }
         observeArtwork()

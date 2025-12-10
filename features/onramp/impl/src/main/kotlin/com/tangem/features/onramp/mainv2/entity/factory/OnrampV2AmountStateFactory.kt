@@ -112,11 +112,11 @@ internal class OnrampV2AmountStateFactory(
 
         val errorTextRes = when (error) {
             is OnrampError.AmountError.TooBigError -> {
-                analyticsEventHandler.send(OnrampAnalyticsEvent.MaxAmountError)
+                analyticsEventHandler.send(OnrampAnalyticsEvent.MaxAmountError())
                 R.string.onramp_max_amount_restriction
             }
             is OnrampError.AmountError.TooSmallError -> {
-                analyticsEventHandler.send(OnrampAnalyticsEvent.MinAmountError)
+                analyticsEventHandler.send(OnrampAnalyticsEvent.MinAmountError())
                 R.string.onramp_min_amount_restriction
             }
         }
