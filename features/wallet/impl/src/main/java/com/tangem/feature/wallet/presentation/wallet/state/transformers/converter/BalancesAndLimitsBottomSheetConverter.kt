@@ -44,12 +44,12 @@ internal class BalancesAndLimitsBottomSheetConverter(
     }
 
     private fun balanceInfoOnClick() {
-        analyticsEventHandler.send(MainScreenAnalyticsEvent.NoticeBalancesInfo)
+        analyticsEventHandler.send(MainScreenAnalyticsEvent.NoticeBalancesInfo())
         eventSender.send(WalletEvent.ShowAlert(WalletAlertState.VisaBalancesInfo))
     }
 
     private fun limitInfoOnClick(totalLimit: String, otherLimit: String) {
-        analyticsEventHandler.send(MainScreenAnalyticsEvent.NoticeLimitsInfo)
+        analyticsEventHandler.send(MainScreenAnalyticsEvent.NoticeLimitsInfo())
         eventSender.send(WalletEvent.ShowAlert(WalletAlertState.VisaLimitsInfo(totalLimit, otherLimit)))
     }
 }
