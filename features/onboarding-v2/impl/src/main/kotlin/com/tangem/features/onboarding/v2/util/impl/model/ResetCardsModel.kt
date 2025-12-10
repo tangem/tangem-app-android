@@ -1,6 +1,5 @@
 package com.tangem.features.onboarding.v2.util.impl.model
 
-import com.tangem.common.CompletionResult
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -8,12 +7,13 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
+import com.tangem.domain.card.ResetCardUseCase
+import com.tangem.domain.card.ResetCardUserCodeParams
 import com.tangem.domain.card.common.util.getBackupCardsCount
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.onboarding.v2.impl.R
 import com.tangem.features.onboarding.v2.util.ResetCardsComponent
-import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
@@ -26,7 +26,7 @@ import kotlin.coroutines.resume
 internal class ResetCardsModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
-    private val tangemSdkManager: TangemSdkManager,
+    private val resetCardUseCase: ResetCardUseCase,
     private val uiMessageSender: UiMessageSender,
 ) : Model() {
 
@@ -41,14 +41,19 @@ internal class ResetCardsModel @Inject constructor(
     }
 
     private suspend fun startFullResetFlow(createdUserWallet: UserWallet.Cold) {
+        val userCodeParams = ResetCardUserCodeParams(
+            isAccessCodeSet = createdUserWallet.scanResponse.card.isAccessCodeSet,
+            isPasscodeSet = createdUserWallet.scanResponse.card.isPasscodeSet,
+        )
+
         suspendCancellableCoroutine { continuation ->
             uiMessageSender.send(
                 DialogMessage.invoke(
                     title = resourceReference(R.string.reset_cards_dialog_first_title),
-                    isDismissable = false,
+                    isDismissable = true,
                     message = resourceReference(R.string.reset_cards_dialog_first_description),
                     firstActionBuilder = {
-                        cancelAction {
+                        cancelAction(isWarning = true) {
                             callbacks.onCancel()
                             onDismissRequest()
                             continuation.resume(Unit)
@@ -57,13 +62,13 @@ internal class ResetCardsModel @Inject constructor(
                     secondActionBuilder = {
                         EventMessageAction(
                             title = resourceReference(R.string.card_settings_action_sheet_reset),
-                            isWarning = true,
+                            isWarning = false,
                             onClick = {
                                 modelScope.launch {
-                                    repeatUntilTrue { resetPrimaryCard(createdUserWallet) }
+                                    repeatUntilTrue { resetPrimaryCard(createdUserWallet, userCodeParams) }
                                     continuation.resume(Unit)
                                     onDismissRequest()
-                                    startResetBackupCardsFlow(createdUserWallet)
+                                    startResetBackupCardsFlow(createdUserWallet, userCodeParams)
                                 }
                             },
                         )
@@ -74,13 +79,18 @@ internal class ResetCardsModel @Inject constructor(
         }
     }
 
-    private suspend fun startResetBackupCardsFlow(createdUserWallet: UserWallet.Cold) {
+    private suspend fun startResetBackupCardsFlow(
+        createdUserWallet: UserWallet.Cold,
+        userCodeParams: ResetCardUserCodeParams,
+    ) {
         val backupCardsCount = createdUserWallet.scanResponse.getBackupCardsCount() ?: 0
 
         if (backupCardsCount == 0) {
             completeResetFlow()
             return
         }
+
+        var canceled = false
 
         repeat(backupCardsCount) { index ->
             suspendCancellableCoroutine { continuation ->
@@ -90,23 +100,43 @@ internal class ResetCardsModel @Inject constructor(
                         isDismissable = false,
                         message = resourceReference(R.string.reset_cards_dialog_next_device_description),
                         firstActionBuilder = {
-                            cancelAction {
-                                callbacks.onCancel()
+                            cancelAction(isWarning = true) {
                                 onDismissRequest()
-                                continuation.resume(Unit)
+                                recommendResetAgain(
+                                    onCancel = {
+                                        canceled = true
+                                        callbacks.onCancel()
+                                        continuation.resume(Unit)
+                                    },
+                                    onReset = onReset@{
+                                        modelScope.launch {
+                                            repeatUntilTrue {
+                                                resetBackupCard(
+                                                    cardNumber = index + 2,
+                                                    params = userCodeParams,
+                                                    userWalletId = createdUserWallet.walletId,
+                                                )
+                                            }
+                                            this@onReset.onDismissRequest()
+                                            continuation.resume(Unit)
+                                        }
+                                    },
+                                )
                             }
                         },
                         secondActionBuilder = {
                             EventMessageAction(
                                 title = resourceReference(R.string.card_settings_action_sheet_reset),
-                                isWarning = true,
                                 onClick = {
                                     modelScope.launch {
-                                        repeatUntilTrue { resetBackupCard(index + 1, createdUserWallet.walletId) }
-                                        onDismissRequest()
-                                        if (index == backupCardsCount - 1) {
-                                            completeResetFlow()
+                                        repeatUntilTrue {
+                                            resetBackupCard(
+                                                cardNumber = index + 2,
+                                                params = userCodeParams,
+                                                userWalletId = createdUserWallet.walletId,
+                                            )
                                         }
+                                        onDismissRequest()
                                         continuation.resume(Unit)
                                     }
                                 },
@@ -116,7 +146,35 @@ internal class ResetCardsModel @Inject constructor(
                     ),
                 )
             }
+
+            if (canceled) return
         }
+
+        completeResetFlow()
+    }
+
+    private fun recommendResetAgain(onCancel: () -> Unit, onReset: EventMessageAction.BuilderScope.() -> Unit) {
+        uiMessageSender.send(
+            DialogMessage.invoke(
+                title = resourceReference(R.string.card_reset_alert_incomplete_title),
+                isDismissable = false,
+                message = resourceReference(R.string.card_reset_alert_incomplete_message),
+                firstActionBuilder = {
+                    cancelAction(isWarning = true) {
+                        onCancel()
+                        onDismissRequest()
+                    }
+                },
+                secondActionBuilder = {
+                    EventMessageAction(
+                        title = resourceReference(R.string.card_settings_action_sheet_reset),
+                        onClick = {
+                            onReset()
+                        },
+                    )
+                },
+            ),
+        )
     }
 
     private suspend fun completeResetFlow() {
@@ -125,10 +183,20 @@ internal class ResetCardsModel @Inject constructor(
                 DialogMessage.invoke(
                     title = resourceReference(R.string.card_settings_completed_reset_alert_title),
                     isDismissable = false,
-                    message = resourceReference(R.string.reset_cards_dialog_complete_description),
+                    message = when (params.source) {
+                        ResetCardsComponent.Params.Source.Upgrade ->
+                            resourceReference(R.string.card_reset_alert_finish_message)
+                        ResetCardsComponent.Params.Source.Onboarding ->
+                            resourceReference(R.string.card_settings_completed_reset_alert_message)
+                    },
                     firstActionBuilder = {
                         EventMessageAction(
-                            title = resourceReference(R.string.common_done),
+                            title = when (params.source) {
+                                ResetCardsComponent.Params.Source.Upgrade ->
+                                    resourceReference(R.string.card_reset_alert_finish_ok_button)
+                                ResetCardsComponent.Params.Source.Onboarding ->
+                                    resourceReference(R.string.common_done)
+                            },
                             onClick = {
                                 modelScope.launch {
                                     onDismissRequest()
@@ -144,26 +212,30 @@ internal class ResetCardsModel @Inject constructor(
         }
     }
 
-    private suspend fun resetPrimaryCard(createdUserWallet: UserWallet.Cold): Boolean {
+    private suspend fun resetPrimaryCard(
+        createdUserWallet: UserWallet.Cold,
+        params: ResetCardUserCodeParams,
+    ): Boolean {
         val scanResponse = createdUserWallet.scanResponse
 
-        val result = tangemSdkManager.resetToFactorySettings(
+        val result = resetCardUseCase.invoke(
             cardId = scanResponse.card.cardId,
-            allowsRequestAccessCodeFromRepository = true,
+            params = params,
         )
 
-        return when (result) {
-            is CompletionResult.Failure -> false
-            is CompletionResult.Success -> true
-        }
+        return result.isRight()
     }
 
-    private suspend fun resetBackupCard(cardIndex: Int, userWalletId: UserWalletId): Boolean {
-        val result = tangemSdkManager.resetBackupCard(cardIndex, userWalletId)
-        return when (result) {
-            is CompletionResult.Failure -> false
-            is CompletionResult.Success -> true
-        }
+    private suspend fun resetBackupCard(
+        cardNumber: Int,
+        params: ResetCardUserCodeParams,
+        userWalletId: UserWalletId,
+    ): Boolean {
+        return resetCardUseCase.invoke(
+            cardNumber = cardNumber,
+            params,
+            userWalletId,
+        ).isRight()
     }
 
     private inline fun repeatUntilTrue(action: () -> Boolean) {
