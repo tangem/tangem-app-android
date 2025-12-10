@@ -7,6 +7,7 @@ import com.tangem.core.ui.extensions.TextReference
 @Immutable
 sealed class NavigationUM {
     data class Content(
+        val source: String,
         val title: TextReference,
         val subtitle: TextReference?,
         @DrawableRes val backIconRes: Int,
