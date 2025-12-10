@@ -590,6 +590,7 @@
   <string name="hw_backup_need_finish_first">まずバックアップを完了する</string>
   <string name="hw_backup_need_title">まずバックアップを完了する</string>
   <string name="hw_backup_section_other_title">その他の方法</string>
+  <string name="hw_backup_seed_description">リカバリーフレーズは、ご自身で安全な場所に保管し、資金を守るために他人には絶対に共有しないでください。</string>
   <string name="hw_backup_seed_title">リカバリーフレーズ</string>
   <string name="hw_backup_to_secure_description">アクセスコードを使用してウォレットを保護するには、まずバックアップを完了してください。</string>
   <string name="hw_backup_to_upgrade_description">ウォレットをハードウェアにアップグレードするには、まずバックアップしてください。</string>
@@ -1432,6 +1433,8 @@
   <string name="tangempay_failed_to_issue_card">カードの発行に失敗しました</string>
   <string name="tangempay_failed_to_issue_card_retry_description">技術的なエラーが発生しました。下のボタンをクリックして、もう一度お試しください。</string>
   <string name="tangempay_failed_to_issue_card_support_description">技術的なエラーが発生しました。サポートへお問い合わせください。</string>
+  <string name="tangempay_get_banner_description">暗号資産を日常の支払いに使おう。\n\nこれまでにないタイプの決済カード。</string>
+  <string name="tangempay_get_tangem_pay">Tangem Payを入手</string>
   <string name="tangempay_issue_card_notification_description">通常は最大で15分ほどかかります</string>
   <string name="tangempay_issue_card_notification_title">Tangemカードのセットアップ</string>
   <string name="tangempay_issuing_your_card">カードを発行しています</string>
@@ -1454,6 +1457,7 @@
   <string name="tangempay_service_unavailable_description">技術的な問題を修正しています。後でもう一度お試しください。</string>
   <string name="tangempay_service_unavailable_title">サービスは一時的に利用できません</string>
   <string name="tangempay_service_unreachable_try_later">現在サービスに接続できません。後ほどもう一度お試しください。</string>
+  <string name="tangempay_tangem_visa_card">Tangem Visaカード</string>
   <string name="tangempay_temporarily_unavailable">Tangem Payは一時的に利用できません</string>
   <string name="tangempay_title">Tangem Pay</string>
   <string name="tangempay_use_tangem_device_to_restore_payment_account">カードまたはリングを使用して、支払いアカウントへのアクセスを復元してください。</string>
@@ -1500,6 +1504,7 @@
   <string name="transaction_history_multiple_addresses">複数のアドレス</string>
   <string name="transaction_history_not_supported_description">現在、このブロックチェーンでは取引履歴はサポートされていません。しかしご心配なく！弊社で対応中です。その間、エクスプローラーで確認することができます。</string>
   <string name="transaction_history_operation">オペレーション</string>
+  <string name="transaction_history_transaction_for_address">対象：%s</string>
   <string name="transaction_history_transaction_from_address">送金元: %s</string>
   <string name="transaction_history_transaction_to_address">送金先: %s</string>
   <string name="transaction_history_transaction_validator">バリデーター: %s</string>
