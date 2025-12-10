@@ -39,16 +39,16 @@ internal class WalletWarningsAnalyticsSender @Inject constructor(
     @Suppress("CyclomaticComplexMethod")
     private fun getEvent(warning: WalletNotification): AnalyticsEvent? {
         return when (warning) {
-            is WalletNotification.Critical.DevCard -> MainScreen.DevelopmentCard
-            is WalletNotification.Critical.FailedCardValidation -> MainScreen.ProductSampleCard
-            is WalletNotification.Warning.MissingBackup -> MainScreen.BackupYourWallet
-            is WalletNotification.Warning.NumberOfSignedHashesIncorrect -> MainScreen.CardSignedTransactions
-            is WalletNotification.Warning.TestNetCard -> MainScreen.TestnetCard
-            is WalletNotification.Informational.DemoCard -> MainScreen.DemoCard
-            is WalletNotification.Informational.MissingAddresses -> MainScreen.MissingAddresses
-            is WalletNotification.RateApp -> MainScreen.HowDoYouLikeTangem
-            is WalletNotification.Critical.BackupError -> MainScreen.BackupError
-            is WalletNotification.NoteMigration -> MainScreen.NotePromo
+            is WalletNotification.Critical.DevCard -> MainScreen.DevelopmentCard()
+            is WalletNotification.Critical.FailedCardValidation -> MainScreen.ProductSampleCard()
+            is WalletNotification.Warning.MissingBackup -> MainScreen.BackupYourWallet()
+            is WalletNotification.Warning.NumberOfSignedHashesIncorrect -> MainScreen.CardSignedTransactions()
+            is WalletNotification.Warning.TestNetCard -> MainScreen.TestnetCard()
+            is WalletNotification.Informational.DemoCard -> MainScreen.DemoCard()
+            is WalletNotification.Informational.MissingAddresses -> MainScreen.MissingAddresses()
+            is WalletNotification.RateApp -> MainScreen.HowDoYouLikeTangem()
+            is WalletNotification.Critical.BackupError -> MainScreen.BackupError()
+            is WalletNotification.NoteMigration -> MainScreen.NotePromo()
             is WalletNotification.SwapPromo -> NoticePromotionBanner(
                 source = AnalyticsParam.ScreensSources.Main,
                 program = Program.Empty, // Use it on new promo action
@@ -61,8 +61,8 @@ internal class WalletWarningsAnalyticsSender @Inject constructor(
                 source = AnalyticsParam.ScreensSources.Main,
                 program = Program.BlackFriday,
             )
-            is WalletNotification.ReferralPromo -> MainScreen.ReferralPromo
-            is WalletNotification.VisaPresalePromo -> VisaWaitlistPromo
+            is WalletNotification.ReferralPromo -> MainScreen.ReferralPromo()
+            is WalletNotification.VisaPresalePromo -> VisaWaitlistPromo()
             is WalletNotification.UnlockWallets -> null // See [SelectedWalletAnalyticsSender]
             is WalletNotification.Informational.NoAccount,
             is WalletNotification.Warning.LowSignatures,
@@ -80,9 +80,9 @@ internal class WalletWarningsAnalyticsSender @Inject constructor(
                 }
                 MainScreen.NoticeFinishActivation(activationState)
             }
-            is WalletNotification.Critical.SeedPhraseNotification -> MainScreen.NoticeSeedPhraseSupport
-            is WalletNotification.Critical.SeedPhraseSecondNotification -> MainScreen.NoticeSeedPhraseSupportSecond
-            is WalletNotification.PushNotifications -> WalletScreenAnalyticsEvent.PushBannerPromo.PushBanner
+            is WalletNotification.Critical.SeedPhraseNotification -> MainScreen.NoticeSeedPhraseSupport()
+            is WalletNotification.Critical.SeedPhraseSecondNotification -> MainScreen.NoticeSeedPhraseSupportSecond()
+            is WalletNotification.PushNotifications -> WalletScreenAnalyticsEvent.PushBannerPromo.PushBanner()
             is WalletNotification.Warning.TangemPayRefreshNeeded -> null
             WalletNotification.Warning.TangemPayUnreachable -> null
         }
