@@ -58,14 +58,18 @@ internal class WelcomeModel @Inject constructor(
             modelScope.launch {
                 val userWallets = userWalletsListRepository.userWalletsSync()
                 val userWallet = userWallets.first { it.walletId == walletId }
-                trackingContextProxy.proceedWithContext(userWallet) {
-                    val signInType = when {
-                        !userWallet.isLocked -> SignIn.ButtonWallet.SignInType.NoSecurity
-                        userWallet is UserWallet.Cold -> SignIn.ButtonWallet.SignInType.Card
-                        else -> SignIn.ButtonWallet.SignInType.AccessCode
-                    }
-                    analyticsEventHandler.send(SignIn.ButtonWallet(signInType))
+                trackingContextProxy.addContext(userWallet)
+                val signInType = when {
+                    !userWallet.isLocked -> SignIn.ButtonWallet.SignInType.NoSecurity
+                    userWallet is UserWallet.Cold -> SignIn.ButtonWallet.SignInType.Card
+                    else -> SignIn.ButtonWallet.SignInType.AccessCode
                 }
+                analyticsEventHandler.send(
+                    event = SignIn.ButtonWallet(
+                        signInType = signInType,
+                        walletsCount = userWallets.size,
+                    ),
+                )
                 onUserWalletClick(userWallet)
             }
         },
@@ -210,6 +214,7 @@ internal class WelcomeModel @Inject constructor(
                 router.replaceAll(AppRoute.Wallet)
             },
             onUserCancelled = { onUserCancelled() },
+            analyticsEventHandler = analyticsEventHandler,
             showMessage = uiMessageSender::send,
         )
     }
@@ -226,13 +231,12 @@ internal class WelcomeModel @Inject constructor(
 
     private suspend fun trackSignInEvent(userWallet: UserWallet, type: Basic.SignedIn.SignInType) {
         val walletsCount = userWalletsListRepository.userWalletsSync().size
-        trackingContextProxy.proceedWithContext(userWallet) {
-            analyticsEventHandler.send(
-                event = Basic.SignedIn(
-                    signInType = type,
-                    walletsCount = walletsCount,
-                ),
-            )
-        }
+        trackingContextProxy.addContext(userWallet)
+        analyticsEventHandler.send(
+            event = Basic.SignedIn(
+                signInType = type,
+                walletsCount = walletsCount,
+            ),
+        )
     }
 }
