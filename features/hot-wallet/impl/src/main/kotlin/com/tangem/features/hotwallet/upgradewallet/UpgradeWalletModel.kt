@@ -202,7 +202,7 @@ internal class UpgradeWalletModel @Inject constructor(
         }
 
         override fun onComplete() {
-            setLoading(false)
+            scanCard()
         }
     }
 }
