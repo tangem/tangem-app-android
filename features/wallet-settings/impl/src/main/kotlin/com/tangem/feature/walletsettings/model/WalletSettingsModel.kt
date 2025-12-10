@@ -115,7 +115,7 @@ internal class WalletSettingsModel @Inject constructor(
     init {
         getUserWalletUseCase.invoke(params.userWalletId).onRight { wallet ->
             trackingContextProxy.addContext(wallet)
-            analyticsEventHandler.send(WalletSettingsAnalyticEvents.WalletSettingsScreenOpened)
+            analyticsEventHandler.send(WalletSettingsAnalyticEvents.WalletSettingsScreenOpened())
         }
 
         fun combineUI(wallet: UserWallet) = combine(
@@ -384,7 +384,6 @@ internal class WalletSettingsModel @Inject constructor(
     }
 
     private fun onUpgradeWalletClick() {
-        analyticsEventHandler.send(WalletSettingsAnalyticEvents.ButtonHardwareUpdate)
         if (!state.value.isWalletBackedUp) {
             showMakeBackupAtFirstAlertBS(
                 isUpgradeFlow = true,
@@ -404,7 +403,7 @@ internal class WalletSettingsModel @Inject constructor(
     }
 
     private fun onBackupClick() {
-        analyticsEventHandler.send(WalletSettingsAnalyticEvents.ButtonBackup)
+        analyticsEventHandler.send(WalletSettingsAnalyticEvents.ButtonBackup())
         router.push(AppRoute.WalletBackup(params.userWalletId))
     }
 
@@ -441,7 +440,7 @@ internal class WalletSettingsModel @Inject constructor(
                             shouldSetAccessCode = true,
                             analyticsSource = AnalyticsParam.ScreensSources.WalletSettings.value,
                             analyticsAction = if (isUpgradeFlow) {
-                                RecoveryPhraseScreenAction.Backup.value
+                                RecoveryPhraseScreenAction.Upgrade.value
                             } else {
                                 RecoveryPhraseScreenAction.AccessCode.value
                             },
