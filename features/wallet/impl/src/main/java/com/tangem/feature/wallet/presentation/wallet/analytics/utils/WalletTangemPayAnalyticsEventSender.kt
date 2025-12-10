@@ -27,8 +27,8 @@ internal class WalletTangemPayAnalyticsEventSender @Inject constructor(
         val event = when {
             customerInfo.orderStatus == OrderStatus.CANCELED -> return // ignore cancelled state on analytics
             !customerInfo.info.isKycApproved -> return // ignore kyc not approved state on analytics
-            cardInfo != null && productInstance != null -> TangemPayAnalyticsEvents.MainScreenOpened
-            else -> TangemPayAnalyticsEvents.IssuingBannerDisplayed
+            cardInfo != null && productInstance != null -> TangemPayAnalyticsEvents.MainScreenOpened()
+            else -> TangemPayAnalyticsEvents.IssuingBannerDisplayed()
         }
 
         if (sentEvents.add(event)) {
