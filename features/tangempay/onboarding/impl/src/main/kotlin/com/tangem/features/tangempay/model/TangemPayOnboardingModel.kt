@@ -58,7 +58,7 @@ internal class TangemPayOnboardingModel @Inject constructor(
                 }
                 is TangemPayOnboardingComponent.Params.Deeplink -> {
                     repository.validateDeeplink(params.deeplink)
-                        .onRight { isValid -> if (isValid) showOnboarding() }
+                        .onRight { isValid -> if (isValid) showOnboarding() else back() }
                         .onLeft { back() }
                 }
             }
