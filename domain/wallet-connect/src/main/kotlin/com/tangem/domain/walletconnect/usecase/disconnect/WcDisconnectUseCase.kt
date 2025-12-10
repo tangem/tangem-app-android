@@ -15,7 +15,7 @@ class WcDisconnectUseCase(
 ) {
 
     suspend fun disconnectAll() {
-        analytics.send(WcAnalyticEvents.ButtonDisconnectAll)
+        analytics.send(WcAnalyticEvents.ButtonDisconnectAll())
         sessionsManager.sessions.first()
             .flatMap { it.value }
             .map { session -> flow { emit(internalDisconnect(session)) } }

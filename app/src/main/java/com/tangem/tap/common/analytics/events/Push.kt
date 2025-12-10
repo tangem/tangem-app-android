@@ -8,5 +8,5 @@ internal sealed class Push(event: String) : AnalyticsEvent(
     params = emptyMap(),
 ) {
 
-    data object PushNotificationOpened : Push(event = "Push Notification Opened")
+    class PushNotificationOpened : Push(event = "Push Notification Opened")
 }

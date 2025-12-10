@@ -71,7 +71,7 @@ internal class OnboardingVisaAccessCodeModel @Inject constructor(
     val onDone = MutableSharedFlow<ActivationReadyEvent>()
 
     init {
-        analyticsEventsHandler.send(OnboardingVisaAnalyticsEvent.SettingAccessCodeStarted)
+        analyticsEventsHandler.send(OnboardingVisaAnalyticsEvent.SettingAccessCodeStarted())
     }
 
     fun onBack() {
@@ -115,14 +115,14 @@ internal class OnboardingVisaAccessCodeModel @Inject constructor(
     private fun onContinue() {
         when (uiState.value.step) {
             OnboardingVisaAccessCodeUM.Step.Enter -> {
-                analyticsEventsHandler.send(OnboardingVisaAnalyticsEvent.AccessCodeEntered)
+                analyticsEventsHandler.send(OnboardingVisaAnalyticsEvent.AccessCodeEntered())
                 if (checkAccessCodeMinChars().not()) return
                 _uiState.update { it.copy(step = OnboardingVisaAccessCodeUM.Step.ReEnter) }
-                analyticsEventsHandler.send(OnboardingVisaAnalyticsEvent.AccessCodeReenterScreen)
+                analyticsEventsHandler.send(OnboardingVisaAnalyticsEvent.AccessCodeReenterScreen())
             }
             OnboardingVisaAccessCodeUM.Step.ReEnter -> {
                 if (checkAccessCodesMatch().not()) return
-                analyticsEventsHandler.send(OnboardingVisaAnalyticsEvent.OnboardingVisa)
+                analyticsEventsHandler.send(OnboardingVisaAnalyticsEvent.OnboardingVisa())
                 startActivationProcess(accessCode = uiState.value.accessCodeFirst.text)
             }
         }
