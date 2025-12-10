@@ -294,7 +294,11 @@ sealed class WalletNotification(val config: NotificationConfig) {
     ) : WalletNotification(
         config = NotificationConfig(
             title = resourceReference(R.string.hw_activation_need_title),
-            subtitle = resourceReference(R.string.hw_activation_need_description),
+            subtitle = if (isBackupExists) {
+                resourceReference(R.string.hw_activation_need_warning_description)
+            } else {
+                resourceReference(R.string.hw_activation_need_description)
+            },
             iconResId = R.drawable.img_knight_shield_32,
             iconTint = when (type) {
                 WalletActivationBannerType.Attention -> IconTint.Attention
