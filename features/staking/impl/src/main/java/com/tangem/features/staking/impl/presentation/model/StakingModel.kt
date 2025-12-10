@@ -466,7 +466,7 @@ internal class StakingModel @Inject constructor(
     }
 
     override fun onInitialInfoBannerClick() {
-        analyticsEventHandler.send(StakingAnalyticsEvent.WhatIsStaking)
+        analyticsEventHandler.send(StakingAnalyticsEvent.WhatIsStaking())
         innerRouter.openUrl(WHAT_IS_STAKING_ARTICLE_URL)
     }
 
@@ -512,7 +512,7 @@ internal class StakingModel @Inject constructor(
     }
 
     override fun onMaxValueClick() {
-        analyticsEventHandler.send(StakingAnalyticsEvent.ButtonMax)
+        analyticsEventHandler.send(StakingAnalyticsEvent.ButtonMax())
         stateController.update(
             AmountMaxValueStateTransformer(
                 cryptoCurrencyStatus = cryptoCurrencyStatus,
@@ -554,7 +554,7 @@ internal class StakingModel @Inject constructor(
     }
 
     override fun openRewardsValidators() {
-        analyticsEventHandler.send(StakingAnalyticsEvent.ButtonRewards)
+        analyticsEventHandler.send(StakingAnalyticsEvent.ButtonRewards())
         val rewardsValidators =
             stateController.value.rewardsValidatorsState as? StakingStates.RewardsValidatorsState.Data
 
@@ -878,7 +878,7 @@ internal class StakingModel @Inject constructor(
     }
 
     override fun onExploreClick() {
-        analyticsEventHandler.send(StakingAnalyticsEvent.ButtonExplore)
+        analyticsEventHandler.send(StakingAnalyticsEvent.ButtonExplore())
         val confirmationDataState = uiState.value.confirmationState as? StakingStates.ConfirmationState.Data
         val transactionDoneState = confirmationDataState?.transactionDoneState as? TransactionDoneState.Content
         val txUrl = transactionDoneState?.txUrl
@@ -892,7 +892,7 @@ internal class StakingModel @Inject constructor(
         val transactionDoneState = confirmationDataState?.transactionDoneState as? TransactionDoneState.Content
         val txUrl = transactionDoneState?.txUrl
 
-        analyticsEventHandler.send(StakingAnalyticsEvent.ButtonShare)
+        analyticsEventHandler.send(StakingAnalyticsEvent.ButtonShare())
         if (txUrl != null) {
             vibratorHapticManager.performOneTime(TangemHapticEffect.OneTime.Click)
             shareManager.shareText(txUrl)
