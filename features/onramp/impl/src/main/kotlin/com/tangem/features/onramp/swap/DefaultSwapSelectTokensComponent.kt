@@ -50,7 +50,7 @@ internal class DefaultSwapSelectTokensComponent @AssistedInject constructor(
     )
 
     init {
-        analyticsEventHandler.send(event = MainScreenAnalyticsEvent.SwapScreenOpened)
+        analyticsEventHandler.send(event = MainScreenAnalyticsEvent.SwapScreenOpened())
     }
 
     @Composable
