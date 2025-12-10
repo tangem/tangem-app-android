@@ -90,7 +90,7 @@ internal class ReferralModel @Inject constructor(
     }
 
     init {
-        analyticsEventHandler.send(ReferralEvents.ReferralScreenOpened)
+        analyticsEventHandler.send(ReferralEvents.ReferralScreenOpened())
         if (accountsFeatureToggles.isFeatureEnabled) {
             combine(
                 flow = referralData.filterNotNull().onEach(::selectAccount),
@@ -178,7 +178,7 @@ internal class ReferralModel @Inject constructor(
         if (userWallet is UserWallet.Cold && isDemoCardUseCase(cardId = userWallet.cardId)) {
             showErrorSnackbar(DemoModeException())
         } else {
-            analyticsEventHandler.send(ReferralEvents.ClickParticipate)
+            analyticsEventHandler.send(ReferralEvents.ClickParticipate())
             val lastInfoState = uiState.referralInfoState
             uiState = uiState.copy(referralInfoState = ReferralInfoState.Loading)
             modelScope.launch {
@@ -187,9 +187,9 @@ internal class ReferralModel @Inject constructor(
                     false -> PortfolioId(params.userWalletId)
                 }
                 runCatching { referralInteractor.startReferral(portfolioId) }
-                    .onSuccess {
-                        analyticsEventHandler.send(ReferralEvents.ParticipateSuccessful)
-                        referralData.value = it
+                    .onSuccess { referral ->
+                        analyticsEventHandler.send(ReferralEvents.ParticipateSuccessful())
+                        referralData.value = referral
                     }
                     .onFailure { throwable ->
                         if (throwable is ReferralError.UserCancelledException) {
@@ -213,17 +213,17 @@ internal class ReferralModel @Inject constructor(
     }
 
     private fun onAgreementClicked() {
-        analyticsEventHandler.send(ReferralEvents.ClickTaC)
+        analyticsEventHandler.send(ReferralEvents.ClickTaC())
 
         lastReferralData?.tosLink?.let(urlOpener::openUrl)
     }
 
     private fun onCopyClicked() {
-        analyticsEventHandler.send(ReferralEvents.ClickCopy)
+        analyticsEventHandler.send(ReferralEvents.ClickCopy())
     }
 
     private fun onShareClicked(text: String) {
-        analyticsEventHandler.send(ReferralEvents.ClickShare)
+        analyticsEventHandler.send(ReferralEvents.ClickShare())
 
         shareManager.shareText(text = text)
     }
