@@ -155,9 +155,10 @@ internal class DefaultCurrencyChecksRepository(
 
     override suspend fun getRentExemptionError(
         userWalletId: UserWalletId,
-        currencyStatus: CryptoCurrencyStatus,
+        currencyStatus: CryptoCurrencyStatus?,
         balanceAfterTransaction: BigDecimal,
     ): CryptoCurrencyWarning.Rent? {
+        if (currencyStatus == null) return null
         val rentData = walletManagersFacade.getRentInfo(userWalletId, currencyStatus.currency.network) ?: return null
         return when {
             balanceAfterTransaction.isZero() -> null
