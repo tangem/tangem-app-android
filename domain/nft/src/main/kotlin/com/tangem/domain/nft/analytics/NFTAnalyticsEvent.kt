@@ -34,7 +34,7 @@ sealed class NFTAnalyticsEvent(
     )
 
     object Receive {
-        data object ScreenOpened : NFTAnalyticsEvent(event = "Receive NFT Screen Opened")
+        class ScreenOpened : NFTAnalyticsEvent(event = "Receive NFT Screen Opened")
 
         data class BlockchainChosen(
             private val blockchain: String,
@@ -63,9 +63,9 @@ sealed class NFTAnalyticsEvent(
             },
         )
 
-        data object ButtonReadMore : NFTAnalyticsEvent(event = "Button - Read More")
-        data object ButtonSeeAll : NFTAnalyticsEvent(event = "Button - See All")
-        data object ButtonExplore : NFTAnalyticsEvent(event = "Button - Explore")
-        data object ButtonSend : NFTAnalyticsEvent(event = "Button - Send")
+        class ButtonReadMore : NFTAnalyticsEvent(event = "Button - Read More")
+        class ButtonSeeAll : NFTAnalyticsEvent(event = "Button - See All")
+        class ButtonExplore : NFTAnalyticsEvent(event = "Button - Explore")
+        class ButtonSend : NFTAnalyticsEvent(event = "Button - Send")
     }
 }

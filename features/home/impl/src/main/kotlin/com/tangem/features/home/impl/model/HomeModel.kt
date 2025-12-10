@@ -93,7 +93,7 @@ internal class HomeModel @Inject constructor(
     val uiState = _uiState.asStateFlow()
 
     init {
-        analyticsEventHandler.send(IntroductionProcess.ScreenOpened)
+        analyticsEventHandler.send(IntroductionProcess.ScreenOpened())
         observeUserCountryChanges()
 
         when (params.launchMode) {
@@ -127,20 +127,20 @@ internal class HomeModel @Inject constructor(
     }
 
     private fun onScanClick() {
-        analyticsEventHandler.send(IntroductionProcess.ButtonScanCardLegacy)
+        analyticsEventHandler.send(IntroductionProcess.ButtonScanCardLegacy())
         scanCard()
     }
 
     private fun onShopClick() {
-        analyticsEventHandler.send(IntroductionProcess.ButtonBuyCards)
-        analyticsEventHandler.send(Shop.ScreenOpened)
+        analyticsEventHandler.send(IntroductionProcess.ButtonBuyCards())
+        analyticsEventHandler.send(Shop.ScreenOpened())
         modelScope.launch {
             generateBuyTangemCardLinkUseCase.invoke().let { urlOpener.openUrl(it) }
         }
     }
 
     private fun onSearchTokensClick() {
-        analyticsEventHandler.send(IntroductionProcess.ButtonTokensList)
+        analyticsEventHandler.send(IntroductionProcess.ButtonTokensList())
         router.push(AppRoute.ManageTokens(Source.STORIES))
     }
 

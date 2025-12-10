@@ -80,10 +80,10 @@ class MultiWalletBackupModel @Inject constructor(
     init {
         // for wallet 1 this event is sent in Wallet1ChooseOptionModel
         if (scanResponse.productType == ProductType.Wallet2 || scanResponse.productType == ProductType.Ring) {
-            analyticsEventHandler.send(OnboardingEvent.Backup.ScreenOpened)
+            analyticsEventHandler.send(OnboardingEvent.Backup.ScreenOpened())
         }
 
-        analyticsEventHandler.send(OnboardingEvent.Backup.Started)
+        analyticsEventHandler.send(OnboardingEvent.Backup.Started())
 
         // Clear any saved backup before starting the backup process
         // also clears the primary card if it was set
@@ -226,7 +226,7 @@ class MultiWalletBackupModel @Inject constructor(
                                             _uiState.update { it.copy(dialog = null) }
                                         },
                                         onDismissClick = {
-                                            analyticsEventHandler.send(OnboardingEvent.Backup.ResetCancelEvent)
+                                            analyticsEventHandler.send(OnboardingEvent.Backup.ResetCancelEvent())
                                         },
                                     ),
                                 )
@@ -270,7 +270,7 @@ class MultiWalletBackupModel @Inject constructor(
     }
 
     private fun resetBackupCard(cardId: String) {
-        analyticsEventHandler.send(OnboardingEvent.Backup.ResetPerformEvent)
+        analyticsEventHandler.send(OnboardingEvent.Backup.ResetPerformEvent())
 
         modelScope.launch {
             tangemSdkManager.resetToFactorySettings(

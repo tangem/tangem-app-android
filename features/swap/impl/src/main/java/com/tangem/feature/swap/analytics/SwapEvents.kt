@@ -23,7 +23,7 @@ sealed class SwapEvents(
         params = mapOf("Token" to token),
     )
 
-    data object SendTokenBalanceClicked : SwapEvents(event = "Send Token Balance Clicked")
+    class SendTokenBalanceClicked : SwapEvents(event = "Send Token Balance Clicked")
 
     data class ChooseTokenScreenOpened(val availableTokens: Boolean) : SwapEvents(
         event = "Choose Token Screen Opened",
@@ -43,7 +43,7 @@ sealed class SwapEvents(
         params = mapOf("Send Token" to sendToken, "Receive Token" to receiveToken),
     )
 
-    data object ButtonGivePermissionClicked : SwapEvents(event = "Button - Give permission")
+    class ButtonGivePermissionClicked : SwapEvents(event = "Button - Give permission")
 
     data class ButtonPermissionApproveClicked(
         val sendToken: String,
@@ -58,9 +58,9 @@ sealed class SwapEvents(
         ),
     )
 
-    data object ButtonPermissionCancelClicked : SwapEvents(event = "Button - Permission Cancel")
+    class ButtonPermissionCancelClicked : SwapEvents(event = "Button - Permission Cancel")
 
-    data object ButtonSwipeClicked : SwapEvents(event = "Button - Swipe")
+    class ButtonSwipeClicked : SwapEvents(event = "Button - Swipe")
 
     data class SwapInProgressScreen(
         val provider: SwapProvider,
@@ -81,7 +81,7 @@ sealed class SwapEvents(
         ),
     )
 
-    data object ProviderClicked : SwapEvents("Provider Clicked")
+    class ProviderClicked : SwapEvents("Provider Clicked")
 
     data class ProviderChosen(val provider: SwapProvider) : SwapEvents(
         event = "Provider Chosen",
@@ -98,7 +98,7 @@ sealed class SwapEvents(
         params = mapOf("Token" to token),
     )
 
-    data object NoticeNoAvailableTokensToSwap : SwapEvents("Notice - No Available Tokens To Swap")
+    class NoticeNoAvailableTokensToSwap : SwapEvents("Notice - No Available Tokens To Swap")
 
     data class NoticeNotEnoughFee(val token: String, val blockchain: String) : SwapEvents(
         event = "Notice - Not Enough Fee",

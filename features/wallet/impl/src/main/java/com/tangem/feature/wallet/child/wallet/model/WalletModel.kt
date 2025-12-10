@@ -118,7 +118,7 @@ internal class WalletModel @Inject constructor(
 
     init {
         if (!hotWalletFeatureToggles.isHotWalletEnabled) {
-            analyticsEventsHandler.send(WalletScreenAnalyticsEvent.MainScreen.ScreenOpenedLegacy)
+            analyticsEventsHandler.send(WalletScreenAnalyticsEvent.MainScreen.ScreenOpenedLegacy())
         }
 
         suggestToOpenMarkets()

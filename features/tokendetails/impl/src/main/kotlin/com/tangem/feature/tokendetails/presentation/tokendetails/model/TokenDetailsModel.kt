@@ -878,7 +878,7 @@ internal class TokenDetailsModel @Inject constructor(
                 PromoAnalyticsEvent.PromotionBannerClicked(
                     source = AnalyticsParam.ScreensSources.Token,
                     program = PromoAnalyticsEvent.Program.Empty, // Use it on new promo action
-                    action = PromoAnalyticsEvent.PromotionBannerClicked.BannerAction.Closed,
+                    action = PromoAnalyticsEvent.PromotionBannerClicked.BannerAction.Closed(),
                 ),
             )
         }
@@ -891,7 +891,7 @@ internal class TokenDetailsModel @Inject constructor(
                 PromoAnalyticsEvent.PromotionBannerClicked(
                     source = AnalyticsParam.ScreensSources.Token,
                     program = PromoAnalyticsEvent.Program.Empty, // Use it on new promo action
-                    action = PromoAnalyticsEvent.PromotionBannerClicked.BannerAction.Clicked,
+                    action = PromoAnalyticsEvent.PromotionBannerClicked.BannerAction.Clicked(),
                 ),
             )
         }
