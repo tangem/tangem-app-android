@@ -227,14 +227,13 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
         if (hotWalletFeatureToggles.isHotWalletEnabled) {
             val userWallets = userWalletsListRepository.userWalletsSync()
             val selectedWallet = userWalletsListRepository.selectedUserWalletSync() ?: return
-            trackingContextProxy.proceedWithContext(selectedWallet) {
-                analyticsEventHandler.send(
-                    event = Basic.SignedIn(
-                        signInType = Basic.SignedIn.SignInType.NoSecurity,
-                        walletsCount = userWallets.size,
-                    ),
-                )
-            }
+            trackingContextProxy.addContext(selectedWallet)
+            analyticsEventHandler.send(
+                event = Basic.SignedIn(
+                    signInType = Basic.SignedIn.SignInType.NoSecurity,
+                    walletsCount = userWallets.size,
+                ),
+            )
         }
     }
 }

@@ -71,12 +71,6 @@ internal class DefaultTrackingContextProxy(private val abTestsManager: ABTestsMa
         Analytics.removeContext()
     }
 
-    override fun proceedWithContext(userWallet: UserWallet, action: () -> Unit) {
-        setContext(userWallet)
-        action()
-        eraseContext()
-    }
-
     private fun calculateUserIdHash(userWalletId: UserWalletId?): String? {
         return userWalletId?.value
             ?.calculateSha256()

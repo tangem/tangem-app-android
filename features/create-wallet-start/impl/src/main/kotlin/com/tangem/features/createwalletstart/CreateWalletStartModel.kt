@@ -127,9 +127,15 @@ internal class CreateWalletStartModel @Inject constructor(
             },
         )
 
+    init {
+        analyticsEventHandler.send(
+            event = IntroductionProcess.CreateWalletIntroScreenOpened(),
+        )
+    }
+
     private fun onScanClick() {
         analyticsEventHandler.send(
-            event = IntroductionProcess.ButtonScanCard(AnalyticsParam.ScreensSources.CreateNewWallet),
+            event = IntroductionProcess.ButtonScanCard(AnalyticsParam.ScreensSources.CreateWalletIntro),
         )
         scanCard()
     }
@@ -137,7 +143,7 @@ internal class CreateWalletStartModel @Inject constructor(
     private fun onStartWithMobileWalletClick() {
         analyticsEventHandler.send(
             event = OnboardingAnalyticsEvent.Onboarding.ButtonMobileWallet(
-                source = AnalyticsParam.ScreensSources.CreateNewWallet.value,
+                source = AnalyticsParam.ScreensSources.CreateWalletIntro.value,
             ),
         )
         if (!isHotWalletCreationSupported()) {
@@ -147,11 +153,11 @@ internal class CreateWalletStartModel @Inject constructor(
             return
         }
 
-        router.push(AppRoute.CreateMobileWallet(AnalyticsParam.ScreensSources.CreateNewWallet.value))
+        router.push(AppRoute.CreateMobileWallet(AnalyticsParam.ScreensSources.CreateWalletIntro.value))
     }
 
     private fun onBuyClick() {
-        analyticsEventHandler.send(Basic.ButtonBuy(source = AnalyticsParam.ScreensSources.CreateNewWallet))
+        analyticsEventHandler.send(Basic.ButtonBuy(source = AnalyticsParam.ScreensSources.CreateWalletIntro))
         modelScope.launch {
             generateBuyTangemCardLinkUseCase.invoke().let { urlOpener.openUrl(it) }
         }
