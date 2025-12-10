@@ -74,7 +74,7 @@ internal class OnrampSuccessComponentModel @Inject constructor(
     }
 
     override fun goToProviderClick(providerLink: String) {
-        analyticsEventHandler.send(TokenOnrampAnalyticsEvent.GoToProvider)
+        analyticsEventHandler.send(TokenOnrampAnalyticsEvent.GoToProvider())
         urlOpener.openUrl(providerLink)
     }
 
