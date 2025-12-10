@@ -43,12 +43,14 @@ import java.math.BigDecimal
  */
 class TokenItemStateConverter(
     private val appCurrency: AppCurrency,
-    private val yieldModuleApyMap: Map<String, String> = emptyMap(),
+    private val yieldModuleApyMap: Map<String, BigDecimal> = emptyMap(),
     private val stakingApyMap: Map<String, List<Yield.Validator>> = emptyMap(),
+    private val yieldSupplyPromoBannerKey: String? = null,
     private val iconStateProvider: (CryptoCurrencyStatus) -> CurrencyIconState = {
         CryptoCurrencyToIconStateConverter().convert(it)
     },
     private val onApyLabelClick: ((CryptoCurrencyStatus, String) -> Unit)? = null,
+    private val onYieldPromoCloseClick: (() -> Unit)? = null,
     private val titleStateProvider: (CryptoCurrencyStatus) -> TokenItemState.TitleState = { currencyStatus ->
         createTitleState(
             currencyStatus = currencyStatus,
@@ -65,6 +67,15 @@ class TokenItemStateConverter(
     },
     private val fiatAmountStateProvider: (CryptoCurrencyStatus) -> TokenItemState.FiatAmountState? = {
         createFiatAmountState(status = it, appCurrency = appCurrency)
+    },
+    private val promoBannerProvider: (CryptoCurrencyStatus) -> TokenItemState.PromoBannerState = { status ->
+        createPromoBannerState(
+            status = status,
+            yieldModuleApyMap = yieldModuleApyMap,
+            yieldSupplyPromoBannerKey = yieldSupplyPromoBannerKey,
+            onApyLabelClick = onApyLabelClick,
+            onYieldPromoCloseClick = onYieldPromoCloseClick,
+        )
     },
     private val onItemClick: ((TokenItemState, CryptoCurrencyStatus) -> Unit)? = null,
     private val onItemLongClick: ((TokenItemState, CryptoCurrencyStatus) -> Unit)? = null,
@@ -102,6 +113,7 @@ class TokenItemStateConverter(
             subtitleState = requireNotNull(subtitleStateProvider(this)),
             fiatAmountState = requireNotNull(fiatAmountStateProvider(this)),
             subtitle2State = requireNotNull(subtitle2StateProvider(this)),
+            promoBannerState = promoBannerProvider(this),
             onItemClick = onItemClick?.let { onItemClick ->
                 { onItemClick(it, this) }
             },
@@ -164,7 +176,7 @@ class TokenItemStateConverter(
 
         private fun createTitleState(
             currencyStatus: CryptoCurrencyStatus,
-            yieldModuleApyMap: Map<String, String>,
+            yieldModuleApyMap: Map<String, BigDecimal>,
             stakingApyMap: Map<String, List<Yield.Validator>>,
             onApyLabelClick: ((CryptoCurrencyStatus, String) -> Unit)?,
         ): TokenItemState.TitleState {
@@ -204,7 +216,7 @@ class TokenItemStateConverter(
         // polygon-pos_0xc2132d05d31c914a87c6611c10748aeb04b58e8f
         private fun resolveEarnApy(
             cryptoCurrencyStatus: CryptoCurrencyStatus,
-            yieldModuleApyMap: Map<String, String>,
+            yieldModuleApyMap: Map<String, BigDecimal>,
             stakingApyMap: Map<String, List<Yield.Validator>>,
         ): EarnApyInfo? {
             val token = cryptoCurrencyStatus.currency as? CryptoCurrency.Token
@@ -223,7 +235,7 @@ class TokenItemStateConverter(
                             wrappedList(yieldSupplyApy),
                         ),
                         isActive = isActive,
-                        apy = yieldSupplyApy,
+                        apy = yieldSupplyApy.toString(),
                     )
                 }
             }
@@ -377,6 +389,36 @@ class TokenItemStateConverter(
                 is CryptoCurrencyStatus.Loading,
                 -> null
             }
+        }
+
+        private fun createPromoBannerState(
+            status: CryptoCurrencyStatus,
+            yieldModuleApyMap: Map<String, BigDecimal>,
+            yieldSupplyPromoBannerKey: String?,
+            onApyLabelClick: ((CryptoCurrencyStatus, String) -> Unit)?,
+            onYieldPromoCloseClick: (() -> Unit)?,
+        ): TokenItemState.PromoBannerState {
+            val token = status.currency as? CryptoCurrency.Token ?: return TokenItemState.PromoBannerState.Empty
+            if (yieldSupplyPromoBannerKey == null || yieldSupplyPromoBannerKey != token.yieldSupplyKey() ||
+                yieldModuleApyMap[token.yieldSupplyKey()] == null
+            ) {
+                return TokenItemState.PromoBannerState.Empty
+            }
+            val yieldSupplyApy =
+                yieldModuleApyMap[token.yieldSupplyKey()] ?: return TokenItemState.PromoBannerState.Empty
+
+            return TokenItemState.PromoBannerState.Content(
+                title = resourceReference(
+                    R.string.yield_module_main_screen_promo_banner_message,
+                    wrappedList(yieldSupplyApy),
+                ),
+                onPromoBannerClick = {
+                    onApyLabelClick?.invoke(status, yieldSupplyApy.toString())
+                },
+                onCloseClick = {
+                    onYieldPromoCloseClick?.invoke()
+                },
+            )
         }
 
         private fun CryptoCurrencyStatus.getCryptoPriceState(appCurrency: AppCurrency): TokenItemState.SubtitleState {
