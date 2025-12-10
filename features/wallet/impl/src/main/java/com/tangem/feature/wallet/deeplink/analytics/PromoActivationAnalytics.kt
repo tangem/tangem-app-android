@@ -8,7 +8,7 @@ sealed class PromoActivationAnalytics(
     params: Map<String, String> = mapOf(),
 ) : AnalyticsEvent(category = "Promotion", event = event, params = params) {
 
-    data object PromoDeepLinkActivationStart : PromoActivationAnalytics(
+    class PromoDeepLinkActivationStart : PromoActivationAnalytics(
         event = "Bitcoin Promo Deep Link Activation",
         params = emptyMap(),
     )

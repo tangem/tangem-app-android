@@ -30,7 +30,7 @@ class DefaultKycModel @Inject constructor(
     val uiState = _uiState.asStateFlow()
 
     init {
-        analytics.send(TangemPayAnalyticsEvents.KycFlowOpened)
+        analytics.send(TangemPayAnalyticsEvents.KycFlowOpened())
         modelScope.launch {
             try {
                 kycRepository.getKycStartInfo(params.userWalletId).getOrNull()?.let { _uiState.emit(it) }
