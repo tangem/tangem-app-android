@@ -48,8 +48,8 @@ internal class AllOffersModel @Inject constructor(
 
     init {
         subscribeOnAllOffers()
-        analyticsEventHandler.send(OnrampAnalyticsEvent.PaymentMethodsScreenOpened)
-        analyticsEventHandler.send(OnrampAnalyticsEvent.AllOffersClicked)
+        analyticsEventHandler.send(OnrampAnalyticsEvent.PaymentMethodsScreenOpened())
+        analyticsEventHandler.send(OnrampAnalyticsEvent.AllOffersClicked())
     }
 
     fun dismiss() {
