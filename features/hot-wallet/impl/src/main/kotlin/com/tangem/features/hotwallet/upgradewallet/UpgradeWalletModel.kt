@@ -9,6 +9,7 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
+import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -62,6 +63,7 @@ internal class UpgradeWalletModel @Inject constructor(
     private val tangemSdkManager: TangemSdkManager,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val coldUserWalletBuilderFactory: ColdUserWalletBuilder.Factory,
+    private val trackingContextProxy: TrackingContextProxy,
     private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
     private val params = paramsContainer.require<UpgradeWalletComponent.Params>()
@@ -79,10 +81,12 @@ internal class UpgradeWalletModel @Inject constructor(
         )
 
     init {
-        analyticsEventHandler.send(WalletSettingsAnalyticEvents.HardwareUpgradeScreenOpened)
+        trackingContextProxy.addHotWalletContext()
+        analyticsEventHandler.send(WalletSettingsAnalyticEvents.HardwareUpgradeScreenOpened())
     }
 
     override fun onDestroy() {
+        trackingContextProxy.removeContext()
         clearHotWalletContextualUnlockUseCase.invoke(params.userWalletId)
         super.onDestroy()
     }
@@ -96,7 +100,7 @@ internal class UpgradeWalletModel @Inject constructor(
 
     private fun onContinueClick() {
         analyticsEventHandler.send(IntroductionProcess.ButtonScanCard(AnalyticsParam.ScreensSources.Upgrade))
-        analyticsEventHandler.send(WalletSettingsAnalyticEvents.ButtonStartUpgrade)
+        analyticsEventHandler.send(WalletSettingsAnalyticEvents.ButtonStartUpgrade())
         scanCard()
     }
 
