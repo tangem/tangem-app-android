@@ -64,6 +64,7 @@ internal class OnrampV2AmountStateFactory(
                 currencySymbol = currency.unit,
                 onAmountValueChanged = onrampIntents::onAmountValueChanged,
             ),
+            offersBlockState = OnrampOffersBlockUM.Loading,
         )
     }
 
