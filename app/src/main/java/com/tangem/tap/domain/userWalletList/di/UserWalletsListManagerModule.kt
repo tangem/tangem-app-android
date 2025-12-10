@@ -10,6 +10,7 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.domain.common.wallets.UserWalletsListRepository
+import com.tangem.domain.hotwallet.repository.HotWalletRepository
 import com.tangem.domain.models.scan.serialization.*
 import com.tangem.domain.visa.model.VisaActivationRemoteState
 import com.tangem.domain.visa.model.VisaCardActivationStatus
@@ -127,6 +128,7 @@ internal object UserWalletsListManagerModule {
         tangemHotSdk: TangemHotSdk,
         trackingContextProxy: TrackingContextProxy,
         analyticsEventHandler: AnalyticsEventHandler,
+        hotWalletRepository: HotWalletRepository,
     ): UserWalletsListRepository {
         val moshi = buildMoshi()
         val secureStorage = buildSecureStorage(applicationContext = applicationContext)
@@ -176,6 +178,7 @@ internal object UserWalletsListManagerModule {
             tangemHotSdk = tangemHotSdk,
             trackingContextProxy = trackingContextProxy,
             analyticsEventHandler = analyticsEventHandler,
+            hotWalletRepository = hotWalletRepository,
         )
     }
 
