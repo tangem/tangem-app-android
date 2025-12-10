@@ -82,9 +82,9 @@ internal class SingleWalletOnrampTransactionConverter(
                     fallbackResId = R.drawable.ic_currency_24,
                 ),
                 iconState = getIconState(value.status),
-                onGoToProviderClick = {
-                    analyticsEventHandler.send(TokenOnrampAnalyticsEvent.GoToProvider)
-                    clickIntents.onGoToProviderClick(it)
+                onGoToProviderClick = { url ->
+                    analyticsEventHandler.send(TokenOnrampAnalyticsEvent.GoToProvider())
+                    clickIntents.onGoToProviderClick(url)
                 },
                 onDisposeExpressStatus = clickIntents::onConfirmDisposeExpressStatus,
                 onClick = {
