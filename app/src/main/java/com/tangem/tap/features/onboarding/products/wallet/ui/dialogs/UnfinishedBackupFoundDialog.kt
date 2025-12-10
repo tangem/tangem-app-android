@@ -18,12 +18,12 @@ object UnfinishedBackupFoundDialog {
             setTitle(R.string.common_warning)
             setMessage(R.string.welcome_interrupted_backup_alert_message)
             setPositiveButton(R.string.welcome_interrupted_backup_alert_resume) { _, _ ->
-                Analytics.send(OnboardingEvent.Backup.ResumeInterruptedBackup)
+                Analytics.send(OnboardingEvent.Backup.ResumeInterruptedBackup())
                 store.dispatch(GlobalAction.HideDialog)
                 store.dispatch(BackupAction.ResumeFoundUnfinishedBackup(scanResponse))
             }
             setNegativeButton(R.string.welcome_interrupted_backup_alert_discard) { _, _ ->
-                Analytics.send(OnboardingEvent.Backup.CancelInterruptedBackup)
+                Analytics.send(OnboardingEvent.Backup.CancelInterruptedBackup())
                 store.dispatch(GlobalAction.HideDialog)
                 store.dispatch(GlobalAction.ShowDialog(BackupDialog.ConfirmDiscardingBackup(scanResponse)))
             }
