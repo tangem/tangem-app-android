@@ -8,7 +8,5 @@ sealed class Settings(
     params: Map<String, String> = emptyMap(),
 ) : AnalyticsEvent(category, event, params) {
 
-    data object ButtonCreateBackup : Settings(event = "Button - Create Backup")
-
-    data object ButtonManageTokens : Settings(event = "Button - Manage Tokens")
+    class ButtonManageTokens : Settings(event = "Button - Manage Tokens")
 }
