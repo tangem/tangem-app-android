@@ -14,9 +14,11 @@ class GetCurrencyCheckUseCase(
     private val dispatchers: CoroutineDispatcherProvider,
 ) {
 
+    @Suppress("LongParameterList")
     suspend operator fun invoke(
         userWalletId: UserWalletId,
         currencyStatus: CryptoCurrencyStatus,
+        feeCurrencyStatus: CryptoCurrencyStatus?,
         amount: BigDecimal?,
         fee: BigDecimal?,
         feeCurrencyBalanceAfterTransaction: BigDecimal?,
@@ -31,7 +33,7 @@ class GetCurrencyCheckUseCase(
             val existentialDeposit = currencyChecksRepository.getExistentialDeposit(userWalletId, network)
             val rentWarning = currencyChecksRepository.getRentExemptionError(
                 userWalletId = userWalletId,
-                currencyStatus = currencyStatus,
+                currencyStatus = feeCurrencyStatus,
                 balanceAfterTransaction = feeCurrencyBalanceAfterTransaction ?: BigDecimal.ZERO,
             )
             val isAccountFunded = recipientAddress?.let {
