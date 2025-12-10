@@ -185,7 +185,9 @@ private fun Footer(model: DetailsFooterUM, modifier: Modifier = Modifier) {
         }
 
         Text(
-            modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing6),
+            modifier = Modifier
+                .padding(horizontal = TangemTheme.dimens.spacing6)
+                .testTag(DetailsScreenTestTags.VERSION_NAME),
             text = model.appVersion,
             style = TangemTheme.typography.caption2,
             color = TangemTheme.colors.text.tertiary,
