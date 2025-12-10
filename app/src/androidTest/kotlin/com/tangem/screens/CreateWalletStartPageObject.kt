@@ -3,21 +3,21 @@ package com.tangem.screens
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import com.tangem.common.BaseTestCase
 import com.tangem.core.ui.test.BaseButtonTestTags
-import com.tangem.features.onboarding.v2.impl.R
 import io.github.kakaocup.compose.node.element.ComposeScreen
 import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onComposeScreen
 import io.github.kakaocup.compose.node.element.KNode
 import io.github.kakaocup.kakao.common.utilities.getResourceString
+import com.tangem.features.onboarding.v2.impl.R as OnboardingImplR
 
-class StoriesPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
-    ComposeScreen<StoriesPageObject>(semanticsProvider = semanticsProvider) {
+class CreateWalletStartPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
+    ComposeScreen<CreateWalletStartPageObject>(semanticsProvider = semanticsProvider) {
 
-    val getStartedButton: KNode = child {
+    val scanCardOrRingButton: KNode = child {
         hasTestTag(BaseButtonTestTags.TEXT)
-        hasText(getResourceString(R.string.common_get_started))
+        hasText(getResourceString(OnboardingImplR.string.welcome_unlock_card))
         useUnmergedTree = true
     }
 }
 
-internal fun BaseTestCase.onStoriesScreen(function: StoriesPageObject.() -> Unit) =
+internal fun BaseTestCase.onCreateWalletStartScreen(function: CreateWalletStartPageObject.() -> Unit) =
     onComposeScreen(composeTestRule, function)

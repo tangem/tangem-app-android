@@ -139,8 +139,11 @@ class FeedbackTest : BaseTestCase() {
             step("Set scanning error") {
                 MockProvider.setEmulateError(TangemSdkError.TagLost())
             }
-            step("Click on 'Scan' button") {
-                onStoriesScreen { scanButton.performClick() }
+            step("Click on 'Get started' button") {
+                onStoriesScreen { getStartedButton.clickWithAssertion() }
+            }
+            step("Click on 'Scan card or ring' button") {
+                onCreateWalletStartScreen { scanCardOrRingButton.clickWithAssertion() }
             }
             step("Force show 'Scan warning' dialog"){
                 runOnUiThread {
@@ -178,8 +181,11 @@ class FeedbackTest : BaseTestCase() {
             step("Click on 'Accept' button") {
                 onDisclaimerScreen { acceptButton.clickWithAssertion() }
             }
-            step("Click on 'Scan' button") {
-                onStoriesScreen { scanButton.clickWithAssertion() }
+            step("Click on 'Get started' button") {
+                onStoriesScreen { getStartedButton.clickWithAssertion() }
+            }
+            step("Click on 'Scan card or ring' button") {
+                onCreateWalletStartScreen { scanCardOrRingButton.clickWithAssertion() }
             }
             step("Check 'Already used Wallet' dialog") {
                 checkAlreadyUsedWalletDialog()
