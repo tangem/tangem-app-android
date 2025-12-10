@@ -21,6 +21,7 @@ import com.tangem.domain.tokens.model.details.NavigationAction
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyEnterStatusUseCase
+import com.tangem.domain.yield.supply.usecase.YieldSupplySetShouldShowMainPromoUseCase
 import com.tangem.feature.wallet.presentation.account.AccountDependencies
 import com.tangem.feature.wallet.presentation.wallet.domain.OnrampStatusFactory
 import com.tangem.feature.wallet.presentation.wallet.domain.unwrap
@@ -51,6 +52,8 @@ internal interface WalletContentClickIntents {
     fun onTokenItemLongClick(userWalletId: UserWalletId, cryptoCurrencyStatus: CryptoCurrencyStatus)
 
     fun onApyLabelClick(userWalletId: UserWalletId, currencyStatus: CryptoCurrencyStatus, apy: String)
+
+    fun onYieldPromoCloseClick()
 
     fun onAccountExpandClick(account: Account)
 
@@ -89,6 +92,7 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
     private val accountDependencies: AccountDependencies,
     private val yieldSupplyEnterStatusUseCase: YieldSupplyEnterStatusUseCase,
+    private val yieldSupplySetShouldShowMainPromoUseCase: YieldSupplySetShouldShowMainPromoUseCase,
 ) : BaseWalletClickIntents(), WalletContentClickIntents {
 
     override fun onDetailsClick() {
@@ -179,6 +183,12 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
                 navigationAction = navigationAction,
                 apy = apy,
             )
+        }
+    }
+
+    override fun onYieldPromoCloseClick() {
+        modelScope.launch {
+            yieldSupplySetShouldShowMainPromoUseCase(false)
         }
     }
 
