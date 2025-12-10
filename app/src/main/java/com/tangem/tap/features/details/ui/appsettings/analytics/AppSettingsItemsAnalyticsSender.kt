@@ -25,7 +25,7 @@ internal class AppSettingsItemsAnalyticsSender @Inject constructor(
 
     private fun getEvent(item: AppSettingsScreenState.Item): AnalyticsEvent? {
         return when (item.id) {
-            AppSettingsItemsFactory.ID_ENROLL_BIOMETRICS_CARD -> Settings.AppSettings.EnableBiometrics
+            AppSettingsItemsFactory.ID_ENROLL_BIOMETRICS_CARD -> Settings.AppSettings.EnableBiometrics()
             else -> null
         }
     }
