@@ -288,7 +288,7 @@ internal class OnrampMainComponentModel @Inject constructor(
     }
 
     override fun openCurrenciesList() {
-        analyticsEventHandler.send(OnrampAnalyticsEvent.SelectCurrencyScreenOpened)
+        analyticsEventHandler.send(OnrampAnalyticsEvent.SelectCurrencyScreenOpened())
         bottomSheetNavigation.activate(OnrampMainBottomSheetConfig.CurrenciesList)
     }
 
@@ -333,7 +333,7 @@ internal class OnrampMainComponentModel @Inject constructor(
     }
 
     private fun onCloseClick() {
-        analyticsEventHandler.send(OnrampAnalyticsEvent.CloseOnramp)
+        analyticsEventHandler.send(OnrampAnalyticsEvent.CloseOnramp())
         router.pop()
     }
 

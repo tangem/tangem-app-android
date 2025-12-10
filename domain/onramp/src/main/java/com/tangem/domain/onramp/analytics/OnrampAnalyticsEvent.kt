@@ -30,7 +30,7 @@ sealed class OnrampAnalyticsEvent(
         ),
     )
 
-    data object SelectCurrencyScreenOpened : OnrampAnalyticsEvent(event = "Currency Screen Opened")
+    class SelectCurrencyScreenOpened : OnrampAnalyticsEvent(event = "Currency Screen Opened")
 
     data class FiatCurrencyChosen(
         private val currency: String,
@@ -39,11 +39,11 @@ sealed class OnrampAnalyticsEvent(
         params = mapOf("Currency Type" to currency),
     )
 
-    data object CloseOnramp : OnrampAnalyticsEvent(event = "Button - Close")
+    class CloseOnramp : OnrampAnalyticsEvent(event = "Button - Close")
 
-    data object SettingsOpened : OnrampAnalyticsEvent(event = "Onramp Settings Screen Opened")
+    class SettingsOpened : OnrampAnalyticsEvent(event = "Onramp Settings Screen Opened")
 
-    data object SelectResidenceOpened : OnrampAnalyticsEvent(event = "Residence Screen Opened")
+    class SelectResidenceOpened : OnrampAnalyticsEvent(event = "Residence Screen Opened")
 
     data class OnResidenceChosen(
         private val residence: String,
@@ -59,7 +59,7 @@ sealed class OnrampAnalyticsEvent(
         params = mapOf(RESIDENCE to residence),
     )
 
-    data object OnResidenceChange : OnrampAnalyticsEvent(event = "Button - Change")
+    class OnResidenceChange : OnrampAnalyticsEvent(event = "Button - Change")
 
     data class OnResidenceConfirm(
         private val residence: String,
@@ -68,7 +68,7 @@ sealed class OnrampAnalyticsEvent(
         params = mapOf(RESIDENCE to residence),
     )
 
-    data object ProvidersScreenOpened : OnrampAnalyticsEvent(event = "Providers Screen Opened")
+    class ProvidersScreenOpened : OnrampAnalyticsEvent(event = "Providers Screen Opened")
 
     data class ProviderCalculated(
         private val providerName: String,
@@ -83,7 +83,7 @@ sealed class OnrampAnalyticsEvent(
         ),
     )
 
-    data object PaymentMethodsScreenOpened : OnrampAnalyticsEvent(event = "Payment Method Screen Opened")
+    class PaymentMethodsScreenOpened : OnrampAnalyticsEvent(event = "Payment Method Screen Opened")
 
     data class OnPaymentMethodChosen(
         private val paymentMethod: String,
@@ -135,8 +135,8 @@ sealed class OnrampAnalyticsEvent(
         ),
     )
 
-    data object MinAmountError : OnrampAnalyticsEvent(event = "Error - Min Amount")
-    data object MaxAmountError : OnrampAnalyticsEvent(event = "Error - Max Amount")
+    class MinAmountError : OnrampAnalyticsEvent(event = "Error - Min Amount")
+    class MaxAmountError : OnrampAnalyticsEvent(event = "Error - Max Amount")
 
     data class Errors(
         private val tokenSymbol: String,
@@ -203,7 +203,7 @@ sealed class OnrampAnalyticsEvent(
         ),
     )
 
-    data object AllOffersClicked : OnrampAnalyticsEvent(
+    class AllOffersClicked : OnrampAnalyticsEvent(
         event = "Button - All Offers",
         params = emptyMap(),
     )
