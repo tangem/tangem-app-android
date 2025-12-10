@@ -6,6 +6,7 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
+import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.navigation.Router
@@ -51,6 +52,7 @@ internal class CreateHardwareWalletModel @Inject constructor(
     private val coldUserWalletBuilderFactory: ColdUserWalletBuilder.Factory,
     private val saveWalletUseCase: SaveWalletUseCase,
     private val userWalletsListRepository: UserWalletsListRepository,
+    private val trackingContextProxy: TrackingContextProxy,
     private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
 
@@ -64,10 +66,12 @@ internal class CreateHardwareWalletModel @Inject constructor(
         )
 
     init {
-        analyticsEventHandler.send(WalletSettingsAnalyticEvents.CreateWalletScreenOpened)
+        trackingContextProxy.addHotWalletContext()
+        analyticsEventHandler.send(WalletSettingsAnalyticEvents.CreateWalletScreenOpened())
     }
 
     override fun onDestroy() {
+        trackingContextProxy.removeContext()
         super.onDestroy()
     }
 
