@@ -378,6 +378,7 @@ internal class SendAmountModel @Inject constructor(
             setSendWithSwapAvailability()
             params.callback.onNavigationResult(
                 NavigationUM.Content(
+                    source = CommonSendRoute.Amount::class.java.simpleName,
                     title = resourceReference(R.string.send_amount_label),
                     subtitle = null,
                     backIconRes = if (route.isEditMode) {

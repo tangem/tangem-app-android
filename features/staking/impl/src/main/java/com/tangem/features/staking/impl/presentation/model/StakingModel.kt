@@ -772,6 +772,7 @@ internal class StakingModel @Inject constructor(
             val currencyStatus = getCurrencyCheckUseCase(
                 userWalletId = userWalletId,
                 currencyStatus = cryptoCurrencyStatus,
+                feeCurrencyStatus = feeCryptoCurrencyStatus,
                 amount = amount,
                 fee = fee,
                 feeCurrencyBalanceAfterTransaction = balanceAfterTransaction,
