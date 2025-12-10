@@ -37,7 +37,7 @@ internal class MultiWalletAccessCodeModel @Inject constructor(
     val onDismiss = MutableSharedFlow<Unit>()
 
     init {
-        analyticsHandler.send(OnboardingEvent.Backup.SettingAccessCodeStarted)
+        analyticsHandler.send(OnboardingEvent.Backup.SettingAccessCodeStarted())
 
         params.multiWalletState.update {
             it.copy(accessCode = null)
@@ -112,7 +112,7 @@ internal class MultiWalletAccessCodeModel @Inject constructor(
                     }
                 }
 
-                analyticsHandler.send(OnboardingEvent.Backup.AccessCodeEntered)
+                analyticsHandler.send(OnboardingEvent.Backup.AccessCodeEntered())
             }
             MultiWalletAccessCodeUM.Step.ConfirmAccessCode -> {
                 if (checkAccessCode()) {
@@ -125,7 +125,7 @@ internal class MultiWalletAccessCodeModel @Inject constructor(
                     modelScope.launch { onDismiss.emit(Unit) }
                 }
 
-                analyticsHandler.send(OnboardingEvent.Backup.AccessCodeReEntered)
+                analyticsHandler.send(OnboardingEvent.Backup.AccessCodeReEntered())
             }
         }
     }
