@@ -523,6 +523,7 @@ internal class SendConfirmModel @Inject constructor(
             params.callback.onResult(
                 state.copy(
                     navigationUM = NavigationUM.Content(
+                        source = CommonSendRoute.Confirm.javaClass.simpleName,
                         title = resourceReference(id = R.string.common_send),
                         subtitle = null,
                         backIconRes = when (confirmUM) {
