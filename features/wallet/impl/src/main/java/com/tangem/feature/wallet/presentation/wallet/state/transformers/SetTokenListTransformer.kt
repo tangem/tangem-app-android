@@ -11,14 +11,16 @@ import com.tangem.feature.wallet.presentation.wallet.state.transformers.converte
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.TokenListStateConverter
 import com.tangem.feature.wallet.presentation.wallet.state.utils.enableButtons
 import timber.log.Timber
+import java.math.BigDecimal
 
 internal class SetTokenListTransformer(
     private val params: TokenConverterParams,
     private val userWallet: UserWallet,
     private val appCurrency: AppCurrency,
     private val clickIntents: WalletClickIntents,
-    private val yieldSupplyApyMap: Map<String, String> = emptyMap(),
+    private val yieldSupplyApyMap: Map<String, BigDecimal> = emptyMap(),
     private val stakingApyMap: Map<String, List<Yield.Validator>> = emptyMap(),
+    private val shouldShowMainPromo: Boolean,
 ) : WalletStateTransformer(userWallet.walletId) {
 
     override fun transform(prevState: WalletState): WalletState {
@@ -63,6 +65,7 @@ internal class SetTokenListTransformer(
             clickIntents = clickIntents,
             yieldModuleApyMap = yieldSupplyApyMap,
             stakingApyMap = stakingApyMap,
+            shouldShowMainPromo = shouldShowMainPromo,
         ).convert(value = this)
     }
 }
