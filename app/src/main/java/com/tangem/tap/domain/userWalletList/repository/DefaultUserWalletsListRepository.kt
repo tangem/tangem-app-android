@@ -16,6 +16,7 @@ import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.UserWalletsListRepository.LockMethod
 import com.tangem.domain.common.wallets.error.*
+import com.tangem.domain.hotwallet.repository.HotWalletRepository
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
@@ -55,6 +56,7 @@ internal class DefaultUserWalletsListRepository(
     private val tangemHotSdk: TangemHotSdk,
     private val trackingContextProxy: TrackingContextProxy,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val hotWalletRepository: HotWalletRepository,
 ) : UserWalletsListRepository {
 
     override val userWallets = MutableStateFlow<List<UserWallet>?>(null)
@@ -209,7 +211,7 @@ internal class DefaultUserWalletsListRepository(
 
         userWalletEncryptionKeysRepository.delete(userWalletIds)
 
-        removeHotWalletsFromSDK(userWalletIds)
+        removeHotWalletsFromSDKAndRepos(userWalletIds)
 
         userWallets.update { currentWallets ->
             val updatedWallets = currentWallets?.filter { userWalletIds.contains(it.walletId).not() }
@@ -388,7 +390,7 @@ internal class DefaultUserWalletsListRepository(
         if (newUserWallet.walletId == oldUserWallet.walletId &&
             oldUserWallet is UserWallet.Hot && newUserWallet is UserWallet.Cold
         ) {
-            removeHotWalletsFromSDK(walletIds = listOf(oldUserWallet.walletId))
+            removeHotWalletsFromSDKAndRepos(walletIds = listOf(oldUserWallet.walletId))
             // When upgrading from Hot to Cold, if biometric lock is available, set it
             if (hasBiometry()) {
                 setLock(newUserWallet.walletId, LockMethod.Biometric, changeUnsecured = true)
@@ -399,13 +401,14 @@ internal class DefaultUserWalletsListRepository(
         }
     }
 
-    private suspend fun removeHotWalletsFromSDK(walletIds: List<UserWalletId>) {
+    private suspend fun removeHotWalletsFromSDKAndRepos(walletIds: List<UserWalletId>) {
         val hotWalletsToDelete = userWalletsSync()
             .filterIsInstance<UserWallet.Hot>()
             .filter { walletIds.contains(it.walletId) }
 
-        hotWalletsToDelete.forEach {
-            tangemHotSdk.delete(it.hotWalletId)
+        hotWalletsToDelete.forEach { wallet ->
+            hotWalletRepository.setAccessCodeSkipped(wallet.walletId, false) // In case the wallet is added again
+            tangemHotSdk.delete(wallet.hotWalletId)
         }
     }
 
