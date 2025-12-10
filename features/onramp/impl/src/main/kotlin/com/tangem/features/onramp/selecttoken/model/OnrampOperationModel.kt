@@ -60,8 +60,8 @@ internal class OnrampOperationModel @Inject constructor(
     init {
         analyticsEventHandler.send(
             event = when (params) {
-                is Params.Buy -> MainScreenAnalyticsEvent.BuyScreenOpened
-                is Params.Sell -> MainScreenAnalyticsEvent.SellScreenOpened
+                is Params.Buy -> MainScreenAnalyticsEvent.BuyScreenOpened()
+                is Params.Sell -> MainScreenAnalyticsEvent.SellScreenOpened()
             },
         )
     }
