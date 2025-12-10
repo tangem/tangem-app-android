@@ -17,13 +17,19 @@ sealed class SignIn(
         ),
     )
 
+    class ButtonBiometricSignIn : SignIn(event = "Button - Biometric Sign In")
+
     class ButtonUnlockAllWithBiometric : SignIn(event = "Button - Unlock All With Biometric")
+
+    class ErrorBiometricUpdated : SignIn(event = "Error - Biometric Updated")
 
     class ButtonWallet(
         signInType: SignInType,
+        walletsCount: Int,
     ) : SignIn(
         event = "Button - Wallet",
         params = buildMap {
+            put("Wallets Count", walletsCount.toString())
             put("Sign in type", signInType.value)
         },
     ) {
