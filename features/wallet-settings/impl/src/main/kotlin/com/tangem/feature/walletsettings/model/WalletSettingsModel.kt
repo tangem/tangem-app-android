@@ -220,7 +220,7 @@ internal class WalletSettingsModel @Inject constructor(
             },
             onReferralClick = { onReferralClick(userWallet) },
             onManageTokensClick = {
-                analyticsEventHandler.send(Settings.ButtonManageTokens)
+                analyticsEventHandler.send(Settings.ButtonManageTokens())
                 router.push(
                     AppRoute.ManageTokens(
                         source = Source.SETTINGS,
