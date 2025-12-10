@@ -375,7 +375,7 @@ internal class SwapModel @Inject constructor(
     ) {
         // exceptional case
         if (selectedCurrency == null) {
-            analyticsEventHandler.send(SwapEvents.NoticeNoAvailableTokensToSwap)
+            analyticsEventHandler.send(SwapEvents.NoticeNoAvailableTokensToSwap())
             uiState = stateBuilder.createNoAvailableTokensToSwapState(
                 uiStateHolder = uiState,
                 fromToken = initialFromStatus,
@@ -1271,7 +1271,7 @@ internal class SwapModel @Inject constructor(
 
     private fun onAmountSelected(selected: Boolean) {
         if (selected) {
-            analyticsEventHandler.send(SwapEvents.SendTokenBalanceClicked)
+            analyticsEventHandler.send(SwapEvents.SendTokenBalanceClicked())
         }
     }
 
@@ -1312,7 +1312,7 @@ internal class SwapModel @Inject constructor(
             },
             onChangeCardsClicked = {
                 onChangeCardsClicked()
-                analyticsEventHandler.send(SwapEvents.ButtonSwipeClicked)
+                analyticsEventHandler.send(SwapEvents.ButtonSwipeClicked())
             },
             onBackClicked = {
                 val bottomSheet = uiState.bottomSheetConfig
@@ -1331,10 +1331,10 @@ internal class SwapModel @Inject constructor(
             onReduceByAmount = ::onReduceAmountClicked,
             openPermissionBottomSheet = {
                 singleTaskScheduler.cancelTask()
-                analyticsEventHandler.send(SwapEvents.ButtonGivePermissionClicked)
+                analyticsEventHandler.send(SwapEvents.ButtonGivePermissionClicked())
                 uiState = stateBuilder.showPermissionBottomSheet(uiState) {
                     startLoadingQuotesFromLastState(isSilent = true)
-                    analyticsEventHandler.send(SwapEvents.ButtonPermissionCancelClicked)
+                    analyticsEventHandler.send(SwapEvents.ButtonPermissionCancelClicked())
                     uiState = stateBuilder.dismissBottomSheet(uiState)
                 }
             },
@@ -1362,7 +1362,7 @@ internal class SwapModel @Inject constructor(
                 }
             },
             onProviderClick = { providerId ->
-                analyticsEventHandler.send(SwapEvents.ProviderClicked)
+                analyticsEventHandler.send(SwapEvents.ProviderClicked())
                 val states = dataState.lastLoadedSwapStates.getLastLoadedSuccessStates()
                 val pricesLowerBest = getPricesLowerBest(providerId, states)
                 uiState = stateBuilder.showSelectProviderBottomSheet(

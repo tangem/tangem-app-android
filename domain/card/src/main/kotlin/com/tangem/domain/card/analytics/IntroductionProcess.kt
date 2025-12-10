@@ -8,10 +8,10 @@ sealed class IntroductionProcess(
     params: Map<String, String> = emptyMap(),
 ) : AnalyticsEvent("Introduction Process", event, params) {
 
-    object ScreenOpened : IntroductionProcess("Introduction Process Screen Opened")
-    object ButtonTokensList : IntroductionProcess("Button - Tokens List")
-    object ButtonBuyCards : IntroductionProcess("Button - Buy Cards")
-    object ButtonScanCardLegacy : IntroductionProcess("Button - Scan Card")
+    class ScreenOpened : IntroductionProcess("Introduction Process Screen Opened")
+    class ButtonTokensList : IntroductionProcess("Button - Tokens List")
+    class ButtonBuyCards : IntroductionProcess("Button - Buy Cards")
+    class ButtonScanCardLegacy : IntroductionProcess("Button - Scan Card")
 
     class ButtonScanCard(
         val source: AnalyticsParam.ScreensSources,
