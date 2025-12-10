@@ -33,6 +33,7 @@ import com.tangem.features.hotwallet.WalletActivationComponent
 import com.tangem.features.hotwallet.stepper.api.HotWalletStepperComponent
 import com.tangem.features.pushnotifications.api.PushNotificationsModelCallbacks
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -134,7 +135,7 @@ internal class WalletActivationModel @Inject constructor(
                 secondAction = EventMessageAction(
                     title = resourceReference(R.string.access_code_alert_skip_ok),
                     onClick = {
-                        modelScope.launch {
+                        modelScope.launch(NonCancellable) {
                             setAccessCodeSkippedUseCase(userWalletId, true)
                         }
                         navigateToPushNotificationsOrNext()
