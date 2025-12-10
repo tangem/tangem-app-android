@@ -525,13 +525,12 @@ internal class DefaultUserWalletsListRepository(
     }
 
     private fun trackSignInEvent(userWallet: UserWallet, type: Basic.SignedIn.SignInType) {
-        trackingContextProxy.proceedWithContext(userWallet) {
-            analyticsEventHandler.send(
-                event = Basic.SignedIn(
-                    signInType = type,
-                    walletsCount = userWallets.value?.size ?: 0,
-                ),
-            )
-        }
+        trackingContextProxy.addContext(userWallet)
+        analyticsEventHandler.send(
+            event = Basic.SignedIn(
+                signInType = type,
+                walletsCount = userWallets.value?.size ?: 0,
+            ),
+        )
     }
 }

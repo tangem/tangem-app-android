@@ -13,6 +13,8 @@ sealed class IntroductionProcess(
     class ButtonBuyCards : IntroductionProcess("Button - Buy Cards")
     class ButtonScanCardLegacy : IntroductionProcess("Button - Scan Card")
 
+    class CreateWalletIntroScreenOpened : IntroductionProcess("Create Wallet Intro Screen Opened")
+
     class ButtonScanCard(
         val source: AnalyticsParam.ScreensSources,
     ) : IntroductionProcess(
