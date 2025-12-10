@@ -527,7 +527,7 @@
   <string name="express_status_buying">Buying %s</string>
   <string name="express_status_buying_active">Buying %s...</string>
   <string name="express_status_hide_button_text">Hide this transaction</string>
-  <string name="express_status_hide_dialog_text">Once hidden, the transaction status cannot be viewed again. You can simply swipe to dismiss instead.</string>
+  <string name="express_status_hide_dialog_text">If you hide this transaction, it won’t appear in the status screen anymore. If you just want to close the status screen and return later, simply swipe it away instead.</string>
   <string name="express_status_hide_dialog_title">Hide Transaction Status?</string>
   <string name="express_swap_not_supported_text">This token is not supported. Please choose a different token to swap.</string>
   <string name="express_swap_not_supported_title">%s is not supported</string>
@@ -697,11 +697,13 @@
   <string name="markets_apy_placeholder">APY %s</string>
   <string name="markets_common_my_portfolio">My portfolio</string>
   <string name="markets_common_title">Market</string>
+  <string name="markets_earn_common_title">Earn with Tangem</string>
   <string name="markets_generate_addresses_notification">To generate addresses for selected networks, you must scan your Tangem Wallet card or ring</string>
   <string name="markets_hint">To add tokens pull this up or tap the search bar</string>
   <string name="markets_insights_info_description_message">This section’s data is sourced from the following networks: %s</string>
   <string name="markets_loading_error_title">Unable to load the data…</string>
   <string name="markets_loading_no_data_title">No data</string>
+  <string name="markets_pulse_common_title">Market Pulse</string>
   <string name="markets_quick_actions">Quick actions</string>
   <string name="markets_search_header_title">Search through the market</string>
   <string name="markets_search_result_title">Result</string>
@@ -1985,7 +1987,7 @@
   <string name="yield_module_fee_policy_tangem_service_fee_title">Tangem also takes a 15% service fee on yield generated.</string>
   <string name="yield_module_high_fee_error">Your funds will be automatically supplied to Aave once network fees are lower or your balance meets the minimum required amount.</string>
   <string name="yield_module_historical_returns">Historical returns</string>
-  <string name="yield_module_main_screen_promo_banner_message">"Enable %1$s%% APY on your balance"</string>
+  <string name="yield_module_main_screen_promo_banner_message">Enable %1$s%% APY on your balance</string>
   <string name="yield_module_main_view_approve_notification_description">Approval for your token in Yield Mode has been revoked. Open the token to grant permission again.</string>
   <string name="yield_module_main_view_approve_notification_title">Token approval needed</string>
   <string name="yield_module_network_fee_unreachable_notification_description">Check your network connection</string>
