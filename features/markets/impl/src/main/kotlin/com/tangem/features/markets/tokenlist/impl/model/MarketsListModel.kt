@@ -69,9 +69,9 @@ internal class MarketsListModel @Inject constructor(
         visibleItemsChanged = { visibleItemIds.value = it },
         onRetryButtonClicked = { activeListManager.reload() },
         onTokenClick = { onTokenUIClicked(it) },
-        onStakingNotificationClick = { analyticsEventHandler.send(MarketsListAnalyticsEvent.StakingMoreInfoClicked) },
+        onStakingNotificationClick = { analyticsEventHandler.send(MarketsListAnalyticsEvent.StakingMoreInfoClicked()) },
         onStakingNotificationCloseClick = { onStakingNotificationCloseClick() },
-        onShowTokensUnder100kClicked = { analyticsEventHandler.send(MarketsListAnalyticsEvent.ShowTokens) },
+        onShowTokensUnder100kClicked = { analyticsEventHandler.send(MarketsListAnalyticsEvent.ShowTokens()) },
     )
 
     private val mainMarketsListManager = MarketsListBatchFlowManager(
@@ -150,7 +150,7 @@ internal class MarketsListModel @Inject constructor(
                 if (marketsListUMStateManager.state.value.stakingNotificationMaxApy == null &&
                     stakingNotificationMaxApy != null
                 ) {
-                    analyticsEventHandler.send(MarketsListAnalyticsEvent.StakingPromoShown)
+                    analyticsEventHandler.send(MarketsListAnalyticsEvent.StakingPromoShown())
                 }
 
                 marketsListUMStateManager.onUiItemsChanged(
@@ -267,9 +267,9 @@ internal class MarketsListModel @Inject constructor(
     }
 
     private fun initAnalytics() {
-        containerBottomSheetState.onEach {
-            if (it == BottomSheetState.EXPANDED) {
-                analyticsEventHandler.send(MarketsListAnalyticsEvent.BottomSheetOpened)
+        containerBottomSheetState.onEach { bottomSheetState ->
+            if (bottomSheetState == BottomSheetState.EXPANDED) {
+                analyticsEventHandler.send(MarketsListAnalyticsEvent.BottomSheetOpened())
             }
         }.launchIn(modelScope)
 
@@ -303,7 +303,7 @@ internal class MarketsListModel @Inject constructor(
     }
 
     private fun onStakingNotificationCloseClick() {
-        analyticsEventHandler.send(MarketsListAnalyticsEvent.StakingPromoClosed)
+        analyticsEventHandler.send(MarketsListAnalyticsEvent.StakingPromoClosed())
         modelScope.launch {
             promoRepository.setMarketsStakingNotificationHideClicked()
         }

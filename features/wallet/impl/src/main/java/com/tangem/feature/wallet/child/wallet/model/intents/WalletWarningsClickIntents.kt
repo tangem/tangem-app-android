@@ -141,7 +141,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
 ) : BaseWalletClickIntents(), WalletWarningsClickIntents {
 
     override fun onAddBackupCardClick() {
-        analyticsEventHandler.send(MainScreen.NoticeBackupYourWalletTapped)
+        analyticsEventHandler.send(MainScreen.NoticeBackupYourWalletTapped())
 
         prepareAndStartOnboardingProcess()
     }
@@ -169,7 +169,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
 
     override fun onGenerateMissedAddressesClick(missedAddressCurrencies: List<CryptoCurrency>) {
         analyticsEventHandler.send(Basic.CardWasScanned(AnalyticsParam.ScreensSources.Main))
-        analyticsEventHandler.send(MainScreen.NoticeScanYourCardTapped)
+        analyticsEventHandler.send(MainScreen.NoticeScanYourCardTapped())
 
         modelScope.launch {
             val userWallet = getSelectedUserWallet() ?: return@launch
@@ -187,7 +187,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     }
 
     override fun onOpenUnlockWalletsBottomSheetClick() {
-        analyticsEventHandler.send(MainScreen.WalletUnlockTapped)
+        analyticsEventHandler.send(MainScreen.WalletUnlockTapped())
 
         if (hotWalletFeatureToggles.isHotWalletEnabled) {
             modelScope.launch {
@@ -218,7 +218,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
 
     @Deprecated("Will be removed with hot wallet release")
     override fun onUnlockWalletClick() {
-        analyticsEventHandler.send(MainScreen.UnlockAllWithBiometrics)
+        analyticsEventHandler.send(MainScreen.UnlockAllWithBiometrics())
 
         modelScope.launch(dispatchers.main) {
             unlockWalletsUseCase(type = UnlockType.ALL_WITHOUT_SELECT)
@@ -246,7 +246,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
 
     @Deprecated("Will be removed with hot wallet release")
     override fun onScanToUnlockWalletClick() {
-        analyticsEventHandler.send(MainScreen.UnlockWithCardScan)
+        analyticsEventHandler.send(MainScreen.UnlockWithCardScan())
         openScanCardDialog()
     }
 
@@ -304,17 +304,17 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     override fun onClosePromoClick(promoId: PromoId) {
         analyticsEventHandler.send(
             when (promoId) {
-                PromoId.Referral -> MainScreen.ReferralPromoButtonDismiss
+                PromoId.Referral -> MainScreen.ReferralPromoButtonDismiss()
                 PromoId.Sepa -> PromotionBannerClicked(
                     source = AnalyticsParam.ScreensSources.Main,
                     program = Program.Sepa,
-                    action = PromotionBannerClicked.BannerAction.Closed,
+                    action = PromotionBannerClicked.BannerAction.Closed(),
                 )
-                PromoId.VisaPresale -> PromoAnalyticsEvent.VisaWaitlistPromoDismiss
+                PromoId.VisaPresale -> PromoAnalyticsEvent.VisaWaitlistPromoDismiss()
                 PromoId.BlackFriday -> PromotionBannerClicked(
                     source = AnalyticsParam.ScreensSources.Main,
                     program = Program.BlackFriday,
-                    action = PromotionBannerClicked.BannerAction.Closed,
+                    action = PromotionBannerClicked.BannerAction.Closed(),
                 )
             },
 
@@ -328,7 +328,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
         val userWallet = getSelectedUserWallet() ?: return
         when (promoId) {
             PromoId.Referral -> {
-                analyticsEventHandler.send(MainScreen.ReferralPromoButtonParticipate)
+                analyticsEventHandler.send(MainScreen.ReferralPromoButtonParticipate())
                 appRouter.push(ReferralProgram(userWalletId = userWallet.walletId))
             }
             PromoId.Sepa -> {
@@ -336,7 +336,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
                     PromotionBannerClicked(
                         source = AnalyticsParam.ScreensSources.Main,
                         program = Program.Sepa,
-                        action = PromotionBannerClicked.BannerAction.Clicked,
+                        action = PromotionBannerClicked.BannerAction.Clicked(),
                     ),
                 )
                 cryptoCurrency ?: return
@@ -350,7 +350,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
                 )
             }
             PromoId.VisaPresale -> {
-                analyticsEventHandler.send(PromoAnalyticsEvent.VisaWaitlistPromoJoin)
+                analyticsEventHandler.send(PromoAnalyticsEvent.VisaWaitlistPromoJoin())
                 urlOpener.openUrl(VISA_PROMO_LINK)
             }
             PromoId.BlackFriday -> {
@@ -358,7 +358,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
                     PromotionBannerClicked(
                         source = AnalyticsParam.ScreensSources.Main,
                         program = Program.BlackFriday,
-                        action = PromotionBannerClicked.BannerAction.Clicked,
+                        action = PromotionBannerClicked.BannerAction.Clicked(),
                     ),
                 )
                 urlOpener.openUrl(BLACK_FRIDAY_PROMO_LINK)
@@ -376,7 +376,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     }
 
     override fun onNoteMigrationButtonClick(url: String) {
-        analyticsEventHandler.send(MainScreen.NotePromoButton)
+        analyticsEventHandler.send(MainScreen.NotePromoButton())
         modelScope.launch(dispatchers.main) {
             router.openUrl(url)
         }
@@ -385,7 +385,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     override fun onSeedPhraseNotificationConfirm() {
         val userWallet = getSelectedUserWallet() ?: return
 
-        analyticsEventHandler.send(MainScreen.NoticeSeedPhraseSupportButtonYes)
+        analyticsEventHandler.send(MainScreen.NoticeSeedPhraseSupportButtonYes())
 
         walletEventSender.send(
             event = WalletEvent.ShowAlert(
@@ -408,7 +408,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     override fun onSeedPhraseNotificationDecline() {
         val userWallet = getSelectedUserWallet() ?: return
 
-        analyticsEventHandler.send(MainScreen.NoticeSeedPhraseSupportButtonNo)
+        analyticsEventHandler.send(MainScreen.NoticeSeedPhraseSupportButtonNo())
 
         walletEventSender.send(
             event = WalletEvent.ShowAlert(
@@ -427,7 +427,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     override fun onSeedPhraseSecondNotificationAccept() {
         val userWallet = getSelectedUserWallet() ?: return
 
-        analyticsEventHandler.send(MainScreen.NoticeSeedPhraseSupportButtonUsed)
+        analyticsEventHandler.send(MainScreen.NoticeSeedPhraseSupportButtonUsed())
 
         walletEventSender.send(
             event = WalletEvent.ShowAlert(
@@ -450,7 +450,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     override fun onSeedPhraseSecondNotificationReject() {
         val userWallet = getSelectedUserWallet() ?: return
 
-        analyticsEventHandler.send(MainScreen.NoticeSeedPhraseSupportButtonDeclined)
+        analyticsEventHandler.send(MainScreen.NoticeSeedPhraseSupportButtonDeclined())
 
         modelScope.launch {
             seedPhraseNotificationUseCase.rejectSecond(userWalletId = userWallet.walletId)
@@ -458,13 +458,13 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     }
 
     override fun onFinishWalletActivationClick(isBackupExists: Boolean) {
-        analyticsEventHandler.send(MainScreen.ButtonFinalizeActivation)
+        analyticsEventHandler.send(MainScreen.ButtonFinalizeActivation())
         val userWalletId = stateHolder.getSelectedWalletId()
         appRouter.push(WalletActivation(userWalletId, isBackupExists))
     }
 
     override fun onAllowPermissions() {
-        analyticsEventHandler.send(WalletScreenAnalyticsEvent.PushBannerPromo.ButtonAllowPush)
+        analyticsEventHandler.send(WalletScreenAnalyticsEvent.PushBannerPromo.ButtonAllowPush())
         walletEventSender.send(
             event = WalletEvent.RequestPushPermissions(
                 onAllow = {
@@ -490,7 +490,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
 
     override fun onDenyPermissions() {
         modelScope.launch {
-            analyticsEventHandler.send(WalletScreenAnalyticsEvent.PushBannerPromo.ButtonLaterPush)
+            analyticsEventHandler.send(WalletScreenAnalyticsEvent.PushBannerPromo.ButtonLaterPush())
             updateSubscribeOnPushPermissions(false)
         }
     }

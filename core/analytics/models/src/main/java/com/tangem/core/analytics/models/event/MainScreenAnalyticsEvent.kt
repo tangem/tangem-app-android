@@ -36,23 +36,23 @@ sealed class MainScreenAnalyticsEvent(
         },
     )
 
-    data object ButtonReceive : MainScreenAnalyticsEvent(
+    class ButtonReceive : MainScreenAnalyticsEvent(
         event = "Button - Receive",
     )
 
-    data object LimitsClicked : MainScreenAnalyticsEvent(
+    class LimitsClicked : MainScreenAnalyticsEvent(
         event = "Limits Clicked",
     )
 
-    data object NoticeBalancesInfo : MainScreenAnalyticsEvent(
+    class NoticeBalancesInfo : MainScreenAnalyticsEvent(
         event = "Notice - Balances Info",
     )
 
-    data object NoticeLimitsInfo : MainScreenAnalyticsEvent(
+    class NoticeLimitsInfo : MainScreenAnalyticsEvent(
         event = "Notice - Limits Info",
     )
 
-    data object ButtonExplore : MainScreenAnalyticsEvent(
+    class ButtonExplore : MainScreenAnalyticsEvent(
         event = "Button - Explore",
     )
 
@@ -66,11 +66,11 @@ sealed class MainScreenAnalyticsEvent(
         params = mapOf(AnalyticsParam.STATUS to status.value),
     )
 
-    data object BuyScreenOpened : MainScreenAnalyticsEvent(event = "Buy Screen Opened")
+    class BuyScreenOpened : MainScreenAnalyticsEvent(event = "Buy Screen Opened")
 
-    data object SwapScreenOpened : MainScreenAnalyticsEvent(event = "Swap Screen Opened")
+    class SwapScreenOpened : MainScreenAnalyticsEvent(event = "Swap Screen Opened")
 
-    data object SellScreenOpened : MainScreenAnalyticsEvent(event = "Sell Screen Opened")
+    class SellScreenOpened : MainScreenAnalyticsEvent(event = "Sell Screen Opened")
 
     data class BuyTokenClicked(val currencySymbol: String) : MainScreenAnalyticsEvent(
         event = "Buy Token Clicked",

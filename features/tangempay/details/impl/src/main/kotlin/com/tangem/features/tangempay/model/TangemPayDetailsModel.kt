@@ -337,7 +337,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     }
 
     override fun onClickSwap(data: TangemPayTopUpData) {
-        analytics.send(TangemPayAnalyticsEvents.SwapClicked)
+        analytics.send(TangemPayAnalyticsEvents.SwapClicked())
         bottomSheetNavigation.dismiss()
         router.push(
             AppRoute.Swap(
@@ -356,7 +356,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     }
 
     override fun onClickReceive(data: TangemPayTopUpData) {
-        analytics.send(TangemPayAnalyticsEvents.ReceiveFundsClicked)
+        analytics.send(TangemPayAnalyticsEvents.ReceiveFundsClicked())
         bottomSheetNavigation.dismiss()
         val config = TokenReceiveConfig(
             shouldShowWarning = false,

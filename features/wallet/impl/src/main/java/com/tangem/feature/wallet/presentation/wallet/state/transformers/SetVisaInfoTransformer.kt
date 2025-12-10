@@ -154,7 +154,7 @@ internal class SetVisaInfoTransformer(
                     clickIntents.onReceiveClick(
                         userWalletId = userWalletId,
                         cryptoCurrencyStatus = cryptoCurrencyStatus,
-                        event = MainScreenAnalyticsEvent.ButtonReceive,
+                        event = MainScreenAnalyticsEvent.ButtonReceive(),
                     )
                 },
                 onLongClick = {

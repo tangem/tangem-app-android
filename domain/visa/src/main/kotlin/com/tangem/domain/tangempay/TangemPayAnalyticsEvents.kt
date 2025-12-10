@@ -8,42 +8,42 @@ sealed class TangemPayAnalyticsEvents(
     params: Map<String, String> = emptyMap(),
 ) : AnalyticsEvent(category = categoryName, event = event, params = params) {
 
-    data object ActivationScreenOpened : TangemPayAnalyticsEvents(
+    class ActivationScreenOpened : TangemPayAnalyticsEvents(
         categoryName = "Visa Onboarding",
         event = "Activation Screen Opened",
     )
 
-    data object ViewTermsClicked : TangemPayAnalyticsEvents(
+    class ViewTermsClicked : TangemPayAnalyticsEvents(
         categoryName = "Visa Onboarding",
         event = "Button - Visa View Terms",
     )
 
-    data object GetCardClicked : TangemPayAnalyticsEvents(
+    class GetCardClicked : TangemPayAnalyticsEvents(
         categoryName = "Visa Onboarding",
         event = "Button - Visa Get Card",
     )
 
-    data object KycFlowOpened : TangemPayAnalyticsEvents(
+    class KycFlowOpened : TangemPayAnalyticsEvents(
         categoryName = "Visa Onboarding",
         event = "Visa KYC Flow Opened",
     )
 
-    data object IssuingBannerDisplayed : TangemPayAnalyticsEvents(
+    class IssuingBannerDisplayed : TangemPayAnalyticsEvents(
         categoryName = "Visa Onboarding",
         event = "Visa Issuing Banner Displayed",
     )
 
-    data object MainScreenOpened : TangemPayAnalyticsEvents(
+    class MainScreenOpened : TangemPayAnalyticsEvents(
         categoryName = "Visa Screen",
         event = "Visa Main Screen Opened",
     )
 
-    data object ReceiveFundsClicked : TangemPayAnalyticsEvents(
+    class ReceiveFundsClicked : TangemPayAnalyticsEvents(
         categoryName = "Visa Screen",
         event = "Button - Visa Receive",
     )
 
-    data object SwapClicked : TangemPayAnalyticsEvents(
+    class SwapClicked : TangemPayAnalyticsEvents(
         categoryName = "Visa Screen",
         event = "Button - Visa Swap",
     )
