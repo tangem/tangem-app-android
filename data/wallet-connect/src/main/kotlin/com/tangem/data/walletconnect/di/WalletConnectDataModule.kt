@@ -30,6 +30,7 @@ import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
 import com.tangem.domain.walletconnect.WcPairService
 import com.tangem.domain.walletconnect.WcRequestService
 import com.tangem.domain.walletconnect.WcRequestUseCaseFactory
+import com.tangem.domain.walletconnect.featuretoggle.WalletConnectFeatureToggles
 import com.tangem.domain.walletconnect.repository.WalletConnectRepository
 import com.tangem.domain.walletconnect.repository.WcSessionsManager
 import com.tangem.domain.walletconnect.usecase.disconnect.WcDisconnectUseCase
@@ -38,6 +39,8 @@ import com.tangem.domain.walletconnect.usecase.pair.WcPairUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.core.configtoggle.feature.FeatureTogglesManager
+import com.tangem.data.walletconnect.featuretoggle.DefaultWalletConnectFeatureToggles
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -230,12 +233,15 @@ internal object WalletConnectDataModule {
         ethNetwork: WcEthNetwork,
         solanaNetwork: WcSolanaNetwork,
         bitcoinNetwork: WcBitcoinNetwork,
+        featureToggles: WalletConnectFeatureToggles,
     ) = DiHelperBox(
-        handlers = setOf(
-            ethNetwork,
-            solanaNetwork,
-            bitcoinNetwork,
-        ),
+        handlers = buildSet {
+            add(ethNetwork)
+            add(solanaNetwork)
+            if (featureToggles.isBitcoinEnabled) {
+                add(bitcoinNetwork)
+            }
+        },
     )
 
     @Provides
@@ -244,11 +250,14 @@ internal object WalletConnectDataModule {
         ethNamespaceConverter: WcEthNetwork.NamespaceConverter,
         solanaNamespaceConverter: WcSolanaNetwork.NamespaceConverter,
         bitcoinNamespaceConverter: WcBitcoinNetwork.NamespaceConverter,
-    ): Set<@JvmSuppressWildcards WcNamespaceConverter> = setOf(
-        ethNamespaceConverter,
-        solanaNamespaceConverter,
-        bitcoinNamespaceConverter,
-    )
+        featureToggles: WalletConnectFeatureToggles,
+    ): Set<@JvmSuppressWildcards WcNamespaceConverter> = buildSet {
+        add(ethNamespaceConverter)
+        add(solanaNamespaceConverter)
+        if (featureToggles.isBitcoinEnabled) {
+            add(bitcoinNamespaceConverter)
+        }
+    }
 
     @Provides
     @Singleton
@@ -289,6 +298,14 @@ internal object WalletConnectDataModule {
         analytics: AnalyticsEventHandler,
     ): WcDisconnectUseCase {
         return WcDisconnectUseCase(sessionsManager, analytics)
+    }
+
+    @Provides
+    @Singleton
+    fun providesWalletConnectFeatureToggles(
+        featureTogglesManager: FeatureTogglesManager,
+    ): WalletConnectFeatureToggles {
+        return DefaultWalletConnectFeatureToggles(featureTogglesManager)
     }
 
     internal class DiHelperBox(
