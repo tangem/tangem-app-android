@@ -55,6 +55,7 @@ internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
                 fiatBalance = result.fiat.availableBalance,
                 currencyCode = result.fiat.currency,
                 cryptoBalance = result.crypto.balance,
+                availableForWithdrawal = result.availableForWithdrawal.amount,
                 chainId = result.crypto.chainId,
                 depositAddress = result.crypto.depositAddress,
                 contractAddress = result.crypto.tokenContractAddress,
