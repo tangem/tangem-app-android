@@ -248,6 +248,7 @@
   <string name="common_coming_soon">Coming soon</string>
   <string name="common_confirm">Confirm</string>
   <string name="common_connecting">Connecting</string>
+  <string name="common_contact_support">Contact support</string>
   <string name="common_contact_tangem_support">Contact Tangem Support</string>
   <string name="common_contact_visa_support">Contact Visa Support</string>
   <string name="common_continue">Continue</string>
@@ -1390,6 +1391,8 @@
   <string name="swapping_to_title">You receive</string>
   <string name="swapping_token_list_title">Choose token</string>
   <string name="swapping_token_not_available">not available</string>
+  <string name="tangem_pay_beta_notification_subtitle">We would be happy to receive your feedback</string>
+  <string name="tangem_pay_beta_notification_title">Tangem Pay is now in beta</string>
   <string name="tangem_pay_card_frozen">Card frozen</string>
   <string name="tangem_pay_card_payment">Card payment</string>
   <string name="tangem_pay_deposit">Deposit</string>
