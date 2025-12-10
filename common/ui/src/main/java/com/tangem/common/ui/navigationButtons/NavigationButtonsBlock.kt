@@ -35,8 +35,8 @@ import com.tangem.core.ui.extensions.isNullOrEmpty
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.core.ui.utils.singleEvent
 import com.tangem.core.ui.test.SendScreenTestTags
+import com.tangem.core.ui.utils.singleEvent
 
 @Composable
 fun NavigationButtonsBlock(
@@ -78,7 +78,9 @@ fun NavigationButtonsBlockV2(
             horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
         ) {
             PreviousButton(navigationUM?.prevButton)
-            NavigationPrimaryButton(navigationUM?.primaryButton, modifier = Modifier.weight(1f))
+            key(navigationUM?.source) {
+                NavigationPrimaryButton(navigationUM?.primaryButton, modifier = Modifier.weight(1f))
+            }
         }
     }
 }
