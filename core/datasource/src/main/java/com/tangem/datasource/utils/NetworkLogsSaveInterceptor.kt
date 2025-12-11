@@ -44,7 +44,12 @@ class NetworkLogsSaveInterceptor(
             throw e
         }
 
-        if (restrictedForLogURLs.contains(request.url.host + request.url.encodedPath)) {
+        val host = request.url.host
+        val path = request.url.encodedPath
+        val isRestrictedUrl = restrictedForLogURLs.contains(host + path)
+        val isRestrictedHost = restrictedForLogHosts.any { host.contains(it) }
+
+        if (isRestrictedUrl || isRestrictedHost) {
             logResponseWithEmptyMessage(response, startNs)
         } else {
             logResponseMessage(response, startNs)
@@ -221,6 +226,9 @@ class NetworkLogsSaveInterceptor(
          */
         val restrictedForLogURLs = listOf(
             "api.stakek.it/v1/yields/enabled",
+        )
+        val restrictedForLogHosts = listOf(
+            "us.paera.com",
         )
     }
 }
