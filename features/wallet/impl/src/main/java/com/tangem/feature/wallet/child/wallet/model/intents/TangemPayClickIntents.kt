@@ -10,11 +10,9 @@ import com.tangem.domain.feedback.GetWalletMetaInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.models.wallet.requireColdWallet
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
 import com.tangem.domain.pay.usecase.TangemPayMainScreenCustomerInfoUseCase
-import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.features.tangempay.TangemPayFeatureToggles
 import kotlinx.coroutines.launch
@@ -41,7 +39,6 @@ internal class TangemPayClickIntentsImplementor @Inject constructor(
     private val onboardingRepository: OnboardingRepository,
     private val produceInitialDataTangemPay: ProduceTangemPayInitialDataUseCase,
     private val getWalletMetainfoUseCase: GetWalletMetaInfoUseCase,
-    private val getUserWalletUseCase: GetUserWalletUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val tangemPayMainScreenCustomerInfoUseCase: TangemPayMainScreenCustomerInfoUseCase,
     private val uiMessageSender: UiMessageSender,
@@ -93,7 +90,7 @@ internal class TangemPayClickIntentsImplementor @Inject constructor(
                 body = resourceReference(R.string.tangempay_failed_to_issue_card_support_description)
             }
             secondaryButton {
-                text = resourceReference(R.string.common_contact_support)
+                text = resourceReference(R.string.tangempay_go_to_support)
                 onClick {
                     onPaySupportClick()
                     closeBs()
@@ -106,10 +103,8 @@ internal class TangemPayClickIntentsImplementor @Inject constructor(
 
     override fun onPaySupportClick() {
         modelScope.launch {
-            val userWalletId = stateHolder.getSelectedWalletId()
-            val userWallet = getUserWalletUseCase.invoke(userWalletId).getOrNull() ?: return@launch
             val cardInfo = getWalletMetainfoUseCase.invoke(
-                userWallet.requireColdWallet().scanResponse,
+                userWalletId = stateHolder.getSelectedWalletId(),
             ).getOrNull() ?: return@launch
 
             sendFeedbackEmailUseCase(
