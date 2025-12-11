@@ -2,14 +2,12 @@ package com.tangem.data.pay
 
 import arrow.core.Either
 import arrow.core.Either.Companion.catch
-import com.squareup.moshi.Moshi
 import com.tangem.blockchain.blockchains.ethereum.Chain
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.core.error.UniversalError
 import com.tangem.data.common.currency.CryptoCurrencyFactory
 import com.tangem.data.common.network.NetworkFactory
 import com.tangem.data.pay.util.TangemPayErrorConverter
-import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.pay.TangemPayCryptoCurrencyFactory
@@ -26,8 +24,8 @@ private const val TOKEN_CONTRACT_ADDRESS = "0x3c499c542cef5e3811e1192ce70d8cc03d
 private const val TOKEN_DECIMALS = 6
 
 internal class DefaultTangemPayCryptoCurrencyFactory @Inject constructor(
-    @NetworkMoshi moshi: Moshi,
     excludedBlockchains: ExcludedBlockchains,
+    private val errorConverter: TangemPayErrorConverter,
 ) : TangemPayCryptoCurrencyFactory {
 
     private val cryptoCurrencyFactory by lazy(mode = LazyThreadSafetyMode.NONE) {
@@ -36,8 +34,6 @@ internal class DefaultTangemPayCryptoCurrencyFactory @Inject constructor(
     private val networkFactory by lazy(mode = LazyThreadSafetyMode.NONE) {
         NetworkFactory(excludedBlockchains)
     }
-
-    private val errorConverter by lazy(mode = LazyThreadSafetyMode.NONE) { TangemPayErrorConverter(moshi) }
 
     override fun create(userWallet: UserWallet, chainId: Int): Either<UniversalError, CryptoCurrency> {
         return catch {

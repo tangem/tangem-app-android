@@ -6,6 +6,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -74,6 +75,7 @@ internal fun TangemPayTxHistoryDetailsContent(state: TangemPayTxHistoryDetailsUM
                 text = state.transactionSubtitle.resolveReference(),
                 style = TangemTheme.typography.body2,
                 color = TangemTheme.colors.text.tertiary,
+                textAlign = TextAlign.Center,
             )
             Text(
                 modifier = Modifier.padding(top = 8.dp),
@@ -84,7 +86,7 @@ internal fun TangemPayTxHistoryDetailsContent(state: TangemPayTxHistoryDetailsUM
             state.localTransactionText?.let { localTransaction ->
                 Text(
                     modifier = Modifier.padding(top = 4.dp),
-                    text = localTransaction,
+                    text = localTransaction.orMaskWithStars(state.isBalanceHidden),
                     style = TangemTheme.typography.body2,
                     color = TangemTheme.colors.text.tertiary,
                 )
@@ -207,11 +209,11 @@ private class TangemPayTxHistoryDetailsUMProvider : CollectionPreviewParameterPr
             dismiss = {},
         ),
         TangemPayTxHistoryDetailsUM(
-            isBalanceHidden = false,
+            isBalanceHidden = true,
             title = stringReference("12 June • 12:40"),
             iconState = ImageReference.Res(R.drawable.ic_category_24),
             transactionTitle = stringReference("Starbucks"),
-            transactionSubtitle = stringReference("Food and drinks"),
+            transactionSubtitle = stringReference("Food and drinks Food and drinks Food and drinks Food and drinks"),
             transactionAmount = "-$5.86",
             transactionAmountColor = themedColor { TangemTheme.colors.text.primary1 },
             localTransactionText = "€ 5.36",
