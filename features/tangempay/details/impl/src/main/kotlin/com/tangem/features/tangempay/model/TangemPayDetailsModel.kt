@@ -101,6 +101,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     val bottomSheetNavigation: SlotNavigation<TangemPayDetailsNavigation> = SlotNavigation()
 
     init {
+        analytics.send(TangemPayAnalyticsEvents.MainScreenOpened())
         handleBalanceHiding()
         fetchAddToWalletBanner()
         fetchBalance()
@@ -212,6 +213,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     }
 
     override fun onClickAddFunds() {
+        analytics.send(TangemPayAnalyticsEvents.AddFundsClicked())
         val currentBalance = balance
         val depositAddress = currentBalance?.depositAddress
         if (currentBalance == null || depositAddress == null) {
@@ -352,7 +354,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     }
 
     override fun onClickSwap(data: TangemPayTopUpData) {
-        analytics.send(TangemPayAnalyticsEvents.SwapClicked)
+        analytics.send(TangemPayAnalyticsEvents.SwapClicked())
         bottomSheetNavigation.dismiss()
         router.push(
             AppRoute.Swap(
@@ -371,7 +373,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     }
 
     override fun onClickReceive(data: TangemPayTopUpData) {
-        analytics.send(TangemPayAnalyticsEvents.ReceiveFundsClicked)
+        analytics.send(TangemPayAnalyticsEvents.ReceiveFundsClicked())
         bottomSheetNavigation.dismiss()
         val config = TokenReceiveConfig(
             shouldShowWarning = false,
