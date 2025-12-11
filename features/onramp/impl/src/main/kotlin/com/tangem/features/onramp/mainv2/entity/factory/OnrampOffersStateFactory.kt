@@ -19,7 +19,7 @@ internal class OnrampOffersStateFactory(
         return when (currentState) {
             is OnrampV2MainComponentUM.InitialLoading -> currentState
             is OnrampV2MainComponentUM.Content -> {
-                if (currentState.offersBlockState is OnrampOffersBlockUM.Loading && offers.isEmpty()) {
+                if (currentState.offersBlockState is OnrampOffersBlockUM.Loading) {
                     return currentState
                 }
                 currentState.copy(
