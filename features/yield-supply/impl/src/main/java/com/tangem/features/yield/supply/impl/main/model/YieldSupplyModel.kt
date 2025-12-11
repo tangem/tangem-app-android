@@ -91,7 +91,7 @@ internal class YieldSupplyModel @Inject constructor(
                 subscribeOnCurrencyStatusUpdates()
                 singleNetworkStatusFetcher(
                     params = SingleNetworkStatusFetcher.Params(
-                        userWalletId = userWallet.walletId,
+                        userWalletId = params.userWalletId,
                         network = cryptoCurrency.network,
                     ),
                 )
