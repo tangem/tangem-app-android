@@ -33,12 +33,9 @@ import com.tangem.features.walletconnect.transaction.ui.common.WcNetworkItem
 import com.tangem.features.walletconnect.transaction.ui.common.WcSmallTitleItem
 import com.tangem.features.walletconnect.transaction.ui.common.WcTransactionRequestButtons
 
+@Suppress("LongMethod")
 @Composable
-internal fun WcGetAddressesContent(
-    state: WcGetAddressesUM,
-    onDismiss: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+internal fun WcGetAddressesContent(state: WcGetAddressesUM, onDismiss: () -> Unit, modifier: Modifier = Modifier) {
     TangemModalBottomSheetWithFooter<TangemBottomSheetConfigContent.Empty>(
         config = TangemBottomSheetConfig(
             isShown = true,
@@ -133,11 +130,7 @@ internal fun WcGetAddressesContent(
 }
 
 @Composable
-private fun WcAddressInfoItem(
-    address: String,
-    intention: String?,
-    modifier: Modifier = Modifier,
-) {
+private fun WcAddressInfoItem(address: String, intention: String?, modifier: Modifier = Modifier) {
     Column(modifier = modifier) {
         if (intention != null) {
             Text(

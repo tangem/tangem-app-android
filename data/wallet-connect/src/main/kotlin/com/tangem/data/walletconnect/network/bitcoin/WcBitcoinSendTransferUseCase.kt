@@ -103,9 +103,6 @@ internal class WcBitcoinSendTransferUseCase @AssistedInject constructor(
 
     @AssistedFactory
     interface Factory {
-        fun create(
-            context: WcMethodUseCaseContext,
-            method: WcBitcoinMethod.SendTransfer,
-        ): WcBitcoinSendTransferUseCase
+        fun create(context: WcMethodUseCaseContext, method: WcBitcoinMethod.SendTransfer): WcBitcoinSendTransferUseCase
     }
 }

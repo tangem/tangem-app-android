@@ -124,9 +124,6 @@ internal class WcBitcoinSignPsbtUseCase @AssistedInject constructor(
 
     @AssistedFactory
     interface Factory {
-        fun create(
-            context: WcMethodUseCaseContext,
-            method: WcBitcoinMethod.SignPsbt,
-        ): WcBitcoinSignPsbtUseCase
+        fun create(context: WcMethodUseCaseContext, method: WcBitcoinMethod.SignPsbt): WcBitcoinSignPsbtUseCase
     }
 }

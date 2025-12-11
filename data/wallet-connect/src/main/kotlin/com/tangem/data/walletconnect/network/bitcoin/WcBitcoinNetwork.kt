@@ -184,7 +184,7 @@ internal class WcBitcoinNetwork(
             // Bitcoin testnet genesis hash prefixes (supports any truncated version)
             private val TESTNET_GENESIS_PREFIX = listOf(
                 "000000000933ea01ad0ee984209779ba", // Standard testnet genesis hash prefix (9 leading zeros)
-                "0000000000933ea01ad0ee984209779ba", // Alternative testnet prefix (10 leading zeros, as seen in some dApps)
+                "0000000000933ea01ad0ee984209779ba", // Alternative testnet prefix (10 leading zeros)
             )
         }
     }

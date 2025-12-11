@@ -111,9 +111,6 @@ internal class WcBitcoinSignMessageUseCase @AssistedInject constructor(
 
     @AssistedFactory
     interface Factory {
-        fun create(
-            context: WcMethodUseCaseContext,
-            method: WcBitcoinMethod.SignMessage,
-        ): WcBitcoinSignMessageUseCase
+        fun create(context: WcMethodUseCaseContext, method: WcBitcoinMethod.SignMessage): WcBitcoinSignMessageUseCase
     }
 }

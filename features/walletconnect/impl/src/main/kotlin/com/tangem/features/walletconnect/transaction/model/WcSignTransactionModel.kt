@@ -77,9 +77,9 @@ internal class WcSignTransactionModel @Inject constructor(
                     router.push(WcHandleMethodErrorConverter.convert(it))
                 }
                 .getOrNull() ?: run {
-                    Timber.tag(WC_TAG).e("Use case is null, exiting")
-                    return@launch
-                }
+                Timber.tag(WC_TAG).e("Use case is null, exiting")
+                return@launch
+            }
 
             Timber.tag(WC_TAG).i("Use case created successfully")
             Timber.tag(WC_TAG).i("Use case type: ${useCase.javaClass.simpleName}")

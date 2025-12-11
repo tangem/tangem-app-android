@@ -60,6 +60,7 @@ internal class DefaultBlockAidRepository(
             mapper.mapToDomain(response)
         }
 
+    @Suppress("UnusedParameter")
     private suspend fun scanBitcoinTransaction(data: TransactionData): CheckTransactionResult {
         // TODO: BlockAid API doesn't support Bitcoin transaction scanning yet
         // When support is added, implement: api.scanBitcoinTransaction(mapper.mapToBitcoinRequest(data))

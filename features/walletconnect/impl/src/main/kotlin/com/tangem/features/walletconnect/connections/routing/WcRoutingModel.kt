@@ -16,8 +16,6 @@ import kotlinx.coroutines.flow.*
 import timber.log.Timber
 import javax.inject.Inject
 
-private const val WC_TAG = "Wallet Connect"
-
 @ModelScoped
 internal class WcRoutingModel @Inject constructor(
     private val requestService: WcRequestService,
@@ -101,7 +99,10 @@ internal class WcRoutingModel @Inject constructor(
         cardSdkProvider.sdk.uiVisibility(),
     ) { isSlotEmpty, permittedAppRoute, isCardSdkVisible ->
         val ready = isSlotEmpty && permittedAppRoute && !isCardSdkVisible
-        Timber.d("WC Queue: isSlotEmpty=$isSlotEmpty, permittedAppRoute=$permittedAppRoute, isCardSdkVisible=$isCardSdkVisible, ready=$ready")
+        Timber.d(
+            "WC Queue: isSlotEmpty=$isSlotEmpty, permittedAppRoute=$permittedAppRoute, " +
+                "isCardSdkVisible=$isCardSdkVisible, ready=$ready",
+        )
         ready
     }.first { it }
 
