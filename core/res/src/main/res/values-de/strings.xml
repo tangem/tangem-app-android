@@ -54,6 +54,8 @@
   <string name="account_unsaved_dialog_message_create">Bist Du sicher, dass Du das neue Konto verwerfen willst?</string>
   <string name="account_unsaved_dialog_message_edit">Bist Du sicher, dass Du die Bearbeitungen verwerfen willst?</string>
   <string name="account_unsaved_dialog_title">Nicht gespeicherte Änderungen</string>
+  <string name="accounts_migration_alert_message">Einige benutzerdefinierte Token wurden von “%1$s” Zu “%2$s” da ihre Herleitung zu diesem Konto gehört.</string>
+  <string name="accounts_migration_alert_title">Einige benutzerdefinierte Token wurden verschoben.</string>
   <string name="action_buttons_buy_empty_search_message">Du kannst Deinen Token nicht finden? Gehe zum Bereich „Markt“ auf der Hauptseite und fügen diesen zum kaufen im Portfolio hinzu.</string>
   <string name="action_buttons_sell_empty_search_message">Du kannst Deinen Token nicht finden? Gehe zum Bereich „Markt“ auf der Hauptseite und fügen diesen zum verkaufen im Portfolio hinzu.</string>
   <string name="action_buttons_sell_navigation_bar_title">Verkaufen</string>
@@ -88,6 +90,7 @@
   <string name="alert_manage_tokens_unsupported_message">Tokens im %1$s -Netzwerk werden von dieser Karte oder Ring aufgrund einer Firmware-Einschränkung nicht unterstützt.</string>
   <string name="alert_troubleshooting_scan_card_title">Hast du Probleme beim Scannen deiner Karte oder Ring?</string>
   <string name="alert_unsupported_card">Diese Karte oder Ring ist für die Zusammenarbeit mit Tangem nicht geeignet</string>
+  <string name="app_settings_access_code_warning">Lege zunächst einen Zugangscode fest, um die Biometrie zu aktivieren.</string>
   <string name="app_settings_biometrics_footer">Verwende die %1$s um Deine Wallet zu entsperren und sensible Aktionen wie das Signieren von Transaktionen zu bestätigen. Bei Hardware-Wallets ist zum Signieren weiterhin eine Karte oder ein Ring erforderlich.</string>
   <string name="app_settings_default_fee">Standardgebühr</string>
   <string name="app_settings_default_fee_footer">Aktiviere die Option Standardgebühr, um die Transaktionsgebühren automatisch festzulegen und die Gebührenseite beim Senden von Geldern zu überspringen. Du kannst bei Bedarf jederzeit zu dieser Seite zurückkehren.</string>
@@ -273,6 +276,7 @@
   <string name="common_forget">Entfernen</string>
   <string name="common_free">Kostenlos</string>
   <string name="common_from">Vom</string>
+  <string name="common_from_wallet_name">Von %s</string>
   <string name="common_generate_addresses">Adressen synchronisieren</string>
   <string name="common_get_started">Erste Schritte</string>
   <string name="common_get_token">Token erhalten</string>
@@ -298,6 +302,7 @@
     <item quantity="other">%1$s Netzwerke</item>
   </plurals>
   <string name="common_new_address">Neue Adresse</string>
+  <string name="common_news">Nachrichten</string>
   <string name="common_next">Weiter</string>
   <string name="common_nft">NFT</string>
   <string name="common_no">Nein</string>
@@ -363,7 +368,7 @@
   <string name="common_transaction_failed">Transaktion fehlgeschlagen</string>
   <string name="common_transaction_status">Transaktionsstatus</string>
   <string name="common_transactions">Transaktionen</string>
-  <string name="common_transfer">Überweiseung</string>
+  <string name="common_transfer">Überweisung</string>
   <string name="common_unable_to_load">Die Daten konnten nicht geladen werden…</string>
   <string name="common_understand">Ich verstehe</string>
   <string name="common_unknown_error">Es ist ein Fehler aufgetreten. Bitte versuche es erneut.</string>
@@ -516,6 +521,8 @@
   <string name="express_transaction_id">ID: %s</string>
   <string name="express_transaction_id_copied">Transaktions-ID kopiert</string>
   <string name="exсhange_token_description">Tauschen jeden Vermögenswert in Deinem Portfolio gegen diesen Token</string>
+  <string name="feed_market_and_news">Markt &amp; Nachrichten</string>
+  <string name="feed_trending_now">Aktuelle Trends</string>
   <string name="feedback_data_collection_message">Die folgenden Angaben sind freiwillig. Du kannst diese löschen, wenn du sie nicht weitergeben möchtest.</string>
   <string name="feedback_preface_rate_negative">Teile uns mit, welche Funktionen du vermisst, und wir werden versuchen, dir zu helfen.</string>
   <string name="feedback_preface_scan_failed">Bitte sag uns, welche Karte oder Ring du hast</string>
@@ -767,6 +774,8 @@
   <string name="markets_token_details_volume">Volumen</string>
   <string name="markets_tooltip_message">Rufe dies auf oder tippe auf die Suchleiste, um Token direkt vom Markt hinzuzufügen</string>
   <string name="markets_tooltip_title">Token hinzufügen</string>
+  <string name="news_all_news">Alle Neuigkeiten</string>
+  <string name="news_stay_in_the_loop">Auf dem Laufenden bleiben</string>
   <string name="nfc_error_unavailable">NFC ist auf deinem Gerät nicht verfügbar</string>
   <string name="nft_about_title">Über NFT</string>
   <string name="nft_asset">NFT-Vermögenswert</string>
@@ -821,6 +830,8 @@
   <string name="no_account_polkadot">Das Zielkonto ist nicht aktiv. Sende %s oder mehr, um das Konto zu aktivieren.</string>
   <string name="no_account_send_to_create">Senden Sie Geld an diese Andresse um ein Konto zu erstellen</string>
   <string name="no_trustline_xlm_asset">Das Zielkonto verfügt nicht über eine Vertrauensstellung für das gesendete Asset.</string>
+  <string name="notification_black_friday_text">Sicher Dir 10 $ in BTC mit jeder Wallet greif schnell zu!</string>
+  <string name="notification_black_friday_title">Black Friday: bis zu 30% Nachlass</string>
   <string name="notification_referral_promo_button">Jetzt beitreten</string>
   <string name="notification_referral_promo_text">Teile Deinen Code – verdiene 5 USDT pro Verkauf. Deine Freunde erhalten 10 % Rabatt.</string>
   <string name="notification_referral_promo_title">Erhalte BELOHNUNGEN für jeden Freund!</string>
@@ -1369,6 +1380,7 @@
   <string name="tangem_pay_status_completed">Abgeschlossen</string>
   <string name="tangem_pay_status_declined">Abgelehnt</string>
   <string name="tangem_pay_status_pending">Ausstehend</string>
+  <string name="tangem_pay_terms_limits">Bedingungen und Einschränkungen</string>
   <string name="tangem_pay_transaction_declined_notification_text">Die Bank hat diese Transaktionsanfrage abgelehnt.</string>
   <string name="tangem_pay_transaction_fee_notification_text">Diese Gebühr dient zur Deckung der Kosten für die Abwicklung Deiner Überweisung.</string>
   <string name="tangem_pay_unfreeze_card_alert_body">Nutze Dein Geld weiterhin. Du kannst es jederzeit einfrieren.</string>
@@ -1402,7 +1414,7 @@
   <string name="tangempay_card_details_swap_description">Tausche beliebige Vermögenswerte in Deinem Portfolio gegen eine Karte.</string>
   <string name="tangempay_card_details_title">Kartendetails</string>
   <string name="tangempay_card_details_unfreeze_card">Karte entsperren</string>
-  <string name="tangempay_issue_card_notification_title">Konto erstellen und Karte ausstellen</string>
+  <string name="tangempay_issue_card_notification_description">Es dauert in der Regel bis zu 15 Minuten.</string>
   <string name="tangempay_kyc_card_ready_notification_title">Tangem Pay</string>
   <string name="tangempay_kyc_in_progress_notification_button">Status anzeigen</string>
   <string name="tangempay_kyc_in_progress_notification_title">KYC für Tangem Pay in Arbeit</string>
@@ -1951,6 +1963,12 @@
   <string name="yield_module_token_details_earn_notification_earning_on_your_balance_title">Ertragsmodus</string>
   <string name="yield_module_token_details_earn_notification_processing">Bearbeitung Deiner Einzahlung</string>
   <string name="yield_module_token_details_earn_notification_title">Ertragsmodus</string>
+  <string name="yield_module_transaction_enter">Ertragsmodus aktivieren</string>
+  <string name="yield_module_transaction_enter_subtitle">%1$s geliefert an Aave</string>
+  <string name="yield_module_transaction_exit">Ertragsmodus deaktiviert</string>
+  <string name="yield_module_transaction_exit_subtitle">%1$s aus Aave zurücküberwiesen</string>
+  <string name="yield_module_transaction_topup">Lieferung an Aave</string>
+  <string name="yield_module_transaction_topup_subtitle">%1$s geliefert an Aave</string>
   <string name="yield_module_transfer_mode_automatic">Automatisch</string>
   <string name="yield_module_unable_to_cover_fee_description">Einzahlung von %1$s %2$s zur Deckung der Netzwerkgebühr für Transaktionen</string>
   <string name="yield_module_unable_to_cover_fee_title">Die Gebühr %s kann nicht gedeckt werden</string>

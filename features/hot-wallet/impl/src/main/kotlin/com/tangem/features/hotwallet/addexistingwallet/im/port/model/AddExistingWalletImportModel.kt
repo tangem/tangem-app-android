@@ -1,5 +1,8 @@
 package com.tangem.features.hotwallet.addexistingwallet.im.port.model
 
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.event.OnboardingAnalyticsEvent
 import com.tangem.core.decompose.di.GlobalUiMessageSender
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -37,6 +40,7 @@ internal class AddExistingWalletImportModel @Inject constructor(
     private val hotUserWalletBuilderFactory: HotUserWalletBuilder.Factory,
     private val saveUserWalletUseCase: SaveWalletUseCase,
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
 
     private val params: AddExistingWalletImportComponent.Params = paramsContainer.require()
@@ -60,6 +64,7 @@ internal class AddExistingWalletImportModel @Inject constructor(
         }
 
     init {
+        analyticsEventHandler.send(OnboardingAnalyticsEvent.SeedPhrase.ImportSeedPhraseScreenOpened)
         importSeedPhraseUiStateBuilder = ImportSeedPhraseUiStateBuilder(
             modelScope = modelScope,
             mnemonicRepository = mnemonicRepository,
@@ -72,6 +77,7 @@ internal class AddExistingWalletImportModel @Inject constructor(
                 )
             },
             onPassphraseInfoClick = ::onPassphraseInfoClick,
+            onImportClick = { analyticsEventHandler.send(OnboardingAnalyticsEvent.SeedPhrase.ButtonImport) },
         )
     }
 
@@ -101,6 +107,23 @@ internal class AddExistingWalletImportModel @Inject constructor(
                     }
                     .onRight {
                         setImportProgress(false)
+                        analyticsEventHandler.send(
+                            event = OnboardingAnalyticsEvent.Onboarding.Finished(
+                                source = AnalyticsParam.ScreensSources.ImportWallet.value,
+                            ),
+                        )
+                        analyticsEventHandler.send(
+                            event = OnboardingAnalyticsEvent.CreateWallet.WalletCreatedSuccessfully(
+                                source = AnalyticsParam.ScreensSources.ImportWallet.value,
+                                creationType = OnboardingAnalyticsEvent.CreateWallet.WalletCreationType.SeedImport,
+                                seedPhraseLength = mnemonic.mnemonicComponents.size,
+                                passPhraseState = if (passphrase.isNullOrBlank()) {
+                                    AnalyticsParam.EmptyFull.Empty
+                                } else {
+                                    AnalyticsParam.EmptyFull.Full
+                                },
+                            ),
+                        )
                         params.callbacks.onWalletImported(userWallet.walletId)
                     }
             }.onFailure {

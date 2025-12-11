@@ -63,7 +63,7 @@ internal class MultiWalletCreateWalletModel @Inject constructor(
                 resourceReference(R.string.onboarding_create_wallet_body)
             },
             onCreateWalletClick = {
-                analyticsHandler.send(OnboardingEvent.CreateWallet.ButtonCreateWallet)
+                analyticsHandler.send(OnboardingEvent.CreateWallet.ButtonCreateWallet())
                 createWallet(false)
             },
             showOtherOptionsButton = params.parentParams.withSeedPhraseFlow,
@@ -80,7 +80,7 @@ internal class MultiWalletCreateWalletModel @Inject constructor(
     val onDone = MutableSharedFlow<Step>()
 
     init {
-        analyticsHandler.send(OnboardingEvent.CreateWallet.ScreenOpened)
+        analyticsHandler.send(OnboardingEvent.CreateWallet.ScreenOpened())
     }
 
     private fun createWallet(shouldReset: Boolean) {

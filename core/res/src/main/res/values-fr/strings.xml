@@ -172,6 +172,7 @@
   <string name="common_fee_selector_option_slow">Lent</string>
   <string name="common_fee_selector_title">Vitesse et frais</string>
   <string name="common_finish">Terminer</string>
+  <string name="common_from_wallet_name">De %s</string>
   <string name="common_generate_addresses">Synchroniser les adresses</string>
   <string name="common_get_started">Commencer</string>
   <string name="common_go_to_provider">Aller au fournisseur</string>
@@ -624,6 +625,8 @@
   <string name="no_account_polkadot">Le compte de destination est inactif. Envoyez %s ou plus pour activer le compte.</string>
   <string name="no_account_send_to_create">Pour créer un compte, envoyez des fonds à cette adresse</string>
   <string name="no_trustline_xlm_asset">Le compte destinataire n\'a pas de Trustline pour l\'actif envoyé qu\'il tente d\'envoyer.</string>
+  <string name="notification_black_friday_text">Obtenez 10 $ en BTC avec chaque wallet\nDépêchez-vous !</string>
+  <string name="notification_black_friday_title">Black Friday : jusqu\'à 30% de réduction</string>
   <string name="notification_referral_promo_button">Rejoignez maintenant</string>
   <string name="notification_referral_promo_text">Partagez votre code et gagnez 5 USDT par vente. Votre ami bénéficie de 10 % de réduction.</string>
   <string name="notification_referral_promo_title">Recevez des RÉCOMPENSES pour chaque ami !</string>
@@ -1385,7 +1388,7 @@
   <string name="wc_alert_unknown_error_description">Code d\'erreur : %s. Si le problème persiste, n\'hésitez pas à contacter notre service d\'assistance.</string>
   <string name="wc_alert_unknown_error_description_no_error_code">Si le problème persiste, n’hésitez pas à contacter notre support.</string>
   <string name="wc_alert_unknown_error_title">Nous avons rencontré une erreur inconnue.</string>
-  <string name="wc_alert_unsupported_dapps_description">Le portefeuille Tangem ne prend actuellement pas en charge %ss</string>
+  <string name="wc_alert_unsupported_dapps_description">Le portefeuille Tangem ne prend actuellement pas en charge %s</string>
   <string name="wc_alert_unsupported_dapps_title">dApp non prise en charge</string>
   <string name="wc_alert_unsupported_method_description">Code d\'erreur : 8 005. Si le problème persiste, n\'hésitez pas à contacter notre support.</string>
   <string name="wc_alert_unsupported_method_title">Nous avons rencontré une erreur inconnue</string>
@@ -1545,6 +1548,12 @@
   <string name="yield_module_token_details_earn_notification_earning_on_your_balance_title">Mode Rendement</string>
   <string name="yield_module_token_details_earn_notification_processing">Traitement de votre dépôt</string>
   <string name="yield_module_token_details_earn_notification_title">Mode Rendement</string>
+  <string name="yield_module_transaction_enter">Mode rendement activé</string>
+  <string name="yield_module_transaction_enter_subtitle">%1$s fourni à Aave</string>
+  <string name="yield_module_transaction_exit">Mode rendement désactivé</string>
+  <string name="yield_module_transaction_exit_subtitle">%1$s retiré d\'Aave</string>
+  <string name="yield_module_transaction_topup">Approvisionnement à Aave</string>
+  <string name="yield_module_transaction_topup_subtitle">%1$s fourni à Aave</string>
   <string name="yield_module_transfer_mode_automatic">Automatique</string>
   <string name="yield_module_unable_to_cover_fee_description">Déposez %1$s %2$s pour couvrir les frais de réseau liés aux transactions.</string>
   <string name="yield_module_unable_to_cover_fee_title">Impossible de couvrir les frais %s</string>

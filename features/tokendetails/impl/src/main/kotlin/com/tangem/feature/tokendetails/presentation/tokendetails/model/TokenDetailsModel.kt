@@ -878,7 +878,7 @@ internal class TokenDetailsModel @Inject constructor(
                 PromoAnalyticsEvent.PromotionBannerClicked(
                     source = AnalyticsParam.ScreensSources.Token,
                     program = PromoAnalyticsEvent.Program.Empty, // Use it on new promo action
-                    action = PromoAnalyticsEvent.PromotionBannerClicked.BannerAction.Closed,
+                    action = PromoAnalyticsEvent.PromotionBannerClicked.BannerAction.Closed(),
                 ),
             )
         }
@@ -891,7 +891,7 @@ internal class TokenDetailsModel @Inject constructor(
                 PromoAnalyticsEvent.PromotionBannerClicked(
                     source = AnalyticsParam.ScreensSources.Token,
                     program = PromoAnalyticsEvent.Program.Empty, // Use it on new promo action
-                    action = PromoAnalyticsEvent.PromotionBannerClicked.BannerAction.Clicked,
+                    action = PromoAnalyticsEvent.PromotionBannerClicked.BannerAction.Clicked(),
                 ),
             )
         }
@@ -1106,14 +1106,15 @@ internal class TokenDetailsModel @Inject constructor(
 
     private fun openStaking() {
         modelScope.launch {
-            val yield = getYieldUseCase.invoke(
+            getYieldUseCase.invoke(
                 cryptoCurrencyId = cryptoCurrency.id,
                 symbol = cryptoCurrency.symbol,
-            ).getOrElse {
-                error("Staking is unavailable for ${cryptoCurrency.name}")
+            ).onRight { yield ->
+                router.openStaking(userWalletId, cryptoCurrency, yield.id)
+            }.onLeft {
+                Timber.e("Staking is unavailable for ${cryptoCurrency.name}")
+                uiMessageSender.send(SnackbarMessage(resourceReference(R.string.staking_error_no_validators_title)))
             }
-
-            router.openStaking(userWalletId, cryptoCurrency, yield.id)
         }
     }
 
@@ -1250,8 +1251,14 @@ internal class TokenDetailsModel @Inject constructor(
     }
 
     private fun handleNavigationParam() {
-        if (params.navigationAction is NavigationAction.Staking) {
-            openStaking()
+        when (val action = params.navigationAction) {
+            is NavigationAction.Staking -> openStaking()
+            is NavigationAction.YieldSupply -> if (action.isActive) {
+                modelScope.launch(dispatchers.default) {
+                    fetchCurrencyStatusUseCase(userWalletId = userWalletId, id = cryptoCurrency.id)
+                }
+            }
+            else -> Unit
         }
     }
 

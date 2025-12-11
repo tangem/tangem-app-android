@@ -50,8 +50,11 @@ interface TangemTechApi {
         @Body userTokens: UserTokensResponse,
     ): ApiResponse<Unit>
 
-    @POST("v1/user-tokens")
-    suspend fun markUserWallerWasCreated(@Body body: MarkUserWalletWasCreatedBody): ApiResponse<Unit>
+    @PUT("/v1/wallets/{walletId}/tokens")
+    suspend fun saveTokens(
+        @Path(value = "walletId") userId: String,
+        @Body userTokens: UserTokensResponse,
+    ): ApiResponse<Unit>
 
     /** Returns referral status by [walletId] */
     @GET("v1/referral/{walletId}")
@@ -130,6 +133,12 @@ interface TangemTechApi {
     suspend fun associateApplicationIdWithWallets(
         @Path("application_id") applicationId: String,
         @Body body: List<WalletIdBody>,
+    ): ApiResponse<Unit>
+
+    @PUT("/v1/user-wallets/applications/{application_id}/wallets")
+    suspend fun associateApplicationIdWithWalletsV2(
+        @Path("application_id") applicationId: String,
+        @Body body: AssociateApplicationIdWithWalletsBody,
     ): ApiResponse<Unit>
 
     @GET("v1/user-wallets/wallets/{wallet_id}")

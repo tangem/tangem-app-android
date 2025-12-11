@@ -197,6 +197,7 @@ sealed class AppRoute(val path: String) : Route {
             val cryptoAmount: SerializedBigDecimal,
             val fiatAmount: SerializedBigDecimal,
             val depositAddress: String,
+            val isWithdrawal: Boolean,
         )
     }
 
@@ -345,7 +346,9 @@ sealed class AppRoute(val path: String) : Route {
     object CreateHardwareWallet : AppRoute(path = "/create_hardware_wallet")
 
     @Serializable
-    object CreateMobileWallet : AppRoute(path = "/create_mobile_wallet")
+    data class CreateMobileWallet(
+        val source: String,
+    ) : AppRoute(path = "/create_mobile_wallet")
 
     @Serializable
     data class UpgradeWallet(
@@ -364,13 +367,16 @@ sealed class AppRoute(val path: String) : Route {
     @Serializable
     data class CreateWalletBackup(
         val userWalletId: UserWalletId,
+        val analyticsSource: String,
+        val analyticsAction: String,
         val isUpgradeFlow: Boolean = false,
-        val setAccessCode: Boolean = false,
+        val shouldSetAccessCode: Boolean = false,
     ) : AppRoute(path = "/create_wallet_backup/${userWalletId.stringValue}")
 
     @Serializable
     data class UpdateAccessCode(
         val userWalletId: UserWalletId,
+        val source: String,
     ) : AppRoute(path = "/update_access_code/${userWalletId.stringValue}")
 
     @Serializable
@@ -427,15 +433,18 @@ sealed class AppRoute(val path: String) : Route {
             @Serializable
             data class Deeplink(
                 val deeplink: String,
+                val userWalletId: UserWalletId?,
             ) : Mode()
 
             @Serializable
-            object ContinueOnboarding : Mode()
+            data class ContinueOnboarding(
+                val userWalletId: UserWalletId?,
+            ) : Mode()
         }
     }
 
     @Serializable
-    data object Kyc : AppRoute(path = "/kyc")
+    data class Kyc(val userWalletId: UserWalletId) : AppRoute(path = "/kyc")
 
     @Serializable
     data class YieldSupplyPromo(
@@ -443,4 +452,11 @@ sealed class AppRoute(val path: String) : Route {
         val cryptoCurrency: CryptoCurrency,
         val apy: String,
     ) : AppRoute(path = "/yield_supply_promo/${userWalletId.stringValue}/${cryptoCurrency.symbol}")
+
+    @Serializable
+    data class YieldSupplyActive(
+        val userWalletId: UserWalletId,
+        val cryptoCurrency: CryptoCurrency,
+        val apy: String,
+    ) : AppRoute(path = "/yield_supply_active/${userWalletId.stringValue}/${cryptoCurrency.symbol}")
 }

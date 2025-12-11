@@ -2,10 +2,17 @@ package com.tangem.data.common.currency
 
 import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.common.tokens.UserTokensBackwardCompatibility
+import com.tangem.datasource.api.common.response.ApiResponse
+import com.tangem.datasource.api.common.response.ApiResponseError
+import com.tangem.datasource.api.common.response.isNetworkError
 import com.tangem.datasource.api.tangemTech.TangemTechApi
+import com.tangem.datasource.api.tangemTech.converters.WalletIdBodyConverter
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
+import com.tangem.datasource.api.tangemTech.models.WalletType
 import com.tangem.datasource.local.token.UserTokensResponseStore
+import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.retryer.Retryer
@@ -13,8 +20,10 @@ import com.tangem.utils.retryer.RetryerPool
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 
+@Suppress("LongParameterList")
 class UserTokensSaver(
     private val tangemTechApi: TangemTechApi,
+    private val userWalletsStore: UserWalletsStore,
     private val userTokensResponseStore: UserTokensResponseStore,
     private val dispatchers: CoroutineDispatcherProvider,
     private val addressesEnricher: UserTokensResponseAddressesEnricher,
@@ -46,19 +55,26 @@ class UserTokensSaver(
         response: UserTokensResponse,
         useEnricher: Boolean = true,
         onFailSend: () -> Unit = {},
-    ) {
-        withContext(dispatchers.default) {
+    ) = withContext(dispatchers.io) {
+        val userWallet = userWalletsStore.getSyncOrNull(key = userWalletId)
+
+        if (userWallet == null) {
+            Timber.e("UserWallet with id $userWalletId not found. Cannot push tokens.")
+            onFailSend()
+            return@withContext
+        }
+
+        if (accountsFeatureToggles.isFeatureEnabled) {
             val enrichedResponse = response.enrichIf(userWalletId = userWalletId, condition = useEnricher)
 
-            safeApiCall(
-                call = {
-                    withContext(dispatchers.io) {
-                        tangemTechApi.saveUserTokens(userId = userWalletId.stringValue, userTokens = enrichedResponse)
-                            .bind()
-                    }
-                },
-                onError = { onFailSend() },
+            pushNew(userWallet = userWallet, response = enrichedResponse, onFailSend = onFailSend)
+        } else {
+            val enrichedResponse = response.enrichIf(userWalletId = userWalletId, condition = useEnricher).copy(
+                walletName = userWallet.name,
+                walletType = WalletType.from(userWallet),
             )
+
+            pushLegacy(userWalletId = userWalletId, response = enrichedResponse, onFailSend = onFailSend)
         }
     }
 
@@ -76,6 +92,39 @@ class UserTokensSaver(
                 pushTokensRetryerPool + createPushTokensRetryer(userWalletId, response)
                 onFailSend()
             },
+        )
+    }
+
+    private suspend fun pushLegacy(userWalletId: UserWalletId, response: UserTokensResponse, onFailSend: () -> Unit) {
+        safeApiCall(
+            call = { tangemTechApi.saveUserTokens(userId = userWalletId.stringValue, userTokens = response).bind() },
+            onError = { onFailSend() },
+        )
+    }
+
+    private suspend fun pushNew(userWallet: UserWallet, response: UserTokensResponse, onFailSend: () -> Unit) {
+        safeApiCall(
+            call = {
+                val apiResponse = tangemTechApi.saveTokens(
+                    userId = userWallet.walletId.stringValue,
+                    userTokens = response,
+                )
+
+                val isWalletNotFound = apiResponse is ApiResponse.Error &&
+                    apiResponse.cause.isNetworkError(ApiResponseError.HttpException.Code.NOT_FOUND)
+
+                if (isWalletNotFound) {
+                    tangemTechApi.createWallet(body = WalletIdBodyConverter.convert(userWallet)).bind()
+
+                    tangemTechApi.saveTokens(
+                        userId = userWallet.walletId.stringValue,
+                        userTokens = response,
+                    ).bind()
+                } else {
+                    apiResponse.bind()
+                }
+            },
+            onError = { onFailSend() },
         )
     }
 

@@ -22,6 +22,7 @@ dependencies {
     implementation(projects.common.routing)
     implementation(projects.common.ui)
     implementation(projects.core.decompose) // For Route supertype
+    implementation(projects.core.error)
 
     /** Domain modules **/
     implementation(projects.domain.models)

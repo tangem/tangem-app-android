@@ -3,6 +3,7 @@ package com.tangem.core.ui.components.inputrow
 import android.content.res.Configuration
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Icon
@@ -15,6 +16,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.R
@@ -35,7 +37,7 @@ import com.tangem.core.ui.res.TangemThemePreview
  * @param modifier modifier
  * @param caption caption text
  * @param imageUrl icon to load
- * @param iconRes icon resource
+ * @param iconResVector icon resource
  * @param subtitleColor subtitle text color
  * @param captionColor caption text color
  * @param iconTint icon tint
@@ -47,17 +49,19 @@ import com.tangem.core.ui.res.TangemThemePreview
  */
 @Suppress("LongMethod")
 @Composable
-internal fun InputRowImageBase(
+fun InputRowImageBase(
     subtitle: TextReference,
     modifier: Modifier = Modifier,
     caption: TextReference? = null,
     imageUrl: String? = null,
-    @DrawableRes iconRes: Int? = null,
+    @DrawableRes iconResVector: Int? = null,
+    @DrawableRes iconResWebp: Int? = null,
     subtitleColor: Color = TangemTheme.colors.text.primary1,
     captionColor: Color = TangemTheme.colors.text.tertiary,
     iconTint: Color = TangemTheme.colors.icon.informative,
     isGrayscaleImage: Boolean = false,
     @DrawableRes iconEndRes: Int? = null,
+    endIconTint: Color = TangemTheme.colors.icon.informative,
     onImageError: (@Composable () -> Unit)? = null,
     subtitleExtraContent: (@Composable RowScope.() -> Unit)? = null,
     extraContent: (@Composable RowScope.() -> Unit)? = null,
@@ -76,7 +80,7 @@ internal fun InputRowImageBase(
                     .clip(TangemTheme.shapes.roundedCornersXLarge),
             )
             SpacerW12()
-        } else if (iconRes != null) {
+        } else if (iconResVector != null) {
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
@@ -85,12 +89,19 @@ internal fun InputRowImageBase(
                     .background(iconTint.copy(alpha = 0.08f)),
             ) {
                 Icon(
-                    painter = rememberVectorPainter(image = ImageVector.vectorResource(id = iconRes)),
+                    painter = rememberVectorPainter(image = ImageVector.vectorResource(id = iconResVector)),
                     tint = iconTint,
                     contentDescription = null,
                     modifier = Modifier.size(TangemTheme.dimens.size18),
                 )
             }
+            SpacerW12()
+        } else if (iconResWebp != null) {
+            Image(
+                painter = painterResource(iconResWebp),
+                contentDescription = null,
+                modifier = Modifier.size(TangemTheme.dimens.size36),
+            )
             SpacerW12()
         }
         Column {
@@ -117,12 +128,12 @@ internal fun InputRowImageBase(
         } else {
             SpacerWMax()
         }
-        InputRowEndIcon(iconEndRes)
+        InputRowEndIcon(iconEndRes, endIconTint)
     }
 }
 
 @Composable
-private fun RowScope.InputRowEndIcon(iconRes: Int?) {
+private fun RowScope.InputRowEndIcon(iconRes: Int?, tint: Color = TangemTheme.colors.icon.informative) {
     AnimatedVisibility(
         visible = iconRes != null,
         label = "End icon visibility animation",
@@ -130,7 +141,7 @@ private fun RowScope.InputRowEndIcon(iconRes: Int?) {
         val icon = remember(this) { requireNotNull(iconRes) }
         Icon(
             painter = rememberVectorPainter(image = ImageVector.vectorResource(id = icon)),
-            tint = TangemTheme.colors.icon.informative,
+            tint = tint,
             contentDescription = null,
             modifier = Modifier.padding(start = TangemTheme.dimens.spacing6),
         )

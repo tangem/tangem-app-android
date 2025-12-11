@@ -41,6 +41,7 @@ internal class TangemPayDetailsComponent(
     private val txHistoryComponent = DefaultTangemPayTxHistoryComponent(
         appComponentContext = child("txHistoryComponent"),
         params = DefaultTangemPayTxHistoryComponent.Params(
+            userWalletId = params.userWalletId,
             customerWalletAddress = params.config.customerWalletAddress,
             uiActions = model,
         ),
@@ -83,6 +84,7 @@ internal class TangemPayDetailsComponent(
                 appComponentContext = context,
                 params = TangemPayTxHistoryDetailsComponent.Params(
                     transaction = navigation.transaction,
+                    isBalanceHidden = navigation.isBalanceHidden,
                     userWalletId = params.userWalletId,
                     onDismiss = model.bottomSheetNavigation::dismiss,
                 ),

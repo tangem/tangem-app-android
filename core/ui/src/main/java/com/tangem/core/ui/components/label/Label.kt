@@ -17,11 +17,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
+import com.tangem.core.ui.components.label.entity.LabelLeadingContentUM
+import com.tangem.core.ui.components.label.entity.LabelSize
 import com.tangem.core.ui.components.label.entity.LabelStyle
 import com.tangem.core.ui.components.label.entity.LabelUM
 import com.tangem.core.ui.extensions.TextReference
@@ -37,6 +41,7 @@ import com.tangem.core.ui.res.TangemThemePreview
  *
  * @see <a href="https://www.figma.com/design/14ISV23YB1yVW1uNVwqrKv/Android?node-id=4480-1459&t=2QTpi1G7FeTexTFS-4">Figma</a>
  */
+@Suppress("LongMethod", "CyclomaticComplexMethod")
 @Composable
 fun Label(state: LabelUM, modifier: Modifier = Modifier) {
     val backgroundColor by animateColorAsState(
@@ -63,12 +68,28 @@ fun Label(state: LabelUM, modifier: Modifier = Modifier) {
         },
     )
 
-    AnimatedContent(targetState = state.text) { text ->
+    val horizontalArrangementSize = remember {
+        when (state.size) {
+            LabelSize.REGULAR -> 4.dp
+            LabelSize.BIG -> 8.dp
+        }
+    }
+
+    val paddings = remember {
+        when (state.size) {
+            LabelSize.REGULAR -> PaddingValues(horizontal = 8.dp, vertical = 4.dp)
+            LabelSize.BIG -> PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+        }
+    }
+
+    AnimatedContent(
+        modifier = modifier,
+        targetState = state.text,
+    ) { text ->
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
-            modifier = modifier
-                .padding(horizontal = 4.dp)
+            horizontalArrangement = Arrangement.spacedBy(horizontalArrangementSize),
+            modifier = Modifier
                 .clip(TangemTheme.shapes.roundedCorners8)
                 .background(color = backgroundColor)
                 .then(
@@ -82,8 +103,22 @@ fun Label(state: LabelUM, modifier: Modifier = Modifier) {
                         Modifier
                     },
                 )
-                .padding(horizontal = 8.dp, vertical = 4.dp),
+                .padding(paddings),
         ) {
+            state.leadingContent.let { leadingContentUM ->
+                when (leadingContentUM) {
+                    is LabelLeadingContentUM.Token -> {
+                        Icon(
+                            modifier = Modifier
+                                .size(16.dp),
+                            painter = painterResource(leadingContentUM.icon),
+                            tint = Color.Unspecified,
+                            contentDescription = null,
+                        )
+                    }
+                    LabelLeadingContentUM.None -> Unit
+                }
+            }
             Text(
                 modifier = Modifier.weight(1.0f, fill = false),
                 text = text.resolveReference(),
@@ -109,6 +144,8 @@ fun Label(state: LabelUM, modifier: Modifier = Modifier) {
     }
 }
 
+@Suppress("LongMethod")
+@OptIn(ExperimentalLayoutApi::class)
 @Preview(showBackground = true)
 @Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
@@ -118,47 +155,93 @@ private fun LabelPreview() {
             verticalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier.padding(16.dp),
         ) {
-            Label(
-                state = LabelUM(
-                    text = TextReference.Str("Regular Label"),
-                    style = LabelStyle.REGULAR,
-                ),
-            )
-            Label(
-                state = LabelUM(
-                    text = TextReference.Str("Accent Label"),
-                    style = LabelStyle.ACCENT,
-                ),
-            )
-            Label(
-                state = LabelUM(
-                    text = TextReference.Str("Warning Label"),
-                    style = LabelStyle.WARNING,
-                ),
-            )
-            Label(
-                state = LabelUM(
-                    text = TextReference.Str(
-                        "Regular long long long long long long long long long long long long Label",
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Label(
+                    state = LabelUM(
+                        text = TextReference.Str("Regular Label"),
+                        style = LabelStyle.REGULAR,
                     ),
-                    style = LabelStyle.REGULAR,
-                    icon = R.drawable.ic_information_24,
-                ),
-            )
-            Label(
-                state = LabelUM(
-                    text = TextReference.Str("Accent Label"),
-                    style = LabelStyle.ACCENT,
-                    icon = R.drawable.ic_information_24,
-                ),
-            )
-            Label(
-                state = LabelUM(
-                    text = TextReference.Str("Warning Label"),
-                    style = LabelStyle.WARNING,
-                    icon = R.drawable.ic_information_24,
-                ),
-            )
+                )
+                Label(
+                    state = LabelUM(
+                        leadingContent = LabelLeadingContentUM.Token(
+                            icon = R.drawable.img_bsc_22,
+                        ),
+                        text = TextReference.Str("Regular Label"),
+                        style = LabelStyle.REGULAR,
+                    ),
+                )
+                Label(
+                    state = LabelUM(
+                        text = TextReference.Str("Accent Label"),
+                        style = LabelStyle.ACCENT,
+                    ),
+                )
+                Label(
+                    state = LabelUM(
+                        text = TextReference.Str("Warning Label"),
+                        style = LabelStyle.WARNING,
+                    ),
+                )
+            }
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Label(
+                    state = LabelUM(
+                        text = TextReference.Str(
+                            "Regular long long long long long long long long long long long long Label",
+                        ),
+                        style = LabelStyle.REGULAR,
+                        icon = R.drawable.ic_information_24,
+                    ),
+                )
+                Label(
+                    state = LabelUM(
+                        text = TextReference.Str("Accent Label"),
+                        style = LabelStyle.ACCENT,
+                        icon = R.drawable.ic_information_24,
+                    ),
+                )
+                Label(
+                    state = LabelUM(
+                        text = TextReference.Str("Warning Label"),
+                        style = LabelStyle.WARNING,
+                        icon = R.drawable.ic_information_24,
+                    ),
+                )
+            }
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Label(
+                    state = LabelUM(
+                        text = TextReference.Str("Regular Label"),
+                        style = LabelStyle.REGULAR,
+                        size = LabelSize.BIG,
+                    ),
+                )
+                Label(
+                    state = LabelUM(
+                        text = TextReference.Str("Accent Label"),
+                        style = LabelStyle.ACCENT,
+                        size = LabelSize.BIG,
+                        icon = R.drawable.ic_information_24,
+                    ),
+                )
+                Label(
+                    state = LabelUM(
+                        text = TextReference.Str("Warning Label"),
+                        style = LabelStyle.WARNING,
+                        size = LabelSize.BIG,
+                    ),
+                )
+            }
         }
     }
 }

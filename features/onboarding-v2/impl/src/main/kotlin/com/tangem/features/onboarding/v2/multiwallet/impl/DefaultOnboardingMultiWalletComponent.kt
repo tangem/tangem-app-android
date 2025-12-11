@@ -209,7 +209,7 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
             }
             Done -> {
                 // final step - navigate to parent
-                analyticsHandler.send(OnboardingEvent.Finished)
+                analyticsHandler.send(OnboardingEvent.Finished())
                 val userWallet = childParams.multiWalletState.value.resultUserWallet ?: return
                 params.onDone(userWallet)
             }

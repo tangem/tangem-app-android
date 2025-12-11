@@ -41,12 +41,12 @@ internal class HotCryptoPortfolioDataLoader @Inject constructor(
         val mapOfAddedCurrencies: AccountCryptoCurrencyStatuses = getAccountCurrencyStatusUseCase
             .invokeSync(userWalletId, hotCryptoCurrencies)
             .getOrNull()
-            ?: emptyMap()
-        val accountsWithHotCrypto = walletAccounts.accountStatuses.map {
-            val account: AccountStatus.CryptoPortfolio = when (it) {
-                is AccountStatus.CryptoPortfolio -> it
+            .orEmpty()
+        val accountsWithHotCrypto = walletAccounts.accountStatuses.map { accountStatus ->
+            val account: AccountStatus.CryptoPortfolio = when (accountStatus) {
+                is AccountStatus.CryptoPortfolio -> accountStatus
             }
-            val addedHotCrypto = mapOfAddedCurrencies[account.account] ?: listOf()
+            val addedHotCrypto = mapOfAddedCurrencies[account.account].orEmpty()
             HotCryptoPortfolioData.Account(
                 account = account,
                 addedHotCrypto = addedHotCrypto,

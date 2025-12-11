@@ -4,8 +4,11 @@ import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
+import com.tangem.datasource.api.tangemTech.models.WalletType
 import com.tangem.datasource.local.token.UserTokensResponseStore
+import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
@@ -18,6 +21,7 @@ import org.junit.jupiter.api.TestInstance
 class UserTokensSaverTest {
 
     private val tangemTechApi: TangemTechApi = mockk()
+    private val userWalletsStore: UserWalletsStore = mockk(relaxUnitFun = true)
     private val userTokensResponseStore: UserTokensResponseStore = mockk(relaxed = true)
     private val enricher: UserTokensResponseAddressesEnricher = mockk()
     private val accountsFeatureToggles = mockk<AccountsFeatureToggles> {
@@ -26,6 +30,7 @@ class UserTokensSaverTest {
 
     private val userTokensSaver: UserTokensSaver = UserTokensSaver(
         tangemTechApi = tangemTechApi,
+        userWalletsStore = userWalletsStore,
         userTokensResponseStore = userTokensResponseStore,
         dispatchers = TestingCoroutineDispatcherProvider(),
         addressesEnricher = enricher,
@@ -35,7 +40,7 @@ class UserTokensSaverTest {
 
     @BeforeEach
     fun resetMocks() {
-        clearMocks(tangemTechApi, userTokensResponseStore, enricher)
+        clearMocks(tangemTechApi, userWalletsStore, userTokensResponseStore, enricher)
     }
 
     @Test
@@ -68,7 +73,7 @@ class UserTokensSaverTest {
         }
 
         coVerify(inverse = true) {
-            tangemTechApi.saveUserTokens(any(), any())
+            tangemTechApi.saveTokens(any(), any())
         }
     }
 
@@ -77,22 +82,34 @@ class UserTokensSaverTest {
         runTest {
             // GIVEN
             val userWalletId = UserWalletId("1234567890abcdef")
+            val userWallet = mockk<UserWallet.Cold> {
+                every { this@mockk.walletId } returns userWalletId
+                every { this@mockk.name } returns "Wallet"
+            }
+
             val response = UserTokensResponse(
                 version = 0,
                 group = UserTokensResponse.GroupType.NETWORK,
                 sort = UserTokensResponse.SortType.BALANCE,
                 tokens = emptyList(),
+                walletName = userWallet.name,
+                walletType = WalletType.COLD,
             )
             val enrichedResponse = UserTokensResponse(
                 version = 0,
                 group = UserTokensResponse.GroupType.NETWORK,
                 sort = UserTokensResponse.SortType.MANUAL,
                 tokens = emptyList(),
+                walletName = userWallet.name,
+                walletType = WalletType.COLD,
             )
             val error = ApiResponseError.UnknownException(Exception("API Error"))
             var onFailSendCalled = false
+
+            coEvery { userWalletsStore.getSyncOrNull(userWalletId) } returns userWallet
             coEvery { enricher(userWalletId, response) } returns enrichedResponse
-            coEvery { tangemTechApi.saveUserTokens(any(), any()) } returns ApiResponse.Error(error) as ApiResponse<Unit>
+            coEvery { tangemTechApi.saveTokens(any(), any()) } returns ApiResponse.Error(error) as ApiResponse<Unit>
+            coEvery { tangemTechApi.createWallet(body = any()) } returns ApiResponse.Error(error) as ApiResponse<Unit>
 
             // WHEN
             userTokensSaver.push(
@@ -104,7 +121,7 @@ class UserTokensSaverTest {
             // THEN
             coVerifyOrder {
                 enricher(userWalletId, response)
-                tangemTechApi.saveUserTokens(userWalletId.stringValue, enrichedResponse)
+                tangemTechApi.saveTokens(userWalletId.stringValue, enrichedResponse)
             }
 
             assert(onFailSendCalled) { "onFailSend callback should be called when API call fails" }
@@ -114,21 +131,32 @@ class UserTokensSaverTest {
     fun `GIVEN user wallet id and response WHEN storeAndPush THEN should store and push enriched response`() = runTest {
         // GIVEN
         val userWalletId = UserWalletId("1234567890abcdef")
+        val userWallet = mockk<UserWallet.Cold> {
+            every { this@mockk.walletId } returns userWalletId
+            every { this@mockk.name } returns "Wallet"
+        }
+
         val response = UserTokensResponse(
             version = 0,
             group = UserTokensResponse.GroupType.NETWORK,
             sort = UserTokensResponse.SortType.BALANCE,
             tokens = emptyList(),
+            walletName = userWallet.name,
+            walletType = WalletType.COLD,
         )
         val enrichedResponse = UserTokensResponse(
             version = 0,
             group = UserTokensResponse.GroupType.NETWORK,
             sort = UserTokensResponse.SortType.BALANCE,
             tokens = emptyList(),
+            walletName = userWallet.name,
+            walletType = WalletType.COLD,
         )
+
+        coEvery { userWalletsStore.getSyncOrNull(userWalletId) } returns userWallet
         coEvery { enricher(userWalletId, response) } returns enrichedResponse
         coEvery {
-            tangemTechApi.saveUserTokens(userWalletId.stringValue, enrichedResponse)
+            tangemTechApi.saveTokens(userWalletId.stringValue, enrichedResponse)
         } returns ApiResponse.Success(Unit)
 
         // WHEN
@@ -137,7 +165,7 @@ class UserTokensSaverTest {
         // THEN
         coVerifyOrder {
             enricher(userWalletId, response)
-            tangemTechApi.saveUserTokens(userWalletId.stringValue, enrichedResponse)
+            tangemTechApi.saveTokens(userWalletId.stringValue, enrichedResponse)
         }
     }
 }

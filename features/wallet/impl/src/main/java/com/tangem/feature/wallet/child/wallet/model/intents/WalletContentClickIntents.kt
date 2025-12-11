@@ -2,13 +2,14 @@ package com.tangem.feature.wallet.child.wallet.model.intents
 
 import arrow.core.getOrElse
 import com.tangem.common.ui.expressStatus.ExpressStatusBottomSheetConfig
+import com.tangem.common.ui.tokens.TokenItemStateConverter.ApySource
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.domain.models.account.Account
-import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.models.staking.YieldBalance
+import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
@@ -20,6 +21,7 @@ import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.domain.tokens.model.details.NavigationAction
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.domain.yield.supply.usecase.YieldSupplyEnterStatusUseCase
 import com.tangem.feature.wallet.presentation.account.AccountDependencies
 import com.tangem.feature.wallet.presentation.wallet.domain.OnrampStatusFactory
 import com.tangem.feature.wallet.presentation.wallet.domain.unwrap
@@ -49,7 +51,12 @@ internal interface WalletContentClickIntents {
 
     fun onTokenItemLongClick(userWalletId: UserWalletId, cryptoCurrencyStatus: CryptoCurrencyStatus)
 
-    fun onApyLabelClick(userWalletId: UserWalletId, currencyStatus: CryptoCurrencyStatus)
+    fun onApyLabelClick(
+        userWalletId: UserWalletId,
+        currencyStatus: CryptoCurrencyStatus,
+        apySource: ApySource,
+        apy: String,
+    )
 
     fun onAccountExpandClick(account: Account)
 
@@ -87,6 +94,7 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
     private val accountDependencies: AccountDependencies,
+    private val yieldSupplyEnterStatusUseCase: YieldSupplyEnterStatusUseCase,
 ) : BaseWalletClickIntents(), WalletContentClickIntents {
 
     override fun onDetailsClick() {
@@ -160,12 +168,71 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
         }
     }
 
-    override fun onApyLabelClick(userWalletId: UserWalletId, currencyStatus: CryptoCurrencyStatus) {
-        val navigationAction = if (currencyStatus.currency is CryptoCurrency.Token) {
-            NavigationAction.YieldSupply(currencyStatus.value.yieldSupplyStatus?.isActive == true)
-        } else {
-            NavigationAction.Staking
+    override fun onApyLabelClick(
+        userWalletId: UserWalletId,
+        currencyStatus: CryptoCurrencyStatus,
+        apySource: ApySource,
+        apy: String,
+    ) {
+        val navigationAction = when (apySource) {
+            ApySource.STAKING -> NavigationAction.Staking
+            ApySource.YIELD_SUPPLY -> {
+                NavigationAction.YieldSupply(currencyStatus.value.yieldSupplyStatus?.isActive == true)
+            }
         }
+
+        sendApyLabelClickAnalytics(navigationAction, currencyStatus)
+
+        when (navigationAction) {
+            is NavigationAction.Staking -> router.openTokenDetails(userWalletId, currencyStatus, navigationAction)
+            is NavigationAction.YieldSupply -> openYieldSupply(
+                userWalletId = userWalletId,
+                cryptoCurrencyStatus = currencyStatus,
+                navigationAction = navigationAction,
+                apy = apy,
+            )
+        }
+    }
+
+    override fun onAccountExpandClick(account: Account) {
+        val userWalletId = stateHolder.getSelectedWalletId()
+        accountDependencies.expandedAccountsHolder.expandAccount(userWalletId, account.accountId)
+    }
+
+    override fun onAccountCollapseClick(account: Account) {
+        val userWalletId = stateHolder.getSelectedWalletId()
+        accountDependencies.expandedAccountsHolder.collapseAccount(userWalletId, account.accountId)
+    }
+
+    private fun openYieldSupply(
+        userWalletId: UserWalletId,
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+        navigationAction: NavigationAction.YieldSupply,
+        apy: String,
+    ) {
+        modelScope.launch {
+            val tokenEnterStatus = yieldSupplyEnterStatusUseCase(userWalletId, cryptoCurrencyStatus).getOrNull()
+            when {
+                tokenEnterStatus != null -> router.openTokenDetails(
+                    userWalletId = userWalletId,
+                    currencyStatus = cryptoCurrencyStatus,
+                    navigationAction = navigationAction,
+                )
+                navigationAction.isActive -> router.openYieldSupplyActiveScreen(
+                    userWalletId = userWalletId,
+                    cryptoCurrency = cryptoCurrencyStatus.currency,
+                    apy = apy,
+                )
+                else -> router.openYieldSupplyPromoScreen(
+                    userWalletId = userWalletId,
+                    cryptoCurrency = cryptoCurrencyStatus.currency,
+                    apy = apy,
+                )
+            }
+        }
+    }
+
+    private fun sendApyLabelClickAnalytics(navigationAction: NavigationAction, currencyStatus: CryptoCurrencyStatus) {
         val event = when (navigationAction) {
             is NavigationAction.YieldSupply -> {
                 MainScreenAnalyticsEvent.ApyClicked(
@@ -184,7 +251,7 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
                     token = currencyStatus.currency.symbol,
                     blockchain = currencyStatus.currency.network.name,
                     action = "Staking",
-                    state = if (currencyStatus.value.yieldBalance is YieldBalance.Data) {
+                    state = if (currencyStatus.value.stakingBalance is StakingBalance.Data) {
                         "Enabled"
                     } else {
                         "Disabled"
@@ -193,17 +260,6 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
             }
         }
         analyticsEventHandler.send(event)
-        router.openTokenDetails(userWalletId, currencyStatus, navigationAction)
-    }
-
-    override fun onAccountExpandClick(account: Account) {
-        val userWalletId = stateHolder.getSelectedWalletId()
-        accountDependencies.expandedAccountsHolder.expandAccount(userWalletId, account.accountId)
-    }
-
-    override fun onAccountCollapseClick(account: Account) {
-        val userWalletId = stateHolder.getSelectedWalletId()
-        accountDependencies.expandedAccountsHolder.collapseAccount(userWalletId, account.accountId)
     }
 
     private fun showActionsBottomSheet(tokenActionsState: TokenActionsState, userWallet: UserWallet) {
@@ -299,7 +355,7 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
             is WalletNFTItemUM.Content -> {
                 analyticsEventHandler.send(
                     NFTAnalyticsEvent.NFTListScreenOpened(
-                        state = NFTAnalyticsEvent.NFTListScreenOpened.State.Full,
+                        state = AnalyticsParam.EmptyFull.Full,
                         allAssetsCount = state.allAssetsCount,
                         collectionsCount = state.collectionsCount,
                         noCollectionAssetsCount = state.noCollectionAssetsCount,
@@ -309,7 +365,7 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
             is WalletNFTItemUM.Empty -> {
                 analyticsEventHandler.send(
                     NFTAnalyticsEvent.NFTListScreenOpened(
-                        state = NFTAnalyticsEvent.NFTListScreenOpened.State.Empty,
+                        state = AnalyticsParam.EmptyFull.Empty,
                         allAssetsCount = 0,
                         collectionsCount = 0,
                         noCollectionAssetsCount = 0,

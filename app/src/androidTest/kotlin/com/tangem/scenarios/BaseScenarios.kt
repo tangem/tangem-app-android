@@ -26,8 +26,11 @@ fun BaseTestCase.scanCard(
     step("Click on 'Accept' button") {
         onDisclaimerScreen { acceptButton.clickWithAssertion() }
     }
-    step("Click on 'Scan' button") {
-        onStoriesScreen { scanButton.clickWithAssertion() }
+    step("Click on 'Get started' button") {
+        onStoriesScreen { getStartedButton.clickWithAssertion() }
+    }
+    step("Click on 'Scan card or ring' button") {
+        onCreateWalletStartScreen { scanCardOrRingButton.clickWithAssertion() }
     }
     if (alreadyActivatedDialogIsShown) {
         step("Click on 'This is my wallet' button") {

@@ -300,6 +300,9 @@ include(":features:yield-supply:impl")
 
 include(":features:feed:api")
 include(":features:feed:impl")
+
+include(":features:news:news-details:api")
+include(":features:news:news-details:impl")
 // endregion Feature modules
 
 // region Domain modules
@@ -360,6 +363,7 @@ include(":domain:notifications")
 include(":domain:notifications:models")
 include(":domain:express")
 include(":domain:express:models")
+include(":domain:referral")
 include(":domain:swap")
 include(":domain:swap:models")
 include(":domain:wallet-manager")

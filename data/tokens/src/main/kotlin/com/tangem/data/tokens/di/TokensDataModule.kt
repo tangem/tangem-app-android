@@ -5,14 +5,22 @@ import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.common.currency.CardCryptoCurrencyFactory
 import com.tangem.data.common.currency.ResponseCryptoCurrenciesFactory
 import com.tangem.data.common.currency.UserTokensSaver
-import com.tangem.data.tokens.repository.*
+import com.tangem.data.tokens.repository.DefaultCurrenciesRepository
+import com.tangem.data.tokens.repository.DefaultCurrencyChecksRepository
+import com.tangem.data.tokens.repository.DefaultTokenReceiveWarningsViewedRepository
+import com.tangem.data.tokens.repository.DefaultYieldSupplyWarningsViewedRepository
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.token.TokenReceiveWarningActionStore
 import com.tangem.datasource.local.token.UserTokensResponseStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
+import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.express.ExpressServiceFetcher
-import com.tangem.domain.tokens.repository.*
+import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
+import com.tangem.domain.tokens.repository.CurrenciesRepository
+import com.tangem.domain.tokens.repository.CurrencyChecksRepository
+import com.tangem.domain.tokens.repository.TokenReceiveWarningsViewedRepository
+import com.tangem.domain.tokens.repository.YieldSupplyWarningsViewedRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
@@ -39,6 +47,8 @@ internal object TokensDataModule {
         cardCryptoCurrencyFactory: CardCryptoCurrencyFactory,
         tokensSaver: UserTokensSaver,
         responseCryptoCurrenciesFactory: ResponseCryptoCurrenciesFactory,
+        multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
+        accountsFeatureToggles: AccountsFeatureToggles,
     ): CurrenciesRepository {
         return DefaultCurrenciesRepository(
             tangemTechApi = tangemTechApi,
@@ -52,6 +62,8 @@ internal object TokensDataModule {
             cardCryptoCurrencyFactory = cardCryptoCurrencyFactory,
             userTokensSaver = tokensSaver,
             responseCryptoCurrenciesFactory = responseCryptoCurrenciesFactory,
+            multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
+            accountsFeatureToggles = accountsFeatureToggles,
         )
     }
 

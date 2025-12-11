@@ -2,6 +2,10 @@ package com.tangem.features.hotwallet.wallethardwarebackup.model
 
 import arrow.core.getOrElse
 import com.tangem.common.routing.AppRoute
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.Basic
+import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -18,6 +22,7 @@ import com.tangem.core.ui.components.label.entity.LabelUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.bottomSheetMessage
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.UnlockHotWalletContextualUseCase
@@ -46,30 +51,42 @@ internal class WalletHardwareBackupModel @Inject constructor(
     private val urlOpener: UrlOpener,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val messageSender: UiMessageSender,
+    private val trackingContextProxy: TrackingContextProxy,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
 
     private val params = paramsContainer.require<WalletHardwareBackupComponent.Params>()
 
     private val makeBackupAtFirstAlertBS
-        get() = bottomSheetMessage {
-            infoBlock {
-                icon(R.drawable.ic_passcode_lock_32) {
-                    type = MessageBottomSheetUMV2.Icon.Type.Accent
-                    backgroundType = MessageBottomSheetUMV2.Icon.BackgroundType.SameAsTint
+        get() = run {
+            analyticsEventHandler.send(
+                WalletSettingsAnalyticEvents.NoticeBackupFirst(
+                    source = AnalyticsParam.ScreensSources.HardwareWallet.value,
+                    action = WalletSettingsAnalyticEvents.NoticeBackupFirst.Action.Upgrade,
+                ),
+            )
+            bottomSheetMessage {
+                infoBlock {
+                    icon(R.drawable.ic_passcode_lock_32) {
+                        type = MessageBottomSheetUMV2.Icon.Type.Accent
+                        backgroundType = MessageBottomSheetUMV2.Icon.BackgroundType.SameAsTint
+                    }
+                    title = resourceReference(R.string.hw_backup_need_finish_first)
+                    body = resourceReference(R.string.hw_backup_to_upgrade_description)
                 }
-                title = resourceReference(R.string.hw_backup_need_finish_first)
-                body = resourceReference(R.string.hw_backup_to_upgrade_description)
-            }
-            primaryButton {
-                text = resourceReference(R.string.hw_backup_need_action)
-                onClick {
-                    router.push(
-                        AppRoute.CreateWalletBackup(
-                            userWalletId = params.userWalletId,
-                            isUpgradeFlow = true,
-                        ),
-                    )
-                    closeBs()
+                primaryButton {
+                    text = resourceReference(R.string.hw_backup_need_action)
+                    onClick {
+                        router.push(
+                            AppRoute.CreateWalletBackup(
+                                userWalletId = params.userWalletId,
+                                isUpgradeFlow = true,
+                                analyticsSource = AnalyticsParam.ScreensSources.HardwareWallet.value,
+                                analyticsAction = WalletSettingsAnalyticEvents.RecoveryPhraseScreenAction.Upgrade.value,
+                            ),
+                        )
+                        closeBs()
+                    }
                 }
             }
         }
@@ -100,7 +117,14 @@ internal class WalletHardwareBackupModel @Inject constructor(
         )
 
     init {
+        trackingContextProxy.addHotWalletContext()
+        analyticsEventHandler.send(WalletSettingsAnalyticEvents.HardwareBackupScreenOpened())
         showPurchaseBlockWithDelay()
+    }
+
+    override fun onDestroy() {
+        trackingContextProxy.removeContext()
+        super.onDestroy()
     }
 
     private fun showPurchaseBlockWithDelay() {
@@ -111,6 +135,7 @@ internal class WalletHardwareBackupModel @Inject constructor(
     }
 
     private fun onCreateNewWalletClick() {
+        analyticsEventHandler.send(WalletSettingsAnalyticEvents.ButtonCreateNewWallet())
         router.push(AppRoute.CreateHardwareWallet)
     }
 
@@ -118,6 +143,7 @@ internal class WalletHardwareBackupModel @Inject constructor(
         val userWallet = getUserWalletUseCase.invoke(params.userWalletId)
             .getOrElse { error("Cannot find user wallet with id: ${params.userWalletId.stringValue}") }
         if (userWallet is UserWallet.Hot) {
+            analyticsEventHandler.send(WalletSettingsAnalyticEvents.ButtonUpgradeCurrent())
             if (!userWallet.backedUp) {
                 messageSender.send(makeBackupAtFirstAlertBS)
             } else {
@@ -143,6 +169,7 @@ internal class WalletHardwareBackupModel @Inject constructor(
     }
 
     private fun onBuyClick() {
+        analyticsEventHandler.send(Basic.ButtonBuy(source = AnalyticsParam.ScreensSources.HardwareWallet))
         modelScope.launch {
             generateBuyTangemCardLinkUseCase.invoke().let { urlOpener.openUrl(it) }
         }

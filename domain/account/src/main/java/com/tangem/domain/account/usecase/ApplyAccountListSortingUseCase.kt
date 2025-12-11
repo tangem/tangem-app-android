@@ -55,10 +55,11 @@ class ApplyAccountListSortingUseCase(
             val updatedAccountList = withError(
                 transform = { Error.DataOperationFailed("Unable to create AccountList: $it") },
             ) {
-                AccountList(
+                AccountList.invoke(
                     userWalletId = accountList.userWalletId,
                     accounts = sortedAccounts,
                     totalAccounts = accountList.totalAccounts,
+                    totalArchivedAccounts = accountList.totalArchivedAccounts,
                     sortType = accountList.sortType,
                     groupType = accountList.groupType,
                 )

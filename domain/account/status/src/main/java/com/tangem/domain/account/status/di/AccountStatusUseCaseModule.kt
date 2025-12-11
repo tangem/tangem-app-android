@@ -12,10 +12,11 @@ import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
 import com.tangem.domain.networks.utils.NetworksCleaner
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.staking.StakingIdFactory
-import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
+import com.tangem.domain.staking.multi.MultiStakingBalanceFetcher
 import com.tangem.domain.staking.utils.StakingCleaner
 import com.tangem.domain.tokens.GetCryptoCurrencyActionsUseCase
 import com.tangem.domain.tokens.repository.CurrenciesRepository
+import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.derivations.DerivationsRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
@@ -91,10 +92,11 @@ internal object AccountStatusUseCaseModule {
     @Provides
     @Singleton
     fun provideManageCryptoCurrenciesUseCase(
-        singleAccountListSupplier: SingleAccountListSupplier,
+        singleAccountStatusListSupplier: SingleAccountStatusListSupplier,
         accountsCRUDRepository: AccountsCRUDRepository,
         currenciesRepository: CurrenciesRepository,
         derivationsRepository: DerivationsRepository,
+        walletManagersFacade: WalletManagersFacade,
         cryptoCurrencyBalanceFetcher: CryptoCurrencyBalanceFetcher,
         stakingIdFactory: StakingIdFactory,
         networksCleaner: NetworksCleaner,
@@ -103,10 +105,11 @@ internal object AccountStatusUseCaseModule {
         dispatchers: CoroutineDispatcherProvider,
     ): ManageCryptoCurrenciesUseCase {
         return ManageCryptoCurrenciesUseCase(
-            singleAccountListSupplier = singleAccountListSupplier,
+            singleAccountStatusListSupplier = singleAccountStatusListSupplier,
             accountsCRUDRepository = accountsCRUDRepository,
             currenciesRepository = currenciesRepository,
             derivationsRepository = derivationsRepository,
+            walletManagersFacade = walletManagersFacade,
             cryptoCurrencyBalanceFetcher = cryptoCurrencyBalanceFetcher,
             stakingIdFactory = stakingIdFactory,
             networksCleaner = networksCleaner,
@@ -120,18 +123,16 @@ internal object AccountStatusUseCaseModule {
     @Provides
     @Singleton
     fun provideCryptoCurrencyBalanceFetcher(
-        accountsCRUDRepository: AccountsCRUDRepository,
         multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
         multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
-        multiYieldBalanceFetcher: MultiYieldBalanceFetcher,
+        multiStakingBalanceFetcher: MultiStakingBalanceFetcher,
         stakingIdFactory: StakingIdFactory,
         dispatchers: CoroutineDispatcherProvider,
     ): CryptoCurrencyBalanceFetcher {
         return CryptoCurrencyBalanceFetcher(
-            accountsCRUDRepository = accountsCRUDRepository,
             multiNetworkStatusFetcher = multiNetworkStatusFetcher,
             multiQuoteStatusFetcher = multiQuoteStatusFetcher,
-            multiYieldBalanceFetcher = multiYieldBalanceFetcher,
+            multiStakingBalanceFetcher = multiStakingBalanceFetcher,
             stakingIdFactory = stakingIdFactory,
             parallelUpdatingScope = CoroutineScope(SupervisorJob() + dispatchers.default),
         )

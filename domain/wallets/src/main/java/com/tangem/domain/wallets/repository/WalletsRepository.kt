@@ -43,8 +43,6 @@ interface WalletsRepository {
 
     suspend fun acceptSeedPhraseSecondNotification(userWalletId: UserWalletId)
 
-    suspend fun markWallet2WasCreated(userWalletId: UserWalletId)
-
     suspend fun createWallet(userWalletId: UserWalletId)
 
     fun nftEnabledStatus(userWalletId: UserWalletId): Flow<Boolean>
@@ -66,10 +64,13 @@ interface WalletsRepository {
     suspend fun dismissUpgradeWalletNotification(userWalletId: UserWalletId)
 
     @Throws
-    suspend fun setWalletName(walletId: String, walletName: String)
+    suspend fun setWalletName(walletId: UserWalletId, walletName: String)
 
     @Throws
-    suspend fun getWalletInfo(walletId: String): UserWalletRemoteInfo
+    suspend fun upgradeWallet(walletId: UserWalletId)
+
+    @Throws
+    suspend fun getWalletInfo(walletId: UserWalletId): UserWalletRemoteInfo
 
     @Throws
     suspend fun getWalletsInfo(applicationId: String, updateCache: Boolean = true): List<UserWalletRemoteInfo>

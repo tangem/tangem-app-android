@@ -1,19 +1,15 @@
 package com.tangem.data.pay.di
 
-import com.tangem.data.pay.DefaultTangemPayTopUpDataFactory
-import com.tangem.data.pay.repository.DefaultTangemPayCardDetailsRepository
-import com.tangem.data.pay.repository.DefaultKycRepository
-import com.tangem.data.pay.repository.DefaultTangemPayTxHistoryRepository
-import com.tangem.data.pay.repository.DefaultOnboardingRepository
+import com.tangem.data.pay.DefaultTangemPayCryptoCurrencyFactory
+import com.tangem.data.pay.repository.*
 import com.tangem.data.pay.usecase.DefaultGetTangemPayCurrencyStatusUseCase
-import com.tangem.domain.pay.TangemPayTopUpDataFactory
-import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
-import com.tangem.domain.pay.repository.KycRepository
-import com.tangem.domain.pay.repository.OnboardingRepository
+import com.tangem.data.pay.usecase.DefaultTangemPayWithdrawUseCase
+import com.tangem.domain.pay.TangemPayCryptoCurrencyFactory
+import com.tangem.domain.pay.repository.*
 import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
-import com.tangem.domain.pay.usecase.TangemPayIssueOrderUseCase
 import com.tangem.domain.pay.usecase.TangemPayMainScreenCustomerInfoUseCase
 import com.tangem.domain.tangempay.GetTangemPayCurrencyStatusUseCase
+import com.tangem.domain.tangempay.TangemPayWithdrawUseCase
 import com.tangem.domain.tangempay.repository.TangemPayTxHistoryRepository
 import dagger.Binds
 import dagger.Module
@@ -44,7 +40,17 @@ internal interface TangemPayDataModule {
 
     @Binds
     @Singleton
-    fun bindDataForReceiveFactory(factory: DefaultTangemPayTopUpDataFactory): TangemPayTopUpDataFactory
+    fun bindTangemPaySwapRepository(repository: DefaultTangemPaySwapRepository): TangemPaySwapRepository
+
+    @Binds
+    @Singleton
+    fun bindCustomerOrderRepository(repository: DefaultCustomerOrderRepository): CustomerOrderRepository
+
+    @Binds
+    @Singleton
+    fun bindTangemPayCryptoCurrencyFactory(
+        factory: DefaultTangemPayCryptoCurrencyFactory,
+    ): TangemPayCryptoCurrencyFactory
 
     @Binds
     @Singleton
@@ -52,13 +58,23 @@ internal interface TangemPayDataModule {
         impl: DefaultGetTangemPayCurrencyStatusUseCase,
     ): GetTangemPayCurrencyStatusUseCase
 
+    @Binds
+    @Singleton
+    fun bindTangemPayWithdrawUseCase(impl: DefaultTangemPayWithdrawUseCase): TangemPayWithdrawUseCase
+
     companion object {
         @Provides
         @Singleton
         fun provideTangemPayMainScreenCustomerInfoUseCase(
             repository: OnboardingRepository,
+            customerOrderRepository: CustomerOrderRepository,
+            tangemPayOnboardingRepository: OnboardingRepository,
         ): TangemPayMainScreenCustomerInfoUseCase {
-            return TangemPayMainScreenCustomerInfoUseCase(repository = repository)
+            return TangemPayMainScreenCustomerInfoUseCase(
+                repository = repository,
+                customerOrderRepository = customerOrderRepository,
+                tangemPayOnboardingRepository = tangemPayOnboardingRepository,
+            )
         }
 
         @Provides
@@ -67,12 +83,6 @@ internal interface TangemPayDataModule {
             repository: OnboardingRepository,
         ): ProduceTangemPayInitialDataUseCase {
             return ProduceTangemPayInitialDataUseCase(repository = repository)
-        }
-
-        @Provides
-        @Singleton
-        fun provideTangemPayIssueOrderUseCase(repository: OnboardingRepository): TangemPayIssueOrderUseCase {
-            return TangemPayIssueOrderUseCase(repository = repository)
         }
     }
 }

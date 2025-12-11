@@ -15,6 +15,7 @@ import com.tangem.domain.feedback.models.FeedbackEmailType
 internal class EmailSubjectResolver(private val resources: Resources) {
 
     /** Resolve email message body by [type] */
+    @Suppress("CyclomaticComplexMethod")
     fun resolve(type: FeedbackEmailType): String {
         return when (type) {
             is FeedbackEmailType.DirectUserRequest -> {
@@ -39,9 +40,12 @@ internal class EmailSubjectResolver(private val resources: Resources) {
             FeedbackEmailType.CardAttestationFailed -> "Card attestation failed"
             is FeedbackEmailType.Visa.Activation -> "[Visa] [Activation] {auto-filled subject}"
             is FeedbackEmailType.Visa.DirectUserRequest -> "[Visa] {auto-filled subject}"
+            is FeedbackEmailType.Visa.FailedIssueCard -> "[Visa] {auto-filled subject}"
             is FeedbackEmailType.Visa.Dispute,
             is FeedbackEmailType.Visa.DisputeV2,
             -> "[Visa] [DISPUTE] {auto-filled subject}"
+            is FeedbackEmailType.Visa.Withdrawal -> "[Visa] [WITHDRAWAL] {auto-filled subject}"
+            is FeedbackEmailType.Visa.FeatureIsBeta -> "[VISA] [FEEDBACK]"
         }
     }
 }

@@ -7,10 +7,10 @@ import arrow.core.right
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.staking.model.stakekit.StakingError
-import com.tangem.domain.staking.single.SingleYieldBalanceFetcher
+import com.tangem.domain.staking.single.SingleStakingBalanceFetcher
 
 class FetchStakingYieldBalanceUseCase(
-    private val singleYieldBalanceFetcher: SingleYieldBalanceFetcher,
+    private val singleStakingBalanceFetcher: SingleStakingBalanceFetcher,
     private val stakingIdFactory: StakingIdFactory,
 ) {
 
@@ -32,8 +32,8 @@ class FetchStakingYieldBalanceUseCase(
                 return@either
             }
 
-        singleYieldBalanceFetcher(
-            params = SingleYieldBalanceFetcher.Params(userWalletId = userWalletId, stakingId = stakingId),
+        singleStakingBalanceFetcher(
+            params = SingleStakingBalanceFetcher.Params(userWalletId = userWalletId, stakingId = stakingId),
         )
             .mapLeft { StakingError.DomainError("$it") }
             .bind()

@@ -21,7 +21,7 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.currency.yieldSupplyKey
-import com.tangem.domain.models.staking.YieldBalance
+import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.staking.model.isStakingSupported
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.staking.utils.getTotalWithRewardsStakingBalance
@@ -48,11 +48,14 @@ class TokenItemStateConverter(
     private val iconStateProvider: (CryptoCurrencyStatus) -> CurrencyIconState = {
         CryptoCurrencyToIconStateConverter().convert(it)
     },
-    private val onApyLabelClick: ((CryptoCurrencyStatus) -> Unit)? = null,
-    private val titleStateProvider: (CryptoCurrencyStatus) -> TokenItemState.TitleState = {
-        createTitleState(it, yieldModuleApyMap, stakingApyMap, {
-            onApyLabelClick?.invoke(it)
-        })
+    private val onApyLabelClick: ((CryptoCurrencyStatus, ApySource, String) -> Unit)? = null,
+    private val titleStateProvider: (CryptoCurrencyStatus) -> TokenItemState.TitleState = { currencyStatus ->
+        createTitleState(
+            currencyStatus = currencyStatus,
+            yieldModuleApyMap = yieldModuleApyMap,
+            stakingApyMap = stakingApyMap,
+            onApyLabelClick = onApyLabelClick,
+        )
     },
     private val subtitleStateProvider: (CryptoCurrencyStatus) -> TokenItemState.SubtitleState? = {
         createSubtitleState(it, appCurrency)
@@ -105,9 +108,6 @@ class TokenItemStateConverter(
             onItemLongClick = onItemLongClick?.let { onItemLongClick ->
                 { onItemLongClick(it, this) }
             },
-            onApyLabelClick = onApyLabelClick?.let { onApyLabelClick ->
-                { onApyLabelClick(this) }
-            },
         )
     }
 
@@ -159,14 +159,14 @@ class TokenItemStateConverter(
             return totalAmount.format { crypto(currency) }
         }
 
-        private fun CryptoCurrencyStatus.getStakedBalance() = (value.yieldBalance as? YieldBalance.Data)
+        private fun CryptoCurrencyStatus.getStakedBalance() = (value.stakingBalance as? StakingBalance.Data)
             ?.getTotalWithRewardsStakingBalance(blockchainId = currency.network.rawId).orZero()
 
         private fun createTitleState(
             currencyStatus: CryptoCurrencyStatus,
             yieldModuleApyMap: Map<String, String>,
             stakingApyMap: Map<String, List<Yield.Validator>>,
-            onApyLabelClick: () -> Unit,
+            onApyLabelClick: ((CryptoCurrencyStatus, ApySource, String) -> Unit)?,
         ): TokenItemState.TitleState {
             return when (val value = currencyStatus.value) {
                 is CryptoCurrencyStatus.Loading,
@@ -181,7 +181,7 @@ class TokenItemStateConverter(
                 is CryptoCurrencyStatus.NoQuote,
                 is CryptoCurrencyStatus.NoAccount,
                 -> {
-                    val (earnApyText, isActive) = resolveEarnApy(
+                    val apyInfo = resolveEarnApy(
                         cryptoCurrencyStatus = currencyStatus,
                         yieldModuleApyMap = yieldModuleApyMap,
                         stakingApyMap = stakingApyMap,
@@ -189,9 +189,13 @@ class TokenItemStateConverter(
                     TokenItemState.TitleState.Content(
                         text = stringReference(currencyStatus.currency.name),
                         hasPending = value.hasCurrentNetworkTransactions,
-                        earnApy = earnApyText,
-                        earnApyIsActive = isActive,
-                        onApyLabelClick = onApyLabelClick,
+                        earnApy = apyInfo?.text,
+                        earnApyIsActive = apyInfo?.isActive == true,
+                        onApyLabelClick = if (apyInfo?.apy != null && onApyLabelClick != null) {
+                            { onApyLabelClick.invoke(currencyStatus, apyInfo.source, apyInfo.apy) }
+                        } else {
+                            null
+                        },
                     )
                 }
             }
@@ -202,7 +206,7 @@ class TokenItemStateConverter(
             cryptoCurrencyStatus: CryptoCurrencyStatus,
             yieldModuleApyMap: Map<String, String>,
             stakingApyMap: Map<String, List<Yield.Validator>>,
-        ): Pair<TextReference?, Boolean> {
+        ): EarnApyInfo? {
             val token = cryptoCurrencyStatus.currency as? CryptoCurrency.Token
             if (token != null && yieldModuleApyMap.isNotEmpty()) {
                 val yieldSupplyApy = yieldModuleApyMap.entries.firstOrNull {
@@ -213,10 +217,15 @@ class TokenItemStateConverter(
                 }?.value
                 if (yieldSupplyApy != null) {
                     val isActive = cryptoCurrencyStatus.value.yieldSupplyStatus?.isActive ?: false
-                    return resourceReference(
-                        R.string.yield_module_earn_badge,
-                        wrappedList(yieldSupplyApy),
-                    ) to isActive
+                    return EarnApyInfo(
+                        text = resourceReference(
+                            R.string.yield_module_earn_badge,
+                            wrappedList(yieldSupplyApy),
+                        ),
+                        isActive = isActive,
+                        apy = yieldSupplyApy,
+                        source = ApySource.YIELD_SUPPLY,
+                    )
                 }
             }
 
@@ -233,14 +242,20 @@ class TokenItemStateConverter(
                     -> R.string.yield_module_earn_badge
                 }
                 if (stakingInfo.rate != null) {
-                    return resourceReference(
-                        rewardTypeRes,
-                        wrappedList(stakingInfo.rate.format { percent(withPercentSign = false) }),
-                    ) to stakingInfo.isActive
+                    val apyString = stakingInfo.rate.format { percent(withPercentSign = false) }
+                    return EarnApyInfo(
+                        text = resourceReference(
+                            rewardTypeRes,
+                            wrappedList(apyString),
+                        ),
+                        isActive = stakingInfo.isActive,
+                        apy = apyString,
+                        source = ApySource.STAKING,
+                    )
                 }
             }
 
-            return null to false
+            return null
         }
 
         private fun findStakingRate(
@@ -251,12 +266,13 @@ class TokenItemStateConverter(
             val validators = stakingApyMap[stakingKey]
                 ?: return StakingLocalInfo(rate = null, isActive = false, rewardType = null)
 
-            val yieldBalance = currencyStatus.value.yieldBalance
-            val hasStakedBalance = yieldBalance is YieldBalance.Data
+            val stakingBalance = currencyStatus.value.stakingBalance as? StakingBalance.Data
+            val stakeKitBalance = stakingBalance as? StakingBalance.Data.StakeKit
 
-            val rateInfo: Pair<BigDecimal, Yield.RewardType?>? = if (hasStakedBalance) {
+            val rateInfo: Pair<BigDecimal, Yield.RewardType?>? = if (stakeKitBalance != null) {
+                // StakeKit-specific: try to find rate from validator address
                 val validatorsByAddress = validators.associateBy { it.address }
-                yieldBalance.balance.items
+                stakeKitBalance.balance.items
                     .mapNotNull { it.validatorAddress }
                     .firstNotNullOfOrNull { address ->
                         val validator = validatorsByAddress[address]
@@ -271,6 +287,8 @@ class TokenItemStateConverter(
                         }
                         .maxByOrNull { it.first }
             } else {
+                // P2P or no balance: use preferred validators
+                // TODO p2p
                 validators
                     .filter { it.preferred }
                     .mapNotNull { validator ->
@@ -283,7 +301,7 @@ class TokenItemStateConverter(
 
             return StakingLocalInfo(
                 rate = rateInfo?.first,
-                isActive = hasStakedBalance,
+                isActive = stakingBalance != null,
                 rewardType = rateInfo?.second,
             )
         }
@@ -412,4 +430,16 @@ class TokenItemStateConverter(
         val isActive: Boolean,
         val rewardType: Yield.RewardType?,
     )
+
+    private data class EarnApyInfo(
+        val text: TextReference?,
+        val isActive: Boolean,
+        val apy: String?,
+        val source: ApySource,
+    )
+
+    enum class ApySource {
+        STAKING,
+        YIELD_SUPPLY,
+    }
 }

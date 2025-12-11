@@ -6,7 +6,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -23,8 +22,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.dp
-import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.SpacerWMax
+import com.tangem.core.ui.components.buttons.common.TangemButton
+import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
 import com.tangem.core.ui.components.buttons.common.TangemButtonSize
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
@@ -34,11 +34,13 @@ import com.tangem.domain.visa.model.TangemPayCardFrozenState
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.entity.TangemPayCardDetailsUM
 
+private val CustomCardBlockColor = Color(0x1F828282)
+
 @Suppress("MagicNumber")
 @Composable
 internal fun TangemPayCard(state: TangemPayCardDetailsUM, modifier: Modifier = Modifier) {
     val isCardFlipped = !state.isHidden
-    val animDuration = 900
+    val animDuration = 600
     val zAxisDistance = 50f // distance between camera and Card
 
     // rotate Y-axis with animation
@@ -60,7 +62,6 @@ internal fun TangemPayCard(state: TangemPayCardDetailsUM, modifier: Modifier = M
                 cameraDistance = zAxisDistance
             }
             .clip(RoundedCornerShape(16.dp))
-            .clickable(onClick = state.onClick)
             .background(Color(red = 18, green = 21, blue = 31))
             .border(
                 width = 1.dp,
@@ -88,7 +89,7 @@ internal fun TangemPayCard(state: TangemPayCardDetailsUM, modifier: Modifier = M
             TangemPayCardDetailsHiddenBlock(
                 cardFrozenState = state.cardFrozenState,
                 isLoading = state.isLoading,
-                shortCardNumber = state.number,
+                shortCardNumber = state.numberShort,
                 onShowDetails = state.onClick,
             )
         }
@@ -144,11 +145,11 @@ private fun TangemPayCardDetailsHiddenBlock(
                 TangemPayCardFrozenState.Unfrozen -> Unit
             }
             SpacerWMax()
-            PrimaryButton(
+            TangemPayCardDetailsCustomButton(
+                modifier = Modifier.padding(bottom = 8.dp),
                 text = stringResourceSafe(id = R.string.tangempay_card_details_show_details),
-                showProgress = isLoading,
                 onClick = onShowDetails,
-                size = TangemButtonSize.Small,
+                showProgress = isLoading,
             )
         }
     }
@@ -168,23 +169,21 @@ private fun TangemPayCardDetailsShownBlock(
 ) {
     Column(
         modifier = modifier
-            .padding(8.dp)
             .fillMaxSize(),
     ) {
         CardDetailsTextContainer(
             modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f),
+                .padding(top = 16.dp, bottom = 12.dp, start = 16.dp, end = 16.dp)
+                .fillMaxWidth(),
             title = stringResourceSafe(R.string.tangempay_card_details_card_number),
             text = cardNumber,
             onCopy = onCopyCardNumber,
         )
-        HorizontalDivider(thickness = 1.dp, color = Color(0x1F828282)) // Hardcode since background is an image
         Row(
             modifier = Modifier
+                .padding(horizontal = 16.dp)
                 .fillMaxWidth()
-                .weight(1f)
-                .padding(top = 8.dp),
+                .weight(1f),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             CardDetailsTextContainer(
@@ -195,7 +194,6 @@ private fun TangemPayCardDetailsShownBlock(
                 text = expiry,
                 onCopy = onCopyExpiry,
             )
-            VerticalDivider(thickness = 1.dp, color = Color(0x1F828282)) // Hardcode since background is an image
             CardDetailsTextContainer(
                 modifier = Modifier
                     .weight(1f)
@@ -207,10 +205,11 @@ private fun TangemPayCardDetailsShownBlock(
         }
         Row {
             SpacerWMax()
-            PrimaryButton(
+            TangemPayCardDetailsCustomButton(
+                modifier = Modifier.padding(end = 16.dp, bottom = 8.dp),
                 text = stringResourceSafe(id = R.string.tangempay_card_details_hide_details),
                 onClick = onHideDetails,
-                size = TangemButtonSize.Small,
+                showProgress = false,
             )
         }
     }
@@ -219,11 +218,16 @@ private fun TangemPayCardDetailsShownBlock(
 @Composable
 private fun CardDetailsTextContainer(title: String, text: String, onCopy: () -> Unit, modifier: Modifier = Modifier) {
     Row(
-        modifier = modifier.padding(12.dp),
+        modifier = modifier
+            .background(
+                color = CustomCardBlockColor,
+                shape = RoundedCornerShape(11.dp),
+            )
+            .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(
                 text = title,
                 style = TangemTheme.typography.subtitle2,
@@ -236,9 +240,7 @@ private fun CardDetailsTextContainer(title: String, text: String, onCopy: () -> 
             )
         }
         IconButton(
-            modifier = Modifier
-                .padding(end = TangemTheme.dimens.spacing12)
-                .size(TangemTheme.dimens.size32),
+            modifier = Modifier.size(TangemTheme.dimens.size32),
             onClick = onCopy,
         ) {
             Icon(
@@ -249,6 +251,31 @@ private fun CardDetailsTextContainer(title: String, text: String, onCopy: () -> 
             )
         }
     }
+}
+
+@Composable
+private fun TangemPayCardDetailsCustomButton(
+    text: String,
+    onClick: () -> Unit,
+    showProgress: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    TangemButton(
+        modifier = modifier,
+        text = text,
+        icon = TangemButtonIconPosition.None,
+        onClick = onClick,
+        colors = ButtonColors(
+            containerColor = CustomCardBlockColor,
+            contentColor = TangemTheme.colors.text.constantWhite,
+            disabledContainerColor = TangemTheme.colors.text.constantWhite,
+            disabledContentColor = TangemTheme.colors.text.constantWhite,
+        ),
+        enabled = true,
+        showProgress = showProgress,
+        size = TangemButtonSize.Small,
+        textStyle = TangemTheme.typography.subtitle1,
+    )
 }
 
 @Preview(widthDp = 400, heightDp = 700, showBackground = true)
@@ -277,7 +304,8 @@ private class TangemPayCardDetailsUMProvider : CollectionPreviewParameterProvide
         TangemPayCardDetailsUM(
             isLoading = false,
             onClick = {},
-            number = "*1245",
+            number = "1234 5678 9012 3456",
+            numberShort = "*3456",
             expiry = "",
             cvv = "",
             buttonText = resourceReference(R.string.tangempay_card_details_show_details),
@@ -288,7 +316,8 @@ private class TangemPayCardDetailsUMProvider : CollectionPreviewParameterProvide
         TangemPayCardDetailsUM(
             isLoading = false,
             onClick = {},
-            number = "*1245",
+            number = "1234 5678 9012 3456",
+            numberShort = "*3456",
             expiry = "",
             cvv = "",
             buttonText = resourceReference(R.string.tangempay_card_details_show_details),
@@ -299,7 +328,8 @@ private class TangemPayCardDetailsUMProvider : CollectionPreviewParameterProvide
         TangemPayCardDetailsUM(
             isLoading = false,
             onClick = {},
-            number = "*1245",
+            number = "1234 5678 9012 3456",
+            numberShort = "*3456",
             expiry = "",
             cvv = "",
             buttonText = resourceReference(R.string.tangempay_card_details_show_details),
@@ -314,6 +344,7 @@ private class TangemPayCardDetailsUMProvider : CollectionPreviewParameterProvide
             onCopy = {},
             isHidden = false,
             number = "1234 5678 9012 3456",
+            numberShort = "*3456",
             expiry = "12/34",
             cvv = "123",
             cardFrozenState = TangemPayCardFrozenState.Unfrozen,

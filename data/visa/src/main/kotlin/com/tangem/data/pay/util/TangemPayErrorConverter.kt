@@ -12,6 +12,9 @@ class TangemPayErrorConverter(moshi: Moshi) : Converter<Throwable, VisaApiError>
 
     override fun convert(value: Throwable): VisaApiError {
         return if (value is ApiResponseError.HttpException) {
+            if (value.code == ApiResponseError.HttpException.Code.NOT_FOUND) return VisaApiError.NotPaeraCustomer
+            if (value.code == ApiResponseError.HttpException.Code.UNAUTHORIZED) return VisaApiError.RefreshTokenExpired
+
             val errorBody = value.errorBody ?: return VisaApiError.UnknownWithoutCode
             return runCatching {
                 visaErrorAdapter.fromJson(errorBody)?.error?.code ?: value.code.numericCode

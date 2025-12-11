@@ -10,8 +10,8 @@ import com.tangem.features.tangempay.entity.TangemPayDetailsErrorType
 
 internal object TangemPayMessagesFactory {
 
-    fun createErrorMessage(type: TangemPayDetailsErrorType): BottomSheetMessageV2 {
-        return when (type) {
+    fun createErrorMessage(errorType: TangemPayDetailsErrorType): BottomSheetMessageV2 {
+        return when (errorType) {
             TangemPayDetailsErrorType.Receive -> bottomSheetMessage {
                 infoBlock {
                     icon(R.drawable.img_attention_20) {
@@ -21,6 +21,33 @@ internal object TangemPayMessagesFactory {
                     body = TextReference.Res(R.string.tangempay_card_details_receive_error_description)
                 }
                 primaryButton {
+                    text = resourceReference(R.string.common_got_it)
+                    onClick { closeBs() }
+                }
+            }
+            TangemPayDetailsErrorType.Withdraw -> bottomSheetMessage {
+                infoBlock {
+                    icon(R.drawable.img_attention_20) {
+                        backgroundType = MessageBottomSheetUMV2.Icon.BackgroundType.Attention
+                    }
+                    title = TextReference.Res(R.string.tangempay_card_details_withdraw_error_title)
+                    body = TextReference.Res(R.string.tangempay_card_details_receive_error_description)
+                }
+                primaryButton {
+                    text = resourceReference(R.string.common_got_it)
+                    onClick { closeBs() }
+                }
+            }
+            TangemPayDetailsErrorType.WithdrawInProgress -> bottomSheetMessage {
+                infoBlock {
+                    icon(R.drawable.ic_clock_24) {
+                        type = MessageBottomSheetUMV2.Icon.Type.Informative
+                        backgroundType = MessageBottomSheetUMV2.Icon.BackgroundType.Informative
+                    }
+                    title = TextReference.Res(R.string.tangempay_card_details_withdraw_in_progress_title)
+                    body = TextReference.Res(R.string.tangempay_card_details_withdraw_in_progress_description)
+                }
+                secondaryButton {
                     text = resourceReference(R.string.common_got_it)
                     onClick { closeBs() }
                 }

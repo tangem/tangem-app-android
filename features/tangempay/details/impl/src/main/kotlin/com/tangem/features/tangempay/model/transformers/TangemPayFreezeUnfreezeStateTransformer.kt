@@ -6,6 +6,7 @@ import com.tangem.core.ui.extensions.themedColor
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.visa.model.TangemPayCardFrozenState
 import com.tangem.features.tangempay.details.impl.R
+import com.tangem.features.tangempay.entity.TangemPayDetailsBalanceBlockState
 import com.tangem.features.tangempay.entity.TangemPayDetailsTopBarMenuItem
 import com.tangem.features.tangempay.entity.TangemPayDetailsTopBarMenuItemType.FreezeCard
 import com.tangem.features.tangempay.entity.TangemPayDetailsTopBarMenuItemType.UnfreezeCard
@@ -27,16 +28,24 @@ internal class TangemPayFreezeUnfreezeStateTransformer(
     }
 
     override fun transform(prevState: TangemPayDetailsUM): TangemPayDetailsUM {
-        val dropdownMenuItems = when (cardFrozenState) {
-            TangemPayCardFrozenState.Frozen,
-            TangemPayCardFrozenState.Unfrozen,
-            -> createUpdatedMenuItems(prevState.topBarConfig.items)
-            TangemPayCardFrozenState.Pending -> prevState.topBarConfig.items
+        val filteredItems = prevState.topBarConfig.items?.filterNot {
+            it.type == FreezeCard || it.type == UnfreezeCard
         }
-
+        val dropdownMenuItems = createUpdatedMenuItems(filteredItems?.toPersistentList())
+        val balanceBlockState = if (prevState.balanceBlockState is TangemPayDetailsBalanceBlockState.Content) {
+            val actionButtons = prevState.balanceBlockState.actionButtons.map {
+                it.copy(isEnabled = cardFrozenState == TangemPayCardFrozenState.Unfrozen)
+            }
+            prevState.balanceBlockState.copy(
+                actionButtons = actionButtons.toPersistentList(),
+            )
+        } else {
+            prevState.balanceBlockState
+        }
         return prevState.copy(
             topBarConfig = prevState.topBarConfig.copy(items = dropdownMenuItems),
             cardFrozenState = converter.convert(cardFrozenState),
+            balanceBlockState = balanceBlockState,
         )
     }
 
@@ -44,12 +53,11 @@ internal class TangemPayFreezeUnfreezeStateTransformer(
         items: ImmutableList<TangemPayDetailsTopBarMenuItem>?,
     ): ImmutableList<TangemPayDetailsTopBarMenuItem>? {
         return items
-            ?.filterNot { it.type == UnfreezeCard || it.type == FreezeCard }
-            ?.plus(createMenuItemToAdd())
+            ?.plus(createMenuItemToAdd(cardFrozenState))
             ?.toPersistentList()
     }
 
-    private fun createMenuItemToAdd(): TangemPayDetailsTopBarMenuItem {
+    private fun createMenuItemToAdd(cardFrozenState: TangemPayCardFrozenState): TangemPayDetailsTopBarMenuItem {
         return TangemPayDetailsTopBarMenuItem(
             type = if (isCardFrozen) UnfreezeCard else FreezeCard,
             dropdownItem = TangemDropdownMenuItem(
@@ -62,6 +70,7 @@ internal class TangemPayFreezeUnfreezeStateTransformer(
                 ),
                 textColor = themedColor { TangemTheme.colors.text.primary1 },
                 onClick = if (isCardFrozen) onUnfreezeClick else onFreezeClick,
+                isEnabled = cardFrozenState != TangemPayCardFrozenState.Pending,
             ),
         )
     }

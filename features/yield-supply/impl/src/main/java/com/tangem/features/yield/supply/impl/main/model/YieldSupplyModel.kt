@@ -1,8 +1,7 @@
 package com.tangem.features.yield.supply.impl.main.model
 
+import com.tangem.common.routing.AppRoute
 import android.os.SystemClock
-import com.arkivanov.decompose.router.slot.SlotNavigation
-import com.arkivanov.decompose.router.slot.activate
 import com.tangem.common.routing.AppRoute.YieldSupplyPromo
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -13,7 +12,6 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.combinedReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -26,11 +24,7 @@ import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.yield.supply.YieldSupplyRepository
 import com.tangem.domain.yield.supply.models.YieldSupplyEnterStatus
-import com.tangem.domain.yield.supply.usecase.YieldSupplyActivateUseCase
-import com.tangem.domain.yield.supply.usecase.YieldSupplyDeactivateUseCase
-import com.tangem.domain.yield.supply.usecase.YieldSupplyGetTokenStatusUseCase
-import com.tangem.domain.yield.supply.usecase.YieldSupplyIsAvailableUseCase
-import com.tangem.domain.yield.supply.usecase.YieldSupplyMinAmountUseCase
+import com.tangem.domain.yield.supply.usecase.*
 import com.tangem.features.yield.supply.api.YieldSupplyComponent
 import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
 import com.tangem.features.yield.supply.impl.R
@@ -48,6 +42,7 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 import kotlin.properties.Delegates
+import java.util.concurrent.atomic.AtomicBoolean
 
 @Suppress("LongParameterList", "LargeClass")
 @ModelScoped
@@ -60,7 +55,6 @@ internal class YieldSupplyModel @Inject constructor(
     private val getSingleCryptoCurrencyStatusUseCase: GetSingleCryptoCurrencyStatusUseCase,
     private val singleNetworkStatusFetcher: SingleNetworkStatusFetcher,
     @DelayedWork private val coroutineScope: CoroutineScope,
-    private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val yieldSupplyGetTokenStatusUseCase: YieldSupplyGetTokenStatusUseCase,
     private val yieldSupplyIsAvailableUseCase: YieldSupplyIsAvailableUseCase,
     private val yieldSupplyActivateUseCase: YieldSupplyActivateUseCase,
@@ -74,45 +68,16 @@ internal class YieldSupplyModel @Inject constructor(
     val uiState: StateFlow<YieldSupplyUM>
         field = MutableStateFlow<YieldSupplyUM>(YieldSupplyUM.Initial)
 
-    val bottomSheetNavigation: SlotNavigation<Unit> = SlotNavigation()
-
-    private val handleNavigation = params.handleNavigation
     private val cryptoCurrency = params.cryptoCurrency
     var userWallet: UserWallet by Delegates.notNull()
 
-    val cryptoCurrencyStatusFlow: StateFlow<CryptoCurrencyStatus>
-        field = MutableStateFlow(
-            CryptoCurrencyStatus(
-                currency = params.cryptoCurrency,
-                value = CryptoCurrencyStatus.Loading,
-            ),
-        )
-
-    val isBalanceHiddenFlow: StateFlow<Boolean>
-        field = MutableStateFlow(false)
-
-    private var lastYieldSupplyStatus: YieldSupplyStatus? = null
     private val fetchCurrencyJobHolder = JobHolder()
 
     private var lastStatusCheckTimestamp = 0L
+    private val isFirstCryptoCurrencyStatusEmission = AtomicBoolean(true)
 
     init {
         checkIfYieldSupplyIsAvailable()
-
-        val protocolStatus = yieldSupplyRepository.getTokenProtocolStatus(
-            userWalletId = params.userWalletId,
-            cryptoCurrency = cryptoCurrency,
-        )
-        if (handleNavigation != null && protocolStatus == null) {
-            if (handleNavigation) {
-                modelScope.launch {
-                    delay(timeMillis = 1000)
-                    bottomSheetNavigation.activate(Unit)
-                }
-            } else {
-                onStartEarningClick()
-            }
-        }
     }
 
     private fun checkIfYieldSupplyIsAvailable() {
@@ -120,7 +85,6 @@ internal class YieldSupplyModel @Inject constructor(
             val isAvailable = yieldSupplyIsAvailableUseCase(params.userWalletId, params.cryptoCurrency)
             if (isAvailable) {
                 subscribeOnCurrencyStatusUpdates()
-                subscribeOnBalanceHidden()
             }
         }
     }
@@ -138,7 +102,9 @@ internal class YieldSupplyModel @Inject constructor(
                     ).onEach { maybeCryptoCurrency ->
                         maybeCryptoCurrency.fold(
                             ifRight = { cryptoCurrencyStatus ->
-                                cryptoCurrencyStatusFlow.update { cryptoCurrencyStatus }
+                                if (isFirstCryptoCurrencyStatusEmission.compareAndSet(true, false)) {
+                                    sendInfoAboutProtocolStatus(cryptoCurrencyStatus)
+                                }
                                 onCryptoCurrencyStatusUpdated(cryptoCurrencyStatus)
                             },
                             ifLeft = {
@@ -174,8 +140,7 @@ internal class YieldSupplyModel @Inject constructor(
     }
 
     override fun onStartEarningClick() {
-        val yieldSupplyUM = uiState.value
-        val apy = when (yieldSupplyUM) {
+        val apy = when (val yieldSupplyUM = uiState.value) {
             is YieldSupplyUM.Available -> yieldSupplyUM.apy
             is YieldSupplyUM.Content -> yieldSupplyUM.apy
             else -> ""
@@ -190,18 +155,18 @@ internal class YieldSupplyModel @Inject constructor(
     }
 
     override fun onActiveClick() {
-        bottomSheetNavigation.activate(Unit)
-    }
-
-    private fun subscribeOnBalanceHidden() {
-        getBalanceHidingSettingsUseCase()
-            .conflate()
-            .distinctUntilChanged()
-            .onEach {
-                isBalanceHiddenFlow.value = it.isBalanceHidden
-            }
-            .flowOn(dispatchers.default)
-            .launchIn(modelScope)
+        val apy = when (val yieldSupplyUM = uiState.value) {
+            is YieldSupplyUM.Available -> yieldSupplyUM.apy
+            is YieldSupplyUM.Content -> yieldSupplyUM.apy
+            else -> ""
+        }
+        appRouter.push(
+            AppRoute.YieldSupplyActive(
+                userWalletId = params.userWalletId,
+                cryptoCurrency = params.cryptoCurrency,
+                apy = apy,
+            ),
+        )
     }
 
     @Suppress("MaximumLineLength")
@@ -277,7 +242,6 @@ internal class YieldSupplyModel @Inject constructor(
                     cryptoCurrency = cryptoCurrency,
                     yieldSupplyEnterStatus = null,
                 )
-                sendInfoAboutProtocolStatus(cryptoCurrencyStatus)
                 if (yieldSupplyStatus?.isActive == true) {
                     loadActiveState(
                         cryptoCurrencyStatus = cryptoCurrencyStatus,
@@ -306,8 +270,7 @@ internal class YieldSupplyModel @Inject constructor(
     private fun loadActiveState(cryptoCurrencyStatus: CryptoCurrencyStatus, yieldSupplyStatus: YieldSupplyStatus) {
         val cryptoCurrencyToken = cryptoCurrency as? CryptoCurrency.Token ?: return
         val showWarningIcon = !yieldSupplyStatus.isAllowedToSpend
-        val state = uiState.value
-        val isShowInfoIconPrevState = when (state) {
+        val isShowInfoIconPrevState = when (val state = uiState.value) {
             is YieldSupplyUM.Content -> state.showInfoIcon
             else -> false
         }
@@ -368,7 +331,8 @@ internal class YieldSupplyModel @Inject constructor(
     private fun computeAndApplyShowInfoIcon(cryptoCurrencyStatus: CryptoCurrencyStatus) {
         modelScope.launch(dispatchers.default) {
             val isShowInfoIcon = if (cryptoCurrencyStatus.hasNotSuppliedAmount()) {
-                val minAmount = yieldSupplyMinAmountUseCase(userWallet, cryptoCurrencyStatus).getOrNull()
+                val minAmount = yieldSupplyMinAmountUseCase(userWalletId = userWallet.walletId, cryptoCurrencyStatus)
+                    .getOrNull()
                 if (minAmount != null) {
                     cryptoCurrencyStatus.shouldShowNotSuppliedInfoIcon(minAmount)
                 } else {
@@ -387,7 +351,6 @@ internal class YieldSupplyModel @Inject constructor(
     }
 
     private fun sendInfoAboutProtocolStatus(cryptoCurrencyStatus: CryptoCurrencyStatus) {
-        if (lastYieldSupplyStatus == cryptoCurrencyStatus.value.yieldSupplyStatus) return
         val token = cryptoCurrency as? CryptoCurrency.Token ?: return
         val address = cryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value ?: return
         modelScope.launch(dispatchers.default) {
@@ -396,13 +359,9 @@ internal class YieldSupplyModel @Inject constructor(
                     userWalletId = userWallet.walletId,
                     cryptoCurrency = token,
                     address = address,
-                ).onRight {
-                    lastYieldSupplyStatus = cryptoCurrencyStatus.value.yieldSupplyStatus
-                }
+                )
             } else {
-                yieldSupplyDeactivateUseCase(token, address).onRight {
-                    lastYieldSupplyStatus = cryptoCurrencyStatus.value.yieldSupplyStatus
-                }
+                yieldSupplyDeactivateUseCase(token, address)
             }
         }
     }

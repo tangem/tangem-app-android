@@ -36,7 +36,6 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -55,10 +54,11 @@ internal class SelectProviderModel @Inject constructor(
     paramsContainer: ParamsContainer,
 ) : Model() {
 
-    val state: StateFlow<SelectPaymentAndProviderUM> get() = _state.asStateFlow()
+    val state: StateFlow<SelectPaymentAndProviderUM>
+        field = MutableStateFlow(getInitialState())
+
     val bottomSheetNavigation: SlotNavigation<ProviderListBottomSheetConfig> = SlotNavigation()
     private val params: SelectProviderComponent.Params = paramsContainer.require()
-    private val _state = MutableStateFlow(getInitialState())
 
     private var userCountry: UserCountry? = null
 
@@ -66,7 +66,7 @@ internal class SelectProviderModel @Inject constructor(
         userCountry = getUserCountryUseCase.invokeSync().getOrNull()
             ?: UserCountry.Other(Locale.getDefault().country)
 
-        analyticsEventHandler.send(OnrampAnalyticsEvent.ProvidersScreenOpened)
+        analyticsEventHandler.send(OnrampAnalyticsEvent.ProvidersScreenOpened())
         getPaymentMethods()
         getProviders(params.selectedPaymentMethod)
     }
@@ -84,18 +84,18 @@ internal class SelectProviderModel @Inject constructor(
             val filteredEmptyMethods = methods.mapNotNull { method ->
                 val providers = getOnrampProviderWithQuoteUseCase(method).getOrNull()
                 if (!providers.isNullOrEmpty()) {
-                    val allErrorProviders = providers.all {
+                    val isAllErrorProviders = providers.all {
                         it is OnrampProviderWithQuote.Unavailable.NotSupportedPaymentMethod
                     }
                     PaymentProviderUM(
                         paymentMethod = method,
                         providers = providers.toProvidersListItems(),
-                    ).takeIf { !allErrorProviders }
+                    ).takeIf { !isAllErrorProviders }
                 } else {
                     null
                 }
             }
-            _state.value = state.value.copy(
+            state.value = state.value.copy(
                 paymentMethods = filteredEmptyMethods.toPersistentList(),
                 isPaymentMethodClickEnabled = filteredEmptyMethods.isNotEmpty(),
             )
@@ -106,7 +106,7 @@ internal class SelectProviderModel @Inject constructor(
         modelScope.launch {
             getOnrampProviderWithQuoteUseCase.invoke(paymentMethod)
                 .onRight { quotes ->
-                    _state.update { state ->
+                    state.update { state ->
                         state.copy(
                             selectedPaymentMethod = state.selectedPaymentMethod.copy(
                                 providers = quotes.toProvidersListItems(),
@@ -140,7 +140,7 @@ internal class SelectProviderModel @Inject constructor(
     }
 
     private fun openPaymentMethods() {
-        analyticsEventHandler.send(OnrampAnalyticsEvent.PaymentMethodsScreenOpened)
+        analyticsEventHandler.send(OnrampAnalyticsEvent.PaymentMethodsScreenOpened())
         bottomSheetNavigation.activate(
             ProviderListBottomSheetConfig.PaymentMethods(
                 selectedMethodId = state.value.selectedPaymentMethod.paymentMethod.id,
@@ -163,7 +163,7 @@ internal class SelectProviderModel @Inject constructor(
         val firstProvider = methodContainer.providers.firstOrNull()
         analyticsEventHandler.send(OnrampAnalyticsEvent.OnPaymentMethodChosen(paymentMethod = paymentMethod.name))
         modelScope.launch {
-            _state.update { state ->
+            state.update { state ->
                 state.copy(
                     selectedPaymentMethod = state.selectedPaymentMethod.copy(
                         paymentMethod = paymentMethod,
@@ -279,7 +279,7 @@ internal class SelectProviderModel @Inject constructor(
                 tokenSymbol = params.cryptoCurrency.symbol,
             ),
         )
-        _state.update {
+        state.update {
             it.copy(selectedProviderId = result.provider.id)
         }
         params.onProviderClick(result, isBestRate)
@@ -303,15 +303,15 @@ internal class SelectProviderModel @Inject constructor(
      * 1. Highest rate
      * 2. Smallest difference between entered amount and required min/max amount
      */
-    private fun List<OnrampProviderWithQuote>.sortByRate() = sortedByDescending {
-        when (it) {
-            is OnrampProviderWithQuote.Data -> it.toAmount.value
+    private fun List<OnrampProviderWithQuote>.sortByRate() = sortedByDescending { quote ->
+        when (quote) {
+            is OnrampProviderWithQuote.Data -> quote.toAmount.value
 
             // negative difference to sort both when data and unavailable is present
             is OnrampProviderWithQuote.Unavailable.AmountError -> {
-                when (val error = it.quoteError.error) {
-                    is OnrampError.AmountError.TooSmallError -> it.quoteError.fromAmount.value - error.requiredAmount
-                    is OnrampError.AmountError.TooBigError -> error.requiredAmount - it.quoteError.fromAmount.value
+                when (val error = quote.quoteError.error) {
+                    is OnrampError.AmountError.TooSmallError -> quote.quoteError.fromAmount.value - error.requiredAmount
+                    is OnrampError.AmountError.TooBigError -> error.requiredAmount - quote.quoteError.fromAmount.value
                     else -> null
                 }
             }

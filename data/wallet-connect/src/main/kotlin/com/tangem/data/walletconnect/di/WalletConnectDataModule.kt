@@ -128,7 +128,10 @@ internal object WalletConnectDataModule {
 
     @Provides
     @Singleton
-    fun defaultWcRequestService(diHelperBox: DiHelperBox, respondService: WcRespondService): DefaultWcRequestService {
+    fun defaultWcRequestService(
+        diHelperBox: DiHelperBox,
+        respondService: DefaultWcRespondService,
+    ): DefaultWcRequestService {
         return DefaultWcRequestService(
             requestConverters = diHelperBox.handlers,
             respondService = respondService,
@@ -137,7 +140,11 @@ internal object WalletConnectDataModule {
 
     @Provides
     @Singleton
-    fun wcRespondService(): WcRespondService = DefaultWcRespondService()
+    fun wcDefaultWcRespondService(): DefaultWcRespondService = DefaultWcRespondService()
+
+    @Provides
+    @Singleton
+    fun wcRespondService(default: DefaultWcRespondService): WcRespondService = default
 
     @Provides
     @Singleton

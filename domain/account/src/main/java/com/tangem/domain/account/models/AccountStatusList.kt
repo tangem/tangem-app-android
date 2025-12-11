@@ -1,5 +1,6 @@
 package com.tangem.domain.account.models
 
+import arrow.core.Either
 import com.tangem.domain.models.TokensGroupType
 import com.tangem.domain.models.TokensSortType
 import com.tangem.domain.models.TotalFiatBalance
@@ -25,6 +26,7 @@ data class AccountStatusList(
     val userWalletId: UserWalletId,
     val accountStatuses: List<AccountStatus>,
     val totalAccounts: Int,
+    val totalArchivedAccounts: Int,
     val totalFiatBalance: TotalFiatBalance,
     val sortType: TokensSortType,
     val groupType: TokensGroupType,
@@ -40,4 +42,15 @@ data class AccountStatusList(
     fun flattenCurrencies(): List<CryptoCurrencyStatus> = accountStatuses
         .map { accountStatus -> accountStatus.flattenCurrencies() }
         .flatten()
+
+    fun toAccountList(): Either<AccountList.Error, AccountList> {
+        return AccountList(
+            userWalletId = userWalletId,
+            accounts = accountStatuses.map(AccountStatus::account),
+            totalAccounts = totalAccounts,
+            totalArchivedAccounts = totalArchivedAccounts,
+            sortType = sortType,
+            groupType = groupType,
+        )
+    }
 }
