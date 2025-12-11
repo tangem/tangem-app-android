@@ -10,6 +10,7 @@ import io.github.kakaocup.compose.node.element.ComposeScreen.Companion.onCompose
 import io.github.kakaocup.compose.node.element.KNode
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 import com.tangem.features.send.v2.impl.R as SendR
+import androidx.compose.ui.test.hasText as withText
 
 class SendPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
     ComposeScreen<SendPageObject>(semanticsProvider = semanticsProvider) {
@@ -35,6 +36,11 @@ class SendPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
 
     val amountInputTextField: KNode = child {
         hasTestTag(SendScreenTestTags.INPUT_TEXT_FIELD)
+        useUnmergedTree = true
+    }
+
+    val amountErrorText: KNode = child {
+        hasTestTag(SendScreenTestTags.AMOUNT_ERROR_TEXT)
         useUnmergedTree = true
     }
 
@@ -69,8 +75,8 @@ class SendPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
     }
 
     val nextButton: KNode = child {
-        hasTestTag(BaseButtonTestTags.TEXT)
-        hasText(getResourceString(SendR.string.common_next))
+        hasTestTag(BaseButtonTestTags.BUTTON)
+        hasAnyDescendant(withText(getResourceString(SendR.string.common_next)))
         useUnmergedTree = true
     }
 
