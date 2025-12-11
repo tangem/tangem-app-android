@@ -12,10 +12,15 @@ import com.tangem.datasource.api.ethpool.models.request.P2PEthPoolDepositRequest
 import com.tangem.datasource.api.ethpool.models.request.P2PEthPoolUnstakeRequest
 import com.tangem.datasource.api.ethpool.models.request.P2PEthPoolWithdrawRequest
 import com.tangem.datasource.local.token.P2PEthPoolVaultsStore
+import com.tangem.domain.staking.model.StakingAvailability
+import com.tangem.domain.staking.model.StakingOption
 import com.tangem.domain.staking.model.ethpool.*
 import com.tangem.domain.staking.repositories.P2PEthPoolRepository
 import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 
@@ -192,7 +197,12 @@ internal class DefaultP2PEthPoolRepository(
         period: Int?,
     ): Either<StakingError, List<P2PEthPoolReward>> = either {
         withContext(dispatchers.io) {
-            val response = p2pApi.getRewards(network.value, delegatorAddress, vaultAddress, period)
+            val response = p2pApi.getRewards(
+                network = network.value,
+                delegatorAddress = delegatorAddress,
+                vaultAddress = vaultAddress,
+                period = period,
+            )
             when (response) {
                 is ApiResponse.Success -> {
                     val data = response.data
@@ -205,5 +215,34 @@ internal class DefaultP2PEthPoolRepository(
                 is ApiResponse.Error -> raise(StakingError.UnknownError(response.cause))
             }
         }
+    }
+
+    override fun getStakingAvailability(): Flow<StakingAvailability> {
+        return getVaultsFlow()
+            .distinctUntilChanged()
+            .map { vaults ->
+                if (vaults.isEmpty()) {
+                    return@map StakingAvailability.TemporaryUnavailable
+                } else {
+                    StakingAvailability.Available(StakingOption.P2P(vaults))
+                }
+            }
+    }
+
+    override suspend fun getStakingAvailabilitySync(): StakingAvailability {
+        val vaults = getVaultsSync()
+        return if (vaults.isEmpty()) {
+            StakingAvailability.TemporaryUnavailable
+        } else {
+            StakingAvailability.Available(StakingOption.P2P(vaults))
+        }
+    }
+
+    private suspend fun getVaultsSync(): List<P2PEthPoolVault> {
+        return p2pEthPoolVaultsStore.getSync()
+    }
+
+    private fun getVaultsFlow(): Flow<List<P2PEthPoolVault>> {
+        return p2pEthPoolVaultsStore.get()
     }
 }

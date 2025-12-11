@@ -69,7 +69,7 @@ internal class OnrampAmountStateFactory(
         return currentState.copy(
             amountBlockState = amountState.copy(secondaryFieldModel = OnrampAmountSecondaryFieldUM.Loading),
             providerBlockState = OnrampProviderBlockUM.Loading,
-            buyButtonConfig = currentState.buyButtonConfig.copy(enabled = false),
+            buyButtonConfig = currentState.buyButtonConfig.copy(isEnabled = false),
             errorNotification = null,
         )
     }
@@ -87,7 +87,7 @@ internal class OnrampAmountStateFactory(
                 secondaryFieldModel = quote.toSecondaryFieldUiModel(amountState) ?: amountState.secondaryFieldModel,
             ),
             buyButtonConfig = currentState.buyButtonConfig.copy(
-                enabled = quote is OnrampQuote.Data,
+                isEnabled = quote is OnrampQuote.Data,
                 onClick = {
                     if (quote is OnrampQuote.Data) {
                         onrampIntents.onBuyClick(
@@ -166,7 +166,7 @@ internal class OnrampAmountStateFactory(
                 onLinkClick = onrampIntents::onLinkClick,
             ),
             buyButtonConfig = currentState.buyButtonConfig.copy(
-                enabled = providerResult is SelectProviderResult.ProviderWithQuote,
+                isEnabled = providerResult is SelectProviderResult.ProviderWithQuote,
                 onClick = {
                     if (providerResult is SelectProviderResult.ProviderWithQuote) {
                         onrampIntents.onBuyClick(
@@ -240,11 +240,11 @@ internal class OnrampAmountStateFactory(
 
         val errorTextRes = when (error) {
             is OnrampError.AmountError.TooBigError -> {
-                analyticsEventHandler.send(OnrampAnalyticsEvent.MaxAmountError)
+                analyticsEventHandler.send(OnrampAnalyticsEvent.MaxAmountError())
                 R.string.onramp_max_amount_restriction
             }
             is OnrampError.AmountError.TooSmallError -> {
-                analyticsEventHandler.send(OnrampAnalyticsEvent.MinAmountError)
+                analyticsEventHandler.send(OnrampAnalyticsEvent.MinAmountError())
                 R.string.onramp_min_amount_restriction
             }
         }

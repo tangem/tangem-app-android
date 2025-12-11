@@ -2,15 +2,19 @@ package com.tangem.features.createwalletselection
 
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.Basic
+import com.tangem.core.analytics.models.event.OnboardingAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.components.label.entity.LabelStyle
 import com.tangem.core.ui.components.label.entity.LabelUM
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.domain.card.analytics.IntroductionProcess
-import com.tangem.domain.card.analytics.Shop
+import com.tangem.core.ui.message.dialog.Dialogs.hotWalletCreationNotSupportedDialog
+import com.tangem.domain.hotwallet.IsHotWalletCreationSupported
 import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
 import com.tangem.features.createwalletselection.entity.CreateWalletSelectionUM
 import com.tangem.features.createwalletselection.impl.R
@@ -31,6 +35,8 @@ internal class CreateWalletSelectionModel @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val generateBuyTangemCardLinkUseCase: GenerateBuyTangemCardLinkUseCase,
     private val urlOpener: UrlOpener,
+    private val isHotWalletCreationSupported: IsHotWalletCreationSupported,
+    private val uiMessageSender: UiMessageSender,
 ) : Model() {
 
     internal val uiState: StateFlow<CreateWalletSelectionUM>
@@ -75,22 +81,37 @@ internal class CreateWalletSelectionModel @Inject constructor(
                     ),
                 ),
                 onBuyClick = ::onBuyClick,
+                shouldShowAlreadyHaveWallet = true,
             ),
         )
 
     init {
-        showAlreadyHaveWalletWithDelay()
+        // temporarily disabled by timer and enabled by default
+        // showAlreadyHaveWalletWithDelay()
     }
 
+    @Suppress("UnusedPrivateMember")
     private fun showAlreadyHaveWalletWithDelay() {
         modelScope.launch {
             delay(SHOW_ALREADY_HAVE_WALLET_DELAY)
-            uiState.update { it.copy(showAlreadyHaveWallet = true) }
+            uiState.update { it.copy(shouldShowAlreadyHaveWallet = true) }
         }
     }
 
     private fun onMobileWalletClick() {
-        router.push(AppRoute.CreateMobileWallet)
+        analyticsEventHandler.send(
+            event = OnboardingAnalyticsEvent.Onboarding.ButtonMobileWallet(
+                source = AnalyticsParam.ScreensSources.AddNewWallet.value,
+            ),
+        )
+        if (!isHotWalletCreationSupported()) {
+            uiMessageSender.send(
+                hotWalletCreationNotSupportedDialog(isHotWalletCreationSupported.getLeastVersionName()),
+            )
+            return
+        }
+
+        router.push(AppRoute.CreateMobileWallet(AnalyticsParam.ScreensSources.AddNewWallet.value))
     }
 
     private fun onHardwareWalletClick() {
@@ -98,8 +119,7 @@ internal class CreateWalletSelectionModel @Inject constructor(
     }
 
     private fun onBuyClick() {
-        analyticsEventHandler.send(IntroductionProcess.ButtonBuyCards)
-        analyticsEventHandler.send(Shop.ScreenOpened)
+        analyticsEventHandler.send(Basic.ButtonBuy(source = AnalyticsParam.ScreensSources.AddNewWallet))
         modelScope.launch {
             generateBuyTangemCardLinkUseCase.invoke().let { urlOpener.openUrl(it) }
         }

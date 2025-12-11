@@ -41,6 +41,7 @@ import com.tangem.pagination.fetcher.LimitOffsetBatchFetcher
 import com.tangem.pagination.fetcher.LimitOffsetBatchFetcher.Request
 import com.tangem.pagination.toBatchFlow
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.runSuspendCatching
 
 @Suppress("LongParameterList", "LargeClass")
 internal class DefaultManageTokensRepository(
@@ -163,6 +164,7 @@ internal class DefaultManageTokensRepository(
         )
     }
 
+    @Suppress("CyclomaticComplexMethod")
     private suspend fun createManagedCryptoCurrencyList(
         params: ManageTokensListConfig.Account,
         userWallet: UserWallet?,
@@ -172,11 +174,15 @@ internal class DefaultManageTokensRepository(
         updatedCoinsResponse: CoinsResponse,
     ): List<ManagedCryptoCurrency> {
         val response = params.userWalletId?.let { userWalletId ->
-            if (loadUserTokensFromRemote && userWallet != null) {
-                runCatching { walletAccountsFetcher.fetch(userWalletId = userWallet.walletId) }.getOrNull()
+            val shouldFetch = loadUserTokensFromRemote && userWallet != null
+
+            val fetchedResponse = if (shouldFetch) {
+                runSuspendCatching { walletAccountsFetcher.fetch(userWalletId = userWallet.walletId) }.getOrNull()
             } else {
-                walletAccountsFetcher.getSaved(userWalletId)
+                null
             }
+
+            fetchedResponse ?: walletAccountsFetcher.getSaved(userWalletId)
         }
 
         val accountId = when {
@@ -209,19 +215,22 @@ internal class DefaultManageTokensRepository(
             userWallet != null &&
             query == null
 
+        val accountIndex = accountDTO?.derivationIndex?.let(DerivationIndex::invoke)?.getOrNull()
+            ?: return emptyList()
+
         val items = if (isCreateWithCustom) {
             managedCryptoCurrencyFactory.createWithCustomTokens(
                 coinsResponse = updatedCoinsResponse,
                 tokensResponse = tokensResponse,
                 userWallet = userWallet,
-                accountIndex = accountDTO?.derivationIndex?.let(DerivationIndex::invoke)?.getOrNull(),
+                accountIndex = accountIndex,
             )
         } else {
             managedCryptoCurrencyFactory.create(
                 coinsResponse = updatedCoinsResponse,
                 tokensResponse = tokensResponse,
                 userWallet = userWallet,
-                accountIndex = accountDTO?.derivationIndex?.let(DerivationIndex::invoke)?.getOrNull(),
+                accountIndex = accountIndex,
             )
         }
 
@@ -257,14 +266,14 @@ internal class DefaultManageTokensRepository(
                 coinsResponse = updatedCoinsResponse,
                 tokensResponse = tokensResponse,
                 userWallet = userWallet,
-                accountIndex = null,
+                accountIndex = DerivationIndex.Main,
             )
         } else {
             managedCryptoCurrencyFactory.create(
                 coinsResponse = updatedCoinsResponse,
                 tokensResponse = tokensResponse,
                 userWallet = userWallet,
-                accountIndex = null,
+                accountIndex = DerivationIndex.Main,
             )
         }
     }
@@ -302,6 +311,13 @@ internal class DefaultManageTokensRepository(
             )
         }
 
+        val accountIndex = accountDTO?.derivationIndex?.let(DerivationIndex::invoke)?.getOrNull()
+            ?: return BatchFetchResult.Success(
+                data = emptyList(),
+                empty = true,
+                last = true,
+            )
+
         val items = managedCryptoCurrencyFactory.createTestnetWithCustomTokens(
             testnetTokensConfig = if (!searchText.isNullOrBlank()) {
                 testnetTokensConfig.copy(
@@ -315,7 +331,7 @@ internal class DefaultManageTokensRepository(
             },
             tokensResponse = tokensResponse,
             userWallet = userWallet,
-            accountIndex = accountDTO?.derivationIndex?.let(DerivationIndex::invoke)?.getOrNull(),
+            accountIndex = accountIndex,
         )
 
         return BatchFetchResult.Success(
@@ -345,7 +361,7 @@ internal class DefaultManageTokensRepository(
             },
             tokensResponse = getSavedUserTokensResponseSync(userWallet.walletId),
             userWallet = userWallet,
-            accountIndex = null,
+            accountIndex = DerivationIndex.Main,
         )
 
         return BatchFetchResult.Success(
@@ -387,10 +403,10 @@ internal class DefaultManageTokensRepository(
         )
         val newTokensList = storedTokens.tokens + addedTokens - removedTokens.toSet()
 
-        return newTokensList.any {
-            it.contractAddress != null &&
-                it.networkId == network.backendId &&
-                it.derivationPath == network.derivationPath.value
+        return newTokensList.any { token ->
+            token.contractAddress != null &&
+                token.networkId == network.backendId &&
+                token.derivationPath == network.derivationPath.value
         }
     }
 

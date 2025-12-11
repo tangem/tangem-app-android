@@ -1,7 +1,11 @@
 package com.tangem.features.details.model
 
 import com.tangem.common.routing.AppRoute
+import com.tangem.common.ui.userwallet.handle
 import com.tangem.common.ui.userwallet.state.UserWalletItemUM
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.event.SignIn
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.navigation.Router
@@ -38,6 +42,7 @@ internal class UserWalletListModel @Inject constructor(
     private val userWalletSaver: UserWalletSaver,
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
     private val unlockWalletUseCase: UnlockWalletUseCase,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
 
     private val isWalletSavingInProgress: MutableStateFlow<Boolean> = MutableStateFlow(value = false)
@@ -86,6 +91,7 @@ internal class UserWalletListModel @Inject constructor(
 
     private fun onAddNewWalletClick() {
         if (hotWalletFeatureToggles.isHotWalletEnabled) {
+            analyticsEventHandler.send(SignIn.ButtonAddWallet(AnalyticsParam.ScreensSources.SignIn))
             router.push(AppRoute.CreateWalletSelection)
         } else {
             withProgress(isWalletSavingInProgress) {
@@ -98,11 +104,15 @@ internal class UserWalletListModel @Inject constructor(
         if (hotWalletFeatureToggles.isHotWalletEnabled) {
             modelScope.launch {
                 unlockWalletUseCase(userWalletId)
-                    .onRight {
-                        router.push(AppRoute.WalletSettings(userWalletId))
-                    }
+                    .onRight { router.push(AppRoute.WalletSettings(userWalletId)) }
                     .onLeft { error ->
                         Timber.e("Failed to unlock wallet $userWalletId: $error")
+                        error.handle(
+                            onUserCancelled = {},
+                            onAlreadyUnlocked = { router.push(AppRoute.WalletSettings(userWalletId)) },
+                            analyticsEventHandler = analyticsEventHandler,
+                            showMessage = messageSender::send,
+                        )
                     }
             }
         } else {

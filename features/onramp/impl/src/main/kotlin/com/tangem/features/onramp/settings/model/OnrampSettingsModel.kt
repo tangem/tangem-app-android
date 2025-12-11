@@ -29,14 +29,15 @@ internal class OnrampSettingsModel @Inject constructor(
     paramsContainer: ParamsContainer,
 ) : Model() {
 
-    val state: StateFlow<OnrampSettingsUM> get() = _state
+    private val params: OnrampSettingsComponent.Params = paramsContainer.require()
+
+    val state: StateFlow<OnrampSettingsUM>
+        field = MutableStateFlow(getInitialState())
+
     val bottomSheetNavigation: SlotNavigation<OnrampSettingsConfig> = SlotNavigation()
 
-    private val params: OnrampSettingsComponent.Params = paramsContainer.require()
-    private val _state: MutableStateFlow<OnrampSettingsUM> = MutableStateFlow(getInitialState())
-
     init {
-        analyticsEventHandler.send(OnrampAnalyticsEvent.SettingsOpened)
+        analyticsEventHandler.send(OnrampAnalyticsEvent.SettingsOpened())
         subscribeOnUpdateState()
     }
 
@@ -52,7 +53,7 @@ internal class OnrampSettingsModel @Inject constructor(
                 analyticsEventHandler.sendOnrampErrorEvent(it, params.cryptoCurrency.symbol)
             },
             ifRight = { country ->
-                _state.update { state ->
+                state.update { state ->
                     state.copy(
                         items = listOf(
                             OnrampSettingsItemUM.Residence(

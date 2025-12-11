@@ -1520,6 +1520,12 @@
   <string name="yield_module_token_details_earn_notification_earning_on_your_balance_title">Режим дохідності</string>
   <string name="yield_module_token_details_earn_notification_processing">Відправка ваших коштів</string>
   <string name="yield_module_token_details_earn_notification_title">Режим прибутковості</string>
+  <string name="yield_module_transaction_enter">Режим прибутковості увімкнено</string>
+  <string name="yield_module_transaction_enter_subtitle">%1$s постачено в Aave</string>
+  <string name="yield_module_transaction_exit">Режим прибутковості вимкнено</string>
+  <string name="yield_module_transaction_exit_subtitle">%1$s виведено з Aave</string>
+  <string name="yield_module_transaction_topup">Постачити в Aave</string>
+  <string name="yield_module_transaction_topup_subtitle">%1$s постачено в Aave</string>
   <string name="yield_module_transfer_mode_automatic">Автоматично</string>
   <string name="yield_module_unable_to_cover_fee_description">Внесіть трохи %1$s %2$s, щоб покрити комісію мережі за транзакції.</string>
   <string name="yield_module_unable_to_cover_fee_title">Неможливо покрити комісію в %s</string>

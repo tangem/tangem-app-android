@@ -5,19 +5,19 @@ import arrow.core.raise.catch
 import arrow.core.raise.either
 import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.domain.staking.repositories.StakingErrorResolver
-import com.tangem.domain.staking.repositories.StakingRepository
+import com.tangem.domain.staking.repositories.StakeKitRepository
 
 /**
  * Use case for getting enabled tokens
  */
 class FetchStakingTokensUseCase(
-    private val stakingRepository: StakingRepository,
+    private val stakeKitRepository: StakeKitRepository,
     private val stakingErrorResolver: StakingErrorResolver,
 ) {
     suspend operator fun invoke(): Either<StakingError, Unit> {
         return either {
             catch(
-                block = { stakingRepository.fetchYields() },
+                block = { stakeKitRepository.fetchYields() },
                 catch = { stakingErrorResolver.resolve(it) },
             )
         }

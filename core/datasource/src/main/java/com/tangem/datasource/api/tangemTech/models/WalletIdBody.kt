@@ -9,14 +9,4 @@ data class WalletIdBody(
     @Json(name = "name") val name: String,
     @Json(name = "type") val walletType: WalletType? = null,
     @Json(name = "cards") val cards: List<CardInfoBody>? = null,
-) {
-
-    @JsonClass(generateAdapter = false)
-    enum class WalletType {
-        @Json(name = "card")
-        COLD,
-
-        @Json(name = "mobile")
-        HOT,
-    }
-}
+)

@@ -3,7 +3,6 @@ package com.tangem.data.account.fetcher
 import com.tangem.data.account.converter.createGetWalletAccountsResponse
 import com.tangem.data.account.converter.createWalletAccountDTO
 import com.tangem.data.account.utils.DefaultWalletAccountsResponseFactory
-import com.tangem.data.common.cache.etag.ETagsStore
 import com.tangem.data.common.currency.UserTokensSaver
 import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.common.response.ApiResponseError
@@ -12,6 +11,7 @@ import com.tangem.datasource.api.common.response.ETAG_HEADER
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.api.tangemTech.models.WalletIdBody
+import com.tangem.datasource.api.tangemTech.models.WalletType
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
 import com.tangem.datasource.api.tangemTech.models.account.toUserTokensResponse
@@ -37,7 +37,6 @@ class FetchWalletAccountsErrorHandlerTest {
     private val userTokensSaver: UserTokensSaver = mockk(relaxUnitFun = true)
     private val userTokensResponseStore: UserTokensResponseStore = mockk(relaxUnitFun = true)
     private val defaultWalletAccountsResponseFactory: DefaultWalletAccountsResponseFactory = mockk()
-    private val eTagsStore: ETagsStore = mockk(relaxUnitFun = true)
 
     private val handler = FetchWalletAccountsErrorHandler(
         tangemTechApi = tangemTechApi,
@@ -45,17 +44,18 @@ class FetchWalletAccountsErrorHandlerTest {
         userTokensSaver = userTokensSaver,
         userTokensResponseStore = userTokensResponseStore,
         defaultWalletAccountsResponseFactory = defaultWalletAccountsResponseFactory,
-        eTagsStore = eTagsStore,
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
 
-    private val pushWalletAccounts: suspend (UserWalletId, List<WalletAccountDTO>) -> GetWalletAccountsResponse =
+    private val pushWalletAccounts: suspend (List<WalletAccountDTO>, String) -> GetWalletAccountsResponse =
         mockk(relaxed = true)
     private val storeWalletAccounts: suspend (UserWalletId, GetWalletAccountsResponse) -> Unit = mockk(relaxed = true)
 
     @BeforeEach
     fun setupEach() {
         clearMocks(
+            tangemTechApi,
+            userWalletsStore,
             userTokensSaver,
             userTokensResponseStore,
             defaultWalletAccountsResponseFactory,
@@ -124,11 +124,11 @@ class FetchWalletAccountsErrorHandlerTest {
                 WalletIdBody(
                     walletId = userWalletId.stringValue,
                     name = walletName,
-                    walletType = WalletIdBody.WalletType.COLD,
+                    walletType = WalletType.COLD,
                 ),
             )
         } returns apiResponse
-        coEvery { pushWalletAccounts(userWalletId, listOf(accountDTO)) } returns savedAccountsResponse
+        coEvery { pushWalletAccounts(listOf(accountDTO), eTagValue) } returns savedAccountsResponse
 
         // Act
         handler.handle(
@@ -146,11 +146,10 @@ class FetchWalletAccountsErrorHandlerTest {
                 WalletIdBody(
                     walletId = userWalletId.stringValue,
                     name = walletName,
-                    walletType = WalletIdBody.WalletType.COLD,
+                    walletType = WalletType.COLD,
                 ),
             )
-            eTagsStore.store(userWalletId, ETagsStore.Key.WalletAccounts, eTagValue)
-            pushWalletAccounts(userWalletId, listOf(accountDTO))
+            pushWalletAccounts(listOf(accountDTO), eTagValue)
             storeWalletAccounts(userWalletId, savedAccountsResponse)
         }
 
@@ -181,6 +180,7 @@ class FetchWalletAccountsErrorHandlerTest {
                 group = UserTokensResponse.GroupType.NONE,
                 sort = UserTokensResponse.SortType.MANUAL,
                 totalAccounts = 1,
+                totalArchivedAccounts = 0,
             ),
             accounts = listOf(accountDTO),
             unassignedTokens = emptyList(),

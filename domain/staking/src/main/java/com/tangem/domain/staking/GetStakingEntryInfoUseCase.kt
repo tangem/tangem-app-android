@@ -6,13 +6,13 @@ import com.tangem.domain.staking.model.StakingEntryInfo
 import com.tangem.domain.staking.model.StakingOption
 import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.domain.staking.repositories.StakingErrorResolver
-import com.tangem.domain.staking.repositories.StakingRepository
+import com.tangem.domain.staking.repositories.StakeKitRepository
 
 /**
  * Use case for getting entry info about staking on token screen.
  */
 class GetStakingEntryInfoUseCase(
-    private val stakingRepository: StakingRepository,
+    private val stakeKitRepository: StakeKitRepository,
     private val stakingErrorResolver: StakingErrorResolver,
 ) {
 
@@ -25,7 +25,7 @@ class GetStakingEntryInfoUseCase(
             .catch {
                 when (stakingOption) {
                     is StakingOption.StakeKit -> {
-                        stakingRepository.getEntryInfo(
+                        stakeKitRepository.getEntryInfo(
                             cryptoCurrencyId = cryptoCurrencyId,
                             symbol = symbol,
                         )

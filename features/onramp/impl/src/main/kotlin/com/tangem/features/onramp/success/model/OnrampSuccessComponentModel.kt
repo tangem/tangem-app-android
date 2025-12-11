@@ -12,6 +12,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.domain.models.currency.CryptoCurrency
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.onramp.GetOnrampStatusUseCase
 import com.tangem.domain.onramp.GetOnrampTransactionUseCase
 import com.tangem.domain.onramp.OnrampRemoveTransactionUseCase
@@ -21,7 +22,6 @@ import com.tangem.domain.onramp.model.cache.OnrampTransaction
 import com.tangem.domain.onramp.model.error.OnrampError
 import com.tangem.domain.tokens.GetCryptoCurrencyUseCase
 import com.tangem.domain.tokens.model.analytics.TokenOnrampAnalyticsEvent
-import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.onramp.component.OnrampSuccessComponent
 import com.tangem.features.onramp.impl.R
@@ -32,6 +32,7 @@ import com.tangem.features.onramp.utils.sendOnrampErrorEvent
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.PeriodicTask
 import com.tangem.utils.coroutines.SingleTaskScheduler
+import com.tangem.utils.coroutines.runSuspendCatching
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -66,14 +67,14 @@ internal class OnrampSuccessComponentModel @Inject constructor(
 
     private var userWallet: UserWallet by Delegates.notNull()
     private var cryptoCurrency: CryptoCurrency by Delegates.notNull()
-    private var expressTxStatusTaskScheduler = SingleTaskScheduler<Unit>()
+    private val expressTxStatusTaskScheduler = SingleTaskScheduler<Unit>()
 
     init {
         loadData()
     }
 
     override fun goToProviderClick(providerLink: String) {
-        analyticsEventHandler.send(TokenOnrampAnalyticsEvent.GoToProvider)
+        analyticsEventHandler.send(TokenOnrampAnalyticsEvent.GoToProvider())
         urlOpener.openUrl(providerLink)
     }
 
@@ -119,7 +120,7 @@ internal class OnrampSuccessComponentModel @Inject constructor(
                 isDelayFirst = false,
                 delay = EXPRESS_STATUS_UPDATE_DELAY,
                 task = {
-                    runCatching {
+                    runSuspendCatching {
                         loadTransactionStatus(transaction)
                     }
                 },

@@ -23,6 +23,11 @@ internal class ManualBackupCompletedModel @Inject constructor(
     internal val uiState: StateFlow<ManualBackupCompletedUM>
         field = MutableStateFlow(
             ManualBackupCompletedUM(
+                continueButtonText = if (params.isLastScreen) {
+                    resourceReference(R.string.common_finish)
+                } else {
+                    resourceReference(R.string.common_continue)
+                },
                 onContinueClick = {
                     if (params.isUpgradeFlow) {
                         params.callbacks.onUpgradeClick(params.userWalletId)

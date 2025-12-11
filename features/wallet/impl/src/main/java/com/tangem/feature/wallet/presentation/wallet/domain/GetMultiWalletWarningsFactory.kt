@@ -7,7 +7,6 @@ import com.tangem.common.ui.notifications.NotificationId
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.ui.components.notifications.NotificationConfig.ButtonsState
-import com.tangem.core.ui.components.notifications.NotificationConfig.IconTint
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.account.status.producer.SingleAccountStatusListProducer
 import com.tangem.domain.card.CardTypesResolver
@@ -45,6 +44,7 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import timber.log.Timber
 import javax.inject.Inject
@@ -95,13 +95,18 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
         return combine(
             // todo account just use it, after delete accountsFeatureToggles
             // accountStatusListFlow,
-            isReadyToShowRateAppUseCase(),
-            isNeedToBackupUseCase(userWallet.walletId),
-            seedPhraseNotificationUseCase(userWalletId = userWallet.walletId),
-            shouldShowPromoWalletUseCase(userWalletId = userWallet.walletId, promoId = PromoId.VisaPresale),
-            shouldShowPromoWalletUseCase(userWalletId = userWallet.walletId, promoId = PromoId.Sepa),
-            notificationsRepository.getShouldShowNotification(NotificationId.EnablePushesReminderNotification.key),
-            getAccessCodeSkippedUseCase(userWallet.walletId),
+            isReadyToShowRateAppUseCase().distinctUntilChanged(),
+            isNeedToBackupUseCase(userWallet.walletId).distinctUntilChanged(),
+            seedPhraseNotificationUseCase(userWalletId = userWallet.walletId).distinctUntilChanged(),
+            shouldShowPromoWalletUseCase(userWalletId = userWallet.walletId, promoId = PromoId.VisaPresale)
+                .distinctUntilChanged(),
+            shouldShowPromoWalletUseCase(userWalletId = userWallet.walletId, promoId = PromoId.Sepa)
+                .distinctUntilChanged(),
+            shouldShowPromoWalletUseCase(userWalletId = userWallet.walletId, promoId = PromoId.BlackFriday)
+                .distinctUntilChanged(),
+            notificationsRepository.getShouldShowNotification(NotificationId.EnablePushesReminderNotification.key)
+                .distinctUntilChanged(),
+            getAccessCodeSkippedUseCase(userWallet.walletId).distinctUntilChanged(),
         ) { array -> array }
             .combine(tokenListFlow()) { array, any: Any -> arrayOf(any).plus(elements = array) }
             .map { array ->
@@ -113,15 +118,23 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
                 val seedPhraseIssueStatus = array[3] as SeedPhraseNotificationsStatus
                 val shouldShowVisaPromo = array[4] as Boolean
                 val shouldShowSepaBanner = array[5] as Boolean
-                val shouldShowEnablePushesReminderNotification = array[6] as Boolean
-                val accessCodeSkipped = array[7] as Boolean
+                val shouldShowBlackFridayPromo = array[6] as Boolean
+                val shouldShowEnablePushesReminderNotification = array[7] as Boolean
+                val shouldAccessCodeSkipped = array[8] as Boolean
 
                 buildList {
                     addUsedOutdatedDataNotification(totalFiatBalance)
 
                     addCriticalNotifications(userWallet, seedPhraseIssueStatus, clickIntents)
 
-                    addFinishWalletActivationNotification(userWallet, totalFiatBalance, clickIntents, accessCodeSkipped)
+                    addFinishWalletActivationNotification(
+                        userWallet = userWallet,
+                        totalFiatBalance = totalFiatBalance,
+                        clickIntents = clickIntents,
+                        shouldAccessCodeSkipped = shouldAccessCodeSkipped,
+                    )
+
+                    addBlackFridayPromoNotification(clickIntents, shouldShowBlackFridayPromo)
 
                     addVisaPresalePromoNotification(clickIntents, shouldShowVisaPromo)
 
@@ -296,6 +309,19 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
         )
     }
 
+    private fun MutableList<WalletNotification>.addBlackFridayPromoNotification(
+        clickIntents: WalletClickIntents,
+        shouldShowPromo: Boolean,
+    ) {
+        addIf(
+            element = WalletNotification.BlackFridayPromo(
+                onCloseClick = { clickIntents.onClosePromoClick(promoId = PromoId.BlackFriday) },
+                onClick = { clickIntents.onPromoClick(promoId = PromoId.BlackFriday) },
+            ),
+            condition = shouldShowPromo,
+        )
+    }
+
     private suspend fun MutableList<WalletNotification>.addSepaPromoNotification(
         userWallet: UserWallet,
         flattenCurrencies: Lce<TokenListError, List<CryptoCurrencyStatus>>,
@@ -423,13 +449,13 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
         userWallet: UserWallet,
         totalFiatBalance: Lce<TokenListError, TotalFiatBalance>,
         clickIntents: WalletClickIntents,
-        accessCodeSkipped: Boolean,
+        shouldAccessCodeSkipped: Boolean,
     ) {
         if (userWallet !is UserWallet.Hot) return
 
         val isBackupExists = userWallet.backedUp
         val isAccessCodeRequired = userWallet.hotWalletId.authType == HotWalletId.AuthType.NoPassword &&
-            !accessCodeSkipped
+            !shouldAccessCodeSkipped
         val shouldShowFinishActivation = !isBackupExists || isAccessCodeRequired
 
         val type = totalFiatBalance.fold(
@@ -438,24 +464,20 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
             ifError = { WalletActivationBannerType.Attention },
         )
 
-        val tint = when (type) {
-            WalletActivationBannerType.Attention -> IconTint.Attention
-            WalletActivationBannerType.Warning -> IconTint.Warning
-        }
-
         addIf(
             element = WalletNotification.FinishWalletActivation(
-                iconTint = tint,
+                type = type,
                 buttonsState = when (type) {
                     WalletActivationBannerType.Warning -> ButtonsState.PrimaryButtonConfig(
                         text = resourceReference(R.string.hw_activation_need_finish),
-                        onClick = { clickIntents.onFinishWalletActivationClick(type, isBackupExists) },
+                        onClick = { clickIntents.onFinishWalletActivationClick(isBackupExists) },
                     )
                     else -> ButtonsState.SecondaryButtonConfig(
                         text = resourceReference(R.string.hw_activation_need_finish),
-                        onClick = { clickIntents.onFinishWalletActivationClick(type, isBackupExists) },
+                        onClick = { clickIntents.onFinishWalletActivationClick(isBackupExists) },
                     )
                 },
+                isBackupExists = isBackupExists,
             ),
             condition = shouldShowFinishActivation,
         )

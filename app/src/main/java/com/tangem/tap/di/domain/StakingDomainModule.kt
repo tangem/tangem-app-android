@@ -2,11 +2,13 @@ package com.tangem.tap.di.domain
 
 import com.tangem.domain.staking.*
 import com.tangem.domain.staking.repositories.P2PEthPoolRepository
-import com.tangem.domain.staking.repositories.StakingActionRepository
+import com.tangem.domain.staking.repositories.StakeKitActionRepository
 import com.tangem.domain.staking.repositories.StakingErrorResolver
+import com.tangem.domain.staking.repositories.StakeKitRepository
 import com.tangem.domain.staking.repositories.StakingRepository
-import com.tangem.domain.staking.repositories.StakingTransactionHashRepository
-import com.tangem.domain.staking.single.SingleYieldBalanceFetcher
+import com.tangem.domain.staking.repositories.StakeKitTransactionHashRepository
+import com.tangem.domain.staking.toggles.StakingFeatureToggles
+import com.tangem.domain.staking.single.SingleStakingBalanceFetcher
 import com.tangem.domain.staking.usecase.StakingApyFlowUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import dagger.Module
@@ -35,11 +37,11 @@ internal object StakingDomainModule {
     @Provides
     @Singleton
     fun provideGetStakingEntryInfoUseCase(
-        stakingRepository: StakingRepository,
+        stakeKitRepository: StakeKitRepository,
         stakingErrorResolver: StakingErrorResolver,
     ): GetStakingEntryInfoUseCase {
         return GetStakingEntryInfoUseCase(
-            stakingRepository = stakingRepository,
+            stakeKitRepository = stakeKitRepository,
             stakingErrorResolver = stakingErrorResolver,
         )
     }
@@ -47,11 +49,11 @@ internal object StakingDomainModule {
     @Provides
     @Singleton
     fun provideGetYieldUseCase(
-        stakingRepository: StakingRepository,
+        stakeKitRepository: StakeKitRepository,
         stakingErrorResolver: StakingErrorResolver,
     ): GetYieldUseCase {
         return GetYieldUseCase(
-            stakingRepository = stakingRepository,
+            stakeKitRepository = stakeKitRepository,
             stakingErrorResolver = stakingErrorResolver,
         )
     }
@@ -59,13 +61,13 @@ internal object StakingDomainModule {
     @Provides
     @Singleton
     fun provideFetchActionsUseCase(
-        stakingRepository: StakingRepository,
-        stakingActionRepository: StakingActionRepository,
+        stakeKitRepository: StakeKitRepository,
+        stakeKitActionRepository: StakeKitActionRepository,
         stakingErrorResolver: StakingErrorResolver,
     ): FetchActionsUseCase {
         return FetchActionsUseCase(
-            stakingRepository = stakingRepository,
-            stakingActionRepository = stakingActionRepository,
+            stakeKitRepository = stakeKitRepository,
+            stakeKitActionRepository = stakeKitActionRepository,
             stakingErrorResolver = stakingErrorResolver,
         )
     }
@@ -73,11 +75,11 @@ internal object StakingDomainModule {
     @Provides
     @Singleton
     fun provideGetActionsUseCase(
-        stakingActionRepository: StakingActionRepository,
+        stakeKitActionRepository: StakeKitActionRepository,
         stakingErrorResolver: StakingErrorResolver,
     ): GetActionsUseCase {
         return GetActionsUseCase(
-            stakingActionRepository = stakingActionRepository,
+            stakeKitActionRepository = stakeKitActionRepository,
             stakingErrorResolver = stakingErrorResolver,
         )
     }
@@ -85,11 +87,11 @@ internal object StakingDomainModule {
     @Provides
     @Singleton
     fun provideGetStakingTokensUseCase(
-        stakingRepository: StakingRepository,
+        stakeKitRepository: StakeKitRepository,
         stakingErrorResolver: StakingErrorResolver,
     ): FetchStakingTokensUseCase {
         return FetchStakingTokensUseCase(
-            stakingRepository = stakingRepository,
+            stakeKitRepository = stakeKitRepository,
             stakingErrorResolver = stakingErrorResolver,
         )
     }
@@ -97,12 +99,12 @@ internal object StakingDomainModule {
     @Provides
     @Singleton
     fun provideFetchStakingOptionsUseCase(
-        stakingRepository: StakingRepository,
+        stakeKitRepository: StakeKitRepository,
         p2pRepository: P2PEthPoolRepository,
         stakingErrorResolver: StakingErrorResolver,
     ): FetchStakingOptionsUseCase {
         return FetchStakingOptionsUseCase(
-            stakingRepository = stakingRepository,
+            stakeKitRepository = stakeKitRepository,
             p2pRepository = p2pRepository,
             stakingErrorResolver = stakingErrorResolver,
         )
@@ -111,11 +113,11 @@ internal object StakingDomainModule {
     @Provides
     @Singleton
     fun provideFetchStakingYieldBalanceUseCase(
-        singleYieldBalanceFetcher: SingleYieldBalanceFetcher,
+        singleStakingBalanceFetcher: SingleStakingBalanceFetcher,
         stakingIdFactory: StakingIdFactory,
     ): FetchStakingYieldBalanceUseCase {
         return FetchStakingYieldBalanceUseCase(
-            singleYieldBalanceFetcher = singleYieldBalanceFetcher,
+            singleStakingBalanceFetcher = singleStakingBalanceFetcher,
             stakingIdFactory = stakingIdFactory,
         )
     }
@@ -123,11 +125,11 @@ internal object StakingDomainModule {
     @Provides
     @Singleton
     fun provideGetStakingTransactionsUseCase(
-        stakingRepository: StakingRepository,
+        stakeKitRepository: StakeKitRepository,
         stakingErrorResolver: StakingErrorResolver,
     ): GetStakingTransactionsUseCase {
         return GetStakingTransactionsUseCase(
-            stakingRepository = stakingRepository,
+            stakeKitRepository = stakeKitRepository,
             stakingErrorResolver = stakingErrorResolver,
         )
     }
@@ -135,11 +137,11 @@ internal object StakingDomainModule {
     @Provides
     @Singleton
     fun provideGasEstimateUseCase(
-        stakingRepository: StakingRepository,
+        stakeKitRepository: StakeKitRepository,
         stakingErrorResolver: StakingErrorResolver,
     ): EstimateGasUseCase {
         return EstimateGasUseCase(
-            stakingRepository = stakingRepository,
+            stakeKitRepository = stakeKitRepository,
             stakingErrorResolver = stakingErrorResolver,
         )
     }
@@ -147,11 +149,11 @@ internal object StakingDomainModule {
     @Provides
     @Singleton
     fun provideSubmitHashUseCase(
-        stakingTransactionHashRepository: StakingTransactionHashRepository,
+        stakeKitTransactionHashRepository: StakeKitTransactionHashRepository,
         stakingErrorResolver: StakingErrorResolver,
     ): SubmitHashUseCase {
         return SubmitHashUseCase(
-            stakingTransactionHashRepository = stakingTransactionHashRepository,
+            stakeKitTransactionHashRepository = stakeKitTransactionHashRepository,
             stakingErrorResolver = stakingErrorResolver,
         )
     }
@@ -159,11 +161,11 @@ internal object StakingDomainModule {
     @Provides
     @Singleton
     fun provideSaveUnsubmittedHashUseCase(
-        stakingTransactionHashRepository: StakingTransactionHashRepository,
+        stakeKitTransactionHashRepository: StakeKitTransactionHashRepository,
         stakingErrorResolver: StakingErrorResolver,
     ): SaveUnsubmittedHashUseCase {
         return SaveUnsubmittedHashUseCase(
-            stakingTransactionHashRepository = stakingTransactionHashRepository,
+            stakeKitTransactionHashRepository = stakeKitTransactionHashRepository,
             stakingErrorResolver = stakingErrorResolver,
         )
     }
@@ -181,11 +183,11 @@ internal object StakingDomainModule {
     @Provides
     @Singleton
     fun provideSendUnsubmittedHashesUseCase(
-        stakingTransactionHashRepository: StakingTransactionHashRepository,
+        stakeKitTransactionHashRepository: StakeKitTransactionHashRepository,
         stakingErrorResolver: StakingErrorResolver,
     ): SendUnsubmittedHashesUseCase {
         return SendUnsubmittedHashesUseCase(
-            stakingTransactionHashRepository = stakingTransactionHashRepository,
+            stakeKitTransactionHashRepository = stakeKitTransactionHashRepository,
             stakingErrorResolver = stakingErrorResolver,
         )
     }
@@ -193,11 +195,11 @@ internal object StakingDomainModule {
     @Provides
     @Singleton
     fun provideGetConstructedStakingTransactionUseCase(
-        stakingRepository: StakingRepository,
+        stakeKitRepository: StakeKitRepository,
         stakingErrorResolver: StakingErrorResolver,
     ): GetConstructedStakingTransactionUseCase {
         return GetConstructedStakingTransactionUseCase(
-            stakingRepository = stakingRepository,
+            stakeKitRepository = stakeKitRepository,
             stakingErrorResolver = stakingErrorResolver,
         )
     }
@@ -236,7 +238,10 @@ internal object StakingDomainModule {
 
     @Provides
     @Singleton
-    fun provideStakingApyFlowUseCase(stakingRepository: StakingRepository): StakingApyFlowUseCase {
-        return StakingApyFlowUseCase(stakingRepository)
+    fun provideStakingApyFlowUseCase(
+        stakeKitRepository: StakeKitRepository,
+        stakingFeatureToggles: StakingFeatureToggles,
+    ): StakingApyFlowUseCase {
+        return StakingApyFlowUseCase(stakeKitRepository, stakingFeatureToggles)
     }
 }

@@ -9,6 +9,12 @@ internal class DetailsHiddenStateTransformer(
 ) : Transformer<TangemPayCardDetailsUM> {
 
     override fun transform(prevState: TangemPayCardDetailsUM): TangemPayCardDetailsUM {
-        return stateFactory.getInitialState()
+        val initialState = stateFactory.getInitialState()
+        return prevState.copy(
+            buttonText = initialState.buttonText,
+            onClick = initialState.onClick,
+            isHidden = initialState.isHidden,
+            isLoading = initialState.isLoading,
+        )
     }
 }

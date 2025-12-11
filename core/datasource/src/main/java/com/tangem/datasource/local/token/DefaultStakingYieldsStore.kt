@@ -23,20 +23,22 @@ internal class DefaultStakingYieldsStore(
         return withTimeoutOrNull(timeout = YIELDS_WAITING_TIMEOUT, block = { get().firstOrNull() })
     }
 
-    override suspend fun store(items: List<YieldDTO>) {
-        dataStore.updateData { data ->
-            val updatedItems = data.toMutableList()
-            items.forEach { newItem ->
-                val existingItemIndex = data.indexOfFirst { it.id == newItem.id }
-                if (existingItemIndex != -1) {
-                    // Update existing item
-                    updatedItems[existingItemIndex] = newItem
-                } else {
-                    // Add new item
-                    updatedItems.add(newItem)
+    override suspend fun store(items: List<YieldDTO>, force: Boolean) {
+        if (force) {
+            dataStore.updateData { items }
+        } else {
+            dataStore.updateData { data ->
+                val updatedItems = data.toMutableList()
+                items.forEach { newItem ->
+                    val existingItemIndex = data.indexOfFirst { it.id == newItem.id }
+                    if (existingItemIndex != -1) {
+                        updatedItems[existingItemIndex] = newItem
+                    } else {
+                        updatedItems.add(newItem)
+                    }
                 }
+                updatedItems
             }
-            updatedItems
         }
     }
 

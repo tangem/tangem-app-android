@@ -14,6 +14,7 @@ dependencies {
     api(projects.core.pagination)
     implementation(projects.core.utils)
     implementation(projects.core.error)
+    implementation(projects.core.analytics.models)
 
     /** Project - Domain */
     api(projects.domain.models)
@@ -27,6 +28,7 @@ dependencies {
     implementation(deps.spongecastle.core)
 
     /** Libs - Other */
+    implementation(deps.timber)
     implementation(deps.jodatime)
     implementation(deps.androidx.paging.runtime)
     implementation(deps.moshi)

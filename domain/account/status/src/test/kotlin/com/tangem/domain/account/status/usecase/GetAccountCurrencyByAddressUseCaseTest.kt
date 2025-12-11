@@ -113,7 +113,7 @@ class GetAccountCurrencyByAddressUseCaseTest {
         // Arrange
         every { accountsCRUDRepository.getUserWalletsSync() } returns listOf(multiUserWallet)
         coEvery {
-            multiNetworkStatusSupplier.getSyncOrNull(params = MultiNetworkStatusProducer.Params(userWalletId))
+            multiNetworkStatusSupplier.getSyncOrNull(params = MultiNetworkStatusProducer.Params(userWalletId), 1000)
         } returns null
 
         // Act
@@ -124,7 +124,7 @@ class GetAccountCurrencyByAddressUseCaseTest {
 
         coVerifySequence {
             accountsCRUDRepository.getUserWalletsSync()
-            multiNetworkStatusSupplier.getSyncOrNull(params = MultiNetworkStatusProducer.Params(userWalletId))
+            multiNetworkStatusSupplier.getSyncOrNull(params = MultiNetworkStatusProducer.Params(userWalletId), 1000)
         }
     }
 
@@ -133,7 +133,7 @@ class GetAccountCurrencyByAddressUseCaseTest {
         // Arrange
         every { accountsCRUDRepository.getUserWalletsSync() } returns listOf(multiUserWallet)
         coEvery {
-            multiNetworkStatusSupplier.getSyncOrNull(params = MultiNetworkStatusProducer.Params(userWalletId))
+            multiNetworkStatusSupplier.getSyncOrNull(params = MultiNetworkStatusProducer.Params(userWalletId), 1000)
         } returns emptySet()
 
         // Act
@@ -144,7 +144,7 @@ class GetAccountCurrencyByAddressUseCaseTest {
 
         coVerifySequence {
             accountsCRUDRepository.getUserWalletsSync()
-            multiNetworkStatusSupplier.getSyncOrNull(params = MultiNetworkStatusProducer.Params(userWalletId))
+            multiNetworkStatusSupplier.getSyncOrNull(params = MultiNetworkStatusProducer.Params(userWalletId), 1000)
         }
     }
 
@@ -158,7 +158,7 @@ class GetAccountCurrencyByAddressUseCaseTest {
 
         every { accountsCRUDRepository.getUserWalletsSync() } returns listOf(multiUserWallet)
         coEvery {
-            multiNetworkStatusSupplier.getSyncOrNull(params = MultiNetworkStatusProducer.Params(userWalletId))
+            multiNetworkStatusSupplier.getSyncOrNull(params = MultiNetworkStatusProducer.Params(userWalletId), 1000)
         } returns setOf(networkStatus)
 
         // Act
@@ -169,7 +169,7 @@ class GetAccountCurrencyByAddressUseCaseTest {
 
         coVerifySequence {
             accountsCRUDRepository.getUserWalletsSync()
-            multiNetworkStatusSupplier.getSyncOrNull(params = MultiNetworkStatusProducer.Params(userWalletId))
+            multiNetworkStatusSupplier.getSyncOrNull(params = MultiNetworkStatusProducer.Params(userWalletId), 1000)
         }
     }
 
@@ -185,7 +185,7 @@ class GetAccountCurrencyByAddressUseCaseTest {
 
         every { accountsCRUDRepository.getUserWalletsSync() } returns listOf(multiUserWallet)
         coEvery {
-            multiNetworkStatusSupplier.getSyncOrNull(params = MultiNetworkStatusProducer.Params(userWalletId))
+            multiNetworkStatusSupplier.getSyncOrNull(params = MultiNetworkStatusProducer.Params(userWalletId), 1000)
         } returns setOf(networkStatus)
         coEvery {
             singleAccountListSupplier.getSyncOrNull(
@@ -201,7 +201,7 @@ class GetAccountCurrencyByAddressUseCaseTest {
 
         coVerifySequence {
             accountsCRUDRepository.getUserWalletsSync()
-            multiNetworkStatusSupplier.getSyncOrNull(params = MultiNetworkStatusProducer.Params(userWalletId))
+            multiNetworkStatusSupplier.getSyncOrNull(params = MultiNetworkStatusProducer.Params(userWalletId), 1000)
             singleAccountListSupplier.getSyncOrNull(
                 params = SingleAccountListProducer.Params(userWalletId = userWalletId),
             )
@@ -222,7 +222,7 @@ class GetAccountCurrencyByAddressUseCaseTest {
 
         every { accountsCRUDRepository.getUserWalletsSync() } returns listOf(multiUserWallet)
         coEvery {
-            multiNetworkStatusSupplier.getSyncOrNull(params = MultiNetworkStatusProducer.Params(userWalletId))
+            multiNetworkStatusSupplier.getSyncOrNull(params = MultiNetworkStatusProducer.Params(userWalletId), 1000)
         } returns setOf(networkStatus)
         coEvery {
             singleAccountListSupplier.getSyncOrNull(
@@ -238,7 +238,7 @@ class GetAccountCurrencyByAddressUseCaseTest {
 
         coVerifySequence {
             accountsCRUDRepository.getUserWalletsSync()
-            multiNetworkStatusSupplier.getSyncOrNull(params = MultiNetworkStatusProducer.Params(userWalletId))
+            multiNetworkStatusSupplier.getSyncOrNull(params = MultiNetworkStatusProducer.Params(userWalletId), 1000)
             singleAccountListSupplier.getSyncOrNull(
                 params = SingleAccountListProducer.Params(userWalletId = userWalletId),
             )
@@ -257,7 +257,7 @@ class GetAccountCurrencyByAddressUseCaseTest {
 
         every { accountsCRUDRepository.getUserWalletsSync() } returns listOf(multiUserWallet)
         coEvery {
-            multiNetworkStatusSupplier.getSyncOrNull(params = MultiNetworkStatusProducer.Params(userWalletId))
+            multiNetworkStatusSupplier.getSyncOrNull(params = MultiNetworkStatusProducer.Params(userWalletId), 1000)
         } returns setOf(networkStatus)
         coEvery {
             singleAccountListSupplier.getSyncOrNull(
@@ -274,7 +274,7 @@ class GetAccountCurrencyByAddressUseCaseTest {
 
         coVerifySequence {
             accountsCRUDRepository.getUserWalletsSync()
-            multiNetworkStatusSupplier.getSyncOrNull(params = MultiNetworkStatusProducer.Params(userWalletId))
+            multiNetworkStatusSupplier.getSyncOrNull(params = MultiNetworkStatusProducer.Params(userWalletId), 1000)
             singleAccountListSupplier.getSyncOrNull(
                 params = SingleAccountListProducer.Params(userWalletId = userWalletId),
             )

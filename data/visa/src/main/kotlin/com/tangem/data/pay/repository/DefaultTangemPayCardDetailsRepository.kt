@@ -14,13 +14,20 @@ import com.tangem.datasource.api.pay.models.request.SetPinRequest
 import com.tangem.datasource.api.pay.models.response.FreezeUnfreezeCardResponse
 import com.tangem.datasource.local.visa.TangemPayCardFrozenStateStore
 import com.tangem.datasource.local.visa.TangemPayStorage
+import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.model.OrderStatus
 import com.tangem.domain.pay.model.SetPinResult
 import com.tangem.domain.pay.model.TangemPayCardBalance
 import com.tangem.domain.pay.model.TangemPayCardDetails
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
 import com.tangem.domain.visa.model.TangemPayCardFrozenState
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import timber.log.Timber
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.seconds
 
 private const val TAG = "TangemPay: CardDetailsRepository"
 
@@ -35,24 +42,33 @@ internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
     private val cardFrozenStateStore: TangemPayCardFrozenStateStore,
 ) : TangemPayCardDetailsRepository {
 
-    override suspend fun getCardBalance(): Either<UniversalError, TangemPayCardBalance> {
+    private val pollingScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+    private val pollingJobs = mutableMapOf<String, Job>()
+    private val storePollingMutex = Mutex()
+
+    override suspend fun getCardBalance(userWalletId: UserWalletId): Either<UniversalError, TangemPayCardBalance> {
         return requestHelper.runWithErrorLogs(TAG) {
-            val result = requestHelper.request { authHeader ->
+            val result = requestHelper.request(userWalletId) { authHeader ->
                 tangemPayApi.getCardBalance(authHeader)
             }.result ?: error("Cannot get card balance")
             TangemPayCardBalance(
-                balance = result.availableBalance,
-                currencyCode = result.currency,
+                fiatBalance = result.fiat.availableBalance,
+                currencyCode = result.fiat.currency,
+                cryptoBalance = result.crypto.balance,
+                availableForWithdrawal = result.availableForWithdrawal.amount,
+                chainId = result.crypto.chainId,
+                depositAddress = result.crypto.depositAddress,
+                contractAddress = result.crypto.tokenContractAddress,
             )
         }
     }
 
-    override suspend fun revealCardDetails(): Either<UniversalError, TangemPayCardDetails> {
+    override suspend fun revealCardDetails(userWalletId: UserWalletId): Either<UniversalError, TangemPayCardDetails> {
         return requestHelper.runWithErrorLogs(TAG) {
             val publicKeyBase64 = getPublicKeyBase64()
             val (secretKeyBytes, sessionId) = rainCryptoUtil.generateSecretKeyAndSessionId(publicKeyBase64)
 
-            val result = requestHelper.request { authHeader ->
+            val result = requestHelper.request(userWalletId) { authHeader ->
                 tangemPayApi.revealCardDetails(
                     authHeader = authHeader,
                     body = CardDetailsRequest(sessionId = sessionId),
@@ -81,14 +97,14 @@ internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
         }
     }
 
-    override suspend fun setPin(pin: String): Either<UniversalError, SetPinResult> {
+    override suspend fun setPin(userWalletId: UserWalletId, pin: String): Either<UniversalError, SetPinResult> {
         return requestHelper.runWithErrorLogs(TAG) {
             val publicKeyBase64 = getPublicKeyBase64()
             val (secretKeyBytes, sessionId) = rainCryptoUtil.generateSecretKeyAndSessionId(publicKeyBase64)
             val encryptedData = rainCryptoUtil.encryptPin(pin = pin, secretKeyBytes = secretKeyBytes)
             secretKeyBytes.fill(0)
 
-            val status = requestHelper.request { authHeader ->
+            val status = requestHelper.request(userWalletId) { authHeader ->
                 tangemPayApi.setPin(
                     authHeader = authHeader,
                     body = SetPinRequest(
@@ -107,21 +123,24 @@ internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
         }
     }
 
-    override suspend fun isAddToWalletDone(): Either<UniversalError, Boolean> {
+    override suspend fun isAddToWalletDone(userWalletId: UserWalletId): Either<UniversalError, Boolean> {
         return requestHelper.runWithErrorLogs(TAG) {
-            storage.getAddToWalletDone(requestHelper.getCustomerWalletAddress())
+            storage.getAddToWalletDone(requestHelper.getCustomerWalletAddress(userWalletId))
         }
     }
 
-    override suspend fun setAddToWalletAsDone(): Either<UniversalError, Unit> {
+    override suspend fun setAddToWalletAsDone(userWalletId: UserWalletId): Either<UniversalError, Unit> {
         return requestHelper.runWithErrorLogs(TAG) {
-            storage.storeAddToWalletDone(requestHelper.getCustomerWalletAddress(), isDone = true)
+            storage.storeAddToWalletDone(requestHelper.getCustomerWalletAddress(userWalletId), isDone = true)
         }
     }
 
-    override suspend fun freezeCard(cardId: String): Either<UniversalError, TangemPayCardFrozenState> {
+    override suspend fun freezeCard(
+        userWalletId: UserWalletId,
+        cardId: String,
+    ): Either<UniversalError, TangemPayCardFrozenState> {
         cardFrozenStateStore.store(cardId, TangemPayCardFrozenState.Pending)
-        return requestHelper.makeSafeRequest {
+        return requestHelper.performRequest(userWalletId) {
             tangemPayApi.freezeCard(authHeader = it, body = FreezeUnfreezeCardRequest(cardId = cardId))
         }.onLeft {
             cardFrozenStateStore.store(cardId, TangemPayCardFrozenState.Unfrozen)
@@ -135,15 +154,26 @@ internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
                 null,
                 -> TangemPayCardFrozenState.Unfrozen
             }
+            if (state == TangemPayCardFrozenState.Pending) {
+                startOrderIdPolling(
+                    userWalletId = userWalletId,
+                    cardId = cardId,
+                    orderId = response.result?.orderId,
+                    isFreeze = true,
+                )
+            }
             cardFrozenStateStore.store(cardId, state)
 
             state
         }
     }
 
-    override suspend fun unfreezeCard(cardId: String): Either<UniversalError, TangemPayCardFrozenState> {
+    override suspend fun unfreezeCard(
+        userWalletId: UserWalletId,
+        cardId: String,
+    ): Either<UniversalError, TangemPayCardFrozenState> {
         cardFrozenStateStore.store(cardId, TangemPayCardFrozenState.Pending)
-        return requestHelper.makeSafeRequest {
+        return requestHelper.performRequest(userWalletId) {
             tangemPayApi.unfreezeCard(authHeader = it, body = FreezeUnfreezeCardRequest(cardId = cardId))
         }.onLeft {
             cardFrozenStateStore.store(cardId, TangemPayCardFrozenState.Frozen)
@@ -157,9 +187,73 @@ internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
                 null,
                 -> TangemPayCardFrozenState.Frozen
             }
+            if (state == TangemPayCardFrozenState.Pending) {
+                startOrderIdPolling(
+                    userWalletId = userWalletId,
+                    cardId = cardId,
+                    orderId = response.result?.orderId,
+                    isFreeze = false,
+                )
+            }
             cardFrozenStateStore.store(cardId, state)
 
             state
+        }
+    }
+
+    private suspend fun startOrderIdPolling(
+        userWalletId: UserWalletId,
+        cardId: String,
+        orderId: String?,
+        isFreeze: Boolean,
+    ) {
+        if (orderId.isNullOrEmpty()) return
+        storePollingMutex.withLock {
+            if (pollingJobs.containsKey(orderId)) return
+            val pollingJob = pollingScope.launch {
+                try {
+                    var retryCount = 0
+                    while (isActive && pollingJobs.containsKey(orderId)) {
+                        delay(duration = 5.seconds)
+
+                        val orderStatus = requestHelper.performRequest(userWalletId) { authHeader ->
+                            tangemPayApi.getOrder(authHeader, orderId)
+                        }
+
+                        orderStatus.onRight { response ->
+                            val status = response.result?.status
+                            if (status == OrderStatus.COMPLETED.apiName || status == OrderStatus.CANCELED.apiName) {
+                                // Remove from jobs
+                                pollingJobs.remove(key = orderId)
+
+                                // Final card state
+                                val finalState = when {
+                                    status == OrderStatus.COMPLETED.apiName && isFreeze
+                                    -> TangemPayCardFrozenState.Frozen
+                                    status == OrderStatus.COMPLETED.apiName && !isFreeze
+                                    -> TangemPayCardFrozenState.Unfrozen
+                                    else -> return@launch
+                                }
+
+                                cardFrozenStateStore.store(cardId, finalState)
+                            }
+                        }.onLeft { error ->
+                            Timber.e("error ${error.errorCode}")
+                            // stop retrying after 3 errors
+                            if (retryCount > MAX_POLLING_RETRIES) {
+                                pollingJobs.remove(key = orderId)
+                            }
+                        }
+                        retryCount++
+                    }
+                } catch (e: Exception) {
+                    Timber.e(e)
+                    storePollingMutex.withLock {
+                        pollingJobs.remove(orderId)
+                    }
+                }
+            }
+            pollingJobs[orderId] = pollingJob
         }
     }
 
@@ -178,9 +272,14 @@ internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
             ApiEnvironment.DEV_2,
             ApiEnvironment.DEV_3,
             ApiEnvironment.STAGE,
+            ApiEnvironment.STAGE_2,
             ApiEnvironment.MOCK,
             -> visaLibLoader.getOrCreateConfig().rainRSAPublicKey.dev
             ApiEnvironment.PROD -> visaLibLoader.getOrCreateConfig().rainRSAPublicKey.prod
         }
+    }
+
+    private companion object {
+        const val MAX_POLLING_RETRIES = 3
     }
 }

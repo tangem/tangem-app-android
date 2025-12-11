@@ -19,6 +19,7 @@ internal class EmailMessageBodyResolver(
 ) {
 
     /** Resolve email message body by [type] */
+    @Suppress("CyclomaticComplexMethod")
     suspend fun resolve(type: FeedbackEmailType): String = with(FeedbackDataBuilder()) {
         when (type) {
             is FeedbackEmailType.DirectUserRequest -> addUserRequestBody(type.walletMetaInfo)
@@ -33,8 +34,11 @@ internal class EmailMessageBodyResolver(
             -> addPhoneInfoBody()
             is FeedbackEmailType.Visa.Activation -> addUserRequestBody(type.walletMetaInfo)
             is FeedbackEmailType.Visa.DirectUserRequest -> addUserRequestBody(type.walletMetaInfo)
+            is FeedbackEmailType.Visa.FailedIssueCard -> addUserRequestBody(type.walletMetaInfo)
             is FeedbackEmailType.Visa.Dispute -> addVisaRequestBody(type.walletMetaInfo, type.visaTxDetails)
             is FeedbackEmailType.Visa.DisputeV2 -> addTangemPayRequestBody(type.walletMetaInfo, type.item)
+            is FeedbackEmailType.Visa.Withdrawal -> addTangemPayWithdrawalRequestBody(type)
+            is FeedbackEmailType.Visa.FeatureIsBeta -> addTangemPayBetaRequestBody(type.walletMetaInfo)
         }
 
         return build()
@@ -47,6 +51,42 @@ internal class EmailMessageBodyResolver(
         addUserRequestBody(walletMetaInfo)
         addDelimiter()
         addTangemPayTxInfo(item)
+    }
+
+    private fun FeedbackDataBuilder.addTangemPayBetaRequestBody(walletMetaInfo: WalletMetaInfo) {
+        addPhoneInfoBody()
+        addDelimiter()
+        walletMetaInfo.userWalletId?.let { userWalletId ->
+            addUserWalletId(userWalletId = userWalletId.stringValue)
+            addDelimiter()
+        }
+    }
+
+    private suspend fun FeedbackDataBuilder.addTangemPayWithdrawalRequestBody(
+        type: FeedbackEmailType.Visa.Withdrawal,
+    ) {
+        addUserWalletMetaInfo(type.walletMetaInfo)
+        addDelimiter()
+
+        val userWalletId = requireNotNull(type.walletMetaInfo.userWalletId) { "UserWalletId must be not null" }
+        val blockchainError = feedbackRepository.getBlockchainErrorInfo(userWalletId = userWalletId)
+        val blockchainInfo = blockchainError?.let {
+            feedbackRepository.getBlockchainInfo(
+                userWalletId = userWalletId,
+                blockchainId = blockchainError.blockchainId,
+                derivationPath = blockchainError.derivationPath,
+            )
+        }
+
+        if (blockchainInfo != null) {
+            addBlockchainError(blockchainInfo, blockchainError)
+            addDelimiter()
+        }
+
+        addSwapInfo(providerName = type.providerName, txId = type.txId)
+        addDelimiter()
+
+        addPhoneInfo(phoneInfo = feedbackRepository.getPhoneInfo())
     }
 
     private suspend fun FeedbackDataBuilder.addVisaRequestBody(

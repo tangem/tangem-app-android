@@ -37,7 +37,7 @@ sealed class WalletScreenAnalyticsEvent {
             },
         )
 
-        class TokenBalance(balance: AnalyticsParam.TokenBalanceState, token: String) : Basic(
+        class TokenBalance(balance: AnalyticsParam.EmptyFull, token: String) : Basic(
             event = "Token Balance",
             params = mapOf(
                 AnalyticsParam.STATE to balance.value,
@@ -51,7 +51,30 @@ sealed class WalletScreenAnalyticsEvent {
         params: Map<String, String> = mapOf(),
     ) : AnalyticsEvent(category = "Main Screen", event = event, params = params) {
 
-        data object ScreenOpened : MainScreen(event = "Screen opened")
+        class ScreenOpenedLegacy : MainScreen(
+            event = "Screen opened",
+        )
+
+        data class ScreenOpened(
+            private val hasMobileWallet: Boolean,
+        ) : MainScreen(
+            event = "Screen opened",
+            params = mapOf("Mobile Wallet" to if (hasMobileWallet) "Yes" else "No"),
+        )
+
+        data class NoticeFinishActivation(private val activationState: ActivationState) : MainScreen(
+            event = "Notice - Finish Activation",
+            params = mapOf("Activation State" to activationState.value),
+        ) {
+            enum class ActivationState(val value: String) {
+                NotStarted("Not Started"),
+                Unfinished("Unfinished"),
+            }
+        }
+
+        class ButtonFinalizeActivation : MainScreen(
+            event = "Button - Finalize Activation",
+        )
 
         class WalletSelected(val isImported: Boolean) : MainScreen(
             event = "Wallet Selected",
@@ -70,9 +93,9 @@ sealed class WalletScreenAnalyticsEvent {
             params = mapOf("Result" to result.value),
         )
 
-        data object NoticeBackupYourWalletTapped : MainScreen(event = "Notice - Backup Your Wallet Tapped")
-        data object NoticeScanYourCardTapped : MainScreen(event = "Notice - Scan Your Card Tapped")
-        data object WalletUnlockTapped : MainScreen(event = "Notice - Wallet Unlock Tapped")
+        class NoticeBackupYourWalletTapped : MainScreen(event = "Notice - Backup Your Wallet Tapped")
+        class NoticeScanYourCardTapped : MainScreen(event = "Notice - Scan Your Card Tapped")
+        class WalletUnlockTapped : MainScreen(event = "Notice - Wallet Unlock Tapped")
 
         class NetworksUnreachable(
             tokens: List<String>,
@@ -81,54 +104,54 @@ sealed class WalletScreenAnalyticsEvent {
             params = mapOf("Tokens" to tokens.joinToString()),
         )
 
-        data object MissingAddresses : MainScreen(event = "Notice - Missing Addresses")
+        class MissingAddresses : MainScreen(event = "Notice - Missing Addresses")
 
-        data object CardSignedTransactions : MainScreen(event = "Notice - Card Signed Transactions")
+        class CardSignedTransactions : MainScreen(event = "Notice - Card Signed Transactions")
 
-        data object HowDoYouLikeTangem : MainScreen(event = "Notice - How Do You Like Tangem")
+        class HowDoYouLikeTangem : MainScreen(event = "Notice - How Do You Like Tangem")
 
-        data object ProductSampleCard : MainScreen(event = "Notice - Product Sample Card")
+        class ProductSampleCard : MainScreen(event = "Notice - Product Sample Card")
 
-        data object TestnetCard : MainScreen(event = "Notice - Testnet Card")
+        class TestnetCard : MainScreen(event = "Notice - Testnet Card")
 
-        data object DemoCard : MainScreen(event = "Notice - Demo Card")
+        class DemoCard : MainScreen(event = "Notice - Demo Card")
 
-        data object DevelopmentCard : MainScreen(event = "Notice - Development Card")
+        class DevelopmentCard : MainScreen(event = "Notice - Development Card")
 
-        data object WalletUnlock : MainScreen(event = "Notice - Wallet Unlock")
+        class WalletUnlock : MainScreen(event = "Notice - Wallet Unlock")
 
-        data object BackupYourWallet : MainScreen(event = "Notice - Backup Your Wallet")
+        class BackupYourWallet : MainScreen(event = "Notice - Backup Your Wallet")
 
-        data object BackupError : MainScreen(event = "Notice - Backup Error")
+        class BackupError : MainScreen(event = "Notice - Backup Error")
 
-        data object NotePromo : MainScreen(event = "Notice - Note Promo")
+        class NotePromo : MainScreen(event = "Notice - Note Promo")
 
-        data object NotePromoButton : MainScreen(event = "Note Promo Button")
+        class NotePromoButton : MainScreen(event = "Note Promo Button")
 
-        data object UnlockAllWithBiometrics : MainScreen(event = "Button - Unlock All With Biometrics")
+        class UnlockAllWithBiometrics : MainScreen(event = "Button - Unlock All With Biometrics")
 
-        data object UnlockWithCardScan : MainScreen(event = "Button - Unlock With Card Scan")
+        class UnlockWithCardScan : MainScreen(event = "Button - Unlock With Card Scan")
 
-        data object EditWalletTapped : MainScreen(event = "Button - Edit Wallet Tapped")
+        class EditWalletTapped : MainScreen(event = "Button - Edit Wallet Tapped")
 
-        data object DeleteWalletTapped : MainScreen(event = "Button - Delete Wallet Tapped")
+        class DeleteWalletTapped : MainScreen(event = "Button - Delete Wallet Tapped")
 
-        data object NoticeSeedPhraseSupport : MainScreen(event = "Notice - Seed Phrase Support")
+        class NoticeSeedPhraseSupport : MainScreen(event = "Notice - Seed Phrase Support")
 
-        data object NoticeSeedPhraseSupportSecond : MainScreen(event = "Notice - Seed Phrase Support2")
+        class NoticeSeedPhraseSupportSecond : MainScreen(event = "Notice - Seed Phrase Support2")
 
-        data object NoticeSeedPhraseSupportButtonNo : MainScreen(event = "Button - Support No")
+        class NoticeSeedPhraseSupportButtonNo : MainScreen(event = "Button - Support No")
 
-        data object NoticeSeedPhraseSupportButtonYes : MainScreen(event = "Button - Support Yes")
+        class NoticeSeedPhraseSupportButtonYes : MainScreen(event = "Button - Support Yes")
 
-        data object NoticeSeedPhraseSupportButtonUsed : MainScreen(event = "Button - Support Used")
+        class NoticeSeedPhraseSupportButtonUsed : MainScreen(event = "Button - Support Used")
 
-        data object NoticeSeedPhraseSupportButtonDeclined : MainScreen(event = "Button - Support Declined")
+        class NoticeSeedPhraseSupportButtonDeclined : MainScreen(event = "Button - Support Declined")
 
         // region Referral Promo
-        data object ReferralPromo : MainScreen(event = "Referral Banner")
-        data object ReferralPromoButtonParticipate : MainScreen(event = "Button - Referral Participate")
-        data object ReferralPromoButtonDismiss : MainScreen(event = "Button - Referral Dismiss")
+        class ReferralPromo : MainScreen(event = "Referral Banner")
+        class ReferralPromoButtonParticipate : MainScreen(event = "Button - Referral Participate")
+        class ReferralPromoButtonDismiss : MainScreen(event = "Button - Referral Dismiss")
         //endregion
     }
 
@@ -137,8 +160,8 @@ sealed class WalletScreenAnalyticsEvent {
         params: Map<String, String> = mapOf(),
     ) : AnalyticsEvent(category = "Promo", event = event, params = params) {
 
-        data object PushBanner : PushBannerPromo(event = "Push Banner")
-        data object ButtonAllowPush : PushBannerPromo(event = "Button - Allow Push")
-        data object ButtonLaterPush : PushBannerPromo(event = "Button - Later Push")
+        class PushBanner : PushBannerPromo(event = "Push Banner")
+        class ButtonAllowPush : PushBannerPromo(event = "Button - Allow Push")
+        class ButtonLaterPush : PushBannerPromo(event = "Button - Later Push")
     }
 }

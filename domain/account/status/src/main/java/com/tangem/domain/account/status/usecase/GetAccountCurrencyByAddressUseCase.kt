@@ -82,6 +82,7 @@ class GetAccountCurrencyByAddressUseCase(
         for (id in userWalletIds) {
             val networkStatus = multiNetworkStatusSupplier.getSyncOrNull(
                 params = MultiNetworkStatusProducer.Params(userWalletId = id),
+                timeMillis = 1000L,
             )
                 ?.firstOrNull { it.getAddress() == address }
 

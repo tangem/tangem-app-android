@@ -2,15 +2,21 @@ package com.tangem.tap.domain.userWalletList.repository
 
 import arrow.core.Either
 import arrow.core.left
+import arrow.core.raise.Raise
 import arrow.core.raise.either
 import arrow.core.right
 import com.tangem.common.*
+import com.tangem.common.core.TangemSdkError
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.Basic
+import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.common.wallets.UserWalletsListRepository.LockMethod
 import com.tangem.domain.common.wallets.error.*
+import com.tangem.domain.hotwallet.repository.HotWalletRepository
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
@@ -48,6 +54,9 @@ internal class DefaultUserWalletsListRepository(
     private val appPreferencesStore: AppPreferencesStore,
     private val hotWalletAccessCodeAttemptsRepository: HotWalletAccessCodeAttemptsRepository,
     private val tangemHotSdk: TangemHotSdk,
+    private val trackingContextProxy: TrackingContextProxy,
+    private val analyticsEventHandler: AnalyticsEventHandler,
+    private val hotWalletRepository: HotWalletRepository,
 ) : UserWalletsListRepository {
 
     override val userWallets = MutableStateFlow<List<UserWallet>?>(null)
@@ -202,7 +211,7 @@ internal class DefaultUserWalletsListRepository(
 
         userWalletEncryptionKeysRepository.delete(userWalletIds)
 
-        removeHotWalletsFromSDK(userWalletIds)
+        removeHotWalletsFromSDKAndRepos(userWalletIds)
 
         userWallets.update { currentWallets ->
             val updatedWallets = currentWallets?.filter { userWalletIds.contains(it.walletId).not() }
@@ -233,11 +242,12 @@ internal class DefaultUserWalletsListRepository(
         when (unlockMethod) {
             UserWalletsListRepository.UnlockMethod.Biometric -> {
                 unlockAllWallets().bind()
+                trackSignInEvent(userWallet, Basic.SignedIn.SignInType.Biometric)
                 select(userWalletId)
             }
             UserWalletsListRepository.UnlockMethod.AccessCode -> {
                 if (userWallet !is UserWallet.Hot) {
-                    raise(UnlockWalletError.UnableToUnlock)
+                    raise(UnlockWalletError.UnableToUnlock.Empty)
                 }
 
                 val encryptionKey = requestPasswordRecursive(
@@ -245,8 +255,8 @@ internal class DefaultUserWalletsListRepository(
                     block = { password ->
                         runSuspendCatching {
                             userWalletEncryptionKeysRepository.getEncryptedWithPassword(userWalletId, password)
-                        }.onFailure {
-                            raise(UnlockWalletError.UnableToUnlock)
+                        }.onFailure { error ->
+                            raise(UnlockWalletError.UnableToUnlock.RawException(error))
                         }.getOrNull()
                     },
                     biometryFallback = {
@@ -261,14 +271,15 @@ internal class DefaultUserWalletsListRepository(
                 removePasswordAttempts(userWallet)
 
                 sensitiveInformationRepository.getAll(listOf(encryptionKey))
-                    .doOnSuccess { sensitiveInfo -> updateWallets { it?.updateWith(sensitiveInfo) } }
-                    .doOnFailure { error ->
-                        raise(UnlockWalletError.UnableToUnlock)
+                    .doOnSuccess { sensitiveInfo ->
+                        updateWallets { it?.updateWith(sensitiveInfo) }
+                        trackSignInEvent(userWallet, Basic.SignedIn.SignInType.AccessCode)
                     }
+                    .doOnFailure { error -> raise(UnlockWalletError.UnableToUnlock.RawException(error)) }
             }
             is UserWalletsListRepository.UnlockMethod.Scan -> {
                 if (userWallet !is UserWallet.Cold) {
-                    raise(UnlockWalletError.UnableToUnlock)
+                    raise(UnlockWalletError.UnableToUnlock.Empty)
                 }
 
                 val scanResponse = unlockMethod.scanResponse ?: run {
@@ -287,12 +298,15 @@ internal class DefaultUserWalletsListRepository(
 
                 val encryptionKey = UserWalletEncryptionKey(
                     walletId = userWallet.walletId,
-                    encryptionKey = scanResponse.encryptionKey ?: raise(UnlockWalletError.UnableToUnlock),
+                    encryptionKey = scanResponse.encryptionKey ?: raise(UnlockWalletError.UnableToUnlock.Empty),
                 )
 
                 sensitiveInformationRepository.getAll(listOf(encryptionKey))
-                    .doOnSuccess { sensitiveInfo -> updateWallets { it?.updateWith(sensitiveInfo) } }
-                    .doOnFailure { error -> raise(UnlockWalletError.UnableToUnlock) }
+                    .doOnSuccess { sensitiveInfo ->
+                        updateWallets { it?.updateWith(sensitiveInfo) }
+                        trackSignInEvent(userWallet, Basic.SignedIn.SignInType.Card)
+                    }
+                    .doOnFailure { error -> raise(UnlockWalletError.UnableToUnlock.RawException(error)) }
             }
         }
     }
@@ -306,9 +320,8 @@ internal class DefaultUserWalletsListRepository(
 
         val biometricKeys = runSuspendCatching {
             userWalletEncryptionKeysRepository.getAllBiometric()
-        }.getOrElse {
-            // TODO handle error properly [REDACTED_TASK_KEY]
-            raise(UnlockWalletError.UserCancelled)
+        }.getOrElse { exception ->
+            catchBiometricException(exception)
         }
 
         val unsecuredKeys = userWalletEncryptionKeysRepository.getAllUnsecured()
@@ -327,14 +340,17 @@ internal class DefaultUserWalletsListRepository(
         // if we cant unlock any of the locked wallets, return error
         // (isLocked remains `true` here because we haven't updated the wallets yet)
         if (unlockedWallets.any { it.isLocked }.not()) {
-            raise(UnlockWalletError.UnableToUnlock)
+            raise(UnlockWalletError.UnableToUnlock.Empty)
         }
 
         sensitiveInformationRepository.getAll(allKeys)
             .doOnSuccess { sensitiveInfo ->
                 updateWallets { wallets -> wallets?.updateWith(sensitiveInfo) }
+                selectedUserWallet.value?.let {
+                    trackSignInEvent(it, Basic.SignedIn.SignInType.Biometric)
+                }
             }
-            .doOnFailure { raise(UnlockWalletError.UnableToUnlock) }
+            .doOnFailure { error -> raise(UnlockWalletError.UnableToUnlock.RawException(error)) }
     }
 
     override suspend fun lockAllWallets(): Either<LockWalletsError, Unit> = either {
@@ -374,17 +390,25 @@ internal class DefaultUserWalletsListRepository(
         if (newUserWallet.walletId == oldUserWallet.walletId &&
             oldUserWallet is UserWallet.Hot && newUserWallet is UserWallet.Cold
         ) {
-            removeHotWalletsFromSDK(walletIds = listOf(oldUserWallet.walletId))
+            removeHotWalletsFromSDKAndRepos(walletIds = listOf(oldUserWallet.walletId))
+            // When upgrading from Hot to Cold, if biometric lock is available, set it
+            if (hasBiometry()) {
+                setLock(newUserWallet.walletId, LockMethod.Biometric, changeUnsecured = true)
+            }
+            // Remove any encryption keys related to the old hot wallet
+            userWalletEncryptionKeysRepository.removeEncryptedWithPasswordKey(oldUserWallet.walletId)
+            userWalletEncryptionKeysRepository.removeUnsecuredKey(oldUserWallet.walletId)
         }
     }
 
-    private suspend fun removeHotWalletsFromSDK(walletIds: List<UserWalletId>) {
+    private suspend fun removeHotWalletsFromSDKAndRepos(walletIds: List<UserWalletId>) {
         val hotWalletsToDelete = userWalletsSync()
             .filterIsInstance<UserWallet.Hot>()
             .filter { walletIds.contains(it.walletId) }
 
-        hotWalletsToDelete.forEach {
-            tangemHotSdk.delete(it.hotWalletId)
+        hotWalletsToDelete.forEach { wallet ->
+            hotWalletRepository.setAccessCodeSkipped(wallet.walletId, false) // In case the wallet is added again
+            tangemHotSdk.delete(wallet.hotWalletId)
         }
     }
 
@@ -453,6 +477,27 @@ internal class DefaultUserWalletsListRepository(
         }
     }
 
+    private fun Raise<UnlockWalletError>.catchBiometricException(ex: Throwable): Nothing {
+        val reason = when (ex) {
+            is TangemSdkError.AuthenticationLockout ->
+                UnlockWalletError.UnableToUnlock.Reason.BiometricsAuthenticationLockout(isPermanent = false)
+            is TangemSdkError.AuthenticationPermanentLockout ->
+                UnlockWalletError.UnableToUnlock.Reason.BiometricsAuthenticationLockout(isPermanent = true)
+            is TangemSdkError.KeystoreInvalidated ->
+                UnlockWalletError.UnableToUnlock.Reason.AllKeysInvalidated
+            is TangemSdkError.AuthenticationUnavailable ->
+                UnlockWalletError.UnableToUnlock.Reason.BiometricsAuthenticationDisabled
+
+            is TangemSdkError.AuthenticationCanceled,
+            is TangemSdkError.AuthenticationAlreadyInProgress,
+            -> raise(UnlockWalletError.UserCancelled)
+
+            else -> raise(UnlockWalletError.UnableToUnlock.RawException(ex))
+        }
+
+        raise(UnlockWalletError.UnableToUnlock.WithReason(reason))
+    }
+
     /**
      * Find the nearest available wallet that can be selected
      *
@@ -480,5 +525,15 @@ internal class DefaultUserWalletsListRepository(
         }
 
         return lastOrNull()
+    }
+
+    private fun trackSignInEvent(userWallet: UserWallet, type: Basic.SignedIn.SignInType) {
+        trackingContextProxy.addContext(userWallet)
+        analyticsEventHandler.send(
+            event = Basic.SignedIn(
+                signInType = type,
+                walletsCount = userWallets.value?.size ?: 0,
+            ),
+        )
     }
 }

@@ -5,6 +5,7 @@ import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.common.routing.AppRoute
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -16,12 +17,19 @@ import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfi
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
+import com.tangem.domain.feedback.SendFeedbackEmailUseCase
+import com.tangem.domain.feedback.models.FeedbackEmailType
+import com.tangem.domain.feedback.models.WalletMetaInfo
 import com.tangem.domain.models.TokenReceiveConfig
-import com.tangem.domain.pay.TangemPayTopUpData
+import com.tangem.domain.pay.TangemPayCryptoCurrencyFactory
 import com.tangem.domain.pay.model.TangemPayCardBalance
+import com.tangem.domain.pay.model.TangemPayTopUpData
+import com.tangem.domain.pay.repository.CustomerOrderRepository
 import com.tangem.domain.pay.repository.TangemPayCardDetailsRepository
+import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
 import com.tangem.domain.visa.model.TangemPayCardFrozenState
 import com.tangem.domain.visa.model.TangemPayTxHistoryItem
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.tangempay.TangemPayConstants
 import com.tangem.features.tangempay.components.AddFundsListener
 import com.tangem.features.tangempay.components.TangemPayDetailsContainerComponent
@@ -48,14 +56,16 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 @Stable
 @ModelScoped
 internal class TangemPayDetailsModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
+    private val analytics: AnalyticsEventHandler,
     private val router: Router,
     private val urlOpener: UrlOpener,
     private val cardDetailsRepository: TangemPayCardDetailsRepository,
@@ -63,6 +73,10 @@ internal class TangemPayDetailsModel @Inject constructor(
     private val uiMessageSender: UiMessageSender,
     private val cardDetailsEventListener: CardDetailsEventListener,
     private val txHistoryUpdateListener: TangemPayTxHistoryUpdateListener,
+    private val tangemPayCryptoCurrencyFactory: TangemPayCryptoCurrencyFactory,
+    private val orderRepository: CustomerOrderRepository,
+    private val getUserWalletUseCase: GetUserWalletUseCase,
+    private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
 ) : Model(), TangemPayTxHistoryUiActions, TangemPayDetailIntents, AddFundsListener {
 
     private val params: TangemPayDetailsContainerComponent.Params = paramsContainer.require()
@@ -123,7 +137,13 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     private fun freezeCard() {
         modelScope.launch {
-            cardDetailsRepository.freezeCard(cardId = params.config.cardId)
+            val result = try {
+                cardDetailsRepository.freezeCard(userWalletId = params.userWalletId, cardId = params.config.cardId)
+            } catch (e: Exception) {
+                Timber.e(e)
+                return@launch
+            }
+            result
                 .onLeft {
                     uiMessageSender.send(SnackbarMessage(resourceReference(R.string.tangem_pay_freeze_card_failed)))
                 }
@@ -155,7 +175,13 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     private fun unfreezeCard() {
         modelScope.launch {
-            cardDetailsRepository.unfreezeCard(cardId = params.config.cardId)
+            val result = try {
+                cardDetailsRepository.unfreezeCard(userWalletId = params.userWalletId, cardId = params.config.cardId)
+            } catch (e: Exception) {
+                Timber.e(e)
+                return@launch
+            }
+            result
                 .onLeft {
                     uiMessageSender.send(SnackbarMessage(resourceReference(R.string.tangem_pay_unfreeze_card_failed)))
                 }
@@ -186,26 +212,77 @@ internal class TangemPayDetailsModel @Inject constructor(
     }
 
     override fun onClickAddFunds() {
-        if (params.config.depositAddress == null || balance == null) {
+        val currentBalance = balance
+        val depositAddress = currentBalance?.depositAddress
+        if (currentBalance == null || depositAddress == null) {
             showBottomSheetError(TangemPayDetailsErrorType.Receive)
         } else {
             bottomSheetNavigation.activate(
                 TangemPayDetailsNavigation.AddFunds(
                     walletId = params.userWalletId,
-                    fiatBalance = requireNotNull(balance).balance,
-                    // Using the fiat balance as crypto balance. This will be changed when back returns crypto balance
-                    cryptoBalance = requireNotNull(balance).balance,
-                    depositAddress = requireNotNull(params.config.depositAddress),
+                    fiatBalance = currentBalance.fiatBalance,
+                    cryptoBalance = currentBalance.cryptoBalance,
+                    depositAddress = depositAddress,
                     chainId = params.config.chainId,
                 ),
             )
         }
     }
 
+    override fun onClickWithdraw() {
+        val currentBalance = balance
+        val depositAddress = currentBalance?.depositAddress
+        if (currentBalance == null || depositAddress == null) {
+            showBottomSheetError(TangemPayDetailsErrorType.Withdraw)
+        } else {
+            modelScope.launch {
+                val hasActiveWithdrawal = orderRepository.hasWithdrawOrder(userWalletId = params.userWalletId)
+                if (hasActiveWithdrawal) {
+                    showBottomSheetError(TangemPayDetailsErrorType.WithdrawInProgress)
+                } else {
+                    val userWallet = getUserWalletUseCase(params.userWalletId).getOrNull()
+                    val currency = userWallet?.let {
+                        tangemPayCryptoCurrencyFactory.create(userWallet = userWallet, chainId = params.config.chainId)
+                            .getOrNull()
+                    }
+                    if (currency != null) {
+                        router.push(
+                            AppRoute.Swap(
+                                currencyFrom = currency,
+                                userWalletId = params.userWalletId,
+                                isInitialReverseOrder = false,
+                                screenSource = AnalyticsParam.ScreensSources.TangemPay.value,
+                                tangemPayInput = AppRoute.Swap.TangemPayInput(
+                                    cryptoAmount = currentBalance.availableForWithdrawal,
+                                    fiatAmount = currentBalance.availableForWithdrawal,
+                                    depositAddress = depositAddress,
+                                    isWithdrawal = true,
+                                ),
+                            ),
+                        )
+                    } else {
+                        showBottomSheetError(TangemPayDetailsErrorType.Withdraw)
+                    }
+                }
+            }
+        }
+    }
+
     private fun fetchBalance(): Job {
         return modelScope.launch {
-            val result = cardDetailsRepository.getCardBalance().onRight { balance = it }
-            uiState.update(DetailsBalanceTransformer(balance = result))
+            val result = try {
+                cardDetailsRepository.getCardBalance(params.userWalletId).onRight { balance = it }
+            } catch (e: Exception) {
+                Timber.e(e)
+                return@launch
+            }
+            uiState.update(
+                transformer = DetailsBalanceTransformer(
+                    balance = result,
+                    userWallet = getUserWalletUseCase(params.userWalletId).getOrNull(),
+                    cryptoCurrencyFactory = tangemPayCryptoCurrencyFactory,
+                ),
+            )
         }.saveIn(fetchBalanceJobHolder)
     }
 
@@ -217,7 +294,12 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     private fun fetchAddToWalletBanner() {
         modelScope.launch {
-            val isDone = cardDetailsRepository.isAddToWalletDone().getOrNull() ?: false
+            val isDone = try {
+                cardDetailsRepository.isAddToWalletDone(params.userWalletId).getOrNull() == true
+            } catch (e: Exception) {
+                Timber.e(e)
+                return@launch
+            }
             uiState.update(
                 transformer = DetailsAddToWalletBannerTransformer(
                     onClickBanner = ::onClickAddToWalletBlock,
@@ -226,6 +308,16 @@ internal class TangemPayDetailsModel @Inject constructor(
                 ),
             )
         }.saveIn(addToWalletBannerJobHolder)
+    }
+
+    override fun onContactSupportClicked() {
+        modelScope.launch {
+            sendFeedbackEmailUseCase.invoke(
+                type = FeedbackEmailType.Visa.FeatureIsBeta(
+                    walletMetaInfo = WalletMetaInfo(userWalletId = params.userWalletId),
+                ),
+            )
+        }
     }
 
     override fun onRefreshSwipe(refreshState: ShowRefreshState) {
@@ -244,7 +336,11 @@ internal class TangemPayDetailsModel @Inject constructor(
 
     private fun onClickCloseAddToWalletBlock() {
         modelScope.launch {
-            cardDetailsRepository.setAddToWalletAsDone()
+            try {
+                cardDetailsRepository.setAddToWalletAsDone(params.userWalletId)
+            } catch (e: Exception) {
+                Timber.e(e)
+            }
             uiState.update(
                 transformer = DetailsAddToWalletBannerTransformer(
                     onClickBanner = ::onClickAddToWalletBlock,
@@ -256,6 +352,7 @@ internal class TangemPayDetailsModel @Inject constructor(
     }
 
     override fun onClickSwap(data: TangemPayTopUpData) {
+        analytics.send(TangemPayAnalyticsEvents.SwapClicked())
         bottomSheetNavigation.dismiss()
         router.push(
             AppRoute.Swap(
@@ -267,12 +364,14 @@ internal class TangemPayDetailsModel @Inject constructor(
                     cryptoAmount = data.cryptoBalance,
                     fiatAmount = data.fiatBalance,
                     depositAddress = data.depositAddress,
+                    isWithdrawal = false,
                 ),
             ),
         )
     }
 
     override fun onClickReceive(data: TangemPayTopUpData) {
+        analytics.send(TangemPayAnalyticsEvents.ReceiveFundsClicked())
         bottomSheetNavigation.dismiss()
         val config = TokenReceiveConfig(
             shouldShowWarning = false,
@@ -289,7 +388,12 @@ internal class TangemPayDetailsModel @Inject constructor(
     }
 
     override fun onTransactionClick(item: TangemPayTxHistoryItem) {
-        bottomSheetNavigation.activate(TangemPayDetailsNavigation.TransactionDetails(item))
+        bottomSheetNavigation.activate(
+            configuration = TangemPayDetailsNavigation.TransactionDetails(
+                transaction = item,
+                isBalanceHidden = uiState.value.isBalanceHidden,
+            ),
+        )
     }
 
     override fun onClickTermsAndLimits() {
@@ -297,6 +401,6 @@ internal class TangemPayDetailsModel @Inject constructor(
     }
 
     private fun showBottomSheetError(type: TangemPayDetailsErrorType) {
-        uiMessageSender.send(message = TangemPayMessagesFactory.createErrorMessage(type = type))
+        uiMessageSender.send(message = TangemPayMessagesFactory.createErrorMessage(errorType = type))
     }
 }

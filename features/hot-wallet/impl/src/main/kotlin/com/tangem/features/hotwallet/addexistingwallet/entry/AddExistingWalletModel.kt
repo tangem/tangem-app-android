@@ -2,6 +2,8 @@ package com.tangem.features.hotwallet.addexistingwallet.entry
 
 import com.arkivanov.decompose.router.stack.*
 import com.tangem.common.routing.AppRoute
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.core.decompose.di.GlobalUiMessageSender
 import com.tangem.core.decompose.di.ModelScoped
@@ -15,6 +17,7 @@ import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.settings.ShouldAskPermissionUseCase
 import com.tangem.domain.hotwallet.SetAccessCodeSkippedUseCase
+import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import com.tangem.features.hotwallet.addexistingwallet.entry.routing.AddExistingWalletRoute
 import com.tangem.features.hotwallet.addexistingwallet.im.port.AddExistingWalletImportComponent
 import com.tangem.features.hotwallet.manualbackup.completed.ManualBackupCompletedComponent
@@ -24,10 +27,12 @@ import com.tangem.features.hotwallet.stepper.api.HotWalletStepperComponent
 import com.tangem.features.pushnotifications.api.PushNotificationsModelCallbacks
 import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 @ModelScoped
 internal class AddExistingWalletModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
@@ -36,18 +41,21 @@ internal class AddExistingWalletModel @Inject constructor(
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
     private val trackingContextProxy: TrackingContextProxy,
     private val setAccessCodeSkippedUseCase: SetAccessCodeSkippedUseCase,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
 
     val hotWalletStepperComponentModelCallback = HotWalletStepperComponentModelCallback()
     val addExistingWalletImportModelCallbacks = AddExistingWalletImportModelCallbacks()
-    val manualBackupCompletedComponentModelCallbacks = ManualBackupCompletedComponentModelCallbacks()
+    val manualBackupCompletedModelCallbacks = ManualBackupCompletedModelCallbacks()
     val accessCodeModelCallbacks = AccessCodeModelCallbacks()
     val pushNotificationsCallbacks = PushNotificationsCallbacks()
-    val mobileWalletSetupFinishedComponentModelCallbacks = MobileWalletSetupFinishedComponentModelCallbacks()
+    val mobileWalletSetupFinishedModelCallbacks = MobileWalletSetupFinishedModelCallbacks()
 
     val stackNavigation = StackNavigation<AddExistingWalletRoute>()
     val startRoute = AddExistingWalletRoute.Import
     val currentRoute: MutableStateFlow<AddExistingWalletRoute> = MutableStateFlow(startRoute)
+
+    private val analyticsSource = AnalyticsParam.ScreensSources.ImportWallet
 
     init {
         trackingContextProxy.addHotWalletContext()
@@ -103,7 +111,7 @@ internal class AddExistingWalletModel @Inject constructor(
                     title = resourceReference(R.string.access_code_alert_skip_ok),
                     onClick = {
                         if (userWalletId != null) {
-                            modelScope.launch {
+                            modelScope.launch(NonCancellable) {
                                 setAccessCodeSkippedUseCase(userWalletId, true)
                             }
                         }
@@ -131,8 +139,11 @@ internal class AddExistingWalletModel @Inject constructor(
         }
     }
 
-    inner class ManualBackupCompletedComponentModelCallbacks : ManualBackupCompletedComponent.ModelCallbacks {
+    inner class ManualBackupCompletedModelCallbacks : ManualBackupCompletedComponent.ModelCallbacks {
         override fun onContinueClick(userWalletId: UserWalletId) {
+            analyticsEventHandler.send(
+                event = WalletSettingsAnalyticEvents.AccessCodeScreenOpened(source = analyticsSource.value),
+            )
             stackNavigation.replaceAll(AddExistingWalletRoute.SetAccessCode(userWalletId))
         }
 
@@ -141,6 +152,9 @@ internal class AddExistingWalletModel @Inject constructor(
 
     inner class AccessCodeModelCallbacks : AccessCodeComponent.ModelCallbacks {
         override fun onNewAccessCodeInput(userWalletId: UserWalletId, accessCode: String) {
+            analyticsEventHandler.send(
+                event = WalletSettingsAnalyticEvents.ReEnterAccessCodeScreen(source = analyticsSource.value),
+            )
             stackNavigation.push(AddExistingWalletRoute.ConfirmAccessCode(userWalletId, accessCode))
         }
 
@@ -163,7 +177,7 @@ internal class AddExistingWalletModel @Inject constructor(
         }
     }
 
-    inner class MobileWalletSetupFinishedComponentModelCallbacks :
+    inner class MobileWalletSetupFinishedModelCallbacks :
         MobileWalletSetupFinishedComponent.ModelCallbacks {
         override fun onFinishClick() {
             router.replaceAll(AppRoute.Wallet)

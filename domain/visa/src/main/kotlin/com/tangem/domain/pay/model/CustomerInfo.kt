@@ -1,6 +1,12 @@
 package com.tangem.domain.pay.model
 
+import com.tangem.domain.visa.model.TangemPayCardFrozenState
 import java.math.BigDecimal
+
+sealed class MainCustomerInfoContentState {
+    object Loading : MainCustomerInfoContentState()
+    data class Content(val info: MainScreenCustomerInfo) : MainCustomerInfoContentState()
+}
 
 data class MainScreenCustomerInfo(
     val info: CustomerInfo,
@@ -16,13 +22,8 @@ data class CustomerInfo(
     data class ProductInstance(
         val id: String,
         val cardId: String,
-        val status: Status,
-    ) {
-        enum class Status {
-            ACTIVE,
-            INACTIVE,
-        }
-    }
+        val cardFrozenState: TangemPayCardFrozenState,
+    )
 
     data class CardInfo(
         val lastFourDigits: String,

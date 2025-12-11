@@ -2,6 +2,7 @@ package com.tangem.features.tangempay.entity
 
 import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
+import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.visa.model.TangemPayCardFrozenState
 import kotlinx.collections.immutable.ImmutableList
@@ -14,10 +15,12 @@ internal data class TangemPayDetailsUM(
     val isBalanceHidden: Boolean,
     val addFundsEnabled: Boolean,
     val cardFrozenState: CardFrozenState,
+    val betaNotificationConfig: NotificationConfig,
 )
 
 internal data class TangemPayCardDetailsUM(
     val number: String,
+    val numberShort: String,
     val expiry: String,
     val cvv: String,
     val buttonText: TextReference = TextReference.EMPTY,

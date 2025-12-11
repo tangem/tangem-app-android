@@ -1,8 +1,0 @@
-<?xml version="1.0" ?>
-<SmellBaseline>
-  <ManuallySuppressedIssues/>
-  <CurrentIssues>
-    <ID>CouldBeSequence:GetSwapPairsUseCase.kt$GetSwapPairsUseCase$filter { pair -&gt; filteringCurrency(pair).currency.id.rawCurrencyId == initialCurrency.id.rawCurrencyId }</ID>
-    <ID>CouldBeSequence:GetSwapSupportedPairsUseCase.kt$GetSwapSupportedPairsUseCase$filter { pair -&gt; filteringCurrency(pair).currency.id.rawCurrencyId == initialCurrency.id.rawCurrencyId }</ID>
-  </CurrentIssues>
-</SmellBaseline>

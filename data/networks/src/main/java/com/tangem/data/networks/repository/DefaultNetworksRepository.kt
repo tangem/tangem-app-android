@@ -79,6 +79,10 @@ internal class DefaultNetworksRepository(
             }
     }
 
+    override suspend fun hasCachedStatuses(userWalletId: UserWalletId): Boolean {
+        return networksStatusesStore.contains(userWalletId)
+    }
+
     private suspend fun fetchPendingTransactions(
         userWalletId: UserWalletId,
         network: Network,

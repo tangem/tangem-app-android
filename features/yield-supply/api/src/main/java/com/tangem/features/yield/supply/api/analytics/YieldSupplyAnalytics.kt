@@ -8,7 +8,7 @@ import com.tangem.core.analytics.models.AnalyticsParam.Key.TOKEN_PARAM
 
 sealed class YieldSupplyAnalytics(
     event: String,
-    params: Map<String, String> = mapOf(),
+    params: Map<String, String> = emptyMap(),
 ) : AnalyticsEvent(category = "Earning", event = event, params = params) {
 
     data class EarningScreenInfoOpened(
@@ -189,7 +189,7 @@ sealed class YieldSupplyAnalytics(
         ),
     )
 
-    data object ApyChartViewed : YieldSupplyAnalytics(
+    class ApyChartViewed : YieldSupplyAnalytics(
         event = "APY Chart",
     )
 

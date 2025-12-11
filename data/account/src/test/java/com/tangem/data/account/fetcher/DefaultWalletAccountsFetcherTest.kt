@@ -3,6 +3,7 @@ package com.tangem.data.account.fetcher
 import com.google.common.truth.Truth
 import com.tangem.data.account.converter.createGetWalletAccountsResponse
 import com.tangem.data.account.converter.createWalletAccountDTO
+import com.tangem.data.account.fetcher.DefaultWalletAccountsFetcher.FetchResult
 import com.tangem.data.account.store.AccountsResponseStore
 import com.tangem.data.account.store.AccountsResponseStoreFactory
 import com.tangem.data.account.utils.DefaultWalletAccountsResponseFactory
@@ -216,7 +217,7 @@ class DefaultWalletAccountsFetcherTest {
                     pushWalletAccounts = any(),
                     storeWalletAccounts = any(),
                 )
-            } returns savedAccountsResponse
+            } returns FetchResult(savedAccountsResponse)
 
             // Act
             fetcher.fetch(userWalletId)

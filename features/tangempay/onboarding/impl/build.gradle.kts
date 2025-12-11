@@ -13,12 +13,11 @@ android {
 
 dependencies {
     /** Core */
+    implementation(projects.core.analytics)
     implementation(projects.core.decompose)
-    implementation(projects.core.ui)
     implementation(projects.core.error)
     implementation(projects.core.navigation)
-    implementation(deps.arrow.core)
-    implementation(deps.arrow.core)
+    implementation(projects.core.ui)
 
     /** Common */
     implementation(projects.common.routing)
@@ -31,6 +30,10 @@ dependencies {
 
     /** Domain */
     implementation(projects.domain.visa)
+    implementation(projects.domain.wallets)
+
+    /** Data **/
+    implementation(projects.data.visa)
 
     /** Compose */
     implementation(deps.compose.foundation)
@@ -44,4 +47,5 @@ dependencies {
 
     /** Other */
     implementation(deps.timber)
+    implementation(deps.arrow.core)
 }

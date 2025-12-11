@@ -1,8 +1,6 @@
 package com.tangem.feature.walletsettings.utils
 
-import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.di.ModelScoped
-import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.components.block.model.BlockUM
 import com.tangem.core.ui.components.label.entity.LabelStyle
 import com.tangem.core.ui.components.label.entity.LabelUM
@@ -18,9 +16,7 @@ import kotlinx.collections.immutable.toImmutableList
 import javax.inject.Inject
 
 @ModelScoped
-internal class ItemsBuilder @Inject constructor(
-    private val router: Router,
-) {
+internal class ItemsBuilder @Inject constructor() {
 
     @Suppress("LongParameterList")
     fun buildItems(
@@ -45,6 +41,8 @@ internal class ItemsBuilder @Inject constructor(
         walletUpgradeDismissed: Boolean,
         onUpgradeWalletClick: () -> Unit,
         onDismissUpgradeWalletClick: () -> Unit,
+        onBackupClick: () -> Unit,
+        onCardSettingsClick: () -> Unit,
     ): PersistentList<WalletSettingsItemUM> = persistentListOf<WalletSettingsItemUM>()
         .add(cardItem)
         .addAll(
@@ -66,6 +64,8 @@ internal class ItemsBuilder @Inject constructor(
                 onLinkMoreCardsClick = onLinkMoreCardsClick,
                 onReferralClick = onReferralClick,
                 onManageTokensClick = onManageTokensClick,
+                onBackupClick = onBackupClick,
+                onCardSettingsClick = onCardSettingsClick,
             ),
         )
         .addAll(
@@ -173,18 +173,19 @@ internal class ItemsBuilder @Inject constructor(
         onLinkMoreCardsClick: () -> Unit,
         onReferralClick: () -> Unit,
         onManageTokensClick: () -> Unit,
+        onBackupClick: () -> Unit,
+        onCardSettingsClick: () -> Unit,
     ) = WalletSettingsItemUM.WithItems(
         id = "card",
         description = resourceReference(R.string.settings_card_settings_footer),
         blocks = buildList {
-            val userWalletId = userWallet.walletId
             val isHotWallet = userWallet is UserWallet.Hot
             if (isHotWallet) {
                 val hasBackup = userWallet.backedUp
                 val backupBlock = BlockUM(
                     text = resourceReference(R.string.common_backup),
                     iconRes = R.drawable.ic_more_cards_24,
-                    onClick = { router.push(AppRoute.WalletBackup(userWalletId)) },
+                    onClick = { onBackupClick() },
                     endContent = if (hasBackup) {
                         BlockUM.EndContent.None
                     } else {
@@ -224,7 +225,7 @@ internal class ItemsBuilder @Inject constructor(
                 val deviceSettingsBlock = BlockUM(
                     text = resourceReference(R.string.card_settings_title),
                     iconRes = R.drawable.ic_card_settings_24,
-                    onClick = { router.push(AppRoute.CardSettings(userWalletId)) },
+                    onClick = { onCardSettingsClick() },
                 )
 
                 add(deviceSettingsBlock)

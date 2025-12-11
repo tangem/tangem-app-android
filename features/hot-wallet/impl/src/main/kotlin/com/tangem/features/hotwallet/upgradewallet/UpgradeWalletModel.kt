@@ -6,6 +6,10 @@ import com.tangem.common.doOnFailure
 import com.tangem.common.doOnResult
 import com.tangem.common.doOnSuccess
 import com.tangem.common.routing.AppRoute
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.Basic
+import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -17,13 +21,15 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.toWrappedList
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
-import com.tangem.domain.card.BackupValidator
+import com.tangem.domain.card.analytics.IntroductionProcess
+import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.settings.repositories.SettingsRepository
+import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
 import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.wallets.usecase.ClearHotWalletContextualUnlockUseCase
 import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
@@ -57,6 +63,8 @@ internal class UpgradeWalletModel @Inject constructor(
     private val tangemSdkManager: TangemSdkManager,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val coldUserWalletBuilderFactory: ColdUserWalletBuilder.Factory,
+    private val trackingContextProxy: TrackingContextProxy,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
     private val params = paramsContainer.require<UpgradeWalletComponent.Params>()
 
@@ -72,18 +80,27 @@ internal class UpgradeWalletModel @Inject constructor(
             ),
         )
 
+    init {
+        trackingContextProxy.addHotWalletContext()
+        analyticsEventHandler.send(WalletSettingsAnalyticEvents.HardwareUpgradeScreenOpened())
+    }
+
     override fun onDestroy() {
+        trackingContextProxy.removeContext()
         clearHotWalletContextualUnlockUseCase.invoke(params.userWalletId)
         super.onDestroy()
     }
 
     private fun onBuyTangemWalletClick() {
+        analyticsEventHandler.send(Basic.ButtonBuy(source = AnalyticsParam.ScreensSources.Upgrade))
         modelScope.launch {
             generateBuyTangemCardLinkUseCase.invoke().let { urlOpener.openUrl(it) }
         }
     }
 
     private fun onContinueClick() {
+        analyticsEventHandler.send(IntroductionProcess.ButtonScanCard(AnalyticsParam.ScreensSources.Upgrade))
+        analyticsEventHandler.send(WalletSettingsAnalyticEvents.ButtonStartUpgrade())
         scanCard()
     }
 
@@ -98,26 +115,12 @@ internal class UpgradeWalletModel @Inject constructor(
 
             tangemSdkManager
                 .scanProduct()
-                .doOnSuccess {
-                    // Check if user attempted to upgrade before but something went wrong and a full reset is required
-                    val userWallet = coldUserWalletBuilderFactory.create(it).build()
-                    val sameWalletButNotFinishedBackup by lazy {
-                        userWallet?.walletId == params.userWalletId &&
-                            BackupValidator.isValidFull(it.card).not()
+                .doOnSuccess { scanResponse ->
+                    checkIsWalletSuitableToBeUsedAsUpgrade(scanResponse = scanResponse) {
+                        delay(DELAY_SDK_DIALOG_CLOSE)
+                        tangemSdkManager.changeDisplayedCardIdNumbersCount(scanResponse)
+                        navigateToUpgradeFlow(scanResponse)
                     }
-                    val otherWalletAndAlreadyCreated by lazy {
-                        userWallet?.walletId != params.userWalletId &&
-                            it.card.wallets.map { it.curve }.toSet().isNotEmpty()
-                    }
-
-                    if (userWallet != null && (sameWalletButNotFinishedBackup || otherWalletAndAlreadyCreated)) {
-                        startResetCardsFlow.emit(userWallet)
-                        return@doOnSuccess
-                    }
-
-                    delay(DELAY_SDK_DIALOG_CLOSE)
-                    tangemSdkManager.changeDisplayedCardIdNumbersCount(it)
-                    navigateToUpgradeFlow(it)
                 }
                 .doOnFailure {
                     showCardVerificationFailedDialog(it)
@@ -132,10 +135,34 @@ internal class UpgradeWalletModel @Inject constructor(
         uiState.update { it.copy(isLoading = isLoading) }
     }
 
+    private suspend fun checkIsWalletSuitableToBeUsedAsUpgrade(
+        scanResponse: ScanResponse,
+        onSuccess: suspend () -> Unit,
+    ) {
+        val userWallet = coldUserWalletBuilderFactory.create(scanResponse).build()
+
+        if (userWallet?.walletId == params.userWalletId) {
+            startResetCardsFlow.emit(userWallet)
+            return
+        }
+
+        // Check for the correct card type
+        when {
+            scanResponse.card.wallets.isNotEmpty() -> uiMessageSender.send(
+                DialogMessage(resourceReference(R.string.hw_upgrade_error_card_already_has_wallet)),
+            )
+            scanResponse.cardTypesResolver.isWallet2().not() -> uiMessageSender.send(
+                DialogMessage(resourceReference(R.string.hw_upgrade_error_wallet2_card_required)),
+            )
+            scanResponse.card.settings.isKeysImportAllowed.not() -> uiMessageSender.send(
+                DialogMessage(resourceReference(R.string.hw_upgrade_error_card_key_import)),
+            )
+            else -> onSuccess()
+        }
+    }
+
     private fun showCardVerificationFailedDialog(error: TangemError) {
         if (error !is TangemSdkError.CardVerificationFailed) return
-
-        // TODO [REDACTED_TASK_KEY] track error
 
         val resource = error.localizedDescriptionRes()
         val resId = resource.resId ?: R.string.common_unknown_error
@@ -179,7 +206,7 @@ internal class UpgradeWalletModel @Inject constructor(
         }
 
         override fun onComplete() {
-            setLoading(false)
+            scanCard()
         }
     }
 }
