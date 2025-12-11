@@ -498,7 +498,7 @@ internal class WalletModel @Inject constructor(
         }
     }
 
-    private suspend fun reinitializeWallet(action: WalletsUpdateActionResolver.Action.ReinitializeWallet) {
+    private fun reinitializeWallet(action: WalletsUpdateActionResolver.Action.ReinitializeWallet) {
         walletScreenContentLoader.cancel(action.prevWalletId)
         tokenListStore.remove(action.prevWalletId)
 
@@ -520,7 +520,7 @@ internal class WalletModel @Inject constructor(
         )
     }
 
-    private suspend fun addWallet(action: WalletsUpdateActionResolver.Action.AddWallet) {
+    private fun addWallet(action: WalletsUpdateActionResolver.Action.AddWallet) {
         if (accountsFeatureToggles.isFeatureEnabled) {
             fetchWalletContent(userWallet = action.selectedWallet)
 
@@ -660,15 +660,15 @@ internal class WalletModel @Inject constructor(
         }
     }
 
-    private suspend fun fetchWalletContent(userWallet: UserWallet) {
+    private fun fetchWalletContent(userWallet: UserWallet) {
         if (userWallet.isLocked) return
 
         /*
          * Updating the balance of the current wallet is an essential part of InitializationWallets,
          * so the coroutine is launched in the current context
          */
-        supervisorScope {
-            launch { walletContentFetcher(userWalletId = userWallet.walletId) }
+        modelScope.launch {
+            walletContentFetcher(userWalletId = userWallet.walletId)
         }
     }
 
