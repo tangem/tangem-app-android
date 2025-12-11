@@ -2,6 +2,7 @@ package com.tangem.tap.di.domain
 
 import com.tangem.domain.onramp.*
 import com.tangem.domain.onramp.repositories.*
+import com.tangem.domain.promo.PromoRepository
 import com.tangem.domain.settings.repositories.SettingsRepository
 import dagger.Module
 import dagger.Provides
@@ -264,12 +265,14 @@ internal object OnrampDomainModule {
         onrampErrorResolver: OnrampErrorResolver,
         onrampTransactionRepository: OnrampTransactionRepository,
         settingsRepository: SettingsRepository,
+        promoRepository: PromoRepository,
     ): GetOnrampOffersUseCase {
         return GetOnrampOffersUseCase(
             onrampRepository = onrampRepository,
             errorResolver = onrampErrorResolver,
             onrampTransactionRepository = onrampTransactionRepository,
             settingsRepository = settingsRepository,
+            promoRepository = promoRepository,
         )
     }
 }
