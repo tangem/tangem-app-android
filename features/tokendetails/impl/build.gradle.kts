@@ -88,6 +88,7 @@ dependencies {
     implementation(projects.domain.wallets)
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.yieldSupply)
+    implementation(projects.domain.yieldSupply.models)
 
     /** Temp dependency to swap domain */
     implementation(projects.features.swap.domain)
