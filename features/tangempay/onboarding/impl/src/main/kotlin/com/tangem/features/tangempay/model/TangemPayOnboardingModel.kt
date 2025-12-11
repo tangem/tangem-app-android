@@ -50,7 +50,6 @@ internal class TangemPayOnboardingModel @Inject constructor(
         field = MutableStateFlow(getInitialState())
 
     init {
-        analytics.send(TangemPayAnalyticsEvents.ActivationScreenOpened)
         modelScope.launch {
             when (params) {
                 is TangemPayOnboardingComponent.Params.ContinueOnboarding -> {
@@ -66,6 +65,8 @@ internal class TangemPayOnboardingModel @Inject constructor(
     }
 
     private fun showOnboarding() {
+        // TODO: move analytics to init block [REDACTED_JIRA]
+        analytics.send(TangemPayAnalyticsEvents.ActivationScreenOpened())
         uiState.update {
             TangemPayOnboardingScreenState.Content(
                 onBack = it.onBack,
@@ -118,12 +119,12 @@ internal class TangemPayOnboardingModel @Inject constructor(
     }
 
     private fun onTermsClick() {
-        analytics.send(TangemPayAnalyticsEvents.ViewTermsClicked)
+        analytics.send(TangemPayAnalyticsEvents.ViewTermsClicked())
         urlOpener.openUrl(TangemPayConstants.TERMS_AND_LIMITS_LINK)
     }
 
     private fun onGetCardClick() {
-        analytics.send(TangemPayAnalyticsEvents.GetCardClicked)
+        analytics.send(TangemPayAnalyticsEvents.GetCardClicked())
         uiState.transformerUpdate(TangemPayOnboardingButtonLoadingTransformer(isLoading = true))
         modelScope.launch {
             // TODO implement selector
