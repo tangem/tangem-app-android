@@ -367,6 +367,23 @@ sealed class WalletNotification(val config: NotificationConfig) {
         ),
     )
 
+    data class OnePlusOnePromo(
+        val onCloseClick: () -> Unit,
+        val onClick: () -> Unit,
+    ) : WalletNotification(
+        config = NotificationConfig(
+            title = resourceReference(R.string.notification_one_plus_one_title),
+            subtitle = resourceReference(R.string.notification_one_plus_one_text),
+            iconResId = R.drawable.img_one_plus_one_promo,
+            onCloseClick = onCloseClick,
+            buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
+                text = resourceReference(R.string.notification_one_plus_one_button),
+                onClick = onClick,
+            ),
+            iconSize = 54.dp,
+        ),
+    )
+
     data class PushNotifications(
         val onCloseClick: () -> Unit,
         val onEnabledClick: () -> Unit,
