@@ -4,7 +4,6 @@ import com.tangem.domain.feedback.FeedbackDataBuilder
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.feedback.models.WalletMetaInfo
 import com.tangem.domain.feedback.repository.FeedbackRepository
-import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import com.tangem.domain.visa.model.VisaTxDetails
 
 /**
@@ -34,31 +33,39 @@ internal class EmailMessageBodyResolver(
             -> addPhoneInfoBody()
             is FeedbackEmailType.Visa.Activation -> addUserRequestBody(type.walletMetaInfo)
             is FeedbackEmailType.Visa.DirectUserRequest -> addUserRequestBody(type.walletMetaInfo)
-            is FeedbackEmailType.Visa.FailedIssueCard -> addUserRequestBody(type.walletMetaInfo)
             is FeedbackEmailType.Visa.Dispute -> addVisaRequestBody(type.walletMetaInfo, type.visaTxDetails)
-            is FeedbackEmailType.Visa.DisputeV2 -> addTangemPayRequestBody(type.walletMetaInfo, type.item)
+            is FeedbackEmailType.Visa.FailedIssueCard -> addTangemPayFailedIssuingCardBody(type)
+            is FeedbackEmailType.Visa.DisputeV2 -> addTangemPayDisputeRequestBody(type)
             is FeedbackEmailType.Visa.Withdrawal -> addTangemPayWithdrawalRequestBody(type)
-            is FeedbackEmailType.Visa.FeatureIsBeta -> addTangemPayBetaRequestBody(type.walletMetaInfo)
+            is FeedbackEmailType.Visa.FeatureIsBeta -> addTangemPayBetaRequestBody(type)
         }
 
         return build()
     }
 
-    private suspend fun FeedbackDataBuilder.addTangemPayRequestBody(
-        walletMetaInfo: WalletMetaInfo,
-        item: TangemPayTxHistoryItem,
-    ) {
-        addUserRequestBody(walletMetaInfo)
+    private fun FeedbackDataBuilder.addTangemPayFailedIssuingCardBody(type: FeedbackEmailType.Visa.FailedIssueCard) {
+        addTangemPayPhoneInfoBody(type)
         addDelimiter()
-        addTangemPayTxInfo(item)
+        type.walletMetaInfo.userWalletId?.let { userWalletId ->
+            addUserWalletId(userWalletId = userWalletId.stringValue)
+        }
     }
 
-    private fun FeedbackDataBuilder.addTangemPayBetaRequestBody(walletMetaInfo: WalletMetaInfo) {
-        addPhoneInfoBody()
+    private fun FeedbackDataBuilder.addTangemPayDisputeRequestBody(type: FeedbackEmailType.Visa.DisputeV2) {
+        addTangemPayPhoneInfoBody(type = type)
         addDelimiter()
-        walletMetaInfo.userWalletId?.let { userWalletId ->
+        addTangemPayTxInfo(type.item)
+        addDelimiter()
+        type.walletMetaInfo.userWalletId?.let { userWalletId ->
             addUserWalletId(userWalletId = userWalletId.stringValue)
-            addDelimiter()
+        }
+    }
+
+    private fun FeedbackDataBuilder.addTangemPayBetaRequestBody(type: FeedbackEmailType.Visa) {
+        addTangemPayPhoneInfoBody(type)
+        addDelimiter()
+        type.walletMetaInfo?.userWalletId?.let { userWalletId ->
+            addUserWalletId(userWalletId = userWalletId.stringValue)
         }
     }
 
@@ -120,6 +127,11 @@ internal class EmailMessageBodyResolver(
 
     private fun FeedbackDataBuilder.addPhoneInfoBody() {
         addPhoneInfo(phoneInfo = feedbackRepository.getPhoneInfo())
+    }
+
+    private fun FeedbackDataBuilder.addTangemPayPhoneInfoBody(type: FeedbackEmailType.Visa) {
+        addPhoneInfo(phoneInfo = feedbackRepository.getPhoneInfo())
+        addTangemPayIssueType(type)
     }
 
     private suspend fun FeedbackDataBuilder.addTransactionSendingProblemBody(walletMetaInfo: WalletMetaInfo) {
