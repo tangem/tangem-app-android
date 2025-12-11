@@ -12,6 +12,7 @@ internal class FeedbackDataBuilder {
 
     fun addTangemPayTxInfo(item: TangemPayTxHistoryItem) {
         builder.append(item.jsonRepresentation)
+        builder.breakLine()
     }
 
     fun addVisaTxInfo(txDetails: VisaTxDetails) {
@@ -106,6 +107,26 @@ internal class FeedbackDataBuilder {
         builder.appendKeyValue("Phone model", phoneInfo.phoneModel)
         builder.appendKeyValue("OS version", phoneInfo.osVersion)
         builder.appendKeyValue("App version", phoneInfo.appVersion)
+    }
+
+    fun addTangemPayIssueType(type: FeedbackEmailType.Visa) {
+        val issueType = when (type) {
+            is FeedbackEmailType.Visa.Activation,
+            is FeedbackEmailType.Visa.DirectUserRequest,
+            is FeedbackEmailType.Visa.Dispute,
+            is FeedbackEmailType.Visa.FeatureIsBeta,
+            is FeedbackEmailType.Visa.Withdrawal,
+            -> return
+            is FeedbackEmailType.Visa.DisputeV2 -> when (type.item) {
+                is TangemPayTxHistoryItem.Collateral -> "Receive/Withdraw"
+                is TangemPayTxHistoryItem.Fee,
+                is TangemPayTxHistoryItem.Spend,
+                is TangemPayTxHistoryItem.Payment,
+                -> "Transaction"
+            }
+            is FeedbackEmailType.Visa.FailedIssueCard -> "Card issuing"
+        }
+        builder.appendKeyValue("Issue type", issueType)
     }
 
     fun addBlockchainError(info: BlockchainInfo, error: BlockchainErrorInfo) {
