@@ -1,11 +1,13 @@
 package com.tangem.domain.yield.supply.usecase
 
 import com.tangem.core.ui.format.bigdecimal.anyDecimals
+import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
+import com.tangem.domain.yield.supply.models.YieldSupplyRewardBalance
 import com.tangem.domain.yield.supply.YieldSupplyRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.delay
@@ -22,7 +24,7 @@ class YieldSupplyGetRewardsBalanceUseCase(
     private val dispatcherProvider: CoroutineDispatcherProvider,
 ) {
 
-    operator fun invoke(status: CryptoCurrencyStatus, appCurrency: AppCurrency): Flow<String> = flow {
+    operator fun invoke(status: CryptoCurrencyStatus, appCurrency: AppCurrency): Flow<YieldSupplyRewardBalance> = flow {
         val cryptoAmount = status.value.amount
         val fiatRate = status.value.fiatRate
 
@@ -30,11 +32,7 @@ class YieldSupplyGetRewardsBalanceUseCase(
             return@flow
         }
 
-        val amount = if (cryptoAmount != null && fiatRate != null) {
-            cryptoAmount.multiply(fiatRate)
-        } else {
-            return@flow
-        }
+        if (cryptoAmount == null) return@flow
 
         val tokenAddress = (status.currency as? CryptoCurrency.Token)?.contractAddress ?: return@flow
         val apy = try {
@@ -50,37 +48,57 @@ class YieldSupplyGetRewardsBalanceUseCase(
             return@flow
         }
 
-        val initialPerTickDelta = amount
-            .multiply(apyFraction)
-            .multiply(TICK_SECONDS_BD)
-            .divide(SECONDS_PER_YEAR_BD, SCALE, RoundingMode.HALF_UP)
-            .abs()
+        val initialPerTickDeltaCrypto = perTickDelta(cryptoAmount, apyFraction).abs()
 
-        val minVisibleDecimals = calculateMinVisibleDecimals(initialPerTickDelta)
+        val minVisibleDecimalsCrypto = calculateMinVisibleDecimals(
+            perTickDeltaAbs = initialPerTickDeltaCrypto,
+            maxDecimals = status.currency.decimals,
+        )
 
-        var currentBalance: BigDecimal = amount
+        val fiatAmountStart = fiatRate?.let { cryptoAmount.multiply(it) }
+        val minVisibleDecimalsFiat = fiatAmountStart?.let { amount ->
+            val initialPerTickDeltaFiat = perTickDelta(amount, apyFraction).abs()
+            calculateMinVisibleDecimals(
+                perTickDeltaAbs = initialPerTickDeltaFiat,
+                maxDecimals = FIAT_MAX_DECIMALS,
+            )
+        }
+
+        var currentCryptoBalance: BigDecimal = cryptoAmount
+        var currentFiatBalance: BigDecimal? = fiatAmountStart
         while (true) {
+            val fiatBalanceFormatted: String? = currentFiatBalance?.format {
+                fiat(
+                    fiatCurrencyCode = appCurrency.code,
+                    fiatCurrencySymbol = appCurrency.symbol,
+                ).anyDecimals(decimals = minVisibleDecimalsFiat ?: FIAT_MIN_DECIMALS)
+            }
+
+            val cryptoBalanceFormatted: String = currentCryptoBalance.format {
+                crypto(status.currency).anyDecimals(
+                    maxDecimals = minVisibleDecimalsCrypto,
+                    minDecimals = minVisibleDecimalsCrypto,
+                )
+            }
+
             emit(
-                currentBalance.format {
-                    fiat(
-                        fiatCurrencyCode = appCurrency.code,
-                        fiatCurrencySymbol = appCurrency.symbol,
-                    ).anyDecimals(decimals = minVisibleDecimals)
-                },
+                YieldSupplyRewardBalance(fiatBalance = fiatBalanceFormatted, cryptoBalance = cryptoBalanceFormatted),
             )
 
-            val perTickDelta = currentBalance
-                .multiply(apyFraction)
-                .multiply(TICK_SECONDS_BD)
-                .divide(SECONDS_PER_YEAR_BD, SCALE, RoundingMode.HALF_UP)
+            val perTickDeltaCrypto = perTickDelta(currentCryptoBalance, apyFraction)
 
-            currentBalance = currentBalance.add(perTickDelta)
+            currentCryptoBalance = currentCryptoBalance.add(perTickDeltaCrypto)
+
+            currentFiatBalance = currentFiatBalance?.let { current ->
+                val perTickDeltaFiat = perTickDelta(current, apyFraction)
+                current.add(perTickDeltaFiat)
+            }
 
             delay(TICK_MILLIS)
         }
     }.flowOn(dispatcherProvider.default)
 
-    private fun calculateMinVisibleDecimals(perTickDeltaAbs: BigDecimal): Int {
+    private fun calculateMinVisibleDecimals(perTickDeltaAbs: BigDecimal, maxDecimals: Int): Int {
         if (perTickDeltaAbs <= BigDecimal.ZERO) return MIN_DECIMALS
 
         val perTickAsDouble = perTickDeltaAbs.toDouble()
@@ -88,20 +106,28 @@ class YieldSupplyGetRewardsBalanceUseCase(
 
         val safe = if (perTickAsDouble <= 0.0) EPSILON else perTickAsDouble
         val raw = ceil(-ln(safe) / LN_10)
-        return raw.toInt().coerceIn(MIN_DECIMALS, MAX_DECIMALS)
+        return raw.toInt().coerceIn(MIN_DECIMALS, maxDecimals)
     }
 
-    private companion object {
-        const val TICK_MILLIS: Long = 800
-        private val TICK_SECONDS_BD = BigDecimal("0.8")
-        private val SECONDS_PER_YEAR_BD = BigDecimal("31536000") // 365 * 24 * 60 * 60
-        private val HUNDRED_BD = BigDecimal("100")
-        private const val SCALE = 18
+    private fun perTickDelta(amount: BigDecimal, apyFraction: BigDecimal): BigDecimal {
+        return amount
+            .multiply(apyFraction)
+            .multiply(TICK_SECONDS_BD)
+            .divide(SECONDS_PER_YEAR_BD, SCALE, RoundingMode.HALF_UP)
+    }
 
-        private const val MIN_DECIMALS = 3
-        private const val MAX_DECIMALS = 12
+    companion object {
+        internal const val TICK_MILLIS: Long = 800
+        internal val TICK_SECONDS_BD: BigDecimal = BigDecimal("0.8")
+        internal val SECONDS_PER_YEAR_BD: BigDecimal = BigDecimal("31536000") // 365 * 24 * 60 * 60
+        internal val HUNDRED_BD: BigDecimal = BigDecimal("100")
+        internal const val SCALE: Int = 18
 
-        private val LN_10 = ln(10.0)
-        private const val EPSILON = 1e-18
+        internal const val MIN_DECIMALS: Int = 3
+        internal const val FIAT_MIN_DECIMALS: Int = 2
+        internal const val FIAT_MAX_DECIMALS: Int = 12
+
+        internal val LN_10: Double = ln(10.0)
+        internal const val EPSILON: Double = 1e-18
     }
 }
