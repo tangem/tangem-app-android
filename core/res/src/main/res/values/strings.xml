@@ -1453,6 +1453,7 @@
   <string name="tangempay_failed_to_issue_card">Failed to issue card</string>
   <string name="tangempay_failed_to_issue_card_retry_description">A technical error has occurred, please try again by clicking the button below.</string>
   <string name="tangempay_failed_to_issue_card_support_description">A technical error has occurred, please contact support.</string>
+  <string name="tangempay_go_to_support">Go to Support</string>
   <string name="tangempay_issue_card_notification_description">It usually takes up to 15 minutes</string>
   <string name="tangempay_issue_card_notification_title">Setting up your Tangem Card</string>
   <string name="tangempay_issuing_your_card">Issuing your card</string>
