@@ -112,6 +112,7 @@ internal object UserWalletsListManagerModule {
             publicInformationRepository = publicInformationRepository,
             sensitiveInformationRepository = sensitiveInformationRepository,
             selectedUserWalletRepository = selectedUserWalletRepository,
+            dispatcherProvider = dispatchers,
         )
     }
 
