@@ -65,6 +65,7 @@ internal class TangemPayClickIntentsImplementor @Inject constructor(
         val issuingBottomSheet = bottomSheetMessage {
             infoBlock {
                 icon(com.tangem.core.ui.R.drawable.ic_clock_24) {
+                    type = MessageBottomSheetUMV2.Icon.Type.Informative
                     backgroundType = MessageBottomSheetUMV2.Icon.BackgroundType.Informative
                 }
                 title = resourceReference(R.string.tangempay_issuing_your_card)
