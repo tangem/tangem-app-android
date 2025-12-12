@@ -183,6 +183,12 @@ object PreferencesKeys {
     fun getTangemPayAddToWalletKey(customerWalletAddress: String) =
         booleanPreferencesKey("tangem_pay_add_to_wallet_done_key_$customerWalletAddress")
 
+    fun getTangemPayOrderIdKey(customerWalletAddress: String) =
+        stringPreferencesKey("tangem_pay_order_id_key_$customerWalletAddress")
+
+    fun getTangemPayCustomerWalletAddressKey(userWalletId: UserWalletId) =
+        stringPreferencesKey("tangem_pay_customer_wallet_address_key_${userWalletId.stringValue}")
+
     fun getTangemPayCheckCustomerByWalletId(userWalletId: UserWalletId) =
         booleanPreferencesKey("tangem_pay_check_customer_by_wallet_id_$userWalletId")
 

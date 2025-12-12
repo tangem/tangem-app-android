@@ -2,7 +2,6 @@
 
 package com.tangem.feature.wallet.presentation.wallet.domain
 
-import arrow.core.getOrElse
 import com.tangem.common.ui.notifications.NotificationId
 import com.tangem.common.ui.userwallet.ext.walletInterationIcon
 import com.tangem.core.decompose.di.ModelScoped
@@ -22,12 +21,9 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.notifications.repository.NotificationsRepository
-import com.tangem.domain.onramp.GetOnrampCountryUseCase
-import com.tangem.domain.onramp.OnrampSepaAvailableUseCase
 import com.tangem.domain.promo.ShouldShowPromoWalletUseCase
 import com.tangem.domain.promo.models.PromoId
 import com.tangem.domain.settings.IsReadyToShowRateAppUseCase
-import com.tangem.domain.tokens.GetCryptoCurrenciesUseCase
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.wallets.models.SeedPhraseNotificationsStatus
 import com.tangem.domain.wallets.usecase.IsNeedToBackupUseCase
@@ -38,7 +34,6 @@ import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.account.AccountDependencies
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotification
 import com.tangem.hot.sdk.model.HotWalletId
-import com.tangem.lib.crypto.BlockchainUtils.isBitcoin
 import com.tangem.utils.extensions.addIf
 import com.tangem.utils.extensions.isPositive
 import kotlinx.collections.immutable.ImmutableList
@@ -47,7 +42,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
-import timber.log.Timber
 import javax.inject.Inject
 
 @Suppress("LongParameterList", "LargeClass")
@@ -60,9 +54,6 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
     private val backupValidator: BackupValidator,
     private val seedPhraseNotificationUseCase: SeedPhraseNotificationUseCase,
     private val shouldShowPromoWalletUseCase: ShouldShowPromoWalletUseCase,
-    private val getCryptoCurrenciesUseCase: GetCryptoCurrenciesUseCase,
-    private val onrampSepaAvailableUseCase: OnrampSepaAvailableUseCase,
-    private val getOnrampCountryUseCase: GetOnrampCountryUseCase,
     private val notificationsRepository: NotificationsRepository,
     private val accountDependencies: AccountDependencies,
     private val getAccessCodeSkippedUseCase: GetAccessCodeSkippedUseCase,
@@ -99,11 +90,7 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
             isReadyToShowRateAppUseCase().distinctUntilChanged(),
             isNeedToBackupUseCase(userWallet.walletId).distinctUntilChanged(),
             seedPhraseNotificationUseCase(userWalletId = userWallet.walletId).distinctUntilChanged(),
-            shouldShowPromoWalletUseCase(userWalletId = userWallet.walletId, promoId = PromoId.VisaPresale)
-                .distinctUntilChanged(),
-            shouldShowPromoWalletUseCase(userWalletId = userWallet.walletId, promoId = PromoId.Sepa)
-                .distinctUntilChanged(),
-            shouldShowPromoWalletUseCase(userWalletId = userWallet.walletId, promoId = PromoId.BlackFriday)
+            shouldShowPromoWalletUseCase(userWalletId = userWallet.walletId, promoId = PromoId.OnePlusOne)
                 .distinctUntilChanged(),
             notificationsRepository.getShouldShowNotification(NotificationId.EnablePushesReminderNotification.key)
                 .distinctUntilChanged(),
@@ -117,11 +104,9 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
                 val isReadyToShowRating = array[1] as Boolean
                 val isNeedToBackup = array[2] as Boolean
                 val seedPhraseIssueStatus = array[3] as SeedPhraseNotificationsStatus
-                val shouldShowVisaPromo = array[4] as Boolean
-                val shouldShowSepaBanner = array[5] as Boolean
-                val shouldShowBlackFridayPromo = array[6] as Boolean
-                val shouldShowEnablePushesReminderNotification = array[7] as Boolean
-                val shouldAccessCodeSkipped = array[8] as Boolean
+                val shouldShowOnePlusOnePromo = array[4] as Boolean
+                val shouldShowEnablePushesReminderNotification = array[5] as Boolean
+                val shouldAccessCodeSkipped = array[6] as Boolean
 
                 buildList {
                     addUsedOutdatedDataNotification(totalFiatBalance)
@@ -135,16 +120,7 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
                         shouldAccessCodeSkipped = shouldAccessCodeSkipped,
                     )
 
-                    addBlackFridayPromoNotification(clickIntents, shouldShowBlackFridayPromo)
-
-                    addVisaPresalePromoNotification(clickIntents, shouldShowVisaPromo)
-
-                    addSepaPromoNotification(
-                        userWallet = userWallet,
-                        flattenCurrencies = flattenCurrencies,
-                        clickIntents = clickIntents,
-                        shouldShowSepaPromo = shouldShowSepaBanner,
-                    )
+                    addOnePlusOnePromoNotification(clickIntents, shouldShowOnePlusOnePromo)
 
                     addInformationalNotifications(userWallet, cardTypesResolver, flattenCurrencies, clickIntents)
 
@@ -297,69 +273,16 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
             .map(CryptoCurrencyStatus::currency)
     }
 
-    private fun MutableList<WalletNotification>.addVisaPresalePromoNotification(
+    private fun MutableList<WalletNotification>.addOnePlusOnePromoNotification(
         clickIntents: WalletClickIntents,
         shouldShowPromo: Boolean,
     ) {
         addIf(
-            element = WalletNotification.VisaPresalePromo(
-                onCloseClick = { clickIntents.onClosePromoClick(promoId = PromoId.VisaPresale) },
-                onClick = { clickIntents.onPromoClick(promoId = PromoId.VisaPresale) },
+            element = WalletNotification.OnePlusOnePromo(
+                onCloseClick = { clickIntents.onClosePromoClick(promoId = PromoId.OnePlusOne) },
+                onClick = { clickIntents.onPromoClick(promoId = PromoId.OnePlusOne) },
             ),
             condition = shouldShowPromo,
-        )
-    }
-
-    private fun MutableList<WalletNotification>.addBlackFridayPromoNotification(
-        clickIntents: WalletClickIntents,
-        shouldShowPromo: Boolean,
-    ) {
-        addIf(
-            element = WalletNotification.BlackFridayPromo(
-                onCloseClick = { clickIntents.onClosePromoClick(promoId = PromoId.BlackFriday) },
-                onClick = { clickIntents.onPromoClick(promoId = PromoId.BlackFriday) },
-            ),
-            condition = shouldShowPromo,
-        )
-    }
-
-    private suspend fun MutableList<WalletNotification>.addSepaPromoNotification(
-        userWallet: UserWallet,
-        flattenCurrencies: Lce<TokenListError, List<CryptoCurrencyStatus>>,
-        clickIntents: WalletClickIntents,
-        shouldShowSepaPromo: Boolean,
-    ) {
-        val currencies = if (accountDependencies.accountsFeatureToggles.isFeatureEnabled) {
-            flattenCurrencies.map { statuses -> statuses.map { it.currency } }.getOrNull() ?: run {
-                Timber.e("Error on getting crypto currency list")
-                return
-            }
-        } else {
-            getCryptoCurrenciesUseCase(userWalletId = userWallet.walletId).getOrElse {
-                Timber.e("Error on getting crypto currency list")
-                return
-            }
-        }
-
-        val bitcoinCurrency = currencies.find { isBitcoin(it.network.rawId) } ?: return
-
-        val country = getOnrampCountryUseCase.invokeSync(userWallet).getOrElse {
-            Timber.e("Error on getting onramp country")
-            return
-        }
-
-        val isSepaAvailable = onrampSepaAvailableUseCase(
-            userWallet = userWallet,
-            country = country,
-            cryptoCurrency = bitcoinCurrency,
-        )
-
-        addIf(
-            element = WalletNotification.Sepa(
-                onCloseClick = { clickIntents.onClosePromoClick(promoId = PromoId.Sepa) },
-                onClick = { clickIntents.onPromoClick(promoId = PromoId.Sepa, bitcoinCurrency) },
-            ),
-            condition = shouldShowSepaPromo && isSepaAvailable,
         )
     }
 

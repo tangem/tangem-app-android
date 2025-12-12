@@ -35,10 +35,16 @@ internal class ManagedCryptoCurrencyFactory(
         coinsResponse: CoinsResponse,
         tokensResponse: UserTokensResponse?,
         userWallet: UserWallet?,
-        accountIndex: DerivationIndex?,
+        accountIndex: DerivationIndex,
     ): List<ManagedCryptoCurrency> {
         return coinsResponse.coins.mapNotNull { coin ->
-            createToken(coin, tokensResponse, coinsResponse.imageHost, userWallet, accountIndex)
+            createToken(
+                coinResponse = coin,
+                tokensResponse = tokensResponse,
+                imageHost = coinsResponse.imageHost,
+                userWallet = userWallet,
+                accountIndex = accountIndex,
+            )
         }
     }
 
@@ -46,10 +52,15 @@ internal class ManagedCryptoCurrencyFactory(
         coinsResponse: CoinsResponse,
         tokensResponse: UserTokensResponse,
         userWallet: UserWallet,
-        accountIndex: DerivationIndex?,
+        accountIndex: DerivationIndex,
     ): List<ManagedCryptoCurrency> {
         val customTokens = createCustomTokens(tokensResponse, userWallet, accountIndex)
-        val tokens = create(coinsResponse, tokensResponse, userWallet, accountIndex)
+        val tokens = create(
+            coinsResponse = coinsResponse,
+            tokensResponse = tokensResponse,
+            userWallet = userWallet,
+            accountIndex = accountIndex,
+        )
 
         return customTokens + tokens
     }
@@ -58,11 +69,11 @@ internal class ManagedCryptoCurrencyFactory(
         testnetTokensConfig: TestnetTokensConfig,
         tokensResponse: UserTokensResponse?,
         userWallet: UserWallet,
-        accountIndex: DerivationIndex?,
+        accountIndex: DerivationIndex,
     ): List<ManagedCryptoCurrency> {
         val customTokens = tokensResponse
             ?.let { createCustomTokens(it, userWallet, accountIndex) }
-            ?: emptyList()
+            .orEmpty()
         val testnetTokens = testnetTokensConfig.tokens.map { testnetToken ->
             ManagedCryptoCurrency.Token(
                 id = ManagedCryptoCurrency.ID(testnetToken.id),
@@ -77,8 +88,13 @@ internal class ManagedCryptoCurrencyFactory(
                         userWallet = userWallet,
                         accountIndex = accountIndex,
                     )
-                } ?: emptyList(),
-                addedIn = findAddedInNetworks(testnetToken.id, tokensResponse, userWallet, accountIndex),
+                }.orEmpty(),
+                addedIn = findAddedInNetworks(
+                    currencyId = testnetToken.id,
+                    tokensResponse = tokensResponse,
+                    userWallet = userWallet,
+                    accountIndex = accountIndex,
+                ),
             )
         }
 
@@ -88,7 +104,7 @@ internal class ManagedCryptoCurrencyFactory(
     private fun createCustomTokens(
         tokensResponse: UserTokensResponse,
         userWallet: UserWallet,
-        accountIndex: DerivationIndex?,
+        accountIndex: DerivationIndex,
     ): List<ManagedCryptoCurrency> = tokensResponse.tokens
         .mapNotNull { token ->
             maybeCreateCustomToken(token, userWallet, accountIndex)
@@ -97,7 +113,7 @@ internal class ManagedCryptoCurrencyFactory(
     private fun maybeCreateCustomToken(
         token: UserTokensResponse.Token,
         userWallet: UserWallet,
-        accountIndex: DerivationIndex?,
+        accountIndex: DerivationIndex,
     ): ManagedCryptoCurrency? {
         val blockchain = Blockchain.fromNetworkId(token.networkId)
             ?.takeUnless { it in excludedBlockchains }
@@ -161,7 +177,7 @@ internal class ManagedCryptoCurrencyFactory(
         tokensResponse: UserTokensResponse?,
         imageHost: String?,
         userWallet: UserWallet?,
-        accountIndex: DerivationIndex?,
+        accountIndex: DerivationIndex,
     ): ManagedCryptoCurrency? {
         if (coinResponse.networks.isEmpty() || !coinResponse.active) return null
 
@@ -184,7 +200,12 @@ internal class ManagedCryptoCurrencyFactory(
             symbol = coinResponse.symbol,
             iconUrl = getIconUrl(coinResponse.id, imageHost),
             availableNetworks = availableNetworks,
-            addedIn = findAddedInNetworks(coinResponse.id, tokensResponse, userWallet, accountIndex),
+            addedIn = findAddedInNetworks(
+                currencyId = coinResponse.id,
+                tokensResponse = tokensResponse,
+                userWallet = userWallet,
+                accountIndex = accountIndex,
+            ),
         )
     }
 
@@ -194,7 +215,7 @@ internal class ManagedCryptoCurrencyFactory(
         decimals: Int?,
         userWallet: UserWallet?,
         extraDerivationPath: String? = null,
-        accountIndex: DerivationIndex?,
+        accountIndex: DerivationIndex,
     ): SourceNetwork? {
         val blockchain = Blockchain.fromNetworkId(networkId)
             ?.takeUnless { it in excludedBlockchains }
@@ -235,7 +256,7 @@ internal class ManagedCryptoCurrencyFactory(
         currencyId: String,
         tokensResponse: UserTokensResponse?,
         userWallet: UserWallet?,
-        accountIndex: DerivationIndex?,
+        accountIndex: DerivationIndex,
     ): Set<Network> {
         if (tokensResponse == null) return emptySet()
 
