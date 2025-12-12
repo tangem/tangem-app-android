@@ -17,7 +17,7 @@ data class LabelUM(
 @Immutable
 sealed class LabelLeadingContentUM {
     data object None : LabelLeadingContentUM()
-    data class Token(val icon: Int) : LabelLeadingContentUM()
+    data class Token(val iconUrl: String) : LabelLeadingContentUM()
 }
 
 enum class LabelStyle {

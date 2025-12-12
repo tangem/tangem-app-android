@@ -51,6 +51,7 @@ dependencies {
     implementation(projects.domain.settings)
     implementation(projects.domain.notifications.models)
     implementation(projects.domain.transaction)
+    implementation(projects.domain.news)
 
     // FIXME [REDACTED_TASK_KEY]
     // Remove the "Buy" and "Sell" actions from the redux middleware.
@@ -86,6 +87,7 @@ dependencies {
     implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
     implementation(projects.core.navigation)
+    implementation(projects.core.utils)
 
     /* Common */
     implementation(projects.common.ui)
