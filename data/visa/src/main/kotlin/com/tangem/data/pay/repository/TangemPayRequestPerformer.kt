@@ -5,14 +5,12 @@ import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.raise.catch
 import arrow.core.right
-import com.squareup.moshi.Moshi
 import com.squareup.wire.Instant
 import com.tangem.data.pay.util.TangemPayErrorConverter
 import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.pay.TangemPayAuthApi
 import com.tangem.datasource.api.pay.models.request.RefreshCustomerWalletAccessTokenRequest
 import com.tangem.datasource.api.pay.models.response.TangemPayGetTokensResponse
-import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.local.config.environment.EnvironmentConfigStorage
 import com.tangem.datasource.local.visa.TangemPayStorage
 import com.tangem.domain.models.wallet.UserWalletId
@@ -21,11 +19,11 @@ import com.tangem.domain.visa.model.TangemPayAuthTokens
 import com.tangem.domain.visa.model.getAuthHeader
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import timber.log.Timber
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -33,16 +31,15 @@ private const val TAG = "TangemPayRequestPerformer"
 
 @Singleton
 internal class TangemPayRequestPerformer @Inject constructor(
-    @NetworkMoshi moshi: Moshi,
+    private val errorConverter: TangemPayErrorConverter,
     private val environmentConfigStorage: EnvironmentConfigStorage,
     private val dispatchers: CoroutineDispatcherProvider,
     private val tangemPayAuthApi: TangemPayAuthApi,
     private val tangemPayStorage: TangemPayStorage,
 ) {
 
-    private val customerWalletAddress = MutableStateFlow<String?>(null)
+    private val customerWalletAddresses = ConcurrentHashMap<UserWalletId, String>()
     private val tokensMutex = Mutex()
-    private val errorConverter = TangemPayErrorConverter(moshi)
 
     @Deprecated("Do not use this method")
     suspend fun <T : Any> runWithErrorLogs(tag: String, requestBlock: suspend () -> T): Either<VisaApiError, T> {
@@ -110,7 +107,7 @@ internal class TangemPayRequestPerformer @Inject constructor(
     }
 
     suspend fun getCustomerWalletAddress(userWalletId: UserWalletId): String {
-        val existingAddress = customerWalletAddress.value
+        val existingAddress = customerWalletAddresses[userWalletId]
         if (existingAddress != null) {
             return existingAddress
         }
@@ -118,7 +115,7 @@ internal class TangemPayRequestPerformer @Inject constructor(
             userWalletId = userWalletId,
         ) ?: error("Can not find customer address")
 
-        customerWalletAddress.value = storedAddress
+        customerWalletAddresses[userWalletId] = storedAddress
         return storedAddress
     }
 
