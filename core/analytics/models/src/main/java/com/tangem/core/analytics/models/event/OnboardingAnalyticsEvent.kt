@@ -47,7 +47,7 @@ sealed class OnboardingAnalyticsEvent(
         params: Map<String, String> = mapOf(),
     ) : OnboardingAnalyticsEvent(category = "Onboarding / Create Wallet", event = event, params = params) {
 
-        data object ButtonCreateWallet : CreateWallet("Button - Create Wallet")
+        class ButtonCreateWallet : CreateWallet("Button - Create Wallet")
 
         class WalletCreatedSuccessfully(
             source: String,
@@ -77,10 +77,17 @@ sealed class OnboardingAnalyticsEvent(
         params: Map<String, String> = mapOf(),
     ) : OnboardingAnalyticsEvent(category = "Onboarding / Seed Phrase", event = event, params = params) {
 
-        data object CreateMobileScreenOpened : SeedPhrase("Create Mobile Screen Opened")
-        data object ButtonImportWallet : SeedPhrase("Button - Import Wallet")
-        data object ImportSeedPhraseScreenOpened : SeedPhrase("Import Seed Phrase Screen Opened")
-        data object ButtonImport : SeedPhrase("Button - Import")
+        class CreateMobileScreenOpened(
+            source: String,
+        ) : SeedPhrase(
+            event = "Create Mobile Screen Opened",
+            params = mapOf(
+                AnalyticsParam.SOURCE to source,
+            ),
+        )
+        class ButtonImportWallet : SeedPhrase("Button - Import Wallet")
+        class ImportSeedPhraseScreenOpened : SeedPhrase("Import Seed Phrase Screen Opened")
+        class ButtonImport : SeedPhrase("Button - Import")
     }
 
     sealed class Error(
