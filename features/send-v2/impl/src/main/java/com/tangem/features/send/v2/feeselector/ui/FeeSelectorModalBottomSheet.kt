@@ -129,7 +129,7 @@ private fun FeeSelectorItems(
         val feeFiatRateUM = state.feeFiatRateUM
         state.feeItems.fastForEachIndexed { index, item ->
             val isSelected = item.isSameClass(state.selectedFeeItem)
-            val lastItem = index == state.feeItems.size - 1
+            val isLastItem = index == state.feeItems.size - 1
             val iconTint by animateColorAsState(
                 targetValue = if (isSelected) TangemTheme.colors.icon.accent else TangemTheme.colors.text.tertiary,
                 label = "Fee selector icon tint change",
@@ -180,7 +180,7 @@ private fun FeeSelectorItems(
                         null
                     },
                     ellipsizeOffset = item.fee.amount.currencySymbol.length,
-                    showDivider = !isSelected && !lastItem,
+                    showDivider = !isSelected && !isLastItem,
                 )
             }
         }
@@ -243,7 +243,7 @@ private fun ExpandedCustomFeeItems(
 ) {
     Column(modifier = modifier) {
         customFeeFields.fastForEachIndexed { index, field ->
-            val showDivider = index != customFeeFields.size - 1 || nonce is FeeNonce.Nonce
+            val isShowDivider = index != customFeeFields.size - 1 || nonce is FeeNonce.Nonce
             if (field.label != null) {
                 InputRowEnterInfoAmountV2(
                     text = field.value,
@@ -256,7 +256,7 @@ private fun ExpandedCustomFeeItems(
                     keyboardOptions = field.keyboardOptions,
                     keyboardActions = field.keyboardActions,
                     onValueChange = { onValueChange(index, it) },
-                    showDivider = showDivider,
+                    showDivider = isShowDivider,
                     isReadOnly = field.isReadonly,
                 )
             } else {
@@ -270,7 +270,7 @@ private fun ExpandedCustomFeeItems(
                     onValueChange = { onValueChange(index, it) },
                     keyboardOptions = field.keyboardOptions,
                     keyboardActions = field.keyboardActions,
-                    showDivider = showDivider,
+                    showDivider = isShowDivider,
                 )
             }
         }
