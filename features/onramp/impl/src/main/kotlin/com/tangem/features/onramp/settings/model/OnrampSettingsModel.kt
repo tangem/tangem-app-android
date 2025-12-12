@@ -29,12 +29,12 @@ internal class OnrampSettingsModel @Inject constructor(
     paramsContainer: ParamsContainer,
 ) : Model() {
 
+    private val params: OnrampSettingsComponent.Params = paramsContainer.require()
+
     val state: StateFlow<OnrampSettingsUM>
         field = MutableStateFlow(getInitialState())
 
     val bottomSheetNavigation: SlotNavigation<OnrampSettingsConfig> = SlotNavigation()
-
-    private val params: OnrampSettingsComponent.Params = paramsContainer.require()
 
     init {
         analyticsEventHandler.send(OnrampAnalyticsEvent.SettingsOpened)
