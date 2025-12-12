@@ -17,13 +17,14 @@ internal class OnrampOffersStateFactory(
     fun getOffersState(offers: List<OnrampOffersBlock>): OnrampV2MainComponentUM {
         val currentState = currentStateProvider.invoke()
         return when (currentState) {
+            is OnrampV2MainComponentUM.InitialLoading -> currentState
             is OnrampV2MainComponentUM.Content -> {
+                if (currentState.offersBlockState is OnrampOffersBlockUM.Loading) {
+                    return currentState
+                }
                 currentState.copy(
                     offersBlockState = mapOnrampOffersBlockToUM(offersBlocks = offers),
                 )
-            }
-            is OnrampV2MainComponentUM.InitialLoading -> {
-                currentState
             }
         }
     }

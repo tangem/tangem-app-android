@@ -1,8 +1,12 @@
 package com.tangem.data.pay.repository
 
 import arrow.core.Either
+import arrow.core.left
+import arrow.core.raise.catch
+import arrow.core.right
 import com.tangem.core.error.UniversalError
 import com.tangem.data.pay.util.RainCryptoUtil
+import com.tangem.data.pay.util.TangemPayErrorConverter
 import com.tangem.data.visa.config.VisaLibLoader
 import com.tangem.datasource.api.common.config.ApiConfig
 import com.tangem.datasource.api.common.config.ApiEnvironment
@@ -40,6 +44,7 @@ internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
     private val rainCryptoUtil: RainCryptoUtil,
     private val storage: TangemPayStorage,
     private val cardFrozenStateStore: TangemPayCardFrozenStateStore,
+    private val errorConverter: TangemPayErrorConverter,
 ) : TangemPayCardDetailsRepository {
 
     private val pollingScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
@@ -55,6 +60,7 @@ internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
                 fiatBalance = result.fiat.availableBalance,
                 currencyCode = result.fiat.currency,
                 cryptoBalance = result.crypto.balance,
+                availableForWithdrawal = result.availableForWithdrawal.amount,
                 chainId = result.crypto.chainId,
                 depositAddress = result.crypto.depositAddress,
                 contractAddress = result.crypto.tokenContractAddress,
@@ -63,37 +69,39 @@ internal class DefaultTangemPayCardDetailsRepository @Inject constructor(
     }
 
     override suspend fun revealCardDetails(userWalletId: UserWalletId): Either<UniversalError, TangemPayCardDetails> {
-        return requestHelper.runWithErrorLogs(TAG) {
-            val publicKeyBase64 = getPublicKeyBase64()
-            val (secretKeyBytes, sessionId) = rainCryptoUtil.generateSecretKeyAndSessionId(publicKeyBase64)
+        return catch(
+            block = {
+                val publicKeyBase64 = getPublicKeyBase64()
+                val (secretKeyBytes, sessionId) = rainCryptoUtil.generateSecretKeyAndSessionId(publicKeyBase64)
+                val result = requestHelper.performRequest(userWalletId = userWalletId) { authHeader ->
+                    tangemPayApi.revealCardDetails(
+                        authHeader = authHeader,
+                        body = CardDetailsRequest(sessionId = sessionId),
+                    )
+                }.getOrNull()?.result ?: error("Cannot reveal card details")
 
-            val result = requestHelper.request(userWalletId) { authHeader ->
-                tangemPayApi.revealCardDetails(
-                    authHeader = authHeader,
-                    body = CardDetailsRequest(sessionId = sessionId),
+                val pan = rainCryptoUtil.decryptSecret(
+                    base64Secret = result.pan.secret,
+                    base64Iv = result.pan.iv,
+                    secretKeyBytes = secretKeyBytes,
                 )
-            }.result ?: error("Cannot reveal card details")
 
-            val pan = rainCryptoUtil.decryptSecret(
-                base64Secret = result.pan.secret,
-                base64Iv = result.pan.iv,
-                secretKeyBytes = secretKeyBytes,
-            )
+                val cvv = rainCryptoUtil.decryptSecret(
+                    base64Secret = result.cvv.secret,
+                    base64Iv = result.cvv.iv,
+                    secretKeyBytes = secretKeyBytes,
+                )
+                secretKeyBytes.fill(0)
 
-            val cvv = rainCryptoUtil.decryptSecret(
-                base64Secret = result.cvv.secret,
-                base64Iv = result.cvv.iv,
-                secretKeyBytes = secretKeyBytes,
-            )
-            secretKeyBytes.fill(0)
-
-            TangemPayCardDetails(
-                pan = pan,
-                cvv = cvv,
-                expirationYear = result.expirationYear,
-                expirationMonth = result.expirationMonth,
-            )
-        }
+                TangemPayCardDetails(
+                    pan = pan,
+                    cvv = cvv,
+                    expirationYear = result.expirationYear,
+                    expirationMonth = result.expirationMonth,
+                ).right()
+            },
+            catch = { errorConverter.convert(it).left() },
+        )
     }
 
     override suspend fun setPin(userWalletId: UserWalletId, pin: String): Either<UniversalError, SetPinResult> {

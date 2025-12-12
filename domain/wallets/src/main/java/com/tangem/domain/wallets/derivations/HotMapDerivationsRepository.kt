@@ -2,6 +2,7 @@ package com.tangem.domain.wallets.derivations
 
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.crypto.hdWallet.DerivationPath
+import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
@@ -16,6 +17,7 @@ interface HotMapDerivationsRepository {
     suspend fun derivePublicKeysByNetworkIds(
         userWallet: UserWallet.Hot,
         networkIds: List<Network.RawID>,
+        accountIndex: DerivationIndex,
     ): UserWallet.Hot
 
     @Throws
