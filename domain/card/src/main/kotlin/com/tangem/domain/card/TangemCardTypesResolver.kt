@@ -36,15 +36,15 @@ internal class TangemCardTypesResolver(
 
     override fun isTangemWallet(): Boolean {
         return card.settings.isBackupAllowed && card.settings.isHDWalletAllowed &&
-            card.firmwareVersion >= FirmwareVersion.Companion.MultiWalletAvailable
+            card.firmwareVersion >= FirmwareVersion.MultiWalletAvailable
     }
 
     override fun isShibaWallet(): Boolean {
-        return card.firmwareVersion.compareTo(FirmwareVersion.Companion.KeysImportAvailable) == 0
+        return card.firmwareVersion.compareTo(FirmwareVersion.KeysImportAvailable) == 0
     }
 
     override fun isWhiteWallet(): Boolean {
-        return walletData == null && card.firmwareVersion <= FirmwareVersion.Companion.HDWalletAvailable
+        return walletData == null && card.firmwareVersion <= FirmwareVersion.HDWalletAvailable
     }
 
     override fun isWallet2(): Boolean = card.isWallet2
@@ -73,7 +73,7 @@ internal class TangemCardTypesResolver(
             (multiWalletAvailable() || card.wallets.firstOrNull()?.curve == EllipticCurve.Secp256k1)
     }
 
-    private fun multiWalletAvailable() = card.firmwareVersion >= FirmwareVersion.Companion.MultiWalletAvailable
+    private fun multiWalletAvailable() = card.firmwareVersion >= FirmwareVersion.MultiWalletAvailable
 
     override fun getBlockchain(): Blockchain {
         return when (productType) {
@@ -93,12 +93,15 @@ internal class TangemCardTypesResolver(
 
     override fun getPrimaryToken(): Token? {
         val cardToken = walletData?.token ?: return null
-        return Token(
-            cardToken.name,
-            cardToken.symbol,
-            cardToken.contractAddress,
-            cardToken.decimals,
-        )
+
+        return with(cardToken) {
+            Token(
+                name = name,
+                symbol = symbol,
+                contractAddress = contractAddress,
+                decimals = decimals,
+            )
+        }
     }
 
     override fun isReleaseFirmwareType(): Boolean = card.firmwareVersion.type == FirmwareVersion.FirmwareType.Release
