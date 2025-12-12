@@ -219,4 +219,10 @@ internal object YieldSupplyDomainModule {
             yieldSupplyRepository = yieldSupplyRepository,
         )
     }
+
+    @Provides
+    @Singleton
+    fun provideYieldSupplyGetDustMinAmountUseCase(): YieldSupplyGetDustMinAmountUseCase {
+        return YieldSupplyGetDustMinAmountUseCase()
+    }
 }
