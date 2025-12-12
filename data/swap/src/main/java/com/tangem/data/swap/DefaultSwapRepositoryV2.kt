@@ -79,23 +79,23 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
             userWallet = userWallet,
             filterProviderTypes = filterProviderTypes,
         )
-        val mappedProviders = providers.associateBy(ExpressProvider::providerId)
+        val expressProviders = providers.associateBy(ExpressProvider::providerId)
 
         allPairs.map { pair ->
             async {
                 val statusFrom = cryptoCurrencyStatusList
-                    .firstOrNull {
-                        it.currency.getContractAddress() == pair.from.contractAddress &&
-                            it.currency.network.backendId == pair.from.network
+                    .firstOrNull { currencyStatus ->
+                        currencyStatus.currency.getContractAddress() == pair.from.contractAddress &&
+                            currencyStatus.currency.network.backendId == pair.from.network
                     }
                 val statusTo = cryptoCurrencyStatusList
-                    .firstOrNull {
-                        it.currency.getContractAddress() == pair.to.contractAddress &&
-                            it.currency.network.backendId == pair.to.network
+                    .firstOrNull { currencyStatus ->
+                        currencyStatus.currency.getContractAddress() == pair.to.contractAddress &&
+                            currencyStatus.currency.network.backendId == pair.to.network
                     }
 
                 val mappedProviders = pair.providers.mapNotNull {
-                    mappedProviders[it.providerId]
+                    expressProviders[it.providerId]
                 }.filterYieldSupplyProvider(statusFrom)
 
                 if (statusFrom != null && statusTo != null && mappedProviders.isNotEmpty()) {
@@ -135,16 +135,16 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
             async {
                 val statusFromDeferred = async {
                     cryptoCurrencyList
-                        .firstOrNull {
-                            it.getContractAddress() == pair.from.contractAddress &&
-                                it.network.backendId == pair.from.network
+                        .firstOrNull { currency ->
+                            currency.getContractAddress() == pair.from.contractAddress &&
+                                currency.network.backendId == pair.from.network
                         }
                 }
                 val statusToDeferred = async {
                     cryptoCurrencyList
-                        .firstOrNull {
-                            it.getContractAddress() == pair.to.contractAddress &&
-                                it.network.backendId == pair.to.network
+                        .firstOrNull { currency ->
+                            currency.getContractAddress() == pair.to.contractAddress &&
+                                currency.network.backendId == pair.to.network
                         }
                 }
 
@@ -213,27 +213,27 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
         expressOperationType: ExpressOperationType,
     ): SwapDataModel = withContext(coroutineDispatcher.io) {
         val requestId = UUID.randomUUID().toString()
-        val fromCryptoCurrency = fromCryptoCurrencyStatus.currency
+        val (fromCurrency, fromStatus) = fromCryptoCurrencyStatus
 
         val refundData = when (expressProvider.type) {
             ExpressProviderType.CEX,
             ExpressProviderType.DEX_BRIDGE,
             ExpressProviderType.DEX,
             -> SwapRefundData(
-                refundAddress = fromCryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value,
+                refundAddress = fromStatus.networkAddress?.defaultAddress?.value,
                 refundExtraId = null, // currently always null
             )
             else -> null
         }
 
         val response = tangemExpressApi.getExchangeData(
-            fromContractAddress = fromCryptoCurrency.getContractAddress(),
+            fromContractAddress = fromCurrency.getContractAddress(),
             toContractAddress = toCryptoCurrency.getContractAddress(),
-            fromNetwork = fromCryptoCurrency.network.backendId,
+            fromNetwork = fromCurrency.network.backendId,
             toNetwork = toCryptoCurrency.network.backendId,
-            fromAddress = fromCryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value.orEmpty(),
+            fromAddress = fromStatus.networkAddress?.defaultAddress?.value.orEmpty(),
             toAddress = toAddress,
-            fromDecimals = fromCryptoCurrency.decimals,
+            fromDecimals = fromCurrency.decimals,
             toDecimals = toCryptoCurrency.decimals,
             fromAmount = fromAmount,
             providerId = expressProvider.providerId,
@@ -277,6 +277,7 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
         txHash: String,
         txExtraId: String?,
     ) {
+        val (currency, status) = fromCryptoCurrencyStatus
         withContext(coroutineDispatcher.io) {
             tangemExpressApi.exchangeSent(
                 userWalletId = userWallet.walletId.stringValue,
@@ -286,8 +287,8 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
                 ),
                 body = ExchangeSentRequestBody(
                     txId = txId,
-                    fromNetwork = fromCryptoCurrencyStatus.currency.network.backendId,
-                    fromAddress = fromCryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value.orEmpty(),
+                    fromNetwork = currency.network.backendId,
+                    fromAddress = status.networkAddress?.defaultAddress?.value.orEmpty(),
                     payinAddress = toAddress,
                     payinExtraId = txExtraId,
                     txHash = txHash,
@@ -364,9 +365,9 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
                     ),
                 ).getOrThrow()
             },
-            onError = {
-                Timber.w(it, "Unable to get pairs")
-                throw it
+            onError = { error ->
+                Timber.w(error, "Unable to get pairs")
+                throw error
             },
         )
     }
