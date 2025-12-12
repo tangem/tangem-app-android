@@ -6,8 +6,6 @@
     <ID>MultilineLambdaItParameter:DefaultAccountsCRUDRepository.kt$DefaultAccountsCRUDRepository${ if (it is HttpException &amp;&amp; it.code == HttpException.Code.NOT_MODIFIED) { null } else { throw it } }</ID>
     <ID>MultilineLambdaItParameter:GetWalletAccountsResponseExt.kt${ enrichedTokensByAccountId[it].orEmpty().map { token -&gt; // Tokens from unexisting accounts should be copied to the main account token.copy(accountId = accountDTO.id) } }</ID>
     <ID>NoNameShadowing:GetWalletAccountsResponseExt.kt$tokens</ID>
-    <ID>NullableToStringCall:AccountListCryptoCurrenciesProducer.kt$AccountListCryptoCurrenciesProducer$${this::class.simpleName}</ID>
-    <ID>NullableToStringCall:DefaultMultiWalletCryptoCurrenciesProducer.kt$DefaultMultiWalletCryptoCurrenciesProducer$${this::class.simpleName}</ID>
     <ID>UnnecessaryLet:DefaultAccountsCRUDRepository.kt$DefaultAccountsCRUDRepository$let(AccountName::invoke)</ID>
   </CurrentIssues>
 </SmellBaseline>
