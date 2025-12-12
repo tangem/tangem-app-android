@@ -62,9 +62,15 @@ sealed class WalletScreenAnalyticsEvent {
             params = mapOf("Mobile Wallet" to if (hasMobileWallet) "Yes" else "No"),
         )
 
-        data class NoticeFinishActivation(private val activationState: ActivationState) : MainScreen(
+        data class NoticeFinishActivation(
+            private val activationState: ActivationState,
+            private val balanceState: AnalyticsParam.EmptyFull,
+        ) : MainScreen(
             event = "Notice - Finish Activation",
-            params = mapOf("Activation State" to activationState.value),
+            params = mapOf(
+                "Activation State" to activationState.value,
+                "Balance State" to balanceState.value,
+            ),
         ) {
             enum class ActivationState(val value: String) {
                 NotStarted("Not Started"),
