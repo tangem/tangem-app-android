@@ -85,14 +85,14 @@ internal fun SendContent(
 
 @Composable
 private fun SendAppBar(navigationUM: NavigationUM) {
-    val navigationUM = navigationUM as? NavigationUM.Content ?: return
+    val navigationUMContent = navigationUM as? NavigationUM.Content ?: return
     AppBarWithBackButtonAndIcon(
-        text = navigationUM.title.resolveReference(),
-        subtitle = navigationUM.subtitle?.resolveReference(),
-        onBackClick = navigationUM.backIconClick,
-        onIconClick = navigationUM.additionalIconClick,
-        backIconRes = navigationUM.backIconRes,
-        iconRes = navigationUM.additionalIconRes,
+        text = navigationUMContent.title.resolveReference(),
+        subtitle = navigationUMContent.subtitle?.resolveReference(),
+        onBackClick = navigationUMContent.backIconClick,
+        onIconClick = navigationUMContent.additionalIconClick,
+        backIconRes = navigationUMContent.backIconRes,
+        iconRes = navigationUMContent.additionalIconRes,
         backgroundColor = TangemTheme.colors.background.tertiary,
         modifier = Modifier.height(TangemTheme.dimens.size56),
     )
