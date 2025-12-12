@@ -54,8 +54,8 @@ internal class WalletWarningsSingleEventSender @Inject constructor(
                 is WalletNotification.FinishWalletActivation -> {
                     if (event.type == WalletActivationBannerType.Warning && !isActivationBottomSheetShown.get()) {
                         showFinishActivationBottomSheet(userWalletId)
-                        isActivationBottomSheetShown.set(true)
                     }
+                    isActivationBottomSheetShown.set(true)
                 }
                 else -> Unit
             }
