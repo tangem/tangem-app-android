@@ -65,9 +65,9 @@ internal class ResetCardsModel @Inject constructor(
                             isWarning = false,
                             onClick = {
                                 modelScope.launch {
-                                    repeatUntilTrue { resetPrimaryCard(createdUserWallet, userCodeParams) }
-                                    continuation.resume(Unit)
                                     onDismissRequest()
+                                    resetOrCancel { resetPrimaryCard(createdUserWallet, userCodeParams) }
+                                    continuation.resume(Unit)
                                     startResetBackupCardsFlow(createdUserWallet, userCodeParams)
                                 }
                             },
@@ -109,15 +109,16 @@ internal class ResetCardsModel @Inject constructor(
                                         continuation.resume(Unit)
                                     },
                                     onReset = onReset@{
+                                        this@onReset.onDismissRequest()
+
                                         modelScope.launch {
-                                            repeatUntilTrue {
+                                            resetOrCancel {
                                                 resetBackupCard(
                                                     cardNumber = index + 2,
                                                     params = userCodeParams,
                                                     userWalletId = createdUserWallet.walletId,
                                                 )
                                             }
-                                            this@onReset.onDismissRequest()
                                             continuation.resume(Unit)
                                         }
                                     },
@@ -128,15 +129,17 @@ internal class ResetCardsModel @Inject constructor(
                             EventMessageAction(
                                 title = resourceReference(R.string.card_settings_action_sheet_reset),
                                 onClick = {
+                                    onDismissRequest()
+
                                     modelScope.launch {
-                                        repeatUntilTrue {
+                                        resetOrCancel {
                                             resetBackupCard(
                                                 cardNumber = index + 2,
                                                 params = userCodeParams,
                                                 userWalletId = createdUserWallet.walletId,
                                             )
                                         }
-                                        onDismissRequest()
+
                                         continuation.resume(Unit)
                                     }
                                 },
@@ -212,14 +215,32 @@ internal class ResetCardsModel @Inject constructor(
         }
     }
 
+    private suspend fun resetOrCancel(action: suspend () -> Boolean) {
+        while (true) {
+            if (action()) {
+                return
+            }
+
+            suspendCancellableCoroutine { continuation ->
+                recommendResetAgain(
+                    onCancel = {
+                        callbacks.onCancel()
+                        continuation.cancel()
+                    },
+                    onReset = {
+                        continuation.resume(Unit)
+                    },
+                )
+            }
+        }
+    }
+
     private suspend fun resetPrimaryCard(
         createdUserWallet: UserWallet.Cold,
         params: ResetCardUserCodeParams,
     ): Boolean {
-        val scanResponse = createdUserWallet.scanResponse
-
         val result = resetCardUseCase.invoke(
-            cardId = scanResponse.card.cardId,
+            cardId = createdUserWallet.scanResponse.card.cardId,
             params = params,
         )
 
@@ -233,14 +254,8 @@ internal class ResetCardsModel @Inject constructor(
     ): Boolean {
         return resetCardUseCase.invoke(
             cardNumber = cardNumber,
-            params,
-            userWalletId,
-        ).isRight()
-    }
-
-    private inline fun repeatUntilTrue(action: () -> Boolean) {
-        while (true) {
-            if (action()) break
-        }
+            params = params,
+            userWalletId = userWalletId,
+        ).getOrNull() == true
     }
 }
