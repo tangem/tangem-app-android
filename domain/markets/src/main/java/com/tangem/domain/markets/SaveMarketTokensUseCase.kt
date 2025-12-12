@@ -2,6 +2,7 @@ package com.tangem.domain.markets
 
 import arrow.core.Either
 import com.tangem.domain.markets.repositories.MarketsTokenRepository
+import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
@@ -45,11 +46,11 @@ class SaveMarketTokensUseCase(
         removedNetworks: Set<TokenMarketInfo.Network>,
     ): Either<Throwable, Unit> = Either.catch {
         if (removedNetworks.isNotEmpty()) {
-            val removedCurrencies = removedNetworks.mapNotNull {
+            val removedCurrencies = removedNetworks.mapNotNull { network ->
                 marketsTokenRepository.createCryptoCurrency(
                     userWalletId = userWalletId,
                     token = tokenMarketParams,
-                    network = it,
+                    network = network,
                 )
             }
 
@@ -60,13 +61,15 @@ class SaveMarketTokensUseCase(
             derivationsRepository.derivePublicKeysByNetworkIds(
                 userWalletId = userWalletId,
                 networkIds = addedNetworks.map { Network.RawID(it.networkId) },
+                accountIndex = DerivationIndex.Main,
             )
 
-            val addedCurrencies = addedNetworks.mapNotNull {
+            val addedCurrencies = addedNetworks.mapNotNull { network ->
                 marketsTokenRepository.createCryptoCurrency(
                     userWalletId = userWalletId,
                     token = tokenMarketParams,
-                    network = it,
+                    network = network,
+                    accountIndex = DerivationIndex.Main,
                 )
             }
 

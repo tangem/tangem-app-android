@@ -50,7 +50,7 @@ sealed class WalletNotification(val config: NotificationConfig) {
             title = resourceReference(R.string.warning_backup_errors_title),
             subtitle = resourceReference(R.string.warning_backup_errors_message),
             buttonsState = NotificationConfig.ButtonsState.PrimaryButtonConfig(
-                text = resourceReference(id = R.string.details_row_title_contact_to_support),
+                text = resourceReference(id = R.string.common_contact_support),
                 onClick = onSupportClick,
             ),
         )
@@ -361,6 +361,23 @@ sealed class WalletNotification(val config: NotificationConfig) {
             onCloseClick = onCloseClick,
             buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
                 text = resourceReference(R.string.common_claim),
+                onClick = onClick,
+            ),
+            iconSize = 54.dp,
+        ),
+    )
+
+    data class OnePlusOnePromo(
+        val onCloseClick: () -> Unit,
+        val onClick: () -> Unit,
+    ) : WalletNotification(
+        config = NotificationConfig(
+            title = resourceReference(R.string.notification_one_plus_one_title),
+            subtitle = resourceReference(R.string.notification_one_plus_one_text),
+            iconResId = R.drawable.img_one_plus_one_promo,
+            onCloseClick = onCloseClick,
+            buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
+                text = resourceReference(R.string.notification_one_plus_one_button),
                 onClick = onClick,
             ),
             iconSize = 54.dp,

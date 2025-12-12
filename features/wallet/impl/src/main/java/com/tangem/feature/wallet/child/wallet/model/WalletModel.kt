@@ -20,6 +20,7 @@ import com.tangem.domain.nft.ObserveAndClearNFTCacheIfNeedUseCase
 import com.tangem.domain.notifications.GetIsHuaweiDeviceWithoutGoogleServicesUseCase
 import com.tangem.domain.notifications.repository.NotificationsRepository
 import com.tangem.domain.pay.repository.OnboardingRepository
+import com.tangem.domain.pay.usecase.TangemPayMainScreenCustomerInfoUseCase
 import com.tangem.domain.settings.*
 import com.tangem.domain.tokens.RefreshMultiCurrencyWalletQuotesUseCase
 import com.tangem.domain.wallets.usecase.*
@@ -94,7 +95,7 @@ internal class WalletModel @Inject constructor(
     private val tangemPayOnboardingRepository: OnboardingRepository,
     private val yieldSupplyFeatureToggles: YieldSupplyFeatureToggles,
     private val accountsFeatureToggles: AccountsFeatureToggles,
-    private val tangemPayMainInfoManager: TangemPayMainInfoManager,
+    private val tangemPayMainScreenCustomerInfoUseCase: TangemPayMainScreenCustomerInfoUseCase,
     val screenLifecycleProvider: ScreenLifecycleProvider,
     val innerWalletRouter: InnerWalletRouter,
 ) : Model() {
@@ -357,7 +358,10 @@ internal class WalletModel @Inject constructor(
             }.distinctUntilChanged(),
             transform = ::Pair,
         ).onEach { (inBackground, userWalletId) ->
-            if (inBackground) return@onEach
+            if (inBackground) {
+                updateTangemPayJobHolder.cancel()
+                return@onEach
+            }
 
             val savedCustomerInfo =
                 tangemPayOnboardingRepository.getSavedCustomerInfo(userWalletId)
@@ -368,15 +372,15 @@ internal class WalletModel @Inject constructor(
             if (isShouldLaunchPeriodicUpdate) {
                 updateTangemPayJobHolder.cancel()
                 modelScope.launch {
-                    tangemPayMainInfoManager.refreshTangemPayInfo(userWalletId)
+                    tangemPayMainScreenCustomerInfoUseCase.fetch(userWalletId)
                     while (isActive) {
                         delay(TANGEM_PAY_UPDATE_INTERVAL)
-                        tangemPayMainInfoManager.refreshTangemPayInfo(userWalletId)
+                        tangemPayMainScreenCustomerInfoUseCase.fetch(userWalletId)
                     }
                 }.saveIn(updateTangemPayJobHolder)
             } else {
                 // Don't refresh customer info periodically if the card was already issued, only update on swipe to refresh
-                tangemPayMainInfoManager.refreshTangemPayInfo(userWalletId)
+                tangemPayMainScreenCustomerInfoUseCase.fetch(userWalletId)
             }
         }.launchIn(modelScope)
     }
@@ -494,7 +498,7 @@ internal class WalletModel @Inject constructor(
         }
     }
 
-    private suspend fun reinitializeWallet(action: WalletsUpdateActionResolver.Action.ReinitializeWallet) {
+    private fun reinitializeWallet(action: WalletsUpdateActionResolver.Action.ReinitializeWallet) {
         walletScreenContentLoader.cancel(action.prevWalletId)
         tokenListStore.remove(action.prevWalletId)
 
@@ -516,7 +520,7 @@ internal class WalletModel @Inject constructor(
         )
     }
 
-    private suspend fun addWallet(action: WalletsUpdateActionResolver.Action.AddWallet) {
+    private fun addWallet(action: WalletsUpdateActionResolver.Action.AddWallet) {
         if (accountsFeatureToggles.isFeatureEnabled) {
             fetchWalletContent(userWallet = action.selectedWallet)
 
@@ -656,15 +660,15 @@ internal class WalletModel @Inject constructor(
         }
     }
 
-    private suspend fun fetchWalletContent(userWallet: UserWallet) {
+    private fun fetchWalletContent(userWallet: UserWallet) {
         if (userWallet.isLocked) return
 
         /*
          * Updating the balance of the current wallet is an essential part of InitializationWallets,
          * so the coroutine is launched in the current context
          */
-        supervisorScope {
-            launch { walletContentFetcher(userWalletId = userWallet.walletId) }
+        modelScope.launch {
+            walletContentFetcher(userWalletId = userWallet.walletId)
         }
     }
 

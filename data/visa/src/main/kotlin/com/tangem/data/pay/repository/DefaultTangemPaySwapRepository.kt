@@ -18,6 +18,7 @@ import com.tangem.domain.pay.repository.TangemPaySwapRepository
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
+import com.tangem.utils.extensions.addHexPrefix
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.util.Currency
@@ -66,7 +67,7 @@ internal class DefaultTangemPaySwapRepository @Inject constructor(
                             recipientAddress = receiverAddress,
                             adminSalt = result.salt,
                             senderAddress = result.senderAddress,
-                            adminSignature = signatureResult.signature,
+                            adminSignature = signatureResult.signature.addHexPrefix(),
                         )
                         tangemPayApi.withdraw(authHeader = authHeader, body = request)
                     }
