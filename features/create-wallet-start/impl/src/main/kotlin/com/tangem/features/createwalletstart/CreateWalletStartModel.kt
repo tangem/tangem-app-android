@@ -8,6 +8,7 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
 import com.tangem.core.analytics.models.event.OnboardingAnalyticsEvent
+import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.core.decompose.di.GlobalUiMessageSender
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -60,6 +61,7 @@ internal class CreateWalletStartModel @Inject constructor(
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
     private val generateBuyTangemCardLinkUseCase: GenerateBuyTangemCardLinkUseCase,
     private val urlOpener: UrlOpener,
+    private val trackingContextProxy: TrackingContextProxy,
     private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
 
@@ -141,6 +143,7 @@ internal class CreateWalletStartModel @Inject constructor(
     }
 
     private fun onStartWithMobileWalletClick() {
+        trackingContextProxy.addHotWalletContext()
         analyticsEventHandler.send(
             event = OnboardingAnalyticsEvent.Onboarding.ButtonMobileWallet(
                 source = AnalyticsParam.ScreensSources.CreateWalletIntro.value,
