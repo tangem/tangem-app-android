@@ -45,7 +45,7 @@ internal class TransactionDataToTxHistoryItemConverter(
                 TransactionStatus.Confirmed -> TxInfo.TransactionStatus.Confirmed
                 TransactionStatus.Unconfirmed -> TxInfo.TransactionStatus.Unconfirmed
             },
-            type = getTransactionType(value.extras),
+            type = getTransactionType(value),
             amount = amount,
         )
     }
@@ -99,16 +99,25 @@ internal class TransactionDataToTxHistoryItemConverter(
         )
     }
 
-    private fun getTransactionType(extras: TransactionExtras?): TxInfo.TransactionType {
-        return when (extras) {
+    private fun getTransactionType(transactionData: TransactionData.Uncompiled?): TxInfo.TransactionType {
+        return when (val extras = transactionData?.extras) {
             is EthereumTransactionExtras -> {
-                when (extras.callData) {
-                    is EthereumYieldSupplyDeployCallData,
-                    is EthereumYieldSupplyReactivateTokenCallData,
-                    is EthereumYieldSupplyInitTokenCallData,
-                    is EthereumYieldSupplyEnterCallData,
-                    -> TxInfo.TransactionType.YieldSupply.Enter
-                    is EthereumYieldSupplyExitCallData -> TxInfo.TransactionType.YieldSupply.Exit
+                when (val callData = extras.callData) {
+                    is EthereumYieldSupplyDeployCallData -> TxInfo.TransactionType.YieldSupply.DeployContract(
+                        transactionData.destinationAddress,
+                    )
+                    is EthereumYieldSupplyReactivateTokenCallData -> TxInfo.TransactionType.YieldSupply.ReactivateToken(
+                        callData.tokenContractAddress,
+                    )
+                    is EthereumYieldSupplyInitTokenCallData -> TxInfo.TransactionType.YieldSupply.InitializeToken(
+                        callData.tokenContractAddress,
+                    )
+                    is EthereumYieldSupplyEnterCallData -> TxInfo.TransactionType.YieldSupply.Enter(
+                        callData.tokenContractAddress,
+                    )
+                    is EthereumYieldSupplyExitCallData -> TxInfo.TransactionType.YieldSupply.Exit(
+                        callData.tokenContractAddress,
+                    )
                     is ApprovalERC20TokenCallData -> TxInfo.TransactionType.Approve
                     else -> TxInfo.TransactionType.Transfer
                 }
