@@ -61,7 +61,6 @@ fun NetworkTitle(
     ) {
         Box(
             modifier = Modifier
-                .weight(weight = 1f)
                 .heightIn(min = TangemTheme.dimens.size20),
             contentAlignment = Alignment.CenterStart,
             content = title,
@@ -99,4 +98,4 @@ private fun NetworkTitlePreview(@PreviewParameter(NetworkTitleIconVisibilityProv
     }
 }
 
-private object NetworkTitleIconVisibilityProvider : CollectionPreviewParameterProvider<Boolean>(listOf(true, false))
+private class NetworkTitleIconVisibilityProvider : CollectionPreviewParameterProvider<Boolean>(listOf(true, false))

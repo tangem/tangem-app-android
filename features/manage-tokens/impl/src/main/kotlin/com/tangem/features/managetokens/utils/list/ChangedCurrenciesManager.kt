@@ -7,6 +7,11 @@ import kotlinx.coroutines.flow.update
 
 internal typealias ChangedCurrencies = Map<ManagedCryptoCurrency.Token, Set<Network>>
 
+internal data class CurrencyUpdates(
+    val toAdd: ChangedCurrencies = emptyMap(),
+    val toRemove: ChangedCurrencies = emptyMap(),
+)
+
 internal class ChangedCurrenciesManager {
 
     val currenciesToAdd: MutableStateFlow<ChangedCurrencies> = MutableStateFlow(emptyMap())

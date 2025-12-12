@@ -2,6 +2,7 @@ package com.tangem.domain.wallets.derivations
 
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.crypto.hdWallet.DerivationPath
+import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
@@ -13,7 +14,11 @@ interface DerivationsRepository {
     @Throws
     suspend fun derivePublicKeys(userWalletId: UserWalletId, currencies: List<CryptoCurrency>)
 
-    suspend fun derivePublicKeysByNetworkIds(userWalletId: UserWalletId, networkIds: List<Network.RawID>)
+    suspend fun derivePublicKeysByNetworkIds(
+        userWalletId: UserWalletId,
+        networkIds: List<Network.RawID>,
+        accountIndex: DerivationIndex,
+    )
 
     @Throws
     suspend fun derivePublicKeysByNetworks(userWalletId: UserWalletId, networks: List<Network>)

@@ -97,9 +97,9 @@ internal class DefaultFeedbackRepository(
     override fun saveBlockchainErrorInfo(error: BlockchainErrorInfo) {
         val userWallet = getSelectedWalletUseCase.sync().getOrNull() ?: error("UserWallet is not selected")
 
-        blockchainsErrors.update {
-            it.toMutableMap().apply {
-                put(userWallet.walletId, error)
+        blockchainsErrors.update { map ->
+            map.toMutableMap().apply {
+                this[userWallet.walletId] = error
             }
         }
     }
