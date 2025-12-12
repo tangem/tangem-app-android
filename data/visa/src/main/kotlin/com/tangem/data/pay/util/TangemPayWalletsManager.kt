@@ -15,12 +15,14 @@ class TangemPayWalletsManager @Inject constructor(
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
 ) {
 
+    @Deprecated("Don't use and put userWallet in features that need it")
     suspend fun getDefaultWalletForTangemPay(): UserWallet.Cold {
         val userWalletsFlow = if (useNewRepository()) repository.userWallets else manager.userWallets
         val userWallets = userWalletsFlow.filter { !it.isNullOrEmpty() }.first()
         return findColdWallet(userWallets)
     }
 
+    @Deprecated("Don't use and put userWallet in features that need it")
     fun getDefaultWalletForTangemPayBlocking(): UserWallet.Cold {
         val userWallets = if (useNewRepository()) repository.userWallets.value else manager.userWalletsSync
         return findColdWallet(userWallets)
@@ -29,7 +31,8 @@ class TangemPayWalletsManager @Inject constructor(
     private fun useNewRepository(): Boolean = hotWalletFeatureToggles.isHotWalletEnabled
 
     private fun findColdWallet(userWallets: List<UserWallet>?): UserWallet.Cold {
-        return userWallets?.find { it is UserWallet.Cold } as? UserWallet.Cold
-            ?: error("Cannot find cold user wallet")
+        return userWallets?.find {
+            it is UserWallet.Cold && it.isMultiCurrency
+        } as? UserWallet.Cold ?: error("Cannot find cold user wallet")
     }
 }
