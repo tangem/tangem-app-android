@@ -30,6 +30,7 @@ dependencies {
 
     /** Domain */
     implementation(projects.domain.visa)
+    implementation(projects.domain.wallets)
 
     /** Data **/
     implementation(projects.data.visa)

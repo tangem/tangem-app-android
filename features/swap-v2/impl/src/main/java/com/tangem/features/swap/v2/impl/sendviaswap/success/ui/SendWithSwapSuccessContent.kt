@@ -55,6 +55,7 @@ import com.tangem.features.swap.v2.impl.amount.entity.SwapAmountUM
 import com.tangem.features.swap.v2.impl.amount.ui.preview.SwapAmountContentPreview
 import com.tangem.features.swap.v2.impl.common.entity.ConfirmUM
 import com.tangem.features.swap.v2.impl.common.entity.SwapQuoteUM
+import com.tangem.features.swap.v2.impl.sendviaswap.SendWithSwapRoute
 import com.tangem.features.swap.v2.impl.sendviaswap.entity.SendWithSwapUM
 import kotlinx.collections.immutable.persistentListOf
 import java.math.BigDecimal
@@ -368,6 +369,7 @@ private fun SendWithSwapSuccessContent_Preview() {
                     ),
                 ),
                 navigationUM = NavigationUM.Content(
+                    source = SendWithSwapRoute.Success.javaClass.simpleName,
                     title = TextReference.EMPTY,
                     subtitle = null,
                     backIconRes = R.drawable.ic_close_24,
