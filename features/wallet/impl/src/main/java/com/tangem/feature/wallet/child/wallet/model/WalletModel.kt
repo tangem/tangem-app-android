@@ -4,7 +4,6 @@ import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
-import com.squareup.sqldelight.internal.AtomicBoolean
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
@@ -116,7 +115,6 @@ internal class WalletModel @Inject constructor(
     private val updateTangemPayJobHolder = JobHolder()
 
     private var expressTxStatusTaskScheduler = SingleTaskScheduler<Unit>()
-    private val hasMainScreenOpenedEventSent = AtomicBoolean(false)
 
     init {
         if (!hotWalletFeatureToggles.isHotWalletEnabled) {
@@ -291,15 +289,13 @@ internal class WalletModel @Inject constructor(
                 .onEach { selectedWallet ->
                     trackingContextProxy.setContext(selectedWallet)
 
-                    if (hotWalletFeatureToggles.isHotWalletEnabled && !hasMainScreenOpenedEventSent.get()) {
-                        // send it here because we need context to be set
+                    if (hotWalletFeatureToggles.isHotWalletEnabled) {
                         modelScope.launch {
                             val hasMobileWallet = userWalletsListRepository.userWalletsSync()
                                 .any { it is UserWallet.Hot }
                             analyticsEventsHandler.send(
                                 WalletScreenAnalyticsEvent.MainScreen.ScreenOpened(hasMobileWallet),
                             )
-                            hasMainScreenOpenedEventSent.set(true)
                         }
                     }
 
