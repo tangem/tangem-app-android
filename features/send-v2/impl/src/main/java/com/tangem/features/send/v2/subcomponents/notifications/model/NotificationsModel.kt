@@ -136,6 +136,7 @@ internal class NotificationsModel @Inject constructor(
         val currencyCheck = getCurrencyCheckUseCase(
             userWalletId = userWalletId,
             currencyStatus = cryptoCurrencyStatus,
+            feeCurrencyStatus = feeCryptoCurrencyStatus,
             amount = sendingAmount,
             fee = feeValue,
             recipientAddress = destinationAddress,
