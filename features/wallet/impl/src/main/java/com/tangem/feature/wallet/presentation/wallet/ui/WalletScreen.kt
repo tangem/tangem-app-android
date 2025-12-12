@@ -224,9 +224,9 @@ private fun WalletContent(
                     contentType = selectedWallet.tangemPayState::class.java,
                 ) {
                     TangemPayMainScreenBlock(
-                        selectedWallet.tangemPayState,
+                        state = selectedWallet.tangemPayState,
                         isBalanceHidden = state.isHidingMode,
-                        itemModifier,
+                        modifier = itemModifier,
                     )
                 }
             }
