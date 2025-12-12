@@ -111,8 +111,14 @@ internal class DefaultWalletRouter @Inject constructor(
         )
     }
 
-    override fun openTangemPayOnboarding() {
-        router.push(AppRoute.TangemPayOnboarding(AppRoute.TangemPayOnboarding.Mode.ContinueOnboarding))
+    override fun openTangemPayOnboarding(userWalletId: UserWalletId) {
+        router.push(
+            AppRoute.TangemPayOnboarding(
+                AppRoute.TangemPayOnboarding.Mode.ContinueOnboarding(
+                    userWalletId = userWalletId,
+                ),
+            ),
+        )
     }
 
     override fun openTangemPayDetails(userWalletId: UserWalletId, config: TangemPayDetailsConfig) {
