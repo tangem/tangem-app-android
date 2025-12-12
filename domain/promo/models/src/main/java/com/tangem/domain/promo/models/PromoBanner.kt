@@ -30,4 +30,5 @@ enum class PromoId {
     Sepa,
     VisaPresale,
     BlackFriday,
+    OnePlusOne,
 }

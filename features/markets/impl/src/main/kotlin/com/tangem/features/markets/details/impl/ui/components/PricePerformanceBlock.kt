@@ -57,12 +57,16 @@ internal fun PricePerformanceBlock(state: PricePerformanceUM, modifier: Modifier
                     currentInterval = it
                     state.onIntervalChanged(it)
                 },
+                modifier = Modifier.width(IntrinsicSize.Min),
             ) {
                 Box(
                     Modifier
                         .fillMaxSize()
                         .align(Alignment.Center)
-                        .padding(vertical = TangemTheme.dimens.spacing4),
+                        .padding(
+                            horizontal = 14.dp,
+                            vertical = TangemTheme.dimens.spacing4,
+                        ),
                 ) {
                     Text(
                         modifier = Modifier.align(Alignment.Center),
