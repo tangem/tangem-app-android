@@ -40,6 +40,7 @@ import com.tangem.hot.sdk.model.HotWalletId
 import com.tangem.lib.crypto.BlockchainUtils.isBitcoin
 import com.tangem.utils.extensions.addIf
 import com.tangem.utils.extensions.isPositive
+import com.tangem.utils.extensions.orZero
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
@@ -67,7 +68,7 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
     private val getAccessCodeSkippedUseCase: GetAccessCodeSkippedUseCase,
 ) {
 
-    @Suppress("UNCHECKED_CAST", "MagicNumber")
+    @Suppress("UNCHECKED_CAST", "MagicNumber", "LongMethod")
     fun create(userWallet: UserWallet, clickIntents: WalletClickIntents): Flow<ImmutableList<WalletNotification>> {
         val cardTypesResolver = (userWallet as? UserWallet.Cold)?.scanResponse?.cardTypesResolver
 
@@ -129,7 +130,7 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
 
                     addFinishWalletActivationNotification(
                         userWallet = userWallet,
-                        totalFiatBalance = totalFiatBalance,
+                        flattenCurrencies = flattenCurrencies,
                         clickIntents = clickIntents,
                         shouldAccessCodeSkipped = shouldAccessCodeSkipped,
                     )
@@ -437,8 +438,8 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
         )
     }
 
-    private fun TotalFiatBalance?.getFinishWalletActivationType(): WalletActivationBannerType {
-        return if ((this as? TotalFiatBalance.Loaded)?.amount?.isPositive() == true) {
+    private fun List<CryptoCurrencyStatus>?.getFinishWalletActivationType(): WalletActivationBannerType {
+        return if (this?.any { it.value.amount.orZero().isPositive() } == true) {
             WalletActivationBannerType.Warning
         } else {
             WalletActivationBannerType.Attention
@@ -447,7 +448,7 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
 
     private fun MutableList<WalletNotification>.addFinishWalletActivationNotification(
         userWallet: UserWallet,
-        totalFiatBalance: Lce<TokenListError, TotalFiatBalance>,
+        flattenCurrencies: Lce<TokenListError, List<CryptoCurrencyStatus>>,
         clickIntents: WalletClickIntents,
         shouldAccessCodeSkipped: Boolean,
     ) {
@@ -458,8 +459,8 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
             !shouldAccessCodeSkipped
         val shouldShowFinishActivation = !isBackupExists || isAccessCodeRequired
 
-        val type = totalFiatBalance.fold(
-            ifLoading = { it.getFinishWalletActivationType() },
+        val type = flattenCurrencies.fold(
+            ifLoading = { return },
             ifContent = { it.getFinishWalletActivationType() },
             ifError = { WalletActivationBannerType.Attention },
         )
