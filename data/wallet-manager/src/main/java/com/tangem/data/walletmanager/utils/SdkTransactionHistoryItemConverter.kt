@@ -24,7 +24,7 @@ internal class SdkTransactionHistoryItemConverter(
             SdkTransactionHistoryItem.TransactionStatus.Failed -> TxInfo.TransactionStatus.Failed
             SdkTransactionHistoryItem.TransactionStatus.Unconfirmed -> TxInfo.TransactionStatus.Unconfirmed
         },
-        type = typeConverter.convert(value.type),
+        type = typeConverter.convert(value.type to value.destinationType.toDomain()),
         amount = requireNotNull(value.amount.value) { "Transaction amount value must not be null" },
     )
 

@@ -5,6 +5,7 @@ import com.tangem.data.yield.supply.DefaultYieldSupplyRepository
 import com.tangem.data.yield.supply.DefaultYieldSupplyErrorResolver
 import com.tangem.data.yield.supply.DefaultYieldSupplyTransactionRepository
 import com.tangem.datasource.api.tangemTech.YieldSupplyApi
+import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.yieldsupply.YieldMarketsStore
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.yield.supply.YieldSupplyRepository
@@ -41,6 +42,7 @@ internal object YieldSupplyDataModule {
         walletManagersFacade: WalletManagersFacade,
         dispatchers: CoroutineDispatcherProvider,
         analyticsExceptionHandler: AnalyticsExceptionHandler,
+        appPreferencesStore: AppPreferencesStore,
     ): YieldSupplyRepository {
         return DefaultYieldSupplyRepository(
             yieldSupplyApi = yieldSupplyApi,
@@ -48,6 +50,7 @@ internal object YieldSupplyDataModule {
             dispatchers = dispatchers,
             walletManagersFacade = walletManagersFacade,
             analyticsExceptionHandler = analyticsExceptionHandler,
+            appPreferencesStore = appPreferencesStore,
         )
     }
 
