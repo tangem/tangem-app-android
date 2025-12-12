@@ -72,7 +72,11 @@ internal class SavedSwapTransactionListConverter(
 
             return SwapTransactionListModel(
                 transactions = value.transactions.map { tx ->
-                    savedSwapTransactionConverter.convertBack(tx, userWallet, txStatuses)
+                    savedSwapTransactionConverter.convertBack(
+                        value = tx,
+                        userWallet = userWallet,
+                        txStatuses = txStatuses,
+                    )
                 },
                 userWalletId = value.userWalletId,
                 fromCryptoCurrencyId = value.fromCryptoCurrencyId,
