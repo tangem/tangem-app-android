@@ -28,11 +28,12 @@ import java.math.BigDecimal
  * - Builds the fee policy note text using the minimum amount.
  * - Adds contextual notifications:
  *   - Approval required notification when spending is not yet allowed (emits analytics on CTA).
- *   - "Not all amount supplied" info when wallet balance exceeds the supplied balance by more than [minAmount].
+ *   - "Not all amount supplied" info when the not-supplied balance exceeds the dust threshold [dustMinAmount].
  *
  * @property cryptoCurrencyStatus Current currency status used to calculate values and flags.
  * @property appCurrency Preferred fiat currency for formatting.
  * @property minAmount Protocol-required minimal amount to deposit/supply (in crypto units).
+ * @property dustMinAmount Threshold used to detect dust/not-supplied balance (in crypto units).
  * @property analyticsHandler Analytics reporter for user actions.
  * @property onApprove Action invoked when the "Approve" notification button is tapped.
  */
@@ -40,6 +41,7 @@ internal class YieldSupplyActiveMinAmountTransformer(
     private val cryptoCurrencyStatus: CryptoCurrencyStatus,
     private val appCurrency: AppCurrency,
     private val minAmount: BigDecimal,
+    private val dustMinAmount: BigDecimal,
     private val analyticsHandler: AnalyticsEventHandler,
     private val onApprove: () -> Unit,
 ) : Transformer<YieldSupplyActiveContentUM> {
@@ -89,7 +91,7 @@ internal class YieldSupplyActiveMinAmountTransformer(
     }
 
     private fun getNotSuppliedNotification(cryptoCurrencyStatus: CryptoCurrencyStatus): NotificationUM? {
-        return if (cryptoCurrencyStatus.shouldShowNotSuppliedInfoIcon(minAmount)) {
+        return if (cryptoCurrencyStatus.shouldShowNotSuppliedInfoIcon(dustMinAmount)) {
             val cryptoCurrency = cryptoCurrencyStatus.currency
             val notDepositedAmount = cryptoCurrencyStatus.notSuppliedAmountOrNull()
             val formattedAmount =
