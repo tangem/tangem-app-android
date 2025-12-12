@@ -15,10 +15,10 @@ import com.arkivanov.decompose.extensions.compose.stack.Children
 import com.arkivanov.decompose.extensions.compose.stack.animation.slide
 import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
 import com.arkivanov.decompose.router.stack.ChildStack
+import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.core.ui.res.LocalMainBottomSheetColor
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.markets.details.MarketsTokenDetailsComponent
-import com.tangem.features.markets.entry.BottomSheetState
 import com.tangem.features.markets.entry.impl.MarketsEntryChildFactory
 import com.tangem.features.markets.tokenlist.MarketsTokenListComponent
 

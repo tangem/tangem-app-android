@@ -3,6 +3,7 @@ package com.tangem.features.feed.components
 import androidx.compose.runtime.Immutable
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.navigation.Route
+import com.tangem.core.ui.decompose.ComposableModularContentComponent
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.features.feed.components.feed.DefaultFeedComponent
@@ -11,8 +12,9 @@ import com.tangem.features.feed.components.market.list.DefaultMarketsTokenListCo
 import com.tangem.features.feed.components.news.details.DefaultNewsDetailsComponent
 import com.tangem.features.feed.components.news.list.DefaultNewsListComponent
 import kotlinx.serialization.Serializable
+import javax.inject.Inject
 
-internal class FeedEntryChildFactory {
+internal class FeedEntryChildFactory @Inject constructor() {
 
     @Serializable
     @Immutable
@@ -43,7 +45,7 @@ internal class FeedEntryChildFactory {
         child: Child,
         appComponentContext: AppComponentContext,
         onTokenClick: (TokenMarketParams, AppCurrency) -> Unit,
-    ): Any {
+    ): ComposableModularContentComponent {
         return when (child) {
             is Child.TokenDetails -> {
                 DefaultMarketsTokenDetailsComponent(
