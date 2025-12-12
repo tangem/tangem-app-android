@@ -660,8 +660,13 @@ internal class ChildFactory @Inject constructor(
                 createComponentChild(
                     context = context,
                     params = when (val mode = route.mode) {
-                        is AppRoute.TangemPayOnboarding.Mode.ContinueOnboarding -> ContinueOnboarding
-                        is AppRoute.TangemPayOnboarding.Mode.Deeplink -> Deeplink(deeplink = mode.deeplink)
+                        is AppRoute.TangemPayOnboarding.Mode.ContinueOnboarding -> ContinueOnboarding(
+                            userWalletId = mode.userWalletId,
+                        )
+                        is AppRoute.TangemPayOnboarding.Mode.Deeplink -> Deeplink(
+                            deeplink = mode.deeplink,
+                            userWalletId = mode.userWalletId,
+                        )
                     },
                     componentFactory = tangemPayOnboardingComponentFactory,
                 )
