@@ -21,8 +21,8 @@ internal class SendDestinationValidationResultTransformer(
         val isValidAddress = addressValidationResult.isRight()
         val isValidMemo = memoValidationResult.isRight()
 
-        val addressErrorText = addressValidationResult.mapLeft {
-            when (it) {
+        val addressErrorText = addressValidationResult.mapLeft { error ->
+            when (error) {
                 is AddressValidation.Error.DataError,
                 AddressValidation.Error.InvalidAddress,
                 -> R.string.send_recipient_address_error
