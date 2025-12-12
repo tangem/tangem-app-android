@@ -35,6 +35,7 @@ import com.tangem.features.send.v2.api.entity.PredefinedValues
 import com.tangem.features.send.v2.api.subcomponents.destination.SendDestinationComponentParams
 import com.tangem.features.send.v2.api.subcomponents.destination.SendDestinationComponentParams.DestinationBlockParams
 import com.tangem.features.send.v2.api.subcomponents.destination.entity.DestinationUM
+import com.tangem.features.send.v2.common.CommonSendRoute
 import com.tangem.features.send.v2.impl.R
 import com.tangem.features.send.v2.subcomponents.destination.analytics.EnterAddressSource
 import com.tangem.features.send.v2.subcomponents.destination.analytics.SendDestinationAnalyticEvents
@@ -359,6 +360,7 @@ internal class SendDestinationModel @Inject constructor(
         ).onEach { (state, route) ->
             params.callback.onNavigationResult(
                 NavigationUM.Content(
+                    source = CommonSendRoute.Destination::class.java.simpleName,
                     title = params.title,
                     subtitle = null,
                     backIconRes = if (route.isEditMode) {
