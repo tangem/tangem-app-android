@@ -98,12 +98,12 @@ internal class WcRoutingModel @Inject constructor(
         permittedAppRoute,
         cardSdkProvider.sdk.uiVisibility(),
     ) { isSlotEmpty, permittedAppRoute, isCardSdkVisible ->
-        val ready = isSlotEmpty && permittedAppRoute && !isCardSdkVisible
+        val isReady = isSlotEmpty && permittedAppRoute && !isCardSdkVisible
         Timber.d(
             "WC Queue: isSlotEmpty=$isSlotEmpty, permittedAppRoute=$permittedAppRoute, " +
-                "isCardSdkVisible=$isCardSdkVisible, ready=$ready",
+                "isCardSdkVisible=$isCardSdkVisible, ready=$isReady",
         )
-        ready
+        isReady
     }.first { it }
 
     fun onAppRouteChange(appRoute: AppRoute) {

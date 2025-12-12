@@ -72,9 +72,9 @@ internal class WcSignTransactionModel @Inject constructor(
         modelScope.launch {
             Timber.tag(WC_TAG).i("Creating use case...")
             useCase = useCaseFactory.createUseCase<WcMessageSignUseCase>(params.rawRequest)
-                .onLeft {
-                    Timber.tag(WC_TAG).e("Failed to create use case: $it")
-                    router.push(WcHandleMethodErrorConverter.convert(it))
+                .onLeft { error ->
+                    Timber.tag(WC_TAG).e("Failed to create use case: $error")
+                    router.push(WcHandleMethodErrorConverter.convert(error))
                 }
                 .getOrNull() ?: run {
                 Timber.tag(WC_TAG).e("Use case is null, exiting")
