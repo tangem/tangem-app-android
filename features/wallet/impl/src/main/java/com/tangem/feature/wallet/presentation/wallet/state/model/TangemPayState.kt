@@ -9,6 +9,8 @@ internal sealed class TangemPayState {
 
     object Empty : TangemPayState()
 
+    data object Loading : TangemPayState()
+
     data class Progress(
         val title: TextReference,
         val description: TextReference,

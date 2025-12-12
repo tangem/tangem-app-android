@@ -22,7 +22,7 @@ class ResponseCryptoCurrenciesFactory @Inject constructor(
     fun createCurrencies(
         response: UserTokensResponse,
         userWallet: UserWallet,
-        accountIndex: DerivationIndex? = null,
+        accountIndex: DerivationIndex,
     ): List<CryptoCurrency> {
         return createCurrencies(tokens = response.tokens, userWallet = userWallet, accountIndex = accountIndex)
     }
@@ -30,7 +30,7 @@ class ResponseCryptoCurrenciesFactory @Inject constructor(
     fun createCurrencies(
         tokens: List<UserTokensResponse.Token>,
         userWallet: UserWallet,
-        accountIndex: DerivationIndex? = null,
+        accountIndex: DerivationIndex,
     ): List<CryptoCurrency> {
         return tokens
             .asSequence()
@@ -42,7 +42,7 @@ class ResponseCryptoCurrenciesFactory @Inject constructor(
     fun createCurrency(
         responseToken: UserTokensResponse.Token,
         userWallet: UserWallet,
-        accountIndex: DerivationIndex? = null,
+        accountIndex: DerivationIndex,
     ): CryptoCurrency? {
         var blockchain = Blockchain.fromNetworkId(responseToken.networkId)
         if (blockchain == null || blockchain == Blockchain.Unknown) {
@@ -103,7 +103,7 @@ class ResponseCryptoCurrenciesFactory @Inject constructor(
         blockchain: Blockchain,
         responseToken: UserTokensResponse.Token,
         network: Network,
-    ): CryptoCurrency.Coin? {
+    ): CryptoCurrency.Coin {
         return CryptoCurrency.Coin(
             id = getCoinId(network, blockchain.toCoinId()),
             network = network,
@@ -127,7 +127,7 @@ class ResponseCryptoCurrenciesFactory @Inject constructor(
         }
     }
 
-    private fun createToken(blockchain: Blockchain, sdkToken: Token, network: Network): CryptoCurrency.Token? {
+    private fun createToken(blockchain: Blockchain, sdkToken: Token, network: Network): CryptoCurrency.Token {
         val id = getTokenId(network, sdkToken)
 
         return CryptoCurrency.Token(

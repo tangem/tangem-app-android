@@ -61,7 +61,7 @@ internal class DefaultMainAccountTokensMigration(
 
         val unassignedTokens = mainAccount.findUnassignedTokens(derivationIndex)
 
-        if (unassignedTokens == null) {
+        if (unassignedTokens.isNullOrEmpty()) {
             Timber.i("No unassigned tokens found for migration")
             return@either
         }

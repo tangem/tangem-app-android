@@ -36,11 +36,12 @@ internal class AccountListCryptoCurrenciesProducer @AssistedInject constructor(
 
     override val fallback: Option<Set<CryptoCurrency>> = emptySet<CryptoCurrency>().some()
 
+    @Suppress("NullableToStringCall")
     override fun produce(): Flow<Set<CryptoCurrency>> {
         val userWallet = userWalletsStore.getSyncStrict(key = params.userWalletId)
 
         if (!userWallet.isMultiCurrency) {
-            error("${this::class.simpleName} supports only multi-currency wallet")
+            error("${this::class.simpleName ?: this::class.toString()} supports only multi-currency wallet")
         }
 
         return accountsResponseStoreFactory.create(userWalletId = userWallet.walletId).data
@@ -49,10 +50,13 @@ internal class AccountListCryptoCurrenciesProducer @AssistedInject constructor(
                 if (response == null) return@map emptySet()
 
                 response.accounts.flatMapTo(hashSetOf()) { accountDTO ->
+                    val accountIndex = DerivationIndex(accountDTO.derivationIndex).getOrNull()
+                        ?: return@map emptySet()
+
                     responseCryptoCurrenciesFactory.createCurrencies(
                         tokens = accountDTO.tokens.orEmpty(),
                         userWallet = userWallet,
-                        accountIndex = DerivationIndex(accountDTO.derivationIndex).getOrNull(),
+                        accountIndex = accountIndex,
                     )
                 }
             }
