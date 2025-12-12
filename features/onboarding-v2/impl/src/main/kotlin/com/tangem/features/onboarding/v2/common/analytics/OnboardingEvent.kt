@@ -19,13 +19,16 @@ sealed class OnboardingEvent(
 
         class ScreenOpened : CreateWallet("Create Wallet Screen Opened")
         class ButtonCreateWallet : CreateWallet("Button - Create Wallet")
+        class ButtonOtherOptions : CreateWallet("Button - Other Options")
         class WalletCreatedSuccessfully(
             creationType: WalletCreationType = WalletCreationType.PrivateKey,
             seedPhraseLength: Int? = null,
+            passPhraseState: AnalyticsParam.EmptyFull,
         ) : CreateWallet(
             event = "Wallet Created Successfully",
             params = buildMap {
                 put("Creation Type", creationType.value)
+                put("Passphrase", passPhraseState.value)
                 if (seedPhraseLength != null) {
                     put("Seed Phrase Length", seedPhraseLength.toString())
                 }
