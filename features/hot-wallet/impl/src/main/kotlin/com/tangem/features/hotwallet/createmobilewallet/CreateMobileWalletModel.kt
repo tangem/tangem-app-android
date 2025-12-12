@@ -60,8 +60,12 @@ internal class CreateMobileWalletModel @Inject constructor(
 
     init {
         trackingContextProxy.addHotWalletContext()
-        analyticsEventHandler.send(OnboardingAnalyticsEvent.Onboarding.Started(source = params.source))
-        analyticsEventHandler.send(OnboardingAnalyticsEvent.SeedPhrase.CreateMobileScreenOpened)
+        analyticsEventHandler.send(
+            event = OnboardingAnalyticsEvent.Onboarding.Started(source = params.source),
+        )
+        analyticsEventHandler.send(
+            event = OnboardingAnalyticsEvent.SeedPhrase.CreateMobileScreenOpened(source = params.source),
+        )
     }
 
     override fun onDestroy() {
@@ -70,13 +74,13 @@ internal class CreateMobileWalletModel @Inject constructor(
     }
 
     private fun onImportClick() {
-        analyticsEventHandler.send(OnboardingAnalyticsEvent.SeedPhrase.ButtonImportWallet)
+        analyticsEventHandler.send(OnboardingAnalyticsEvent.SeedPhrase.ButtonImportWallet())
         checkHotWalletCreationSupported(notSupported = { return })
         router.push(AppRoute.AddExistingWallet)
     }
 
     private fun onCreateClick() {
-        analyticsEventHandler.send(OnboardingAnalyticsEvent.CreateWallet.ButtonCreateWallet)
+        analyticsEventHandler.send(OnboardingAnalyticsEvent.CreateWallet.ButtonCreateWallet())
         checkHotWalletCreationSupported(notSupported = { return })
 
         modelScope.launch {
