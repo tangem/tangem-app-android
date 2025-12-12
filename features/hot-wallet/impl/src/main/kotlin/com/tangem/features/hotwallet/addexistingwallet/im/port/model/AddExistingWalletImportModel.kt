@@ -64,7 +64,7 @@ internal class AddExistingWalletImportModel @Inject constructor(
         }
 
     init {
-        analyticsEventHandler.send(OnboardingAnalyticsEvent.SeedPhrase.ImportSeedPhraseScreenOpened)
+        analyticsEventHandler.send(OnboardingAnalyticsEvent.SeedPhrase.ImportSeedPhraseScreenOpened())
         importSeedPhraseUiStateBuilder = ImportSeedPhraseUiStateBuilder(
             modelScope = modelScope,
             mnemonicRepository = mnemonicRepository,
@@ -77,7 +77,7 @@ internal class AddExistingWalletImportModel @Inject constructor(
                 )
             },
             onPassphraseInfoClick = ::onPassphraseInfoClick,
-            onImportClick = { analyticsEventHandler.send(OnboardingAnalyticsEvent.SeedPhrase.ButtonImport) },
+            onImportClick = { analyticsEventHandler.send(OnboardingAnalyticsEvent.SeedPhrase.ButtonImport()) },
         )
     }
 
