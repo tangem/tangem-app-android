@@ -96,9 +96,9 @@ class GetOnrampOffersUseCase(
         isMoonpayPromoActive: Boolean,
     ): OnrampOffer? {
         val moonpayPromoOffers = if (isMoonpayPromoActive) {
-            offers.filter {
-                it.quote.provider.id == MOONPAY_PROMO_PROVIDER_ID &&
-                    it.quote.paymentMethod.type == PaymentMethodType.GOOGLE_PAY
+            offers.filter { offer ->
+                offer.quote.provider.id == MOONPAY_PROMO_PROVIDER_ID &&
+                    offer.quote.paymentMethod.type == PaymentMethodType.GOOGLE_PAY
             }
         } else {
             emptyList()
