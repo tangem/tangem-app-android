@@ -1447,7 +1447,7 @@
   <string name="tangempay_card_details_open_wallet_step_1">Откройте Google Wallet</string>
   <string name="tangempay_card_details_open_wallet_step_1_5_apple">Нажмите на кнопку “+” сверху справа</string>
   <string name="tangempay_card_details_open_wallet_step_1_apple">Откройте Apple Wallet</string>
-  <string name="tangempay_card_details_open_wallet_step_2">Нажите \"Добавить карту\"</string>
+  <string name="tangempay_card_details_open_wallet_step_2">Нажмите \"Добавить карту\"</string>
   <string name="tangempay_card_details_open_wallet_step_2_apple">Выберите \"Дебетовая или кредитная карта\"</string>
   <string name="tangempay_card_details_open_wallet_step_3">Заполните данные карты вручную</string>
   <string name="tangempay_card_details_open_wallet_step_4">Введите код подтверждения, направленный в email или СМС</string>
@@ -1487,7 +1487,7 @@
   <string name="tangempay_onboarding_banner_description">Используйте криптовалюту в реальной жизни. \nКарта, не похожая ни на одну другую.</string>
   <string name="tangempay_onboarding_banner_title">Tangem Visa Card</string>
   <string name="tangempay_onboarding_get_card_button_text">Открыть карту</string>
-  <string name="tangempay_onboarding_pay_description">Виртуальную карту можно добавить в Apple Pay and Google Pay</string>
+  <string name="tangempay_onboarding_pay_description">Виртуальную карту можно добавить в Apple Pay и Google Pay</string>
   <string name="tangempay_onboarding_pay_title">Покупайте где угодно</string>
   <string name="tangempay_onboarding_purchases_description">Никаких дополнительных комиссий за покупки</string>
   <string name="tangempay_onboarding_purchases_title">Сколько видишь – столько платишь</string>
