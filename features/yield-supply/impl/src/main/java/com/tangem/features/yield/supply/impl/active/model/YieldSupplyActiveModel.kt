@@ -58,6 +58,7 @@ internal class YieldSupplyActiveModel @Inject constructor(
     private val getSingleCryptoCurrencyStatusUseCase: GetSingleCryptoCurrencyStatusUseCase,
     private val urlOpener: UrlOpener,
     private val appRouter: AppRouter,
+    private val yieldSupplyGetDustMinAmountUseCase: YieldSupplyGetDustMinAmountUseCase,
 ) : Model(), YieldSupplyStopEarningComponent.ModelCallback,
     YieldSupplyApproveComponent.ModelCallback {
 
@@ -241,11 +242,13 @@ internal class YieldSupplyActiveModel @Inject constructor(
                 userWalletId,
                 cryptoCurrencyStatusFlow.value,
             ).onRight { minAmount ->
+                val dustAmount = yieldSupplyGetDustMinAmountUseCase(minAmount = minAmount, appCurrency = appCurrency)
                 uiState.update(
                     YieldSupplyActiveMinAmountTransformer(
                         cryptoCurrencyStatus = cryptoCurrencyStatusFlow.value,
                         appCurrency = appCurrency,
                         minAmount = minAmount,
+                        dustMinAmount = dustAmount,
                         analyticsHandler = analyticsHandler,
                         onApprove = ::onApprove,
                     ),
