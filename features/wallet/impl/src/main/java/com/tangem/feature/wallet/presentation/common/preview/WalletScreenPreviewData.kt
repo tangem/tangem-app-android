@@ -223,6 +223,7 @@ internal object WalletScreenPreviewData {
         isHidingMode = false,
         showMarketsOnboarding = false,
         onDismissMarketsOnboarding = {},
+        isNewMarketEnabled = false,
     )
 
     internal val accountScreenState =
