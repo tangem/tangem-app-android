@@ -1,6 +1,10 @@
 package com.tangem.core.ui.utils
 
 import android.text.format.DateFormat
+import com.tangem.core.ui.utils.DateTimeFormatters.dateDDMMYYYY
+import com.tangem.core.ui.utils.DateTimeFormatters.dateMMMdd
+import com.tangem.core.ui.utils.DateTimeFormatters.dateTimeFormatter
+import com.tangem.core.ui.utils.DateTimeFormatters.dateYYYY
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 import org.joda.time.format.DateTimeFormatter
@@ -78,6 +82,13 @@ object DateTimeFormatters {
      */
     val dateYYYY: DateTimeFormatter by lazy {
         getBestFormatterBySkeleton("yyyy")
+    }
+
+    /**
+     * Example: "June 31"
+     */
+    val dateDMMM: DateTimeFormatter by lazy {
+        getBestFormatterBySkeleton("d MMMM")
     }
 
     /**
