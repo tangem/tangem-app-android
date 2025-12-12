@@ -35,7 +35,7 @@ internal class CustomTabsUrlOpener : UrlOpener {
 
     private fun openUrl(url: String, context: Context) {
         if (url.isEmpty()) return
-        val browserIntent = Intent(Intent.ACTION_VIEW, url.toUri())
+        val browserIntent = Intent(Intent.ACTION_VIEW, url.trim().toUri())
         runCatching {
             if (checkCustomTabsAvailability(context, browserIntent)) {
                 context.startActivity(browserIntent)
