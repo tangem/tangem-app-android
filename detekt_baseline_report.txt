@@ -1,7 +1,7 @@
 ==========================================
 Detekt Baseline Updater & Issue Counter
 ==========================================
-Date: 2025-12-08 12:25:24
+Date: 2025-12-12 13:10:21
 
 Step 1: Running detekt to check for new issues...
 
@@ -17,13 +17,13 @@ Counting issues in baseline files...
 ==========================================
 
 Summary:
-  Total Issues: 1311
-  Modules with Issues: 48
+  Total Issues: 1247
+  Modules with Issues: 46
   Average Issues per Module: 27
 
 Progress:
-  Fixed: 491 out of 1802 (27%)
-  Remaining: 1311
+  Fixed: 555 out of 1802 (30%)
+  Remaining: 1247
 
 ==========================================
 All Modules with Issues (sorted by count)
@@ -31,21 +31,20 @@ All Modules with Issues (sorted by count)
 
 Module                                                           Issues
 ────────────────────────────────────────────────────────────────
-features/markets/impl                                               148
-features/wallet/impl                                                145
-features/onboarding-v2/impl                                         130
+features/markets/impl                                               147
+features/wallet/impl                                                144
+features/onboarding-v2/impl                                         128
 features/swap/impl                                                   67
 data/wallet-connect                                                  54
 features/hot-wallet/impl                                             51
 features/walletconnect/impl                                          47
-features/tokendetails/impl                                           46
 features/staking/impl                                                46
-features/manage-tokens/impl                                          45
-features/swap-v2/impl                                                40
+features/tokendetails/impl                                           45
+features/manage-tokens/impl                                          44
 domain/wallets                                                       37
 features/nft/impl                                                    34
-features/tester/impl                                                 30
-core/ui                                                              27
+features/tester/impl                                                 28
+core/ui                                                              26
 features/swap/domain                                                 25
 domain/tokens                                                        25
 common/ui                                                            24
@@ -55,20 +54,19 @@ data/visa                                                            21
 data/nft                                                             19
 features/swap/data                                                   15
 data/wallets                                                         13
-data/swap                                                            13
 features/token-recieve/impl                                          11
 features/qr-scanning/impl                                            11
 data/onramp                                                          11
 core/datasource                                                      11
 data/markets                                                         10
 features/details/impl                                                 9
-domain/staking                                                        9
 domain/account/status                                                 9
 data/yield-supply                                                     9
 data/networks                                                         9
-features/referral/impl                                                8
 domain/transaction                                                    8
+domain/staking                                                        8
 libs/tangem-sdk-api                                                   7
+features/referral/impl                                                7
 data/txhistory                                                        7
 features/welcome/impl                                                 6
 libs/visa                                                             5
