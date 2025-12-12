@@ -12,7 +12,7 @@ internal class NFTSendConfirmInitialStateTransformer(
     override fun transform(prevState: ConfirmUM): ConfirmUM {
         return ConfirmUM.Content(
             isSending = false,
-            showTapHelp = isShowTapHelp,
+            isShowTapHelp = isShowTapHelp,
             sendingFooter = TextReference.EMPTY,
             walletName = walletName,
             notifications = persistentListOf(),

@@ -14,7 +14,6 @@
     <ID>NullCheckOnMutableProperty:VisaLibLoader.kt$VisaLibLoader$if (config != null) return@withLock requireNotNull(config)</ID>
     <ID>NullCheckOnMutableProperty:VisaLibLoader.kt$VisaLibLoader$if (provider != null) return@withLock requireNotNull(provider)</ID>
     <ID>NullableToStringCall:DefaultOnboardingRepository.kt$DefaultOnboardingRepository$${error.message}</ID>
-    <ID>NullableToStringCall:TangemPayRequestPerformer.kt$TangemPayRequestPerformer$${error.message}</ID>
     <ID>RedundantSuspendModifier:DefaultVisaRepository.kt$DefaultVisaRepository$suspend</ID>
     <ID>SuspendFunSwallowedCancellation:DefaultVisaRepository.kt$DefaultVisaRepository$runCatching</ID>
     <ID>SuspendFunSwallowedCancellation:VisaApiRequestMaker.kt$VisaApiRequestMaker$runCatching</ID>
