@@ -22,7 +22,6 @@ import com.tangem.domain.walletconnect.model.WcSolanaMethodName
 import com.tangem.domain.walletconnect.model.sdkcopy.WcSdkSessionRequest
 import com.tangem.domain.walletconnect.repository.WcSessionsManager
 import com.tangem.domain.walletconnect.usecase.method.WcMethodUseCase
-import com.tangem.domain.walletmanager.WalletManagersFacade
 import jakarta.inject.Inject
 
 internal class WcSolanaNetwork(
@@ -30,7 +29,6 @@ internal class WcSolanaNetwork(
     private val sessionsManager: WcSessionsManager,
     private val factories: Factories,
     private val networksConverter: WcNetworksConverter,
-    private val walletManagersFacade: WalletManagersFacade,
 ) : WcRequestToUseCaseConverter {
 
     override fun toWcMethodName(request: WcSdkSessionRequest): WcSolanaMethodName? {
@@ -52,7 +50,7 @@ internal class WcSolanaNetwork(
         val chainId = request.chainId.orEmpty()
         suspend fun anyExistNetwork() = networksConverter.mainOrAnyWalletNetworkForRequest(chainId, wallet)
         suspend fun anyAddress() = anyExistNetwork()
-            ?.let { network -> walletManagersFacade.getDefaultAddress(wallet.walletId, network).orEmpty() }
+            ?.let { network -> networksConverter.getAddressForWC(wallet.walletId, network).orEmpty() }
             .orEmpty()
 
         val accountAddress = when (method) {
