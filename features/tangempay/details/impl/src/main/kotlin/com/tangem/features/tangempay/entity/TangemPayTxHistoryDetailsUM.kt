@@ -8,6 +8,7 @@ import com.tangem.core.ui.extensions.TextReference
 import kotlinx.collections.immutable.ImmutableList
 
 internal data class TangemPayTxHistoryDetailsUM(
+    val isBalanceHidden: Boolean,
     val title: TextReference,
     val iconState: ImageReference,
     val transactionTitle: TextReference,
