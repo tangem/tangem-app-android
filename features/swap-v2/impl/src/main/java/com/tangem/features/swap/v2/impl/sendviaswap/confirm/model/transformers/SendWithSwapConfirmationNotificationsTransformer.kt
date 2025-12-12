@@ -109,16 +109,16 @@ internal class SendWithSwapConfirmationNotificationsTransformer : Transformer<Se
         val expressProvider = (swapAmountUM as? SwapAmountUM.Content)?.selectedQuote?.provider ?: return null
 
         return ConfirmUM.Content.TosUM(
-            tosLink = expressProvider.termsOfUse?.let {
+            tosLink = expressProvider.termsOfUse?.let { termsOfUse ->
                 ConfirmUM.Content.LegalUM(
                     title = resourceReference(R.string.common_terms_of_use),
-                    link = it,
+                    link = termsOfUse,
                 )
             },
-            policyLink = expressProvider.privacyPolicy?.let {
+            policyLink = expressProvider.privacyPolicy?.let { privacyPolicy ->
                 ConfirmUM.Content.LegalUM(
                     title = resourceReference(R.string.common_privacy_policy),
-                    link = it,
+                    link = privacyPolicy,
                 )
             },
         )

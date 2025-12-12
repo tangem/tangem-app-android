@@ -57,7 +57,6 @@
     <ID>MultilineLambdaItParameter:MarketsListBatchFlowManager.kt$MarketsListBatchFlowManager${ when (val status = it.status) { is PaginationStatus.Paginating -&gt; { if (status.lastResult is BatchFetchResult.Success) { it.data.size == 1 } else { null } } is PaginationStatus.EndOfPagination -&gt; { it.data.size == 1 } else -&gt; null } }</ID>
     <ID>MultilineLambdaItParameter:MarketsListItem.kt${ if (Random.nextBoolean()) { it.first.inc() to PriceChangeType.UP } else { it.first.dec() to PriceChangeType.DOWN } }</ID>
     <ID>MultilineLambdaItParameter:MarketsListLazyColumn.kt${ (it.key as? String)?.split(TOKEN_LAZY_LIST_ID_SEPARATOR)?.first() ?.let { rawId -&gt; CryptoCurrency.RawID(rawId) } }</ID>
-    <ID>MultilineLambdaItParameter:MarketsListModel.kt$MarketsListModel${ if (it == BottomSheetState.EXPANDED) { analyticsEventHandler.send(MarketsListAnalyticsEvent.BottomSheetOpened) } }</ID>
     <ID>MultilineLambdaItParameter:MarketsListModel.kt$MarketsListModel${ if (it) { analyticsEventHandler.send(MarketsListAnalyticsEvent.TokenSearched(tokenFound = false)) } }</ID>
     <ID>MultilineLambdaItParameter:MarketsListModel.kt$MarketsListModel${ if (it.isNotEmpty()) { activeListManager.getBatchKeysByItemIds(visibleItemIds.value) } else { null } }</ID>
     <ID>MultilineLambdaItParameter:MarketsListModel.kt$MarketsListModel${ if (it.list !is ListUM.Content) { visibleItemIds.value = emptyList() } }</ID>
