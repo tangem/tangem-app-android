@@ -26,7 +26,7 @@ internal class SendAnalyticHelper @Inject constructor(
                 token = cryptoCurrency.symbol,
                 feeType = feeType,
                 blockchain = cryptoCurrency.network.name,
-                nonceNotEmpty = feeSelectorUM.feeNonce is FeeNonce.Nonce,
+                isNonceNotEmpty = feeSelectorUM.feeNonce is FeeNonce.Nonce,
                 ensStatus = getEnsStatus(sendUM),
             ),
         )
@@ -54,9 +54,9 @@ internal class SendAnalyticHelper @Inject constructor(
     }
 
     private fun getEnsStatus(sendUM: SendUM): AnalyticsParam.EmptyFull {
-        val blockchainAddressForEns =
+        val isBlockchainAddressForEns =
             (sendUM.destinationUM as? DestinationUM.Content)?.addressTextField?.isAddressEns
-        return if (blockchainAddressForEns == true) {
+        return if (isBlockchainAddressForEns == true) {
             AnalyticsParam.EmptyFull.Full
         } else {
             AnalyticsParam.EmptyFull.Empty
