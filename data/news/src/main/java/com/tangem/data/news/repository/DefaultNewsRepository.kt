@@ -18,7 +18,6 @@ import com.tangem.pagination.fetcher.BatchFetcher
 import com.tangem.pagination.toBatchFlow
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runSuspendCatching
-import javax.inject.Inject
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -31,7 +30,7 @@ import kotlin.collections.orEmpty
  * Implementation of [NewsRepository].
 [REDACTED_AUTHOR]
  */
-internal class DefaultNewsRepository @Inject constructor(
+internal class DefaultNewsRepository(
     private val newsApi: NewsApi,
     private val dispatchers: CoroutineDispatcherProvider,
     private val newsDetailsStore: NewsDetailsStore,
@@ -68,8 +67,8 @@ internal class DefaultNewsRepository @Inject constructor(
         fetchDetailedArticlesInternal(newsIds = newsIds, language = language)
     }
 
-    override suspend fun getTrendingNews(limit: Int, language: String?): List<ShortArticle> {
-        return fetchAndStoreTrendingNews(limit = limit, language = language)
+    override suspend fun getTrendingNews(limit: Int, language: String?) {
+        fetchAndStoreTrendingNews(limit = limit, language = language)
     }
 
     override fun observeTrendingNews(): Flow<List<ShortArticle>> {
