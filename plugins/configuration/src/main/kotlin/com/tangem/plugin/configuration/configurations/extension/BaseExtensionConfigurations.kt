@@ -3,11 +3,8 @@ package com.tangem.plugin.configuration.configurations.extension
 import com.android.build.gradle.BaseExtension
 import com.tangem.plugin.configuration.model.AppConfig
 import com.tangem.plugin.configuration.utils.findPlugin
-import com.tangem.plugin.configuration.utils.findVersion
 import org.gradle.api.JavaVersion
 import org.gradle.api.Project
-import org.gradle.kotlin.dsl.apply
-import org.gradle.kotlin.dsl.plugins
 
 internal fun BaseExtension.configureCompileSdk() {
     compileSdkVersion(AppConfig.compileSdkVersion)
@@ -28,6 +25,7 @@ internal fun BaseExtension.configureCompose(project: Project) {
             contains(Regex(pattern = ":presentation\$")) ||
             contains(Regex(pattern = ":app\$")) || // TODO: [REDACTED_JIRA]
             contains(Regex(pattern = ":features:markets:api\$")) || // provides Composable function
+            contains(Regex(pattern = ":features:feed:api\$")) || // provides Composable function
             contains(Regex(pattern = ":features:manage-tokens:api\$")) || // provides Composable function
             contains(Regex(pattern = ":features:txhistory:api\$")) || // provides Composable function
             contains(Regex(pattern = ":impl\$"))
