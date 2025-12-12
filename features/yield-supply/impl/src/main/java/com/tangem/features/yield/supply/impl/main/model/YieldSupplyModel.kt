@@ -1,5 +1,6 @@
 package com.tangem.features.yield.supply.impl.main.model
 
+import arrow.core.getOrElse
 import com.tangem.common.routing.AppRoute
 import android.os.SystemClock
 import com.tangem.common.routing.AppRoute.YieldSupplyPromo
@@ -12,6 +13,8 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.combinedReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
+import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -28,6 +31,7 @@ import com.tangem.domain.yield.supply.usecase.YieldSupplyActivateUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyDeactivateUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetTokenStatusUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyIsAvailableUseCase
+import com.tangem.domain.yield.supply.usecase.YieldSupplyGetDustMinAmountUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyMinAmountUseCase
 import com.tangem.features.yield.supply.api.YieldSupplyComponent
 import com.tangem.features.yield.supply.api.analytics.YieldSupplyAnalytics
@@ -55,6 +59,7 @@ internal class YieldSupplyModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val analyticsEventsHandler: AnalyticsEventHandler,
     private val appRouter: AppRouter,
+    private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val getSingleCryptoCurrencyStatusUseCase: GetSingleCryptoCurrencyStatusUseCase,
     private val singleNetworkStatusFetcher: SingleNetworkStatusFetcher,
@@ -65,6 +70,7 @@ internal class YieldSupplyModel @Inject constructor(
     private val yieldSupplyDeactivateUseCase: YieldSupplyDeactivateUseCase,
     private val yieldSupplyRepository: YieldSupplyRepository,
     private val yieldSupplyMinAmountUseCase: YieldSupplyMinAmountUseCase,
+    private val yieldSupplyGetDustMinAmountUseCase: YieldSupplyGetDustMinAmountUseCase,
 ) : Model(), YieldSupplyClickIntents {
 
     private val params = paramsContainer.require<YieldSupplyComponent.Params>()
@@ -73,6 +79,7 @@ internal class YieldSupplyModel @Inject constructor(
         field = MutableStateFlow<YieldSupplyUM>(YieldSupplyUM.Initial)
 
     private val cryptoCurrency = params.cryptoCurrency
+    private var appCurrency: AppCurrency = AppCurrency.Default
     var userWallet: UserWallet by Delegates.notNull()
 
     private val fetchCurrencyJobHolder = JobHolder()
@@ -85,7 +92,8 @@ internal class YieldSupplyModel @Inject constructor(
     }
 
     private fun checkIfYieldSupplyIsAvailable() {
-        modelScope.launch(dispatchers.io) {
+        modelScope.launch(dispatchers.default) {
+            appCurrency = getSelectedAppCurrencyUseCase.invokeSync().getOrElse { AppCurrency.Default }
             val isAvailable = yieldSupplyIsAvailableUseCase(params.userWalletId, params.cryptoCurrency)
             if (isAvailable) {
                 subscribeOnCurrencyStatusUpdates()
@@ -345,7 +353,11 @@ internal class YieldSupplyModel @Inject constructor(
                 val minAmount = yieldSupplyMinAmountUseCase(userWalletId = userWallet.walletId, cryptoCurrencyStatus)
                     .getOrNull()
                 if (minAmount != null) {
-                    cryptoCurrencyStatus.shouldShowNotSuppliedInfoIcon(minAmount)
+                    val dustAmount = yieldSupplyGetDustMinAmountUseCase(
+                        minAmount = minAmount,
+                        appCurrency = appCurrency,
+                    )
+                    cryptoCurrencyStatus.shouldShowNotSuppliedInfoIcon(dustAmount)
                 } else {
                     false
                 }
