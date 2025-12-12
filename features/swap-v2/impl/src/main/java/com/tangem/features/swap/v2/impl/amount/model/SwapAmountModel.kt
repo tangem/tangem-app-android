@@ -720,6 +720,7 @@ internal class SwapAmountModel @Inject constructor(
         ).filter { (_, route) -> route is SendWithSwapRoute.Amount }.onEach { (state, route) ->
             params.callback.onNavigationResult(
                 NavigationUM.Content(
+                    source = SendWithSwapRoute.Amount::class.java.simpleName,
                     title = resourceReference(R.string.common_amount),
                     subtitle = null,
                     backIconRes = if (route.isEditMode) {
