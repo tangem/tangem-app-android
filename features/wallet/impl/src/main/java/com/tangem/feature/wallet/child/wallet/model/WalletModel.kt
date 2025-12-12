@@ -42,6 +42,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.transformers.*
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
 import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvider
 import com.tangem.features.biometry.AskBiometryComponent
+import com.tangem.features.feed.entry.featuretoggle.FeedFeatureToggle
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.pushnotifications.api.PushNotificationsModelCallbacks
 import com.tangem.features.tangempay.TangemPayFeatureToggles
@@ -99,6 +100,7 @@ internal class WalletModel @Inject constructor(
     private val accountsFeatureToggles: AccountsFeatureToggles,
     private val tangemPayMainScreenCustomerInfoUseCase: TangemPayMainScreenCustomerInfoUseCase,
     private val trackingContextProxy: TrackingContextProxy,
+    private val feedFeatureToggle: FeedFeatureToggle,
     val screenLifecycleProvider: ScreenLifecycleProvider,
     val innerWalletRouter: InnerWalletRouter,
 ) : Model() {
@@ -121,6 +123,7 @@ internal class WalletModel @Inject constructor(
             analyticsEventsHandler.send(WalletScreenAnalyticsEvent.MainScreen.ScreenOpenedLegacy())
         }
 
+        updateMarketToggle()
         suggestToOpenMarkets()
 
         maybeMigrateNames()
@@ -140,6 +143,12 @@ internal class WalletModel @Inject constructor(
     fun onResume() {
         modelScope.launch(dispatchers.main) {
             suggestToEnableBiometrics()
+        }
+    }
+
+    private fun updateMarketToggle() {
+        stateHolder.update {
+            it.copy(isNewMarketEnabled = feedFeatureToggle.isFeedEnabled)
         }
     }
 
