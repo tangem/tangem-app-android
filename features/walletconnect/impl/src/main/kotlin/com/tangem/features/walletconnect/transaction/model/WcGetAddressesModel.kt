@@ -62,7 +62,9 @@ internal class WcGetAddressesModel @Inject constructor(
         uiState = WcGetAddressesUM(
             appInfo = WcTransactionAppInfoContentUM(
                 appName = session.sdkModel.appMetaData.name,
-                appIcon = session.sdkModel.appMetaData.icons.firstOrNull().orEmpty(),
+                appIcon = session.sdkModel.appMetaData.icons
+                    .firstOrNull()
+                    .orEmpty(),
                 appSubtitle = session.sdkModel.appMetaData.url,
                 verifiedState = if (session.securityStatus == CheckDAppResult.SAFE) {
                     VerifiedDAppState.Verified(onVerifiedClick = {})
@@ -88,9 +90,9 @@ internal class WcGetAddressesModel @Inject constructor(
 
         modelScope.launch {
             currentUseCase.invoke()
-                .onLeft {
-                    timber.log.Timber.e("WC GetAddresses: onApprove failed with error: $it")
-                    showErrorDialog(it)
+                .onLeft { error ->
+                    timber.log.Timber.e("WC GetAddresses: onApprove failed with error: $error")
+                    showErrorDialog(error)
                 }
                 .onRight {
                     timber.log.Timber.d("WC GetAddresses: onApprove success, calling router.pop()")
