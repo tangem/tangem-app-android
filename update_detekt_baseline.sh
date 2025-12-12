@@ -7,7 +7,7 @@ cd "$SCRIPT_DIR"
 
 OUTPUT_FILE="${1:-detekt_baseline_report.txt}"
 
-INITIAL_ISSUES=1802
+INITIAL_ISSUES=1933
 
 log() {
     echo "$@" | tee -a "$OUTPUT_FILE"
@@ -24,7 +24,7 @@ log ""
 log "Step 1: Running detekt to check for new issues..."
 log ""
 
-if ./gradlew detekt detektDebug detektGoogleDebug; then
+if ./gradlew detekt detektMain; then
     log "✓ Detekt passed - no new issues found"
     log ""
 else
@@ -35,10 +35,10 @@ else
     exit 1
 fi
 
-log "Step 2: Updating detekt baseline for debug variant..."
+log "Step 2: Updating detekt baseline ..."
 log ""
 
-./gradlew detektBaselineDebug
+./gradlew detektBaselineMain
 
 log ""
 log "Baseline updated successfully!"
@@ -54,11 +54,11 @@ module_count=0
 
 temp_file=$(mktemp)
 
-find . -name "detekt-baseline-debug.xml" -type f | while IFS= read -r file; do
+find . \( -name "detekt-baseline-main.xml" -o -name "detekt-baseline-debug.xml" \) -type f | while IFS= read -r file; do
     issue_count=$(grep -c "<ID>" "$file" 2>/dev/null) || issue_count=0
 
     if [ "$issue_count" -gt 0 ]; then
-        module_name=$(echo "$file" | sed 's|^\./||' | sed 's|/detekt-baseline-debug.xml$||')
+        module_name=$(echo "$file" | sed 's|^\./||' | sed 's|/detekt-baseline-main.xml$||' | sed 's|/detekt-baseline-debug.xml$||')
         echo "$issue_count|$module_name"
     fi
 done | sort -rn -t'|' -k1 > "$temp_file"
