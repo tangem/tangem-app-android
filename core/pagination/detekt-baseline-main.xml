@@ -1,0 +1,22 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>BooleanPropertyNaming:BatchAction.kt$BatchAction.UpdateBatches$val async: Boolean = false</ID>
+    <ID>BooleanPropertyNaming:BatchFetchResult.kt$BatchFetchResult.Success$val empty: Boolean</ID>
+    <ID>BooleanPropertyNaming:BatchFetchResult.kt$BatchFetchResult.Success$val last: Boolean</ID>
+    <ID>BooleanPropertyNaming:BatchListSource.kt$DefaultBatchListSource$val started = job.start()</ID>
+    <ID>MultilineLambdaItParameter:BatchListSource.kt$DefaultBatchListSource${ currentCoroutineContext().ensureActive() BatchFetchResult.Error(it) }</ID>
+    <ID>MultilineLambdaItParameter:BatchListSource.kt$DefaultBatchListSource${ if (predicate(it.first)) { it.second.cancel() null } else { it } }</ID>
+    <ID>MultilineLambdaItParameter:CursorBatchFetcher.kt$CursorBatchFetcher${ currentCoroutineContext().ensureActive() return BatchFetchResult.Error(it) }</ID>
+    <ID>MultilineLambdaItParameter:LimitOffsetBatchFetcher.kt$LimitOffsetBatchFetcher${ currentCoroutineContext().ensureActive() BatchFetchResult.Error(it) }</ID>
+    <ID>NamedArguments:BatchListSource.kt$DefaultBatchListSource(fetchDispatcher, context, generateNewKey, batchFetcher, null)</ID>
+    <ID>NamedArguments:BatchListSource.kt$DefaultBatchListSource(fetchDispatcher, context, generateNewKey, batchFetcher, updateFetcher)</ID>
+    <ID>NestedScopeFunctions:BatchListSource.kt$DefaultBatchListSource$also { currentCoroutineContext().ensureActive() }</ID>
+    <ID>SuspendFunSwallowedCancellation:BatchListSource.kt$DefaultBatchListSource$runCatching</ID>
+    <ID>SuspendFunSwallowedCancellation:CursorBatchFetcher.kt$CursorBatchFetcher$runCatching</ID>
+    <ID>SuspendFunSwallowedCancellation:LimitOffsetBatchFetcher.kt$LimitOffsetBatchFetcher$runCatching</ID>
+    <ID>UseEmptyCounterpart:BatchListSource.kt$DefaultBatchListSource$listOf()</ID>
+    <ID>UseOrEmpty:BatchListSource.kt$DefaultBatchListSource$batch?.let { listOf(it) } ?: emptyList()</ID>
+  </CurrentIssues>
+</SmellBaseline>
