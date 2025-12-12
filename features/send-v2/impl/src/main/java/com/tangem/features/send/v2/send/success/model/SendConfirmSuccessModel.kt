@@ -52,6 +52,7 @@ internal class SendConfirmSuccessModel @Inject constructor(
             params.callback.onResult(
                 state.copy(
                     navigationUM = NavigationUM.Content(
+                        source = CommonSendRoute.ConfirmSuccess.javaClass.simpleName,
                         title = stringReference(""),
                         subtitle = null,
                         backIconRes = R.drawable.ic_close_24,
