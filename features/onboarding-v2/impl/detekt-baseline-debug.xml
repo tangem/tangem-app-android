@@ -98,7 +98,6 @@
     <ID>MultilineLambdaItParameter:OnboardingVisaModel.kt$OnboardingVisaModel${ val derivedKey = it.derivedKeys[VisaUtilities.visaDefaultDerivationPath] ?: return@any false VisaWalletPublicKeyUtility.validateExtendedPublicKey( targetAddress = targetAddress, extendedPublicKey = derivedKey, ).onLeft { return@any VisaWalletPublicKeyUtility.findKeyWithoutDerivation( targetAddress = targetAddress, card = wallet.scanResponse.card, ).isRight() }.isRight() }</ID>
     <ID>MultilineLambdaItParameter:OnboardingVisaOtherWalletModel.kt$OnboardingVisaOtherWalletModel${ if (it is VisaActivationRemoteState.AwaitingPinCode) { onDone.emit(it.activationOrderInfo) return@launch } }</ID>
     <ID>MultilineLambdaItParameter:OnboardingVisaOtherWalletModel.kt$OnboardingVisaOtherWalletModel${ uiMessageSender.showErrorDialog(it) analyticsEventHandler.send(VisaAnalyticsEvent.ErrorOnboarding(it)) delay(timeMillis = 60_000) }</ID>
-    <ID>MultilineLambdaItParameter:OnboardingVisaPinCodeModel.kt$OnboardingVisaPinCodeModel${ it.copy( pinCode = pin, submitButtonEnabled = PinCodeValidation.validate(pin), error = if (isError) { analyticsEventHandler.send(OnboardingVisaAnalyticsEvent.ErrorPinValidation) resourceReference(R.string.visa_onboarding_pin_validation_error_message) } else { null }, ) }</ID>
     <ID>MultilineLambdaItParameter:OnboardingVisaWelcomeModel.kt$OnboardingVisaWelcomeModel${ onError(it) return@launch }</ID>
     <ID>MultilineLambdaItParameter:SeedPhraseCheckUiStateBuilder.kt$SeedPhraseCheckUiStateBuilder${ checkWordField( word = it.word.text, shownIndex = it.index, ) }</ID>
     <ID>MultilineLambdaItParameter:TwinWalletArtwork.kt${ animationState = it val maxTime = maxOf( transition1.totalDurationNanos, transition2.totalDurationNanos, ) delay(TimeUnit.NANOSECONDS.toMillis(maxTime)) }</ID>
@@ -126,7 +125,6 @@
     <ID>UseEmptyCounterpart:OnboardingEvent.kt$OnboardingEvent$mapOf()</ID>
     <ID>UseEmptyCounterpart:OnboardingEvent.kt$OnboardingEvent.Backup$mapOf()</ID>
     <ID>UseEmptyCounterpart:OnboardingEvent.kt$OnboardingEvent.CreateWallet$mapOf()</ID>
-    <ID>UseEmptyCounterpart:OnboardingEvent.kt$OnboardingEvent.Topup$mapOf()</ID>
     <ID>UseEmptyCounterpart:OnboardingEvent.kt$OnboardingEvent.Twins$mapOf()</ID>
     <ID>UseEmptyCounterpart:OnboardingVisaAnalyticsEvent.kt$OnboardingVisaAnalyticsEvent$mapOf()</ID>
     <ID>UseEmptyCounterpart:VisaAnalyticsEvent.kt$VisaAnalyticsEvent$mapOf()</ID>
