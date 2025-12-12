@@ -1,5 +1,6 @@
 package com.tangem.features.onramp.redirect.model
 
+import arrow.core.getOrElse
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -13,6 +14,8 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.DialogMessage
+import com.tangem.domain.apptheme.GetAppThemeModeUseCase
+import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.onramp.GetOnrampRedirectUrlUseCase
 import com.tangem.domain.onramp.model.cache.OnrampTransaction
 import com.tangem.domain.onramp.model.error.OnrampError
@@ -24,7 +27,9 @@ import com.tangem.features.onramp.redirect.entity.OnrampRedirectUM
 import com.tangem.features.onramp.success.OnrampSuccessScreenListener
 import com.tangem.features.onramp.utils.sendOnrampErrorEvent
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -38,6 +43,7 @@ internal class OnrampRedirectModel @Inject constructor(
     private val messageSender: UiMessageSender,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val onrampSuccessScreenListener: OnrampSuccessScreenListener,
+    private val getAppThemeModeUseCase: GetAppThemeModeUseCase,
     private val appRouter: AppRouter,
     paramsContainer: ParamsContainer,
     getWalletsUseCase: GetWalletsUseCase,
@@ -74,8 +80,17 @@ internal class OnrampRedirectModel @Inject constructor(
         subscribeToOnrampSuccessListener()
     }
 
-    fun getRedirectUrl(isDarkTheme: Boolean) {
+    fun getRedirectUrl(isSystemInDarkTheme: Boolean) {
         modelScope.launch {
+            val isDarkTheme = getAppThemeModeUseCase()
+                .map { result ->
+                    when (result.getOrElse { AppThemeMode.FOLLOW_SYSTEM }) {
+                        AppThemeMode.FORCE_DARK -> true
+                        AppThemeMode.FORCE_LIGHT -> false
+                        AppThemeMode.FOLLOW_SYSTEM -> isSystemInDarkTheme
+                    }
+                }.firstOrNull() ?: isSystemInDarkTheme
+
             getOnrampRedirectUrlUseCase.invoke(
                 userWallet = selectedUserWallet,
                 quote = params.onrampProviderWithQuote,
