@@ -19,6 +19,10 @@ dependencies {
     /** Tangem SDKs */
     implementation(tangemDeps.blockchain)
 
+    // region AndroidX libraries
+    implementation(deps.androidx.datastore)
+    // endregion
+
     /** Core */
     implementation(projects.core.datasource)
     implementation(projects.core.utils)
