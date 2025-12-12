@@ -1,13 +1,13 @@
 ==========================================
 Detekt Baseline Updater & Issue Counter
 ==========================================
-Date: 2025-12-12 13:10:21
+Date: 2025-12-12 13:17:20
 
 Step 1: Running detekt to check for new issues...
 
 ✓ Detekt passed - no new issues found
 
-Step 2: Updating detekt baseline for debug variant...
+Step 2: Updating detekt baseline ...
 
 
 Baseline updated successfully!
@@ -17,13 +17,13 @@ Counting issues in baseline files...
 ==========================================
 
 Summary:
-  Total Issues: 1247
-  Modules with Issues: 46
-  Average Issues per Module: 27
+  Total Issues: 1378
+  Modules with Issues: 72
+  Average Issues per Module: 19
 
 Progress:
-  Fixed: 555 out of 1802 (30%)
-  Remaining: 1247
+  Fixed: 555 out of 1933 (28%)
+  Remaining: 1378
 
 ==========================================
 All Modules with Issues (sorted by count)
@@ -50,31 +50,57 @@ domain/tokens                                                        25
 common/ui                                                            24
 features/yield-supply/impl                                           21
 features/tangempay/details/impl                                      21
+domain/models                                                        21
 data/visa                                                            21
 data/nft                                                             19
+core/pagination                                                      16
 features/swap/data                                                   15
+domain/staking/models                                                13
 data/wallets                                                         13
 features/token-recieve/impl                                          11
 features/qr-scanning/impl                                            11
 data/onramp                                                          11
 core/datasource                                                      11
+core/analytics/models                                                11
 data/markets                                                         10
 features/details/impl                                                 9
 domain/account/status                                                 9
 data/yield-supply                                                     9
 data/networks                                                         9
+domain/visa/models                                                    8
 domain/transaction                                                    8
 domain/staking                                                        8
+core/utils                                                            8
 libs/tangem-sdk-api                                                   7
 features/referral/impl                                                7
+domain/tokens/models                                                  7
 data/txhistory                                                        7
 features/welcome/impl                                                 6
+domain/wallet-connect/models                                          6
+domain/onramp                                                         6
+domain/account                                                        6
 libs/visa                                                             5
 features/home/impl                                                    5
 domain/markets                                                        5
+domain/core                                                           5
 data/account                                                          5
+domain/onramp/models                                                  4
 data/tokens                                                           4
+domain/nft/models                                                     3
+domain/balance-hiding                                                 3
 data/wallet-manager                                                   3
 data/manage-tokens                                                    3
+domain/txhistory/models                                               2
+domain/networks                                                       2
 core/config-toggles                                                   2
+test/mock                                                             1
+domain/yield-supply/models                                            1
+domain/wallets/models                                                 1
+domain/transaction/models                                             1
+domain/quotes                                                         1
+domain/promo                                                          1
+domain/onboarding                                                     1
+domain/markets/models                                                 1
+domain/feedback/models                                                1
+domain/express/models                                                 1
 ────────────────────────────────────────────────────────────────

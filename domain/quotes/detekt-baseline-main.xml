@@ -1,0 +1,7 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>UnnecessaryAbstractClass:SingleQuoteStatusSupplier.kt$SingleQuoteStatusSupplier$SingleQuoteStatusSupplier</ID>
+  </CurrentIssues>
+</SmellBaseline>
