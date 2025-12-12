@@ -110,6 +110,7 @@ internal class WalletStateController @Inject constructor() {
             isHidingMode = false,
             showMarketsOnboarding = false,
             onDismissMarketsOnboarding = {},
+            isNewMarketEnabled = false,
         )
     }
 }
