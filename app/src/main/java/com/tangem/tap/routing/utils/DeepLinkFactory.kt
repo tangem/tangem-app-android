@@ -102,6 +102,7 @@ internal class DeepLinkFactory @Inject constructor(
 
     private fun launchDeepLink(deeplinkUri: Uri, coroutineScope: CoroutineScope, isFromOnNewIntent: Boolean) {
         when (deeplinkUri.scheme) {
+            DeepLinkScheme.Https.scheme -> handleHttpDeepLinks(deeplinkUri)
             DeepLinkScheme.Tangem.scheme -> handleTangemDeepLinks(deeplinkUri, coroutineScope, isFromOnNewIntent)
             DeepLinkScheme.WalletConnect.scheme -> walletConnectDeepLink.create(deeplinkUri)
             else -> {
@@ -112,6 +113,13 @@ internal class DeepLinkFactory @Inject constructor(
                     """.trimIndent(),
                 )
             }
+        }
+    }
+
+    private fun handleHttpDeepLinks(deeplinkUri: Uri) {
+        if (deeplinkUri.host == DeepLinkRoute.PayApp.host && deeplinkUri.path?.startsWith("/pay-app") == true) {
+            onboardVisaDeepLink.create(deeplinkUri)
+            return
         }
     }
 

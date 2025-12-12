@@ -22,5 +22,8 @@ internal sealed class TangemPayDetailsNavigation {
     ) : TangemPayDetailsNavigation()
 
     @Serializable
-    data class TransactionDetails(val transaction: TangemPayTxHistoryItem) : TangemPayDetailsNavigation()
+    data class TransactionDetails(
+        val transaction: TangemPayTxHistoryItem,
+        val isBalanceHidden: Boolean,
+    ) : TangemPayDetailsNavigation()
 }

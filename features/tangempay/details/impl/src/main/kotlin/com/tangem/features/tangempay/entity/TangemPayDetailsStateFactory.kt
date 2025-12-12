@@ -1,8 +1,10 @@
 package com.tangem.features.tangempay.entity
 
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.components.dropdownmenu.TangemDropdownMenuItem
+import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.themedColor
 import com.tangem.core.ui.res.TangemTheme
@@ -21,6 +23,7 @@ internal class TangemPayDetailsStateFactory(
     private val converter: TangemPayCardFrozenStateConverter,
 ) {
 
+    @Suppress("LongMethod")
     fun getInitialState(): TangemPayDetailsUM {
         val cardFrozenStateItem = when (cardFrozenState) {
             is TangemPayCardFrozenState.Pending -> null
@@ -41,7 +44,6 @@ internal class TangemPayDetailsStateFactory(
                 ),
             )
         }
-
         return TangemPayDetailsUM(
             topBarConfig = TangemPayDetailsTopBarConfig(
                 onBackClick = onBack,
@@ -89,6 +91,16 @@ internal class TangemPayDetailsStateFactory(
             isBalanceHidden = false,
             addFundsEnabled = true,
             cardFrozenState = converter.convert(cardFrozenState),
+            betaNotificationConfig = NotificationConfig(
+                title = resourceReference(R.string.tangem_pay_beta_notification_title),
+                subtitle = resourceReference(R.string.tangem_pay_beta_notification_subtitle),
+                iconResId = R.drawable.img_visa_notification,
+                buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
+                    text = resourceReference(R.string.common_contact_support),
+                    onClick = intents::onContactSupportClicked,
+                ),
+                iconSize = 36.dp,
+            ),
         )
     }
 }
