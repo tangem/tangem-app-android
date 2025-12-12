@@ -64,6 +64,11 @@ internal class OnrampV2AmountStateFactory(
                 currencySymbol = currency.unit,
                 onAmountValueChanged = onrampIntents::onAmountValueChanged,
             ),
+            offersBlockState = if (amountState.amountFieldModel.fiatValue.isEmpty()) {
+                OnrampOffersBlockUM.Empty
+            } else {
+                OnrampOffersBlockUM.Loading
+            },
         )
     }
 
@@ -97,6 +102,7 @@ internal class OnrampV2AmountStateFactory(
             amountBlockState = amountState.copy(secondaryFieldModel = OnrampSecondaryFieldErrorUM.Empty),
             onrampAmountButtonUMState = OnrampV2AmountButtonUMState.None,
             errorNotification = null,
+            offersBlockState = currentState.offersBlockState,
         )
     }
 

@@ -5,7 +5,7 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.pay.TangemPayTopUpData
+import com.tangem.domain.pay.model.TangemPayTopUpData
 import com.tangem.features.tangempay.model.TangemPayAddFundsModel
 import com.tangem.features.tangempay.ui.TangemPayAddFundsContent
 import java.math.BigDecimal
