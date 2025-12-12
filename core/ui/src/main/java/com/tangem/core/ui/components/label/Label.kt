@@ -8,6 +8,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
@@ -17,13 +18,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import coil.compose.SubcomposeAsyncImage
+import coil.request.ImageRequest
 import com.tangem.core.ui.R
+import com.tangem.core.ui.components.CircleShimmer
 import com.tangem.core.ui.components.label.entity.LabelLeadingContentUM
 import com.tangem.core.ui.components.label.entity.LabelSize
 import com.tangem.core.ui.components.label.entity.LabelStyle
@@ -108,11 +111,23 @@ fun Label(state: LabelUM, modifier: Modifier = Modifier) {
             state.leadingContent.let { leadingContentUM ->
                 when (leadingContentUM) {
                     is LabelLeadingContentUM.Token -> {
-                        Icon(
-                            modifier = Modifier
-                                .size(16.dp),
-                            painter = painterResource(leadingContentUM.icon),
-                            tint = Color.Unspecified,
+                        SubcomposeAsyncImage(
+                            modifier = Modifier.size(16.dp),
+                            model = ImageRequest.Builder(context = LocalContext.current)
+                                .data(leadingContentUM.iconUrl)
+                                .crossfade(enable = true)
+                                .allowHardware(enable = false)
+                                .build(),
+                            loading = { CircleShimmer() },
+                            error = {
+                                Box(
+                                    modifier = Modifier
+                                        .background(
+                                            color = TangemTheme.colors.background.tertiary,
+                                            shape = CircleShape,
+                                        ),
+                                )
+                            },
                             contentDescription = null,
                         )
                     }
@@ -168,7 +183,7 @@ private fun LabelPreview() {
                 Label(
                     state = LabelUM(
                         leadingContent = LabelLeadingContentUM.Token(
-                            icon = R.drawable.img_bsc_22,
+                            iconUrl = "https://s3.eu-central-1.amazonaws.com/tangem.api/coins/large/euro-coin.png",
                         ),
                         text = TextReference.Str("Regular Label"),
                         style = LabelStyle.REGULAR,

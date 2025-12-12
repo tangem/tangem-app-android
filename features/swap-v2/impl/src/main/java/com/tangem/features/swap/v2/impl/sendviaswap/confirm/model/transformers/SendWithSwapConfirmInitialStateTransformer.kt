@@ -12,7 +12,7 @@ internal class SendWithSwapConfirmInitialStateTransformer(
         return ConfirmUM.Content(
             isPrimaryButtonEnabled = false,
             isTransactionInProcess = false,
-            showTapHelp = isShowTapHelp,
+            isShowTapHelp = isShowTapHelp,
             sendingFooter = TextReference.EMPTY,
             notifications = persistentListOf(),
             tosUM = null,

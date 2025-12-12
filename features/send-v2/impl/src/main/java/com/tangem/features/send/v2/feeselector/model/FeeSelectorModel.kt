@@ -197,7 +197,7 @@ internal class FeeSelectorModel @Inject constructor(
     private fun subscribeOnFeeReloadTriggerUpdates() {
         feeSelectorReloadListener.reloadTriggerFlow
             .onEach { data ->
-                if (data.removeSuggestedFee) {
+                if (data.isRemoveSuggestedFee) {
                     uiState.update(FeeSelectorRemoveSuggestedTransformer)
                 }
                 loadFee()
@@ -220,9 +220,9 @@ internal class FeeSelectorModel @Inject constructor(
     private fun checkLoadFee() {
         modelScope.launch {
             params.onLoadFee().fold(
-                ifRight = {
+                ifRight = { newFee ->
                     feeSelectorAlertFactory.getFeeUpdatedAlert(
-                        newFee = it,
+                        newTransactionFee = newFee,
                         feeSelectorUM = uiState.value,
                         proceedAction = {
                             modelScope.launch {
