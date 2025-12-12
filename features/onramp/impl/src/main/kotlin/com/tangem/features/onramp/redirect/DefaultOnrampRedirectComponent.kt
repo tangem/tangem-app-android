@@ -42,9 +42,9 @@ internal class DefaultOnrampRedirectComponent @AssistedInject constructor(
         BackHandler(onBack = params.onBack)
         OnrampRedirectContent(modifier = modifier, state = model.state)
 
-        val isDarkTheme = isSystemInDarkTheme()
+        val isSystemInDarkTheme = isSystemInDarkTheme()
         LaunchedEffect(model.state) {
-            model.getRedirectUrl(isDarkTheme = isDarkTheme)
+            model.getRedirectUrl(isSystemInDarkTheme = isSystemInDarkTheme)
         }
     }
 
