@@ -110,14 +110,32 @@ data class TxInfo(
         @Serializable
         sealed interface YieldSupply : TransactionType {
 
-            @Serializable
-            data object Enter : YieldSupply
+            val address: String?
 
             @Serializable
-            data object Exit : YieldSupply
+            data class Enter(override val address: String) : YieldSupply
 
             @Serializable
-            data object Topup : YieldSupply
+            data class Exit(override val address: String) : YieldSupply
+
+            @Serializable
+            data object Topup : YieldSupply {
+                override val address: String? = null
+            }
+
+            @Serializable
+            data object Send : YieldSupply {
+                override val address: String? = null
+            }
+
+            @Serializable
+            data class DeployContract(override val address: String) : YieldSupply
+
+            @Serializable
+            data class ReactivateToken(override val address: String) : YieldSupply
+
+            @Serializable
+            data class InitializeToken(override val address: String) : YieldSupply
         }
 
         @Serializable
