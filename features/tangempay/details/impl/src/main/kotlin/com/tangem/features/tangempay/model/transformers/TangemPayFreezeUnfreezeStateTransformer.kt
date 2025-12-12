@@ -6,6 +6,7 @@ import com.tangem.core.ui.extensions.themedColor
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.visa.model.TangemPayCardFrozenState
 import com.tangem.features.tangempay.details.impl.R
+import com.tangem.features.tangempay.entity.TangemPayDetailsBalanceBlockState
 import com.tangem.features.tangempay.entity.TangemPayDetailsTopBarMenuItem
 import com.tangem.features.tangempay.entity.TangemPayDetailsTopBarMenuItemType.FreezeCard
 import com.tangem.features.tangempay.entity.TangemPayDetailsTopBarMenuItemType.UnfreezeCard
@@ -31,9 +32,20 @@ internal class TangemPayFreezeUnfreezeStateTransformer(
             it.type == FreezeCard || it.type == UnfreezeCard
         }
         val dropdownMenuItems = createUpdatedMenuItems(filteredItems?.toPersistentList())
+        val balanceBlockState = if (prevState.balanceBlockState is TangemPayDetailsBalanceBlockState.Content) {
+            val actionButtons = prevState.balanceBlockState.actionButtons.map {
+                it.copy(isEnabled = cardFrozenState == TangemPayCardFrozenState.Unfrozen)
+            }
+            prevState.balanceBlockState.copy(
+                actionButtons = actionButtons.toPersistentList(),
+            )
+        } else {
+            prevState.balanceBlockState
+        }
         return prevState.copy(
             topBarConfig = prevState.topBarConfig.copy(items = dropdownMenuItems),
             cardFrozenState = converter.convert(cardFrozenState),
+            balanceBlockState = balanceBlockState,
         )
     }
 
