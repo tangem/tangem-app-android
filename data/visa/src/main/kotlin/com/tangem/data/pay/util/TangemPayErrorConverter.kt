@@ -3,10 +3,16 @@ package com.tangem.data.pay.util
 import com.squareup.moshi.Moshi
 import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.pay.models.response.VisaErrorResponse
+import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.domain.visa.error.VisaApiError
 import com.tangem.utils.converter.Converter
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class TangemPayErrorConverter(moshi: Moshi) : Converter<Throwable, VisaApiError> {
+@Singleton
+internal class TangemPayErrorConverter @Inject constructor(
+    @NetworkMoshi moshi: Moshi,
+) : Converter<Throwable, VisaApiError> {
 
     private val visaErrorAdapter by lazy { moshi.adapter(VisaErrorResponse::class.java) }
 

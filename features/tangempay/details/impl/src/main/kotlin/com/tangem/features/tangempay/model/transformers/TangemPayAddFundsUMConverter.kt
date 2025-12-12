@@ -1,7 +1,7 @@
 package com.tangem.features.tangempay.model.transformers
 
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.domain.pay.TangemPayTopUpData
+import com.tangem.domain.pay.model.TangemPayTopUpData
 import com.tangem.features.tangempay.components.AddFundsListener
 import com.tangem.features.tangempay.details.impl.R
 import com.tangem.features.tangempay.entity.TangemPayAddFundsItemUM

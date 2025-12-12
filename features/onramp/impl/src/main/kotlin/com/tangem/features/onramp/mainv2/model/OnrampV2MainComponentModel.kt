@@ -236,8 +236,17 @@ internal class OnrampV2MainComponentModel @Inject constructor(
                 maybeOffers.fold(
                     ifLeft = ::handleOnrampError,
                     ifRight = { offers ->
-                        if (offers.isNotEmpty()) {
-                            state.update { onrampOffersStateFactory.getOffersState(offers) }
+                        val currentState = state.value
+                        if (currentState is OnrampV2MainComponentUM.Content) {
+                            if (currentState.amountBlockState.amountFieldModel.fiatValue.isEmpty()) {
+                                state.update {
+                                    currentState.copy(offersBlockState = OnrampOffersBlockUM.Empty)
+                                }
+                                return@fold
+                            }
+                            state.update {
+                                onrampOffersStateFactory.getOffersState(offers)
+                            }
                         }
                     },
                 )
@@ -301,7 +310,17 @@ internal class OnrampV2MainComponentModel @Inject constructor(
                 state.update { stateFactory.getErrorState(onRefresh = ::onRetryQuotes) }
             }
             else -> {
-                state.update { amountStateFactory.getAmountSecondaryFieldResetState() }
+                state.update { prevState ->
+                    val resetState = amountStateFactory.getAmountSecondaryFieldResetState()
+                    if (prevState is OnrampV2MainComponentUM.Content &&
+                        resetState is OnrampV2MainComponentUM.Content &&
+                        prevState.offersBlockState is OnrampOffersBlockUM.Loading
+                    ) {
+                        resetState.copy(offersBlockState = OnrampOffersBlockUM.Empty)
+                    } else {
+                        resetState
+                    }
+                }
             }
         }
     }
