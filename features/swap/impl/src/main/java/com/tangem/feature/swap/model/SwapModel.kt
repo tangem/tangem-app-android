@@ -1647,8 +1647,7 @@ internal class SwapModel @Inject constructor(
 
     private fun onTangemPaySupportClick(txId: String?) {
         modelScope.launch {
-            val metaInfo = getWalletMetaInfoUseCase(userWallet.walletId)
-                .getOrElse { error("CardInfo must be not null") }
+            val metaInfo = getWalletMetaInfoUseCase(userWallet.walletId).getOrNull() ?: return@launch
             val email = FeedbackEmailType.Visa.Withdrawal(
                 walletMetaInfo = metaInfo,
                 providerName = dataState.selectedProvider?.name.orEmpty(),
