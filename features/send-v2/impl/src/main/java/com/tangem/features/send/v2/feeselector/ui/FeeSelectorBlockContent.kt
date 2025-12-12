@@ -172,12 +172,13 @@ private fun FeeContent(state: FeeSelectorUM.Content, modifier: Modifier = Modifi
                     approximate = state.feeExtraInfo.isFeeApproximate,
                 )
             } else {
-                state.selectedFeeItem.fee.amount.value.format {
-                    crypto(
-                        symbol = state.selectedFeeItem.fee.amount.currencySymbol,
-                        decimals = state.selectedFeeItem.fee.amount.decimals,
-                    ).fee(canBeLower = state.feeExtraInfo.isFeeApproximate)
-                }
+                state.selectedFeeItem.fee.amount.value
+                    .format {
+                        crypto(
+                            symbol = state.selectedFeeItem.fee.amount.currencySymbol,
+                            decimals = state.selectedFeeItem.fee.amount.decimals,
+                        ).fee(canBeLower = state.feeExtraInfo.isFeeApproximate)
+                    }
             },
             style = TangemTheme.typography.body1,
             color = TangemTheme.colors.text.tertiary,
