@@ -3,6 +3,11 @@ package com.tangem.domain.pay.model
 import com.tangem.domain.visa.model.TangemPayCardFrozenState
 import java.math.BigDecimal
 
+sealed class MainCustomerInfoContentState {
+    object Loading : MainCustomerInfoContentState()
+    data class Content(val info: MainScreenCustomerInfo) : MainCustomerInfoContentState()
+}
+
 data class MainScreenCustomerInfo(
     val info: CustomerInfo,
     val orderStatus: OrderStatus,

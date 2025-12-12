@@ -84,6 +84,7 @@ internal class TangemPayDetailsComponent(
                 appComponentContext = context,
                 params = TangemPayTxHistoryDetailsComponent.Params(
                     transaction = navigation.transaction,
+                    isBalanceHidden = navigation.isBalanceHidden,
                     userWalletId = params.userWalletId,
                     onDismiss = model.bottomSheetNavigation::dismiss,
                 ),
