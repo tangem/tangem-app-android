@@ -2,8 +2,6 @@
 <SmellBaseline>
   <ManuallySuppressedIssues/>
   <CurrentIssues>
-    <ID>NullableBooleanCheck:DefaultPromoRepository.kt$DefaultPromoRepository$getSepaPromoBanner()?.isActive ?: false</ID>
-    <ID>NullableBooleanCheck:DefaultPromoRepository.kt$DefaultPromoRepository$getVisaPromoBanner()?.isActive ?: false</ID>
     <ID>SuspendFunSwallowedCancellation:DefaultPromoRepository.kt$DefaultPromoRepository$runCatching</ID>
     <ID>SuspendFunWithFlowReturnType:DefaultPromoRepository.kt$DefaultPromoRepository$suspend</ID>
   </CurrentIssues>
