@@ -11,6 +11,8 @@ import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
+import com.tangem.domain.account.supplier.SingleAccountListSupplier
+import com.tangem.domain.account.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
@@ -99,6 +101,8 @@ internal class WalletModel @Inject constructor(
     private val accountsFeatureToggles: AccountsFeatureToggles,
     private val tangemPayMainScreenCustomerInfoUseCase: TangemPayMainScreenCustomerInfoUseCase,
     private val trackingContextProxy: TrackingContextProxy,
+    private val singleAccountListSupplier: SingleAccountListSupplier,
+    private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
     private val feedFeatureToggle: FeedFeatureToggle,
     val screenLifecycleProvider: ScreenLifecycleProvider,
     val innerWalletRouter: InnerWalletRouter,
@@ -293,8 +297,19 @@ internal class WalletModel @Inject constructor(
                         modelScope.launch {
                             val hasMobileWallet = userWalletsListRepository.userWalletsSync()
                                 .any { it is UserWallet.Hot }
+                            val accountsCount = if (isAccountsModeEnabledUseCase.invokeSync()) {
+                                singleAccountListSupplier(selectedWallet.walletId)
+                                    .first()
+                                    .accounts
+                                    .size
+                            } else {
+                                null
+                            }
                             analyticsEventsHandler.send(
-                                WalletScreenAnalyticsEvent.MainScreen.ScreenOpened(hasMobileWallet),
+                                WalletScreenAnalyticsEvent.MainScreen.ScreenOpened(
+                                    hasMobileWallet = hasMobileWallet,
+                                    accountsCount = accountsCount,
+                                ),
                             )
                         }
                     }
@@ -522,7 +537,7 @@ internal class WalletModel @Inject constructor(
         }
     }
 
-    private suspend fun reinitializeWallet(action: WalletsUpdateActionResolver.Action.ReinitializeWallet) {
+    private fun reinitializeWallet(action: WalletsUpdateActionResolver.Action.ReinitializeWallet) {
         walletScreenContentLoader.cancel(action.prevWalletId)
         tokenListStore.remove(action.prevWalletId)
 
@@ -570,7 +585,7 @@ internal class WalletModel @Inject constructor(
         }
     }
 
-    private suspend fun addWallet(action: WalletsUpdateActionResolver.Action.AddWallet) {
+    private fun addWallet(action: WalletsUpdateActionResolver.Action.AddWallet) {
         if (accountsFeatureToggles.isFeatureEnabled) {
             fetchWalletContent(userWallet = action.selectedWallet)
 
@@ -710,15 +725,15 @@ internal class WalletModel @Inject constructor(
         }
     }
 
-    private suspend fun fetchWalletContent(userWallet: UserWallet) {
+    private fun fetchWalletContent(userWallet: UserWallet) {
         if (userWallet.isLocked) return
 
         /*
          * Updating the balance of the current wallet is an essential part of InitializationWallets,
          * so the coroutine is launched in the current context
          */
-        supervisorScope {
-            launch { walletContentFetcher(userWalletId = userWallet.walletId) }
+        modelScope.launch {
+            walletContentFetcher(userWalletId = userWallet.walletId)
         }
     }
 

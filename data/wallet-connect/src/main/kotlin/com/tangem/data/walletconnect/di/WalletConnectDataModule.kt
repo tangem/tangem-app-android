@@ -152,14 +152,12 @@ internal object WalletConnectDataModule {
         @SdkMoshi moshi: Moshi,
         sessionsManager: WcSessionsManager,
         factories: WcEthNetwork.Factories,
-        walletManagersFacade: WalletManagersFacade,
         wcNetworksConverter: WcNetworksConverter,
     ): WcEthNetwork = WcEthNetwork(
         moshi = moshi,
         networksConverter = wcNetworksConverter,
         sessionsManager = sessionsManager,
         factories = factories,
-        walletManagersFacade = walletManagersFacade,
     )
 
     @Provides
@@ -169,13 +167,11 @@ internal object WalletConnectDataModule {
         wcNetworksConverter: WcNetworksConverter,
         sessionsManager: WcSessionsManager,
         factories: WcSolanaNetwork.Factories,
-        walletManagersFacade: WalletManagersFacade,
     ): WcSolanaNetwork = WcSolanaNetwork(
         moshi = moshi,
         sessionsManager = sessionsManager,
         factories = factories,
         networksConverter = wcNetworksConverter,
-        walletManagersFacade = walletManagersFacade,
     )
 
     @Provides
@@ -198,11 +194,9 @@ internal object WalletConnectDataModule {
     @Singleton
     fun caipNamespaceDelegate(
         namespaceConverters: Set<@JvmSuppressWildcards WcNamespaceConverter>,
-        walletManagersFacade: WalletManagersFacade,
         wcNetworksConverter: WcNetworksConverter,
     ): CaipNamespaceDelegate = CaipNamespaceDelegate(
         namespaceConverters = namespaceConverters,
-        walletManagersFacade = walletManagersFacade,
         wcNetworksConverter = wcNetworksConverter,
     )
 
