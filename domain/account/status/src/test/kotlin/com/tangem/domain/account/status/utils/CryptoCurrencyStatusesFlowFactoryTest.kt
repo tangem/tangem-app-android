@@ -4,7 +4,6 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
-import com.tangem.common.test.utils.getEmittedValues
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -23,6 +22,7 @@ import com.tangem.domain.quotes.single.SingleQuoteStatusSupplier
 import com.tangem.domain.staking.StakingIdFactory
 import com.tangem.domain.staking.single.SingleYieldBalanceProducer
 import com.tangem.domain.staking.single.SingleYieldBalanceSupplier
+import com.tangem.test.core.getEmittedValues
 import io.mockk.*
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf

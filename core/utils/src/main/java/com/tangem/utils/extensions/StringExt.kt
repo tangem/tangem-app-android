@@ -10,3 +10,7 @@ fun String.uriValidate(): Boolean {
 
     return !regex.containsMatchIn(this)
 }
+
+fun String.addHexPrefix(): String {
+    return if (this.startsWith("0x")) this else "0x$this"
+}

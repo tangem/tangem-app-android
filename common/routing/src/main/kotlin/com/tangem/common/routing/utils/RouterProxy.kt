@@ -28,6 +28,12 @@ private class RouterProxy(
         }
     }
 
+    override fun replaceCurrent(route: Route, onComplete: (Boolean) -> Unit) {
+        if (route is AppRoute) {
+            appRouter.replaceCurrent(route, onComplete)
+        }
+    }
+
     override fun replaceAll(vararg routes: Route, onComplete: (isSuccess: Boolean) -> Unit) {
         routes.filterIsInstance<AppRoute>().let {
             appRouter.replaceAll(*it.toTypedArray(), onComplete = onComplete)

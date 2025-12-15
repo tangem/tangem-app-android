@@ -2,13 +2,13 @@ package com.tangem.data.account.fetcher
 
 import arrow.core.left
 import arrow.core.right
-import com.tangem.common.test.utils.assertEitherLeft
-import com.tangem.common.test.utils.assertEitherRight
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.account.fetcher.MultiAccountListFetcher
 import com.tangem.domain.account.fetcher.SingleAccountListFetcher
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.test.core.assertEitherLeft
+import com.tangem.test.core.assertEitherRight
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach

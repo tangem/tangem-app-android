@@ -111,12 +111,18 @@ internal class DefaultWalletRouter @Inject constructor(
         )
     }
 
-    override fun openTangemPayOnboarding() {
-        router.push(AppRoute.TangemPayOnboarding(AppRoute.TangemPayOnboarding.Mode.ContinueOnboarding))
+    override fun openTangemPayOnboarding(userWalletId: UserWalletId) {
+        router.push(
+            AppRoute.TangemPayOnboarding(
+                AppRoute.TangemPayOnboarding.Mode.ContinueOnboarding(
+                    userWalletId = userWalletId,
+                ),
+            ),
+        )
     }
 
-    override fun openTangemPayDetails(config: TangemPayDetailsConfig) {
-        router.push(AppRoute.TangemPayDetails(config))
+    override fun openTangemPayDetails(userWalletId: UserWalletId, config: TangemPayDetailsConfig) {
+        router.push(AppRoute.TangemPayDetails(userWalletId = userWalletId, config = config))
     }
 
     override fun openYieldSupplyBottomSheet(
@@ -129,6 +135,26 @@ internal class DefaultWalletRouter @Inject constructor(
                 cryptoCurrency = cryptoCurrency,
                 tokenAction = tokenAction,
                 onWarningAcknowledged = onWarningAcknowledged,
+            ),
+        )
+    }
+
+    override fun openYieldSupplyActiveScreen(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency, apy: String) {
+        router.push(
+            AppRoute.YieldSupplyActive(
+                userWalletId = userWalletId,
+                cryptoCurrency = cryptoCurrency,
+                apy = apy,
+            ),
+        )
+    }
+
+    override fun openYieldSupplyPromoScreen(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency, apy: String) {
+        router.push(
+            AppRoute.YieldSupplyPromo(
+                userWalletId = userWalletId,
+                cryptoCurrency = cryptoCurrency,
+                apy = apy,
             ),
         )
     }
