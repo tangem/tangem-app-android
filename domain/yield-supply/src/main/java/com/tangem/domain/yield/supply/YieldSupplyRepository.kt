@@ -108,4 +108,8 @@ interface YieldSupplyRepository {
         userWalletId: UserWalletId,
         cryptoCurrencyStatus: CryptoCurrencyStatus,
     ): YieldSupplyEnterStatus?
+
+    fun getShouldShowYieldPromoBanner(): Flow<Boolean>
+
+    suspend fun setShouldShowYieldPromoBanner(shouldShow: Boolean)
 }

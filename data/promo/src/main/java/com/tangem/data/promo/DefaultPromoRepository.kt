@@ -63,6 +63,11 @@ internal class DefaultPromoRepository(
 
                         isActive && shouldShow
                     }
+                    PromoId.OnePlusOne -> {
+                        val isActive = getOnePlusOnePromoBanner()?.isActive == true
+
+                        isActive && shouldShow
+                    }
                 }
             }
     }
@@ -73,6 +78,7 @@ internal class DefaultPromoRepository(
             PromoId.Sepa -> flowOf(false)
             PromoId.VisaPresale -> flowOf(false)
             PromoId.BlackFriday -> flowOf(false)
+            PromoId.OnePlusOne -> flowOf(false)
         }
     }
 
@@ -176,11 +182,20 @@ internal class DefaultPromoRepository(
         }.getOrNull()
     }
 
+    private suspend fun getOnePlusOnePromoBanner(): PromoBanner? {
+        return runCatching(dispatchers.io) {
+            promoBannerConverter.convert(
+                tangemApi.getPromoBanner(ONE_PLUS_ONE_NAME).getOrThrow(),
+            )
+        }.getOrNull()
+    }
+
     private companion object {
         const val SEPA_NAME = "sepa"
         const val VISA_NAME = "visa-waitlist"
         const val BLACK_FRIDAY_NAME = "black-friday"
         const val MOONPAY_NAME = "moonpay"
+        const val ONE_PLUS_ONE_NAME = "one-plus-one"
         const val STORIES_LOAD_DELAY = 1000L
     }
 }

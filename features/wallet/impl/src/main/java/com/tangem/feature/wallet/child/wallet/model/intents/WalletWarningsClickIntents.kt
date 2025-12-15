@@ -317,6 +317,11 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
                     program = Program.BlackFriday,
                     action = PromotionBannerClicked.BannerAction.Closed(),
                 )
+                PromoId.OnePlusOne -> PromotionBannerClicked(
+                    source = AnalyticsParam.ScreensSources.Main,
+                    program = Program.OnePlusOne,
+                    action = PromotionBannerClicked.BannerAction.Closed(),
+                )
             },
 
         )
@@ -363,6 +368,16 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
                     ),
                 )
                 urlOpener.openUrl(BLACK_FRIDAY_PROMO_LINK)
+            }
+            PromoId.OnePlusOne -> {
+                analyticsEventHandler.send(
+                    PromotionBannerClicked(
+                        source = AnalyticsParam.ScreensSources.Main,
+                        program = Program.OnePlusOne,
+                        action = PromotionBannerClicked.BannerAction.Clicked(),
+                    ),
+                )
+                urlOpener.openUrl(ONE_PLUS_ONE_PROMO_LINK)
             }
         }
     }
@@ -581,5 +596,10 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
             "&utm_source=tangem-app-banner" +
             "&utm_medium=banner" +
             "&utm_campaign=BlackFriday2025"
+        const val ONE_PLUS_ONE_PROMO_LINK = "https://tangem.com/pricing/" +
+            "?cat=family" +
+            "&utm_source=tangem-app-banner" +
+            "&utm_medium=banner" +
+            "&utm_campaign=BOGO50"
     }
 }
