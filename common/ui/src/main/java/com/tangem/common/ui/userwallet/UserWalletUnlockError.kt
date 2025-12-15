@@ -1,6 +1,8 @@
 package com.tangem.common.ui.userwallet
 
 import com.tangem.common.ui.R
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.event.SignIn
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
@@ -13,6 +15,7 @@ import com.tangem.domain.common.wallets.error.UnlockWalletError.UnableToUnlock.R
 inline fun UnlockWalletError.handle(
     onAlreadyUnlocked: () -> Unit = {},
     onUserCancelled: () -> Unit = {},
+    analyticsEventHandler: AnalyticsEventHandler,
     noinline showMessage: (EventMessage) -> Unit,
 ) {
     when (this) {
@@ -30,15 +33,20 @@ inline fun UnlockWalletError.handle(
             // This should never happen in this flow, as we always check for the wallet existence before unlocking
             showMessage(SnackbarMessage(TextReference.Res(R.string.generic_error)))
         }
-        is UnlockWalletError.UnableToUnlock -> handleUnableToUnlock(this, showMessage)
+        is UnlockWalletError.UnableToUnlock -> handleUnableToUnlock(this, analyticsEventHandler, showMessage)
     }
 }
 
-fun handleUnableToUnlock(error: UnlockWalletError.UnableToUnlock, showDialog: (DialogMessage) -> Unit) {
+fun handleUnableToUnlock(
+    error: UnlockWalletError.UnableToUnlock,
+    analyticsEventHandler: AnalyticsEventHandler,
+    showDialog: (DialogMessage) -> Unit,
+) {
     val dialogMessage = when (error) {
         is UnlockWalletError.UnableToUnlock.WithReason -> {
             when (error.reason) {
                 Reason.AllKeysInvalidated -> {
+                    analyticsEventHandler.send(SignIn.ErrorBiometricUpdated())
                     DialogMessage(
                         title = resourceReference(R.string.biometric_updated_warning_title),
                         message = resourceReference(R.string.biometric_updated_warning_description),
