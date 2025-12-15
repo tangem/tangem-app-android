@@ -8,11 +8,11 @@ sealed class PortfolioOrganizeTokensAnalyticsEvent(
     params: Map<String, String> = mapOf(),
 ) : AnalyticsEvent("Portfolio / Organize Tokens", event, params) {
 
-    object ScreenOpened : PortfolioOrganizeTokensAnalyticsEvent("Organize Tokens Screen Opened")
+    class ScreenOpened : PortfolioOrganizeTokensAnalyticsEvent("Organize Tokens Screen Opened")
 
-    object ByBalance : PortfolioOrganizeTokensAnalyticsEvent("Button - By Balance")
+    class ByBalance : PortfolioOrganizeTokensAnalyticsEvent("Button - By Balance")
 
-    object Group : PortfolioOrganizeTokensAnalyticsEvent("Button - Group")
+    class Group : PortfolioOrganizeTokensAnalyticsEvent("Button - Group")
 
     class Apply(
         grouping: AnalyticsParam.OnOffState,
@@ -25,5 +25,5 @@ sealed class PortfolioOrganizeTokensAnalyticsEvent(
         ),
     )
 
-    object Cancel : PortfolioOrganizeTokensAnalyticsEvent("Button - Cancel")
+    class Cancel : PortfolioOrganizeTokensAnalyticsEvent("Button - Cancel")
 }
