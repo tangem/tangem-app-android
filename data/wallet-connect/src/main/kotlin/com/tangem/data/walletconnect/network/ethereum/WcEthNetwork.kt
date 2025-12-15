@@ -18,7 +18,6 @@ import com.tangem.domain.walletconnect.model.*
 import com.tangem.domain.walletconnect.model.sdkcopy.WcSdkSessionRequest
 import com.tangem.domain.walletconnect.repository.WcSessionsManager
 import com.tangem.domain.walletconnect.usecase.method.WcMethodUseCase
-import com.tangem.domain.walletmanager.WalletManagersFacade
 import jakarta.inject.Inject
 
 internal class WcEthNetwork(
@@ -26,7 +25,6 @@ internal class WcEthNetwork(
     private val sessionsManager: WcSessionsManager,
     private val factories: Factories,
     private val networksConverter: WcNetworksConverter,
-    private val walletManagersFacade: WalletManagersFacade,
 ) : WcRequestToUseCaseConverter {
 
     override fun toWcMethodName(request: WcSdkSessionRequest): WcEthMethodName? {
@@ -57,7 +55,7 @@ internal class WcEthNetwork(
             is WcEthMethod.SwitchEthereumChain,
             ->
                 anyExistNetwork()
-                    ?.let { network -> walletManagersFacade.getDefaultAddress(wallet.walletId, network).orEmpty() }
+                    ?.let { network -> networksConverter.getAddressForWC(wallet.walletId, network).orEmpty() }
                     .orEmpty()
         }
         val walletNetwork = when (method) {

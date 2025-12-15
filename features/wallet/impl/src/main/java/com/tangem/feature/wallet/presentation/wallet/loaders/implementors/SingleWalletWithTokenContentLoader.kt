@@ -6,6 +6,7 @@ import com.tangem.domain.promo.GetStoryContentUseCase
 import com.tangem.domain.staking.usecase.StakingApyFlowUseCase
 import com.tangem.domain.wallets.usecase.ShouldSaveUserWalletsUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyApyFlowUseCase
+import com.tangem.domain.yield.supply.usecase.YieldSupplyGetShouldShowMainPromoUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.TokenListAnalyticsSender
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.WalletWarningsAnalyticsSender
@@ -35,6 +36,7 @@ internal class SingleWalletWithTokenContentLoader(
     private val yieldSupplyApyFlowUseCase: YieldSupplyApyFlowUseCase,
     private val stakingApyFlowUseCase: StakingApyFlowUseCase,
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
+    private val yieldSupplyGetShouldShowMainPromoUseCase: YieldSupplyGetShouldShowMainPromoUseCase,
 ) : WalletContentLoader(id = userWallet.walletId) {
 
     override fun create(): List<WalletSubscriber> {
@@ -49,6 +51,7 @@ internal class SingleWalletWithTokenContentLoader(
                 getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
                 yieldSupplyApyFlowUseCase = yieldSupplyApyFlowUseCase,
                 stakingApyFlowUseCase = stakingApyFlowUseCase,
+                yieldSupplyGetShouldShowMainPromoUseCase = yieldSupplyGetShouldShowMainPromoUseCase,
             ).let(::add)
             MultiWalletWarningsSubscriber(
                 userWallet = userWallet,
