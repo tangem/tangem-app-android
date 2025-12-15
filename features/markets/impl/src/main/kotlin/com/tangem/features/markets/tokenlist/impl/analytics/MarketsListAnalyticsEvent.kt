@@ -9,7 +9,7 @@ internal sealed class MarketsListAnalyticsEvent(
     params: Map<String, String> = mapOf(),
 ) : AnalyticsEvent(category = "Markets", event = event, params = params) {
 
-    data object BottomSheetOpened : MarketsListAnalyticsEvent(event = "Markets Screen Opened")
+    class BottomSheetOpened : MarketsListAnalyticsEvent(event = "Markets Screen Opened")
 
     data class SortBy(
         val sortByTypeUM: SortByTypeUM,
@@ -33,11 +33,11 @@ internal sealed class MarketsListAnalyticsEvent(
         ),
     )
 
-    data object StakingPromoShown : MarketsListAnalyticsEvent(event = "Notice - Staking Promo")
+    class StakingPromoShown : MarketsListAnalyticsEvent(event = "Notice - Staking Promo")
 
-    data object StakingPromoClosed : MarketsListAnalyticsEvent(event = "Staking Promo Closed")
+    class StakingPromoClosed : MarketsListAnalyticsEvent(event = "Staking Promo Closed")
 
-    data object StakingMoreInfoClicked : MarketsListAnalyticsEvent(event = "Staking More Info")
+    class StakingMoreInfoClicked : MarketsListAnalyticsEvent(event = "Staking More Info")
 
     data class TokenSearched(val tokenFound: Boolean) : MarketsListAnalyticsEvent(
         event = "Token Searched",
@@ -46,5 +46,5 @@ internal sealed class MarketsListAnalyticsEvent(
         ),
     )
 
-    data object ShowTokens : MarketsListAnalyticsEvent(event = "Button - Show Tokens")
+    class ShowTokens : MarketsListAnalyticsEvent(event = "Button - Show Tokens")
 }
