@@ -175,6 +175,7 @@ include(":common:routing")
 include(":common:test")
 include(":common:ui")
 include(":common:ui-charts")
+include(":common:ui-markets")
 // endregion
 
 // region Libs modules
