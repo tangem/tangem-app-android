@@ -1,7 +1,7 @@
 ==========================================
 Detekt Baseline Updater & Issue Counter
 ==========================================
-Date: 2025-12-12 13:17:20
+Date: 2025-12-13 00:34:09
 
 Step 1: Running detekt to check for new issues...
 
@@ -17,13 +17,13 @@ Counting issues in baseline files...
 ==========================================
 
 Summary:
-  Total Issues: 1378
-  Modules with Issues: 72
-  Average Issues per Module: 19
+  Total Issues: 1271
+  Modules with Issues: 69
+  Average Issues per Module: 18
 
 Progress:
-  Fixed: 555 out of 1933 (28%)
-  Remaining: 1378
+  Fixed: 662 out of 1933 (34%)
+  Remaining: 1271
 
 ==========================================
 All Modules with Issues (sorted by count)
@@ -34,7 +34,6 @@ Module                                                           Issues
 features/markets/impl                                               147
 features/wallet/impl                                                144
 features/onboarding-v2/impl                                         128
-features/swap/impl                                                   67
 data/wallet-connect                                                  54
 features/hot-wallet/impl                                             51
 features/walletconnect/impl                                          47
@@ -45,7 +44,6 @@ domain/wallets                                                       37
 features/nft/impl                                                    34
 features/tester/impl                                                 28
 core/ui                                                              26
-features/swap/domain                                                 25
 domain/tokens                                                        25
 common/ui                                                            24
 features/yield-supply/impl                                           21
@@ -54,7 +52,6 @@ domain/models                                                        21
 data/visa                                                            21
 data/nft                                                             19
 core/pagination                                                      16
-features/swap/data                                                   15
 domain/staking/models                                                13
 data/wallets                                                         13
 features/token-recieve/impl                                          11
