@@ -93,7 +93,7 @@ interface SwapRepositoryV2 {
      *
      * @param userWallet                selected user wallet
      * @param fromCryptoCurrencyStatus  currency status being swapped from
-     * @param toAddress                 swap destination address
+     * @param payInAddress              swap destination address
      * @param txId                      transaction id in ExpressApi
      * @param txHash                    transaction hash in blockchain
      * @param txExtraId                 extra transaction id in ExpressApi
@@ -101,7 +101,7 @@ interface SwapRepositoryV2 {
     suspend fun swapTransactionSent(
         userWallet: UserWallet,
         fromCryptoCurrencyStatus: CryptoCurrencyStatus,
-        toAddress: String,
+        payInAddress: String,
         txId: String,
         txHash: String,
         txExtraId: String?,
