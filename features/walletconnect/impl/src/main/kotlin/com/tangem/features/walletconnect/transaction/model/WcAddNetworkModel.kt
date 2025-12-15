@@ -111,7 +111,7 @@ internal class WcAddNetworkModel @Inject constructor(
         modelScope.launch {
             _uiState.update { it?.copy(transaction = it.transaction.copy(isLoading = true)) }
             useCase.approve().getOrNull()?.let {
-                showSuccessSignMessage()
+                showSuccessAddedMessage()
                 router.pop()
             } ?: run {
                 _uiState.update { it?.copy(transaction = it.transaction.copy(isLoading = false)) }
