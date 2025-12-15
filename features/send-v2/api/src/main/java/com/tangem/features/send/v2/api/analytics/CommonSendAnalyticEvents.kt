@@ -51,16 +51,29 @@ sealed class CommonSendAnalyticEvents(
         ),
     )
 
+    @Suppress("NullableToStringCall")
     /** Confirmation screen opened */
     data class ConfirmationScreenOpened(
         val categoryName: String,
         val source: CommonSendSource,
+        val fromDerivationIndex: Int?,
+        val toDerivationIndex: Int?,
+        val sendBlockchain: String,
+        val sendToken: String,
     ) : CommonSendAnalyticEvents(
         category = categoryName,
         event = "Confirm Screen Opened",
-        params = mapOf(
-            SOURCE to source.analyticsName,
-        ),
+        params = buildMap {
+            put(SOURCE, source.analyticsName)
+            put("Token", sendToken)
+            put("Blockchain", sendBlockchain)
+            if (fromDerivationIndex != null || toDerivationIndex != null) {
+                put(
+                    "Account Derivation From or To (optional)",
+                    "$fromDerivationIndex, $toDerivationIndex",
+                )
+            }
+        },
     )
 
     /** If transaction delays notification is present */
