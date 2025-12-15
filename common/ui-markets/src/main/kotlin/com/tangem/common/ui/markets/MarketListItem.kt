@@ -1,4 +1,4 @@
-package com.tangem.features.feed.ui.market.components
+package com.tangem.common.ui.markets
 
 import android.content.res.Configuration
 import androidx.compose.foundation.background
@@ -19,6 +19,8 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import com.tangem.common.ui.charts.MarketChartMini
 import com.tangem.common.ui.charts.state.MarketChartLook
 import com.tangem.common.ui.charts.state.MarketChartRawData
+import com.tangem.common.ui.markets.models.MarketsListItemUM
+import com.tangem.common.ui.markets.preview.MarketChartListItemPreviewDataProvider
 import com.tangem.common.ui.tokens.TokenPriceText
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.*
@@ -32,13 +34,11 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.MarketsTestTags
 import com.tangem.core.ui.windowsize.WindowSizeType
-import com.tangem.features.feed.ui.market.preview.MarketChartListItemPreviewDataProvider
-import com.tangem.features.feed.ui.market.state.MarketsListItemUM
 import com.tangem.utils.StringsSigns.MINUS
 import kotlin.random.Random
 
 @Composable
-internal fun MarketsListItem(model: MarketsListItemUM, modifier: Modifier = Modifier, onClick: () -> Unit = {}) {
+fun MarketsListItem(model: MarketsListItemUM, modifier: Modifier = Modifier, onClick: () -> Unit = {}) {
     MarketsListItemContent(
         modifier = modifier
             .fillMaxWidth()
