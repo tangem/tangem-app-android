@@ -87,7 +87,7 @@ internal class ItemsBuilder @Inject constructor(private val router: Router) {
             DetailsItemUM.Basic.Item(
                 id = "support_email",
                 block = BlockUM(
-                    text = resourceReference(R.string.details_row_title_contact_to_support),
+                    text = resourceReference(R.string.common_contact_support),
                     iconRes = R.drawable.ic_comment_24,
                     onClick = onSupportEmailClick,
                 ),

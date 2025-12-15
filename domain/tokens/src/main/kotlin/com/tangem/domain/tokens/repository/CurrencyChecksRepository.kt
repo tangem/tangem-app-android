@@ -58,7 +58,7 @@ interface CurrencyChecksRepository {
      */
     suspend fun getRentExemptionError(
         userWalletId: UserWalletId,
-        currencyStatus: CryptoCurrencyStatus,
+        currencyStatus: CryptoCurrencyStatus?,
         balanceAfterTransaction: BigDecimal,
     ): CryptoCurrencyWarning.Rent?
 }
