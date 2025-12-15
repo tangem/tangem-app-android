@@ -12,6 +12,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.features.swap.v2.impl.R
 import com.tangem.features.swap.v2.impl.common.entity.ConfirmUM
+import com.tangem.features.swap.v2.impl.sendviaswap.SendWithSwapRoute
 import com.tangem.features.swap.v2.impl.sendviaswap.entity.SendWithSwapUM
 import com.tangem.features.swap.v2.impl.sendviaswap.success.SendWithSwapSuccessComponent
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -40,6 +41,7 @@ internal class SendWithSwapSuccessModel @Inject constructor(
     private fun configConfirmSuccessNavigation() {
         params.callback.onNavigationResult(
             NavigationUM.Content(
+                source = SendWithSwapRoute.Success.javaClass.simpleName,
                 title = TextReference.EMPTY,
                 subtitle = null,
                 backIconRes = R.drawable.ic_close_24,

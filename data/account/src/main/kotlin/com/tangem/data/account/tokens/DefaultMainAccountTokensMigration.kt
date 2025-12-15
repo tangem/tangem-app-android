@@ -9,11 +9,12 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.data.account.store.AccountsResponseStoreFactory
 import com.tangem.data.account.utils.assignTokens
-import com.tangem.data.account.utils.toUserTokensResponse
 import com.tangem.data.common.currency.UserTokensSaver
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.api.tangemTech.models.account.GetWalletAccountsResponse
 import com.tangem.datasource.api.tangemTech.models.account.WalletAccountDTO
+import com.tangem.datasource.api.tangemTech.models.account.toUserTokensResponse
+import com.tangem.datasource.local.accounts.AccountTokenMigrationStore
 import com.tangem.datasource.utils.getSyncOrNull
 import com.tangem.domain.account.tokens.MainAccountTokensMigration
 import com.tangem.domain.models.account.DerivationIndex
@@ -32,6 +33,7 @@ import timber.log.Timber
  */
 internal class DefaultMainAccountTokensMigration(
     private val accountsResponseStoreFactory: AccountsResponseStoreFactory,
+    private val accountTokenMigrationStore: AccountTokenMigrationStore,
     private val userTokensSaver: UserTokensSaver,
 ) : MainAccountTokensMigration {
 
@@ -59,7 +61,7 @@ internal class DefaultMainAccountTokensMigration(
 
         val unassignedTokens = mainAccount.findUnassignedTokens(derivationIndex)
 
-        if (unassignedTokens == null) {
+        if (unassignedTokens.isNullOrEmpty()) {
             Timber.i("No unassigned tokens found for migration")
             return@either
         }
@@ -78,12 +80,19 @@ internal class DefaultMainAccountTokensMigration(
             },
         )
 
-        userTokensSaver.push(
+        store.updateData { updatedResponse }
+
+        val mainAccountName = mainAccount.name
+        val selectedAccountName = selectedAccount.name
+        if (mainAccountName != null && selectedAccountName != null) {
+            accountTokenMigrationStore.store(userWalletId, mainAccountName to selectedAccountName)
+        }
+
+        val userTokensResponse = updatedResponse.toUserTokensResponse()
+        userTokensSaver.pushWithRetryer(
             userWalletId = userWalletId,
-            response = updatedResponse.toUserTokensResponse(),
+            response = userTokensResponse,
             onFailSend = {
-                // TODO: save failed state to retry later
-                //  [REDACTED_JIRA]
                 val exception = IllegalStateException("Failed to push updated tokens after migration")
                 Timber.e(exception)
                 raise(exception)

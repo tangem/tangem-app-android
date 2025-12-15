@@ -75,17 +75,20 @@ internal class CreateWalletSelectionModel @Inject constructor(
                     ),
                 ),
                 onBuyClick = ::onBuyClick,
+                shouldShowAlreadyHaveWallet = true,
             ),
         )
 
     init {
-        showAlreadyHaveWalletWithDelay()
+        // temporarily disabled by timer and enabled by default
+        // showAlreadyHaveWalletWithDelay()
     }
 
+    @Suppress("UnusedPrivateMember")
     private fun showAlreadyHaveWalletWithDelay() {
         modelScope.launch {
             delay(SHOW_ALREADY_HAVE_WALLET_DELAY)
-            uiState.update { it.copy(showAlreadyHaveWallet = true) }
+            uiState.update { it.copy(shouldShowAlreadyHaveWallet = true) }
         }
     }
 
@@ -94,7 +97,7 @@ internal class CreateWalletSelectionModel @Inject constructor(
     }
 
     private fun onHardwareWalletClick() {
-        // TODO [REDACTED_TASK_KEY]
+        router.push(AppRoute.CreateHardwareWallet)
     }
 
     private fun onBuyClick() {

@@ -119,7 +119,7 @@ private fun WcSelectWalletContent(
                 val baseModifier = Modifier
                     .clip(RoundedCornerShape(14.dp))
                     .clickable(onClick = state.onClick)
-                val itemModifier = if (state.id == selectedWalletId) {
+                val itemModifier = if (state.id == selectedWalletId.stringValue) {
                     baseModifier.border(
                         width = 1.dp,
                         color = TangemTheme.colors.text.accent,
@@ -148,7 +148,7 @@ private fun WcSelectWalletContent(
 private fun WcSelectWalletContent_Preview() {
     val wallets = persistentListOf(
         UserWalletItemUM(
-            id = UserWalletId("user_wallet_1".encodeToByteArray()),
+            id = "user_wallet_1",
             name = stringReference("Tangem 2.0"),
             information = getInformation(42),
             balance = UserWalletItemUM.Balance.Loaded("1 496,34 $", isFlickering = false),
@@ -156,7 +156,7 @@ private fun WcSelectWalletContent_Preview() {
             onClick = {},
         ),
         UserWalletItemUM(
-            id = UserWalletId("user_wallet_2".encodeToByteArray()),
+            id = "user_wallet_2",
             name = stringReference("Tangem White"),
             information = getInformation(24),
             balance = UserWalletItemUM.Balance.Loaded("1 496,34 $", isFlickering = false),
@@ -164,7 +164,7 @@ private fun WcSelectWalletContent_Preview() {
             onClick = {},
         ),
         UserWalletItemUM(
-            id = UserWalletId("user_wallet_3".encodeToByteArray()),
+            id = "user_wallet_3",
             name = stringReference("Bitcoin"),
             information = getInformation(1),
             balance = UserWalletItemUM.Balance.Loaded("1 496,34 $", isFlickering = false),
@@ -172,7 +172,7 @@ private fun WcSelectWalletContent_Preview() {
             onClick = {},
         ),
         UserWalletItemUM(
-            id = UserWalletId("user_wallet_4".encodeToByteArray()),
+            id = "user_wallet_4",
             name = stringReference("Tangem 1.0"),
             information = getInformation(21),
             balance = UserWalletItemUM.Balance.Loaded("1 496,34 $", isFlickering = false),
@@ -180,7 +180,7 @@ private fun WcSelectWalletContent_Preview() {
             onClick = {},
         ),
         UserWalletItemUM(
-            id = UserWalletId("user_wallet_4".encodeToByteArray()),
+            id = "user_wallet_4",
             name = stringReference("Tangem 1.0"),
             information = UserWalletItemUM.Information.Loading,
             balance = UserWalletItemUM.Balance.Loaded("1 496,34 $", isFlickering = false),
@@ -188,7 +188,7 @@ private fun WcSelectWalletContent_Preview() {
             onClick = {},
         ),
         UserWalletItemUM(
-            id = UserWalletId("user_wallet_4".encodeToByteArray()),
+            id = "user_wallet_4",
             name = stringReference("Tangem 1.0"),
             information = UserWalletItemUM.Information.Failed,
             balance = UserWalletItemUM.Balance.Loaded("1 496,34 $", isFlickering = false),
@@ -199,7 +199,7 @@ private fun WcSelectWalletContent_Preview() {
     TangemThemePreview {
         WcSelectWalletModalBS(
             wallets = wallets,
-            selectedWalletId = wallets.first().id,
+            selectedWalletId = UserWalletId(wallets.first().id.encodeToByteArray()),
             onBack = {},
             onDismiss = {},
         )
