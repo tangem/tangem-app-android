@@ -8,13 +8,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.tangem.common.ui.markets.MarketsListItemPlaceholder
 import com.tangem.common.ui.news.DefaultLoadingArticle
 import com.tangem.common.ui.news.TrendingLoadingArticle
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.block.BlockCard
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.features.feed.ui.market.components.MarketsListItemPlaceholder
 
 @Composable
 internal fun MarketLoadingBlock() {

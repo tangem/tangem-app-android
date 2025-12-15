@@ -93,6 +93,7 @@ dependencies {
     implementation(projects.common.ui)
     implementation(projects.common.uiCharts)
     implementation(projects.common.routing)
+    implementation(projects.common.uiMarkets)
 
     /* Libs */
     implementation(projects.libs.crypto)

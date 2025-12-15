@@ -1,4 +1,4 @@
-package com.tangem.features.feed.ui.market.components
+package com.tangem.common.ui.markets
 
 import android.content.res.Configuration
 import androidx.compose.foundation.background
