@@ -1,0 +1,11 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>BooleanPropertyNaming:LogConfig.kt$AnalyticsHandlersLogConfig$val amplitude: Boolean = BuildConfig.LOG_ENABLED</ID>
+    <ID>BooleanPropertyNaming:LogConfig.kt$AnalyticsHandlersLogConfig$val appsflyer: Boolean = BuildConfig.LOG_ENABLED</ID>
+    <ID>BooleanPropertyNaming:LogConfig.kt$AnalyticsHandlersLogConfig$val firebase: Boolean = BuildConfig.LOG_ENABLED</ID>
+    <ID>BooleanPropertyNaming:LogConfig.kt$LogConfig$val storeAction: Boolean = BuildConfig.LOG_ENABLED</ID>
+    <ID>BooleanPropertyNaming:LogConfig.kt$NetworkLogConfig$val blockchainSdkNetwork: Boolean = BuildConfig.LOG_ENABLED</ID>
+  </CurrentIssues>
+</SmellBaseline>

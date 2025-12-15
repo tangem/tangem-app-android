@@ -11,6 +11,7 @@ android {
 dependencies {
     /** Project - Core */
     implementation(projects.core.ui)
+    implementation(projects.core.utils)
 
     /** Compose */
     implementation(tangemDeps.vico.core)

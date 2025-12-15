@@ -15,24 +15,23 @@ import javax.inject.Inject
  */
 internal class SwapSelectTokensController @Inject constructor() {
 
-    val state: StateFlow<SwapSelectTokensUM> get() = _state
-
-    private val _state: MutableStateFlow<SwapSelectTokensUM> = MutableStateFlow(
-        value = SwapSelectTokensUM(
-            onBackClick = {},
-            exchangeFrom = createEmptyExchangeFrom(),
-            exchangeTo = createEmptyExchangeTo(),
-            isBalanceHidden = false,
-        ),
-    )
+    val state: StateFlow<SwapSelectTokensUM>
+        field = MutableStateFlow(
+            value = SwapSelectTokensUM(
+                onBackClick = {},
+                exchangeFrom = createEmptyExchangeFrom(),
+                exchangeTo = createEmptyExchangeTo(),
+                isBalanceHidden = false,
+            ),
+        )
 
     fun update(transform: (SwapSelectTokensUM) -> SwapSelectTokensUM) {
         Timber.d("Applying non-name transformation")
-        _state.update(transform)
+        state.update(transform)
     }
 
     fun update(transformer: SwapSelectTokensUMTransformer) {
-        Timber.d("Applying ${transformer::class.simpleName}")
-        _state.update(transformer::transform)
+        Timber.d("Applying ${transformer::class.simpleName ?: "null"}")
+        state.update(transformer::transform)
     }
 }

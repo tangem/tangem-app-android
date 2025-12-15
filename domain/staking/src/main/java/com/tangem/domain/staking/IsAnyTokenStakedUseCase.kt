@@ -3,8 +3,8 @@ package com.tangem.domain.staking
 import arrow.core.Either
 import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.domain.staking.repositories.StakingErrorResolver
-import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.staking.repositories.StakingRepository
 
 class IsAnyTokenStakedUseCase(
     private val stakingRepository: StakingRepository,

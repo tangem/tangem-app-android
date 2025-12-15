@@ -8,6 +8,10 @@ class DummyRouter : Router {
         onComplete(true)
     }
 
+    override fun replaceCurrent(route: Route, onComplete: (Boolean) -> Unit) {
+        onComplete(true)
+    }
+
     override fun replaceAll(vararg routes: Route, onComplete: (isSuccess: Boolean) -> Unit) {
         onComplete(true)
     }

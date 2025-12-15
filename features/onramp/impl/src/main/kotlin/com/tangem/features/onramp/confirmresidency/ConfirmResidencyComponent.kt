@@ -3,8 +3,8 @@ package com.tangem.features.onramp.confirmresidency
 import com.tangem.core.decompose.factory.ComponentFactory
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.domain.onramp.model.OnrampCountry
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.onramp.model.OnrampCountry
 
 internal interface ConfirmResidencyComponent : ComposableBottomSheetComponent {
 
@@ -12,7 +12,7 @@ internal interface ConfirmResidencyComponent : ComposableBottomSheetComponent {
         val userWalletId: UserWalletId,
         val cryptoCurrency: CryptoCurrency,
         val country: OnrampCountry,
-        val launchSepa: Boolean,
+        val isLaunchSepa: Boolean,
         val onDismiss: () -> Unit,
     )
 
