@@ -1,0 +1,46 @@
+package com.tangem.features.feed.ui.market.state
+
+import androidx.compose.runtime.Immutable
+import com.tangem.common.ui.charts.state.MarketChartLook
+import com.tangem.common.ui.charts.state.MarketChartRawData
+import com.tangem.core.ui.components.marketprice.PriceChangeType
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.domain.models.currency.CryptoCurrency
+
+@Immutable
+data class MarketsListItemUM(
+    val id: CryptoCurrency.RawID,
+    val name: String,
+    val currencySymbol: String,
+    val iconUrl: String?,
+    val ratingPosition: String?,
+    val marketCap: String?,
+    val price: Price,
+    val trendPercentText: String,
+    val trendType: PriceChangeType,
+    val chartData: MarketChartRawData?,
+    val isUnder100kMarketCap: Boolean,
+    val stakingRate: TextReference?,
+    val updateTimestamp: Long?,
+) {
+    val chartType: MarketChartLook.Type = when (trendType) {
+        PriceChangeType.UP -> MarketChartLook.Type.Growing
+        PriceChangeType.DOWN -> MarketChartLook.Type.Falling
+        PriceChangeType.NEUTRAL -> MarketChartLook.Type.Neutral
+    }
+
+    @Immutable
+    data class Price(
+        val text: String,
+        val changeType: PriceChangeType? = null,
+    )
+
+    @Suppress("NullableToStringCall")
+    fun getComposeKey(): String {
+        return id.value + TOKEN_LAZY_LIST_ID_SEPARATOR + marketCap.toString() + updateTimestamp
+    }
+
+    companion object {
+        const val TOKEN_LAZY_LIST_ID_SEPARATOR = "@"
+    }
+}

@@ -42,6 +42,7 @@ internal class DefaultCustomTokenSelectorComponent @AssistedInject constructor(
             context = childByContext(context),
             params = CustomTokenDerivationInputComponent.Params(
                 mode = config.mode,
+                selectedNetwork = config.network,
                 onConfirm = model::selectCustomDerivationPath,
                 onDismiss = model.dialogNavigation::dismiss,
             ),

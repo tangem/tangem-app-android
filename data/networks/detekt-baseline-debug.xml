@@ -1,0 +1,15 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>MultilineLambdaItParameter:CommonNetworkStatusFetcher.kt$CommonNetworkStatusFetcher${ Timber.e("Failed to fetch network status for $userWalletId [${network.rawId}]: $it") networksStatusesStore.setSourceAsOnlyCache(userWalletId = userWalletId, network = network) }</ID>
+    <ID>MultilineLambdaItParameter:DefaultMultiNetworkStatusFetcher.kt$DefaultMultiNetworkStatusFetcher${ networksStatusesStore.setSourceAsOnlyCache( userWalletId = params.userWalletId, networks = params.networks, ) raise(it) }</ID>
+    <ID>MultilineLambdaItParameter:DefaultNetworksRepository.kt$DefaultNetworksRepository${ Timber.e(it, "Unable to create wallet currencies") return emptyList() }</ID>
+    <ID>MultilineLambdaItParameter:DefaultNetworksRepository.kt$DefaultNetworksRepository${ Timber.e(it, "Unable to create wallet currencies") return@withContext }</ID>
+    <ID>MultilineLambdaItParameter:NetworkAmountsConverter.kt$NetworkAmountsConverter${ val amount = it.value as? NetworkStatus.Amount.Loaded ?: return@mapNotNull null CurrencyAmount( id = currencyIdConverter.convertBack(value = it.key), amount = amount.value, ) }</ID>
+    <ID>MultilineLambdaItParameter:NetworkAmountsConverter.kt$NetworkAmountsConverter${ val currencyId = currencyIdConverter.convert(value = it.id) val amount = NetworkStatus.Amount.Loaded(value = it.amount) currencyId to amount }</ID>
+    <ID>MultilineLambdaItParameter:NetworkStatusSupplierModule.kt$NetworkStatusSupplierModule.&lt;no name provided&gt;${ "single_network_status_${it.userWalletId.stringValue}_${it.network.rawId}_" + it.network.derivationPath.value }</ID>
+    <ID>MultilineLambdaItParameter:NetworkYieldSupplyStatusConverter.kt$NetworkYieldSupplyStatusConverter${ val id = currencyIdConverter.convert(value = it.id) val status = YieldSupplyStatus( isActive = it.isActive, isInitialized = it.isInitialized, isAllowedToSpend = it.isAllowedToSpend, effectiveProtocolBalance = it.effectiveProtocolBalance, ) id to status }</ID>
+    <ID>SuspendFunSwallowedCancellation:DefaultNetworksRepository.kt$DefaultNetworksRepository$runCatching</ID>
+  </CurrentIssues>
+</SmellBaseline>
