@@ -74,6 +74,7 @@ internal fun RootContent(
                                 startActivity(context, instance.intent, Bundle.EMPTY)
                             }
                         }
+                        RoutingComponent.Child.DummyComponent -> Unit
                     }
                 }
 
