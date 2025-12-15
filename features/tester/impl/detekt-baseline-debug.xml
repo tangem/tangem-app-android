@@ -9,7 +9,6 @@
     <ID>ExplicitCollectionElementAccessMethod:TestPushAddKeyDataTransformer.kt$TestPushAddKeyDataTransformer$mutableData.set(index = index, updated)</ID>
     <ID>ExplicitCollectionElementAccessMethod:TestPushAddValueDataTransformer.kt$TestPushAddValueDataTransformer$mutableData.set(index = index, updated)</ID>
     <ID>MaxChainedCallsOnSameLine:BlockchainProvidersScreen.kt$ProvidersDnDTarget$event.toAndroidDragEvent().clipData.getItemAt(0).text.toString().toInt()</ID>
-    <ID>MultilineLambdaItParameter:ApiEnvironmentComparator.kt$ApiEnvironmentComparator${ when (it) { ApiEnvironment.DEV -&gt; 0 ApiEnvironment.DEV_2 -&gt; 1 ApiEnvironment.DEV_3 -&gt; 2 ApiEnvironment.STAGE -&gt; 3 ApiEnvironment.MOCK -&gt; 4 ApiEnvironment.PROD -&gt; 5 } }</ID>
     <ID>MultilineLambdaItParameter:BlockchainProvidersScreen.kt${ value = it state.onValueChange(it.text) }</ID>
     <ID>MultilineLambdaItParameter:BlockchainProvidersViewModel.kt$BlockchainProvidersViewModel${ if (it.blockchainId == blockchainId) { it.update() } else { it } }</ID>
     <ID>MultilineLambdaItParameter:BlockchainProvidersViewModel.kt$BlockchainProvidersViewModel${ it.copyProvidersUM(blockchainId = id) { copy( addPublicProviderDialog = addPublicProviderDialog.copy( hasError = !PatternsCompat.WEB_URL.matcher(url).matches(), ), ) } }</ID>
@@ -23,12 +22,10 @@
     <ID>MultilineLambdaItParameter:TesterAccountsViewModel.kt$TesterAccountsViewModel${ it.copy( accountListBottomSheetConfig = it.accountListBottomSheetConfig.copy( isAccountsShown = false, ), ) }</ID>
     <ID>MultilineLambdaItParameter:TesterAccountsViewModel.kt$TesterAccountsViewModel${ it.copy( walletSelector = it.walletSelector.copy(selected = userWallet), accountListBottomSheetConfig = it.accountListBottomSheetConfig.copy( accounts = getWalletAccounts(userWallet.walletId), ), ) }</ID>
     <ID>MultilineLambdaItParameter:TesterActionsScreen.kt${ builder.setStream( FileProvider.getUriForFile(activity, "${activity.packageName}.provider", it), ) }</ID>
-    <ID>MultilineLambdaItParameter:TesterActivity.kt$TesterActivity${ val route = when (it) { ButtonUM.FEATURE_TOGGLES -&gt; TesterScreen.FEATURE_TOGGLES ButtonUM.EXCLUDED_BLOCKCHAINS -&gt; TesterScreen.EXCLUDED_BLOCKCHAINS ButtonUM.ENVIRONMENT_TOGGLES -&gt; TesterScreen.ENVIRONMENTS_TOGGLES ButtonUM.BLOCKCHAIN_PROVIDERS -&gt; TesterScreen.BLOCKCHAIN_PROVIDERS ButtonUM.TESTER_ACTIONS -&gt; TesterScreen.TESTER_ACTIONS ButtonUM.TEST_PUSHES -&gt; TesterScreen.TEST_PUSHES ButtonUM.ACCOUNTS -&gt; TesterScreen.ACCOUNTS } innerTesterRouter.open(route) }</ID>
     <ID>NoNameShadowing:AccountsScreen.kt$content</ID>
     <ID>NoNameShadowing:BlockchainProvidersViewModel.kt$BlockchainProvidersViewModel${ onAddProviderClick(id = blockchain.id, url = it) }</ID>
     <ID>NoNameShadowing:BlockchainProvidersViewModel.kt$BlockchainProvidersViewModel${ onPublicProviderUrlChange(id = blockchain.id, url = it) }</ID>
     <ID>NoNameShadowing:EnvironmentsTogglesViewModel.kt$EnvironmentsTogglesViewModel${ it.environment == currentEnvironment }</ID>
-    <ID>NoNameShadowing:TesterActivity.kt$TesterActivity${ val route = when (it) { ButtonUM.FEATURE_TOGGLES -&gt; TesterScreen.FEATURE_TOGGLES ButtonUM.EXCLUDED_BLOCKCHAINS -&gt; TesterScreen.EXCLUDED_BLOCKCHAINS ButtonUM.ENVIRONMENT_TOGGLES -&gt; TesterScreen.ENVIRONMENTS_TOGGLES ButtonUM.BLOCKCHAIN_PROVIDERS -&gt; TesterScreen.BLOCKCHAIN_PROVIDERS ButtonUM.TESTER_ACTIONS -&gt; TesterScreen.TESTER_ACTIONS ButtonUM.TEST_PUSHES -&gt; TesterScreen.TEST_PUSHES ButtonUM.ACCOUNTS -&gt; TesterScreen.ACCOUNTS } innerTesterRouter.open(route) }</ID>
     <ID>PropertyUsedBeforeDeclaration:BlockchainProvidersViewModel.kt$BlockchainProvidersViewModel$_state</ID>
     <ID>PropertyUsedBeforeDeclaration:BlockchainProvidersViewModel.kt$BlockchainProvidersViewModel$searchQuery</ID>
     <ID>PropertyUsedBeforeDeclaration:EnvironmentsTogglesViewModel.kt$EnvironmentsTogglesViewModel$_uiState</ID>
