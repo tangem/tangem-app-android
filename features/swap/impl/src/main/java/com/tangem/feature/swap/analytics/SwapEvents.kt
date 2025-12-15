@@ -62,6 +62,7 @@ sealed class SwapEvents(
 
     class ButtonSwipeClicked : SwapEvents(event = "Button - Swipe")
 
+    @Suppress("NullableToStringCall")
     data class SwapInProgressScreen(
         val provider: SwapProvider,
         val commission: FeeType, // Market / Fast
@@ -69,6 +70,8 @@ sealed class SwapEvents(
         val receiveBlockchain: String,
         val sendToken: String,
         val receiveToken: String,
+        val fromDerivationIndex: Int?,
+        val toDerivationIndex: Int?,
     ) : SwapEvents(
         event = "Swap in Progress Screen Opened",
         params = mapOf(
@@ -78,6 +81,7 @@ sealed class SwapEvents(
             "Receive Token" to receiveToken,
             "Send Blockchain" to sendBlockchain,
             "Receive Blockchain" to receiveBlockchain,
+            "Account Derivation From or To (optional)" to "$fromDerivationIndex, $toDerivationIndex",
         ),
     )
 
