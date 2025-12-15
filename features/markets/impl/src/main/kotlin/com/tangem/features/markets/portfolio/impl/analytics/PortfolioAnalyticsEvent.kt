@@ -21,6 +21,14 @@ internal class PortfolioAnalyticsEvent(
             ),
         )
 
+        fun popupToChooseAccount() = PortfolioAnalyticsEvent(
+            event = "Popup to choose account",
+        )
+
+        fun addToNotMainAccount() = PortfolioAnalyticsEvent(
+            event = "Button - Add (token not to main Account)",
+        )
+
         fun addToPortfolioWalletChanged() = PortfolioAnalyticsEvent(event = "Wallet Selected")
 
         fun addToPortfolioContinue(blockchainNames: List<String>) = PortfolioAnalyticsEvent(
@@ -47,5 +55,19 @@ internal class PortfolioAnalyticsEvent(
                     put("blockchain", blockchainName)
                 },
             )
+
+        fun getTokenActionClick(actionUM: TokenActionsBSContentUM.Action) = PortfolioAnalyticsEvent(
+            event = when (actionUM) {
+                TokenActionsBSContentUM.Action.Buy -> "Popup Get token - Button Buy"
+                TokenActionsBSContentUM.Action.Receive -> "Popup Get token - Button Receive"
+                TokenActionsBSContentUM.Action.Exchange -> "Popup Get token - Button Exchange"
+                TokenActionsBSContentUM.Action.Stake -> "Popup Get token - Button Stake"
+                else -> "error"
+            },
+        )
+
+        fun getTokenLater() = PortfolioAnalyticsEvent(
+            event = "Popup Get token - Button Later",
+        )
     }
 }

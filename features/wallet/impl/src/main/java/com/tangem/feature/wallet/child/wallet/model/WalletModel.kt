@@ -7,9 +7,12 @@ import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
+import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
+import com.tangem.domain.account.supplier.SingleAccountListSupplier
+import com.tangem.domain.account.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
@@ -40,6 +43,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.transformers.*
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
 import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvider
 import com.tangem.features.biometry.AskBiometryComponent
+import com.tangem.features.feed.entry.featuretoggle.FeedFeatureToggle
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.pushnotifications.api.PushNotificationsModelCallbacks
 import com.tangem.features.tangempay.TangemPayFeatureToggles
@@ -96,6 +100,10 @@ internal class WalletModel @Inject constructor(
     private val yieldSupplyFeatureToggles: YieldSupplyFeatureToggles,
     private val accountsFeatureToggles: AccountsFeatureToggles,
     private val tangemPayMainScreenCustomerInfoUseCase: TangemPayMainScreenCustomerInfoUseCase,
+    private val trackingContextProxy: TrackingContextProxy,
+    private val singleAccountListSupplier: SingleAccountListSupplier,
+    private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
+    private val feedFeatureToggle: FeedFeatureToggle,
     val screenLifecycleProvider: ScreenLifecycleProvider,
     val innerWalletRouter: InnerWalletRouter,
 ) : Model() {
@@ -113,15 +121,11 @@ internal class WalletModel @Inject constructor(
     private var expressTxStatusTaskScheduler = SingleTaskScheduler<Unit>()
 
     init {
-        analyticsEventsHandler.send(WalletScreenAnalyticsEvent.MainScreen.ScreenOpened)
+        if (!hotWalletFeatureToggles.isHotWalletEnabled) {
+            analyticsEventsHandler.send(WalletScreenAnalyticsEvent.MainScreen.ScreenOpenedLegacy())
+        }
 
-        screenLifecycleProvider.isBackgroundState
-            .onEach { isBackground ->
-                if (isBackground.not()) {
-                    suggestToEnableBiometrics()
-                }
-            }.launchIn(modelScope)
-
+        updateMarketToggle()
         suggestToOpenMarkets()
 
         maybeMigrateNames()
@@ -136,6 +140,18 @@ internal class WalletModel @Inject constructor(
         enableNotificationsIfNeeded()
 
         clickIntents.initialize(innerWalletRouter, modelScope)
+    }
+
+    fun onResume() {
+        modelScope.launch(dispatchers.main) {
+            suggestToEnableBiometrics()
+        }
+    }
+
+    private fun updateMarketToggle() {
+        stateHolder.update {
+            it.copy(isNewMarketEnabled = feedFeatureToggle.isFeedEnabled)
+        }
     }
 
     private fun updateYieldSupplyApy() {
@@ -193,7 +209,6 @@ internal class WalletModel @Inject constructor(
     private suspend fun shouldShowAskBiometryBottomSheet(): Boolean {
         return if (hotWalletFeatureToggles.isHotWalletEnabled) {
             userWalletsListRepository.userWalletsSync().any { it is UserWallet.Cold } &&
-                innerWalletRouter.isWalletLastScreen() &&
                 shouldShowAskBiometryUseCase() &&
                 canUseBiometryUseCase()
         } else {
@@ -271,11 +286,34 @@ internal class WalletModel @Inject constructor(
     // It's okay here because we need to be able to observe the selected wallet changes
     @Suppress("DEPRECATION")
     private fun subscribeOnSelectedWalletFlow() {
-        getSelectedWalletUseCase().onRight {
-            it
+        getSelectedWalletUseCase().onRight { walletFlow ->
+            walletFlow
                 .conflate()
                 .distinctUntilChanged()
                 .onEach { selectedWallet ->
+                    trackingContextProxy.setContext(selectedWallet)
+
+                    if (hotWalletFeatureToggles.isHotWalletEnabled) {
+                        modelScope.launch {
+                            val hasMobileWallet = userWalletsListRepository.userWalletsSync()
+                                .any { it is UserWallet.Hot }
+                            val accountsCount = if (isAccountsModeEnabledUseCase.invokeSync()) {
+                                singleAccountListSupplier(selectedWallet.walletId)
+                                    .first()
+                                    .accounts
+                                    .size
+                            } else {
+                                null
+                            }
+                            analyticsEventsHandler.send(
+                                WalletScreenAnalyticsEvent.MainScreen.ScreenOpened(
+                                    hasMobileWallet = hasMobileWallet,
+                                    accountsCount = accountsCount,
+                                ),
+                            )
+                        }
+                    }
+
                     if (selectedWallet.isMultiCurrency) {
                         selectedWalletAnalyticsSender.send(selectedWallet)
                     }
@@ -416,6 +454,7 @@ internal class WalletModel @Inject constructor(
         when (action) {
             is WalletsUpdateActionResolver.Action.InitializeWallets -> initializeWallets(action)
             is WalletsUpdateActionResolver.Action.ReinitializeWallet -> reinitializeWallet(action)
+            is WalletsUpdateActionResolver.Action.ReinitializeWallets -> reinitializeWallets(action)
             is WalletsUpdateActionResolver.Action.AddWallet -> addWallet(action)
             is WalletsUpdateActionResolver.Action.DeleteWallet -> deleteWallet(action)
             is WalletsUpdateActionResolver.Action.UnlockWallet -> unlockWallet(action)
@@ -518,6 +557,32 @@ internal class WalletModel @Inject constructor(
                 walletImageResolver = walletImageResolver,
             ),
         )
+    }
+
+    private fun reinitializeWallets(action: WalletsUpdateActionResolver.Action.ReinitializeWallets) {
+        action.wallets.forEach { userWallet ->
+            walletScreenContentLoader.cancel(userWallet.walletId)
+            tokenListStore.remove(userWallet.walletId)
+
+            walletScreenContentLoader.load(
+                userWallet = userWallet,
+                clickIntents = clickIntents,
+                coroutineScope = modelScope,
+            )
+
+            modelScope.launch(dispatchers.main) {
+                fetchWalletContent(userWallet = userWallet)
+            }
+
+            stateHolder.update(
+                ReinitializeWalletTransformer(
+                    prevWalletId = userWallet.walletId,
+                    newUserWallet = userWallet,
+                    clickIntents = clickIntents,
+                    walletImageResolver = walletImageResolver,
+                ),
+            )
+        }
     }
 
     private fun addWallet(action: WalletsUpdateActionResolver.Action.AddWallet) {
