@@ -9,11 +9,9 @@ import com.tangem.data.walletconnect.utils.WcNetworksConverter
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.walletconnect.model.WcSessionApprove
-import com.tangem.domain.walletmanager.WalletManagersFacade
 
 internal class CaipNamespaceDelegate(
     private val namespaceConverters: Set<WcNamespaceConverter>,
-    private val walletManagersFacade: WalletManagersFacade,
     private val wcNetworksConverter: WcNetworksConverter,
 ) {
 
@@ -36,7 +34,7 @@ internal class CaipNamespaceDelegate(
             }
 
         suspend fun createCAIP10(userWalletId: UserWalletId, network: Network): CAIP10? {
-            val address = walletManagersFacade.getDefaultAddress(userWalletId, network)
+            val address = wcNetworksConverter.getAddressForWC(userWalletId, network)
             val chainId = allWcNetworks
                 .find { (wcNetwork, _) -> network.rawId == wcNetwork.rawId }
                 ?.second
