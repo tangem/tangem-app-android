@@ -8,5 +8,7 @@ sealed class TokenListSortingError {
 
     object UnableToSortTokenList : TokenListSortingError()
 
+    data class UnableToSortAccounts(val accountIds: List<String>) : TokenListSortingError()
+
     data class DataError(val cause: Throwable) : TokenListSortingError()
 }
