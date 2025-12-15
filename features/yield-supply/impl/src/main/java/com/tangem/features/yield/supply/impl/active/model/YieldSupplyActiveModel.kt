@@ -283,7 +283,7 @@ internal class YieldSupplyActiveModel @Inject constructor(
                     YieldSupplyActiveFeeContentTransformer(
                         cryptoCurrencyStatus = cryptoStatus,
                         appCurrency = appCurrency,
-                        feeValue = currentFee,
+                        feeValue = currentFee.value,
                         maxNetworkFee = maxFee,
                         analyticsHandler = analyticsHandler,
                     ),
