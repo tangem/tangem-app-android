@@ -16,12 +16,33 @@ sealed class WalletSettingsAnalyticEvents(
         params = mapOf(STATUS to enabled.value),
     )
 
-    class WalletSettingsScreenOpened : WalletSettingsAnalyticEvents(
+    class WalletSettingsScreenOpened(
+        private val accountsCount: Int?,
+    ) : WalletSettingsAnalyticEvents(
         event = "Wallet Settings Screen Opened",
+        params = buildMap {
+            if (accountsCount != null) put("Accounts Count", accountsCount.toString())
+        },
     )
 
     class ButtonBackup : WalletSettingsAnalyticEvents(
         event = "Button - Backup",
+    )
+
+    class ButtonAddAccount : WalletSettingsAnalyticEvents(
+        event = "Button - Add Account",
+    )
+
+    class ButtonOpenExistingAccount : WalletSettingsAnalyticEvents(
+        event = "Button - Open Existing Account",
+    )
+
+    class ButtonArchivedAccounts : WalletSettingsAnalyticEvents(
+        event = "Button - Archived Accounts",
+    )
+
+    class LongtapAccountsOrder : WalletSettingsAnalyticEvents(
+        event = "Longtap - Accounts Order",
     )
 
     data class ButtonAccessCode(
