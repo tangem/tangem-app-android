@@ -66,6 +66,14 @@ internal class UserWalletEncryptionKeysRepository(
         authenticatedStorage.delete(StorageKey.UserWalletEncryptionKey(userWalletId).name)
     }
 
+    fun removeEncryptedWithPasswordKey(userWalletId: UserWalletId) {
+        secureStorage.delete(StorageKey.UserWalletEncryptionKeyEncrypted(userWalletId).name)
+    }
+
+    fun removeUnsecuredKey(userWalletId: UserWalletId) {
+        secureStorage.delete(StorageKey.UserWalletEncryptionKeyUnsecured(userWalletId).name)
+    }
+
     suspend fun getAllUnsecured(): List<UserWalletEncryptionKey> = withContext(dispatchers.io) {
         getUserWalletsIds().mapNotNull { userWalletId ->
             secureStorage.get(account = StorageKey.UserWalletEncryptionKeyUnsecured(userWalletId).name).decodeToKey()

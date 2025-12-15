@@ -23,6 +23,11 @@ internal class EmailMessageTitleResolver(private val resources: Resources) {
             is FeedbackEmailType.Visa.Activation,
             is FeedbackEmailType.Visa.DirectUserRequest,
             is FeedbackEmailType.Visa.Dispute,
+            is FeedbackEmailType.Visa.DisputeV2,
+            is FeedbackEmailType.Visa.FailedIssueCard,
+            is FeedbackEmailType.Visa.Withdrawal,
+            is FeedbackEmailType.Visa.FeatureIsBeta,
+            is FeedbackEmailType.PreActivatedWallet,
             -> R.string.feedback_preface_support
             is FeedbackEmailType.RateCanBeBetter -> R.string.feedback_preface_rate_negative
             is FeedbackEmailType.ScanningProblem -> R.string.feedback_preface_scan_failed
@@ -30,7 +35,6 @@ internal class EmailMessageTitleResolver(private val resources: Resources) {
             is FeedbackEmailType.StakingProblem,
             is FeedbackEmailType.SwapProblem,
             -> R.string.feedback_preface_tx_failed
-            is FeedbackEmailType.PreActivatedWallet -> R.string.feedback_preface_support
         }
 
         return resources.getStringSafe(resId)

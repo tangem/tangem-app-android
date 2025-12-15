@@ -29,4 +29,3 @@ class TestingCoroutineDispatcherProvider(
     override val default: CoroutineDispatcher = Dispatchers.Unconfined,
     override val single: CoroutineDispatcher = Executors.newFixedThreadPool(1).asCoroutineDispatcher(),
 ) : CoroutineDispatcherProvider
-
