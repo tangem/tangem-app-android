@@ -30,10 +30,10 @@ internal class SendRecipientWalletListConverter(
         var walletsCounter = 0
 
         return this.filterNotNull()
-            .filter {
-                val isCoin = it.cryptoCurrency is CryptoCurrency.Coin
-                val isNotSameAddress = it.address != senderAddress
-                val isNotBlankAddress = it.address.isNotBlank()
+            .filter { destinationWallet ->
+                val isCoin = destinationWallet.cryptoCurrency is CryptoCurrency.Coin
+                val isNotSameAddress = destinationWallet.address != senderAddress
+                val isNotBlankAddress = destinationWallet.address.isNotBlank()
 
                 isNotBlankAddress && isCoin && (isNotSameAddress || isSelfSendAvailable)
             }

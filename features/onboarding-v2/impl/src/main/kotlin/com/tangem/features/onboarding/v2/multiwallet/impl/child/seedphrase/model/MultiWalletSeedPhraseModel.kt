@@ -5,6 +5,8 @@ import arrow.core.getOrElse
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.event.OnboardingAnalyticsEvent
 import com.tangem.core.decompose.di.GlobalUiMessageSender
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -60,6 +62,7 @@ internal class MultiWalletSeedPhraseModel @Inject constructor(
     private val isWalletAlreadySavedUseCase: IsWalletAlreadySavedUseCase,
     private val coldUserWalletBuilderFactory: ColdUserWalletBuilder.Factory,
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
 
     private val params = paramsContainer.require<MultiWalletChildParams>()
@@ -108,6 +111,7 @@ internal class MultiWalletSeedPhraseModel @Inject constructor(
         updateUiState = { block -> updateUiStateSpecific(block) },
         readyToImport = { ready -> state.update { it.copy(readyToImport = ready) } },
         importWallet = { mnemonic, passphrase ->
+            analyticsEventHandler.send(OnboardingAnalyticsEvent.SeedPhrase.ButtonImport())
             importWallet(
                 mnemonic = mnemonic,
                 passphrase = passphrase,
@@ -149,6 +153,7 @@ internal class MultiWalletSeedPhraseModel @Inject constructor(
     private fun getInitialUIState(): MultiWalletSeedPhraseUM {
         return MultiWalletSeedPhraseUM.Start(
             onImportSeedPhraseClicked = {
+                analyticsEventHandler.send(OnboardingAnalyticsEvent.SeedPhrase.ButtonImportWallet())
                 openImportSeedPhrase()
             },
             onGenerateSeedPhraseClicked = {
@@ -177,6 +182,7 @@ internal class MultiWalletSeedPhraseModel @Inject constructor(
     }
 
     private fun openImportSeedPhrase() {
+        analyticsEventHandler.send(OnboardingAnalyticsEvent.SeedPhrase.ImportSeedPhraseScreenOpened())
         _uiState.value = importSeedPhraseUiStateBuilder.getState()
     }
 
@@ -232,6 +238,11 @@ internal class MultiWalletSeedPhraseModel @Inject constructor(
                                     OnboardingEvent.CreateWallet.WalletCreationType.SeedImport
                                 },
                                 seedPhraseLength = mnemonic.mnemonicComponents.size,
+                                passPhraseState = if (passphrase.isNullOrBlank()) {
+                                    AnalyticsParam.EmptyFull.Empty
+                                } else {
+                                    AnalyticsParam.EmptyFull.Full
+                                },
                             ),
                         )
 
