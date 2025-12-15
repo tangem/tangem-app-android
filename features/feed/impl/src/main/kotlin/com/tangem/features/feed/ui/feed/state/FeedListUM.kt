@@ -14,7 +14,7 @@ internal data class FeedListUM(
     val currentDate: String,
     val searchBar: SearchBarUM,
     val feedListCallbacks: FeedListCallbacks,
-    val news: ImmutableList<ArticleConfigUM>,
+    val news: NewsUM,
     val trendingArticle: ArticleConfigUM?,
     val marketChartConfig: MarketChartConfig,
 )
@@ -27,6 +27,12 @@ internal data class FeedListCallbacks(
     val onMarketItemClick: (MarketsListItemUM) -> Unit,
     val onSortTypeClick: (SortByTypeUM) -> Unit,
 )
+
+@Immutable
+internal sealed interface NewsUM {
+    data object Loading : NewsUM
+    data class Content(val content: ImmutableList<ArticleConfigUM>) : NewsUM
+}
 
 internal data class MarketChartConfig(
     val marketCharts: ImmutableMap<SortByTypeUM, MarketChartUM>,
@@ -49,7 +55,7 @@ internal sealed interface MarketChartUM {
     data class LoadingError(val onRetryClicked: () -> Unit) : MarketChartUM
 }
 
-data class SortChartConfigUM(
+internal data class SortChartConfigUM(
     val sortByType: SortByTypeUM,
     val isSelected: Boolean,
 )

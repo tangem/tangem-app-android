@@ -4,6 +4,7 @@ import androidx.compose.runtime.Stable
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -68,6 +69,7 @@ internal class MultiWalletCreateWalletModel @Inject constructor(
             },
             showOtherOptionsButton = params.parentParams.withSeedPhraseFlow,
             onOtherOptionsClick = {
+                analyticsHandler.send(OnboardingEvent.CreateWallet.ButtonOtherOptions())
                 modelScope.launch {
                     onDone.emit(Step.SeedPhrase)
                 }
@@ -104,7 +106,11 @@ internal class MultiWalletCreateWalletModel @Inject constructor(
 
                     cardRepository.startCardActivation(cardId = result.data.card.cardId)
 
-                    analyticsHandler.send(OnboardingEvent.CreateWallet.WalletCreatedSuccessfully())
+                    analyticsHandler.send(
+                        event = OnboardingEvent.CreateWallet.WalletCreatedSuccessfully(
+                            passPhraseState = AnalyticsParam.EmptyFull.Empty,
+                        ),
+                    )
 
                     val cardDoesNotSupportBackup = result.data.card.settings.isBackupAllowed.not()
                     when {

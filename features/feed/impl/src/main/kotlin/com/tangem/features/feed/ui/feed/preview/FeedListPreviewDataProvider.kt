@@ -1,16 +1,15 @@
 package com.tangem.features.feed.ui.feed.preview
 
 import com.tangem.common.ui.charts.state.MarketChartRawData
-import com.tangem.core.ui.components.fields.entity.SearchBarUM
-import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.common.ui.news.ArticleConfigUM
+import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.components.label.entity.LabelLeadingContentUM
 import com.tangem.core.ui.components.label.entity.LabelUM
+import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.features.feed.impl.R
 import com.tangem.features.feed.ui.feed.state.*
 import com.tangem.features.feed.ui.market.state.MarketsListItemUM
 import com.tangem.features.feed.ui.market.state.SortByTypeUM
@@ -39,7 +38,7 @@ internal object FeedListPreviewDataProvider {
                 onMarketItemClick = {},
                 onSortTypeClick = {},
             ),
-            news = articles.filter { it.isTrending.not() }.toImmutableList(),
+            news = NewsUM.Content(articles.filter { it.isTrending.not() }.toImmutableList()),
             trendingArticle = articles.first { it.isTrending },
             marketChartConfig = MarketChartConfig(
                 marketCharts = createMarketCharts(marketItems, includeErrorState = false),
@@ -165,7 +164,7 @@ internal object FeedListPreviewDataProvider {
             LabelUM(
                 text = TextReference.Str("BTC"),
                 leadingContent = LabelLeadingContentUM.Token(
-                    icon = R.drawable.img_btc_22,
+                    iconUrl = "https://s3.eu-central-1.amazonaws.com/tangem.api/coins/large/euro-coin.png",
                 ),
             ),
             LabelUM(TextReference.Str("Regulation")),

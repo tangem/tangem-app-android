@@ -39,14 +39,16 @@ internal class EthereumCustomFeeConverter(
 
     override fun convert(value: Fee.Ethereum): ImmutableList<CustomFeeFieldUM> {
         return buildList {
-            convertFeeValue(value).let(::add)
+            add(convertFeeValue(value))
 
-            when (value) {
-                is Fee.Ethereum.EIP1559 -> eipFeeConverter.convert(value)
-                is Fee.Ethereum.Legacy -> legacyFeeConverter.convert(value)
-            }.let(::addAll)
+            addAll(
+                when (value) {
+                    is Fee.Ethereum.EIP1559 -> eipFeeConverter.convert(value)
+                    is Fee.Ethereum.Legacy -> legacyFeeConverter.convert(value)
+                },
+            )
 
-            convertGasLimitValue(value).let(::add)
+            add(convertGasLimitValue(value))
         }
             .toImmutableList()
     }
@@ -72,8 +74,18 @@ internal class EthereumCustomFeeConverter(
         value: String,
     ): ImmutableList<CustomFeeFieldUM> {
         return when (feeValue) {
-            is Fee.Ethereum.EIP1559 -> eipFeeConverter.onValueChange(feeValue, customValues, index, value)
-            is Fee.Ethereum.Legacy -> legacyFeeConverter.onValueChange(feeValue, customValues, index, value)
+            is Fee.Ethereum.EIP1559 -> eipFeeConverter.onValueChange(
+                feeValue = feeValue,
+                customValues = customValues,
+                index = index,
+                value = value,
+            )
+            is Fee.Ethereum.Legacy -> legacyFeeConverter.onValueChange(
+                feeValue = feeValue,
+                customValues = customValues,
+                index = index,
+                value = value,
+            )
         }
     }
 

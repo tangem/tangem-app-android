@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.CardColors
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -17,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.block.BlockCard
+import com.tangem.core.ui.components.block.TangemBlockCardColors
 import com.tangem.core.ui.components.label.Label
 import com.tangem.core.ui.components.label.entity.LabelUM
 import com.tangem.core.ui.extensions.TextReference
@@ -30,10 +32,16 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toImmutableSet
 
 @Composable
-fun ArticleCard(articleConfigUM: ArticleConfigUM, onArticleClick: () -> Unit, modifier: Modifier = Modifier) {
+fun ArticleCard(
+    articleConfigUM: ArticleConfigUM,
+    onArticleClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    colors: CardColors = TangemBlockCardColors,
+) {
     BlockCard(
         modifier = modifier,
         onClick = onArticleClick,
+        colors = colors,
     ) {
         if (articleConfigUM.isTrending) {
             TrendingArticle(articleConfigUM = articleConfigUM)
@@ -167,7 +175,6 @@ private fun ArticleCardsPreview() {
         LabelUM(TextReference.Str("BTC")),
         LabelUM(TextReference.Str("Supply")),
         LabelUM(TextReference.Str("Demand")),
-        LabelUM(TextReference.Str("Best rate")),
         LabelUM(TextReference.Str("Breaking news")),
     ).toImmutableSet()
 

@@ -171,7 +171,11 @@ internal class OnboardingTwinModel @Inject constructor(
                         }
                     }
 
-                    analyticsEventHandler.send(OnboardingEvent.CreateWallet.WalletCreatedSuccessfully())
+                    analyticsEventHandler.send(
+                        event = OnboardingEvent.CreateWallet.WalletCreatedSuccessfully(
+                            passPhraseState = AnalyticsParam.EmptyFull.Empty,
+                        ),
+                    )
 
                     update<OnboardingTwinUM.ScanCard> {
                         it.copy(

@@ -1,7 +1,8 @@
 package com.tangem.features.onboarding.v2.note.impl.child.create.model
 
 import com.tangem.common.CompletionResult
-import com.tangem.core.analytics.Analytics
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -22,6 +23,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 @ModelScoped
 internal class OnboardingNoteCreateWalletModel @Inject constructor(
     paramsContainer: ParamsContainer,
@@ -30,6 +32,7 @@ internal class OnboardingNoteCreateWalletModel @Inject constructor(
     private val cardRepository: CardRepository,
     private val coldUserWalletBuilderFactory: ColdUserWalletBuilder.Factory,
     private val saveWalletUseCase: SaveWalletUseCase,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
 
     private val params = paramsContainer.require<OnboardingNoteCreateWalletComponent.Params>()
@@ -41,11 +44,11 @@ internal class OnboardingNoteCreateWalletModel @Inject constructor(
     )
 
     init {
-        Analytics.send(OnboardingEvent.CreateWallet.ScreenOpened())
+        analyticsEventHandler.send(OnboardingEvent.CreateWallet.ScreenOpened())
         modelScope.launch {
             val scanResponse = params.childParams.commonState.value.scanResponse ?: return@launch
             if (!cardRepository.isActivationStarted(scanResponse.card.cardId)) {
-                Analytics.send(OnboardingEvent.Started())
+                analyticsEventHandler.send(OnboardingEvent.Started())
             }
         }
         observeArtwork()
@@ -62,7 +65,11 @@ internal class OnboardingNoteCreateWalletModel @Inject constructor(
             val result = tangemSdkManager.createProductWallet(scanResponse)
             when (result) {
                 is CompletionResult.Success -> {
-                    Analytics.send(OnboardingEvent.CreateWallet.WalletCreatedSuccessfully())
+                    analyticsEventHandler.send(
+                        event = OnboardingEvent.CreateWallet.WalletCreatedSuccessfully(
+                            passPhraseState = AnalyticsParam.EmptyFull.Empty,
+                        ),
+                    )
                     createWalletAndNavigateBackWithDone(scanResponse.copy(card = result.data.card))
                 }
                 is CompletionResult.Failure -> _uiState.update {
