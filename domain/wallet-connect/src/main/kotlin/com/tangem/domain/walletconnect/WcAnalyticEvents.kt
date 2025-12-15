@@ -278,3 +278,22 @@ fun CheckDAppResult.toAnalyticVerificationStatus(): String = when (this) {
     UNSAFE -> DAppVerificationStatus.Risky
     FAILED_TO_VERIFY -> DAppVerificationStatus.Unknown
 }.status
+
+sealed class WcAnalyticAccountEvents(
+    event: String,
+    params: Map<String, String> = emptyMap(),
+) : AnalyticsEvent(category = WC_CATEGORY_ACCOUNT_NAME, event = event, params = params) {
+
+    data class PairButtonConnect(
+        private val accountDerivation: Int,
+    ) : WcAnalyticAccountEvents(
+        event = "Button - Connect",
+        params = mapOf(
+            "Account Derivation" to accountDerivation.toString(),
+        ),
+    )
+
+    companion object {
+        const val WC_CATEGORY_ACCOUNT_NAME = "WalletConnect - Account"
+    }
+}
