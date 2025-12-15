@@ -416,7 +416,11 @@ internal class SendConfirmModel @Inject constructor(
                 updateTransactionStatus(txData)
                 addTokenToWalletIfNeeded()
                 sendBalanceUpdater.scheduleUpdates()
-                sendAnalyticHelper.sendSuccessAnalytics(cryptoCurrency, uiState.value)
+                sendAnalyticHelper.sendSuccessAnalytics(
+                    cryptoCurrency = cryptoCurrency,
+                    sendUM = uiState.value,
+                    account = params.accountFlow.value,
+                )
                 params.callback.onResult(uiState.value)
                 params.onSendTransaction()
             },
