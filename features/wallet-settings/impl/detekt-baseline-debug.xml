@@ -1,0 +1,9 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>NonBooleanPropertyPrefixedWithIs:AccountItemsDelegate.kt$AccountItemsDelegate$private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase</ID>
+    <ID>NonBooleanPropertyPrefixedWithIs:WalletSettingsModel.kt$WalletSettingsModel$private val isDemoCardUseCase: IsDemoCardUseCase</ID>
+    <ID>NonBooleanPropertyPrefixedWithIs:WalletSettingsModel.kt$WalletSettingsModel$private val isUpgradeWalletNotificationEnabledUseCase: IsUpgradeWalletNotificationEnabledUseCase</ID>
+  </CurrentIssues>
+</SmellBaseline>

@@ -1,11 +1,11 @@
 package com.tangem.core.ui.components.dropdownmenu
 
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
+import com.tangem.core.ui.extensions.ColorReference
 import com.tangem.core.ui.extensions.TextReference
 
 data class TangemDropdownMenuItem(
     val title: TextReference,
-    val textColorProvider: @Composable () -> Color,
+    val textColor: ColorReference,
     val onClick: () -> Unit,
+    val isEnabled: Boolean = true,
 )

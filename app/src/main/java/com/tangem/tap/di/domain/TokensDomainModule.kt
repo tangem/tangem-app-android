@@ -20,10 +20,7 @@ import com.tangem.domain.staking.single.SingleYieldBalanceSupplier
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.operations.BaseCurrencyStatusOperations
 import com.tangem.domain.tokens.operations.CachedCurrenciesStatusesOperations
-import com.tangem.domain.tokens.repository.CurrenciesRepository
-import com.tangem.domain.tokens.repository.CurrencyChecksRepository
-import com.tangem.domain.tokens.repository.TokenReceiveWarningsViewedRepository
-import com.tangem.domain.tokens.repository.YieldSupplyWarningsViewedRepository
+import com.tangem.domain.tokens.repository.*
 import com.tangem.domain.tokens.wallet.WalletBalanceFetcher
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.tap.domain.tokens.DefaultTokensFeatureToggles
@@ -55,24 +52,6 @@ internal object TokensDomainModule {
             multiQuoteStatusFetcher = multiQuoteStatusFetcher,
             singleYieldBalanceFetcher = singleYieldBalanceFetcher,
             multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
-            stakingIdFactory = stakingIdFactory,
-        )
-    }
-
-    @Provides
-    @Singleton
-    fun provideFetchTokenListUseCase(
-        currenciesRepository: CurrenciesRepository,
-        multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
-        multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
-        multiYieldBalanceFetcher: MultiYieldBalanceFetcher,
-        stakingIdFactory: StakingIdFactory,
-    ): FetchTokenListUseCase {
-        return FetchTokenListUseCase(
-            currenciesRepository = currenciesRepository,
-            multiNetworkStatusFetcher = multiNetworkStatusFetcher,
-            multiQuoteStatusFetcher = multiQuoteStatusFetcher,
-            multiYieldBalanceFetcher = multiYieldBalanceFetcher,
             stakingIdFactory = stakingIdFactory,
         )
     }
@@ -179,24 +158,6 @@ internal object TokensDomainModule {
             multiQuoteStatusFetcher = multiQuoteStatusFetcher,
             singleYieldBalanceFetcher = singleYieldBalanceFetcher,
             multiWalletCryptoCurrenciesSupplier = multiWalletCryptoCurrenciesSupplier,
-            stakingIdFactory = stakingIdFactory,
-        )
-    }
-
-    @Provides
-    @Singleton
-    fun provideFetchCardTokenListUseCase(
-        currenciesRepository: CurrenciesRepository,
-        multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
-        multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
-        multiYieldBalanceFetcher: MultiYieldBalanceFetcher,
-        stakingIdFactory: StakingIdFactory,
-    ): FetchCardTokenListUseCase {
-        return FetchCardTokenListUseCase(
-            currenciesRepository = currenciesRepository,
-            multiNetworkStatusFetcher = multiNetworkStatusFetcher,
-            multiQuoteStatusFetcher = multiQuoteStatusFetcher,
-            multiYieldBalanceFetcher = multiYieldBalanceFetcher,
             stakingIdFactory = stakingIdFactory,
         )
     }

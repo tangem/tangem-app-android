@@ -8,6 +8,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.block.information.GridItems
 import com.tangem.core.ui.components.block.information.InformationBlock
@@ -51,12 +52,16 @@ internal fun InsightsBlock(state: InsightsUM, modifier: Modifier = Modifier) {
                     currentInterval = it
                     state.onIntervalChanged(it)
                 },
+                modifier = Modifier.width(IntrinsicSize.Min),
             ) {
                 Box(
                     Modifier
                         .fillMaxSize()
                         .align(Alignment.Center)
-                        .padding(vertical = TangemTheme.dimens.spacing4),
+                        .padding(
+                            horizontal = 14.dp,
+                            vertical = 4.dp,
+                        ),
                 ) {
                     Text(
                         modifier = Modifier.align(Alignment.Center),

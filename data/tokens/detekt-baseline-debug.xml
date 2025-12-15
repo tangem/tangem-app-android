@@ -1,0 +1,10 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>MultilineLambdaItParameter:CustomTokensMerger.kt$CustomTokensMerger${ Timber.e(it, "Unable to fetch token:\n$token") null }</ID>
+    <ID>NullableToStringCall:AccountListCryptoCurrenciesFetcher.kt$AccountListCryptoCurrenciesFetcher$${this::class.simpleName}</ID>
+    <ID>NullableToStringCall:DefaultMultiWalletCryptoCurrenciesFetcher.kt$DefaultMultiWalletCryptoCurrenciesFetcher$${this::class.simpleName}</ID>
+    <ID>UseOrEmpty:DefaultYieldSupplyWarningsViewedRepository.kt$DefaultYieldSupplyWarningsViewedRepository$appPreferencesStore.getObjectSet&lt;String&gt;(PreferencesKeys.YIELD_SUPPLY_WARNINGS_STATES_KEY).firstOrNull() ?: emptySet()</ID>
+  </CurrentIssues>
+</SmellBaseline>

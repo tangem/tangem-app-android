@@ -302,7 +302,9 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
     }
 
     private fun createAppThemeModeFlow(): SharedFlow<AppThemeMode> {
-        val tangemApplication = application as TangemApplication
+        val tangemApplication = requireNotNull(application as? TangemApplication) {
+            "Application is null"
+        }
 
         return tangemApplication.getAppThemeModeUseCase()
             .filterNotNull()

@@ -16,6 +16,8 @@ import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.R
+import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.features.hotwallet.manualbackup.completed.entity.ManualBackupCompletedUM
 
@@ -43,7 +45,7 @@ internal fun ManualBackupCompletedContent(state: ManualBackupCompletedUM, modifi
                     top = 20.dp,
                     end = 48.dp,
                 ),
-            text = stringResourceSafe(R.string.backup_complete_title),
+            text = state.title.resolveReference(),
             style = TangemTheme.typography.h2,
             color = TangemTheme.colors.text.primary1,
             textAlign = TextAlign.Center,
@@ -64,9 +66,7 @@ internal fun ManualBackupCompletedContent(state: ManualBackupCompletedUM, modifi
         Spacer(modifier = Modifier.weight(2f))
         PrimaryButton(
             modifier = Modifier.fillMaxWidth(),
-            text = stringResourceSafe(R.string.common_continue),
-            showProgress = false,
-            enabled = true,
+            text = state.continueButtonText.resolveReference(),
             onClick = state.onContinueClick,
         )
     }
@@ -75,11 +75,32 @@ internal fun ManualBackupCompletedContent(state: ManualBackupCompletedUM, modifi
 @Preview(showBackground = true, widthDp = 360)
 @Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun PreviewManualBackupCompletedContent() {
+private fun PreviewManualBackupCompletedContentBackup() {
     TangemThemePreview {
         ManualBackupCompletedContent(
             state = ManualBackupCompletedUM(
-                onContinueClick = {},
+                isLoading = false,
+                title = resourceReference(R.string.backup_complete_title),
+                continueButtonText = resourceReference(R.string.common_finish),
+                description = resourceReference(R.string.backup_complete_description),
+                onContinueClick = { },
+            ),
+        )
+    }
+}
+
+@Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun PreviewManualBackupCompletedContentImport() {
+    TangemThemePreview {
+        ManualBackupCompletedContent(
+            state = ManualBackupCompletedUM(
+                isLoading = false,
+                title = resourceReference(R.string.wallet_import_success_title),
+                continueButtonText = resourceReference(R.string.common_continue),
+                description = resourceReference(R.string.backup_complete_description),
+                onContinueClick = { },
             ),
         )
     }

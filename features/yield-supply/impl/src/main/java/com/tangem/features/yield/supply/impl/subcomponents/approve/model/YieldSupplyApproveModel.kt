@@ -144,7 +144,7 @@ internal class YieldSupplyApproveModel @Inject constructor(
                     )
                     yieldSupplyAlertFactory.getSendTransactionErrorState(
                         error = error,
-                        popBack = params.callback::onBackClick,
+                        popBack = params.callback::onDismissClick,
                         onFailedTxEmailClick = { errorMessage ->
                             modelScope.launch(dispatchers.default) {
                                 yieldSupplyAlertFactory.onFailedTxEmailClick(
