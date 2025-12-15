@@ -20,6 +20,8 @@ internal interface RoutingComponent : ComposableContentComponent {
         data class ComposableComponent(
             val component: ComposableContentComponent,
         ) : Child()
+
+        data object DummyComponent : Child()
     }
 
     interface Factory {

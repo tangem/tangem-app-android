@@ -3,6 +3,7 @@ package com.tangem.domain.wallets.extension
 import com.tangem.blockchain.blockchains.cardano.CardanoUtils
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.crypto.hdWallet.DerivationPath
+import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.card.common.util.hasDerivation
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.config.curvesConfig
@@ -26,3 +27,16 @@ fun UserWallet.hasDerivation(blockchain: Blockchain, derivationPath: String): Bo
         }
     }
 }
+
+/**
+ * Check if accounts are supported for the [UserWallet]
+ */
+val UserWallet.isAccountsSupported
+    get() = when (this) {
+        is UserWallet.Hot -> true
+        is UserWallet.Cold -> {
+            with(this.cardTypesResolver) {
+                isMultiwalletAllowed() && !isWhiteWallet()
+            }
+        }
+    }

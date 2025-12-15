@@ -92,12 +92,14 @@ internal class SwapNotificationsFactory(
         return updatedNotifications.toPersistentList()
     }
 
+    @Suppress("LongParameterList")
     fun getConfirmationStateNotifications(
         quoteModel: SwapState.QuotesLoadedState,
         fromToken: CryptoCurrency,
         feeCryptoCurrencyStatus: CryptoCurrencyStatus?,
         selectedFeeType: FeeType,
         providerName: String,
+        hideFee: Boolean,
     ): ImmutableList<NotificationUM> {
         val warnings = buildList {
             maybeAddRentExemptionError(quoteModel)
@@ -105,7 +107,7 @@ internal class SwapNotificationsFactory(
             maybeAddNeedReserveToCreateAccountWarning(quoteModel)
             maybeAddPermissionNeededWarning(quoteModel, fromToken, providerName)
             maybeAddNetworkFeeCoverageWarning(quoteModel, selectedFeeType)
-            maybeAddUnableCoverFeeWarning(quoteModel, fromToken)
+            maybeAddUnableCoverFeeWarning(quoteModel, fromToken, hideFee)
             maybeAddTransactionInProgressWarning(quoteModel)
         }
         return warnings.toPersistentList()
@@ -284,7 +286,9 @@ internal class SwapNotificationsFactory(
     private fun MutableList<NotificationUM>.maybeAddUnableCoverFeeWarning(
         quoteModel: SwapState.QuotesLoadedState,
         fromToken: CryptoCurrency,
+        hideFee: Boolean,
     ) {
+        if (hideFee) return
         val feeEnoughState = quoteModel.preparedSwapConfigState.feeState as? SwapFeeState.NotEnough ?: return
         val needShowCoverWarning = quoteModel.preparedSwapConfigState.isBalanceEnough &&
             quoteModel.permissionState !is PermissionDataState.PermissionLoading &&
