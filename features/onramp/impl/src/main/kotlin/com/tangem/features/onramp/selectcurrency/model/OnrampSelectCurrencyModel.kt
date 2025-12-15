@@ -46,13 +46,13 @@ internal class OnrampSelectCurrencyModel @Inject constructor(
     paramsContainer: ParamsContainer,
 ) : Model() {
 
-    val state: StateFlow<CurrenciesListUM> get() = controller.state
-
-    private val params: SelectCurrencyComponent.Params = paramsContainer.require()
     private val controller = CurrencyListController(
         currencySearchBarUM = createSearchBarUM(),
         loadingSections = loadingSections,
     )
+
+    val state: StateFlow<CurrenciesListUM> get() = controller.state
+    private val params: SelectCurrencyComponent.Params = paramsContainer.require()
 
     init {
         updateCurrenciesList()

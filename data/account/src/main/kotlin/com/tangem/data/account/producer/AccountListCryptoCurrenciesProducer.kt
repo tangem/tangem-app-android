@@ -3,9 +3,9 @@ package com.tangem.data.account.producer
 import arrow.core.Option
 import arrow.core.some
 import com.tangem.data.account.store.AccountsResponseStoreFactory
-import com.tangem.data.account.utils.toUserTokensResponse
 import com.tangem.data.common.currency.ResponseCryptoCurrenciesFactory
 import com.tangem.datasource.local.userwallet.UserWalletsStore
+import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesProducer
@@ -36,11 +36,12 @@ internal class AccountListCryptoCurrenciesProducer @AssistedInject constructor(
 
     override val fallback: Option<Set<CryptoCurrency>> = emptySet<CryptoCurrency>().some()
 
+    @Suppress("NullableToStringCall")
     override fun produce(): Flow<Set<CryptoCurrency>> {
         val userWallet = userWalletsStore.getSyncStrict(key = params.userWalletId)
 
         if (!userWallet.isMultiCurrency) {
-            error("${this::class.simpleName} supports only multi-currency wallet")
+            error("${this::class.simpleName ?: this::class.toString()} supports only multi-currency wallet")
         }
 
         return accountsResponseStoreFactory.create(userWalletId = userWallet.walletId).data
@@ -48,12 +49,19 @@ internal class AccountListCryptoCurrenciesProducer @AssistedInject constructor(
             .map { response ->
                 if (response == null) return@map emptySet()
 
-                responseCryptoCurrenciesFactory.createCurrencies(
-                    response = response.toUserTokensResponse(),
-                    userWallet = userWallet,
-                ).toSet()
+                response.accounts.flatMapTo(hashSetOf()) { accountDTO ->
+                    val accountIndex = DerivationIndex(accountDTO.derivationIndex).getOrNull()
+                        ?: return@map emptySet()
+
+                    responseCryptoCurrenciesFactory.createCurrencies(
+                        tokens = accountDTO.tokens.orEmpty(),
+                        userWallet = userWallet,
+                        accountIndex = accountIndex,
+                    )
+                }
             }
             .onEmpty { emit(emptySet()) }
+            .distinctUntilChanged()
             .flowOn(dispatchers.default)
     }
 

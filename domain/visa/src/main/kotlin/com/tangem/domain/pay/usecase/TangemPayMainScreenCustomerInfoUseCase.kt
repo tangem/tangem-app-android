@@ -1,7 +1,17 @@
 package com.tangem.domain.pay.usecase
 
-import com.tangem.domain.pay.model.MainScreenCustomerInfo
+import arrow.core.Either
+import arrow.core.left
+import arrow.core.right
+import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.model.*
+import com.tangem.domain.pay.repository.CustomerOrderRepository
 import com.tangem.domain.pay.repository.OnboardingRepository
+import com.tangem.domain.visa.error.VisaApiError
+import kotlinx.coroutines.flow.*
+import timber.log.Timber
+
+private const val TAG = "TangemPayMainScreenCustomerInfoUseCase"
 
 /**
  * Returns tangem pay customer info for the main screen banner
@@ -9,7 +19,130 @@ import com.tangem.domain.pay.repository.OnboardingRepository
  */
 class TangemPayMainScreenCustomerInfoUseCase(
     private val repository: OnboardingRepository,
+    private val customerOrderRepository: CustomerOrderRepository,
+    private val tangemPayOnboardingRepository: OnboardingRepository,
 ) {
 
-    suspend operator fun invoke(): MainScreenCustomerInfo? = repository.getMainScreenCustomerInfo().getOrNull()
+    val state: StateFlow<Map<UserWalletId, Either<TangemPayCustomerInfoError, MainCustomerInfoContentState>>>
+        field = MutableStateFlow(value = mapOf())
+
+    suspend fun fetch(userWalletId: UserWalletId) {
+        Timber.tag(TAG).i("fetch: $userWalletId")
+        repository.checkCustomerWallet(userWalletId)
+            .fold(
+                ifLeft = { error ->
+                    Timber.tag(TAG).e("Failed checkCustomerWallet for $userWalletId: ${error.javaClass.simpleName}")
+                    updateState(userWalletId, TangemPayCustomerInfoError.UnknownError.left())
+                },
+                ifRight = { hasTangemPay ->
+                    Timber.tag(TAG).i("checkCustomerWallet for $userWalletId: $hasTangemPay")
+                    if (hasTangemPay) {
+                        val oldResult = state.value[userWalletId]
+                        if (oldResult == null) {
+                            updateState(userWalletId, MainCustomerInfoContentState.Loading.right())
+                        }
+
+                        val result = proceedWithPaeraCustomerResult(userWalletId)
+                            .map(MainCustomerInfoContentState::Content)
+                        updateState(userWalletId, result)
+                    } else {
+                        // ignore if there's no TangemPay
+                        updateState(userWalletId, TangemPayCustomerInfoError.UnknownError.left())
+                    }
+                },
+            )
+    }
+
+    operator fun invoke(
+        userWalletId: UserWalletId,
+    ): Flow<Either<TangemPayCustomerInfoError, MainCustomerInfoContentState>> {
+        return state.mapNotNull { map -> map[userWalletId] }
+    }
+
+    private fun updateState(
+        userWalletId: UserWalletId,
+        either: Either<TangemPayCustomerInfoError, MainCustomerInfoContentState>,
+    ) {
+        state.update { currentMap ->
+            currentMap.toMutableMap().apply { this[userWalletId] = either }
+        }
+    }
+
+    private suspend fun proceedWithPaeraCustomerResult(
+        userWalletId: UserWalletId,
+    ): Either<TangemPayCustomerInfoError, MainScreenCustomerInfo> {
+        if (!tangemPayOnboardingRepository.isTangemPayInitialDataProduced(userWalletId)) {
+            return TangemPayCustomerInfoError.RefreshNeededError.left()
+        }
+        val orderId = repository.getOrderId(userWalletId)
+        return if (orderId != null) {
+            proceedWithOrderId(userWalletId = userWalletId, orderId = orderId)
+        } else {
+            proceedWithoutOrder(userWalletId = userWalletId)
+        }
+    }
+
+    private suspend fun proceedWithoutOrder(
+        userWalletId: UserWalletId,
+    ): Either<TangemPayCustomerInfoError, MainScreenCustomerInfo> {
+        return repository.getCustomerInfo(userWalletId)
+            .mapLeft { error ->
+                Timber.tag(TAG).e("mapErrorForCustomer: $error")
+                error.mapErrorForCustomer()
+            }
+            .map { customerInfo ->
+                Timber.tag(TAG).i("customerInfo")
+                if (customerInfo.cardInfo == null && customerInfo.isKycApproved) {
+                    // If order id wasn't saved -> start order creation and get customer info
+                    repository.createOrder(userWalletId)
+                }
+                MainScreenCustomerInfo(info = customerInfo, orderStatus = OrderStatus.UNKNOWN)
+            }
+    }
+
+    private suspend fun proceedWithOrderId(
+        userWalletId: UserWalletId,
+        orderId: String,
+    ): Either<TangemPayCustomerInfoError, MainScreenCustomerInfo> {
+        return customerOrderRepository.getOrderStatus(userWalletId, orderId = orderId)
+            .fold(
+                ifLeft = { error ->
+                    error.mapErrorForCustomer().left()
+                },
+                ifRight = { orderStatus ->
+                    when (orderStatus) {
+                        // Kyc is passed and user waits for order creation -> no need to get customer info
+                        OrderStatus.NEW,
+                        OrderStatus.PROCESSING,
+                        -> MainScreenCustomerInfo(
+                            info = CustomerInfo(productInstance = null, isKycApproved = true, cardInfo = null),
+                            orderStatus = orderStatus,
+                        ).right()
+
+                        // Order was created/cancelled -> clear order id and get customer info
+                        OrderStatus.COMPLETED,
+                        OrderStatus.CANCELED,
+                        OrderStatus.UNKNOWN,
+                        -> {
+                            repository.clearOrderId(userWalletId)
+                            // If order was cancelled -> start order creation
+                            if (orderStatus == OrderStatus.CANCELED) repository.createOrder(userWalletId)
+                            repository.getCustomerInfo(userWalletId = userWalletId)
+                                .mapLeft { it.mapErrorForCustomer() }
+                                .map { customerInfo ->
+                                    MainScreenCustomerInfo(info = customerInfo, orderStatus = orderStatus)
+                                }
+                        }
+                    }
+                },
+            )
+    }
+
+    private fun VisaApiError.mapErrorForCustomer(): TangemPayCustomerInfoError {
+        return when (this) {
+            is VisaApiError.RefreshTokenExpired -> TangemPayCustomerInfoError.RefreshNeededError
+            is VisaApiError.NotPaeraCustomer -> TangemPayCustomerInfoError.UnknownError
+            else -> TangemPayCustomerInfoError.UnavailableError
+        }
+    }
 }
