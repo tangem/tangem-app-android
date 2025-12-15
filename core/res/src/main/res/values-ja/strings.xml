@@ -848,8 +848,8 @@
   <string name="notification_black_friday_text">ウォレットごとに$10相当のBTCをプレゼント\nお早めに！</string>
   <string name="notification_black_friday_title">ブラックフライデー：最大30% オフ</string>
   <string name="notification_one_plus_one_button">今すぐチェック</string>
-  <string name="notification_one_plus_one_text">理想のTangemセットを揃えよう。期間限定。</string>
-  <string name="notification_one_plus_one_title">1＋1：1つ購入で、2つ目が50%オフ</string>
+  <string name="notification_one_plus_one_text">期間限定！</string>
+  <string name="notification_one_plus_one_title">1＋1：ウォレット1つ購入で、2つ目が50%オフ</string>
   <string name="notification_referral_promo_button">今すぐ参加</string>
   <string name="notification_referral_promo_text">コードを共有すると、販売ごとに5 USDTを獲得できます。お友達は10%割引になります。</string>
   <string name="notification_referral_promo_title">友達への紹介で報酬を獲得しよう！</string>
@@ -1391,7 +1391,7 @@
   <string name="tangem_pay_explore_transaction">取引を表示</string>
   <string name="tangem_pay_fee_subtitle">サービス手数料</string>
   <string name="tangem_pay_fee_title">手数料</string>
-  <string name="tangem_pay_freeze_card_alert_body">カードを紛失したり盗まれたりしても、資金を安全に保てます。一時停止はいつでも解除できます。</string>
+  <string name="tangem_pay_freeze_card_alert_body">資金を安全に保管します。凍結はいつでも解除できます。</string>
   <string name="tangem_pay_freeze_card_alert_title">カードを一時停止しますか？</string>
   <string name="tangem_pay_freeze_card_failed">カードを凍結できませんでした。しばらくしてからもう一度お試しください。</string>
   <string name="tangem_pay_freeze_card_freeze">一時停止</string>
