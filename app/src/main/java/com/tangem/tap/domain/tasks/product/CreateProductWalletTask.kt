@@ -14,10 +14,11 @@ import com.tangem.common.map
 import com.tangem.crypto.bip39.Mnemonic
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.domain.card.CardTypesResolver
-import com.tangem.domain.wallets.derivations.DerivationStyleProvider
 import com.tangem.domain.card.common.TapWorkarounds.isTestCard
 import com.tangem.domain.card.configs.CardConfig
+import com.tangem.domain.demo.models.DemoConfig
 import com.tangem.domain.models.scan.CardDTO
+import com.tangem.domain.wallets.derivations.DerivationStyleProvider
 import com.tangem.operations.backup.PrimaryCard
 import com.tangem.operations.backup.StartPrimaryCardLinkingCommand
 import com.tangem.operations.derivation.DeriveMultipleWalletPublicKeysTask
@@ -60,7 +61,13 @@ class CreateProductWalletTask(
         val cardDto = CardDTO(card)
 
         val commandProcessor = when {
-            cardTypesResolver.isTangemNote() -> CreateWalletTangemNote(cardTypesResolver)
+            /**
+             * @workaround isDemoNoteAsMultiwallet
+             * There were produced 20k Note demo cards that should work like multiwallet (except Onboarding)
+             * for that reasons we've just added some specific checks for their BatchId
+             */
+            DemoConfig.isDemoNoteAsMultiwallet(card.cardId) || cardTypesResolver.isTangemNote() ->
+                CreateWalletTangemNote(cardTypesResolver)
             cardTypesResolver.isTangemTwins() ->
                 throw UnsupportedOperationException("Use the TwinCardsManager to create a wallet")
 
@@ -374,7 +381,7 @@ private class CreateWalletTangemWallet(
 
     private fun getBlockchains(cardId: String, card: CardDTO): List<Blockchain> {
         return when {
-            DemoHelper.isDemoCardId(cardId) -> DemoHelper.config.demoBlockchains.toList()
+            DemoHelper.isDemoCardId(cardId) -> DemoHelper.config.getDemoBlockchains(cardId).toList()
             card.isTestCard -> listOf(Blockchain.BitcoinTestnet, Blockchain.EthereumTestnet)
             else -> listOf(Blockchain.Bitcoin, Blockchain.Ethereum)
         }

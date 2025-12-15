@@ -5,11 +5,12 @@ import com.tangem.core.configtoggle.blockchain.ExcludedBlockchainsManager
 import org.jetbrains.annotations.TestOnly
 import javax.inject.Inject
 
+@Suppress("MemberNameEqualsClassName")
 class ExcludedBlockchains @Inject internal constructor(
     private val excludedBlockchainsManager: ExcludedBlockchainsManager,
 ) : Set<Blockchain> {
 
-    private val excludedBlockchains: Set<Blockchain> by lazy(mode = LazyThreadSafetyMode.NONE) {
+    private val excludedBlockchainsSet: Set<Blockchain> by lazy(mode = LazyThreadSafetyMode.NONE) {
         excludedBlockchainsManager.excludedBlockchainsIds.fold(mutableSetOf()) { acc, blockchainId ->
             val blockchain = Blockchain.fromId(blockchainId)
             acc.add(blockchain)
@@ -21,7 +22,7 @@ class ExcludedBlockchains @Inject internal constructor(
     }
 
     override val size: Int
-        get() = excludedBlockchains.size
+        get() = excludedBlockchainsSet.size
 
     @TestOnly
     constructor() : this(
@@ -31,11 +32,11 @@ class ExcludedBlockchains @Inject internal constructor(
         },
     )
 
-    override fun contains(element: Blockchain): Boolean = excludedBlockchains.contains(element)
+    override fun contains(element: Blockchain): Boolean = excludedBlockchainsSet.contains(element)
 
-    override fun containsAll(elements: Collection<Blockchain>): Boolean = excludedBlockchains.containsAll(elements)
+    override fun containsAll(elements: Collection<Blockchain>): Boolean = excludedBlockchainsSet.containsAll(elements)
 
-    override fun isEmpty(): Boolean = excludedBlockchains.isEmpty()
+    override fun isEmpty(): Boolean = excludedBlockchainsSet.isEmpty()
 
-    override fun iterator(): Iterator<Blockchain> = excludedBlockchains.iterator()
+    override fun iterator(): Iterator<Blockchain> = excludedBlockchainsSet.iterator()
 }

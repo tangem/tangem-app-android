@@ -16,14 +16,14 @@ import com.tangem.utils.extensions.mapNotNullValues
 
 sealed class WcAnalyticEvents(
     event: String,
-    params: Map<String, String> = mapOf(),
+    params: Map<String, String> = emptyMap(),
 ) : AnalyticsEvent(category = WC_CATEGORY_NAME, event = event, params = params) {
 
     object ScreenOpened : WcAnalyticEvents(event = "WC Screen Opened")
     class NewPairInitiated(source: WcPairRequest.Source) : WcAnalyticEvents(
         event = "Session Initiated",
         params = mapOf(
-            AnalyticsParam.Key.SOURCE to when (source) {
+            AnalyticsParam.SOURCE to when (source) {
                 WcPairRequest.Source.QR -> "QR"
                 WcPairRequest.Source.DEEPLINK -> "DeepLink"
                 WcPairRequest.Source.CLIPBOARD -> "Clipboard"
@@ -57,8 +57,8 @@ sealed class WcAnalyticEvents(
     ) : WcAnalyticEvents(
         event = "Session Failed",
         params = mapOf(
-            AnalyticsParam.Key.ERROR_CODE to errorCode,
-            AnalyticsParam.Key.ERROR_DESCRIPTION to errorMessage,
+            AnalyticsParam.ERROR_CODE to errorCode,
+            AnalyticsParam.ERROR_DESCRIPTION to errorMessage,
         ),
     )
 
@@ -69,9 +69,9 @@ sealed class WcAnalyticEvents(
     ) : WcAnalyticEvents(
         event = "dApp Connected",
         params = mapOf(
-            AnalyticsParam.Key.DAPP_NAME to sessionProposal.dAppMetaData.name,
-            AnalyticsParam.Key.DAPP_URL to sessionProposal.dAppMetaData.url,
-            AnalyticsParam.Key.BLOCKCHAIN to sessionForApprove.network.joinToString(",") { it.name },
+            AnalyticsParam.DAPP_NAME to sessionProposal.dAppMetaData.name,
+            AnalyticsParam.DAPP_URL to sessionProposal.dAppMetaData.url,
+            AnalyticsParam.BLOCKCHAIN to sessionForApprove.network.joinToString(",") { it.name },
             DOMAIN_VERIFICATION to securityStatus.toAnalyticVerificationStatus(),
         ),
     )
@@ -82,16 +82,16 @@ sealed class WcAnalyticEvents(
     ) : WcAnalyticEvents(
         event = "dApp Connection Failed",
         params = mapOf(
-            AnalyticsParam.Key.ERROR_CODE to errorCode,
-            AnalyticsParam.Key.ERROR_DESCRIPTION to errorMessage,
+            AnalyticsParam.ERROR_CODE to errorCode,
+            AnalyticsParam.ERROR_DESCRIPTION to errorMessage,
         ),
     )
 
     class SessionDisconnected(dAppMetaData: WcAppMetaData) : WcAnalyticEvents(
         event = "dApp Disconnected",
         params = mapOf(
-            AnalyticsParam.Key.DAPP_NAME to dAppMetaData.name,
-            AnalyticsParam.Key.DAPP_URL to dAppMetaData.url,
+            AnalyticsParam.DAPP_NAME to dAppMetaData.name,
+            AnalyticsParam.DAPP_URL to dAppMetaData.url,
         ),
     )
 
@@ -101,10 +101,10 @@ sealed class WcAnalyticEvents(
     ) : WcAnalyticEvents(
         event = "Transaction Details Opened",
         params = mapOf(
-            AnalyticsParam.Key.DAPP_NAME to rawRequest.dAppMetaData.name,
-            AnalyticsParam.Key.DAPP_URL to rawRequest.dAppMetaData.url,
-            AnalyticsParam.Key.METHOD_NAME to rawRequest.request.method,
-            AnalyticsParam.Key.BLOCKCHAIN to network.name,
+            AnalyticsParam.DAPP_NAME to rawRequest.dAppMetaData.name,
+            AnalyticsParam.DAPP_URL to rawRequest.dAppMetaData.url,
+            AnalyticsParam.METHOD_NAME to rawRequest.request.method,
+            AnalyticsParam.BLOCKCHAIN to network.name,
         ),
     )
 
@@ -116,12 +116,12 @@ sealed class WcAnalyticEvents(
     ) : WcAnalyticEvents(
         event = "Signature Request Received",
         params = mapOf(
-            AnalyticsParam.Key.DAPP_NAME to rawRequest.dAppMetaData.name,
-            AnalyticsParam.Key.DAPP_URL to rawRequest.dAppMetaData.url,
-            AnalyticsParam.Key.METHOD_NAME to rawRequest.request.method,
-            AnalyticsParam.Key.BLOCKCHAIN to network.name,
-            AnalyticsParam.Key.EMULATION_STATUS to emulationStatus?.status,
-            AnalyticsParam.Key.TYPE to securityStatus.toAnalyticVerificationStatus(),
+            AnalyticsParam.DAPP_NAME to rawRequest.dAppMetaData.name,
+            AnalyticsParam.DAPP_URL to rawRequest.dAppMetaData.url,
+            AnalyticsParam.METHOD_NAME to rawRequest.request.method,
+            AnalyticsParam.BLOCKCHAIN to network.name,
+            AnalyticsParam.EMULATION_STATUS to emulationStatus?.status,
+            AnalyticsParam.TYPE to securityStatus.toAnalyticVerificationStatus(),
         ).mapNotNullValues { it.value },
     ) {
         enum class EmulationStatus(val status: String) {
@@ -138,11 +138,11 @@ sealed class WcAnalyticEvents(
     ) : WcAnalyticEvents(
         event = "Signature Request Handled",
         params = mapOf(
-            AnalyticsParam.Key.DAPP_NAME to rawRequest.dAppMetaData.name,
-            AnalyticsParam.Key.DAPP_URL to rawRequest.dAppMetaData.url,
-            AnalyticsParam.Key.METHOD_NAME to rawRequest.request.method,
-            AnalyticsParam.Key.BLOCKCHAIN to network.name,
-            AnalyticsParam.Key.TYPE to securityStatus.toAnalyticVerificationStatus(),
+            AnalyticsParam.DAPP_NAME to rawRequest.dAppMetaData.name,
+            AnalyticsParam.DAPP_URL to rawRequest.dAppMetaData.url,
+            AnalyticsParam.METHOD_NAME to rawRequest.request.method,
+            AnalyticsParam.BLOCKCHAIN to network.name,
+            AnalyticsParam.TYPE to securityStatus.toAnalyticVerificationStatus(),
         ),
     )
 
@@ -154,12 +154,12 @@ sealed class WcAnalyticEvents(
     ) : WcAnalyticEvents(
         event = "Signature Request Failed",
         params = mapOf(
-            AnalyticsParam.Key.DAPP_NAME to rawRequest.dAppMetaData.name,
-            AnalyticsParam.Key.DAPP_URL to rawRequest.dAppMetaData.url,
-            AnalyticsParam.Key.METHOD_NAME to rawRequest.request.method,
-            AnalyticsParam.Key.BLOCKCHAIN to network.name,
-            AnalyticsParam.Key.ERROR_CODE to errorCode,
-            AnalyticsParam.Key.ERROR_DESCRIPTION to errorMessage,
+            AnalyticsParam.DAPP_NAME to rawRequest.dAppMetaData.name,
+            AnalyticsParam.DAPP_URL to rawRequest.dAppMetaData.url,
+            AnalyticsParam.METHOD_NAME to rawRequest.request.method,
+            AnalyticsParam.BLOCKCHAIN to network.name,
+            AnalyticsParam.ERROR_CODE to errorCode,
+            AnalyticsParam.ERROR_DESCRIPTION to errorMessage,
         ),
     )
 
@@ -171,12 +171,12 @@ sealed class WcAnalyticEvents(
     ) : WcAnalyticEvents(
         event = "Signature Request Received with Failed",
         params = mapOf(
-            AnalyticsParam.Key.DAPP_NAME to rawRequest.dAppMetaData.name,
-            AnalyticsParam.Key.DAPP_URL to rawRequest.dAppMetaData.url,
-            AnalyticsParam.Key.METHOD_NAME to rawRequest.request.method,
-            AnalyticsParam.Key.BLOCKCHAIN to blockchain,
-            AnalyticsParam.Key.ERROR_CODE to errorCode,
-            AnalyticsParam.Key.ERROR_DESCRIPTION to errorMessage,
+            AnalyticsParam.DAPP_NAME to rawRequest.dAppMetaData.name,
+            AnalyticsParam.DAPP_URL to rawRequest.dAppMetaData.url,
+            AnalyticsParam.METHOD_NAME to rawRequest.request.method,
+            AnalyticsParam.BLOCKCHAIN to blockchain,
+            AnalyticsParam.ERROR_CODE to errorCode,
+            AnalyticsParam.ERROR_DESCRIPTION to errorMessage,
         ),
     )
 
@@ -185,7 +185,7 @@ sealed class WcAnalyticEvents(
     ) : WcAnalyticEvents(
         event = "Button - Sign",
         params = mapOf(
-            AnalyticsParam.Key.METHOD_NAME to rawRequest.request.method,
+            AnalyticsParam.METHOD_NAME to rawRequest.request.method,
         ),
     )
 
@@ -194,7 +194,7 @@ sealed class WcAnalyticEvents(
     ) : WcAnalyticEvents(
         event = "Button - Cancel",
         params = mapOf(
-            AnalyticsParam.Key.TYPE to type.type,
+            AnalyticsParam.TYPE to type.type,
         ),
     ) {
         enum class Type(val type: String) {
@@ -212,8 +212,8 @@ sealed class WcAnalyticEvents(
     ) : WcAnalyticEvents(
         event = "Button - Disconnect",
         params = mapOf(
-            AnalyticsParam.Key.DAPP_NAME to session.sdkModel.appMetaData.name,
-            AnalyticsParam.Key.DAPP_URL to session.sdkModel.appMetaData.url,
+            AnalyticsParam.DAPP_NAME to session.sdkModel.appMetaData.name,
+            AnalyticsParam.DAPP_URL to session.sdkModel.appMetaData.url,
         ),
     )
 
@@ -224,13 +224,13 @@ sealed class WcAnalyticEvents(
     ) : WcAnalyticEvents(
         event = "Notice - Security Alert",
         params = mapOf(
-            AnalyticsParam.Key.DAPP_NAME to dAppMetaData.name,
-            AnalyticsParam.Key.DAPP_URL to dAppMetaData.url,
-            AnalyticsParam.Key.SOURCE to when (source) {
+            AnalyticsParam.DAPP_NAME to dAppMetaData.name,
+            AnalyticsParam.DAPP_URL to dAppMetaData.url,
+            AnalyticsParam.SOURCE to when (source) {
                 Source.Domain -> "Domain"
                 Source.SmartContract -> "Smart Contract"
             },
-            AnalyticsParam.Key.TYPE to securityStatus.toAnalyticVerificationStatus(),
+            AnalyticsParam.TYPE to securityStatus.toAnalyticVerificationStatus(),
         ),
     ) {
         enum class Source { Domain, SmartContract }
@@ -241,7 +241,7 @@ sealed class WcAnalyticEvents(
     ) : WcAnalyticEvents(
         event = "Solana Large Transaction",
         params = mapOf(
-            AnalyticsParam.Key.DAPP_NAME to dappName,
+            AnalyticsParam.DAPP_NAME to dappName,
         ),
     )
 
@@ -250,7 +250,7 @@ sealed class WcAnalyticEvents(
     ) : WcAnalyticEvents(
         event = "Solana Large Transaction Status",
         params = mapOf(
-            AnalyticsParam.Key.STATUS to status.value,
+            AnalyticsParam.STATUS to status.value,
         ),
     ) {
         enum class Status(val value: String) {
