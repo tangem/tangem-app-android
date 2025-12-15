@@ -10,7 +10,7 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-internal interface ComponentModule {
+internal interface FeedComponentModule {
 
     @Binds
     @Singleton
