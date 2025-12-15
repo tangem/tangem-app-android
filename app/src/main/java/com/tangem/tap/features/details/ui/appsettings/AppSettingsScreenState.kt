@@ -35,6 +35,7 @@ internal sealed class AppSettingsScreenState {
             val isEnabled: Boolean,
             val isChecked: Boolean,
             val onCheckedChange: (Boolean) -> Unit,
+            val onDisabledClick: () -> Unit = {},
         ) : Item()
 
         data class Button(
