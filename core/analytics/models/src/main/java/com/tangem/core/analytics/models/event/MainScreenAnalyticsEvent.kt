@@ -56,6 +56,14 @@ sealed class MainScreenAnalyticsEvent(
         event = "Button - Explore",
     )
 
+    class AccountShowTokens : MainScreenAnalyticsEvent(
+        event = "Button - Account Show Tokens",
+    )
+
+    class AccountHideTokens : MainScreenAnalyticsEvent(
+        event = "Button - Account Hide Tokens",
+    )
+
     data class ButtonSwap(val status: AnalyticsParam.Status) : MainScreenAnalyticsEvent(
         event = "Button - Swap",
         params = mapOf(AnalyticsParam.STATUS to status.value),

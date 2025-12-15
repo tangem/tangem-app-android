@@ -57,9 +57,13 @@ sealed class WalletScreenAnalyticsEvent {
 
         data class ScreenOpened(
             private val hasMobileWallet: Boolean,
+            private val accountsCount: Int?,
         ) : MainScreen(
             event = "Screen opened",
-            params = mapOf("Mobile Wallet" to if (hasMobileWallet) "Yes" else "No"),
+            params = buildMap {
+                put("Mobile Wallet", if (hasMobileWallet) "Yes" else "No")
+                if (accountsCount != null) put("Accounts Count", accountsCount.toString())
+            },
         )
 
         data class NoticeFinishActivation(
