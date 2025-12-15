@@ -43,7 +43,6 @@ internal class YieldSupplyNotificationsComponent(
                         Modifier.padding(top = 16.dp)
                     },
                     containerColor = TangemTheme.colors.background.action,
-                    iconTint = null,
                 )
             }
         }
