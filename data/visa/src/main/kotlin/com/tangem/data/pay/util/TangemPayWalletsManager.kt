@@ -1,5 +1,6 @@
 package com.tangem.data.pay.util
 
+import com.tangem.common.card.FirmwareVersion
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
@@ -32,7 +33,7 @@ class TangemPayWalletsManager @Inject constructor(
 
     private fun findColdWallet(userWallets: List<UserWallet>?): UserWallet.Cold {
         return userWallets?.find {
-            it is UserWallet.Cold && it.isMultiCurrency
+            it is UserWallet.Cold && it.scanResponse.card.firmwareVersion >= FirmwareVersion.HDWalletAvailable
         } as? UserWallet.Cold ?: error("Cannot find cold user wallet")
     }
 }
