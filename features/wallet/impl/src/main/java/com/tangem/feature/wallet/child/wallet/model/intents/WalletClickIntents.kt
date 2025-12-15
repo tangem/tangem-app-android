@@ -7,6 +7,7 @@ import com.tangem.domain.onramp.FetchHotCryptoUseCase
 import com.tangem.domain.settings.NeverToShowWalletsScrollPreview
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.domain.wallets.usecase.SelectWalletUseCase
+import com.tangem.domain.yield.supply.usecase.YieldSupplyApyUpdateUseCase
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
 import com.tangem.feature.wallet.presentation.wallet.domain.OnrampStatusFactory
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletContentFetcher
@@ -39,13 +40,16 @@ internal class WalletClickIntents @Inject constructor(
     private val rampStateManager: RampStateManager,
     private val fetchHotCryptoUseCase: FetchHotCryptoUseCase,
     private val onrampStatusFactory: OnrampStatusFactory,
+    private val tangemPayIntents: TangemPayClickIntentsImplementor,
+    private val yieldSupplyApyUpdateUseCase: YieldSupplyApyUpdateUseCase,
 ) : BaseWalletClickIntents(),
     WalletCardClickIntents by walletCardClickIntentsImplementor,
     WalletWarningsClickIntents by warningsClickIntentsImplementer,
     WalletCurrencyActionsClickIntents by currencyActionsClickIntentsImplementor,
     WalletContentClickIntents by contentClickIntentsImplementor,
     VisaWalletIntents by visaWalletIntentsImplementor,
-    WalletPushPermissionClickIntents by pushPermissionClickIntentsImplementor {
+    WalletPushPermissionClickIntents by pushPermissionClickIntentsImplementor,
+    TangemPayIntents by tangemPayIntents {
 
     override fun initialize(router: InnerWalletRouter, coroutineScope: CoroutineScope) {
         super.initialize(router, coroutineScope)
@@ -56,6 +60,7 @@ internal class WalletClickIntents @Inject constructor(
         contentClickIntentsImplementor.initialize(router, coroutineScope)
         visaWalletIntentsImplementor.initialize(router, coroutineScope)
         pushPermissionClickIntentsImplementor.initialize(router, coroutineScope)
+        tangemPayIntents.initialize(router, coroutineScope)
     }
 
     fun onWalletChange(index: Int, onlyState: Boolean) {
@@ -121,8 +126,9 @@ internal class WalletClickIntents @Inject constructor(
 
             buildList {
                 async { rampStateManager.fetchSellServiceData() }.let(::add)
-
                 async { fetchHotCryptoUseCase() }.let(::add)
+                async { tangemPayIntents.onPullToRefresh() }.let(::add)
+                async { yieldSupplyApyUpdateUseCase() }.let(::add)
             }
                 .awaitAll()
 

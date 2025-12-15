@@ -70,10 +70,10 @@ private class ExpectedAwardsConverter : Converter<ReferralResponse.ExpectedAward
     override fun convert(value: ReferralResponse.ExpectedAwards): ExpectedAwards {
         return ExpectedAwards(
             numberOfWallets = value.numberOfWallets,
-            expectedAwards = value.list.map {
+            expectedAwards = value.list.map { awardItem ->
                 ExpectedAward(
-                    paymentDate = it.paymentDate.toDateTimeAtStartOfDay().millis.toDateFormat(),
-                    amount = "${it.amount} ${it.currency}",
+                    paymentDate = awardItem.paymentDate.toDateTimeAtStartOfDay().millis.toDateFormat(),
+                    amount = "${awardItem.amount} ${awardItem.currency}",
                 )
             },
         )

@@ -20,28 +20,26 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.Dp
-import com.tangem.common.ui.charts.state.MarketChartDataProducer
 import com.tangem.core.ui.components.*
 import com.tangem.core.ui.components.appbar.TangemTopAppBar
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.buttons.segmentedbutton.SegmentedButtons
 import com.tangem.core.ui.components.currency.icon.CoinIcon
 import com.tangem.core.ui.components.marketprice.PriceChangeInPercent
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.event.EventEffect
 import com.tangem.core.ui.event.StateEvent
-import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.domain.markets.PriceChangeInterval
 import com.tangem.features.markets.details.impl.ui.components.*
+import com.tangem.features.markets.details.impl.ui.preview.MarketsTokenDetailsPreview
 import com.tangem.features.markets.details.impl.ui.state.ExchangesBottomSheetContent
 import com.tangem.features.markets.details.impl.ui.state.InfoBottomSheetContent
 import com.tangem.features.markets.details.impl.ui.state.MarketsTokenDetailsUM
@@ -58,6 +56,7 @@ internal fun MarketsTokenDetailsContent(
     onBackClick: () -> Unit,
     onHeaderSizeChange: (Dp) -> Unit,
     backButtonEnabled: Boolean,
+    isAccountEnabled: Boolean,
     modifier: Modifier = Modifier,
     portfolioBlock: @Composable ((Modifier) -> Unit)?,
 ) {
@@ -69,6 +68,7 @@ internal fun MarketsTokenDetailsContent(
         onHeaderSizeChange = onHeaderSizeChange,
         backButtonEnabled = backButtonEnabled,
         portfolioBlock = portfolioBlock,
+        isAccountEnabled = isAccountEnabled,
         addTopBarStatusBarInsets = addTopBarStatusBarPadding,
     )
 
@@ -88,6 +88,7 @@ private fun Content(
     onBackClick: () -> Unit,
     onHeaderSizeChange: (Dp) -> Unit,
     backButtonEnabled: Boolean,
+    isAccountEnabled: Boolean,
     modifier: Modifier = Modifier,
     portfolioBlock: @Composable ((Modifier) -> Unit)?,
 ) {
@@ -153,6 +154,7 @@ private fun Content(
 
             tokenMarketDetailsBody(
                 state = state.body,
+                isAccountEnabled = isAccountEnabled,
                 portfolioBlock = portfolioBlock,
             )
         }
@@ -313,42 +315,32 @@ fun PriceChangeInterval.getText(): TextReference {
     }
 }
 
-@Preview
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
+// region Preview
 @Composable
-private fun Preview() {
+@Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
+private fun MarketsTokenDetailsContent_Preview(
+    @PreviewParameter(MarketsTokenDetailsContentPreviewProvider::class) params: MarketsTokenDetailsUM,
+) {
     TangemThemePreview {
         MarketsTokenDetailsContent(
-            state = MarketsTokenDetailsUM(
-                tokenName = "Token Name",
-                priceText = "$0.00000000324",
-                dateTimeText = stringReference("Today"),
-                priceChangePercentText = "52.00%",
-                iconUrl = "",
-                priceChangeType = PriceChangeType.UP,
-                chartState = MarketsTokenDetailsUM.ChartState(
-                    dataProducer = MarketChartDataProducer.build { },
-                    onLoadRetryClick = {},
-                    status = MarketsTokenDetailsUM.ChartState.Status.LOADING,
-                    onMarkerPointSelected = { _, _ -> },
-                ),
-                selectedInterval = PriceChangeInterval.H24,
-                onSelectedIntervalChange = { },
-                body = MarketsTokenDetailsUM.Body.Loading,
-                bottomSheetConfig = TangemBottomSheetConfig(
-                    isShown = false,
-                    onDismissRequest = {},
-                    content = TangemBottomSheetConfigContent.Empty,
-                ),
-                markerSet = false,
-                triggerPriceChange = consumedEvent(),
-            ),
+            state = params,
             onHeaderSizeChange = {},
             onBackClick = {},
             backgroundColor = TangemTheme.colors.background.tertiary,
             portfolioBlock = {},
             backButtonEnabled = true,
+            isAccountEnabled = true,
             addTopBarStatusBarPadding = false,
         )
     }
 }
+
+private class MarketsTokenDetailsContentPreviewProvider : PreviewParameterProvider<MarketsTokenDetailsUM> {
+    override val values: Sequence<MarketsTokenDetailsUM>
+        get() = sequenceOf(
+            MarketsTokenDetailsPreview.loadingState,
+            MarketsTokenDetailsPreview.contentState,
+        )
+}
+// endregion

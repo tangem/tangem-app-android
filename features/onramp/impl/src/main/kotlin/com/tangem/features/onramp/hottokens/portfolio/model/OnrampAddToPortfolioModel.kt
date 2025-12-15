@@ -4,9 +4,9 @@ import arrow.core.getOrElse
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
-import com.tangem.domain.wallets.usecase.DerivePublicKeysUseCase
-import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
+import com.tangem.domain.wallets.usecase.DerivePublicKeysUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.onramp.hottokens.portfolio.OnrampAddToPortfolioComponent
 import com.tangem.features.onramp.hottokens.portfolio.entity.OnrampAddToPortfolioUM
@@ -40,8 +40,8 @@ internal class OnrampAddToPortfolioModel @Inject constructor(
 
     private val params: OnrampAddToPortfolioComponent.Params = paramsContainer.require()
 
-    val state: StateFlow<OnrampAddToPortfolioUM> get() = _state
-    private val _state = MutableStateFlow(value = getInitialState())
+    val state: StateFlow<OnrampAddToPortfolioUM>
+        field = MutableStateFlow(value = getInitialState())
 
     private fun getInitialState(): OnrampAddToPortfolioUM {
         return OnrampAddToPortfolioUM(
@@ -72,9 +72,11 @@ internal class OnrampAddToPortfolioModel @Inject constructor(
     private fun onAddClick() {
         modelScope.launch {
             changeAddButtonProgressStatus(isProgress = true)
-
-            derivePublicKeysUseCase(params.userWalletId, listOfNotNull(params.cryptoCurrency)).getOrElse {
-                Timber.e("Failed to derive public keys: $it")
+            derivePublicKeysUseCase(
+                userWalletId = params.userWalletId,
+                currencies = listOf(params.cryptoCurrency),
+            ).getOrElse { throwable ->
+                Timber.e("Failed to derive public keys: $throwable")
 
                 changeAddButtonProgressStatus(isProgress = false)
             }
@@ -89,8 +91,8 @@ internal class OnrampAddToPortfolioModel @Inject constructor(
     }
 
     private fun changeAddButtonProgressStatus(isProgress: Boolean) {
-        _state.update {
-            it.copy(addButtonUM = it.addButtonUM.copy(isProgress = isProgress))
+        state.update { prevState ->
+            prevState.copy(addButtonUM = prevState.addButtonUM.copy(isProgress = isProgress))
         }
     }
 }

@@ -63,9 +63,9 @@ internal interface InnerWalletRouter {
 
     fun openTokenReceiveBottomSheet(tokenReceiveConfig: TokenReceiveConfig)
 
-    fun openTangemPayOnboarding()
+    fun openTangemPayOnboarding(userWalletId: UserWalletId)
 
-    fun openTangemPayDetails(config: TangemPayDetailsConfig)
+    fun openTangemPayDetails(userWalletId: UserWalletId, config: TangemPayDetailsConfig)
 
     /** Open BS abput yield supply active and all money deposited in AAVE */
     fun openYieldSupplyBottomSheet(
@@ -73,4 +73,10 @@ internal interface InnerWalletRouter {
         tokenAction: TokenAction,
         onWarningAcknowledged: (TokenAction) -> Unit,
     )
+
+    /** Open yield supply active screen */
+    fun openYieldSupplyActiveScreen(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency, apy: String)
+
+    /** Open yield supply promo screen */
+    fun openYieldSupplyPromoScreen(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency, apy: String)
 }
