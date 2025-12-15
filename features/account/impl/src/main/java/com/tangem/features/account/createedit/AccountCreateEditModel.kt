@@ -4,6 +4,7 @@ import androidx.annotation.StringRes
 import com.tangem.common.ui.account.AccountNameUM
 import com.tangem.common.ui.account.toDomain
 import com.tangem.common.ui.account.toUM
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
@@ -25,6 +26,9 @@ import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.account.AccountCreateEditComponent
+import com.tangem.features.account.analytics.AccountSettingsAnalyticEvents
+import com.tangem.features.account.analytics.AccountSettingsAnalyticEvents.Companion.toAnalyticSource
+import com.tangem.features.account.analytics.WalletSettingsAccountAnalyticEvents
 import com.tangem.features.account.createedit.entity.AccountCreateEditUM
 import com.tangem.features.account.createedit.entity.AccountCreateEditUMBuilder
 import com.tangem.features.account.createedit.entity.AccountCreateEditUMBuilder.Companion.portfolioIcon
@@ -54,6 +58,7 @@ internal class AccountCreateEditModel @Inject constructor(
     private val addCryptoPortfolioUseCase: AddCryptoPortfolioUseCase,
     private val getUnoccupiedAccountIndexUseCase: GetUnoccupiedAccountIndexUseCase,
     private val analyticsExceptionHandler: AnalyticsExceptionHandler,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
 
     private val params = paramsContainer.require<AccountCreateEditComponent.Params>()
@@ -65,6 +70,8 @@ internal class AccountCreateEditModel @Inject constructor(
     init {
         if (params is AccountCreateEditComponent.Params.Create) {
             updateDerivationInfo(userWalletId = params.userWalletId)
+        } else {
+            analyticsEventHandler.send(AccountSettingsAnalyticEvents.AccountEditScreenOpened())
         }
     }
 
@@ -105,6 +112,12 @@ internal class AccountCreateEditModel @Inject constructor(
         val icon = state.account.portfolioIcon.toDomain()
         val index = state.account.derivationInfo.index ?: return
         val derivationIndex = DerivationIndex(value = index).getOrNull() ?: return
+        val event = AccountSettingsAnalyticEvents.ButtonAddNewAccount(
+            name = name,
+            icon = icon,
+            derivationIndex = derivationIndex.value,
+        )
+        analyticsEventHandler.send(event)
 
         uiState.value = uiState.value.toggleProgress(showProgress = true)
         val result = addCryptoPortfolioUseCase(
@@ -118,12 +131,22 @@ internal class AccountCreateEditModel @Inject constructor(
         result
             .onLeft(::handleAddAccountError)
             .onRight {
+                analyticsEventHandler.send(WalletSettingsAccountAnalyticEvents.AccountCreated())
                 showMessage(R.string.account_create_success_message)
                 router.pop()
             }
     }
 
     private fun handleAddAccountError(error: AddCryptoPortfolioUseCase.Error) {
+        val event = AccountSettingsAnalyticEvents.AccountError(
+            source = params.toAnalyticSource(),
+            error = when (error) {
+                is AddCryptoPortfolioUseCase.Error.AccountListRequirementsNotMet -> error.cause.tag
+                is AddCryptoPortfolioUseCase.Error.DataOperationFailed -> error.cause.message.orEmpty()
+            },
+        )
+        analyticsEventHandler.send(event)
+
         val isDuplicateAccountNamesError = (error as? AddCryptoPortfolioUseCase.Error.AccountListRequirementsNotMet)
             ?.cause is AccountList.Error.DuplicateAccountNames
         when {
@@ -141,6 +164,7 @@ internal class AccountCreateEditModel @Inject constructor(
         val icon = state.account.portfolioIcon.toDomain()
         val isNewName = name != params.account.accountName
         val isNewIcon = icon != params.account.portfolioIcon
+        analyticsEventHandler.send(AccountSettingsAnalyticEvents.ButtonSave(name, icon))
 
         uiState.value = uiState.value.toggleProgress(showProgress = true)
         val result = updateCryptoPortfolioUseCase(
@@ -159,6 +183,15 @@ internal class AccountCreateEditModel @Inject constructor(
     }
 
     private fun handleEditAccountError(error: UpdateCryptoPortfolioUseCase.Error) {
+        val event = AccountSettingsAnalyticEvents.AccountError(
+            source = params.toAnalyticSource(),
+            error = when (error) {
+                is UpdateCryptoPortfolioUseCase.Error.AccountListRequirementsNotMet -> error.cause.tag
+                is UpdateCryptoPortfolioUseCase.Error.DataOperationFailed -> error.cause.message.orEmpty()
+                UpdateCryptoPortfolioUseCase.Error.NothingToUpdate -> error::class.simpleName.orEmpty()
+            },
+        )
+        analyticsEventHandler.send(event)
         val isDuplicateAccountNamesError = (error as? UpdateCryptoPortfolioUseCase.Error.AccountListRequirementsNotMet)
             ?.cause is AccountList.Error.DuplicateAccountNames
         when {

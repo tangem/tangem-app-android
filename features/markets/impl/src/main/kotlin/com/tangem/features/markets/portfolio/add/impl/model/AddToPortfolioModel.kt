@@ -4,6 +4,7 @@ import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.popToFirst
 import com.arkivanov.decompose.router.stack.pushNew
 import com.arkivanov.decompose.router.stack.replaceAll
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -47,6 +48,7 @@ internal class AddToPortfolioModel @Inject constructor(
     private val getCryptoCurrencyActionsUseCase: GetCryptoCurrencyActionsUseCaseV2,
     private val getTokenMarketCryptoCurrency: GetTokenMarketCryptoCurrency,
     private val messageSender: UiMessageSender,
+    private val analyticsEventHandler: AnalyticsEventHandler,
     val portfolioSelectorController: PortfolioSelectorController,
 ) : Model(),
     ChooseNetworkComponent.Callbacks by callbackDelegate,
@@ -93,6 +95,7 @@ internal class AddToPortfolioModel @Inject constructor(
                 .map { it.availableToAddData }
                 .distinctUntilChanged()
                 .stateIn(this)
+            val isAccountMode = portfolioSelectorController.isAccountModeSync()
 
             // use snapshot data, looks like we don’t need to remap at runtime
             val data = featureDataFlow.value
@@ -117,6 +120,7 @@ internal class AddToPortfolioModel @Inject constructor(
                 // force select a portfolio, triggers [selectedPortfolio]
                 portfolioSelectorController.selectAccount(accountId)
             } else {
+                logAccountSelector(isAccountMode)
                 navigation.replaceAll(AddToPortfolioRoutes.PortfolioSelector)
             }
 
@@ -165,6 +169,7 @@ internal class AddToPortfolioModel @Inject constructor(
                 .onEach {
                     middleNavigationJob?.cancel()
                     middleNavigationJob = changePortfolioNavigationFlow(data).launchIn(this)
+                    logAccountSelector(isAccountMode)
                     navigation.pushNew(AddToPortfolioRoutes.PortfolioSelector)
                 }
                 .launchIn(this)
@@ -192,6 +197,12 @@ internal class AddToPortfolioModel @Inject constructor(
                 params.callback.onDismiss()
             }
             .launchIn(modelScope)
+    }
+
+    private fun logAccountSelector(isAccountMode: Boolean) {
+        if (isAccountMode) {
+            analyticsEventHandler.send(eventBuilder.popupToChooseAccount())
+        }
     }
 
     private fun changeNetworkNavigationFlow(): Flow<SelectedNetwork> {
@@ -260,6 +271,7 @@ internal class AddToPortfolioModel @Inject constructor(
                 data.availableToAddWallets[selectedAccountId.userWalletId] ?: return@combine null
             val availableToAddAccount =
                 availableToAddWallets.availableToAddAccounts[selectedAccountId] ?: return@combine null
+            if (!isAccountMode) analyticsEventHandler.send(eventBuilder.addToPortfolioWalletChanged())
             SelectedPortfolio(
                 isAccountMode = isAccountMode,
                 userWallet = availableToAddWallets.userWallet,

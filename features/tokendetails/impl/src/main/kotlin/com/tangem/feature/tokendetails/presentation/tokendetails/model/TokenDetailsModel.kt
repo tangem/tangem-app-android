@@ -532,6 +532,7 @@ internal class TokenDetailsModel @Inject constructor(
                 token = cryptoCurrency.symbol,
                 blockchain = cryptoCurrency.network.name,
                 status = unavailabilityReason.toReasonAnalyticsText(),
+                derivationIndex = getAccountIndexOrNull(),
             ),
         )
 
@@ -557,6 +558,7 @@ internal class TokenDetailsModel @Inject constructor(
                 token = cryptoCurrency.symbol,
                 blockchain = cryptoCurrency.network.name,
                 status = null,
+                derivationIndex = getAccountIndexOrNull(),
             ),
         )
         router.openTokenDetails(userWalletId = userWalletId, currency = cryptoCurrency)
@@ -578,6 +580,7 @@ internal class TokenDetailsModel @Inject constructor(
                 token = cryptoCurrency.symbol,
                 blockchain = cryptoCurrency.network.name,
                 status = unavailabilityReason.toReasonAnalyticsText(),
+                derivationIndex = getAccountIndexOrNull(),
             ),
         )
 
@@ -698,6 +701,7 @@ internal class TokenDetailsModel @Inject constructor(
                 token = cryptoCurrency.symbol,
                 blockchain = cryptoCurrency.network.name,
                 status = unavailabilityReason.toReasonAnalyticsText(),
+                derivationIndex = getAccountIndexOrNull(),
             ),
         )
 
@@ -764,6 +768,12 @@ internal class TokenDetailsModel @Inject constructor(
     override fun onExploreClick() {
         analyticsEventsHandler.send(TokenScreenAnalyticsEvent.ButtonExplore(cryptoCurrency.symbol))
         showErrorIfDemoModeOrElse(action = ::openExplorer)
+    }
+
+    private fun getAccountIndexOrNull(): Int? {
+        val account = account
+        val isNotMainAccount = account != null && !account.isMainAccount
+        return if (isNotMainAccount) account.derivationIndex.value else null
     }
 
     private fun openExplorer() {
