@@ -19,10 +19,7 @@ import com.tangem.domain.promo.models.StoryContent
 import com.tangem.feature.referral.domain.ReferralRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runCatching
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.mapLatest
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 
@@ -41,28 +38,35 @@ internal class DefaultPromoRepository(
         return appPreferencesStore.get(
             key = PreferencesKeys.getShouldShowPromoKey(promoId = promoId.name),
             default = true,
-        ).map { shouldShow ->
-            when (promoId) {
-                PromoId.Referral -> runCatching {
-                    !referralRepository.isReferralParticipant(userWalletId) && shouldShow
-                }.getOrDefault(false)
-                PromoId.Sepa -> {
-                    val isActive = getSepaPromoBanner()?.isActive ?: false
+        )
+            .distinctUntilChanged()
+            .map { shouldShow ->
+                when (promoId) {
+                    PromoId.Referral -> runCatching {
+                        !referralRepository.isReferralParticipant(userWalletId) && shouldShow
+                    }.getOrDefault(false)
+                    PromoId.Sepa -> {
+                        val isActive = getSepaPromoBanner()?.isActive == true
 
-                    isActive && shouldShow
-                }
-                PromoId.VisaPresale -> {
-                    val isActive = getVisaPromoBanner()?.isActive ?: false
+                        isActive && shouldShow
+                    }
+                    PromoId.VisaPresale -> {
+                        val isActive = getVisaPromoBanner()?.isActive == true
 
-                    isActive && shouldShow
-                }
-                PromoId.BlackFriday -> {
-                    val isActive = getBlackFridayPromoBanner()?.isActive ?: false
+                        isActive && shouldShow
+                    }
+                    PromoId.BlackFriday -> {
+                        val isActive = getBlackFridayPromoBanner()?.isActive == true
 
-                    isActive && shouldShow
+                        isActive && shouldShow
+                    }
+                    PromoId.OnePlusOne -> {
+                        val isActive = getOnePlusOnePromoBanner()?.isActive == true
+
+                        isActive && shouldShow
+                    }
                 }
             }
-        }
     }
 
     override fun isReadyToShowTokenPromo(promoId: PromoId): Flow<Boolean> {
@@ -71,6 +75,7 @@ internal class DefaultPromoRepository(
             PromoId.Sepa -> flowOf(false)
             PromoId.VisaPresale -> flowOf(false)
             PromoId.BlackFriday -> flowOf(false)
+            PromoId.OnePlusOne -> flowOf(false)
         }
     }
 
@@ -162,10 +167,19 @@ internal class DefaultPromoRepository(
         }.getOrNull()
     }
 
+    private suspend fun getOnePlusOnePromoBanner(): PromoBanner? {
+        return runCatching(dispatchers.io) {
+            promoBannerConverter.convert(
+                tangemApi.getPromoBanner(ONE_PLUS_ONE_NAME).getOrThrow(),
+            )
+        }.getOrNull()
+    }
+
     private companion object {
         const val SEPA_NAME = "sepa"
         const val VISA_NAME = "visa-waitlist"
         const val BLACK_FRIDAY_NAME = "black-friday"
+        const val ONE_PLUS_ONE_NAME = "one-plus-one"
         const val STORIES_LOAD_DELAY = 1000L
     }
 }

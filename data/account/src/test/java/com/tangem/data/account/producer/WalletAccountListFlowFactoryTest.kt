@@ -3,7 +3,6 @@ package com.tangem.data.account.producer
 import com.google.common.truth.Truth
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.common.test.domain.wallet.MockUserWalletFactory
-import com.tangem.common.test.utils.getEmittedValues
 import com.tangem.data.account.converter.AccountListConverter
 import com.tangem.data.account.converter.createGetWalletAccountsResponse
 import com.tangem.data.account.store.AccountsResponseStore
@@ -15,6 +14,7 @@ import com.tangem.domain.account.models.AccountList
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isMultiCurrency
+import com.tangem.test.core.getEmittedValues
 import io.mockk.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest

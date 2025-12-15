@@ -1,6 +1,7 @@
 package com.tangem.features.walletconnect.connections.entity
 
 import androidx.compose.runtime.Immutable
+import com.tangem.common.ui.account.PortfolioSelectUM
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.extensions.TextReference
@@ -17,6 +18,7 @@ internal sealed class WcAppInfoUM : TangemBottomSheetConfigContent {
     data class Loading(
         override val onDismiss: () -> Unit,
         override val connectButtonConfig: WcPrimaryButtonConfig,
+        val portfolioName: TextReference,
     ) : WcAppInfoUM()
 
     data class Content(
@@ -25,6 +27,7 @@ internal sealed class WcAppInfoUM : TangemBottomSheetConfigContent {
         val verifiedDAppState: VerifiedDAppState,
         val appSubtitle: String,
         val notification: WcAppInfoSecurityNotification?,
+        val portfolioSelectRow: PortfolioSelectUM?,
         val walletName: String,
         val onWalletClick: (() -> Unit)?,
         val networksInfo: WcNetworksInfo,

@@ -57,7 +57,7 @@ internal class ConfirmResidencyModel @Inject constructor(
                 analyticsEventHandler.send(OnrampAnalyticsEvent.OnResidenceConfirm(country.name))
                 modelScope.launch {
                     saveDefaultCountryUseCase.invoke(country)
-                    if (params.launchSepa) {
+                    if (params.isLaunchSepa) {
                         onrampSaveDefaultCurrencyUseCase.invoke(EUR_CURRENCY)
                     }
 

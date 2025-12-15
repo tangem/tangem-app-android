@@ -213,5 +213,15 @@ class MockTangemSdkManager(
         error("Not implemented")
     }
 
+    override suspend fun tangemPayProduceInitialCredentials(
+        cardId: String,
+    ): CompletionResult<TangemPayInitialCredentials> {
+        error("Not implemented")
+    }
+
+    override suspend fun getWithdrawalSignature(cardId: String, hash: String): CompletionResult<String> {
+        error("Not implemented")
+    }
+
     // endregion
 }

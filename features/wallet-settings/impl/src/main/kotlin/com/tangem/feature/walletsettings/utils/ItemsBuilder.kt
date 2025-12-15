@@ -1,17 +1,11 @@
 package com.tangem.feature.walletsettings.utils
 
-import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRoute.ManageTokens.Source
-import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
-import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.components.block.model.BlockUM
 import com.tangem.core.ui.components.label.entity.LabelStyle
 import com.tangem.core.ui.components.label.entity.LabelUM
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.domain.models.PortfolioId
 import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.feature.walletsettings.analytics.Settings
 import com.tangem.feature.walletsettings.entity.WalletSettingsAccountsUM
 import com.tangem.feature.walletsettings.entity.WalletSettingsItemUM
 import com.tangem.feature.walletsettings.impl.R
@@ -22,10 +16,7 @@ import kotlinx.collections.immutable.toImmutableList
 import javax.inject.Inject
 
 @ModelScoped
-internal class ItemsBuilder @Inject constructor(
-    private val router: Router,
-    private val analyticsEventHandler: AnalyticsEventHandler,
-) {
+internal class ItemsBuilder @Inject constructor() {
 
     @Suppress("LongParameterList")
     fun buildItems(
@@ -38,7 +29,6 @@ internal class ItemsBuilder @Inject constructor(
         isNFTFeatureEnabled: Boolean,
         isNFTEnabled: Boolean,
         onCheckedNFTChange: (Boolean) -> Unit,
-        isNotificationsFeatureEnabled: Boolean,
         isNotificationsEnabled: Boolean,
         isNotificationsPermissionGranted: Boolean,
         onCheckedNotificationsChanged: (Boolean) -> Unit,
@@ -46,10 +36,13 @@ internal class ItemsBuilder @Inject constructor(
         forgetWallet: () -> Unit,
         onLinkMoreCardsClick: () -> Unit,
         onReferralClick: () -> Unit,
+        onManageTokensClick: () -> Unit,
         onAccessCodeClick: () -> Unit,
         walletUpgradeDismissed: Boolean,
         onUpgradeWalletClick: () -> Unit,
         onDismissUpgradeWalletClick: () -> Unit,
+        onBackupClick: () -> Unit,
+        onCardSettingsClick: () -> Unit,
     ): PersistentList<WalletSettingsItemUM> = persistentListOf<WalletSettingsItemUM>()
         .add(cardItem)
         .addAll(
@@ -70,11 +63,13 @@ internal class ItemsBuilder @Inject constructor(
                 isManageTokensAvailable = isManageTokensAvailable,
                 onLinkMoreCardsClick = onLinkMoreCardsClick,
                 onReferralClick = onReferralClick,
+                onManageTokensClick = onManageTokensClick,
+                onBackupClick = onBackupClick,
+                onCardSettingsClick = onCardSettingsClick,
             ),
         )
         .addAll(
             buildNotificationItems(
-                isNotificationsFeatureEnabled = isNotificationsFeatureEnabled,
                 isNotificationsPermissionGranted = isNotificationsPermissionGranted,
                 isNotificationsEnabled = isNotificationsEnabled,
                 onCheckedNotificationsChanged = onCheckedNotificationsChanged,
@@ -103,13 +98,11 @@ internal class ItemsBuilder @Inject constructor(
     }
 
     private fun buildNotificationItems(
-        isNotificationsFeatureEnabled: Boolean,
         isNotificationsPermissionGranted: Boolean,
         isNotificationsEnabled: Boolean,
         onCheckedNotificationsChanged: (Boolean) -> Unit,
         onNotificationsDescriptionClick: () -> Unit,
     ): List<WalletSettingsItemUM> {
-        if (!isNotificationsFeatureEnabled) return emptyList()
         return buildList {
             if (!isNotificationsPermissionGranted) {
                 add(buildNotificationsPermissionItem())
@@ -179,18 +172,20 @@ internal class ItemsBuilder @Inject constructor(
         isManageTokensAvailable: Boolean,
         onLinkMoreCardsClick: () -> Unit,
         onReferralClick: () -> Unit,
+        onManageTokensClick: () -> Unit,
+        onBackupClick: () -> Unit,
+        onCardSettingsClick: () -> Unit,
     ) = WalletSettingsItemUM.WithItems(
         id = "card",
         description = resourceReference(R.string.settings_card_settings_footer),
         blocks = buildList {
-            val userWalletId = userWallet.walletId
             val isHotWallet = userWallet is UserWallet.Hot
             if (isHotWallet) {
                 val hasBackup = userWallet.backedUp
-                BlockUM(
+                val backupBlock = BlockUM(
                     text = resourceReference(R.string.common_backup),
                     iconRes = R.drawable.ic_more_cards_24,
-                    onClick = { router.push(AppRoute.WalletBackup(userWalletId)) },
+                    onClick = { onBackupClick() },
                     endContent = if (hasBackup) {
                         BlockUM.EndContent.None
                     } else {
@@ -201,42 +196,49 @@ internal class ItemsBuilder @Inject constructor(
                             ),
                         )
                     },
-                ).let(::add)
+                )
+
+                add(backupBlock)
             }
 
             if (isManageTokensAvailable) {
-                BlockUM(
+                val manageTokensBlock = BlockUM(
                     text = resourceReference(R.string.add_tokens_title),
                     iconRes = R.drawable.ic_tether_24,
-                    onClick = {
-                        analyticsEventHandler.send(Settings.ButtonManageTokens)
-                        router.push(AppRoute.ManageTokens(Source.SETTINGS, PortfolioId(userWalletId)))
-                    },
-                ).let(::add)
+                    onClick = onManageTokensClick,
+                )
+
+                add(manageTokensBlock)
             }
 
             if (isLinkMoreCardsAvailable) {
-                BlockUM(
+                val linkMoreCardsBlock = BlockUM(
                     text = resourceReference(R.string.details_row_title_create_backup),
                     iconRes = R.drawable.ic_more_cards_24,
                     onClick = onLinkMoreCardsClick,
-                ).let(::add)
+                )
+
+                add(linkMoreCardsBlock)
             }
 
             if (!isHotWallet) {
-                BlockUM(
+                val deviceSettingsBlock = BlockUM(
                     text = resourceReference(R.string.card_settings_title),
                     iconRes = R.drawable.ic_card_settings_24,
-                    onClick = { router.push(AppRoute.CardSettings(userWalletId)) },
-                ).let(::add)
+                    onClick = { onCardSettingsClick() },
+                )
+
+                add(deviceSettingsBlock)
             }
 
             if (isReferralAvailable) {
-                BlockUM(
+                val referralBlock = BlockUM(
                     text = resourceReference(R.string.details_referral_title),
                     iconRes = R.drawable.ic_add_friends_24,
                     onClick = onReferralClick,
-                ).let(::add)
+                )
+
+                add(referralBlock)
             }
         }.toImmutableList(),
     )

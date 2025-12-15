@@ -70,6 +70,7 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
     private val params: YieldSupplyStartEarningComponent.Params = paramsContainer.require()
 
     private val cryptoCurrency = params.cryptoCurrency
+    private val userWalletId = params.userWalletId
     private var minAmount: BigDecimal by Delegates.notNull()
     var userWallet: UserWallet by Delegates.notNull()
 
@@ -126,8 +127,8 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
         }
     }
 
-    private suspend fun calculateMinAmount(userWallet: UserWallet, cryptoCurrencyStatus: CryptoCurrencyStatus) {
-        yieldSupplyMinAmountUseCase(userWallet, cryptoCurrencyStatus).onRight {
+    private suspend fun calculateMinAmount(cryptoCurrencyStatus: CryptoCurrencyStatus) {
+        yieldSupplyMinAmountUseCase(userWalletId, cryptoCurrencyStatus).onRight {
             minAmount = it
         }.onLeft {
             minAmount = BigDecimal.ZERO
@@ -141,25 +142,22 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
             it.copy(yieldSupplyFeeUM = YieldSupplyFeeUM.Loading)
         }
 
-        val maxFee = yieldSupplyGetMaxFeeUseCase(userWallet, cryptoCurrencyStatus).getOrNull() ?: return
-        val estimatedFee = yieldSupplyGetCurrentFeeUseCase(userWallet, cryptoCurrencyStatus).getOrNull() ?: return
+        val maxFee = yieldSupplyGetMaxFeeUseCase(userWalletId, cryptoCurrencyStatus).getOrNull()
+        val estimatedFee = yieldSupplyGetCurrentFeeUseCase(userWalletId, cryptoCurrencyStatus).getOrNull()
+
+        if (estimatedFee == null || maxFee == null) {
+            showFeeUnknownError()
+            return
+        }
 
         val transactionListData = yieldSupplyStartEarningUseCase(
-            userWalletId = userWallet.walletId,
+            userWalletId = userWalletId,
             cryptoCurrencyStatus = cryptoCurrencyStatus,
             maxNetworkFee = maxFee.tokenMaxFee,
         ).getOrNull()
 
         if (transactionListData == null) {
-            uiState.update {
-                it.copy(yieldSupplyFeeUM = YieldSupplyFeeUM.Error)
-            }
-            yieldSupplyNotificationsUpdateTrigger.triggerUpdate(
-                data = YieldSupplyNotificationData(
-                    feeValue = null,
-                    feeError = GetFeeError.UnknownError,
-                ),
-            )
+            showFeeUnknownError()
             return
         }
 
@@ -255,7 +253,7 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
 
     private suspend fun onStartEarningTransactionSuccess(yieldSupplyFeeUM: YieldSupplyFeeUM.Content) {
         yieldSupplyRepository.saveTokenProtocolStatus(
-            userWallet.walletId,
+            userWalletId,
             cryptoCurrency,
             YieldSupplyEnterStatus.Enter,
         )
@@ -282,7 +280,7 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
         val address = cryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value
         if (address != null) {
             yieldSupplyActivateUseCase(
-                userWalletId = userWallet.walletId,
+                userWalletId = userWalletId,
                 cryptoCurrency = cryptoCurrency,
                 address = address,
             )
@@ -295,7 +293,7 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
 
     private fun subscribeOnCurrencyStatusUpdates() {
         modelScope.launch {
-            getUserWalletUseCase(params.userWalletId).fold(
+            getUserWalletUseCase(userWalletId).fold(
                 ifRight = { wallet ->
                     userWallet = wallet
                     getCurrenciesStatusUpdates()
@@ -325,7 +323,7 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
 
     private fun getCurrenciesStatusUpdates() {
         getSingleCryptoCurrencyStatusUseCase.invokeMultiWallet(
-            userWalletId = params.userWalletId,
+            userWalletId = userWalletId,
             currencyId = cryptoCurrency.id,
             isSingleWalletWithTokens = false,
         ).onEach { maybeCryptoCurrency ->
@@ -334,7 +332,7 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
                     onDataLoaded(
                         currencyStatus = cryptoCurrencyStatus,
                         feeCurrencyStatus = getFeePaidCryptoCurrencyStatusSyncUseCase(
-                            userWalletId = params.userWalletId,
+                            userWalletId = userWalletId,
                             cryptoCurrencyStatus = cryptoCurrencyStatus,
                         ).getOrNull() ?: cryptoCurrencyStatus,
                     )
@@ -352,7 +350,7 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
         feeCryptoCurrencyStatusFlow.update { feeCurrencyStatus }
 
         modelScope.launch {
-            calculateMinAmount(userWallet, currencyStatus)
+            calculateMinAmount(currencyStatus)
             onLoadFee()
         }
     }
@@ -369,6 +367,18 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
                 }
             },
             popBack = params.callback::onBackClick,
+        )
+    }
+
+    private suspend fun showFeeUnknownError() {
+        uiState.update {
+            it.copy(yieldSupplyFeeUM = YieldSupplyFeeUM.Error)
+        }
+        yieldSupplyNotificationsUpdateTrigger.triggerUpdate(
+            data = YieldSupplyNotificationData(
+                feeValue = null,
+                feeError = GetFeeError.UnknownError,
+            ),
         )
     }
 }
