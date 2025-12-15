@@ -847,6 +847,8 @@ internal class SwapModel @Inject constructor(
         val fee = dataState.selectedFee?.feeType ?: return
         val fromCurrency = dataState.fromCryptoCurrency?.currency ?: return
         val toCurrency = dataState.toCryptoCurrency?.currency ?: return
+        val fromDerivationIndex = dataState.fromAccount?.derivationIndex?.value
+        val toDerivationIndex = dataState.toAccount?.derivationIndex?.value
 
         analyticsEventHandler.send(
             SwapEvents.SwapInProgressScreen(
@@ -856,6 +858,8 @@ internal class SwapModel @Inject constructor(
                 receiveBlockchain = toCurrency.network.name,
                 sendToken = fromCurrency.symbol,
                 receiveToken = toCurrency.symbol,
+                fromDerivationIndex = fromDerivationIndex,
+                toDerivationIndex = toDerivationIndex,
             ),
         )
     }

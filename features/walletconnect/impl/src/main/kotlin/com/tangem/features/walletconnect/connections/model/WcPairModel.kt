@@ -31,6 +31,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.models.wallet.isMultiCurrency
+import com.tangem.domain.walletconnect.WcAnalyticAccountEvents
 import com.tangem.domain.walletconnect.WcAnalyticEvents
 import com.tangem.domain.walletconnect.model.WcPairError
 import com.tangem.domain.walletconnect.model.WcPairError.Unknown
@@ -319,6 +320,17 @@ internal class WcPairModel @Inject constructor(
         val selectedPortfolio = selectedPortfolio.replayCache.firstOrNull()
         val wallet = selectedPortfolio?.first ?: selectedUserWalletFlow.value
         val account = selectedPortfolio?.second?.account
+
+        modelScope.launch {
+            if (selectorController.isAccountModeSync() && account != null) {
+                val derivationIndex = when (account) {
+                    is Account.CryptoPortfolio -> account.derivationIndex.value
+                }
+                analytics.send(WcAnalyticAccountEvents.PairButtonConnect(derivationIndex))
+            } else {
+                analytics.send(WcAnalyticEvents.PairButtonConnect())
+            }
+        }
         wcPairUseCase.approve(
             WcSessionApprove(
                 wallet = wallet,
