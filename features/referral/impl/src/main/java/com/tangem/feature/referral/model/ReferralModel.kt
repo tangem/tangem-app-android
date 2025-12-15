@@ -30,6 +30,7 @@ import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.feature.referral.analytics.ReferralEvents
+import com.tangem.feature.referral.analytics.ReferralEventsAccounts
 import com.tangem.feature.referral.api.ReferralComponent
 import com.tangem.feature.referral.domain.ReferralInteractor
 import com.tangem.feature.referral.domain.errors.ReferralError
@@ -90,7 +91,7 @@ internal class ReferralModel @Inject constructor(
     }
 
     init {
-        analyticsEventHandler.send(ReferralEvents.ReferralScreenOpened)
+        analyticsEventHandler.send(ReferralEvents.ReferralScreenOpened())
         if (accountsFeatureToggles.isFeatureEnabled) {
             combine(
                 flow = referralData.filterNotNull().onEach(::selectAccount),
@@ -116,6 +117,7 @@ internal class ReferralModel @Inject constructor(
 
     private fun combineAccountUI(referralData: ReferralData): Flow<AccountAward?> = combine(
         flow = portfolioSelectorController.selectedAccountWithData(portfolioFetcher)
+            .onEach { analyticsEventHandler.send(ReferralEventsAccounts.ListChooseAccount()) }
             .onEach { bottomSheetNavigation.dismiss() },
         flow2 = getBalanceHidingSettingsUseCase.isBalanceHidden(),
         flow3 = getSelectedAppCurrencyUseCase.invokeOrDefault(),
@@ -178,7 +180,7 @@ internal class ReferralModel @Inject constructor(
         if (userWallet is UserWallet.Cold && isDemoCardUseCase(cardId = userWallet.cardId)) {
             showErrorSnackbar(DemoModeException())
         } else {
-            analyticsEventHandler.send(ReferralEvents.ClickParticipate)
+            analyticsEventHandler.send(ReferralEvents.ClickParticipate())
             val lastInfoState = uiState.referralInfoState
             uiState = uiState.copy(referralInfoState = ReferralInfoState.Loading)
             modelScope.launch {
@@ -187,9 +189,9 @@ internal class ReferralModel @Inject constructor(
                     false -> PortfolioId(params.userWalletId)
                 }
                 runCatching { referralInteractor.startReferral(portfolioId) }
-                    .onSuccess {
-                        analyticsEventHandler.send(ReferralEvents.ParticipateSuccessful)
-                        referralData.value = it
+                    .onSuccess { referral ->
+                        analyticsEventHandler.send(ReferralEvents.ParticipateSuccessful())
+                        referralData.value = referral
                     }
                     .onFailure { throwable ->
                         if (throwable is ReferralError.UserCancelledException) {
@@ -213,17 +215,17 @@ internal class ReferralModel @Inject constructor(
     }
 
     private fun onAgreementClicked() {
-        analyticsEventHandler.send(ReferralEvents.ClickTaC)
+        analyticsEventHandler.send(ReferralEvents.ClickTaC())
 
         lastReferralData?.tosLink?.let(urlOpener::openUrl)
     }
 
     private fun onCopyClicked() {
-        analyticsEventHandler.send(ReferralEvents.ClickCopy)
+        analyticsEventHandler.send(ReferralEvents.ClickCopy())
     }
 
     private fun onShareClicked(text: String) {
-        analyticsEventHandler.send(ReferralEvents.ClickShare)
+        analyticsEventHandler.send(ReferralEvents.ClickShare())
 
         shareManager.shareText(text = text)
     }

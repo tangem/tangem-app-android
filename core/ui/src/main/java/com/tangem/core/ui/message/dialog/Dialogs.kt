@@ -40,6 +40,30 @@ object Dialogs {
     }
 
     /**
+     * Hot wallet creation not supported dialog
+     *
+     * @param leastSupportedVersion least supported OS version name ex. "Android 10"
+     * @param onDismiss lambda be invoked when dialog is dismissed
+     */
+    fun hotWalletCreationNotSupportedDialog(leastSupportedVersion: String, onDismiss: () -> Unit = {}): DialogMessage {
+        return DialogMessage(
+            title = resourceReference(
+                id = R.string.mobile_wallet_requires_min_os_warning_title,
+                formatArgs = wrappedList(leastSupportedVersion),
+            ),
+            message = resourceReference(
+                id = R.string.mobile_wallet_requires_min_os_warning_body,
+                formatArgs = wrappedList(leastSupportedVersion),
+            ),
+            firstAction = EventMessageAction(
+                title = resourceReference(R.string.common_got_it),
+                onClick = {},
+            ),
+            onDismissRequest = onDismiss,
+        )
+    }
+
+    /**
      * Universal error dialog
      */
     fun universalErrorDialog(universalError: UniversalError, onDismiss: () -> Unit): DialogMessage {
