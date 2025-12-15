@@ -28,16 +28,24 @@ import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.mutate
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
+import java.math.BigDecimal
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListState.OrganizeTokensButtonConfig as WalletOrganizeTokensButtonConfig
 
+@Suppress("LongParameterList")
 internal class TokenListStateConverter(
     private val appCurrency: AppCurrency,
     private val params: TokenConverterParams,
     private val selectedWallet: UserWallet,
     private val clickIntents: WalletClickIntents,
-    private val yieldModuleApyMap: Map<String, String>,
+    private val yieldModuleApyMap: Map<String, BigDecimal>,
     private val stakingApyMap: Map<String, List<Yield.Validator>>,
+    private val shouldShowMainPromo: Boolean,
 ) : Converter<WalletTokensListState, WalletTokensListState> {
+
+    private val yieldSupplyPromoBannerKeyConverter = YieldSupplyPromoBannerKeyConverter(
+        yieldModuleApyMap,
+        shouldShowMainPromo,
+    )
 
     private val onTokenClick: (accountId: AccountId?, currencyStatus: CryptoCurrencyStatus) -> Unit =
         { accountId, currencyStatus ->
@@ -63,10 +71,12 @@ internal class TokenListStateConverter(
     private fun tokenStatusConverter(accountId: AccountId? = null) = TokenItemStateConverter(
         appCurrency = appCurrency,
         yieldModuleApyMap = yieldModuleApyMap,
+        yieldSupplyPromoBannerKey = yieldSupplyPromoBannerKeyConverter.convert(params),
         stakingApyMap = stakingApyMap,
         onItemClick = { _, status -> onTokenClick(accountId, status) },
         onItemLongClick = { _, status -> onTokenLongClick(accountId, status) },
         onApyLabelClick = { status, apySource, apy -> onApyLabelClick(status, apySource, apy) },
+        onYieldPromoCloseClick = clickIntents::onYieldPromoCloseClick,
     )
 
     override fun convert(value: WalletTokensListState): WalletTokensListState {
