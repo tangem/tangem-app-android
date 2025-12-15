@@ -199,4 +199,30 @@ internal object YieldSupplyDomainModule {
             yieldSupplyRepository = yieldSupplyRepository,
         )
     }
+
+    @Provides
+    @Singleton
+    fun provideYieldSupplyGetShouldShowMainPromoUseCase(
+        yieldSupplyRepository: YieldSupplyRepository,
+    ): YieldSupplyGetShouldShowMainPromoUseCase {
+        return YieldSupplyGetShouldShowMainPromoUseCase(
+            yieldSupplyRepository = yieldSupplyRepository,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideYieldSupplySetShouldShowMainPromoUseCase(
+        yieldSupplyRepository: YieldSupplyRepository,
+    ): YieldSupplySetShouldShowMainPromoUseCase {
+        return YieldSupplySetShouldShowMainPromoUseCase(
+            yieldSupplyRepository = yieldSupplyRepository,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideYieldSupplyGetDustMinAmountUseCase(): YieldSupplyGetDustMinAmountUseCase {
+        return YieldSupplyGetDustMinAmountUseCase()
+    }
 }
