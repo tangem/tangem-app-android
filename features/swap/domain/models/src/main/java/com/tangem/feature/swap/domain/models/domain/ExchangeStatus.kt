@@ -32,7 +32,7 @@ data class ExchangeStatusModel(
     val averageDuration: Int? = null,
 ) {
     val hasLongTime: Boolean
-        get() = createdAt?.isBefore(DateTime.now().minusMinutes(FIFTEEN_MINUTES)) ?: false
+        get() = createdAt?.isBefore(DateTime.now().minusMinutes(FIFTEEN_MINUTES)) == true
 
     private companion object {
         const val FIFTEEN_MINUTES = 15

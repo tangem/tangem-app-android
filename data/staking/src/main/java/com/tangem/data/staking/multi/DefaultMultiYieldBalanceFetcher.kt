@@ -69,8 +69,8 @@ internal class DefaultMultiYieldBalanceFetcher @Inject constructor(
 
             fetch(userWalletId = params.userWalletId, stakingIds = availableStakingIds)
         }
-            .onLeft {
-                Timber.e(it, "Unable to fetch yield balances $params")
+            .onLeft { throwable ->
+                Timber.e(throwable, "Unable to fetch yield balances $params")
 
                 yieldsBalancesStore.storeError(userWalletId = params.userWalletId, stakingIds = stakingIds)
             }
@@ -163,21 +163,21 @@ internal class DefaultMultiYieldBalanceFetcher @Inject constructor(
 
                 if (!allResponsesReceived(requests, yieldBalances)) {
                     val values = stakingIds.filter { stakingId ->
-                        yieldBalances.none {
-                            stakingId.integrationId == it.integrationId &&
-                                stakingId.address == it.addresses.address
+                        yieldBalances.none { balanceWrapper ->
+                            stakingId.integrationId == balanceWrapper.integrationId &&
+                                stakingId.address == balanceWrapper.addresses.address
                         }
                     }
 
                     yieldsBalancesStore.storeError(userWalletId = userWalletId, stakingIds = values.toSet())
                 }
             },
-            onError = {
-                Timber.e(it, "Unable to fetch yield balances $userWalletId")
+            onError = { throwable ->
+                Timber.e(throwable, "Unable to fetch yield balances $userWalletId")
 
                 yieldsBalancesStore.storeError(userWalletId = userWalletId, stakingIds = stakingIds)
 
-                throw it
+                throw throwable
             },
         )
     }
@@ -187,9 +187,9 @@ internal class DefaultMultiYieldBalanceFetcher @Inject constructor(
         yieldBalances: Set<YieldBalanceWrapperDTO>,
     ): Boolean {
         return requests.all { request ->
-            yieldBalances.any {
-                request.integrationId == it.integrationId &&
-                    request.addresses.address == it.addresses.address
+            yieldBalances.any { balance ->
+                request.integrationId == balance.integrationId &&
+                    request.addresses.address == balance.addresses.address
             }
         }
     }

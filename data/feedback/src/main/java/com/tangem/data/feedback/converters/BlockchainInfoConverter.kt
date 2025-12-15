@@ -16,9 +16,11 @@ import com.tangem.domain.feedback.models.BlockchainInfo.Addresses as BlockchainA
 internal object BlockchainInfoConverter : Converter<WalletManager, BlockchainInfo> {
 
     override fun convert(value: WalletManager): BlockchainInfo {
+        val derivationPath = value.wallet.publicKey.derivationPath
+
         return BlockchainInfo(
             blockchain = value.wallet.blockchain.fullName,
-            derivationPath = value.wallet.publicKey.derivationPath?.rawPath ?: "",
+            derivationPath = derivationPath?.rawPath.orEmpty(),
             outputsCount = value.outputsCount?.toString(),
             host = value.currentHost,
             addresses = value.wallet.mapAddresses(Address::value),
