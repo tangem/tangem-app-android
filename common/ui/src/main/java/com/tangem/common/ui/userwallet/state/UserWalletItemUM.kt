@@ -3,12 +3,11 @@ package com.tangem.common.ui.userwallet.state
 import com.tangem.common.ui.account.CryptoPortfolioIconUM
 import com.tangem.core.ui.components.artwork.ArtworkUM
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.domain.models.wallet.UserWalletId
 import javax.annotation.concurrent.Immutable
 
 @Immutable
 data class UserWalletItemUM(
-    val id: UserWalletId,
+    val id: String,
     val name: TextReference,
     val information: Information,
     val balance: Balance,
@@ -25,6 +24,7 @@ data class UserWalletItemUM(
         Warning,
     }
 
+    @Immutable
     sealed class Balance {
 
         data object Hidden : Balance()
@@ -43,6 +43,7 @@ data class UserWalletItemUM(
         ) : Balance()
     }
 
+    @Immutable
     sealed class Information {
 
         data object Failed : Information()

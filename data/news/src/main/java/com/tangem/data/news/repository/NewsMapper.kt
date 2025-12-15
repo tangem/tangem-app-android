@@ -1,0 +1,63 @@
+package com.tangem.data.news.repository
+
+import com.tangem.datasource.api.news.models.response.NewsArticleDto
+import com.tangem.datasource.api.news.models.response.NewsDetailsResponse
+import com.tangem.datasource.api.news.models.response.NewsOriginalArticleDto
+import com.tangem.datasource.api.news.models.response.NewsRelatedTokenDto
+import com.tangem.domain.models.news.ArticleCategory
+import com.tangem.domain.models.news.DetailedArticle
+import com.tangem.domain.models.news.OriginalArticle
+import com.tangem.domain.models.news.RelatedToken
+import com.tangem.domain.models.news.ShortArticle
+
+internal fun NewsDetailsResponse.toDomainDetailedArticle(): DetailedArticle {
+    return DetailedArticle(
+        id = id,
+        createdAt = createdAt,
+        score = score.toFloat(),
+        locale = language,
+        isTrending = isTrending,
+        categories = categories.map { ArticleCategory(id = it.id, name = it.name) },
+        relatedTokens = relatedTokens.map { it.toDomainRelatedToken() },
+        title = title,
+        newsUrl = newsUrl,
+        shortContent = shortContent,
+        content = content,
+        originalArticles = originalArticles.map { it.toDomainOriginalArticle() },
+    )
+}
+
+internal fun NewsArticleDto.toDomainShortArticle(): ShortArticle {
+    return ShortArticle(
+        id = id,
+        createdAt = createdAt,
+        score = score.toFloat(),
+        locale = language,
+        categories = categories.map { ArticleCategory(id = it.id, name = it.name) },
+        relatedTokens = relatedTokens.map { it.toDomainRelatedToken() },
+        isTrending = isTrending,
+        title = title,
+        newsUrl = newsUrl,
+        viewed = false,
+    )
+}
+
+internal fun NewsRelatedTokenDto.toDomainRelatedToken(): RelatedToken {
+    return RelatedToken(
+        id = id,
+        symbol = symbol,
+        name = name,
+    )
+}
+
+internal fun NewsOriginalArticleDto.toDomainOriginalArticle(): OriginalArticle {
+    return OriginalArticle(
+        id = id,
+        title = title,
+        sourceName = sourceName,
+        locale = language,
+        publishedAt = publishedAt,
+        url = url,
+        imageUrl = imageUrl,
+    )
+}
