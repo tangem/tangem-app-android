@@ -1,5 +1,6 @@
 package com.tangem.features.walletconnect.transaction.entity.sign
 
+import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.features.walletconnect.transaction.entity.common.WcCommonTransactionUM
 import com.tangem.features.walletconnect.transaction.entity.common.WcNetworkInfoUM
@@ -15,7 +16,7 @@ internal data class WcSignTransactionItemUM(
     val onDismiss: () -> Unit,
     val onSign: () -> Unit,
     val appInfo: WcTransactionAppInfoContentUM,
-    val walletName: String?,
+    val portfolioName: AccountTitleUM?,
     val networkInfo: WcNetworkInfoUM,
     val address: String?,
     val walletInteractionIcon: Int?,

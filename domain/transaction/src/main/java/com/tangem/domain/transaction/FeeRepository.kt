@@ -7,6 +7,7 @@ import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
 
 interface FeeRepository {
 
@@ -20,5 +21,5 @@ interface FeeRepository {
         transactionData: TransactionData,
     ): TransactionFee
 
-    suspend fun getEthereumFeeWithoutGas(userWallet: UserWallet, cryptoCurrency: CryptoCurrency): Fee.Ethereum
+    suspend fun getEthereumFeeWithoutGas(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): Fee.Ethereum
 }
