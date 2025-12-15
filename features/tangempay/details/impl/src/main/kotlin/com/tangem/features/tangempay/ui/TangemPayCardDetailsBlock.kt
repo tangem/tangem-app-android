@@ -182,8 +182,7 @@ private fun TangemPayCardDetailsShownBlock(
         Row(
             modifier = Modifier
                 .padding(horizontal = 16.dp)
-                .fillMaxWidth()
-                .weight(1f),
+                .fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             CardDetailsTextContainer(
@@ -203,6 +202,7 @@ private fun TangemPayCardDetailsShownBlock(
                 onCopy = onCopyCvv,
             )
         }
+        Spacer(modifier = Modifier.weight(1f))
         Row {
             SpacerWMax()
             TangemPayCardDetailsCustomButton(

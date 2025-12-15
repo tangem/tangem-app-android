@@ -23,6 +23,7 @@ internal class BiometricUserWalletsListManagerTest(private val model: Model) {
         publicInformationRepository = mockk(),
         sensitiveInformationRepository = mockk(),
         selectedUserWalletRepository = mockk(),
+        dispatcherProvider = mockk(),
     )
 
     @Test

@@ -75,6 +75,7 @@ import com.tangem.domain.wallets.usecase.GetExploreUrlUseCase
 import com.tangem.domain.wallets.usecase.GetExtendedPublicKeyForCurrencyUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.NetworkHasDerivationUseCase
+import com.tangem.domain.yield.supply.models.YieldSupplyRewardBalance
 import com.tangem.domain.yield.supply.usecase.YieldSupplyGetRewardsBalanceUseCase
 import com.tangem.feature.tokendetails.deeplink.TokenDetailsDeepLinkActionListener
 import com.tangem.feature.tokendetails.presentation.router.InnerTokenDetailsRouter
@@ -416,7 +417,9 @@ internal class TokenDetailsModel @Inject constructor(
                 .saveIn(yieldSupplyBalanceJobHolder)
         } else {
             yieldSupplyBalanceJobHolder.cancel()
-            internalUiState.value = stateFactory.getStateWithUpdatedYieldSupplyDisplayBalance(null)
+            internalUiState.value = stateFactory.getStateWithUpdatedYieldSupplyDisplayBalance(
+                YieldSupplyRewardBalance.empty(),
+            )
         }
     }
 
@@ -1261,14 +1264,8 @@ internal class TokenDetailsModel @Inject constructor(
     }
 
     private fun handleNavigationParam() {
-        when (val action = params.navigationAction) {
-            is NavigationAction.Staking -> openStaking()
-            is NavigationAction.YieldSupply -> if (action.isActive) {
-                modelScope.launch(dispatchers.default) {
-                    fetchCurrencyStatusUseCase(userWalletId = userWalletId, id = cryptoCurrency.id)
-                }
-            }
-            else -> Unit
+        if (params.navigationAction is NavigationAction.Staking) {
+            openStaking()
         }
     }
 

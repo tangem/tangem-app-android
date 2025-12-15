@@ -10,7 +10,7 @@ sealed class TangemPayAnalyticsEvents(
 
     class ActivationScreenOpened : TangemPayAnalyticsEvents(
         categoryName = "Visa Onboarding",
-        event = "Activation Screen Opened",
+        event = "Visa Activation Screen Opened",
     )
 
     class ViewTermsClicked : TangemPayAnalyticsEvents(
@@ -41,6 +41,11 @@ sealed class TangemPayAnalyticsEvents(
     class ReceiveFundsClicked : TangemPayAnalyticsEvents(
         categoryName = "Visa Screen",
         event = "Button - Visa Receive",
+    )
+
+    class AddFundsClicked : TangemPayAnalyticsEvents(
+        categoryName = "Visa Screen",
+        event = "Button - Visa Add Funds",
     )
 
     class SwapClicked : TangemPayAnalyticsEvents(
