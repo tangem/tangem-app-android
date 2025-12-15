@@ -1,10 +1,9 @@
 package com.tangem.features.feed.ui.feed.state
 
 import androidx.compose.runtime.Immutable
+import com.tangem.common.ui.markets.models.MarketsListItemUM
 import com.tangem.common.ui.news.ArticleConfigUM
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
-import com.tangem.core.ui.event.StateEvent
-import com.tangem.features.feed.ui.market.state.MarketsListItemUM
 import com.tangem.features.feed.ui.market.state.SortByTypeUM
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableMap
@@ -46,7 +45,6 @@ internal sealed interface MarketChartUM {
 
     data class Content(
         val items: ImmutableList<MarketsListItemUM>,
-        val triggerScrollReset: StateEvent<Unit>,
         val sortChartConfig: SortChartConfigUM,
     ) : MarketChartUM
 
