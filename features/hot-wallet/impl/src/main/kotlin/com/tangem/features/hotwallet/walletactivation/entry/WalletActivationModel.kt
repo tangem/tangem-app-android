@@ -33,6 +33,7 @@ import com.tangem.features.hotwallet.WalletActivationComponent
 import com.tangem.features.hotwallet.stepper.api.HotWalletStepperComponent
 import com.tangem.features.pushnotifications.api.PushNotificationsModelCallbacks
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -70,16 +71,16 @@ internal class WalletActivationModel @Inject constructor(
     }
     val currentRoute: MutableStateFlow<WalletActivationRoute> = MutableStateFlow(startRoute)
 
-    private val source = AnalyticsParam.ScreensSources.Main
-    private val action = WalletSettingsAnalyticEvents.RecoveryPhraseScreenAction.Backup
+    private val analyticsSource = AnalyticsParam.ScreensSources.Main
+    private val analyticsAction = WalletSettingsAnalyticEvents.RecoveryPhraseScreenAction.Backup
 
     init {
         trackingContextProxy.addHotWalletContext()
         if (startRoute is WalletActivationRoute.ManualBackupStart) {
             analyticsEventHandler.send(
                 event = WalletSettingsAnalyticEvents.RecoveryPhraseScreenInfo(
-                    source = source.value,
-                    action = action.value,
+                    source = analyticsSource.value,
+                    action = analyticsAction.value,
                 ),
             )
         }
@@ -134,7 +135,7 @@ internal class WalletActivationModel @Inject constructor(
                 secondAction = EventMessageAction(
                     title = resourceReference(R.string.access_code_alert_skip_ok),
                     onClick = {
-                        modelScope.launch {
+                        modelScope.launch(NonCancellable) {
                             setAccessCodeSkippedUseCase(userWalletId, true)
                         }
                         navigateToPushNotificationsOrNext()
@@ -160,8 +161,8 @@ internal class WalletActivationModel @Inject constructor(
             stackNavigation.push(WalletActivationRoute.ManualBackupPhrase)
             analyticsEventHandler.send(
                 event = WalletSettingsAnalyticEvents.RecoveryPhraseScreen(
-                    source = source.value,
-                    action = action.value,
+                    source = analyticsSource.value,
+                    action = analyticsAction.value,
                 ),
             )
         }
@@ -172,8 +173,8 @@ internal class WalletActivationModel @Inject constructor(
             stackNavigation.push(WalletActivationRoute.ManualBackupCheck)
             analyticsEventHandler.send(
                 event = WalletSettingsAnalyticEvents.RecoveryPhraseCheck(
-                    source = source.value,
-                    action = action.value,
+                    source = analyticsSource.value,
+                    action = analyticsAction.value,
                 ),
             )
         }
@@ -184,8 +185,8 @@ internal class WalletActivationModel @Inject constructor(
             stackNavigation.push(WalletActivationRoute.ManualBackupCompleted)
             analyticsEventHandler.send(
                 event = WalletSettingsAnalyticEvents.BackupCompleteScreen(
-                    source = source.value,
-                    action = action.value,
+                    source = analyticsSource.value,
+                    action = analyticsAction.value,
                 ),
             )
         }
@@ -193,6 +194,9 @@ internal class WalletActivationModel @Inject constructor(
 
     inner class ManualBackupCompletedModelCallbacks : ManualBackupCompletedComponent.ModelCallbacks {
         override fun onContinueClick(userWalletId: UserWalletId) {
+            analyticsEventHandler.send(
+                event = WalletSettingsAnalyticEvents.AccessCodeScreenOpened(source = analyticsSource.value),
+            )
             stackNavigation.push(WalletActivationRoute.SetAccessCode)
         }
 
@@ -201,6 +205,9 @@ internal class WalletActivationModel @Inject constructor(
 
     inner class AccessCodeModelCallbacks : AccessCodeComponent.ModelCallbacks {
         override fun onNewAccessCodeInput(userWalletId: UserWalletId, accessCode: String) {
+            analyticsEventHandler.send(
+                event = WalletSettingsAnalyticEvents.ReEnterAccessCodeScreen(source = analyticsSource.value),
+            )
             stackNavigation.push(WalletActivationRoute.ConfirmAccessCode(accessCode))
         }
 
