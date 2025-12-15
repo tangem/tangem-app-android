@@ -196,7 +196,7 @@ class DetailsMiddleware {
         }
 
         private fun enrollBiometrics() {
-            Analytics.send(Settings.AppSettings.ButtonEnableBiometricAuthentication)
+            Analytics.send(Settings.AppSettings.ButtonEnableBiometricAuthentication())
             store.inject(DaggerGraphState::settingsManager).openBiometricSettings()
         }
 

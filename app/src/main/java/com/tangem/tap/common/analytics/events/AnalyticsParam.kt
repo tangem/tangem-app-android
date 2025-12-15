@@ -12,12 +12,6 @@ sealed class AnalyticsParam {
         class Amount(amount: com.tangem.blockchain.common.Amount) : CurrencyType(amount.currencySymbol)
     }
 
-    sealed class CardBalanceState(val value: String) {
-        data object Empty : CardBalanceState("Empty")
-        data object Full : CardBalanceState("Full")
-        companion object
-    }
-
     sealed class RateApp(val value: String) {
         data object Liked : RateApp("Liked")
         data object Closed : RateApp("Close")

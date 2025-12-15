@@ -15,7 +15,7 @@ sealed class TokenReceiveNewAnalyticsEvent(
     class ReceiveScreenOpened(
         token: String,
         blockchainName: String,
-        ensStatus: AnalyticsParam.EnsStatus,
+        ensStatus: AnalyticsParam.EmptyFull,
     ) : TokenReceiveNewAnalyticsEvent(
         event = "Receive Screen Opened",
         params = mapOf(
