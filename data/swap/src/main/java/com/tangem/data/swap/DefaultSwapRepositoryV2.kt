@@ -272,7 +272,7 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
     override suspend fun swapTransactionSent(
         userWallet: UserWallet,
         fromCryptoCurrencyStatus: CryptoCurrencyStatus,
-        toAddress: String,
+        payInAddress: String,
         txId: String,
         txHash: String,
         txExtraId: String?,
@@ -288,7 +288,7 @@ internal class DefaultSwapRepositoryV2 @Inject constructor(
                     txId = txId,
                     fromNetwork = fromCryptoCurrencyStatus.currency.network.backendId,
                     fromAddress = fromCryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value.orEmpty(),
-                    payinAddress = toAddress,
+                    payinAddress = payInAddress,
                     payinExtraId = txExtraId,
                     txHash = txHash,
                 ),
