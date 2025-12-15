@@ -6,7 +6,7 @@ import com.tangem.domain.managetokens.repository.ManageTokensRepository
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.staking.StakingIdFactory
-import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
+import com.tangem.domain.staking.multi.MultiStakingBalanceFetcher
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.derivations.DerivationsRepository
@@ -74,7 +74,7 @@ internal object ManageTokensDomainModule {
         derivationsRepository: DerivationsRepository,
         multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
         multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
-        multiYieldBalanceFetcher: MultiYieldBalanceFetcher,
+        multiStakingBalanceFetcher: MultiStakingBalanceFetcher,
         stakingIdFactory: StakingIdFactory,
         dispatchers: CoroutineDispatcherProvider,
     ): SaveManagedTokensUseCase {
@@ -85,7 +85,7 @@ internal object ManageTokensDomainModule {
             derivationsRepository = derivationsRepository,
             multiNetworkStatusFetcher = multiNetworkStatusFetcher,
             multiQuoteStatusFetcher = multiQuoteStatusFetcher,
-            multiYieldBalanceFetcher = multiYieldBalanceFetcher,
+            multiStakingBalanceFetcher = multiStakingBalanceFetcher,
             stakingIdFactory = stakingIdFactory,
             parallelUpdatingScope = CoroutineScope(SupervisorJob() + dispatchers.default),
         )

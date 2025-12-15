@@ -26,6 +26,7 @@ data class AccountStatusList(
     val userWalletId: UserWalletId,
     val accountStatuses: List<AccountStatus>,
     val totalAccounts: Int,
+    val totalArchivedAccounts: Int,
     val totalFiatBalance: TotalFiatBalance,
     val sortType: TokensSortType,
     val groupType: TokensGroupType,
@@ -47,6 +48,7 @@ data class AccountStatusList(
             userWalletId = userWalletId,
             accounts = accountStatuses.map(AccountStatus::account),
             totalAccounts = totalAccounts,
+            totalArchivedAccounts = totalArchivedAccounts,
             sortType = sortType,
             groupType = groupType,
         )

@@ -179,6 +179,7 @@ class DefaultMainAccountTokensMigrationTest {
                 group = UserTokensResponse.GroupType.NONE,
                 sort = UserTokensResponse.SortType.MANUAL,
                 totalAccounts = 2,
+                totalArchivedAccounts = 0,
             ),
             accounts = listOf(mainAccount, selectedAccount),
             unassignedTokens = emptyList(),

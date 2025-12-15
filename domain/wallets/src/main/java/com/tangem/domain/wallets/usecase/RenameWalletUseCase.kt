@@ -16,7 +16,7 @@ class RenameWalletUseCase(
     suspend operator fun invoke(userWalletId: UserWalletId, name: String): Either<UpdateWalletError, UserWallet> =
         either {
             runCatching {
-                walletsRepository.setWalletName(userWalletId.stringValue, name)
+                walletsRepository.setWalletName(userWalletId, name)
             }
 
             userWalletsSyncDelegate.syncWallet(userWalletId, name).bind()

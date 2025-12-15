@@ -9,7 +9,7 @@ import com.tangem.core.ui.format.bigdecimal.*
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.models.staking.YieldBalance
+import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.staking.utils.getTotalWithRewardsStakingBalance
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDetailsClickIntents
@@ -73,7 +73,7 @@ internal class TokenDetailsLoadedBalanceConverter(
         status: CryptoCurrencyStatus,
     ): TokenDetailsBalanceBlockState {
         val stakingCryptoAmount =
-            (status.value.yieldBalance as? YieldBalance.Data)?.getTotalWithRewardsStakingBalance(
+            (status.value.stakingBalance as? StakingBalance.Data)?.getTotalWithRewardsStakingBalance(
                 status.currency.network.rawId,
             )
         val stakingFiatAmount = stakingCryptoAmount?.let { status.value.fiatRate?.multiply(it) }

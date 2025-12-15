@@ -13,6 +13,7 @@ import com.tangem.datasource.api.tangemTech.models.PromocodeActivationResponse
 import com.tangem.datasource.api.tangemTech.models.WalletResponse
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.models.errors.ActivatePromoCodeError
@@ -51,6 +52,8 @@ class DefaultWalletsRepositoryTest {
             seedPhraseNotificationVisibilityStore = mockk(),
             dispatchers = dispatchers,
             authProvider = mockk(),
+            accountsFeatureToggles = mockk(),
+            moshi = mockk(),
         )
     }
 
@@ -204,6 +207,10 @@ class DefaultWalletsRepositoryTest {
             coEvery { getCardsPublicKeys() } returns publicKeys
         }
 
+        val accountsFeatureToggles = mockk<AccountsFeatureToggles> {
+            every { isFeatureEnabled } returns false
+        }
+
         repository = DefaultWalletsRepository(
             appPreferencesStore = appPreferenceStore,
             tangemTechApi = tangemTechApi,
@@ -211,6 +218,8 @@ class DefaultWalletsRepositoryTest {
             seedPhraseNotificationVisibilityStore = mockk(),
             dispatchers = dispatchers,
             authProvider = authProvider,
+            accountsFeatureToggles = accountsFeatureToggles,
+            moshi = mockk(),
         )
 
         coEvery {

@@ -48,6 +48,8 @@ dependencies {
     implementation(projects.domain.settings)
     implementation(projects.domain.transaction.models)
     implementation(projects.domain.account.status)
+    implementation(projects.domain.appTheme)
+    implementation(projects.domain.appTheme.models)
 
     /** DI */
     implementation(deps.hilt.android)

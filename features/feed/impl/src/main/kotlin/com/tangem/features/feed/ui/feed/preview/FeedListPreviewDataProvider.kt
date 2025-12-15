@@ -1,11 +1,11 @@
 package com.tangem.features.feed.ui.feed.preview
 
 import com.tangem.common.ui.charts.state.MarketChartRawData
-import com.tangem.core.ui.components.fields.entity.SearchBarUM
-import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.common.ui.news.ArticleConfigUM
-import com.tangem.common.ui.news.ArticleTagUM
-import com.tangem.core.ui.components.currency.icon.CurrencyIconState
+import com.tangem.core.ui.components.fields.entity.SearchBarUM
+import com.tangem.core.ui.components.label.entity.LabelLeadingContentUM
+import com.tangem.core.ui.components.label.entity.LabelUM
+import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
@@ -38,7 +38,7 @@ internal object FeedListPreviewDataProvider {
                 onMarketItemClick = {},
                 onSortTypeClick = {},
             ),
-            news = articles.filter { it.isTrending.not() }.toImmutableList(),
+            news = NewsUM.Content(articles.filter { it.isTrending.not() }.toImmutableList()),
             trendingArticle = articles.first { it.isTrending },
             marketChartConfig = MarketChartConfig(
                 marketCharts = createMarketCharts(marketItems, includeErrorState = false),
@@ -159,21 +159,18 @@ internal object FeedListPreviewDataProvider {
         ),
     )
 
-    private fun createArticleTags(): ImmutableSet<ArticleTagUM> {
+    private fun createArticleTags(): ImmutableSet<LabelUM> {
         return persistentSetOf(
-            ArticleTagUM.Token(
-                title = TextReference.Str("BTC"),
-                iconState = CurrencyIconState.CoinIcon(
-                    url = "",
-                    fallbackResId = 0,
-                    isGrayscale = false,
-                    shouldShowCustomBadge = false,
+            LabelUM(
+                text = TextReference.Str("BTC"),
+                leadingContent = LabelLeadingContentUM.Token(
+                    iconUrl = "https://s3.eu-central-1.amazonaws.com/tangem.api/coins/large/euro-coin.png",
                 ),
             ),
-            ArticleTagUM.Category(TextReference.Str("Regulation")),
-            ArticleTagUM.Category(TextReference.Str("BTC")),
-            ArticleTagUM.Category(TextReference.Str("Supply")),
-            ArticleTagUM.Category(TextReference.Str("Demand")),
+            LabelUM(TextReference.Str("Regulation")),
+            LabelUM(TextReference.Str("BTC")),
+            LabelUM(TextReference.Str("Supply")),
+            LabelUM(TextReference.Str("Demand")),
         )
     }
 

@@ -1,13 +1,13 @@
 ==========================================
 Detekt Baseline Updater & Issue Counter
 ==========================================
-Date: 2025-12-02 13:19:49
+Date: 2025-12-12 13:17:20
 
 Step 1: Running detekt to check for new issues...
 
 ✓ Detekt passed - no new issues found
 
-Step 2: Updating detekt baseline for debug variant...
+Step 2: Updating detekt baseline ...
 
 
 Baseline updated successfully!
@@ -17,13 +17,13 @@ Counting issues in baseline files...
 ==========================================
 
 Summary:
-  Total Issues: 1435
-  Modules with Issues: 62
-  Average Issues per Module: 23
+  Total Issues: 1378
+  Modules with Issues: 72
+  Average Issues per Module: 19
 
 Progress:
-  Fixed: 367 out of 1802 (20%)
-  Remaining: 1435
+  Fixed: 555 out of 1933 (28%)
+  Remaining: 1378
 
 ==========================================
 All Modules with Issues (sorted by count)
@@ -31,66 +31,76 @@ All Modules with Issues (sorted by count)
 
 Module                                                           Issues
 ────────────────────────────────────────────────────────────────
-features/wallet/impl                                                148
-features/markets/impl                                               148
-features/onboarding-v2/impl                                         130
+features/markets/impl                                               147
+features/wallet/impl                                                144
+features/onboarding-v2/impl                                         128
 features/swap/impl                                                   67
-features/send-v2/impl                                                57
-data/wallet-connect                                                  55
-features/hot-wallet/impl                                             53
-features/tokendetails/impl                                           48
-features/staking/impl                                                48
+data/wallet-connect                                                  54
+features/hot-wallet/impl                                             51
 features/walletconnect/impl                                          47
-features/manage-tokens/impl                                          45
-features/swap-v2/impl                                                40
+features/staking/impl                                                46
+features/tokendetails/impl                                           45
+features/manage-tokens/impl                                          44
 domain/wallets                                                       37
 features/nft/impl                                                    34
-features/tester/impl                                                 31
-domain/tokens                                                        28
-core/ui                                                              27
-common/ui                                                            26
+features/tester/impl                                                 28
+core/ui                                                              26
 features/swap/domain                                                 25
-data/visa                                                            22
+domain/tokens                                                        25
+common/ui                                                            24
 features/yield-supply/impl                                           21
 features/tangempay/details/impl                                      21
-data/nft                                                             20
+domain/models                                                        21
+data/visa                                                            21
+data/nft                                                             19
+core/pagination                                                      16
 features/swap/data                                                   15
-data/wallets                                                         14
-data/swap                                                            13
+domain/staking/models                                                13
+data/wallets                                                         13
 features/token-recieve/impl                                          11
 features/qr-scanning/impl                                            11
-domain/account/status                                                11
 data/onramp                                                          11
 core/datasource                                                      11
+core/analytics/models                                                11
 data/markets                                                         10
 features/details/impl                                                 9
-domain/staking                                                        9
+domain/account/status                                                 9
 data/yield-supply                                                     9
 data/networks                                                         9
-features/referral/impl                                                8
+domain/visa/models                                                    8
 domain/transaction                                                    8
+domain/staking                                                        8
+core/utils                                                            8
 libs/tangem-sdk-api                                                   7
+features/referral/impl                                                7
+domain/tokens/models                                                  7
 data/txhistory                                                        7
 features/welcome/impl                                                 6
-data/wallet-manager                                                   6
+domain/wallet-connect/models                                          6
+domain/onramp                                                         6
+domain/account                                                        6
 libs/visa                                                             5
-features/send-v2/api                                                  5
 features/home/impl                                                    5
 domain/markets                                                        5
-domain/legacy                                                         5
-data/transaction                                                      5
+domain/core                                                           5
 data/account                                                          5
-features/referral/domain                                              4
-features/biometry/impl                                                4
+domain/onramp/models                                                  4
 data/tokens                                                           4
-features/txhistory/impl                                               3
-features/tangempay/onboarding/impl                                    3
-features/create-wallet-start/impl                                     3
-domain/manage-tokens                                                  3
+domain/nft/models                                                     3
+domain/balance-hiding                                                 3
+data/wallet-manager                                                   3
 data/manage-tokens                                                    3
-common/routing                                                        3
-features/account/api                                                  2
-data/promo                                                            2
+domain/txhistory/models                                               2
+domain/networks                                                       2
 core/config-toggles                                                   2
-data/feedback                                                         1
+test/mock                                                             1
+domain/yield-supply/models                                            1
+domain/wallets/models                                                 1
+domain/transaction/models                                             1
+domain/quotes                                                         1
+domain/promo                                                          1
+domain/onboarding                                                     1
+domain/markets/models                                                 1
+domain/feedback/models                                                1
+domain/express/models                                                 1
 ────────────────────────────────────────────────────────────────
