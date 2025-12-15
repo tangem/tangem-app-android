@@ -48,15 +48,13 @@ internal class OnrampOperationModel @Inject constructor(
     private val messageSender: UiMessageSender,
     private val rampStateManager: RampStateManager,
 ) : Model() {
-
-    val state: StateFlow<OnrampOperationUM> get() = _state
-
     private val params: Params = paramsContainer.require()
-
-    private val _state = MutableStateFlow(value = getInitialState())
 
     private val selectedUserWallet = getWalletsUseCase.invokeSync()
         .first { it.walletId == params.userWalletId }
+
+    val state: StateFlow<OnrampOperationUM>
+        field = MutableStateFlow(value = getInitialState())
 
     init {
         analyticsEventHandler.send(
@@ -176,7 +174,7 @@ internal class OnrampOperationModel @Inject constructor(
 
     fun onTokenListInitialized() {
         // Makes HotCrypto tokens visible when token list is initialized to synchronize UI
-        _state.update {
+        state.update {
             it.copy(isHotCryptoVisible = true)
         }
     }

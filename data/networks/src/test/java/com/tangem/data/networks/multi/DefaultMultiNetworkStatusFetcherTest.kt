@@ -3,7 +3,6 @@ package com.tangem.data.networks.multi
 import arrow.core.Either
 import arrow.core.left
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
-import com.tangem.common.test.utils.assertEither
 import com.tangem.data.common.currency.CardCryptoCurrencyFactory
 import com.tangem.data.networks.fetcher.CommonNetworkStatusFetcher
 import com.tangem.data.networks.store.NetworksStatusesStore
@@ -11,6 +10,7 @@ import com.tangem.data.networks.store.setSourceAsCache
 import com.tangem.data.networks.store.setSourceAsOnlyCache
 import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
+import com.tangem.test.core.assertEither
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
