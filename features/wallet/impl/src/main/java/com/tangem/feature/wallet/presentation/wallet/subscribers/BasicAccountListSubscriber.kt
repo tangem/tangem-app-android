@@ -20,6 +20,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.transformers.TokenCon
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import timber.log.Timber
+import java.math.BigDecimal
 
 /**
  * Basic implementation of [WalletSubscriber] for wallet with accounts.
@@ -46,8 +47,9 @@ internal abstract class BasicAccountListSubscriber : BasicWalletSubscriber() {
         appCurrency: AppCurrency,
         expandedAccounts: Set<AccountId>,
         isAccountMode: Boolean,
-        yieldSupplyApyMap: Map<String, String> = emptyMap(),
+        yieldSupplyApyMap: Map<String, BigDecimal> = emptyMap(),
         stakingApyMap: Map<String, List<Yield.Validator>> = emptyMap(),
+        shouldShowMainPromo: Boolean = false,
     ) {
         val mainAccount = accountList.mainAccount
 
@@ -66,11 +68,18 @@ internal abstract class BasicAccountListSubscriber : BasicWalletSubscriber() {
                     portfolioId = PortfolioId(mainAccount.accountId),
                     yieldSupplyApyMap = yieldSupplyApyMap,
                     stakingApyMap = stakingApyMap,
+                    shouldShowMainPromo = shouldShowMainPromo,
                 )
             }
             isAccountMode -> {
                 val convertParams = TokenConverterParams.Account(accountList, expandedAccounts)
-                updateContent(convertParams, appCurrency, yieldSupplyApyMap, stakingApyMap)
+                updateContent(
+                    params = convertParams,
+                    appCurrency = appCurrency,
+                    yieldSupplyApyMap = yieldSupplyApyMap,
+                    stakingApyMap = stakingApyMap,
+                    shouldShowMainPromo = shouldShowMainPromo,
+                )
             }
         }
     }
@@ -79,8 +88,9 @@ internal abstract class BasicAccountListSubscriber : BasicWalletSubscriber() {
         maybeTokenList: Lce<TokenListError, TokenList>,
         appCurrency: AppCurrency,
         portfolioId: PortfolioId,
-        yieldSupplyApyMap: Map<String, String> = emptyMap(),
+        yieldSupplyApyMap: Map<String, BigDecimal> = emptyMap(),
         stakingApyMap: Map<String, List<Yield.Validator>> = emptyMap(),
+        shouldShowMainPromo: Boolean,
     ) {
         val tokenList = maybeTokenList.getOrElse(
             ifLoading = { maybeContent ->
@@ -110,14 +120,16 @@ internal abstract class BasicAccountListSubscriber : BasicWalletSubscriber() {
             appCurrency = appCurrency,
             yieldSupplyApyMap = yieldSupplyApyMap,
             stakingApyMap = stakingApyMap,
+            shouldShowMainPromo = shouldShowMainPromo,
         )
     }
 
     private fun updateContent(
         params: TokenConverterParams,
         appCurrency: AppCurrency,
-        yieldSupplyApyMap: Map<String, String> = emptyMap(),
+        yieldSupplyApyMap: Map<String, BigDecimal> = emptyMap(),
         stakingApyMap: Map<String, List<Yield.Validator>> = emptyMap(),
+        shouldShowMainPromo: Boolean,
     ) {
         stateController.update(
             SetTokenListTransformer(
@@ -127,6 +139,7 @@ internal abstract class BasicAccountListSubscriber : BasicWalletSubscriber() {
                 clickIntents = clickIntents,
                 yieldSupplyApyMap = yieldSupplyApyMap,
                 stakingApyMap = stakingApyMap,
+                shouldShowMainPromo = shouldShowMainPromo,
             ),
         )
     }
