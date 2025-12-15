@@ -3,7 +3,6 @@
   <ManuallySuppressedIssues/>
   <CurrentIssues>
     <ID>MultilineLambdaItParameter:DefaultNFTRepository.kt$DefaultNFTRepository${ NFTCollections( network = network, content = NFTCollections.Content.Collections( collections = it ?.map { collection -&gt; nftSdkCollectionConverter.convert(network to collection) } ?.filter { it.id !is NFTCollection.Identifier.Unknown }, source = StatusSource.CACHE, ), ) }</ID>
-    <ID>MultilineLambdaItParameter:DefaultNFTRepository.kt$DefaultNFTRepository${ getNFTPersistenceStore(userWalletId, it).clear() getNFTRuntimeStore(userWalletId, it).clear() }</ID>
     <ID>MultilineLambdaItParameter:DefaultNFTRepository.kt$DefaultNFTRepository${ if (it !is UnsupportedOperationException) { saveFailedStateInRuntime( userWalletId = userWalletId, network = network, error = it, ) } }</ID>
     <ID>MultilineLambdaItParameter:DefaultNFTRepository.kt$DefaultNFTRepository${ if (it.id == collectionId) { it.changeAssetsStatusSource(source) } else { it } }</ID>
     <ID>MultilineLambdaItParameter:DefaultNFTRepository.kt$DefaultNFTRepository${ if (it.identifier == sdkCollectionId) { it.copy(assets = assets) } else { it } }</ID>

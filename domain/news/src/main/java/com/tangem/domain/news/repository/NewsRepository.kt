@@ -38,12 +38,12 @@ interface NewsRepository {
     suspend fun fetchDetailedArticles(newsIds: Collection<Int>, language: String?)
 
     /**
-     * Returns list of trending news by limit and with correct locale.
+     * Fetch list of trending news by limit and with correct locale and store it in runtime data store.
      *
      * @param limit
      * @param language current device locale
      */
-    suspend fun getTrendingNews(limit: Int, language: String?): List<ShortArticle>
+    suspend fun getTrendingNews(limit: Int, language: String?)
 
     /**
      * Observes trending news with runtime viewed flag support.

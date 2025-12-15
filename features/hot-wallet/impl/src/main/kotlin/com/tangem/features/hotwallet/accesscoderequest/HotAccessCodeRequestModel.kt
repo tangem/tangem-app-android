@@ -1,5 +1,7 @@
 package com.tangem.features.hotwallet.accesscoderequest
 
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.event.SignIn
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.ui.components.fields.PinTextColor
@@ -33,6 +35,7 @@ internal class HotAccessCodeRequestModel @Inject constructor(
     private val hotAccessCodeAttemptsRepository: HotWalletAccessCodeAttemptsRepository,
     private val userWalletsListRepository: UserWalletsListRepository,
     private val canUseBiometryUseCase: CanUseBiometryUseCase,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
 
     private val result = MutableStateFlow<HotWalletPasswordRequester.Result?>(null)
@@ -108,6 +111,7 @@ internal class HotAccessCodeRequestModel @Inject constructor(
         onAccessCodeChange = ::onAccessCodeChange,
         accessCode = "",
         useBiometricClick = {
+            analyticsEventHandler.send(SignIn.ButtonBiometricSignIn())
             dismissState()
             result.value = HotWalletPasswordRequester.Result.UseBiometry
         },
