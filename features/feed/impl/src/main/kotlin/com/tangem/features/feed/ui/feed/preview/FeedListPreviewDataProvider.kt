@@ -1,17 +1,16 @@
 package com.tangem.features.feed.ui.feed.preview
 
 import com.tangem.common.ui.charts.state.MarketChartRawData
+import com.tangem.common.ui.markets.models.MarketsListItemUM
 import com.tangem.common.ui.news.ArticleConfigUM
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.components.label.entity.LabelLeadingContentUM
 import com.tangem.core.ui.components.label.entity.LabelUM
 import com.tangem.core.ui.components.marketprice.PriceChangeType
-import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.features.feed.ui.feed.state.*
-import com.tangem.features.feed.ui.market.state.MarketsListItemUM
 import com.tangem.features.feed.ui.market.state.SortByTypeUM
 import kotlinx.collections.immutable.*
 
@@ -94,7 +93,6 @@ internal object FeedListPreviewDataProvider {
     ): MarketChartUM.Content {
         return MarketChartUM.Content(
             items = items,
-            triggerScrollReset = consumedEvent(),
             sortChartConfig = SortChartConfigUM(
                 sortByType = sortByType,
                 isSelected = isSelected,
@@ -107,7 +105,7 @@ internal object FeedListPreviewDataProvider {
             id = 1,
             title = "Bitcoin ETF reaches new highs, institutions pile in",
             score = 0.82f,
-            createdAt = "2h ago",
+            createdAt = TextReference.Str("Yesterday"),
             isTrending = true,
             tags = createArticleTags(),
             isViewed = false,
@@ -116,7 +114,7 @@ internal object FeedListPreviewDataProvider {
             id = 2,
             title = "Layer 2 networks battle for dominance amid fee wars",
             score = 0.71f,
-            createdAt = "4h ago",
+            createdAt = TextReference.Str("Yesterday"),
             isTrending = false,
             tags = createArticleTags(),
             isViewed = true,
@@ -125,7 +123,7 @@ internal object FeedListPreviewDataProvider {
             id = 3,
             title = "Stablecoins expand on-ramps across LATAM",
             score = 0.65f,
-            createdAt = "Yesterday",
+            createdAt = TextReference.Str("Yesterday"),
             isTrending = false,
             tags = createArticleTags(),
             isViewed = false,
@@ -134,7 +132,7 @@ internal object FeedListPreviewDataProvider {
             id = 4,
             title = "Stablecoins expand on-ramps across LATAM",
             score = 0.65f,
-            createdAt = "Yesterday",
+            createdAt = TextReference.Str("Yesterday"),
             isTrending = false,
             tags = createArticleTags(),
             isViewed = false,
@@ -143,7 +141,7 @@ internal object FeedListPreviewDataProvider {
             id = 5,
             title = "Stablecoins expand on-ramps across LATAM",
             score = 0.65f,
-            createdAt = "Yesterday",
+            createdAt = TextReference.Str("Yesterday"),
             isTrending = false,
             tags = createArticleTags(),
             isViewed = false,
@@ -152,7 +150,7 @@ internal object FeedListPreviewDataProvider {
             id = 6,
             title = "Stablecoins expand on-ramps across LATAM",
             score = 0.65f,
-            createdAt = "Yesterday",
+            createdAt = TextReference.Str("Yesterday"),
             isTrending = false,
             tags = createArticleTags(),
             isViewed = false,
