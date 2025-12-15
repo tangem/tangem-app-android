@@ -55,10 +55,6 @@
     <ID>NoNameShadowing:SwapModel.kt$SwapModel${ it.cryptoCurrencyStatus }</ID>
     <ID>NoNameShadowing:SwapModel.kt$SwapModel${ it.cryptoCurrencyStatus.currency.id.value == id }</ID>
     <ID>NoNameShadowing:SwapModel.kt$SwapModel${ it.key == selectedSwapProvider }</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:StateBuilder.kt$StateBuilder$private val isAccountsModeProvider: Provider&lt;Boolean&gt;</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:StateBuilder.kt$StateBuilder$private val isBalanceHiddenProvider: Provider&lt;Boolean&gt;</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:SwapModel.kt$SwapModel$private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:TokensDataConverter.kt$TokensDataConverter$private val isBalanceHiddenProvider: Provider&lt;Boolean&gt;</ID>
     <ID>NullableToStringCall:SwapModel.kt$SwapModel$${currencyStatus.value.amount}</ID>
     <ID>NullableToStringCall:SwapModel.kt$SwapModel$${it.value.amount}</ID>
     <ID>NullableToStringCall:TransactionCard.kt$data.toString()</ID>
