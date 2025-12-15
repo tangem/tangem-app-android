@@ -4,6 +4,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.anyDecimals
+import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -11,6 +12,7 @@ import com.tangem.domain.models.network.Network
 import com.tangem.domain.models.network.NetworkAddress
 import com.tangem.domain.yield.supply.YieldSupplyRepository
 import com.tangem.domain.yield.supply.models.YieldMarketToken
+import com.tangem.domain.yield.supply.usecase.YieldSupplyGetRewardsBalanceUseCase.Companion.TICK_MILLIS
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import io.mockk.coEvery
 import io.mockk.mockk
@@ -26,7 +28,6 @@ import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.math.RoundingMode
 import kotlin.math.ceil
-import kotlin.math.ln
 
 class YieldSupplyGetRewardsBalanceUseCaseTest {
 
@@ -165,9 +166,9 @@ class YieldSupplyGetRewardsBalanceUseCaseTest {
         val deferred = async { useCase(status, appCurrency).take(3).toList() }
 
         testScheduler.advanceUntilIdle()
-        advanceTimeBy(300)
+        advanceTimeBy(TICK_MILLIS)
         testScheduler.advanceUntilIdle()
-        advanceTimeBy(300)
+        advanceTimeBy(TICK_MILLIS)
         testScheduler.advanceUntilIdle()
 
         val collected = deferred.await()
@@ -175,25 +176,147 @@ class YieldSupplyGetRewardsBalanceUseCaseTest {
 
         val expectedDecimals = calculateMinVisibleDecimalsForTest(initialPerTickDelta(amount, apy))
 
-        val firstExpected = amount.format { fiat(
-            appCurrency.code,
-            appCurrency.symbol,
-        ).anyDecimals(decimals = expectedDecimals) }
-        assertThat(collected[0]).isEqualTo(firstExpected)
+        val firstExpected = amount.format {
+            fiat(
+                appCurrency.code,
+                appCurrency.symbol,
+            ).anyDecimals(decimals = expectedDecimals)
+        }
+        assertThat(collected[0].fiatBalance).isEqualTo(firstExpected)
 
         val firstNext = nextBalance(amount, apy)
-        val secondExpected = firstNext.format { fiat(
-            appCurrency.code,
-            appCurrency.symbol,
-        ).anyDecimals(decimals = expectedDecimals) }
-        assertThat(collected[1]).isEqualTo(secondExpected)
+        val secondExpected = firstNext.format {
+            fiat(
+                appCurrency.code,
+                appCurrency.symbol,
+            ).anyDecimals(decimals = expectedDecimals)
+        }
+        assertThat(collected[1].fiatBalance).isEqualTo(secondExpected)
 
         val secondNext = nextBalance(firstNext, apy)
-        val thirdExpected = secondNext.format { fiat(
-            appCurrency.code,
-            appCurrency.symbol,
-        ).anyDecimals(decimals = expectedDecimals) }
-        assertThat(collected[2]).isEqualTo(thirdExpected)
+        val thirdExpected = secondNext.format {
+            fiat(
+                appCurrency.code,
+                appCurrency.symbol,
+            ).anyDecimals(decimals = expectedDecimals)
+        }
+        assertThat(collected[2].fiatBalance).isEqualTo(thirdExpected)
+    }
+
+    @Test
+    fun `GIVEN polygon USDT0 Loaded status WHEN invoke THEN emit formatted balances`() = runTest {
+        val network = Network(
+            id = Network.ID(Network.RawID("POLYGON"), Network.DerivationPath.Card("m/44'/60'/0'/0/0")),
+            backendId = "polygon-pos",
+            name = "Polygon",
+            currencySymbol = "POL",
+            derivationPath = Network.DerivationPath.Card("m/44'/60'/0'/0/0"),
+            isTestnet = false,
+            standardType = Network.StandardType.Unspecified("Polygon"),
+            hasFiatFeeRate = true,
+            canHandleTokens = true,
+            transactionExtrasType = Network.TransactionExtrasType.NONE,
+            nameResolvingType = Network.NameResolvingType.NONE,
+        )
+        val tokenId = CryptoCurrency.ID(
+            prefix = CryptoCurrency.ID.Prefix.TOKEN_PREFIX,
+            body = CryptoCurrency.ID.Body.NetworkId(network.rawId),
+            suffix = CryptoCurrency.ID.Suffix.RawID("usdt0", "0xc2132d05d31c914a87c6611c10748aeb04b58e8f"),
+        )
+        val currency = CryptoCurrency.Token(
+            id = tokenId,
+            network = network,
+            name = "USDT0",
+            symbol = "USDT0",
+            decimals = 6,
+            iconUrl = "https://s3.eu-central-1.amazonaws.com/tangem.api/coins/large/usdt0.png",
+            isCustom = false,
+            contractAddress = "0xc2132d05d31c914a87c6611c10748aeb04b58e8f",
+        )
+
+        val amount = BigDecimal("9.241136")
+        val fiatRate = BigDecimal("0.9999761277273864")
+        val status = CryptoCurrencyStatus(
+            currency = currency,
+            value = CryptoCurrencyStatus.Loaded(
+                amount = amount,
+                fiatAmount = amount.multiply(fiatRate),
+                fiatRate = fiatRate,
+                priceChange = BigDecimal("-0.000058200000000008245"),
+                stakingBalance = null,
+                yieldSupplyStatus = null,
+                hasCurrentNetworkTransactions = false,
+                pendingTransactions = emptySet(),
+                networkAddress = NetworkAddress.Single(
+                    NetworkAddress.Address(
+                        value = "0xb71fa0E20ba8579B3ec51cC79aaa84Bf5982BB49",
+                        type = NetworkAddress.Address.Type.Primary,
+                    ),
+                ),
+                sources = CryptoCurrencyStatus.Sources(),
+            ),
+        )
+
+        val apy = BigDecimal("5.0")
+        coEvery { repository.getCachedMarkets() } returns listOf(
+            YieldMarketToken(
+                tokenAddress = currency.contractAddress,
+                chainId = 137,
+                apy = apy,
+                isActive = true,
+                maxFeeNative = BigDecimal.ZERO,
+                maxFeeUSD = BigDecimal.ZERO,
+                backendId = "polygon-pos",
+            ),
+        )
+
+        val dispatcherProvider = testDispatcherProvider(this)
+        val useCase = YieldSupplyGetRewardsBalanceUseCase(repository, dispatcherProvider)
+        val appCurrency = AppCurrency.Default
+
+        val deferred = async { useCase(status, appCurrency).take(2).toList() }
+
+        testScheduler.advanceUntilIdle()
+        advanceTimeBy(TICK_MILLIS)
+        testScheduler.advanceUntilIdle()
+
+        val emissions = deferred.await()
+        assertThat(emissions).hasSize(2)
+
+        val apyFraction = apy.divide(BigDecimal("100"), 18, RoundingMode.HALF_UP)
+        val perTickCrypto = amount.multiply(apyFraction)
+            .multiply(YieldSupplyGetRewardsBalanceUseCase.TICK_SECONDS_BD)
+            .divide(
+                YieldSupplyGetRewardsBalanceUseCase.SECONDS_PER_YEAR_BD,
+                YieldSupplyGetRewardsBalanceUseCase.SCALE,
+                RoundingMode.HALF_UP,
+            )
+            .abs()
+        val minCryptoDecimals = calculateMinVisibleDecimalsForTest(perTickCrypto).coerceAtMost(currency.decimals)
+
+        val fiatAmountStart = amount.multiply(fiatRate)
+        val perTickFiat = fiatAmountStart.multiply(apyFraction)
+            .multiply(YieldSupplyGetRewardsBalanceUseCase.TICK_SECONDS_BD)
+            .divide(
+                YieldSupplyGetRewardsBalanceUseCase.SECONDS_PER_YEAR_BD,
+                YieldSupplyGetRewardsBalanceUseCase.SCALE,
+                RoundingMode.HALF_UP,
+            )
+            .abs()
+        val minFiatDecimals = calculateMinVisibleDecimalsForTest(perTickFiat)
+
+        val expectedCrypto0 = amount.format {
+            crypto(currency).anyDecimals(
+                maxDecimals = minCryptoDecimals,
+                minDecimals = minCryptoDecimals,
+            )
+        }
+        val expectedFiat0 = fiatAmountStart.format {
+            fiat(appCurrency.code, appCurrency.symbol).anyDecimals(decimals = minFiatDecimals)
+        }
+
+        assertThat(emissions[0].cryptoBalance).isEqualTo(expectedCrypto0)
+        assertThat(emissions[0].fiatBalance).isEqualTo(expectedFiat0)
     }
 
     private fun testDispatcherProvider(scope: TestScope): CoroutineDispatcherProvider {
@@ -260,42 +383,48 @@ class YieldSupplyGetRewardsBalanceUseCaseTest {
     }
 
     private fun initialPerTickDelta(amount: BigDecimal, apy: BigDecimal): BigDecimal {
-        val apyFraction = apy.divide(HUNDRED_BD, SCALE, RoundingMode.HALF_UP)
+        val apyFraction = apy.divide(
+            YieldSupplyGetRewardsBalanceUseCase.HUNDRED_BD,
+            YieldSupplyGetRewardsBalanceUseCase.SCALE,
+            RoundingMode.HALF_UP,
+        )
         return amount
             .multiply(apyFraction)
-            .multiply(TICK_SECONDS_BD)
-            .divide(SECONDS_PER_YEAR_BD, SCALE, RoundingMode.HALF_UP)
+            .multiply(YieldSupplyGetRewardsBalanceUseCase.TICK_SECONDS_BD)
+            .divide(
+                YieldSupplyGetRewardsBalanceUseCase.SECONDS_PER_YEAR_BD,
+                YieldSupplyGetRewardsBalanceUseCase.SCALE,
+                RoundingMode.HALF_UP,
+            )
             .abs()
     }
 
     private fun nextBalance(current: BigDecimal, apy: BigDecimal): BigDecimal {
-        val apyFraction = apy.divide(HUNDRED_BD, SCALE, RoundingMode.HALF_UP)
+        val apyFraction = apy.divide(
+            YieldSupplyGetRewardsBalanceUseCase.HUNDRED_BD,
+            YieldSupplyGetRewardsBalanceUseCase.SCALE,
+            RoundingMode.HALF_UP,
+        )
         val perTickDelta = current
             .multiply(apyFraction)
-            .multiply(TICK_SECONDS_BD)
-            .divide(SECONDS_PER_YEAR_BD, SCALE, RoundingMode.HALF_UP)
+            .multiply(YieldSupplyGetRewardsBalanceUseCase.TICK_SECONDS_BD)
+            .divide(
+                YieldSupplyGetRewardsBalanceUseCase.SECONDS_PER_YEAR_BD,
+                YieldSupplyGetRewardsBalanceUseCase.SCALE,
+                RoundingMode.HALF_UP,
+            )
         return current.add(perTickDelta)
     }
 
     private fun calculateMinVisibleDecimalsForTest(perTickDeltaAbs: BigDecimal): Int {
-        if (perTickDeltaAbs <= BigDecimal.ZERO) return MIN_DECIMALS
+        if (perTickDeltaAbs <= BigDecimal.ZERO) return YieldSupplyGetRewardsBalanceUseCase.MIN_DECIMALS
         val perTickAsDouble = perTickDeltaAbs.toDouble()
-        if (perTickAsDouble.isNaN() || perTickAsDouble.isInfinite()) return MIN_DECIMALS
-        val safe = if (perTickAsDouble <= 0.0) EPSILON else perTickAsDouble
-        val raw = ceil(-ln(safe) / LN_10)
-        return raw.toInt().coerceIn(MIN_DECIMALS, MAX_DECIMALS)
-    }
-
-    private companion object {
-        private const val SCALE = 18
-        private val TICK_SECONDS_BD = BigDecimal("0.3")
-        private val SECONDS_PER_YEAR_BD = BigDecimal("31536000")
-        private val HUNDRED_BD = BigDecimal("100")
-
-        private const val MIN_DECIMALS = 3
-        private const val MAX_DECIMALS = 8
-
-        private val LN_10 = ln(10.0)
-        private const val EPSILON = 1e-18
+        if (perTickAsDouble.isNaN() || perTickAsDouble.isInfinite()) return YieldSupplyGetRewardsBalanceUseCase.MIN_DECIMALS
+        val safe = if (perTickAsDouble <= 0.0) YieldSupplyGetRewardsBalanceUseCase.EPSILON else perTickAsDouble
+        val raw = ceil(-kotlin.math.ln(safe) / YieldSupplyGetRewardsBalanceUseCase.LN_10)
+        return raw.toInt().coerceIn(
+            YieldSupplyGetRewardsBalanceUseCase.MIN_DECIMALS,
+            YieldSupplyGetRewardsBalanceUseCase.FIAT_MAX_DECIMALS,
+        )
     }
 }
