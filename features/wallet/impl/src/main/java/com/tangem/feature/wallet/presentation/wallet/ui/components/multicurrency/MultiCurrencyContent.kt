@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrency
 
+import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
@@ -8,6 +9,7 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -25,7 +27,7 @@ import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListState
 import kotlinx.collections.immutable.ImmutableList
 
-private const val NON_CONTENT_TOKENS_LIST_KEY = "NON_CONTENT_TOKENS_LIST"
+internal const val NON_CONTENT_TOKENS_LIST_KEY = "NON_CONTENT_TOKENS_LIST"
 
 /**
  * LazyList extension for [WalletTokensListState]
@@ -39,12 +41,14 @@ internal fun LazyListScope.tokensListItems(
     state: WalletTokensListState,
     modifier: Modifier = Modifier,
     isBalanceHidden: Boolean,
+    portfolioVisibleState: (portfolio: TokensListItemUM.Portfolio) -> MutableTransitionState<Boolean>,
 ) {
     when (state) {
         is WalletTokensListState.ContentState.PortfolioContent -> portfolioContentItems(
             items = state.items,
             isBalanceHidden = isBalanceHidden,
             modifier = modifier,
+            portfolioVisibleState = portfolioVisibleState,
         )
         is WalletTokensListState.ContentState.Content,
         is WalletTokensListState.ContentState.Loading,
@@ -89,27 +93,34 @@ private fun LazyListScope.nonContentItem(modifier: Modifier = Modifier) {
         key = NON_CONTENT_TOKENS_LIST_KEY,
         contentType = NON_CONTENT_TOKENS_LIST_KEY,
     ) {
-        Column(
+        NonContentItemContent(
             modifier = modifier
                 .animateItem(fadeInSpec = null, fadeOutSpec = null)
                 .padding(top = TangemTheme.dimens.spacing96),
-            verticalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing16),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Icon(
-                painter = painterResource(id = R.drawable.ic_empty_64),
-                contentDescription = null,
-                modifier = Modifier.size(size = TangemTheme.dimens.size64),
-                tint = TangemTheme.colors.icon.inactive,
-            )
+        )
+    }
+}
 
-            Text(
-                text = stringResourceSafe(id = R.string.main_empty_tokens_list_message),
-                modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing48),
-                color = TangemTheme.colors.text.tertiary,
-                textAlign = TextAlign.Center,
-                style = TangemTheme.typography.caption2,
-            )
-        }
+@Composable
+internal fun NonContentItemContent(modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing16),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Icon(
+            painter = painterResource(id = R.drawable.ic_empty_64),
+            contentDescription = null,
+            modifier = Modifier.size(size = TangemTheme.dimens.size64),
+            tint = TangemTheme.colors.icon.inactive,
+        )
+
+        Text(
+            text = stringResourceSafe(id = R.string.main_empty_tokens_list_message),
+            modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing48),
+            color = TangemTheme.colors.text.tertiary,
+            textAlign = TextAlign.Center,
+            style = TangemTheme.typography.caption2,
+        )
     }
 }
