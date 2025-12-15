@@ -90,8 +90,9 @@ internal class ManageTokensListManager @AssistedInject constructor(
      */
     suspend fun launchPagination(isCollapsed: Boolean) = coroutineScope {
         val loadUserTokensFromRemote = when (mode) {
-            is ManageTokensMode.Wallet -> source == ManageTokensSource.ONBOARDING
+            is ManageTokensMode.Wallet,
             is ManageTokensMode.Account,
+            -> source == ManageTokensSource.ONBOARDING
             ManageTokensMode.None,
             -> false
         }
@@ -328,6 +329,10 @@ internal class ManageTokensListManager @AssistedInject constructor(
             val updatedUiItem = uiBatch.data[currencyIndex].toggleExpanded(
                 currency = currencyBatch.data[currencyIndex],
                 isEditable = batches.canEditItems,
+                updates = CurrencyUpdates(
+                    toAdd = currenciesToAdd.value,
+                    toRemove = currenciesToRemove.value,
+                ),
                 onSelectCurrencyNetwork = { networkId, isSelected ->
                     selectNetwork(currencyBatch.key, currency, networkId, isSelected)
                 },

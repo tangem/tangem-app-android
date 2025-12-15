@@ -1,7 +1,9 @@
 package com.tangem.features.account.selector.ui
 
 import android.content.res.Configuration
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -19,6 +21,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
+import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.account.AccountIconPreviewData
 import com.tangem.common.ui.userwallet.UserWalletItemRow
 import com.tangem.common.ui.userwallet.state.UserWalletItemUM
@@ -29,7 +32,6 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.features.account.impl.R
 import com.tangem.features.account.selector.entity.PortfolioSelectorItemUM
 import com.tangem.features.account.selector.entity.PortfolioSelectorUM
@@ -68,14 +70,21 @@ internal fun PortfolioSelectorContent(
                 )
             }
 
+            val portfolioShape = RoundedCornerShape(TangemTheme.dimens.radius14)
+            val border = BorderStroke(
+                width = 1.dp,
+                color = TangemTheme.colors.text.accent,
+            )
+
             when (item) {
                 is PortfolioSelectorItemUM.Portfolio -> UserWalletItemRow(
                     state = item.item,
                     modifier = offsetModifier
                         .fillMaxWidth()
                         .heightIn(min = TangemTheme.dimens.size68)
-                        .clip(RoundedCornerShape(TangemTheme.dimens.radius14))
+                        .clip(portfolioShape)
                         .background(TangemTheme.colors.background.action)
+                        .conditional(item.isSelected) { border(border, portfolioShape) }
                         .clickable(enabled = item.item.isEnabled, onClick = item.item.onClick)
                         .padding(all = TangemTheme.dimens.spacing12)
                         .conditional(!item.item.isEnabled) { alpha(DISABLED_WALLET_ALPHA) },
@@ -122,7 +131,7 @@ internal object PortfolioSelectorPreviewData {
 
     private val accountItem: UserWalletItemUM
         get() = UserWalletItemUM(
-            id = UserWalletId(UUID.randomUUID().toString().encodeToByteArray()),
+            id = UUID.randomUUID().toString(),
             name = accountName,
             information = UserWalletItemUM.Information.Loaded(stringReference("12 tokens")),
             balance = UserWalletItemUM.Balance.Loaded("$726.04", false),
@@ -139,7 +148,7 @@ internal object PortfolioSelectorPreviewData {
 
     private val walletItem: UserWalletItemUM
         get() = UserWalletItemUM(
-            id = UserWalletId(UUID.randomUUID().toString().encodeToByteArray()),
+            id = UUID.randomUUID().toString(),
             name = walletName,
             information = UserWalletItemUM.Information.Loaded(stringReference("12 tokens")),
             balance = UserWalletItemUM.Balance.Loaded("$726.04", false),
@@ -152,76 +161,65 @@ internal object PortfolioSelectorPreviewData {
         get() = walletItem.copy(isEnabled = false)
 
     val firstList
-        get() = buildList {
+        get() = listOf(
             PortfolioSelectorItemUM.GroupTitle(
                 id = UUID.randomUUID().toString(),
                 name = stringReference("Tangem 2.0"),
-            ).let(::add)
-            accountItem
-                .let { PortfolioSelectorItemUM.Portfolio(it) }
-                .let(::add)
-            lockedAccountItem
-                .let { PortfolioSelectorItemUM.Portfolio(it) }
-                .let(::add)
+            ),
+            PortfolioSelectorItemUM.Portfolio(accountItem, false),
+            PortfolioSelectorItemUM.Portfolio(lockedAccountItem, false),
             PortfolioSelectorItemUM.GroupTitle(
                 id = UUID.randomUUID().toString(),
                 name = stringReference("Tangem White"),
-            ).let(::add)
-            accountItem.let { PortfolioSelectorItemUM.Portfolio(it) }
-                .let(::add)
-        }
+            ),
+            PortfolioSelectorItemUM.Portfolio(accountItem, true),
+        )
 
     val secondList
-        get() = firstList + buildList {
+        get() = firstList + listOf(
             PortfolioSelectorItemUM.GroupTitle(
                 id = UUID.randomUUID().toString(),
                 name = resourceReference(R.string.common_locked_wallets),
-            ).let(::add)
-            add(PortfolioSelectorItemUM.Portfolio(lockedWalletItem))
-            add(PortfolioSelectorItemUM.Portfolio(lockedWalletItem))
-        }
+            ),
+            PortfolioSelectorItemUM.Portfolio(lockedWalletItem, false),
+            PortfolioSelectorItemUM.Portfolio(lockedWalletItem, false),
+        )
 
     val walletList
-        get() = buildList {
-            add(PortfolioSelectorItemUM.Portfolio(walletItem))
-            add(PortfolioSelectorItemUM.Portfolio(walletItem))
-        }
+        get() = listOf(
+            PortfolioSelectorItemUM.Portfolio(walletItem, false),
+            PortfolioSelectorItemUM.Portfolio(walletItem, true),
+        )
 
     val lockedWalletList
-        get() = buildList {
-            add(PortfolioSelectorItemUM.Portfolio(walletItem))
-            val title = PortfolioSelectorItemUM.GroupTitle(
+        get() = listOf(
+            PortfolioSelectorItemUM.Portfolio(walletItem, true),
+            PortfolioSelectorItemUM.GroupTitle(
                 id = UUID.randomUUID().toString(),
                 name = resourceReference(R.string.common_locked_wallets),
-            )
-            add(title)
-            add(PortfolioSelectorItemUM.Portfolio(lockedWalletItem))
-            add(PortfolioSelectorItemUM.Portfolio(lockedWalletItem))
-        }
+            ),
+            PortfolioSelectorItemUM.Portfolio(lockedWalletItem, false),
+            PortfolioSelectorItemUM.Portfolio(lockedWalletItem, false),
+        )
 }
 
 internal class PortfolioSelectorPreviewStateProvider : CollectionPreviewParameterProvider<PortfolioSelectorUM>(
-    buildList {
-        val first = PortfolioSelectorUM(
+    listOf(
+        PortfolioSelectorUM(
             title = resourceReference(R.string.common_choose_account),
             items = firstList.toImmutableList(),
-        )
-        val second = PortfolioSelectorUM(
+        ),
+        PortfolioSelectorUM(
             title = resourceReference(R.string.common_choose_account),
             items = secondList.toImmutableList(),
-        )
-        val walletListUM = PortfolioSelectorUM(
+        ),
+        PortfolioSelectorUM(
             title = resourceReference(R.string.common_choose_wallet),
             items = walletList.toImmutableList(),
-        )
-        val lockedWalletListUM =
-            PortfolioSelectorUM(
-                title = resourceReference(R.string.common_choose_wallet),
-                items = lockedWalletList.toImmutableList(),
-            )
-        add(first)
-        add(second)
-        add(walletListUM)
-        add(lockedWalletListUM)
-    },
+        ),
+        PortfolioSelectorUM(
+            title = resourceReference(R.string.common_choose_wallet),
+            items = lockedWalletList.toImmutableList(),
+        ),
+    ),
 )

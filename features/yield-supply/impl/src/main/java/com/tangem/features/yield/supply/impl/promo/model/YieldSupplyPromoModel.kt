@@ -35,10 +35,12 @@ internal class YieldSupplyPromoModel @Inject constructor(
         tosLink = TangemBlogUrlBuilder.YIELD_SUPPLY_TOS_URL,
         policyLink = TangemBlogUrlBuilder.YIELD_SUPPLY_PRIVACY_URL,
         tokenSymbol = params.currency.symbol,
-        title = resourceReference(R.string.yield_module_promo_screen_title),
-        subtitle = resourceReference(
-            R.string.yield_module_promo_screen_variable_rate_info,
+        title = resourceReference(
+            R.string.yield_module_promo_screen_title_v2,
             wrappedList(params.apy),
+        ),
+        subtitle = resourceReference(
+            R.string.yield_module_promo_screen_variable_rate_info_v2,
         ),
     )
 

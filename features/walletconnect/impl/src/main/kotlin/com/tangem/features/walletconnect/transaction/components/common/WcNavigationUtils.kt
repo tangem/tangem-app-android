@@ -27,7 +27,7 @@ internal fun getWcCommonScreen(
         is WcTransactionRoutes.Transaction -> transactionScreenConverter()
         is WcTransactionRoutes.Alert -> AlertsComponentV2(
             appComponentContext = appComponentContext,
-            messageUM = createCommonTransactionAppInfoAlertUM(config.type),
+            messageUM = createCommonTransactionAppInfoAlertUM(config.alertType),
         )
         is WcTransactionRoutes.TransactionRequestInfo -> WcTransactionRequestInfoComponent(
             appComponentContext = appComponentContext,

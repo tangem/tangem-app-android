@@ -124,4 +124,4 @@ private fun NetworkTitleItemPreview(@PreviewParameter(GroupTitleItemProvider::cl
     }
 }
 
-private object GroupTitleItemProvider : CollectionPreviewParameterProvider<Boolean>(collection = listOf(true, false))
+private class GroupTitleItemProvider : CollectionPreviewParameterProvider<Boolean>(collection = listOf(true, false))

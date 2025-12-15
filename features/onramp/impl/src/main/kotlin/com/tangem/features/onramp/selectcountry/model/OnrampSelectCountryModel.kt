@@ -52,12 +52,12 @@ internal class OnrampSelectCountryModel @Inject constructor(
     private val params: SelectCountryComponent.Params = paramsContainer.require()
     private val userWallet = getWalletsUseCase.invokeSync().first { it.walletId == params.userWalletId }
 
-    val state: StateFlow<CountryListUM> get() = controller.state
-
     private val controller = CountryListUMController(
         searchBarUM = createSearchBarUM(),
         loadingItems = loadingItems,
     )
+
+    val state: StateFlow<CountryListUM> get() = controller.state
 
     init {
         analyticsEventHandler.send(OnrampAnalyticsEvent.SelectResidenceOpened)
@@ -69,7 +69,7 @@ internal class OnrampSelectCountryModel @Inject constructor(
         params.onDismiss(isCountrySelected)
     }
 
-    private suspend fun subscribeOnUpdateState() {
+    private fun subscribeOnUpdateState() {
         combine(
             flow = getOnrampCountriesUseCase(),
             flow2 = getOnrampCountryUseCase(),

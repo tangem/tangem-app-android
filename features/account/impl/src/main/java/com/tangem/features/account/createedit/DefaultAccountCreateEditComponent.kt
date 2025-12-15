@@ -15,7 +15,7 @@ import dagger.assisted.AssistedInject
 
 internal class DefaultAccountCreateEditComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
-    @Assisted params: AccountCreateEditComponent.Params,
+    @Assisted private val params: AccountCreateEditComponent.Params,
 ) : AppComponentContext by appComponentContext, AccountCreateEditComponent {
 
     private val model: AccountCreateEditModel = getOrCreateModel(params)
@@ -24,8 +24,9 @@ internal class DefaultAccountCreateEditComponent @AssistedInject constructor(
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
         AccountCreateEditContent(
-            modifier = modifier,
             state = state,
+            isCreateMode = params is AccountCreateEditComponent.Params.Create,
+            modifier = modifier,
         )
         BackHandler(onBack = state.onCloseClick)
     }
