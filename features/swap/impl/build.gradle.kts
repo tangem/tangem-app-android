@@ -22,6 +22,7 @@ dependencies {
     implementation(projects.common.routing)
     implementation(projects.common.ui)
     implementation(projects.core.decompose) // For Route supertype
+    implementation(projects.core.error)
 
     /** Domain modules **/
     implementation(projects.domain.models)
@@ -44,6 +45,9 @@ dependencies {
     implementation(projects.domain.txhistory)
     implementation(projects.domain.txhistory.models)
     implementation(projects.domain.express.models)
+    implementation(projects.domain.account)
+    implementation(projects.domain.account.status)
+    implementation(projects.domain.visa)
 
     /** Feature modules */
     implementation(projects.features.swap.domain)
