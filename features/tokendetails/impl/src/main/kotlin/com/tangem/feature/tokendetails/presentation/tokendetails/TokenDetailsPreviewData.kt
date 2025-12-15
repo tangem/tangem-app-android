@@ -121,7 +121,7 @@ internal object TokenDetailsPreviewData {
         selectedBalanceType = BalanceType.ALL,
         onBalanceSelect = {},
         displayCryptoBalance = "966,96 XLM",
-        displayYeildSupplyCryptoBalance = null,
+        displayYieldSupplyFiatBalance = null,
         displayFiatBalance = "91,50$",
         isBalanceSelectorEnabled = true,
         isBalanceFlickering = false,
