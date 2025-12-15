@@ -11,6 +11,8 @@ enum class P2PEthPoolNetwork(
     val value: String,
     val displayName: String,
     val chainId: Int,
+    val stakingNetworkId: String,
+    val isTestnet: Boolean,
 ) {
     /**
      * Ethereum mainnet
@@ -20,16 +22,20 @@ enum class P2PEthPoolNetwork(
         value = "mainnet",
         displayName = "Ethereum",
         chainId = 1,
+        stakingNetworkId = "ethereum",
+        isTestnet = false,
     ),
 
     /**
-     * Ethereum testnet (Holesky)
+     * Ethereum testnet (Hoodi)
      * Chain ID: 17000
      */
     TESTNET(
         value = "hoodi",
-        displayName = "Holesky Testnet",
+        displayName = "Hoodi Testnet",
         chainId = 17000,
+        stakingNetworkId = "ethereum/test",
+        isTestnet = true,
     ),
     ;
 
