@@ -1,7 +1,10 @@
 package com.tangem.data.tokens.repository
 
 import com.tangem.blockchain.blockchains.polkadot.ExistentialDepositProvider
-import com.tangem.blockchain.common.*
+import com.tangem.blockchain.common.FeeResourceAmountProvider
+import com.tangem.blockchain.common.MinimumSendAmountProvider
+import com.tangem.blockchain.common.ReserveAmountProvider
+import com.tangem.blockchain.common.UtxoAmountLimitProvider
 import com.tangem.data.tokens.converters.UtxoConverter
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -129,6 +132,8 @@ internal class DefaultCurrencyChecksRepository(
         userWalletId: UserWalletId,
         currencyStatus: CryptoCurrencyStatus,
     ): CryptoCurrencyWarning.Rent? {
+        if (currencyStatus.currency !is CryptoCurrency.Coin) return null
+
         val rentData = walletManagersFacade.getRentInfo(userWalletId, currencyStatus.currency.network) ?: return null
         val balanceValue = currencyStatus.value as? CryptoCurrencyStatus.Loaded ?: return null
         val stakingBalance = balanceValue.yieldBalance as? YieldBalance.Data
@@ -150,9 +155,10 @@ internal class DefaultCurrencyChecksRepository(
 
     override suspend fun getRentExemptionError(
         userWalletId: UserWalletId,
-        currencyStatus: CryptoCurrencyStatus,
+        currencyStatus: CryptoCurrencyStatus?,
         balanceAfterTransaction: BigDecimal,
     ): CryptoCurrencyWarning.Rent? {
+        if (currencyStatus == null) return null
         val rentData = walletManagersFacade.getRentInfo(userWalletId, currencyStatus.currency.network) ?: return null
         return when {
             balanceAfterTransaction.isZero() -> null

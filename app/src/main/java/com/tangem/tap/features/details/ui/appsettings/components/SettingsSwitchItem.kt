@@ -1,12 +1,16 @@
 package com.tangem.tap.features.details.ui.appsettings.components
 
 import android.content.res.Configuration
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -39,35 +43,49 @@ internal fun SettingsSwitchItem(item: Item.Switch, modifier: Modifier = Modifier
         },
     )
 
-    Row(
-        modifier = modifier,
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween,
-    ) {
-        Column(
-            modifier = Modifier.weight(weight = .9f),
-            verticalArrangement = Arrangement.Center,
+    Box(modifier = modifier) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            Text(
-                text = item.title.resolveReference(),
-                style = TangemTheme.typography.subtitle1,
-                color = titleTextColor,
-            )
-            SpacerH4()
-            Text(
-                text = item.description.resolveReference(),
-                style = TangemTheme.typography.body2,
-                color = descriptionTextColor,
+            Column(
+                modifier = Modifier.weight(weight = .9f),
+                verticalArrangement = Arrangement.Center,
+            ) {
+                Text(
+                    text = item.title.resolveReference(),
+                    style = TangemTheme.typography.subtitle1,
+                    color = titleTextColor,
+                )
+                SpacerH4()
+                Text(
+                    text = item.description.resolveReference(),
+                    style = TangemTheme.typography.body2,
+                    color = descriptionTextColor,
+                )
+            }
+            SpacerW32()
+            TangemSwitch(
+                checked = item.isChecked,
+                enabled = item.isEnabled,
+                onCheckedChange = item.onCheckedChange,
+                checkedColor = TangemTheme.colors.control.checked,
+                uncheckedColor = TangemTheme.colors.icon.inactive,
             )
         }
-        SpacerW32()
-        TangemSwitch(
-            checked = item.isChecked,
-            enabled = item.isEnabled,
-            onCheckedChange = item.onCheckedChange,
-            checkedColor = TangemTheme.colors.control.checked,
-            uncheckedColor = TangemTheme.colors.icon.inactive,
-        )
+
+        if (item.isEnabled.not()) {
+            Box(
+                Modifier
+                    .matchParentSize()
+                    .clickable(
+                        enabled = true,
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                        onClick = item.onDisabledClick,
+                    ),
+            )
+        }
     }
 }
 

@@ -1,6 +1,5 @@
 package com.tangem.features.account.archived
 
-import com.tangem.common.ui.account.toUM
 import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
 import com.tangem.core.decompose.model.Model
@@ -15,21 +14,20 @@ import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.ToastMessage
 import com.tangem.core.ui.utils.showErrorDialog
 import com.tangem.domain.account.models.AccountList
-import com.tangem.domain.account.models.ArchivedAccount
-import com.tangem.domain.account.usecase.ArchivedAccountList
+import com.tangem.domain.account.status.usecase.RecoverCryptoPortfolioUseCase
 import com.tangem.domain.account.usecase.GetArchivedAccountsUseCase
-import com.tangem.domain.account.usecase.RecoverCryptoPortfolioUseCase
-import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.models.account.AccountId
 import com.tangem.features.account.ArchivedAccountListComponent
 import com.tangem.features.account.archived.entity.AccountArchivedUM
 import com.tangem.features.account.archived.entity.AccountArchivedUMBuilder
+import com.tangem.features.account.archived.entity.AccountArchivedUMBuilder.Companion.toggleProgress
 import com.tangem.features.account.createedit.error.AccountFeatureError
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -48,9 +46,10 @@ internal class ArchivedAccountListModel @Inject constructor(
     private val params = paramsContainer.require<ArchivedAccountListComponent.Params>()
     private val onCloseClick = { router.pop() }
 
-    val uiState: StateFlow<AccountArchivedUM> get() = _uiState
-    private val _uiState: MutableStateFlow<AccountArchivedUM> = MutableStateFlow(getInitialState())
-    private var getArchivedAccountsJob = JobHolder()
+    val uiState: StateFlow<AccountArchivedUM>
+        field = MutableStateFlow(getInitialState())
+
+    private val getArchivedAccountsJob = JobHolder()
 
     init {
         getArchivedAccounts()
@@ -61,56 +60,48 @@ internal class ArchivedAccountListModel @Inject constructor(
             .conflate()
             .distinctUntilChanged()
             .onEach { lce ->
-                val newState = when (lce) {
-                    is Lce.Content<ArchivedAccountList> -> umBuilder.mapContent(
-                        accounts = lce.content,
-                        onCloseClick = onCloseClick,
-                        confirmRecoverDialog = { confirmRecoverDialog(it) },
-                    )
-                    is Lce.Error<Throwable> -> umBuilder.mapError(
-                        throwable = lce.error,
-                        onCloseClick = onCloseClick,
-                        getArchivedAccounts = { getArchivedAccounts() },
-                    )
-                    is Lce.Loading<ArchivedAccountList> -> lce.partialContent?.let { content ->
+                val newState = lce.fold(
+                    ifLoading = { content ->
+                        content ?: return@fold null
+
                         umBuilder.mapContent(
                             accounts = content,
                             onCloseClick = onCloseClick,
-                            confirmRecoverDialog = { confirmRecoverDialog(it) },
+                            onRecoverClick = { recoverCryptoPortfolio(accountId = it.accountId) },
                         )
-                    }
+                    },
+                    ifContent = { content ->
+                        umBuilder.mapContent(
+                            accounts = content,
+                            onCloseClick = onCloseClick,
+                            onRecoverClick = { recoverCryptoPortfolio(accountId = it.accountId) },
+                        )
+                    },
+                    ifError = { error ->
+                        umBuilder.mapError(
+                            throwable = error,
+                            onCloseClick = onCloseClick,
+                            getArchivedAccounts = { getArchivedAccounts() },
+                        )
+                    },
+                )
+
+                if (newState != null) {
+                    uiState.value = newState
                 }
-                newState?.let { _uiState.value = newState }
             }
             .flowOn(dispatchers.default)
             .launchIn(modelScope)
             .saveIn(getArchivedAccountsJob)
     }
 
-    private fun confirmRecoverDialog(account: ArchivedAccount) {
-        val secondAction = EventMessageAction(
-            title = resourceReference(R.string.common_cancel),
-            onClick = {},
-        )
-        val firstAction = EventMessageAction(
-            title = resourceReference(R.string.account_archived_recover),
-            onClick = { recoverCryptoPortfolio(account.accountId) },
-        )
-        messageSender.send(
-            DialogMessage(
-                title = resourceReference(R.string.account_archived_recover_dialog_title),
-                message = resourceReference(
-                    id = R.string.account_archived_recover_dialog_description,
-                    formatArgs = wrappedList(account.name.toUM().value),
-                ),
-                firstActionBuilder = { firstAction },
-                secondActionBuilder = { secondAction },
-            ),
-        )
-    }
-
-    private fun recoverCryptoPortfolio(accountId: AccountId) = modelScope.launch(dispatchers.default) {
-        recoverCryptoPortfolioUseCase(accountId)
+    private fun recoverCryptoPortfolio(accountId: AccountId) = modelScope.launch {
+        uiState.update { it.toggleProgress(accountId, isLoading = true) }
+        val result = withContext(dispatchers.default) {
+            recoverCryptoPortfolioUseCase(accountId)
+        }
+        uiState.update { it.toggleProgress(accountId, isLoading = false) }
+        result
             .onLeft(::handleRecoverError)
             .onRight {
                 showSuccessRecoverMessage()
@@ -122,8 +113,22 @@ internal class ArchivedAccountListModel @Inject constructor(
         if (error is RecoverCryptoPortfolioUseCase.Error.AccountListRequirementsNotMet &&
             error.cause is AccountList.Error.ExceedsMaxAccountsCount
         ) {
-            // TODO("account") show alert that max accounts count reached
-            //  https://www.figma.com/design/09KKG4ZVuFDZhj8WLv5rGJ/%F0%9F%9A%A7-App-experience?node-id=24765-180563&t=vk6TCy4MkYol1cPb-4
+            val firstAction = EventMessageAction(
+                title = resourceReference(R.string.common_got_it),
+                onClick = { },
+            )
+
+            messageSender.send(
+                DialogMessage(
+                    title = resourceReference(R.string.account_recover_limit_dialog_title),
+                    message = resourceReference(
+                        id = R.string.account_recover_limit_dialog_description,
+                        formatArgs = wrappedList(AccountList.MAX_ACCOUNTS_COUNT.toString()),
+                    ),
+                    firstActionBuilder = { firstAction },
+                ),
+            )
+
             return
         }
 
@@ -132,7 +137,7 @@ internal class ArchivedAccountListModel @Inject constructor(
         messageSender.showErrorDialog(universalError = featureError, onDismiss = router::pop)
     }
 
-    private fun logError(error: AccountFeatureError, params: Map<String, String> = mapOf()) {
+    private fun logError(error: AccountFeatureError, params: Map<String, String> = emptyMap()) {
         val exception = IllegalStateException(error.toString())
 
         Timber.e(exception)
