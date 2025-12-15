@@ -266,5 +266,6 @@ sealed class AnalyticsParam {
         const val CHOSEN_TOKEN = "Token Chosen"
         const val ENS = "ENS"
         const val ENS_ADDRESS = "ENS Address"
+        const val ACCOUNT_DERIVATION_FROM = "Account Derivation (from)"
     }
 }
