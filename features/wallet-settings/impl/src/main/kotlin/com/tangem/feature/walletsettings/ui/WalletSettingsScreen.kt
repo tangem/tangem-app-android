@@ -1,20 +1,24 @@
 package com.tangem.feature.walletsettings.ui
 
 import android.content.res.Configuration
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
@@ -44,10 +48,14 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.WalletSettingsScreenTestTags
 import com.tangem.feature.walletsettings.component.preview.PreviewWalletSettingsComponent
+import com.tangem.feature.walletsettings.entity.AccountReorderUM
 import com.tangem.feature.walletsettings.entity.WalletSettingsAccountsUM
 import com.tangem.feature.walletsettings.entity.WalletSettingsItemUM
 import com.tangem.feature.walletsettings.entity.WalletSettingsUM
 import com.tangem.feature.walletsettings.impl.R
+import sh.calvin.reorderable.ReorderableItem
+import sh.calvin.reorderable.ReorderableLazyListState
+import sh.calvin.reorderable.rememberReorderableLazyListState
 
 @Composable
 internal fun WalletSettingsScreen(
@@ -79,9 +87,16 @@ internal fun WalletSettingsScreen(
     )
 }
 
+@Suppress("LongMethod")
 @Composable
 private fun Content(state: WalletSettingsUM, modifier: Modifier = Modifier) {
+    val listState = rememberLazyListState()
+    val reorderableListState = rememberReorderableLazyListState(
+        lazyListState = listState,
+        onMove = { from, to -> state.accountReorderUM.onMove(from.index, to.index) },
+    )
     LazyColumn(
+        state = listState,
         modifier = modifier,
         contentPadding = PaddingValues(
             top = TangemTheme.dimens.spacing16,
@@ -99,6 +114,7 @@ private fun Content(state: WalletSettingsUM, modifier: Modifier = Modifier) {
         items(
             items = state.items,
             key = WalletSettingsItemUM::id,
+            contentType = { it::class.java },
         ) { item ->
             val offsetModifier = when (item) {
                 is WalletSettingsAccountsUM.Account,
@@ -142,7 +158,12 @@ private fun Content(state: WalletSettingsUM, modifier: Modifier = Modifier) {
                     model = item,
                 )
                 is WalletSettingsAccountsUM.Header -> AccountsHeader(item, itemModifier)
-                is WalletSettingsAccountsUM.Account -> AccountItem(item, itemModifier)
+                is WalletSettingsAccountsUM.Account -> AccountItem(
+                    model = item,
+                    reorderableListState = reorderableListState,
+                    accountReorderUM = state.accountReorderUM,
+                    modifier = itemModifier,
+                )
                 is WalletSettingsAccountsUM.Footer -> AccountsFooter(item, itemModifier)
             }
         }
@@ -261,6 +282,7 @@ private fun UpgradeWalletBlock(model: WalletSettingsItemUM.UpgradeWallet, modifi
             iconSize = 36.dp,
             onClick = model.onClick,
             onCloseClick = model.onDismissClick,
+            shouldShowArrowIcon = false,
         ),
         modifier = modifier,
     )
@@ -303,13 +325,39 @@ private fun AccountsHeader(model: WalletSettingsAccountsUM.Header, modifier: Mod
     )
 }
 
+@Suppress("MagicNumber")
 @Composable
-private fun AccountItem(model: WalletSettingsAccountsUM.Account, modifier: Modifier = Modifier) {
-    UserWalletItem(
-        state = model.state,
-        modifier = modifier
-            .background(color = TangemTheme.colors.background.primary),
-    )
+private fun LazyItemScope.AccountItem(
+    model: WalletSettingsAccountsUM.Account,
+    reorderableListState: ReorderableLazyListState,
+    accountReorderUM: AccountReorderUM,
+    modifier: Modifier = Modifier,
+) {
+    ReorderableItem(
+        state = reorderableListState,
+        key = model.id,
+        modifier = modifier,
+    ) { isDragging ->
+        val elevation by animateDpAsState(if (isDragging) 9.dp else 0.dp)
+        val scale by animateFloatAsState(if (isDragging) 1.04f else 1f)
+        val shapeRadius by animateDpAsState(if (isDragging) 16.dp else 0.dp)
+
+        Surface(
+            shape = RoundedCornerShape(shapeRadius),
+            shadowElevation = elevation,
+            modifier = Modifier.scale(scale),
+        ) {
+            UserWalletItem(
+                state = model.state,
+                modifier = Modifier
+                    .longPressDraggableHandle(
+                        enabled = accountReorderUM.isDragEnabled,
+                        onDragStopped = accountReorderUM.onDragStopped,
+                    )
+                    .background(color = TangemTheme.colors.background.primary),
+            )
+        }
+    }
 }
 
 @Composable
@@ -325,19 +373,27 @@ private fun AccountsFooter(model: WalletSettingsAccountsUM.Footer, modifier: Mod
             ),
         ) {
             AddAccountRow(model.addAccount)
-            HorizontalDivider(
-                thickness = TangemTheme.dimens.size0_5,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = TangemTheme.dimens.spacing12),
-                color = TangemTheme.colors.stroke.primary,
-            )
-            BlockItem(
-                modifier = Modifier.fillMaxWidth(),
-                model = model.archivedAccounts,
-            )
+
+            AnimatedVisibility(visible = model.archivedAccounts != null) {
+                model.archivedAccounts ?: return@AnimatedVisibility
+
+                Column {
+                    HorizontalDivider(
+                        thickness = TangemTheme.dimens.size0_5,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = TangemTheme.dimens.spacing12),
+                        color = TangemTheme.colors.stroke.primary,
+                    )
+
+                    BlockItem(
+                        modifier = Modifier.fillMaxWidth(),
+                        model = model.archivedAccounts,
+                    )
+                }
+            }
         }
-        if (!model.showDescription) return
+        if (!model.shouldShowDescription) return
         SpacerH8()
         Text(
             modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing12),
@@ -355,7 +411,7 @@ private fun AddAccountRow(model: WalletSettingsAccountsUM.Footer.AddAccountUM, m
     val iconTint: Color
     val backgroundColor: Color
     val textColor: Color
-    if (model.addAccountEnabled) {
+    if (model.isAddAccountEnabled) {
         iconTint = TangemTheme.colors.icon.accent
         backgroundColor = TangemTheme.colors.icon.accent.copy(alpha = 0.1f)
         textColor = TangemTheme.colors.text.accent

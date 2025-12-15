@@ -6,14 +6,14 @@ import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.domain.staking.model.stakekit.transaction.ActionParams
 import com.tangem.domain.staking.model.stakekit.transaction.StakingGasEstimate
 import com.tangem.domain.staking.repositories.StakingErrorResolver
-import com.tangem.domain.staking.repositories.StakingRepository
+import com.tangem.domain.staking.repositories.StakeKitRepository
 import com.tangem.domain.models.wallet.UserWalletId
 
 /**
  * Use case for staking gas estimation.
  */
 class EstimateGasUseCase(
-    private val stakingRepository: StakingRepository,
+    private val stakeKitRepository: StakeKitRepository,
     private val stakingErrorResolver: StakingErrorResolver,
 ) {
 
@@ -23,7 +23,7 @@ class EstimateGasUseCase(
         params: ActionParams,
     ): Either<StakingError, StakingGasEstimate> {
         return Either.catch {
-            stakingRepository.estimateGas(userWalletId, network, params)
+            stakeKitRepository.estimateGas(userWalletId, network, params)
         }.mapLeft {
             stakingErrorResolver.resolve(it)
         }
