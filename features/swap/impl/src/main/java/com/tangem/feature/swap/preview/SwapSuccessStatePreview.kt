@@ -17,7 +17,7 @@ internal data object SwapSuccessStatePreview {
         fee = TextReference.Str("1 000 DAI ~ 1 000 MATIC"),
         providerName = TextReference.Str("1inch"),
         providerType = TextReference.Str(ExchangeProviderType.DEX.providerName),
-        showStatusButton = false,
+        shouldShowStatusButton = false,
         providerIcon = "",
         fromTitle = AccountTitleUM.Account(
             prefixText = stringReference("From"),
