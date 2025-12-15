@@ -41,8 +41,8 @@ object SimpleCancelableAlertDialog {
         context: Context,
     ): AlertDialog {
         return MaterialAlertDialogBuilder(context, R.style.CustomMaterialDialog).apply {
-            setTitle(titleRes?.let { context.getString(it) } ?: title)
-            setMessage(messageRes?.let { context.getString(it) } ?: message)
+            setTitle(if (titleRes != null) context.getString(titleRes) else title)
+            setMessage(if (messageRes != null) context.getString(messageRes) else message)
             setPositiveButton(context.getText(primaryButtonRes)) { _, _ -> primaryButtonAction() }
             if (secondaryButtonRes != null) {
                 setNegativeButton(context.getText(secondaryButtonRes)) { _, _ -> secondaryButtonAction() }

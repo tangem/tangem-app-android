@@ -21,8 +21,18 @@ interface PortfolioFetcher {
     data class Data(
         val appCurrency: AppCurrency,
         val isBalanceHidden: Boolean,
-        val balances: Map<UserWallet, PortfolioBalance>,
-    )
+        val balances: Map<UserWalletId, PortfolioBalance>,
+    ) {
+
+        val isSingleChoice: Boolean = balances.values
+            .map { it.accountsBalance.accountStatuses }
+            .flatten().size == 1
+
+        fun isSingleChoice(walletId: UserWalletId): Boolean = balances[walletId]
+            ?.accountsBalance
+            ?.accountStatuses
+            ?.size == 1
+    }
 
     data class PortfolioBalance(
         val userWallet: UserWallet,

@@ -1,0 +1,17 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>BooleanPropertyNaming:ReceiveAssetsUM.kt$ReceiveAssetsUM$val showMemoDisclaimer: Boolean</ID>
+    <ID>BooleanPropertyNaming:TokenReceiveAssetsComponent.kt$TokenReceiveAssetsComponent.TokenReceiveAssetsParams$val showMemoDisclaimer: Boolean</ID>
+    <ID>BooleanPropertyNaming:TokenReceiveStateFactory.kt$TokenReceiveStateFactory$val needUseToLegacyAndDefaultName = addresses.any { it.nameService == ReceiveAddressModel.NameService.Legacy }</ID>
+    <ID>MaxChainedCallsOnSameLine:DefaultTokenReceiveComponent.kt$DefaultTokenReceiveComponent$model.params.config.cryptoCurrency.network.name</ID>
+    <ID>MultilineLambdaItParameter:TokenReceiveAssetsContent.kt${ hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress) assetsUM.onOpenQrCodeClick(it) }</ID>
+    <ID>MultilineLambdaItParameter:TokenReceiveAssetsContent.kt${ hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress) assetsUM.onShareClick(it) }</ID>
+    <ID>MultilineLambdaItParameter:TokenReceiveAssetsContent.kt${ hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress) coroutineScope.launch { snackbarHostState.showSnackbar( message = resources.getStringSafe( R.string.wallet_notification_address_copied, ), ) } assetsUM.onCopyClick(it) }</ID>
+    <ID>NoNameShadowing:TokenReceiveStateFactory.kt$TokenReceiveStateFactory$ensAddress</ID>
+    <ID>PropertyUsedBeforeDeclaration:TokenReceiveModel.kt$TokenReceiveModel$params</ID>
+    <ID>PropertyUsedBeforeDeclaration:TokenReceiveModel.kt$TokenReceiveModel$state</ID>
+    <ID>ReusedModifierInstance:TokenReceiveAssetsContent.kt$Box( modifier = modifier .fillMaxWidth() .heightIn(min = 64.dp), contentAlignment = Alignment.Center, ) { CircularProgressIndicator( color = TangemTheme.colors.icon.informative, modifier = Modifier.padding(TangemTheme.dimens.spacing8), ) }</ID>
+  </CurrentIssues>
+</SmellBaseline>
