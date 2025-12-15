@@ -132,8 +132,8 @@ internal class SendWithSwapModel @Inject constructor(
     }
 
     override fun resetSendWithSwapNavigation(resetNavigation: Boolean) {
-        uiState.update {
-            it.copy(
+        uiState.update { state ->
+            state.copy(
                 destinationUM = DestinationUM.Empty(),
                 feeSelectorUM = FeeSelectorUM.Loading,
                 confirmUM = ConfirmUM.Empty,
@@ -166,8 +166,8 @@ internal class SendWithSwapModel @Inject constructor(
                 userWallet = wallet
                 getPrimaryCurrencyStatusUpdates(params.currency)
             },
-            ifLeft = {
-                Timber.w(it.toString())
+            ifLeft = { error ->
+                Timber.w(error.toString())
                 swapAlertFactory.getGenericErrorState(
                     expressError = ExpressError.UnknownError,
                     onFailedTxEmailClick = {
@@ -175,7 +175,7 @@ internal class SendWithSwapModel @Inject constructor(
                             swapAlertFactory.onFailedTxEmailClick(
                                 userWallet = userWallet,
                                 cryptoCurrency = params.currency,
-                                errorMessage = it.toString(),
+                                errorMessage = error.toString(),
                             )
                         }
                     },
