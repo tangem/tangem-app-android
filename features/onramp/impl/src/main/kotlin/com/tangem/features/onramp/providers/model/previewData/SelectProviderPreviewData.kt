@@ -27,7 +27,7 @@ internal object SelectProviderPreviewData {
             termsOfUseLink = null,
             privacyPolicyLink = null,
         ),
-        paymentMethods = listOf(),
+        paymentMethods = emptyList(),
     )
 
     private val providerListUM = PaymentProviderUM(

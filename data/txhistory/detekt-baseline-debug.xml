@@ -1,0 +1,13 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>BooleanPropertyNaming:TxHistoryPagingSource.kt$TxHistoryPagingSource.Params$val refresh: Boolean</ID>
+    <ID>MaxChainedCallsOnSameLine:DefaultTxHistoryRepository.kt$DefaultTxHistoryRepository$walletManager?.wallet?.recentTransactions?.last()?.hash.orEmpty()</ID>
+    <ID>MultilineLambdaItParameter:TxHistoryPageBatchFetcher.kt$TxHistoryPageBatchFetcher${ currentCoroutineContext().ensureActive() BatchFetchResult.Error(it) }</ID>
+    <ID>NamedArguments:DefaultTxHistoryRepository.kt$DefaultTxHistoryRepository$Params(userWalletId, currency, pageSize, refresh)</ID>
+    <ID>NamedArguments:TxHistoryDataModule.kt$TxHistoryDataModule$DefaultTxHistoryRepository( cacheRegistry, walletManagersFacade, userWalletsStore, txHistoryItemsStore, dispatchers, )</ID>
+    <ID>SuspendFunSwallowedCancellation:TxHistoryPageBatchFetcher.kt$TxHistoryPageBatchFetcher$runCatching</ID>
+    <ID>UseOrEmpty:DefaultTxHistoryRepository.kt$DefaultTxHistoryRepository$txs ?: emptyList()</ID>
+  </CurrentIssues>
+</SmellBaseline>
