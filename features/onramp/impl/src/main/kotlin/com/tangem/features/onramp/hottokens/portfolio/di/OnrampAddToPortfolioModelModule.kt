@@ -3,6 +3,7 @@ package com.tangem.features.onramp.hottokens.portfolio.di
 import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.model.Model
 import com.tangem.features.onramp.hottokens.portfolio.model.OnrampAddToPortfolioModel
+import com.tangem.features.onramp.hottokens.portfolio.model.OnrampAddTokenModel
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -17,4 +18,9 @@ internal interface OnrampAddToPortfolioModelModule {
     @IntoMap
     @ClassKey(OnrampAddToPortfolioModel::class)
     fun bindOnrampSelectCountryModel(model: OnrampAddToPortfolioModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(OnrampAddTokenModel::class)
+    fun bindOnrampAddTokenModel(model: OnrampAddTokenModel): Model
 }

@@ -1,8 +1,8 @@
 package com.tangem.domain.feedback.utils
 
 import com.tangem.domain.feedback.FeedbackDataBuilder
-import com.tangem.domain.feedback.models.WalletMetaInfo
 import com.tangem.domain.feedback.models.FeedbackEmailType
+import com.tangem.domain.feedback.models.WalletMetaInfo
 import com.tangem.domain.feedback.repository.FeedbackRepository
 import com.tangem.domain.visa.model.VisaTxDetails
 
@@ -18,6 +18,7 @@ internal class EmailMessageBodyResolver(
 ) {
 
     /** Resolve email message body by [type] */
+    @Suppress("CyclomaticComplexMethod")
     suspend fun resolve(type: FeedbackEmailType): String = with(FeedbackDataBuilder()) {
         when (type) {
             is FeedbackEmailType.DirectUserRequest -> addUserRequestBody(type.walletMetaInfo)
@@ -33,9 +34,66 @@ internal class EmailMessageBodyResolver(
             is FeedbackEmailType.Visa.Activation -> addUserRequestBody(type.walletMetaInfo)
             is FeedbackEmailType.Visa.DirectUserRequest -> addUserRequestBody(type.walletMetaInfo)
             is FeedbackEmailType.Visa.Dispute -> addVisaRequestBody(type.walletMetaInfo, type.visaTxDetails)
+            is FeedbackEmailType.Visa.FailedIssueCard -> addTangemPayFailedIssuingCardBody(type)
+            is FeedbackEmailType.Visa.DisputeV2 -> addTangemPayDisputeRequestBody(type)
+            is FeedbackEmailType.Visa.Withdrawal -> addTangemPayWithdrawalRequestBody(type)
+            is FeedbackEmailType.Visa.FeatureIsBeta -> addTangemPayBetaRequestBody(type)
         }
 
         return build()
+    }
+
+    private fun FeedbackDataBuilder.addTangemPayFailedIssuingCardBody(type: FeedbackEmailType.Visa.FailedIssueCard) {
+        addTangemPayPhoneInfoBody(type)
+        addDelimiter()
+        type.walletMetaInfo.userWalletId?.let { userWalletId ->
+            addUserWalletId(userWalletId = userWalletId.stringValue)
+        }
+    }
+
+    private fun FeedbackDataBuilder.addTangemPayDisputeRequestBody(type: FeedbackEmailType.Visa.DisputeV2) {
+        addTangemPayPhoneInfoBody(type = type)
+        addDelimiter()
+        addTangemPayTxInfo(type.item)
+        addDelimiter()
+        type.walletMetaInfo.userWalletId?.let { userWalletId ->
+            addUserWalletId(userWalletId = userWalletId.stringValue)
+        }
+    }
+
+    private fun FeedbackDataBuilder.addTangemPayBetaRequestBody(type: FeedbackEmailType.Visa) {
+        addTangemPayPhoneInfoBody(type)
+        addDelimiter()
+        type.walletMetaInfo?.userWalletId?.let { userWalletId ->
+            addUserWalletId(userWalletId = userWalletId.stringValue)
+        }
+    }
+
+    private suspend fun FeedbackDataBuilder.addTangemPayWithdrawalRequestBody(
+        type: FeedbackEmailType.Visa.Withdrawal,
+    ) {
+        addUserWalletMetaInfo(type.walletMetaInfo)
+        addDelimiter()
+
+        val userWalletId = requireNotNull(type.walletMetaInfo.userWalletId) { "UserWalletId must be not null" }
+        val blockchainError = feedbackRepository.getBlockchainErrorInfo(userWalletId = userWalletId)
+        val blockchainInfo = blockchainError?.let {
+            feedbackRepository.getBlockchainInfo(
+                userWalletId = userWalletId,
+                blockchainId = blockchainError.blockchainId,
+                derivationPath = blockchainError.derivationPath,
+            )
+        }
+
+        if (blockchainInfo != null) {
+            addBlockchainError(blockchainInfo, blockchainError)
+            addDelimiter()
+        }
+
+        addSwapInfo(providerName = type.providerName, txId = type.txId)
+        addDelimiter()
+
+        addPhoneInfo(phoneInfo = feedbackRepository.getPhoneInfo())
     }
 
     private suspend fun FeedbackDataBuilder.addVisaRequestBody(
@@ -69,6 +127,11 @@ internal class EmailMessageBodyResolver(
 
     private fun FeedbackDataBuilder.addPhoneInfoBody() {
         addPhoneInfo(phoneInfo = feedbackRepository.getPhoneInfo())
+    }
+
+    private fun FeedbackDataBuilder.addTangemPayPhoneInfoBody(type: FeedbackEmailType.Visa) {
+        addPhoneInfo(phoneInfo = feedbackRepository.getPhoneInfo())
+        addTangemPayIssueType(type)
     }
 
     private suspend fun FeedbackDataBuilder.addTransactionSendingProblemBody(walletMetaInfo: WalletMetaInfo) {
