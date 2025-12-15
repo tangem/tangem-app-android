@@ -4,7 +4,6 @@ import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
-import com.squareup.sqldelight.internal.AtomicBoolean
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
@@ -42,6 +41,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.transformers.*
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
 import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvider
 import com.tangem.features.biometry.AskBiometryComponent
+import com.tangem.features.feed.entry.featuretoggle.FeedFeatureToggle
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
 import com.tangem.features.pushnotifications.api.PushNotificationsModelCallbacks
 import com.tangem.features.tangempay.TangemPayFeatureToggles
@@ -99,6 +99,7 @@ internal class WalletModel @Inject constructor(
     private val accountsFeatureToggles: AccountsFeatureToggles,
     private val tangemPayMainScreenCustomerInfoUseCase: TangemPayMainScreenCustomerInfoUseCase,
     private val trackingContextProxy: TrackingContextProxy,
+    private val feedFeatureToggle: FeedFeatureToggle,
     val screenLifecycleProvider: ScreenLifecycleProvider,
     val innerWalletRouter: InnerWalletRouter,
 ) : Model() {
@@ -114,13 +115,13 @@ internal class WalletModel @Inject constructor(
     private val updateTangemPayJobHolder = JobHolder()
 
     private var expressTxStatusTaskScheduler = SingleTaskScheduler<Unit>()
-    private val hasMainScreenOpenedEventSent = AtomicBoolean(false)
 
     init {
         if (!hotWalletFeatureToggles.isHotWalletEnabled) {
             analyticsEventsHandler.send(WalletScreenAnalyticsEvent.MainScreen.ScreenOpenedLegacy())
         }
 
+        updateMarketToggle()
         suggestToOpenMarkets()
 
         maybeMigrateNames()
@@ -140,6 +141,12 @@ internal class WalletModel @Inject constructor(
     fun onResume() {
         modelScope.launch(dispatchers.main) {
             suggestToEnableBiometrics()
+        }
+    }
+
+    private fun updateMarketToggle() {
+        stateHolder.update {
+            it.copy(isNewMarketEnabled = feedFeatureToggle.isFeedEnabled)
         }
     }
 
@@ -282,15 +289,13 @@ internal class WalletModel @Inject constructor(
                 .onEach { selectedWallet ->
                     trackingContextProxy.setContext(selectedWallet)
 
-                    if (hotWalletFeatureToggles.isHotWalletEnabled && !hasMainScreenOpenedEventSent.get()) {
-                        // send it here because we need context to be set
+                    if (hotWalletFeatureToggles.isHotWalletEnabled) {
                         modelScope.launch {
                             val hasMobileWallet = userWalletsListRepository.userWalletsSync()
                                 .any { it is UserWallet.Hot }
                             analyticsEventsHandler.send(
                                 WalletScreenAnalyticsEvent.MainScreen.ScreenOpened(hasMobileWallet),
                             )
-                            hasMainScreenOpenedEventSent.set(true)
                         }
                     }
 
