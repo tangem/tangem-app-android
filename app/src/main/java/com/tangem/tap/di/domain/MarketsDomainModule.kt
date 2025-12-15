@@ -39,6 +39,14 @@ object MarketsDomainModule {
 
     @Provides
     @Singleton
+    fun provideGetTopFiveMarketTokenUseCase(
+        marketsTokenRepository: MarketsTokenRepository,
+    ): GetTopFiveMarketTokenUseCase {
+        return GetTopFiveMarketTokenUseCase(marketsTokenRepository = marketsTokenRepository)
+    }
+
+    @Provides
+    @Singleton
     fun provideGetTokenPriceChartUseCase(marketsTokenRepository: MarketsTokenRepository): GetTokenPriceChartUseCase {
         return GetTokenPriceChartUseCase(marketsTokenRepository = marketsTokenRepository)
     }
