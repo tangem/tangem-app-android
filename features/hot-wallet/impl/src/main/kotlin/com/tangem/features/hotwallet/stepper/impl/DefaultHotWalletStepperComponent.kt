@@ -34,7 +34,6 @@ internal class DefaultHotWalletStepperComponent @AssistedInject constructor(
             modifier = modifier,
             onBackClick = model::onBackClick,
             onSkipClick = model::onSkipClick,
-            onFeedbackClick = model::onFeedbackClick,
         )
     }
 

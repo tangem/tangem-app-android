@@ -37,8 +37,7 @@ class TermsOfServiceTest : BaseTestCase() {
             }
             step("Assert 'Stories' screen is opened") {
                 onStoriesScreen {
-                    scanButton.assertIsDisplayed()
-                    orderButton.assertIsDisplayed()
+                    getStartedButton.assertIsDisplayed()
                 }
             }
         }
@@ -91,8 +90,7 @@ class TermsOfServiceTest : BaseTestCase() {
             }
             step("Assert 'Stories' screen is opened") {
                 onStoriesScreen {
-                    scanButton.assertIsDisplayed()
-                    orderButton.assertIsDisplayed()
+                    getStartedButton.assertIsDisplayed()
                 }
             }
             step("Stop app") {
@@ -103,8 +101,7 @@ class TermsOfServiceTest : BaseTestCase() {
             }
             step("Assert 'Stories' screen is opened") {
                 onStoriesScreen {
-                    scanButton.assertIsDisplayed()
-                    orderButton.assertIsDisplayed()
+                    getStartedButton.assertIsDisplayed()
                 }
             }
         }

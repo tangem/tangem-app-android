@@ -10,7 +10,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.staking.StakingIdFactory
-import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
+import com.tangem.domain.staking.multi.MultiStakingBalanceFetcher
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.derivations.DerivationsRepository
@@ -28,7 +28,7 @@ class SaveManagedTokensUseCase(
     private val derivationsRepository: DerivationsRepository,
     private val multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
     private val multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
-    private val multiYieldBalanceFetcher: MultiYieldBalanceFetcher,
+    private val multiStakingBalanceFetcher: MultiStakingBalanceFetcher,
     private val stakingIdFactory: StakingIdFactory,
     private val parallelUpdatingScope: CoroutineScope,
 ) {
@@ -61,6 +61,8 @@ class SaveManagedTokensUseCase(
 
             parallelUpdatingScope.launch {
                 withContext(NonCancellable) {
+                    syncTokens(userWalletId = userWalletId, addedCurrencies = savedCurrencies)
+
                     launch {
                         refreshUpdatedNetworks(
                             userWalletId = userWalletId,
@@ -68,7 +70,7 @@ class SaveManagedTokensUseCase(
                         )
                     }
                     launch {
-                        refreshUpdatedYieldBalances(
+                        refreshUpdatedStakingBalances(
                             userWalletId = userWalletId,
                             addedCurrencies = savedCurrencies,
                         )
@@ -96,6 +98,26 @@ class SaveManagedTokensUseCase(
         )
     }
 
+    private suspend fun syncTokens(userWalletId: UserWalletId, addedCurrencies: List<CryptoCurrency>) {
+        createWalletManagers(userWalletId = userWalletId, currencies = addedCurrencies)
+        currenciesRepository.syncTokens(userWalletId)
+    }
+
+    /**
+     * Creates wallet managers for the given [currencies] if they do not already exist.
+     * The method will generate addresses for new networks to ensure the stability of the "Push notifications" feature.
+     *
+     * @param userWalletId The ID of the user's wallet.
+     * @param currencies The list of cryptocurrencies for which to create wallet managers.
+     */
+    private suspend fun createWalletManagers(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) {
+        val networks = currencies.mapTo(hashSetOf(), CryptoCurrency::network)
+
+        for (network in networks) {
+            walletManagersFacade.getOrCreateWalletManager(userWalletId = userWalletId, network = network)
+        }
+    }
+
     private suspend fun refreshUpdatedNetworks(userWalletId: UserWalletId, addedCurrencies: List<CryptoCurrency>) {
         multiNetworkStatusFetcher(
             MultiNetworkStatusFetcher.Params(
@@ -103,11 +125,9 @@ class SaveManagedTokensUseCase(
                 networks = addedCurrencies.map(CryptoCurrency::network).toSet(),
             ),
         )
-
-        currenciesRepository.syncTokens(userWalletId)
     }
 
-    private suspend fun refreshUpdatedYieldBalances(
+    private suspend fun refreshUpdatedStakingBalances(
         userWalletId: UserWalletId,
         addedCurrencies: List<CryptoCurrency>,
     ) {
@@ -115,8 +135,8 @@ class SaveManagedTokensUseCase(
             stakingIdFactory.create(userWalletId = userWalletId, cryptoCurrency = it).getOrNull()
         }
 
-        multiYieldBalanceFetcher(
-            params = MultiYieldBalanceFetcher.Params(userWalletId = userWalletId, stakingIds = stakingIds),
+        multiStakingBalanceFetcher(
+            params = MultiStakingBalanceFetcher.Params(userWalletId = userWalletId, stakingIds = stakingIds),
         )
     }
 

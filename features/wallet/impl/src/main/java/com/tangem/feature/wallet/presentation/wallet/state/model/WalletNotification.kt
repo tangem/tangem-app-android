@@ -10,6 +10,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.pluralReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.feature.wallet.child.wallet.model.WalletActivationBannerType
 import com.tangem.feature.wallet.impl.R
 import org.joda.time.DateTime
 
@@ -287,14 +288,22 @@ sealed class WalletNotification(val config: NotificationConfig) {
     )
 
     data class FinishWalletActivation(
-        val iconTint: IconTint,
+        val type: WalletActivationBannerType,
         val buttonsState: ButtonsState,
+        val isBackupExists: Boolean,
     ) : WalletNotification(
         config = NotificationConfig(
             title = resourceReference(R.string.hw_activation_need_title),
-            subtitle = resourceReference(R.string.hw_activation_need_description),
+            subtitle = if (isBackupExists) {
+                resourceReference(R.string.hw_activation_need_warning_description)
+            } else {
+                resourceReference(R.string.hw_activation_need_description)
+            },
             iconResId = R.drawable.img_knight_shield_32,
-            iconTint = iconTint,
+            iconTint = when (type) {
+                WalletActivationBannerType.Attention -> IconTint.Attention
+                WalletActivationBannerType.Warning -> IconTint.Warning
+            },
             buttonsState = buttonsState,
         ),
     )
