@@ -154,6 +154,11 @@ internal class AccessCodeModel @Inject constructor(
                     title = resourceReference(R.string.access_code_alert_validation_ok),
                     onClick = ::setNewCode,
                 ),
+                onDismissRequest = {
+                    uiState.update { currentState ->
+                        currentState.copy(onAccessCodeChange = ::onAccessCodeChange)
+                    }
+                },
             ),
         )
     }

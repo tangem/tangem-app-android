@@ -8,7 +8,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -25,7 +24,7 @@ import com.tangem.features.hotwallet.manualbackup.start.entity.ManualBackupStart
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun ManualBackupStartContent(state: ManualBackupStartUM, modifier: Modifier = Modifier) {
-    Box(
+    Column(
         modifier
             .background(TangemTheme.colors.background.primary)
             .fillMaxSize()
@@ -36,7 +35,11 @@ internal fun ManualBackupStartContent(state: ManualBackupStartUM, modifier: Modi
                 bottom = 16.dp,
             ),
     ) {
-        Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .verticalScroll(rememberScrollState()),
+        ) {
             Text(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -86,7 +89,6 @@ internal fun ManualBackupStartContent(state: ManualBackupStartUM, modifier: Modi
 
         PrimaryButton(
             modifier = Modifier
-                .align(Alignment.BottomCenter)
                 .fillMaxWidth()
                 .padding(top = 16.dp),
             text = stringResourceSafe(R.string.common_continue),
