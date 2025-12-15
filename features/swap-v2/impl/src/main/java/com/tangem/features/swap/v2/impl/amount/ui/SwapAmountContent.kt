@@ -175,7 +175,7 @@ private fun SwapAmountBlock(
             selectedQuote = selectedQuote,
             isSelectedAmountType = isSelectedAmountType,
             isFixedRate = isFixedRate,
-            onExpandEditField = clickIntents::onExpandEditField,
+            onExpandEditField = { clickIntents.onExpandEditField(amountFieldUM.amountType) },
             onSelectTokenClick = clickIntents::onSelectTokenClick,
             onMaxAmountClick = clickIntents::onMaxValueClick,
         )
@@ -195,14 +195,14 @@ private fun SwapAmountEditBlock(
         verticalArrangement = Arrangement.spacedBy(12.dp),
         modifier = modifier.padding(top = 48.dp, bottom = 28.dp),
     ) {
-        when (val amountFieldUM = amountFieldUM.amountField) {
+        when (val amountField = amountFieldUM.amountField) {
             !is AmountState.Data -> {
                 TextShimmer(
                     style = TangemTheme.typography.caption2,
                     modifier = Modifier.width(60.dp),
                 )
             }
-            else -> AccountTitle(amountFieldUM.accountTitleUM)
+            else -> AccountTitle(amountField.accountTitleUM)
         }
         AmountFieldV2(
             amountUM = amountFieldUM.amountField,
@@ -221,7 +221,7 @@ private fun SwapAmountInfo(
     selectedQuote: SwapQuoteUM?,
     isSelectedAmountType: Boolean,
     isFixedRate: Boolean,
-    onExpandEditField: (SwapAmountType) -> Unit,
+    onExpandEditField: () -> Unit,
     onMaxAmountClick: () -> Unit,
     onSelectTokenClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -237,7 +237,7 @@ private fun SwapAmountInfo(
                 enabled = (amountFieldUM as? SwapAmountFieldUM.Content)?.isClickEnabled == true,
                 onClick = {
                     if (isFixedRate) {
-                        onExpandEditField(amountFieldUM.amountType)
+                        onExpandEditField()
                     } else {
                         onSelectTokenClick()
                     }
