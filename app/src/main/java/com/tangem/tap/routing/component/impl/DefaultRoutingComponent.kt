@@ -4,12 +4,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.router.stack.childStack
+import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.decompose.value.subscribe
 import com.arkivanov.essenty.lifecycle.subscribe
 import com.google.android.material.snackbar.Snackbar
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.entity.InitScreenLaunchMode
+import com.tangem.core.analytics.api.AnalyticsExceptionHandler
+import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.context.childByContext
@@ -42,6 +45,7 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 @Suppress("LongParameterList")
 internal class DefaultRoutingComponent @AssistedInject constructor(
@@ -59,6 +63,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
     private val userWalletsListRepository: UserWalletsListRepository,
     private val cardRepository: CardRepository,
     private val onboardingRepository: OnboardingRepository,
+    private val analyticsExceptionHandler: AnalyticsExceptionHandler,
 ) : RoutingComponent,
     AppComponentContext by context,
     SnackbarHandler {
@@ -73,13 +78,23 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
             .create(child("hotAccessCodeRequestComponent"), Unit)
     }
 
+    private val navigation = navigationProvider.getOrCreateTyped<AppRoute>()
+
     private val stack: Value<ChildStack<AppRoute, Child>> = childStack(
-        source = navigationProvider.getOrCreateTyped(),
+        source = navigation,
         initialStack = { getInitialStackOrInit() },
         serializer = null, // AppRoute.serializer(), // Disabled until Nav refactoring completes
         handleBackButton = true,
         childFactory = { route, childContext ->
-            childFactory.createChild(route, childByContext(childContext))
+            try {
+                childFactory.createChild(route, childByContext(childContext))
+            } catch (e: Exception) {
+                Timber.e(e, "App Router Failed")
+                analyticsExceptionHandler.sendException(
+                    ExceptionAnalyticsEvent(exception = e, params = mapOf("Category" to "App Routing")),
+                )
+                Child.DummyComponent
+            }
         },
     )
 
@@ -89,6 +104,12 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
         appRouterConfig.snackbarHandler = this
 
         stack.subscribe(lifecycle) { stack ->
+            // Handle DummyComponent by popping it immediately
+            if (stack.active.instance is Child.DummyComponent) {
+                navigation.pop()
+                return@subscribe
+            }
+
             val stackItems = stack.items.map { it.configuration }
 
             wcRoutingComponent.onAppRouteChange(stack.active.configuration)

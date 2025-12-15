@@ -16,11 +16,19 @@ import javax.inject.Singleton
 
 @Singleton
 class DefaultDeviceFlipDetector @Inject constructor(
-    @ApplicationContext context: Context,
+    @ApplicationContext private val context: Context,
 ) : DeviceFlipDetector, DefaultLifecycleObserver {
 
-    private val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
-    private val gravitySensor = sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+    private val sensorManager: SensorManager by lazy {
+        val manager = context.getSystemService(Context.SENSOR_SERVICE) as? SensorManager
+
+        requireNotNull(manager)
+    }
+
+    private val gravitySensor by lazy {
+        sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+    }
+
     private val isResumedState = AtomicBoolean(false)
 
     override fun onPause(owner: LifecycleOwner) {

@@ -1,0 +1,31 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>BooleanPropertyNaming:SwapInteractorImpl.kt$SwapInteractorImpl$val allQuotesFound = cachedQuotes?.all { it.value !is QuoteStatus.Empty } == true</ID>
+    <ID>BooleanPropertyNaming:SwapInteractorImpl.kt$SwapInteractorImpl$val currencyFilter = it.currency.network.backendId != currency.network.backendId || it.currency.getContractAddress() != currency.getContractAddress()</ID>
+    <ID>BooleanPropertyNaming:SwapInteractorImpl.kt$SwapInteractorImpl$val notCustomTokenFilter = !it.currency.isCustom</ID>
+    <ID>BooleanPropertyNaming:SwapInteractorImpl.kt$SwapInteractorImpl$val statusFilter = it.value is CryptoCurrencyStatus.Loaded || it.value is CryptoCurrencyStatus.NoAccount</ID>
+    <ID>CanBeNonNullable:SwapInteractorImpl.kt$SwapInteractorImpl$spenderAddress: String?</ID>
+    <ID>MaxChainedCallsOnSameLine:SwapInteractorImpl.kt$SwapInteractorImpl$currencyToGet.value.networkAddress?.defaultAddress?.value.orEmpty()</ID>
+    <ID>MaxChainedCallsOnSameLine:SwapInteractorImpl.kt$SwapInteractorImpl$currencyToSend.value.networkAddress?.defaultAddress?.value.orEmpty()</ID>
+    <ID>MaxChainedCallsOnSameLine:SwapInteractorImpl.kt$SwapInteractorImpl$currencyToSendStatus.value.networkAddress?.defaultAddress?.value.orEmpty()</ID>
+    <ID>MaxChainedCallsOnSameLine:SwapInteractorImpl.kt$SwapInteractorImpl$fromToken.value.networkAddress?.defaultAddress?.value.orEmpty()</ID>
+    <ID>MaxChainedCallsOnSameLine:SwapInteractorImpl.kt$SwapInteractorImpl$toToken.value.networkAddress?.defaultAddress?.value.orEmpty()</ID>
+    <ID>MultilineLambdaItParameter:SwapInteractorImpl.kt$SwapInteractorImpl${ Timber.e(it, "Failed to create approveTransaction") return SwapTransactionState.Error.UnknownError }</ID>
+    <ID>MultilineLambdaItParameter:SwapInteractorImpl.kt$SwapInteractorImpl${ Timber.e(it, "Failed to create swap CEX tx data") return SwapTransactionState.Error.UnknownError }</ID>
+    <ID>MultilineLambdaItParameter:SwapInteractorImpl.kt$SwapInteractorImpl${ Timber.e(it, "Failed to create swap dex tx data") return SwapTransactionState.Error.UnknownError }</ID>
+    <ID>MultilineLambdaItParameter:SwapInteractorImpl.kt$SwapInteractorImpl${ it.contractAddress.equals(feePaidCurrency.contractAddress, ignoreCase = true) &amp;&amp; it.network.derivationPath == fromTokenStatus.currency.network.derivationPath }</ID>
+    <ID>MultilineLambdaItParameter:SwapInteractorImpl.kt$SwapInteractorImpl${ tokenInfoForFilter(it).contractAddress == currency.getContractAddress() &amp;&amp; tokenInfoForFilter(it).network == currency.network.backendId }</ID>
+    <ID>MultilineLambdaItParameter:SwapInteractorImpl.kt$SwapInteractorImpl${ val currencyFilter = it.currency.network.backendId != currency.network.backendId || it.currency.getContractAddress() != currency.getContractAddress() val statusFilter = it.value is CryptoCurrencyStatus.Loaded || it.value is CryptoCurrencyStatus.NoAccount val notCustomTokenFilter = !it.currency.isCustom statusFilter &amp;&amp; currencyFilter &amp;&amp; notCustomTokenFilter }</ID>
+    <ID>MultilineLambdaItParameter:SwapInteractorImpl.kt$SwapInteractorImpl${ val listTokenInfo = tokenInfoForAvailable(it) if (cryptoCurrencyStatuses.currency.network.backendId == listTokenInfo.network &amp;&amp; cryptoCurrencyStatuses.currency.getContractAddress() == listTokenInfo.contractAddress &amp;&amp; isAvailableForSwap ) { it.providers } else { null } }</ID>
+    <ID>NamedArguments:SwapInteractorImpl.kt$SwapInteractorImpl$getCoinBalanceAfterTransaction(fromTokenStatus, amount, includeFeeInAmount, fee)</ID>
+    <ID>NamedArguments:SwapInteractorImpl.kt$SwapInteractorImpl$isAllowedToSpend(networkId, fromToken.currency, amount, it)</ID>
+    <ID>NamedArguments:SwapInteractorImpl.kt$SwapInteractorImpl$tryGetFromCache(userWallet, initialCryptoCurrency, state, isReverseFromTo)</ID>
+    <ID>NamedArguments:SwapInteractorImpl.kt$SwapInteractorImpl$tryGetFromCacheV2(userWallet, initialCryptoCurrency, state, isReverseFromTo)</ID>
+    <ID>NoNameShadowing:SwapInteractorImpl.kt$SwapInteractorImpl$account</ID>
+    <ID>NoNameShadowing:SwapInteractorImpl.kt$SwapInteractorImpl${ it.isAvailable }</ID>
+    <ID>NullableToStringCall:SwapInteractorImpl.kt$SwapInteractorImpl$${e.message}</ID>
+    <ID>SuspendFunSwallowedCancellation:SwapInteractorImpl.kt$SwapInteractorImpl$runCatching</ID>
+  </CurrentIssues>
+</SmellBaseline>
