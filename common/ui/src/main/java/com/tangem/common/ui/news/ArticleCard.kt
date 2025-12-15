@@ -22,6 +22,7 @@ import com.tangem.core.ui.components.block.TangemBlockCardColors
 import com.tangem.core.ui.components.label.Label
 import com.tangem.core.ui.components.label.entity.LabelUM
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -87,7 +88,7 @@ private fun TrendingArticle(articleConfigUM: ArticleConfigUM) {
 
         ArticleInfo(
             score = articleConfigUM.score,
-            createdAt = articleConfigUM.createdAt,
+            createdAt = articleConfigUM.createdAt.resolveReference(),
         )
 
         SpacerH(32.dp)
@@ -104,7 +105,7 @@ private fun DefaultArticle(articleConfigUM: ArticleConfigUM) {
     Column(modifier = Modifier.padding(12.dp)) {
         ArticleInfo(
             score = articleConfigUM.score,
-            createdAt = articleConfigUM.createdAt,
+            createdAt = articleConfigUM.createdAt.resolveReference(),
         )
 
         SpacerH(8.dp)
@@ -182,7 +183,7 @@ private fun ArticleCardsPreview() {
         id = 1,
         title = "Bitcoin ETFs log 4th straight day of inflows (+\$550M)",
         score = 9.5f,
-        createdAt = "1h ago",
+        createdAt = TextReference.Str("1h ago"),
         isTrending = true,
         tags = tags,
         isViewed = false,
