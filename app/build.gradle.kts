@@ -215,6 +215,7 @@ dependencies {
     implementation(projects.data.walletManager)
     implementation(projects.data.yieldSupply)
     implementation(projects.data.hotWallet)
+    implementation(projects.data.news)
 
     /** Features */
     implementation(projects.features.referral.impl)
