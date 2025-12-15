@@ -6,6 +6,7 @@ import androidx.compose.runtime.getValue
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.features.yield.supply.impl.apy.ui.YieldSupplyApyContent
 import com.tangem.features.yield.supply.impl.chart.DefaultYieldSupplyChartComponent
@@ -48,6 +49,7 @@ internal class YieldSupplyApyComponent(
     override fun BottomSheet() {
         val state by loadingState.collectAsState()
         YieldSupplyApyContent(
+            apy = stringReference("${params.apy}%"),
             isLoading = state,
             onBackClick = params.onBackClick,
             chartComponent = chartComponent,
@@ -56,6 +58,7 @@ internal class YieldSupplyApyComponent(
 
     data class Params(
         val cryptoCurrency: CryptoCurrency,
+        val apy: String,
         val onBackClick: () -> Unit,
     )
 }

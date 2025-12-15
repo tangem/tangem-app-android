@@ -19,6 +19,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 
+@Suppress("UnusedFlow")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class IsAccountsModeEnabledUseCaseTest {
 
@@ -68,7 +69,7 @@ class IsAccountsModeEnabledUseCaseTest {
                 accountsCRUDRepository.getUserWallets()
             }
 
-            verify(inverse = true) { accountsCRUDRepository.getTotalAccountsCount(any()) }
+            verify(inverse = true) { accountsCRUDRepository.getTotalActiveAccountsCount(any()) }
         }
 
         @Test
@@ -90,7 +91,7 @@ class IsAccountsModeEnabledUseCaseTest {
                 accountsCRUDRepository.getUserWallets()
             }
 
-            verify(inverse = true) { accountsCRUDRepository.getTotalAccountsCount(any()) }
+            verify(inverse = true) { accountsCRUDRepository.getTotalActiveAccountsCount(any()) }
         }
 
         @Test
@@ -100,7 +101,7 @@ class IsAccountsModeEnabledUseCaseTest {
 
             every { featureToggles.isFeatureEnabled } returns true
             every { accountsCRUDRepository.getUserWallets() } returns flowOf(listOf(wallet))
-            every { accountsCRUDRepository.getTotalAccountsCount(wallet.walletId) } returns flowOf(2.some())
+            every { accountsCRUDRepository.getTotalActiveAccountsCount(wallet.walletId) } returns flowOf(2.some())
 
             // Act
             val actual = useCase.invoke().first()
@@ -111,7 +112,7 @@ class IsAccountsModeEnabledUseCaseTest {
             verifyOrder {
                 featureToggles.isFeatureEnabled
                 accountsCRUDRepository.getUserWallets()
-                accountsCRUDRepository.getTotalAccountsCount(wallet.walletId)
+                accountsCRUDRepository.getTotalActiveAccountsCount(wallet.walletId)
             }
         }
 
@@ -122,7 +123,7 @@ class IsAccountsModeEnabledUseCaseTest {
 
             every { featureToggles.isFeatureEnabled } returns true
             every { accountsCRUDRepository.getUserWallets() } returns flowOf(listOf(wallet))
-            every { accountsCRUDRepository.getTotalAccountsCount(wallet.walletId) } returns flowOf(none())
+            every { accountsCRUDRepository.getTotalActiveAccountsCount(wallet.walletId) } returns flowOf(none())
 
             // Act
             val actual = useCase.invoke().first()
@@ -133,7 +134,7 @@ class IsAccountsModeEnabledUseCaseTest {
             verifyOrder {
                 featureToggles.isFeatureEnabled
                 accountsCRUDRepository.getUserWallets()
-                accountsCRUDRepository.getTotalAccountsCount(wallet.walletId)
+                accountsCRUDRepository.getTotalActiveAccountsCount(wallet.walletId)
             }
         }
 
@@ -145,7 +146,7 @@ class IsAccountsModeEnabledUseCaseTest {
 
             every { featureToggles.isFeatureEnabled } returns true
             every { accountsCRUDRepository.getUserWallets() } returns flowOf(listOf(wallet1, wallet2))
-            every { accountsCRUDRepository.getTotalAccountsCount(wallet2.walletId) } returns flowOf(2.some())
+            every { accountsCRUDRepository.getTotalActiveAccountsCount(wallet2.walletId) } returns flowOf(2.some())
 
             // Act
             val actual = useCase.invoke().first()
@@ -156,10 +157,10 @@ class IsAccountsModeEnabledUseCaseTest {
             verifyOrder {
                 featureToggles.isFeatureEnabled
                 accountsCRUDRepository.getUserWallets()
-                accountsCRUDRepository.getTotalAccountsCount(wallet2.walletId)
+                accountsCRUDRepository.getTotalActiveAccountsCount(wallet2.walletId)
             }
 
-            verify(inverse = true) { accountsCRUDRepository.getTotalAccountsCount(wallet1.walletId) }
+            verify(inverse = true) { accountsCRUDRepository.getTotalActiveAccountsCount(wallet1.walletId) }
         }
     }
 
@@ -199,7 +200,7 @@ class IsAccountsModeEnabledUseCaseTest {
                 accountsCRUDRepository.getUserWalletsSync()
             }
 
-            coVerify(inverse = true) { accountsCRUDRepository.getTotalAccountsCountSync(any()) }
+            coVerify(inverse = true) { accountsCRUDRepository.getTotalActiveAccountsCountSync(any()) }
         }
 
         @Test
@@ -221,7 +222,7 @@ class IsAccountsModeEnabledUseCaseTest {
                 accountsCRUDRepository.getUserWalletsSync()
             }
 
-            coVerify(inverse = true) { accountsCRUDRepository.getTotalAccountsCountSync(any()) }
+            coVerify(inverse = true) { accountsCRUDRepository.getTotalActiveAccountsCountSync(any()) }
         }
 
         @Test
@@ -231,7 +232,7 @@ class IsAccountsModeEnabledUseCaseTest {
 
             every { featureToggles.isFeatureEnabled } returns true
             every { accountsCRUDRepository.getUserWalletsSync() } returns listOf(wallet)
-            coEvery { accountsCRUDRepository.getTotalAccountsCountSync(wallet.walletId) } returns 2.some()
+            coEvery { accountsCRUDRepository.getTotalActiveAccountsCountSync(wallet.walletId) } returns 2.some()
 
             // Act
             val actual = useCase.invokeSync()
@@ -242,7 +243,7 @@ class IsAccountsModeEnabledUseCaseTest {
             coVerifyOrder {
                 featureToggles.isFeatureEnabled
                 accountsCRUDRepository.getUserWalletsSync()
-                accountsCRUDRepository.getTotalAccountsCountSync(wallet.walletId)
+                accountsCRUDRepository.getTotalActiveAccountsCountSync(wallet.walletId)
             }
         }
 
@@ -253,7 +254,7 @@ class IsAccountsModeEnabledUseCaseTest {
 
             every { featureToggles.isFeatureEnabled } returns true
             every { accountsCRUDRepository.getUserWalletsSync() } returns listOf(wallet)
-            coEvery { accountsCRUDRepository.getTotalAccountsCountSync(wallet.walletId) } returns none()
+            coEvery { accountsCRUDRepository.getTotalActiveAccountsCountSync(wallet.walletId) } returns none()
 
             // Act
             val actual = useCase.invokeSync()
@@ -264,7 +265,7 @@ class IsAccountsModeEnabledUseCaseTest {
             coVerifyOrder {
                 featureToggles.isFeatureEnabled
                 accountsCRUDRepository.getUserWalletsSync()
-                accountsCRUDRepository.getTotalAccountsCountSync(wallet.walletId)
+                accountsCRUDRepository.getTotalActiveAccountsCountSync(wallet.walletId)
             }
         }
 
@@ -276,7 +277,7 @@ class IsAccountsModeEnabledUseCaseTest {
 
             every { featureToggles.isFeatureEnabled } returns true
             every { accountsCRUDRepository.getUserWalletsSync() } returns listOf(wallet1, wallet2)
-            coEvery { accountsCRUDRepository.getTotalAccountsCountSync(wallet2.walletId) } returns 2.some()
+            coEvery { accountsCRUDRepository.getTotalActiveAccountsCountSync(wallet2.walletId) } returns 2.some()
 
             // Act
             val actual = useCase.invokeSync()
@@ -287,10 +288,10 @@ class IsAccountsModeEnabledUseCaseTest {
             coVerifyOrder {
                 featureToggles.isFeatureEnabled
                 accountsCRUDRepository.getUserWalletsSync()
-                accountsCRUDRepository.getTotalAccountsCountSync(wallet2.walletId)
+                accountsCRUDRepository.getTotalActiveAccountsCountSync(wallet2.walletId)
             }
 
-            coVerify(inverse = true) { accountsCRUDRepository.getTotalAccountsCountSync(wallet1.walletId) }
+            coVerify(inverse = true) { accountsCRUDRepository.getTotalActiveAccountsCountSync(wallet1.walletId) }
         }
     }
 

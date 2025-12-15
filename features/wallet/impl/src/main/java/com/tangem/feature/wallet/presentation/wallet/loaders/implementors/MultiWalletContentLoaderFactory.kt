@@ -2,12 +2,12 @@ package com.tangem.feature.wallet.presentation.wallet.loaders.implementors
 
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.nft.GetNFTCollectionsUseCase
 import com.tangem.domain.promo.GetStoryContentUseCase
+import com.tangem.domain.staking.usecase.StakingApyFlowUseCase
 import com.tangem.domain.tokens.ApplyTokenListSortingUseCase
 import com.tangem.domain.tokens.repository.CurrenciesRepository
-import com.tangem.domain.models.wallet.UserWallet
-import com.tangem.domain.staking.usecase.StakingApyFlowUseCase
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.ShouldSaveUserWalletsUseCase
 import com.tangem.domain.yield.supply.usecase.YieldSupplyApyFlowUseCase
@@ -19,10 +19,13 @@ import com.tangem.feature.wallet.presentation.wallet.domain.GetMultiWalletWarnin
 import com.tangem.feature.wallet.presentation.wallet.domain.MultiWalletTokenListStore
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletWithFundsChecker
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
-import com.tangem.feature.wallet.presentation.account.AccountDependencies
+import com.tangem.feature.wallet.presentation.wallet.subscribers.TangemPayMainSubscriber
+import com.tangem.features.hotwallet.HotWalletFeatureToggles
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
+@Deprecated("Use MultiWalletContentLoaderV2.Factory instead")
 @ModelScoped
 internal class MultiWalletContentLoaderFactory @Inject constructor(
     private val stateHolder: WalletStateController,
@@ -39,9 +42,11 @@ internal class MultiWalletContentLoaderFactory @Inject constructor(
     private val walletsRepository: WalletsRepository,
     private val getNFTCollectionsUseCase: GetNFTCollectionsUseCase,
     private val currenciesRepository: CurrenciesRepository,
-    private val accountDependencies: AccountDependencies,
     private val yieldSupplyApyFlowUseCase: YieldSupplyApyFlowUseCase,
     private val stakingApyFlowUseCase: StakingApyFlowUseCase,
+    private val hotWalletFeatureToggles: HotWalletFeatureToggles,
+    private val tangemPayFeatureToggles: TangemPayFeatureToggles,
+    private val tangemPayMainSubscriberFactory: TangemPayMainSubscriber.Factory,
 ) {
 
     fun create(userWallet: UserWallet, clickIntents: WalletClickIntents): WalletContentLoader {
@@ -62,9 +67,11 @@ internal class MultiWalletContentLoaderFactory @Inject constructor(
             walletsRepository = walletsRepository,
             getNFTCollectionsUseCase = getNFTCollectionsUseCase,
             currenciesRepository = currenciesRepository,
-            accountDependencies = accountDependencies,
             yieldSupplyApyFlowUseCase = yieldSupplyApyFlowUseCase,
             stakingApyFlowUseCase = stakingApyFlowUseCase,
+            hotWalletFeatureToggles = hotWalletFeatureToggles,
+            tangemPayFeatureToggles = tangemPayFeatureToggles,
+            tangemPayMainSubscriberFactory = tangemPayMainSubscriberFactory,
         )
     }
 }

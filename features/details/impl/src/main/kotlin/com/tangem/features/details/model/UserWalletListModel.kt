@@ -1,6 +1,7 @@
 package com.tangem.features.details.model
 
 import com.tangem.common.routing.AppRoute
+import com.tangem.common.ui.userwallet.handle
 import com.tangem.common.ui.userwallet.state.UserWalletItemUM
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -8,7 +9,9 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.wallets.usecase.ShouldSaveUserWalletsUseCase
+import com.tangem.domain.wallets.usecase.UnlockWalletUseCase
 import com.tangem.features.details.entity.UserWalletListUM
 import com.tangem.features.details.impl.R
 import com.tangem.features.details.utils.UserWalletSaver
@@ -21,6 +24,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -33,6 +38,7 @@ internal class UserWalletListModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val userWalletSaver: UserWalletSaver,
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
+    private val unlockWalletUseCase: UnlockWalletUseCase,
 ) : Model() {
 
     private val isWalletSavingInProgress: MutableStateFlow<Boolean> = MutableStateFlow(value = false)
@@ -40,7 +46,8 @@ internal class UserWalletListModel @Inject constructor(
         messageSender = messageSender,
         onlyMultiCurrency = false,
         isAuthMode = false,
-        onWalletClick = { userWalletId -> router.push(AppRoute.WalletSettings(userWalletId)) },
+        isClickableIfLocked = hotWalletFeatureToggles.isHotWalletEnabled,
+        onWalletClick = ::onWalletClicked,
     )
 
     val state: MutableStateFlow<UserWalletListUM> = MutableStateFlow(
@@ -85,6 +92,25 @@ internal class UserWalletListModel @Inject constructor(
             withProgress(isWalletSavingInProgress) {
                 userWalletSaver.scanAndSaveUserWallet(modelScope)
             }
+        }
+    }
+
+    private fun onWalletClicked(userWalletId: UserWalletId) {
+        if (hotWalletFeatureToggles.isHotWalletEnabled) {
+            modelScope.launch {
+                unlockWalletUseCase(userWalletId)
+                    .onRight { router.push(AppRoute.WalletSettings(userWalletId)) }
+                    .onLeft { error ->
+                        Timber.e("Failed to unlock wallet $userWalletId: $error")
+                        error.handle(
+                            onUserCancelled = {},
+                            onAlreadyUnlocked = { router.push(AppRoute.WalletSettings(userWalletId)) },
+                            showMessage = messageSender::send,
+                        )
+                    }
+            }
+        } else {
+            router.push(AppRoute.WalletSettings(userWalletId))
         }
     }
 }

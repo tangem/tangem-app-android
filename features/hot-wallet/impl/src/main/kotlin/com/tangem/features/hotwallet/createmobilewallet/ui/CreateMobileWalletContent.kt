@@ -15,6 +15,7 @@ import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.SecondaryButton
 import com.tangem.core.ui.components.appbar.TangemTopAppBar
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
+import com.tangem.core.ui.components.feature.FeatureBlock
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
@@ -95,44 +96,16 @@ internal fun CreateMobileWalletContent(state: CreateMobileWalletUM, modifier: Mo
         PrimaryButton(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(
+                    start = 16.dp,
+                    top = 8.dp,
+                    end = 16.dp,
+                    bottom = 16.dp,
+                ),
             text = stringResourceSafe(R.string.onboarding_create_wallet_button_create_wallet),
             showProgress = state.createButtonLoading,
             onClick = state.onCreateClick,
         )
-    }
-}
-
-@Composable
-private fun FeatureBlock(title: String, description: String, iconRes: Int, modifier: Modifier = Modifier) {
-    Row(
-        modifier = modifier,
-    ) {
-        Icon(
-            modifier = Modifier
-                .padding(horizontal = 12.dp),
-            painter = painterResource(iconRes),
-            contentDescription = null,
-            tint = TangemTheme.colors.icon.primary1,
-        )
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 8.dp),
-        ) {
-            Text(
-                text = title,
-                style = TangemTheme.typography.subtitle1,
-                color = TangemTheme.colors.text.primary1,
-            )
-            Text(
-                modifier = Modifier
-                    .padding(top = 4.dp),
-                text = description,
-                style = TangemTheme.typography.body2,
-                color = TangemTheme.colors.text.secondary,
-            )
-        }
     }
 }
 

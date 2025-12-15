@@ -6,6 +6,7 @@ import com.tangem.domain.account.status.supplier.SingleAccountStatusListSupplier
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.account.PortfolioFetcher
@@ -41,7 +42,10 @@ internal class DefaultPortfolioFetcher @AssistedInject constructor(
         get() = _mode
 
     init {
-        _mode.flatMapLatest(::combineUseCases)
+        _mode
+            // reset cache if mode(StateFlow) changed
+            .onEach { _data.resetReplayCache() }
+            .flatMapLatest(::combineUseCases)
             .flowOn(dispatchers.default)
             .onEach { _data.emit(it) }
             .launchIn(scope)
@@ -73,13 +77,13 @@ internal class DefaultPortfolioFetcher @AssistedInject constructor(
         }
     }
 
-    private fun balancesForWallets(wallets: List<UserWallet>): Flow<Map<UserWallet, PortfolioBalance>> {
+    private fun balancesForWallets(wallets: List<UserWallet>): Flow<Map<UserWalletId, PortfolioBalance>> {
         val balanceFlows = wallets.map { walletAccountsBalancesFlow(it) }
         return combine(balanceFlows) { pairs -> pairs.toMap() }
     }
 
-    private fun walletAccountsBalancesFlow(wallet: UserWallet): Flow<Pair<UserWallet, PortfolioBalance>> =
-        accountStatusListFlow(wallet).map { wallet to PortfolioBalance(wallet, it) }
+    private fun walletAccountsBalancesFlow(wallet: UserWallet): Flow<Pair<UserWalletId, PortfolioBalance>> =
+        accountStatusListFlow(wallet).map { wallet.walletId to PortfolioBalance(wallet, it) }
 
     private fun accountStatusListFlow(wallet: UserWallet): Flow<AccountStatusList> =
         singleAccountStatusListSupplier(SingleAccountStatusListProducer.Params(wallet.walletId))

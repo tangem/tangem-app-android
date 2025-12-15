@@ -22,5 +22,14 @@ interface NetworksRepository {
      */
     suspend fun getNetworkAddresses(userWalletId: UserWalletId, network: Network): List<CryptoCurrencyAddress>
 
+    /**
+     * Returns addresses and crypto currency
+     *
+     * @param userWalletId the unique identifier of the user wallet
+     * @param network      network id
+     */
     suspend fun getNetworkAddresses(userWalletId: UserWalletId, network: Network.RawID): List<CryptoCurrencyAddress>
+
+    /** Checks if there are cached statuses for given [userWalletId] */
+    suspend fun hasCachedStatuses(userWalletId: UserWalletId): Boolean
 }

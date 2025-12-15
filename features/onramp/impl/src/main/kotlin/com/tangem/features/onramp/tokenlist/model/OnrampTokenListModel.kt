@@ -5,6 +5,7 @@ import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.ui.components.fields.InputManager
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.account.models.AccountStatusList
@@ -120,11 +121,11 @@ internal class OnrampTokenListModel @Inject constructor(
                 UpdateTokenItemsTransformer(
                     appCurrency = appCurrency,
                     onItemClick = params.onTokenClick,
-                    statuses = filterByQueryTokenList.let {
+                    statuses = filterByQueryTokenList.let { statuses ->
                         if (hasRestrictionForSell || isInsufficientBalanceForSell) {
-                            mapOf(false to it)
+                            mapOf(false to statuses)
                         } else {
-                            it.filterByAvailability()
+                            statuses.filterByAvailability()
                         }
                     },
                     isBalanceHidden = isBalanceHidden,
@@ -226,17 +227,25 @@ internal class OnrampTokenListModel @Inject constructor(
         }
     }
 
-    private fun getUnavailableTokensHeaderReference() = when (params.filterOperation) {
-        OnrampOperation.BUY -> R.string.tokens_list_unavailable_to_purchase_header
-        OnrampOperation.SELL -> R.string.tokens_list_unavailable_to_sell_header
-        OnrampOperation.SWAP -> R.string.tokens_list_unavailable_to_swap_source_header
-    }.let(::resourceReference)
+    private fun getUnavailableTokensHeaderReference(): TextReference {
+        val res = when (params.filterOperation) {
+            OnrampOperation.BUY -> R.string.tokens_list_unavailable_to_purchase_header
+            OnrampOperation.SELL -> R.string.tokens_list_unavailable_to_sell_header
+            OnrampOperation.SWAP -> R.string.tokens_list_unavailable_to_swap_source_header
+        }
 
-    private fun getEmptySearchMessageReference() = when (params.filterOperation) {
-        OnrampOperation.BUY -> R.string.action_buttons_buy_empty_search_message
-        OnrampOperation.SELL -> R.string.action_buttons_sell_empty_search_message
-        OnrampOperation.SWAP -> R.string.action_buttons_swap_empty_search_message
-    }.let(::resourceReference)
+        return resourceReference(res)
+    }
+
+    private fun getEmptySearchMessageReference(): TextReference {
+        val res = when (params.filterOperation) {
+            OnrampOperation.BUY -> R.string.action_buttons_buy_empty_search_message
+            OnrampOperation.SELL -> R.string.action_buttons_sell_empty_search_message
+            OnrampOperation.SWAP -> R.string.action_buttons_swap_empty_search_message
+        }
+
+        return resourceReference(res)
+    }
 
     private fun updateTokenListUM(transformer: TokenListUMTransformer) {
         modelScope.launch {
@@ -297,9 +306,9 @@ internal class OnrampTokenListModel @Inject constructor(
         }.filter { (_, value) -> value.isNotEmpty() }
 
     private fun List<CryptoCurrencyStatus>.filterByQuery(query: String): List<CryptoCurrencyStatus> {
-        return filter {
-            it.currency.name.contains(other = query, ignoreCase = true) ||
-                it.currency.symbol.contains(other = query, ignoreCase = true)
+        return filter { status ->
+            status.currency.name.contains(other = query, ignoreCase = true) ||
+                status.currency.symbol.contains(other = query, ignoreCase = true)
         }
     }
 
