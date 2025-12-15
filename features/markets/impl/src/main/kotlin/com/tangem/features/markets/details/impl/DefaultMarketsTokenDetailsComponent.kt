@@ -13,6 +13,7 @@ import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.res.LocalMainBottomSheetColor
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.features.markets.details.MarketsTokenDetailsComponent
 import com.tangem.features.markets.details.MarketsTokenDetailsComponent.Params
@@ -33,6 +34,7 @@ internal class DefaultMarketsTokenDetailsComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
     @Assisted params: Params,
     analyticsEventHandler: AnalyticsEventHandler,
+    private val accountsFeatureToggles: AccountsFeatureToggles,
     portfolioComponentFactory: MarketsPortfolioComponent.Factory,
 ) : AppComponentContext by appComponentContext, MarketsTokenDetailsComponent {
 
@@ -114,6 +116,7 @@ internal class DefaultMarketsTokenDetailsComponent @AssistedInject constructor(
             onBackClick = ::navigateBack,
             backButtonEnabled = bsState == BottomSheetState.EXPANDED,
             onHeaderSizeChange = onHeaderSizeChange,
+            isAccountEnabled = accountsFeatureToggles.isFeatureEnabled,
             portfolioBlock = portfolioComponent?.let { component ->
                 { blockModifier ->
                     component.Content(blockModifier)
@@ -141,6 +144,7 @@ internal class DefaultMarketsTokenDetailsComponent @AssistedInject constructor(
             onBackClick = ::navigateBack,
             backButtonEnabled = true,
             onHeaderSizeChange = {},
+            isAccountEnabled = accountsFeatureToggles.isFeatureEnabled,
             portfolioBlock = portfolioComponent?.let { component ->
                 { blockModifier ->
                     component.Content(blockModifier)

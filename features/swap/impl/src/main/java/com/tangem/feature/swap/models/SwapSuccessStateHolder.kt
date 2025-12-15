@@ -1,5 +1,6 @@
 package com.tangem.feature.swap.models
 
+import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.extensions.TextReference
 
@@ -12,6 +13,8 @@ data class SwapSuccessStateHolder(
     val providerName: TextReference,
     val providerType: TextReference,
     val providerIcon: String,
+    val fromTitle: AccountTitleUM,
+    val toTitle: AccountTitleUM,
     val fromTokenAmount: TextReference,
     val toTokenAmount: TextReference,
     val fromTokenFiatAmount: TextReference,
