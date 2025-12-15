@@ -35,6 +35,7 @@ dependencies {
     implementation(projects.domain.networks)
     implementation(projects.domain.staking.models)
     implementation(projects.domain.staking)
+    implementation(projects.domain.account)
 
     /** Tangem SDK */
     implementation(tangemDeps.blockchain) {
@@ -43,6 +44,7 @@ dependencies {
 
     /** Libs */
     implementation(projects.libs.blockchainSdk)
+    implementation(projects.libs.crypto)
 
     /** Other */
     implementation(deps.androidx.datastore)

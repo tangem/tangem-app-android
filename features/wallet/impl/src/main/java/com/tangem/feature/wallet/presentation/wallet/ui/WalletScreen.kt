@@ -18,6 +18,7 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -55,6 +56,7 @@ import com.tangem.core.ui.components.rememberIsKeyboardVisible
 import com.tangem.core.ui.components.sheetscaffold.*
 import com.tangem.core.ui.components.snackbar.CopiedTextSnackbar
 import com.tangem.core.ui.components.snackbar.TangemSnackbar
+import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.event.StateEvent
 import com.tangem.core.ui.extensions.stringResourceSafe
@@ -69,12 +71,14 @@ import com.tangem.core.ui.utils.moveTo
 import com.tangem.core.ui.utils.toPx
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.preview.WalletScreenPreviewData.accountScreenState
+import com.tangem.feature.wallet.presentation.common.preview.WalletScreenPreviewData.accountScreenWithEmptyTokensState
 import com.tangem.feature.wallet.presentation.common.preview.WalletScreenPreviewData.walletScreenState
 import com.tangem.feature.wallet.presentation.wallet.state.model.*
 import com.tangem.feature.wallet.presentation.wallet.state.model.holder.TxHistoryStateHolder
 import com.tangem.feature.wallet.presentation.wallet.ui.components.TokenActionsBottomSheet
 import com.tangem.feature.wallet.presentation.wallet.ui.components.WalletsList
 import com.tangem.feature.wallet.presentation.wallet.ui.components.common.*
+import com.tangem.feature.wallet.presentation.wallet.ui.components.fastForEach
 import com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrency.nftCollections
 import com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrency.organizeTokensButton
 import com.tangem.feature.wallet.presentation.wallet.ui.components.singlecurrency.marketPriceBlock
@@ -142,6 +146,7 @@ private fun WalletContent(
      */
     val selectedWalletIndex by remember(state.selectedWalletIndex) { mutableIntStateOf(state.selectedWalletIndex) }
     val selectedWallet = state.wallets.getOrElse(selectedWalletIndex) { state.wallets[state.selectedWalletIndex] }
+    val (expandedState, collapsedState) = getExpandPortfolioStates(selectedWallet)
 
     val listState = rememberLazyListState()
 
@@ -213,10 +218,18 @@ private fun WalletContent(
 
             notifications(configs = selectedWallet.warnings, modifier = itemModifier)
 
-            item(
-                key = "TangemPayMainScreenBlock",
-                contentType = state.tangemPayState::class.java,
-            ) { TangemPayMainScreenBlock(state.tangemPayState, itemModifier) }
+            if (selectedWallet is WalletState.MultiCurrency) {
+                item(
+                    key = "TangemPayMainScreenBlock",
+                    contentType = selectedWallet.tangemPayState::class.java,
+                ) {
+                    TangemPayMainScreenBlock(
+                        state = selectedWallet.tangemPayState,
+                        isBalanceHidden = state.isHidingMode,
+                        modifier = itemModifier,
+                    )
+                }
+            }
 
             (selectedWallet as? WalletState.SingleCurrency)?.let { walletState ->
                 walletState.marketPriceBlockState?.let { marketPriceBlockState ->
@@ -242,6 +255,13 @@ private fun WalletContent(
                 txHistoryItems = txHistoryItems,
                 isBalanceHidden = state.isHidingMode,
                 modifier = movableItemModifier,
+                portfolioVisibleState = {
+                    findPortfolioVisibleState(
+                        portfolio = it,
+                        expandedState = expandedState,
+                        collapsedState = collapsedState,
+                    )
+                },
             )
 
             nftCollections(state = selectedWallet, itemModifier = itemModifier)
@@ -287,6 +307,61 @@ private fun WalletContent(
         },
         content = scaffoldContent,
     )
+}
+
+private fun findPortfolioVisibleState(
+    portfolio: TokensListItemUM.Portfolio,
+    expandedState: SnapshotStateMap<String, MutableTransitionState<Boolean>>,
+    collapsedState: SnapshotStateMap<String, MutableTransitionState<Boolean>>,
+): MutableTransitionState<Boolean> {
+    val portfolioKey = portfolio.id
+
+    fun forceVisible() = MutableTransitionState(true).apply { targetState = true }
+    val shouldExpand = portfolio.isExpanded
+    return if (shouldExpand) {
+        collapsedState[portfolioKey] ?: forceVisible()
+    } else {
+        expandedState[portfolioKey] ?: forceVisible()
+    }
+}
+
+@Composable
+private fun getExpandPortfolioStates(
+    state: WalletState,
+): Pair<
+    SnapshotStateMap<String, MutableTransitionState<Boolean>>,
+    SnapshotStateMap<String, MutableTransitionState<Boolean>>,
+    > {
+    val expandedTransitionState =
+        remember { mutableStateMapOf<String, MutableTransitionState<Boolean>>() }
+    val collapsedTransitionState =
+        remember { mutableStateMapOf<String, MutableTransitionState<Boolean>>() }
+
+    val portfolioContent = state is WalletState.MultiCurrency.Content &&
+        state.tokensListState is WalletTokensListState.ContentState.PortfolioContent
+    if (!portfolioContent) {
+        return expandedTransitionState to collapsedTransitionState
+    }
+
+    state.tokensListState.items.fastForEach { portfolio ->
+        val portfolioKey = portfolio.id
+        val shouldExpand = portfolio.isExpanded
+
+        fun toggleVisible() = MutableTransitionState(false).apply { targetState = true }
+        fun forceVisible() = MutableTransitionState(true).apply { targetState = true }
+
+        val isFirstCall = collapsedTransitionState[portfolioKey] == null ||
+            expandedTransitionState[portfolioKey] == null
+        when {
+            isFirstCall -> {
+                collapsedTransitionState[portfolioKey] = forceVisible()
+                expandedTransitionState[portfolioKey] = forceVisible()
+            }
+            shouldExpand -> expandedTransitionState[portfolioKey] = toggleVisible()
+            else -> collapsedTransitionState[portfolioKey] = toggleVisible()
+        }
+    }
+    return expandedTransitionState to collapsedTransitionState
 }
 
 @Suppress("LongParameterList", "LongMethod", "CyclomaticComplexMethod")
@@ -743,6 +818,7 @@ private class WalletScreenPreviewProvider : PreviewParameterProvider<WalletScree
             walletScreenState,
             walletScreenState.copy(selectedWalletIndex = 1),
             accountScreenState.copy(selectedWalletIndex = 1),
+            accountScreenWithEmptyTokensState.copy(selectedWalletIndex = 1),
         )
 }
 // endregion

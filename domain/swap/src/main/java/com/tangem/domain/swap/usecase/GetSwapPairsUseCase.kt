@@ -63,14 +63,18 @@ class GetSwapPairsUseCase(
         groupingCurrency: (SwapPairModel) -> CryptoCurrencyStatus,
         cryptoCurrencyStatusList: List<CryptoCurrencyStatus>,
     ): SwapCurrenciesGroup {
-        val availableCryptoCurrencies = filter { pair ->
-            filteringCurrency(pair).currency.id.rawCurrencyId == initialCurrency.id.rawCurrencyId
-        }.filter { pair ->
-            // Search available to swap currency
-            cryptoCurrencyStatusList.any { currencyStatus ->
-                currencyStatus.currency.id == pair.to.currency.id
+        val availableCryptoCurrencies = asSequence()
+            .filter { pair ->
+                filteringCurrency(pair).currency.id.rawCurrencyId == initialCurrency.id.rawCurrencyId
             }
-        }.map { pair -> SwapCryptoCurrency(groupingCurrency(pair), pair.providers) }
+            .filter { pair ->
+                // Search available to swap currency
+                cryptoCurrencyStatusList.any { currencyStatus ->
+                    currencyStatus.currency.id == pair.to.currency.id
+                }
+            }
+            .map { pair -> SwapCryptoCurrency(groupingCurrency(pair), pair.providers) }
+            .toList()
 
         val unavailableCryptoCurrencies =
             cryptoCurrencyStatusList - availableCryptoCurrencies.map { it.currencyStatus }.toSet()

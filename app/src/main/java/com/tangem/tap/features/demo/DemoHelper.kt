@@ -5,7 +5,7 @@ import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.common.redux.AppState
 
 object DemoHelper {
-    val config = DemoConfig()
+    val config = DemoConfig
 
     fun isDemoCard(scanResponse: ScanResponse): Boolean = isDemoCardId(scanResponse.card.cardId)
 
