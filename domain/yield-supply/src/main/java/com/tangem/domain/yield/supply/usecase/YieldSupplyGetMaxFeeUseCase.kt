@@ -6,7 +6,7 @@ import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.currency.yieldSupplyKey
 import com.tangem.domain.models.quote.QuoteStatus
-import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.quotes.QuotesRepository
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.yield.supply.YieldSupplyRepository
@@ -32,7 +32,7 @@ class YieldSupplyGetMaxFeeUseCase(
 ) {
 
     suspend operator fun invoke(
-        userWallet: UserWallet,
+        userWalletId: UserWalletId,
         cryptoCurrencyStatus: CryptoCurrencyStatus,
     ): Either<Throwable, YieldSupplyMaxFee> = catch {
         val token = cryptoCurrencyStatus.currency as? CryptoCurrency.Token
@@ -42,7 +42,7 @@ class YieldSupplyGetMaxFeeUseCase(
         require(fiatRate > BigDecimal.ZERO) { "Fiat rate for token must be > 0" }
 
         val nativeCryptoCurrency = currenciesRepository.getNetworkCoin(
-            userWalletId = userWallet.walletId,
+            userWalletId = userWalletId,
             networkId = cryptoCurrencyStatus.currency.network.id,
             derivationPath = cryptoCurrencyStatus.currency.network.derivationPath,
         )
