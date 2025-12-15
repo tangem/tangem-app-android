@@ -32,8 +32,7 @@ dependencies {
     // endregion
 
     // region Test libraries
-    testImplementation(deps.test.junit5)
+    testImplementation(projects.test.core)
     testRuntimeOnly(deps.test.junit5.engine)
-    testImplementation(deps.test.truth)
     // endregion
 }

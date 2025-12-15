@@ -9,13 +9,17 @@ import com.tangem.domain.onramp.model.OnrampProviderWithQuote
 import com.tangem.domain.onramp.model.error.OnrampError
 import com.tangem.features.onramp.alloffers.AllOffersComponent
 import com.tangem.features.onramp.alloffers.entity.AllOffersIntents
+import com.tangem.features.onramp.alloffers.entity.AllOffersPaymentMethodUM
 import com.tangem.features.onramp.alloffers.entity.AllOffersStateFactory
 import com.tangem.features.onramp.alloffers.entity.AllOffersStateUM
 import com.tangem.features.onramp.mainv2.entity.OnrampOfferAdvantagesUM
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
@@ -26,6 +30,9 @@ internal class AllOffersModel @Inject constructor(
     private val getOnrampAllOffersUseCase: GetOnrampAllOffersUseCase,
     paramsContainer: ParamsContainer,
 ) : Model(), AllOffersIntents {
+
+    val state: StateFlow<AllOffersStateUM>
+        field = MutableStateFlow<AllOffersStateUM>(AllOffersStateUM.Loading)
 
     private var quotesJob: Job? = null
 
@@ -39,9 +46,6 @@ internal class AllOffersModel @Inject constructor(
 
     private val params: AllOffersComponent.Params = paramsContainer.require()
 
-    private val _state: MutableStateFlow<AllOffersStateUM> = MutableStateFlow(AllOffersStateUM.Loading)
-    val state: StateFlow<AllOffersStateUM> = _state.asStateFlow()
-
     init {
         subscribeOnAllOffers()
         analyticsEventHandler.send(OnrampAnalyticsEvent.PaymentMethodsScreenOpened)
@@ -53,12 +57,20 @@ internal class AllOffersModel @Inject constructor(
     }
 
     override fun onPaymentMethodClicked(paymentMethodId: String) {
-        val contentState = state.value as? AllOffersStateUM.Content ?: return
-        val method = contentState.methods.firstOrNull { it.methodConfig.method.id == paymentMethodId } ?: return
-        analyticsEventHandler.send(
-            event = OnrampAnalyticsEvent.OnPaymentMethodChosen(paymentMethod = method.methodConfig.method.name),
-        )
-        _state.update { contentState.copy(currentMethod = method) }
+        var method: AllOffersPaymentMethodUM? = null
+
+        state.update { contentState ->
+            if (contentState !is AllOffersStateUM.Content) return
+            method = contentState.methods.firstOrNull { it.methodConfig.method.id == paymentMethodId } ?: return
+
+            contentState.copy(currentMethod = method)
+        }
+
+        if (method != null) {
+            analyticsEventHandler.send(
+                event = OnrampAnalyticsEvent.OnPaymentMethodChosen(paymentMethod = method.methodConfig.method.name),
+            )
+        }
     }
 
     override fun onBuyClick(quote: OnrampProviderWithQuote.Data, onrampOfferAdvantagesUM: OnrampOfferAdvantagesUM) {
@@ -69,16 +81,23 @@ internal class AllOffersModel @Inject constructor(
                 tokenSymbol = params.cryptoCurrency.symbol,
             ),
         )
-        onrampOfferAdvantagesUM.toAnalyticsEvent(
+
+        val event = onrampOfferAdvantagesUM.toAnalyticsEvent(
             cryptoCurrencySymbol = params.cryptoCurrency.symbol,
             providerName = quote.provider.info.name,
             paymentMethodName = quote.paymentMethod.name,
-        )?.let { analyticsEventHandler::send }
+        )
+
+        if (event != null) {
+            analyticsEventHandler.send(event)
+        }
+
+        dismiss()
         params.openRedirectPage(quote)
     }
 
     override fun onBackClicked() {
-        _state.update { stateFactory.getPaymentsState() }
+        state.update { stateFactory.getPaymentsState() }
     }
 
     override fun onRefresh() {
@@ -95,7 +114,12 @@ internal class AllOffersModel @Inject constructor(
                 maybeOffers.fold(
                     ifLeft = ::handleOnrampError,
                     ifRight = { offersGroup ->
-                        _state.update { stateFactory.getLoadedPaymentsState(offersGroup) }
+                        state.update {
+                            stateFactory.getLoadedPaymentsState(
+                                methodGroups = offersGroup,
+                                currencyCode = params.amountCurrencyCode,
+                            )
+                        }
                     },
                 )
             }
@@ -104,6 +128,6 @@ internal class AllOffersModel @Inject constructor(
 
     private fun handleOnrampError(onrampError: OnrampError) {
         Timber.e(onrampError.toString())
-        _state.update { stateFactory.getOnrampErrorState(onrampError) }
+        state.update { stateFactory.getOnrampErrorState(onrampError) }
     }
 }
