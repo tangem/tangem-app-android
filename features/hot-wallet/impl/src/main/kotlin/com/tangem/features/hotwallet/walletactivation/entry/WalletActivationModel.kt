@@ -62,7 +62,7 @@ internal class WalletActivationModel @Inject constructor(
     val pushNotificationsCallbacks = PushNotificationsCallbacks()
     val mobileWalletSetupFinishedModelCallbacks = MobileWalletSetupFinishedModelCallbacks()
 
-    val isStartingWithAccessCode = params.isBackupExists
+    private val isStartingWithAccessCode = params.isBackupExists
     val stackNavigation = StackNavigation<WalletActivationRoute>()
     val startRoute = if (isStartingWithAccessCode) {
         WalletActivationRoute.SetAccessCode
@@ -76,13 +76,23 @@ internal class WalletActivationModel @Inject constructor(
 
     init {
         trackingContextProxy.addHotWalletContext()
-        if (startRoute is WalletActivationRoute.ManualBackupStart) {
-            analyticsEventHandler.send(
-                event = WalletSettingsAnalyticEvents.RecoveryPhraseScreenInfo(
-                    source = analyticsSource.value,
-                    action = analyticsAction.value,
-                ),
-            )
+        when (startRoute) {
+            is WalletActivationRoute.ManualBackupStart -> {
+                analyticsEventHandler.send(
+                    event = WalletSettingsAnalyticEvents.RecoveryPhraseScreenInfo(
+                        source = analyticsSource.value,
+                        action = analyticsAction.value,
+                    ),
+                )
+            }
+            is WalletActivationRoute.SetAccessCode -> {
+                analyticsEventHandler.send(
+                    event = WalletSettingsAnalyticEvents.AccessCodeScreenOpened(
+                        source = analyticsSource.value,
+                    ),
+                )
+            }
+            else -> Unit
         }
     }
 
