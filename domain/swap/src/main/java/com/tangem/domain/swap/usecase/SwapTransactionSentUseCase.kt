@@ -27,6 +27,7 @@ class SwapTransactionSentUseCase(
         swapDataTransactionModel: SwapDataTransactionModel,
         provider: ExpressProvider,
         txHash: String,
+        payInAddress: String,
         timestamp: Long,
         swapTxType: SwapTxType,
     ) = Either.catch {
@@ -63,7 +64,7 @@ class SwapTransactionSentUseCase(
         swapRepositoryV2.swapTransactionSent(
             userWallet = userWallet,
             fromCryptoCurrencyStatus = fromCryptoCurrencyStatus,
-            toAddress = swapDataTransactionModel.txTo,
+            payInAddress = payInAddress,
             txId = swapDataTransactionModel.txId,
             txHash = txHash,
             txExtraId = swapDataTransactionModel.txExtraId,
