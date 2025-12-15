@@ -1,22 +1,26 @@
 package com.tangem.features.account.createedit.ui
 
 import android.content.res.Configuration
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalFocusManager
@@ -43,8 +47,13 @@ import com.tangem.features.account.createedit.entity.AccountCreateEditUM
 import com.tangem.features.account.createedit.entity.AccountCreateEditUM.Account
 import kotlinx.collections.immutable.toImmutableList
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-internal fun AccountCreateEditContent(state: AccountCreateEditUM, modifier: Modifier = Modifier) {
+internal fun AccountCreateEditContent(
+    state: AccountCreateEditUM,
+    isCreateMode: Boolean,
+    modifier: Modifier = Modifier,
+) {
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
     Column(
@@ -55,49 +64,56 @@ internal fun AccountCreateEditContent(state: AccountCreateEditUM, modifier: Modi
             .systemBarsPadding(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        AppBarWithBackButton(
-            text = state.title.resolveReference(),
-            onBackClick = state.onCloseClick,
-            iconRes = R.drawable.ic_close_24,
-            modifier = Modifier.height(TangemTheme.dimens.size56),
-        )
+        AppBar(title = state.title, onBackClick = state.onCloseClick)
 
         Column(
             modifier = Modifier
+                .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp)
                 .weight(1f),
         ) {
-            AccountSummary(state.account)
+            AccountSummary(state.account, isCreateMode)
             SpacerH24()
             AccountColor(state.colorsState)
             SpacerH24()
             AccountIcons(state.iconsState)
             SpacerH8()
-            Text(
-                modifier = Modifier.padding(horizontal = 8.dp),
-                text = state.account.derivationInfo.text.resolveReference(),
-                style = TangemTheme.typography.caption2,
-                color = TangemTheme.colors.text.tertiary,
-            )
+            DerivationInfo(text = state.account.derivationInfo.text)
         }
-        if (state.buttonState.showProgress) {
-            focusManager.clearFocus()
-            keyboardController?.hide()
-        }
+
         PrimaryButton(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
             enabled = state.buttonState.isButtonEnabled,
-            showProgress = state.buttonState.showProgress,
+            showProgress = state.buttonState.shouldShowProgress,
             text = state.buttonState.text.resolveReference(),
             onClick = state.buttonState.onConfirmClick,
         )
     }
+
+    SideEffect {
+        if (state.buttonState.shouldShowProgress) {
+            focusManager.clearFocus()
+            keyboardController?.hide()
+        }
+    }
 }
 
 @Composable
-private fun AccountSummary(account: Account) {
+private fun AppBar(title: TextReference, onBackClick: () -> Unit) {
+    AppBarWithBackButton(
+        text = title.resolveReference(),
+        onBackClick = onBackClick,
+        iconRes = R.drawable.ic_close_24,
+        modifier = Modifier.height(TangemTheme.dimens.size56),
+    )
+}
+
+@Composable
+private fun AccountSummary(account: Account, isCreateMode: Boolean) {
+    val focusRequester = remember { FocusRequester() }
+
     Column(
         modifier = Modifier
             .clip(RoundedCornerShape(16.dp))
@@ -129,24 +145,32 @@ private fun AccountSummary(account: Account) {
             placeholder = account.inputPlaceholder,
             value = account.name.value.resolveReference(),
             singleLine = true,
-            onValueChange = {
+            onValueChange = { value ->
                 /*
                  * If the user had the default main account name and enters the same name during renaming,
                  * we should use the default value instead of custom to avoid breaking the name validation process.
                  */
-                val newName = if (wasDefault && it == defaultAccountName) {
+                val newName = if (wasDefault && value == defaultAccountName) {
                     AccountNameUM.DefaultMain
                 } else {
-                    AccountNameUM.Custom(raw = it)
+                    AccountNameUM.Custom(raw = value)
                 }
 
                 account.onNameChange(newName)
             },
+            textFieldModifier = Modifier.focusRequester(focusRequester),
         )
         SpacerH(20.dp)
     }
+
+    LaunchedEffect(Unit) {
+        if (isCreateMode) {
+            focusRequester.requestFocus()
+        }
+    }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Suppress("LongMethod", "MagicNumber")
 @Composable
 private fun AccountColor(colorsState: AccountCreateEditUM.Colors) {
@@ -156,14 +180,15 @@ private fun AccountColor(colorsState: AccountCreateEditUM.Colors) {
             .fillMaxWidth()
             .background(TangemTheme.colors.background.action),
     ) {
-        val columns = GridCells.Fixed(6)
         val contentPadding = PaddingValues(horizontal = 8.dp, vertical = 12.dp)
-        LazyVerticalGrid(
-            columns = columns,
-            contentPadding = contentPadding,
+        FlowRow(
+            maxItemsInEachRow = 6,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(contentPadding),
             horizontalArrangement = Arrangement.spacedBy(4.dp),
         ) {
-            itemsIndexed(colorsState.list) { index, color ->
+            colorsState.list.forEach { color ->
                 val isSelected = color == colorsState.selected
                 Box(
                     contentAlignment = Alignment.Center,
@@ -197,6 +222,7 @@ private fun AccountColor(colorsState: AccountCreateEditUM.Colors) {
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Suppress("LongMethod", "MagicNumber")
 @Composable
 private fun AccountIcons(iconsState: AccountCreateEditUM.Icons) {
@@ -207,11 +233,11 @@ private fun AccountIcons(iconsState: AccountCreateEditUM.Icons) {
             .background(TangemTheme.colors.background.action)
             .padding(8.dp),
     ) {
-        val columns = GridCells.Fixed(6)
-        LazyVerticalGrid(
-            columns = columns,
+        FlowRow(
+            maxItemsInEachRow = 6,
+            modifier = Modifier.fillMaxWidth(),
         ) {
-            itemsIndexed(iconsState.list) { index, icon ->
+            iconsState.list.forEachIndexed { index, icon ->
                 val isSelected = icon == iconsState.selected
                 Box(
                     contentAlignment = Alignment.Center,
@@ -282,12 +308,22 @@ private fun AccountIcons(iconsState: AccountCreateEditUM.Icons) {
     }
 }
 
+@Composable
+private fun DerivationInfo(text: TextReference) {
+    Text(
+        modifier = Modifier.padding(horizontal = 8.dp),
+        text = text.resolveReference(),
+        style = TangemTheme.typography.caption2,
+        color = TangemTheme.colors.text.tertiary,
+    )
+}
+
 @Preview(showBackground = true, widthDp = 360)
 @Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun WcConnectionsContentPreview(@PreviewParameter(PreviewStateProvider::class) params: AccountCreateEditUM) {
     TangemThemePreview {
-        AccountCreateEditContent(state = params)
+        AccountCreateEditContent(state = params, isCreateMode = true)
     }
 }
 
@@ -321,7 +357,7 @@ private class PreviewStateProvider : CollectionPreviewParameterProvider<AccountC
             ),
             buttonState = AccountCreateEditUM.Button(
                 isButtonEnabled = false,
-                showProgress = false,
+                shouldShowProgress = false,
                 onConfirmClick = {},
                 text = stringReference("Add account"),
             ),
@@ -355,7 +391,7 @@ private class PreviewStateProvider : CollectionPreviewParameterProvider<AccountC
             ),
             buttonState = AccountCreateEditUM.Button(
                 isButtonEnabled = false,
-                showProgress = false,
+                shouldShowProgress = false,
                 onConfirmClick = {},
                 text = stringReference("Save"),
             ),

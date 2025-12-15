@@ -106,6 +106,28 @@ internal object WalletScreenPreviewData {
         ),
     )
 
+    private val emptyPortfolioContentState = WalletTokensListState.ContentState.PortfolioContent(
+        items = persistentListOf(
+            TokensListItemUM.Portfolio(
+                tokens = textContentTokensState.items.filterIsInstance<PortfolioTokensListItemUM>().toPersistentList(),
+                isExpanded = false,
+                isCollapsable = true,
+                tokenItemUM = AccountItemPreviewData.accountItem
+                    .copy(iconState = AccountItemPreviewData.accountLetterIcon),
+            ),
+            TokensListItemUM.Portfolio(
+                tokens = persistentListOf(),
+                isExpanded = true,
+                isCollapsable = true,
+                tokenItemUM = AccountItemPreviewData.accountItem,
+            ),
+        ),
+        organizeTokensButtonConfig = WalletTokensListState.OrganizeTokensButtonConfig(
+            isEnabled = true,
+            onClick = {},
+        ),
+    )
+
     private val noteLockedCard by lazy {
         WalletCardState.LockedContent(
             id = UserWalletId(stringValue = "1"),
@@ -162,6 +184,7 @@ internal object WalletScreenPreviewData {
                 isFlickering = false,
                 onItemClick = { },
             ),
+            tangemPayState = TangemPayState.Empty,
             type = WalletState.MultiCurrency.WalletType.Cold,
         )
     }
@@ -206,6 +229,14 @@ internal object WalletScreenPreviewData {
             wallets = persistentListOf(
                 singleWalletLockedState,
                 multiWalletState.copy(tokensListState = portfolioContentState),
+            ),
+        )
+
+    internal val accountScreenWithEmptyTokensState =
+        walletScreenState.copy(
+            wallets = persistentListOf(
+                singleWalletLockedState,
+                multiWalletState.copy(tokensListState = emptyPortfolioContentState),
             ),
         )
 }

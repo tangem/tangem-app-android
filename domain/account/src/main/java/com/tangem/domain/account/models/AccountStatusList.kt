@@ -1,5 +1,8 @@
 package com.tangem.domain.account.models
 
+import arrow.core.Either
+import com.tangem.domain.models.TokensGroupType
+import com.tangem.domain.models.TokensSortType
 import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.account.AccountStatus
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
@@ -13,25 +16,39 @@ import kotlinx.serialization.Serializable
  * @property accountStatuses  a set of account statuses associated with the user wallet
  * @property totalAccounts    the total number of accounts (including archived ones)
  * @property totalFiatBalance the total fiat balance across all accounts
+ * @property sortType      the sorting type applied to the accounts
+ * @property groupType     the grouping type applied to the accounts
  *
 [REDACTED_AUTHOR]
  */
 @Serializable
 data class AccountStatusList(
     val userWalletId: UserWalletId,
-    val accountStatuses: Set<AccountStatus>,
+    val accountStatuses: List<AccountStatus>,
     val totalAccounts: Int,
     val totalFiatBalance: TotalFiatBalance,
+    val sortType: TokensSortType,
+    val groupType: TokensGroupType,
 ) {
 
-    val mainAccount: AccountStatus
+    val mainAccount: AccountStatus.CryptoPortfolio
         get() = accountStatuses.first { accountStatus ->
             when (accountStatus) {
                 is AccountStatus.CryptoPortfolio -> accountStatus.account.isMainAccount
             }
-        }
+        } as AccountStatus.CryptoPortfolio
 
     fun flattenCurrencies(): List<CryptoCurrencyStatus> = accountStatuses
         .map { accountStatus -> accountStatus.flattenCurrencies() }
         .flatten()
+
+    fun toAccountList(): Either<AccountList.Error, AccountList> {
+        return AccountList(
+            userWalletId = userWalletId,
+            accounts = accountStatuses.map(AccountStatus::account),
+            totalAccounts = totalAccounts,
+            sortType = sortType,
+            groupType = groupType,
+        )
+    }
 }
