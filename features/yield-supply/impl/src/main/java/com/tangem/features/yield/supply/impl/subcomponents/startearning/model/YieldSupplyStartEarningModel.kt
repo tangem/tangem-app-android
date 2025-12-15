@@ -190,7 +190,7 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
                         updatedTransactionList = updatedTransactionList,
                         feeValue = feeSum,
                         maxNetworkFee = maxFee,
-                        estimatedFeeValueInTokenCurrency = estimatedFee,
+                        estimatedFeeValueInTokenCurrency = estimatedFee.value,
                         minAmount = minAmount,
                     ),
                 )
@@ -198,6 +198,7 @@ internal class YieldSupplyStartEarningModel @Inject constructor(
                     data = YieldSupplyNotificationData(
                         feeValue = feeSum,
                         feeError = null,
+                        shouldShowHighFeeNotification = estimatedFee.isHighFee,
                     ),
                 )
             },
