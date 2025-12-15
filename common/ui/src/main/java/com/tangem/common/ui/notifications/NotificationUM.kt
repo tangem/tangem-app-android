@@ -301,6 +301,12 @@ sealed class NotificationUM(val config: NotificationConfig) {
             ),
             subtitle = TextReference.EMPTY,
         )
+
+        data object YieldSupplyHighNetworkFee : Info(
+            title = resourceReference(id = R.string.yield_module_high_network_fees_notification_title),
+            subtitle = resourceReference(id = R.string.yield_module_high_network_fees_notification_description),
+            iconTint = NotificationConfig.IconTint.Accent,
+        )
     }
 
     sealed interface Cardano {
