@@ -1,4 +1,4 @@
-package com.tangem.features.feed.ui.market.state
+package com.tangem.common.ui.markets.models
 
 import androidx.compose.runtime.Immutable
 import com.tangem.common.ui.charts.state.MarketChartLook

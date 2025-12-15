@@ -14,7 +14,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -29,6 +31,10 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
+import com.tangem.common.ui.markets.MarketChartLoadingError
+import com.tangem.common.ui.markets.MarketsListItem
+import com.tangem.common.ui.markets.MarketsListItemPlaceholder
+import com.tangem.common.ui.markets.models.MarketsListItemUM
 import com.tangem.common.ui.news.ArticleCard
 import com.tangem.common.ui.news.ArticleConfigUM
 import com.tangem.core.ui.R
@@ -49,9 +55,6 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.feed.ui.feed.preview.FeedListPreviewDataProvider.createFeedPreviewState
 import com.tangem.features.feed.ui.feed.state.*
-import com.tangem.features.feed.ui.market.components.MarketsListItem
-import com.tangem.features.feed.ui.market.components.MarketsListItemPlaceholder
-import com.tangem.features.feed.ui.market.state.MarketsListItemUM
 import com.tangem.features.feed.ui.market.state.SortByTypeUM
 
 @Composable
@@ -101,10 +104,12 @@ internal fun FeedListContent(state: FeedListUM, modifier: Modifier = Modifier) {
 
         SpacerH(32.dp)
 
-        MarketBlock(
-            marketChartConfig = state.marketChartConfig,
-            feedListCallbacks = state.feedListCallbacks,
-        )
+        state.marketChartConfig.marketCharts[SortByTypeUM.Rating]?.let { marketChartUM ->
+            MarketBlock(
+                marketChart = marketChartUM,
+                feedListCallbacks = state.feedListCallbacks,
+            )
+        }
 
         NewsBlock(
             news = state.news,
@@ -120,44 +125,43 @@ internal fun FeedListContent(state: FeedListUM, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun MarketBlock(marketChartConfig: MarketChartConfig, feedListCallbacks: FeedListCallbacks) {
-    if (marketChartConfig.marketCharts.isNotEmpty()) {
-        Header(
-            title = {
-                Text(
-                    text = stringResourceSafe(R.string.markets_common_title),
-                    style = TangemTheme.typography.h3,
-                    color = TangemTheme.colors.text.primary1,
-                )
-            },
-            onSeeAllClick = { feedListCallbacks.onMarketOpenClick(SortByTypeUM.Rating) },
-        )
-
-        SpacerH(12.dp)
-
-        marketChartConfig.marketCharts[SortByTypeUM.Rating]?.let { chart ->
-            Charts(
-                onItemClick = feedListCallbacks.onMarketItemClick,
-                modifier = Modifier.padding(horizontal = 16.dp),
-                marketChart = chart,
+private fun MarketBlock(marketChart: MarketChartUM, feedListCallbacks: FeedListCallbacks) {
+    Header(
+        title = {
+            Text(
+                text = stringResourceSafe(R.string.markets_common_title),
+                style = TangemTheme.typography.h3,
+                color = TangemTheme.colors.text.primary1,
             )
-        }
-        SpacerH(32.dp)
-    }
+        },
+        onSeeAllClick = { feedListCallbacks.onMarketOpenClick(SortByTypeUM.Rating) },
+    )
+
+    SpacerH(12.dp)
+
+    Charts(
+        onItemClick = feedListCallbacks.onMarketItemClick,
+        modifier = Modifier.padding(horizontal = 16.dp),
+        marketChart = marketChart,
+    )
+    SpacerH(32.dp)
 }
 
 @Composable
 private fun MarketPulseBlock(marketChartConfig: MarketChartConfig, feedListCallbacks: FeedListCallbacks) {
+    val onSeeAllClick by rememberUpdatedState {
+        feedListCallbacks.onMarketOpenClick(marketChartConfig.currentSortByType)
+    }
     if (marketChartConfig.marketCharts.isNotEmpty()) {
         Header(
             title = {
                 Text(
-                    text = stringResourceSafe(R.string.markets_common_title),
+                    text = stringResourceSafe(R.string.markets_pulse_common_title),
                     style = TangemTheme.typography.h3,
                     color = TangemTheme.colors.text.primary1,
                 )
             },
-            onSeeAllClick = { feedListCallbacks.onMarketOpenClick(marketChartConfig.currentSortByType) },
+            onSeeAllClick = { onSeeAllClick() },
         )
 
         LazyRow(
@@ -330,11 +334,7 @@ private fun Charts(
         modifier = modifier,
         colors = TangemBlockCardColors.copy(containerColor = TangemTheme.colors.background.action),
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-        ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
             when (marketChart) {
                 MarketChartUM.Loading -> {
                     repeat(DEFAULT_CHART_SIZE_IN_MARKET) {
@@ -342,7 +342,10 @@ private fun Charts(
                     }
                 }
                 is MarketChartUM.LoadingError -> {
-                    // TODO will be created in [REDACTED_TASK_KEY]
+                    MarketChartLoadingError(
+                        modifier = Modifier.fillMaxWidth(),
+                        onRetryClick = marketChart.onRetryClicked,
+                    )
                 }
                 is MarketChartUM.Content -> {
                     marketChart.items.fastForEach { chart ->
