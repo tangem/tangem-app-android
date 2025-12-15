@@ -1,6 +1,7 @@
 package com.tangem.feature.swap.domain
 
 import com.tangem.domain.express.models.ExpressOperationType
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.wallet.UserWalletId
@@ -29,16 +30,23 @@ interface SwapInteractor {
      * Find best quote for given tokens to swap
      * under the hood calls different methods to receive data, depends on permission for given token
      *
-     * @param fromToken [Currency] from which want to swap
-     * @param toToken [Currency] that receive after swap
-     * @param amountToSwap amount you want to swap
-     * @param selectedFee selected fee to swap
+     * @param fromToken         token from which want to swap
+     * @param fromAccount       account from which swap will be made
+     * @param toToken           token that receive after swap
+     * @param toAccount         account to which receive token after swap
+     * @param providers         list of providers to find quote
+     * @param amountToSwap      amount you want to swap
+     * @param reduceBalanceBy   amount to reduce from balance (used for fee calculation)
+     * @param selectedFee       selected fee to swap
      * @return
      */
+    @Suppress("LongParameterList")
     @Throws(IllegalStateException::class)
     suspend fun findBestQuote(
         fromToken: CryptoCurrencyStatus,
+        fromAccount: Account.CryptoPortfolio?,
         toToken: CryptoCurrencyStatus,
+        toAccount: Account.CryptoPortfolio?,
         providers: List<SwapProvider>,
         amountToSwap: String,
         reduceBalanceBy: BigDecimal,
@@ -53,7 +61,8 @@ interface SwapInteractor {
      * @param currencyToSend [Currency]
      * @param currencyToGet [Currency]
      * @param amountToSwap amount to swap
-     * @param fee for tx
+     * @param fee for tx (can be null only for tangem pay withdrawal)
+
      * @return [SwapTransactionState]
      */
     @Suppress("LongParameterList")
@@ -63,10 +72,13 @@ interface SwapInteractor {
         swapData: SwapDataModel?,
         currencyToSend: CryptoCurrencyStatus,
         currencyToGet: CryptoCurrencyStatus,
+        fromAccount: Account.CryptoPortfolio?,
+        toAccount: Account.CryptoPortfolio?,
         amountToSwap: String,
         includeFeeInAmount: IncludeFeeInAmount,
-        fee: TxFee,
+        fee: TxFee?,
         expressOperationType: ExpressOperationType,
+        isTangemPayWithdrawal: Boolean,
     ): SwapTransactionState
 
     // suspend fun updateQuotesStateWithSelectedFee(
@@ -90,7 +102,35 @@ interface SwapInteractor {
         isReverseFromTo: Boolean,
     ): CryptoCurrencyStatus?
 
+    /**
+     * Returns initial currency to swap as AccountSwapCurrency
+     *
+     * @param initialCryptoCurrency initial currency selected to swap
+     * @param state current tokens data state
+     * @param isReverseFromTo flag indicating the direction of the swap
+     */
+    suspend fun getInitialCurrencyToSwapV2(
+        initialCryptoCurrency: CryptoCurrency,
+        state: TokensDataStateExpress,
+        isReverseFromTo: Boolean,
+    ): AccountSwapCurrency?
+
     fun getNativeToken(networkId: String): CryptoCurrency
+
+    @Suppress("LongParameterList")
+    suspend fun storeSwapTransaction(
+        currencyToSend: CryptoCurrencyStatus,
+        currencyToGet: CryptoCurrencyStatus,
+        fromAccount: Account.CryptoPortfolio?,
+        toAccount: Account.CryptoPortfolio?,
+        amount: SwapAmount,
+        swapProvider: SwapProvider,
+        swapDataModel: SwapDataModel,
+        timestamp: Long,
+        txExternalUrl: String? = null,
+        txExternalId: String? = null,
+        averageDuration: Int? = null,
+    )
 
     interface Factory {
         fun create(selectedWalletId: UserWalletId): SwapInteractor

@@ -4,6 +4,6 @@ internal data class ProviderListPaymentMethodUM(
     val id: String,
     val name: String,
     val imageUrl: String,
-    val enabled: Boolean,
+    val isEnabled: Boolean,
     val onClick: () -> Unit,
 )

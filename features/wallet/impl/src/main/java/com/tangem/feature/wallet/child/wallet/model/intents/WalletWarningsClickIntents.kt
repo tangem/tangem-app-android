@@ -5,6 +5,7 @@ import com.tangem.common.TangemBlogUrlBuilder
 import com.tangem.common.routing.AppRoute.*
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.notifications.NotificationId
+import com.tangem.common.ui.userwallet.handle
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ModelScoped
@@ -105,7 +106,7 @@ internal interface WalletWarningsClickIntents {
 
     fun onDenyPermissions()
 
-    fun onFinishWalletActivationClick(type: WalletActivationBannerType)
+    fun onFinishWalletActivationClick(bannerType: WalletActivationBannerType, isBackupExists: Boolean)
 }
 
 @Suppress("LargeClass", "LongParameterList", "TooManyFunctions")
@@ -120,6 +121,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val scanCardToUnlockWalletClickHandler: ScanCardToUnlockWalletClickHandler,
     private val unlockWalletsUseCase: UnlockWalletsUseCase,
+    private val nonBiometricUnlockWalletUseCase: NonBiometricUnlockWalletUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val dispatchers: CoroutineDispatcherProvider,
     private val shouldShowPromoWalletUseCase: ShouldShowPromoWalletUseCase,
@@ -136,36 +138,10 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     private val userWalletsListRepository: UserWalletsListRepository,
     private val setShouldShowNotificationUseCase: SetShouldShowNotificationUseCase,
     private val notificationsRepository: NotificationsRepository,
-    private val messageSender: UiMessageSender,
     private val setNotificationsEnabledUseCase: SetNotificationsEnabledUseCase,
     private val getWalletsListForEnablingUseCase: GetWalletsForAutomaticallyPushEnablingUseCase,
+    private val uiMessageSender: UiMessageSender,
 ) : BaseWalletClickIntents(), WalletWarningsClickIntents {
-
-    private val finalizeWalletSetupAlertBS
-        get() = bottomSheetMessage {
-            infoBlock {
-                icon(R.drawable.img_knight_shield_32) {
-                    type = MessageBottomSheetUMV2.Icon.Type.Warning
-                    backgroundType = MessageBottomSheetUMV2.Icon.BackgroundType.SameAsTint
-                }
-                title = resourceReference(R.string.hw_activation_need_title)
-                body = resourceReference(R.string.hw_activation_need_description)
-            }
-            secondaryButton {
-                text = resourceReference(R.string.common_later)
-                onClick {
-                    closeBs()
-                }
-            }
-            primaryButton {
-                text = resourceReference(R.string.hw_activation_need_backup)
-                onClick {
-                    val userWallet = getSelectedUserWallet() ?: return@onClick
-                    appRouter.push(WalletActivation(userWallet.walletId))
-                    closeBs()
-                }
-            }
-        }
 
     override fun onAddBackupCardClick() {
         analyticsEventHandler.send(MainScreen.NoticeBackupYourWalletTapped)
@@ -220,12 +196,15 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
             modelScope.launch {
                 userWalletsListRepository.unlockAllWallets()
                     .onLeft {
-                        val selectedUserWallet = getSelectedUserWallet() ?: return@onLeft
-                        val method = when (selectedUserWallet) {
-                            is UserWallet.Cold -> UserWalletsListRepository.UnlockMethod.Scan()
-                            is UserWallet.Hot -> UserWalletsListRepository.UnlockMethod.AccessCode
-                        }
-                        userWalletsListRepository.unlock(stateHolder.getSelectedWalletId(), method)
+                        val selectedUserWalletId = stateHolder.getSelectedWalletId()
+                        nonBiometricUnlockWalletUseCase(selectedUserWalletId)
+                            .onLeft { error ->
+                                error.handle(
+                                    onAlreadyUnlocked = {},
+                                    onUserCancelled = {},
+                                    showMessage = uiMessageSender::send,
+                                )
+                            }
                     }
             }
             return
@@ -340,6 +319,11 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
                     program = Program.BlackFriday,
                     action = PromotionBannerClicked.BannerAction.Closed,
                 )
+                PromoId.OnePlusOne -> PromotionBannerClicked(
+                    source = AnalyticsParam.ScreensSources.Main,
+                    program = Program.OnePlusOne,
+                    action = PromotionBannerClicked.BannerAction.Closed,
+                )
             },
 
         )
@@ -386,6 +370,16 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
                     ),
                 )
                 urlOpener.openUrl(BLACK_FRIDAY_PROMO_LINK)
+            }
+            PromoId.OnePlusOne -> {
+                analyticsEventHandler.send(
+                    PromotionBannerClicked(
+                        source = AnalyticsParam.ScreensSources.Main,
+                        program = Program.OnePlusOne,
+                        action = PromotionBannerClicked.BannerAction.Clicked,
+                    ),
+                )
+                urlOpener.openUrl(ONE_PLUS_ONE_PROMO_LINK)
             }
         }
     }
@@ -481,14 +475,38 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
         }
     }
 
-    override fun onFinishWalletActivationClick(type: WalletActivationBannerType) {
-        when (type) {
+    override fun onFinishWalletActivationClick(bannerType: WalletActivationBannerType, isBackupExists: Boolean) {
+        when (bannerType) {
             WalletActivationBannerType.Attention -> {
                 val userWallet = getSelectedUserWallet() ?: return
-                appRouter.push(WalletActivation(userWallet.walletId))
+                appRouter.push(WalletActivation(userWallet.walletId, isBackupExists))
             }
             WalletActivationBannerType.Warning -> {
-                messageSender.send(finalizeWalletSetupAlertBS)
+                val message = bottomSheetMessage {
+                    infoBlock {
+                        icon(R.drawable.img_knight_shield_32) {
+                            type = MessageBottomSheetUMV2.Icon.Type.Warning
+                            backgroundType = MessageBottomSheetUMV2.Icon.BackgroundType.SameAsTint
+                        }
+                        title = resourceReference(R.string.hw_activation_need_title)
+                        body = resourceReference(R.string.hw_activation_need_description)
+                    }
+                    secondaryButton {
+                        text = resourceReference(R.string.common_later)
+                        onClick {
+                            closeBs()
+                        }
+                    }
+                    primaryButton {
+                        text = resourceReference(R.string.hw_activation_need_backup)
+                        onClick {
+                            val userWallet = getSelectedUserWallet() ?: return@onClick
+                            appRouter.push(WalletActivation(userWallet.walletId, isBackupExists))
+                            closeBs()
+                        }
+                    }
+                }
+                uiMessageSender.send(message)
             }
         }
     }
@@ -607,5 +625,10 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
             "&utm_source=tangem-app-banner" +
             "&utm_medium=banner" +
             "&utm_campaign=BlackFriday2025"
+        const val ONE_PLUS_ONE_PROMO_LINK = "https://tangem.com/pricing/" +
+            "?cat=family" +
+            "&utm_source=tangem-app-banner" +
+            "&utm_medium=banner" +
+            "&utm_campaign=BOGO50"
     }
 }

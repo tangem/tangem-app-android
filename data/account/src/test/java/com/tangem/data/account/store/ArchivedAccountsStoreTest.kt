@@ -1,7 +1,6 @@
 package com.tangem.data.account.store
 
 import com.google.common.truth.Truth
-import com.tangem.common.test.utils.getEmittedValues
 import com.tangem.datasource.local.datastore.RuntimeStateStore
 import com.tangem.domain.account.models.ArchivedAccount
 import com.tangem.domain.models.account.AccountId
@@ -9,6 +8,7 @@ import com.tangem.domain.models.account.AccountName
 import com.tangem.domain.models.account.CryptoPortfolioIcon
 import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.test.core.getEmittedValues
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Nested
