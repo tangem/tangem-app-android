@@ -340,7 +340,9 @@ private fun AddressItem(
         onClick = onOpenQrCodeClick,
     ) {
         Column(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 32.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp, vertical = 32.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             CurrencyIcon(
