@@ -180,8 +180,8 @@ internal class SendAmountModel @Inject constructor(
 
     private fun initialState(
         cryptoCurrencyStatus: CryptoCurrencyStatus,
-        @Suppress("UnusedParameter") account: Account.CryptoPortfolio?,
-        @Suppress("UnusedParameter") isAccountsMode: Boolean,
+        account: Account.CryptoPortfolio?,
+        isAccountsMode: Boolean,
     ) {
         if (uiState.value is AmountState.Empty && userWallet != null) {
             val isOnlyOneWallet = getWalletsUseCase.invokeSync().size == 1
@@ -378,6 +378,7 @@ internal class SendAmountModel @Inject constructor(
             setSendWithSwapAvailability()
             params.callback.onNavigationResult(
                 NavigationUM.Content(
+                    source = CommonSendRoute.Amount::class.java.simpleName,
                     title = resourceReference(R.string.send_amount_label),
                     subtitle = null,
                     backIconRes = if (route.isEditMode) {

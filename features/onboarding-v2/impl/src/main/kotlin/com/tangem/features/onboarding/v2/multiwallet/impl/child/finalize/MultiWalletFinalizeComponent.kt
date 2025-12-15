@@ -6,6 +6,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
+import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.features.onboarding.v2.impl.R
@@ -13,13 +14,17 @@ import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChild
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildParams
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.finalize.model.MultiWalletFinalizeModel
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.finalize.ui.MultiWalletFinalize
+import com.tangem.features.onboarding.v2.util.ResetCardsComponent
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 @Suppress("UnusedPrivateMember")
 internal class MultiWalletFinalizeComponent(
     context: AppComponentContext,
+    resetCardsComponentFactory: ResetCardsComponent.Factory,
     params: MultiWalletChildParams,
     backButtonClickFlow: SharedFlow<Unit>,
     onBack: () -> Unit,
@@ -27,6 +32,13 @@ internal class MultiWalletFinalizeComponent(
 ) : AppComponentContext by context, MultiWalletChildComponent {
 
     private val model: MultiWalletFinalizeModel = getOrCreateModel(params)
+
+    private val resetCardsComponent = resetCardsComponentFactory.create(
+        context = child("ResetCardsComponent"),
+        params = ResetCardsComponent.Params(
+            callbacks = model.resetCardsModelCallbacks,
+        ),
+    )
 
     init {
         params.innerNavigation.update {
@@ -51,6 +63,10 @@ internal class MultiWalletFinalizeComponent(
         componentScope.launch {
             model.onBackFlow.collect { onBack() }
         }
+
+        model.startFullResetFlow
+            .onEach { resetCardsComponent.startResetCardsFlow(it) }
+            .launchIn(componentScope)
     }
 
     @Composable
@@ -66,6 +82,6 @@ internal class MultiWalletFinalizeComponent(
     }
 
     enum class Event {
-        OneBackupCardAdded, TwoBackupCardsAdded, ThreeBackupCardsAdded
+        OneBackupCardAdded, TwoBackupCardsAdded, ThreeBackupCardsAdded, ExitFromFlow
     }
 }

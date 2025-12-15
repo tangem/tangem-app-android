@@ -65,7 +65,7 @@ class YieldSupplyMinAmountUseCaseTest {
         val maxFeePerGas = BigInteger("158320679232")
         val fee = createEip1559Fee(maxFeePerGas)
 
-        coEvery { feeRepository.getEthereumFeeWithoutGas(userWallet, token) } returns fee
+        coEvery { feeRepository.getEthereumFeeWithoutGas(userWallet.walletId, token) } returns fee
         coEvery {
             currenciesRepository.getNetworkCoin(
                 userWalletId = userWallet.walletId,
@@ -88,7 +88,7 @@ class YieldSupplyMinAmountUseCaseTest {
             ),
         )
         val expected = expectedMinAmount(maxFeePerGas, nativeFiatRate, tokenFiatRate, token.decimals)
-        val result = useCase(userWallet, tokenStatus).getOrNull()
+        val result = useCase(userWallet.walletId, tokenStatus).getOrNull()
         Truth.assertThat(result).isEqualTo(expected)
     }
 
@@ -114,7 +114,7 @@ class YieldSupplyMinAmountUseCaseTest {
             ),
         )
         val userWallet = createUserWallet()
-        val result = useCase(userWallet, tokenStatus)
+        val result = useCase(userWallet.walletId, tokenStatus)
         Truth.assertThat(result.isLeft()).isTrue()
         Truth.assertThat(result.leftOrNull()?.message).isEqualTo("Fiat rate is missing")
     }
@@ -145,7 +145,7 @@ class YieldSupplyMinAmountUseCaseTest {
         val maxFeePerGas = BigInteger("158320679232")
         val fee = createEip1559Fee(maxFeePerGas)
 
-        coEvery { feeRepository.getEthereumFeeWithoutGas(userWallet, token) } returns fee
+        coEvery { feeRepository.getEthereumFeeWithoutGas(userWallet.walletId, token) } returns fee
         coEvery {
             currenciesRepository.getNetworkCoin(
                 userWalletId = userWallet.walletId,
@@ -157,7 +157,7 @@ class YieldSupplyMinAmountUseCaseTest {
         coEvery {
             quotesRepository.getMultiQuoteSyncOrNull(setOf(nativeCoin.id.rawCurrencyId!!))
         } returns null
-        val result = useCase(userWallet, tokenStatus)
+        val result = useCase(userWallet.walletId, tokenStatus)
         Truth.assertThat(result.isLeft()).isTrue()
         Truth.assertThat(result.leftOrNull()?.message).isEqualTo("Quotes for native coin are unavailable")
     }

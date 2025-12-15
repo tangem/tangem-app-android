@@ -10,7 +10,7 @@ fun List<TokensListItemUM>.addHeader(textReference: TextReference): ImmutableLis
 
     return buildList {
         if (items.isNotEmpty()) {
-            createGroupTitle(textReference = textReference).let(::add)
+            add(createGroupTitle(textReference = textReference))
         }
 
         addAll(items)
