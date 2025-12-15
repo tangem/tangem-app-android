@@ -25,7 +25,9 @@ import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.haptic.TangemHapticEffect
 import com.tangem.core.ui.haptic.VibratorHapticManager
 import com.tangem.core.ui.message.DialogMessage
-import com.tangem.features.staking.impl.R
+import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
+import com.tangem.domain.account.status.usecase.GetAccountCurrencyStatusUseCase
+import com.tangem.domain.account.usecase.IsAccountsModeEnabledUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
@@ -34,6 +36,7 @@ import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.BlockchainErrorInfo
 import com.tangem.domain.feedback.models.FeedbackEmailType
+import com.tangem.domain.models.account.Account
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.staking.*
@@ -52,14 +55,11 @@ import com.tangem.domain.staking.model.stakekit.transaction.StakingTransaction
 import com.tangem.domain.staking.utils.getValidatorsCount
 import com.tangem.domain.tokens.*
 import com.tangem.domain.transaction.error.GetFeeError
-import com.tangem.domain.transaction.usecase.CreateApprovalTransactionUseCase
-import com.tangem.domain.transaction.usecase.CreateTransferTransactionUseCase
-import com.tangem.domain.transaction.usecase.GetAllowanceUseCase
-import com.tangem.domain.transaction.usecase.GetFeeUseCase
-import com.tangem.domain.transaction.usecase.SendTransactionUseCase
+import com.tangem.domain.transaction.usecase.*
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.staking.api.StakingComponent
+import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.analytics.StakingParamsInterceptor
 import com.tangem.features.staking.impl.analytics.utils.StakingAnalyticSender
 import com.tangem.features.staking.impl.navigation.InnerStakingRouter
@@ -78,9 +78,9 @@ import com.tangem.features.staking.impl.presentation.state.transformers.confirma
 import com.tangem.features.staking.impl.presentation.state.transformers.notifications.AddStakingNotificationsTransformer
 import com.tangem.features.staking.impl.presentation.state.transformers.notifications.DismissStakingNotificationsStateTransformer
 import com.tangem.features.staking.impl.presentation.state.transformers.ton.CompleteInitializeBottomSheetTransformer
+import com.tangem.features.staking.impl.presentation.state.transformers.ton.SetFeeErrorToTonInitializeBottomSheetTransformer
 import com.tangem.features.staking.impl.presentation.state.transformers.ton.SetFeeToTonInitializeBottomSheetTransformer
 import com.tangem.features.staking.impl.presentation.state.transformers.ton.ShowTonInitializeBottomSheetTransformer
-import com.tangem.features.staking.impl.presentation.state.transformers.ton.SetFeeErrorToTonInitializeBottomSheetTransformer
 import com.tangem.features.staking.impl.presentation.state.transformers.validator.ValidatorSelectChangeTransformer
 import com.tangem.features.staking.impl.presentation.state.utils.checkAndCalculateSubtractedAmount
 import com.tangem.features.staking.impl.presentation.state.utils.isSingleAction
@@ -139,12 +139,15 @@ internal class StakingModel @Inject constructor(
     private val getFeeUseCase: GetFeeUseCase,
     private val getNetworkAddressesUseCase: GetNetworkAddressesUseCase,
     private val getActionRequirementAmountUseCase: GetActionRequirementAmountUseCase,
+    private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase,
+    private val getAccountCurrencyStatusUseCase: GetAccountCurrencyStatusUseCase,
     private val paramsInterceptorHolder: ParamsInterceptorHolder,
     private val shareManager: ShareManager,
     private val urlOpener: UrlOpener,
     @DelayedWork private val coroutineScope: CoroutineScope,
     private val innerRouter: InnerStakingRouter,
     private val messageSender: UiMessageSender,
+    private val accountsFeatureToggles: AccountsFeatureToggles,
     appRouter: AppRouter,
 ) : Model(), StakingClickIntents {
 
@@ -159,7 +162,7 @@ internal class StakingModel @Inject constructor(
         analyticsEventsHandler = analyticsEventHandler,
     )
 
-    private val cryptoCurrencyId: CryptoCurrency.ID = params.cryptoCurrencyId
+    private val cryptoCurrencyId: CryptoCurrency.ID = params.cryptoCurrency.id
     private val userWalletId: UserWalletId = params.userWalletId
     private val yield: Yield = runBlocking {
         getYieldUseCase(params.yieldId).getOrElse {
@@ -173,6 +176,8 @@ internal class StakingModel @Inject constructor(
     private var stakingActions: List<StakingAction> = emptyList()
     private var feeCryptoCurrencyStatus: CryptoCurrencyStatus? = null
     private var minimumTransactionAmount: EnterAmountBoundary? = null
+    private val isBalanceHiddenFlow: StateFlow<Boolean>
+        field = MutableStateFlow(false)
 
     private var tonAccountInitializeTransaction: TransactionData.Uncompiled? = null
 
@@ -238,6 +243,9 @@ internal class StakingModel @Inject constructor(
     private var isAnyTokenStaked: Boolean = false
     private val allowanceTaskScheduler = SingleTaskScheduler<BigDecimal>()
 
+    private var isAccountsModeEnabled: Boolean = true
+    private var account: Account.CryptoPortfolio? = null
+
     private val transactionsInProgress: CopyOnWriteArrayList<StakingTransaction> = CopyOnWriteArrayList()
 
     private var actionsJobHolder: JobHolder = JobHolder()
@@ -248,7 +256,6 @@ internal class StakingModel @Inject constructor(
 
     init {
         subscribeOnSelectedAppCurrency()
-        subscribeOnBalanceHiding()
         subscribeOnCurrencyStatusUpdates()
         stateController.initializeWithUserWallet(userWallet)
     }
@@ -298,6 +305,9 @@ internal class StakingModel @Inject constructor(
                                 cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
                                 userWalletProvider = Provider { userWallet },
                                 appCurrencyProvider = Provider { appCurrency },
+                                isBalanceHidden = isBalanceHiddenFlow.value,
+                                isAccountsModeEnabled = isAccountsModeEnabled,
+                                account = account,
                             ).let(::add)
                             AmountMaxValueStateTransformer(
                                 cryptoCurrencyStatus = cryptoCurrencyStatus,
@@ -762,6 +772,7 @@ internal class StakingModel @Inject constructor(
             val currencyStatus = getCurrencyCheckUseCase(
                 userWalletId = userWalletId,
                 currencyStatus = cryptoCurrencyStatus,
+                feeCurrencyStatus = feeCryptoCurrencyStatus,
                 amount = amount,
                 fee = fee,
                 feeCurrencyBalanceAfterTransaction = balanceAfterTransaction,
@@ -1066,60 +1077,75 @@ internal class StakingModel @Inject constructor(
     }
 
     private fun subscribeOnCurrencyStatusUpdates() {
-        getSingleCryptoCurrencyStatusUseCase.invokeMultiWallet(
-            userWalletId = userWalletId,
-            currencyId = cryptoCurrencyId,
-            isSingleWalletWithTokens = false,
-        )
-            .conflate()
-            .distinctUntilChanged()
-            .filter {
-                value.currentStep == StakingStep.InitialInfo || isTopHeatupCase()
-            }
-            .onEach { maybeStatus ->
-                maybeStatus.fold(
-                    ifRight = { status ->
-                        if (!isInitialInfoAnalyticSent) {
-                            isInitialInfoAnalyticSent = true
-                            val balances = status.value.yieldBalance as? YieldBalance.Data
-                            paramsInterceptorHolder.addParamsInterceptor(
-                                interceptor = StakingParamsInterceptor(status.currency.symbol),
+        if (accountsFeatureToggles.isFeatureEnabled) {
+            getAccountCurrencyStatusUseCase(
+                userWalletId = params.userWalletId,
+                currency = params.cryptoCurrency,
+            ).conflate().distinctUntilChanged()
+                .filter {
+                    value.currentStep == StakingStep.InitialInfo || isTopHeatupCase()
+                }.onEach { (maybeAccount, maybeStatus) ->
+                    isAccountsModeEnabled = isAccountsModeEnabledUseCase.invokeSync()
+                    account = maybeAccount
+                    onDataLoaded(maybeStatus)
+                }.flowOn(dispatchers.main)
+                .launchIn(modelScope)
+        } else {
+            getSingleCryptoCurrencyStatusUseCase.invokeMultiWallet(
+                userWalletId = userWalletId,
+                currencyId = cryptoCurrencyId,
+                isSingleWalletWithTokens = false,
+            ).conflate().distinctUntilChanged()
+                .filter {
+                    value.currentStep == StakingStep.InitialInfo || isTopHeatupCase()
+                }
+                .onEach { maybeStatus ->
+                    maybeStatus.fold(
+                        ifRight = { onDataLoaded(it) },
+                        ifLeft = { error ->
+                            stakingEventFactory.createGenericErrorAlert(error.toString())
+                            stateController.update(
+                                SetConfirmationStateResetAssentTransformer(cryptoCurrencyStatus = cryptoCurrencyStatus),
                             )
-                            analyticsEventHandler.send(
-                                StakingAnalyticsEvent.StakingInfoScreenOpened(
-                                    validatorsCount = balances?.getValidatorsCount() ?: 0,
-                                ),
-                            )
-                        }
+                        },
+                    )
+                }.flowOn(dispatchers.main)
+                .launchIn(modelScope)
+        }
+    }
 
-                        feeCryptoCurrencyStatus =
-                            getFeePaidCryptoCurrencyStatusSyncUseCase(userWalletId, status).getOrNull()
-                        minimumTransactionAmount =
-                            getMinimumTransactionAmountSyncUseCase(userWalletId, status).getOrNull()?.let {
-                                EnterAmountBoundary(
-                                    amount = it,
-                                    fiatRate = status.value.fiatRate.orZero(),
-                                )
-                            }
-                        cryptoCurrencyStatus = status
+    private suspend fun onDataLoaded(status: CryptoCurrencyStatus) {
+        if (!isInitialInfoAnalyticSent) {
+            isInitialInfoAnalyticSent = true
+            val balances = status.value.yieldBalance as? YieldBalance.Data
+            paramsInterceptorHolder.addParamsInterceptor(
+                interceptor = StakingParamsInterceptor(status.currency.symbol),
+            )
+            analyticsEventHandler.send(
+                StakingAnalyticsEvent.StakingInfoScreenOpened(
+                    validatorsCount = balances?.getValidatorsCount() ?: 0,
+                ),
+            )
+        }
 
-                        checkForTonHeatupCase()
-                        setupApprovalNeeded()
-                        setupIsAnyTokenStaked()
-                        checkIfSubtractAvailable()
-                        subscribeOnActionsUpdates(status)
-                        subscribeOnStepChanges(status)
-                    },
-                    ifLeft = { error ->
-                        stakingEventFactory.createGenericErrorAlert(error.toString())
-                        stateController.update(
-                            SetConfirmationStateResetAssentTransformer(cryptoCurrencyStatus = cryptoCurrencyStatus),
-                        )
-                    },
+        feeCryptoCurrencyStatus =
+            getFeePaidCryptoCurrencyStatusSyncUseCase(userWalletId, status).getOrNull()
+        minimumTransactionAmount =
+            getMinimumTransactionAmountSyncUseCase(userWalletId, status).getOrNull()?.let {
+                EnterAmountBoundary(
+                    amount = it,
+                    fiatRate = status.value.fiatRate.orZero(),
                 )
             }
-            .flowOn(dispatchers.main)
-            .launchIn(modelScope)
+        cryptoCurrencyStatus = status
+
+        checkForTonHeatupCase()
+        setupApprovalNeeded()
+        setupIsAnyTokenStaked()
+        checkIfSubtractAvailable()
+        subscribeOnActionsUpdates(status)
+        subscribeOnStepChanges(status)
+        subscribeOnBalanceHiding()
     }
 
     private fun subscribeOnBalanceHiding() {
@@ -1127,7 +1153,14 @@ internal class StakingModel @Inject constructor(
             .conflate()
             .distinctUntilChanged()
             .onEach {
-                stateController.update(transformer = HideBalanceStateTransformer(it.isBalanceHidden))
+                isBalanceHiddenFlow.value = it.isBalanceHidden
+                stateController.update(
+                    transformer = HideBalanceStateTransformer(
+                        isBalanceHidden = it.isBalanceHidden,
+                        cryptoCurrencyStatus = cryptoCurrencyStatus,
+                        appCurrency = appCurrency,
+                    ),
+                )
             }
             .flowOn(dispatchers.main)
             .launchIn(modelScope)
@@ -1202,6 +1235,9 @@ internal class StakingModel @Inject constructor(
                 userWalletProvider = Provider { userWallet },
                 appCurrencyProvider = Provider { appCurrency },
                 balancesToShowProvider = Provider { balancesToShow },
+                isAccountsModeEnabled = isAccountsModeEnabled,
+                account = account,
+                isBalanceHidden = isBalanceHiddenFlow.value,
             ),
             SetConfirmationStateEmptyTransformer,
         )
@@ -1236,6 +1272,9 @@ internal class StakingModel @Inject constructor(
                 cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
                 userWalletProvider = Provider { userWallet },
                 appCurrencyProvider = Provider { appCurrency },
+                isAccountsModeEnabled = isAccountsModeEnabled,
+                isBalanceHidden = isBalanceHiddenFlow.value,
+                account = account,
             ),
             AmountChangeStateTransformer(
                 cryptoCurrencyStatus = cryptoCurrencyStatus,
