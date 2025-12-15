@@ -2,26 +2,33 @@ package com.tangem.features.tangempay.entity
 
 import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
+import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.domain.visa.model.TangemPayCardFrozenState
 import kotlinx.collections.immutable.ImmutableList
 
 internal data class TangemPayDetailsUM(
     val topBarConfig: TangemPayDetailsTopBarConfig,
     val pullToRefreshConfig: PullToRefreshConfig,
     val balanceBlockState: TangemPayDetailsBalanceBlockState,
-    val cardDetailsUM: TangemPayCardDetailsUM,
+    val addToWalletBlockState: AddToWalletBlockState?,
     val isBalanceHidden: Boolean,
+    val addFundsEnabled: Boolean,
+    val cardFrozenState: CardFrozenState,
+    val betaNotificationConfig: NotificationConfig,
 )
 
-data class TangemPayCardDetailsUM(
-    val number: String = "",
-    val expiry: String = "",
-    val cvv: String = "",
+internal data class TangemPayCardDetailsUM(
+    val number: String,
+    val numberShort: String,
+    val expiry: String,
+    val cvv: String,
     val buttonText: TextReference = TextReference.EMPTY,
     val onClick: () -> Unit = {},
     val onCopy: (String) -> Unit = {},
     val isHidden: Boolean = true,
     val isLoading: Boolean = false,
+    val cardFrozenState: TangemPayCardFrozenState,
 )
 
 internal sealed class TangemPayDetailsBalanceBlockState {
@@ -43,3 +50,14 @@ internal sealed class TangemPayDetailsBalanceBlockState {
         override val actionButtons: ImmutableList<ActionButtonConfig>,
     ) : TangemPayDetailsBalanceBlockState()
 }
+
+sealed class CardFrozenState {
+    data object Pending : CardFrozenState()
+    data class Frozen(val onUnfreeze: () -> Unit) : CardFrozenState()
+    data object Unfrozen : CardFrozenState()
+}
+
+internal data class AddToWalletBlockState(
+    val onClick: () -> Unit,
+    val onClickClose: () -> Unit,
+)

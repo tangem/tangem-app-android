@@ -6,7 +6,7 @@ import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.domain.staking.model.stakekit.transaction.ActionParams
 import com.tangem.domain.staking.model.stakekit.transaction.StakingTransaction
 import com.tangem.domain.staking.repositories.StakingErrorResolver
-import com.tangem.domain.staking.repositories.StakingRepository
+import com.tangem.domain.staking.repositories.StakeKitRepository
 import com.tangem.domain.models.wallet.UserWalletId
 import kotlinx.coroutines.delay
 
@@ -14,7 +14,7 @@ import kotlinx.coroutines.delay
  * Use case for creating enter action
  */
 class GetStakingTransactionsUseCase(
-    private val stakingRepository: StakingRepository,
+    private val stakeKitRepository: StakeKitRepository,
     private val stakingErrorResolver: StakingErrorResolver,
 ) {
 
@@ -24,7 +24,7 @@ class GetStakingTransactionsUseCase(
         params: ActionParams,
     ): Either<StakingError, List<StakingTransaction>> {
         return Either.catch {
-            val createAction = stakingRepository.createAction(userWalletId, network, params)
+            val createAction = stakeKitRepository.createAction(userWalletId, network, params)
 
             // workaround, sometimes transaction is not created immediately after actions/enter
             delay(PATCH_TRANSACTION_REQUEST_DELAY)

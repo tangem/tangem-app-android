@@ -15,7 +15,6 @@ import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.sdk.mocks.MockProvider
 import com.tangem.tap.store
 import dagger.hilt.android.testing.HiltAndroidTest
-import io.qameta.allure.kotlin.Allure
 import io.qameta.allure.kotlin.AllureId
 import io.qameta.allure.kotlin.junit4.DisplayName
 import org.junit.Test
@@ -37,7 +36,11 @@ class FeedbackTest : BaseTestCase() {
             step("Open 'Main Screen'") {
                 openMainScreen()
             }
+            step("Synchronize addresses") {
+                synchronizeAddresses()
+            }
             step("Click 'More' button on TopBar") {
+                waitForIdle()
                 onTopBar { moreButton.clickWithAssertion() }
             }
             step("Click 'Contact support' button") {
@@ -73,7 +76,7 @@ class FeedbackTest : BaseTestCase() {
                 onMainScreen { tokenWithTitleAndAddress(tokenName).clickWithAssertion() }
             }
             step("Click 'Send' button") {
-                onTokenDetailsScreen { sendButton.performClick() }
+                onTokenDetailsScreen { sendButton().performClick() }
             }
             step("Type '$sendAmount' in input text field") {
                 onSendScreen {
@@ -130,7 +133,7 @@ class FeedbackTest : BaseTestCase() {
                 MockProvider.resetEmulateError()
             }
         ).run {
-            Allure.step("Click on 'Accept' button") {
+            step("Click on 'Accept' button") {
                 onDisclaimerScreen { acceptButton.clickWithAssertion() }
             }
             step("Set scanning error") {
