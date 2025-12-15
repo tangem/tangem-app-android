@@ -58,7 +58,7 @@ internal class OnboardingMultiWalletModel @Inject constructor(
     val uiState = _uiState.asStateFlow()
 
     init {
-        analyticsHandler.send(OnboardingEvent.Started)
+        analyticsHandler.send(OnboardingEvent.Started())
         initScreenTitle()
         loadCardArtwork()
         subscribeToBackups()

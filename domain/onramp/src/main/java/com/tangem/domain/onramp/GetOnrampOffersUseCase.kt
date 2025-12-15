@@ -11,9 +11,11 @@ import com.tangem.domain.onramp.repositories.OnrampRepository
 import com.tangem.domain.onramp.repositories.OnrampTransactionRepository
 import com.tangem.domain.onramp.utils.calculateRateDif
 import com.tangem.domain.onramp.utils.compareOffersByRateSpeedAndPriority
+import com.tangem.domain.promo.PromoRepository
 import com.tangem.domain.settings.repositories.SettingsRepository
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 
 class GetOnrampOffersUseCase(
@@ -21,14 +23,16 @@ class GetOnrampOffersUseCase(
     private val onrampTransactionRepository: OnrampTransactionRepository,
     private val errorResolver: OnrampErrorResolver,
     private val settingsRepository: SettingsRepository,
+    private val promoRepository: PromoRepository,
 ) {
 
     operator fun invoke(): EitherFlow<OnrampError, List<OnrampOffersBlock>> {
         return combine(
             onrampRepository.getQuotes(),
             onrampTransactionRepository.getAllTransactions(),
-        ) { quotes, transactions ->
-            processOffers(quotes, transactions)
+            flow { emit(promoRepository.isMoonpayPromoActive()) },
+        ) { quotes, transactions, isMoonpayPromoActive ->
+            processOffers(quotes, transactions, isMoonpayPromoActive)
         }
             .map { offers -> offers.right() }
             .catch { throwable -> errorResolver.resolve(throwable).left() }
@@ -37,6 +41,7 @@ class GetOnrampOffersUseCase(
     private suspend fun processOffers(
         quotes: List<OnrampQuote>,
         transactions: List<OnrampTransaction>,
+        isMoonpayPromoActive: Boolean,
     ): List<OnrampOffersBlock> {
         val validQuotes = quotes.filterIsInstance<OnrampQuote.Data>()
         if (validQuotes.isEmpty()) return emptyList()
@@ -57,7 +62,7 @@ class GetOnrampOffersUseCase(
 
         val recentOffer = findRecentOffer(offers, transactions)
         val bestRateOffer = findBestRateOffer(offers, isGooglePayAvailable)
-        val fastestOffer = findFastestOffer(offers, isGooglePayAvailable)
+        val fastestOffer = findFastestOffer(offers, isGooglePayAvailable, isMoonpayPromoActive)
 
         return buildOffersBlocks(
             recentOffer = recentOffer,
@@ -85,8 +90,24 @@ class GetOnrampOffersUseCase(
         return offers.maxWithOrNull(offerComparator(isGooglePayAvailable))
     }
 
-    private fun findFastestOffer(offers: List<OnrampOffer>, isGooglePayAvailable: Boolean): OnrampOffer? {
-        val instantOffers = offers.filter { it.quote.paymentMethod.type.isInstant() }
+    private fun findFastestOffer(
+        offers: List<OnrampOffer>,
+        isGooglePayAvailable: Boolean,
+        isMoonpayPromoActive: Boolean,
+    ): OnrampOffer? {
+        val moonpayPromoOffers = if (isMoonpayPromoActive) {
+            offers.filter { offer ->
+                offer.quote.provider.id == MOONPAY_PROMO_PROVIDER_ID &&
+                    offer.quote.paymentMethod.type == PaymentMethodType.GOOGLE_PAY
+            }
+        } else {
+            emptyList()
+        }
+
+        val instantOffers = moonpayPromoOffers.ifEmpty {
+            offers.filter { it.quote.paymentMethod.type.isInstant() }
+        }
+
         return if (instantOffers.isNotEmpty()) {
             instantOffers.maxWithOrNull(fastestOfferComparator(isGooglePayAvailable))
         } else {
@@ -286,5 +307,9 @@ class GetOnrampOffersUseCase(
             OnrampStatus.Status.Refunded,
             -> true
         }
+    }
+
+    private companion object {
+        const val MOONPAY_PROMO_PROVIDER_ID = "moonpay"
     }
 }
