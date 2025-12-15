@@ -5,6 +5,7 @@ import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.blockchainsdk.utils.toMigratedCoinId
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
+import com.tangem.domain.staking.model.ethpool.P2PStakingConfig
 
 /**
  * Represents a staking integration identifier.
@@ -101,8 +102,10 @@ sealed interface StakingIntegrationID {
     enum class P2P : StakingIntegrationID {
         EthereumPooled {
             override val value: String = "p2p-ethereum-pooled"
-            override val blockchain: Blockchain = Blockchain.Ethereum
-            override val networkId: String = "ethereum"
+            override val blockchain: Blockchain
+                get() = if (P2PStakingConfig.USE_TESTNET) Blockchain.EthereumTestnet else Blockchain.Ethereum
+            override val networkId: String
+                get() = P2PStakingConfig.activeNetwork.stakingNetworkId
         },
     }
 
