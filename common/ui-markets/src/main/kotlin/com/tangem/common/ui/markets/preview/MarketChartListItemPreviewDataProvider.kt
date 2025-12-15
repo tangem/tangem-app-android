@@ -1,15 +1,15 @@
-package com.tangem.features.feed.ui.market.preview
+package com.tangem.common.ui.markets.preview
 
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import com.tangem.common.ui.charts.state.MarketChartRawData
+import com.tangem.common.ui.markets.models.MarketsListItemUM
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.currency.CryptoCurrency
-import com.tangem.features.feed.ui.market.state.MarketsListItemUM
 import kotlinx.collections.immutable.persistentListOf
 
 @Suppress("MagicNumber")
-internal class MarketChartListItemPreviewDataProvider : CollectionPreviewParameterProvider<MarketsListItemUM>(
+class MarketChartListItemPreviewDataProvider : CollectionPreviewParameterProvider<MarketsListItemUM>(
     collection = listOf(
         MarketsListItemUM(
             id = CryptoCurrency.RawID("1"),
