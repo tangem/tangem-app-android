@@ -3,6 +3,7 @@ package com.tangem.core.ui.components.token
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -18,6 +19,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.audits.AuditLabelUM
 import com.tangem.core.ui.components.currency.icon.CurrencyIcon
@@ -28,6 +30,7 @@ import com.tangem.core.ui.components.token.internal.*
 import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.components.token.state.TokenItemState.FiatAmountState
 import com.tangem.core.ui.components.token.state.TokenItemState.Subtitle2State
+import com.tangem.core.ui.components.token.state.TokenItemState.PromoBannerState
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.rememberHapticFeedback
 import com.tangem.core.ui.extensions.stringReference
@@ -44,7 +47,7 @@ private const val TITLE_MIN_WIDTH_COEFFICIENT = 0.3
 private const val PRICE_MIN_WIDTH_COEFFICIENT = 0.32
 
 private enum class LayoutId {
-    ICON, TITLE, FIAT_AMOUNT, CRYPTO_AMOUNT, CRYPTO_PRICE, NON_FIAT_CONTENT
+    ICON, TITLE, FIAT_AMOUNT, CRYPTO_AMOUNT, CRYPTO_PRICE, NON_FIAT_CONTENT, PROMO_BANNER
 }
 
 /**
@@ -107,6 +110,14 @@ fun TokenItem(
                 .layoutId(layoutId = LayoutId.ICON)
                 .padding(end = TangemTheme.dimens.spacing8)
                 .testTag(TokenElementsTestTags.TOKEN_ICON),
+        )
+
+        YieldSupplyPromoBanner(
+            state = state.promoBannerState,
+            modifier = Modifier
+                .layoutId(layoutId = LayoutId.PROMO_BANNER)
+                .testTag(TokenElementsTestTags.TOKEN_YIELD_PROMO_BANNER)
+                .fillMaxWidth(),
         )
 
         TokenTitle(
@@ -220,6 +231,13 @@ private fun CustomContainer(state: TokenItemState, modifier: Modifier = Modifier
 
         val nonFiatContent = measurables.measure(layoutId = LayoutId.NON_FIAT_CONTENT, constraints = constraints)
 
+        val promoBanner = when (state.promoBannerState) {
+            is PromoBannerState.Content -> measurables.measure(
+                layoutId = LayoutId.PROMO_BANNER,
+                constraints = constraints,
+            )
+            else -> null
+        }
         var firstRowRemainingFreeSpace: Int? = null
         var secondRowRemainingFreeSpace: Int? = null
 
@@ -283,10 +301,18 @@ private fun CustomContainer(state: TokenItemState, modifier: Modifier = Modifier
             )
         }
 
+        val promoBannerHeight = promoBanner?.height ?: 0
+        val promoOffset = if (promoBannerHeight > 0) {
+            promoBannerHeight - 8.dp.roundToPx()
+        } else {
+            0
+        }
+
         val layoutHeight = calculateLayoutHeight(
             state = state,
             minLayoutHeight = with(density) { dimens.size68.roundToPx() },
             layoutPadding = verticalPadding,
+            promoOffset = promoOffset,
             title = title,
             fiatAmount = fiatAmount,
             cryptoAmount = cryptoAmount,
@@ -294,16 +320,22 @@ private fun CustomContainer(state: TokenItemState, modifier: Modifier = Modifier
         )
 
         layout(width = constraints.maxWidth, height = layoutHeight) {
-            icon.placeRelative(x = 0, y = (layoutHeight - icon.height).div(other = 2))
+            promoBanner?.placeRelative(x = 0, y = 0)
+
+            icon.placeRelative(
+                x = 0,
+                y = promoOffset + (layoutHeight - promoOffset - icon.height)
+                    .div(other = 2),
+            )
 
             title.placeRelative(
                 x = icon.width,
-                y = when (state) {
+                y = promoOffset + when (state) {
                     is TokenItemState.NoAddress,
                     is TokenItemState.Unreachable,
                     -> {
                         if (state.subtitleState == null) {
-                            (layoutHeight - title.height).div(other = 2)
+                            (layoutHeight - promoOffset - title.height).div(other = 2)
                         } else {
                             verticalPadding
                         }
@@ -314,8 +346,8 @@ private fun CustomContainer(state: TokenItemState, modifier: Modifier = Modifier
 
             fiatAmount?.placeRelative(
                 x = layoutWidth - fiatAmount.width,
-                y = when (state.subtitle2State) {
-                    null -> (layoutHeight - fiatAmount.height).div(other = 2)
+                y = promoOffset + when (state.subtitle2State) {
+                    null -> (layoutHeight - promoOffset - fiatAmount.height).div(other = 2)
                     else -> verticalPadding
                 },
             )
@@ -335,7 +367,7 @@ private fun CustomContainer(state: TokenItemState, modifier: Modifier = Modifier
 
             nonFiatContent.placeRelative(
                 x = layoutWidth - nonFiatContent.width,
-                y = (layoutHeight - nonFiatContent.height).div(other = 2),
+                y = promoOffset + (layoutHeight - promoOffset - nonFiatContent.height).div(other = 2),
             )
         }
     }
@@ -443,6 +475,7 @@ private fun calculateLayoutHeight(
     state: TokenItemState,
     minLayoutHeight: Int,
     layoutPadding: Int,
+    promoOffset: Int,
     title: Placeable,
     fiatAmount: Placeable?,
     cryptoAmount: Placeable?,
@@ -468,7 +501,7 @@ private fun calculateLayoutHeight(
         }
     }
 
-    return max(firstColumnHeight, secondColumnHeight).coerceAtLeast(minLayoutHeight)
+    return (promoOffset + max(firstColumnHeight, secondColumnHeight)).coerceAtLeast(promoOffset + minLayoutHeight)
 }
 
 @Preview(widthDp = 360, showBackground = true)
@@ -587,6 +620,11 @@ private class TokenItemStateProvider : CollectionPreviewParameterProvider<TokenI
             ),
             onItemClick = {},
             onItemLongClick = {},
+            promoBannerState = PromoBannerState.Content(
+                title = TextReference.Str(value = "Trusted"),
+                onPromoBannerClick = {},
+                onCloseClick = {},
+            ),
         ),
         TokenItemState.Loading(
             id = "Loading#1",
