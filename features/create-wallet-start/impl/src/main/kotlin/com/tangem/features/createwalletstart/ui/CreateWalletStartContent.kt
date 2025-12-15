@@ -296,7 +296,7 @@ private fun AdaptiveScrollableContent(
         Layout(
             modifier = Modifier
                 .fillMaxWidth()
-                .verticalScroll(rememberScrollState()),
+                .verticalScroll(rememberScrollState(initial = Int.MAX_VALUE)),
             content = {
                 Column(
                     modifier = Modifier.fillMaxWidth(),

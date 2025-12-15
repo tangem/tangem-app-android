@@ -371,11 +371,12 @@ internal class NFTSendConfirmModel @Inject constructor(
             flow = uiState,
             flow2 = params.currentRoute,
             transform = { state, route -> state to route },
-        ).onEach { (state, _) ->
+        ).onEach { (state, route) ->
             val confirmUM = state.confirmUM
             params.callback.onResult(
                 state.copy(
                     navigationUM = NavigationUM.Content(
+                        source = CommonSendRoute.Confirm.javaClass.simpleName,
                         title = resourceReference(R.string.nft_send),
                         subtitle = null,
                         backIconRes = when (confirmUM) {

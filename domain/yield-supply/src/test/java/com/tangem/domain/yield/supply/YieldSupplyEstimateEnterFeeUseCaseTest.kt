@@ -34,7 +34,9 @@ class YieldSupplyEstimateEnterFeeUseCaseTest {
     private val blockAidGasEstimate: BlockAidGasEstimate = mockk()
     private val useCase = YieldSupplyEstimateEnterFeeUseCase(feeRepository, feeErrorResolver, blockAidGasEstimate)
 
-    private val userWallet: UserWallet = mockk()
+    private val userWallet: UserWallet = mockk {
+        every { walletId } returns mockk()
+    }
     private val cryptoCurrency: CryptoCurrency = mockk(relaxed = true) {
         every { decimals } returns 18
     }

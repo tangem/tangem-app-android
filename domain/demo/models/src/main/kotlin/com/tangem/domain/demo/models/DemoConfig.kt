@@ -4,14 +4,27 @@ import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.Blockchain
 import java.math.BigDecimal
 
-@Suppress("LargeClass")
-class DemoConfig {
+@Suppress("LargeClass", "ClassOrdering", "PropertyUsedBeforeDeclaration")
+object DemoConfig {
 
-    val demoBlockchains = setOf(
+    /**
+     * @workaround
+     * There were produced 20k Note demo cards that should work like multiwallet (except Onboarding)
+     * for that reasons we've just added some specific checks for their BatchId
+     */
+    private const val DEMO_NOTE_AS_MILTIWALLET_BATCH = "DE00"
+
+    private val demoBlockchains = setOf(
         Blockchain.Bitcoin,
         Blockchain.Ethereum,
         Blockchain.Dogecoin,
         Blockchain.Solana,
+    )
+
+    private val demoBlockchainsSecpOnly = setOf(
+        Blockchain.Bitcoin,
+        Blockchain.Ethereum,
+        Blockchain.Dogecoin,
     )
 
     private val demoCardIds: List<String> by lazy {
@@ -28,18 +41,30 @@ class DemoConfig {
         Blockchain.Solana to Amount(13.246.toBigDecimal(), Blockchain.Solana),
     )
 
-    fun isDemoCardId(cardId: String): Boolean = demoCardIds.contains(cardId)
+    fun isDemoCardId(cardId: String): Boolean = demoCardIds.contains(cardId) ||
+        cardId.startsWith(DEMO_NOTE_AS_MILTIWALLET_BATCH)
 
     fun isTestDemoCardId(cardId: String): Boolean = testDemoCardIds.contains(cardId)
 
     fun getBalance(blockchain: Blockchain): Amount = walletBalances[blockchain]?.copy()
         ?: Amount(BigDecimal.ZERO, blockchain).copy()
 
+    fun isDemoNoteAsMultiwallet(cardId: String): Boolean {
+        return cardId.startsWith(DEMO_NOTE_AS_MILTIWALLET_BATCH)
+    }
+
+    fun getDemoBlockchains(cardId: String): Set<Blockchain> {
+        return if (cardId.startsWith(DEMO_NOTE_AS_MILTIWALLET_BATCH)) {
+            demoBlockchainsSecpOnly
+        } else {
+            demoBlockchains
+        }
+    }
+
     private fun getReleaseIds(): List<String> {
         return (releaseDemoCardIds + testDemoCardIds).distinct()
     }
 
-    @Suppress("ClassOrdering")
     private val releaseDemoCardIds = mutableListOf(
         // === Not from the Google Sheet table ===
         "AC01000000041225",
@@ -423,7 +448,6 @@ class DemoConfig {
         "AF10100000000084",
     )
 
-    @Suppress("ClassOrdering")
     private val testDemoCardIds = listOf(
         "FB20000000000186", // Note ETH
         "FB10000000000196", // Note BTC
@@ -431,6 +455,5 @@ class DemoConfig {
         "FB04000000000152", // Wallet 2
     )
 
-    @Suppress("ClassOrdering")
     private val debugTestDemoCardIds = emptyList<String>()
 }

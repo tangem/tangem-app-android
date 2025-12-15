@@ -101,6 +101,7 @@ private fun ColumnScope.Content(yieldSupplyPromoUM: YieldSupplyPromoUM, clickInt
                 Text(
                     text = yieldSupplyPromoUM.title.resolveReference(),
                     style = TangemTheme.typography.h2,
+                    textAlign = TextAlign.Center,
                     color = TangemTheme.colors.text.primary1,
                 )
                 SpacerH8()

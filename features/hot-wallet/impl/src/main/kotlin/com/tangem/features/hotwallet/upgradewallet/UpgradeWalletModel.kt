@@ -3,8 +3,10 @@ package com.tangem.features.hotwallet.upgradewallet
 import com.tangem.common.core.TangemError
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.doOnFailure
+import com.tangem.common.doOnResult
 import com.tangem.common.doOnSuccess
 import com.tangem.common.routing.AppRoute
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -16,20 +18,27 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.toWrappedList
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
+import com.tangem.domain.card.BackupValidator
+import com.tangem.domain.card.common.util.cardTypesResolver
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.settings.repositories.SettingsRepository
+import com.tangem.domain.wallets.analytics.WalletSettingsAnalyticEvents
+import com.tangem.domain.wallets.builder.ColdUserWalletBuilder
 import com.tangem.domain.wallets.usecase.ClearHotWalletContextualUnlockUseCase
 import com.tangem.domain.wallets.usecase.GenerateBuyTangemCardLinkUseCase
 import com.tangem.features.hotwallet.UpgradeWalletComponent
 import com.tangem.features.hotwallet.upgradewallet.entity.UpgradeWalletUM
+import com.tangem.features.onboarding.v2.util.ResetCardsComponent
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.sdk.extensions.localizedDescriptionRes
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.DELAY_SDK_DIALOG_CLOSE
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -50,17 +59,26 @@ internal class UpgradeWalletModel @Inject constructor(
     private val clearHotWalletContextualUnlockUseCase: ClearHotWalletContextualUnlockUseCase,
     private val tangemSdkManager: TangemSdkManager,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
+    private val coldUserWalletBuilderFactory: ColdUserWalletBuilder.Factory,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
     private val params = paramsContainer.require<UpgradeWalletComponent.Params>()
 
-    private val _uiState = MutableStateFlow(
-        UpgradeWalletUM(
-            onBackClick = { router.pop() },
-            onBuyTangemWalletClick = ::onBuyTangemWalletClick,
-            onScanDeviceClick = ::onScanDeviceClick,
-        ),
-    )
-    internal val uiState: StateFlow<UpgradeWalletUM> = _uiState
+    val resetCardsComponentCallbacks = ResetCardsModelCallbacks()
+    val startResetCardsFlow = MutableSharedFlow<UserWallet.Cold>()
+
+    internal val uiState: StateFlow<UpgradeWalletUM>
+        field = MutableStateFlow(
+            UpgradeWalletUM(
+                onBackClick = { router.pop() },
+                onBuyTangemWalletClick = ::onBuyTangemWalletClick,
+                onContinueClick = ::onContinueClick,
+            ),
+        )
+
+    init {
+        analyticsEventHandler.send(WalletSettingsAnalyticEvents.HardwareUpgradeScreenOpened)
+    }
 
     override fun onDestroy() {
         clearHotWalletContextualUnlockUseCase.invoke(params.userWalletId)
@@ -73,7 +91,8 @@ internal class UpgradeWalletModel @Inject constructor(
         }
     }
 
-    private fun onScanDeviceClick() {
+    private fun onContinueClick() {
+        analyticsEventHandler.send(WalletSettingsAnalyticEvents.ButtonStartUpgrade)
         scanCard()
     }
 
@@ -88,25 +107,57 @@ internal class UpgradeWalletModel @Inject constructor(
 
             tangemSdkManager
                 .scanProduct()
-                .doOnSuccess {
-                    delay(DELAY_SDK_DIALOG_CLOSE)
-                    tangemSdkManager.changeDisplayedCardIdNumbersCount(it)
-                    navigateToUpgradeFlow(it)
+                .doOnSuccess { scanResponse ->
+                    checkIsWalletSuitableToBeUsedAsUpgrade(scanResponse = scanResponse) {
+                        delay(DELAY_SDK_DIALOG_CLOSE)
+                        tangemSdkManager.changeDisplayedCardIdNumbersCount(scanResponse)
+                        navigateToUpgradeFlow(scanResponse)
+                    }
                 }
                 .doOnFailure {
                     showCardVerificationFailedDialog(it)
+                }
+                .doOnResult {
+                    setLoading(false)
                 }
         }
     }
 
     private fun setLoading(isLoading: Boolean) {
-        _uiState.update { it.copy(isLoading = isLoading) }
+        uiState.update { it.copy(isLoading = isLoading) }
+    }
+
+    private suspend fun checkIsWalletSuitableToBeUsedAsUpgrade(
+        scanResponse: ScanResponse,
+        onSuccess: suspend () -> Unit,
+    ) {
+        // Check if user attempted to upgrade before but something went wrong and a full reset is required
+        val userWallet = coldUserWalletBuilderFactory.create(scanResponse).build()
+        val isSameWalletButNotFinishedBackup = userWallet?.walletId == params.userWalletId &&
+            BackupValidator.isValidFull(scanResponse.card).not()
+
+        if (userWallet != null && isSameWalletButNotFinishedBackup) {
+            startResetCardsFlow.emit(userWallet)
+            return
+        }
+
+        // Check for the correct card type
+        when {
+            scanResponse.card.wallets.isNotEmpty() -> uiMessageSender.send(
+                DialogMessage(resourceReference(R.string.hw_upgrade_error_card_already_has_wallet)),
+            )
+            scanResponse.cardTypesResolver.isWallet2().not() -> uiMessageSender.send(
+                DialogMessage(resourceReference(R.string.hw_upgrade_error_wallet2_card_required)),
+            )
+            scanResponse.card.settings.isKeysImportAllowed.not() -> uiMessageSender.send(
+                DialogMessage(resourceReference(R.string.hw_upgrade_error_card_key_import)),
+            )
+            else -> onSuccess()
+        }
     }
 
     private fun showCardVerificationFailedDialog(error: TangemError) {
         if (error !is TangemSdkError.CardVerificationFailed) return
-
-        // TODO [REDACTED_TASK_KEY] track error
 
         val resource = error.localizedDescriptionRes()
         val resId = resource.resId ?: R.string.common_unknown_error
@@ -142,5 +193,15 @@ internal class UpgradeWalletModel @Inject constructor(
                 ),
             ),
         )
+    }
+
+    inner class ResetCardsModelCallbacks : ResetCardsComponent.ModelCallbacks {
+        override fun onCancel() {
+            setLoading(false)
+        }
+
+        override fun onComplete() {
+            setLoading(false)
+        }
     }
 }

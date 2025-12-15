@@ -3,11 +3,7 @@ package com.tangem.features.onramp.mainv2.entity.converter
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.format.bigdecimal.crypto
-import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.utils.parseBigDecimalOrNull
-import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.features.onramp.mainv2.entity.*
 import com.tangem.features.onramp.mainv2.entity.factory.OnrampAmountButtonUMStateFactory
 import com.tangem.utils.Provider
@@ -18,7 +14,6 @@ internal class OnrampV2AmountFieldChangeConverter(
     private val currentStateProvider: Provider<OnrampV2MainComponentUM>,
     private val onrampAmountButtonUMStateFactory: OnrampAmountButtonUMStateFactory,
     private val onrampIntents: OnrampV2Intents,
-    private val cryptoCurrency: CryptoCurrency,
 ) : Converter<String, OnrampV2MainComponentUM> {
 
     override fun convert(value: String): OnrampV2MainComponentUM {
@@ -39,12 +34,11 @@ internal class OnrampV2AmountFieldChangeConverter(
         return state.copy(
             amountBlockState = amountState.copy(
                 amountFieldModel = amountFieldModel,
-                secondaryFieldModel = OnrampNewAmountSecondaryFieldUM.Loading,
+                secondaryFieldModel = OnrampSecondaryFieldErrorUM.Empty,
             ),
-            continueButtonConfig = state.continueButtonConfig.copy(enabled = false),
-            onrampProviderState = OnrampV2ProvidersUM.Loading,
             onrampAmountButtonUMState = OnrampV2AmountButtonUMState.None,
-            offersBlockState = OnrampOffersBlockUM.Empty,
+            offersBlockState = OnrampOffersBlockUM.Loading,
+            errorNotification = null,
         )
     }
 
@@ -63,22 +57,14 @@ internal class OnrampV2AmountFieldChangeConverter(
         return copy(
             amountBlockState = amountBlockState.copy(
                 amountFieldModel = amountFieldModel,
-                secondaryFieldModel = OnrampNewAmountSecondaryFieldUM.Content(
-                    stringReference(
-                        BigDecimal.ZERO.format {
-                            crypto(cryptoCurrency = cryptoCurrency, ignoreSymbolPosition = true)
-                        },
-                    ),
-                ),
+                secondaryFieldModel = OnrampSecondaryFieldErrorUM.Empty,
             ),
-            continueButtonConfig = continueButtonConfig.copy(enabled = false),
             offersBlockState = OnrampOffersBlockUM.Empty,
             onrampAmountButtonUMState = onrampAmountButtonUMStateFactory.createOnrampAmountActionButton(
                 currencySymbol = amountBlockState.currencyUM.unit,
                 currencyCode = amountBlockState.currencyUM.code,
                 onAmountValueChanged = onrampIntents::onAmountValueChanged,
             ),
-            onrampProviderState = OnrampV2ProvidersUM.Empty,
         )
     }
 }

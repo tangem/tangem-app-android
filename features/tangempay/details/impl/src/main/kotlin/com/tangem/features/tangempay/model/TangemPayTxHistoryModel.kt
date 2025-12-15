@@ -6,34 +6,33 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.tangempay.repository.TangemPayTxHistoryRepository
-import com.tangem.domain.visa.model.TangemPayTxHistoryItem
 import com.tangem.features.tangempay.components.txHistory.DefaultTangemPayTxHistoryComponent
 import com.tangem.features.tangempay.entity.TangemPayTxHistoryUM
 import com.tangem.features.tangempay.utils.TangemPayTxHistoryListManager
-import com.tangem.features.tangempay.utils.TangemPayTxHistoryUiActions
+import com.tangem.features.tangempay.utils.TangemPayTxHistoryUpdateListener
 import com.tangem.pagination.PaginationStatus
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import javax.inject.Inject
 
 @Stable
 @ModelScoped
 internal class TangemPayTxHistoryModel @Inject constructor(
-    private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
-    override val dispatchers: CoroutineDispatcherProvider,
-    tangemPayTxHistoryRepository: TangemPayTxHistoryRepository,
     paramsContainer: ParamsContainer,
-) : Model(), TangemPayTxHistoryUiActions {
+    tangemPayTxHistoryRepository: TangemPayTxHistoryRepository,
+    override val dispatchers: CoroutineDispatcherProvider,
+    private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
+    private val txHistoryUpdateListener: TangemPayTxHistoryUpdateListener,
+) : Model() {
 
     private val params: DefaultTangemPayTxHistoryComponent.Params = paramsContainer.require()
     private val listManager = TangemPayTxHistoryListManager(
         repository = tangemPayTxHistoryRepository,
         dispatchers = dispatchers,
         customerWalletAddress = params.customerWalletAddress,
-        txHistoryUiActions = this,
+        txHistoryUiActions = params.uiActions,
     )
 
     val uiState: StateFlow<TangemPayTxHistoryUM>
@@ -43,10 +42,11 @@ internal class TangemPayTxHistoryModel @Inject constructor(
         handleBalanceHiding()
         launchPagination()
         subscribeToUiItemChanges()
+        subscribeToUpdateListener()
     }
 
     private fun launchPagination() {
-        modelScope.launch { listManager.launchPagination() }
+        modelScope.launch { listManager.launchPagination(params.userWalletId) }
     }
 
     private fun subscribeToUiItemChanges() {
@@ -58,6 +58,12 @@ internal class TangemPayTxHistoryModel @Inject constructor(
             .launchIn(modelScope)
         listManager.emptyStatus
             .onEach(::handleEmptyState)
+            .launchIn(modelScope)
+    }
+
+    private fun subscribeToUpdateListener() {
+        txHistoryUpdateListener.updates
+            .onEach { reload() }
             .launchIn(modelScope)
     }
 
@@ -113,10 +119,6 @@ internal class TangemPayTxHistoryModel @Inject constructor(
         getBalanceHidingSettingsUseCase()
             .onEach { uiState.update { state -> state.copySealed(isBalanceHidden = it.isBalanceHidden) } }
             .launchIn(modelScope)
-    }
-
-    override fun onTransactionClick(item: TangemPayTxHistoryItem) {
-        Timber.d("onTransactionClick: $item")
     }
 
     private fun getEmptyState(isBalanceHidden: Boolean): TangemPayTxHistoryUM.Empty {

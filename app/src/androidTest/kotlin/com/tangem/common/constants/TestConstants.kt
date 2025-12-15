@@ -4,8 +4,32 @@ object TestConstants {
     const val TOTAL_BALANCE = "$3,299.18"
 
     const val RECIPIENT_ADDRESS = "0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0"
+    const val ETHEREUM_ADDRESS = "0x9FFd974772bDA94D288240C1B22F367Ce75CcD7f"
+    const val ETHEREUM_RECIPIENT_ADDRESS = "0x5aa711F440Eb6d4361148bBD89d03464628ace84"
+    const val ETHEREUM_RECIPIENT_SHORTENED_ADDRESS = "0x5aa711F440Eb6d43...89d03464628ace84"
     const val BITCOIN_ADDRESS = "bc1qtg9aa6jcpqtvun0pe0uct7sxm8nq2nsxfmfxm3"
-    const val CARDANO_ADDRESS = "addr1q8f9499e58k4hhfd9vhawprxt3xd94x7rmlyp33ee4xkatakcl2zgkrg0p6ceqkndtkw4cumfe9enhdph8yhuswn785srksm9p"
+    const val CARDANO_ADDRESS =
+        "addr1q8f9499e58k4hhfd9vhawprxt3xd94x7rmlyp33ee4xkatakcl2zgkrg0p6ceqkndtkw4cumfe9enhdph8yhuswn785srksm9p"
+    const val SOLANA_RECIPIENT_ADDRESS = "5fcy9woa8Di1QHcce65CsV3XKrxdB2pD4HJx5xx82ipM"
+    const val POLKADOT_RECIPIENT_ADDRESS = "143TfgFYAFfM86LRzt4UcFNU3KosxCndBCVz2U5HCxpLidKZ"
+    const val XRP_X_ADDRESS = "XVVzUQZFrRo3MUW3HT1WUaAfE5iNr7USr9ER3DvsKmguJRa"
+    const val XRP_RECIPIENT_ADDRESS = "rNeY28BPda6jp5N5oESZzd2ZN7eMZy8jNf"
+    const val XRP_X_RECIPIENT_ADDRESS = "XVNpatGaPNpPbiAJsQz6ZczZFt97QBbFimbtGZnxBMC7ug9"
+    const val XRP_X_RECIPIENT_ADDRESS_WITH_TAG = "XVNpatGaPNpPbiAJsQz6ZczZFt97QB6jeQWyCM3uCaDHVix"
+    const val ENS_NAME = "louded.eth"
+    const val ENS_ETHEREUM_RECIPIENT_ADDRESS = "0x0211ff638298adcbdc99c177dc2e95ec69948865"
+    const val ENS_ETHEREUM_RECIPIENT_SHORTENED_ADDRESS = "0x0211ff63829..."
+    const val KUSAMA_RECIPIENT_ADDRESS = "CqNrR92Hh76vW69vDBL5iATrZoYkk9nj67iVSUbb2YHtktn"
+    const val AZERO_RECIPIENT_ADDRESS = "5EA4p6DZdbt2vLZySML2dG3ZsnNrenEWZHnVCScQh4iq2KZo"
+    const val TEZOS_RECIPIENT_ADDRESS = "tz1eBdC2JkU2bxgZssweLo6D3wCkWN12ioHW"
+    const val KASPA_RECIPIENT_ADDRESS = "kaspa:qypc4aywf95rken57kclwdjvycugnacstrh5uzmu0a7pjtxas366ktgj5jzu8t6"
+    const val CHIA_RECIPIENT_ADDRESS = "xch1dz2vua2qvxpx6fufd98rxxv2n8j9t3au733xlht3fga4gk8ks5mqq5tzsz"
+    const val XLM_NON_ACTIVATED_RECIPIENT_ADDRESS = "GAGMMENFDWASIHSVO4BPVIT3ZH3YNUIM4EJ6MUDJW46OVPNOJSQIJ22K"
+    const val XLM_ACTIVATED_RECIPIENT_ADDRESS = "GDKGS3UQFUNQY34P4SIAOKKGEA3NKHH6BSAXK4HIN3BZQQRBTITJLKL6"
+    const val XRP_NON_ACTIVATED_RECIPIENT_ADDRESS = "rvJfSnN6JzV3rhz1RRKDHnE6MYW28BaZG"
+    const val XRP_ACTIVATED_RECIPIENT_ADDRESS = "rN7n7otQDd6FczFgLdSqtcsAUxDkw6fzRH"
+    const val DOGECOIN_RECIPIENT_ADDRESS = "DJQR3bdhBKcFGMHX2BkMCkrMFApNWNzr6V"
+    const val DOGECOIN_ADDRESS = "DJ2TaZ5vvp3mBLugUpKjVM3pRBLi4uYaqz"
 
     const val WAIT_UNTIL_TIMEOUT = 20_000L
     const val WAIT_UNTIL_TIMEOUT_LONG = 30_000L
@@ -14,4 +38,7 @@ object TestConstants {
 
     const val ALLURE_LABEL_NAME = "Owner"
     const val ALLURE_LABEL_VALUE = "Kaspresso"
+
+    const val USER_TOKENS_API_SCENARIO = "user_tokens_api"
+    const val QUOTES_API_SCENARIO = "quotes_api"
 }

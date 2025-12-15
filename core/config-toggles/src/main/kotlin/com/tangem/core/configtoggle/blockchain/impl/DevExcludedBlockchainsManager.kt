@@ -21,6 +21,8 @@ internal class DevExcludedBlockchainsManager(
 ) : MutableExcludedBlockchainsManager {
 
     private val fileBlockchainToggles: Map<String, Boolean> = getFileBlockchainToggles()
+
+    @Suppress("DoubleMutabilityForCollection")
     private var blockchainTogglesMap: MutableMap<String, Boolean> by Delegates.notNull()
 
     override val excludedBlockchainsIds: Set<String>

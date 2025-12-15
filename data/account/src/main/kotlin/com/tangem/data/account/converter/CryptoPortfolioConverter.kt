@@ -36,6 +36,7 @@ internal class CryptoPortfolioConverter @AssistedInject constructor(
                 responseCryptoCurrenciesFactory.createCurrencies(
                     tokens = tokens,
                     userWallet = userWallet,
+                    accountIndex = value.derivationIndex.toDerivationIndex(),
                 ).toSet()
             } else {
                 emptySet()
