@@ -428,6 +428,7 @@
   <string name="custom_token_validation_error_not_found_title">Note that tokens can be created by anyone</string>
   <string name="details_buy_wallet">Buy Tangem Wallet</string>
   <string name="details_chat">Chat</string>
+  <string name="details_get_visa">Get Tangem Visa</string>
   <string name="details_manage_security_access_code">Access code</string>
   <string name="details_manage_security_access_code_description">You will have to submit the correct access code before scanning the card</string>
   <string name="details_manage_security_long_tap">Long Tap</string>
@@ -439,7 +440,6 @@
   <string name="details_row_description_flip_to_hide">Flip your device screen down to quickly hide and show balances</string>
   <string name="details_row_subtitle_signed_hashes_format">%s hashes</string>
   <string name="details_row_title_cid">Device ID</string>
-  <string name="details_row_title_contact_to_support">Contact support</string>
   <string name="details_row_title_contact_to_support_chat">Open support chat</string>
   <string name="details_row_title_create_backup">Link More Cards</string>
   <string name="details_row_title_currency">App Currency</string>
@@ -528,7 +528,7 @@
   <string name="express_status_buying">Buying %s</string>
   <string name="express_status_buying_active">Buying %s...</string>
   <string name="express_status_hide_button_text">Hide this transaction</string>
-  <string name="express_status_hide_dialog_text">Once hidden, the transaction status cannot be viewed again. You can simply swipe to dismiss instead.</string>
+  <string name="express_status_hide_dialog_text">If you hide this transaction, it won’t appear in the status screen anymore. If you just want to close the status screen and return later, simply swipe it away instead.</string>
   <string name="express_status_hide_dialog_title">Hide Transaction Status?</string>
   <string name="express_swap_not_supported_text">This token is not supported. Please choose a different token to swap.</string>
   <string name="express_swap_not_supported_title">%s is not supported</string>
@@ -601,9 +601,9 @@
   <string name="hw_backup_need_title">Finalize backup first</string>
   <string name="hw_backup_no_backup">Incomplete</string>
   <string name="hw_backup_section_other_title">Other methods</string>
-  <string name="hw_backup_seed_description">Physical devices that securely store your private key offline.</string>
+  <string name="hw_backup_seed_description">Manually save your recovery phrase in a secure place and keep it private to protect your funds.</string>
   <string name="hw_backup_seed_title">Recovery phrase</string>
-  <string name="hw_backup_to_secure_description">To secure your wallet with a Access Code, complete the backup first.</string>
+  <string name="hw_backup_to_secure_description">To secure your wallet with an Access Code, complete the backup first.</string>
   <string name="hw_backup_to_upgrade_description">To upgrade your wallet to hardware, back it up first.</string>
   <string name="hw_create_keys_description">Your private keys are securely encrypted and stored on your phone</string>
   <string name="hw_create_keys_title">Keys are stored in the app</string>
@@ -698,11 +698,13 @@
   <string name="markets_apy_placeholder">APY %s</string>
   <string name="markets_common_my_portfolio">My portfolio</string>
   <string name="markets_common_title">Market</string>
+  <string name="markets_earn_common_title">Earn with Tangem</string>
   <string name="markets_generate_addresses_notification">To generate addresses for selected networks, you must scan your Tangem Wallet card or ring</string>
   <string name="markets_hint">To add tokens pull this up or tap the search bar</string>
   <string name="markets_insights_info_description_message">This section’s data is sourced from the following networks: %s</string>
   <string name="markets_loading_error_title">Unable to load the data…</string>
   <string name="markets_loading_no_data_title">No data</string>
+  <string name="markets_pulse_common_title">Market Pulse</string>
   <string name="markets_quick_actions">Quick actions</string>
   <string name="markets_search_header_title">Search through the market</string>
   <string name="markets_search_result_title">Result</string>
@@ -798,6 +800,14 @@
   <string name="mobile_wallet_requires_min_os_warning_body">You must update to %1$s in order to create mobile wallet</string>
   <string name="mobile_wallet_requires_min_os_warning_title">Mobile Wallet requires %1$s or later</string>
   <string name="news_all_news">All news</string>
+  <plurals name="news_published_hours_ago">
+    <item quantity="one"></item>
+    <item quantity="other">%dh ago</item>
+  </plurals>
+  <plurals name="news_published_minutes_ago">
+    <item quantity="one">%d minute ago</item>
+    <item quantity="other">%d minutes ago</item>
+  </plurals>
   <string name="news_stay_in_the_loop">Stay in the loop</string>
   <string name="nfc_error_unavailable">NFC is not available on your device</string>
   <string name="nft_about_title">About NFT</string>
@@ -855,6 +865,9 @@
   <string name="no_trustline_xlm_asset">The destination account does not have a trustline for the asset being sent.</string>
   <string name="notification_black_friday_text">Get $10 in BTC with every wallet\nHurry!</string>
   <string name="notification_black_friday_title">Black Friday: up to 30% OFF</string>
+  <string name="notification_one_plus_one_button">Let’s go</string>
+  <string name="notification_one_plus_one_text">Limited time!</string>
+  <string name="notification_one_plus_one_title">1+1: Buy One Wallet, Get 50% OFF</string>
   <string name="notification_referral_promo_button">Join Now</string>
   <string name="notification_referral_promo_text">Share your code - earn 5 USDT per sale. Your friend gets 10% OFF.</string>
   <string name="notification_referral_promo_title">Get REWARDS for every friend!</string>
@@ -1217,6 +1230,8 @@
   <string name="staking_account_initialization_footer">A network fee is a small payment required to process and confirm your transaction on the blockchain.</string>
   <string name="staking_account_initialization_message">To begin staking, your TON account must be activated with a transaction of 1 TON. The funds stay in your account because this step only activates it for staking.</string>
   <string name="staking_account_initialization_title">Account activation</string>
+  <string name="staking_alert_network_fee_updated_message">The network fee has changed. Please review the new amount before proceeding.</string>
+  <string name="staking_alert_network_fee_updated_title">Network fee updated</string>
   <string name="staking_amount_requirement_error">The amount to stake must be at least %s</string>
   <string name="staking_amount_tron_integer_error">Staking amount will be rounded to %1$s TRX due to network rules.</string>
   <string name="staking_amount_tron_integer_error_unstaking">Unstaking amount will be rounded to %1$s TRX due to network rules.</string>
@@ -1255,6 +1270,7 @@
   <string name="staking_give_permission_fee_footer">The network will charge a token approval fee to verify that you are authorizing the use of your token for the staking.</string>
   <string name="staking_legal">By using staking functionality, you agree with provider’s %1$s and %2$s</string>
   <string name="staking_locked">Locked</string>
+  <string name="staking_max_amount_requirement_error">Maximum amount: %s</string>
   <string name="staking_migrate">Migrate</string>
   <string name="staking_native">Native staking</string>
   <string name="staking_no_validators_error_message">No active validators available for staking at the moment. Please try again later.</string>
@@ -1400,7 +1416,7 @@
   <string name="tangem_pay_explore_transaction">Explore transaction</string>
   <string name="tangem_pay_fee_subtitle">Service fees</string>
   <string name="tangem_pay_fee_title">Fee</string>
-  <string name="tangem_pay_freeze_card_alert_body">Keep your money safe if your card is lost or stolen. You can unfreeze anytime.</string>
+  <string name="tangem_pay_freeze_card_alert_body">Keep your money safe. You can unfreeze anytime.</string>
   <string name="tangem_pay_freeze_card_alert_title">Freeze your card?</string>
   <string name="tangem_pay_freeze_card_failed">Failed to freeze the card. Try again later.</string>
   <string name="tangem_pay_freeze_card_freeze">Freeze</string>
@@ -1435,14 +1451,14 @@
   <string name="tangempay_card_details_open_wallet_notification_subtitle">Set up Tangem Pay in a few taps and start paying with Google Pay.</string>
   <string name="tangempay_card_details_open_wallet_notification_subtitle_apple">Set up Tangem Pay in a few taps and start paying with Apple Pay.</string>
   <string name="tangempay_card_details_open_wallet_notification_title">Add your card to Google Pay</string>
-  <string name="tangempay_card_details_open_wallet_notification_title_apple">Add your card to Apple Pay</string>
+  <string name="tangempay_card_details_open_wallet_notification_title_apple">Add your card to Apple Pay</string>
   <string name="tangempay_card_details_open_wallet_step_1">Open Google Wallet</string>
   <string name="tangempay_card_details_open_wallet_step_1_5_apple">Tap “+” button on the top right</string>
   <string name="tangempay_card_details_open_wallet_step_1_apple">Open Apple Wallet</string>
   <string name="tangempay_card_details_open_wallet_step_2">Tap “Add a card”</string>
   <string name="tangempay_card_details_open_wallet_step_2_apple">Tap “Debit or Credit Card”</string>
   <string name="tangempay_card_details_open_wallet_step_3">Enter the card details manually</string>
-  <string name="tangempay_card_details_open_wallet_step_4">Verify card using the OTP sent to your device.</string>
+  <string name="tangempay_card_details_open_wallet_step_4">Verify card using the OTP sent to your device.</string>
   <string name="tangempay_card_details_open_wallet_step_5">All set! Your card is ready to use.</string>
   <string name="tangempay_card_details_open_wallet_title">Add card to Google Pay</string>
   <string name="tangempay_card_details_open_wallet_title_apple">Add card to Apple Pay</string>
@@ -1458,9 +1474,14 @@
   <string name="tangempay_card_details_withdraw_error_title">Withdraw unavailable now</string>
   <string name="tangempay_card_details_withdraw_in_progress_description">You can\'t initiate swap or new withdrawal till the current one is finished</string>
   <string name="tangempay_card_details_withdraw_in_progress_title">Withdrawal in progress</string>
+  <string name="tangempay_change_pin_code">Change PIN-code</string>
+  <string name="tangempay_come_back_if_forget_pin">Come back to the app if you forget it.</string>
   <string name="tangempay_failed_to_issue_card">Failed to issue card</string>
   <string name="tangempay_failed_to_issue_card_retry_description">A technical error has occurred, please try again by clicking the button below.</string>
   <string name="tangempay_failed_to_issue_card_support_description">A technical error has occurred, please contact support.</string>
+  <string name="tangempay_get_banner_description">Use your crypto for real world spending. \nIt\'s a payment card unlike any other.</string>
+  <string name="tangempay_get_tangem_pay">Get Tangem Pay</string>
+  <string name="tangempay_go_to_support">Go to Support</string>
   <string name="tangempay_issue_card_notification_description">It usually takes up to 15 minutes</string>
   <string name="tangempay_issue_card_notification_title">Setting up your Tangem Card</string>
   <string name="tangempay_issuing_your_card">Issuing your card</string>
@@ -1471,6 +1492,8 @@
   <string name="tangempay_kyc_in_progress">KYC in progress</string>
   <string name="tangempay_kyc_in_progress_notification_button">View Status</string>
   <string name="tangempay_kyc_in_progress_notification_title">KYC in progress for Tangem Pay</string>
+  <string name="tangempay_onboarding_banner_description">Use your crypto for real world spending. \nIt’s a payment card unlike any other.</string>
+  <string name="tangempay_onboarding_banner_title">Tangem Visa Card</string>
   <string name="tangempay_onboarding_get_card_button_text">Get card</string>
   <string name="tangempay_onboarding_pay_description">With digital card that works with Apple Pay and Google Pay</string>
   <string name="tangempay_onboarding_pay_title">Spend your assets anywhere</string>
@@ -1485,9 +1508,11 @@
   <string name="tangempay_service_unavailable_title">Service temporarily unavailable</string>
   <string name="tangempay_service_unreachable_try_later">The service is currently unreachable. Please try again later.</string>
   <string name="tangempay_sync_needed">Sync needed</string>
+  <string name="tangempay_tangem_visa_card">Tangem Visa Card</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay is temporarily unavailable</string>
   <string name="tangempay_title">Tangem Pay</string>
   <string name="tangempay_use_tangem_device_to_restore_payment_account">Use your card or ring to restore access to your payment account</string>
+  <string name="tangempay_your_pin_code">Your PIN code</string>
   <string name="this_is_my_wallet_title">This is my wallet</string>
   <string name="toast_balances_hidden">Balances hidden</string>
   <string name="toast_balances_shown">Balances shown</string>
@@ -1531,6 +1556,7 @@
   <string name="transaction_history_multiple_addresses">Multiple addresses</string>
   <string name="transaction_history_not_supported_description">Transaction history is currently not supported for this blockchain. But don\'t worry, we\'re working on it! In the meantime you can check it in the explorer.</string>
   <string name="transaction_history_operation">Operation</string>
+  <string name="transaction_history_transaction_for_address">for: %s</string>
   <string name="transaction_history_transaction_from_address">from: %s</string>
   <string name="transaction_history_transaction_to_address">to: %s</string>
   <string name="transaction_history_transaction_validator">validator: %s</string>
@@ -1983,8 +2009,10 @@
   <string name="yield_module_fee_policy_sheet_title">Top-up fee policy</string>
   <string name="yield_module_fee_policy_tangem_service_fee_title">Tangem also takes a 15% service fee on yield generated.</string>
   <string name="yield_module_high_fee_error">Your funds will be automatically supplied to Aave once network fees are lower or your balance meets the minimum required amount.</string>
+  <string name="yield_module_high_network_fees_notification_description">Fees are higher than usual because the market is very active. You can proceed now or check back later when the fees are lower.</string>
+  <string name="yield_module_high_network_fees_notification_title">High Network Fees</string>
   <string name="yield_module_historical_returns">Historical returns</string>
-  <string name="yield_module_main_screen_promo_banner_message">"Enable %1$s%% APY on your balance"</string>
+  <string name="yield_module_main_screen_promo_banner_message">Enable %1$s%% APY on your balance</string>
   <string name="yield_module_main_view_approve_notification_description">Approval for your token in Yield Mode has been revoked. Open the token to grant permission again.</string>
   <string name="yield_module_main_view_approve_notification_title">Token approval needed</string>
   <string name="yield_module_network_fee_unreachable_notification_description">Check your network connection</string>
@@ -2029,12 +2057,12 @@
   <string name="yield_module_token_details_earn_notification_processing">Enabling Yield Mode</string>
   <string name="yield_module_token_details_earn_notification_title">Yield Mode</string>
   <string name="yield_module_transaction_deploy_contract">Yield Mode contract deploy</string>
-  <string name="yield_module_transaction_enter">Yield Mode enable</string>
+  <string name="yield_module_transaction_enter">Yield Mode enabled</string>
   <string name="yield_module_transaction_enter_subtitle">%1$s supplied to Aave</string>
-  <string name="yield_module_transaction_exit">Yield Mode disable</string>
+  <string name="yield_module_transaction_exit">Yield Mode disabled</string>
   <string name="yield_module_transaction_exit_subtitle">%1$s withdrawn from Aave</string>
-  <string name="yield_module_transaction_initialize">Yield Mode initialize</string>
-  <string name="yield_module_transaction_reactivate">Yield Mode reactivate</string>
+  <string name="yield_module_transaction_initialize">Yield Mode initialized</string>
+  <string name="yield_module_transaction_reactivate">Yield Mode reactivated</string>
   <string name="yield_module_transaction_topup">Supply to Aave</string>
   <string name="yield_module_transaction_topup_subtitle">%1$s supplied to Aave</string>
   <string name="yield_module_transaction_withdraw">Withdraw from Aave</string>
