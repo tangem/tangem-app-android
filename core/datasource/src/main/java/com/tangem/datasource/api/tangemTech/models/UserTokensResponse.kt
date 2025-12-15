@@ -3,6 +3,9 @@ package com.tangem.datasource.api.tangemTech.models
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 import com.tangem.common.extensions.calculateHashCode
+import com.tangem.datasource.api.tangemTech.models.UserTokensResponse.GroupType
+import com.tangem.datasource.api.tangemTech.models.UserTokensResponse.GroupType.NONE
+import com.tangem.datasource.api.tangemTech.models.UserTokensResponse.SortType
 
 @JsonClass(generateAdapter = true)
 @Suppress("BooleanPropertyNaming")
@@ -10,8 +13,10 @@ data class UserTokensResponse(
     @Json(name = "version") val version: Int = 0,
     @Json(name = "group") val group: GroupType,
     @Json(name = "sort") val sort: SortType,
-    @Json(name = "notifyStatus") val notifyStatus: Boolean? = null,
     @Json(name = "tokens") val tokens: List<Token> = emptyList(),
+    @Json(name = "notifyStatus") val notifyStatus: Boolean? = null,
+    @Json(name = "name") val walletName: String? = null,
+    @Json(name = "type") val walletType: WalletType? = null,
 ) {
 
     @JsonClass(generateAdapter = true)
@@ -69,3 +74,7 @@ data class UserTokensResponse(
         MARKETCAP,
     }
 }
+
+fun GroupType?.orDefault(): GroupType = this ?: NONE
+
+fun SortType?.orDefault(): SortType = this ?: SortType.MANUAL

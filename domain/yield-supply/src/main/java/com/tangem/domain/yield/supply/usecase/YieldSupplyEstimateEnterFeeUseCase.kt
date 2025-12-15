@@ -70,7 +70,7 @@ class YieldSupplyEstimateEnterFeeUseCase(
         if (estimatedFees.estimatedGasList.isEmpty()) return null
 
         val fee = feeRepository.getEthereumFeeWithoutGas(
-            userWallet = userWallet,
+            userWalletId = userWallet.walletId,
             cryptoCurrency = cryptoCurrency,
         )
 

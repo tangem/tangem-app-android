@@ -5,10 +5,10 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.compatibility.l2BlockchainsCoinIds
 import com.tangem.blockchainsdk.utils.toCoinId
 import com.tangem.common.test.data.quote.MockQuoteResponseFactory
-import com.tangem.common.test.utils.ProvideTestModels
 import com.tangem.data.quotes.utils.QuotesUnsupportedCurrenciesIdAdapter.ReplacementResult
 import com.tangem.datasource.api.tangemTech.models.QuotesResponse
 import com.tangem.datasource.api.tangemTech.models.QuotesResponse.Quote
+import com.tangem.test.core.ProvideTestModels
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest

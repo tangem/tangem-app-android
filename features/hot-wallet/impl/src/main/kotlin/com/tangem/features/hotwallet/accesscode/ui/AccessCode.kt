@@ -11,7 +11,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.res.R
-import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.fields.PinTextColor
 import com.tangem.core.ui.components.fields.PinTextField
 import com.tangem.core.ui.extensions.stringResourceSafe
@@ -25,6 +24,7 @@ internal fun AccessCode(state: AccessCodeUM, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .fillMaxSize()
+            .background(TangemTheme.colors.background.primary)
             .navigationBarsPadding(),
     ) {
         Column(
@@ -32,7 +32,6 @@ internal fun AccessCode(state: AccessCodeUM, modifier: Modifier = Modifier) {
                 .padding(top = 16.dp)
                 .weight(1f)
                 .fillMaxSize()
-                .background(TangemTheme.colors.background.primary)
                 .padding(horizontal = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
@@ -81,23 +80,6 @@ internal fun AccessCode(state: AccessCodeUM, modifier: Modifier = Modifier) {
                 )
             }
         }
-
-        PrimaryButton(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
-                .imePadding(),
-            text = stringResourceSafe(
-                if (state.isConfirmMode) {
-                    R.string.common_confirm
-                } else {
-                    R.string.common_continue
-                },
-            ),
-            onClick = state.onButtonClick,
-            enabled = state.buttonEnabled,
-            showProgress = state.buttonInProgress,
-        )
     }
 }
 
@@ -112,9 +94,6 @@ private fun PreviewSet() {
                 accessCodeColor = PinTextColor.Primary,
                 onAccessCodeChange = {},
                 isConfirmMode = false,
-                buttonEnabled = false,
-                buttonInProgress = false,
-                onButtonClick = {},
             ),
         )
     }
@@ -131,9 +110,6 @@ private fun PreviewConfirm() {
                 accessCodeColor = PinTextColor.Success,
                 onAccessCodeChange = {},
                 isConfirmMode = true,
-                buttonEnabled = true,
-                buttonInProgress = false,
-                onButtonClick = {},
             ),
         )
     }

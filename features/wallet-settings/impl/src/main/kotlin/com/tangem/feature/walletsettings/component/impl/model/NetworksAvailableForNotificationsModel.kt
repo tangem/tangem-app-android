@@ -19,19 +19,18 @@ internal class NetworksAvailableForNotificationsModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
 ) : Model() {
 
-    val state: StateFlow<NetworksAvailableForNotificationsUM> get() = _state
-
-    private val _state = MutableStateFlow(
-        value = NetworksAvailableForNotificationsUM(
-            networks = persistentListOf(),
-            isLoading = true,
-        ),
-    )
+    val state: StateFlow<NetworksAvailableForNotificationsUM>
+        field = MutableStateFlow(
+            value = NetworksAvailableForNotificationsUM(
+                networks = persistentListOf(),
+                isLoading = true,
+            ),
+        )
 
     init {
         modelScope.launch {
             getNetworksAvailableForNotificationsUseCase().onRight { networks ->
-                _state.update {
+                state.update {
                     it.copy(networks = networks.toImmutableList(), isLoading = false)
                 }
             }

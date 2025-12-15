@@ -5,16 +5,17 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.test.domain.card.MockScanResponseFactory
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.common.test.domain.wallet.MockUserWalletFactory
-import com.tangem.common.test.utils.getEmittedValues
 import com.tangem.data.common.currency.ResponseCryptoCurrenciesFactory
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.local.token.UserTokensResponseStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.card.configs.GenericCardConfig
+import com.tangem.domain.models.account.DerivationIndex
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesProducer
+import com.tangem.test.core.getEmittedValues
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
 import kotlinx.coroutines.flow.*
@@ -72,7 +73,7 @@ internal class DefaultMultiWalletCryptoCurrenciesProducerTest {
         }
 
         verify(inverse = true) {
-            responseCryptoCurrenciesFactory.createCurrencies(response = any(), userWallet = any())
+            responseCryptoCurrenciesFactory.createCurrencies(response = any(), userWallet = any(), accountIndex = any())
         }
     }
 
@@ -115,6 +116,7 @@ internal class DefaultMultiWalletCryptoCurrenciesProducerTest {
             responseCryptoCurrenciesFactory.createCurrencies(
                 response = userTokensResponse,
                 userWallet = userWallet,
+                accountIndex = DerivationIndex.Main,
             )
         } returns cryptoCurrencies.toList()
 
@@ -122,6 +124,7 @@ internal class DefaultMultiWalletCryptoCurrenciesProducerTest {
             responseCryptoCurrenciesFactory.createCurrencies(
                 response = updatedUserTokensResponse,
                 userWallet = userWallet,
+                accountIndex = DerivationIndex.Main,
             )
         } returns updatedCryptoCurrencies.toList()
 
@@ -144,6 +147,7 @@ internal class DefaultMultiWalletCryptoCurrenciesProducerTest {
             responseCryptoCurrenciesFactory.createCurrencies(
                 response = userTokensResponse,
                 userWallet = userWallet,
+                accountIndex = DerivationIndex.Main,
             )
         }
 
@@ -162,6 +166,7 @@ internal class DefaultMultiWalletCryptoCurrenciesProducerTest {
             responseCryptoCurrenciesFactory.createCurrencies(
                 response = updatedUserTokensResponse,
                 userWallet = userWallet,
+                accountIndex = DerivationIndex.Main,
             )
         }
     }
@@ -186,6 +191,7 @@ internal class DefaultMultiWalletCryptoCurrenciesProducerTest {
             responseCryptoCurrenciesFactory.createCurrencies(
                 response = userTokensResponse,
                 userWallet = userWallet,
+                accountIndex = DerivationIndex.Main,
             )
         } returns cryptoCurrencies.toList()
 
@@ -208,6 +214,7 @@ internal class DefaultMultiWalletCryptoCurrenciesProducerTest {
             responseCryptoCurrenciesFactory.createCurrencies(
                 response = userTokensResponse,
                 userWallet = userWallet,
+                accountIndex = DerivationIndex.Main,
             )
         }
 
@@ -252,6 +259,7 @@ internal class DefaultMultiWalletCryptoCurrenciesProducerTest {
             responseCryptoCurrenciesFactory.createCurrencies(
                 response = userTokensResponse,
                 userWallet = userWallet,
+                accountIndex = DerivationIndex.Main,
             )
         } returns cryptoCurrencies.toList()
 
@@ -283,6 +291,7 @@ internal class DefaultMultiWalletCryptoCurrenciesProducerTest {
             responseCryptoCurrenciesFactory.createCurrencies(
                 response = userTokensResponse,
                 userWallet = userWallet,
+                accountIndex = DerivationIndex.Main,
             )
         }
     }
@@ -307,7 +316,7 @@ internal class DefaultMultiWalletCryptoCurrenciesProducerTest {
         }
 
         verify(inverse = true) {
-            responseCryptoCurrenciesFactory.createCurrencies(response = any(), userWallet = any())
+            responseCryptoCurrenciesFactory.createCurrencies(response = any(), userWallet = any(), accountIndex = any())
         }
     }
 
@@ -335,7 +344,7 @@ internal class DefaultMultiWalletCryptoCurrenciesProducerTest {
 
         verify(inverse = true) {
             userTokensResponseStore.get(any())
-            responseCryptoCurrenciesFactory.createCurrencies(response = any(), userWallet = any())
+            responseCryptoCurrenciesFactory.createCurrencies(response = any(), userWallet = any(), accountIndex = any())
         }
     }
 
