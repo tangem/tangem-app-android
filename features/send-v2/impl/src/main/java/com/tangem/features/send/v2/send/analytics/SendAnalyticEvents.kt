@@ -2,6 +2,7 @@ package com.tangem.features.send.v2.send.analytics
 
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.AnalyticsParam.Key.ACCOUNT_DERIVATION_FROM
 import com.tangem.core.analytics.models.AnalyticsParam.Key.BLOCKCHAIN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ENS_ADDRESS
 import com.tangem.core.analytics.models.AnalyticsParam.Key.FEE_TYPE
@@ -25,18 +26,21 @@ internal sealed class SendAnalyticEvents(
         val blockchain: String,
         val isNonceNotEmpty: Boolean,
         private val ensStatus: AnalyticsParam.EmptyFull,
+        val derivationIndex: Int?,
     ) : SendAnalyticEvents(
         event = "Transaction Sent Screen Opened",
-        params = mapOf(
-            TOKEN_PARAM to token,
-            FEE_TYPE to feeType.value,
-            BLOCKCHAIN to blockchain,
-            NONCE to isNonceNotEmpty.toString().capitalize(),
-            ENS_ADDRESS to when (ensStatus) {
+        params = buildMap {
+            put(TOKEN_PARAM, token)
+            put(FEE_TYPE, feeType.value)
+            put(BLOCKCHAIN, blockchain)
+            if (derivationIndex != null) put(ACCOUNT_DERIVATION_FROM, derivationIndex.toString())
+            put(NONCE, isNonceNotEmpty.toString().capitalize())
+            val ensAddress = when (ensStatus) {
                 AnalyticsParam.EmptyFull.Empty -> false.toString().capitalize()
                 AnalyticsParam.EmptyFull.Full -> true.toString().capitalize()
-            },
-        ),
+            }
+            put(ENS_ADDRESS, ensAddress)
+        },
     )
 
     data class ConvertTokenButtonClicked(
