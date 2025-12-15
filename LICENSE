@@ -2,17 +2,37 @@ Tangem Proprietary and Confidential
 Copyright (c) 2025 Tangem AG. All rights reserved.
 ================================================================================
 NOTICE: THIS IS NOT AN OPEN SOURCE LICENSE.
-This software, including all source code, documentation, and accompanying files (the "Software") stored in this repository, is the proprietary and confidential information of Tangem AG ("Tangem"). The publication of this Software on a public platform does not grant any license, express or implied.
+
+This software, including all source code, documentation, and accompanying files (the "Software") stored in this repository, is the proprietary and confidential information of Tangem AG ("Tangem").
+The publication of this Software on a public platform does not grant any license, express or implied, except as explicitly stated in Section 2 below.
+
 1.  Definitions.
 "Software" refers to all contents of this repository.
 "Protocol" refers to the proprietary communication protocol, including the sequence of, data structures, and cryptographic methods used to interact with Tangem hardware.
-"SDKs" refer to the official Software Development Kits (e.g., for Android, iOS, React Native) provided by Tangem in separate repositories and under their own distinct licenses.
-2.  Strict Prohibition of Use. Any use of the Software, in whole or in part, is strictly prohibited without the express prior written consent of Tangem. This prohibition includes, but is not limited to, the following actions for any purpose, whether commercial or non-commercial:
-- Copying, modifying, or merging the Software.
-- Publishing, distributing, or sublicensing the Software.
+
+2.  Limited License for Personal Use and Contributions.
+Notwithstanding the proprietary nature of the Software, Tangem grants you a personal, non-exclusive, non-transferable, revocable license to:
+- Clone, fork, and modify the Software solely for personal, non-commercial purposes (e.g., for security auditing, verification, or building the application for installation on your personal device).
+- Use the Software to interact with Tangem hardware for personal needs.
+- Submit proposals for changes (Pull Requests) to improve the Software.
+
+3.  Strict Prohibition of Commercial Use and Distribution.
+Except for the rights expressly granted in Section 2, any use of the Software, in whole or in part, remains strictly prohibited without the express prior written consent of Tangem.
+This prohibition applies to any commercial purpose and includes, but is not limited to:
+- Publishing, distributing, or sublicensing the Software or its derivatives.
 - Selling copies of the Software.
-- Creating derivative works based on the Software.
-3.  Protocol Usage. Reverse-engineering, analyzing, decompiling, or attempting to recreate the Protocol is strictly prohibited. The only authorized method for third-party applications to interact with Tangem hardware is by using the official Tangem SDKs. The SDKs are governed by their own license terms (e.g., MIT License), which permit their use in third-party applications. This Software is provided for transparency and reference purposes only.
-4.  No Implied Rights. The act of Tangem publishing the Software to a public repository does not grant users any implied rights or licenses to use, modify, or distribute the Software. All rights not expressly granted by Tangem in a separate written agreement are reserved.
-5.  Legal Action. Unauthorized use, reproduction, or distribution of the Software or the Protocol may result in severe civil and criminal penalties, and will be prosecuted to the maximum extent possible under applicable law.
+- Creating a competing product or service based on the Software.
+- Integrating the Software or the Protocol into third-party commercial applications or services.
+
+4.  Protocol Usage.
+Reverse-engineering, decompiling, or attempting to recreate the Protocol for use in unauthorized applications is strictly prohibited.
+Any interaction with Tangem hardware in commercial or distributed applications requires a separate commercial agreement with Tangem.
+This Software is provided for transparency and reference purposes.
+
+5.  No Implied Rights.
+The act of Tangem publishing the Software to a public repository does not grant users any implied rights or licenses to use, modify, or distribute the Software beyond the limited permissions described in Section 2.
+All rights not expressly granted by Tangem in a separate written agreement are reserved.
+
+6.  Legal Action.
+Unauthorized use, reproduction, or distribution of the Software or the Protocol may result in severe civil and criminal penalties, and will be prosecuted to the maximum extent possible under applicable law.
 For inquiries about licensing or permissions to use the Software or the Protocol, please contact Tangem AG at: legal@tangem.com.
