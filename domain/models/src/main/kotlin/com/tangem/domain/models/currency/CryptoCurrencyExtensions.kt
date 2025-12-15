@@ -11,9 +11,9 @@ fun CryptoCurrencyStatus.hasNotSuppliedAmount(): Boolean {
     return notSupplied > BigDecimal.ZERO
 }
 
-fun CryptoCurrencyStatus.shouldShowNotSuppliedInfoIcon(minAmount: BigDecimal): Boolean {
+fun CryptoCurrencyStatus.shouldShowNotSuppliedInfoIcon(dustAmount: BigDecimal): Boolean {
     val notSupplied = notSuppliedAmountOrNull() ?: return false
-    return notSupplied >= minAmount
+    return notSupplied >= dustAmount
 }
 
 fun CryptoCurrencyStatus.notSuppliedAmountOrNull(): BigDecimal? {

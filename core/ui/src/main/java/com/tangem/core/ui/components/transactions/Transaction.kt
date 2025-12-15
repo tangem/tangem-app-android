@@ -19,10 +19,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
+import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ChainStyle
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import androidx.constraintlayout.compose.Visibility
+import androidx.constraintlayout.compose.atLeast
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.CircleShimmer
 import com.tangem.core.ui.components.RectangleShimmer
@@ -94,7 +96,7 @@ fun Transaction(state: TransactionState, isBalanceHidden: Boolean, modifier: Mod
                         bottom.linkTo(subtitleItem.top)
                         start.linkTo(iconItem.end)
                         end.linkTo(amountItem.start)
-                        width = Dimension.fillToConstraints
+                        width = Dimension.fillToConstraints.atLeast(50.dp)
                     },
             )
 
@@ -122,7 +124,6 @@ fun Transaction(state: TransactionState, isBalanceHidden: Boolean, modifier: Mod
                     visibility = state.isGoneIf { amount.isEmpty() }
                     top.linkTo(parent.top)
                     bottom.linkTo(timestampItem.top)
-                    start.linkTo(titleItem.end)
                     end.linkTo(parent.end)
                     width = Dimension.fillToConstraints
                 },
@@ -436,7 +437,7 @@ private class TransactionItemStateProvider : CollectionPreviewParameterProvider<
         ),
         TransactionState.Content(
             txHash = UUID.randomUUID().toString(),
-            amount = "0.625 USDT",
+            amount = "0.62521313 USDT",
             time = "€0.50",
             status = Status.Confirmed,
             direction = Direction.OUTGOING,
