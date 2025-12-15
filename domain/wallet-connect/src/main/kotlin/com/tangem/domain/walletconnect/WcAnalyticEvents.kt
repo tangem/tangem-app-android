@@ -5,7 +5,7 @@ import com.domain.blockaid.models.dapp.CheckDAppResult.*
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.domain.models.network.Network
-import com.tangem.domain.walletconnect.WcAnalyticEvents.ButtonDisconnectAll.toAnalyticVerificationStatus
+import com.tangem.domain.walletconnect.WcAnalyticEvents.DAppVerificationStatus
 import com.tangem.domain.walletconnect.model.WcPairRequest
 import com.tangem.domain.walletconnect.model.WcSession
 import com.tangem.domain.walletconnect.model.WcSessionApprove
@@ -19,7 +19,7 @@ sealed class WcAnalyticEvents(
     params: Map<String, String> = emptyMap(),
 ) : AnalyticsEvent(category = WC_CATEGORY_NAME, event = event, params = params) {
 
-    object ScreenOpened : WcAnalyticEvents(event = "WC Screen Opened")
+    class ScreenOpened : WcAnalyticEvents(event = "WC Screen Opened")
     class NewPairInitiated(source: WcPairRequest.Source) : WcAnalyticEvents(
         event = "Session Initiated",
         params = mapOf(
@@ -32,7 +32,7 @@ sealed class WcAnalyticEvents(
         ),
     )
 
-    data object PairButtonConnect : WcAnalyticEvents(
+    class PairButtonConnect : WcAnalyticEvents(
         event = "Button - Connect",
     )
 
@@ -203,7 +203,7 @@ sealed class WcAnalyticEvents(
         }
     }
 
-    data object ButtonDisconnectAll : WcAnalyticEvents(
+    class ButtonDisconnectAll : WcAnalyticEvents(
         event = "Button - Disconnect All",
     )
 
@@ -265,16 +265,35 @@ sealed class WcAnalyticEvents(
         Unknown("Unknown"),
     }
 
-    fun CheckDAppResult.toAnalyticVerificationStatus(): String = when (this) {
-        SAFE -> DAppVerificationStatus.Verified
-        UNSAFE -> DAppVerificationStatus.Risky
-        FAILED_TO_VERIFY -> DAppVerificationStatus.Unknown
-    }.status
-
     companion object {
 
         const val NETWORKS = "Networks"
         const val DOMAIN_VERIFICATION = "Domain Verification"
         const val WC_CATEGORY_NAME = "Wallet Connect"
+    }
+}
+
+fun CheckDAppResult.toAnalyticVerificationStatus(): String = when (this) {
+    SAFE -> DAppVerificationStatus.Verified
+    UNSAFE -> DAppVerificationStatus.Risky
+    FAILED_TO_VERIFY -> DAppVerificationStatus.Unknown
+}.status
+
+sealed class WcAnalyticAccountEvents(
+    event: String,
+    params: Map<String, String> = emptyMap(),
+) : AnalyticsEvent(category = WC_CATEGORY_ACCOUNT_NAME, event = event, params = params) {
+
+    data class PairButtonConnect(
+        private val accountDerivation: Int,
+    ) : WcAnalyticAccountEvents(
+        event = "Button - Connect",
+        params = mapOf(
+            "Account Derivation" to accountDerivation.toString(),
+        ),
+    )
+
+    companion object {
+        const val WC_CATEGORY_ACCOUNT_NAME = "WalletConnect - Account"
     }
 }
