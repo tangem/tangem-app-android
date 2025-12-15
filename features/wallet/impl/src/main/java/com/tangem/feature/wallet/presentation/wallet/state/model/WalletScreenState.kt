@@ -14,5 +14,4 @@ internal data class WalletScreenState(
     val isHidingMode: Boolean,
     val showMarketsOnboarding: Boolean,
     val onDismissMarketsOnboarding: () -> Unit,
-    val tangemPayState: TangemPayState = TangemPayState.Empty,
 )
