@@ -14,11 +14,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
+import com.tangem.common.ui.account.AccountTitle
+import com.tangem.common.ui.account.AccountTitleUM
 import com.tangem.core.ui.components.SecondaryButton
+import com.tangem.core.ui.components.account.AccountIconSize
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheet
 import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetTitle
@@ -35,6 +37,7 @@ import com.tangem.core.ui.utils.toDateFormatWithTodayYesterday
 import com.tangem.core.ui.utils.toTimeFormat
 import com.tangem.features.walletconnect.connections.entity.*
 import com.tangem.features.walletconnect.impl.R
+import com.tangem.features.walletconnect.transaction.ui.sign.accountPortfolioName
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -137,41 +140,51 @@ private fun AppInfoFirstBlock(state: WcConnectedAppInfoUM, modifier: Modifier = 
             subtitle = state.appSubtitle,
             verifiedDAppState = state.verifiedDAppState,
         )
-        HorizontalDivider(thickness = 1.dp, color = TangemTheme.colors.stroke.primary)
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(TangemTheme.dimens.spacing12),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Icon(
-                modifier = Modifier
-                    .size(24.dp)
-                    .testTag(WalletConnectDetailsBottomSheetTestTags.WALLET_ICON),
-                painter = painterResource(R.drawable.ic_wallet_new_24),
-                contentDescription = null,
-                tint = TangemTheme.colors.icon.accent,
-            )
-            Text(
-                modifier = Modifier
-                    .padding(start = TangemTheme.dimens.spacing4)
-                    .weight(1f)
-                    .testTag(WalletConnectDetailsBottomSheetTestTags.WALLET_TITLE),
-                text = stringResourceSafe(R.string.manage_tokens_network_selector_wallet),
-                style = TangemTheme.typography.body1,
-                color = TangemTheme.colors.text.primary1,
-            )
-            Text(
-                modifier = Modifier
-                    .padding(start = TangemTheme.dimens.spacing16)
-                    .weight(1f)
-                    .testTag(WalletConnectDetailsBottomSheetTestTags.WALLET_NAME),
-                text = state.walletName,
-                textAlign = TextAlign.End,
-                style = TangemTheme.typography.body1,
-                color = TangemTheme.colors.text.tertiary,
-            )
+        if (state.portfolioName != null) {
+            HorizontalDivider(thickness = 0.5.dp, color = TangemTheme.colors.stroke.primary)
+            PortfolioName(state.portfolioName)
         }
+    }
+}
+
+@Composable
+private fun PortfolioName(portfolioName: AccountTitleUM, modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(TangemTheme.dimens.spacing12),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            modifier = Modifier
+                .size(24.dp)
+                .testTag(WalletConnectDetailsBottomSheetTestTags.WALLET_ICON),
+            painter = painterResource(R.drawable.ic_wallet_new_24),
+            contentDescription = null,
+            tint = TangemTheme.colors.icon.accent,
+        )
+        val leftText: String = when (portfolioName) {
+            is AccountTitleUM.Account -> stringResourceSafe(R.string.common_account)
+            is AccountTitleUM.Text -> stringResourceSafe(R.string.wc_common_wallet)
+        }
+        Text(
+            modifier = Modifier
+                .padding(start = TangemTheme.dimens.spacing4)
+                .weight(1f)
+                .testTag(WalletConnectDetailsBottomSheetTestTags.WALLET_TITLE),
+            text = leftText,
+            style = TangemTheme.typography.body1,
+            color = TangemTheme.colors.text.primary1,
+        )
+        AccountTitle(
+            modifier = Modifier
+                .padding(start = TangemTheme.dimens.spacing16)
+                .testTag(WalletConnectDetailsBottomSheetTestTags.WALLET_NAME),
+            accountTitleUM = portfolioName,
+            textStyle = TangemTheme.typography.body1,
+            textColor = TangemTheme.colors.text.tertiary,
+            iconSize = AccountIconSize.Small,
+        )
     }
 }
 
@@ -194,7 +207,6 @@ private fun NetworksBlock(networks: ImmutableList<WcNetworkInfoItem.Required>, m
 }
 
 @Preview(showBackground = true)
-@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun WcConnectedAppInfoBS_Preview() {
     TangemThemePreview {
@@ -205,7 +217,48 @@ private fun WcConnectedAppInfoBS_Preview() {
                 verifiedDAppState = VerifiedDAppState.Verified {},
                 isVerified = true,
                 appSubtitle = "react-app.walletconnect.com",
-                walletName = "Tangem 2.0",
+                portfolioName = accountPortfolioName,
+                connectingTime = System.currentTimeMillis(),
+                networks = persistentListOf(
+                    WcNetworkInfoItem.Required(
+                        id = "1",
+                        icon = R.drawable.img_optimism_22,
+                        name = "img_optimism_22img_optimism_22",
+                        symbol = "optimism",
+                    ),
+                    WcNetworkInfoItem.Required(
+                        id = "2",
+                        icon = R.drawable.img_bsc_22,
+                        name = "img_bsc_22",
+                        symbol = "bsc",
+                    ),
+                    WcNetworkInfoItem.Required(
+                        id = "3",
+                        icon = R.drawable.img_solana_22,
+                        name = "img_solana_22",
+                        symbol = "solana",
+                    ),
+                ),
+                disconnectButtonConfig = WcPrimaryButtonConfig(showProgress = false, enabled = true, onClick = {}),
+                onDismiss = {},
+            ),
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun WcConnectedAppInfoBS_OneWallet_Preview() {
+    TangemThemePreview {
+        WcConnectedAppInfoBS(
+            state = WcConnectedAppInfoUM(
+                appName = "React App",
+                appIcon = "",
+                verifiedDAppState = VerifiedDAppState.Verified {},
+                isVerified = true,
+                appSubtitle = "react-app.walletconnect.com",
+                portfolioName = null,
                 connectingTime = System.currentTimeMillis(),
                 networks = persistentListOf(
                     WcNetworkInfoItem.Required(
