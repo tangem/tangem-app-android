@@ -86,7 +86,7 @@ internal class AllOffersStateFactory(
     fun getPaymentsState(): AllOffersStateUM {
         return when (val currentState = currentStateProvider.invoke()) {
             is AllOffersStateUM.Content -> {
-                analyticsEventHandler.send(OnrampAnalyticsEvent.PaymentMethodsScreenOpened)
+                analyticsEventHandler.send(OnrampAnalyticsEvent.PaymentMethodsScreenOpened())
                 currentState.copy(currentMethod = null)
             }
             AllOffersStateUM.Loading,
