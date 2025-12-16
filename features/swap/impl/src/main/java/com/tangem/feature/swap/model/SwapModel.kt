@@ -391,7 +391,7 @@ internal class SwapModel @Inject constructor(
         } else {
             initialFromStatus to selectedCurrency
         }
-        val (fromAccount, toAccount) = if (accountsFeatureToggles.isFeatureEnabled) {
+        val (fromAccount, toAccount) = if (accountsFeatureToggles.isFeatureEnabled && tangemPayInput == null) {
             if (isOrderReversed) {
                 selectedAccount to fromAccountCurrencyStatus.account
             } else {
