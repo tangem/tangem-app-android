@@ -84,7 +84,6 @@ internal class DefaultOnboardingRepository @Inject constructor(
     }
 
     override suspend fun getCustomerInfo(userWalletId: UserWalletId): Either<VisaApiError, CustomerInfo> {
-        // TODO implement selector
         return requestHelper.performRequest(userWalletId) { authHeader -> tangemPayApi.getCustomerMe(authHeader) }
             .map { response -> getCustomerInfo(userWalletId = userWalletId, response = response.result) }
     }
@@ -192,5 +191,20 @@ internal class DefaultOnboardingRepository @Inject constructor(
             }
             error
         }
+    }
+
+    override suspend fun checkCustomerEligibility(): Boolean {
+        val response = requestHelper.performWithoutToken {
+            tangemPayApi.checkCustomerEligibility()
+        }.getOrNull()
+        return response?.result?.isTangemPayAvailable == true
+    }
+
+    override suspend fun getHideMainOnboardingBanner(userWalletId: UserWalletId): Boolean {
+        return tangemPayStorage.getHideMainOnboardingBanner(userWalletId)
+    }
+
+    override suspend fun setHideMainOnboardingBanner(userWalletId: UserWalletId) {
+        tangemPayStorage.storeHideOnboardingBanner(userWalletId, hide = true)
     }
 }
