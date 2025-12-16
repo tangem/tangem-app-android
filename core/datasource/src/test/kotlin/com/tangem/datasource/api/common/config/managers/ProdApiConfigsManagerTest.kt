@@ -251,7 +251,7 @@ internal class ProdApiConfigsManagerTest {
             id = ApiConfig.ID.TangemPay,
             expected = ApiEnvironmentConfig(
                 environment = ApiEnvironment.DEV,
-                baseUrl = "https://api.dev.us.paera.com/bff/",
+                baseUrl = "https://api.dev.us.paera.com/bff-v2/",
                 headers = mapOf(
                     "version" to ProviderSuspend { VERSION_NAME },
                     "platform" to ProviderSuspend { "Android" },
