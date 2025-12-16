@@ -11,6 +11,7 @@ import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.TokenActionsState.ActionState
 import com.tangem.domain.transaction.models.AssetRequirementsCondition
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.domain.yield.supply.models.YieldSupplyAvailability
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.withTimeoutOrNull
 
@@ -191,6 +192,15 @@ internal open class BaseActionsFactory(
             null,
             -> ScenarioUnavailabilityReason.None
             is AssetRequirementsCondition.RequiredTrustline -> ScenarioUnavailabilityReason.TrustlineRequired
+        }
+    }
+
+    protected fun ActionAvailabilityBuilder.addYieldSupplyAction(yieldSupplyAvailability: YieldSupplyAvailability) {
+        if (yieldSupplyAvailability is YieldSupplyAvailability.Available) {
+            ActionState.YieldMode(
+                unavailabilityReason = ScenarioUnavailabilityReason.None,
+                apy = yieldSupplyAvailability.apy,
+            ).addByReason()
         }
     }
 }
