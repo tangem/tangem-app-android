@@ -40,6 +40,8 @@ import com.tangem.features.tangempay.components.TangemPayDetailsContainerCompone
 import com.tangem.features.tangempay.components.TangemPayOnboardingComponent
 import com.tangem.features.tangempay.components.TangemPayOnboardingComponent.Params.ContinueOnboarding
 import com.tangem.features.tangempay.components.TangemPayOnboardingComponent.Params.Deeplink
+import com.tangem.features.tangempay.components.TangemPayOnboardingComponent.Params.FromBannerOnMain
+import com.tangem.features.tangempay.components.TangemPayOnboardingComponent.Params.FromBannerInSettings
 import com.tangem.features.tokendetails.TokenDetailsComponent
 import com.tangem.features.wallet.WalletEntryComponent
 import com.tangem.features.walletconnect.components.WalletConnectEntryComponent
@@ -667,6 +669,9 @@ internal class ChildFactory @Inject constructor(
                         )
                         is AppRoute.TangemPayOnboarding.Mode.Deeplink -> Deeplink(
                             deeplink = mode.deeplink,
+                        )
+                        is AppRoute.TangemPayOnboarding.Mode.FromBannerInSettings -> FromBannerInSettings
+                        is AppRoute.TangemPayOnboarding.Mode.FromBannerOnMain -> FromBannerOnMain(
                             userWalletId = mode.userWalletId,
                         )
                     },
