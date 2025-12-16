@@ -11,6 +11,11 @@ internal sealed class TangemPayState {
 
     data object Loading : TangemPayState()
 
+    data class OnboardingBanner(
+        val onClick: () -> Unit,
+        val closeOnClick: () -> Unit,
+    ) : TangemPayState()
+
     data class Progress(
         val title: TextReference,
         val description: TextReference,
