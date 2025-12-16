@@ -31,4 +31,6 @@ sealed class OnrampError {
     ) : OnrampError()
 
     data object PairsNotFound : OnrampError()
+
+    data object AlreadyHandledTransaction : OnrampError()
 }
