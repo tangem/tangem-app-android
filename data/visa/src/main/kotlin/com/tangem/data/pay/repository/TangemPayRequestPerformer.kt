@@ -89,6 +89,19 @@ internal class TangemPayRequestPerformer @Inject constructor(
         )
     }
 
+    suspend fun <T : Any> performWithoutToken(requestBlock: suspend () -> ApiResponse<T>): Either<VisaApiError, T> =
+        withContext(dispatchers.io) {
+            catch(
+                block = {
+                    when (val apiResponse = requestBlock()) {
+                        is ApiResponse.Error -> errorConverter.convert(apiResponse.cause).left()
+                        is ApiResponse.Success<T> -> apiResponse.data.right()
+                    }
+                },
+                catch = { errorConverter.convert(it).left() },
+            )
+        }
+
     suspend fun <T : Any> performRequest(
         userWalletId: UserWalletId,
         requestBlock: suspend (header: String) -> ApiResponse<T>,
