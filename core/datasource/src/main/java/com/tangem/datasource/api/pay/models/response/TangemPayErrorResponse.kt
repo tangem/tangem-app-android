@@ -4,11 +4,11 @@ import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 
 @JsonClass(generateAdapter = true)
-data class VisaDataToSignResponse(
-    @Json(name = "result") val result: Result,
+data class TangemPayErrorResponse(
+    @Json(name = "error") val error: Error,
 ) {
     @JsonClass(generateAdapter = true)
-    data class Result(
-        @Json(name = "hash") val hash: String,
+    data class Error(
+        @Json(name = "code") val code: Int,
     )
 }
