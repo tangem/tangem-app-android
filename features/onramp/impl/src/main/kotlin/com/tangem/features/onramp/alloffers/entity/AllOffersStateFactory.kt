@@ -111,6 +111,7 @@ internal class AllOffersStateFactory(
             -> true
             is OnrampError.AmountError,
             is OnrampError.RedirectError,
+            is OnrampError.AlreadyHandledTransaction,
             -> false
         }
     }
