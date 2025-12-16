@@ -7,6 +7,8 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.components.fields.PinTextColor
+import com.tangem.core.ui.event.consumedEvent
+import com.tangem.core.ui.event.triggeredEvent
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
@@ -146,7 +148,11 @@ internal class AccessCodeModel @Inject constructor(
                     title = resourceReference(R.string.access_code_alert_validation_cancel),
                     onClick = {
                         uiState.update { currentState ->
-                            currentState.copy(onAccessCodeChange = ::onAccessCodeChange)
+                            currentState.copy(
+                                accessCode = "",
+                                onAccessCodeChange = ::onAccessCodeChange,
+                                requestFocus = triggeredEvent(Unit, ::consumeRequestFocusEvent),
+                            )
                         }
                     },
                 ),
@@ -154,13 +160,15 @@ internal class AccessCodeModel @Inject constructor(
                     title = resourceReference(R.string.access_code_alert_validation_ok),
                     onClick = ::setNewCode,
                 ),
-                onDismissRequest = {
-                    uiState.update { currentState ->
-                        currentState.copy(onAccessCodeChange = ::onAccessCodeChange)
-                    }
-                },
+                isDismissable = false,
             ),
         )
+    }
+
+    private fun consumeRequestFocusEvent() {
+        uiState.update { currentState ->
+            currentState.copy(requestFocus = consumedEvent())
+        }
     }
 
     private suspend fun showErrorAndReset() {
