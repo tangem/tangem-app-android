@@ -192,6 +192,9 @@ object PreferencesKeys {
     fun getTangemPayCheckCustomerByWalletId(userWalletId: UserWalletId) =
         booleanPreferencesKey("tangem_pay_check_customer_by_wallet_id_$userWalletId")
 
+    fun getTangemPayHideOnboardingKey(userWalletId: UserWalletId) =
+        booleanPreferencesKey("tangem_pay_hide_onboarding_key_$userWalletId")
+
     // endregion
 }
 
