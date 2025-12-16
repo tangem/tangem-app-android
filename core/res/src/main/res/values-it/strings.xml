@@ -162,11 +162,11 @@
   <string name="tangempay_onboarding_security_description">Verrà creato un conto di pagamento separato senza divulgare i tuoi indirizzi e asset</string>
   <string name="tangempay_onboarding_security_title">Privacy senza rivali</string>
   <string name="tangempay_onboarding_title">Ottieni la tua carta Tangem Pay gratuita in pochi minuti</string>
-  <string name="tangempay_payment_account">Payment account</string>
+  <string name="tangempay_payment_account">Conto di pagamento</string>
   <string name="tangempay_payment_account_sync_needed">Sincronizzazione del conto di pagamento necessaria</string>
   <string name="tangempay_service_unavailable_description">Stiamo risolvendo un problema tecnico. Riprova più tardi.</string>
   <string name="tangempay_service_unavailable_title">Servizio temporaneamente non disponibile</string>
-  <string name="tangempay_service_unreachable_try_later">Il servizio è attualmente non raggiungibile. Riprova più tardi.</string>
+  <string name="tangempay_service_unreachable_try_later">Al momento non è possibile visualizzare i dati, ma i pagamenti con carta continuano a funzionare.</string>
   <string name="tangempay_sync_needed">Sincronizzazione necessaria</string>
   <string name="tangempay_tangem_visa_card">Tangem Visa Card</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay è temporaneamente non disponibile</string>
@@ -174,6 +174,10 @@
   <string name="tangempay_use_tangem_device_to_restore_payment_account">Usa la tua carta o il tuo anello per ripristinare l\'accesso al tuo conto di pagamento</string>
   <string name="tangempay_your_pin_code">Il tuo codice PIN</string>
   <string name="twins_recreate_toolbar">Tangem Twin</string>
+  <string name="visa_onboarding_pin_code_description">Imposta un codice di 4 cifre.\nVerrà utilizzato per i pagamenti.</string>
+  <string name="visa_onboarding_pin_code_title">Crea codice PIN</string>
+  <string name="visa_onboarding_pin_not_accepted">Il PIN non è stato accettato. Riprova o utilizza un codice diverso.</string>
+  <string name="visa_onboarding_pin_validation_error_message">PIN non valido: evitare sequenze o ripetizioni</string>
   <string name="wallet_connect_title">WalletConnect</string>
   <string name="wallet_notification_address_copied">L\'indirizzo è stato copiato con successo</string>
   <string name="wallet_notification_no_internet">Nessuna connessione a Internet</string>
