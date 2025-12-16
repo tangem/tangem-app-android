@@ -17,21 +17,40 @@ import com.tangem.core.ui.components.block.BlockCard
 import com.tangem.core.ui.res.TangemThemePreview
 
 @Composable
+internal fun FeeListLoading(modifier: Modifier = Modifier) {
+    Column(modifier) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(WindowInsets.navigationBars.asPaddingValues()),
+        ) {
+            MarketLoadingBlock()
+            NewsLoadingBlock()
+            MarketPulseLoadingBlock()
+        }
+    }
+}
+
+@Composable
 internal fun MarketLoadingBlock() {
     RectangleShimmer(
         modifier = Modifier
             .padding(start = 16.dp)
             .size(width = 104.dp, height = 18.dp),
     )
-    SpacerH(12.dp)
+    SpacerH(15.dp)
     ChartsLoading(modifier = Modifier.padding(horizontal = 16.dp))
-    SpacerH(32.dp)
+    SpacerH(35.dp)
 }
 
 @Composable
 internal fun MarketPulseLoadingBlock() {
-    RectangleShimmer()
-    SpacerH(8.dp)
+    RectangleShimmer(
+        modifier = Modifier
+            .padding(start = 16.dp)
+            .size(width = 104.dp, height = 18.dp),
+    )
+    SpacerH(15.dp)
     LazyRow(
         modifier = Modifier.padding(vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -43,7 +62,7 @@ internal fun MarketPulseLoadingBlock() {
             RectangleShimmer(modifier = Modifier.size(width = 124.dp, height = 36.dp))
         }
     }
-    SpacerH(12.dp)
+    SpacerH(16.dp)
     ChartsLoading(modifier = Modifier.padding(horizontal = 16.dp))
     SpacerH(32.dp)
 }
@@ -51,8 +70,12 @@ internal fun MarketPulseLoadingBlock() {
 @Composable
 internal fun NewsLoadingBlock() {
     Column {
-        RectangleShimmer()
-        SpacerH(12.dp)
+        RectangleShimmer(
+            modifier = Modifier
+                .padding(start = 16.dp)
+                .size(width = 104.dp, height = 18.dp),
+        )
+        SpacerH(15.dp)
         TrendingLoadingArticle(modifier = Modifier.padding(horizontal = 16.dp))
         SpacerH(12.dp)
         LazyRow(
@@ -65,6 +88,7 @@ internal fun NewsLoadingBlock() {
                 DefaultLoadingArticle()
             }
         }
+        SpacerH(35.dp)
     }
 }
 
@@ -90,10 +114,8 @@ private const val DEFAULT_CHART_SIZE_IN_MARKET = 5
 private fun FeedListLoadingPreview() {
     TangemThemePreview {
         Column {
-            NewsLoadingBlock()
-            SpacerH(10.dp)
             MarketLoadingBlock()
-            SpacerH(10.dp)
+            NewsLoadingBlock()
             MarketPulseLoadingBlock()
         }
     }
