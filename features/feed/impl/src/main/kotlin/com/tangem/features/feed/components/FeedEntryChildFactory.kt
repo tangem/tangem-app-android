@@ -4,8 +4,6 @@ import androidx.compose.runtime.Immutable
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.navigation.Route
 import com.tangem.core.ui.decompose.ComposableModularContentComponent
-import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.features.feed.components.feed.DefaultFeedComponent
 import com.tangem.features.feed.components.market.details.DefaultMarketsTokenDetailsComponent
 import com.tangem.features.feed.components.market.list.DefaultMarketsTokenListComponent
@@ -44,7 +42,7 @@ internal class FeedEntryChildFactory @Inject constructor() {
     fun createChild(
         child: Child,
         appComponentContext: AppComponentContext,
-        onTokenClick: (TokenMarketParams, AppCurrency) -> Unit,
+        feedEntryClickIntents: FeedEntryClickIntents,
     ): ComposableModularContentComponent {
         return when (child) {
             is Child.TokenDetails -> {
@@ -56,7 +54,12 @@ internal class FeedEntryChildFactory @Inject constructor() {
             is Child.TokenList -> {
                 DefaultMarketsTokenListComponent(
                     appComponentContext = appComponentContext,
-                    onTokenClick = onTokenClick,
+                    onTokenClick = { token, appCurrency ->
+                        feedEntryClickIntents.onMarketItemClick(
+                            token,
+                            appCurrency,
+                        )
+                    },
                 )
             }
             Child.NewsDetails -> {
@@ -72,6 +75,7 @@ internal class FeedEntryChildFactory @Inject constructor() {
             Child.Feed -> {
                 DefaultFeedComponent(
                     appComponentContext = appComponentContext,
+                    params = DefaultFeedComponent.FeedParams(feedClickIntents = feedEntryClickIntents),
                 )
             }
         }
