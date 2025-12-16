@@ -70,8 +70,15 @@ class ApplyAccountListSortingUseCase(
                 return@eitherOn
             }
 
-            accountsCRUDRepository.saveAccounts(accountList = updatedAccountList)
+            applySorting(accountList = updatedAccountList)
         }
+
+    private suspend fun applySorting(accountList: AccountList) {
+        catch(
+            block = { accountsCRUDRepository.saveAccounts(accountList) },
+            catch = { accountsCRUDRepository.saveAccountsLocally(accountList) },
+        )
+    }
 
     private suspend fun Raise<Error>.getAccountList(userWalletId: UserWalletId): AccountList {
         return catch(
