@@ -3,21 +3,21 @@ package com.tangem.domain.apptheme.model
 /**
  * Enumerates the possible modes for the application's theme.
  */
-enum class AppThemeMode {
+enum class AppThemeMode(val value: String) {
     /**
      * Forces the dark theme mode regardless of system settings.
      */
-    FORCE_DARK,
+    FORCE_DARK("Dark"),
 
     /**
      * Forces the light theme mode regardless of system settings.
      */
-    FORCE_LIGHT,
+    FORCE_LIGHT("Light"),
 
     /**
      * Follows the system-wide theme mode.
      */
-    FOLLOW_SYSTEM,
+    FOLLOW_SYSTEM("System"),
 
     ;
 
@@ -30,6 +30,6 @@ enum class AppThemeMode {
         /**
          * List of available [AppThemeMode]s.
          * */
-        val available: List<AppThemeMode> = values().toList()
+        val available: List<AppThemeMode> = entries
     }
 }
