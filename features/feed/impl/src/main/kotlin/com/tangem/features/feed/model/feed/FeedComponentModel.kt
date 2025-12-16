@@ -4,6 +4,7 @@ import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
+import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.utils.DateTimeFormatters
@@ -11,8 +12,10 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.GetTopFiveMarketTokenUseCase
 import com.tangem.domain.markets.TokenMarketListConfig
+import com.tangem.domain.markets.toSerializableParam
 import com.tangem.domain.news.usecase.FetchTrendingNewsUseCase
 import com.tangem.domain.news.usecase.ManageTrendingNewsUseCase
+import com.tangem.features.feed.components.feed.DefaultFeedComponent
 import com.tangem.features.feed.impl.R
 import com.tangem.features.feed.ui.feed.state.*
 import com.tangem.features.feed.ui.market.state.SortByTypeUM
@@ -37,10 +40,10 @@ internal class FeedComponentModel @Inject constructor(
     private val manageTrendingNewsUseCase: ManageTrendingNewsUseCase,
     getTopFiveMarketTokenUseCase: GetTopFiveMarketTokenUseCase,
     getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
+    paramsContainer: ParamsContainer,
 ) : Model() {
 
-    private val _state = MutableStateFlow(initialState())
-    val state = _state.asStateFlow()
+    private val params = paramsContainer.require<DefaultFeedComponent.FeedParams>()
 
     private var quotesUpdateJob: Job? = null
 
@@ -59,42 +62,50 @@ internal class FeedComponentModel @Inject constructor(
         dispatchers = dispatchers,
     )
 
+    internal val state: StateFlow<FeedListUM>
+        field = MutableStateFlow<FeedListUM>(initialState())
+
     private val searchBarStateFactory by lazy(LazyThreadSafetyMode.NONE) {
         SearchBarStateFactory(
-            currentStateProvider = Provider { _state.value },
-            onStateUpdate = { newState -> _state.update { newState } },
+            currentStateProvider = Provider { state.value },
+            onStateUpdate = { newState -> state.update { newState } },
         )
     }
 
     private val trendingNewsStateFactory by lazy(LazyThreadSafetyMode.NONE) {
         TrendingNewsStateFactory(
-            currentStateProvider = Provider { _state.value },
-            onStateUpdate = { newState -> _state.update { newState } },
+            currentStateProvider = Provider { state.value },
+            onStateUpdate = { newState -> state.update { newState } },
         )
     }
 
+    val isVisibleOnScreen = MutableStateFlow(false)
+
     init {
+        updateCallbacks()
+
         modelScope.launch(dispatchers.default) {
             fetchTrendingNewsUseCase()
-            subscribeOnTrendingNews()
-        }
-        _state.update { feedListUM ->
-            feedListUM.copy(
-                searchBar = _state.value.searchBar.copy(onQueryChange = searchBarStateFactory::onSearchQueryChange),
-                feedListCallbacks = feedListUM.feedListCallbacks.copy(
-                    onSortTypeClick = ::onSortTypeClick,
-                ),
-            )
         }
 
         modelScope.launch(dispatchers.default) {
             combine(
-                marketsBatchFlowManager.itemsByOrder,
-                marketsBatchFlowManager.loadingStatesByOrder,
-                marketsBatchFlowManager.errorStatesByOrder,
-            ) { itemsByOrder, loadingStatesByOrder, errorStatesByOrder ->
+                flow = marketsBatchFlowManager.itemsByOrder,
+                flow2 = marketsBatchFlowManager.loadingStatesByOrder,
+                flow3 = marketsBatchFlowManager.errorStatesByOrder,
+                flow4 = manageTrendingNewsUseCase.observeTrendingNews(),
+            ) { itemsByOrder, loadingStatesByOrder, errorStatesByOrder, trendingNewsResult ->
                 updateMarketCharts(itemsByOrder, loadingStatesByOrder, errorStatesByOrder)
-                val currentSortType = _state.value.marketChartConfig.currentSortByType
+                trendingNewsStateFactory.updateTrendingNewsState(
+                    result = trendingNewsResult,
+                    onRetryClicked = {
+                        modelScope.launch(dispatchers.default) {
+                            fetchTrendingNewsUseCase.invoke()
+                        }
+                    },
+                )
+                updateGlobalState()
+                val currentSortType = state.value.marketChartConfig.currentSortByType
                 val items = itemsByOrder[currentSortType]
                 val isLoading = loadingStatesByOrder[currentSortType] == true
                 if (items != null && items.isNotEmpty() && !isLoading) {
@@ -122,12 +133,6 @@ internal class FeedComponentModel @Inject constructor(
         }
     }
 
-    private suspend fun subscribeOnTrendingNews() {
-        manageTrendingNewsUseCase().collect { articles ->
-            trendingNewsStateFactory.updateTrendingNewsState(articles)
-        }
-    }
-
     private fun initialState(): FeedListUM {
         return FeedListUM(
             currentDate = getCurrentDate(),
@@ -151,11 +156,12 @@ internal class FeedComponentModel @Inject constructor(
             marketChartConfig = MarketChartConfig(
                 marketCharts = buildMap {
                     SortByTypeUM.entries.forEach {
-                        put(it, MarketChartUM.LoadingError(onRetryClicked = marketsBatchFlowManager::reloadAll))
+                        put(it, MarketChartUM.Loading)
                     }
                 }.toPersistentHashMap(),
                 currentSortByType = SortByTypeUM.Trending,
             ),
+            globalState = GlobalFeedState.Loading,
         )
     }
 
@@ -169,7 +175,7 @@ internal class FeedComponentModel @Inject constructor(
         loadingStatesByOrder: Map<SortByTypeUM, Boolean>,
         errorStatesByOrder: Map<SortByTypeUM, Boolean>,
     ) {
-        _state.update { currentState ->
+        state.update { currentState ->
             val newMarketCharts = buildMap {
                 SortByTypeUM.entries.forEach { sortByType ->
                     val items = itemsByOrder[sortByType] ?: persistentListOf()
@@ -224,8 +230,41 @@ internal class FeedComponentModel @Inject constructor(
         }
     }
 
+    private fun updateGlobalState() {
+        state.update { currentState ->
+            val newsState = currentState.news
+            val marketCharts = currentState.marketChartConfig.marketCharts
+
+            val isNewsLoading = newsState is NewsUM.Loading
+            val areAllChartsLoading = marketCharts.values.all { it is MarketChartUM.Loading }
+
+            val isNewsError = newsState is NewsUM.Error
+            val areAllChartsError = marketCharts.values.all { it is MarketChartUM.LoadingError }
+
+            val newGlobalState = when {
+                isNewsLoading && areAllChartsLoading -> GlobalFeedState.Loading
+                isNewsError && areAllChartsError -> GlobalFeedState.Error(
+                    onRetryClicked = {
+                        modelScope.launch(dispatchers.default) {
+                            fetchTrendingNewsUseCase.invoke()
+                            marketsBatchFlowManager.reloadAll()
+                        }
+                    },
+                )
+                else -> GlobalFeedState.Content
+            }
+
+            val currentGlobalState = currentState.globalState
+            if (currentGlobalState::class != newGlobalState::class) {
+                currentState.copy(globalState = newGlobalState)
+            } else {
+                currentState
+            }
+        }
+    }
+
     private fun onSortTypeClick(sortByType: SortByTypeUM) {
-        _state.update { currentState ->
+        state.update { currentState ->
             val updatedCharts = currentState.marketChartConfig.marketCharts.mapValues { (chartSortType, chart) ->
                 when (chart) {
                     is MarketChartUM.Content -> {
@@ -256,8 +295,38 @@ internal class FeedComponentModel @Inject constructor(
         quotesUpdateJob = modelScope.launch {
             while (true) {
                 delay(DELAY_TO_FETCH_QUOTES)
+                isVisibleOnScreen.first { it }
                 marketsBatchFlowManager.updateQuotes()
             }
+        }
+    }
+
+    private fun updateCallbacks() {
+        state.update { feedListUM ->
+            feedListUM.copy(
+                searchBar = state.value.searchBar.copy(onQueryChange = searchBarStateFactory::onSearchQueryChange),
+                feedListCallbacks = feedListUM.feedListCallbacks.copy(
+                    onSortTypeClick = ::onSortTypeClick,
+                    onMarketItemClick = { item ->
+                        val tokenMarket = marketsBatchFlowManager.getTokenMarketById(item.id)
+                        if (tokenMarket != null) {
+                            params.feedClickIntents.onMarketItemClick(
+                                token = tokenMarket.toSerializableParam(),
+                                appCurrency = currentAppCurrency.value,
+                            )
+                        }
+                    },
+                    onMarketOpenClick = { sortBy ->
+                        params.feedClickIntents.onMarketOpenClick(sortBy)
+                    },
+                    onArticleClick = { articleId ->
+                        params.feedClickIntents.onArticleClick(articleId)
+                    },
+                    onOpenAllNews = {
+                        params.feedClickIntents.onOpenAllNews()
+                    },
+                ),
+            )
         }
     }
 
