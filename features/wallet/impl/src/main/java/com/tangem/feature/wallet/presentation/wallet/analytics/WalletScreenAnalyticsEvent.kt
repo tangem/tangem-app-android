@@ -51,7 +51,14 @@ sealed class WalletScreenAnalyticsEvent {
         params: Map<String, String> = mapOf(),
     ) : AnalyticsEvent(category = "Main Screen", event = event, params = params) {
 
-        data object ScreenOpened : MainScreen(event = "Screen opened")
+        class ScreenOpened(
+            val theme: String,
+        ) : MainScreen(
+            event = "Screen opened",
+            params = mapOf(
+                "App Theme" to theme,
+            ),
+        )
 
         class WalletSelected(val isImported: Boolean) : MainScreen(
             event = "Wallet Selected",

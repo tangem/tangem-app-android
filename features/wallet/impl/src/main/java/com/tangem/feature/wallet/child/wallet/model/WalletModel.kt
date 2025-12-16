@@ -10,6 +10,8 @@ import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.domain.account.featuretoggle.AccountsFeatureToggles
+import com.tangem.domain.apptheme.GetAppThemeModeUseCase
+import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
@@ -96,6 +98,7 @@ internal class WalletModel @Inject constructor(
     private val yieldSupplyFeatureToggles: YieldSupplyFeatureToggles,
     private val accountsFeatureToggles: AccountsFeatureToggles,
     private val tangemPayMainScreenCustomerInfoUseCase: TangemPayMainScreenCustomerInfoUseCase,
+    private val getAppThemeModeUseCase: GetAppThemeModeUseCase,
     val screenLifecycleProvider: ScreenLifecycleProvider,
     val innerWalletRouter: InnerWalletRouter,
 ) : Model() {
@@ -106,14 +109,18 @@ internal class WalletModel @Inject constructor(
 
     private val walletsUpdateJobHolder = JobHolder()
     private val refreshWalletJobHolder = JobHolder()
-    private var needToRefreshWallet = false
     private val clearNFTCacheJobHolder = JobHolder()
     private val updateTangemPayJobHolder = JobHolder()
 
+    private var needToRefreshWallet = false
     private var expressTxStatusTaskScheduler = SingleTaskScheduler<Unit>()
 
     init {
-        analyticsEventsHandler.send(WalletScreenAnalyticsEvent.MainScreen.ScreenOpened)
+        modelScope.launch {
+            val result = getAppThemeModeUseCase().firstOrNull()
+            val theme = result?.getOrElse { AppThemeMode.FOLLOW_SYSTEM } ?: AppThemeMode.FOLLOW_SYSTEM
+            analyticsEventsHandler.send(WalletScreenAnalyticsEvent.MainScreen.ScreenOpened(theme.value))
+        }
 
         screenLifecycleProvider.isBackgroundState
             .onEach { isBackground ->
