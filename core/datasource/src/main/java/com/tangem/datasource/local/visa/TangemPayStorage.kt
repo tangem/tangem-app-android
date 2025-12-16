@@ -30,5 +30,9 @@ interface TangemPayStorage {
 
     suspend fun deleteWithdrawOrder(userWalletId: UserWalletId)
 
+    suspend fun getHideMainOnboardingBanner(userWalletId: UserWalletId): Boolean
+
+    suspend fun storeHideOnboardingBanner(userWalletId: UserWalletId, hide: Boolean)
+
     suspend fun clearAll(userWalletId: UserWalletId, customerWalletAddress: String)
 }
