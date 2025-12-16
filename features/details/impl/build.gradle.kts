@@ -20,6 +20,7 @@ dependencies {
     implementation(projects.features.tester.api)
     implementation(projects.features.createWalletSelection.api)
     implementation(projects.features.hotWallet.api)
+    implementation(projects.features.tangempay.details.api)
 
     /* Project - Core */
     implementation(projects.core.decompose)
@@ -46,6 +47,7 @@ dependencies {
     implementation(projects.domain.balanceHiding)
     implementation(projects.domain.balanceHiding.models)
     implementation(projects.domain.legacy)
+    implementation(projects.domain.visa)
 
     /* SDK */
     // TODO: For TangemError model, should be removed after card domain scanning refactoring

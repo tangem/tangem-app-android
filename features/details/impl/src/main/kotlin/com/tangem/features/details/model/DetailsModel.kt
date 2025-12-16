@@ -20,6 +20,7 @@ import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.feedback.models.WalletMetaInfo
 import com.tangem.domain.feedback.repository.FeedbackFeatureToggles
 import com.tangem.domain.models.wallet.UserWallet
+import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.domain.redux.LegacyAction
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.walletconnect.CheckIsWalletConnectAvailableUseCase
@@ -34,6 +35,7 @@ import com.tangem.features.details.entity.SelectEmailFeedbackTypeBS
 import com.tangem.features.details.utils.ItemsBuilder
 import com.tangem.features.details.utils.SocialsBuilder
 import com.tangem.features.hotwallet.HotWalletFeatureToggles
+import com.tangem.features.tangempay.TangemPayFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.version.AppVersionProvider
 import kotlinx.collections.immutable.ImmutableList
@@ -51,7 +53,7 @@ import javax.inject.Inject
 @Suppress("LongParameterList")
 internal class DetailsModel @Inject constructor(
     socialsBuilder: SocialsBuilder,
-    itemsBuilder: ItemsBuilder,
+    private val itemsBuilder: ItemsBuilder,
     private val appVersionProvider: AppVersionProvider,
     private val checkIsWalletConnectAvailableUseCase: CheckIsWalletConnectAvailableUseCase,
     private val router: Router,
@@ -68,6 +70,8 @@ internal class DetailsModel @Inject constructor(
     private val generateBuyTangemCardLinkUseCase: GenerateBuyTangemCardLinkUseCase,
     private val hotWalletFeatureToggles: HotWalletFeatureToggles,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val tangemPayEligibilityManager: TangemPayEligibilityManager,
+    private val tangemPayFeatureToggles: TangemPayFeatureToggles,
 ) : Model() {
 
     private val params: DetailsComponent.Params = paramsContainer.require()
@@ -99,6 +103,8 @@ internal class DetailsModel @Inject constructor(
                 onBuyClick = ::onBuyClick,
             ),
         )
+
+        addTangemPayItemIfEligible()
 
         state = MutableStateFlow(
             value = DetailsUM(
@@ -236,6 +242,16 @@ internal class DetailsModel @Inject constructor(
     private fun updateState(items: ImmutableList<DetailsItemUM>) {
         state.update { prevState ->
             prevState.copy(items = items)
+        }
+    }
+
+    private fun addTangemPayItemIfEligible() {
+        if (!tangemPayFeatureToggles.isTangemPayEnabled) return
+        modelScope.launch {
+            val isEligible = tangemPayEligibilityManager.getEligibleWallets().isNotEmpty()
+            if (isEligible) {
+                items.update { itemsBuilder.addVisaItem(it) }
+            }
         }
     }
 
