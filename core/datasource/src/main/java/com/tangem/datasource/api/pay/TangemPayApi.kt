@@ -128,6 +128,9 @@ interface TangemPayApi {
     @POST("v1/deeplink/validate")
     suspend fun validateDeeplink(@Body body: DeeplinkValidityRequest): ApiResponse<DeeplinkValidityResponse>
 
+    @GET("v1/customer/eligibility")
+    suspend fun checkCustomerEligibility(): ApiResponse<CustomerEligibilityResponse>
+
     @GET("v1/order/{order_id}")
     suspend fun getOrder(
         @Header("Authorization") authHeader: String,
