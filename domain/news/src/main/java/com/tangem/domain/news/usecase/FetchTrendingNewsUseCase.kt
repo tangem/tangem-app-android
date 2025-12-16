@@ -11,7 +11,7 @@ import java.util.Locale
 class FetchTrendingNewsUseCase(private val newsRepository: NewsRepository) {
 
     suspend operator fun invoke(): Either<Throwable, Unit> = Either.catch {
-        newsRepository.getTrendingNews(
+        newsRepository.fetchTrendingNews(
             limit = LIMIT_FOR_TRENDING_NEWS,
             language = Locale.getDefault().language,
         )

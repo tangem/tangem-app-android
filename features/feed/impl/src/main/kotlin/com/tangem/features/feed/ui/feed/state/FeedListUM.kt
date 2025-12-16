@@ -16,6 +16,7 @@ internal data class FeedListUM(
     val news: NewsUM,
     val trendingArticle: ArticleConfigUM?,
     val marketChartConfig: MarketChartConfig,
+    val globalState: GlobalFeedState = GlobalFeedState.Content,
 )
 
 internal data class FeedListCallbacks(
@@ -31,6 +32,7 @@ internal data class FeedListCallbacks(
 internal sealed interface NewsUM {
     data object Loading : NewsUM
     data class Content(val content: ImmutableList<ArticleConfigUM>) : NewsUM
+    data class Error(val onRetryClicked: () -> Unit) : NewsUM
 }
 
 internal data class MarketChartConfig(
@@ -57,3 +59,10 @@ internal data class SortChartConfigUM(
     val sortByType: SortByTypeUM,
     val isSelected: Boolean,
 )
+
+@Immutable
+internal sealed interface GlobalFeedState {
+    data object Loading : GlobalFeedState
+    data object Content : GlobalFeedState
+    data class Error(val onRetryClicked: () -> Unit) : GlobalFeedState
+}
