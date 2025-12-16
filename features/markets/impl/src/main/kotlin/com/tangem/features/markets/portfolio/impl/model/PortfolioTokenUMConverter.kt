@@ -71,8 +71,8 @@ internal class PortfolioTokenUMConverter(
         ): PortfolioTokenUM.QuickActions {
             return PortfolioTokenUM.QuickActions(
                 actions = toQuickActions(cryptoData.actions),
-                onQuickActionClick = {
-                    when (it) {
+                onQuickActionClick = { quickActionUM ->
+                    when (quickActionUM) {
                         QuickActionUM.Buy -> tokenActionsHandler.handle(
                             action = TokenActionsBSContentUM.Action.Buy,
                             cryptoCurrencyData = cryptoData,
@@ -87,6 +87,10 @@ internal class PortfolioTokenUMConverter(
                         )
                         QuickActionUM.Stake -> tokenActionsHandler.handle(
                             action = TokenActionsBSContentUM.Action.Stake,
+                            cryptoCurrencyData = cryptoData,
+                        )
+                        is QuickActionUM.YieldMode -> tokenActionsHandler.handle(
+                            action = TokenActionsBSContentUM.Action.YieldMode,
                             cryptoCurrencyData = cryptoData,
                         )
                     }
@@ -110,6 +114,7 @@ internal class PortfolioTokenUMConverter(
                         is TokenActionsState.ActionState.Swap -> QuickActionUM.Exchange(showBadge = action.showBadge)
                         is TokenActionsState.ActionState.Receive -> QuickActionUM.Receive
                         is TokenActionsState.ActionState.Stake -> QuickActionUM.Stake
+                        is TokenActionsState.ActionState.YieldMode -> QuickActionUM.YieldMode(apy = action.apy)
                         else -> null
                     }?.let(::add)
                 }
