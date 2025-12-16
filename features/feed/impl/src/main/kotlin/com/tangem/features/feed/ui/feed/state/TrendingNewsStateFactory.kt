@@ -11,6 +11,7 @@ import com.tangem.core.ui.utils.getFormattedDate
 import com.tangem.data.common.currency.getTokenIconUrlFromDefaultHost
 import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.news.ShortArticle
+import com.tangem.domain.models.news.TrendingNews
 import com.tangem.features.feed.impl.R
 import com.tangem.utils.Provider
 import com.tangem.utils.StringsSigns
@@ -23,69 +24,76 @@ internal class TrendingNewsStateFactory(
     private val onStateUpdate: (FeedListUM) -> Unit,
 ) {
 
-    fun updateTrendingNewsState(news: List<ShortArticle>) {
-        val trendingArticleIndex = news.indexOfFirst { it.isTrending }
-        val trendingArticle = if (trendingArticleIndex != -1) news[trendingArticleIndex] else null
-        val commonArticles = if (trendingArticleIndex != -1) {
-            news.toMutableList().apply { removeAt(trendingArticleIndex) }
-        } else {
-            news
-        }
+    fun updateTrendingNewsState(result: TrendingNews, onRetryClicked: () -> Unit) {
         val currentState = currentStateProvider()
+        when (result) {
+            is TrendingNews.Data -> handleDataState(currentState, result.articles)
+            is TrendingNews.Error -> handleErrorState(currentState, onRetryClicked)
+        }
+    }
+
+    private fun handleDataState(currentState: FeedListUM, articles: List<ShortArticle>) {
+        val (trendingArticle, commonArticles) = separateTrendingAndCommonArticles(articles)
+
         onStateUpdate(
             currentState.copy(
-                trendingArticle = trendingArticle?.let { article ->
-                    ArticleConfigUM(
-                        id = article.id,
-                        title = article.title,
-                        score = article.score,
-                        isTrending = true,
-                        tags = article.categories.map { category ->
-                            LabelUM(text = TextReference.Str(category.name))
-                        }.plus(
-                            article.relatedTokens.map { token ->
-                                LabelUM(
-                                    text = TextReference.Str(token.symbol),
-                                    leadingContent = LabelLeadingContentUM.Token(
-                                        iconUrl = getTokenIconUrlFromDefaultHost(
-                                            tokenId = CryptoCurrency.RawID(token.id),
-                                        ),
-                                    ),
-                                )
-                            },
-                        ).toPersistentSet(),
-                        createdAt = mapFormattedDate(article.createdAt),
-                        isViewed = article.viewed,
-                    )
-                },
+                trendingArticle = trendingArticle?.let { mapToArticleConfigUM(it, isTrending = true) },
                 news = NewsUM.Content(
-                    commonArticles.map { article ->
-                        ArticleConfigUM(
-                            id = article.id,
-                            title = article.title,
-                            score = article.score,
-                            isTrending = false,
-                            tags = article.categories.map { category ->
-                                LabelUM(text = TextReference.Str(category.name))
-                            }.plus(
-                                article.relatedTokens.map { token ->
-                                    LabelUM(
-                                        text = TextReference.Str(token.symbol),
-                                        leadingContent = LabelLeadingContentUM.Token(
-                                            iconUrl = getTokenIconUrlFromDefaultHost(
-                                                tokenId = CryptoCurrency.RawID(token.id),
-                                            ),
-                                        ),
-                                    )
-                                },
-                            ).toPersistentSet(),
-                            createdAt = mapFormattedDate(article.createdAt),
-                            isViewed = article.viewed,
-                        )
-                    }.toPersistentList(),
+                    commonArticles.map { mapToArticleConfigUM(it, isTrending = false) }.toPersistentList(),
                 ),
             ),
         )
+    }
+
+    private fun handleErrorState(currentState: FeedListUM, onRetryClicked: () -> Unit) {
+        onStateUpdate(
+            currentState.copy(
+                trendingArticle = null,
+                news = NewsUM.Error(onRetryClicked = onRetryClicked),
+            ),
+        )
+    }
+
+    private fun separateTrendingAndCommonArticles(
+        articles: List<ShortArticle>,
+    ): Pair<ShortArticle?, List<ShortArticle>> {
+        val trendingArticleIndex = articles.indexOfFirst { it.isTrending }
+        return if (trendingArticleIndex != -1) {
+            val trendingArticle = articles[trendingArticleIndex]
+            val commonArticles = articles.toMutableList().apply { removeAt(trendingArticleIndex) }
+            trendingArticle to commonArticles
+        } else {
+            null to articles
+        }
+    }
+
+    private fun mapToArticleConfigUM(article: ShortArticle, isTrending: Boolean): ArticleConfigUM {
+        return ArticleConfigUM(
+            id = article.id,
+            title = article.title,
+            score = article.score,
+            isTrending = isTrending,
+            tags = buildArticleTags(article),
+            createdAt = mapFormattedDate(article.createdAt),
+            isViewed = article.viewed,
+        )
+    }
+
+    private fun buildArticleTags(article: ShortArticle): kotlinx.collections.immutable.ImmutableSet<LabelUM> {
+        val categoryLabels = article.categories.map { category ->
+            LabelUM(text = TextReference.Str(category.name))
+        }
+        val tokenLabels = article.relatedTokens.map { token ->
+            LabelUM(
+                text = TextReference.Str(token.symbol),
+                leadingContent = LabelLeadingContentUM.Token(
+                    iconUrl = getTokenIconUrlFromDefaultHost(
+                        tokenId = CryptoCurrency.RawID(token.id),
+                    ),
+                ),
+            )
+        }
+        return (categoryLabels + tokenLabels).toPersistentSet()
     }
 
     private fun mapFormattedDate(createdAt: String): TextReference {
