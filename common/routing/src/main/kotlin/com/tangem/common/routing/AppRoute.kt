@@ -433,13 +433,20 @@ sealed class AppRoute(val path: String) : Route {
             @Serializable
             data class Deeplink(
                 val deeplink: String,
-                val userWalletId: UserWalletId?,
             ) : Mode()
 
             @Serializable
             data class ContinueOnboarding(
-                val userWalletId: UserWalletId?,
+                val userWalletId: UserWalletId,
             ) : Mode()
+
+            @Serializable
+            data class FromBannerOnMain(
+                val userWalletId: UserWalletId,
+            ) : Mode()
+
+            @Serializable
+            data object FromBannerInSettings : Mode()
         }
     }
 
