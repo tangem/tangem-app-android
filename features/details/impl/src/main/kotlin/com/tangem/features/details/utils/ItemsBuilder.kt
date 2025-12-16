@@ -37,6 +37,17 @@ internal class ItemsBuilder @Inject constructor(private val router: Router) {
         ).let(::add)
     }.toImmutableList()
 
+    fun addVisaItem(items: ImmutableList<DetailsItemUM>): ImmutableList<DetailsItemUM> {
+        return items.toMutableList().map { block ->
+            if (block.id == "shop" && block is DetailsItemUM.Basic) {
+                val newItems = block.items.toMutableList().apply { add(getVisaItem()) }
+                block.copy(items = newItems.toImmutableList())
+            } else {
+                block
+            }
+        }.toImmutableList()
+    }
+
     private fun buildWalletConnectBlock(isWalletConnectAvailable: Boolean, userWalletId: UserWalletId): DetailsItemUM? {
         return if (isWalletConnectAvailable) {
             DetailsItemUM.WalletConnect(
@@ -113,5 +124,16 @@ internal class ItemsBuilder @Inject constructor(private val router: Router) {
                 ),
             ).let(::add)
         }.toPersistentList(),
+    )
+
+    private fun getVisaItem(): DetailsItemUM.Basic.Item = DetailsItemUM.Basic.Item(
+        id = "get_tangem_visa",
+        block = BlockUM(
+            text = resourceReference(R.string.details_get_visa),
+            iconRes = R.drawable.ic_tangem_pay_24,
+            onClick = {
+                router.push(AppRoute.TangemPayOnboarding(AppRoute.TangemPayOnboarding.Mode.FromBannerInSettings))
+            },
+        ),
     )
 }
