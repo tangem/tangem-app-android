@@ -6,4 +6,5 @@ import java.math.BigDecimal
 data class YieldSupplyNotificationData(
     val feeValue: BigDecimal?,
     val feeError: GetFeeError?,
+    val shouldShowHighFeeNotification: Boolean = false,
 )
