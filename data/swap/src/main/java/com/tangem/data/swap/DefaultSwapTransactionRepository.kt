@@ -64,10 +64,10 @@ internal class DefaultSwapTransactionRepository(
         toAccount: Account.CryptoPortfolio?,
         transaction: SwapTransactionModel,
     ) {
-        transaction.status?.let {
+        transaction.status?.let { swapTxList ->
             storeTransactionState(
                 txId = transaction.txId,
-                status = it,
+                status = swapTxList,
                 accountWithCurrency = fromAccount?.accountId to fromCryptoCurrency,
             )
         }
@@ -76,8 +76,8 @@ internal class DefaultSwapTransactionRepository(
                 key = PreferencesKeys.SWAP_TRANSACTIONS_KEY,
             )
             val tokenTransactions = savedTransactions
-                ?.firstOrNull {
-                    it.checkId(
+                ?.firstOrNull { swapTxList ->
+                    swapTxList.checkId(
                         checkUserWalletId = userWalletId,
                         fromCurrencyId = fromCryptoCurrency.id,
                         toCurrencyId = toCryptoCurrency.id,
@@ -129,17 +129,17 @@ internal class DefaultSwapTransactionRepository(
         },
     ) { savedTransactions, txStatuses, multiAccountList ->
         val currencyTxs = savedTransactions
-            ?.filter {
-                it.userWalletId == userWallet.walletId.stringValue &&
+            ?.filter { swapTxList ->
+                swapTxList.userWalletId == userWallet.walletId.stringValue &&
                     (
-                        it.toCryptoCurrencyId == cryptoCurrencyId.value ||
-                            it.fromCryptoCurrencyId == cryptoCurrencyId.value
+                        swapTxList.toCryptoCurrencyId == cryptoCurrencyId.value ||
+                            swapTxList.fromCryptoCurrencyId == cryptoCurrencyId.value
                         )
             }
 
-        currencyTxs?.mapNotNull {
+        currencyTxs?.mapNotNull { swapTxList ->
             listConverter.convertBack(
-                value = it,
+                value = swapTxList,
                 multiAccountList = multiAccountList,
                 userWallet = userWallet,
                 txStatuses = txStatuses,
@@ -155,8 +155,8 @@ internal class DefaultSwapTransactionRepository(
             )
             val tokenTransactions = savedList
                 ?.asSequence()
-                ?.map {
-                    it.copy(transactions = it.transactions.filterNot { it.txId == txId })
+                ?.map { swapTxList ->
+                    swapTxList.copy(transactions = swapTxList.transactions.filterNot { swapTx -> swapTx.txId == txId })
                 }?.filterNot { it.transactions.isEmpty() }
                 ?.toList()
 
@@ -257,8 +257,8 @@ internal class DefaultSwapTransactionRepository(
                 toAccount = toAccount,
                 tokenTransactions = transactions,
             ),
-            predicate = {
-                it.checkId(
+            predicate = { swapTxList ->
+                swapTxList.checkId(
                     checkUserWalletId = userWalletId,
                     fromCurrencyId = fromCryptoCurrency.id,
                     toCurrencyId = toCryptoCurrency.id,
