@@ -9,6 +9,8 @@ import com.tangem.domain.pay.model.*
 import com.tangem.domain.pay.repository.CustomerOrderRepository
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.visa.error.VisaApiError
+import com.tangem.security.DeviceSecurityInfoProvider
+import com.tangem.security.isSecurityExposed
 import kotlinx.coroutines.flow.*
 import timber.log.Timber
 
@@ -23,6 +25,7 @@ class TangemPayMainScreenCustomerInfoUseCase(
     private val customerOrderRepository: CustomerOrderRepository,
     private val tangemPayOnboardingRepository: OnboardingRepository,
     private val eligibilityManager: TangemPayEligibilityManager,
+    private val deviceSecurity: DeviceSecurityInfoProvider,
 ) {
 
     val state: StateFlow<Map<UserWalletId, Either<TangemPayCustomerInfoError, MainCustomerInfoContentState>>>
@@ -30,6 +33,16 @@ class TangemPayMainScreenCustomerInfoUseCase(
 
     suspend fun fetch(userWalletId: UserWalletId) {
         Timber.tag(TAG).i("fetch: $userWalletId")
+
+        if (deviceSecurity.isSecurityExposed()) {
+            Timber.tag(TAG).i("fetch security info: rooted: ${deviceSecurity.isRooted}")
+            Timber.tag(TAG).i("fetch security info: xposed: ${deviceSecurity.isXposed}")
+            Timber.tag(TAG).i("fetch security info: bootloader unlocked: ${deviceSecurity.isBootloaderUnlocked}")
+
+            updateState(userWalletId = userWalletId, either = TangemPayCustomerInfoError.ExposedDeviceError.left())
+            return // fast exit
+        }
+
         repository.checkCustomerWallet(userWalletId)
             .fold(
                 ifLeft = { error ->
