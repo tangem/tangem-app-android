@@ -9,7 +9,7 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.quotes.multi.MultiQuoteStatusFetcher
 import com.tangem.domain.staking.StakingIdFactory
-import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
+import com.tangem.domain.staking.multi.MultiStakingBalanceFetcher
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesFetcher
 import com.tangem.domain.tokens.MultiWalletCryptoCurrenciesSupplier
 import com.tangem.domain.tokens.repository.CurrenciesRepository
@@ -31,7 +31,7 @@ import timber.log.Timber
  * @property singleWalletBalanceFetcher          balance fetcher of single-currency wallet
  * @property multiNetworkStatusFetcher           networks statuses fetcher
  * @property multiQuoteStatusFetcher             quotes statuses fetcher
- * @property multiYieldBalanceFetcher            yields balances fetcher
+ * @property multiStakingBalanceFetcher            yields balances fetcher
  * @property dispatchers                         dispatchers
  *
 [REDACTED_AUTHOR]
@@ -44,7 +44,7 @@ class WalletBalanceFetcher internal constructor(
     private val singleWalletBalanceFetcher: BaseWalletBalanceFetcher,
     private val multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
     private val multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
-    private val multiYieldBalanceFetcher: MultiYieldBalanceFetcher,
+    private val multiStakingBalanceFetcher: MultiStakingBalanceFetcher,
     private val stakingIdFactory: StakingIdFactory,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : FlowFetcher<WalletBalanceFetcher.Params> {
@@ -56,7 +56,7 @@ class WalletBalanceFetcher internal constructor(
         multiWalletCryptoCurrenciesSupplier: MultiWalletCryptoCurrenciesSupplier,
         multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
         multiQuoteStatusFetcher: MultiQuoteStatusFetcher,
-        multiYieldBalanceFetcher: MultiYieldBalanceFetcher,
+        multiStakingBalanceFetcher: MultiStakingBalanceFetcher,
         stakingIdFactory: StakingIdFactory,
         dispatchers: CoroutineDispatcherProvider,
     ) : this(
@@ -71,7 +71,7 @@ class WalletBalanceFetcher internal constructor(
         singleWalletBalanceFetcher = SingleWalletBalanceFetcher(currenciesRepository = currenciesRepository),
         multiNetworkStatusFetcher = multiNetworkStatusFetcher,
         multiQuoteStatusFetcher = multiQuoteStatusFetcher,
-        multiYieldBalanceFetcher = multiYieldBalanceFetcher,
+        multiStakingBalanceFetcher = multiStakingBalanceFetcher,
         stakingIdFactory = stakingIdFactory,
         dispatchers = dispatchers,
     )
@@ -164,8 +164,8 @@ class WalletBalanceFetcher internal constructor(
         val stakingIds = maybeStakingIds.mapNotNullTo(hashSetOf()) { it.getOrNull() }
 
         if (stakingIds.isNotEmpty()) {
-            multiYieldBalanceFetcher(
-                params = MultiYieldBalanceFetcher.Params(userWalletId = userWalletId, stakingIds = stakingIds),
+            multiStakingBalanceFetcher(
+                params = MultiStakingBalanceFetcher.Params(userWalletId = userWalletId, stakingIds = stakingIds),
             )
                 .bind()
         } else {

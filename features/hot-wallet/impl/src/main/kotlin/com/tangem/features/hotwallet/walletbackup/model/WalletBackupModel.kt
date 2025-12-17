@@ -3,6 +3,8 @@ package com.tangem.features.hotwallet.walletbackup.model
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.Basic
+import com.tangem.core.analytics.utils.TrackingContextProxy
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -24,6 +26,7 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -36,10 +39,13 @@ internal class WalletBackupModel @Inject constructor(
     private val generateBuyTangemCardLinkUseCase: GenerateBuyTangemCardLinkUseCase,
     private val urlOpener: UrlOpener,
     private val router: Router,
+    private val trackingContextProxy: TrackingContextProxy,
     private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
 
     private val params: WalletBackupComponent.Params = paramsContainer.require()
+
+    private val isScreenOpenedEventSent: AtomicBoolean = AtomicBoolean(false)
 
     val uiState: StateFlow<WalletBackupUM>
         field = MutableStateFlow(
@@ -67,18 +73,31 @@ internal class WalletBackupModel @Inject constructor(
         )
 
     init {
-        analyticsEventHandler.send(WalletSettingsAnalyticEvents.BackupScreenOpened(isManualBackupEnabled = true))
+        trackingContextProxy.addHotWalletContext()
         getUserWalletUseCase.invokeFlow(params.userWalletId)
             .onEach { either ->
                 either.fold(
                     ifLeft = {
                         Timber.e("Error on getting user wallet: $it")
                     },
-                    ifRight = {
-                        updateBackupStatuses(it)
+                    ifRight = { userWallet ->
+                        if (!isScreenOpenedEventSent.get() && userWallet is UserWallet.Hot) {
+                            analyticsEventHandler.send(
+                                event = WalletSettingsAnalyticEvents.BackupScreenOpened(
+                                    isBackedUp = userWallet.backedUp,
+                                ),
+                            )
+                            isScreenOpenedEventSent.set(true)
+                        }
+                        updateBackupStatuses(userWallet)
                     },
                 )
             }.launchIn(modelScope)
+    }
+
+    override fun onDestroy() {
+        trackingContextProxy.removeContext()
+        super.onDestroy()
     }
 
     private fun updateBackupStatuses(userWallet: UserWallet) {
@@ -111,13 +130,14 @@ internal class WalletBackupModel @Inject constructor(
     )
 
     private fun onBuyClick() {
+        analyticsEventHandler.send(Basic.ButtonBuy(source = AnalyticsParam.ScreensSources.Backup))
         modelScope.launch {
             generateBuyTangemCardLinkUseCase.invoke().let { urlOpener.openUrl(it) }
         }
     }
 
     private fun onRecoveryPhraseClick() {
-        analyticsEventHandler.send(WalletSettingsAnalyticEvents.ButtonRecoveryPhrase)
+        analyticsEventHandler.send(WalletSettingsAnalyticEvents.ButtonRecoveryPhrase())
         if (uiState.value.backedUp) {
             getUserWalletUseCase.invoke(params.userWalletId)
                 .fold(
@@ -160,7 +180,7 @@ internal class WalletBackupModel @Inject constructor(
     }
 
     private fun onHardwareWalletClick() {
-        analyticsEventHandler.send(WalletSettingsAnalyticEvents.ButtonHardwareUpdate)
+        analyticsEventHandler.send(WalletSettingsAnalyticEvents.ButtonHardwareUpdate())
         router.push(AppRoute.WalletHardwareBackup(params.userWalletId))
     }
 }

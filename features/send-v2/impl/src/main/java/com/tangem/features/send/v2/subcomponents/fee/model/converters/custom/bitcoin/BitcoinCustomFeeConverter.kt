@@ -60,7 +60,7 @@ internal class BitcoinCustomFeeConverter(
                         amount = feeValue,
                         decimals = value.amount.decimals,
                         txSize = value.txSize,
-                    ).toString(),
+                    )?.toString().orEmpty(),
                     decimals = SATOSHI_DECIMALS,
                     symbol = "",
                     title = resourceReference(R.string.send_satoshi_per_byte_title),

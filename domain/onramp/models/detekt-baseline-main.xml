@@ -1,0 +1,10 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>BooleanPropertyNaming:OnrampCountry.kt$OnrampCountry$val onrampAvailable: Boolean</ID>
+    <ID>ObjectExtendsThrowable:OnrampPairsError.kt$OnrampPairsError$PairsNotFound : OnrampPairsError</ID>
+    <ID>ObjectExtendsThrowable:OnrampRedirectError.kt$OnrampRedirectError$VerificationFailed : OnrampRedirectError</ID>
+    <ID>ObjectExtendsThrowable:OnrampRedirectError.kt$OnrampRedirectError$WrongRequestId : OnrampRedirectError</ID>
+  </CurrentIssues>
+</SmellBaseline>

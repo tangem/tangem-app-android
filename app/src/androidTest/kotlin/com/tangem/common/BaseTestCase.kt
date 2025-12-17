@@ -16,8 +16,6 @@ import com.tangem.common.allure.FailedStepScreenshotInterceptor
 import com.tangem.common.constants.TestConstants.ALLURE_LABEL_NAME
 import com.tangem.common.constants.TestConstants.ALLURE_LABEL_VALUE
 import com.tangem.common.rules.ApiEnvironmentRule
-import com.tangem.core.configtoggle.feature.FeatureTogglesManager
-import com.tangem.core.configtoggle.feature.MutableFeatureTogglesManager
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
@@ -54,9 +52,6 @@ abstract class BaseTestCase : TestCase(
     lateinit var appPreferencesStore: AppPreferencesStore
 
     @Inject
-    lateinit var featureTogglesManager: FeatureTogglesManager
-
-    @Inject
     lateinit var promoRepository: PromoRepository
 
     private val hiltRule = HiltAndroidRule(this)
@@ -75,7 +70,7 @@ abstract class BaseTestCase : TestCase(
     @JvmField
     val ruleChain: TestRule = RuleChain
         .outerRule(hiltRule)
-        .around(ApplicationInjectionExecutionRule())
+        .around(applicationInjectionRule())
         .around(permissionRule)
         .around(apiEnvironmentRule)
         .around(composeTestRule)
@@ -110,7 +105,6 @@ abstract class BaseTestCase : TestCase(
         apiEnvironmentRule.setup(apiConfigsManager)
         ActivityScenario.launch(MainActivity::class.java)
         Intents.init()
-        setFeatureToggles()
         additionalBeforeSection()
     }.after {
         additionalAfterSection()
@@ -141,14 +135,15 @@ abstract class BaseTestCase : TestCase(
 
     fun waitForIdle() = composeTestRule.waitForIdle()
 
-    private fun setFeatureToggles() {
-        runBlocking {
-            with(featureTogglesManager as MutableFeatureTogglesManager) {
-                changeToggle("NEW_TOKEN_RECEIVE_ENABLED", true)
-                changeToggle("WALLET_BALANCE_FETCHER_ENABLED", true)
-                changeToggle("SWAP_REDESIGN_ENABLED", true)
-                changeToggle("NEW_ONRAMP_MAIN_ENABLED", true)
-            }
-        }
+    private fun applicationInjectionRule(): ApplicationInjectionExecutionRule {
+        return ApplicationInjectionExecutionRule(
+            toggleStates = mapOf(
+                "NEW_TOKEN_RECEIVE_ENABLED" to true,
+                "WALLET_BALANCE_FETCHER_ENABLED" to true,
+                "SWAP_REDESIGN_ENABLED" to true,
+                "NEW_ONRAMP_MAIN_ENABLED" to true,
+                "HOT_WALLET_ENABLED" to true
+            )
+        )
     }
 }

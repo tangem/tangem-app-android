@@ -367,7 +367,7 @@ class MainActivity : AppCompatActivity(), ActivityResultCallbackHolder {
 
         val isFromPush = intent.extras?.containsKey(OPENED_FROM_GCM_PUSH) == true
         if (isFromPush) {
-            analyticsEventsHandler.send(Push.PushNotificationOpened)
+            analyticsEventsHandler.send(Push.PushNotificationOpened())
         }
 
         handleDeepLink(intent = intent, isFromOnNewIntent = true)

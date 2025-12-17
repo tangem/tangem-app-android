@@ -6,7 +6,7 @@ import com.tangem.domain.models.TokensGroupType
 import com.tangem.domain.models.TokensSortType
 import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
-import com.tangem.domain.models.staking.YieldBalance
+import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.models.tokenlist.TokenList.GroupedByNetwork.NetworkGroup
 import com.tangem.domain.staking.utils.getTotalWithRewardsStakingBalance
@@ -123,10 +123,10 @@ object TokenListFactory {
     }
 
     private fun CryptoCurrencyStatus.calculateBalance(): BigDecimal {
-        val yieldBalance = value.yieldBalance as? YieldBalance.Data
-        val totalYieldBalance = yieldBalance?.getTotalWithRewardsStakingBalance(currency.network.rawId).orZero()
-        val totalFiatYieldBalance = totalYieldBalance.multiply(value.fiatRate.orZero())
+        val stakingBalance = value.stakingBalance as? StakingBalance.Data
+        val totalStakingBalance = stakingBalance?.getTotalWithRewardsStakingBalance(currency.network.rawId).orZero()
+        val totalFiatStakingBalance = totalStakingBalance.multiply(value.fiatRate.orZero())
 
-        return value.fiatAmount?.plus(totalFiatYieldBalance).orZero()
+        return value.fiatAmount?.plus(totalFiatStakingBalance).orZero()
     }
 }

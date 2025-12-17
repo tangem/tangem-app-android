@@ -6,7 +6,7 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.TotalFiatBalance
 import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.getResultStatusSource
-import com.tangem.domain.models.staking.YieldBalance
+import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.models.tokenlist.TokenList
 import com.tangem.domain.staking.utils.getTotalWithRewardsStakingBalance
 import com.tangem.lib.crypto.BlockchainUtils
@@ -153,17 +153,17 @@ object TotalFiatBalanceCalculator {
     }
 
     private fun CryptoCurrencyStatus.Loaded.getFiatStakingBalance(blockchainId: String): BigDecimal {
-        val yieldBalance = yieldBalance as? YieldBalance.Data
-        val stakingBalance = yieldBalance?.getTotalWithRewardsStakingBalance(blockchainId).orZero()
+        val stakingBalanceData = stakingBalance as? StakingBalance.Data
+        val totalStakingBalance = stakingBalanceData?.getTotalWithRewardsStakingBalance(blockchainId).orZero()
 
-        return fiatRate.times(stakingBalance)
+        return fiatRate.times(totalStakingBalance)
     }
 
     private fun CryptoCurrencyStatus.Custom.getFiatStakingBalance(blockchainId: String): BigDecimal {
-        val yieldBalance = yieldBalance as? YieldBalance.Data
-        val stakingBalance = yieldBalance?.getTotalWithRewardsStakingBalance(blockchainId).orZero()
+        val stakingBalanceData = stakingBalance as? StakingBalance.Data
+        val totalStakingBalance = stakingBalanceData?.getTotalWithRewardsStakingBalance(blockchainId).orZero()
 
-        return fiatRate?.times(stakingBalance).orZero()
+        return fiatRate?.times(totalStakingBalance).orZero()
     }
 
     private inline fun TotalFiatBalance.fold(

@@ -151,7 +151,7 @@ class StakingIntegrationIDTest {
                 expected = StakingIntegrationID.StakeKit.Coin.Cardano,
             ),
             CreateModel(
-                currencyId = createCurrencyId(blockchain = Blockchain.Ethereum),
+                currencyId = createCurrencyId(blockchain = StakingIntegrationID.P2P.EthereumPooled.blockchain),
                 expected = StakingIntegrationID.P2P.EthereumPooled,
             ),
             CreateModel(

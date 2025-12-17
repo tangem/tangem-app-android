@@ -1,5 +1,6 @@
 package com.tangem.features.markets.portfolio.impl.loader
 
+import arrow.core.getOrElse
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.core.lce.Lce
@@ -11,6 +12,8 @@ import com.tangem.domain.tokens.GetAllWalletsCryptoCurrencyStatusesUseCase
 import com.tangem.domain.tokens.GetCryptoCurrencyActionsUseCase
 import com.tangem.domain.tokens.GetWalletTotalBalanceUseCase
 import com.tangem.domain.tokens.error.TokenListError
+import com.tangem.domain.yield.supply.models.YieldSupplyAvailability
+import com.tangem.domain.yield.supply.usecase.YieldSupplyGetAvailabilityUseCase
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
@@ -30,6 +33,7 @@ internal class PortfolioDataLoader @Inject constructor(
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val getWalletTotalBalanceUseCase: GetWalletTotalBalanceUseCase,
+    private val yieldSupplyGetAvailabilityUseCase: YieldSupplyGetAvailabilityUseCase,
     private val getCryptoCurrencyActionsUseCase: GetCryptoCurrencyActionsUseCase,
 ) {
 
@@ -72,7 +76,10 @@ internal class PortfolioDataLoader @Inject constructor(
             .flatMapLatest { walletsWithStatuses ->
                 val actionsFlows = walletsWithStatuses.flatMap { (wallet, statuses) ->
                     statuses.map { status ->
-                        getCryptoCurrencyActionsUseCase(wallet, status)
+                        val yieldSupplyAvailability = yieldSupplyGetAvailabilityUseCase(status.currency).getOrElse {
+                            YieldSupplyAvailability.Unavailable
+                        }
+                        getCryptoCurrencyActionsUseCase(wallet, status, yieldSupplyAvailability)
                             .map {
                                 PortfolioData.CryptoCurrencyData(
                                     userWallet = wallet,

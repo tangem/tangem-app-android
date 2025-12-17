@@ -117,6 +117,8 @@ private fun PurchaseBlock(onBuyClick: () -> Unit, modifier: Modifier = Modifier)
             text = stringResourceSafe(R.string.wallet_add_hardware_purchase),
             style = TangemTheme.typography.button,
             color = TangemTheme.colors.text.primary1,
+            maxLines = 3,
+            overflow = TextOverflow.Ellipsis,
         )
 
         SecondaryButton(

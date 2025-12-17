@@ -9,7 +9,6 @@
     <ID>MultilineLambdaItParameter:DetailsModel.kt$DetailsModel${ it.copy( selectFeedbackEmailTypeBSConfig = it.selectFeedbackEmailTypeBSConfig.copy(isShown = false), ) }</ID>
     <ID>MultilineLambdaItParameter:PreviewUserWalletListComponent.kt$PreviewUserWalletListComponent${ it.copy( balance = UserWalletItemUM.Balance.Loaded( value = "1.000 BTC", isFlickering = true, ), ) }</ID>
     <ID>MultilineLambdaItParameter:UserWalletSaver.kt$UserWalletSaver${ val message = it.message if (!message.isNullOrEmpty()) { messageSender.send(SnackbarMessage(message)) } }</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:UserWalletListModel.kt$UserWalletListModel$private val isWalletSavingInProgress: MutableStateFlow&lt;Boolean&gt; = MutableStateFlow(value = false)</ID>
     <ID>RedundantSuspendModifier:UserWalletSaver.kt$UserWalletSaver$suspend</ID>
     <ID>UnnecessaryLet:ItemsBuilder.kt$ItemsBuilder$let(::add)</ID>
   </CurrentIssues>

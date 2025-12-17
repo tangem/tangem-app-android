@@ -1,0 +1,7 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ObjectExtendsThrowable:ParsedQrCodeErrors.kt$ParsedQrCodeErrors$InvalidUriError : ParsedQrCodeErrors</ID>
+  </CurrentIssues>
+</SmellBaseline>

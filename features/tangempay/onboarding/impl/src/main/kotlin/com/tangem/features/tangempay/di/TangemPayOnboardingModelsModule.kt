@@ -3,6 +3,7 @@ package com.tangem.features.tangempay.di
 import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.model.Model
 import com.tangem.features.tangempay.model.TangemPayOnboardingModel
+import com.tangem.features.tangempay.model.TangemPayWalletSelectorModel
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -16,5 +17,10 @@ internal interface TangemPayOnboardingModelsModule {
     @Binds
     @IntoMap
     @ClassKey(TangemPayOnboardingModel::class)
-    fun bindModel(model: TangemPayOnboardingModel): Model
+    fun bindTangemPayOnboardingModel(model: TangemPayOnboardingModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(TangemPayWalletSelectorModel::class)
+    fun bindTangemPayWalletSelectorModel(model: TangemPayWalletSelectorModel): Model
 }

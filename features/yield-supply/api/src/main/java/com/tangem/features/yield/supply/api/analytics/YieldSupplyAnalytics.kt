@@ -189,7 +189,7 @@ sealed class YieldSupplyAnalytics(
         ),
     )
 
-    data object ApyChartViewed : YieldSupplyAnalytics(
+    class ApyChartViewed : YieldSupplyAnalytics(
         event = "APY Chart",
     )
 
