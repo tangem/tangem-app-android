@@ -104,7 +104,7 @@ internal class TangemPayOnboardingModel @Inject constructor(
                         else -> back()
                     }
                 }
-                .onLeft { back() }
+                .onLeft { startOnboarding(userWalletId) }
         }
     }
 
