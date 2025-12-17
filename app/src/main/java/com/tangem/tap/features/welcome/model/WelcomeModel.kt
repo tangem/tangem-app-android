@@ -10,7 +10,7 @@ import com.tangem.core.navigation.finisher.AppFinisher
 import com.tangem.domain.wallets.legacy.UserWalletsListError
 import com.tangem.tap.common.analytics.events.SignIn
 import com.tangem.tap.common.redux.global.GlobalAction
-import com.tangem.tap.features.details.ui.cardsettings.TextReference
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.tap.features.welcome.component.WelcomeComponent
 import com.tangem.tap.features.welcome.redux.WelcomeAction
 import com.tangem.tap.features.welcome.redux.WelcomeState
