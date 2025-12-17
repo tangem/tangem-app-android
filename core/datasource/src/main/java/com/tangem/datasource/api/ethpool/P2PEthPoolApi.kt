@@ -23,9 +23,7 @@ interface P2PEthPoolApi {
      * @param network Ethereum pool network: "mainnet" or "hoodi" (testnet)
      */
     @GET("api/v1/staking/pool/{network}/vaults")
-    suspend fun getVaults(
-        @Path("network") network: String = "mainnet",
-    ): ApiResponse<P2PEthPoolResponse<P2PEthPoolVaultsResponse>>
+    suspend fun getVaults(@Path("network") network: String): ApiResponse<P2PEthPoolResponse<P2PEthPoolVaultsResponse>>
 
     /**
      * Prepare deposit transaction
