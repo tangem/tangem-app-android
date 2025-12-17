@@ -98,8 +98,16 @@ internal class TokenDetailsLoadedBalanceConverter(
                     stakingCryptoAmount,
                     currentState.selectedBalanceType,
                 ),
-                displayYieldSupplyFiatBalance = (currentState as? TokenDetailsBalanceBlockState.Content)
-                    ?.displayYieldSupplyFiatBalance,
+                displayYieldSupplyFiatBalance = if (status.value.yieldSupplyStatus?.isActive == true) {
+                    (currentState as? TokenDetailsBalanceBlockState.Content)?.displayYieldSupplyFiatBalance
+                } else {
+                    null
+                },
+                displayYieldSupplyCryptoBalance = if (status.value.yieldSupplyStatus?.isActive == true) {
+                    (currentState as? TokenDetailsBalanceBlockState.Content)?.displayYieldSupplyCryptoBalance
+                } else {
+                    null
+                },
                 balanceSegmentedButtonConfig = currentState.balanceSegmentedButtonConfig,
                 onBalanceSelect = clickIntents::onBalanceSelect,
                 selectedBalanceType = currentState.selectedBalanceType,
