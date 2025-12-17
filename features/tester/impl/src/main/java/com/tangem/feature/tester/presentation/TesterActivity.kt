@@ -35,6 +35,11 @@ import com.tangem.feature.tester.presentation.providers.ui.BlockchainProvidersSc
 import com.tangem.feature.tester.presentation.providers.viewmodel.BlockchainProvidersViewModel
 import com.tangem.feature.tester.presentation.testpush.ui.TestPushScreen
 import com.tangem.feature.tester.presentation.testpush.viewmodel.TestPushViewModel
+import com.tangem.feature.tester.presentation.news.ui.NewsScreen
+import com.tangem.feature.tester.presentation.news.viewmodel.NewsViewModel
+import com.tangem.features.news.details.impl.MockArticlesFactory
+import com.tangem.features.news.details.impl.ui.NewsDetailsContent
+import com.tangem.features.news.details.impl.ui.NewsDetailsUM
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.collections.immutable.persistentSetOf
 import javax.inject.Inject
@@ -82,9 +87,10 @@ internal class TesterActivity : ComposeActivity() {
                             ButtonUM.TESTER_ACTIONS,
                             ButtonUM.TEST_PUSHES,
                             ButtonUM.ACCOUNTS,
+                            ButtonUM.NEWS,
                         ),
-                        onButtonClick = {
-                            val route = when (it) {
+                        onButtonClick = { buttonUM ->
+                            val route = when (buttonUM) {
                                 ButtonUM.FEATURE_TOGGLES -> TesterScreen.FEATURE_TOGGLES
                                 ButtonUM.EXCLUDED_BLOCKCHAINS -> TesterScreen.EXCLUDED_BLOCKCHAINS
                                 ButtonUM.ENVIRONMENT_TOGGLES -> TesterScreen.ENVIRONMENTS_TOGGLES
@@ -92,6 +98,7 @@ internal class TesterActivity : ComposeActivity() {
                                 ButtonUM.TESTER_ACTIONS -> TesterScreen.TESTER_ACTIONS
                                 ButtonUM.TEST_PUSHES -> TesterScreen.TEST_PUSHES
                                 ButtonUM.ACCOUNTS -> TesterScreen.ACCOUNTS
+                                ButtonUM.NEWS -> TesterScreen.NEWS
                             }
 
                             innerTesterRouter.open(route)
@@ -161,6 +168,27 @@ internal class TesterActivity : ComposeActivity() {
                 val state by viewModel.uiState.collectAsStateWithLifecycle()
 
                 AccountsScreen(state)
+            }
+
+            composable(route = TesterScreen.NEWS.name) {
+                val viewModel = hiltViewModel<NewsViewModel>().apply {
+                    setupNavigation(innerTesterRouter)
+                }
+                val state by viewModel.uiState.collectAsStateWithLifecycle()
+
+                NewsScreen(state)
+            }
+
+            composable(route = TesterScreen.NEWS_DETAILS.name) {
+                NewsDetailsContent(
+                    state = NewsDetailsUM(
+                        articles = MockArticlesFactory.createMockArticles(),
+                        selectedArticleIndex = 0,
+                        onLikeClick = { },
+                        onShareClick = { },
+                    ),
+                    onBackClick = { innerTesterRouter.back() },
+                )
             }
         }
     }
