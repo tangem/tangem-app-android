@@ -386,6 +386,7 @@ internal class FeedMarketsBatchFlowManager(
             TokenMarketListConfig.Order.TopGainers -> SortByTypeUM.TopGainers
             TokenMarketListConfig.Order.TopLosers -> SortByTypeUM.TopLosers
             TokenMarketListConfig.Order.Staking -> SortByTypeUM.Staking
+            TokenMarketListConfig.Order.YieldSupply -> SortByTypeUM.YieldSupply
         }
     }
 }
