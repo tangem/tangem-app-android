@@ -16,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
@@ -31,6 +32,7 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.SendSelectNetworkFeeBottomSheetTestTags
 
 /**
  * [InputRowEnter](https://www.figma.com/file/14ISV23YB1yVW1uNVwqrKv/Android?type=design&node-id=2100-799&mode=design&t=IQ5lBJEkFGU4WSvi-4)
@@ -113,7 +115,8 @@ fun InputRowEnter(
                     visualTransformation = visualTransformation,
                     keyboardOptions = keyboardOptions,
                     modifier = Modifier
-                        .padding(top = TangemTheme.dimens.spacing8),
+                        .padding(top = TangemTheme.dimens.spacing8)
+                        .testTag(SendSelectNetworkFeeBottomSheetTestTags.NONCE_INPUT_TEXT_FIELD),
                 )
             }
             iconRes?.let { iconRes ->

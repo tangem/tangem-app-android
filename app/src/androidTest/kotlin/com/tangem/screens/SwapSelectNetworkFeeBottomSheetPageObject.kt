@@ -2,7 +2,7 @@ package com.tangem.screens
 
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import com.tangem.common.BaseTestCase
-import com.tangem.core.ui.test.SelectNetworkFeeBottomSheetTestTags
+import com.tangem.core.ui.test.SwapSelectNetworkFeeBottomSheetTestTags
 import com.tangem.core.ui.test.TopAppBarTestTags
 import com.tangem.wallet.R
 import io.github.kakaocup.compose.node.element.ComposeScreen
@@ -11,8 +11,8 @@ import io.github.kakaocup.compose.node.element.KNode
 import io.github.kakaocup.kakao.common.utilities.getResourceString
 import androidx.compose.ui.test.hasText as withText
 
-class SelectNetworkFeePageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
-    ComposeScreen<SelectNetworkFeePageObject>(semanticsProvider = semanticsProvider) {
+class SwapSelectNetworkFeeBottomSheetPageObject(semanticsProvider: SemanticsNodeInteractionsProvider) :
+    ComposeScreen<SwapSelectNetworkFeeBottomSheetPageObject>(semanticsProvider = semanticsProvider) {
 
     val title: KNode = child {
         hasTestTag(TopAppBarTestTags.TITLE)
@@ -21,22 +21,22 @@ class SelectNetworkFeePageObject(semanticsProvider: SemanticsNodeInteractionsPro
     }
 
     val marketSelectorItem: KNode = child {
-        hasTestTag(SelectNetworkFeeBottomSheetTestTags.SELECTOR_ITEM)
+        hasTestTag(SwapSelectNetworkFeeBottomSheetTestTags.SELECTOR_ITEM)
         hasAnyChild(withText(getResourceString(R.string.common_fee_selector_option_market)))
         useUnmergedTree = true
     }
 
     val fastSelectorItem: KNode = child {
-        hasTestTag(SelectNetworkFeeBottomSheetTestTags.SELECTOR_ITEM)
+        hasTestTag(SwapSelectNetworkFeeBottomSheetTestTags.SELECTOR_ITEM)
         hasAnyChild(withText(getResourceString(R.string.common_fee_selector_option_fast)))
         useUnmergedTree = true
     }
 
     val readMoreTextBlock: KNode = child {
-        hasTestTag(SelectNetworkFeeBottomSheetTestTags.READ_MORE_TEXT)
+        hasTestTag(SwapSelectNetworkFeeBottomSheetTestTags.READ_MORE_TEXT)
         useUnmergedTree = true
     }
 }
 
-internal fun BaseTestCase.onSelectNetworkFeeBottomSheet(function: SelectNetworkFeePageObject.() -> Unit) =
+internal fun BaseTestCase.onSwapSelectNetworkFeeBottomSheet(function: SwapSelectNetworkFeeBottomSheetPageObject.() -> Unit) =
     onComposeScreen(composeTestRule, function)
