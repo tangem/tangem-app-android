@@ -3,6 +3,7 @@ package com.tangem.feature.swap.domain
 import android.util.Base64
 import arrow.core.Either
 import arrow.core.getOrElse
+import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
 import com.tangem.blockchain.blockchains.solana.SolanaTransactionHelper
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.Blockchain
@@ -11,6 +12,7 @@ import com.tangem.blockchain.common.TransactionExtras
 import com.tangem.blockchain.common.smartcontract.SmartContractCallDataProviderFactory
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
+import com.tangem.blockchain.yieldsupply.providers.ethereum.yield.EthereumYieldSupplySendCallData
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.blockchainsdk.utils.toBlockchain
 import com.tangem.blockchainsdk.utils.toNetworkId
@@ -883,6 +885,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             Timber.e(error, "Failed to create swap dex tx data")
             return SwapTransactionState.Error.UnknownError
         }
+
         return handleSwapResult(
             provider = provider,
             networkId = networkId,
@@ -894,7 +897,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             amount = amount,
             derivationPath = derivationPath,
             txData = txData,
-            payInAddress = txData.destinationAddress,
+            payInAddress = getPayoutAddress(txData),
         )
     }
 
@@ -1108,7 +1111,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                     txId = exchangeDataCex.txId,
                     fromNetwork = currencyToSend.currency.network.backendId,
                     fromAddress = cexFromAddress,
-                    payInAddress = txData.destinationAddress,
+                    payInAddress = getPayoutAddress(txData),
                     txHash = txHash,
                     payInExtraId = exchangeDataCex.txExtraId,
                 )
@@ -2346,6 +2349,15 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         } catch (e: Exception) {
             Timber.e("Failed to format the hash: ${e.message.orEmpty()}")
             hash
+        }
+    }
+
+    private fun getPayoutAddress(txData: TransactionData.Uncompiled): String {
+        val ethereumCallData = (txData.extras as? EthereumTransactionExtras)?.callData
+        return if (ethereumCallData is EthereumYieldSupplySendCallData) {
+            ethereumCallData.destinationAddress
+        } else {
+            txData.destinationAddress
         }
     }
 
