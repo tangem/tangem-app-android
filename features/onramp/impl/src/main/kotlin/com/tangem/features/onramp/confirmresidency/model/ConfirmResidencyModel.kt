@@ -69,7 +69,7 @@ internal class ConfirmResidencyModel @Inject constructor(
     } else {
         ConfirmResidencyUM.ActionButtonConfig(
             onClick = {
-                analyticsEventHandler.send(OnrampAnalyticsEvent.CloseOnramp)
+                analyticsEventHandler.send(OnrampAnalyticsEvent.CloseOnramp())
                 router.pop()
             },
             text = resourceReference(R.string.common_close),
@@ -77,7 +77,7 @@ internal class ConfirmResidencyModel @Inject constructor(
     }
 
     private fun onChangeClick() {
-        analyticsEventHandler.send(OnrampAnalyticsEvent.OnResidenceChange)
+        analyticsEventHandler.send(OnrampAnalyticsEvent.OnResidenceChange())
         bottomSheetNavigation.activate(ConfirmResidencyBottomSheetConfig.SelectCountry(params.onDismiss))
     }
 }
