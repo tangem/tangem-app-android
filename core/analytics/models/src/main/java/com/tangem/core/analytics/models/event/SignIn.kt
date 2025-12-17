@@ -21,7 +21,9 @@ sealed class SignIn(
 
     class ButtonUnlockAllWithBiometric : SignIn(event = "Button - Unlock All With Biometric")
 
-    class ErrorBiometricUpdated : SignIn(event = "Error - Biometric Updated")
+    data class ErrorBiometricUpdated(
+        val isFromUnlockAll: Boolean,
+    ) : SignIn(event = "Error - Biometric Updated")
 
     class ButtonWallet(
         signInType: SignInType,
