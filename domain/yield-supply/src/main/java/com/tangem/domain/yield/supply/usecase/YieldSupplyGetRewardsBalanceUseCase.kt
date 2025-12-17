@@ -29,6 +29,9 @@ class YieldSupplyGetRewardsBalanceUseCase(
         val fiatRate = status.value.fiatRate
 
         if (cryptoAmount?.compareTo(BigDecimal.ZERO) == 0) {
+            emit(
+                YieldSupplyRewardBalance(fiatBalance = null, cryptoBalance = null),
+            )
             return@flow
         }
 

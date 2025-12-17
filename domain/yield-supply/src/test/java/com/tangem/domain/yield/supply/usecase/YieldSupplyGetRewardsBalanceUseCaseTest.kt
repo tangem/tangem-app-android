@@ -50,6 +50,38 @@ class YieldSupplyGetRewardsBalanceUseCaseTest {
     }
 
     @Test
+    fun `GIVEN zero amount WHEN invoke THEN emit null balances`() = runTest {
+        val network = createNetwork()
+        val token = createToken(network)
+        val status = CryptoCurrencyStatus(
+            currency = token,
+            value = CryptoCurrencyStatus.Custom(
+                amount = BigDecimal.ZERO,
+                fiatAmount = null,
+                fiatRate = BigDecimal.ONE,
+                priceChange = null,
+                yieldBalance = null,
+                yieldSupplyStatus = null,
+                hasCurrentNetworkTransactions = false,
+                pendingTransactions = emptySet(),
+                networkAddress = NetworkAddress.Single(
+                    NetworkAddress.Address(value = "0xabc", type = NetworkAddress.Address.Type.Primary),
+                ),
+                sources = CryptoCurrencyStatus.Sources(),
+            ),
+        )
+
+        val dispatcherProvider = testDispatcherProvider(this)
+        val useCase = YieldSupplyGetRewardsBalanceUseCase(repository, dispatcherProvider)
+        val appCurrency = AppCurrency.Default
+
+        val emissions = useCase(status, appCurrency).toList()
+        assertThat(emissions).hasSize(1)
+        assertThat(emissions[0].fiatBalance).isNull()
+        assertThat(emissions[0].cryptoBalance).isNull()
+    }
+
+    @Test
     fun `GIVEN coin currency WHEN invoke THEN emit nothing`() = runTest {
         val network = createNetwork()
         val coin = createNativeCoin(network)
