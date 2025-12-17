@@ -109,10 +109,17 @@ internal class DefaultSendWithSwapComponent @AssistedInject constructor(
                         activeComponent.updateState(model.uiState.value.destinationUM)
                     }
                     is SendWithSwapConfirmComponent -> {
+                        val fromCurrency = params.currency
+                        val fromDerivationIndex = model.accountFlow.value?.derivationIndex?.value
+                            .takeIf { model.isAccountModeFlow.value }
                         analyticsEventHandler.send(
                             CommonSendAnalyticEvents.ConfirmationScreenOpened(
                                 categoryName = model.analyticCategoryName,
                                 source = model.analyticsSendSource,
+                                sendBlockchain = fromCurrency.network.name,
+                                sendToken = fromCurrency.symbol,
+                                fromDerivationIndex = fromDerivationIndex,
+                                toDerivationIndex = null,
                             ),
                         )
                         if (model.currentRoute.value.isEditMode) {
