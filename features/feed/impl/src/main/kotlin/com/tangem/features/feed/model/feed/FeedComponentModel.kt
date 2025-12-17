@@ -338,6 +338,7 @@ internal class FeedComponentModel @Inject constructor(
             SortByTypeUM.TopGainers -> TokenMarketListConfig.Order.TopGainers
             SortByTypeUM.TopLosers -> TokenMarketListConfig.Order.TopLosers
             SortByTypeUM.Staking -> TokenMarketListConfig.Order.Staking
+            SortByTypeUM.YieldSupply -> TokenMarketListConfig.Order.YieldSupply
         }
     }
 

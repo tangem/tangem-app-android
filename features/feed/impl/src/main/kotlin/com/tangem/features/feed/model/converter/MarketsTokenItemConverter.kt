@@ -38,7 +38,7 @@ internal class MarketsTokenItemConverter(
             trendType = value.getTrendType(),
             chartData = value.getChartData(),
             isUnder100kMarketCap = value.isUnderMarketCapLimit,
-            stakingRate = value.stakingRate?.format { percent() }?.let {
+            stakingRate = value.yieldRate?.format { percent() }?.let {
                 resourceReference(R.string.markets_apy_placeholder, wrappedList(it))
             },
             updateTimestamp = value.updateTimestamp,
