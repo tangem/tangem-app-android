@@ -95,7 +95,7 @@ internal class OrganizeTokensModel @Inject constructor(
     val onBack = MutableSharedFlow<Unit>()
 
     init {
-        analyticsEventsHandler.send(PortfolioOrganizeTokensAnalyticsEvent.ScreenOpened)
+        analyticsEventsHandler.send(PortfolioOrganizeTokensAnalyticsEvent.ScreenOpened())
 
         getBalanceHidingSettingsUseCase()
             .onEach {
@@ -117,7 +117,7 @@ internal class OrganizeTokensModel @Inject constructor(
             val list = cachedAccountStatusList ?: return
             if (list.sortType == TokensSortType.BALANCE) return
 
-            analyticsEventsHandler.send(PortfolioOrganizeTokensAnalyticsEvent.ByBalance)
+            analyticsEventsHandler.send(PortfolioOrganizeTokensAnalyticsEvent.ByBalance())
 
             modelScope.launch {
                 toggleTokenListSortingUseCaseV2(list).fold(
@@ -132,7 +132,7 @@ internal class OrganizeTokensModel @Inject constructor(
             val list = cachedTokenList ?: return
             if (list.sortedBy == TokensSortType.BALANCE) return
 
-            analyticsEventsHandler.send(PortfolioOrganizeTokensAnalyticsEvent.ByBalance)
+            analyticsEventsHandler.send(PortfolioOrganizeTokensAnalyticsEvent.ByBalance())
 
             modelScope.launch {
                 toggleTokenListSortingUseCase(list).fold(
@@ -150,7 +150,7 @@ internal class OrganizeTokensModel @Inject constructor(
         if (accountsFeatureToggles.isFeatureEnabled) {
             val list = cachedAccountStatusList ?: return
 
-            analyticsEventsHandler.send(PortfolioOrganizeTokensAnalyticsEvent.Group)
+            analyticsEventsHandler.send(PortfolioOrganizeTokensAnalyticsEvent.Group())
 
             modelScope.launch {
                 toggleTokenListGroupingUseCaseV2(list).fold(
@@ -164,7 +164,7 @@ internal class OrganizeTokensModel @Inject constructor(
         } else {
             val list = cachedTokenList ?: return
 
-            analyticsEventsHandler.send(PortfolioOrganizeTokensAnalyticsEvent.Group)
+            analyticsEventsHandler.send(PortfolioOrganizeTokensAnalyticsEvent.Group())
 
             modelScope.launch {
                 toggleTokenListGroupingUseCase(list).fold(
@@ -228,7 +228,7 @@ internal class OrganizeTokensModel @Inject constructor(
     }
 
     override fun onCancelClick() {
-        analyticsEventsHandler.send(PortfolioOrganizeTokensAnalyticsEvent.Cancel)
+        analyticsEventsHandler.send(PortfolioOrganizeTokensAnalyticsEvent.Cancel())
 
         modelScope.launch { onBack.emit(Unit) }
     }

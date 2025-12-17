@@ -1,6 +1,7 @@
 package com.tangem.domain.nft.analytics
 
 import com.tangem.core.analytics.models.AnalyticsEvent
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.AnalyticsParam.Key.BLOCKCHAIN
 import com.tangem.core.analytics.models.AnalyticsParam.Key.COLLECTIONS
 import com.tangem.core.analytics.models.AnalyticsParam.Key.NFT
@@ -18,7 +19,7 @@ sealed class NFTAnalyticsEvent(
 ) {
 
     data class NFTListScreenOpened(
-        val state: State,
+        val state: AnalyticsParam.EmptyFull,
         val collectionsCount: Int,
         val allAssetsCount: Int,
         val noCollectionAssetsCount: Int,
@@ -30,15 +31,10 @@ sealed class NFTAnalyticsEvent(
             put(NFT, allAssetsCount.toString())
             put(NO_COLLECTION, noCollectionAssetsCount.toString())
         },
-    ) {
-        enum class State(val value: String) {
-            Empty("Empty"),
-            Full("Full"),
-        }
-    }
+    )
 
     object Receive {
-        data object ScreenOpened : NFTAnalyticsEvent(event = "Receive NFT Screen Opened")
+        class ScreenOpened : NFTAnalyticsEvent(event = "Receive NFT Screen Opened")
 
         data class BlockchainChosen(
             private val blockchain: String,
@@ -67,9 +63,9 @@ sealed class NFTAnalyticsEvent(
             },
         )
 
-        data object ButtonReadMore : NFTAnalyticsEvent(event = "Button - Read More")
-        data object ButtonSeeAll : NFTAnalyticsEvent(event = "Button - See All")
-        data object ButtonExplore : NFTAnalyticsEvent(event = "Button - Explore")
-        data object ButtonSend : NFTAnalyticsEvent(event = "Button - Send")
+        class ButtonReadMore : NFTAnalyticsEvent(event = "Button - Read More")
+        class ButtonSeeAll : NFTAnalyticsEvent(event = "Button - See All")
+        class ButtonExplore : NFTAnalyticsEvent(event = "Button - Explore")
+        class ButtonSend : NFTAnalyticsEvent(event = "Button - Send")
     }
 }
