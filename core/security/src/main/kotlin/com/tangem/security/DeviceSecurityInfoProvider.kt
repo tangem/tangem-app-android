@@ -5,3 +5,5 @@ interface DeviceSecurityInfoProvider {
     val isBootloaderUnlocked: Boolean
     val isXposed: Boolean
 }
+
+fun DeviceSecurityInfoProvider.isSecurityExposed(): Boolean = isRooted || isBootloaderUnlocked || isXposed
