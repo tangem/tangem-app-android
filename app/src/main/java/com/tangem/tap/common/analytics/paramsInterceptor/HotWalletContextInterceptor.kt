@@ -19,6 +19,7 @@ class HotWalletContextInterceptor(
             is SignIn.ButtonUnlockAllWithBiometric,
             is IntroductionProcess.ButtonScanCard,
             -> false
+            is SignIn.ErrorBiometricUpdated -> !event.isFromUnlockAll
             else -> true
         }
     }
