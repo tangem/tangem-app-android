@@ -30,7 +30,7 @@ sealed class TokenOnrampAnalyticsEvent(
             ),
         )
 
-    data object GoToProvider : TokenOnrampAnalyticsEvent(event = "Button - Go To Provider")
+    class GoToProvider : TokenOnrampAnalyticsEvent(event = "Button - Go To Provider")
 
     data class NoticeKYC(
         val tokenSymbol: String,
