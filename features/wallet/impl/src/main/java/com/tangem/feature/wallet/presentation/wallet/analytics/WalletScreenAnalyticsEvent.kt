@@ -51,18 +51,23 @@ sealed class WalletScreenAnalyticsEvent {
         params: Map<String, String> = mapOf(),
     ) : AnalyticsEvent(category = "Main Screen", event = event, params = params) {
 
-        class ScreenOpenedLegacy : MainScreen(
-            event = "Screen opened",
-        )
-
         data class ScreenOpened(
             private val hasMobileWallet: Boolean,
             private val accountsCount: Int?,
+            val theme: String,
+            val isImported: Boolean,
         ) : MainScreen(
             event = "Screen opened",
             params = buildMap {
                 put("Mobile Wallet", if (hasMobileWallet) "Yes" else "No")
                 if (accountsCount != null) put("Accounts Count", accountsCount.toString())
+                put("App Theme", theme)
+                val seedPhrase = if (isImported) {
+                    "Seed Phrase"
+                } else {
+                    "Seedless"
+                }
+                put("Wallet Type", seedPhrase)
             },
         )
 
