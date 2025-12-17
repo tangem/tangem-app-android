@@ -181,7 +181,7 @@ internal class DefaultOnboardingRepository @Inject constructor(
                 customerWalletId = userWalletId.stringValue,
             )
         }.map { response ->
-            val id = response.id
+            val id = response.result?.id
             val isPaeraCustomer = !id.isNullOrEmpty()
             tangemPayStorage.storeCheckCustomerWalletResult(userWalletId = userWalletId, isPaeraCustomer)
             isPaeraCustomer
