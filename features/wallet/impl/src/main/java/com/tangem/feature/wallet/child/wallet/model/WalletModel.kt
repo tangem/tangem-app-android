@@ -453,7 +453,7 @@ internal class WalletModel @Inject constructor(
     private suspend fun updateWallets(action: WalletsUpdateActionResolver.Action) {
         when (action) {
             is WalletsUpdateActionResolver.Action.InitializeWallets -> initializeWallets(action)
-            is WalletsUpdateActionResolver.Action.ReinitializeWallet -> reinitializeWallet(action)
+            is WalletsUpdateActionResolver.Action.ReinitializeNewWallet -> reinitializeNewWallet(action)
             is WalletsUpdateActionResolver.Action.ReinitializeWallets -> reinitializeWallets(action)
             is WalletsUpdateActionResolver.Action.AddWallet -> addWallet(action)
             is WalletsUpdateActionResolver.Action.DeleteWallet -> deleteWallet(action)
@@ -537,7 +537,7 @@ internal class WalletModel @Inject constructor(
         }
     }
 
-    private fun reinitializeWallet(action: WalletsUpdateActionResolver.Action.ReinitializeWallet) {
+    private fun reinitializeNewWallet(action: WalletsUpdateActionResolver.Action.ReinitializeNewWallet) {
         walletScreenContentLoader.cancel(action.prevWalletId)
         tokenListStore.remove(action.prevWalletId)
 
@@ -550,7 +550,7 @@ internal class WalletModel @Inject constructor(
         fetchWalletContent(userWallet = action.selectedWallet)
 
         stateHolder.update(
-            ReinitializeWalletTransformer(
+            ReinitializeNewWalletTransformer(
                 prevWalletId = action.prevWalletId,
                 newUserWallet = action.selectedWallet,
                 clickIntents = clickIntents,
@@ -570,14 +570,11 @@ internal class WalletModel @Inject constructor(
                 coroutineScope = modelScope,
             )
 
-            modelScope.launch(dispatchers.main) {
-                fetchWalletContent(userWallet = userWallet)
-            }
+            fetchWalletContent(userWallet = userWallet)
 
             stateHolder.update(
                 ReinitializeWalletTransformer(
-                    prevWalletId = userWallet.walletId,
-                    newUserWallet = userWallet,
+                    userWallet = userWallet,
                     clickIntents = clickIntents,
                     walletImageResolver = walletImageResolver,
                 ),
