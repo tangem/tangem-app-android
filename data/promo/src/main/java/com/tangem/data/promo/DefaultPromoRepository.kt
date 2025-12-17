@@ -20,6 +20,7 @@ import com.tangem.domain.promo.models.StoryContent
 import com.tangem.feature.referral.domain.ReferralRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runCatching
+import com.tangem.utils.coroutines.runSuspendCatching
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
@@ -44,7 +45,7 @@ internal class DefaultPromoRepository(
             .distinctUntilChanged()
             .map { shouldShow ->
                 when (promoId) {
-                    PromoId.Referral -> runCatching {
+                    PromoId.Referral -> runSuspendCatching {
                         !referralRepository.isReferralParticipant(userWalletId) && shouldShow
                     }.getOrDefault(false)
                     PromoId.Sepa -> {
@@ -89,7 +90,7 @@ internal class DefaultPromoRepository(
         appPreferencesStore.store(PreferencesKeys.getShouldShowPromoKey(promoId = promoId.name), false)
     }
 
-    override suspend fun isMarketsStakingNotificationHideClicked(): Flow<Boolean> {
+    override fun isMarketsStakingNotificationHideClicked(): Flow<Boolean> {
         return appPreferencesStore.get(
             key = PreferencesKeys.MARKETS_STAKING_NOTIFICATION_HIDE_CLICKED_KEY,
             default = false,
@@ -125,7 +126,7 @@ internal class DefaultPromoRepository(
         val storedPromo = promoStoriesStore.getSyncOrNull(storyId = id)
         // Get last stored promo by id if possible or get from network
         val story = if (storedPromo == null && refresh) {
-            val storyContent = runCatching {
+            val storyContent = runSuspendCatching {
                 // Important to return
                 withTimeoutOrNull(STORIES_LOAD_DELAY) {
                     tangemApi.getStoryById(storyId = id).getOrThrow()
@@ -193,8 +194,8 @@ internal class DefaultPromoRepository(
         const val SEPA_NAME = "sepa"
         const val VISA_NAME = "visa-waitlist"
         const val BLACK_FRIDAY_NAME = "black-friday"
-        const val ONE_PLUS_ONE_NAME = "one-plus-one"
         const val MOONPAY_NAME = "moonpay"
+        const val ONE_PLUS_ONE_NAME = "one-plus-one"
         const val STORIES_LOAD_DELAY = 1000L
     }
 }
