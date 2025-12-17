@@ -74,6 +74,10 @@ internal class YieldSupplyNotificationsModel @Inject constructor(
                         dustValue = null,
                         onReload = params.callback::onFeeReload,
                     )
+
+                    if (data.shouldShowHighFeeNotification) {
+                        add(NotificationUM.Info.YieldSupplyHighNetworkFee)
+                    }
                 }
 
                 if (notifications.any { it is NotificationUM.Error.TokenExceedsBalance }) {
