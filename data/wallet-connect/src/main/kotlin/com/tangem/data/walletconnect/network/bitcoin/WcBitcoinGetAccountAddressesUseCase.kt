@@ -3,12 +3,10 @@ package com.tangem.data.walletconnect.network.bitcoin
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
 import com.squareup.moshi.Moshi
 import com.tangem.blockchain.blockchains.bitcoin.BitcoinWalletManager
-import com.tangem.blockchain.blockchains.bitcoin.walletconnect.models.GetAccountAddressesRequest
-import com.tangem.blockchain.blockchains.bitcoin.walletconnect.models.GetAccountAddressesResponse
+import com.tangem.blockchain.blockchains.bitcoin.walletconnect.models.AccountAddress
+import com.tangem.blockchain.common.address.AddressInfo
 import com.tangem.blockchain.extensions.Result as SdkResult
 import com.tangem.data.walletconnect.respond.WcRespondService
 import com.tangem.data.walletconnect.sign.WcMethodUseCaseContext
@@ -31,14 +29,6 @@ import dagger.assisted.AssistedInject
  * Returns wallet addresses filtered by intention (payment/ordinal).
  * This is a non-signing operation.
  */
-@JsonClass(generateAdapter = true)
-internal data class AddressInfo(
-    @Json(name = "address") val address: String,
-    @Json(name = "publicKey") val publicKey: String? = null,
-    @Json(name = "path") val path: String? = null,
-    @Json(name = "intention") val intention: String? = null,
-)
-
 internal class WcBitcoinGetAccountAddressesUseCase @AssistedInject constructor(
     @Assisted val context: WcMethodUseCaseContext,
     @Assisted override val method: WcBitcoinMethod.GetAccountAddresses,
@@ -66,33 +56,11 @@ internal class WcBitcoinGetAccountAddressesUseCase @AssistedInject constructor(
 
         return when (val result = walletManager.getAddresses(method.intentions)) {
             is SdkResult.Success -> {
-                // Map SDK AddressInfo to WalletConnect AccountAddress
-                val accountAddresses = result.data.map { addressInfo ->
-                    com.tangem.blockchain.blockchains.bitcoin.walletconnect.models.AccountAddress(
-                        address = addressInfo.address,
-                        publicKey = addressInfo.publicKey,
-                        path = addressInfo.derivationPath,
-                        intention = addressInfo.metadata?.get("intention") as? String,
-                    )
-                }
+                val accountAddresses = mapToAccountAddresses(result.data)
 
-                val response = GetAccountAddressesResponse(addresses = accountAddresses)
+                respondToApp(accountAddresses)
 
-                // Send response back to dApp
-                val jsonResponse = buildJsonResponse(response)
-                respondService.respond(rawSdkRequest, jsonResponse)
-
-                // Return result for UI
-                WcGetAddressesUseCase.GetAddressesResult(
-                    addresses = accountAddresses.map { addr ->
-                        WcGetAddressesUseCase.AddressInfo(
-                            address = addr.address,
-                            publicKey = addr.publicKey,
-                            path = addr.path,
-                            intention = addr.intention,
-                        )
-                    },
-                ).right()
+                buildUiResult(accountAddresses).right()
             }
             is SdkResult.Failure -> {
                 HandleMethodError.UnknownError(result.error.customMessage).left()
@@ -100,24 +68,42 @@ internal class WcBitcoinGetAccountAddressesUseCase @AssistedInject constructor(
         }
     }
 
+    private fun mapToAccountAddresses(addressInfoList: List<AddressInfo>): List<AccountAddress> {
+        return addressInfoList.map { addressInfo ->
+            AccountAddress(
+                address = addressInfo.address,
+                publicKey = addressInfo.publicKey,
+                path = addressInfo.derivationPath,
+                intention = addressInfo.metadata?.get("intention") as? String,
+            )
+        }
+    }
+
+    private suspend fun respondToApp(accountAddresses: List<AccountAddress>) {
+        val jsonResponse = buildJsonResponse(accountAddresses)
+        respondService.respond(rawSdkRequest, jsonResponse)
+    }
+
+    private fun buildUiResult(accountAddresses: List<AccountAddress>): WcGetAddressesUseCase.GetAddressesResult {
+        return WcGetAddressesUseCase.GetAddressesResult(
+            addresses = accountAddresses.map { addr ->
+                WcGetAddressesUseCase.AddressInfo(
+                    address = addr.address,
+                    publicKey = addr.publicKey,
+                    path = addr.path,
+                    intention = addr.intention,
+                )
+            },
+        )
+    }
+
     override fun reject() {
         respondService.rejectRequestNonBlock(rawSdkRequest)
     }
 
-    private fun buildJsonResponse(
-        data: com.tangem.blockchain.blockchains.bitcoin.walletconnect.models.GetAccountAddressesResponse,
-    ): String {
-        val addresses = data.addresses.map { addr ->
-            AddressInfo(
-                address = addr.address,
-                publicKey = addr.publicKey,
-                path = addr.path,
-                intention = addr.intention,
-            )
-        }
-        return moshi.adapter<List<AddressInfo>>(
-            com.squareup.moshi.Types.newParameterizedType(List::class.java, AddressInfo::class.java),
-        ).toJson(addresses)
+    private fun buildJsonResponse(data: List<AccountAddress>): String {
+        val listType = com.squareup.moshi.Types.newParameterizedType(List::class.java, AccountAddress::class.java)
+        return moshi.adapter<List<AccountAddress>>(listType).toJson(data)
     }
 
     @AssistedFactory

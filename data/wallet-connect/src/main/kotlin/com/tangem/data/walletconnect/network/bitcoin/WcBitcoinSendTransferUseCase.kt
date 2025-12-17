@@ -1,9 +1,9 @@
 package com.tangem.data.walletconnect.network.bitcoin
 
 import arrow.core.left
+import com.squareup.moshi.Moshi
 import com.tangem.blockchain.blockchains.bitcoin.BitcoinTransactionExtras
 import com.tangem.blockchain.blockchains.bitcoin.BitcoinWalletManager
-import com.tangem.blockchain.blockchains.bitcoin.walletconnect.models.SendTransferRequest
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.TransactionData
@@ -17,6 +17,7 @@ import com.tangem.data.walletconnect.sign.SignCollector
 import com.tangem.data.walletconnect.sign.SignStateConverter.toResult
 import com.tangem.data.walletconnect.sign.WcMethodUseCaseContext
 import com.tangem.data.walletconnect.utils.BlockAidVerificationDelegate
+import com.tangem.datasource.di.SdkMoshi
 import com.tangem.domain.core.lce.LceFlow
 import com.tangem.domain.walletconnect.WcTransactionSignerProvider
 import com.tangem.domain.walletconnect.model.HandleMethodError
@@ -45,6 +46,7 @@ internal class WcBitcoinSendTransferUseCase @AssistedInject constructor(
     override val respondService: WcRespondService,
     override val analytics: AnalyticsEventHandler,
     blockAidDelegate: BlockAidVerificationDelegate,
+    @SdkMoshi private val moshi: Moshi,
 ) : BaseWcSignUseCase<Nothing, TransactionData>(),
     WcTransactionUseCase {
 
@@ -68,48 +70,74 @@ internal class WcBitcoinSendTransferUseCase @AssistedInject constructor(
 
         val walletManager = walletManagersFacade.getOrCreateWalletManager(wallet.walletId, network)
         if (walletManager !is BitcoinWalletManager) {
-            emit(state.toResult(HandleMethodError.UnknownError("Invalid wallet manager type").left()))
+            emitError(state, "Invalid wallet manager type")
             return
         }
 
         val signer = signerProvider.createSigner(wallet)
-        val amountInSatoshis = try {
-            BigDecimal(method.amount)
-        } catch (e: NumberFormatException) {
-            emit(state.toResult(HandleMethodError.UnknownError("Invalid amount format: ${method.amount}").left()))
+        val amount = parseAmount() ?: run {
+            emitError(state, "Invalid amount format: ${method.amount}")
             return
         }
 
+        val fee = getFee(walletManager, amount, state) ?: return
+
+        val transactionData = buildTransactionData(amount, fee)
+
+        sendTransaction(walletManager, transactionData, signer, state)
+    }
+
+    private fun parseAmount(): Amount? {
+        val amountInSatoshis = try {
+            BigDecimal(method.amount)
+        } catch (e: NumberFormatException) {
+            return null
+        }
+
         val amountInBtc = amountInSatoshis.movePointLeft(SATOSHI_DECIMALS)
-        val amount = Amount(
+        return Amount(
             currencySymbol = network.currencySymbol,
             value = amountInBtc,
             decimals = SATOSHI_DECIMALS,
             type = AmountType.Coin,
         )
+    }
 
-        val feeResult = walletManager.getFee(amount, method.recipientAddress)
-        val fee = when (feeResult) {
+    private suspend fun SignCollector<TransactionData>.getFee(
+        walletManager: BitcoinWalletManager,
+        amount: Amount,
+        state: WcSignState<TransactionData>,
+    ): Fee? {
+        return when (val feeResult = walletManager.getFee(amount, method.recipientAddress)) {
             is SdkResult.Success -> Fee.Common(feeResult.data.normal.amount)
             is SdkResult.Failure -> {
-                emit(state.toResult(HandleMethodError.UnknownError(feeResult.error.customMessage).left()))
-                return
+                emitError(state, feeResult.error.customMessage)
+                null
             }
         }
+    }
+
+    private fun buildTransactionData(amount: Amount, fee: Fee): TransactionData.Uncompiled {
         val extras = BitcoinTransactionExtras(
             memo = method.memo,
             changeAddress = method.changeAddress,
         )
 
-        val transactionData = TransactionData.Uncompiled(
+        return TransactionData.Uncompiled(
             amount = amount,
             fee = fee,
             sourceAddress = method.account,
             destinationAddress = method.recipientAddress,
             extras = extras,
         )
+    }
 
-        // Send the transaction
+    private suspend fun SignCollector<TransactionData>.sendTransaction(
+        walletManager: BitcoinWalletManager,
+        transactionData: TransactionData.Uncompiled,
+        signer: com.tangem.blockchain.common.TransactionSigner,
+        state: WcSignState<TransactionData>,
+    ) {
         when (val sendResult = walletManager.send(transactionData, signer)) {
             is SdkResult.Success -> {
                 val response = buildJsonResponse(
@@ -121,9 +149,16 @@ internal class WcBitcoinSendTransferUseCase @AssistedInject constructor(
                 emit(state.toResult(wcRespondResult))
             }
             is SdkResult.Failure -> {
-                emit(state.toResult(HandleMethodError.UnknownError(sendResult.error.customMessage).left()))
+                emitError(state, sendResult.error.customMessage)
             }
         }
+    }
+
+    private suspend fun SignCollector<TransactionData>.emitError(
+        state: WcSignState<TransactionData>,
+        message: String,
+    ) {
+        emit(state.toResult(HandleMethodError.UnknownError(message).left()))
     }
 
     override fun invoke(): Flow<WcSignState<TransactionData>> {
@@ -136,7 +171,11 @@ internal class WcBitcoinSendTransferUseCase @AssistedInject constructor(
 
     private fun buildJsonResponse(
         data: com.tangem.blockchain.blockchains.bitcoin.walletconnect.models.SendTransferResponse,
-    ): String = "{\"txid\":\"${data.txid}\"}"
+    ): String {
+        return moshi.adapter(
+            com.tangem.blockchain.blockchains.bitcoin.walletconnect.models.SendTransferResponse::class.java,
+        ).toJson(data)
+    }
 
     @AssistedFactory
     interface Factory {
