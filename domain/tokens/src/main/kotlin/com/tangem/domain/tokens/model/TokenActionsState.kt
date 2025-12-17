@@ -34,6 +34,11 @@ data class TokenActionsState(
 
         data class Send(override val unavailabilityReason: ScenarioUnavailabilityReason) : ActionState()
 
+        data class YieldMode(
+            override val unavailabilityReason: ScenarioUnavailabilityReason,
+            val apy: String,
+        ) : ActionState()
+
         data class Analytics(override val unavailabilityReason: ScenarioUnavailabilityReason) : ActionState()
 
         data class HideToken(override val unavailabilityReason: ScenarioUnavailabilityReason) : ActionState()

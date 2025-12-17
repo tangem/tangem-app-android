@@ -9,7 +9,7 @@ import com.tangem.domain.models.currency.CryptoCurrencyStatus
 import com.tangem.domain.models.staking.BalanceItem
 import com.tangem.domain.models.staking.BalanceType
 import com.tangem.domain.models.staking.RewardBlockType
-import com.tangem.domain.models.staking.YieldBalance
+import com.tangem.domain.models.staking.StakingBalance
 import com.tangem.domain.models.staking.action.StakingActionType
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.staking.utils.getRewardStakingBalance
@@ -36,11 +36,11 @@ internal class YieldBalancesConverter(
         val appCurrency = appCurrencyProvider()
 
         val cryptoCurrency = cryptoCurrencyStatus.currency
-        val yieldBalance = cryptoCurrencyStatus.value.yieldBalance as? YieldBalance.Data
+        val stakeKitBalance = cryptoCurrencyStatus.value.stakingBalance as? StakingBalance.Data.StakeKit
         val balanceToShowItems = balancesToShowProvider()
 
-        return if (yieldBalance != null || balanceToShowItems.any { it.isPending }) {
-            val cryptoRewardsValue = yieldBalance?.getRewardStakingBalance()
+        return if (stakeKitBalance != null || balanceToShowItems.any { it.isPending }) {
+            val cryptoRewardsValue = stakeKitBalance?.getRewardStakingBalance()
 
             val fiatRate = cryptoCurrencyStatus.value.fiatRate
             val fiatRewardsValue = if (fiatRate != null && cryptoRewardsValue != null) {
@@ -49,13 +49,13 @@ internal class YieldBalancesConverter(
                 null
             }
             val type = getRewardBlockType()
-            val pendingRewardsConstraints = yieldBalance?.balance?.items
+            val pendingRewardsConstraints = stakeKitBalance?.balance?.items
                 ?.firstOrNull { it.type == BalanceType.REWARDS }
                 ?.pendingActionsConstraints
                 ?.firstOrNull { it.type == StakingActionType.CLAIM_REWARDS }
 
             InnerYieldBalanceState.Data(
-                integrationId = yieldBalance?.stakingId?.integrationId,
+                integrationId = stakeKitBalance?.stakingId?.integrationId,
                 reward = YieldReward(
                     rewardsCrypto = cryptoRewardsValue.format { crypto(cryptoCurrency) },
                     rewardsFiat = fiatRewardsValue.format {
@@ -71,6 +71,7 @@ internal class YieldBalancesConverter(
                 balances = balanceToShowItems.mapBalances(),
             )
         } else {
+            // TODO p2p
             InnerYieldBalanceState.Empty
         }
     }
@@ -84,8 +85,8 @@ internal class YieldBalancesConverter(
 
     private fun getRewardBlockType(): RewardBlockType {
         val blockchainId = cryptoCurrencyStatus.currency.network.rawId
-        val yieldBalance = cryptoCurrencyStatus.value.yieldBalance as? YieldBalance.Data
-        val rewards = yieldBalance?.balance?.items
+        val stakeKitBalance = cryptoCurrencyStatus.value.stakingBalance as? StakingBalance.Data.StakeKit
+        val rewards = stakeKitBalance?.balance?.items
             ?.filter { it.type == BalanceType.REWARDS && !it.amount.isZero() }
 
         val isActionable = rewards?.any { it.pendingActions.isNotEmpty() } == true
