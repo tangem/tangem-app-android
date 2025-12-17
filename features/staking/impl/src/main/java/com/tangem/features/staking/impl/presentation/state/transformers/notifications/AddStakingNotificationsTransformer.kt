@@ -291,6 +291,8 @@ internal class AddStakingNotificationsTransformer(
     }
 
     private fun MutableList<NotificationUM>.addTonInitializeAccountNotification(prevState: StakingUiState) {
+        if (prevState.actionType !is StakingActionCommonType.Enter) return
+
         val isAccountInitialized = isAccountInitializedProvider.invoke()
         val cryptoCurrencyNetworkIdValue = cryptoCurrencyStatusProvider().currency.network.rawId
 
