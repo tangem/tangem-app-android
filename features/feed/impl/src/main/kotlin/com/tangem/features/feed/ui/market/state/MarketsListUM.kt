@@ -1,6 +1,7 @@
 package com.tangem.features.feed.ui.market.state
 
 import androidx.compose.runtime.Immutable
+import com.tangem.common.ui.markets.models.MarketsListItemUM
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
