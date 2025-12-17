@@ -41,6 +41,7 @@ enum class SortByTypeUM(val text: TextReference) {
     TopGainers(resourceReference(R.string.markets_sort_by_top_gainers_title)),
     TopLosers(resourceReference(R.string.markets_sort_by_top_losers_title)),
     Staking(resourceReference(R.string.common_staking)),
+    YieldSupply(resourceReference(R.string.markets_sort_by_yield_mode_title)),
 }
 
 @Immutable
