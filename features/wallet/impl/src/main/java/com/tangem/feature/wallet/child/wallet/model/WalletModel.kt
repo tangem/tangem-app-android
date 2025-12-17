@@ -16,6 +16,7 @@ import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.common.wallets.UserWalletsListRepository
 import com.tangem.domain.models.wallet.UserWallet
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.models.wallet.isImported
 import com.tangem.domain.models.wallet.isLocked
 import com.tangem.domain.models.wallet.isMultiCurrency
 import com.tangem.domain.nft.ObserveAndClearNFTCacheIfNeedUseCase
@@ -116,12 +117,6 @@ internal class WalletModel @Inject constructor(
     private var expressTxStatusTaskScheduler = SingleTaskScheduler<Unit>()
 
     init {
-        modelScope.launch {
-            val result = getAppThemeModeUseCase().firstOrNull()
-            val theme = result?.getOrElse { AppThemeMode.FOLLOW_SYSTEM } ?: AppThemeMode.FOLLOW_SYSTEM
-            analyticsEventsHandler.send(WalletScreenAnalyticsEvent.MainScreen.ScreenOpened(theme.value))
-        }
-
         screenLifecycleProvider.isBackgroundState
             .onEach { isBackground ->
                 if (isBackground.not()) {
@@ -278,8 +273,8 @@ internal class WalletModel @Inject constructor(
     // It's okay here because we need to be able to observe the selected wallet changes
     @Suppress("DEPRECATION")
     private fun subscribeOnSelectedWalletFlow() {
-        getSelectedWalletUseCase().onRight {
-            it
+        getSelectedWalletUseCase().onRight { walletFlow ->
+            walletFlow
                 .conflate()
                 .distinctUntilChanged()
                 .onEach { selectedWallet ->
@@ -289,6 +284,8 @@ internal class WalletModel @Inject constructor(
 
                     subscribeOnExpressTransactionsUpdates(selectedWallet)
                     observeAndClearNFTCacheIfNeedUseCase(selectedWallet)
+
+                    sendMainScreenOpenedAnalytics(selectedWallet.isImported())
                 }
                 .flowOn(dispatchers.main)
                 .launchIn(modelScope)
@@ -696,6 +693,17 @@ internal class WalletModel @Inject constructor(
                 }
             }
         }
+    }
+
+    private suspend fun sendMainScreenOpenedAnalytics(isImported: Boolean) {
+        val result = getAppThemeModeUseCase().firstOrNull()
+        val theme = result?.getOrElse { AppThemeMode.FOLLOW_SYSTEM } ?: AppThemeMode.FOLLOW_SYSTEM
+        analyticsEventsHandler.send(
+            WalletScreenAnalyticsEvent.MainScreen.ScreenOpened(
+                theme = theme.value,
+                isImported = isImported,
+            ),
+        )
     }
 
     inner class AskBiometryModelCallbacks : AskBiometryComponent.ModelCallbacks {
