@@ -5,6 +5,9 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -22,6 +25,7 @@ import com.tangem.core.ui.components.label.entity.LabelStyle
 import com.tangem.core.ui.components.label.entity.LabelUM
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -71,6 +75,7 @@ internal fun CreateWalletSelectionContent(state: CreateWalletSelectionUM, modifi
         Column(
             modifier = Modifier
                 .weight(1f)
+                .verticalScroll(rememberScrollState())
                 .padding(
                     start = 16.dp,
                     top = 24.dp,
@@ -113,6 +118,7 @@ internal fun CreateWalletSelectionContent(state: CreateWalletSelectionUM, modifi
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun WalletBlock(
     title: String,
@@ -137,11 +143,11 @@ private fun WalletBlock(
                 vertical = 12.dp,
             ),
     ) {
-        Row {
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
             Text(
-                modifier = Modifier
-                    .weight(1f, fill = false)
-                    .padding(end = 8.dp),
                 text = title,
                 style = TangemTheme.typography.subtitle1,
                 color = TangemTheme.colors.text.primary1,
@@ -176,6 +182,7 @@ private fun WalletBlock(
 private fun Feature(feature: CreateWalletSelectionUM.Feature, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
             modifier = Modifier.size(TangemTheme.dimens.size16),
@@ -221,6 +228,8 @@ private fun AlreadyHaveTangemWalletBlock(
             text = stringResourceSafe(R.string.wallet_add_hardware_purchase),
             style = TangemTheme.typography.button,
             color = TangemTheme.colors.text.primary1,
+            maxLines = 3,
+            overflow = TextOverflow.Ellipsis,
         )
 
         SecondaryButton(
@@ -242,7 +251,7 @@ private fun PreviewCreateWalletContent() {
                 onBackClick = { },
                 blocks = persistentListOf(
                     CreateWalletSelectionUM.Block(
-                        title = resourceReference(R.string.wallet_create_hardware_title),
+                        title = stringReference("Hardware wallet very long title"),
                         titleLabel = LabelUM(
                             text = resourceReference(R.string.common_recommended),
                             style = LabelStyle.ACCENT,
@@ -277,6 +286,7 @@ private fun PreviewCreateWalletContent() {
                         onClick = { },
                     ),
                 ),
+                shouldShowAlreadyHaveWallet = true,
                 onBuyClick = { },
             ),
         )
