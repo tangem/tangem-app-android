@@ -5,7 +5,6 @@
     <ID>BooleanPropertyNaming:AddStakingNotificationsTransformer.kt$AddStakingNotificationsTransformer$val showNotification = sendingAmount + feeAmount &gt; balance</ID>
     <ID>BooleanPropertyNaming:AmountCurrencyChangeStateTransformer.kt$AmountCurrencyChangeStateTransformer$private val value: Boolean</ID>
     <ID>BooleanPropertyNaming:StakingModel.kt$StakingModel$val noBalanceState = balanceState == null</ID>
-    <ID>BooleanPropertyNaming:StakingModel.kt$StakingModel$val noYieldBalanceData = cryptoCurrencyStatus.value.yieldBalance !is YieldBalance.Data</ID>
     <ID>BooleanPropertyNaming:StakingUiState.kt$StakingStates.InitialInfoState.Data$val showBanner: Boolean</ID>
     <ID>BooleanPropertyNaming:StakingUiState.kt$StakingUiState$val showColdWalletInteractionIcon: Boolean</ID>
     <ID>CanBeNonNullable:StakingScreen.kt$bottomSheetConfig: TangemBottomSheetConfig?</ID>
@@ -28,14 +27,6 @@
     <ID>MultilineLambdaItParameter:StakingTransactionSender.kt$StakingTransactionSender${ onConstructError(it) return emptyList() }</ID>
     <ID>NoNameShadowing:StakingFeeTransactionLoader.kt$StakingFeeTransactionLoader$amount</ID>
     <ID>NoNameShadowing:StakingFeeTransactionLoader.kt$StakingFeeTransactionLoader${ if (!it.amount.isZero()) return feeResult }</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:AddStakingNotificationsTransformer.kt$AddStakingNotificationsTransformer$private val isAccountInitializedProvider: Provider&lt;Boolean&gt;</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:DefaultStakingDeepLinkHandler.kt$DefaultStakingDeepLinkHandler$val isStakingEnabled = getStakingAvailabilityUseCase.invokeSync( userWalletId = selectedUserWalletId, cryptoCurrency = cryptoCurrency, ).getOrNull()</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:StakingFeeTransactionLoader.kt$StakingFeeTransactionLoader$private val isFeeApproximateUseCase: IsFeeApproximateUseCase</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:StakingModel.kt$StakingModel$private val isAccountsModeEnabledUseCase: IsAccountsModeEnabledUseCase</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:StakingModel.kt$StakingModel$private val isAmountSubtractAvailableUseCase: IsAmountSubtractAvailableUseCase</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:StakingModel.kt$StakingModel$private val isAnyTokenStakedUseCase: IsAnyTokenStakedUseCase</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:StakingModel.kt$StakingModel$private val isBalanceHiddenFlow: StateFlow&lt;Boolean&gt; field = MutableStateFlow(false)</ID>
-    <ID>NonBooleanPropertyPrefixedWithIs:StakingTransactionSender.kt$StakingTransactionSender$private val isFeeApproximateUseCase: IsFeeApproximateUseCase</ID>
     <ID>NullCheckOnMutableProperty:StakingModel.kt$StakingModel$if (feeCryptoCurrencyStatus != null &amp;&amp; fee != null) { getBalanceNotEnoughForFeeWarningUseCase( fee = fee, userWalletId = userWalletId, tokenStatus = cryptoCurrencyStatus, coinStatus = feeCryptoCurrencyStatus ?: cryptoCurrencyStatus, ).getOrNull() } else { null }</ID>
     <ID>NullableToStringCall:DefaultStakingDeepLinkHandler.kt$DefaultStakingDeepLinkHandler$$networkId</ID>
     <ID>NullableToStringCall:DefaultStakingDeepLinkHandler.kt$DefaultStakingDeepLinkHandler$$tokenId</ID>
@@ -50,7 +41,6 @@
     <ID>UnnecessaryLet:StakingTosText.kt$let { onTextClick(PRIVACY_POLICY_URL) }</ID>
     <ID>UnnecessaryLet:StakingTosText.kt$let { onTextClick(TERMS_OF_USE_URL) }</ID>
     <ID>UnsafeCallOnNullableType:StakingModel.kt$StakingModel$tonAccountInitializeTransaction!!</ID>
-    <ID>UseOrEmpty:StakingModel.kt$StakingModel$yieldBalance?.balance?.items ?: emptyList()</ID>
     <ID>UseOrEmpty:StakingTransactionSender.kt$StakingTransactionSender$getExplorerTransactionUrlUseCase( txHash = transactionHashes.last(), networkId = cryptoCurrencyStatus.currency.network.id, ).getOrNull() ?: ""</ID>
     <ID>VarCouldBeVal:StakingModel.kt$StakingModel$private var actionsJobHolder: JobHolder = JobHolder()</ID>
     <ID>VarCouldBeVal:StakingModel.kt$StakingModel$private var approvalJobHolder: JobHolder = JobHolder()</ID>

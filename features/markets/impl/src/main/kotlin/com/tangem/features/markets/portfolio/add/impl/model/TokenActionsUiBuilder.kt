@@ -1,5 +1,6 @@
 package com.tangem.features.markets.portfolio.add.impl.model
 
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
@@ -15,6 +16,7 @@ import javax.inject.Inject
 @ModelScoped
 internal class TokenActionsUiBuilder @Inject constructor(
     paramsContainer: ParamsContainer,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) {
     private val params = paramsContainer.require<TokenActionsComponent.Params>()
 
@@ -32,7 +34,10 @@ internal class TokenActionsUiBuilder @Inject constructor(
         )
         return TokenActionsUM(
             token = tokenUM,
-            onLaterClick = { params.callbacks.onLaterClick() },
+            onLaterClick = {
+                analyticsEventHandler.send(params.eventBuilder.getTokenLater())
+                params.callbacks.onLaterClick()
+            },
             quickActions = PortfolioTokenUMConverter.quickActions(data, tokenActionsHandler),
         )
     }
