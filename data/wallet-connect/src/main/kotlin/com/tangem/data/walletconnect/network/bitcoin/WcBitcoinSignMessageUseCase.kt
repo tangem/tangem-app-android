@@ -55,7 +55,6 @@ internal class WcBitcoinSignMessageUseCase @AssistedInject constructor(
 ) : BaseWcSignUseCase<Nothing, WcMessageSignUseCase.SignModel>(),
     WcMessageSignUseCase {
 
-    // BlockAid doesn't support Bitcoin message signing
     override val securityStatus: LceFlow<Throwable, CheckTransactionResult> = flowOf(
         Lce.Content(
             CheckTransactionResult(
@@ -75,16 +74,17 @@ internal class WcBitcoinSignMessageUseCase @AssistedInject constructor(
         }
 
         val signer = signerProvider.createSigner(wallet)
-        val request = SignMessageRequest(
-            account = method.account,
-            message = method.message,
-            address = method.address,
-            protocol = method.protocol,
-        )
 
-        when (val result = walletManager.walletConnectHandler.signMessage(request, signer)) {
+        val signingAddress = method.address ?: method.account
+
+        when (val result = walletManager.signMessage(method.message, signingAddress, method.protocol, signer)) {
             is SdkResult.Success -> {
-                val response = buildJsonResponse(result.data)
+                val signMessageResponse = com.tangem.blockchain.blockchains.bitcoin.walletconnect.models.SignMessageResponse(
+                    address = result.data.address,
+                    signature = result.data.signature,
+                    messageHash = result.data.messageHash,
+                )
+                val response = buildJsonResponse(signMessageResponse)
                 val wcRespondResult = respondService.respond(rawSdkRequest, response)
                 emit(state.toResult(wcRespondResult))
             }

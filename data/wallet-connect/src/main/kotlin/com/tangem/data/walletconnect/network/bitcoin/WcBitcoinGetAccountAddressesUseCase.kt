@@ -8,6 +8,7 @@ import com.squareup.moshi.JsonClass
 import com.squareup.moshi.Moshi
 import com.tangem.blockchain.blockchains.bitcoin.BitcoinWalletManager
 import com.tangem.blockchain.blockchains.bitcoin.walletconnect.models.GetAccountAddressesRequest
+import com.tangem.blockchain.blockchains.bitcoin.walletconnect.models.GetAccountAddressesResponse
 import com.tangem.blockchain.extensions.Result as SdkResult
 import com.tangem.data.walletconnect.respond.WcRespondService
 import com.tangem.data.walletconnect.sign.WcMethodUseCaseContext
@@ -63,20 +64,27 @@ internal class WcBitcoinGetAccountAddressesUseCase @AssistedInject constructor(
             return HandleMethodError.UnknownError("Invalid wallet manager type").left()
         }
 
-        val request = GetAccountAddressesRequest(
-            account = method.account,
-            intentions = method.intentions,
-        )
-
-        return when (val result = walletManager.walletConnectHandler.getAccountAddresses(request)) {
+        return when (val result = walletManager.getAddresses(method.intentions)) {
             is SdkResult.Success -> {
+                // Map SDK AddressInfo to WalletConnect AccountAddress
+                val accountAddresses = result.data.map { addressInfo ->
+                    com.tangem.blockchain.blockchains.bitcoin.walletconnect.models.AccountAddress(
+                        address = addressInfo.address,
+                        publicKey = addressInfo.publicKey,
+                        path = addressInfo.derivationPath,
+                        intention = addressInfo.metadata?.get("intention") as? String,
+                    )
+                }
+
+                val response = GetAccountAddressesResponse(addresses = accountAddresses)
+
                 // Send response back to dApp
-                val response = buildJsonResponse(result.data)
-                respondService.respond(rawSdkRequest, response)
+                val jsonResponse = buildJsonResponse(response)
+                respondService.respond(rawSdkRequest, jsonResponse)
 
                 // Return result for UI
                 WcGetAddressesUseCase.GetAddressesResult(
-                    addresses = result.data.addresses.map { addr ->
+                    addresses = accountAddresses.map { addr ->
                         WcGetAddressesUseCase.AddressInfo(
                             address = addr.address,
                             publicKey = addr.publicKey,

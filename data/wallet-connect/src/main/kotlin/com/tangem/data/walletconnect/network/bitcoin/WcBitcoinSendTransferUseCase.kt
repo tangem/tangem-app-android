@@ -1,10 +1,15 @@
 package com.tangem.data.walletconnect.network.bitcoin
 
 import arrow.core.left
+import com.tangem.blockchain.blockchains.bitcoin.BitcoinTransactionExtras
 import com.tangem.blockchain.blockchains.bitcoin.BitcoinWalletManager
 import com.tangem.blockchain.blockchains.bitcoin.walletconnect.models.SendTransferRequest
+import com.tangem.blockchain.common.Amount
+import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.TransactionData
+import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.extensions.Result as SdkResult
+import java.math.BigDecimal
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.data.walletconnect.respond.WcRespondService
 import com.tangem.data.walletconnect.sign.BaseWcSignUseCase
@@ -55,7 +60,6 @@ internal class WcBitcoinSendTransferUseCase @AssistedInject constructor(
         }
 
     override suspend fun SignCollector<TransactionData>.onSign(state: WcSignState<TransactionData>) {
-        // Update wallet manager to refresh UTXO data before processing Bitcoin transaction
         walletManagersFacade.update(
             userWalletId = wallet.walletId,
             network = network,
@@ -69,22 +73,55 @@ internal class WcBitcoinSendTransferUseCase @AssistedInject constructor(
         }
 
         val signer = signerProvider.createSigner(wallet)
-        val request = SendTransferRequest(
-            account = method.account,
-            recipientAddress = method.recipientAddress,
-            amount = method.amount,
+        val amountInSatoshis = try {
+            BigDecimal(method.amount)
+        } catch (e: NumberFormatException) {
+            emit(state.toResult(HandleMethodError.UnknownError("Invalid amount format: ${method.amount}").left()))
+            return
+        }
+
+        val amountInBtc = amountInSatoshis.movePointLeft(SATOSHI_DECIMALS)
+        val amount = Amount(
+            currencySymbol = network.currencySymbol,
+            value = amountInBtc,
+            decimals = SATOSHI_DECIMALS,
+            type = AmountType.Coin,
+        )
+
+        val feeResult = walletManager.getFee(amount, method.recipientAddress)
+        val fee = when (feeResult) {
+            is SdkResult.Success -> Fee.Common(feeResult.data.normal.amount)
+            is SdkResult.Failure -> {
+                emit(state.toResult(HandleMethodError.UnknownError(feeResult.error.customMessage).left()))
+                return
+            }
+        }
+        val extras = BitcoinTransactionExtras(
             memo = method.memo,
             changeAddress = method.changeAddress,
         )
 
-        when (val result = walletManager.walletConnectHandler.sendTransfer(request, signer)) {
+        val transactionData = TransactionData.Uncompiled(
+            amount = amount,
+            fee = fee,
+            sourceAddress = method.account,
+            destinationAddress = method.recipientAddress,
+            extras = extras,
+        )
+
+        // Send the transaction
+        when (val sendResult = walletManager.send(transactionData, signer)) {
             is SdkResult.Success -> {
-                val response = buildJsonResponse(result.data)
+                val response = buildJsonResponse(
+                    com.tangem.blockchain.blockchains.bitcoin.walletconnect.models.SendTransferResponse(
+                        txid = sendResult.data.hash,
+                    ),
+                )
                 val wcRespondResult = respondService.respond(rawSdkRequest, response)
                 emit(state.toResult(wcRespondResult))
             }
             is SdkResult.Failure -> {
-                emit(state.toResult(HandleMethodError.UnknownError(result.error.customMessage).left()))
+                emit(state.toResult(HandleMethodError.UnknownError(sendResult.error.customMessage).left()))
             }
         }
     }
@@ -104,5 +141,9 @@ internal class WcBitcoinSendTransferUseCase @AssistedInject constructor(
     @AssistedFactory
     interface Factory {
         fun create(context: WcMethodUseCaseContext, method: WcBitcoinMethod.SendTransfer): WcBitcoinSendTransferUseCase
+    }
+
+    companion object {
+        private const val SATOSHI_DECIMALS = 8
     }
 }

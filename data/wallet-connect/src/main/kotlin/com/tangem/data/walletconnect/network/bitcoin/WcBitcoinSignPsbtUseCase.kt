@@ -81,26 +81,39 @@ internal class WcBitcoinSignPsbtUseCase @AssistedInject constructor(
         }
 
         val signer = signerProvider.createSigner(wallet)
-        val request = SignPsbtRequest(
-            psbt = method.psbt,
-            signInputs = method.signInputs.map { input ->
-                SignInput(
-                    address = input.address,
-                    index = input.index,
-                    sighashTypes = input.sighashTypes,
-                )
-            },
-            broadcast = method.broadcast,
-        )
+        val signInputs = method.signInputs.map { input ->
+            SignInput(
+                address = input.address,
+                index = input.index,
+                sighashTypes = input.sighashTypes,
+            )
+        }
 
-        when (val result = walletManager.walletConnectHandler.signPsbt(request, signer)) {
+        when (val signResult = walletManager.signPsbt(method.psbt, signInputs, signer)) {
             is SdkResult.Success -> {
-                val response = buildJsonResponse(result.data)
+                val signedPsbt = signResult.data
+                val txid = if (method.broadcast) {
+                    when (val broadcastResult = walletManager.broadcastPsbt(signedPsbt)) {
+                        is SdkResult.Success -> broadcastResult.data
+                        is SdkResult.Failure -> {
+                            emit(state.toResult(HandleMethodError.UnknownError(broadcastResult.error.customMessage).left()))
+                            return
+                        }
+                    }
+                } else {
+                    null
+                }
+
+                val signPsbtResponse = com.tangem.blockchain.blockchains.bitcoin.walletconnect.models.SignPsbtResponse(
+                    psbt = signedPsbt,
+                    txid = txid,
+                )
+                val response = buildJsonResponse(signPsbtResponse)
                 val wcRespondResult = respondService.respond(rawSdkRequest, response)
                 emit(state.toResult(wcRespondResult))
             }
             is SdkResult.Failure -> {
-                emit(state.toResult(HandleMethodError.UnknownError(result.error.customMessage).left()))
+                emit(state.toResult(HandleMethodError.UnknownError(signResult.error.customMessage).left()))
             }
         }
     }
