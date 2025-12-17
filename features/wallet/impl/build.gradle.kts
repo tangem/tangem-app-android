@@ -103,6 +103,8 @@ dependencies {
     implementation(projects.domain.transaction)
     implementation(projects.domain.yieldSupply)
     implementation(projects.domain.yieldSupply.models)
+    implementation(projects.domain.appTheme)
+    implementation(projects.domain.appTheme.models)
 
     /** Feature Apis */
     implementation(projects.features.details.api)
