@@ -4,6 +4,7 @@ import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
 import com.tangem.domain.models.wallet.UserWalletId
+import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.domain.pay.model.*
 import com.tangem.domain.pay.repository.CustomerOrderRepository
 import com.tangem.domain.pay.repository.OnboardingRepository
@@ -21,6 +22,7 @@ class TangemPayMainScreenCustomerInfoUseCase(
     private val repository: OnboardingRepository,
     private val customerOrderRepository: CustomerOrderRepository,
     private val tangemPayOnboardingRepository: OnboardingRepository,
+    private val eligibilityManager: TangemPayEligibilityManager,
 ) {
 
     val state: StateFlow<Map<UserWalletId, Either<TangemPayCustomerInfoError, MainCustomerInfoContentState>>>
@@ -46,8 +48,17 @@ class TangemPayMainScreenCustomerInfoUseCase(
                             .map(MainCustomerInfoContentState::Content)
                         updateState(userWalletId, result)
                     } else {
-                        // ignore if there's no TangemPay
-                        updateState(userWalletId, TangemPayCustomerInfoError.UnknownError.left())
+                        // if there's no tangem pay, check eligibility and show onboarding banner
+                        val isEligible = eligibilityManager.getEligibleWallets().any { it.walletId == userWalletId }
+                        if (isEligible) {
+                            if (tangemPayOnboardingRepository.getHideMainOnboardingBanner(userWalletId)) {
+                                updateState(userWalletId, TangemPayCustomerInfoError.UnknownError.left())
+                            } else {
+                                updateState(userWalletId, MainCustomerInfoContentState.OnboardingBanner.right())
+                            }
+                        } else {
+                            updateState(userWalletId, TangemPayCustomerInfoError.UnknownError.left())
+                        }
                     }
                 },
             )

@@ -14,7 +14,7 @@ import com.tangem.features.send.v2.api.analytics.CommonSendAnalyticEvents
  */
 internal sealed class NFTSendAnalyticEvents(
     event: String,
-    params: Map<String, String> = mapOf(),
+    params: Map<String, String> = emptyMap(),
 ) : AnalyticsEvent(category = CommonSendAnalyticEvents.NFT_SEND_CATEGORY, event = event, params = params) {
 
     /** Transaction send screen opened */
@@ -22,14 +22,14 @@ internal sealed class NFTSendAnalyticEvents(
         val token: String,
         val feeType: AnalyticsParam.FeeType,
         val blockchain: String,
-        val nonceNotEmpty: Boolean,
+        val isNonceNotEmpty: Boolean,
     ) : NFTSendAnalyticEvents(
         event = "NFT Sent Screen Opened",
         params = mapOf(
             TOKEN_PARAM to token,
             FEE_TYPE to feeType.value,
             BLOCKCHAIN to blockchain,
-            NONCE to nonceNotEmpty.toString().capitalize(),
+            NONCE to isNonceNotEmpty.toString().capitalize(),
         ),
     )
 }

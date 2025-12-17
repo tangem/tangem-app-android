@@ -6,6 +6,7 @@ import arrow.core.getOrElse
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
+import com.tangem.core.ui.components.bottomsheets.state.BottomSheetState
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.GetMarketsTokenListFlowUseCase
@@ -17,7 +18,6 @@ import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
 import com.tangem.domain.settings.usercountry.models.UserCountry
 import com.tangem.domain.settings.usercountry.models.UserCountryError
 import com.tangem.domain.settings.usercountry.models.needApplyFCARestrictions
-import com.tangem.features.markets.entry.BottomSheetState
 import com.tangem.features.markets.tokenlist.impl.analytics.MarketsListAnalyticsEvent
 import com.tangem.features.markets.tokenlist.impl.model.statemanager.MarketsListBatchFlowManager
 import com.tangem.features.markets.tokenlist.impl.model.statemanager.MarketsListUMStateManager
@@ -69,9 +69,9 @@ internal class MarketsListModel @Inject constructor(
         visibleItemsChanged = { visibleItemIds.value = it },
         onRetryButtonClicked = { activeListManager.reload() },
         onTokenClick = { onTokenUIClicked(it) },
-        onStakingNotificationClick = { analyticsEventHandler.send(MarketsListAnalyticsEvent.StakingMoreInfoClicked) },
+        onStakingNotificationClick = { analyticsEventHandler.send(MarketsListAnalyticsEvent.StakingMoreInfoClicked()) },
         onStakingNotificationCloseClick = { onStakingNotificationCloseClick() },
-        onShowTokensUnder100kClicked = { analyticsEventHandler.send(MarketsListAnalyticsEvent.ShowTokens) },
+        onShowTokensUnder100kClicked = { analyticsEventHandler.send(MarketsListAnalyticsEvent.ShowTokens()) },
     )
 
     private val mainMarketsListManager = MarketsListBatchFlowManager(
@@ -150,7 +150,7 @@ internal class MarketsListModel @Inject constructor(
                 if (marketsListUMStateManager.state.value.stakingNotificationMaxApy == null &&
                     stakingNotificationMaxApy != null
                 ) {
-                    analyticsEventHandler.send(MarketsListAnalyticsEvent.StakingPromoShown)
+                    analyticsEventHandler.send(MarketsListAnalyticsEvent.StakingPromoShown())
                 }
 
                 marketsListUMStateManager.onUiItemsChanged(
@@ -267,9 +267,9 @@ internal class MarketsListModel @Inject constructor(
     }
 
     private fun initAnalytics() {
-        containerBottomSheetState.onEach {
-            if (it == BottomSheetState.EXPANDED) {
-                analyticsEventHandler.send(MarketsListAnalyticsEvent.BottomSheetOpened)
+        containerBottomSheetState.onEach { bottomSheetState ->
+            if (bottomSheetState == BottomSheetState.EXPANDED) {
+                analyticsEventHandler.send(MarketsListAnalyticsEvent.BottomSheetOpened())
             }
         }.launchIn(modelScope)
 
@@ -303,7 +303,7 @@ internal class MarketsListModel @Inject constructor(
     }
 
     private fun onStakingNotificationCloseClick() {
-        analyticsEventHandler.send(MarketsListAnalyticsEvent.StakingPromoClosed)
+        analyticsEventHandler.send(MarketsListAnalyticsEvent.StakingPromoClosed())
         modelScope.launch {
             promoRepository.setMarketsStakingNotificationHideClicked()
         }
