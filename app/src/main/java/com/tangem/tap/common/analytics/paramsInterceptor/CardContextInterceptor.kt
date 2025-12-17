@@ -36,6 +36,7 @@ class CardContextInterceptor(
             is SignIn.ScreenOpened,
             is SignIn.ButtonAddWallet,
             -> false
+            is SignIn.ErrorBiometricUpdated -> !event.isFromUnlockAll
             else -> true
         }
     }
