@@ -1,5 +1,6 @@
 package com.tangem.domain.yield.supply.usecase
 
+import android.icu.util.Calendar
 import arrow.core.Either
 import arrow.core.Either.Companion.catch
 import com.tangem.blockchain.common.Blockchain
@@ -13,6 +14,7 @@ import com.tangem.domain.transaction.FeeRepository
 import com.tangem.domain.yield.supply.YieldSupplyConst.YIELD_SUPPLY_EVM_CONSTANT_GAS_LIMIT
 import com.tangem.domain.yield.supply.fixFee
 import com.tangem.domain.yield.supply.models.YieldSupplyFee
+import timber.log.Timber
 import java.math.BigDecimal
 import java.math.RoundingMode
 
@@ -68,10 +70,19 @@ class YieldSupplyGetCurrentFeeUseCase(
 
         val isHighFee = if (isEthereum) {
             val maxFeePerGas = (feeWithoutGas as? Fee.Ethereum.EIP1559)?.maxFeePerGas ?: 0.toBigInteger()
-            maxFeePerGas >= HIGH_ETHEREUM_FEE
+            val increasedMaxFee = if (Calendar.getInstance().get(Calendar.MINUTE) % 2 == 0) {
+                Timber.tag("isHighFee").d("fee 5x")
+                maxFeePerGas * 10.toBigInteger()
+            } else {
+                Timber.tag("isHighFee").d("fee reduce")
+                maxFeePerGas / 5.toBigInteger()
+            }
+            increasedMaxFee >= HIGH_ETHEREUM_FEE
         } else {
             false
         }
+
+        Timber.tag("isHighFee").d("isHighFee $isHighFee")
 
         YieldSupplyFee(
             value = tokenValue.stripTrailingZeros(),
