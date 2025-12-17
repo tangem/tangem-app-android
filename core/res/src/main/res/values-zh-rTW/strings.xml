@@ -405,11 +405,11 @@
   <string name="tangempay_onboarding_security_description">將創建單獨的支付帳戶，且不會透露您的地址和資產</string>
   <string name="tangempay_onboarding_security_title">無與倫比的隱私</string>
   <string name="tangempay_onboarding_title">在幾分鐘內獲得免費的 Tangem Pay 卡</string>
-  <string name="tangempay_payment_account">Payment account</string>
+  <string name="tangempay_payment_account">付款帳戶</string>
   <string name="tangempay_payment_account_sync_needed">需要同步支付账户</string>
   <string name="tangempay_service_unavailable_description">我们正在修复技术问题。请稍后再试。</string>
   <string name="tangempay_service_unavailable_title">服務暫時無法使用</string>
-  <string name="tangempay_service_unreachable_try_later">服务当前不可用，请稍后再试</string>
+  <string name="tangempay_service_unreachable_try_later">目前無法顯示資料，但卡片支付仍可正常使用。</string>
   <string name="tangempay_sync_needed">需要同步</string>
   <string name="tangempay_tangem_visa_card">Tangem Visa Card</string>
   <string name="tangempay_temporarily_unavailable">Tangem Pay暂时不可用</string>
