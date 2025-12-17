@@ -7,5 +7,5 @@ sealed class Shop(
     params: Map<String, String> = emptyMap(),
 ) : AnalyticsEvent("Shop", event, params) {
 
-    object ScreenOpened : Shop("Shop Screen Opened")
+    class ScreenOpened : Shop("Shop Screen Opened")
 }
