@@ -95,20 +95,22 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
         userWalletId: UserWalletId,
         body: SaveWalletAccountsResponse,
     ): GetWalletAccountsResponse? {
+        return pushInternal(userWalletId = userWalletId, body = body)
+    }
+
+    private suspend fun pushInternal(
+        userWalletId: UserWalletId,
+        body: SaveWalletAccountsResponse,
+        eTag: String? = null,
+    ): GetWalletAccountsResponse? {
         return safeApiCall(
             call = {
-                var eTag = getETag(userWalletId)
-
-                if (eTag == null) {
-                    fetch(userWalletId)
-
-                    eTag = getETag(userWalletId) ?: error("ETag is null after fetch")
-                }
+                val resolvedETag = eTag ?: getETagForPush(userWalletId)
 
                 val apiResponse = withContext(dispatchers.io) {
                     tangemTechApi.saveWalletAccounts(
                         walletId = userWalletId.stringValue,
-                        eTag = eTag,
+                        eTag = resolvedETag,
                         body = body,
                     )
                 }
@@ -125,6 +127,19 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
                 null
             },
         )
+    }
+
+    private suspend fun getETagForPush(userWalletId: UserWalletId): String {
+        var savedETag = getETag(userWalletId)
+
+        if (savedETag == null) {
+            fetch(userWalletId)
+
+            savedETag = getETag(userWalletId)
+                ?: error("Failed to retrieve ETag after fetching wallet accounts for wallet $userWalletId")
+        }
+
+        return savedETag
     }
 
     private suspend fun fetchWalletAccounts(
@@ -154,7 +169,13 @@ internal class DefaultWalletAccountsFetcher @Inject constructor(
                     error = throwable,
                     userWalletId = userWalletId,
                     savedAccountsResponse = savedAccountsResponse,
-                    pushWalletAccounts = ::push,
+                    pushWalletAccounts = { accounts, eTag ->
+                        pushInternal(
+                            userWalletId = userWalletId,
+                            body = SaveWalletAccountsResponse(accounts),
+                            eTag = eTag,
+                        )
+                    },
                     storeWalletAccounts = ::store,
                 )
             },

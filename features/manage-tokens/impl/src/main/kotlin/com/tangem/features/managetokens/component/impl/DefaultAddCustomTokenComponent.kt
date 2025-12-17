@@ -15,6 +15,7 @@ import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.models.account.Account
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.domain.models.network.Network
 import com.tangem.features.managetokens.analytics.CustomTokenAnalyticsEvent
 import com.tangem.features.managetokens.component.AddCustomTokenComponent
@@ -232,7 +233,16 @@ internal class DefaultAddCustomTokenComponent @AssistedInject constructor(
         }
     }
 
-    private fun dismissAndNotify() {
+    private fun dismissAndNotify(currency: CryptoCurrency) {
+        val account = addedToAccount
+        if (account is Account.CryptoPortfolio && !account.isMainAccount) {
+            val event = CustomTokenAnalyticsEvent.AddTokenToAnotherAccount(
+                currencySymbol = currency.symbol,
+                derivationPath = currency.network.derivationPath.value.orEmpty(),
+                source = params.source,
+            )
+            analyticsEventHandler.send(event)
+        }
         params.onCurrencyAdded(addedToAccount)
         dismiss()
     }

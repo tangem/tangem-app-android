@@ -287,7 +287,7 @@ internal class OnboardingManageTokensModel @Inject constructor(
             }
         },
     ) {
-        analyticsEventHandler.send(ManageTokensAnalyticEvent.ButtonLater)
+        analyticsEventHandler.send(ManageTokensAnalyticEvent.ButtonLater())
 
         useCasesFacade.saveManagedTokensUseCase(
             currenciesToAdd = manageTokensListManager.currenciesToAdd.value,

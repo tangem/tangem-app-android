@@ -68,6 +68,7 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
                     accountStatuses = accountStatuses.toList(),
                     totalAccounts = accountList.totalAccounts,
                     totalFiatBalance = TotalFiatBalanceCalculator.calculate(balances),
+                    totalArchivedAccounts = accountList.totalArchivedAccounts,
                     sortType = accountList.sortType,
                     groupType = accountList.groupType,
                 )
@@ -194,6 +195,7 @@ internal class DefaultSingleAccountStatusListProducer @AssistedInject constructo
                 }
             },
             totalAccounts = accountList.totalAccounts,
+            totalArchivedAccounts = accountList.totalArchivedAccounts,
             totalFiatBalance = TotalFiatBalance.Loading,
             sortType = accountList.sortType,
             groupType = accountList.groupType,

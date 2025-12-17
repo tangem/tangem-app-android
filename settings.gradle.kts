@@ -153,19 +153,20 @@ include(":test:core")
 include(":test:mock")
 
 // region Core modules
+include(":core:ab-tests")
 include(":core:analytics")
 include(":core:analytics:models")
-include(":core:datasource")
 include(":core:config-toggles")
-include(":core:ab-tests")
-include(":core:navigation")
-include(":core:res")
-include(":core:ui")
-include(":core:utils")
+include(":core:datasource")
 include(":core:decompose")
-include(":core:pagination")
 include(":core:error")
 include(":core:error:ext")
+include(":core:navigation")
+include(":core:pagination")
+include(":core:res")
+include(":core:security")
+include(":core:ui")
+include(":core:utils")
 // endregion Core modules
 
 // region Common modules
@@ -175,6 +176,7 @@ include(":common:routing")
 include(":common:test")
 include(":common:ui")
 include(":common:ui-charts")
+include(":common:ui-markets")
 // endregion
 
 // region Libs modules
@@ -300,6 +302,9 @@ include(":features:yield-supply:impl")
 
 include(":features:feed:api")
 include(":features:feed:impl")
+
+include(":features:news:news-details:api")
+include(":features:news:news-details:impl")
 // endregion Feature modules
 
 // region Domain modules

@@ -306,8 +306,8 @@ internal class SendConfirmModel @Inject constructor(
         modelScope.launch {
             val isShowTapHelp = isSendTapHelpEnabledUseCase.invokeSync().getOrElse { false }
             if (confirmUM is ConfirmUM.Empty) {
-                _uiState.update {
-                    it.copy(
+                _uiState.update { state ->
+                    state.copy(
                         confirmUM = SendConfirmInitialStateTransformer(
                             isShowTapHelp = isShowTapHelp,
                             walletName = stringReference(userWallet.name),
@@ -323,9 +323,9 @@ internal class SendConfirmModel @Inject constructor(
     private fun subscribeOnTapHelpUpdates() {
         isSendTapHelpEnabledUseCase().getOrNull()
             ?.onEach { showTapHelp ->
-                _uiState.update {
-                    val confirmUM = it.confirmUM as? ConfirmUM.Content
-                    it.copy(confirmUM = confirmUM?.copy(showTapHelp = showTapHelp) ?: it.confirmUM)
+                _uiState.update { state ->
+                    val confirmUM = state.confirmUM as? ConfirmUM.Content
+                    state.copy(confirmUM = confirmUM?.copy(isShowTapHelp = showTapHelp) ?: state.confirmUM)
                 }
             }?.launchIn(modelScope)
     }
@@ -333,12 +333,12 @@ internal class SendConfirmModel @Inject constructor(
     private fun subscribeOnNotificationsUpdateTrigger() {
         notificationsUpdateListener.hasErrorFlow
             .onEach { hasError ->
-                _uiState.update {
-                    val feeUM = it.feeSelectorUM as? FeeSelectorUMRedesigned.Content
-                    it.copy(
-                        confirmUM = (it.confirmUM as? ConfirmUM.Content)?.copy(
+                _uiState.update { state ->
+                    val feeUM = state.feeSelectorUM as? FeeSelectorUMRedesigned.Content
+                    state.copy(
+                        confirmUM = (state.confirmUM as? ConfirmUM.Content)?.copy(
                             isPrimaryButtonEnabled = !hasError && feeUM != null,
-                        ) ?: it.confirmUM,
+                        ) ?: state.confirmUM,
                     )
                 }
             }
@@ -416,7 +416,11 @@ internal class SendConfirmModel @Inject constructor(
                 updateTransactionStatus(txData)
                 addTokenToWalletIfNeeded()
                 sendBalanceUpdater.scheduleUpdates()
-                sendAnalyticHelper.sendSuccessAnalytics(cryptoCurrency, uiState.value)
+                sendAnalyticHelper.sendSuccessAnalytics(
+                    cryptoCurrency = cryptoCurrency,
+                    sendUM = uiState.value,
+                    account = params.accountFlow.value,
+                )
                 params.callback.onResult(uiState.value)
                 params.onSendTransaction()
             },
@@ -495,8 +499,8 @@ internal class SendConfirmModel @Inject constructor(
                     feeError = confirmData.feeError,
                 ),
             )
-            _uiState.update {
-                it.copy(
+            _uiState.update { state ->
+                state.copy(
                     confirmUM = SendConfirmationNotificationsTransformerV2(
                         feeSelectorUM = uiState.value.feeSelectorUM,
                         amountUM = uiState.value.amountUM,

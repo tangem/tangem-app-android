@@ -246,7 +246,8 @@ data class EventMessageAction(
          *
          * @param onClick The action to perform when the button is clicked. By default, it dismisses the message.
          * */
-        fun cancelAction(onClick: () -> Unit = onDismissRequest) = EventMessageAction(
+        fun cancelAction(isWarning: Boolean = false, onClick: () -> Unit = onDismissRequest) = EventMessageAction(
+            isWarning = isWarning,
             title = resourceReference(id = R.string.common_cancel),
             onClick = onClick,
         )

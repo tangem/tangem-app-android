@@ -52,7 +52,7 @@ internal class OnboardingVisaOtherWalletModel @Inject constructor(
     val onDone = MutableSharedFlow<VisaActivationOrderInfo>()
 
     init {
-        analyticsEventHandler.send(OnboardingVisaAnalyticsEvent.GoToWebsiteOpened)
+        analyticsEventHandler.send(OnboardingVisaAnalyticsEvent.GoToWebsiteOpened())
         modelScope.launch {
             while (true) {
                 visaActivationRepository.getActivationRemoteState()
@@ -81,12 +81,12 @@ internal class OnboardingVisaOtherWalletModel @Inject constructor(
     }
 
     private fun onShareClicked() {
-        analyticsEventHandler.send(OnboardingVisaAnalyticsEvent.ButtonShareLink)
+        analyticsEventHandler.send(OnboardingVisaAnalyticsEvent.ButtonShareLink())
         shareManager.shareText("https://tangem.com/") // TODO
     }
 
     private fun onOpenInBrowserClicked() {
-        analyticsEventHandler.send(OnboardingVisaAnalyticsEvent.ButtonBrowser)
+        analyticsEventHandler.send(OnboardingVisaAnalyticsEvent.ButtonBrowser())
         urlOpener.openUrl("https://tangem.com/") // TODO
     }
 }

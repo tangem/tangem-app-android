@@ -38,14 +38,14 @@ sealed class TangemPayAnalyticsEvents(
         event = "Visa Main Screen Opened",
     )
 
-    class AddFundsClicked : TangemPayAnalyticsEvents(
-        categoryName = "Visa Screen",
-        event = "Button - Visa Add Funds",
-    )
-
     class ReceiveFundsClicked : TangemPayAnalyticsEvents(
         categoryName = "Visa Screen",
         event = "Button - Visa Receive",
+    )
+
+    class AddFundsClicked : TangemPayAnalyticsEvents(
+        categoryName = "Visa Screen",
+        event = "Button - Visa Add Funds",
     )
 
     class SwapClicked : TangemPayAnalyticsEvents(
