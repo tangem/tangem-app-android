@@ -200,6 +200,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
                                     onAlreadyUnlocked = {},
                                     onUserCancelled = {},
                                     analyticsEventHandler = analyticsEventHandler,
+                                    isFromUnlockAll = true,
                                     showMessage = uiMessageSender::send,
                                 )
                             }
