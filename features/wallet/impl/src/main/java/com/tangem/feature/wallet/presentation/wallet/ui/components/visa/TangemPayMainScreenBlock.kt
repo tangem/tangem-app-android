@@ -23,6 +23,7 @@ internal fun TangemPayMainScreenBlock(state: TangemPayState, isBalanceHidden: Bo
         is TangemPayState.RefreshNeeded -> TangemPayRefreshBlock(state, modifier)
         is TangemPayState.TemporaryUnavailable -> TangemPayUnavailableBlock(state, modifier)
         is TangemPayState.FailedIssue -> TangemPayFailedIssueState(state, modifier)
+        is TangemPayState.OnboardingBanner -> TangemPayOnboardingBanner(state, modifier)
         TangemPayState.Loading -> TangemPayLoadingScreenBlock(modifier)
     }
 }
