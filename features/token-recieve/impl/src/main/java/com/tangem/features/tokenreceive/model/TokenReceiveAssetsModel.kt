@@ -56,12 +56,12 @@ internal class TokenReceiveAssetsModel @Inject constructor(
             ),
         )
 
-    private fun configureEnsStatus(): AnalyticsParam.EnsStatus {
+    private fun configureEnsStatus(): AnalyticsParam.EmptyFull {
         val hasEnsAddress = params.addresses.any { it.type == ReceiveAddress.Type.Ens }
         return if (hasEnsAddress) {
-            AnalyticsParam.EnsStatus.FULL
+            AnalyticsParam.EmptyFull.Full
         } else {
-            AnalyticsParam.EnsStatus.EMPTY
+            AnalyticsParam.EmptyFull.Empty
         }
     }
 }
