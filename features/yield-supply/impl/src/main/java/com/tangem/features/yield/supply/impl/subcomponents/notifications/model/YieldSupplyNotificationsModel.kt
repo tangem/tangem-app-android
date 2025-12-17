@@ -91,7 +91,9 @@ internal class YieldSupplyNotificationsModel @Inject constructor(
 
                 uiState.update { notifications.toPersistentList() }
 
-                yieldSupplyNotificationsUpdateListener.callbackHasError(notifications.any())
+                // Business requirement that YieldSupplyHighNetworkFee is not an error and doesn't block the button
+                val hasError = notifications.any { it !is NotificationUM.Info.YieldSupplyHighNetworkFee }
+                yieldSupplyNotificationsUpdateListener.callbackHasError(hasError)
             }.launchIn(modelScope)
     }
 
