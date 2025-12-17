@@ -79,10 +79,17 @@ internal class DefaultNFTSendComponent @AssistedInject constructor(
             componentScope.launch {
                 when (val activeComponent = stack.active.instance) {
                     is NFTSendConfirmComponent -> {
+                        val fromCurrency = model.cryptoCurrency
+                        val fromDerivationIndex = model.account?.derivationIndex?.value
+                            .takeIf { model.isAccountsMode }
                         analyticsEventHandler.send(
                             CommonSendAnalyticEvents.ConfirmationScreenOpened(
                                 categoryName = analyticsCategoryName,
                                 source = analyticsSendSource,
+                                sendBlockchain = fromCurrency.network.name,
+                                sendToken = fromCurrency.symbol,
+                                fromDerivationIndex = fromDerivationIndex,
+                                toDerivationIndex = null,
                             ),
                         )
                         if (model.currentRouteFlow.value.isEditMode) {
