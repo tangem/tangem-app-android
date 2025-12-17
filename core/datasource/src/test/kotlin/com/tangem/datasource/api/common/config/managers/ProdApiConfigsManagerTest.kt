@@ -12,6 +12,7 @@ import com.tangem.datasource.api.common.config.ApiConfig.Companion.MOCKED_BUILD_
 import com.tangem.datasource.api.common.config.ApiConfig.Companion.RELEASE_BUILD_TYPE
 import com.tangem.datasource.api.common.config.managers.MockEnvironmentConfigStorage.Companion.BLOCK_AID_API_KEY
 import com.tangem.datasource.api.common.config.managers.MockEnvironmentConfigStorage.Companion.TANGEM_API_KEY
+import com.tangem.domain.staking.model.ethpool.P2PStakingConfig
 import com.tangem.lib.auth.ExpressAuthProvider
 import com.tangem.lib.auth.P2PEthPoolAuthProvider
 import com.tangem.lib.auth.StakeKitAuthProvider
@@ -250,7 +251,7 @@ internal class ProdApiConfigsManagerTest {
             id = ApiConfig.ID.TangemPay,
             expected = ApiEnvironmentConfig(
                 environment = ApiEnvironment.DEV,
-                baseUrl = "https://api.dev.us.paera.com/bff/",
+                baseUrl = "https://api.dev.us.paera.com/bff-v2/",
                 headers = mapOf(
                     "version" to ProviderSuspend { VERSION_NAME },
                     "platform" to ProviderSuspend { "Android" },
@@ -299,11 +300,17 @@ internal class ProdApiConfigsManagerTest {
     }
 
     private fun createP2PModel(): TestModel {
+        val (environment, baseUrl) = if (P2PStakingConfig.USE_TESTNET) {
+            ApiEnvironment.DEV to "https://api-test.p2p.org/"
+        } else {
+            ApiEnvironment.PROD to "https://api.p2p.org/"
+        }
+
         return TestModel(
             id = ApiConfig.ID.P2PEthPool,
             expected = ApiEnvironmentConfig(
-                environment = ApiEnvironment.PROD,
-                baseUrl = "https://api.p2p.org/",
+                environment = environment,
+                baseUrl = baseUrl,
                 headers = mapOf(
                     "Authorization" to ProviderSuspend { "Bearer $P2P_API_KEY" },
                     "accept" to ProviderSuspend { "application/json" },

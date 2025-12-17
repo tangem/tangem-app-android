@@ -3,6 +3,8 @@ package com.tangem.features.hotwallet.upgradewallet.ui
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -44,6 +46,7 @@ internal fun UpgradeWalletContent(state: UpgradeWalletUM, modifier: Modifier = M
         Column(
             modifier = Modifier
                 .weight(1f)
+                .verticalScroll(rememberScrollState())
                 .padding(
                     start = 16.dp,
                     top = 24.dp,

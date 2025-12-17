@@ -19,12 +19,14 @@ object MockAccounts {
     fun createAccountList(
         activeAccounts: Int,
         totalAccounts: Int = activeAccounts,
+        totalArchivedAccounts: Int = 0,
         userWalletId: UserWalletId = this.userWalletId,
     ): AccountList {
         return AccountList(
             userWalletId = userWalletId,
             accounts = createAccounts(count = activeAccounts, userWalletId = userWalletId),
             totalAccounts = totalAccounts,
+            totalArchivedAccounts = totalArchivedAccounts,
         ).getOrNull()!!
     }
 

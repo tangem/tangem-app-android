@@ -22,14 +22,14 @@ private const val TAP_HELP_ANIMATION_DELAY = 500L
 
 internal fun LazyListScope.tapHelp(isDisplay: Boolean, modifier: Modifier = Modifier) {
     item(key = TAP_HELP_KEY) {
-        var wrappedIsDisplay by remember { mutableStateOf(false) }
+        var isWrappedDisplay by remember { mutableStateOf(false) }
 
         LaunchedEffect(key1 = isDisplay) {
             delay(TAP_HELP_ANIMATION_DELAY)
-            wrappedIsDisplay = isDisplay
+            isWrappedDisplay = isDisplay
         }
 
-        if (wrappedIsDisplay) {
+        if (isWrappedDisplay) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = modifier

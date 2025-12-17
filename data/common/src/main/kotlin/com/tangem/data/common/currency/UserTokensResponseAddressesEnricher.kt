@@ -1,55 +1,45 @@
 package com.tangem.data.common.currency
 
+import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.address.Address
+import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
-import com.tangem.domain.models.network.NetworkStatus
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.networks.multi.MultiNetworkStatusProducer
-import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
+import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.withTimeoutOrNull
 import javax.inject.Inject
-import kotlin.time.Duration.Companion.seconds
 
 class UserTokensResponseAddressesEnricher @Inject constructor(
     private val walletsRepository: WalletsRepository,
     private val dispatchers: CoroutineDispatcherProvider,
-    private val multiNetworkStatusSupplier: MultiNetworkStatusSupplier,
+    private val walletManagersFacade: WalletManagersFacade,
 ) {
 
     suspend operator fun invoke(userWalletId: UserWalletId, response: UserTokensResponse): UserTokensResponse {
         val isNotificationsEnabled = walletsRepository.isNotificationsEnabled(userWalletId)
 
         return withContext(dispatchers.default) {
-            val networksStatuses = if (isNotificationsEnabled) {
-                withTimeoutOrNull(
-                    FETCH_TIMEOUT_SECONDS.seconds,
-                    { multiNetworkStatusSupplier.invoke(MultiNetworkStatusProducer.Params(userWalletId)).first() },
-                ).orEmpty()
+            val addressByToken = if (isNotificationsEnabled) {
+                response.tokens.associateWith { token ->
+                    val blockchain = Blockchain.fromNetworkId(token.networkId) ?: return@associateWith null
+
+                    val walletManager = walletManagersFacade.getOrCreateWalletManager(
+                        userWalletId = userWalletId,
+                        blockchain = blockchain,
+                        derivationPath = token.derivationPath,
+                    )
+
+                    walletManager?.wallet?.addresses?.map(Address::value)
+                }
             } else {
-                emptySet()
+                emptyMap()
             }
 
             val enrichedTokens = response.tokens.map { token ->
                 if (isNotificationsEnabled) {
-                    val matchingNetwork = networksStatuses.find { status ->
-                        status.network.backendId == token.networkId &&
-                            status.network.derivationPath.value == token.derivationPath
-                    } ?: return@map token
-
-                    val networkAddress = when (matchingNetwork.value) {
-                        is NetworkStatus.Verified -> (matchingNetwork.value as NetworkStatus.Verified).address
-                        is NetworkStatus.NoAccount -> (matchingNetwork.value as NetworkStatus.NoAccount).address
-                        else -> null
-                    }
-
-                    val addresses = networkAddress
-                        ?.availableAddresses
-                        ?.map { it.value }
-                        ?.toList()
-                        .orEmpty()
+                    val addresses = addressByToken[token] ?: return@map token
 
                     token.copy(addresses = addresses)
                 } else {
@@ -59,9 +49,5 @@ class UserTokensResponseAddressesEnricher @Inject constructor(
 
             response.copy(tokens = enrichedTokens, notifyStatus = isNotificationsEnabled)
         }
-    }
-
-    companion object {
-        private const val FETCH_TIMEOUT_SECONDS = 3
     }
 }
