@@ -257,6 +257,7 @@
   <string name="common_week">тиждень</string>
   <string name="common_with">з</string>
   <string name="common_yes">Так</string>
+  <string name="common_yield_mode">Режим дохідності</string>
   <string name="contract_address_copied_message">Адреса контракту скопійована!</string>
   <string name="currency_subtitle_expanded">Доступні мережі</string>
   <string name="custom_token_contract_address_input_title">Адреса контракту</string>
