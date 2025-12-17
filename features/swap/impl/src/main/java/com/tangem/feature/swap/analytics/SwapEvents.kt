@@ -43,18 +43,31 @@ sealed class SwapEvents(
         params = mapOf("Send Token" to sendToken, "Receive Token" to receiveToken),
     )
 
-    class ButtonGivePermissionClicked : SwapEvents(event = "Button - Give permission")
+    data class ButtonGivePermissionClicked(
+        val sendToken: String,
+        val receiveToken: String,
+        val provider: SwapProvider,
+    ) : SwapEvents(
+        event = "Button - Give permission",
+        params = mapOf(
+            "Send Token" to sendToken,
+            "Receive Token" to receiveToken,
+            "Provider" to provider.name,
+        ),
+    )
 
     data class ButtonPermissionApproveClicked(
         val sendToken: String,
         val receiveToken: String,
         val approveType: ApproveType,
+        val provider: SwapProvider,
     ) : SwapEvents(
         event = "Button - Permission Approve",
         params = mapOf(
             "Send Token" to sendToken,
             "Receive Token" to receiveToken,
             "Type" to if (approveType == ApproveType.LIMITED) "Current Transaction" else "Unlimited",
+            "Provider" to provider.name,
         ),
     )
 
@@ -145,4 +158,17 @@ sealed class SwapEvents(
             data object Recommended : PromoState("Recommended")
         }
     }
+
+    data class NoticePermissionNeeded(
+        val sendToken: String,
+        val receiveToken: String,
+        val provider: SwapProvider,
+    ) : SwapEvents(
+        event = "Notice - Permission Needed",
+        params = mapOf(
+            "Send Token" to sendToken,
+            "Receive Token" to receiveToken,
+            "Provider" to provider.name,
+        ),
+    )
 }
