@@ -1,6 +1,9 @@
 package com.tangem.features.tangempay.model
 
 import androidx.compose.runtime.Stable
+import com.arkivanov.decompose.router.slot.SlotNavigation
+import com.arkivanov.decompose.router.slot.activate
+import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
@@ -8,17 +11,16 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.url.UrlOpener
-import com.tangem.data.pay.util.TangemPayWalletsManager
 import com.tangem.domain.models.wallet.UserWalletId
-import com.tangem.domain.models.wallet.isMultiCurrency
+import com.tangem.domain.pay.TangemPayEligibilityManager
 import com.tangem.domain.pay.repository.OnboardingRepository
 import com.tangem.domain.pay.usecase.ProduceTangemPayInitialDataUseCase
 import com.tangem.domain.tangempay.TangemPayAnalyticsEvents
-import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
-import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.tangempay.TangemPayConstants
 import com.tangem.features.tangempay.components.TangemPayOnboardingComponent
+import com.tangem.features.tangempay.components.WalletSelectorListener
 import com.tangem.features.tangempay.model.transformers.TangemPayOnboardingButtonLoadingTransformer
+import com.tangem.features.tangempay.ui.TangemPayOnboardingNavigation
 import com.tangem.features.tangempay.ui.TangemPayOnboardingScreenState
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -40,36 +42,41 @@ internal class TangemPayOnboardingModel @Inject constructor(
     private val repository: OnboardingRepository,
     private val produceInitialDataUseCase: ProduceTangemPayInitialDataUseCase,
     private val urlOpener: UrlOpener,
-    private val tangemPayWalletsManager: TangemPayWalletsManager,
-    private val getUserWalletUseCase: GetUserWalletUseCase,
-    private val getSelectedWalletUseCase: GetSelectedWalletUseCase,
-) : Model() {
+    private val eligibilityManager: TangemPayEligibilityManager,
+) : Model(), WalletSelectorListener {
 
     private val params = paramsContainer.require<TangemPayOnboardingComponent.Params>()
+
+    val bottomSheetNavigation: SlotNavigation<TangemPayOnboardingNavigation> = SlotNavigation()
+
     val uiState: StateFlow<TangemPayOnboardingScreenState>
         field = MutableStateFlow(getInitialState())
 
     init {
+        analytics.send(TangemPayAnalyticsEvents.ActivationScreenOpened())
+        init()
+    }
+
+    private fun init() {
         modelScope.launch {
             when (params) {
-                is TangemPayOnboardingComponent.Params.ContinueOnboarding -> {
-                    checkCustomerInfo()
-                }
                 is TangemPayOnboardingComponent.Params.Deeplink -> {
                     repository.validateDeeplink(params.deeplink)
                         .onRight { isValid -> if (isValid) showOnboarding() else back() }
                         .onLeft { back() }
                 }
+                is TangemPayOnboardingComponent.Params.ContinueOnboarding,
+                is TangemPayOnboardingComponent.Params.FromBannerInSettings,
+                is TangemPayOnboardingComponent.Params.FromBannerOnMain,
+                -> showOnboarding()
             }
         }
     }
 
     private fun showOnboarding() {
-        // TODO: move analytics to init block [REDACTED_JIRA]
-        analytics.send(TangemPayAnalyticsEvents.ActivationScreenOpened())
-        uiState.update {
+        uiState.update { state ->
             TangemPayOnboardingScreenState.Content(
-                onBack = it.onBack,
+                onBack = state.onBack,
                 onTermsClick = ::onTermsClick,
                 buttonConfig = TangemPayOnboardingScreenState.Content.ButtonConfig(
                     isLoading = false,
@@ -79,42 +86,25 @@ internal class TangemPayOnboardingModel @Inject constructor(
         }
     }
 
-    private suspend fun checkCustomerInfo() {
-        // TODO implement selector
-        val userWalletId = getUserWalletForPay(params.userWalletId)
-        repository.getCustomerInfo(
-            userWalletId = userWalletId,
-        )
-            // selector
-            .onRight { customerInfo ->
-                when {
-                    !customerInfo.isKycApproved -> {
-                        when (params) {
-                            is TangemPayOnboardingComponent.Params.Deeplink -> showOnboarding()
-                            else -> openKyc()
+    private fun checkCustomerInfo(userWalletId: UserWalletId) {
+        modelScope.launch {
+            uiState.transformerUpdate(TangemPayOnboardingButtonLoadingTransformer(isLoading = true))
+            repository.getCustomerInfo(
+                userWalletId = userWalletId,
+            )
+                .onRight { customerInfo ->
+                    uiState.transformerUpdate(TangemPayOnboardingButtonLoadingTransformer(isLoading = false))
+                    when {
+                        !customerInfo.isKycApproved -> {
+                            when (params) {
+                                is TangemPayOnboardingComponent.Params.ContinueOnboarding -> openKyc(userWalletId)
+                                else -> startOnboarding(userWalletId)
+                            }
                         }
+                        else -> back()
                     }
-                    else -> back()
                 }
-            }
-            .onLeft { back() }
-    }
-
-    private fun getUserWalletForPay(userWalletId: UserWalletId?): UserWalletId {
-        val userWallet = userWalletId?.let { getUserWalletUseCase(it).getOrNull() }
-        return if (userWallet?.isMultiCurrency == true) {
-            userWallet.walletId
-        } else {
-            tryGetSelectedWalletId()
-        }
-    }
-
-    private fun tryGetSelectedWalletId(): UserWalletId {
-        val selectedWallet = getSelectedWalletUseCase.sync().getOrNull()
-        return if (selectedWallet?.isMultiCurrency == true) {
-            selectedWallet.walletId
-        } else {
-            tangemPayWalletsManager.getDefaultWalletForTangemPayBlocking().walletId
+                .onLeft { back() }
         }
     }
 
@@ -125,43 +115,72 @@ internal class TangemPayOnboardingModel @Inject constructor(
 
     private fun onGetCardClick() {
         analytics.send(TangemPayAnalyticsEvents.GetCardClicked())
+        modelScope.launch {
+            val eligibleWalletsIds = eligibilityManager.getEligibleWallets().map { it.walletId }
+            if (eligibleWalletsIds.isEmpty()) {
+                back()
+                return@launch
+            }
+            when (params) {
+                is TangemPayOnboardingComponent.Params.ContinueOnboarding -> {
+                    checkCustomerInfo(params.userWalletId)
+                }
+                is TangemPayOnboardingComponent.Params.FromBannerOnMain -> {
+                    if (eligibleWalletsIds.any { walletId -> walletId == params.userWalletId }) {
+                        checkCustomerInfo(userWalletId = params.userWalletId)
+                    } else {
+                        openWalletSelectorIfNeeds(eligibleWalletsIds)
+                    }
+                }
+                is TangemPayOnboardingComponent.Params.Deeplink,
+                is TangemPayOnboardingComponent.Params.FromBannerInSettings,
+                -> {
+                    openWalletSelectorIfNeeds(eligibleWalletsIds)
+                }
+            }
+        }
+    }
+
+    private fun openWalletSelectorIfNeeds(eligibleWalletsIds: List<UserWalletId>) {
+        if (eligibleWalletsIds.size == 1) {
+            checkCustomerInfo(userWalletId = eligibleWalletsIds[0])
+        } else {
+            bottomSheetNavigation.activate(TangemPayOnboardingNavigation.WalletSelector(eligibleWalletsIds))
+        }
+    }
+
+    private fun startOnboarding(userWalletId: UserWalletId) {
         uiState.transformerUpdate(TangemPayOnboardingButtonLoadingTransformer(isLoading = true))
         modelScope.launch {
-            // TODO implement selector
-            val userWalletId = getUserWalletForPay(params.userWalletId)
             val result = produceInitialDataUseCase(userWalletId)
             if (result.isLeft()) {
-                Timber.e("Error producing initial data: ${result.leftOrNull()?.message}")
+                val errorMessage = result.leftOrNull()?.message ?: "Unknown error"
+                Timber.e("Error producing initial data: $errorMessage")
                 uiState.transformerUpdate(TangemPayOnboardingButtonLoadingTransformer(isLoading = false))
                 return@launch
             }
-
-            // TODO implement selector
             repository.getCustomerInfo(
                 userWalletId = userWalletId,
             ).fold(
-                ifLeft = {
-                    Timber.e("Error getCustomerInfo: ${it.errorCode}")
+                ifLeft = { error ->
+                    Timber.e("Error getCustomerInfo: ${error.errorCode}")
                     uiState.transformerUpdate(TangemPayOnboardingButtonLoadingTransformer(isLoading = false))
                 },
                 ifRight = { customerInfo ->
                     if (customerInfo.isKycApproved) {
                         back()
                     } else {
-                        openKyc()
+                        openKyc(userWalletId)
                     }
                 },
             )
         }
     }
 
-    private fun openKyc() {
-        // TODO implement selector
+    private fun openKyc(userWalletId: UserWalletId) {
         router.replaceAll(
             AppRoute.Wallet,
-            AppRoute.Kyc(
-                userWalletId = getUserWalletForPay(params.userWalletId),
-            ),
+            AppRoute.Kyc(userWalletId = userWalletId),
         )
     }
 
@@ -171,5 +190,14 @@ internal class TangemPayOnboardingModel @Inject constructor(
 
     private fun getInitialState(): TangemPayOnboardingScreenState {
         return TangemPayOnboardingScreenState.Loading(onBack = ::back)
+    }
+
+    override fun onWalletSelected(userWalletId: UserWalletId) {
+        bottomSheetNavigation.dismiss()
+        checkCustomerInfo(userWalletId)
+    }
+
+    override fun onWalletSelectorDismiss() {
+        bottomSheetNavigation.dismiss()
     }
 }
