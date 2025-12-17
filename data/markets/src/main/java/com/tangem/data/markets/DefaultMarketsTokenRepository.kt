@@ -20,6 +20,7 @@ import com.tangem.datasource.api.markets.TangemTechMarketsApi
 import com.tangem.datasource.api.markets.models.response.TokenMarketExchangesResponse
 import com.tangem.datasource.local.datastore.RuntimeStateStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
+import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.*
 import com.tangem.domain.markets.repositories.MarketsTokenRepository
 import com.tangem.domain.models.account.DerivationIndex
@@ -28,9 +29,8 @@ import com.tangem.domain.models.wallet.UserWalletId
 import com.tangem.pagination.*
 import com.tangem.pagination.fetcher.LimitOffsetBatchFetcher
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
-import java.math.BigDecimal
+import timber.log.Timber
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
 
@@ -43,7 +43,6 @@ internal class DefaultMarketsTokenRepository(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val cacheRegistry: CacheRegistry,
     private val tokenExchangesStore: RuntimeStateStore<List<TokenMarketExchangesResponse.Exchange>>,
-    private val maxApyStore: RuntimeStateStore<BigDecimal?>,
     private val networkFactory: NetworkFactory,
     excludedBlockchains: ExcludedBlockchains,
 ) : MarketsTokenRepository {
@@ -94,8 +93,6 @@ internal class DefaultMarketsTokenRepository(
                 val last = res.tokens.size < request.limit
 
                 val tokenMarketListWithMaxApy = TokenMarketListConverter.convert(res)
-
-                maxApyStore.store(tokenMarketListWithMaxApy.maxApy)
 
                 return BatchFetchResult.Success(
                     data = tokenMarketListWithMaxApy.tokens,
@@ -294,8 +291,24 @@ internal class DefaultMarketsTokenRepository(
         }
     }
 
-    override suspend fun getMaxApy(): Flow<BigDecimal?> {
-        return maxApyStore.get()
+    override suspend fun showYieldModePromo(
+        appCurrency: AppCurrency,
+        interval: TokenMarketListConfig.Interval,
+    ): Boolean = try {
+        val hasYieldSupplyTokens = marketsApi.getCoinsList(
+            currency = appCurrency.code,
+            interval = interval.toRequestParam(),
+            order = TokenMarketListConfig.Order.YieldSupply.toRequestParam(),
+            offset = 0,
+            limit = 40,
+            timestamp = null,
+            search = null,
+        ).getOrThrow().tokens.isNotEmpty()
+
+        hasYieldSupplyTokens
+    } catch (error: Exception) {
+        Timber.e(error)
+        false
     }
 
     inline fun <T> catchListErrorAndSendEvent(block: () -> T): T {
