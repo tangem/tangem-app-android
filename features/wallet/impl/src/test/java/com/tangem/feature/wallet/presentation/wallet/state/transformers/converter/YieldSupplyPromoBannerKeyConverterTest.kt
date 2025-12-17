@@ -151,7 +151,7 @@ class YieldSupplyPromoBannerKeyConverterTest {
             fiatAmount = null,
             fiatRate = null,
             priceChange = null,
-            yieldBalance = null,
+            stakingBalance = null,
             yieldSupplyStatus = if (isYieldActive) {
                 YieldSupplyStatus(
                     isActive = true,
