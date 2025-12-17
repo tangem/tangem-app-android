@@ -108,9 +108,10 @@ internal class WelcomeModel @Inject constructor(
                         routedOut = true
                         router.replaceAll(AppRoute.Wallet)
                     }
-                    .onLeft {
-                        it.handle(
+                    .onLeft { error ->
+                        error.handle(
                             specificWalletId = null,
+                            isFromUnlockAll = true,
                             onUserCancelled = { tryToUnlockWithAccessCodeRightAway() },
                         )
                         setSelectWalletState()
@@ -146,8 +147,12 @@ internal class WelcomeModel @Inject constructor(
                             .onRight {
                                 router.replaceAll(AppRoute.Wallet)
                             }
-                            .onLeft {
-                                it.handle(null, onUserCancelled = { /* ignore */ })
+                            .onLeft { error ->
+                                error.handle(
+                                    specificWalletId = null,
+                                    isFromUnlockAll = true,
+                                    onUserCancelled = { /* ignore */ },
+                                )
                             }
                     }
                 },
@@ -202,11 +207,19 @@ internal class WelcomeModel @Inject constructor(
                 router.replaceAll(AppRoute.Wallet)
             }
             .onLeft { error ->
-                error.handle(specificWalletId = userWalletId, onUserCancelled = { /* ignore*/ })
+                error.handle(
+                    specificWalletId = userWalletId,
+                    isFromUnlockAll = false,
+                    onUserCancelled = { /* ignore*/ },
+                )
             }
     }
 
-    suspend fun UnlockWalletError.handle(specificWalletId: UserWalletId?, onUserCancelled: suspend () -> Unit = { }) {
+    suspend fun UnlockWalletError.handle(
+        specificWalletId: UserWalletId?,
+        isFromUnlockAll: Boolean,
+        onUserCancelled: suspend () -> Unit = { },
+    ) {
         handle(
             onAlreadyUnlocked = {
                 // this should not happen, as we check for locked state before this
@@ -215,6 +228,7 @@ internal class WelcomeModel @Inject constructor(
             },
             onUserCancelled = { onUserCancelled() },
             analyticsEventHandler = analyticsEventHandler,
+            isFromUnlockAll = isFromUnlockAll,
             showMessage = uiMessageSender::send,
         )
     }
