@@ -44,4 +44,6 @@ internal sealed class TangemPayState {
     ) : TangemPayState()
 
     data class TemporaryUnavailable(val notification: WalletNotification) : TangemPayState()
+
+    data object ExposedDevice : TangemPayState()
 }
