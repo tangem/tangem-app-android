@@ -59,6 +59,8 @@ dependencies {
     /** Feature Apis */
     implementation(projects.features.tester.api)
     implementation(projects.features.pushNotifications.api)
+    implementation(projects.features.news.newsDetails.api)
+    implementation(projects.features.news.newsDetails.impl)
 
     /* SDK */
     implementation(tangemDeps.blockchain)
