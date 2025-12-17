@@ -1,10 +1,10 @@
 package com.tangem.domain.news.repository
 
-import com.tangem.domain.news.model.NewsListBatchFlow
-import com.tangem.domain.news.model.NewsListBatchingContext
 import com.tangem.domain.models.news.ArticleCategory
 import com.tangem.domain.models.news.DetailedArticle
-import com.tangem.domain.models.news.ShortArticle
+import com.tangem.domain.models.news.TrendingNews
+import com.tangem.domain.news.model.NewsListBatchFlow
+import com.tangem.domain.news.model.NewsListBatchingContext
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -43,17 +43,12 @@ interface NewsRepository {
      * @param limit
      * @param language current device locale
      */
-    suspend fun getTrendingNews(limit: Int, language: String?)
+    suspend fun fetchTrendingNews(limit: Int, language: String?)
 
     /**
      * Observes trending news with runtime viewed flag support.
      */
-    fun observeTrendingNews(): Flow<List<ShortArticle>>
-
-    /**
-     * Refreshes trending news list and updates cache without overriding viewed status.
-     */
-    suspend fun refreshTrendingNews(limit: Int, language: String?)
+    fun observeTrendingNews(): Flow<TrendingNews>
 
     /**
      * Updates viewed flag for provided trending articles.

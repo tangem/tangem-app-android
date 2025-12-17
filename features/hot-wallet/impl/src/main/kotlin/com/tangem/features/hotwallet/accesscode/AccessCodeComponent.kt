@@ -2,12 +2,16 @@ package com.tangem.features.hotwallet.accesscode
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.essenty.lifecycle.doOnResume
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.core.ui.event.EventEffect
 import com.tangem.core.ui.security.DisableScreenshotsDisposableEffect
 import com.tangem.features.hotwallet.accesscode.ui.AccessCode
 import com.tangem.domain.models.wallet.UserWalletId
@@ -31,10 +35,18 @@ internal class AccessCodeComponent @AssistedInject constructor(
     @Composable
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
+        val focusRequester = remember { FocusRequester() }
+        val focusManager = LocalFocusManager.current
+
+        EventEffect(event = state.requestFocus) {
+            focusManager.clearFocus()
+            focusRequester.requestFocus()
+        }
 
         DisableScreenshotsDisposableEffect()
         AccessCode(
             modifier = modifier,
+            focusRequester = focusRequester,
             state = state,
         )
     }

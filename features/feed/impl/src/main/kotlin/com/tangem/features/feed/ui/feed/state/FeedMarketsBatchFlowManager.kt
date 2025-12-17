@@ -3,6 +3,7 @@ package com.tangem.features.feed.ui.feed.state
 import com.tangem.common.ui.markets.models.MarketsListItemUM
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.*
+import com.tangem.domain.models.currency.CryptoCurrency
 import com.tangem.features.feed.model.converter.MarketsTokenItemConverter
 import com.tangem.features.feed.ui.market.state.MarketsListUM
 import com.tangem.features.feed.ui.market.state.SortByTypeUM
@@ -124,6 +125,11 @@ internal class FeedMarketsBatchFlowManager(
 
     fun getOnLastBatchLoadedSuccessFlow(order: TokenMarketListConfig.Order): Flow<Int>? {
         return managersByOrder[order]?.onLastBatchLoadedSuccess
+    }
+
+    fun getTokenMarketById(tokenId: CryptoCurrency.RawID): TokenMarket? {
+        return managersByOrder.values
+            .firstNotNullOfOrNull { manager -> manager.getTokenMarketById(tokenId) }
     }
 
     private class SingleOrderManager(
@@ -357,6 +363,13 @@ internal class FeedMarketsBatchFlowManager(
                     )
                 }
             }
+        }
+
+        fun getTokenMarketById(tokenId: CryptoCurrency.RawID): TokenMarket? {
+            return resultBatches.value.processedItems
+                ?.asSequence()
+                ?.flatMap { it.data }
+                ?.firstOrNull { it.id == tokenId }
         }
 
         private data class ResultBatches(
