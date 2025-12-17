@@ -42,7 +42,6 @@ internal object MarketsDataModule {
             cacheRegistry = cacheRegistry,
             tokenExchangesStore = RuntimeStateStore(defaultValue = emptyList()),
             excludedBlockchains = excludedBlockchains,
-            maxApyStore = RuntimeStateStore(defaultValue = null),
             networkFactory = networkFactory,
         )
     }
