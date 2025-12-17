@@ -71,8 +71,8 @@ class YieldSupplyGetCurrentFeeUseCase(
         val isHighFee = if (isEthereum) {
             val maxFeePerGas = (feeWithoutGas as? Fee.Ethereum.EIP1559)?.maxFeePerGas ?: 0.toBigInteger()
             val increasedMaxFee = if (Calendar.getInstance().get(Calendar.MINUTE) % 2 == 0) {
-                Timber.tag("isHighFee").d("fee 5x")
-                maxFeePerGas * 10.toBigInteger()
+                Timber.tag("isHighFee").d("fee 20x")
+                maxFeePerGas * 20.toBigInteger()
             } else {
                 Timber.tag("isHighFee").d("fee reduce")
                 maxFeePerGas / 5.toBigInteger()
