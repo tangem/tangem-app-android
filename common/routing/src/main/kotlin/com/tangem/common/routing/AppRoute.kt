@@ -346,7 +346,9 @@ sealed class AppRoute(val path: String) : Route {
     object CreateHardwareWallet : AppRoute(path = "/create_hardware_wallet")
 
     @Serializable
-    object CreateMobileWallet : AppRoute(path = "/create_mobile_wallet")
+    data class CreateMobileWallet(
+        val source: String,
+    ) : AppRoute(path = "/create_mobile_wallet")
 
     @Serializable
     data class UpgradeWallet(
@@ -368,7 +370,7 @@ sealed class AppRoute(val path: String) : Route {
         val analyticsSource: String,
         val analyticsAction: String,
         val isUpgradeFlow: Boolean = false,
-        val setAccessCode: Boolean = false,
+        val shouldSetAccessCode: Boolean = false,
     ) : AppRoute(path = "/create_wallet_backup/${userWalletId.stringValue}")
 
     @Serializable
@@ -431,13 +433,20 @@ sealed class AppRoute(val path: String) : Route {
             @Serializable
             data class Deeplink(
                 val deeplink: String,
-                val userWalletId: UserWalletId?,
             ) : Mode()
 
             @Serializable
             data class ContinueOnboarding(
-                val userWalletId: UserWalletId?,
+                val userWalletId: UserWalletId,
             ) : Mode()
+
+            @Serializable
+            data class FromBannerOnMain(
+                val userWalletId: UserWalletId,
+            ) : Mode()
+
+            @Serializable
+            data object FromBannerInSettings : Mode()
         }
     }
 
