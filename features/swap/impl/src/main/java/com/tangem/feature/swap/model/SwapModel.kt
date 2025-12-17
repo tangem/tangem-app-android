@@ -192,6 +192,7 @@ internal class SwapModel @Inject constructor(
     private val toTokenBalanceJobHolder = JobHolder()
 
     private var isAmountChangedByUser: Boolean = false
+    private var lastPermissionNotificationTokens: Pair<String, String>? = null
 
     val currentScreen: SwapNavScreen
         get() = swapRouter.currentScreen
@@ -547,58 +548,99 @@ internal class SwapModel @Inject constructor(
     private fun setupLoadedState(provider: SwapProvider, state: SwapState, fromToken: CryptoCurrencyStatus) {
         when (state) {
             is SwapState.QuotesLoadedState -> {
-                fillLoadedDataState(state, state.permissionState, state.swapDataModel)
-                val loadedStates = dataState.lastLoadedSwapStates.getLastLoadedSuccessStates()
-                val bestRatedProviderId = findBestQuoteProvider(loadedStates)?.providerId ?: provider.providerId
-                uiState = stateBuilder.createQuotesLoadedState(
-                    uiStateHolder = uiState,
-                    quoteModel = state,
-                    fromToken = fromToken.currency,
-                    feeCryptoCurrencyStatus = dataState.feePaidCryptoCurrency,
-                    swapProvider = provider,
-                    bestRatedProviderId = bestRatedProviderId,
-                    isNeedBestRateBadge = dataState.lastLoadedSwapStates.consideredProvidersStates().size > 1,
-                    selectedFeeType = dataState.selectedFee?.feeType ?: FeeType.NORMAL,
-                    isReverseSwapPossible = isReverseSwapPossible(),
-                    needApplyFCARestrictions = userCountry.needApplyFCARestrictions(),
-                    hideFee = tangemPayInput?.isWithdrawal == true,
-                )
-                if (uiState.notifications.any { it is SwapNotificationUM.Error.UnableToCoverFeeWarning }) {
-                    analyticsEventHandler.send(
-                        SwapEvents.NoticeNotEnoughFee(
-                            token = initialCurrencyFrom.symbol,
-                            blockchain = fromToken.currency.network.name,
-                        ),
-                    )
-                }
+                setupQuotesLoadedUiState(provider, state, fromToken)
+                sendAnalyticsForNotifications(fromToken)
+                updatePermissionNotificationState(state)
             }
             is SwapState.EmptyAmountState -> {
-                val toTokenStatus = dataState.toCryptoCurrency
-                uiState = stateBuilder.createQuotesEmptyAmountState(
-                    uiStateHolder = uiState,
-                    emptyAmountState = state,
-                    fromTokenStatus = fromToken,
-                    toTokenStatus = toTokenStatus,
-                    isReverseSwapPossible = isReverseSwapPossible(),
-                    toAccount = dataState.toAccount,
-                )
+                setupEmptyAmountUiState(state, fromToken)
+                lastPermissionNotificationTokens = null
             }
             is SwapState.SwapError -> {
-                singleTaskScheduler.cancelTask()
-                uiState = stateBuilder.createQuotesErrorState(
-                    uiStateHolder = uiState,
-                    swapProvider = provider,
-                    fromToken = state.fromTokenInfo,
-                    toToken = dataState.toCryptoCurrency,
-                    expressDataError = state.error,
-                    includeFeeInAmount = state.includeFeeInAmount,
-                    isReverseSwapPossible = isReverseSwapPossible(),
-                    needApplyFCARestrictions = userCountry.needApplyFCARestrictions(),
-                    toAccount = dataState.toAccount,
-                )
-                sendErrorAnalyticsEvent(state.error, provider)
+                setupErrorUiState(provider, state)
+                lastPermissionNotificationTokens = null
             }
         }
+    }
+
+    private fun setupQuotesLoadedUiState(
+        provider: SwapProvider,
+        state: SwapState.QuotesLoadedState,
+        fromToken: CryptoCurrencyStatus,
+    ) {
+        fillLoadedDataState(state, state.permissionState, state.swapDataModel)
+        val loadedStates = dataState.lastLoadedSwapStates.getLastLoadedSuccessStates()
+        val bestRatedProviderId = findBestQuoteProvider(loadedStates)?.providerId ?: provider.providerId
+        uiState = stateBuilder.createQuotesLoadedState(
+            uiStateHolder = uiState,
+            quoteModel = state,
+            fromToken = fromToken.currency,
+            feeCryptoCurrencyStatus = dataState.feePaidCryptoCurrency,
+            swapProvider = provider,
+            bestRatedProviderId = bestRatedProviderId,
+            isNeedBestRateBadge = dataState.lastLoadedSwapStates.consideredProvidersStates().size > 1,
+            selectedFeeType = dataState.selectedFee?.feeType ?: FeeType.NORMAL,
+            isReverseSwapPossible = isReverseSwapPossible(),
+            needApplyFCARestrictions = userCountry.needApplyFCARestrictions(),
+            hideFee = tangemPayInput?.isWithdrawal == true,
+        )
+    }
+
+    private fun sendAnalyticsForNotifications(fromToken: CryptoCurrencyStatus) {
+        if (uiState.notifications.any { it is SwapNotificationUM.Error.UnableToCoverFeeWarning }) {
+            analyticsEventHandler.send(
+                SwapEvents.NoticeNotEnoughFee(
+                    token = initialCurrencyFrom.symbol,
+                    blockchain = fromToken.currency.network.name,
+                ),
+            )
+        }
+    }
+
+    private fun updatePermissionNotificationState(state: SwapState.QuotesLoadedState) {
+        val fromTokenId = state.fromTokenInfo.cryptoCurrencyStatus
+            .currency.id.value
+        val toTokenId = state.toTokenInfo.cryptoCurrencyStatus
+            .currency.id.value
+        val currentTokenPair = Pair(fromTokenId, toTokenId)
+
+        when {
+            uiState.notifications.none { it is SwapNotificationUM.Info.PermissionNeeded } -> {
+                lastPermissionNotificationTokens = null
+            }
+            lastPermissionNotificationTokens != currentTokenPair -> {
+                sendNoticePermissionNeededEvent()
+                lastPermissionNotificationTokens = currentTokenPair
+            }
+        }
+    }
+
+    private fun setupEmptyAmountUiState(state: SwapState.EmptyAmountState, fromToken: CryptoCurrencyStatus) {
+        val toTokenStatus = dataState.toCryptoCurrency
+        uiState = stateBuilder.createQuotesEmptyAmountState(
+            uiStateHolder = uiState,
+            emptyAmountState = state,
+            fromTokenStatus = fromToken,
+            toTokenStatus = toTokenStatus,
+            isReverseSwapPossible = isReverseSwapPossible(),
+            toAccount = dataState.toAccount,
+        )
+    }
+
+    private fun setupErrorUiState(provider: SwapProvider, state: SwapState.SwapError) {
+        singleTaskScheduler.cancelTask()
+        uiState = stateBuilder.createQuotesErrorState(
+            uiStateHolder = uiState,
+            swapProvider = provider,
+            fromToken = state.fromTokenInfo,
+            toToken = dataState.toCryptoCurrency,
+            expressDataError = state.error,
+            includeFeeInAmount = state.includeFeeInAmount,
+            isReverseSwapPossible = isReverseSwapPossible(),
+            needApplyFCARestrictions = userCountry.needApplyFCARestrictions(),
+            toAccount = dataState.toAccount,
+        )
+        sendErrorAnalyticsEvent(state.error, provider)
     }
 
     private fun sendErrorAnalyticsEvent(error: ExpressDataError, provider: SwapProvider) {
@@ -1342,7 +1384,7 @@ internal class SwapModel @Inject constructor(
             onReduceByAmount = ::onReduceAmountClicked,
             openPermissionBottomSheet = {
                 singleTaskScheduler.cancelTask()
-                analyticsEventHandler.send(SwapEvents.ButtonGivePermissionClicked())
+                sendGivePermissionClickedEvent()
                 uiState = stateBuilder.showPermissionBottomSheet(uiState) {
                     startLoadingQuotesFromLastState(isSilent = true)
                     analyticsEventHandler.send(SwapEvents.ButtonPermissionCancelClicked())
@@ -1603,19 +1645,46 @@ internal class SwapModel @Inject constructor(
         }.map { currencyStatus -> currencyStatus.currency }.contains(chosen.currency)
     }
 
+    private fun sendNoticePermissionNeededEvent() {
+        val sendTokenSymbol = dataState.fromCryptoCurrency?.currency?.symbol ?: return
+        val receiveTokenSymbol = dataState.toCryptoCurrency?.currency?.symbol ?: return
+        val provider = dataState.selectedProvider ?: return
+        analyticsEventHandler.send(
+            SwapEvents.NoticePermissionNeeded(
+                sendToken = sendTokenSymbol,
+                receiveToken = receiveTokenSymbol,
+                provider = provider,
+            ),
+        )
+    }
+
+    private fun sendGivePermissionClickedEvent() {
+        val sendTokenSymbol = dataState.fromCryptoCurrency?.currency?.symbol ?: return
+        val receiveTokenSymbol = dataState.toCryptoCurrency?.currency?.symbol ?: return
+        val provider = dataState.selectedProvider ?: return
+        analyticsEventHandler.send(
+            SwapEvents.ButtonGivePermissionClicked(
+                sendToken = sendTokenSymbol,
+                receiveToken = receiveTokenSymbol,
+                provider = provider,
+            ),
+        )
+    }
+
     private fun sendPermissionApproveClickedEvent() {
-        val sendTokenSymbol = dataState.fromCryptoCurrency?.currency?.symbol
-        val receiveTokenSymbol = dataState.toCryptoCurrency?.currency?.symbol
-        val approveType = uiState.permissionState.getApproveTypeOrNull()
-        if (sendTokenSymbol != null && receiveTokenSymbol != null && approveType != null) {
-            analyticsEventHandler.send(
-                SwapEvents.ButtonPermissionApproveClicked(
-                    sendToken = sendTokenSymbol,
-                    receiveToken = receiveTokenSymbol,
-                    approveType = approveType,
-                ),
-            )
-        }
+        val sendTokenSymbol = dataState.fromCryptoCurrency?.currency?.symbol ?: return
+        val receiveTokenSymbol = dataState.toCryptoCurrency?.currency?.symbol ?: return
+        val approveType = uiState.permissionState.getApproveTypeOrNull() ?: return
+        val provider = dataState.selectedProvider ?: return
+
+        analyticsEventHandler.send(
+            SwapEvents.ButtonPermissionApproveClicked(
+                sendToken = sendTokenSymbol,
+                receiveToken = receiveTokenSymbol,
+                approveType = approveType,
+                provider = provider,
+            ),
+        )
     }
 
     private fun updateWalletBalance() {
