@@ -49,7 +49,7 @@ internal class DefaultOnboardingRepository @Inject constructor(
         return requestHelper.performWithStaticToken {
             tangemPayApi.validateDeeplink(body = DeeplinkValidityRequest(link = link))
         }.map { response ->
-            response.result?.status == VALID_STATUS
+            response.result?.status.equals(VALID_STATUS, ignoreCase = true)
         }
     }
 
