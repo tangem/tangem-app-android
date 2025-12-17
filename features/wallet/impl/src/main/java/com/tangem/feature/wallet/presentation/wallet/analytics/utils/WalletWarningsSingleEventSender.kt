@@ -1,6 +1,5 @@
 package com.tangem.feature.wallet.presentation.wallet.analytics.utils
 
-import arrow.atomic.AtomicBoolean
 import com.tangem.common.routing.AppRoute.WalletActivation
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.navigation.Router
@@ -22,6 +21,7 @@ import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotification
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvider
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 
 @ModelScoped
@@ -32,8 +32,7 @@ internal class WalletWarningsSingleEventSender @Inject constructor(
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val router: Router,
 ) {
-
-    private val isActivationBottomSheetShown: AtomicBoolean = AtomicBoolean(false)
+    private val isActivationBottomSheetShown: ConcurrentHashMap<UserWalletId, Boolean> = ConcurrentHashMap()
 
     suspend fun send(
         userWalletId: UserWalletId,
@@ -46,16 +45,26 @@ internal class WalletWarningsSingleEventSender @Inject constructor(
 
         val events = newWarnings.filter { it !in displayedUiState.warnings }
 
+        // We must show activation bs only for the first seen wallet when open the app (if need, see conditions below),
+        // so we keep this wallet id and use for future checks, ignore other wallets during the app session.
+        if (isActivationBottomSheetShown.isEmpty()) {
+            isActivationBottomSheetShown[userWalletId] = false
+        }
+
         events.forEach { event ->
             when (event) {
                 is WalletNotification.Critical.SeedPhraseNotification -> {
                     seedPhraseNotificationUseCase.notified(userWalletId = userWalletId)
                 }
                 is WalletNotification.FinishWalletActivation -> {
-                    if (event.type == WalletActivationBannerType.Warning && !isActivationBottomSheetShown.get()) {
-                        showFinishActivationBottomSheet(userWalletId)
+                    // We check that map contains the first seen wallet (will return null instead false/true otherwise)
+                    // and for this wallet we haven't shown the activation bs yet (check that returns false, not true)
+                    if (isActivationBottomSheetShown[userWalletId] == false) {
+                        if (event.type == WalletActivationBannerType.Warning) {
+                            showFinishActivationBottomSheet(userWalletId)
+                        }
+                        isActivationBottomSheetShown[userWalletId] = true
                     }
-                    isActivationBottomSheetShown.set(true)
                 }
                 else -> Unit
             }
