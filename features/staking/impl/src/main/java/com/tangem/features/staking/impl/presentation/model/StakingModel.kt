@@ -190,9 +190,9 @@ internal class StakingModel @Inject constructor(
 
     private val balancesToShow: List<BalanceItem>
         get() {
-            val yieldBalance = cryptoCurrencyStatus.value.yieldBalance as? YieldBalance.Data
+            val stakeKitBalance = cryptoCurrencyStatus.value.stakingBalance as? StakingBalance.Data.StakeKit
             return invalidatePendingTransactionsUseCase(
-                balanceItems = yieldBalance?.balance?.items ?: emptyList(),
+                balanceItems = stakeKitBalance?.balance?.items.orEmpty(),
                 stakingActions = stakingActions,
                 token = yield.token,
             ).getOrElse { emptyList() }
@@ -277,10 +277,10 @@ internal class StakingModel @Inject constructor(
         modelScope.launch {
             val isInitialInfoStep = value.currentStep == StakingStep.InitialInfo
             val noBalanceState = balanceState == null
-            val noYieldBalanceData = cryptoCurrencyStatus.value.yieldBalance !is YieldBalance.Data
+            val hasNoYieldBalanceData = cryptoCurrencyStatus.value.stakingBalance !is StakingBalance.Data.StakeKit
 
             when {
-                isInitialInfoStep && noBalanceState && yield.allValidatorsFull && noYieldBalanceData -> {
+                isInitialInfoStep && noBalanceState && yield.allValidatorsFull && hasNoYieldBalanceData -> {
                     stakingEventFactory.createStakingValidatorsUnavailableAlert()
                     return@launch
                 }
@@ -466,7 +466,7 @@ internal class StakingModel @Inject constructor(
     }
 
     override fun onInitialInfoBannerClick() {
-        analyticsEventHandler.send(StakingAnalyticsEvent.WhatIsStaking)
+        analyticsEventHandler.send(StakingAnalyticsEvent.WhatIsStaking())
         innerRouter.openUrl(WHAT_IS_STAKING_ARTICLE_URL)
     }
 
@@ -512,7 +512,7 @@ internal class StakingModel @Inject constructor(
     }
 
     override fun onMaxValueClick() {
-        analyticsEventHandler.send(StakingAnalyticsEvent.ButtonMax)
+        analyticsEventHandler.send(StakingAnalyticsEvent.ButtonMax())
         stateController.update(
             AmountMaxValueStateTransformer(
                 cryptoCurrencyStatus = cryptoCurrencyStatus,
@@ -554,7 +554,7 @@ internal class StakingModel @Inject constructor(
     }
 
     override fun openRewardsValidators() {
-        analyticsEventHandler.send(StakingAnalyticsEvent.ButtonRewards)
+        analyticsEventHandler.send(StakingAnalyticsEvent.ButtonRewards())
         val rewardsValidators =
             stateController.value.rewardsValidatorsState as? StakingStates.RewardsValidatorsState.Data
 
@@ -879,7 +879,7 @@ internal class StakingModel @Inject constructor(
     }
 
     override fun onExploreClick() {
-        analyticsEventHandler.send(StakingAnalyticsEvent.ButtonExplore)
+        analyticsEventHandler.send(StakingAnalyticsEvent.ButtonExplore())
         val confirmationDataState = uiState.value.confirmationState as? StakingStates.ConfirmationState.Data
         val transactionDoneState = confirmationDataState?.transactionDoneState as? TransactionDoneState.Content
         val txUrl = transactionDoneState?.txUrl
@@ -893,7 +893,7 @@ internal class StakingModel @Inject constructor(
         val transactionDoneState = confirmationDataState?.transactionDoneState as? TransactionDoneState.Content
         val txUrl = transactionDoneState?.txUrl
 
-        analyticsEventHandler.send(StakingAnalyticsEvent.ButtonShare)
+        analyticsEventHandler.send(StakingAnalyticsEvent.ButtonShare())
         if (txUrl != null) {
             vibratorHapticManager.performOneTime(TangemHapticEffect.OneTime.Click)
             shareManager.shareText(txUrl)
@@ -1117,7 +1117,7 @@ internal class StakingModel @Inject constructor(
     private suspend fun onDataLoaded(status: CryptoCurrencyStatus) {
         if (!isInitialInfoAnalyticSent) {
             isInitialInfoAnalyticSent = true
-            val balances = status.value.yieldBalance as? YieldBalance.Data
+            val balances = status.value.stakingBalance as? StakingBalance.Data.StakeKit
             paramsInterceptorHolder.addParamsInterceptor(
                 interceptor = StakingParamsInterceptor(status.currency.symbol),
             )
