@@ -108,6 +108,8 @@ object PreferencesKeys {
 
     val ONRAMP_TRANSACTIONS_STATUSES_KEY by lazy { stringPreferencesKey(name = "onrampTransactionsStatuses") }
 
+    val ONRAMP_HANDLED_TRANSACTIONS_KEY by lazy { stringPreferencesKey(name = "onrampHandledTransactions") }
+
     val ONBOARDING_FINALIZE_SCAN_RESPONSE_KEY by lazy { stringPreferencesKey(name = "onboardingFinalizeScanResponse") }
 
     val IS_GOOGLE_SERVICES_AVAILABLE_KEY by lazy { booleanPreferencesKey(name = "isGoogleServicesAvailable") }
@@ -191,6 +193,9 @@ object PreferencesKeys {
 
     fun getTangemPayCheckCustomerByWalletId(userWalletId: UserWalletId) =
         booleanPreferencesKey("tangem_pay_check_customer_by_wallet_id_$userWalletId")
+
+    fun getTangemPayHideOnboardingKey(userWalletId: UserWalletId) =
+        booleanPreferencesKey("tangem_pay_hide_onboarding_key_$userWalletId")
 
     // endregion
 }

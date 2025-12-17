@@ -9,7 +9,7 @@ internal data class CreateWalletStartUM(
     val featureItems: ImmutableList<FeatureItem>,
     val imageResId: Int,
     val isScanInProgress: Boolean,
-    val showScanSecondaryButton: Boolean,
+    val shouldShowScanSecondaryButton: Boolean,
     val primaryButtonText: TextReference,
     val onPrimaryButtonClick: () -> Unit,
     val otherMethodDescription: TextReference,
