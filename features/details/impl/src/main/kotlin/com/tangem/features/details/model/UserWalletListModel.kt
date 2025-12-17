@@ -91,7 +91,7 @@ internal class UserWalletListModel @Inject constructor(
 
     private fun onAddNewWalletClick() {
         if (hotWalletFeatureToggles.isHotWalletEnabled) {
-            analyticsEventHandler.send(SignIn.ButtonAddWallet(AnalyticsParam.ScreensSources.SignIn))
+            analyticsEventHandler.send(SignIn.ButtonAddWallet(AnalyticsParam.ScreensSources.Settings))
             router.push(AppRoute.CreateWalletSelection)
         } else {
             withProgress(isWalletSavingInProgress) {
@@ -109,6 +109,7 @@ internal class UserWalletListModel @Inject constructor(
                         Timber.e("Failed to unlock wallet $userWalletId: $error")
                         error.handle(
                             onUserCancelled = {},
+                            isFromUnlockAll = false,
                             onAlreadyUnlocked = { router.push(AppRoute.WalletSettings(userWalletId)) },
                             analyticsEventHandler = analyticsEventHandler,
                             showMessage = messageSender::send,
