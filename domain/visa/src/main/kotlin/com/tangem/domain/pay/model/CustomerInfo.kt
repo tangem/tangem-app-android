@@ -5,6 +5,7 @@ import java.math.BigDecimal
 
 sealed class MainCustomerInfoContentState {
     object Loading : MainCustomerInfoContentState()
+    object OnboardingBanner : MainCustomerInfoContentState()
     data class Content(val info: MainScreenCustomerInfo) : MainCustomerInfoContentState()
 }
 
