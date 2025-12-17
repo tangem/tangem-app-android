@@ -44,7 +44,7 @@ internal fun createStatus(currency: CryptoCurrency, fiatAmount: BigDecimal): Cry
             fiatRate = BigDecimal.ONE,
             fiatAmount = fiatAmount,
             priceChange = BigDecimal.ZERO,
-            yieldBalance = null,
+            stakingBalance = null,
             hasCurrentNetworkTransactions = false,
             yieldSupplyStatus = null,
             pendingTransactions = emptySet(),
