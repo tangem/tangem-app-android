@@ -74,7 +74,7 @@ internal class WalletsUpdateActionResolver @Inject constructor(
                 getChangeWalletsListAction(state, wallets, selectedWallet)
             }
             isAnotherWalletSelected(state, selectedWallet) -> {
-                Action.ReinitializeWallet(
+                Action.ReinitializeNewWallet(
                     prevWalletId = state.getPrevSelectedWallet().id,
                     selectedWallet = selectedWallet,
                 )
@@ -291,7 +291,7 @@ internal class WalletsUpdateActionResolver @Inject constructor(
          * @property prevWalletId   previous selected wallet id
          * @property selectedWallet selected wallet
          */
-        data class ReinitializeWallet(
+        data class ReinitializeNewWallet(
             val prevWalletId: UserWalletId,
             val selectedWallet: UserWallet,
         ) : Action() {
