@@ -90,16 +90,16 @@ internal class DefaultPromoRepository(
         appPreferencesStore.store(PreferencesKeys.getShouldShowPromoKey(promoId = promoId.name), false)
     }
 
-    override fun isMarketsStakingNotificationHideClicked(): Flow<Boolean> {
+    override fun isMarketsYieldSupplyNotificationHideClicked(): Flow<Boolean> {
         return appPreferencesStore.get(
-            key = PreferencesKeys.MARKETS_STAKING_NOTIFICATION_HIDE_CLICKED_KEY,
+            key = PreferencesKeys.MARKETS_YIELD_SUPPLY_NOTIFICATION_HIDE_CLICKED_KEY,
             default = false,
         )
     }
 
-    override suspend fun setMarketsStakingNotificationHideClicked() {
+    override suspend fun setMarketsYieldSupplyNotificationHideClicked() {
         appPreferencesStore.store(
-            key = PreferencesKeys.MARKETS_STAKING_NOTIFICATION_HIDE_CLICKED_KEY,
+            key = PreferencesKeys.MARKETS_YIELD_SUPPLY_NOTIFICATION_HIDE_CLICKED_KEY,
             value = true,
         )
     }
